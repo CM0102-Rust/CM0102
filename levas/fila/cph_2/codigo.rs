@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn move_to_reserves(this: usize, pessoa: usize, clube: 
 }
 
 /// Comparador: lado a lado pela ficha [0xae1080] (a vaga da saída é o argumento na pilha de cada uma).
-unsafe extern "thiscall" fn comparar_get_squad_placement(this: usize, pessoa: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_squad_placement(this: usize, pessoa: usize, clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, pessoa, clube), || get_squad_placement(this, pessoa, clube));
     SCOREBOARD.record(igual && r == n, || format!("get_squad_placement({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
@@ -125,10 +125,10 @@ unsafe fn compare_placement_toggle(i: usize, nome: &str, this: usize, pessoa: us
     r
 }
 
-unsafe extern "thiscall" fn comparar_move_to_first_team(this: usize, pessoa: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_move_to_first_team(this: usize, pessoa: usize, clube: usize) -> u32 {
     compare_placement_toggle(%%I1%%, "move_to_first_team", this, pessoa, clube, [1, 3])
 }
 
-unsafe extern "thiscall" fn comparar_move_to_reserves(this: usize, pessoa: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_move_to_reserves(this: usize, pessoa: usize, clube: usize) -> u32 {
     compare_placement_toggle(%%I2%%, "move_to_reserves", this, pessoa, clube, [2, 4])
 }

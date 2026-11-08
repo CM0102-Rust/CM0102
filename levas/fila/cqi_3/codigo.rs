@@ -244,7 +244,7 @@ fn cqi3_dif(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::Memo
 
 /// Lado a lado: a classificação (com a tabela das finais em +0x440), os clubes, o sorteio (a cópia sem contar) e a marca
 /// da caixa.
-unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usize, clubes: usize, conta: u32) {
+unsafe extern "thiscall" fn compare_assign_uefa_cup_places(this: usize, clubes: usize, conta: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let n = (cqi3_d(0xae235c) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) -> usize {
 
 /// Em 2001 (devolve 0 sem efeito): a devolução das duas. Fora de 2001 só a original (sorteia, aloca a lista e entrega a
 /// notícia).
-unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_pick_english_intertoto_club(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     if cqi3_w(0xae2c92) != 0x7d1 {
         return o(this);
@@ -424,7 +424,7 @@ unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
 }
 
 /// Só a original (refaz as vagas pelas rotinas de dentro, solta a tabela, entrega notícias); a cópia leva o contador.
-unsafe extern "thiscall" fn comparar_update_season(this: usize, diario: u32) {
+unsafe extern "thiscall" fn compare_update_season(this: usize, diario: u32) {
     // ponytail: refaz a classificação inteira e entrega notícias: não dá para rodar duas vezes
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(this, diario)
 }

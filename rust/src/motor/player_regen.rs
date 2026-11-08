@@ -1651,7 +1651,7 @@ pub(crate) unsafe fn non_player_age_limit(person: usize, out: usize) -> i8 {
             }
         }
     };
-    (sortear(n) as u8).wrapping_add(base) as i8
+    (random(n) as u8).wrapping_add(base) as i8
 }
 
 /// Player retirement age limit from his record: 34, 30 or 31 by attribute bytes +0xf/+0x15/+0x14.
@@ -1697,10 +1697,10 @@ pub(crate) unsafe fn set_dates_tomorrow(out: usize) {
 /// [pt] Sem nação-chave válida na aposentadoria pela idade: hoje + sorteio(20) nas duas datas; passando de 365, o dia
 /// sorteio(10) do ano seguinte.
 pub(crate) unsafe fn set_dates_no_key_nation(out: usize) {
-    let a = (sortear(20) as u32).wrapping_add(read_u32_as_usize(G_CURRENT_DATE) as u32) as u16;
+    let a = (random(20) as u32).wrapping_add(read_u32_as_usize(G_CURRENT_DATE) as u32) as u16;
     let year = read_u16(G_CURRENT_DATE_YEAR);
     if a as i16 > 0x16d {
-        let d = sortear(10) as u16;
+        let d = random(10) as u16;
         write_u16(out + 0x10, d);
         write_u16(out + 0x12, year.wrapping_add(1));
         write_u16(out + 8, d);
@@ -1748,16 +1748,16 @@ pub(crate) unsafe fn set_retirement_dates(person: usize, out: usize, away: unsaf
     }
     crate::comparison::branch("cpr_8 datas pela nacao");
     let year = read_u16(G_CURRENT_DATE_YEAR);
-    let a = (sortear(95) as u32).wrapping_add(read_u32_as_usize(G_CURRENT_DATE) as u32).wrapping_add(1) as u16;
-    let (dia1, ano1) = if a as i16 > 0x16d { (sortear(60) as u16, year.wrapping_add(1)) } else { (a, year) };
+    let a = (random(95) as u32).wrapping_add(read_u32_as_usize(G_CURRENT_DATE) as u32).wrapping_add(1) as u16;
+    let (dia1, ano1) = if a as i16 > 0x16d { (random(60) as u16, year.wrapping_add(1)) } else { (a, year) };
     write_u16(out + 0xa, ano1);
     write_u16(out + 8, dia1);
     let t = 0xb63d60usize.wrapping_add((k as usize) * 0x48);
-    let d2 = (sortear(30) as u16).wrapping_add(read_u16(t + 0x15)); // the nation’s end of season
+    let d2 = (random(30) as u16).wrapping_add(read_u16(t + 0x15)); // the nation’s end of season
     write_u16(out + 0x10, d2);
     let more_one = *((t + 0x1d) as *const u8) != 0;
     if d2 as i16 > 0x16d {
-        write_u16(out + 0x10, sortear(30) as u16);
+        write_u16(out + 0x10, random(30) as u16);
         write_u16(out + 0x12, year.wrapping_add(if more_one { 2 } else { 1 }));
     } else {
         write_u16(out + 0x12, if more_one { year.wrapping_add(1) } else { year });
@@ -1831,7 +1831,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
             n != 0 && *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0
         };
         if draws {
-            if sortear(3) != 0 {
+            if random(3) != 0 {
                 break 'm 1;
             }
             if club == 0 || status >= 0 {
@@ -1856,7 +1856,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
             }
             return 0;
         }
-        if sortear(25 * read_i8(j + player_sheet::STAMINA) as i32) != 0 {
+        if random(25 * read_i8(j + player_sheet::STAMINA) as i32) != 0 {
             return 0;
         }
         2
@@ -1955,7 +1955,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
                 if read_u32_as_usize(person + staff::NON_PLAYER) != 0 {
                     break 'm 1;
                 }
-                if read_i8(person + staff::AMBITION) as i32 > sortear(20) {
+                if read_i8(person + staff::AMBITION) as i32 > random(20) {
                     let (cur, pot) = (read_i16(j + player_sheet::CURRENT_ABILITY) as f64, read_i16(j + player_sheet::POTENTIAL_ABILITY) as f64);
                     if !(pot * read_f64_at(0x969520) <= cur) { // 0x969520 = 0.85
                         break 'm 1;
@@ -1976,7 +1976,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
         };
         if draws {
             crate::comparison::branch("cpr_8 fora do jogo");
-            if sortear(3) == 0 {
+            if random(3) == 0 {
                 break 'm 1; // cpr8: um em três se aposenta
             }
             if read_u32_as_usize(person + staff::CLUB_JOB) != 0 && status < 0 {
@@ -2000,7 +2000,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
             }
             return 0;
         }
-        if sortear(25 * read_i8(j + player_sheet::STAMINA) as i32) != 0 {
+        if random(25 * read_i8(j + player_sheet::STAMINA) as i32) != 0 {
             return 0;
         }
         2
@@ -2303,7 +2303,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
     if age < 31 {
         return -10000;
     }
-    let mut rating = sortear((age - 31) * 150); // a idade
+    let mut rating = random((age - 31) * 150); // a idade
     let club = read_usize(person + staff::CLUB_JOB);
     if club != 0 {
         let injury_word_0c = read_i16_as_i32(club + club::REPUTATION);
@@ -2315,7 +2315,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
     let player = read_usize(person + staff::PLAYER);
     if player != 0 {
         let v = read_i8_as_i32(player + player_sheet::LEADERSHIP) / 2;
-        rating = rating.wrapping_add(sortear(match_pl_ftol(game_pow(v as f64, 3.0))));
+        rating = rating.wrapping_add(random(match_pl_ftol(game_pow(v as f64, 3.0))));
         if read_i16_as_i32(player + player_sheet::WORLD_REPUTATION) > 7500 {
             rating = rating.wrapping_add(100);
         }
@@ -2331,15 +2331,15 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
         if read_usize(club + club::MANAGER) == 0 {
             rating = rating.wrapping_add(75);
         }
-        return sortear(rating);
+        return random(rating);
     }
     let b = *((person + staff::INT_APPS) as *const u8) as i32;
     rating = rating.wrapping_add(b * b);
-    let r = sortear(10000); // sem clube
+    let r = random(10000); // sem clube
     if read_i16_as_i32(read_usize(person + staff::PLAYER) + 0xd) > r {
         rating = rating.wrapping_add(rating);
     }
-    sortear(rating)
+    random(rating)
 }
 
 /// Effective date of a retirement list entry: announcement (+8) if not yet past the game date, else retirement (+0x10).
@@ -3030,7 +3030,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_pick_staff_for_non_player_da
     escolhida
 }
 
-comparar_valor!(comparar_is_on_shortlist, is_on_shortlist, IDX_IS_ON_SHORTLIST, (jogador: usize, clube: usize) -> u32);
+compare_value!(compare_is_on_shortlist, is_on_shortlist, IDX_IS_ON_SHORTLIST, (jogador: usize, clube: usize) -> u32);
 
 /// Removes the 16-byte record with key id from a regen list ([regen+lista], count [regen+quantos]), shifts the rest,
 /// marks the last with -1 and decrements the count.

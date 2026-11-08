@@ -60,19 +60,19 @@ unsafe fn list16_regions(regen: usize, lista: usize, quantos: usize) -> Vec<(usi
     r
 }
 
-unsafe extern "thiscall" fn comparar_remove_spare_non_player_record(regen: usize, id: i32) {
+unsafe extern "thiscall" fn compare_remove_spare_non_player_record(regen: usize, id: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&list16_regions(regen, 0x1c, 0x20), || o(regen, id), || remove_spare_non_player_record(regen, id));
     SCOREBOARD.record(igual, || format!("remove_spare_non_player_record({}) {:x?} x {:x?}", id, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_remove_player_data_from_pool(regen: usize, id: i32) {
+unsafe extern "thiscall" fn compare_remove_player_data_from_pool(regen: usize, id: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&list16_regions(regen, 0x3c, 0x40), || o(regen, id), || remove_player_data_from_pool(regen, id));
     SCOREBOARD.record(igual, || format!("remove_player_data_from_pool({}) {:x?} x {:x?}", id, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_calc_prize_fund(liga: usize, cota: i32) -> i32 {
+unsafe extern "thiscall" fn compare_calc_prize_fund(liga: usize, cota: i32) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(%%I2%%)(liga, cota);
     if *((liga + 0x3e) as *const i16) == 0 {
         return r;

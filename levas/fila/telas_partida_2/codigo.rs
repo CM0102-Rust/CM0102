@@ -117,13 +117,13 @@ unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
 
 // ponytail: abrir e responder mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
-unsafe extern "C" fn comparar_open_latest_scores(vaga: u32, entrada: usize) {
+unsafe extern "C" fn compare_open_latest_scores(vaga: u32, entrada: usize) {
     original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, entrada)
 }
 
 /// A montagem é comparada de verdade: as duas montam a tela a partir do mesmo estado e o gerente de
 /// telas, o `Display` da tela atual (a lista de exibição) e o título (0xde1f64) têm de sair iguais.
-unsafe extern "C" fn comparar_build_latest_scores() {
+unsafe extern "C" fn compare_build_latest_scores() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
     let mut reg = screen_build_regions();
     reg.push((0xde1f64, 0x100));
@@ -141,6 +141,6 @@ unsafe extern "C" fn comparar_build_latest_scores() {
     });
 }
 
-unsafe extern "C" fn comparar_latest_scores_input(item: u32) -> i32 {
+unsafe extern "C" fn compare_latest_scores_input(item: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I2%%)(item)
 }

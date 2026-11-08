@@ -930,7 +930,7 @@ unsafe extern "C" fn build_match_details_screen() {
 /// As montagens da tela da partida são comparadas pela lista de exibição: as regiões da tela, o bloco
 /// de parâmetros sem o 0x14 (a hora que o redesenho dos últimos placares 0x724520 grava na aba 8), as
 /// marcas 0xb6b7a8/ac/b0, o texto 0xde1f64 e a posição do buffer de rede ([0xae290c]), mais `extra`.
-unsafe fn comparar_montagem_da_partida(nome: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
+unsafe fn compare_montagem_da_partida(nome: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.push((0xb6b7a8, 12));
     let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
@@ -954,7 +954,7 @@ unsafe fn comparar_montagem_da_partida(nome: &str, extra: &[(usize, usize)], ori
 /// do humano (+0x12f4fe) e o volume do narrador (+0x2db0). Só a original quando há o que não roda duas
 /// vezes: a foto do parâmetro 0x1d a liberar, o lance do parâmetro 7 a narrar (som, 0x6d7b00) ou as
 /// abas 1 (o resumo também narra), 3 (as zonas alocam a foto) e 10 (a tabela ao vivo).
-unsafe extern "C" fn comparar_build_match_screen() {
+unsafe extern "C" fn compare_build_match_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     let aba = get_screen_param(2) as u8;
     // as abas 2 (estatisticas) e 7 (notas) alocam a copia do estado 0x1d quando ela falta: tambem so a original
@@ -983,19 +983,19 @@ unsafe extern "C" fn comparar_build_match_screen() {
             extra.push((rd(pm + 0x8f7a) + 0x2db0, 1));
         }
     }
-    comparar_montagem_da_partida("build_match_screen", &extra, || o(), || build_match_screen());
+    compare_montagem_da_partida("build_match_screen", &extra, || o(), || build_match_screen());
 }
 
 // ponytail: a resposta mexe em telas, menu, rede, narração (som) e tática (não roda duas vezes): no modo
 // comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust (contador "telas ...")
-unsafe extern "C" fn comparar_handle_match_screen_input(item: u32) -> i32 {
+unsafe extern "C" fn compare_handle_match_screen_input(item: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
 }
 
 /// A tela de detalhes é comparada pela lista de exibição quando o registro e a foto da partida já
 /// existem (parâmetros 0x1f e 0x20) e não há foto 0x1d a liberar. Só a original quando eles nascem aqui
 /// (alocação) ou nas abas 1 (o resumo narra com som), 3 (as zonas alocam a foto) e 4 (o relatório nasce).
-unsafe extern "C" fn comparar_build_match_details_screen() {
+unsafe extern "C" fn compare_build_match_details_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I2%%);
     let aba = get_screen_param(2) as u8;
     // as abas 2 (estatisticas) e 6 (notas) alocam a copia do estado 0x1d: tambem so a original
@@ -1003,5 +1003,5 @@ unsafe extern "C" fn comparar_build_match_details_screen() {
         // ponytail: alocar, liberar e narrar não rodam duas vezes; esses casos se provam no modo Rust
         return o();
     }
-    comparar_montagem_da_partida("build_match_details_screen", &[], || o(), || build_match_details_screen());
+    compare_montagem_da_partida("build_match_details_screen", &[], || o(), || build_match_details_screen());
 }

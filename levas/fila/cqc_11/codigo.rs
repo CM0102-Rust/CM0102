@@ -336,7 +336,7 @@ unsafe extern "thiscall" fn arrange_international_friendlies(this: usize, datas:
 /// do ensaio são os da original, salvo os de dentro das rotinas do amistoso, e a fita acaba junto) e, lista a lista de
 /// nações, que os itens novos da original são os que o ensaio acrescentaria. (Lado a lado pelo estado do sorteador não
 /// servia: a 0x5c6f00 e a 0x5c5f40 sorteiam por dentro na original e o ensaio não as chama.)
-unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usize, datas: usize, n: u32) {
+unsafe extern "thiscall" fn compare_arrange_international_friendlies(this: usize, datas: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let nacoes = cqc11_d(0xae2350) as i32;
     let k = nacoes.max(cqc11_d(this + 0x34fe) as i32).max(0) as usize;
@@ -449,7 +449,7 @@ fn news_text_regions(texto: usize, tamanho: u32) -> Vec<(usize, usize)> {
 /// Comparador: lado a lado pelo texto e a devolução (as listas locais nascem e morrem nas duas); com a caixa, só a
 /// original.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(this: usize, a: usize, b: usize, clube: usize, dia: u32,
+unsafe extern "thiscall" fn compare_friendly_check_match_invitation(this: usize, a: usize, b: usize, clube: usize, dia: u32,
     ano: u32, data: usize, texto: usize, tamanho: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, usize, usize, u32) -> u32>(%%I1%%);
     if texto != 0 && (tamanho as i16) < 100 {
@@ -501,7 +501,7 @@ unsafe extern "thiscall" fn friendly_check_tournament_invitation(this: usize, cl
 }
 
 /// Comparador: lado a lado pelo texto e a devolução; com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_friendly_check_tournament_invitation(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
+unsafe extern "thiscall" fn compare_friendly_check_tournament_invitation(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32>(%%I2%%);
     if texto != 0 && (tamanho as i16) < 100 {
         return o(this, clube, torneio, texto, tamanho);

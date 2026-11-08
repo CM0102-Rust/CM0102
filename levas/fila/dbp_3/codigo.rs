@@ -22,7 +22,7 @@ unsafe extern "C" fn staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> 
     pref
 }
 
-unsafe extern "C" fn comparar_staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> usize {
+unsafe extern "C" fn compare_staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I0%%);
     let pref = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + 0x65) as *const usize) };
     if pref == 0 {
@@ -58,7 +58,7 @@ unsafe extern "C" fn staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *m
     n
 }
 
-unsafe extern "C" fn comparar_staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
+unsafe extern "C" fn compare_staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(%%I1%%);
     let com_vetor = [(vetor, 12), (n as usize, 1)];
     let regioes: &[(usize, usize)] = if vetor == 0 { &com_vetor[1..] } else { &com_vetor };

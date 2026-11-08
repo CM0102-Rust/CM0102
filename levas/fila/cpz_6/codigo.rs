@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn get_international_duty_club(this: usize, jogador: us
 
 /// Comparador da 0x7757d0 (2,1 milhões de chamadas até 2002-06-01: o lado a lado leve, sem alocar até 256 bytes): cada
 /// uma com a sua lista provisória (como a original); no texto de 0xde1f64 (0x80) e no do comentário (0x40) e na devolução.
-unsafe extern "thiscall" fn comparar_get_international_duty_club(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
+unsafe extern "thiscall" fn compare_get_international_duty_club(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
                                                                adversario: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize) -> usize>(%%I0%%);
     let regioes = [(0xde1f64usize, 0x80usize), (comentario, 0x40)];
@@ -223,7 +223,7 @@ unsafe extern "stdcall" fn national_teams_player_is_eligible(jogador: usize, tec
 }
 
 /// Comparador da 0x76d9b0: pela devolução (só lê).
-unsafe extern "stdcall" fn comparar_national_teams_player_is_eligible(jogador: usize, tecnico: usize) -> u32 {
+unsafe extern "stdcall" fn compare_national_teams_player_is_eligible(jogador: usize, tecnico: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(jogador, tecnico);
     let n = national_teams_player_is_eligible(jogador, tecnico);
     SCOREBOARD.record(r == n, || format!("national_teams_player_is_eligible(jogador {:x}, tecnico {:x}) original={} rust={}", jogador, tecnico, r, n));
@@ -279,7 +279,7 @@ unsafe fn national_teams_list_items(lista: usize) -> Vec<usize> {
 // ponytail: a 0x775580 acrescenta nós (aloca): só a original roda. O plano, feito antes pelos nós (sem mexer nos
 // cursores): as competições das convocações que ainda não estão em `saida`, na ordem, sem repetir; depois, a devolução
 // é quantas e os últimos itens de `saida` (4 bytes cada) são elas.
-unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn compare_collect_duty_competitions(this: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let conv = cpz6_d(this);
     if conv == 0 || saida == 0 {

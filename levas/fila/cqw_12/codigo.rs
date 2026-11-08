@@ -96,7 +96,7 @@ unsafe fn cqw12_comparar(nome: &str, this: usize, ano: u32, comp: usize, vtable:
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqw12_concacaf(this: usize, ano: u32, comp: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw12_concacaf(this: usize, ano: u32, comp: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     cqw12_comparar("cqw12_concacaf", this, ano, comp, 0x968aa0, || o(this, ano, comp))
 }
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn cqw12_intercontinental(this: usize, ano: u32, comp: 
     cqw12_dois_clubes(this, ano, comp, 0x971250, 3, 3, 0x92b8b0, 0xad5848)
 }
 
-unsafe extern "thiscall" fn comparar_cqw12_intercontinental(this: usize, ano: u32, comp: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw12_intercontinental(this: usize, ano: u32, comp: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqw12_comparar("cqw12_intercontinental", this, ano, comp, 0x971250, || o(this, ano, comp))
 }

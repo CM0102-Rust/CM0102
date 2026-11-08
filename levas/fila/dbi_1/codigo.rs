@@ -29,7 +29,7 @@ unsafe extern "C" fn database_free_staff_history_table() {
 
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
 // ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_database_free_staff_history_table() {
+unsafe extern "C" fn compare_database_free_staff_history_table() {
     original_fn::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
@@ -48,7 +48,7 @@ unsafe extern "C" fn database_free_staff_comp_history_table() {
 
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
 // ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_database_free_staff_comp_history_table() {
+unsafe extern "C" fn compare_database_free_staff_comp_history_table() {
     original_fn::<unsafe extern "C" fn()>(%%I1%%)()
 }
 
@@ -80,7 +80,7 @@ unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 {
 
 /// Comparador: o `realloc` não se desfaz (crescer duas vezes deixaria a tabela com 2n linhas a mais).
 // ponytail: só a original; a prova é o .qst (a tabela vai para o save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_database_grow_comp_history_table(n: i32) -> u32 {
+unsafe extern "C" fn compare_database_grow_comp_history_table(n: i32) -> u32 {
     original_fn::<unsafe extern "C" fn(i32) -> u32>(%%I2%%)(n)
 }
 

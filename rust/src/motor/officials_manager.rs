@@ -408,7 +408,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         (read_i32(b + 8), read_i32(b + 4))
     };
     let (ini, n) = if comp == 0 {
-        band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| sortear(nations)))
+        band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| random(nations)))
     } else {
         let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
         if friendly(read_usize(G_FRIENDLY), comp) != 0 {
@@ -416,7 +416,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         } else {
             let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp).wrapping_mul(4) as usize));
             if c == 0 {
-                band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| sortear(nations)))
+                band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| random(nations)))
             } else {
                 let kind = read_u8(c + cup::CLUB_SIDES) as i8;
                 if kind == 2 || kind == 4 {
@@ -431,9 +431,9 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     } else if let Some(k) = continent_of(away) {
                         k
                     } else {
-                        sortear(read_i32(G_CONTINENT_COUNT))
+                        random(read_i32(G_CONTINENT_COUNT))
                     };
-                    let start = sortear(nations);
+                    let start = random(nations);
                     let mut k = start;
                     loop {
                         let nation = read_usize(G_NATION_TABLE).wrapping_add(k.wrapping_mul(0x122) as usize);
@@ -464,7 +464,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     } else if let Some(k) = officials_manager_club_nation_id(away) {
                         k
                     } else {
-                        sortear(nations)
+                        random(nations)
                     };
                     let b = nation_officials_block(this, nacao);
                     let id = read_i32(comp);
@@ -490,7 +490,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         ini
     } else {
         crate::comparison::branch("cpy_8 arbitro sorteado");
-        ini.wrapping_add(sortear(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
+        ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
     };
     let ocupado = |k: i32| {
         let sheet = read_usize(G_OFFICIAL_TABLE).wrapping_add(k.wrapping_mul(0x2b) as usize);
@@ -567,7 +567,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     if count(read_i32(comp)) == 0 {
         return 0;
     }
-    let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 { read_i32(read_usize(comp + competition::CLUB_COMP_NATION)) } else { sortear(read_i32(G_NATION_COUNT)) };
+    let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 { read_i32(read_usize(comp + competition::CLUB_COMP_NATION)) } else { random(read_i32(G_NATION_COUNT)) };
     let b = nation_officials_block(this, nacao);
     let mut band = None;
     for f in 0..read_i16(b + 0x10).max(0) as usize {
@@ -588,7 +588,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         let year = read_u8(G_CURRENT_DATE_YEAR);
         let dif = (read_i16(sheet + 0xc) as i32).wrapping_sub(read_i16(G_CURRENT_DATE) as i32);
         let age = if dif > 0 { year.wrapping_sub(read_u8(sheet + 0xe)).wrapping_sub(1) } else { year.wrapping_sub(read_u8(sheet + 0xe)) } as i8;
-        if age <= 0x28 || (age <= 0x2d && sortear(3) != 0) {
+        if age <= 0x28 || (age <= 0x2d && random(3) != 0) {
             continue;
         }
         crate::comparison::branch("cpy_8 arbitro renovado");
@@ -597,16 +597,16 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         core::ptr::write_unaligned((sheet + 4) as *mut usize, n1);
         let n2 = name(read_usize(sheet + player_sheet::WING_BACK));
         core::ptr::write_unaligned((sheet + 8) as *mut usize, n2);
-        *((sheet + player_sheet::DIRTINESS) as *mut u8) = if sortear(10) != 0 {
-            (sortear(0x10) as u8).wrapping_add(5)
+        *((sheet + player_sheet::DIRTINESS) as *mut u8) = if random(10) != 0 {
+            (random(0x10) as u8).wrapping_add(5)
         } else {
-            let a = sortear(0xb) as u8;
-            a.wrapping_add(sortear(0xb) as u8)
+            let a = random(0xb) as u8;
+            a.wrapping_add(random(0xb) as u8)
         };
-        let r5 = sortear(5);
+        let r5 = random(5);
         let base = (read_i16(G_CURRENT_DATE_YEAR) as u16).wrapping_sub(0x1b);
         core::ptr::write_unaligned((sheet + 0xe) as *mut u16, (r5 as u16).wrapping_add(base));
-        core::ptr::write_unaligned((sheet + 0xc) as *mut u16, sortear(0x154) as u16);
+        core::ptr::write_unaligned((sheet + 0xc) as *mut u16, random(0x154) as u16);
     }
     for k in 0..n.max(0) {
         let row = read_usize(this).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x11) as usize);
@@ -623,7 +623,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
 ///
 /// [pt] Um byte sorteado: sorteio(n) + k no al.
 pub(crate) unsafe fn random_byte_plus(n: i32, k: u8) -> u8 {
-    (sortear(n) as u8).wrapping_add(k)
+    (random(n) as u8).wrapping_add(k)
 }
 
 /// A new referee record in `r` (0x2b bytes) for nation `nacao`, in the order of `0x79c6aa`.
@@ -657,8 +657,8 @@ pub(crate) unsafe fn generate_official(r: usize, nation: usize) {
     write_u8(r + 0x29, random_byte_plus(10, 7));
     write_u8(r + 0x2a, random_byte_plus(10, 7));
     write_usize(r + 0x1a, 0);
-    write_i16(r + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
-    write_i16(r + 0xc, sortear(0x12c).wrapping_add(1) as i16);
+    write_i16(r + 0xe, random(10).wrapping_add(0x7a8) as i16);
+    write_i16(r + 0xc, random(0x12c).wrapping_add(1) as i16);
 }
 
 /// Reallocates the referee table, generates `count` new referees of the nation and sorts the table by nation and
@@ -750,7 +750,7 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
             } else if read_i32(n2 + 0x37) >= 0 {
                 read_i32(n2 + 0x37)
             } else {
-                sortear(read_i32(G_NATION_COUNT))
+                random(read_i32(G_NATION_COUNT))
             };
             write_usize(e + 0x16, read_usize(G_NATION_TABLE).wrapping_add(k.wrapping_mul(0x122) as usize));
         }
@@ -761,10 +761,10 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
         if away(0x22) {
             let nation = read_usize(e + 0x16);
             let v = if nation != 0 {
-                let s = sortear(0x50) as u8;
+                let s = random(0x50) as u8;
                 s.wrapping_add(read_u8(read_usize(e + 0x16) + 0x8e)).wrapping_add(1)
             } else {
-                (sortear(0x50) as u8).wrapping_add(1)
+                (random(0x50) as u8).wrapping_add(1)
             };
             write_i16(e + 0x22, v as i8 as i16);
         }
@@ -773,10 +773,10 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
                 crate::comparison::branch("cpy_9 nota consertada");
                 let nation = read_usize(e + 0x16);
                 let v = if nation != 0 {
-                    let s = sortear(0x50) as u8;
+                    let s = random(0x50) as u8;
                     s.wrapping_add(read_u8(read_usize(e + 0x16) + 0x8e) << 2).wrapping_add(1)
                 } else {
-                    (sortear(0x50) as u8).wrapping_add(1)
+                    (random(0x50) as u8).wrapping_add(1)
                 };
                 write_i16(e + o, v as i8 as i16);
                 if o == 0x20 && read_i16(e + 0x20) < read_i16(e + 0x1e) {
@@ -795,15 +795,15 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
         fix_official_attribute(e, 0x27, || if read_i16(e + 0x1e) > 0x50 { random_byte_plus(0xf, 6) } else { random_byte_plus(0x14, 1) });
         fix_official_attribute(e, 0x28, || band((0xa, 0xb), (0xf, 5), (0xa, 7)));
         fix_official_attribute(e, 0x29, || band((0xd, 8), (0xe, 7), (0xf, 6)));
-        fix_official_attribute(e, 0x2a, || if sortear(0x64) != 0 { random_byte_plus(0xa, 0xb) } else { random_byte_plus(0xa, 5) });
+        fix_official_attribute(e, 0x2a, || if random(0x64) != 0 { random_byte_plus(0xa, 0xb) } else { random_byte_plus(0xa, 5) });
         let mut limit = [0u8; 8];
         let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> *const u8 = core::mem::transmute(FN_DATE_DATE_549F70);
         let d = data(limit.as_mut_ptr(), 1, 1, 0x776, -1);
         let (dia, ano) = (read_i16(d as usize), read_i16(d as usize + 2) as u16);
         let year_and = read_i16(e + 0xe) as u16;
         if ano > year_and || (ano == year_and && dia > read_i16(e + 0xc)) {
-            write_i16(e + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
-            write_i16(e + 0xc, sortear(0x12c).wrapping_add(1) as i16);
+            write_i16(e + 0xe, random(10).wrapping_add(0x7a8) as i16);
+            write_i16(e + 0xc, random(0x12c).wrapping_add(1) as i16);
         }
         i += 1;
     }

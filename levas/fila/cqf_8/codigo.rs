@@ -297,7 +297,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
 /// Comparador: as duas montam a tabela (a original e a cópia, a partir do mesmo estado; o arquivo de histórico só é
 /// lido) e comparam a conta e as entradas; a da cópia é liberada (0x9452ca) e o jogo segue com a da original. Os casos
 /// de erro (caixa): só a original.
-unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize, conta: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_build_career_history(this: usize, p: usize, conta: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(%%I0%%);
     if p == 0 || (cqf8_i(p) < cqf8_i(0xae2364) && cqf8_d(p + 0x61) == 0) {
         return o(this, p, conta);
@@ -376,7 +376,7 @@ unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize, clube: usi
 }
 
 /// Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
-unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
+unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(%%I1%%);
     if p == 0 || clube == 0 || (cqf8_i(p) < cqf8_i(0xae2364) && cqf8_d(p + 0x39) != clube && cqf8_d(p + 0x61) == 0) {
         return o(p, clube);
@@ -415,7 +415,7 @@ unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, b: usize) -
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = player_stats_compare_history_by_staff(a, b);
     SCOREBOARD.record(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));

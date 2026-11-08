@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
 
 // ponytail: a 0x83f3a0 (chamada por cada vaga ainda sem alvo) sorteia, acrescenta pares aos vetores com realocação e dá
 // notícias: não pode rodar duas vezes. Só a original; a cópia leva os ramos e as mutações.
-unsafe extern "thiscall" fn comparar_allocate_transfer_budget(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_allocate_transfer_budget(this: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube)
 }
 
@@ -278,7 +278,7 @@ unsafe extern "stdcall" fn shortlist_manager_squad_status_allowed(pessoa: usize,
 }
 
 /// Comparador: a devolução (rotina pura); sem ficha de jogador, só a original (caixa).
-unsafe extern "stdcall" fn comparar_shortlist_manager_squad_status_allowed(pessoa: usize, estatuto: u32) -> u32 {
+unsafe extern "stdcall" fn compare_shortlist_manager_squad_status_allowed(pessoa: usize, estatuto: u32) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u32>(%%I1%%);
     if cpy3_d(pessoa + 0x61) == 0 {
         return o(pessoa, estatuto);
@@ -311,7 +311,7 @@ unsafe extern "C" fn scout_manager_write_list_name(indice: u32, texto: usize, ta
 
 /// Comparador: lado a lado pelo texto (até 0x100 bytes do tamanho dado), e a devolução; nos casos de erro, só a
 /// original (caixa).
-unsafe extern "C" fn comparar_scout_manager_write_list_name(indice: u32, texto: usize, tamanho: i32) -> u32 {
+unsafe extern "C" fn compare_scout_manager_write_list_name(indice: u32, texto: usize, tamanho: i32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u32>(%%I2%%);
     let k = indice as u8 as i8;
     if !(0..=9).contains(&k) || texto == 0 || tamanho < 0x32 {

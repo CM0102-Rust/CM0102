@@ -73,7 +73,7 @@ unsafe extern "C" fn database_club_has_reserve_squad(clube: usize) -> u32 {
     1 // pode
 }
 
-unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn compare_staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa, clube),
@@ -82,14 +82,14 @@ unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: u
     r
 }
 
-unsafe extern "C" fn comparar_player_attribute_rating(jogador: usize, valor: u32) -> u32 {
+unsafe extern "C" fn compare_player_attribute_rating(jogador: usize, valor: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%)(jogador, valor);
     let n = player_attribute_rating(jogador, valor);
     SCOREBOARD.record(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: usize) -> u32 {
+unsafe extern "C" fn compare_database_club_has_reserve_squad(clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     if clube == 0 {
         return o(clube); // caixa: só a original

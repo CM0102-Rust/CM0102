@@ -114,17 +114,17 @@ unsafe fn fra_first_compare_league_rules(nome: &str, this: usize, escritas: Vec<
     r
 }
 
-unsafe extern "thiscall" fn comparar_fra_first_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_fra_first_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     fra_first_compare_league_rules("fra_first_set_up_rules", this, fra_first_first_division_rules(this), || o(this), || fra_first_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_fra_second_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_fra_second_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     fra_first_compare_league_rules("fra_second_set_up_rules", this, fra_first_second_division_rules(this), || o(this), || fra_second_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_fra_third_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_fra_third_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     fra_first_compare_league_rules("fra_third_set_up_rules", this, national_division_rules(this), || o(this), || fra_third_set_up_rules(this))
 }

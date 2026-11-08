@@ -209,7 +209,7 @@ unsafe fn compare_rare_finance_event(nome: &str, fin: usize, extras: &[(usize, u
     r
 }
 
-unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn compare_try_finance_boost_event(this: usize, clube: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let pres = if clube != 0 { cqb2_d(clube + 0xbf) } else { 0 };
     let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
@@ -309,7 +309,7 @@ unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: u
     1
 }
 
-unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn compare_try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if clube == 0 || fin == 0 {
         return o(this, clube, fin); // ponytail: sem clube ou sem finanças, só a original
@@ -326,7 +326,7 @@ unsafe extern "thiscall" fn pay_other_costs(this: usize, valor: i32) {
 }
 
 /// Comparador da 0x5999e0: lado a lado no registro de finanças (0x167 bytes).
-unsafe extern "thiscall" fn comparar_pay_other_costs(this: usize, valor: i32) {
+unsafe extern "thiscall" fn compare_pay_other_costs(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_other_costs(this, valor));
     SCOREBOARD.record(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", valor, mo, mr));

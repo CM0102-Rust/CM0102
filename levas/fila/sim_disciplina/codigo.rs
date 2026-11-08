@@ -40,15 +40,15 @@ unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32, vaga: i8, 
 }
 
 // ponytail: as duas primeiras só despacham pela tabela virtual (efeitos fora): provadas pela carreira
-unsafe extern "thiscall" fn comparar_discipline_new_season(this: usize, id: *const i32) {
+unsafe extern "thiscall" fn compare_discipline_new_season(this: usize, id: *const i32) {
     original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I0%%)(this, id)
 }
 
-unsafe extern "thiscall" fn comparar_discipline_daily_update(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn compare_discipline_daily_update(this: usize, hoje: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, hoje)
 }
 
-unsafe extern "thiscall" fn comparar_discipline_set_slot(this: usize, id: i32, vaga: i8, tipo: u8, valor: u32) {
+unsafe extern "thiscall" fn compare_discipline_set_slot(this: usize, id: i32, vaga: i8, tipo: u8, valor: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8, u8, u32)>(%%I2%%);
     let a = (*((this + 0x14) as *const usize) as isize + id as isize * 29 + vaga as isize * 5) as usize;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 5)], || o(this, id, vaga, tipo, valor), || discipline_set_slot(this, id, vaga, tipo, valor));

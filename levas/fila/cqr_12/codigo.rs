@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize, hoje: usiz
 // ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 3 fases
 // criadas e a fase atual (+0x30) a última delas.
-unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_con_merc_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = cqr12_d(this + 0x45) == 0
         && completo != 0
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(this: usize) -
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
-unsafe extern "thiscall" fn comparar_con_merc_cup_create_first_group_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_con_merc_cup_create_first_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqr12_d(this + 0xee);
     if lista == 0 {
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usize, g: i32)
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
-unsafe extern "thiscall" fn comparar_con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
+unsafe extern "thiscall" fn compare_con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(%%I2%%);
     let lista = cqr12_d(this + 0xee);
     if lista == 0 || !(0..3).contains(&g) {

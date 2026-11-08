@@ -258,7 +258,7 @@ unsafe fn meets_residency_naturalisation(s: usize, p2: usize, p5: usize, p10: us
 /// base vira amanhã, +0x855 volta a 0 e +0x84c sobe (de 49 a 0); nas outras +0x855 sobe 1; e no dia 100 da fatia 2
 /// cada pessoa que cumpre a condição (o laço é o último passo, então o estado de depois é o dele) fica com +0x1e (a
 /// segunda nacionalidade) = a nação do clube: a naturalização do dia 100.
-unsafe extern "thiscall" fn comparar_transfer_manager_daily_update(this: usize, hoje: usize, fatia: u32) {
+unsafe extern "thiscall" fn compare_transfer_manager_daily_update(this: usize, hoje: usize, fatia: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let f = fatia as u8;
     let sem_base = cqd1_w(this + 0x84f) == 0;
@@ -514,7 +514,7 @@ unsafe fn process_due_offer_body(this: usize, vaga: usize) {
 }
 
 /// Comparador da 0x8c63a0: só a original (cada ramo muda o status, reagenda, aloca notícias, conclui ou tira a oferta).
-unsafe extern "thiscall" fn comparar_process_due_offer(this: usize, vaga: usize) {
+unsafe extern "thiscall" fn compare_process_due_offer(this: usize, vaga: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, vaga) // ponytail: só a original
 }
 
@@ -651,6 +651,6 @@ unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, deci
 
 /// Comparador da 0x8cfc90: só a original (a vaga no elenco, 0x8cd450, pode liberar o jogador mais barato, e a lista de
 /// observação aloca nós).
-unsafe extern "thiscall" fn comparar_check_offer_restrictions(this: usize, o: usize, decide: usize, motivo: *mut u16, sem_elenco: u32) -> u8 {
+unsafe extern "thiscall" fn compare_check_offer_restrictions(this: usize, o: usize, decide: usize, motivo: *mut u16, sem_elenco: u32) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u16, u32) -> u8>(%%I2%%)(this, o, decide, motivo, sem_elenco) // ponytail: só a original
 }

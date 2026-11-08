@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, pontos: u32
 
 // ponytail: a original pode realocar o histórico (não roda duas vezes): o plano antes (conta, capacidade, pontos, mês e
 // ano), a original roda e a entrada nova é conferida; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_append_result(this: usize, nacao: usize, pontos: u32, partida: usize) {
+unsafe extern "thiscall" fn compare_append_result(this: usize, nacao: usize, pontos: u32, partida: usize) {
     let e = ranking_entry(this, nacao);
     let (conta, cap) = (cpt2_h(e + 0xa), cpt2_h(e + 8));
     let (mes, ano) = match_month_year(partida);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nacao: usize) 
     }
 }
 
-unsafe extern "thiscall" fn comparar_get_nation_strength_tier(this: usize, nacao: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_nation_strength_tier(this: usize, nacao: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, nacao);
     let n = get_nation_strength_tier(this, nacao);
     SCOREBOARD.record(r == n, || format!("get_nation_strength_tier(nação {}) original={} rust={}", cpt2_d(nacao), r, n));
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn recalculate_scores(this: usize) {
     }
 }
 
-unsafe extern "thiscall" fn comparar_recalculate_scores(this: usize) {
+unsafe extern "thiscall" fn compare_recalculate_scores(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg = [(cpt2_d(this), cpt2_d(0xae2350) * 0x2c)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || recalculate_scores(this));

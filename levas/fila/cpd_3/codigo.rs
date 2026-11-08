@@ -37,7 +37,7 @@ unsafe extern "thiscall" fn clear_current_competition(this: usize, nacao: usize)
 
 /// Comparador: a competição atual e a seguinte; com a seguinte (o aviso 0x6a3770 sorteia e mexe nos técnicos), só a
 /// original.
-unsafe extern "thiscall" fn comparar_clear_current_competition(this: usize, nacao: usize) {
+unsafe extern "thiscall" fn compare_clear_current_competition(this: usize, nacao: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let id = *(nacao as *const i32);
     let seguinte = cpd3_d(this + 8).wrapping_add((id as usize).wrapping_mul(4));
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, conti
 /// Comparador: o aviso 0x6a3770 sorteia e mexe nos técnicos (não pode rodar duas vezes): só a original; a prova é a
 /// carreira e o ramo da cópia no modo Rust.
 // ponytail: só a original (4 chamadas na carreira); comparar pedia separar a decisão do aviso.
-unsafe extern "thiscall" fn comparar_release_competitions_of_continent(this: usize, continente: usize, fim_de_fase: u32) {
+unsafe extern "thiscall" fn compare_release_competitions_of_continent(this: usize, continente: usize, fim_de_fase: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%)(this, continente, fim_de_fase)
 }
 
@@ -195,6 +195,6 @@ unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: usize, tipo:
 /// Comparador: a entrada no elenco sai com a notícia (0x76fd10) e a saída do outro mexe na tática: só a original
 /// (a 0x776250 e a 0x7762f0 que ela chama passam pelos comparadores delas).
 // ponytail: só a original; a prova é a carreira (140 chamadas) e o ramo da cópia no modo Rust.
-unsafe extern "thiscall" fn comparar_call_up_replacement(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
+unsafe extern "thiscall" fn compare_call_up_replacement(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize)>(%%I2%%)(this, nacao, tipo, nivel, saindo)
 }

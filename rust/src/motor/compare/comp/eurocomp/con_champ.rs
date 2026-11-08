@@ -12,7 +12,7 @@ use super::*;
 /// [pt] Comparador da 0x4c11a0: lado a lado nos oito times (+0xa7, 48 bytes), em +0x3e e no estado do sorteador (a 0x4afbd0
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_con_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SELECT_QUALIFIED_CLUBS);
     let l = concacaf_club_lists();
     let other = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs
 }
 
 /// Comparer for `con_champ_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_CHAMP_UPDATE_FOR_DATE);
     if read_u32_as_usize(this + 0xa7) == 0 {
         return o(this, today, stage);
@@ -47,14 +47,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: 
 }
 
 /// Comparer for `con_champ_set_up_rounds` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_con_champ_set_up_rounds(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this);
     SCOREBOARD.record(r == 1 && read_u32_as_usize(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, read_u32_as_usize(this + 0x28)));
     r
 }
 
 /// Comparer for `con_champ_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_champ_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_con_champ_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_CHAMP_CREATE_ROUND_TABLE);
     let a = compare_cup_round_table("con_champ_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
         |r, e, s| con_champ_create_round_table(this, stage, r, e, s));

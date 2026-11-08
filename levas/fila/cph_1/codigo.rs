@@ -96,12 +96,12 @@ unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: usize, ctx: 
 }
 
 // a 0x54cdb0 só lê: compara o valor
-comparar_valor!(comparar_days_to_end_date, days_to_end_date, %%I0%%, () -> u32);
+compare_value!(compare_days_to_end_date, days_to_end_date, %%I0%%, () -> u32);
 
 /// Comparador: sem `conferir`, lado a lado pelas queixas e pelo registro de opiniões da pessoa (79 bytes, o que a
 /// 0x549c90 escreve); com `conferir`, a retirada (0x4d9460) mexe na transferência: só a original (a 0x867240 passa
 /// pelo comparador dela).
-unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize, conferir: u32) {
+unsafe extern "thiscall" fn compare_clear_all_grievances(this: usize, conferir: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     if conferir != 0 {
         return o(this, conferir);
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize, conferir:
 
 /// Comparador: quando a decisão da cópia é não retirar, lado a lado pela ficha [0xae1080] e pelo contrato (0x50
 /// bytes); quando retira, só a original (a 0x4d9460 mexe na transferência e a 0x867240 se chama de novo).
-unsafe extern "thiscall" fn comparar_check_transfer_request_withdrawal(this: usize, ctx: u32) {
+unsafe extern "thiscall" fn compare_check_transfer_request_withdrawal(this: usize, ctx: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%);
     let ficha = cph1_d(0xae1080);
     let retira = should_withdraw_transfer_request(this).is_some();

@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn get_exchange_negotiations_for_player(gerente: usize,
     total
 }
 
-unsafe extern "stdcall" fn comparar_transfer_manager_close_offer_contract_offers(oferta: usize) {
+unsafe extern "stdcall" fn compare_transfer_manager_close_offer_contract_offers(oferta: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     // as propostas que podem fechar: as do id do alvo e dos ids da troca (o clube não filtra aqui)
     let mut ids = vec![*((oferta + 0xc) as *const u32)];
@@ -162,7 +162,7 @@ unsafe extern "stdcall" fn comparar_transfer_manager_close_offer_contract_offers
     SCOREBOARD.record(igual, || format!("transfer_manager_close_offer_contract_offers(id {}) {:x?} x {:x?}", ids[0], mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_queue_free_transfer(gerente: usize, pessoa: usize, motivo: u8, compensacao: u32) {
+unsafe extern "thiscall" fn compare_queue_free_transfer(gerente: usize, pessoa: usize, motivo: u8, compensacao: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8, u32)>(%%I1%%);
     // ponytail: a fila aloca um nó (não roda duas vezes): a cópia só monta o registro (0x4cf6d0 é
     // consulta pura), a original põe na fila e confere-se o nó novo da cauda
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn comparar_queue_free_transfer(gerente: usize, pessoa:
         || format!("queue_free_transfer {} -> {} original={:x?} rust={:x?}", antes, depois, novo, registro));
 }
 
-unsafe extern "thiscall" fn comparar_get_exchange_negotiations_for_player(gerente: usize, pessoa: usize, saida: usize) -> i32 {
+unsafe extern "thiscall" fn compare_get_exchange_negotiations_for_player(gerente: usize, pessoa: usize, saida: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I2%%);
     if saida != 0 {
         // ponytail: com lista de saída (só a tela 0x47ec79) a original anexa (aloca); só a original

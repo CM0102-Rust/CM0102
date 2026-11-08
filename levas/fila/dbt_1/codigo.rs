@@ -25,7 +25,7 @@ unsafe extern "C" fn database_count_club_physios(clube: usize) -> u8 {
     validos(clube) + if b != 0 { validos(b) } else { 0 } // os do clube e os do time B (dbt)
 }
 
-unsafe extern "C" fn comparar_database_count_club_physios(clube: usize) -> u8 {
+unsafe extern "C" fn compare_database_count_club_physios(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     if clube == 0 {
         return r; // caixa: só a original
@@ -46,7 +46,7 @@ unsafe extern "C" fn club_is_b_team(clube: usize) -> u32 {
     (database_linked_b_team(clube, &mut eh_a) != 0 && eh_a == 0) as u32 // é o B (dbt)
 }
 
-unsafe extern "C" fn comparar_club_is_b_team(clube: usize) -> u32 {
+unsafe extern "C" fn compare_club_is_b_team(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(clube);
     if clube == 0 {
         return r;
@@ -83,7 +83,7 @@ unsafe extern "C" fn club_collect_non_playing_staff(clube: usize, saida: *mut us
     n as u8
 }
 
-unsafe extern "C" fn comparar_club_collect_non_playing_staff(clube: usize, saida: *mut usize, max: u32) -> u8 {
+unsafe extern "C" fn compare_club_collect_non_playing_staff(clube: usize, saida: *mut usize, max: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(%%I2%%);
     if clube == 0 {
         return o(clube, saida, max);

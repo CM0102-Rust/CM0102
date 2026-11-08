@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn review_national_team_performance(this: usize, comp: 
 
 // ponytail: solta a notícia da avaliação (0x6a5a60), sorteia e aloca a saída (ou chama a 0x69aba0): só a original;
 // a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_review_national_team_performance(this: usize, comp: usize, selecao: usize) {
+unsafe extern "thiscall" fn compare_review_national_team_performance(this: usize, comp: usize, selecao: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, comp, selecao)
 }
 
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn is_club_in_financial_trouble(this: usize, clube: usi
     (core::ptr::read_unaligned(f as *const i64) < 0) as u8
 }
 
-unsafe extern "thiscall" fn comparar_is_club_in_financial_trouble(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn compare_is_club_in_financial_trouble(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
     let n = is_club_in_financial_trouble(this, clube);
     SCOREBOARD.record(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn get_board_confidence_band(this: usize, clube: usize)
     [0xbb8i16, 0xdac, 0x10b3, 0x1964, 0x2134, 0x251c].iter().take_while(|&&l| v >= l).count() as u8
 }
 
-unsafe extern "thiscall" fn comparar_get_board_confidence_band(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_board_confidence_band(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, clube);
     let n = get_board_confidence_band(this, clube);
     SCOREBOARD.record(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));

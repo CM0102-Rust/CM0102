@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: 
 
 /// Comparador: a nota é pura (as estatísticas, as datas e o contrato só leem; nada sorteia): compara a devolução bit a
 /// bit (a original e a cópia na mesma precisão dupla do x87).
-unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this: usize, jogador: usize, clube: usize, contrato: usize, tipo: u32, modo: u32, peso: f32) -> f64 {
+unsafe extern "thiscall" fn compare_rate_player_form_for_story(this: usize, jogador: usize, clube: usize, contrato: usize, tipo: u32, modo: u32, peso: f32) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(%%I0%%)(this, jogador, clube, contrato, tipo, modo, peso);
     let n = rate_player_form_for_story(this, jogador, clube, contrato, tipo, modo, peso);
     SCOREBOARD.record(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
@@ -245,13 +245,13 @@ unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this: usize, jog
 
 /// Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original (a cópia
 /// prova no modo Rust, pelo ramo).
-unsafe extern "thiscall" fn comparar_write_financial_trouble_news_text(this: usize, noticia: usize, corpo: u32, saida: usize) {
+unsafe extern "thiscall" fn compare_write_financial_trouble_news_text(this: usize, noticia: usize, corpo: u32, saida: usize) {
     // ponytail: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I1%%)(this, noticia, corpo, saida);
 }
 
 /// Comparador: a original aloca o vetor: roda só ela e confere o plano feito antes (a conta e os ids, na ordem).
-unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
+unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I2%%);
     if tecnico == 0 || cpn3_i(tecnico).wrapping_sub(cpn3_i(0xae2364)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, conta, categoria);

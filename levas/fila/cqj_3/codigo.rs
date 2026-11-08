@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, ano: u32, a: *mut
 }
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_find_hosts(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
+unsafe extern "thiscall" fn compare_find_hosts(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32>(%%I0%%);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, ano, a, b, padrao);
@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a: *mut u32,
 }
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
+unsafe extern "thiscall" fn compare_find_next_hosts(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u32>(%%I1%%);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, a, b);
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) 
 }
 
 /// Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
-unsafe extern "thiscall" fn comparar_host_country_daily_update(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn compare_host_country_daily_update(this: usize, hoje: usize) {
     // ponytail: entrega notícias pela 0x5faec0 e mexe na lista: não dá para rodar duas vezes
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, hoje)
 }

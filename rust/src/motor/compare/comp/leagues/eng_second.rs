@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/eng_second.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `eng_second_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_SECOND_CREATE_SCHEDULE);
     compare_league_round_table("eng_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_second_create_schedule(this, stage, r, e, l))
 }
@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_second_create_schedule(this:
 /// (não rodam duas vezes): só a original. O plano, feito antes, no mata-mata: a primeira linha do clube decide o que a
 /// rotina grava (+0x37 = 0 e saiu = 1 com 1; +0x37 = 0xfe com 0xff ou 2; nada com 0, que segue procurando outra linha
 /// do mesmo clube); depois a linha e `saiu` têm de estar assim. Na liga a rotina não grava nada: a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, a: u32, b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, a: u32, b: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(IDX_ENG_SECOND_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let s = status as u8;
     let mut plan: Option<(usize, u8, bool)> = None;
@@ -58,31 +58,31 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_
 }
 
 /// Comparer for `eng_second_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_eng_second_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_SECOND_ADVANCE_STAGE);
     compare_stage_advance("eng_second_advance_stage", this, || o(this), || eng_second_advance_stage(this))
 }
 
 /// Comparer for `eng_second_create_play_off_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_create_play_off_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_play_off_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_SECOND_CREATE_PLAY_OFF_STAGE);
     compare_playoff_stage("eng_second_create_play_off_stage", this, [5, 2, 4, 3], || o(this))
 }
 
 /// Comparer for `construct_eng_second` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_second(this: usize, year: u32, record: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_construct_eng_second(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_SECOND);
     compare_english_constructor("construct_eng_second", this, year, record, &ENG_SECOND_DIVISION, || o(this, year, record))
 }
 
 /// Comparer for `eng_second_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_eng_second_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_SECOND_SET_UP_RULES);
     eng_prm_compare_league_rules("eng_second_set_up_rules", this, eng_prm_second_division_rules(), || o(this), || eng_second_set_up_rules(this))
 }
 
 /// Comparer for `eng_second_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_create_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_SECOND_CREATE_TABLE);
     eng_prm_compare_league_table("eng_second_create_table", this, 0x18, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || o(this))
 }

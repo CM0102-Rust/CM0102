@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn pay_round_prize_money(copa: usize, vencedor: usize, 
 /// Comparador da 0x522240, em ensaio: a cópia sem a notícia e a original inteira, a partir do mesmo estado (o fundo e
 /// os registros de finanças dos dois clubes, restaurados depois do ensaio); confere o fundo e as finanças. Sem clube,
 /// sem finanças ou com a divisão que cai: só a original.
-unsafe extern "thiscall" fn comparar_pay_round_prize_money(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
+unsafe extern "thiscall" fn compare_pay_round_prize_money(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(%%I0%%);
     let (cv, cp) = (cqa1_d(vencedor), cqa1_d(perdedor));
     if cv == 0 || cp == 0 || cv == cp || round_prizes(copa, rodada as i16 as i32, false).is_none() {
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn set_home_teams_for_round(copa: usize, rodada: u32, l
 }
 
 /// Comparador da 0x51e870: lado a lado nos confrontos percorridos (a virtual +0x90 só consulta e roda nos dois lados).
-unsafe extern "thiscall" fn comparar_set_home_teams_for_round(copa: usize, rodada: u32, laco: u32) {
+unsafe extern "thiscall" fn compare_set_home_teams_for_round(copa: usize, rodada: u32, laco: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I1%%);
     let (ini, fim) = ties_range(copa, rodada, laco);
     let mut reg = Vec::new();
@@ -296,7 +296,7 @@ unsafe extern "thiscall" fn record_team_progress(copa: usize, time: u32, rodada:
 /// copa (+8, achado pela 0x4a4850: push clube; ecx = as estatísticas; thiscall, ret 4), que a +0x68 grava; as versões
 /// que repassam a outra competição gravam fora da região (aí a comparação só confere que nada mudou nela). Sem
 /// estatísticas, sem clube ou sem registro: só a original.
-unsafe extern "thiscall" fn comparar_record_team_progress(copa: usize, time: u32, rodada: u32) {
+unsafe extern "thiscall" fn compare_record_team_progress(copa: usize, time: u32, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I2%%);
     let stats = cqa1_d(copa + 8);
     let clube = cqa1_d(team_entry(copa, time as i16 as i32));

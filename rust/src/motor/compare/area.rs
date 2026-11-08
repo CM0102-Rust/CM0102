@@ -7,7 +7,7 @@ use super::*;
 ///
 /// [pt] A área inteira, o +0x7c do item dono (se houver) e o ponteiro da barra de rolagem do teclado
 /// (0xad9c58, que a 0x403600 grava) têm de sair iguais.
-pub(crate) unsafe extern "thiscall" fn comparar_area_layout(area: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_area_layout(area: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT);
     let marks = *((area + 0x18) as *const u32);
     let columns = *((area + 0xbab) as *const u8);
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_area_layout(area: usize) {
 }
 
 /// Comparer for `init` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_init(
+pub(crate) unsafe extern "thiscall" fn compare_init(
     area: usize, areas: usize, items: usize, index: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
     pesos_colunas: usize, rows: u32, pesos_linhas: usize, marks: u32, colour: u32, owner: u32,
 ) {
@@ -40,6 +40,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_init(
 }
 
 /// Comparer for `draw` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_draw(area: usize, redraw: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_draw(area: usize, redraw: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redraw)
 }

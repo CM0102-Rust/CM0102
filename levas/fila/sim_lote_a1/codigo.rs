@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn get_exchange_offers_for_player(gerente: usize, jogad
 }
 
 
-unsafe extern "thiscall" fn comparar_can_sign_player(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
+unsafe extern "thiscall" fn compare_can_sign_player(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, *mut u16) -> u32>(%%I0%%);
     let mut regioes = vec![];
     if !saida.is_null() {
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn comparar_can_sign_player(gerente: usize, clube: usiz
     r
 }
 
-unsafe extern "thiscall" fn comparar_get_exchange_offers_for_player(gerente: usize, jogador: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_get_exchange_offers_for_player(gerente: usize, jogador: usize, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if saida != 0 {
         // ponytail: com lista de saída a original anexa (aloca); só a original

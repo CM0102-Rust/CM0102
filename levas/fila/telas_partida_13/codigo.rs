@@ -770,7 +770,7 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
 /// A barra é comparada de verdade quando já existe a cópia do estado (parâmetro 0x1d) e a atualização
 /// é local: o `Display` do gerente, os parâmetros, a cópia (0xd7a bytes) e o texto 0xde1f64. Sem a cópia
 /// (nasce aqui) ou pela rede: só a original.
-unsafe extern "C" fn comparar_refresh_possession_bar() {
+unsafe extern "C" fn compare_refresh_possession_bar() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     let p0 = get_screen_param(0);
     let copia = get_screen_param(0x1d);
@@ -792,7 +792,7 @@ unsafe extern "C" fn comparar_refresh_possession_bar() {
 /// do fim (o `Display` do gerente e a cópia do estado). Só a original: com o aviso de erro, com o
 /// narrador (parâmetro 7: escreve o lance e toca o som), na partida sem a cópia do estado (a barra a
 /// aloca) e com a atualização pela rede.
-unsafe extern "C" fn comparar_draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn compare_draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
     let p0 = get_screen_param(0);
     let foto = get_screen_param(0x1d);
@@ -819,7 +819,7 @@ unsafe extern "C" fn comparar_draw_match_overview_panel(topo: *mut i32, base: *m
 /// A tabela ao vivo é comparada de verdade pela lista de exibição, com a liga (0xee bytes: [+0xad]) e a
 /// tabela dela ([+0xb1], 59 bytes por clube), que a rotina reordena. As cópias locais nascem e morrem
 /// dentro dela. Sem liga ou sem o parâmetro 0xe (caixa "Error"): só a original.
-unsafe extern "C" fn comparar_match_screens_draw_live_league_table(liga: usize, topo: i32, base: i32) {
+unsafe extern "C" fn compare_match_screens_draw_live_league_table(liga: usize, topo: i32, base: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i32, i32)>(%%I2%%);
     if liga == 0 || get_screen_param(0xe) == 0 {
         return o(liga, topo, base);
@@ -830,5 +830,5 @@ unsafe extern "C" fn comparar_match_screens_draw_live_league_table(liga: usize, 
     if tabela != 0 && n > 0 {
         extra.push((tabela, n as usize * 59));
     }
-    comparar_pela_lista_com("match_screens_draw_live_league_table", &extra, || o(liga, topo, base), || match_screens_draw_live_league_table(liga, topo, base));
+    compare_pela_lista_com("match_screens_draw_live_league_table", &extra, || o(liga, topo, base), || match_screens_draw_live_league_table(liga, topo, base));
 }

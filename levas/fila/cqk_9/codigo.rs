@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(this: usize,
 
 /// Comparador: só a original (os registros alocam e vão para o histórico do técnico; não rodam duas vezes) com a
 /// devolução prevista pelo ensaio.
-unsafe extern "thiscall" fn comparar_usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn compare_usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let n = mls_stage_outcome(this, clube, situacao, fase, jogo, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, jogo, a6);
     SCOREBOARD.record(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn usa_mls_add_result(this: usize, jogo: usize, estat: 
 
 /// Comparador: só a original (ponytail: o resultado entra nas tabelas; não roda duas vezes), com o plano: a devolução
 /// 1, a marca +0x42 do jogo (1 no estágio 1; senão -1 se estava abaixo de 2) e o bloco +8 devolvido.
-unsafe extern "thiscall" fn comparar_usa_mls_add_result(this: usize, jogo: usize, estat: u32) -> u32 {
+unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, jogo: usize, estat: u32) -> u32 {
     let marca = *((jogo + 0x42) as *const i8);
     let bloco = cqk9_d(this + 8);
     let esperada = if cqk9_d(this + 0x30) == 1 { 1 } else if marca < 2 { -1 } else { marca };
@@ -162,7 +162,7 @@ unsafe extern "C" fn usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
 }
 
 /// Comparador: a devolução (só lê; o caso de erro fica com a original sozinha).
-unsafe extern "C" fn comparar_usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
+unsafe extern "C" fn compare_usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u16>(%%I2%%)(clube);
     let nacao = cqk9_d(clube + 0x57);
     if nacao != 0 && cqk9_d(nacao) == cqk9_d(0x9cf590) && r == 0 {

@@ -1,6 +1,6 @@
 // The match-engine macros (textual scope: included first).
 
-macro_rules! leitor {
+macro_rules! reader {
     ($nome:ident, $campo:expr) => {
         /// Leitor de um byte do estado da partida no motor (match_pl.cpp, 0x7003xx).
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize) -> u8 {
@@ -9,7 +9,7 @@ macro_rules! leitor {
     };
 }
 
-macro_rules! gravador {
+macro_rules! recorder {
     ($nome:ident, $campo:expr) => {
         /// Gravador de um byte do estado da partida no motor (match_pl.cpp, 0x7003xx).
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize, v: u8) {
@@ -18,7 +18,7 @@ macro_rules! gravador {
     };
 }
 
-macro_rules! comparar_leitor {
+macro_rules! compare_reader {
     ($nome:ident, $rust:ident, $i:expr) => {
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize) -> u8 {
             let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>($i)(this);
@@ -29,7 +29,7 @@ macro_rules! comparar_leitor {
     };
 }
 
-macro_rules! comparar_gravador {
+macro_rules! compare_recorder {
     ($nome:ident, $rust:ident, $i:expr, $campo:expr, $t:ty) => {
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize, v: $t) {
             let f = original_fn::<unsafe extern "thiscall" fn(usize, $t)>($i);
@@ -39,7 +39,7 @@ macro_rules! comparar_gravador {
     };
 }
 
-macro_rules! comparar_repartir {
+macro_rules! compare_split {
     ($nome:ident, $rust:ident, $i:expr) => {
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize, l: i8, delta: i16) {
             let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, i16)>($i);
@@ -50,7 +50,7 @@ macro_rules! comparar_repartir {
     };
 }
 
-macro_rules! comparar_valor {
+macro_rules! compare_value {
     ($nome:ident, $rust:ident, $i:expr, ($($a:ident: $t:ty),*) -> $r:ty) => {
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize $(, $a: $t)*) -> $r {
             let r = original_fn::<unsafe extern "thiscall" fn(usize $(, $t)*) -> $r>($i)(this $(, $a)*);
@@ -61,7 +61,7 @@ macro_rules! comparar_valor {
     };
 }
 
-macro_rules! comparar_ordem {
+macro_rules! compare_order {
     ($nome:ident, $rust:ident, $i:expr) => {
         pub(crate) unsafe extern "C" fn $nome(a: *const usize, b: *const usize) -> i32 {
             let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>($i)(a, b);

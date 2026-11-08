@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn confirm_offer_by_club(this: usize, oferta: usize, cl
 /// Comparador: sem chegar ao acordo dos dois (estado final diferente de 0xe), só o estado muda: lado a lado sobre a
 /// oferta. Com o acordo, a oferta é agendada ou vira transferência futura (mexe nas outras ofertas e aloca): só a
 /// original.
-unsafe extern "thiscall" fn comparar_confirm_offer_by_club(this: usize, oferta: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_confirm_offer_by_club(this: usize, oferta: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if state_after_approval(oferta, clube) == 0xe {
         return o(this, oferta, clube);
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn try_complete_offer(this: usize, oferta: usize, no_pr
 
 // ponytail: conclui transferências, desfaz ofertas e dá notícias (aloca, não roda duas vezes): só a original; a cópia
 // leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_try_complete_offer(this: usize, oferta: usize, no_prazo: u32) {
+unsafe extern "thiscall" fn compare_try_complete_offer(this: usize, oferta: usize, no_prazo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%)(this, oferta, no_prazo)
 }
 
@@ -243,7 +243,7 @@ unsafe extern "thiscall" fn settle_previous_transfer_clauses(this: usize, oferta
 
 /// Comparador: sem marca de cláusula (bits 2, 4 e 8) no jogador nem nas pessoas da troca, só o cursor da lista muda:
 /// lado a lado sobre a lista e as marcas. Com alguma, paga (finanças, notícias que alocam): só a original.
-unsafe extern "thiscall" fn comparar_settle_previous_transfer_clauses(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn compare_settle_previous_transfer_clauses(this: usize, oferta: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let marcas = cpw2_d(this + 0x86e);
     let tem = |id: usize| cpw2_b(marcas.wrapping_add(id.wrapping_mul(8))) & 0xe != 0;

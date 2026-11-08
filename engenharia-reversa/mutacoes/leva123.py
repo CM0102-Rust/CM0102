@@ -6,6 +6,6 @@ MUTACOES = [
     ('u_fora', "                    (weight as f64 * 0.16666666666666666 + 0.83) as f32", "                    (weight as f64 * 0.16666666666666666 + 0.84) as f32"),
     ('u_campo', "                    ((weight as f64 + 1.0) * 0.5) as f32", "                    ((weight as f64 + 1.0) * 0.6) as f32"),
     ('u_cansar', "                call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, j, [1, 0, 0, 0, 0]);", "                call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, j, [0; 5]);"),
-    ('u_nove', "            if sortear(9) == 0 {", "            if sortear(8) == 0 {"),
+    ('u_nove', "            if random(9) == 0 {", "            if random(8) == 0 {"),
     ('u_fim', "    *((m + engine::PUNISHMENT_STATE) as *mut u8) = 2;", "    *((m + engine::PUNISHMENT_STATE) as *mut u8) = 3;"),
 ]

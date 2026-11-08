@@ -51,21 +51,21 @@ unsafe fn payment_list_regions(gerente: usize, id: *const i32, lista: usize, qua
     r
 }
 
-unsafe fn comparar_lista_de_pagamentos(nome: &str, k: usize, rust: unsafe extern "thiscall" fn(usize, *const i32), gerente: usize, id: *const i32, lista: usize, quantos: usize) {
+unsafe fn compare_lista_de_pagamentos(nome: &str, k: usize, rust: unsafe extern "thiscall" fn(usize, *const i32), gerente: usize, id: *const i32, lista: usize, quantos: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(k);
     let reg = payment_list_regions(gerente, id, lista, quantos);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, id), || rust(gerente, id));
     SCOREBOARD.record(igual, || format!("{}({}) {:x?} x {:x?}", nome, *id, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_remove_next_sale_percentage(gerente: usize, id: *const i32) {
-    comparar_lista_de_pagamentos("remove_next_sale_percentage", %%I0%%, remove_next_sale_percentage, gerente, id, 0x880, 0x888);
+unsafe extern "thiscall" fn compare_remove_next_sale_percentage(gerente: usize, id: *const i32) {
+    compare_lista_de_pagamentos("remove_next_sale_percentage", %%I0%%, remove_next_sale_percentage, gerente, id, 0x880, 0x888);
 }
 
-unsafe extern "thiscall" fn comparar_remove_first_team_appearance_money(gerente: usize, id: *const i32) {
-    comparar_lista_de_pagamentos("remove_first_team_appearance_money", %%I1%%, remove_first_team_appearance_money, gerente, id, 0x88c, 0x894);
+unsafe extern "thiscall" fn compare_remove_first_team_appearance_money(gerente: usize, id: *const i32) {
+    compare_lista_de_pagamentos("remove_first_team_appearance_money", %%I1%%, remove_first_team_appearance_money, gerente, id, 0x88c, 0x894);
 }
 
-unsafe extern "thiscall" fn comparar_remove_international_team_appearance_money(gerente: usize, id: *const i32) {
-    comparar_lista_de_pagamentos("remove_international_team_appearance_money", %%I2%%, remove_international_team_appearance_money, gerente, id, 0x898, 0x8a0);
+unsafe extern "thiscall" fn compare_remove_international_team_appearance_money(gerente: usize, id: *const i32) {
+    compare_lista_de_pagamentos("remove_international_team_appearance_money", %%I2%%, remove_international_team_appearance_money, gerente, id, 0x898, 0x8a0);
 }

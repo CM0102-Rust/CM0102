@@ -186,14 +186,14 @@ unsafe extern "C" fn match_screens_handle_team_selection_input(item: u32) -> i32
 
 // ponytail: as três abrem telas, mexem na rede ou no capitão (não rodam duas vezes): no modo comparação
 // só a original; a cópia é provada no modo Rust pelos ramos
-unsafe extern "C" fn comparar_match_screens_handle_continue_command(item: u32) -> i32 {
+unsafe extern "C" fn compare_match_screens_handle_continue_command(item: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I0%%)(item)
 }
 
-unsafe extern "C" fn comparar_match_screens_open_team_selection() {
+unsafe extern "C" fn compare_match_screens_open_team_selection() {
     original_fn::<unsafe extern "C" fn()>(%%I1%%)()
 }
 
-unsafe extern "C" fn comparar_match_screens_handle_team_selection_input(item: u32) -> i32 {
+unsafe extern "C" fn compare_match_screens_handle_team_selection_input(item: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I2%%)(item)
 }

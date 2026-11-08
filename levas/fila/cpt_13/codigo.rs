@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
 /// Comparador: grava e pode realocar a estatística (não roda duas vezes): antes da original, as posições são
 /// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem
 /// de ter em +0x72 a última posição dele.
-unsafe extern "thiscall" fn comparar_cup_rank_teams(this: usize) {
+unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cpt13_w(this + 0x3e) as i32;
     if cpt13_d(this + 8) == 0 || n <= 0 {
@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn comparar_cup_rank_teams(this: usize) {
 
 /// Comparador: ordena no lugar (aloca e libera o temporário): o esperado sai do núcleo sobre uma cópia (chaves num
 /// Vec) antes da original; depois, o vetor tem de ser igual.
-unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usize, n: i32) {
+unsafe extern "C" fn compare_comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i32)>(%%I1%%);
     if v == 0 || n <= 1 {
         return o(v, n);
@@ -185,7 +185,7 @@ unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usize, n: i32)
 
 /// Comparador: acha ou acrescenta o registro (não roda duas vezes): o registro visto antes (se havia) tem de ser o
 /// devolvido, com a posição em +0x72.
-unsafe extern "thiscall" fn comparar_set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
+unsafe extern "thiscall" fn compare_set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if clube == 0 {
         return o(this, clube, pos); // ponytail: a caixa, só a original

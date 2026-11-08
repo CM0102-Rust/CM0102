@@ -74,7 +74,7 @@ unsafe extern "C" fn open_waiting_screen(vaga: u32) {
     abrir(0xb74450, vaga, 0x727fa0, 0x727fb0, 0, 0, 0);
 }
 
-unsafe extern "C" fn comparar_match_control_label(estado: u8, m: usize, saida: *mut u8, tam: i32, marcas: *mut u32) -> u32 {
+unsafe extern "C" fn compare_match_control_label(estado: u8, m: usize, saida: *mut u8, tam: i32, marcas: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(%%I0%%);
     if m == 0 || saida.is_null() || tam < 100 || marcas.is_null() {
         return o(estado, m, saida, tam, marcas);
@@ -88,10 +88,10 @@ unsafe extern "C" fn comparar_match_control_label(estado: u8, m: usize, saida: *
 // ponytail: fechar e abrir mexem no gerente de telas e na memória (não rodam duas vezes): no modo
 // comparação só a original roda; as cópias se provam no jogo do Lucas em modo Rust (JOGAR.bat), com
 // os contadores "telas ..." no ddraw.log
-unsafe extern "C" fn comparar_close_match_screen() {
+unsafe extern "C" fn compare_close_match_screen() {
     original_fn::<unsafe extern "C" fn()>(%%I1%%)()
 }
 
-unsafe extern "C" fn comparar_open_waiting_screen(vaga: u32) {
+unsafe extern "C" fn compare_open_waiting_screen(vaga: u32) {
     original_fn::<unsafe extern "C" fn(u32)>(%%I2%%)(vaga)
 }

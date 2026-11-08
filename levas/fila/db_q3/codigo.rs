@@ -110,7 +110,7 @@ unsafe extern "C" fn staff_get_player_attribute(pessoa: usize, atributo: u32) ->
     calcular(pessoa, core::ptr::read_unaligned((pessoa + 0x61) as *const usize), atributo)
 }
 
-unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn compare_staff_is_transfer_listed_or_requested(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa, clube),
@@ -119,7 +119,7 @@ unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(pessoa: usiz
     r
 }
 
-unsafe extern "C" fn comparar_staff_compute_player_attribute(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn compare_staff_compute_player_attribute(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) || jogador == 0 {
@@ -131,7 +131,7 @@ unsafe extern "C" fn comparar_staff_compute_player_attribute(pessoa: usize, joga
     r
 }
 
-unsafe extern "C" fn comparar_staff_get_player_attribute(pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn compare_staff_get_player_attribute(pessoa: usize, atributo: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(%%I2%%);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) {

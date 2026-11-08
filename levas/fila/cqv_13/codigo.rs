@@ -66,7 +66,7 @@ unsafe fn cqv13_conferir(nome: &str, this: usize, clubes: &[usize], posicoes: &[
 
 // ponytail: Comp_Stats::set_club_final_position acrescenta registros e o embaralhamento sorteia: não roda duas vezes.
 // Só a original; o plano: as posições pela reputação e a lista depois dela uma permutação da de antes.
-unsafe extern "thiscall" fn comparar_cqv13_oceania_clubes_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_cqv13_oceania_clubes_previstas(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let lista = cqv13_d(this + 0xee);
     let n = cqv13_w(this + 0xf2);
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn cqv13_africana_previstas(this: usize) {
 
 // ponytail: Comp_Stats::set_club_final_position acrescenta registros: não roda duas vezes. Só a original; o plano: as
 // posições pela reputação.
-unsafe extern "thiscall" fn comparar_cqv13_africana_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_cqv13_africana_previstas(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let (lista, n) = (cqv13_d(this + 0xee), cqv13_w(this + 0xf2));
     let clubes: Vec<usize> = if lista != 0 && (0..=64).contains(&n) { (0..n as usize).map(|k| cqv13_d(lista + k * 4)).collect() } else { Vec::new() };
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn cqv13_eliminatoria_oceania_previstas(this: usize) {
     cqv13_previstas_da_copia(this, cqv13_d(this + 0xef), n, &CQV13_ELIMINATORIA[..k], 0xad4afc, (0x52a, 0x532))
 }
 
-unsafe extern "thiscall" fn comparar_cqv13_eliminatoria_oceania_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_cqv13_eliminatoria_oceania_previstas(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let (lista, n) = (cqv13_d(this + 0xef), cqv13_d(this + 0xf3) as i32);
     let clubes: Vec<usize> = if lista != 0 && (0..=64).contains(&n) { (0..n as usize).map(|k| cqv13_d(lista + k * 4)).collect() } else { Vec::new() };

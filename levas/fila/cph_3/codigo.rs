@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn remove_talks_records(this: usize, pessoa: usize, tec
     }
 }
 
-unsafe extern "thiscall" fn comparar_contract_manager_operator(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_contract_manager_operator(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x50)], || o(this, origem), || contract_manager_operator(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("contract_manager_operator {:x?} x {:x?}", mo, mr));
@@ -175,11 +175,11 @@ unsafe extern "thiscall" fn comparar_contract_manager_operator(this: usize, orig
 /// Comparador: a 0x8674e0 e a 0x867240 mexem nas queixas, nos vínculos e na transferência (não podem rodar duas
 /// vezes): só a original; a prova é a carreira e o ramo da cópia no modo Rust.
 // ponytail: só a original (153.222 chamadas); comparar pedia separar a moral das chamadas do fim.
-unsafe extern "stdcall" fn comparar_contract_manager_raise_match_morale(pessoa: usize, clube: usize, contrato: usize) {
+unsafe extern "stdcall" fn compare_contract_manager_raise_match_morale(pessoa: usize, clube: usize, contrato: usize) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize, usize)>(%%I1%%)(pessoa, clube, contrato)
 }
 
-unsafe extern "thiscall" fn comparar_remove_talks_records(this: usize, pessoa: usize, tecnico: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_remove_talks_records(this: usize, pessoa: usize, tecnico: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
     let n = (*((this + 0x2c) as *const i32)).max(0) as usize;
     let reg = [(this + 0x28, 8), (cph3_d(this + 0x28) as usize, n * 21)];

@@ -60,14 +60,14 @@ unsafe fn end_call_ups_regions(this: usize) -> Vec<(usize, usize)> {
     reg
 }
 
-unsafe extern "thiscall" fn comparar_end_duty_for_competition(this: usize, comp: usize) {
+unsafe extern "thiscall" fn compare_end_duty_for_competition(this: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let reg = end_call_ups_regions(this);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, comp), || end_duty_for_competition(this, comp));
     SCOREBOARD.record(igual, || format!("end_duty_for_competition({:x}, {:x}) {:x?} x {:x?}", this, comp, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_end_duty_for_nation_in_competition(this: usize, nacao: usize, comp: usize) {
+unsafe extern "thiscall" fn compare_end_duty_for_nation_in_competition(this: usize, nacao: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let reg = end_call_ups_regions(this);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nacao, comp), || end_duty_for_nation_in_competition(this, nacao, comp));
@@ -147,7 +147,7 @@ unsafe fn would_free_call_up_record(rec: usize) -> bool {
 
 /// Comparador: os registros (6 bytes cada) e os vetores de entradas. Algum vetor a soltar (0x9452ca; soltar duas
 /// vezes): só a original.
-unsafe extern "thiscall" fn comparar_prune_club_call_up_records(this: usize) {
+unsafe extern "thiscall" fn compare_prune_club_call_up_records(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let n = club_call_up_record_count().max(0) as usize;
     let recs = cpd1_d(this + 0x20);

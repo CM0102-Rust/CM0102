@@ -35,7 +35,7 @@ unsafe extern "thiscall" fn find_friendly_match(this: usize, data: usize, clube:
     guardado
 }
 
-comparar_valor!(comparar_find_friendly_match, find_friendly_match, %%I0%%, (data: usize, clube: usize) -> usize);
+compare_value!(compare_find_friendly_match, find_friendly_match, %%I0%%, (data: usize, clube: usize) -> usize);
 
 /// { 0x5ae6a0 } (stdcall, ret 0xc, fix_man.cpp): `get_fixture_list_for_date(data, fatia, grupo)`: a lista de partidas
 /// da 0x5abf10 do gerenciador [0xae2a58] para o ano (+2) e o dia (+0) da data. O argumento do ano leva na metade alta a
@@ -49,7 +49,7 @@ unsafe extern "stdcall" fn get_fixture_list_for_date(data: usize, fatia: u32, gr
     lista(*(0xae2a58 as *const usize), ano, dia, fatia, grupo) // o gerenciador de partidas
 }
 
-unsafe extern "stdcall" fn comparar_get_fixture_list_for_date(data: usize, fatia: u32, grupo: u32) -> usize {
+unsafe extern "stdcall" fn compare_get_fixture_list_for_date(data: usize, fatia: u32, grupo: u32) -> usize {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> usize>(%%I1%%)(data, fatia, grupo);
     let n = get_fixture_list_for_date(data, fatia, grupo);
     SCOREBOARD.record(r == n, || format!("get_fixture_list_for_date({:x}, fatia {}, grupo {}) original={:x} rust={:x}", data, fatia, grupo, r, n));

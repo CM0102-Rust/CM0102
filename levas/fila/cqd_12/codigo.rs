@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
 }
 
 /// Comparador: lado a lado (rotina pura: só a taxa e a devolução), pelas cópias leves.
-unsafe extern "thiscall" fn comparar_shortlist_manager_is_compensation_deal(this: usize, vaga: usize, contrato: usize, clube: usize, taxa: *mut i32) -> u32 {
+unsafe extern "thiscall" fn compare_shortlist_manager_is_compensation_deal(this: usize, vaga: usize, contrato: usize, clube: usize, taxa: *mut i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32) -> u32>(%%I0%%);
     let reg = [(taxa as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, vaga, contrato, clube, taxa),
@@ -97,7 +97,7 @@ unsafe extern "C" fn shortlist_compare_slots_by_index(a: usize, b: usize) -> i32
 }
 
 /// Comparador: a devolução (pura).
-unsafe extern "C" fn comparar_shortlist_compare_slots_by_index(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_shortlist_compare_slots_by_index(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
     let n = shortlist_compare_slots_by_index(a, b);
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn mark_player_under_offer(this: usize, jogador: usize,
 
 /// Comparador: lado a lado pelas listas de 40 vagas dos clubes interessados (a cópia e a original montam e soltam a
 /// mesma lista local) e pelo cursor da lista `troca`.
-unsafe extern "thiscall" fn comparar_mark_player_under_offer(this: usize, jogador: usize, comprador: usize, troca: usize) {
+unsafe extern "thiscall" fn compare_mark_player_under_offer(this: usize, jogador: usize, comprador: usize, troca: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
     let mut reg: Vec<(usize, usize)> = interested_clubs(this, jogador).into_iter()
         .map(|k| cqd12_d(cqd12_d(this + 0xdc).wrapping_add(k.wrapping_mul(9))))

@@ -133,7 +133,7 @@ unsafe fn cqw13_comparar(nome: &str, this: usize, ano: u32, comp: usize, vtable:
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqw13_liga_asiatica(this: usize, ano: u32, comp: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw13_liga_asiatica(this: usize, ano: u32, comp: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     cqw13_comparar("cqw13_liga_asiatica", this, ano, comp, 0x9674d4, || o(this, ano, comp))
 }
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn cqw13_recopa_asiatica(this: usize, ano: u32, comp: u
     cqw13_copa_de_32(this, ano, comp, &CQW13_RECOPA)
 }
 
-unsafe extern "thiscall" fn comparar_cqw13_recopa_asiatica(this: usize, ano: u32, comp: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw13_recopa_asiatica(this: usize, ano: u32, comp: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqw13_comparar("cqw13_recopa_asiatica", this, ano, comp, 0x967574, || o(this, ano, comp))
 }

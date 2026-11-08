@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
 
 /// Comparador: lado a lado na formação (0x18e3 bytes: até as instruções dos jogadores em +0x188b + 0x58) e na
 /// devolução; o arquivo é aberto e lido pelas duas (só leitura).
-unsafe extern "thiscall" fn comparar_load_from_disk(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
+unsafe extern "thiscall" fn compare_load_from_disk(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
     if this == 0 {
         return o(this, caminho, quieto, ofuscado);
@@ -246,7 +246,7 @@ unsafe extern "C" fn swap_bytes_16_array(p: usize, conta: u32) {
 }
 
 /// Comparador: lado a lado no vetor (até 0x420 palavras conferidas).
-unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, conta: u32) {
+unsafe extern "C" fn compare_swap_bytes_16_array(p: usize, conta: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32)>(%%I1%%);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
@@ -263,7 +263,7 @@ unsafe extern "C" fn swap_bytes_32_array(p: usize, conta: u32) {
 }
 
 /// Comparador: lado a lado no vetor.
-unsafe extern "C" fn comparar_swap_bytes_32_array(p: usize, conta: u32) {
+unsafe extern "C" fn compare_swap_bytes_32_array(p: usize, conta: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32)>(%%I2%%);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);

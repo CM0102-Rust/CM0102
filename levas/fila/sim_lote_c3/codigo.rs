@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn retire_record_assign(this: usize, origem: usize) -> 
     this
 }
 
-unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_fixture_watched(this: usize, partida: usize) -> u32 {
     // a 0x5fe290 só lê: pode rodar nos dois lados
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if partida == 0 {
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: us
     r
 }
 
-unsafe extern "thiscall" fn comparar_has_nickname(this: usize, pessoa: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn compare_has_nickname(this: usize, pessoa: usize, humano: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if pessoa != 0 && matches!(human_index_for_nickname(this, humano), Some(None)) {
         return o(this, pessoa, humano);
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_has_nickname(this: usize, pessoa: usize, hu
     r
 }
 
-unsafe extern "thiscall" fn comparar_retire_record_assign(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_retire_record_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this, origem), || retire_record_assign(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("retire_record_assign {:x?} x {:x?}", mo, mr));

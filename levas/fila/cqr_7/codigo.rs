@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn ita_cup_create_first_group_table(this: usize) -> u32
     create_first_group_table(this, 4, 0x9ea23c, 0x19e, "cqr_7 grupo 1 da copa da italia")
 }
 
-unsafe extern "thiscall" fn comparar_ita_cup_create_first_group_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_ita_cup_create_first_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     compare_first_group_table("ita_cup_create_first_group_table", this, 4, || o(this))
 }
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn init_first_group(this: usize) -> u32 {
     create_first_group_table(this, 5, 0x9ea204, 0x1a0, "cqr_7 grupo 1 da copa da serie c") // cqr7: 5 times no grupo 1 da Série C
 }
 
-unsafe extern "thiscall" fn comparar_init_first_group(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_init_first_group(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     compare_first_group_table("init_first_group", this, 5, || o(this))
 }
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn ita_cup_advance_stage(this: usize) {
     advance_cup_stage(this, 0x9ea23c, 0x23e, 7, 0x63f870) // cqr7: o mata-mata da Copa da Itália na fase 7
 }
 
-unsafe extern "thiscall" fn comparar_ita_cup_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_ita_cup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     ita_cup_compare_advance_stage("ita_cup_advance_stage", this, || o(this))
 }
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn ita_cup_advance_stage_63d950(this: usize) {
     advance_cup_stage(this, 0x9ea204, 0x240, 0xf, 0x63dc10)
 }
 
-unsafe extern "thiscall" fn comparar_ita_cup_advance_stage_63d950(this: usize) {
+unsafe extern "thiscall" fn compare_ita_cup_advance_stage_63d950(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
     ita_cup_compare_advance_stage("ita_cup_advance_stage_63d950", this, || o(this))
 }

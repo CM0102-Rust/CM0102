@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `pick_random_pundit` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] O comparador: lado a lado nos cabeçalhos das duas listas (o cursor) e no sorteio, e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, club: usize, kind: u32, nation: i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_pick_random_pundit(this: usize, club: usize, kind: u32, nation: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(IDX_PICK_RANDOM_PUNDIT);
     let mut regions = Vec::new();
     for l in [read_usize(this), read_usize(this + 4)] {
@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, 
 ///
 /// [pt] O comparador: lado a lado no nome (até 0xd4 bytes: o nome do comentarista tem 0xd1 e o padrão menos), na marca e
 /// nos cabeçalhos das listas (o cursor).
-pub(crate) unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, kind: u32, id: u32, name: usize, mark: *mut u8) {
+pub(crate) unsafe extern "thiscall" fn compare_get_pundit_name(this: usize, kind: u32, id: u32, name: usize, mark: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8)>(IDX_GET_PUNDIT_NAME);
     let mut regions = vec![(mark as usize, 1)];
     if name != 0 {

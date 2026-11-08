@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn award_best_rated_player(this: usize, notas: usize, i
 
 // ponytail: o trabalho dela é chamar o melhor do mês e a vaga do vencedor, que têm comparador próprio (lado a lado e em
 // ensaio); a vaga chama a notícia e o registro do prêmio, que alocam: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_award_best_rated_player(this: usize, notas: usize, idade: u32) {
+unsafe extern "thiscall" fn compare_award_best_rated_player(this: usize, notas: usize, idade: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, notas, idade)
 }
 
@@ -155,7 +155,7 @@ unsafe fn compare_month_award(nome: &str, regioes: &[(usize, usize)], original: 
     SCOREBOARD.record(mo == mr, || format!("{} original={:x?} rust={:x?}", nome, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_set_winner(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
+unsafe extern "thiscall" fn compare_set_winner(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(%%I1%%);
     let mut regioes = vec![(this + 0x1d, 12 * 11)];
     if id > -1 {
@@ -257,7 +257,7 @@ unsafe extern "C" fn award_raise_winner_reputation(pessoa: usize, clube: usize, 
     cpw6_pw(linha, if v < 6500 { 6500 } else { v });
 }
 
-unsafe extern "C" fn comparar_award_raise_winner_reputation(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
+unsafe extern "C" fn compare_award_raise_winner_reputation(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32, u32)>(%%I2%%);
     let mut regioes = Vec::new();
     winner_reputation_regions(&mut regioes, pessoa, clube);

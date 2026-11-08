@@ -59,7 +59,7 @@ def main():
     if '--gravar' not in sys.argv:
         return
     mapa = dict(troca)
-    mapa.update({'comparar_' + a: 'comparar_' + b for a, b in troca.items()})
+    mapa.update({'compare_' + a: 'compare_' + b for a, b in troca.items()})
     mapa.update({'IDX_' + a.upper(): 'IDX_' + b.upper() for a, b in troca.items()})
     rx = re.compile(r'\b(%s)\b' % '|'.join(map(re.escape, sorted(mapa, key=len, reverse=True))))
 

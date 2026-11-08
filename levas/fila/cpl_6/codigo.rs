@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b: usize, ti
 
 /// Comparador: a original pode alocar e realocar (não roda duas vezes): o registro esperado antes; confere a conta e
 /// que o registro esperado está na lista (a ordem é a do qsort).
-unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
+unsafe extern "thiscall" fn compare_log_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
     let n = cpl6_d(this + 8);
     let esperado = build_news_log_record(a, b, tipo, subtipo, resposta);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I0%%)(this, a, b, tipo, subtipo, resposta);
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, 
 
 /// Comparador: lado a lado pelo registro (ponteiro, capacidade e conta; as histórias) e o estado do sorteio (a cópia
 /// sem contar os sorteios).
-unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
+unsafe extern "thiscall" fn compare_expire_story_log(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     if cpl6_d(this) == 0 {
         return o(this);
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
 }
 
 /// Comparador: pelo valor (a busca e a data padrão da chave só leem).
-unsafe extern "thiscall" fn comparar_has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
+unsafe extern "thiscall" fn compare_has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(%%I2%%)(this, a, b, tipo, subtipo, desde);
     let n = has_logged_story(this, a, b, tipo, subtipo, desde);
     SCOREBOARD.record(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));

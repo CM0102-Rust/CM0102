@@ -126,7 +126,7 @@ unsafe fn find_fixture_list(fm: usize, f: usize) -> usize {
 
 /// Comparador: a original e a cópia só andam o cursor da lista (e a primeira pode criar o bloco do ano, que a segunda
 /// acha pronto): pela devolução.
-unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize, f: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_stored_fixture(this: usize, f: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%)(this, f);
     let n = find_stored_fixture(this, f);
     SCOREBOARD.record(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize, f: usize) 
 
 /// Comparador: acrescenta à lista (não roda duas vezes): a lista é achada antes pela cópia, a original guarda e a conta
 /// tem de subir 1 com a cauda nova igual aos 0x4f bytes do jogo.
-unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: usize) {
+unsafe extern "thiscall" fn compare_insert_fixture(this: usize, f: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let l = find_fixture_list(this, f);
     if l == 0 {
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: usize) {
 
 /// Comparador: tira da lista (não roda duas vezes): antes da original, a cópia acha a lista e vê se algum item tem os
 /// bytes do jogo (o tamanho guardado em +4, como a 0x68d1f0); a original tira e devolve: a devolução e a conta.
-unsafe extern "thiscall" fn comparar_remove_fixture(this: usize, f: usize) -> u32 {
+unsafe extern "thiscall" fn compare_remove_fixture(this: usize, f: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let l = find_fixture_list(this, f);
     if l == 0 {

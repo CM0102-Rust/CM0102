@@ -4,7 +4,7 @@
 # entrada futura: as aposentadorias e os regens atrasam). A fila de regens pelo dia mais tarde primeiro no mesmo ano
 # (consistente; a 0x7a65d0 cria na ordem da fila: os regens mudam de ordem e de data). As tres sao quentes: sem ramo.
 MUTACOES = [
-    ('cpq9_sorteio_da_idade', 'let mut nota = sortear((idade - 31) * 150); // a idade',
+    ('cpq9_sorteio_da_idade', 'let mut nota = random((idade - 31) * 150); // a idade',
      'let mut nota = 0i32; // mutacao: sem o sorteio da idade'),
     ('cpq9_ordem_das_aposentadorias', 'return aa as i32 - ab as i32; // o ano mais cedo primeiro',
      'return ab as i32 - aa as i32; // mutacao: o mais tarde primeiro'),

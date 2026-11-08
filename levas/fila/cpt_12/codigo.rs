@@ -155,13 +155,13 @@ unsafe extern "C" fn compare_friendly_candidate_ptrs_by_nation(a: usize, b: usiz
 }
 
 /// Comparador: sorteia, monta amistosos e cria listas (não roda duas vezes): só a original.
-unsafe extern "thiscall" fn comparar_schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
+unsafe extern "thiscall" fn compare_schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
     // ponytail: o sorteio e os amistosos novos não rodam duas vezes; a cópia se prova pela carreira
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%)(this, cand, adv, n)
 }
 
 /// Comparador: rotina pura, pela devolução.
-unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_friendly_candidates_by_band(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_friendly_candidates_by_band(a, b);
     SCOREBOARD.record(r == n, || format!("compare_friendly_candidates_by_band({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -169,7 +169,7 @@ unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: u
 }
 
 /// Comparador: rotina pura, pela devolução.
-unsafe extern "C" fn comparar_compare_friendly_candidate_ptrs_by_nation(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_friendly_candidate_ptrs_by_nation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_friendly_candidate_ptrs_by_nation(a, b);
     SCOREBOARD.record(r == n, || format!("compare_friendly_candidate_ptrs_by_nation({:x}, {:x}) original={} rust={}", a, b, r, n));

@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) -> u32 {
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-unsafe extern "thiscall" fn comparar_bra_reg_parana_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_parana_set_up_rules(this: usize) -> u32 {
     let reg = cqi9_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
         parana_rules(this);
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn bra_reg_pern_set_up_rules(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Paranaense.
-unsafe extern "thiscall" fn comparar_bra_reg_pern_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_pern_set_up_rules(this: usize) -> u32 {
     let reg = cqi9_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || {
         pernambucano_rules(this);
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Paranaense.
-unsafe extern "thiscall" fn comparar_bra_reg_rio_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_rio_set_up_rules(this: usize) -> u32 {
     let reg = cqi9_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this), || {
         carioca_rules(this);

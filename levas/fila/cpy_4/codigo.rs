@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn update_international_friendlies(this: usize) {
 /// Comparador: no primeiro dia do ano (as listas se esvaziam, liberando) e quando há amistosos a marcar (a 0x5cbdf0
 /// cria jogos e sorteia), só a original, conferindo o plano: o dia marcado em +0x34f4. Nos outros dias, lado a lado
 /// pelo dia marcado e pelas datas estáticas.
-unsafe extern "thiscall" fn comparar_update_international_friendlies(this: usize) {
+unsafe extern "thiscall" fn compare_update_international_friendlies(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpy4_w(0xae2c90) == 0 {
         return o(this);
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn get_selected_list(this: usize, tecnico: usize) -> u8
 }
 
 /// Comparador: a devolução (rotina pura); nos casos de erro, só a original (caixa).
-unsafe extern "thiscall" fn comparar_get_selected_list(this: usize, tecnico: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_selected_list(this: usize, tecnico: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%);
     if manager_human_index(tecnico).is_none() {
         return o(this, tecnico);
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn set_selected_list(this: usize, lista: u32, tecnico: 
 }
 
 /// Comparador: lado a lado pelos 16 bytes das listas escolhidas, e a devolução; nos casos de erro, só a original.
-unsafe extern "thiscall" fn comparar_set_selected_list(this: usize, lista: u32, tecnico: usize) -> u32 {
+unsafe extern "thiscall" fn compare_set_selected_list(this: usize, lista: u32, tecnico: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(%%I2%%);
     if manager_human_index(tecnico).is_none() {
         return o(this, lista, tecnico);

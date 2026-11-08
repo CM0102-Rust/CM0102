@@ -34,7 +34,7 @@ unsafe extern "thiscall" fn init_new_game(this: usize) {
 /// Só a original (ela numera as ligas pela 0x859e20, que manda notícia ao técnico humano: não roda duas vezes); o plano
 /// da cópia (as ligas, achadas antes, sem numerar) tem de ser o que a original fez (gravado pelo comparador da
 /// 0x859e20) e o +0 zerado.
-unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
+unsafe extern "thiscall" fn compare_init_new_game(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let mut plano = Vec::new();
     for_each_numbered_league(|c| plano.push(c));
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, liga: usize
 /// Lado a lado: o +0x3a dos contratos (o do clube e o de empréstimo) de quem está no elenco de cada clube da liga e
 /// no do clube ligado, e a marca da caixa. Com algum clube de técnico humano sem `automatico` (a notícia do pedido não
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
-unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, liga: usize, inicial: u32, automatico: u32) {
+unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this: usize, liga: usize, inicial: u32, automatico: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%);
     if let Some(v) = (*core::ptr::addr_of_mut!(SQUAD_NUMBERS_PLAN)).as_mut() {
         v.push(liga);
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usiz
 
 /// Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
-unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
+unsafe extern "thiscall" fn compare_select_euro_registered_players(this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(%%I2%%);
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let mut sq = [0usize; 50];

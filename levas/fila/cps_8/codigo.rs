@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usi
     0
 }
 
-unsafe extern "thiscall" fn comparar_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
     let n = fixture_has_scouted_player(this, partida);
     SCOREBOARD.record(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn is_player_shortlisted(this: usize, pessoa: usize, ge
     0
 }
 
-unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, pessoa: usize, gerente: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_player_shortlisted(this: usize, pessoa: usize, gerente: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if pessoa == 0 || (gerente == 0 && scout_manager_current_human_manager() == 0) {
         return o(this, pessoa, gerente);
@@ -159,6 +159,6 @@ unsafe extern "thiscall" fn add_first_cap_record(this: usize, pessoa: usize, adv
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_add_first_cap_record(this: usize, pessoa: usize, adversario: usize) {
+unsafe extern "thiscall" fn compare_add_first_cap_record(this: usize, pessoa: usize, adversario: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, pessoa, adversario)
 }

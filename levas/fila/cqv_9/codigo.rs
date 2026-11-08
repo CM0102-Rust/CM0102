@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn cqv9_trofeu_da_liga(this: usize, ano: u32, dono: usi
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqv9_plano).
-unsafe extern "thiscall" fn comparar_cqv9_trofeu_da_liga(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqv9_trofeu_da_liga(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv9_plano(this, r, ano, dono, 0x969894, &CQV9_CAMPOS_TROFEU_DA_LIGA, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqv9_trofeu_da_liga({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn cqv9_liga_dos_campeoes(this: usize, ano: u32, dono: 
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqv9_plano).
-unsafe extern "thiscall" fn comparar_cqv9_liga_dos_campeoes(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqv9_liga_dos_campeoes(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqv9_plano(this, r, ano, dono, 0x96a1d0, &CQV9_CAMPOS_LIGA_DOS_CAMPEOES, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqv9_liga_dos_campeoes({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));

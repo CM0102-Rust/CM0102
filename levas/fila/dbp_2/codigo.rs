@@ -32,7 +32,7 @@ unsafe extern "C" fn staff_remove_favoured_club(pessoa: usize, clube: usize) -> 
     pref
 }
 
-unsafe extern "C" fn comparar_staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
+unsafe extern "C" fn compare_staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I0%%);
     let pref = staff_preferences(pessoa);
     if pref == 0 {
@@ -53,7 +53,7 @@ unsafe extern "C" fn club_remove_favoured_staff(clube: usize, pessoa: usize) -> 
     clube
 }
 
-unsafe extern "C" fn comparar_club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
+unsafe extern "C" fn compare_club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
     if clube == 0 {
         return o(clube, pessoa);
@@ -76,7 +76,7 @@ unsafe extern "C" fn staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> 
     pref
 }
 
-unsafe extern "C" fn comparar_staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
+unsafe extern "C" fn compare_staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);
     let pref = staff_preferences(pessoa);
     if pref == 0 {

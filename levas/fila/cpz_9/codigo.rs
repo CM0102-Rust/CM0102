@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn report_poor_fitness(this: usize, jogador: usize, clu
 /// O comparador do incidente: a original roda sozinha (põe o registro na lista, dá a notícia e multa) e confere o
 /// plano: jogador e clube não nulos põem logo depois da cauda de antes (ou na cabeça, lista vazia) o registro com o
 /// jogador, o clube e a data de hoje (16 bytes; o byte +0x10 é sobra de pilha).
-unsafe extern "thiscall" fn comparar_report_poor_fitness(this: usize, jogador: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_report_poor_fitness(this: usize, jogador: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let l = cpz9_d(this + 8);
     if jogador == 0 || clube == 0 || l == 0 {
@@ -204,7 +204,7 @@ unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, motivo: u32, 
 
 /// O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
 /// sorteio). Sem notícia, tudo igual; com notícia (que sorteia e vai às caixas), só [0xae1080].
-unsafe extern "stdcall" fn comparar_post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
+unsafe extern "stdcall" fn compare_post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(%%I1%%);
     let mut regioes = vec![(0xae1080, 4)];
     regioes.extend(crate::rng::STATE_REGIONS);
@@ -249,6 +249,6 @@ unsafe extern "stdcall" fn post_coach_fine_feedback_news(jogador: usize, treinad
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem
 // notícia as duas não fazem nada.
-unsafe extern "stdcall" fn comparar_post_coach_fine_feedback_news(jogador: usize, treinador: usize, desfecho: u32) {
+unsafe extern "stdcall" fn compare_post_coach_fine_feedback_news(jogador: usize, treinador: usize, desfecho: u32) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I2%%)(jogador, treinador, desfecho)
 }

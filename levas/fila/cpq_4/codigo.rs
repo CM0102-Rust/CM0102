@@ -268,7 +268,7 @@ unsafe extern "thiscall" fn add_transfer_records(this: usize, t: usize) {
 /// Comparador: lado a lado pela global [0xae1080], o estado do sorteador (o valor da oferta pode pedir a avaliação), a
 /// lista da troca (o cursor) e os registros dos dois técnicos (criados antes só quando a original os pede); a cópia
 /// sem os históricos em arquivo, que a original já gravou, e sem contar os sorteios.
-unsafe extern "thiscall" fn comparar_add_transfer_records(this: usize, t: usize) {
+unsafe extern "thiscall" fn compare_add_transfer_records(this: usize, t: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let (pessoa, _, vendedor, comprador) = transfer_parties(t);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -329,7 +329,7 @@ unsafe extern "thiscall" fn add_knocked_out_record(this: usize, clube: usize, co
 
 // ponytail: o histórico vai para o arquivo e as convocações acabam (não rodam duas vezes) e a cópia sem eles não mexe
 // em nada: só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_add_knocked_out_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
+unsafe extern "thiscall" fn compare_add_knocked_out_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I1%%)(this, clube, comp, fase, rodada, x)
 }
 
@@ -349,6 +349,6 @@ unsafe extern "thiscall" fn add_failed_to_qualify_record(this: usize, clube: usi
 }
 
 // ponytail: como a eliminação: só a original.
-unsafe extern "thiscall" fn comparar_add_failed_to_qualify_record(this: usize, clube: usize, comp: usize, fase: u32, x: u32) {
+unsafe extern "thiscall" fn compare_add_failed_to_qualify_record(this: usize, clube: usize, comp: usize, fase: u32, x: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, clube, comp, fase, x)
 }

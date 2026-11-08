@@ -172,18 +172,18 @@ unsafe extern "thiscall" fn offer_contract_to_offer_player(this: usize, clube: u
 
 /// Comparador: grava as permissões (pode crescer o vetor e reordena): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_update_work_permit_on_move(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_update_work_permit_on_move(this: usize, pessoa: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, pessoa, clube)
 }
 
 /// Comparador: assina o contrato (aloca), paga e posta notícias: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_complete_accepted_contract_offer(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn compare_complete_accepted_contract_offer(this: usize, oferta: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, oferta)
 }
 
 /// Comparador: acrescenta ofertas de contrato (aloca), mexe nas listas e retira ofertas: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_offer_contract_to_offer_player(this: usize, clube: usize, pessoa: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn compare_offer_contract_to_offer_player(this: usize, clube: usize, pessoa: usize, oferta: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, clube, pessoa, oferta)
 }

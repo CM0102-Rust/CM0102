@@ -34,7 +34,7 @@ unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
 }
 
 /// Comparador: pelo valor.
-unsafe extern "thiscall" fn comparar_get_wealth_band(this: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_wealth_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(%%I0%%)(this);
     let n = get_wealth_band(this);
     SCOREBOARD.record(r == n, || format!("get_wealth_band(financas {:#x}) original={} rust={}", this, r as i8, n as i8));
@@ -53,7 +53,7 @@ unsafe extern "C" fn compare_players_by_ability(a: *const usize, b: *const usize
 }
 
 /// Comparador: pelo valor.
-unsafe extern "C" fn comparar_compare_players_by_ability(a: *const usize, b: *const usize) -> i32 {
+unsafe extern "C" fn compare_compare_players_by_ability(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = compare_players_by_ability(a, b);
     SCOREBOARD.record(r == n, || format!("compare_players_by_ability({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
@@ -75,7 +75,7 @@ unsafe extern "C" fn stadium_compare_venues_by_capacity(a: usize, b: usize) -> i
 }
 
 /// Comparador: pelo valor.
-unsafe extern "C" fn comparar_stadium_compare_venues_by_capacity(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_stadium_compare_venues_by_capacity(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = stadium_compare_venues_by_capacity(a, b);
     SCOREBOARD.record(r == n, || format!("stadium_compare_venues_by_capacity({:#x}, {:#x}) original={} rust={}", a, b, r, n));

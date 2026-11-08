@@ -12,7 +12,7 @@ use super::*;
 /// [pt] Só a original (sorteia, paga prêmios, aloca as fases e manda notícias), conferindo o plano feito antes: com 32
 /// clubes, as 8 fases em [+0xc], +0x30 = 7 e os clubes das tabelas das fases (+0xb1, linhas de 0x3b bytes, 4 por
 /// fase) são exatamente os 32 do plano.
-pub(crate) unsafe extern "thiscall" fn comparar_draw_phase1_groups(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
     let plan = group_draw_clubs(this);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DRAW_PHASE1_GROUPS)(this);
     if plan.len() != 32 || read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) * 4) == 0 {
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_phase1_groups(this: usize) 
 /// Comparer for `european_cup_compare_clubs_by_seed` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Pura: a devolução.
-pub(crate) unsafe extern "C" fn comparar_european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_EUROPEAN_CUP_COMPARE_CLUBS_BY_SEED)(a, b);
     let n = european_cup_compare_clubs_by_seed(a, b);
     SCOREBOARD.record(r == n, || format!("european_cup_compare_clubs_by_seed: original={} rust={}", r, n));
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "C" fn comparar_european_cup_compare_clubs_by_seed(a: *
 /// [pt] Só a original (acrescenta registros à estatística), conferindo o plano feito antes (o vetor ordenado numa cópia e a
 /// tabela do mata-mata pedida ao método +0x3c e liberada): a posição (+0x72 do registro achado por 0x4a4850) de cada
 /// clube do plano.
-pub(crate) unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EUROPEAN_CUP_RANK_TEAMS);
     if read_u32_as_usize(this + 8) == 0 || read_u32_as_usize(this + 0x14) == 0 || read_i16(this + 0x36) <= 0 {
         return o(this);
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: us
 /// [pt] Só a original (sorteia, paga prêmios, aloca as fases e manda notícias; e se chama de novo), conferindo o plano: na
 /// chamada de fora (tentativa 0), as fases 8..11 existem, +0x30 = 11 e os clubes das tabelas delas (+0xb1, linhas de
 /// 0x3b bytes) são os 16 classificados.
-pub(crate) unsafe extern "thiscall" fn comparar_draw_phase2_groups(this: usize, attempt: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, attempt: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW_PHASE2_GROUPS);
     if attempt as u8 != 0 || read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) * 4) == 0 {
         return o(this, attempt);
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_phase2_groups(this: usize, 
 /// Comparer for `european_cup_compare_phase2_draw_entries` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Pura: a devolução.
-pub(crate) unsafe extern "C" fn comparar_european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_EUROPEAN_CUP_COMPARE_PHASE2_DRAW_ENTRIES)(a, b);
     let n = european_cup_compare_phase2_draw_entries(a, b);
     SCOREBOARD.record(r == n, || format!("european_cup_compare_phase2_draw_entries: original={} rust={}", r, n));
@@ -125,7 +125,7 @@ pub(crate) unsafe extern "C" fn comparar_european_cup_compare_phase2_draw_entrie
 }
 
 /// Comparer for `european_cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a: u32, game: usize, end: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a: u32, game: usize, end: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_EUROPEAN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let (d, f) = (outcome as u8, stage as u8);
     // the original’s bands compare the stage byte as signed (0x80 to 0xfe count as stage 1)
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_update_staff_record
 }
 
 /// Comparer for `draw_quarter_finals` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DRAW_QUARTER_FINALS);
     let mut vivos: Vec<usize> = Vec::new();
     let mut away: Vec<usize> = Vec::new();
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize)
 /// [pt] Comparador da 0x586660: a original aloca a lista (só ela roda; quem chama libera). O plano, feito antes numa lista
 /// local pelos mesmos inscritos: a conta (palavra de baixo da devolução) e os clubes da lista dela iguais. Nos tipos
 /// que vão para a 0x48e1c0 e sem lista: a devolução e a saída como a original deixou.
-pub(crate) unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(this: usize, out: usize, kind: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_club_list(this: usize, out: usize, kind: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_EUROPEAN_CUP_COLLECT_CLUB_LIST);
     let t = kind as u8;
     let sem_7 = match t {
@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(t
 /// [pt] Comparador da 0x584fa0: a original aloca (só ela roda); o plano confere depois tudo o que ela gravou: a lista nova
 /// copiada e repreenchida pela cópia (fill_champions_league_entrants só lê os clubes, que a original não muda) tem de sair igual,
 /// +0x36, +0x38 e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_european_cup_collect_entrants(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_entrants(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EUROPEAN_CUP_COLLECT_ENTRANTS)(this);
     let t = read_usize(this + 0x14);
     if t == 0 {
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_collect_entrants(th
 ///
 /// [pt] Comparador da 0x584990: a original aloca (só ela roda); depois a tabela dela, copiada e remontada pela cópia,
 /// tem de sair igual, com +0x3e = 55 e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_build_qualifying_entry_table(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_build_qualifying_entry_table(this: usize) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_QUALIFYING_ENTRY_TABLE)(this);
     let t = read_usize(this + 0xa7);
     if t == 0 || read_i16(this + 0x3e) != 0x37 {
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_qualifying_entry_table(thi
 }
 
 /// Comparer for `european_cup_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_european_cup_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_advance_stage(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EUROPEAN_CUP_ADVANCE_STAGE)(this)
 }
 
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_advance_stage(this:
 /// 0x585ab0: o coeficiente dos classificados), que só roda quando a fase (+0x30) anda: aí, sem comparação. As
 /// finanças não entram (a base paga o prêmio da rodada da copa nos mesmos campos, 0x51a2fe); o prêmio segue o ramo do
 /// placar que os pontos do coeficiente já conferem. Sem clube, nação, seleção ou finanças: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_process_fixture(this: usize, game: usize, arg: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game: usize, arg: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FIXTURE);
     let (a, b) = if game != 0 { (read_usize(game + 0x1c), read_usize(game + 0x20)) } else { (0, 0) };
     if a == 0 || b == 0 {
@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_fixture(this: usize, gam
 ///
 /// [pt] Comparador da 0x586c00: lado a lado nos três bytes do registro do clube (+0x73..+0x75); sem registro (a original
 /// cai), só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_EUROPEAN_CUP_SET_CLUB_PROGRESS);
     let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let e = search(read_usize(this + 8), club);
@@ -334,7 +334,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(t
 /// [pt] Lado a lado nas fases de grupos: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). As
 /// preliminares e o mata-mata: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_european_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, id: *mut i16, league: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, id: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_EUROPEAN_CUP_CREATE_ROUND_TABLE);
     let f = stage as u8 as i8;
     if f == -1 || f >= 0xc {

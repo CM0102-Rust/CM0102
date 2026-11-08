@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, hoje
 // ponytail: os clubes, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e a fase do
 // grupo B criadas e a fase atual (+0x30) = 0.
-unsafe extern "thiscall" fn comparar_oceania_club_champ_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_oceania_club_champ_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = cqt10_d(this + 0x45) == 0
         && completo == 0
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o escolhido i com a posição i (+4).
-unsafe extern "thiscall" fn comparar_create_group_a_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_create_group_a_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqt10_d(this + 0xee);
     if lista == 0 {
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][0], +0x30 = 0, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
-unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_create_group_b_stage(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let lista = cqt10_d(this + 0xee);
     if lista == 0 {

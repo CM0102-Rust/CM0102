@@ -18,7 +18,7 @@ unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: i32, regist
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_db_files_write_stadiums(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn compare_db_files_write_stadiums(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%)(stream, use_zip, registros, n)
 }
 
@@ -40,7 +40,7 @@ unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32, registros
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_db_files_write_clubs(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn compare_db_files_write_clubs(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I1%%)(stream, use_zip, registros, n)
 }
 
@@ -62,6 +62,6 @@ unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32, registros
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_db_files_write_staff(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn compare_db_files_write_staff(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I2%%)(stream, use_zip, registros, n)
 }

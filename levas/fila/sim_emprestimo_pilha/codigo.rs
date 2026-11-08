@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn can_end_loan(gerente: usize, clube: usize, jogador: 
     f(regras, clube, jogador, a3, a4, a5)
 }
 
-unsafe extern "thiscall" fn comparar_can_end_loan(gerente: usize, clube: usize, jogador: usize, a3: u32, a4: u32, a5: u32) -> u32 {
+unsafe extern "thiscall" fn compare_can_end_loan(gerente: usize, clube: usize, jogador: usize, a3: u32, a4: u32, a5: u32) -> u32 {
     // as regras só escrevem o texto da recusa em a3 (o mesmo texto de novo na cópia)
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32>(%%I0%%)(gerente, clube, jogador, a3, a4, a5);
     let n = can_end_loan(gerente, clube, jogador, a3, a4, a5);

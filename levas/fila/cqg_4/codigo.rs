@@ -314,7 +314,7 @@ unsafe fn group_draw_clubs(this: usize) -> Vec<usize> {
 /// Só a original (sorteia, paga prêmios, aloca as fases e manda notícias), conferindo o plano feito antes: com 32
 /// clubes, as 8 fases em [+0xc], +0x30 = 7 e os clubes das tabelas das fases (+0xb1, linhas de 0x3b bytes, 4 por
 /// fase) são exatamente os 32 do plano.
-unsafe extern "thiscall" fn comparar_draw_phase1_groups(this: usize) {
+unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
     let plano = group_draw_clubs(this);
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     if plano.len() != 32 || cqg4_d(cqg4_d(0xadadfc) + cqg4_d(0x9cf6f0) * 4) == 0 {
@@ -351,7 +351,7 @@ unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usize, b: *con
 }
 
 /// Pura: a devolução.
-unsafe extern "C" fn comparar_european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
+unsafe extern "C" fn compare_european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = european_cup_compare_clubs_by_seed(a, b);
     SCOREBOARD.record(r == n, || format!("european_cup_compare_clubs_by_seed: original={} rust={}", r, n));
@@ -474,7 +474,7 @@ unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
 /// Só a original (acrescenta registros à estatística), conferindo o plano feito antes (o vetor ordenado numa cópia e a
 /// tabela do mata-mata pedida ao método +0x3c e liberada): a posição (+0x72 do registro achado por 0x4a4850) de cada
 /// clube do plano.
-unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: usize) {
+unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqg4p_d(this + 8) == 0 || cqg4p_d(this + 0x14) == 0 || cqg4p_w(this + 0x36) <= 0 {
         return o(this);

@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: usize) {
 /// Comparador: no dia 0 do ano (refaz a lista dos estádios, aloca) só a original. Nos outros, lado a lado pelo cabeçalho
 /// (0x1c bytes), pelas reservas, por [0xa835a4], pelo estádio nacional da Inglaterra, pela casa da seleção e pelos
 /// lugares do estádio fechado.
-unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn compare_stadium_daily_update(this: usize, hoje: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     if cps7_w(hoje) == 0 {
         return o(this, hoje);
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn add_booking(this: usize, estadio: usize, data: usize
 
 /// Comparador: com lista e vaga (não aloca), lado a lado pelo cabeçalho (0xc bytes) e pelas reservas com a nova; senão
 /// (aloca, realoca ou a caixa) só a original.
-unsafe extern "thiscall" fn comparar_add_booking(this: usize, estadio: usize, data: usize) {
+unsafe extern "thiscall" fn compare_add_booking(this: usize, estadio: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let n = cps7_d(this + 4);
     if estadio == 0 || data == 0 || cps7_d(this) == 0 || n == cps7_d(this + 8) {
@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, estadio: usize,
 }
 
 /// Comparador: a original e a cópia (as duas só leem), pelo valor.
-unsafe extern "thiscall" fn comparar_is_stadium_free_on_date(this: usize, estadio: usize, data: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_stadium_free_on_date(this: usize, estadio: usize, data: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, estadio, data);
     let n = is_stadium_free_on_date(this, estadio, data);
     SCOREBOARD.record(r == n, || format!("is_stadium_free_on_date(estadio {:x}) original={} rust={}", estadio, r, n));

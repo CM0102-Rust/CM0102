@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
 /// Lado a lado: a original e a cópia (sem contar os sorteios) a partir do mesmo estado do sorteador, das vagas
 /// (+0xee, 0xa0 bytes), de +0x36, de [0xb67a34] e, na Copa de 2002, da tabela das nações ([+0x14], 32 × 6); as duas
 /// listas alocadas têm de ser iguais byte a byte (a da cópia é liberada, 0x9452ca).
-unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn run_group_draw(this: usize) {
 
 /// Só a original (o sorteio, os jogos, as notícias e as previsões não rodam duas vezes), conferindo o que ela garante:
 /// terminada (+0x45 = 1), as sete fases dos grupos 2..8 existem e a fase atual (+0x30) é a última delas (6).
-unsafe extern "thiscall" fn comparar_run_group_draw(this: usize) {
+unsafe extern "thiscall" fn compare_run_group_draw(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     if cqf4_d(this + 0x45) == 1 {
         let fases = cqf4_d(this + 0xc);
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, hoje: usize, 
 
 /// Só a original (a semeadura, o sorteio e o dia da liga não rodam duas vezes), conferindo o que ela garante: no dia do
 /// sorteio (a condição da cópia), a Copa sai com a tabela do grupo 1 (+0xb1) e +0x45 = 1.
-unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_world_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     let ano = core::ptr::read_unaligned((hoje + 2) as *const u16) as i32;
     let dia = core::ptr::read_unaligned(hoje as *const u16);

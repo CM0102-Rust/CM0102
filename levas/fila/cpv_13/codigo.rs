@@ -132,7 +132,7 @@ unsafe extern "stdcall" fn friendly_get_rest_days_for_kind(tipo: u32) -> u8 {
 /// Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_add_month_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32) {
+unsafe extern "thiscall" fn compare_add_month_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(%%I0%%);
     if p == 0 || premio == 0 {
         return o(this, p, clube, premio, a4, a5);
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn comparar_add_month_award_record(this: usize, p: usiz
 }
 
 /// Comparador: pura.
-unsafe extern "stdcall" fn comparar_friendly_club_reputation_tier(clube: usize) -> u8 {
+unsafe extern "stdcall" fn compare_friendly_club_reputation_tier(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u8>(%%I1%%)(clube);
     let n = friendly_club_reputation_tier(clube);
     SCOREBOARD.record(r == n, || format!("friendly_club_reputation_tier({:x}) original={} rust={}", clube, r, n));
@@ -160,7 +160,7 @@ unsafe extern "stdcall" fn comparar_friendly_club_reputation_tier(clube: usize) 
 }
 
 /// Comparador: pura; os tipos da caixa, só a original.
-unsafe extern "stdcall" fn comparar_friendly_get_rest_days_for_kind(tipo: u32) -> u8 {
+unsafe extern "stdcall" fn compare_friendly_get_rest_days_for_kind(tipo: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32) -> u8>(%%I2%%)(tipo);
     if !matches!(tipo as u8 as i8, 0..=4 | 10 | 11) {
         return r;

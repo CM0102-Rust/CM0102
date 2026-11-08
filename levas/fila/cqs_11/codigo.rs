@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: usize) -> u3
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
 /// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
-unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn conmebol_merc_advance_stage(this: usize) {
     con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 
-unsafe extern "thiscall" fn comparar_conmebol_merc_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_conmebol_merc_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     con_merc_cup_compare_advance_stage("conmebol_merc_advance_stage", this, || o(this))
 }
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
     con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
 
-unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_goldcup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     con_merc_cup_compare_advance_stage("goldcup_advance_stage", this, || o(this))
 }

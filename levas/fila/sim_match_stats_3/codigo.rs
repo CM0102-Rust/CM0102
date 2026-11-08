@@ -127,14 +127,14 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
 // ponytail: as três mexem no arquivo temporário (e a gravação também nos eventos e no índice): rodar
 // duas vezes gravaria o registro duas vezes, então o comparador só chama a original; as cópias se
 // provam no modo Rust (os ramos) e pela carreira com as mutações.
-unsafe extern "thiscall" fn comparar_read_match_record(estat: usize, k: i32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_read_match_record(estat: usize, k: i32, saida: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I0%%)(estat, k, saida)
 }
 
-unsafe extern "thiscall" fn comparar_match_screens_record_match(estat: usize, m: usize, r: usize) -> u32 {
+unsafe extern "thiscall" fn compare_match_screens_record_match(estat: usize, m: usize, r: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(estat, m, r)
 }
 
-unsafe extern "thiscall" fn comparar_write_match_record(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
+unsafe extern "thiscall" fn compare_write_match_record(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(estat, jogo, r, eventos)
 }

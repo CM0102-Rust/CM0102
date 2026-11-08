@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jogo: usize) 
 }
 
 // ponytail: move jogos no calendário (tira, junta, aloca e libera listas, notícia): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_move_nearby_club_fixtures(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn compare_move_nearby_club_fixtures(this: usize, jogo: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, jogo)
 }
 
@@ -253,7 +253,7 @@ unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: usize, club
 }
 
 // ponytail: move jogos no calendário e dá a notícia (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_reschedule_club_fixtures_near_date(this: usize, clube: usize, data: usize) {
+unsafe extern "thiscall" fn compare_reschedule_club_fixtures_near_date(this: usize, clube: usize, data: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, clube, data)
 }
 
@@ -348,7 +348,7 @@ unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, caus
 /// Nova: a cópia monta a notícia sem pô-la na fila e a original roda; a fila tem de crescer um e o último item (a cauda,
 /// +6, nó +0) ser a notícia da cópia nos 0xde bytes que o construtor (0x77bbe0) grava; o último dos 0xdf copiados é
 /// sobra de pilha na original (a cópia leva zero).
-unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: usize, causa: usize, velha: usize) {
+unsafe extern "thiscall" fn compare_queue_fixture_moved_news(this: usize, f: usize, causa: usize, velha: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
     let l = cpz8_d(this + 0x1128);
     let alvo = if l != 0 { find_queued_fixture_news(l, f) } else { 0 };

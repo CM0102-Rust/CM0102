@@ -96,7 +96,7 @@ unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(pessoa: usiz
     1
 }
 
-unsafe extern "thiscall" fn comparar_remove_retirement(this: usize, chave: usize) {
+unsafe extern "thiscall" fn compare_remove_retirement(this: usize, chave: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let n = (*((this + 8) as *const i32)).max(0) as usize;
     let reg = [(this + 4, 8), (cph5_d(this + 4) as usize, n * 26)];
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_remove_retirement(this: usize, chave: usize
 }
 
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pela saída (26 bytes), a cópia em sem_contar.
-unsafe extern "stdcall" fn comparar_player_regen_check_unemployed_retirement(pessoa: usize, saida: usize) -> u8 {
+unsafe extern "stdcall" fn compare_player_regen_check_unemployed_retirement(pessoa: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I1%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((saida, 0x1a));

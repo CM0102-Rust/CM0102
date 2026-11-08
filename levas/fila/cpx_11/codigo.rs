@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn pay_prize_money(liga: usize) {
 /// Comparador: com +0xe1 = 3 (a virtual da competição paga por conta própria) ou o divisor zero: só a original. Nos
 /// outros casos, o ensaio: a cópia sem a notícia do prêmio (0x48e3e0 aloca) e a original a partir do mesmo estado, nos
 /// registros de finanças (0x167 bytes) de todos os clubes da tabela.
-unsafe extern "thiscall" fn comparar_pay_prize_money(liga: usize) {
+unsafe extern "thiscall" fn compare_pay_prize_money(liga: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cpx11_w(liga + 0x3e);
     let e1 = cpx11_b(liga + 0xe1);
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn league_update_staff_records_for_status(liga: usize, 
 
 // ponytail: os três registros acrescentam ao histórico das pessoas e mexem na reputação (alocam): só a original; a
 // cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_league_update_staff_records_for_status(liga: usize, clube: usize, situacao: u32, fase: u32, saida: usize, a: u32, b: u32) -> u32 {
+unsafe extern "thiscall" fn compare_league_update_staff_records_for_status(liga: usize, clube: usize, situacao: u32, fase: u32, saida: usize, a: u32, b: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(%%I1%%)(liga, clube, situacao, fase, saida, a, b)
 }
 
@@ -238,6 +238,6 @@ unsafe extern "thiscall" fn announce_team_status(liga: usize, clube: usize, situ
 
 // ponytail: a virtual +0x44 acrescenta registros e a notícia vai às caixas dos técnicos (alocam): só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_announce_team_status(liga: usize, clube: usize, situacao: u32, fase: u32, a: u32, b: u32) -> u32 {
+unsafe extern "thiscall" fn compare_announce_team_status(liga: usize, clube: usize, situacao: u32, fase: u32, a: u32, b: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(%%I2%%)(liga, clube, situacao, fase, a, b)
 }

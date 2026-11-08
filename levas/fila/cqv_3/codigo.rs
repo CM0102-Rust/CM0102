@@ -111,7 +111,7 @@ unsafe extern "C" fn cqv3_acesso_dos_estaduais() {
 /// contratos; não roda duas vezes), com o plano feito antes: os clubes de cada divisão de baixo na lista (até 200) e os
 /// das últimas linhas de cada estadual. Depois: de cada divisão sobem exatamente min(vagas, os dela na lista) clubes
 /// (+0x60 = o registro do estadual) e os outros dela ficam; os das últimas linhas estão na divisão de baixo.
-unsafe extern "C" fn comparar_cqv3_acesso_dos_estaduais() {
+unsafe extern "C" fn compare_cqv3_acesso_dos_estaduais() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
     let ligas: [usize; 12] = core::array::from_fn(|i| cqv3_liga(CQV3_ESTADUAIS[i]));
@@ -235,7 +235,7 @@ unsafe extern "C" fn cqv3_renovar_serie_c() {
 /// vezes), com o plano feito antes: os clubes sem divisão (até 160) e os das linhas marcadas com 3 nas oito tabelas.
 /// Depois, com 16 ou mais sem divisão: exatamente 16 deles estão na Série C e os outros sem divisão; os marcados, sem
 /// divisão. Com menos de 16: nada mudou neles.
-unsafe extern "C" fn comparar_cqv3_renovar_serie_c() {
+unsafe extern "C" fn compare_cqv3_renovar_serie_c() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
     let (t, reg) = cqv3_serie_c();
@@ -323,7 +323,7 @@ unsafe fn cqv3_virada_j2(this: usize, anos: i16) -> u32 {
 /// O comparador da virada: só a original (libera a tabela e o calendário, aloca os novos, sorteia os jogos e os
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, o bloco de estatísticas igual e,
 /// com as regras, a tabela e os jogos montados, a tabela nova (+0xb1) e +0x4c = 0.
-unsafe extern "thiscall" fn comparar_cqv3_virada_da_j2(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqv3_virada_da_j2(this: usize) -> u32 {
     let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let bloco = cqv3_d(this + 8);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);

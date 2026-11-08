@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn construct_holland_rules(this: usize, a1: u32, a2: u3
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqm1_comparar`).
-unsafe extern "thiscall" fn comparar_construct_holland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_holland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I0%%);
     let mut r = 0usize;
     cqm1_comparar("construct_holland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn construct_croatia_rules(this: usize, a1: u32, a2: u3
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqm1_comparar`).
-unsafe extern "thiscall" fn comparar_construct_croatia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_croatia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let mut r = 0usize;
     cqm1_comparar("construct_croatia_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: u32, a2: u3
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqm1_comparar`).
-unsafe extern "thiscall" fn comparar_construct_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
     let mut r = 0usize;
     cqm1_comparar("construct_ireland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {

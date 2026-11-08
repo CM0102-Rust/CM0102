@@ -21,16 +21,16 @@ unsafe extern "thiscall" fn destroy_match_player(j: usize) {
     core::ptr::write_unaligned((j + 0x19e) as *mut u32, 0);
 }
 
-comparar_valor!(comparar_side_centre_backs_without_conflict, side_centre_backs_without_conflict, %%I0%%, (lado: i8) -> u8);
+compare_value!(compare_side_centre_backs_without_conflict, side_centre_backs_without_conflict, %%I0%%, (lado: i8) -> u8);
 
-unsafe extern "thiscall" fn comparar_construct_referee(a: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_referee(a: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side_light(&[(a, 8)], || o(a), || construct_referee(a));
     SCOREBOARD.record(igual && r == v, || format!("construct_referee({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_destroy_match_player(j: usize) {
+unsafe extern "thiscall" fn compare_destroy_match_player(j: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(j + 0x19e, 4)], || o(j), || destroy_match_player(j));
     SCOREBOARD.record(igual, || format!("destroy_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));

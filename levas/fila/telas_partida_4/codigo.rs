@@ -141,7 +141,7 @@ unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
 }
 
 // ponytail: abrir a tela mexe em telas e na rede (não roda duas vezes): no modo comparação só a original
-unsafe extern "C" fn comparar_open_match_screen(vaga: u32, partida: usize) {
+unsafe extern "C" fn compare_open_match_screen(vaga: u32, partida: usize) {
     original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, partida)
 }
 
@@ -149,7 +149,7 @@ unsafe extern "C" fn comparar_open_match_screen(vaga: u32, partida: usize) {
 /// 0xb6b7a8/ac/b0, mais a devolução); quando há redesenho (a troca de 5 s dos placares, os dados novos
 /// das estatísticas) só a original roda, porque o redesenho grava a hora no parâmetro 0x14 e mexe na
 /// lista de exibição.
-unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) -> i32, r: unsafe extern "C" fn(u32) -> i32, redesenha: bool) -> i32 {
+unsafe fn compare_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) -> i32, r: unsafe extern "C" fn(u32) -> i32, redesenha: bool) -> i32 {
     if item as u16 == 0xffff || redesenha {
         return o(item);
     }
@@ -158,15 +158,15 @@ unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) 
     ro
 }
 
-unsafe extern "C" fn comparar_match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
+unsafe extern "C" fn compare_match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
     let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
     // folga de 1 s: a hora pode virar entre os dois lados
     let redesenha = agora().wrapping_add(1000) >= (get_screen_param(0x14) as u32).wrapping_add(5000);
-    comparar_resposta("match_screens_handle_latest_scores_cycle", item, original_fn(%%I1%%), match_screens_handle_latest_scores_cycle, redesenha)
+    compare_resposta("match_screens_handle_latest_scores_cycle", item, original_fn(%%I1%%), match_screens_handle_latest_scores_cycle, redesenha)
 }
 
-unsafe extern "C" fn comparar_handle_team_stats_input(item: u32) -> i32 {
+unsafe extern "C" fn compare_handle_team_stats_input(item: u32) -> i32 {
     let p0 = get_screen_param(0);
     let redesenha = *(0xb6b7ac as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0;
-    comparar_resposta("handle_team_stats_input", item, original_fn(%%I2%%), handle_team_stats_input, redesenha)
+    compare_resposta("handle_team_stats_input", item, original_fn(%%I2%%), handle_team_stats_input, redesenha)
 }

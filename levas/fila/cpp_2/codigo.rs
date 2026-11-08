@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn sign_loan_contract(this: usize, contrato: usize) {
     update_club_wage_bill(novo);
 }
 
-unsafe extern "thiscall" fn comparar_sign_loan_contract(this: usize, contrato: usize) {
+unsafe extern "thiscall" fn compare_sign_loan_contract(this: usize, contrato: usize) {
     // ponytail: mexe no elenco, nas táticas, nas listas e realoca o vetor: só a original; a cópia prova no modo Rust
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, contrato)
 }
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn end_loan(this: usize, pessoa: usize) {
     }
 }
 
-unsafe extern "thiscall" fn comparar_end_loan(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_end_loan(this: usize, pessoa: usize) {
     // ponytail: mexe no elenco, nas táticas, nas listas e nas disputas (0x556570 libera itens): só a original
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, pessoa)
 }
@@ -367,7 +367,7 @@ unsafe extern "thiscall" fn toggle_squad_placement(this: usize, pessoa: usize, c
     1
 }
 
-unsafe extern "thiscall" fn comparar_toggle_squad_placement(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_toggle_squad_placement(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
     // ponytail: mexe no elenco, nas táticas e nas listas: só a original; a cópia prova no modo Rust
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, pessoa, clube, saida)
 }

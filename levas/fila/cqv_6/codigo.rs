@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn cqv6_copa_do_brasil(this: usize, ano: u32, dono: usi
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqv6_plano).
-unsafe extern "thiscall" fn comparar_cqv6_copa_do_brasil(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqv6_copa_do_brasil(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv6_plano(this, r, ano, dono, 0x967cf8, &CQV6_CAMPOS_COPA_DO_BRASIL, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqv6_copa_do_brasil({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn cqv6_inscritos_da_copa_do_brasil(this: usize) {
 
 /// Lado a lado a partir do mesmo estado (+0x36/+0x38, +0x4b, [0xb67a34]; não sorteia): a original deixa o livro dela em
 /// +0x14, a cópia faz o seu, comparado nos 0x47 registros (6 bytes) e liberado.
-unsafe extern "thiscall" fn comparar_cqv6_inscritos_da_copa_do_brasil(this: usize) {
+unsafe extern "thiscall" fn compare_cqv6_inscritos_da_copa_do_brasil(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let antes = cqv6_d(this + 0x14);
     let lo = core::cell::Cell::new(0usize);

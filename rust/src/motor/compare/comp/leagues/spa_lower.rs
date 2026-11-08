@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/spa_lower.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `spa_lower_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_spa_lower_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_LOWER_CREATE_SCHEDULE);
     compare_league_round_table("spa_lower_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| spa_lower_create_schedule(this, stage, r, e, l))
 }
@@ -12,7 +12,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_lower_create_schedule(this: 
 /// Comparer for `construct_spa_lower` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
-pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize, year: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_construct_spa_lower(this: usize, year: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_SPA_LOWER);
     let r = o(this, year);
     let ok = r == this && read_u32_as_usize(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize,
 /// Depois: +0x3e e o clube das primeiras linhas. O +0x60 não entra: a segunda passada (a dos times B da Segunda) zera o
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela
 /// (comportamento da original, que a cópia repete; achado pela comparação de 8 ligas, 05/11/2026).
-pub(crate) unsafe extern "thiscall" fn comparar_spa_lower_create_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_LOWER_CREATE_TABLE);
     let mut plan: Vec<usize> = Vec::new();
     let mut k: u8 = 0;
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_lower_create_table(this: usi
 }
 
 /// Comparer for `spa_lower_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_spa_lower_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_spa_lower_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_LOWER_SET_UP_RULES);
     spa_first_compare_league_rules("spa_lower_set_up_rules", this, lower_division_rules(), || o(this), || spa_lower_set_up_rules(this))
 }

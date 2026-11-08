@@ -83,7 +83,7 @@ unsafe fn club_seeding_regions() -> Vec<(usize, usize)> {
 
 /// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// devolução e os registros das duas tabelas.
-unsafe extern "stdcall" fn comparar_collect_conmebol_clubs(saida: *mut usize) -> u32 {
+unsafe extern "stdcall" fn compare_collect_conmebol_clubs(saida: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(*mut usize) -> u32>(%%I0%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut t2 = 0usize;
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn update_for_new_season(this: usize, pular: u32) {
 }
 
 /// Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
-unsafe extern "thiscall" fn comparar_update_for_new_season(this: usize, pular: u32) {
+unsafe extern "thiscall" fn compare_update_for_new_season(this: usize, pular: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     let mut reg = club_seeding_regions();
     reg.push((this + 0x6f, 2));
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn set_bra_champ_cup_winner(this: usize, clube: usize) 
 }
 
 /// Lado a lado: o +0x71.
-unsafe extern "thiscall" fn comparar_set_bra_champ_cup_winner(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_set_bra_champ_cup_winner(this: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let reg = [(this + 0x71, 4)];
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, clube), || set_bra_champ_cup_winner(this, clube));

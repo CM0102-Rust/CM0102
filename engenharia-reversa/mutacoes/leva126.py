@@ -1,9 +1,9 @@
 # Mutacoes da leva126 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva126.py --jogo 2001-10-01
 MUTACOES = [
-    ('d_folego', "let folego = sortear(d.wrapping_mul(d) / 50000);\n    let (mut a", "let folego = sortear(d.wrapping_mul(d) / 40000);\n    let (mut a"),
-    ('d_ataque', "let r = sortear(byte(m, engine::BALL_HEIGHT) as i32 * 50);", "let r = sortear(byte(m, engine::BALL_HEIGHT) as i32 * 40);"),
-    ('d_limpa', "if !(nota < at && sortear(5) != 0) {", "if !(nota < at && sortear(4) != 0) {"),
-    ('d_registra', "if sortear(0x1e) == 0 && arriscado == 0 {\n                    crate::comparison::branch(\"tackle so registra", "if sortear(0x1d) == 0 && arriscado == 0 {\n                    crate::comparison::branch(\"tackle so registra"),
+    ('d_folego', "let folego = random(d.wrapping_mul(d) / 50000);\n    let (mut a", "let folego = random(d.wrapping_mul(d) / 40000);\n    let (mut a"),
+    ('d_ataque', "let r = random(byte(m, engine::BALL_HEIGHT) as i32 * 50);", "let r = random(byte(m, engine::BALL_HEIGHT) as i32 * 40);"),
+    ('d_limpa', "if !(nota < at && random(5) != 0) {", "if !(nota < at && random(4) != 0) {"),
+    ('d_registra', "if random(0x1e) == 0 && arriscado == 0 {\n                    crate::comparison::branch(\"tackle so registra", "if random(0x1d) == 0 && arriscado == 0 {\n                    crate::comparison::branch(\"tackle so registra"),
     ('d_cansa', "*w(e, match_player::MATCH_RATING) = (*w(e, match_player::MATCH_RATING)).wrapping_sub(0x19);", "*w(e, match_player::MATCH_RATING) = (*w(e, match_player::MATCH_RATING)).wrapping_sub(0x18);"),
     ('d_limpa_folego', "{ 0x3b } else { 0x46 }", "{ 0x3b } else { 0x45 }"),
     ('d_nota', "rating.wrapping_sub(at).wrapping_sub(200).clamp(-200, 200)", "rating.wrapping_sub(at).wrapping_sub(199).clamp(-200, 200)"),

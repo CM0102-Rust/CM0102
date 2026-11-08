@@ -58,7 +58,7 @@ unsafe extern "C" fn human_manager_get_stand_in_manager(clube: usize) -> usize {
     melhor
 }
 
-unsafe extern "thiscall" fn comparar_remove_loan_contract(gerente: usize, id: *const i32) {
+unsafe extern "thiscall" fn compare_remove_loan_contract(gerente: usize, id: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I0%%);
     let e = loan_state_entry(id);
     let mut reg = vec![(e + 4, 4)];
@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn comparar_remove_loan_contract(gerente: usize, id: *c
     SCOREBOARD.record(igual, || format!("remove_loan_contract({}) {:x?} x {:x?}", *id, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_clear_bid_markers_for_player(gerente: usize, clube: *const i32, jogador: *const i32) {
+unsafe extern "thiscall" fn compare_clear_bid_markers_for_player(gerente: usize, clube: *const i32, jogador: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, *const i32)>(%%I1%%);
     let l = club_shortlist(gerente, clube);
     let reg = if *((l + 4) as *const u8) == 1 { vec![(core::ptr::read_unaligned(l as *const usize), 40 * 0x25)] } else { vec![(l, 9)] };
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn comparar_clear_bid_markers_for_player(gerente: usize
     SCOREBOARD.record(igual, || format!("clear_bid_markers_for_player({}, {}) {:x?} x {:x?}", *clube, *jogador, mo, mr));
 }
 
-unsafe extern "C" fn comparar_human_manager_get_stand_in_manager(clube: usize) -> usize {
+unsafe extern "C" fn compare_human_manager_get_stand_in_manager(clube: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%)(clube);
     let n = human_manager_get_stand_in_manager(clube);
     SCOREBOARD.record(r == n, || format!("human_manager_get_stand_in_manager({:#x}) original={:#x} rust={:#x}", clube, r, n));

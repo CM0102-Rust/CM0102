@@ -176,22 +176,22 @@ unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u32, registr
     r
 }
 
-unsafe extern "thiscall" fn comparar_construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     compare_italian_constructor("construct_ita_ser_a", this, ano, registro, &SERIE_A, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     compare_italian_constructor("construct_ita_ser_b", this, ano, registro, &SERIE_B_DIVISION, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     compare_italian_constructor("construct_ita_ser_c1a", this, ano, registro, &SERIE_C1A_DIVISION, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
     compare_italian_constructor("construct_ita_ser_c1b", this, ano, registro, &SERIE_C1B_DIVISION, || o(this, ano, registro))
 }

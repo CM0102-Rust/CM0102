@@ -761,7 +761,7 @@ pub(crate) unsafe fn rival_manager_passes_draws(c: usize) -> bool {
 }
 
 // 0x53e990 only reads: compare the value
-comparar_valor!(comparar_get_scout, get_scout, IDX_GET_SCOUT, () -> usize);
+compare_value!(compare_get_scout, get_scout, IDX_GET_SCOUT, () -> usize);
 
 /// stores the player search slot (0 to 9)
 /// Original: `PLAYER_SEARCH::set_slot_index` (0x7ae640, player_search.cpp, thiscall).

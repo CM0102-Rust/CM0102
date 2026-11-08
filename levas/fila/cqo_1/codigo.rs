@@ -226,7 +226,7 @@ unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, usize)>) -> 
 }
 
 /// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `stadium_choice_regions` e pela devolução; com reserva que pode alocar, só a original.
-unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(%%I1%%);
     let Some((r, m)) = stadium_choice_regions(this, None) else {
         // ponytail: a reserva pode alocar a lista; só a original
@@ -442,7 +442,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
 
 /// Lado a lado pela partida (0x44 bytes) e pelas regiões de `stadium_choice_regions`; partida nula ou reserva que pode alocar:
 /// só a original.
-unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
+unsafe extern "thiscall" fn compare_set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(%%I0%%);
     if partida == 0 {
         return o(this, marcas, partida, estadio);

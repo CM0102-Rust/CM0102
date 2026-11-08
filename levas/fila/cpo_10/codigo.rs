@@ -269,7 +269,7 @@ unsafe fn cpo10_itens(lista: usize) -> Vec<usize> {
 }
 
 /// Comparador: lado a lado pelas duas saídas, o sorteio, [0xae1080] e [0xb67a34] (a caixa da falta de ficha).
-unsafe extern "thiscall" fn comparar_get_offer_response_delay(this: usize, oferta: usize, dias: *mut u8, fatias: *mut u8) {
+unsafe extern "thiscall" fn compare_get_offer_response_delay(this: usize, oferta: usize, dias: *mut u8, fatias: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I0%%);
     let mut reg = vec![(dias as usize, 1usize), (fatias as usize, 1), (0xae1080, 4), (0xb67a34, 4)];
     reg.extend(crate::rng::STATE_REGIONS);
@@ -284,7 +284,7 @@ unsafe extern "thiscall" fn comparar_get_offer_response_delay(this: usize, ofert
 /// Comparador: só a original, conferindo o plano (feito antes): saem da lista as prestações que tinham 1 a pagar.
 // ponytail: a original paga (finanças), tira itens da lista (libera) e aloca as marcas; não roda duas vezes. A cópia
 // tem os ramos e a prova é pela carreira.
-unsafe extern "thiscall" fn comparar_pay_transfer_instalments(this: usize) {
+unsafe extern "thiscall" fn compare_pay_transfer_instalments(this: usize) {
     let lista = this + 0x872;
     let antes = cpo10_itens(lista);
     let acabam = antes.iter().filter(|&&e| cpo10_b(e + 0xc) == 1).count();
@@ -296,7 +296,7 @@ unsafe extern "thiscall" fn comparar_pay_transfer_instalments(this: usize) {
 /// Comparador: só a original, conferindo o plano (feito antes): a vaga zerada, as contas +8 e +0x14, a menor vaga livre
 /// e o +1 do registro do jogador.
 // ponytail: a original destrói e libera a oferta e mexe nas listas; não roda duas vezes.
-unsafe extern "thiscall" fn comparar_remove_offer(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn compare_remove_offer(this: usize, oferta: usize) {
     let vaga = cpo10_i(oferta + 0x20);
     let ligada = cpo10_i(oferta + 0x28) != -1;
     let (n8, n14, livre) = (cpo10_i(this + 8), cpo10_i(this + 0x14), cpo10_i(this + 0x85e));

@@ -19,7 +19,7 @@ unsafe extern "C" fn qsort_comparator_club_ids_by_reputation(a: usize, b: usize)
     }
 }
 
-unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = qsort_comparator_club_ids_by_reputation(a, b);
     SCOREBOARD.record(r == n, || format!("qsort_comparator_club_ids_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -45,7 +45,7 @@ unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b: usize) ->
     habilidade(pb) as i32 - habilidade(pa) as i32 // a maior primeiro
 }
 
-unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = qsort_comparator_squad_by_player_0xb(a, b);
     SCOREBOARD.record(r == n, || format!("qsort_comparator_squad_by_player_0xb({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -77,7 +77,7 @@ unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b: usize) ->
     }
 }
 
-unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_staff_by_player_ability_desc(a, b);
     SCOREBOARD.record(r == n, || format!("compare_staff_by_player_ability_desc({:x}, {:x}) original={} rust={}", a, b, r, n));

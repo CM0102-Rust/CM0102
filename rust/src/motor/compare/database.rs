@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../database.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `favourite_of` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_favourite_of(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_favourite_of(a: usize, b: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FAVOURITE_OF)(a, b);
     let n = favourite_of(a, b);
     SCOREBOARD.record(r == n, || format!("favourite_of original={} rust={}", r, n));
@@ -12,7 +12,7 @@ pub(crate) unsafe extern "C" fn comparar_favourite_of(a: usize, b: usize) -> u32
 }
 
 /// Comparer for `rejected_by` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_rejected_by(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_rejected_by(a: usize, b: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_REJECTED_BY)(a, b);
     let n = rejected_by(a, b);
     SCOREBOARD.record(r == n, || format!("rejected_by original={} rust={}", r, n));
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "C" fn comparar_rejected_by(a: usize, b: usize) -> u32 
 /// jogadores inteiros, a tabela de 79 bytes por pessoa em [0xae2d0c]), [0x9b59b4], as bandeiras 0x9b59b8/9 e os quatro
 /// vetores globais dos moldes, o texto de 0xde1f64, a data guardada da 0x54cab0 e o estado do sorteador (a cópia sem
 /// contar sorteios). Sem pessoas (caixa e fim): só a original.
-pub(crate) unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
+pub(crate) unsafe extern "C" fn compare_database_player_initialisation(data: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_DATABASE_PLAYER_INITIALISATION);
     let gi = |a: usize| (*(a as *const i32)).max(0) as usize;
     let rd = |a: usize| *(a as *const usize);
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "C" fn comparar_database_player_initialisation(data: us
 }
 
 /// Comparer for `database_format_name_from_strings` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_name_from_strings(name: usize, sobrenome: usize, common: usize, text: usize, size: u32, form: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_name_from_strings(name: usize, sobrenome: usize, common: usize, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_STRINGS);
     if text == 0 || (size as u16 as i16) < 0x69 || !(1..=7).contains(&(form as u8)) {
         return o(name, sobrenome, common, text, size, form); // message box: original only
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "C" fn comparar_database_format_name_from_strings(name:
 }
 
 /// Comparer for `database_get_job_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_job_name(job: u32, curto: u32, maiuscula: u32, gender: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_get_job_name(job: u32, curto: u32, maiuscula: u32, gender: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(IDX_DATABASE_GET_JOB_NAME);
     // the text [0xae19b4] and the gender byte, if any
     let regions = [(G_JOB_NAME_BUFFER, 100usize), (gender, 1)];
@@ -89,7 +89,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_job_name(job: u32, curto: 
 }
 
 /// Comparer for `database_get_language_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_language_name(language: u32) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_get_language_name(language: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_DATABASE_GET_LANGUAGE_NAME);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae21d4, 100)], || o(language), || database_get_language_name(language));
     SCOREBOARD.record(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", language as u8 as i8, r, x, mo, mr));
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_language_name(language: u3
 }
 
 /// Comparer for `club_get_national_team_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_get_national_team_name(club: usize, variant: u32, text: usize, size: i32, form: u32, aspas: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_club_get_national_team_name(club: usize, variant: u32, text: usize, size: i32, form: u32, aspas: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(IDX_CLUB_GET_NATIONAL_TEAM_NAME);
     let f = form as u8 as i8;
     if size < 0x47 || ((1..=4).contains(&f) && club == 0) {
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "C" fn comparar_club_get_national_team_name(club: usize
 }
 
 /// Comparer for `database_get_player_attribute_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_player_attribute_name(attribute: u32, text: usize, size: u32, abreviado: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_get_player_attribute_name(attribute: u32, text: usize, size: u32, abreviado: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_PLAYER_ATTRIBUTE_NAME);
     let x = attribute as u8 as i8;
     if !(1..=0x1f).contains(&x) || text == 0 || (size as u16 as i16) < 100 {
@@ -125,7 +125,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_player_attribute_name(attr
 }
 
 /// Comparer for `database_format_player_positions` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_player_positions(player: usize, text: usize, size: u32, form: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_player_positions(player: usize, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_PLAYER_POSITIONS);
     if text == 0 || player == 0 || (size as u16 as i16) < 0x1e {
         return o(player, text, size, form); // message box: original only
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "C" fn comparar_database_format_player_positions(player
 }
 
 /// Comparer for `database_format_name_from_ids` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_name_from_ids(name: i32, sobrenome: i32, common: i32, text: usize, size: u32, form: u32, person: i32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_name_from_ids(name: i32, sobrenome: i32, common: i32, text: usize, size: u32, form: u32, person: i32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_IDS);
     if text == 0 || (size as i16) < 0x69 {
         return o(name, sobrenome, common, text, size, form, person); // message box: original only
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "C" fn comparar_database_format_name_from_ids(name: i32
 }
 
 /// Comparer for `database_format_official_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_official_name(oficial: usize, text: usize, size: u32, form: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_official_name(oficial: usize, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_OFFICIAL_NAME);
     if oficial == 0 || text == 0 || (size as i16) < 0x69 {
         return o(oficial, text, size, form); // message box: original only
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "C" fn comparar_database_format_official_name(oficial: 
 }
 
 /// Comparer for `position_mask_get_text` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_position_mask_get_text(mask: u32, text: usize, maiuscula: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_position_mask_get_text(mask: u32, text: usize, maiuscula: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32) -> u8>(IDX_POSITION_MASK_GET_TEXT);
     if text == 0 {
         return o(mask, text, maiuscula);
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "C" fn comparar_position_mask_get_text(mask: u32, text:
 }
 
 /// Comparer for `write_position_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_write_position_name(mask: u32, text: usize, size: i32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_write_position_name(mask: u32, text: usize, size: i32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u8>(IDX_WRITE_POSITION_NAME);
     if size < 0x1e {
         return o(mask, text, size); // message box: original only
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "C" fn comparar_write_position_name(mask: u32, text: us
 }
 
 /// Comparer for `write_player_description` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_write_player_description(person: i32, position: u32, qualidades: u32, text: usize, size: i32, gender: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_write_player_description(person: i32, position: u32, qualidades: u32, text: usize, size: i32, gender: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(IDX_WRITE_PLAYER_DESCRIPTION);
     if size < 0x1e {
         return o(person, position, qualidades, text, size, gender); // message box: original only
@@ -206,7 +206,7 @@ pub(crate) unsafe extern "C" fn comparar_write_player_description(person: i32, p
 }
 
 /// Comparer for `staff_is_best_favoured_candidate` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(person: usize, club: usize, candidate: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_is_best_favoured_candidate(person: usize, club: usize, candidate: usize) -> u8 {
     // the calls (contract, average, 0x8cca10) go through the match’s address: the random state goes back between the sides and the
     // the copy does not count, if any of them draws
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u8>(IDX_STAFF_IS_BEST_FAVOURED_CANDIDATE);
@@ -217,7 +217,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(person
 }
 
 /// Comparer for `staff_get_player_strength_flags` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_player_strength_flags(person: usize, other: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_staff_get_player_strength_flags(person: usize, other: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_GET_PLAYER_STRENGTH_FLAGS);
     let (r, _, igual, d) = compare_with_rng_retry(|| o(person, other), || staff_get_player_strength_flags(person, other));
     SCOREBOARD.record(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", person, other, d));
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_player_strength_flags(person:
 }
 
 /// Comparer for `staff_get_player_weakness_flags` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_player_weakness_flags(person: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_staff_get_player_weakness_flags(person: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_GET_PLAYER_WEAKNESS_FLAGS);
     let (r, _, igual, d) = compare_with_rng_retry(|| o(person, club), || staff_get_player_weakness_flags(person, club));
     SCOREBOARD.record(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", person, club, d));
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_player_weakness_flags(person:
 }
 
 /// Comparer for `database_count_club_physios` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_count_club_physios(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_database_count_club_physios(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_PHYSIOS)(club);
     if club == 0 {
         return r; // message box: original only
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "C" fn comparar_database_count_club_physios(club: usize
 }
 
 /// Comparer for `club_is_b_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_is_b_team(club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_club_is_b_team(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_B_TEAM)(club);
     if club == 0 {
         return r;
@@ -255,7 +255,7 @@ pub(crate) unsafe extern "C" fn comparar_club_is_b_team(club: usize) -> u32 {
 }
 
 /// Comparer for `club_collect_non_playing_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_collect_non_playing_staff(club: usize, out: *mut usize, max: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_collect_non_playing_staff(club: usize, out: *mut usize, max: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(IDX_CLUB_COLLECT_NON_PLAYING_STAFF);
     if club == 0 {
         return o(club, out, max);
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "C" fn comparar_club_collect_non_playing_staff(club: us
 }
 
 /// Comparer for `staff_is_player_attribute_visible` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_player_attribute_visible(who_ve: usize, person: usize, attribute: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_is_player_attribute_visible(who_ve: usize, person: usize, attribute: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_IS_PLAYER_ATTRIBUTE_VISIBLE)(who_ve, person, attribute);
     let n = staff_is_player_attribute_visible(who_ve, person, attribute);
     SCOREBOARD.record(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", who_ve, person, attribute as u8 as i8, r, n));
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_player_attribute_visible(who_v
 }
 
 /// Comparer for `staff_get_player_attribute_for_viewer` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(who_ve: usize, person: usize, attribute: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_get_player_attribute_for_viewer(who_ve: usize, person: usize, attribute: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE_FOR_VIEWER)(who_ve, person, attribute);
     let x = attribute as u8 as i8;
     if person == 0 || !(1..=0x1f).contains(&x) {
@@ -287,7 +287,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(w
 }
 
 /// Comparer for `database_get_non_player_attribute_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_non_player_attribute_name(attribute: u32, text: usize, size: u32, abreviado: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_get_non_player_attribute_name(attribute: u32, text: usize, size: u32, abreviado: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_NON_PLAYER_ATTRIBUTE_NAME);
     let x = attribute as u8 as i8;
     if !(1..=12).contains(&x) || text == 0 || (size as u16 as i16) < 100 {
@@ -302,7 +302,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_non_player_attribute_name(
 }
 
 /// Comparer for `database_compare_staff_by_surname` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_SURNAME)(a, b);
     let n = database_compare_staff_by_surname(a, b);
     SCOREBOARD.record(r == n, || format!("database_compare_staff_by_surname({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -310,7 +310,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_surname(a: us
 }
 
 /// Comparer for `database_compare_clubs_by_reputation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_reputation(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_database_compare_clubs_by_reputation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_REPUTATION)(a, b);
     let n = database_compare_clubs_by_reputation(a, b);
     SCOREBOARD.record(r == n, || format!("database_compare_clubs_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -318,7 +318,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_reputation(a:
 }
 
 /// Comparer for `database_club_nation_is_eec` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_club_nation_is_eec(club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_club_nation_is_eec(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_NATION_IS_EEC)(club);
     let n = database_club_nation_is_eec(club);
     SCOREBOARD.record(r == n, || format!("database_club_nation_is_eec({:x}) original={} rust={}", club, r, n));
@@ -326,7 +326,7 @@ pub(crate) unsafe extern "C" fn comparar_database_club_nation_is_eec(club: usize
 }
 
 /// Comparer for `get_regions_sorted_by_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_regions_sorted_by_name(language: u32) -> usize {
+pub(crate) unsafe extern "C" fn compare_get_regions_sorted_by_name(language: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_GET_REGIONS_SORTED_BY_NAME);
     let reg = [(G_REGIONS_SORTED_BY_NAME, 14), (0xae232b, 1)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(language), || get_regions_sorted_by_name(language));
@@ -335,7 +335,7 @@ pub(crate) unsafe extern "C" fn comparar_get_regions_sorted_by_name(language: u3
 }
 
 /// Comparer for `compare_region_names` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_compare_region_names(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_compare_region_names(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_REGION_NAMES)(a, b);
     let n = compare_region_names(a, b);
     SCOREBOARD.record(r == n, || format!("compare_region_names({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -343,7 +343,7 @@ pub(crate) unsafe extern "C" fn comparar_compare_region_names(a: usize, b: usize
 }
 
 /// Comparer for `staff_get_opinion_link_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_opinion_link_staff(person: usize, target: u32) -> usize {
+pub(crate) unsafe extern "C" fn compare_staff_get_opinion_link_staff(person: usize, target: u32) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_GET_OPINION_LINK_STAFF)(person, target);
     let n = staff_get_opinion_link_staff(person, target);
     SCOREBOARD.record(r == n, || format!("staff_get_opinion_link_staff({:x}, {:x}) original={:x} rust={:x}", person, target, r, n));
@@ -351,7 +351,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_opinion_link_staff(person: us
 }
 
 /// Comparer for `club_add_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_add_favoured_staff(club: usize, person: usize, force: u32) {
+pub(crate) unsafe extern "C" fn compare_club_add_favoured_staff(club: usize, person: usize, force: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_FAVOURED_STAFF);
     let reg = preference_regions(if club != 0 { club + club::FAV_STAFF1 } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(club, person, force),
@@ -360,7 +360,7 @@ pub(crate) unsafe extern "C" fn comparar_club_add_favoured_staff(club: usize, pe
 }
 
 /// Comparer for `club_add_disliked_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_add_disliked_staff(club: usize, person: usize, force: u32) {
+pub(crate) unsafe extern "C" fn compare_club_add_disliked_staff(club: usize, person: usize, force: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_DISLIKED_STAFF);
     let reg = preference_regions(if club != 0 { club + club::FAV_STAFF1 } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(club, person, force),
@@ -369,7 +369,7 @@ pub(crate) unsafe extern "C" fn comparar_club_add_disliked_staff(club: usize, pe
 }
 
 /// Comparer for `staff_add_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_add_favoured_staff(person: usize, other: usize, force: u32) {
+pub(crate) unsafe extern "C" fn compare_staff_add_favoured_staff(person: usize, other: usize, force: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_FAVOURED_STAFF);
     let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + preferences::STAFF_FAVOURITE_STAFF1 } else { 0 });
@@ -379,7 +379,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_add_favoured_staff(person: usize,
 }
 
 /// Comparer for `staff_add_disliked_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_add_disliked_club(person: usize, club: usize, force: u32) {
+pub(crate) unsafe extern "C" fn compare_staff_add_disliked_club(person: usize, club: usize, force: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_DISLIKED_CLUB);
     let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + 4 } else { 0 });
@@ -389,7 +389,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_add_disliked_club(person: usize, 
 }
 
 /// Comparer for `staff_fade_staff_relationships` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_fade_staff_relationships(person: usize) {
+pub(crate) unsafe extern "C" fn compare_staff_fade_staff_relationships(person: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_FADE_STAFF_RELATIONSHIPS);
     let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + preferences::STAFF_FAVOURITE_STAFF1 } else { 0 });
@@ -399,7 +399,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_fade_staff_relationships(person: 
 }
 
 /// Comparer for `staff_get_disliked_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_disliked_staff(person: usize, out: usize, n: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_staff_get_disliked_staff(person: usize, out: usize, n: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> usize>(IDX_STAFF_GET_DISLIKED_STAFF);
     let mut reg = vec![(n, 1)];
     if out != 0 {
@@ -411,7 +411,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_disliked_staff(person: usize,
 }
 
 /// Comparer for `staff_get_natural_position_mask` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_natural_position_mask(person: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_staff_get_natural_position_mask(person: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_STAFF_GET_NATURAL_POSITION_MASK)(person);
     let n = staff_get_natural_position_mask(person);
     SCOREBOARD.record(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", person, r, n));
@@ -419,7 +419,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_natural_position_mask(person:
 }
 
 /// Comparer for `club_count_squad_with_position_mask` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_count_squad_with_position_mask(club: usize, mask: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_count_squad_with_position_mask(club: usize, mask: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_CLUB_COUNT_SQUAD_WITH_POSITION_MASK)(club, mask);
     let n = club_count_squad_with_position_mask(club, mask);
     SCOREBOARD.record(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", club, mask, r, n));
@@ -427,7 +427,7 @@ pub(crate) unsafe extern "C" fn comparar_club_count_squad_with_position_mask(clu
 }
 
 /// Comparer for `staff_pick_favoured_team_mate` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(person: usize, club: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_staff_pick_favoured_team_mate(person: usize, club: usize) -> usize {
     // the calls (contract, average, 0x8cca10) go through the match’s address: the random state goes back between the sides and the
     // the copy does not count, if any of them draws
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_PICK_FAVOURED_TEAM_MATE);
@@ -438,7 +438,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(person: u
 }
 
 /// Comparer for `club_nation_is_not_argentina` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_nation_is_not_argentina(club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_club_nation_is_not_argentina(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_NATION_IS_NOT_ARGENTINA)(club);
     let n = club_nation_is_not_argentina(club);
     SCOREBOARD.record(r == n, || format!("club_nation_is_not_argentina({:x}) original={:x} rust={:x}", club, r, n));
@@ -446,7 +446,7 @@ pub(crate) unsafe extern "C" fn comparar_club_nation_is_not_argentina(club: usiz
 }
 
 /// Comparer for `club_nation_not_argentina_france_croatia` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_nation_not_argentina_france_croatia(club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_club_nation_not_argentina_france_croatia(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_NATION_NOT_ARGENTINA_FRANCE_CROATIA)(club);
     let n = club_nation_not_argentina_france_croatia(club);
     SCOREBOARD.record(r == n, || format!("club_nation_not_argentina_france_croatia({:x}) original={:x} rust={:x}", club, r, n));
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "C" fn comparar_club_nation_not_argentina_france_croati
 }
 
 /// Comparer for `database_is_melanesian_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_melanesian_nation(nation: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_is_melanesian_nation(nation: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_MELANESIAN_NATION)(nation);
     let n = database_is_melanesian_nation(nation);
     SCOREBOARD.record(r == n, || format!("database_is_melanesian_nation({:x}) original={} rust={}", nation, r, n));
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "C" fn comparar_database_is_melanesian_nation(nation: u
 }
 
 /// Comparer for `database_is_polynesian_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_polynesian_nation(nation: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_is_polynesian_nation(nation: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_POLYNESIAN_NATION)(nation);
     let n = database_is_polynesian_nation(nation);
     SCOREBOARD.record(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nation, r, n));
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "C" fn comparar_database_is_polynesian_nation(nation: u
 }
 
 /// Comparer for `database_get_coaching_job_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_coaching_job_name(job: u32, gender: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_get_coaching_job_name(job: u32, gender: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32, usize) -> usize>(IDX_DATABASE_GET_COACHING_JOB_NAME);
     // the text (the translated names fit in 64) and the gender byte
     let com = [(G_COACHING_JOB_NAME_BUFFER, 64usize), (gender, 1)];
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_coaching_job_name(job: u32
 }
 
 /// Comparer for `database_format_years_between_dates` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_years_between_dates(end: usize, start: usize, text: usize, size: i32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_years_between_dates(end: usize, start: usize, text: usize, size: i32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(IDX_DATABASE_FORMAT_YEARS_BETWEEN_DATES);
     if text == 0 || size < 5 || end == 0 || start == 0 {
         return o(end, start, text, size); // message box: original only
@@ -494,7 +494,7 @@ pub(crate) unsafe extern "C" fn comparar_database_format_years_between_dates(end
 }
 
 /// Comparer for `database_compare_clubs_by_short_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_SHORT_NAME)(a, b);
     let n = database_compare_clubs_by_short_name(a, b);
     SCOREBOARD.record(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -502,7 +502,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a:
 }
 
 /// Comparer for `database_compare_staff_by_full_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_FULL_NAME)(a, b);
     let n = database_compare_staff_by_full_name(a, b);
     SCOREBOARD.record(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: 
 }
 
 /// Comparer for `database_staff_matches_names` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_staff_matches_names(person: usize, name: u32, sobrenome: u32, common: u32, data: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_staff_matches_names(person: usize, name: u32, sobrenome: u32, common: u32, data: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(IDX_DATABASE_STAFF_MATCHES_NAMES);
     if person == 0 {
         return o(person, name, sobrenome, common, data); // message box: original only
@@ -522,7 +522,7 @@ pub(crate) unsafe extern "C" fn comparar_database_staff_matches_names(person: us
 }
 
 /// Comparer for `database_compare_clubs_by_latitude` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LATITUDE);
     if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
         return o(a, b); // message box: original only
@@ -534,7 +534,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_latitude(a: u
 }
 
 /// Comparer for `database_compare_clubs_by_longitude` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LONGITUDE);
     if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
         return o(a, b); // message box: original only
@@ -546,7 +546,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_longitude(a: 
 }
 
 /// Comparer for `club_has_enough_defenders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_enough_defenders(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_has_enough_defenders(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_DEFENDERS)(club);
     let n = club_has_enough_defenders(club);
     SCOREBOARD.record(r == n, || format!("club_has_enough_defenders({:x}) original={} rust={}", club, r, n));
@@ -554,7 +554,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_enough_defenders(club: usize) 
 }
 
 /// Comparer for `club_has_enough_midfielders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_enough_midfielders(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_has_enough_midfielders(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_MIDFIELDERS)(club);
     let n = club_has_enough_midfielders(club);
     SCOREBOARD.record(r == n, || format!("club_has_enough_midfielders({:x}) original={} rust={}", club, r, n));
@@ -562,7 +562,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_enough_midfielders(club: usize
 }
 
 /// Comparer for `club_has_enough_strikers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_enough_strikers(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_has_enough_strikers(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_STRIKERS)(club);
     let n = club_has_enough_strikers(club);
     SCOREBOARD.record(r == n, || format!("club_has_enough_strikers({:x}) original={} rust={}", club, r, n));
@@ -570,7 +570,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_enough_strikers(club: usize) -
 }
 
 /// Comparer for `club_has_enough_hard_workers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_enough_hard_workers(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_has_enough_hard_workers(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_HARD_WORKERS)(club);
     let n = club_has_enough_hard_workers(club);
     SCOREBOARD.record(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", club, r, n));
@@ -578,7 +578,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_enough_hard_workers(club: usiz
 }
 
 /// Comparer for `club_has_fit_goalkeeper` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_fit_goalkeeper(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_has_fit_goalkeeper(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_FIT_GOALKEEPER)(club);
     let n = club_has_fit_goalkeeper(club);
     SCOREBOARD.record(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", club, r, n));
@@ -586,7 +586,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_fit_goalkeeper(club: usize) ->
 }
 
 /// Comparer for `club_has_ball_winning_midfielders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_has_ball_winning_midfielders(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_BALL_WINNING_MIDFIELDERS)(club);
     let n = club_has_ball_winning_midfielders(club);
     SCOREBOARD.record(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", club, r, n));
@@ -594,7 +594,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(club:
 }
 
 /// Comparer for `club_lacks_aerial_strikers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_strikers(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_lacks_aerial_strikers(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_AERIAL_STRIKERS)(club);
     let n = club_lacks_aerial_strikers(club);
     SCOREBOARD.record(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", club, r, n));
@@ -602,7 +602,7 @@ pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_strikers(club: usize)
 }
 
 /// Comparer for `club_lacks_aerial_defenders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_defenders(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_lacks_aerial_defenders(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_AERIAL_DEFENDERS)(club);
     let n = club_lacks_aerial_defenders(club);
     SCOREBOARD.record(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", club, r, n));
@@ -610,7 +610,7 @@ pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_defenders(club: usize
 }
 
 /// Comparer for `club_lacks_fast_defenders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_lacks_fast_defenders(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_lacks_fast_defenders(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_FAST_DEFENDERS)(club);
     let n = club_lacks_fast_defenders(club);
     SCOREBOARD.record(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", club, r, n));
@@ -618,7 +618,7 @@ pub(crate) unsafe extern "C" fn comparar_club_lacks_fast_defenders(club: usize) 
 }
 
 /// Comparer for `club_has_fast_striker` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_fast_striker(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_has_fast_striker(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_FAST_STRIKER)(club);
     let n = club_has_fast_striker(club);
     SCOREBOARD.record(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", club, r, n));
@@ -626,7 +626,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_fast_striker(club: usize) -> u
 }
 
 /// Comparer for `club_has_two_creative_midfielders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_two_creative_midfielders(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_has_two_creative_midfielders(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_TWO_CREATIVE_MIDFIELDERS)(club);
     let n = club_has_two_creative_midfielders(club);
     SCOREBOARD.record(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", club, r, n));
@@ -634,7 +634,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_two_creative_midfielders(club:
 }
 
 /// Comparer for `club_squad_strength_band` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_squad_strength_band(club: usize, other: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_squad_strength_band(club: usize, other: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_CLUB_SQUAD_STRENGTH_BAND)(club, other);
     let n = club_squad_strength_band(club, other);
     SCOREBOARD.record(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", club, other, r, n));
@@ -642,7 +642,7 @@ pub(crate) unsafe extern "C" fn comparar_club_squad_strength_band(club: usize, o
 }
 
 /// Comparer for `club_reputation_for_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_reputation_for_staff(club: usize, person: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_club_reputation_for_staff(club: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_CLUB_REPUTATION_FOR_STAFF);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(club, person),
         || club_reputation_for_staff(club, person));
@@ -652,7 +652,7 @@ pub(crate) unsafe extern "C" fn comparar_club_reputation_for_staff(club: usize, 
 }
 
 /// Comparer for `staff_count_disliked_staff_at_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(person: usize, club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_count_disliked_staff_at_club(person: usize, club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_STAFF_COUNT_DISLIKED_STAFF_AT_CLUB)(person, club);
     let n = staff_count_disliked_staff_at_club(person, club);
     SCOREBOARD.record(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", person, club, r, n));
@@ -660,7 +660,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pers
 }
 
 /// Comparer for `staff_count_favoured_staff_at_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(person: usize, club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_count_favoured_staff_at_club(person: usize, club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_STAFF_COUNT_FAVOURED_STAFF_AT_CLUB)(person, club);
     let n = staff_count_favoured_staff_at_club(person, club);
     SCOREBOARD.record(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", person, club, r, n));
@@ -668,7 +668,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(pers
 }
 
 /// Comparer for `staff_remove_favoured_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_club(person: usize, club: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_staff_remove_favoured_club(person: usize, club: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_FAVOURED_CLUB);
     let pref = staff_preferences(person);
     if pref == 0 {
@@ -680,7 +680,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_club(person: usiz
 }
 
 /// Comparer for `club_remove_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_remove_favoured_staff(club: usize, person: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_club_remove_favoured_staff(club: usize, person: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_CLUB_REMOVE_FAVOURED_STAFF);
     if club == 0 {
         return o(club, person);
@@ -691,7 +691,7 @@ pub(crate) unsafe extern "C" fn comparar_club_remove_favoured_staff(club: usize,
 }
 
 /// Comparer for `staff_remove_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_staff(person: usize, target: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_staff_remove_favoured_staff(person: usize, target: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_FAVOURED_STAFF);
     let pref = staff_preferences(person);
     if pref == 0 {
@@ -703,7 +703,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_staff(person: usi
 }
 
 /// Comparer for `staff_remove_disliked_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_remove_disliked_staff(person: usize, target: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_staff_remove_disliked_staff(person: usize, target: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_DISLIKED_STAFF);
     let pref = if person == 0 { 0 } else { core::ptr::read_unaligned((person + staff::STAFF_PREFERENCES) as *const usize) };
     if pref == 0 {
@@ -715,7 +715,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_remove_disliked_staff(person: usi
 }
 
 /// Comparer for `staff_get_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_favoured_staff(person: usize, array: usize, n: *mut i8) -> *mut i8 {
+pub(crate) unsafe extern "C" fn compare_staff_get_favoured_staff(person: usize, array: usize, n: *mut i8) -> *mut i8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(IDX_STAFF_GET_FAVOURED_STAFF);
     let with_array = [(array, 12), (n as usize, 1)];
     let regions: &[(usize, usize)] = if array == 0 { &with_array[1..] } else { &with_array };
@@ -725,7 +725,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_favoured_staff(person: usize,
 }
 
 /// Comparer for `club_is_in_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_is_in_season(club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_club_is_in_season(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_IN_SEASON)(club);
     let n = club_is_in_season(club);
     SCOREBOARD.record(r == n, || format!("club_is_in_season({:x}) original={} rust={}", club, r, n));
@@ -733,7 +733,7 @@ pub(crate) unsafe extern "C" fn comparar_club_is_in_season(club: usize) -> u32 {
 }
 
 /// Comparer for `club_is_in_major_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_is_in_major_nation(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_is_in_major_nation(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_IS_IN_MAJOR_NATION)(club);
     let n = club_is_in_major_nation(club);
     SCOREBOARD.record(r == n, || format!("club_is_in_major_nation({:x}) original={} rust={}", club, r, n));
@@ -741,7 +741,7 @@ pub(crate) unsafe extern "C" fn comparar_club_is_in_major_nation(club: usize) ->
 }
 
 /// Comparer for `nation_is_major_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_is_major_nation(nation: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_nation_is_major_nation(nation: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_NATION_IS_MAJOR_NATION)(nation);
     let n = nation_is_major_nation(nation);
     SCOREBOARD.record(r == n, || format!("nation_is_major_nation({:x}) original={} rust={}", nation, r, n));
@@ -749,7 +749,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_is_major_nation(nation: usize) -
 }
 
 /// Comparer for `staff_clear_opinion_links` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_clear_opinion_links(person: usize) {
+pub(crate) unsafe extern "C" fn compare_staff_clear_opinion_links(person: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_CLEAR_OPINION_LINKS);
     let Some(c) = database_staff_state_record(person) else { return o(person) }; // writes nothing
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(person), || staff_clear_opinion_links(person));
@@ -757,7 +757,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_clear_opinion_links(person: usize
 }
 
 /// Comparer for `staff_add_opinion_link` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_add_opinion_link(person: usize, other: usize, value: i32) {
+pub(crate) unsafe extern "C" fn compare_staff_add_opinion_link(person: usize, other: usize, value: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, i32)>(IDX_STAFF_ADD_OPINION_LINK);
     let Some(c) = database_staff_state_record(person) else { return o(person, other, value) };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(person, other, value),
@@ -766,7 +766,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_add_opinion_link(person: usize, o
 }
 
 /// Comparer for `staff_remove_opinion_link` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_remove_opinion_link(person: usize, value: i32) {
+pub(crate) unsafe extern "C" fn compare_staff_remove_opinion_link(person: usize, value: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i32)>(IDX_STAFF_REMOVE_OPINION_LINK);
     let Some(c) = database_staff_state_record(person) else { return o(person, value) };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(person, value), || staff_remove_opinion_link(person, value));
@@ -774,7 +774,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_remove_opinion_link(person: usize
 }
 
 /// Comparer for `database_get_club_assistant` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_assistant(club: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_get_club_assistant(club: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_ASSISTANT);
     if club == 0 {
         return o(club); // message box: original only
@@ -786,7 +786,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_assistant(club: usize
 }
 
 /// Comparer for `database_get_club_coaches` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_coaches(club: usize, array: *mut usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_get_club_coaches(club: usize, array: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_COACHES);
     if club == 0 {
         return o(club, array); // message box: original only
@@ -799,7 +799,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_coaches(club: usize, 
 }
 
 /// Comparer for `database_count_club_coaches` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_count_club_coaches(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_database_count_club_coaches(club: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_COACHES);
     if club == 0 {
         return o(club); // message box: original only
@@ -820,7 +820,7 @@ pub(crate) unsafe extern "C" fn comparar_database_count_club_coaches(club: usize
 /// [pt] Comparador dos nomes em inglês (0x5454c0, 0x5455a0, 0x5456a0): com o idioma dos nomes ([0x9b5984]) ≠ 0 e ≠ 1 e
 /// a tabela do eng.lng ([0xae2408]) ainda nula, o primeiro uso aloca e carrega sob o quadro SEH: só a original.
 /// Senão as duas, comparando o ponteiro devolvido (sem efeito na memória).
-pub(crate) unsafe fn comparar_nome_em_ingles(name: &str, x: usize, o: unsafe extern "C" fn(usize) -> usize, r: unsafe extern "C" fn(usize) -> usize) -> usize {
+pub(crate) unsafe fn compare_nome_em_ingles(name: &str, x: usize, o: unsafe extern "C" fn(usize) -> usize, r: unsafe extern "C" fn(usize) -> usize) -> usize {
     let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(x);
@@ -832,22 +832,22 @@ pub(crate) unsafe fn comparar_nome_em_ingles(name: &str, x: usize, o: unsafe ext
 }
 
 /// Comparer for `nation_get_english_three_letter_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_get_english_three_letter_name(nation: usize) -> usize {
-    comparar_nome_em_ingles("nation_get_english_three_letter_name", nation, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_THREE_LETTER_NAME), nation_get_english_three_letter_name)
+pub(crate) unsafe extern "C" fn compare_nation_get_english_three_letter_name(nation: usize) -> usize {
+    compare_nome_em_ingles("nation_get_english_three_letter_name", nation, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_THREE_LETTER_NAME), nation_get_english_three_letter_name)
 }
 
 /// Comparer for `comp_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_comp_get_english_name(comp: usize) -> usize {
-    comparar_nome_em_ingles("comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_COMP_GET_ENGLISH_NAME), comp_get_english_name)
+pub(crate) unsafe extern "C" fn compare_comp_get_english_name(comp: usize) -> usize {
+    compare_nome_em_ingles("comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_COMP_GET_ENGLISH_NAME), comp_get_english_name)
 }
 
 /// Comparer for `staff_comp_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_comp_get_english_name(comp: usize) -> usize {
-    comparar_nome_em_ingles("staff_comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STAFF_COMP_GET_ENGLISH_NAME), staff_comp_get_english_name)
+pub(crate) unsafe extern "C" fn compare_staff_comp_get_english_name(comp: usize) -> usize {
+    compare_nome_em_ingles("staff_comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STAFF_COMP_GET_ENGLISH_NAME), staff_comp_get_english_name)
 }
 
 /// Comparer for `stadium_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_stadium_get_english_name(stadium: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_stadium_get_english_name(stadium: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STADIUM_GET_ENGLISH_NAME);
     let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
@@ -861,7 +861,7 @@ pub(crate) unsafe extern "C" fn comparar_stadium_get_english_name(stadium: usize
 
 /// Comparador: as duas a partir do mesmo buffer do caminho (0xde279c, 0x104 bytes); compara a resposta e o caminho
 /// montado (acusa o nome trocado mesmo sem o arquivo na pasta).
-pub(crate) unsafe extern "C" fn comparar_database_language_file_exists(language: i32) -> i32 {
+pub(crate) unsafe extern "C" fn compare_database_language_file_exists(language: i32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_DATABASE_LANGUAGE_FILE_EXISTS);
     let (r, x, igual, _, _) = crate::comparison::side_by_side(&[(0xde279c, 0x104)], || o(language), || database_language_file_exists(language));
     SCOREBOARD.record(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", language, r, x, igual));
@@ -869,7 +869,7 @@ pub(crate) unsafe extern "C" fn comparar_database_language_file_exists(language:
 }
 
 /// Comparer for `eng_lng_free_tables` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_lng_free_tables(t: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_eng_lng_free_tables(t: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_LNG_FREE_TABLES)(t)
 }
 
@@ -883,7 +883,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_lng_free_tables(t: usize) {
 /// [pt] Comparador de 0x527240: original e cópia lado a lado sobre as tabelas de clubes e de pessoas inteiras, [0x9b59b4], o
 /// texto de 0xde1f64 e o estado do sorteador (a cópia sem contar sorteios). Com a pessoa de cargo 8 fora das casas
 /// (caixa), só a original. O estouro das 23.000 (caixa) não é previsto aqui: a base de fábrica gera bem menos.
-pub(crate) unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_generate_extra_non_playing_staff() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_DATABASE_GENERATE_EXTRA_NON_PLAYING_STAFF);
     if any_coach_missing_from_club() {
         return o();
@@ -907,12 +907,12 @@ pub(crate) unsafe extern "C" fn comparar_database_generate_extra_non_playing_sta
 }
 
 /// Comparer for `database_trim_club_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_trim_club_table(size: u32) {
+pub(crate) unsafe extern "C" fn compare_database_trim_club_table(size: u32) {
     original_fn::<unsafe extern "C" fn(u32)>(IDX_DATABASE_TRIM_CLUB_TABLE)(size)
 }
 
 /// Comparer for `database_prune_comp_history_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_prune_comp_history_table() {
+pub(crate) unsafe extern "C" fn compare_database_prune_comp_history_table() {
     original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_PRUNE_COMP_HISTORY_TABLE)()
 }
 
@@ -920,7 +920,7 @@ pub(crate) unsafe extern "C" fn comparar_database_prune_comp_history_table() {
 ///
 /// [pt] Comparador de 0x5315a0: original e cópia lado a lado sobre as 12 tabelas inteiras (~50 MB na carga) e o texto de
 /// 0xde1f64. Pessoa com jogador, preferências ou não jogador fora da faixa (caixa): só a original.
-pub(crate) unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
+pub(crate) unsafe extern "C" fn compare_resolve_database_indexes(leniente: u32) {
     let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_RESOLVE_DATABASE_INDEXES);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| *(a as *const usize);
@@ -949,7 +949,7 @@ pub(crate) unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32)
 /// Comparer for `database_sort_clubs_by_reputation` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador de 0x53db40: original e cópia lado a lado sobre o vetor de ids [0xae2d1c].
-pub(crate) unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(redo: u32) {
+pub(crate) unsafe extern "C" fn compare_database_sort_clubs_by_reputation(redo: u32) {
     let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_DATABASE_SORT_CLUBS_BY_REPUTATION);
     let v = *(G_CLUB_REPUTATION_ORDER as *const usize);
     let n = core::ptr::read_unaligned(G_CLUB_COUNT as *const i32);
@@ -962,22 +962,22 @@ pub(crate) unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(redo:
 }
 
 /// Comparer for `database_free_staff_history_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_free_staff_history_table() {
+pub(crate) unsafe extern "C" fn compare_database_free_staff_history_table() {
     original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_FREE_STAFF_HISTORY_TABLE)()
 }
 
 /// Comparer for `database_free_staff_comp_history_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_free_staff_comp_history_table() {
+pub(crate) unsafe extern "C" fn compare_database_free_staff_comp_history_table() {
     original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_FREE_STAFF_COMP_HISTORY_TABLE)()
 }
 
 /// Comparer for `database_grow_comp_history_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_grow_comp_history_table(n: i32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_grow_comp_history_table(n: i32) -> u32 {
     original_fn::<unsafe extern "C" fn(i32) -> u32>(IDX_DATABASE_GROW_COMP_HISTORY_TABLE)(n)
 }
 
 /// Comparer for `qsort_comparator_club_ids_by_reputation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_QSORT_COMPARATOR_CLUB_IDS_BY_REPUTATION)(a, b);
     let n = qsort_comparator_club_ids_by_reputation(a, b);
     SCOREBOARD.record(r == n, || format!("qsort_comparator_club_ids_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -985,7 +985,7 @@ pub(crate) unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation
 }
 
 /// Comparer for `qsort_comparator_squad_by_player_0xb` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_QSORT_COMPARATOR_SQUAD_BY_PLAYER_0XB)(a, b);
     let n = qsort_comparator_squad_by_player_0xb(a, b);
     SCOREBOARD.record(r == n, || format!("qsort_comparator_squad_by_player_0xb({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -993,7 +993,7 @@ pub(crate) unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a:
 }
 
 /// Comparer for `compare_staff_by_player_ability_desc` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_STAFF_BY_PLAYER_ABILITY_DESC)(a, b);
     let n = compare_staff_by_player_ability_desc(a, b);
     SCOREBOARD.record(r == n, || format!("compare_staff_by_player_ability_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -1010,7 +1010,7 @@ pub(crate) unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a:
 /// [pt] Comparador de 0x538bc0 e 0x538ec0: o jogador inteiro (70 bytes) e o byte +0x58 da pessoa, com o gerente
 /// do treino ([0xde1f44]) zerado nos dois lados (o tirar e devolver do progresso mexe nas tabelas do treino,
 /// fora das regiões); com gerente, a original roda depois de verdade a partir do mesmo estado.
-pub(crate) unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), person: usize,
+pub(crate) unsafe fn compare_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), person: usize,
                                            name: &'static str) {
     let player = if person == 0 { 0 } else { core::ptr::read_unaligned((person + staff::PLAYER) as *const usize) };
     if player == 0 {
@@ -1030,13 +1030,13 @@ pub(crate) unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(us
 }
 
 /// Comparer for `staff_normalise_player_physical_attributes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_normalise_player_physical_attributes(person: usize) {
-    comparar_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_PHYSICAL_ATTRIBUTES), staff_normalise_player_physical_attributes, person,
+pub(crate) unsafe extern "C" fn compare_staff_normalise_player_physical_attributes(person: usize) {
+    compare_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_PHYSICAL_ATTRIBUTES), staff_normalise_player_physical_attributes, person,
         "staff_normalise_player_physical_attributes");
 }
 
 /// Comparer for `database_pick_second_name_by_weight` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nation: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_pick_second_name_by_weight(nation: usize) -> usize {
     // only the CRT rand() changes ([0xad6c30]): the state is restored between the sides and the copy does not count
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_SECOND_NAME_BY_WEIGHT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nation),
@@ -1046,13 +1046,13 @@ pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nat
 }
 
 /// Comparer for `staff_normalise_player_attributes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_normalise_player_attributes(person: usize) {
-    comparar_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_ATTRIBUTES), staff_normalise_player_attributes, person,
+pub(crate) unsafe extern "C" fn compare_staff_normalise_player_attributes(person: usize) {
+    compare_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_ATTRIBUTES), staff_normalise_player_attributes, person,
         "staff_normalise_player_attributes");
 }
 
 /// Comparer for `nation_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_get_english_name(nation: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_nation_get_english_name(nation: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_NAME);
     let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
@@ -1065,7 +1065,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_get_english_name(nation: usize) 
 }
 
 /// Comparer for `club_get_english_short_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_get_english_short_name(club: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_club_get_english_short_name(club: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_SHORT_NAME);
     let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
@@ -1081,7 +1081,7 @@ pub(crate) unsafe extern "C" fn comparar_club_get_english_short_name(club: usize
 ///
 /// [pt] Original e cópia lado a lado sobre as regiões dos times A e B; a mensagem dá o primeiro byte que difere (a
 /// tabela de clubes tem 8 MB: as fotos não vão para a mensagem nem voltam às sobras).
-pub(crate) unsafe fn comparar_times_a_e_b(name: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
+pub(crate) unsafe fn compare_times_a_e_b(name: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
     let regions = ab_team_regions();
     let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regions, original, rust);
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| {
@@ -1096,15 +1096,15 @@ pub(crate) unsafe fn comparar_times_a_e_b(name: &'static str, original: impl FnO
 }
 
 /// Comparer for `database_trim_senior_and_b_team_squads` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_trim_senior_and_b_team_squads() {
+pub(crate) unsafe extern "C" fn compare_database_trim_senior_and_b_team_squads() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_TRIM_SENIOR_AND_B_TEAM_SQUADS);
-    comparar_times_a_e_b("database_trim_senior_and_b_team_squads", || o(), || database_trim_senior_and_b_team_squads());
+    compare_times_a_e_b("database_trim_senior_and_b_team_squads", || o(), || database_trim_senior_and_b_team_squads());
 }
 
 /// Comparer for `database_merge_b_team_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_merge_b_team_staff() {
+pub(crate) unsafe extern "C" fn compare_database_merge_b_team_staff() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_MERGE_B_TEAM_STAFF);
-    comparar_times_a_e_b("database_merge_b_team_staff", || o(), || database_merge_b_team_staff());
+    compare_times_a_e_b("database_merge_b_team_staff", || o(), || database_merge_b_team_staff());
 }
 
 /// Comparer for `database_build_nation_name_index` (comparison mode: see the header of motor.rs).
@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "C" fn comparar_database_merge_b_team_staff() {
 /// [pt] Comparador: a original monta o índice; a cópia monta outro (novo malloc), os dois são comparados byte a byte, o
 /// da cópia é liberado (free 0x9452ca) e o da original volta a [0xae2338]. Muda a heap do modo de comparação (a
 /// impressão dele não é critério).
-pub(crate) unsafe extern "C" fn comparar_database_build_nation_name_index() {
+pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
     original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_BUILD_NATION_NAME_INDEX)();
     let t = *(G_NATION_NAME_INDEX_TABLE as *const usize);
     let n = (*(G_NATION_COUNT as *const i32)).max(0) as usize * 0x24;
@@ -1140,7 +1140,7 @@ pub(crate) unsafe extern "C" fn comparar_database_build_nation_name_index() {
 }
 
 /// Comparer for `database_remove_staff_from_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_remove_staff_from_club(club: usize, person: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: usize, person: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB);
     if club == 0 || person == 0 {
         return o(club, person, data, desligar, como_jogador); // 0 or box: original only
@@ -1164,7 +1164,7 @@ pub(crate) unsafe extern "C" fn comparar_database_remove_staff_from_club(club: u
 }
 
 /// Comparer for `database_get_club_scouts` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_scouts(club: usize, array: *mut usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_get_club_scouts(club: usize, array: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_SCOUTS);
     if club == 0 {
         return o(club, array); // message box: original only
@@ -1177,7 +1177,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_scouts(club: usize, a
 }
 
 /// Comparer for `get_adjective_form_index` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_adjective_form_index(index: u32, language: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_get_adjective_form_index(index: u32, language: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u8>(IDX_GET_ADJECTIVE_FORM_INDEX);
     let r = o(index, language);
     let n = get_adjective_form_index(index, language);
@@ -1186,7 +1186,7 @@ pub(crate) unsafe extern "C" fn comparar_get_adjective_form_index(index: u32, la
 }
 
 /// Comparer for `staff_get_non_player_attribute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_non_player_attribute(person: usize, attribute: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_get_non_player_attribute(person: usize, attribute: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_NON_PLAYER_ATTRIBUTE);
     let r = o(person, attribute);
     let a = attribute as u8 as i8;
@@ -1199,7 +1199,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_non_player_attribute(person: 
 }
 
 /// Comparer for `player_attribute_rating_with_scaled_ability` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_ability(player: usize, value: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_player_attribute_rating_with_scaled_ability(player: usize, value: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_PLAYER_ATTRIBUTE_RATING_WITH_SCALED_ABILITY);
     let r = o(player, value);
     let n = player_attribute_rating_with_scaled_ability(player, value);
@@ -1208,7 +1208,7 @@ pub(crate) unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_abi
 }
 
 /// Comparer for `database_pick_first_name_by_weight` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nation: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_pick_first_name_by_weight(nation: usize) -> usize {
     // only the CRT rand() changes ([0xad6c30]): the state is restored between the sides and the copy does not count
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_FIRST_NAME_BY_WEIGHT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nation),
@@ -1218,7 +1218,7 @@ pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nati
 }
 
 /// Comparer for `database_get_comp_colours` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_comp_colours(competition: usize, front: *mut u16, bottom: *mut u16) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_get_comp_colours(competition: usize, front: *mut u16, bottom: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_COMP_COLOURS);
     if competition == 0 {
         return o(competition, front, bottom); // message box: original only
@@ -1231,7 +1231,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_comp_colours(competition: 
 }
 
 /// Comparer for `database_club_has_room_for_job` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_club_has_room_for_job(club: usize, job: u32, person: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_club_has_room_for_job(club: usize, job: u32, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, usize) -> u32>(IDX_DATABASE_CLUB_HAS_ROOM_FOR_JOB);
     let r = o(club, job, person);
     let c = job as u8 as i8;
@@ -1244,7 +1244,7 @@ pub(crate) unsafe extern "C" fn comparar_database_club_has_room_for_job(club: us
 }
 
 /// Comparer for `database_add_staff_to_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_add_staff_to_club(club: usize, person: usize, job: u32, data: usize, write: u32, reduzir: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_add_staff_to_club(club: usize, person: usize, job: u32, data: usize, write: u32, reduzir: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(IDX_DATABASE_ADD_STAFF_TO_CLUB);
     if club == 0 || person == 0 {
         return o(club, person, job, data, write, reduzir); // message box: original only
@@ -1259,7 +1259,7 @@ pub(crate) unsafe extern "C" fn comparar_database_add_staff_to_club(club: usize,
 }
 
 /// Comparer for `database_count_club_squad` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_count_club_squad(club: usize, mode: u32, filtro: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_database_count_club_squad(club: usize, mode: u32, filtro: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD);
     if club == 0 {
         return o(club, mode, filtro); // message box: original only
@@ -1272,7 +1272,7 @@ pub(crate) unsafe extern "C" fn comparar_database_count_club_squad(club: usize, 
 }
 
 /// Comparer for `database_collect_club_squad` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_collect_club_squad(club: usize, array: *mut usize, dobro: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_collect_club_squad(club: usize, array: *mut usize, dobro: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(IDX_DATABASE_COLLECT_CLUB_SQUAD);
     if club == 0 {
         return o(club, array, dobro); // message box: original only
@@ -1285,7 +1285,7 @@ pub(crate) unsafe extern "C" fn comparar_database_collect_club_squad(club: usize
 }
 
 /// Comparer for `club_can_be_managed` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_can_be_managed(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_club_can_be_managed(club: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_CAN_BE_MANAGED);
     let mark = [(club.wrapping_add(0x244), 1)];
     let regions = if club == 0 { &mark[..0] } else { &mark[..] };
@@ -1295,7 +1295,7 @@ pub(crate) unsafe extern "C" fn comparar_club_can_be_managed(club: usize) -> u8 
 }
 
 /// Comparer for `database_vector_to_non_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_vector_to_non_player(not_player: usize, person: usize, array: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_vector_to_non_player(not_player: usize, person: usize, array: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_NON_PLAYER);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(not_player + non_player::ATTACKING, 21)],
         || o(not_player, person, array), || database_vector_to_non_player(not_player, person, array));
@@ -1304,7 +1304,7 @@ pub(crate) unsafe extern "C" fn comparar_database_vector_to_non_player(not_playe
 }
 
 /// Comparer for `database_vector_to_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_vector_to_player(player: usize, person: usize, array: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_vector_to_player(player: usize, person: usize, array: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_PLAYER);
     // the ATTRIBUTE_VECTOR_CELLS offsets are at +0x0f..+0x44
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(player + player_sheet::GOALKEEPER, 0x44 - 0x0f + 1), (person + staff::DETERMINATION, 1)],
@@ -1314,7 +1314,7 @@ pub(crate) unsafe extern "C" fn comparar_database_vector_to_player(player: usize
 }
 
 /// Comparer for `staff_normalise_non_player_attributes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_normalise_non_player_attributes(person: usize) {
+pub(crate) unsafe extern "C" fn compare_staff_normalise_non_player_attributes(person: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
     let nj = if person == 0 { 0 } else { core::ptr::read_unaligned((person + staff::NON_PLAYER) as *const usize) };
     if nj == 0 {
@@ -1326,7 +1326,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_normalise_non_player_attributes(p
 }
 
 /// Comparer for `database_get_colour_family` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_colour_family(colour: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_database_get_colour_family(colour: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_GET_COLOUR_FAMILY);
     let r = o(colour);
     if colour_family(colour).is_none() {
@@ -1338,7 +1338,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_colour_family(colour: usiz
 }
 
 /// Comparer for `database_colours_clash` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_database_colours_clash(a: usize, b: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_DATABASE_COLOURS_CLASH);
     let r = o(a, b);
     if colour_family(a).is_none() || colour_family(b).is_none() {
@@ -1350,7 +1350,7 @@ pub(crate) unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usi
 }
 
 /// Comparer for `staff_compute_non_player_attribute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_compute_non_player_attribute(person: usize, not_player: usize, attribute: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_compute_non_player_attribute(person: usize, not_player: usize, attribute: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_NON_PLAYER_ATTRIBUTE);
     let r = o(person, not_player, attribute);
     let a = attribute as u8 as i8;
@@ -1363,7 +1363,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_compute_non_player_attribute(pers
 }
 
 /// Comparer for `database_pick_first_name_for_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nation: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_pick_first_name_for_nation(nation: usize) -> usize {
     // only the CRT’s rand() changes ([0xad6c30]): the state goes back between the sides
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_FIRST_NAME_FOR_NATION);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nation),
@@ -1373,7 +1373,7 @@ pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nat
 }
 
 /// Comparer for `database_pick_second_name_for_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nation: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_pick_second_name_for_nation(nation: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_SECOND_NAME_FOR_NATION);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nation),
         || crate::rng::without_counting(|| database_pick_second_name_for_nation(nation)));
@@ -1382,7 +1382,7 @@ pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_for_nation(na
 }
 
 /// Comparer for `database_format_staff_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_staff_name(person: usize, target: usize, size: u32, estilo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_format_staff_name(person: usize, target: usize, size: u32, estilo: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_STAFF_NAME);
     if person == 0 || target == 0 || (size as i16) < 0x69 || !(1..=7).contains(&(estilo as u8)) {
         return o(person, target, size, estilo); // message box: original only
@@ -1395,7 +1395,7 @@ pub(crate) unsafe extern "C" fn comparar_database_format_staff_name(person: usiz
 }
 
 /// Comparer for `database_get_club_kit_colours` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_kit_colours(club: usize, kit: u32, front: *mut u16, bottom: *mut u16) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_get_club_kit_colours(club: usize, kit: u32, front: *mut u16, bottom: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS);
     if club == 0 {
         return o(club, kit, front, bottom); // message box: original only
@@ -1407,7 +1407,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_kit_colours(club: usi
 }
 
 /// Comparer for `database_get_club_manager` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_manager(club: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_database_get_club_manager(club: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_MANAGER);
     if club == 0 {
         return o(club); // message box: original only
@@ -1421,7 +1421,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_manager(club: usize) 
 }
 
 /// Comparer for `club_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_get_english_name(club: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_club_get_english_name(club: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_NAME);
     let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
@@ -1434,7 +1434,7 @@ pub(crate) unsafe extern "C" fn comparar_club_get_english_name(club: usize) -> u
 }
 
 /// Comparer for `staff_adjust_morale` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_adjust_morale(person: usize, delta: u32, limitar: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_staff_adjust_morale(person: usize, delta: u32, limitar: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_STAFF_ADJUST_MORALE);
     if delta as u8 == 0 {
         let r = o(person, delta, limitar);
@@ -1451,7 +1451,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_adjust_morale(person: usize, delt
 }
 
 /// Comparer for `database_non_player_to_attribute_vector` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_non_player_to_attribute_vector(not_player: usize, person: usize, array: usize, end: *mut u8) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_non_player_to_attribute_vector(not_player: usize, person: usize, array: usize, end: *mut u8) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32>(IDX_DATABASE_NON_PLAYER_TO_ATTRIBUTE_VECTOR);
     let mut regions = vec![(array, 21 * 3)];
     if !end.is_null() {
@@ -1464,7 +1464,7 @@ pub(crate) unsafe extern "C" fn comparar_database_non_player_to_attribute_vector
 }
 
 /// Comparer for `staff_set_squad_flags` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_set_squad_flags(person: usize, squad: u32) -> usize {
+pub(crate) unsafe extern "C" fn compare_staff_set_squad_flags(person: usize, squad: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_SET_SQUAD_FLAGS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(person + staff::PLAYING_SQUAD, 1)], || o(person, squad),
         || staff_set_squad_flags(person, squad));
@@ -1473,7 +1473,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_set_squad_flags(person: usize, sq
 }
 
 /// Comparer for `database_compare_comp_history_rows` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_COMP_HISTORY_ROWS)(a, b);
     let n = database_compare_comp_history_rows(a, b);
     SCOREBOARD.record(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -1481,7 +1481,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: u
 }
 
 /// Comparer for `database_player_to_attribute_vector` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_player_to_attribute_vector(player: usize, person: usize, array: usize, end_of_sides: *mut u8,
+pub(crate) unsafe extern "C" fn compare_database_player_to_attribute_vector(player: usize, person: usize, array: usize, end_of_sides: *mut u8,
                                                             end_of_positions: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(IDX_DATABASE_PLAYER_TO_ATTRIBUTE_VECTOR);
     let mut regions = vec![(array, 0x3f * 3)];
@@ -1498,7 +1498,7 @@ pub(crate) unsafe extern "C" fn comparar_database_player_to_attribute_vector(pla
 }
 
 /// Comparer for `nation_is_uk_or_ireland` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nation: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_nation_is_uk_or_ireland(nation: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_NATION_IS_UK_OR_IRELAND)(nation);
     let n = nation_is_uk_or_ireland(nation);
     SCOREBOARD.record(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nation, r, n));
@@ -1506,7 +1506,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nation: usize) 
 }
 
 /// Comparer for `database_is_basque_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_basque_club(club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_is_basque_club(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_BASQUE_CLUB)(club);
     let n = database_is_basque_club(club);
     SCOREBOARD.record(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", club, r, n));
@@ -1514,7 +1514,7 @@ pub(crate) unsafe extern "C" fn comparar_database_is_basque_club(club: usize) ->
 }
 
 /// Comparer for `staff_is_transfer_listed` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed(person: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_staff_is_transfer_listed(person: usize, club: usize) -> u32 {
     // without a club, both write the contract to [0xae1080]; 0x4cf5a0, 0x4cf5f0 and 0x600a50 (club not
     // null) only read
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_TRANSFER_LISTED);
@@ -1525,7 +1525,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed(person: usize,
 }
 
 /// Comparer for `staff_is_loan_listed` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_loan_listed(person: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_staff_is_loan_listed(person: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_LOAN_LISTED);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, club),
         || staff_is_loan_listed(person, club));
@@ -1534,7 +1534,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_loan_listed(person: usize, clu
 }
 
 /// Comparer for `staff_is_listed_by_request` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_listed_by_request(person: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_staff_is_listed_by_request(person: usize, club: usize) -> u32 {
     // with no club, both write the contract in [0xae1080]; 0x4cf5a0 and 0x4cf5f0 only read
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_LISTED_BY_REQUEST);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, club),
@@ -1544,7 +1544,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_listed_by_request(person: usiz
 }
 
 /// Comparer for `player_attribute_rating` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_player_attribute_rating(player: usize, value: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_player_attribute_rating(player: usize, value: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_PLAYER_ATTRIBUTE_RATING)(player, value);
     let n = player_attribute_rating(player, value);
     SCOREBOARD.record(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", player, value as u8 as i8, r, n));
@@ -1552,7 +1552,7 @@ pub(crate) unsafe extern "C" fn comparar_player_attribute_rating(player: usize, 
 }
 
 /// Comparer for `database_club_has_reserve_squad` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_club_has_reserve_squad(club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_club_has_reserve_squad(club: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_HAS_RESERVE_SQUAD);
     if club == 0 {
         return o(club); // message box: original only
@@ -1565,7 +1565,7 @@ pub(crate) unsafe extern "C" fn comparar_database_club_has_reserve_squad(club: u
 }
 
 /// Comparer for `database_get_reputation_scope` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_reputation_scope(person: usize, who_ve: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_database_get_reputation_scope(person: usize, who_ve: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_DATABASE_GET_REPUTATION_SCOPE)(person, who_ve);
     let n = database_get_reputation_scope(person, who_ve);
     SCOREBOARD.record(r == n, || format!("database_get_reputation_scope({:x}, {:x}) original={} rust={}", person, who_ve, r, n));
@@ -1573,7 +1573,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_reputation_scope(person: u
 }
 
 /// Comparer for `database_get_staff_reputation_for_viewer` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_staff_reputation_for_viewer(person: usize, who_ve: usize, not_player: u32) -> u16 {
+pub(crate) unsafe extern "C" fn compare_database_get_staff_reputation_for_viewer(person: usize, who_ve: usize, not_player: u32) -> u16 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u16>(IDX_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER)(person, who_ve, not_player);
     let n = database_get_staff_reputation_for_viewer(person, who_ve, not_player);
     SCOREBOARD.record(r == n, || format!("database_get_staff_reputation_for_viewer({:x}, {:x}, {}) original={} rust={}", person, who_ve, not_player, r, n));
@@ -1581,7 +1581,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_staff_reputation_for_viewe
 }
 
 /// Comparer for `database_is_staff_foreign` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_staff_foreign(person: usize, nation: usize, groups: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_is_staff_foreign(person: usize, nation: usize, groups: u32) -> u32 {
     // 0x4cf5a0 and the Date (in a local Date) only read: both sides can run
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u32>(IDX_DATABASE_IS_STAFF_FOREIGN)(person, nation, groups);
     let n = database_is_staff_foreign(person, nation, groups);
@@ -1590,7 +1590,7 @@ pub(crate) unsafe extern "C" fn comparar_database_is_staff_foreign(person: usize
 }
 
 /// Comparer for `database_get_staff_age` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_staff_age(person: usize, data: *const u16) -> u16 {
+pub(crate) unsafe extern "C" fn compare_database_get_staff_age(person: usize, data: *const u16) -> u16 {
     let o = original_fn::<unsafe extern "C" fn(usize, *const u16) -> u16>(IDX_DATABASE_GET_STAFF_AGE);
     if person == 0 {
         return o(person, data); // message box: original only
@@ -1602,7 +1602,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_staff_age(person: usize, d
 }
 
 /// Comparer for `nation_allows_free_transfers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_allows_free_transfers(nation: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_nation_allows_free_transfers(nation: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_NATION_ALLOWS_FREE_TRANSFERS)(nation);
     let n = nation_allows_free_transfers(nation);
     SCOREBOARD.record(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nation, r, n));
@@ -1610,7 +1610,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_allows_free_transfers(nation: us
 }
 
 /// Comparer for `database_is_staff_eu_national` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_staff_eu_national(person: usize, nation_of_club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_is_staff_eu_national(person: usize, nation_of_club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DATABASE_IS_STAFF_EU_NATIONAL)(person, nation_of_club);
     let n = database_is_staff_eu_national(person, nation_of_club);
     SCOREBOARD.record(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", person, nation_of_club, r, n));
@@ -1618,7 +1618,7 @@ pub(crate) unsafe extern "C" fn comparar_database_is_staff_eu_national(person: u
 }
 
 /// Comparer for `staff_is_transfer_listed_or_requested` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(person: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_staff_is_transfer_listed_or_requested(person: usize, club: usize) -> u32 {
     // with no club, both write the contract in [0xae1080]; 0x4cf5a0 and 0x4cf5f0 only read
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, club),
@@ -1628,7 +1628,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(p
 }
 
 /// Comparer for `staff_compute_player_attribute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_compute_player_attribute(person: usize, player: usize, attribute: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_compute_player_attribute(person: usize, player: usize, attribute: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_PLAYER_ATTRIBUTE);
     let a = attribute as u8 as i8;
     if person == 0 || !(1..=0x1f).contains(&a) || player == 0 {
@@ -1641,7 +1641,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_compute_player_attribute(person: 
 }
 
 /// Comparer for `staff_get_player_attribute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute(person: usize, attribute: u32) -> u8 {
+pub(crate) unsafe extern "C" fn compare_staff_get_player_attribute(person: usize, attribute: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE);
     let a = attribute as u8 as i8;
     if person == 0 || !(1..=0x1f).contains(&a) {
@@ -1654,20 +1654,20 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute(person: usiz
 }
 
 /// Comparer for `save_database_for_game` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_save_database_for_game(save: usize, a4: u32, kind: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_save_database_for_game(save: usize, a4: u32, kind: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_SAVE_DATABASE_FOR_GAME)(save, a4, kind)
 }
 
 /// Comparer for `load_database_from_stream` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_LOAD_DATABASE_FROM_STREAM)(save, compartilhado)
 }
 
 /// Comparer for `ball_out` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ball_out(this: usize, l: u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_ball_out(this: usize, l: u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> u8>(IDX_BALL_OUT);
     // call from inside another comparison that records the commentary: original only (see port)
-    if GRAVANDO_6D6F70.load(std::sync::atomic::Ordering::Relaxed) {
+    if RECORDING_6D6F70.load(std::sync::atomic::Ordering::Relaxed) {
         return o(this, l);
     }
     if is_recording() {
@@ -1679,13 +1679,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_ball_out(this: usize, l: u8) -> 
         extra.extend([(owner + 0x29, 2), (owner + 0x19c, 2)]);
     }
     let (r, n) = (core::cell::Cell::new(0u8), core::cell::Cell::new(0u8));
-    let (igual, k) = comparar_com_comentarios_em(&extra, || r.set(o(this, l)), |c| n.set(ball_out_with(this, l, c)));
+    let (igual, k) = compare_with_commentary_at(&extra, || r.set(o(this, l)), |c| n.set(ball_out_with(this, l, c)));
     SCOREBOARD.record(igual && r.get() == n.get(), || format!("ball_out({}) original={} rust={} ({} comentarios)", l, r.get(), n.get(), k));
     r.get()
 }
 
 /// Comparer for `likes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_likes(target: usize, person: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_likes(target: usize, person: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_LIKES)(target, person);
     let n = likes(target, person);
     SCOREBOARD.record(r == n, || format!("likes original={} rust={}", r, n));
@@ -1693,7 +1693,7 @@ pub(crate) unsafe extern "C" fn comparar_likes(target: usize, person: usize) -> 
 }
 
 /// Comparer for `dislikes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_dislikes(target: usize, person: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_dislikes(target: usize, person: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DISLIKES)(target, person);
     let n = dislikes(target, person);
     SCOREBOARD.record(r == n, || format!("dislikes original={} rust={}", r, n));
@@ -1701,7 +1701,7 @@ pub(crate) unsafe extern "C" fn comparar_dislikes(target: usize, person: usize) 
 }
 
 /// Comparer for `mark_position` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_mark_position(this: usize, position: i8, sheet: *const u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_mark_position(this: usize, position: i8, sheet: *const u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const u32) -> u32>(IDX_MARK_POSITION);
     let reg = [((this as isize + 0x5bf + 4 * position as isize) as usize, 4), (this + 0x187f, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, position, sheet), || mark_position(this, position, sheet));
@@ -1712,7 +1712,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_position(this: usize, posit
 /// Comparer for `foul_in_engine` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_foul_in_engine(
+pub(crate) unsafe extern "thiscall" fn compare_foul_in_engine(
     m: usize, j: usize, other: usize, kind: i8, who: i8, card: *mut u8, grav: *mut i8, advantage: *mut u8,
 ) -> u8 {
     // the decision itself (0x6e9820) is already compared in its own hook; here only the pass-through
@@ -1734,7 +1734,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_foul_in_engine(
 }
 
 /// Comparer for `type_not_11` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_type_not_11(kind: i8) -> u32 {
+pub(crate) unsafe extern "C" fn compare_type_not_11(kind: i8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(i8) -> u32>(IDX_TYPE_NOT_11)(kind);
     let v = type_not_11(kind);
     SCOREBOARD.record(r == v, || format!("type_not_11({}) original={} rust={}", kind, r, v));
@@ -1742,7 +1742,7 @@ pub(crate) unsafe extern "C" fn comparar_type_not_11(kind: i8) -> u32 {
 }
 
 /// Comparer for `type_11_to_15` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_type_11_to_15(kind: i8) -> u32 {
+pub(crate) unsafe extern "C" fn compare_type_11_to_15(kind: i8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(i8) -> u32>(IDX_TYPE_11_TO_15)(kind);
     let v = type_11_to_15(kind);
     SCOREBOARD.record(r == v, || format!("type_11_to_15({}) original={} rust={}", kind, r, v));
@@ -1750,7 +1750,7 @@ pub(crate) unsafe extern "C" fn comparar_type_11_to_15(kind: i8) -> u32 {
 }
 
 /// Comparer for `national_side_class` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_national_side_class(club: usize, flag: u32) -> u8 {
+pub(crate) unsafe extern "stdcall" fn compare_national_side_class(club: usize, flag: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(IDX_NATIONAL_SIDE_CLASS)(club, flag);
     let v = national_side_class(club, flag);
     SCOREBOARD.record(r == v, || format!("national_side_class({:#x}, {}) original={} rust={}", club, flag, r, v));
@@ -1758,7 +1758,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_side_class(club: usize, 
 }
 
 /// Comparer for `clear_person_mark` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_clear_person_mark(this: usize, person: usize, k: i8) {
+pub(crate) unsafe extern "thiscall" fn compare_clear_person_mark(this: usize, person: usize, k: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_CLEAR_PERSON_MARK);
     let reg = [(person_flag_byte(this, person, k) as usize, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, k), || clear_person_mark(this, person, k));
@@ -1766,7 +1766,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_person_mark(this: usize, p
 }
 
 /// Comparer for `free_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_free_record() -> usize {
+pub(crate) unsafe extern "C" fn compare_free_record() -> usize {
     let o = original_fn::<unsafe extern "C" fn() -> usize>(IDX_FREE_RECORD);
     let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
     reg.push((0x9b59b4, 4));
@@ -1776,7 +1776,7 @@ pub(crate) unsafe extern "C" fn comparar_free_record() -> usize {
 }
 
 /// Comparer for `database_global_9b5984` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_global_9b5984() -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_global_9b5984() -> u32 {
     let r = original_fn::<unsafe extern "C" fn() -> u32>(IDX_DATABASE_GLOBAL_9B5984)();
     let v = database_global_9b5984();
     SCOREBOARD.record(r == v, || format!("database_global_9b5984 original={:#x} rust={:#x}", r, v));
@@ -1784,7 +1784,7 @@ pub(crate) unsafe extern "C" fn comparar_database_global_9b5984() -> u32 {
 }
 
 /// Comparer for `partner_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_partner_club(club: usize, eh_a: *mut u32, active: u32) -> usize {
+pub(crate) unsafe extern "C" fn compare_partner_club(club: usize, eh_a: *mut u32, active: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(IDX_PARTNER_CLUB);
     let mut reg: Vec<(usize, usize)> = vec![(club + club::HAS_LINKED_CLUB, 1)];
     if !eh_a.is_null() {
@@ -1796,7 +1796,7 @@ pub(crate) unsafe extern "C" fn comparar_partner_club(club: usize, eh_a: *mut u3
 }
 
 /// Comparer for `likes_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_likes_club(person: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_likes_club(person: usize, club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_LIKES_CLUB)(person, club);
     let n = likes_club(person, club);
     SCOREBOARD.record(r == n, || format!("likes_club original={} rust={}", r, n));
@@ -1804,7 +1804,7 @@ pub(crate) unsafe extern "C" fn comparar_likes_club(person: usize, club: usize) 
 }
 
 /// Comparer for `dislikes_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_dislikes_club(person: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_dislikes_club(person: usize, club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DISLIKES_CLUB)(person, club);
     let n = dislikes_club(person, club);
     SCOREBOARD.record(r == n, || format!("dislikes_club original={} rust={}", r, n));
@@ -1812,7 +1812,7 @@ pub(crate) unsafe extern "C" fn comparar_dislikes_club(person: usize, club: usiz
 }
 
 /// Comparer for `main_national_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_main_national_team(nation: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_main_national_team(nation: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_MAIN_NATIONAL_TEAM)(nation);
     let v = main_national_team(nation);
     SCOREBOARD.record(r == v, || format!("main_national_team original={:x} rust={:x}", r, v));
@@ -1820,7 +1820,7 @@ pub(crate) unsafe extern "C" fn comparar_main_national_team(nation: usize) -> us
 }
 
 /// Comparer for `b_national_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_b_national_team(nation: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_b_national_team(nation: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_B_NATIONAL_TEAM)(nation);
     let v = b_national_team(nation);
     SCOREBOARD.record(r == v, || format!("b_national_team original={:x} rust={:x}", r, v));
@@ -1828,7 +1828,7 @@ pub(crate) unsafe extern "C" fn comparar_b_national_team(nation: usize) -> usize
 }
 
 /// Comparer for `is_second_national_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_is_second_national_team(club: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_is_second_national_team(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_SECOND_NATIONAL_TEAM)(club);
     let v = is_second_national_team(club);
     SCOREBOARD.record(r == v, || format!("is_second_national_team original={} rust={}", r, v));
@@ -1837,7 +1837,7 @@ pub(crate) unsafe extern "C" fn comparar_is_second_national_team(club: usize) ->
 
 /// Comparer for `aggregate_score` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_aggregate_score(this: usize, l: i8, home: *mut i8, away: *mut i8, cl: *mut u8, first_leg: *mut u8, f3: *mut u8, bonus: u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_aggregate_score(this: usize, l: i8, home: *mut i8, away: *mut i8, cl: *mut u8, first_leg: *mut u8, f3: *mut u8, bonus: u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> u8>(IDX_AGGREGATE_SCORE);
     let reg = [(home as usize, 1), (away as usize, 1), (cl as usize, 1), (first_leg as usize, 1), (f3 as usize, 1)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, home, away, cl, first_leg, f3, bonus), || aggregate_score(this, l, home, away, cl, first_leg, f3, bonus));

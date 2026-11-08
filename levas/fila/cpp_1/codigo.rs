@@ -27,7 +27,7 @@ unsafe extern "C" fn compare_decision_dates(a: usize, b: usize) -> i32 {
     cpp1_b(a + 0xc) as i8 as i32 - cpp1_b(b + 0xc) as i8 as i32
 }
 
-unsafe extern "C" fn comparar_compare_decision_dates(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_decision_dates(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%);
     let r = o(a, b);
     let n = compare_decision_dates(a, b);
@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn process_due_decision_dates(this: usize, data: usize,
 /// Comparador: a decisão das ofertas (0x4ce4e0) mexe nos contratos, nas ofertas e no próprio vetor: o plano (as datas
 /// lidas antes, sem rodar nada) diz se alguma entrada do tipo 3 com pessoa vence; com ela, só a original. Sem ela (o
 /// caso de todo dia), lado a lado pelo índice +0x18 e pelas entradas que vencem (ficam com −1).
-unsafe extern "thiscall" fn comparar_process_due_decision_dates(this: usize, data: usize, fatia: u32) {
+unsafe extern "thiscall" fn compare_process_due_decision_dates(this: usize, data: usize, fatia: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let (i0, n) = (cpp1_d(this + 0x18) as i32, cpp1_d(this + 0x14) as i32);
     let mut i = i0;
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn get_current_contract_offers(this: usize, clube: usiz
 
 /// Comparador: a original aloca o vetor que quem chama libera: roda só ela e confere o plano feito antes (as ofertas
 /// do clube lidas da lista, sem alocar): a conta e os 111 bytes de cada uma, na ordem.
-unsafe extern "thiscall" fn comparar_get_current_contract_offers(this: usize, clube: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_current_contract_offers(this: usize, clube: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%);
     let lista = cpp1_d(this + 0x34) as usize;
     if lista == 0 || clube == 0 || saida == 0 {

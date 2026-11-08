@@ -71,7 +71,7 @@ The list of the defects (bugs) of CM 01/02 3.9.68 that we found while porting, o
 | 0x584990 | `tabela_da_qualificacao_da_liga_dos_campeoes`, european_cup.cpp | With +0x36 = 0, it reads before the list (negative index). | [inference] A garbage club in qualifying, if the case happens. | reproduced 1:1 | `motor.rs` `cpy5_qualificacao` |
 | 0x641dc0 | `resultado_do_desempate_da_serie_a`, ita_ser_a.cpp | Reads the club of the next row even on the last row (4 bytes past the table). | [inference] A comparison with a value from outside the table. | reproduced 1:1 | `motor.rs` (comment in the routine) |
 | 0x6624f0 | `cqn12_copa_do_imperador_inscritos`, jap_emp_cup.cpp | Without clubs, it reads the vector at index −1. | [inference] A garbage entrant. | the copy uses 0 and falls into the error box | `motor.rs` (comment in the routine) |
-| 0x4c11a0 | `cqi11_concacaf_classificados` | With too few clubs in a list (Mexican, Central American, Caribbean, MLS), it reads stack leftover. | [inference] A garbage qualifier, only in a database with few clubs. | reproduced (copy uses 0) | `motor.rs` `comparar_cqi11_concacaf_classificados` |
+| 0x4c11a0 | `cqi11_concacaf_classificados` | With too few clubs in a list (Mexican, Central American, Caribbean, MLS), it reads stack leftover. | [inference] A garbage qualifier, only in a database with few clubs. | reproduced (copy uses 0) | `motor.rs` `compare_cqi11_concacaf_classificados` |
 | 0x5b91c0, 0x5bd600 | `construir_cfa`, `construir_divisao_de_baixo_francesa` | The local list of 72 or 40 pointers is not zeroed; without enough clubs, it reads garbage. | [inference] Only in a database with few clubs. | reproduced (copy uses 0) | `motor.rs` `cqn4_construir` |
 
 ## Save and database

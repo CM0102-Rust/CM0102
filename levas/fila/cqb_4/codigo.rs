@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
 /// Comparador da 0x5c4770: só a original (ponytail: ela libera e aloca o plano, e a 0x5c4380 aloca as listas de datas e
 /// de adversários dos candidatos; não roda duas vezes), conferindo o plano que ela deixa: o plano alocado, a capacidade
 /// (+0x34e4) não menor que a conta (+0x34e0), o +0x34dc zerado e o plano em ordem de data (a 0x778e90 entre vizinhos).
-unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, conta: u32) {
+unsafe extern "thiscall" fn compare_plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, conta: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, entradas, ordenados, conta);
     let (p, n, cap, z) = (cqb4_d(this + 0x34d8), cqb4_i(this + 0x34e0), cqb4_i(this + 0x34e4), cqb4_i(this + 0x34dc));
     if p == 0 {
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: usize, tipo: 
 }
 
 /// Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido passar) e a devolução.
-unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
+unsafe extern "thiscall" fn compare_add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32, u32, usize, usize) -> usize>(%%I1%%);
     let t = free_tournament_slot(this);
     let mut tam = 0usize;
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn find_human_club_open_invitation(this: usize) -> usiz
 }
 
 /// Comparador da 0x5c68b0: lado a lado no cursor da lista (+0xa) e a devolução.
-unsafe extern "thiscall" fn comparar_find_human_club_open_invitation(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_human_club_open_invitation(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let lista = cqb4_d(this + 0x34c8);
     let reg = if lista != 0 { vec![(lista + 0xa, 4)] } else { Vec::new() };

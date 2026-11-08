@@ -51,7 +51,7 @@ def main():
         partes, pos = [], 0
         for nome, a, b in mover_rotinas.blocos(t):
             ativos = {obj: tab for obj, tab in tabelas.items() if nome not in excluir[obj]
-                      and nome.replace('comparar_', '') not in excluir[obj]}
+                      and nome.replace('compare_', '') not in excluir[obj]}
             if not ativos:
                 continue
 

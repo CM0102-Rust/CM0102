@@ -4,7 +4,7 @@ O nome novo é o do método original no mapa de maxevans60 (`TRANSFER_MANAGER::a
 `add_transfer_offer`; construtor `construct_<classe>`, destrutor `destroy_<classe>`). Se o nome se repete entre
 arquivos (as ligas têm os mesmos métodos virtuais), ou já existe no código, ou é palavra reservada, leva o arquivo na
 frente (`eng_prm_set_up_rules`); se ainda assim repetir, o endereço no fim. O comparador acompanha
-(`comparar_<nome novo>`) e a constante de índice também (IDX_<NOME NOVO>, do build.rs). Os rótulos de texto ("motor_...")
+(`compare_<nome novo>`) e a constante de índice também (IDX_<NOME NOVO>, do build.rs). Os rótulos de texto ("motor_...")
 ficam como estão (as ferramentas da prova do save os usam).
 
 O mapa velho -> novo vai para docs/NOMES.csv (as ferramentas e a documentação ainda chamam as rotinas pelo nome em
@@ -97,7 +97,7 @@ def main():
     if '--gravar' not in sys.argv:
         return
     mapa = dict(troca)
-    mapa.update({'comparar_' + a: 'comparar_' + b for a, b in troca.items()})
+    mapa.update({'compare_' + a: 'compare_' + b for a, b in troca.items()})
     mapa.update({'IDX_' + a.upper(): 'IDX_' + b.upper() for a, b in troca.items()})
     rx = re.compile(r'\b(%s)\b' % '|'.join(map(re.escape, sorted(mapa, key=len, reverse=True))))
 

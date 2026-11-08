@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn build_international_date_table(this: usize) {
 /// Comparador da 0x5ca4f0: a cópia primeiro (aloca a tabela dela, que sai copiada e liberada: free 0x9452ca, cdecl),
 /// depois a original a partir dos mesmos +0x34ec..+0x34f5; confere a conta, o último dia feito e as 110 datas. Roda
 /// uma vez, no construtor dos amistosos.
-unsafe extern "thiscall" fn comparar_build_international_date_table(this: usize) {
+unsafe extern "thiscall" fn compare_build_international_date_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let campos = crate::comparison::MemorySnapshot::read(&[(this + 0x34ec, 10)]);
     build_international_date_table(this);
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
 }
 
 /// Comparador da 0x5cc510: lado a lado nas datas da tabela (só grava nelas; o qsort e a 0x54a130 não sorteiam).
-unsafe extern "thiscall" fn comparar_resolve_international_dates(this: usize) {
+unsafe extern "thiscall" fn compare_resolve_international_dates(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let (t, n) = (cqb3_d(this + 0x34ec), cqb3_i(this + 0x34f0));
     let reg = if t != 0 && n > 0 { vec![(t, n as usize * 0x14)] } else { Vec::new() };
@@ -266,4 +266,4 @@ unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -> usize {
     0
 }
 
-comparar_valor!(comparar_find_human_club_tournament, find_human_club_tournament, %%I2%%, () -> usize);
+compare_value!(compare_find_human_club_tournament, find_human_club_tournament, %%I2%%, () -> usize);

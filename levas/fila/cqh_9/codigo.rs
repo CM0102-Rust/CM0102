@@ -73,7 +73,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_player_setup_find_staff(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
+unsafe extern "C" fn compare_player_setup_find_staff(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(%%I0%%)(primeiro, comum, segundo, clube, no_elenco);
     let n = player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco);
     SCOREBOARD.record(r == n, || format!("player_setup_find_staff(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
@@ -116,7 +116,7 @@ unsafe extern "C" fn player_setup_read_quoted_token(origem: usize, destino: usiz
 }
 
 /// Comparador: lado a lado no destino (até 0x100 bytes) e na devolução.
-unsafe extern "C" fn comparar_player_setup_read_quoted_token(origem: usize, destino: usize) -> usize {
+unsafe extern "C" fn compare_player_setup_read_quoted_token(origem: usize, destino: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
     if origem == 0 || destino == 0 {
         return o(origem, destino);
@@ -160,7 +160,7 @@ unsafe extern "C" fn player_setup_type_from_name(nome: usize) -> u32 {
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_player_setup_type_from_name(nome: usize) -> u32 {
+unsafe extern "C" fn compare_player_setup_type_from_name(nome: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nome);
     let n = player_setup_type_from_name(nome);
     SCOREBOARD.record(r == n, || format!("player_setup_type_from_name({:x}) original={:x} rust={:x}", nome, r, n));

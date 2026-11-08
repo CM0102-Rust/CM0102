@@ -73,7 +73,7 @@ unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4:
         return;
     }
     crate::comparison::branch("cpy_10 sorteio do agradecimento");
-    if sortear(v59 as i32) <= 5 {
+    if random(v59 as i32) <= 5 {
         return;
     }
     let agradece: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x58a070usize);
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn add_year_award_record(this: usize, p: usize, clube: 
 /// Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_add_year_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
+unsafe extern "thiscall" fn compare_add_year_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I0%%);
     if p == 0 || premio == 0 {
         return o(this, p, clube, premio, a4, a5, credito);
@@ -134,7 +134,7 @@ unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -> u32 {
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
-unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
+unsafe extern "C" fn compare_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%)(a, b);
     if a == 0 || b == 0 {
         return r;
@@ -160,7 +160,7 @@ unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
-unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
+unsafe extern "C" fn compare_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(a, b);
     if a == 0 || b == 0 {
         return r;

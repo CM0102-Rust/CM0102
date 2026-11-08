@@ -2,5 +2,5 @@
 # Uso: python mutacoes.py mutacoes\leva130c.py --carreira 2002-06-01
 MUTACOES = [
     ('e_1e_sem2', "adjust(club, 0xc, 0x4b);", "adjust(club, 0xc, -0x4b);", "eventos 0x1e"),
-    ('e_0a_limite2', "let r = sortear(2000) + 0x1194;", "let r = sortear(2000);", "eventos 0x0a"),
+    ('e_0a_limite2', "let r = random(2000) + 0x1194;", "let r = random(2000);", "eventos 0x0a"),
 ]

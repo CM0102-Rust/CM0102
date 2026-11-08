@@ -89,8 +89,8 @@ pub(crate) unsafe extern "thiscall" fn ratings_average(this: usize, index: *cons
     sum as i16 as i32 / 4
 }
 
-comparar_valor!(comparar_ratings_average, ratings_average, IDX_RATINGS_AVERAGE, (indice: *const i32) -> i32);
-comparar_valor!(comparar_centre_backs_without_conflict, centre_backs_without_conflict, IDX_CENTRE_BACKS_WITHOUT_CONFLICT, () -> u8);
+compare_value!(compare_ratings_average, ratings_average, IDX_RATINGS_AVERAGE, (indice: *const i32) -> i32);
+compare_value!(compare_centre_backs_without_conflict, centre_backs_without_conflict, IDX_CENTRE_BACKS_WITHOUT_CONFLICT, () -> u8);
 
 /// The comparer's rehearsal: the copy runs without writing to the history file (FILE_LLIST::add_node 0x58e340, which
 /// writes to the file and moves the player sheet's positions); the nodes it would write go straight into the sum of
@@ -973,7 +973,7 @@ pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, player: usize, 
     r
 }
 
-comparar_valor!(comparar_is_retirement_pending, is_retirement_pending, IDX_IS_RETIREMENT_PENDING, (pessoa: usize) -> u8);
+compare_value!(compare_is_retirement_pending, is_retirement_pending, IDX_IS_RETIREMENT_PENDING, (pessoa: usize) -> u8);
 
 /// The person's 6-byte language record (id, language, fluency) via bsearch in [this+0x3c]; 0 if not found.
 ///

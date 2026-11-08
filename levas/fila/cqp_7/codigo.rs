@@ -145,32 +145,32 @@ unsafe extern "thiscall" fn bra_reg_gaucho_advance_stage(this: usize) {
     state_league_advance_stage(this, 0x98ae50, 0x1f4, 0x4325b0);
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_bahia_start_new_season(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_bahia_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     compare_state_league_new_season("bra_reg_bahia_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_bahia_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_reg_bahia_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     compare_state_league_advance_stage("bra_reg_bahia_advance_stage", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_central_start_new_season(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_central_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     compare_state_league_new_season("bra_reg_central_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_central_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_reg_central_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
     compare_state_league_advance_stage("bra_reg_central_advance_stage", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_gaucho_start_new_season(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_gaucho_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I4%%);
     compare_state_league_new_season("bra_reg_gaucho_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_gaucho_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_reg_gaucho_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I5%%);
     compare_state_league_advance_stage("bra_reg_gaucho_advance_stage", this, || o(this))
 }

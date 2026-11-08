@@ -40,7 +40,7 @@ unsafe extern "C" fn club_lacks_aerial_strikers(clube: usize) -> u8 {
     (count_natural_at_position(clube, 0x15, 0x2e, 13) <= 1) as u8 // atacantes pelo alto (dbo)
 }
 
-unsafe extern "C" fn comparar_club_lacks_aerial_strikers(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_lacks_aerial_strikers(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_lacks_aerial_strikers(clube);
     SCOREBOARD.record(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
@@ -57,7 +57,7 @@ unsafe extern "C" fn club_lacks_aerial_defenders(clube: usize) -> u8 {
     (count_natural_at_position(clube, 0x11, 0x2e, 13) <= 1) as u8 // zagueiros pelo alto (dbo)
 }
 
-unsafe extern "C" fn comparar_club_lacks_aerial_defenders(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_lacks_aerial_defenders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_lacks_aerial_defenders(clube);
     SCOREBOARD.record(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
@@ -74,7 +74,7 @@ unsafe extern "C" fn club_lacks_fast_defenders(clube: usize) -> u8 {
     (count_natural_at_position(clube, 0x11, 0x36, 10) <= 1) as u8 // zagueiros rapidos (dbo)
 }
 
-unsafe extern "C" fn comparar_club_lacks_fast_defenders(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_lacks_fast_defenders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = club_lacks_fast_defenders(clube);
     SCOREBOARD.record(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));

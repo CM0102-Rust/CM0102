@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: usize) {
 
 /// O comparador da nova data: lado a lado no jogo (0x4f bytes); os conflitos de dentro (0x5ad780) criam e destroem a
 /// lista deles. Só a original quando o jogo entra na lista de conferência das pernas (aloca o nó).
-unsafe extern "thiscall" fn comparar_find_new_fixture_date(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn compare_find_new_fixture_date(this: usize, jogo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
     // a caixa da janela sem data (+0x24, tipo 2) apareceria duas vezes: só a original
@@ -421,7 +421,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
 /// O comparador da entrada no calendário: só a original (ponytail: grava nas listas do calendário, aloca nós e o
 /// bloco do outro ano, remarca e entrega notícias; não pode rodar duas vezes). A cópia segue no modo Rust, com os
 /// contadores.
-unsafe extern "thiscall" fn comparar_add_fixture(this: usize, jogo: usize, zerar: u32) -> u32 {
+unsafe extern "thiscall" fn compare_add_fixture(this: usize, jogo: usize, zerar: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, zerar)
 }
 
@@ -517,6 +517,6 @@ unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
 
 /// O comparador do ano do calendário: só a original (ponytail: grava e lê os arquivos dos jogos do ano e refaz todas
 /// as listas; não pode rodar duas vezes).
-unsafe extern "thiscall" fn comparar_set_year(this: usize, ano: u32) -> u32 {
+unsafe extern "thiscall" fn compare_set_year(this: usize, ano: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, ano)
 }

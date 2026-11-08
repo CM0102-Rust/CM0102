@@ -254,7 +254,7 @@ fn date_comparer_regions(saidas: &[usize]) -> Vec<(usize, usize)> {
 
 /// Comparador: lado a lado pela saída, [0xae1080] e as estáticas das datas, e pelo motivo (as regras, a temporada e a
 /// janela só calculam).
-unsafe extern "thiscall" fn comparar_transfer_manager_get_offer_completion_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
+unsafe extern "thiscall" fn compare_transfer_manager_get_offer_completion_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut [u32; 2]) -> u16>(%%I0%%);
     let reg = date_comparer_regions(&[saida as usize]);
     let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, oferta, saida), || transfer_manager_get_offer_completion_date(this, oferta, saida));
@@ -263,7 +263,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_get_offer_completion_date(
 }
 
 /// Comparador: lado a lado pela saída, [0xae1080] e as estáticas das datas, e pelo motivo.
-unsafe extern "thiscall" fn comparar_find_next_allowed_transfer_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
+unsafe extern "thiscall" fn compare_find_next_allowed_transfer_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut [u32; 2]) -> u16>(%%I1%%);
     let reg = date_comparer_regions(&[saida as usize]);
     let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, oferta, saida), || find_next_allowed_transfer_date(this, oferta, saida));
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn comparar_find_next_allowed_transfer_date(this: usize
 }
 
 /// Comparador: lado a lado pelo início e o fim (só datas, sem estáticas).
-unsafe extern "stdcall" fn comparar_transfer_manager_get_next_window_dates(inicio: *mut [u32; 2], fim: *mut [u32; 2]) {
+unsafe extern "stdcall" fn compare_transfer_manager_get_next_window_dates(inicio: *mut [u32; 2], fim: *mut [u32; 2]) {
     let o = original_fn::<unsafe extern "stdcall" fn(*mut [u32; 2], *mut [u32; 2])>(%%I2%%);
     let reg = date_comparer_regions(&[inicio as usize, fim as usize]);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(inicio, fim), || transfer_manager_get_next_window_dates(inicio, fim));

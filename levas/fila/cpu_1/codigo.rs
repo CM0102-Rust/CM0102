@@ -17,7 +17,7 @@ unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
     4
 }
 
-unsafe extern "C" fn comparar_key_nation_index_of_nation(nacao: usize) -> u8 {
+unsafe extern "C" fn compare_key_nation_index_of_nation(nacao: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(nacao);
     let n = key_nation_index_of_nation(nacao);
     SCOREBOARD.record(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nacao, r, n));
@@ -65,7 +65,7 @@ unsafe fn hits_key_nation_error(clube: usize) -> bool {
         && !(0..0x23usize).any(|k| cpu1_d(0xb63d60 + 72 * k) == nacao)
 }
 
-unsafe extern "C" fn comparar_key_nation_index_of_club(clube: usize) -> u8 {
+unsafe extern "C" fn compare_key_nation_index_of_club(clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%);
     if hits_key_nation_error(clube) {
         return o(clube);
@@ -96,7 +96,7 @@ unsafe extern "C" fn key_nation_get_club_season_year(clube: usize) -> u16 {
     ano
 }
 
-unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: usize) -> u16 {
+unsafe extern "C" fn compare_key_nation_get_club_season_year(clube: usize) -> u16 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u16>(%%I2%%);
     if clube != 0 && hits_key_nation_error(clube) {
         return o(clube);

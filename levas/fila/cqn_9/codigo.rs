@@ -105,17 +105,17 @@ unsafe fn bra_reg_gaucho_compare_knockout_from_table(nome: &str, this: usize, li
     SCOREBOARD.record(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn9_w(fase + 0x3e)));
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_gaucho_create_knockout_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_reg_gaucho_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     bra_reg_gaucho_compare_knockout_from_table("bra_reg_gaucho_create_knockout_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_central_create_knockout_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_reg_central_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     bra_reg_gaucho_compare_knockout_from_table("bra_reg_central_create_knockout_stage", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_goias_create_knockout_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_reg_goias_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     bra_reg_gaucho_compare_knockout_from_table("bra_reg_goias_create_knockout_stage", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
 }

@@ -127,7 +127,7 @@ unsafe extern "C" fn comp_util_write_fixture_to_news_slots(jogo: usize, noticia:
     r
 }
 
-unsafe extern "thiscall" fn comparar_get_offers_for_player(this: usize, pessoa: *const i32, lista: usize, todas: u32) -> u32 {
+unsafe extern "thiscall" fn compare_get_offers_for_player(this: usize, pessoa: *const i32, lista: usize, todas: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, usize, u32) -> u32>(%%I0%%);
     // ponytail: com `lista` a original aloca nós (0x68d0d0) e não pode rodar duas vezes; só ela
     if lista != 0 || pessoa.is_null() {
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_get_offers_for_player(this: usize, pessoa: 
     r
 }
 
-unsafe extern "thiscall" fn comparar_update_club_target_reputation(this: usize, clube: usize) -> i32 {
+unsafe extern "thiscall" fn compare_update_club_target_reputation(this: usize, clube: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%);
     let reg = [(shopping_list_entry(this, clube) + 5, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube), || update_club_target_reputation(this, clube));
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn comparar_update_club_target_reputation(this: usize, 
     r
 }
 
-unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
+unsafe extern "C" fn compare_comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut u8) -> u32>(%%I2%%);
     let k = *cursor as i8;
     // índice fora de 0..49 em algum dos 18: a 0x785790 abre a caixa de erro; só a original

@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/fifa_rankings.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `count_results_in_period` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_count_results_in_period(this: usize, nation: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn compare_count_results_in_period(this: usize, nation: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(IDX_COUNT_RESULTS_IN_PERIOD)(this, nation, month_of, year_of, month_until, year_until);
     let n = count_results_in_period(this, nation, month_of, year_of, month_until, year_until);
     SCOREBOARD.record(r == n, || format!("count_results_in_period(nação {}, {}/{} a {}/{}) original={} rust={}", read_usize(nation), month_of as u8, year_of as u16, month_until as u8, year_until as u16, r, n));
@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_count_results_in_period(this: us
 ///
 /// [pt] Comparador: lado a lado pelo objeto (+0..+0xd), pela tabela das nações e por cada histórico (capacidade +8 × 5);
 /// a ordem é alocada e liberada pelas duas.
-pub(crate) unsafe extern "thiscall" fn comparar_update_rankings(this: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_update_rankings(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPDATE_RANKINGS);
     let t = read_usize(this);
     let n = read_usize(G_NATION_COUNT);
@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_rankings(this: usize, dat
 }
 
 /// Comparer for `compare_result_points_desc` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_compare_result_points_desc(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_compare_result_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_RESULT_POINTS_DESC)(a, b);
     let n = compare_result_points_desc(a, b);
     SCOREBOARD.record(r == n, || format!("compare_result_points_desc({}, {}) original={} rust={}", read_i16(a), read_i16(b), r, n));
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "C" fn comparar_compare_result_points_desc(a: usize, b:
 }
 
 /// Comparer for `append_result` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_append_result(this: usize, nation: usize, points: u32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation: usize, points: u32, partida: usize) {
     let e = ranking_entry(this, nation);
     let (conta, cap) = (read_i16(e + 0xa), read_i16(e + 8));
     let (mes, ano) = match_month_year(partida);
@@ -57,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_append_result(this: usize, natio
 }
 
 /// Comparer for `get_nation_strength_tier` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_nation_strength_tier(this: usize, nation: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_get_nation_strength_tier(this: usize, nation: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_NATION_STRENGTH_TIER)(this, nation);
     let n = get_nation_strength_tier(this, nation);
     SCOREBOARD.record(r == n, || format!("get_nation_strength_tier(nação {}) original={} rust={}", read_usize(nation), r, n));
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_nation_strength_tier(this: u
 }
 
 /// Comparer for `recalculate_scores` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_recalculate_scores(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_recalculate_scores(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RECALCULATE_SCORES);
     let reg = [(read_usize(this), read_usize(G_NATION_COUNT) * 0x2c)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || recalculate_scores(this));
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_recalculate_scores(this: usize) 
 }
 
 /// Comparer for `collect_ranked_order` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_collect_ranked_order(this: usize, count: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_collect_ranked_order(this: usize, count: *mut i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(IDX_COLLECT_RANKED_ORDER)(this, count);
     if r == 0 {
         return r;
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_ranked_order(this: usize
 }
 
 /// Comparer for `compare_ranking_score_desc` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_RANKING_SCORE_DESC)(a, b);
     let n = compare_ranking_score_desc(a, b);
     SCOREBOARD.record(r == n, || format!("compare_ranking_score_desc original={} rust={}", r, n));
@@ -103,7 +103,7 @@ pub(crate) unsafe extern "C" fn comparar_compare_ranking_score_desc(a: usize, b:
 ///
 /// [pt] Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
 /// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
-pub(crate) unsafe extern "thiscall" fn comparar_create_default_table(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_create_default_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_DEFAULT_TABLE);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     o(this);

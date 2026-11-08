@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: usize, jogad
 }
 
 /// Comparador: lado a lado pelas 40 vagas da entrada (sem chamadas).
-unsafe extern "stdcall" fn comparar_shortlist_set_up_formation_slots(entrada: usize) {
+unsafe extern "stdcall" fn compare_shortlist_set_up_formation_slots(entrada: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     let reg = [(cpp5_d(entrada), 40 * 0x25)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(entrada), || shortlist_set_up_formation_slots(entrada));
@@ -139,13 +139,13 @@ unsafe extern "stdcall" fn comparar_shortlist_set_up_formation_slots(entrada: us
 
 /// Comparador: a 0x83cb40 reavalia o elenco (sorteios, ofertas, vagas de muitos clubes): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_update_club_shortlist(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_update_club_shortlist(this: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
 }
 
 /// Comparador: lado a lado pelas entradas (9 bytes) e, com `limpar`, pelas vagas (40 × 0x25) dos clubes do plano: os
 /// clubes que a 0x842180 (pura) junta antes, numa lista própria. Cada lado cria e libera a sua lista.
-unsafe extern "thiscall" fn comparar_suspend_clubs_shortlisting_player(this: usize, jogador: usize, limpar: u8) {
+unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player(this: usize, jogador: usize, limpar: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8)>(%%I2%%);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);

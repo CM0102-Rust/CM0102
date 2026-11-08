@@ -32,7 +32,7 @@ unsafe extern "C" fn database_compare_clubs_by_latitude(a: usize, b: usize) -> i
     order_by_city_coordinate(ca, cb, 0x23) // a latitude
 }
 
-unsafe extern "C" fn comparar_database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%);
     if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
         return o(a, b); // caixa: só a original
@@ -54,7 +54,7 @@ unsafe extern "C" fn database_compare_clubs_by_longitude(a: usize, b: usize) -> 
     order_by_city_coordinate(ca, cb, 0x2b) // a longitude
 }
 
-unsafe extern "C" fn comparar_database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
         return o(a, b); // caixa: só a original

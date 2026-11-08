@@ -39,7 +39,7 @@ unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> u8 {
 }
 
 /// Comparador: rotina pura; compara o byte devolvido.
-unsafe extern "C" fn comparar_comp_active_key_nation_of_club(clube: usize) -> u8 {
+unsafe extern "C" fn compare_comp_active_key_nation_of_club(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = comp_active_key_nation_of_club(clube);
     SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", clube, r, n));
@@ -64,7 +64,7 @@ unsafe extern "C" fn comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
 }
 
 /// Comparador: rotina pura; compara o byte devolvido.
-unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
+unsafe extern "C" fn compare_comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(estadio);
     let n = comp_active_key_nation_of_stadium(estadio);
     SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", estadio, r, n));
@@ -89,7 +89,7 @@ unsafe extern "C" fn comp_key_nation_entry_from_active_index(ativo: i8) -> i32 {
 }
 
 /// Comparador: rotina pura; compara a entrada devolvida. Sem entrada (a caixa): só a original.
-unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index(ativo: i8) -> i32 {
+unsafe extern "C" fn compare_comp_key_nation_entry_from_active_index(ativo: i8) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i8) -> i32>(%%I2%%);
     if key_nation_by_active_index(ativo).is_none() {
         return o(ativo); // ponytail: a caixa não roda duas vezes

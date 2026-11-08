@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn add_future_transfer(this: usize, oferta: usize, data
 
 /// Comparador: lado a lado pela marca do jogador e por `saida`, e pela devolução (tirar a marca é o único outro efeito;
 /// a cópia, depois da original, acha o mesmo).
-unsafe extern "thiscall" fn comparar_get_future_transfer(this: usize, jogador: usize, saida: *mut usize) -> u32 {
+unsafe extern "thiscall" fn compare_get_future_transfer(this: usize, jogador: usize, saida: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut usize) -> u32>(%%I0%%);
     let regioes = [(staff_flags_byte(this, cpr3_d(jogador)) as usize, 1), (saida as usize, 4)];
     let n = if saida.is_null() { 1 } else { 2 };
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn comparar_get_future_transfer(this: usize, jogador: u
 
 /// Comparador: lado a lado pela conta e pelo vetor das futuras, pelas marcas do jogador e dos da troca e pelo cursor
 /// da lista da troca (não aloca nem libera).
-unsafe extern "thiscall" fn comparar_remove_future_transfer(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn compare_remove_future_transfer(this: usize, oferta: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let mut regioes = vec![(this + 0x928, 4), (staff_flags_byte(this, cpr3_d(oferta + 0xc)) as usize, 1)];
     let n = cpr3_d(this + 0x928) as i32;
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn comparar_remove_future_transfer(this: usize, oferta:
 /// Comparador: a original acrescenta (pode realocar), reordena e suspende as listas de alvos: só ela, conferida pelo
 /// plano: a conta sobe de 1, o registro (data e oferta) está no vetor, o estado 0x13 com +0x2d = 1 e a marca 0x10 do
 /// jogador.
-unsafe extern "thiscall" fn comparar_add_future_transfer(this: usize, oferta: usize, data: usize) {
+unsafe extern "thiscall" fn compare_add_future_transfer(this: usize, oferta: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
     let n = cpr3_d(this + 0x928);
     let mut alvo = [0u8; 0xc];

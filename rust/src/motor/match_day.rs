@@ -1312,7 +1312,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
     if g(club + club::MANAGER) == 0 {
         return;
     }
-    if test_600a50(club, 0, 1, 0, 0) == 0 && w(club + club::REPUTATION) < 0x128e && sortear(100) != 0 {
+    if test_600a50(club, 0, 1, 0, 0) == 0 && w(club + club::REPUTATION) < 0x128e && random(100) != 0 {
         return;
     }
     crate::comparison::branch("clube segue");
@@ -1335,7 +1335,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
                 && byte(s, staff::AMBITION) > 0xf
                 && byte(s, staff::DETERMINATION) > 0xa
                 && n > 2
-                && sortear(n as i32) != 0
+                && random(n as i32) != 0
             {
                 crate::comparison::branch("clube 5896d0");
                 out(s, club, other, n as i32);
@@ -1362,7 +1362,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
             continue;
         }
         crate::comparison::branch("clube jovem");
-        let r = sortear(5);
+        let r = random(5);
         if byte(p, staff::AMBITION) <= (r as u8).wrapping_add(10) as i8 || g(p + staff::PLAYER) == 0 || w(g(p + staff::PLAYER) + 0xb) >= 0x109a {
             continue;
         }

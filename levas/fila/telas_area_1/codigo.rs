@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn area_layout(area: usize) {
 
 /// A área inteira, o +0x7c do item dono (se houver) e o ponteiro da barra de rolagem do teclado
 /// (0xad9c58, que a 0x403600 grava) têm de sair iguais.
-unsafe extern "thiscall" fn comparar_area_layout(area: usize) {
+unsafe extern "thiscall" fn compare_area_layout(area: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let marcas = *((area + 0x18) as *const u32);
     let colunas = *((area + 0xbab) as *const u8);
@@ -229,7 +229,7 @@ fn cap_area_rows(linhas: u32) -> u32 {
     }
 }
 
-unsafe extern "thiscall" fn comparar_init(
+unsafe extern "thiscall" fn compare_init(
     area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
     pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
 ) {
@@ -338,6 +338,6 @@ unsafe fn position_area_item(area: usize, item: usize, d: i32) {
 // ponytail: desenhar guarda e libera imagens (aloca) e escurece o fundo (desenhar duas vezes escurece
 // duas vezes): no modo comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust
 // (contador "telas desenhar a area" no ddraw.log)
-unsafe extern "thiscall" fn comparar_draw(area: usize, redesenhar: u32) {
+unsafe extern "thiscall" fn compare_draw(area: usize, redesenhar: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(area, redesenhar)
 }

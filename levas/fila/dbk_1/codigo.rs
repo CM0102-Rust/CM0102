@@ -216,7 +216,7 @@ unsafe fn ab_team_regions() -> Vec<(usize, usize)> {
 
 /// Original e cópia lado a lado sobre as regiões dos times A e B; a mensagem dá o primeiro byte que difere (a
 /// tabela de clubes tem 8 MB: as fotos não vão para a mensagem nem voltam às sobras).
-unsafe fn comparar_times_a_e_b(nome: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
+unsafe fn compare_times_a_e_b(nome: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
     let regioes = ab_team_regions();
     let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regioes, original, rust);
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| {
@@ -230,20 +230,20 @@ unsafe fn comparar_times_a_e_b(nome: &'static str, original: impl FnOnce(), rust
     mr.0.clear();
 }
 
-unsafe extern "C" fn comparar_database_trim_senior_and_b_team_squads() {
+unsafe extern "C" fn compare_database_trim_senior_and_b_team_squads() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
-    comparar_times_a_e_b("database_trim_senior_and_b_team_squads", || o(), || database_trim_senior_and_b_team_squads());
+    compare_times_a_e_b("database_trim_senior_and_b_team_squads", || o(), || database_trim_senior_and_b_team_squads());
 }
 
-unsafe extern "C" fn comparar_database_merge_b_team_staff() {
+unsafe extern "C" fn compare_database_merge_b_team_staff() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
-    comparar_times_a_e_b("database_merge_b_team_staff", || o(), || database_merge_b_team_staff());
+    compare_times_a_e_b("database_merge_b_team_staff", || o(), || database_merge_b_team_staff());
 }
 
 /// Comparador: a original monta o índice; a cópia monta outro (novo malloc), os dois são comparados byte a byte, o
 /// da cópia é liberado (free 0x9452ca) e o da original volta a [0xae2338]. Muda a heap do modo de comparação (a
 /// impressão dele não é critério).
-unsafe extern "C" fn comparar_database_build_nation_name_index() {
+unsafe extern "C" fn compare_database_build_nation_name_index() {
     original_fn::<unsafe extern "C" fn()>(%%I2%%)();
     let t = *(0xae2338 as *const usize);
     let n = (*(0xae2350 as *const i32)).max(0) as usize * 0x24;

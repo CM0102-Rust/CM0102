@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     soltar(lista);
 }
 
-unsafe extern "thiscall" fn comparar_usa_mls_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_usa_mls_advance_stage(this: usize) {
     let antes = cqr4_d(this + 0x30) as i32;
     let ultima = antes >= (cqr4_d(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_advance_stage(this: usize) {
 /// O comparador do play-off: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes pela cópia da escolha (os mesmos registros e o mesmo qsort): a fase da terceira vaga existe, com +0x3e = 8, +4
 /// = o +4 da liga e os oito na lista dela (+0xa7, 6 bytes; como conjunto).
-unsafe extern "thiscall" fn comparar_usa_mls_create_playoff_stage(this: usize) {
+unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this: usize) {
     let ordenar: unsafe extern "C" fn(*mut u8, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let (a, b) = (cqr4_d(cqr4_d(this + 0xc)), cqr4_d(cqr4_d(this + 0xc) + 4));
     let mut plano = [0usize; 8];
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_create_playoff_stage(this: usize) {
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
 /// os dois primeiros vencedores do play-off. Depois, a fase da quarta vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (como conjunto).
-unsafe extern "thiscall" fn comparar_usa_mls_create_final_stage(this: usize) {
+unsafe extern "thiscall" fn compare_usa_mls_create_final_stage(this: usize) {
     let po = cqr4_d(cqr4_d(this + 0xc) + 8);
     let mut v = [0usize; 2];
     let mut n = 0usize;

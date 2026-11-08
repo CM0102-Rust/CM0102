@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32) -> usize {
 /// Comparador: a 0x62d250 (tratar) não pode rodar duas vezes: o plano antes, com o estado do sorteio guardado (sem
 /// contar nem rastrear) e as marcas do registro devolvidas; a original roda. Confere as marcas do registro e do
 /// escolhido e, fora do tratar, o estado do sorteio igual ao do plano (os mesmos sorteios).
-unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, registro: usize, lesao: *const u8) {
+unsafe extern "thiscall" fn compare_roll_recurring_injury(this: usize, registro: usize, lesao: *const u8) {
     let estado = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let marcas = (cpm5_b(registro + 0x12), cpm5_b(registro + 0x13));
     let plano = crate::rng::pause_trace(|| crate::rng::without_counting(|| plan_recurring_injury(this, registro, lesao)));
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, registro
 }
 
 /// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
-unsafe extern "thiscall" fn comparar_reset_player_history(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn compare_reset_player_history(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if pessoa == 0 {
         return o(this, pessoa);
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_reset_player_history(this: usize, pessoa: u
 
 /// Comparador: a 0x68d1f0 libera o item tirado e a 0x62e700 grava o histórico no arquivo: o plano antes (os itens
 /// que ficam, o byte do registro de 79 bytes, os bytes do registro que não mudam); a original roda; confere.
-unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize, id: u32) -> usize {
+unsafe extern "thiscall" fn compare_injury_reset_player(this: usize, id: u32) -> usize {
     let l = cpm5_d(this + 0x28);
     let esperado: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().filter(|&e| cpm5_d(e) as u32 != id).collect() } else { Vec::new() };
     let r = injury_history_record(this, id as usize);

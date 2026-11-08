@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
 /// achadas pelo caminho: só a original, conferindo o plano da fila. Sem entrada vencida e sem reservas a refazer, os dois
 /// lado a lado no cabeçalho (nada muda); com vencidas, as k primeiras saem: as seguintes sobem k casas, as k últimas
 /// ficam com id −1 e as palavras +4/+6 zeradas, a conta cai k. Com reservas (mais de 2) ou id inválido: só a original.
-unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
+unsafe extern "thiscall" fn compare_process_regen_queue(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpw10_i(this + 0x20) > 2 {
         crate::comparison::branch("cpw_10 reservas so na original");
@@ -265,7 +265,7 @@ unsafe extern "C" fn media_pick_outlet_type_for_club(clube: usize) -> u32 {
     }
 }
 
-unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: usize) -> u32 {
+unsafe extern "C" fn compare_media_pick_outlet_type_for_club(clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
     let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(clube), || crate::rng::without_counting(|| media_pick_outlet_type_for_club(clube)));
     SCOREBOARD.record(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
@@ -283,7 +283,7 @@ unsafe extern "C" fn media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
     }
 }
 
-unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
+unsafe extern "C" fn compare_media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(pessoa), || crate::rng::without_counting(|| media_pick_outlet_type_for_person(pessoa)));
     SCOREBOARD.record(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));

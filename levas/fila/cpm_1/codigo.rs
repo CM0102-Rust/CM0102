@@ -321,7 +321,7 @@ unsafe extern "C" fn cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32
 
 /// Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; jogo nulo ou empate nos pênaltis (a
 /// caixa): só a original.
-unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn compare_decide_fixture_winner(this: usize, jogo: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if jogo == 0 {
         return o(this, jogo);
@@ -337,7 +337,7 @@ unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usize, jogo: us
 
 /// Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; empate nos pênaltis (a caixa): só a
 /// original.
-unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, confronto: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn compare_decide_tie_winner(this: usize, confronto: usize, jogo: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let reg = [(jogo + 0x3d, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, confronto, jogo)), || tie_winner_side(confronto, jogo));
@@ -350,7 +350,7 @@ unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, confronto: u
 }
 
 /// Comparador: pelo valor.
-unsafe extern "C" fn comparar_cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = cup_compare_draw_entries_by_seed(a, b);
     SCOREBOARD.record(r == n, || format!("cup_compare_draw_entries_by_seed({}, {}) original={} rust={}", cpm1_b(a + 6), cpm1_b(b + 6), r, n));

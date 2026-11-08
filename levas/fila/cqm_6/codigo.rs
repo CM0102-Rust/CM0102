@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn construct_spa_lower(this: usize, ano: u32) -> usize 
 }
 
 /// Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
-unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_spa_lower(this: usize, ano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I0%%);
     let r = o(this, ano);
     let ok = r == this && cqm6_d(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
 
 /// Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
-unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_spa_second_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let n = cqm6_d(0xae235c) as i32;
     let base = cqm6_d(0xae23b4);
@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
 /// Depois: +0x3e e o clube das primeiras linhas. O +0x60 não entra: a segunda passada (a dos times B da Segunda) zera o
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela
 /// (comportamento da original, que a cópia repete; achado pela comparação de 8 ligas, 05/11/2026).
-unsafe extern "thiscall" fn comparar_spa_lower_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_spa_lower_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let mut plano: Vec<usize> = Vec::new();
     let mut k: u8 = 0;

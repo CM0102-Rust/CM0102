@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn get_active_tactic(this: usize, tecnico: usize) -> us
 }
 
 /// Comparador: a devolução (rotina pura); sem técnico ou fora da conta, só a original (caixa).
-unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, tecnico: usize) -> usize {
+unsafe extern "thiscall" fn compare_get_active_tactic(this: usize, tecnico: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let t = manager_or_current_human(tecnico);
     if t == 0 || human_manager_human_manager_index(this, t).is_none() {
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserva: u32, clube:
 
 /// Comparador: lado a lado pelo byte da vaga ativa do registro; sem técnico (nada) ou fora da conta (caixa), só a
 /// original.
-unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, reserva: u32, clube: usize, tecnico: usize) {
+unsafe extern "thiscall" fn compare_select_tactic_slot(this: usize, reserva: u32, clube: usize, tecnico: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(%%I1%%);
     let t = manager_or_current_human(tecnico);
     let Some(k) = (if t != 0 { human_manager_human_manager_index(this, t) } else { None }) else {
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, time: u32
 
 /// Comparador: lado a lado pela devolução e, havendo técnico humano no clube, pelo byte da vaga ativa dele (a 0x5fbe20
 /// grava). Clube nulo (caixa): só a original.
-unsafe extern "thiscall" fn comparar_get_club_tactic(this: usize, clube: usize, time: u32) -> usize {
+unsafe extern "thiscall" fn compare_get_club_tactic(this: usize, clube: usize, time: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%);
     if clube == 0 {
         return o(this, clube, time);

@@ -55,7 +55,7 @@ unsafe extern "C" fn player_attribute_rating_with_scaled_ability(jogador: usize,
     attribute_rating(habilidade * read_f64_at(0x967880) + (v + v)) as u32
 }
 
-unsafe extern "C" fn comparar_get_adjective_form_index(indice: u32, idioma: u32) -> u8 {
+unsafe extern "C" fn compare_get_adjective_form_index(indice: u32, idioma: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u8>(%%I0%%);
     let r = o(indice, idioma);
     let n = get_adjective_form_index(indice, idioma);
@@ -63,7 +63,7 @@ unsafe extern "C" fn comparar_get_adjective_form_index(indice: u32, idioma: u32)
     r
 }
 
-unsafe extern "C" fn comparar_staff_get_non_player_attribute(pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn compare_staff_get_non_player_attribute(pessoa: usize, atributo: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%);
     let r = o(pessoa, atributo);
     let a = atributo as u8 as i8;
@@ -75,7 +75,7 @@ unsafe extern "C" fn comparar_staff_get_non_player_attribute(pessoa: usize, atri
     r
 }
 
-unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_ability(jogador: usize, valor: u32) -> u32 {
+unsafe extern "C" fn compare_player_attribute_rating_with_scaled_ability(jogador: usize, valor: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%);
     let r = o(jogador, valor);
     let n = player_attribute_rating_with_scaled_ability(jogador, valor);

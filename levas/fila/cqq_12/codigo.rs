@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: usize, fase
     build_stage_table(this, oceania_stage_spec(fase), rodadas, extra, liga, 0xa6a068)
 }
 
-unsafe extern "thiscall" fn comparar_oceania_club_champ_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_oceania_club_champ_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     compare_stage_table("oceania_club_champ_create_schedule", fase, oceania_stage_spec(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| oceania_club_champ_create_schedule(this, fase, r, e, l))
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn asia_club_champ_build_team_table(this: usize) -> i32
     build_team_table(this, 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: os times da Liga dos Campeões asiática
 }
 
-unsafe extern "thiscall" fn comparar_asia_club_champ_build_team_table(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_asia_club_champ_build_team_table(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
     compare_team_table("asia_club_champ_build_team_table", this, || o(this), || asia_club_champ_build_team_table(this))
 }
@@ -280,7 +280,7 @@ unsafe extern "thiscall" fn create_team_entries(this: usize) -> i32 {
     build_team_table(this, 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: os times da Recopa asiática
 }
 
-unsafe extern "thiscall" fn comparar_create_team_entries(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_create_team_entries(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
     compare_team_table("create_team_entries", this, || o(this), || create_team_entries(this))
 }

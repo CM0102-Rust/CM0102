@@ -105,14 +105,14 @@ unsafe extern "thiscall" fn get_category(noticia: usize) -> u32 {
     (t as u32 & 0xffff_ff00) | c
 }
 
-unsafe extern "thiscall" fn comparar_get_finable_story_kind(midia: usize, jogador: usize) -> u16 {
+unsafe extern "thiscall" fn compare_get_finable_story_kind(midia: usize, jogador: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(%%I0%%)(midia, jogador);
     let n = get_finable_story_kind(midia, jogador);
     SCOREBOARD.record(r == n, || format!("get_finable_story_kind original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_choose_injury_type(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
+unsafe extern "thiscall" fn compare_choose_injury_type(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8>(%%I1%%);
     // ponytail: jogador nulo abre a caixa de erro do 0x62ed70; não roda duas vezes
     if jogador == 0 {
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn comparar_choose_injury_type(lesoes: usize, categoria
     r
 }
 
-unsafe extern "thiscall" fn comparar_get_category(noticia: usize) -> u32 {
+unsafe extern "thiscall" fn compare_get_category(noticia: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let t = *(noticia as *const i32);
     if !(1..=0x1790).contains(&t) {

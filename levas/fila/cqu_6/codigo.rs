@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn cqu6_copa_do_rei(this: usize, ano: u32, dono: usize)
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu6_plano).
-unsafe extern "thiscall" fn comparar_cqu6_copa_do_rei(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqu6_copa_do_rei(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu6_plano(this, r, ano, dono, 0x96f9c8, &CQU6_CAMPOS_COPA_DO_REI, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqu6_copa_do_rei({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn cqu6_supercopa_espanhola(this: usize, ano: u32, dono
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu6_plano).
-unsafe extern "thiscall" fn comparar_cqu6_supercopa_espanhola(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqu6_supercopa_espanhola(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu6_plano(this, r, ano, dono, 0x96fd38, &CQU6_CAMPOS_SUPERCOPA_ESPANHOLA, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqu6_supercopa_espanhola({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -352,7 +352,7 @@ unsafe extern "thiscall" fn cqu6_inscritos_da_copa_do_rei(this: usize) -> i32 {
 
 /// Lado a lado a partir do mesmo estado (+0x3e; não sorteia): a original deixa a tabela dela em +0xa7, a cópia faz a sua,
 /// comparada nas 83 vagas (6 bytes cada) e liberada; a devolução também.
-unsafe extern "thiscall" fn comparar_cqu6_inscritos_da_copa_do_rei(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_cqu6_inscritos_da_copa_do_rei(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
     let antes = cqu6_d(this + 0xa7);
     let lo = core::cell::Cell::new(0usize);

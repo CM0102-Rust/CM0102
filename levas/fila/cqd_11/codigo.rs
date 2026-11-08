@@ -123,11 +123,11 @@ unsafe fn compare_toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, li
         nome, pessoa, marca, marca.map(|(p, _)| *(p as *const u8)), fica, depois));
 }
 
-unsafe extern "thiscall" fn comparar_clear_awol(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_clear_awol(this: usize, pessoa: usize) {
     compare_toggle_mark_and_unlist(this, pessoa, 1, 0, original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%), "clear_awol");
 }
 
-unsafe extern "thiscall" fn comparar_clear_missed_training(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_clear_missed_training(this: usize, pessoa: usize) {
     compare_toggle_mark_and_unlist(this, pessoa, 2, 4, original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%), "clear_missed_training");
 }
 
@@ -251,7 +251,7 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
 /// Comparador: a original monta a notícia e a entrega (aloca na caixa): só ela roda, com os sorteios rastreados; depois
 /// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
-unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize, jogador: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_awol_post_missed_training_news(this: usize, jogador: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
     let ((), tape_lock) = crate::rng::trace(|| o(this, jogador, clube));
     let n = tape_lock.len();

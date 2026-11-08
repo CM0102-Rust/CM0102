@@ -135,21 +135,21 @@ unsafe extern "C" fn cup_set_round_match_day(rodadas: usize, rodada: i16, vaga: 
     mando
 }
 
-unsafe extern "C" fn comparar_comp_util_read_fixture_from_news_slots(noticia: usize, partida: usize, cursor: *mut u8) {
+unsafe extern "C" fn compare_comp_util_read_fixture_from_news_slots(noticia: usize, partida: usize, cursor: *mut u8) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut u8)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(partida, 0x4d), (cursor as usize, 1)],
         || o(noticia, partida, cursor), || comp_util_read_fixture_from_news_slots(noticia, partida, cursor));
     SCOREBOARD.record(igual, || format!("comp_util_read_fixture_from_news_slots {:x?} x {:x?}", mo, mr));
 }
 
-unsafe extern "C" fn comparar_comp_util_classify_tie_result_for_news(clube: usize, partida: usize) -> u8 {
+unsafe extern "C" fn compare_comp_util_classify_tie_result_for_news(clube: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%)(clube, partida);
     let n = comp_util_classify_tie_result_for_news(clube, partida);
     SCOREBOARD.record(r == n, || format!("comp_util_classify_tie_result_for_news original={} rust={}", r, n));
     r
 }
 
-unsafe extern "C" fn comparar_cup_set_round_match_day(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
+unsafe extern "C" fn compare_cup_set_round_match_day(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(%%I2%%);
     if !(0..8).contains(&vaga) || !(-1..=6).contains(&semana) || !(-1..3).contains(&hora) || !(-1..=3).contains(&codigo) {
         return o(rodadas, rodada, vaga, semana, hora, codigo, mando);

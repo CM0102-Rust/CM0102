@@ -41,14 +41,14 @@ unsafe extern "thiscall" fn get_slot(noticia: usize, vaga: i8) -> u32 {
     core::ptr::read_unaligned((noticia + 5 + vaga as usize * 4) as *const u32)
 }
 
-unsafe extern "thiscall" fn comparar_find_retirement_entry(regen: usize, id: *const i32, por_lesao: u32) -> usize {
+unsafe extern "thiscall" fn compare_find_retirement_entry(regen: usize, id: *const i32, por_lesao: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, u32) -> usize>(%%I0%%)(regen, id, por_lesao);
     let n = find_retirement_entry(regen, id, por_lesao);
     SCOREBOARD.record(r == n, || format!("find_retirement_entry({}, {}) original={:#x} rust={:#x}", *id, por_lesao, r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_register_comp_objects(amistoso: usize) {
+unsafe extern "thiscall" fn compare_register_comp_objects(amistoso: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let tabela = *(0xadadfc as *const usize) as isize;
     let base = core::ptr::read_unaligned((amistoso + 0xaf) as *const i16) as isize;
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn comparar_register_comp_objects(amistoso: usize) {
     SCOREBOARD.record(igual, || format!("register_comp_objects {:x?} x {:x?}", mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_get_slot(noticia: usize, vaga: i8) -> u32 {
+unsafe extern "thiscall" fn compare_get_slot(noticia: usize, vaga: i8) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(%%I2%%)(noticia, vaga);
     if !(0..0x32).contains(&vaga) {
         return r;

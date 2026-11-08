@@ -72,14 +72,14 @@ unsafe extern "C" fn staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
     (v != 0 && *((v + 0x4e) as *const u8) & 2 != 0) as u32
 }
 
-unsafe extern "C" fn comparar_database_is_basque_club(clube: usize) -> u32 {
+unsafe extern "C" fn compare_database_is_basque_club(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(clube);
     let n = database_is_basque_club(clube);
     SCOREBOARD.record(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", clube, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_staff_is_transfer_listed(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn compare_staff_is_transfer_listed(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0, 0x4cf5f0 e 0x600a50 (clube não
     // nulo) só leem
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
@@ -89,7 +89,7 @@ unsafe extern "C" fn comparar_staff_is_transfer_listed(pessoa: usize, clube: usi
     r
 }
 
-unsafe extern "C" fn comparar_staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn compare_staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa, clube),
         || staff_is_loan_listed(pessoa, clube));

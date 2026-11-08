@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn limit_club_division_tier(this: usize, valor: u32, fo
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = cup_compare_entries_by_level_desc(a, b);
     SCOREBOARD.record(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -76,7 +76,7 @@ unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usi
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = cup_compare_entries_by_level_asc(a, b);
     SCOREBOARD.record(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -84,7 +84,7 @@ unsafe extern "C" fn comparar_cup_compare_entries_by_level_asc(a: usize, b: usiz
 }
 
 /// Comparador: grava só o byte +0x64 dos clubes da tabela: lado a lado nesses bytes.
-unsafe extern "thiscall" fn comparar_limit_club_division_tier(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
+unsafe extern "thiscall" fn compare_limit_club_division_tier(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(%%I2%%);
     let n = *((this + 0x3e) as *const i16);
     let tabela = cpp13_d(this + 0xb1);

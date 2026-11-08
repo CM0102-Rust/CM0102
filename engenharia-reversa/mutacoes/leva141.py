@@ -1,10 +1,10 @@
 # Mutacoes da leva141 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva141.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
-    ('l_limite', 'if n > 3 && sortear(n as i32) != 0 && sortear(0x1f4) != 0 {', 'if n > 4 && sortear(n as i32) != 0 && sortear(0x1f4) != 0 {'),
+    ('l_limite', 'if n > 3 && random(n as i32) != 0 && random(0x1f4) != 0 {', 'if n > 4 && random(n as i32) != 0 && random(0x1f4) != 0 {'),
     ('l_teto', '    if *w(0xf639) > 6 {\n        return;', '    if *w(0xf639) > 7 {\n        return;'),
     ('l_causador', 'let q = (o + 0x31) as *mut i16;\n        *q = (*q).wrapping_sub(10);', 'let q = (o + 0x31) as *mut i16;\n        *q = (*q).wrapping_sub(9);'),
     ('l_grave', 'if g as i8 > 0x32 {\n        crate::comparison::branch("lesao grave");', 'if g as i8 > 0x33 {\n        crate::comparison::branch("lesao grave");'),
-    ('l_folego', 'local = sortear(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32;', 'local = sortear(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968)) + 1) as f32;'),
+    ('l_folego', 'local = random(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32;', 'local = random(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968)) + 1) as f32;'),
     ('l_59', '*((p + match_player::STAMINA_BOOST) as *mut f32) = r as f32;', '*((p + match_player::STAMINA_BOOST) as *mut f32) = (r + 1) as f32;'),
     ('l_d5', '*d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64) as f32;', '*d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64 * 1.01) as f32;'),
     ('l_forca', 'let v = (byte(person, 0x2d) as i32 * 25) as f64 + read_f64_at(0x96d458);', 'let v = (byte(person, 0x2d) as i32 * 26) as f64 + read_f64_at(0x96d458);'),
@@ -13,6 +13,6 @@ MUTACOES = [
     ('r_grave', '} else if *chance as i8 > *g as i8 {\n        crate::comparison::branch("lesao mais grave");', '} else if *chance as i8 >= *g as i8 + 3 {\n        crate::comparison::branch("lesao mais grave");', 'lesao mais grave'),
     ('r_nova', 'r[5] = *chance;', 'r[5] = (*chance).wrapping_add(1);', 'lesao registrada'),
     ('l_para3', 'if local >= read_f32_at(0x96d1a8) && *b(p, 0x1c) != 0 {', 'if local > read_f32_at(0x96d1a8) * 1.5 && *b(p, 0x1c) != 0 {', 'lesao para 3 e sai'),
-    ('d_21b5', '0x21b5 => atuacao > sortear(1000) + 0x1f40 && b(0x30) != 0,', '0x21b5 => atuacao > sortear(1000) + 0x1f40,'),
+    ('d_21b5', '0x21b5 => atuacao > random(1000) + 0x1f40 && b(0x30) != 0,', '0x21b5 => atuacao > random(1000) + 0x1f40,'),
     ('d_sim', 'crate::comparison::branch(if r { "destaque sim" } else { "destaque nao" });', 'let r = r || c == 0x21b1;\n    crate::comparison::branch(if r { "destaque sim" } else { "destaque nao" });'),
 ]

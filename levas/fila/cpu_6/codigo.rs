@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, jogo: usi
 }
 
 /// Comparador: lado a lado nos 4 bytes da saída.
-unsafe extern "thiscall" fn comparar_get_match_weather(this: usize, s: *mut u8, jogo: usize) {
+unsafe extern "thiscall" fn compare_get_match_weather(this: usize, s: *mut u8, jogo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(%%I0%%);
     let regioes = [(s as usize, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, s, jogo), || get_match_weather(this, s, jogo));
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, jogo: usize
 }
 
 /// Comparador: pelo valor.
-unsafe extern "thiscall" fn comparar_get_temperature(this: usize, band: u32, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_temperature(this: usize, band: u32, jogo: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(%%I1%%)(this, band, jogo);
     let n = get_temperature(this, band, jogo);
     SCOREBOARD.record(r == n, || format!("get_temperature(band {}, jogo {:#x}) original={} rust={}", band as u8 as i8, jogo, r as i8, n as i8));
@@ -297,7 +297,7 @@ unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: *const u8, 
 }
 
 /// Comparador: pelo valor.
-unsafe extern "thiscall" fn comparar_get_pitch_condition(this: usize, clima: *const u8, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_pitch_condition(this: usize, clima: *const u8, jogo: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(%%I2%%)(this, clima, jogo);
     let n = get_pitch_condition(this, clima, jogo);
     SCOREBOARD.record(r == n, || format!("get_pitch_condition(clima {:x?}, jogo {:#x}) original={:#x} rust={:#x}", core::slice::from_raw_parts(clima, 4), jogo, r, n));

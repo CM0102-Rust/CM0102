@@ -40,7 +40,7 @@ unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     3
 }
 
-unsafe extern "C" fn comparar_key_nation_index_of_comp(comp: usize) -> u8 {
+unsafe extern "C" fn compare_key_nation_index_of_comp(comp: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(comp);
     let n = key_nation_index_of_comp(comp);
     SCOREBOARD.record(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", cpt4_d(comp) as i32, r, n));
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn collect_ranked_order(this: usize, conta: *mut i32) -
 
 // ponytail: as duas alocam o vetor; a original roda primeiro (o vetor dela volta ao chamador), a cópia depois, e o
 // vetor da cópia é liberado (0x9452ca) depois da conferência da conta e dos ponteiros.
-unsafe extern "thiscall" fn comparar_collect_ranked_order(this: usize, conta: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_collect_ranked_order(this: usize, conta: *mut i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(%%I1%%)(this, conta);
     if r == 0 {
         return r;
@@ -104,7 +104,7 @@ unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -> i32 {
     }
 }
 
-unsafe extern "C" fn comparar_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_ranking_score_desc(a, b);
     SCOREBOARD.record(r == n, || format!("compare_ranking_score_desc original={} rust={}", r, n));

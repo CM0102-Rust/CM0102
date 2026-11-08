@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/eurocomp/intertoto_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `intertoto_cup_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE);
     compare_cup_round_table("intertoto_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
         |r, e, s| intertoto_cup_create_round_table(this, stage, r, e, s))
@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table
 ///
 /// [pt] Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
 /// sua, comparada nos inscritos (com a devolução 1) e liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_INTERTOTO_CUP_COLLECT_ENTRANTS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(t
 ///
 /// [pt] Lado a lado: a original grava a lista dela em `saida` (de quem chama, que a libera); a cópia faz a sua numa saída
 /// própria, comparada na conta e nos ponteiros, e a libera.
-pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize, out: *mut usize, ativos: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_club_list(this: usize, out: *mut usize, ativos: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_INTERTOTO_CUP_COLLECT_CLUB_LIST);
     let mut s2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
@@ -72,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(
 }
 
 /// Comparer for `intertoto_cup_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_FOR_DATE);
     let uefa = uefa_cup_object();
     if uefa == 0 || read_u32_as_usize(this + 0xb2) != 0 {
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(th
 }
 
 /// Comparer for `intertoto_cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if club == 0 {
         return o(this, club, outcome, a3, a4, game, a6);

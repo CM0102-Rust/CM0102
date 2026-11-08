@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn add_transfer_offer(this: usize, oferta: usize, termo
 /// Comparador da 0x8be300: só a original (aloca a oferta e as listas, tira a oferta antiga, agenda, entrega a
 /// notícia). Confere o plano feito antes: a vaga (`find_offer_slot_and_rival`, com o vetor que cresce quando está cheio) e o número
 /// de série gravados na oferta de entrada e a série que sobe.
-unsafe extern "thiscall" fn comparar_add_transfer_offer(this: usize, oferta: usize, termos: u32) {
+unsafe extern "thiscall" fn compare_add_transfer_offer(this: usize, oferta: usize, termos: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let (alvo, comprador) = (cqf1_d(oferta + 0xc), cqf1_d(oferta + 8));
     let primeira = cqf1_b(cqf1_d(this + 0x86e).wrapping_add(alvo.wrapping_mul(8)) + 1) == 0;
@@ -368,6 +368,6 @@ unsafe extern "thiscall" fn accept_loan_offer(this: usize, vaga: *mut usize, mar
 }
 
 /// Comparador da 0x8c0660: só a original (entrega notícias, agenda a oferta, mexe nas listas de observação).
-unsafe extern "thiscall" fn comparar_accept_loan_offer(this: usize, vaga: *mut usize, marcar: u32) {
+unsafe extern "thiscall" fn compare_accept_loan_offer(this: usize, vaga: *mut usize, marcar: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32)>(%%I1%%)(this, vaga, marcar) // ponytail: só a original
 }

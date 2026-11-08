@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn create_third_division_stage(this: usize) {
 
 /// O comparador da tabela: só a original (ponytail: aloca a tabela e as listas das linhas), com o plano feito antes:
 /// os clubes da competição com o código 0x413, na ordem do banco, até 4. Depois, a devolução, +0x3e = 4 e as linhas.
-unsafe extern "thiscall" fn comparar_usa_mls_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_usa_mls_create_table(this: usize) -> u32 {
     let mut plano = [0usize; 4];
     let mut n = 0usize;
     let base = cqs1_d(0xae23b4);
@@ -173,12 +173,12 @@ unsafe fn compare_division_stage(nome: &str, this: usize, codigo: i16, k: usize,
     SCOREBOARD.record(igual, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", nome, this, fase, n, plano));
 }
 
-unsafe extern "thiscall" fn comparar_create_second_division_stage(this: usize) {
+unsafe extern "thiscall" fn compare_create_second_division_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     compare_division_stage("create_second_division_stage", this, 0x47b, 0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_create_third_division_stage(this: usize) {
+unsafe extern "thiscall" fn compare_create_third_division_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     compare_division_stage("create_third_division_stage", this, 0x414, 1, || o(this))
 }

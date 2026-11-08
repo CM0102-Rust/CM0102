@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) -> u32 {
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_conmebol_liber_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_conmebol_liber_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     check_cup_rules("conmebol_liber_set_up_rules", this, &LIBERTADORES_RULES, || o(this))
 }
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) -> u32 {
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_con_merc_cup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     check_cup_rules("con_merc_cup_set_up_rules", this, &MERCONORTE_RULES, || o(this))
 }
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_oceania_club_champ_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_oceania_club_champ_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     check_cup_rules("oceania_club_champ_set_up_rules", this, &OCEANIA_RULES, || o(this))
 }

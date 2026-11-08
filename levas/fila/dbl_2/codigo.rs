@@ -34,7 +34,7 @@ unsafe extern "C" fn staff_clear_opinion_links(pessoa: usize) {
     }
 }
 
-unsafe extern "C" fn comparar_staff_clear_opinion_links(pessoa: usize) {
+unsafe extern "C" fn compare_staff_clear_opinion_links(pessoa: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(%%I0%%);
     let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa) }; // não escreve nada
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(pessoa), || staff_clear_opinion_links(pessoa));
@@ -62,7 +62,7 @@ unsafe extern "C" fn staff_add_opinion_link(pessoa: usize, outra: usize, valor: 
     }
 }
 
-unsafe extern "C" fn comparar_staff_add_opinion_link(pessoa: usize, outra: usize, valor: i32) {
+unsafe extern "C" fn compare_staff_add_opinion_link(pessoa: usize, outra: usize, valor: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, i32)>(%%I1%%);
     let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa, outra, valor) };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(pessoa, outra, valor),
@@ -84,7 +84,7 @@ unsafe extern "C" fn staff_remove_opinion_link(pessoa: usize, valor: i32) {
     }
 }
 
-unsafe extern "C" fn comparar_staff_remove_opinion_link(pessoa: usize, valor: i32) {
+unsafe extern "C" fn compare_staff_remove_opinion_link(pessoa: usize, valor: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i32)>(%%I2%%);
     let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa, valor) };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(pessoa, valor), || staff_remove_opinion_link(pessoa, valor));

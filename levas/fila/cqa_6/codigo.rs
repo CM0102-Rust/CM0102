@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn contains_player(this: usize, pessoa: usize) -> u32 {
 }
 
 /// Comparador da 0x7af600: pela devolução (só lê; as datas e a chave são locais). Pessoa nula: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_contains_player(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn compare_contains_player(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if pessoa == 0 {
         return o(this, pessoa);
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32
 
 /// Comparador da 0x7f7270: lado a lado nas 10 buscas do técnico (0x2b0 bytes cada, achadas antes pela 0x7f6cd0, que
 /// só lê) e na devolução. Sem técnico ou com a edição aberta (a 0x8043c0 mexe na edição): só a original.
-unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, tecnico: usize) -> u32 {
+unsafe extern "thiscall" fn compare_sync_scout_lists(this: usize, tecnico: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
     let m = if tecnico != 0 { tecnico } else { scout_manager_current_human_manager() };
     if m == 0 {
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(this: usize,
 }
 
 /// Comparador da 0x7bd700: sem `reservar`, pela devolução (só lê); com ele, lado a lado nas 50 vagas e na devolução.
-unsafe extern "thiscall" fn comparar_player_search_find_or_claim_player_slot(this: usize, pessoa: usize, reservar: u32) -> usize {
+unsafe extern "thiscall" fn compare_player_search_find_or_claim_player_slot(this: usize, pessoa: usize, reservar: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if pessoa == 0 {
         return o(this, pessoa, reservar);

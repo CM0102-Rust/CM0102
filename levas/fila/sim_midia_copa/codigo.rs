@@ -41,21 +41,21 @@ unsafe extern "thiscall" fn cup_match_importance(copa: usize, partida: usize, se
     al
 }
 
-unsafe extern "thiscall" fn comparar_story_with_response_two(midia: usize, id: *const i32) -> u32 {
+unsafe extern "thiscall" fn compare_story_with_response_two(midia: usize, id: *const i32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(%%I0%%)(midia, id);
     let n = story_with_response_two(midia, id);
     SCOREBOARD.record(r == n, || format!("story_with_response_two({}) original={} rust={}", *id, r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_has_story(midia: usize, id: *const i32) -> u8 {
+unsafe extern "thiscall" fn compare_has_story(midia: usize, id: *const i32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(%%I1%%)(midia, id);
     let n = has_story(midia, id);
     SCOREBOARD.record(r == n, || format!("has_story({}) original={} rust={}", *id, r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_cup_match_importance(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
+unsafe extern "thiscall" fn compare_cup_match_importance(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(margem as usize, 1)], || o(copa, partida, segundo, margem), || cup_match_importance(copa, partida, segundo, margem));
     SCOREBOARD.record(igual && r == n, || format!("cup_match_importance(lado {}) original={} rust={} {:x?} x {:x?}", segundo, r, n, mo, mr));

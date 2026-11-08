@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `get_active_tactic` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução (rotina pura); sem técnico ou fora da conta, só a original (caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, manager: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_get_active_tactic(this: usize, manager: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_ACTIVE_TACTIC);
     let t = manager_or_current_human(manager);
     if t == 0 || human_manager_human_manager_index(this, t).is_none() {
@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, m
 ///
 /// [pt] Comparador: lado a lado pelo byte da vaga ativa do registro; sem técnico (nada) ou fora da conta (caixa), só a
 /// original.
-pub(crate) unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, reserve: u32, club: usize, manager: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_select_tactic_slot(this: usize, reserve: u32, club: usize, manager: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT);
     let t = manager_or_current_human(manager);
     let Some(k) = (if t != 0 { human_manager_human_manager_index(this, t) } else { None }) else {
@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, 
 /// Comparer for `clear_invalid_watched_fixtures` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelas 16 partidas assistidas (a 0x5fe700 só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_clear_invalid_watched_fixtures(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLEAR_INVALID_WATCHED_FIXTURES);
     let reg: Vec<(usize, usize)> = (0..0x10).map(|i| (human_manager_watched_match_record(this, i), 79)).collect();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || clear_invalid_watched_fixtures(this));
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(t
 }
 
 /// Comparer for `is_fixture_watched` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_is_fixture_watched(this: usize, partida: usize) -> u32 {
     // 0x5fe290 only reads: can run on both sides
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED);
     if partida == 0 {
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, 
 }
 
 /// Comparer for `has_nickname` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_has_nickname(this: usize, person: usize, human: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_has_nickname(this: usize, person: usize, human: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_HAS_NICKNAME);
     if person != 0 && matches!(human_index_for_nickname(this, human), Some(None)) {
         return o(this, person, human);
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_nickname(this: usize, person
 }
 
 /// Comparer for `get_holiday_stamp` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_holiday_stamp(manager: usize, person: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_holiday_stamp(manager: usize, person: usize) -> u32 {
     if human_manager_record(manager, person).is_none() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GET_HOLIDAY_STAMP)(manager, person);
     }
@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_holiday_stamp(manager: usize
 }
 
 /// Comparer for `get_saved_lineup` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_saved_lineup(manager: usize, person: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_get_saved_lineup(manager: usize, person: usize) -> usize {
     if human_manager_record(manager, person).is_none() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_SAVED_LINEUP)(manager, person);
     }
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_saved_lineup(manager: usize,
 }
 
 /// Comparer for `human_manager_get_stand_in_manager` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_human_manager_get_stand_in_manager(club: usize) -> usize {
+pub(crate) unsafe extern "C" fn compare_human_manager_get_stand_in_manager(club: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_HUMAN_MANAGER_GET_STAND_IN_MANAGER)(club);
     let n = human_manager_get_stand_in_manager(club);
     SCOREBOARD.record(r == n, || format!("human_manager_get_stand_in_manager({:#x}) original={:#x} rust={:#x}", club, r, n));
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "C" fn comparar_human_manager_get_stand_in_manager(club
 }
 
 /// Comparer for `is_watching_fixture` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize, partida: usize, human: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_is_watching_fixture(this: usize, partida: usize, human: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE);
     let r = o(this, partida, human);
     // simplification: the error cases (message box) only in the original
@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize,
 /// Comparer for `can_watch_fixture` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a original e a cópia (as duas só leem; a volta da lista recomeça o cursor), pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, partida: usize, human: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_can_watch_fixture(this: usize, partida: usize, human: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CAN_WATCH_FIXTURE)(this, partida, human);
     if partida == 0 {
         return r;
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, p
 ///
 /// [pt] Comparador: lado a lado pelos vetores de apelidos e contagens de todos os técnicos humanos; sem técnicos (o qsort
 /// leria pelo `id`), só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: usize, id: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_remove_nickname_from_all(this: usize, id: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_NICKNAME_FROM_ALL);
     let n = read_u32(this + 4) as i32;
     if id == 0 || n <= 0 {
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: u
 }
 
 /// Comparer for `human_runs_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_human_runs_club(club: usize, any: u32, force: i8) -> u32 {
+pub(crate) unsafe extern "C" fn compare_human_runs_club(club: usize, any: u32, force: i8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(club, any, force);
     let n = human_runs_club(club, any, force);
     SCOREBOARD.record(r == n, || format!("human_runs_club({:#x}, {}, {}) original={} rust={}", club, any, force, r, n));
@@ -156,7 +156,7 @@ pub(crate) unsafe extern "C" fn comparar_human_runs_club(club: usize, any: u32, 
 }
 
 /// Comparer for `set_human_field` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_set_human_field(t: usize, value: u32, manager: *const i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_set_human_field(t: usize, value: u32, manager: *const i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD);
     let mut p = manager;
     if p.is_null() {
@@ -175,7 +175,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_human_field(t: usize, value:
 }
 
 /// Comparer for `set_on_holiday` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, holiday: u32, manager: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_set_on_holiday(this: usize, holiday: u32, manager: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_SET_ON_HOLIDAY);
     let t = if manager != 0 { manager } else { read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize)) };
     let i = if t == 0 { -1 } else { (read_usize(t) as i32).wrapping_sub(read_usize(G_STAFF_COUNT) as i32).wrapping_add(0x10) };
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, holi
 }
 
 /// Comparer for `square_bit` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_square_bit(code: i16) -> u32 {
+pub(crate) unsafe extern "stdcall" fn compare_square_bit(code: i16) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(i16) -> u32>(IDX_SQUARE_BIT)(code);
     let v = square_bit(code);
     SCOREBOARD.record(r == v, || format!("square_bit({:#x}) original={:#x} rust={:#x}", code, r, v));
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_square_bit(code: i16) -> u32 {
 }
 
 /// Comparer for `split_mask` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_split_mask(m: u32, setor: *mut u16, side: *mut u16) -> u32 {
+pub(crate) unsafe extern "C" fn compare_split_mask(m: u32, setor: *mut u16, side: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32>(IDX_SPLIT_MASK);
     let reg = [(setor as usize, 2), (side as usize, 2)];
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m, setor, side), || split_mask(m, setor, side));
@@ -208,7 +208,7 @@ pub(crate) unsafe extern "C" fn comparar_split_mask(m: u32, setor: *mut u16, sid
 }
 
 /// Comparer for `human_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_human_club(club: usize, a: u32, b: u8, person: usize, c: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_human_club(club: usize, a: u32, b: u8, person: usize, c: u32) -> u32 {
     if is_recording_post_match() {
         let o = original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB);
         return call_recording(FN_HUMAN_MANAGER_IS_HUMAN_CLUB, 0, [club as u32, a, b as u32, person as u32, c], || o(club, a, b, person, c));
@@ -220,7 +220,7 @@ pub(crate) unsafe extern "C" fn comparar_human_club(club: usize, a: u32, b: u8, 
 }
 
 /// Comparer for `manager_9a06` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_manager_9a06(this: usize, person: usize, out: *mut u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_manager_9a06(this: usize, person: usize, out: *mut u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8>(IDX_MANAGER_9A06);
     let reg: Vec<(usize, usize)> = if out.is_null() { vec![] } else { vec![(out as usize, 4)] };
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, out), || manager_9a06(this, person, out));

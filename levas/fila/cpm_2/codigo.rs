@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn record_final_positions(this: usize) {
 /// Comparador: a original aloca (histórico e confrontos): roda só ela e confere a linha com o plano feito antes (o
 /// total de rodadas, a situação do clube, os campos, os blocos zerados, os vetores presentes e, na última linha, os
 /// adversários de cada linha).
-unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
+unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32, usize)>(%%I0%%);
     let a7 = cpm2_w(this + 0xa7);
     let n = cpm2_w(this + 0x3e);
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u32, clube: 
 }
 
 /// Comparador: a original aloca o vetor: roda só ela e confere a conta e os clubes, na ordem da tabela.
-unsafe extern "thiscall" fn comparar_league_get_club_array(this: usize, saida: *mut usize, n: *mut i16) {
+unsafe extern "thiscall" fn compare_league_get_club_array(this: usize, saida: *mut usize, n: *mut i16) {
     original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(%%I1%%)(this, saida, n);
     let p = *saida;
     if p == 0 {
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn comparar_league_get_club_array(this: usize, saida: *
 }
 
 /// Comparador: lado a lado pela divisão da última temporada e pela posição (+0x5b..+0x5f) de cada clube da tabela.
-unsafe extern "thiscall" fn comparar_record_final_positions(this: usize) {
+unsafe extern "thiscall" fn compare_record_final_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg: Vec<(usize, usize)> = (0..cpm2_w(this + 0x3e).max(0) as usize)
         .map(|i| (cpm2_d(cpm2_d(this + 0xb1) + i * TABLE_ROW_SIZE) + 0x5b, 5))

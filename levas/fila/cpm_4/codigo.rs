@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn clear_ban_history(this: usize, pessoa: usize) -> usi
 
 /// Comparador: a 0x58e340 grava o histórico no arquivo (não pode rodar duas vezes): o plano antes, a original roda;
 /// confere o contador, ou a suspensão solta (livre e a entrada do órgão sem índice), ou nada mudado.
-unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize, id: u32, regra: u32, conta: u32) {
+unsafe extern "thiscall" fn compare_update_ban_progress(this: usize, id: u32, regra: u32, conta: u32) {
     let j = serve_ban_match_plan(this, id, regra, conta);
     let antes = if j.suspensao != 0 { *((j.suspensao + 1) as *const u8) } else { 0 };
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(%%I0%%)(this, id, regra, conta);
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize, id: u32, r
 
 /// Comparador: lado a lado pela suspensão, o índice das nações (conta e itens) e as entradas da pessoa nos órgãos das
 /// regras (achadas antes, sem criar). Quarta regra sem o item no índice: só a original (caixa).
-unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32, indice: u32) -> usize {
+unsafe extern "thiscall" fn compare_release_ban(this: usize, id: u32, indice: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(%%I1%%);
     let s = cpm4_d(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
     if *((s + 0xf) as *const u8) != 0xff && find_in_nation_index(this, id) == 0 {
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32, indice: u
 }
 
 /// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
-unsafe extern "thiscall" fn comparar_clear_ban_history(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn compare_clear_ban_history(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     if pessoa == 0 || cpm4_d(pessoa + 0x61) == 0 {
         return o(this, pessoa);

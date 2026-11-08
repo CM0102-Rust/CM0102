@@ -311,12 +311,12 @@ unsafe fn compare_reject_withdraw(nome: &str, this: usize, vaga: *mut usize, ori
     SCOREBOARD.record(igual, || format!("{}(oferta {:#x}) original={:x?} rust={:x?}", nome, o, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_reject_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn compare_reject_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I0%%);
     compare_reject_withdraw("reject_transfer_offer", this, vaga, || o(this, vaga, marcar, motivo), || reject_transfer_offer(this, vaga, marcar, motivo))
 }
 
-unsafe extern "thiscall" fn comparar_withdraw_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn compare_withdraw_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I1%%);
     compare_reject_withdraw("withdraw_transfer_offer", this, vaga, || o(this, vaga, marcar, motivo), || withdraw_transfer_offer(this, vaga, marcar, motivo))
 }
@@ -376,6 +376,6 @@ unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: usize, moti
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_offer_rejected_news(this: usize, o: usize, motivo: u32) {
+unsafe extern "thiscall" fn compare_post_offer_rejected_news(this: usize, o: usize, motivo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, o, motivo)
 }

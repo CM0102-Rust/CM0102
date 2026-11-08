@@ -134,7 +134,7 @@ unsafe fn check_record_plan(nome: &str, clube: usize, e: usize, conta: usize, ve
 }
 
 /// Comparador: a criação realoca e não pode rodar duas vezes: o plano da cópia antes, a original roda, confere.
-unsafe extern "thiscall" fn comparar_get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn compare_get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%);
     if clube == 0 {
         return o(this, clube, criar);
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn comparar_get_all_time_record(this: usize, clube: usi
 }
 
 /// Comparador: o mesmo pelos recordes da temporada.
-unsafe extern "thiscall" fn comparar_get_season_record(this: usize, clube: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn compare_get_season_record(this: usize, clube: usize, criar: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%);
     if clube == 0 {
         return o(this, clube, criar);
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_get_season_record(this: usize, clube: usize
 }
 
 /// Comparador: a original acrescenta (pode realocar); confere a conta, o item novo (id, tipo) e a devolução.
-unsafe extern "thiscall" fn comparar_queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
     let n = cpk1_d(this + 0x2c);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, id, tipo);
     if r == 0 {

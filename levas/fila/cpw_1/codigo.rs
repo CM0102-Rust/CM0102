@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pessoa: usize
 
 /// Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
 /// 0x85fc50 grava e o contrato); a devolução e a memória.
-unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_contract_satisfaction(this: usize, pessoa: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize), (this, 0x50)];
     regioes.extend(crate::rng::STATE_REGIONS);
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize, contrato: 
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_wants_new_contract_news(this: usize, contrato: usize) {
+unsafe extern "thiscall" fn compare_post_wants_new_contract_news(this: usize, contrato: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, contrato)
 }
 
@@ -182,6 +182,6 @@ unsafe extern "thiscall" fn post_transfer_request_withdrawn_news(this: usize, co
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_transfer_request_withdrawn_news(this: usize, contrato: usize, motivo: u32) {
+unsafe extern "thiscall" fn compare_post_transfer_request_withdrawn_news(this: usize, contrato: usize, motivo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, contrato, motivo)
 }

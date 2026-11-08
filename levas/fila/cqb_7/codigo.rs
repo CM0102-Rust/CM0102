@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
 
 /// Comparador da 0x8c7950: lado a lado nas marcas da pessoa (8 bytes), no sorteio e na devolução (a cópia em
 /// sem_contar).
-unsafe extern "thiscall" fn comparar_is_work_permit_granted(this: usize, p: usize, nacao: usize, oferta: usize, registro: usize, sorteio: u32) -> u32 {
+unsafe extern "thiscall" fn compare_is_work_permit_granted(this: usize, p: usize, nacao: usize, oferta: usize, registro: usize, sorteio: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%);
     let mut regioes = vec![crate::rng::STATE_REGIONS[0], crate::rng::STATE_REGIONS[1]];
     if p != 0 && (cqb7_d(p) as i32) < cqb7_d(0xae2364) as i32 {
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn transfer_manager_get_squad_status_for_reason(_this: 
 }
 
 /// Comparador da 0x8c5800: lado a lado em [0xae1080] e no al devolvido.
-unsafe extern "thiscall" fn comparar_transfer_manager_get_squad_status_for_reason(this: usize, p: usize, motivo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_transfer_manager_get_squad_status_for_reason(this: usize, p: usize, motivo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, p, motivo), || transfer_manager_get_squad_status_for_reason(this, p, motivo));
     SCOREBOARD.record(igual && r as u8 == n as u8, || format!("transfer_manager_get_squad_status_for_reason(pessoa {:#x}, motivo {:#x}) original={} {:x?} rust={} {:x?}", p, motivo, r as u8, mo, n as u8, mr));
@@ -256,7 +256,7 @@ unsafe extern "thiscall" fn get_negotiation_slot(this: usize, i: i32) -> usize {
 }
 
 /// Comparador da 0x8c6200: pelo valor (só lê).
-unsafe extern "thiscall" fn comparar_get_negotiation_slot(this: usize, i: i32) -> usize {
+unsafe extern "thiscall" fn compare_get_negotiation_slot(this: usize, i: i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(this, i);
     let n = get_negotiation_slot(this, i);
     SCOREBOARD.record(r == n, || format!("get_negotiation_slot({}) original={:#x} rust={:#x}", i, r, n));

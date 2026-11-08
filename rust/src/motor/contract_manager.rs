@@ -2804,7 +2804,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_lower_match_morale(this:
             } else {
                 let mut done = false;
                 if place(this, person, club) == 1 && read_i16(player + player_sheet::CURRENT_REPUTATION) > 0x4e2 && age > 0x17
-                    && sortear(read_u8_volatile(person + staff::LOYALITY) as i8 as i32 + 5) == 0 {
+                    && random(read_u8_volatile(person + staff::LOYALITY) as i8 as i32 + 5) == 0 {
                     erase(contract, 4);
                     mark(contract, 0x10, 0);
                     done = true;
@@ -2812,14 +2812,14 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_lower_match_morale(this:
                 if !done {
                     let pot = read_i16(player + player_sheet::WORLD_REPUTATION);
                     if (pot as i32) > read_i16(club + club::REPUTATION) as i32 - 0x5dc && pot > 0x1f4
-                        && sortear(read_u8_volatile(person + staff::AMBITION) as i8 as i32) != 0 && (read_u8_volatile(contract + 0x3d) as i8) < 0
+                        && random(read_u8_volatile(person + staff::AMBITION) as i8 as i32) != 0 && (read_u8_volatile(contract + 0x3d) as i8) < 0
                         && transfer_window_open(person, club) {
                         erase(contract, 4);
                         mark(contract, 4, 0);
                     }
                 }
             }
-        } else if place(this, person, club) == 1 && sortear(read_u8_volatile(person + staff::AMBITION) as i8 as i32) > 5
+        } else if place(this, person, club) == 1 && random(read_u8_volatile(person + staff::AMBITION) as i8 as i32) > 5
             && read_i16(player + player_sheet::CURRENT_REPUTATION) > read_i16(club + club::REPUTATION) && read_i16(player + player_sheet::CURRENT_REPUTATION) > 0x4e2 {
             erase(contract, 4);
             mark(contract, 0x10, 0);
@@ -3919,7 +3919,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: 
     if e == 0 {
         crate::comparison::branch("cpr_10 nova decisao");
         let mut d = [0u8; 8];
-        injury_date_add_days(G_CURRENT_DATE, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
+        injury_date_add_days(G_CURRENT_DATE, (random(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
         let append: unsafe extern "thiscall" fn(usize, usize, *const u8, u32, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_ADD_DECISION_DATE);
         append(this, person, d.as_ptr(), 2, 3);
         let n = read_u32_as_usize(this + contract_manager_fields::DECISION_COUNT);
@@ -3947,7 +3947,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: 
         set_today_plus_days(data, (x / 3) as u32);
         advance_time_slice(e, ((x % 3) as u8).wrapping_add(*(G_CURRENT_DAY_SLICE as *const u8)) as i8);
         if *((read_u32_as_usize(of) + 0x2f) as *const u8) != 0 && days(data, read_u32_as_usize(G_CURRENT_DATE) as u32, read_u32_as_usize(G_CURRENT_DATE_LEAP) as u32) < 4 {
-            set_today_plus_days(data, (sortear(2) + 4) as u32);
+            set_today_plus_days(data, (random(2) + 4) as u32);
         }
     } else {
         let (td, ta) = (read_i16(G_CURRENT_DATE), read_u16(G_CURRENT_DATE_YEAR));
@@ -3968,7 +3968,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: 
                 let m = injury_date_add_days(G_CURRENT_DATE, 0xb4, &mut t);
                 let (ma, ca) = (read_u16(m + 2), read_u16(c + 0x2f));
                 if ma > ca || (ma == ca && read_i16(m) > read_i16(c + contract::CONTRACT_EXPIRES)) {
-                    set_today_plus_days(data, (sortear(4) + 4) as u32);
+                    set_today_plus_days(data, (random(4) + 4) as u32);
                 }
             }
         }

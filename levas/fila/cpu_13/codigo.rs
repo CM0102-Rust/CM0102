@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn player_search_slot_sum_goals(this: usize) -> u16 {
 }
 
 /// Comparador: pura (lê o clube, o elenco e as finanças; grava só `*base`): as duas sobre bases próprias.
-unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize, base: *mut i32, forcada: *const i16) -> i32 {
+unsafe extern "C" fn compare_player_search_get_club_target_rating(clube: usize, base: *mut i32, forcada: *const i16) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut i32, *const i16) -> i32>(%%I0%%);
     let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
     let r = o(clube, &mut bo, forcada);
@@ -173,7 +173,7 @@ unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize,
 }
 
 /// Comparador: pura: compara a devolução.
-unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
+unsafe extern "thiscall" fn compare_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%)(this, i);
     let n = player_search_slot_get_match_entry(this, i);
     SCOREBOARD.record(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: us
 }
 
 /// Comparador: pura: compara a devolução.
-unsafe extern "thiscall" fn comparar_player_search_slot_sum_goals(this: usize) -> u16 {
+unsafe extern "thiscall" fn compare_player_search_slot_sum_goals(this: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(%%I2%%)(this);
     let n = player_search_slot_sum_goals(this);
     SCOREBOARD.record(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));

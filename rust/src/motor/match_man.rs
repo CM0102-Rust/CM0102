@@ -638,7 +638,7 @@ pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, sheets: usize,
     let best: i32;
     let tactic = 'tactic: {
         if byte(m, 0) != 0 {
-            best = sortear(how_many()) as i16 as i32;
+            best = random(how_many()) as i16 as i32;
         } else if a4 as u8 != 2 {
             break 'tactic load(tat(), club, human);
         } else {
@@ -947,7 +947,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     let in_home = human != 0 || {
         let comp = byte(u(c, match_manager::FIXTURE), 0x3a);
         (comp == 1 || comp == 9) && {
-            let r = sortear(2000).wrapping_add(sortear(-4000));
+            let r = random(2000).wrapping_add(random(-4000));
             (w(u(c, match_manager::CLUB), 0x80) as i32 - w(u(c, match_manager::OPPONENT), 0x80) as i32) > r
         }
     };
@@ -2324,14 +2324,14 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
     } else {
         let mut done = false;
         if matches!(byte(comp, 0x3a), 1 | 9) {
-            let r = sortear(0x7d0).wrapping_add(sortear(-4000));
+            let r = random(0x7d0).wrapping_add(random(-4000));
             if strength(match_manager::CLUB) - strength(match_manager::OPPONENT) > r {
                 mode |= 0x100;
                 done = true;
             }
         }
         if !done {
-            let r = sortear(0xbb8) + 0xbb8;
+            let r = random(0xbb8) + 0xbb8;
             let check_national_team = if strength(match_manager::CLUB) - strength(match_manager::OPPONENT) > r {
                 mode |= 0x100;
                 true
@@ -2431,9 +2431,9 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
         let (sai, entra) = (sairam[i], entraram[i]);
         let comentarios = byte(m, engine::LIVE_MATCH) != 0;
         // fatigue: first the one going off, then the one coming on
-        let cansado = if comentarios && sortear(w(sai, 0x31) as i32) < -10 {
+        let cansado = if comentarios && random(w(sai, 0x31) as i32) < -10 {
             Some(sai)
-        } else if comentarios && sortear(w(entra, 0x31) as i32) < -10 {
+        } else if comentarios && random(w(entra, 0x31) as i32) < -10 {
             Some(entra)
         } else {
             None
@@ -2442,13 +2442,13 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
             call(FN_MATCH_EVENTS_ADD_EVENT, commentator, [0x211d, m as u32, u32::MAX, (byte(p, match_player::SIDE) == 0) as u32, u32::MAX]);
         }
         let machucado = if comentarios && {
-            let r = sortear(w(sai, match_player::MATCH_RATING) as i32 / 30 + w(sai, 0x33) as i32 - 0xe9);
-            r > sortear(0x1e)
+            let r = random(w(sai, match_player::MATCH_RATING) as i32 / 30 + w(sai, 0x33) as i32 - 0xe9);
+            r > random(0x1e)
         } {
             Some(sai)
         } else if comentarios && {
-            let r = sortear(w(entra, 0x33) as i32);
-            r > sortear(0x1e)
+            let r = random(w(entra, 0x33) as i32);
+            r > random(0x1e)
         } {
             Some(entra)
         } else {

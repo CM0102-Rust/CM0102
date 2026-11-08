@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/eurocomp/asia_cup_winner.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `asia_cup_winner_create_knockout_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ASIA_CUP_WINNER_CREATE_KNOCKOUT_STAGE);
     let stages = read_u32_as_usize(this + 0xc);
     if stages == 0 || (0..3).any(|g| read_u32_as_usize(stages + g * 4) == 0) || read_u32_as_usize(this + 0xb1) == 0 {
@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_
 }
 
 /// Comparer for `asia_cup_winner_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ASIA_CUP_WINNER_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
     let last = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_advance_stage(th
 }
 
 /// Comparer for `create_finals_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_create_finals_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_FINALS_STAGE);
     if read_u32_as_usize(this + 0xa7) == 0 || read_u32_as_usize(this + 0xc) == 0 || read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
         return o(this);
@@ -60,14 +60,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize)
 }
 
 /// Comparer for `asia_cup_winner_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ASIA_CUP_WINNER_CREATE_ROUND_TABLE);
     asia_club_champ_compare_round_table("asia_cup_winner_create_round_table", stage, asian_cup_winners_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
         |r, e, l| asia_cup_winner_create_round_table(this, stage, r, e, l))
 }
 
 /// Comparer for `create_team_entries` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_create_team_entries(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_create_team_entries(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CREATE_TEAM_ENTRIES);
     compare_team_table("create_team_entries", this, || o(this), || create_team_entries(this))
 }

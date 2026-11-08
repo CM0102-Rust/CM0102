@@ -458,17 +458,17 @@ unsafe extern "thiscall" fn match_screens_save(estat: usize, zip: usize) -> u32 
 
 /// A conferência é comparada de verdade pela lista de exibição (o Text local é alocado e liberado
 /// dentro de cada execução).
-unsafe extern "C" fn comparar_match_screens_draw_team_selection() {
+unsafe extern "C" fn compare_match_screens_draw_team_selection() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
-    comparar_painel_pela_lista("match_screens_draw_team_selection", || o(), || match_screens_draw_team_selection());
+    compare_painel_pela_lista("match_screens_draw_team_selection", || o(), || match_screens_draw_team_selection());
 }
 
 // ponytail: carregar e salvar mexem no arquivo do save (e carregar aloca o índice): rodar duas vezes
 // leria/gravaria duas vezes, então o comparador só chama a original; as cópias se provam no modo Rust.
-unsafe extern "thiscall" fn comparar_match_screens_load(estat: usize, zip: usize) -> u32 {
+unsafe extern "thiscall" fn compare_match_screens_load(estat: usize, zip: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(estat, zip)
 }
 
-unsafe extern "thiscall" fn comparar_match_screens_save(estat: usize, zip: usize) -> u32 {
+unsafe extern "thiscall" fn compare_match_screens_save(estat: usize, zip: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(estat, zip)
 }

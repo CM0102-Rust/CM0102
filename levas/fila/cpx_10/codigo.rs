@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
     copiar(board_row_of(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha
 }
 
-unsafe extern "thiscall" fn comparar_post_manager_under_pressure_news(this: usize, clube: usize, tipo: u32) {
+unsafe extern "thiscall" fn compare_post_manager_under_pressure_news(this: usize, clube: usize, tipo: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let regioes = if clube != 0 { vec![(board_row_of(this, clube), 0x49)] } else { Vec::new() };
     compare_manager_news("post_manager_under_pressure_news", regioes, || o(this, clube, tipo), || post_manager_under_pressure_news(this, clube, tipo));
@@ -273,7 +273,7 @@ unsafe extern "thiscall" fn post_manager_departure_news(this: usize, tec: usize,
     }
 }
 
-unsafe extern "thiscall" fn comparar_post_manager_departure_news(this: usize, tec: usize, tipo: u32, motivo: u32, clube: usize, cargo: u32) {
+unsafe extern "thiscall" fn compare_post_manager_departure_news(this: usize, tec: usize, tipo: u32, motivo: u32, clube: usize, cargo: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32)>(%%I1%%);
     compare_manager_news("post_manager_departure_news", Vec::new(), || o(this, tec, tipo, motivo, clube, cargo), || post_manager_departure_news(this, tec, tipo, motivo, clube, cargo));
 }
@@ -328,7 +328,7 @@ unsafe extern "thiscall" fn post_manager_appointment_news(this: usize, tec: usiz
     }
 }
 
-unsafe extern "thiscall" fn comparar_post_manager_appointment_news(this: usize, tec: usize, anterior: usize, clube: usize, cargo: u32) {
+unsafe extern "thiscall" fn compare_post_manager_appointment_news(this: usize, tec: usize, anterior: usize, clube: usize, cargo: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I2%%);
     compare_manager_news("post_manager_appointment_news", Vec::new(), || o(this, tec, anterior, clube, cargo), || post_manager_appointment_news(this, tec, anterior, clube, cargo));
 }

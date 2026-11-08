@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/eurocomp/oceania_club_champ.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `oceania_club_champ_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_update_for_date(this: usize, today: usize, full: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_OCEANIA_CLUB_CHAMP_UPDATE_FOR_DATE);
     let draws = read_u32_as_usize(this + 0x45) == 0
         && full == 0
@@ -26,7 +26,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_update_for_da
 }
 
 /// Comparer for `create_group_a_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_create_group_a_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_create_group_a_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_GROUP_A_TABLE);
     let list = read_u32_as_usize(this + 0xee);
     if list == 0 {
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_a_table(this: usize
 }
 
 /// Comparer for `create_group_b_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_create_group_b_stage(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_GROUP_B_STAGE);
     let list = read_u32_as_usize(this + 0xee);
     if list == 0 {
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize
 ///
 /// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 8 vagas e liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_SELECT_QUALIFIED_CLUBS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -102,7 +102,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualif
 }
 
 /// Comparer for `oceania_club_champ_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_OCEANIA_CLUB_CHAMP_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
     let last = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage
 }
 
 /// Comparer for `oceania_club_champ_create_knockout_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_OCEANIA_CLUB_CHAMP_CREATE_KNOCKOUT_STAGE);
     if read_u32_as_usize(this + 0xb1) == 0 || read_u32_as_usize(this + 0xc) == 0 || read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
         return o(this);
@@ -134,14 +134,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knocko
 }
 
 /// Comparer for `oceania_club_champ_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_OCEANIA_CLUB_CHAMP_CREATE_SCHEDULE);
     compare_stage_table("oceania_club_champ_create_schedule", stage, oceania_stage_spec(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
         |r, e, l| oceania_club_champ_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `oceania_club_champ_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_SET_UP_RULES);
     check_cup_rules("oceania_club_champ_set_up_rules", this, &OCEANIA_RULES, || o(this))
 }

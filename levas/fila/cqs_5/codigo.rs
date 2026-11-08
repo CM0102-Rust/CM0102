@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 {
 /// Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
 /// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
 /// caso em que ela lê a dword sem valor da pilha), só a original.
-unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_select_section_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let base = cqs5_d(0xae23b4);
     let tem_rebaixado = (0..cqs5_d(0xae235c) as i32).any(|i| {
@@ -281,7 +281,7 @@ unsafe extern "thiscall" fn create_section_stage(this: usize) {
 }
 
 /// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
-unsafe extern "thiscall" fn comparar_create_section_stage(this: usize) {
+unsafe extern "thiscall" fn compare_create_section_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
     let f = cqs5_d(cqs5_d(this + 0xc));
@@ -306,7 +306,7 @@ unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
 }
 
 /// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
-unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_eng_auto_cup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let antes = cqs5_d(this + 0x30) as i32;
     let ultima = antes >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1);

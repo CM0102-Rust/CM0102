@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, lista: *mut usiz
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1 e as três divisões montadas
 /// (+0x3e = 4 e as vagas 0 e 1 das fases).
-unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_usa_mls_start_new_season(this: usize) -> u32 {
     let antes = cqs2_w(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let depois = cqs2_w(this + 0x40);
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: usize) -> u3
 /// O comparador das posições previstas: só a original (ponytail: a 0x4a2540 acrescenta o registro de um clube que não
 /// tem; não pode rodar duas vezes), com o plano feito antes: os doze clubes das três tabelas, cada bloco ordenado pela
 /// mesma qsort numa cópia; depois, a posição (+0x72 do registro achado por 0x4a4850) de cada um.
-unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(this: usize) {
+unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = cqs2_w(this + 0x3e) as usize;
     if cqs2_d(this + 8) == 0 || n != 4 {
@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(this: usize
 
 /// O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
 /// das três tabelas na ordem.
-unsafe extern "thiscall" fn comparar_usa_mls_get_club_array(this: usize, lista: *mut usize, n: *mut i16) {
+unsafe extern "thiscall" fn compare_usa_mls_get_club_array(this: usize, lista: *mut usize, n: *mut i16) {
     original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(%%I2%%)(this, lista, n);
     let m = cqs2_w(this + 0x3e) as usize;
     let igual = *n == 0xc && *lista != 0 && (0..m).all(|i| {

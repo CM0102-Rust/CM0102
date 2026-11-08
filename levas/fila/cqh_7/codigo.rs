@@ -35,7 +35,7 @@ unsafe extern "C" fn officials_manager_compare_nation_then_quality_desc(a: usize
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_officials_manager_compare_nation_then_quality_desc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_officials_manager_compare_nation_then_quality_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = officials_manager_compare_nation_then_quality_desc(a, b);
     SCOREBOARD.record(r == n, || format!("officials_manager_compare_nation_then_quality_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -59,7 +59,7 @@ unsafe extern "C" fn officials_manager_compare_nation_then_quality_asc(a: usize,
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_officials_manager_compare_nation_then_quality_asc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_officials_manager_compare_nation_then_quality_asc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = officials_manager_compare_nation_then_quality_asc(a, b);
     SCOREBOARD.record(r == n, || format!("officials_manager_compare_nation_then_quality_asc({:x}, {:x}) original={} rust={}", a, b, r, n));

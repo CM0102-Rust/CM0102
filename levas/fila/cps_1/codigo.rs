@@ -93,12 +93,12 @@ unsafe extern "stdcall" fn staff_is_not_board_member(pessoa: usize) -> u32 {
 
 // ponytail: sorteia (0x90cfc0), põe na lista (0x842c00, 0x4d71b0), muda moral e queixas (que podem chamar o pedido de
 // novo): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_handle_transfer_request(this: usize, contrato: usize) {
+unsafe extern "thiscall" fn compare_handle_transfer_request(this: usize, contrato: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, contrato)
 }
 
 /// Comparador: pelo valor.
-unsafe extern "stdcall" fn comparar_is_contract_staff_job(cargo: u32) -> u32 {
+unsafe extern "stdcall" fn compare_is_contract_staff_job(cargo: u32) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32) -> u32>(%%I1%%)(cargo);
     let n = is_contract_staff_job(cargo);
     SCOREBOARD.record(r == n, || format!("is_contract_staff_job({}) original={} rust={}", cargo as u8, r, n));
@@ -106,7 +106,7 @@ unsafe extern "stdcall" fn comparar_is_contract_staff_job(cargo: u32) -> u32 {
 }
 
 /// Comparador: pelo valor.
-unsafe extern "stdcall" fn comparar_staff_is_not_board_member(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn compare_staff_is_not_board_member(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
     let n = staff_is_not_board_member(pessoa);
     SCOREBOARD.record(r == n, || format!("staff_is_not_board_member(pessoa {}, cargo {}) original={} rust={}", cps1_d(pessoa), cps1_b(pessoa + 0x3d), r, n));

@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn update_city_weather(this: usize) {
 }
 
 // ponytail: sorteia 3 ou 4 vezes por cidade: só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_update_city_weather(this: usize) {
+unsafe extern "thiscall" fn compare_update_city_weather(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao: usize) ->
 }
 
 // ponytail: lê do arquivo (não dá para ler duas vezes): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_read_region(this: usize, f: usize, regiao: usize) -> u8 {
+unsafe extern "thiscall" fn compare_read_region(this: usize, f: usize, regiao: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%)(this, f, regiao)
 }
 
@@ -115,6 +115,6 @@ unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize, periodo: 
 }
 
 // ponytail: lê do arquivo: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_read_region_period(this: usize, f: usize, periodo: usize) -> u8 {
+unsafe extern "thiscall" fn compare_read_region_period(this: usize, f: usize, periodo: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%)(this, f, periodo)
 }

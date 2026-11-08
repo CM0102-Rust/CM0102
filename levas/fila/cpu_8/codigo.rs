@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn set_type(this: usize, vaga: i8, tipo: i8) {
 }
 
 /// Comparador: lado a lado nos 0x16 bytes do programa (a vaga, os níveis e o tipo).
-unsafe extern "thiscall" fn comparar_set_type(this: usize, vaga: i8, tipo: i8) {
+unsafe extern "thiscall" fn compare_set_type(this: usize, vaga: i8, tipo: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8)>(%%I1%%);
     let regioes = [(this, 0x16)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, vaga, tipo), || set_type(this, vaga, tipo));
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn set_default_schedules(this: usize) {
 }
 
 /// Comparador: lado a lado nos 167 programas (0x651d bytes a partir de this; nomes incluídos) e no marcador de erro.
-unsafe extern "thiscall" fn comparar_set_default_schedules(this: usize) {
+unsafe extern "thiscall" fn compare_set_default_schedules(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let regioes = [(this, 0x651d), (0xb67a34, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this), || set_default_schedules(this));
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn get_manager_schedule(this: usize, tecnico: usize, va
 }
 
 /// Comparador: a devolução, sem os casos de erro (só a original).
-unsafe extern "thiscall" fn comparar_get_manager_schedule(this: usize, tecnico: usize, vaga: i8) -> usize {
+unsafe extern "thiscall" fn compare_get_manager_schedule(this: usize, tecnico: usize, vaga: i8) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> usize>(%%I2%%);
     if !(0..0x10).contains(&cpu8_i(0xae2364).wrapping_sub(cpu8_i(tecnico)).wrapping_sub(1)) {
         return o(this, tecnico, vaga);

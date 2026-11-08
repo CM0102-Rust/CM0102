@@ -1,8 +1,8 @@
 r"""Separa os comparadores da lógica do jogo (etapa 4 da reorganização, 08/11/2026, achado do leitor de fora, rodada 3).
 
-Cada `comparar_<x>` (o gêmeo da rotina que roda no modo comparação) sai de rust/src/motor/<caminho>.rs para
+Cada `compare_<x>` (o gêmeo da rotina que roda no modo comparação) sai de rust/src/motor/<caminho>.rs para
 rust/src/motor/compare/<caminho>.rs, com o seu comentário. Quem lê para entender o jogo fica só com a rotina; quem quer
-ver o teste abre o arquivo paralelo. Os comparadores gerados por macro (`comparar_valor!` e afins) ficam onde estão.
+ver o teste abre o arquivo paralelo. Os comparadores gerados por macro (`compare_value!` e afins) ficam onde estão.
 Todos os módulos se enxergam: mover não muda o código gerado. Rodar de novo move só os comparadores novos.
 
 Uso: python separar_comparadores.py [--gravar]
@@ -33,7 +33,7 @@ def main():
             p = os.path.join(d, f)
             rel = os.path.relpath(p, BASE).replace(os.sep, '/')
             t = open(p, encoding='utf-8').read()
-            blocos = [(nome, a, b) for nome, a, b in mover_rotinas.blocos(t) if nome.startswith('comparar_')]
+            blocos = [(nome, a, b) for nome, a, b in mover_rotinas.blocos(t) if nome.startswith('compare_')]
             if not blocos:
                 continue
             n += len(blocos)

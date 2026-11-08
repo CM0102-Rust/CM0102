@@ -98,17 +98,17 @@ unsafe fn bra_reg_northeast_compare_state_league_table(nome: &str, this: usize, 
     r
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_northeast_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     bra_reg_northeast_compare_state_league_table("bra_reg_northeast_create_table", this, 0x10, 0x9cf9a4, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_parana_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_parana_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     bra_reg_northeast_compare_state_league_table("bra_reg_parana_create_table", this, 0xc, 0x9cf9d0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_pern_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_pern_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     bra_reg_northeast_compare_state_league_table("bra_reg_pern_create_table", this, 0xa, 0x9cf9bc, || o(this))
 }

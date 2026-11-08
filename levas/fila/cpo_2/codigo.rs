@@ -103,7 +103,7 @@ unsafe extern "stdcall" fn contract_manager_season_end_month(clube: usize) -> u3
 
 /// Comparador: lado a lado pela vaga da pessoa e pela entrada do contrato (a folha 0x598370 refeita duas vezes dá o
 /// mesmo, pelo contrato já tirado).
-unsafe extern "thiscall" fn comparar_remove_contract(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_remove_contract(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let vaga = main_contract_slot(pessoa);
     let indice = cpo2_i(vaga);
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn comparar_remove_contract(this: usize, pessoa: usize)
 
 /// Comparador: a original reenvia (0x4cc490, ofertas e transferências) e tira as ofertas da lista (libera): roda só ela
 /// e confere o plano feito antes: devolve quantas ofertas da pessoa havia na lista.
-unsafe extern "thiscall" fn comparar_resubmit_held_offers(this: usize, id: usize) -> u32 {
+unsafe extern "thiscall" fn compare_resubmit_held_offers(this: usize, id: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
     let lista = cpo2_d(this + 0x38);
     if lista == 0 {
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn comparar_resubmit_held_offers(this: usize, id: usize
 }
 
 /// Comparador: pelo valor (datas e a 0x669bd0 só calculam).
-unsafe extern "stdcall" fn comparar_contract_manager_season_end_month(clube: usize) -> u32 {
+unsafe extern "stdcall" fn compare_contract_manager_season_end_month(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
     let n = contract_manager_season_end_month(clube);
     SCOREBOARD.record(r == n, || format!("contract_manager_season_end_month({:x}) original={} rust={}", clube, r, n));

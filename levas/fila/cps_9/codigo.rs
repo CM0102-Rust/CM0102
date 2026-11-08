@@ -43,7 +43,7 @@ unsafe extern "stdcall" fn player_stats_get_career_goals(pessoa: usize) -> u16 {
 }
 
 /// Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
-unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize) -> u16 {
+unsafe extern "stdcall" fn compare_player_stats_get_career_goals(pessoa: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(%%I0%%);
     if pessoa == 0 || (cps9_i(pessoa) < cps9_i(0xae2364) && cps9_d(pessoa + 0x61) == 0) {
         return o(pessoa);
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn add_loan_records(this: usize, pessoa: usize, de: usi
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%)(this, pessoa, de, clube)
 }
 
@@ -104,7 +104,7 @@ unsafe extern "C" fn injury_compare_entry_dates(chave: usize, item: usize) -> i3
     0 // cps9: a volta de hoje achada
 }
 
-unsafe extern "C" fn comparar_injury_compare_entry_dates(chave: usize, item: usize) -> i32 {
+unsafe extern "C" fn compare_injury_compare_entry_dates(chave: usize, item: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(chave, item);
     let n = injury_compare_entry_dates(chave, item);
     SCOREBOARD.record(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", chave, item, r, n));

@@ -41,7 +41,7 @@ unsafe extern "C" fn fix_man_save_club_dates() {
 }
 
 /// Comparador da 0x5af040: só a original.
-unsafe extern "C" fn comparar_fix_man_save_club_dates() {
+unsafe extern "C" fn compare_fix_man_save_club_dates() {
     // ponytail: grava o arquivo do save (não pode rodar duas vezes); a cópia é provada pela prova do save (o .qst
     // gravado no modo rust com e sem a leva, item a item: club_dates.tmp)
     original_fn::<unsafe extern "C" fn()>(%%I0%%)()
@@ -77,7 +77,7 @@ unsafe extern "C" fn fix_man_load_club_dates() {
 }
 
 /// Comparador da 0x5aee90: só a original.
-unsafe extern "C" fn comparar_fix_man_load_club_dates() {
+unsafe extern "C" fn compare_fix_man_load_club_dates() {
     // ponytail: aloca a tabela global e lê o arquivo (não pode rodar duas vezes); a cópia é provada pela carga do
     // save de férias na prova do save (levas/N/CARGA) e, sem o arquivo, pela carreira nova
     original_fn::<unsafe extern "C" fn()>(%%I1%%)()
@@ -114,7 +114,7 @@ unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
 }
 
 /// Comparador da 0x5af4a0: só a original.
-unsafe extern "C" fn comparar_fix_man_save_fixture_leg_checks() {
+unsafe extern "C" fn compare_fix_man_save_fixture_leg_checks() {
     // ponytail: grava o arquivo do save e anda o cursor da lista; a cópia é provada pela prova do save
     original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize)
 
 /// Comparador lado a lado nos dois registros (0xd2 bytes), criados antes pela 0x86f5b0 como a original faria (a segunda
 /// chamada acha o mesmo registro). Jogo não disputado: só a original (não cria nada).
-unsafe extern "thiscall" fn comparar_record_match_result(this: usize, p: usize, m: usize) {
+unsafe extern "thiscall" fn compare_record_match_result(this: usize, p: usize, m: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if *((p + 0x3a) as *const u8) == 1 {
         return o(this, p, m);
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn add_league_finish_records(this: usize, liga: usize) 
 }
 
 // ponytail: só grava o histórico no arquivo (não roda duas vezes): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_add_league_finish_records(this: usize, liga: usize) {
+unsafe extern "thiscall" fn compare_add_league_finish_records(this: usize, liga: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, liga)
 }
 
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn add_supporters_player_of_year_record(this: usize, pe
 /// Comparador em ensaio: a cópia sem o histórico e a original a partir do mesmo estado (sorteio, as pessoas favoritas e
 /// rejeitadas do clube +0x9b e os clubes favoritos e rejeitados da pessoa, preferências +0x65: +4..+0x18). Pessoa nula:
 /// só a original.
-unsafe extern "thiscall" fn comparar_add_supporters_player_of_year_record(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
+unsafe extern "thiscall" fn compare_add_supporters_player_of_year_record(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%);
     if pessoa == 0 || clube == 0 {
         return o(this, pessoa, clube, a, b);

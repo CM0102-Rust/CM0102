@@ -584,7 +584,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
 /// Comparador: só a original (ponytail: a rotina tira a ficha do banco, limpa listas e históricos, aloca idiomas e o
 /// contrato e manda notícia; não pode rodar duas vezes). A cópia roda no modo Rust (contadores "cqg_7 ...") e é provada
 /// pelas mutações e pelas duas carreiras Rust.
-unsafe extern "thiscall" fn comparar_regenerate_as_youth_player(this: usize, p: usize) {
+unsafe extern "thiscall" fn compare_regenerate_as_youth_player(this: usize, p: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, p)
 }
 
@@ -625,7 +625,7 @@ unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
 /// Comparador: sem a marca (nada a fazer), lado a lado na marca e no cursor da lista. Com a marca, só a original com o
 /// plano: a marca zerada e a conta da lista uma a menos quando a pessoa está nela (a procura feita antes, com o cursor
 /// devolvido).
-unsafe extern "thiscall" fn comparar_remove_dispute(this: usize, p: usize) {
+unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if p == 0 || cqg7_d(this + 4) == 0 {
         return o(this, p);

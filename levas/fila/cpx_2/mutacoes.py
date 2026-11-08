@@ -11,7 +11,7 @@ MUTACOES = [
     ('cpx2_interesse_4_5', '    if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo',
      '    if !(x >= 4.5) { // mutacao: o interesse minimo em 4,5',
      'cpx_2 interesse avaliado'),
-    ('cpx2_sem_desconto_do_listado', '        n = n.wrapping_add((-2000i32).wrapping_sub(sortear(0x1770)) as i16); // cpx2: o desconto do listado',
+    ('cpx2_sem_desconto_do_listado', '        n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: o desconto do listado',
      '        // mutacao: sem o desconto do listado',
      'cpx_2 listado'),
 ]

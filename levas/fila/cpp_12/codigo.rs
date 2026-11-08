@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn add_qualified_nation(this: usize, nacao: usize, fase
 }
 
 /// Comparador: pelo valor (só lê; as datas são locais).
-unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn compare_can_schedule_club_fixture(this: usize, jogo: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, jogo);
     let n = can_schedule_club_fixture(this, jogo);
     SCOREBOARD.record(r == n, || format!("can_schedule_club_fixture({:x}) original={} rust={}", jogo, r, n));
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: usize, jogo
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_compare_call_up_records_by_date(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_call_up_records_by_date(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_call_up_records_by_date(a, b);
     SCOREBOARD.record(r == n, || format!("compare_call_up_records_by_date({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -120,7 +120,7 @@ unsafe extern "C" fn comparar_compare_call_up_records_by_date(a: usize, b: usize
 
 /// Comparador: a original aloca o nó (não roda duas vezes): só ela, e confere o plano: a conta da lista (+0x28, palavra)
 /// sobe 1 com as duas não nulas e fica igual senão.
-unsafe extern "thiscall" fn comparar_add_qualified_nation(this: usize, nacao: usize, fase_final: usize) {
+unsafe extern "thiscall" fn compare_add_qualified_nation(this: usize, nacao: usize, fase_final: usize) {
     let antes = *((this + 0x28) as *const i16) as i32;
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, nacao, fase_final);
     let depois = *((this + 0x28) as *const i16) as i32;

@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn cqv7_inscritos_da_copa_da_inglaterra(this: usize) ->
 /// Lado a lado a partir do mesmo estado (o sorteador, +0x3e, +0xb3, +0xb4, [0xb67a34]): a original deixa a tabela dela em
 /// +0xa7, a cópia faz a sua (sem contar os sorteios), comparada nas vagas preenchidas (o clube de cada uma; a tabela
 /// não é zerada) e liberada; a devolução também.
-unsafe extern "thiscall" fn comparar_cqv7_inscritos_da_copa_da_inglaterra(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_cqv7_inscritos_da_copa_da_inglaterra(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let antes = cqv7_d(this + 0xa7);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();

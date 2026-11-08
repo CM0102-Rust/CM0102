@@ -93,7 +93,7 @@ unsafe extern "C" fn commentary_player_name(pt: usize, jogador: i8, lado: i8, bu
     let nome: unsafe extern "C" fn(u32, u32, u32, *mut u8, u32, u32, u32) = core::mem::transmute(0x53e140usize);
     let r = (pt as isize + jogador as isize * 0x49 + lado as isize * 0x625) as usize;
     let d = |o: usize| *((r + o) as *const u32);
-    if curto != 0 && sortear(5) == 0 {
+    if curto != 0 && random(5) == 0 {
         nome(d(0x198), d(0x19c), d(0x1a0), buf, tam, 1, d(0x190));
         return;
     }
@@ -178,14 +178,14 @@ unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, tipo: i8, r
     (((verdade + ruido) * peso + (20 - peso) * rep as i32) / 20) as i16
 }
 
-unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
+unsafe extern "C" fn compare_perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(%%I2%%)(o, p, c, tipo, rep);
     let n = perceived_ability(o, p, c, tipo, rep);
     SCOREBOARD.record(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> usize {
+unsafe extern "thiscall" fn compare_next_event(t: usize, saida: *mut usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(%%I0%%);
     let mut reg = vec![(t, 0x2db4)];
     if !saida.is_null() {
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> 
 
 // ponytail: escreve em `buf` e chama a 0x53e140 e a 0x541f90 (efeitos fora); comparação pelo texto
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
+unsafe extern "C" fn compare_commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(%%I1%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((buf as usize, tam as usize));

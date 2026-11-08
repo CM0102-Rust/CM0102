@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn get_stat(this: usize, jogador: usize, categoria: u32
     }
 }
 
-unsafe extern "thiscall" fn comparar_get_stat(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
+unsafe extern "thiscall" fn compare_get_stat(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64>(%%I0%%);
     if jogador == 0 || (cpu3_d(jogador) as i32) >= cpu3_d(0xae236c) as i32 {
         return o(this, jogador, categoria, qual, padrao);
@@ -122,7 +122,7 @@ unsafe extern "C" fn player_stats_compare_language_entries(a: usize, b: usize) -
     la as i8 as i32 - lb as i8 as i32
 }
 
-unsafe extern "C" fn comparar_player_stats_compare_language_entries(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_player_stats_compare_language_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = player_stats_compare_language_entries(a, b);
     SCOREBOARD.record(r == n, || format!("player_stats_compare_language_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -153,7 +153,7 @@ unsafe extern "C" fn player_stats_compare_history_by_club(a: usize, b: usize) ->
     }
 }
 
-unsafe extern "C" fn comparar_player_stats_compare_history_by_club(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_player_stats_compare_history_by_club(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = player_stats_compare_history_by_club(a, b);
     SCOREBOARD.record(r == n, || format!("player_stats_compare_history_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));

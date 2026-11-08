@@ -112,7 +112,7 @@ unsafe fn offer_cursor_region(this: usize, pessoa: usize) -> [(usize, usize); 1]
 }
 
 // ponytail: as três só leem (a lista local nasce e morre nelas); com a pessoa nula, só a original (lê o endereço 0)
-unsafe extern "thiscall" fn comparar_club_has_offer_for_player(this: usize, pessoa: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_club_has_offer_for_player(this: usize, pessoa: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     if pessoa == 0 {
         return o(this, pessoa, clube);
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn comparar_club_has_offer_for_player(this: usize, pess
     r
 }
 
-unsafe extern "thiscall" fn comparar_find_club_offer_for_player(this: usize, pessoa: usize, clube: usize, todas: u32) -> usize {
+unsafe extern "thiscall" fn compare_find_club_offer_for_player(this: usize, pessoa: usize, clube: usize, todas: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> usize>(%%I1%%);
     if pessoa == 0 {
         return o(this, pessoa, clube, todas);
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn comparar_find_club_offer_for_player(this: usize, pes
     r
 }
 
-unsafe extern "thiscall" fn comparar_player_has_pending_offer(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn compare_player_has_pending_offer(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     if pessoa == 0 {
         return o(this, pessoa);

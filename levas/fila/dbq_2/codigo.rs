@@ -42,13 +42,13 @@ unsafe extern "C" fn staff_add_disliked_club(pessoa: usize, clube: usize, forcar
     if forcar == 0 {
         return;
     }
-    let k = sortear(3);
+    let k = random(3);
     if (0..3).contains(&k) {
         *((lista + 4 * k as usize) as *mut usize) = clube;
     }
 }
 
-unsafe extern "C" fn comparar_staff_add_disliked_club(pessoa: usize, clube: usize, forcar: u32) {
+unsafe extern "C" fn compare_staff_add_disliked_club(pessoa: usize, clube: usize, forcar: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
     let pref = if pessoa != 0 { dbq2_u32(pessoa + 0x65) } else { 0 };
     let reg = dbq2_regioes(if pref != 0 { pref + 4 } else { 0 });
@@ -68,19 +68,19 @@ unsafe extern "C" fn staff_fade_staff_relationships(pessoa: usize) {
     let pref = dbq2_u32(pessoa + 0x65);
     for k in 0..3 {
         let v = pref + 0x1c + 4 * k;
-        if dbq2_u32(v) != 0 && sortear(*((pessoa + 0x59) as *const i8) as i32 + 15) == 0 { // as favoritas
+        if dbq2_u32(v) != 0 && random(*((pessoa + 0x59) as *const i8) as i32 + 15) == 0 { // as favoritas
             *(v as *mut usize) = 0;
         }
     }
     for k in 0..3 {
         let v = pref + 0x28 + 4 * k;
-        if dbq2_u32(v) != 0 && sortear(35 - *((pessoa + 0x5d) as *const i8) as i32) == 0 { // as rejeitadas
+        if dbq2_u32(v) != 0 && random(35 - *((pessoa + 0x5d) as *const i8) as i32) == 0 { // as rejeitadas
             *(v as *mut usize) = 0;
         }
     }
 }
 
-unsafe extern "C" fn comparar_staff_fade_staff_relationships(pessoa: usize) {
+unsafe extern "C" fn compare_staff_fade_staff_relationships(pessoa: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(%%I1%%);
     let pref = if pessoa != 0 { dbq2_u32(pessoa + 0x65) } else { 0 };
     let reg = dbq2_regioes(if pref != 0 { pref + 0x1c } else { 0 });
@@ -111,7 +111,7 @@ unsafe extern "C" fn staff_get_disliked_staff(pessoa: usize, saida: usize, n: us
     n
 }
 
-unsafe extern "C" fn comparar_staff_get_disliked_staff(pessoa: usize, saida: usize, n: usize) -> usize {
+unsafe extern "C" fn compare_staff_get_disliked_staff(pessoa: usize, saida: usize, n: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> usize>(%%I2%%);
     let mut reg = vec![(n, 1)];
     if saida != 0 {

@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../officials_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `record_referee_grade` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_record_referee_grade(this: usize, r: *const u8) {
+pub(crate) unsafe extern "thiscall" fn compare_record_referee_grade(this: usize, r: *const u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const u8)>(IDX_RECORD_REFEREE_GRADE);
     if is_recording_top_level() || r.is_null() {
         return o(this, r);
@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_referee_grade(this: usize
 ///
 /// [pt] Comparador: só a original (simplification: aloca, libera e troca a tabela dos árbitros, e as chamadas sorteiam: não pode
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
-pub(crate) unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_set_up_officials(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_UP_OFFICIALS)(this);
     SCOREBOARD.record(read_u32_as_usize(this + 0xc) != 0 && read_i32(this + 4) == read_i32(G_OFFICIAL_COUNT) && read_u32_as_usize(this + 8) != 0,
         || format!("set_up_officials: blocos {:x}, conta {} x {}", read_u32_as_usize(this + 0xc), read_i32(this + 4), read_i32(G_OFFICIAL_COUNT)));
@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
 /// Comparer for `officials_manager_compare_comp_level` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução (só lê).
-pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_OFFICIALS_MANAGER_COMPARE_COMP_LEVEL)(a, b);
     let n = officials_manager_compare_comp_level(a, b);
     SCOREBOARD.record(r == n, || format!("officials_manager_compare_comp_level({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_comp_level(a:
 /// Comparer for `officials_manager_compare_nation_then_quality_desc` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução (só lê).
-pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_nation_then_quality_desc(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_officials_manager_compare_nation_then_quality_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_OFFICIALS_MANAGER_COMPARE_NATION_THEN_QUALITY_DESC)(a, b);
     let n = officials_manager_compare_nation_then_quality_desc(a, b);
     SCOREBOARD.record(r == n, || format!("officials_manager_compare_nation_then_quality_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_nation_then_q
 /// Comparer for `officials_manager_compare_nation_then_quality_asc` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução (só lê).
-pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_nation_then_quality_asc(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_officials_manager_compare_nation_then_quality_asc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_OFFICIALS_MANAGER_COMPARE_NATION_THEN_QUALITY_ASC)(a, b);
     let n = officials_manager_compare_nation_then_quality_asc(a, b);
     SCOREBOARD.record(r == n, || format!("officials_manager_compare_nation_then_quality_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -57,7 +57,7 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_nation_then_q
 /// Comparer for `choose_match_official` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pela palavra de saída e pelo estado do sorteio, e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, game: usize, out: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_choose_match_official(this: usize, game: usize, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CHOOSE_MATCH_OFFICIAL);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((out, 2));
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_match_official(this: usiz
 /// Comparer for `clear_busy_flags` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelos bytes de ocupado e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_clear_busy_flags(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_clear_busy_flags(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLEAR_BUSY_FLAGS);
     let n = read_i32(this + 4);
     let reg = if n > 0 && read_usize(this + 8) != 0 { vec![(read_usize(this + 8), n as usize)] } else { Vec::new() };
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_busy_flags(this: usize) ->
 /// [pt] Comparador: lado a lado pelas fichas de todos os árbitros ([0xae2390] × 0x2b), pelas linhas de estatísticas
 /// ([0xae2390] × 17), pelo estado do sorteio e por [0xb67a34], e pela devolução. Sem tabela de árbitros (a caixa a cada
 /// ficha): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_renew_officials(this: usize, comp: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_renew_officials(this: usize, comp: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_RENEW_OFFICIALS);
     let total = read_i32(G_OFFICIAL_COUNT).max(0) as usize;
     if read_usize(G_OFFICIAL_TABLE) == 0 || read_usize(this) == 0 {
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_renew_officials(this: usize, com
 /// que é reposto; depois roda a original. Confere o estado final do sorteio, a conta nova ([0xae2390] + conta) e que
 /// cada ficha do ensaio esteja na tabela ordenada (campos que a original grava). Conta não positiva ou nação sem
 /// continente: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this: usize, count: i32, nation: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_officials_manager_add_random_officials(this: usize, count: i32, nation: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_OFFICIALS_MANAGER_ADD_RANDOM_OFFICIALS);
     if count <= 0 || (nation != 0 && read_usize(nation + nation::CONTINENT) == 0) {
         return o(this, count, nation);
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_off
 /// Comparer for `officials_manager_validate_officials` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelas fichas de todos os árbitros e pelo estado do sorteio.
-pub(crate) unsafe extern "C" fn comparar_officials_manager_validate_officials() {
+pub(crate) unsafe extern "C" fn compare_officials_manager_validate_officials() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_OFFICIALS_MANAGER_VALIDATE_OFFICIALS);
     let total = read_i32(G_OFFICIAL_COUNT).max(0) as usize;
     if read_usize(G_OFFICIAL_TABLE) == 0 {
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_validate_officials() 
 /// Comparer for `officials_manager_operator` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pela ficha de destino e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_operator(this: usize, src: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_officials_manager_operator(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_OFFICIALS_MANAGER_OPERATOR);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x2b)], || o(this, src), || officials_manager_operator(this, src));
     SCOREBOARD.record(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_operator(this:
 /// Comparer for `save_official_stats` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x79bb80: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_save_official_stats(this: usize, save: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_save_official_stats(this: usize, save: usize) -> u8 {
     // simplification: writes to the save container (cannot run twice); the copy is proven by the save proof
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_SAVE_OFFICIAL_STATS)(this, save)
 }

@@ -2,7 +2,7 @@ r"""Põe cada rotina portada no módulo do seu arquivo de origem (etapa 4 da reo
 
 O cabeçalho de cada rotina diz o arquivo de origem (`Original: ... (0x5d6280, game.cpp, cdecl)`). Se a rotina está em
 outro módulo (as seções vieram por leva, e uma leva juntava rotinas de arquivos diferentes), ela vai para o fim do
-módulo certo, com o cabeçalho e o comparador (`comparar_<nome>`). Os auxiliares ficam onde estão: todos os módulos se
+módulo certo, com o cabeçalho e o comparador (`compare_<nome>`). Os auxiliares ficam onde estão: todos os módulos se
 enxergam (motor.rs re-exporta tudo), então mover não muda o código gerado.
 
 Uso: python mover_rotinas.py [--gravar]
@@ -73,7 +73,7 @@ def main():
     acrescimos = {}
     for rel, alvo, n in mover:
         # a rotina no módulo dela; o comparador (motor/compare/, mesmo caminho) no comparador do módulo novo
-        for nome, de, para in ((n, rel, alvo), ('comparar_' + n, rel, alvo), ('comparar_' + n, 'compare/' + rel, 'compare/' + alvo)):
+        for nome, de, para in ((n, rel, alvo), ('compare_' + n, rel, alvo), ('compare_' + n, 'compare/' + rel, 'compare/' + alvo)):
             if de not in arquivos:
                 continue
             if para not in arquivos:

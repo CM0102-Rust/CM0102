@@ -377,7 +377,7 @@ pub(crate) unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: u
 }
 
 // 0x54cdb0 only reads: compare the value
-comparar_valor!(comparar_days_to_end_date, days_to_end_date, IDX_DAYS_TO_END_DATE, () -> u32);
+compare_value!(compare_days_to_end_date, days_to_end_date, IDX_DAYS_TO_END_DATE, () -> u32);
 
 /// Sets the flags at +0x40 and, when the person now wants to leave and nothing prevents it, files the transfer request
 /// (0x4d8610).

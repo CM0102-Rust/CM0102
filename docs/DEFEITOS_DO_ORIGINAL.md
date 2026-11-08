@@ -71,7 +71,7 @@ A lista dos defeitos (bugs) do CM 01/02 3.9.68 que achamos ao portar, ou que a c
 | 0x584990 | `tabela_da_qualificacao_da_liga_dos_campeoes`, european_cup.cpp | Com +0x36 = 0, lê antes da lista (índice negativo). | [inferência] Clube lixo na qualificação, se o caso ocorrer. | reproduzido 1:1 | `motor.rs` `cpy5_qualificacao` |
 | 0x641dc0 | `resultado_do_desempate_da_serie_a`, ita_ser_a.cpp | Lê o clube da linha seguinte mesmo na última linha (4 bytes além da tabela). | [inferência] Comparação com um valor de fora da tabela. | reproduzido 1:1 | `motor.rs` (comentário na rotina) |
 | 0x6624f0 | `cqn12_copa_do_imperador_inscritos`, jap_emp_cup.cpp | Sem clubes, lê o vetor no índice −1. | [inferência] Inscrito lixo. | a cópia usa 0 e cai na caixa de erro | `motor.rs` (comentário na rotina) |
-| 0x4c11a0 | `cqi11_concacaf_classificados` | Com clubes de menos numa lista (mexicanos, centro-americanos, caribenhos, MLS), lê sobra de pilha. | [inferência] Classificado lixo, só em banco com poucos clubes. | reproduzido (cópia usa 0) | `motor.rs` `comparar_cqi11_concacaf_classificados` |
+| 0x4c11a0 | `cqi11_concacaf_classificados` | Com clubes de menos numa lista (mexicanos, centro-americanos, caribenhos, MLS), lê sobra de pilha. | [inferência] Classificado lixo, só em banco com poucos clubes. | reproduzido (cópia usa 0) | `motor.rs` `compare_cqi11_concacaf_classificados` |
 | 0x5b91c0, 0x5bd600 | `construir_cfa`, `construir_divisao_de_baixo_francesa` | A lista local de 72 ou 40 ponteiros não é zerada; sem clubes bastantes, lê lixo. | [inferência] Só em banco com poucos clubes. | reproduzido (cópia usa 0) | `motor.rs` `cqn4_construir` |
 
 ## Save e banco

@@ -362,7 +362,7 @@ unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> SuspensionPlan {
 /// Comparador: a 0x556940 realoca os vetores e liga os órgãos (não pode rodar duas vezes): o plano antes, a original
 /// roda; confere a velha estendida (jogos, dias, bit 0 das duas), ou a nova na vaga (jogos, dias, as 4 regras), a
 /// conta, as entradas das regras apontando para a vaga e, com a quarta regra, o índice das nações com um a mais.
-unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
+unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban: usize) {
     let plano = add_ban_plan(this, id, ban);
     let indice = cpo11_w(this + 0x12);
     let mut regras = [0u8; 4];
@@ -397,7 +397,7 @@ unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
 /// Comparador: a 0x556270 solta suspensões (índice das nações, órgãos): o plano antes (as vagas que o clube não cobre
 /// e as entradas), a original roda; confere as vagas liberadas (0xff, −1, a entrada −1) e as outras intactas. Uma
 /// entrada repetida em duas vagas não entra na conferência da segunda.
-unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pessoa: usize, nada: u32, clube: usize) {
+unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this: usize, pessoa: usize, nada: u32, clube: usize) {
     let id = cpo11_d(pessoa) as u32;
     let r = discipline_record(this, id);
     let mut antes = [0u8; 29];
@@ -438,7 +438,7 @@ unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pe
 /// Comparador: a 0x556570 tira e libera itens da lista (lição 1: o esperado é montado ANTES; nenhum item é lido depois)
 /// e solta suspensões: o plano antes, a original roda; confere [0xae1080], as vagas devolvidas (os 5 bytes guardados), as
 /// soltas (0xff, −1, a entrada −1), a conta de guardadas e as outras vagas intactas.
-unsafe extern "thiscall" fn comparar_restore_held_bans(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_restore_held_bans(this: usize, pessoa: usize) {
     let id = cpo11_d(pessoa) as u32;
     let r = discipline_record(this, id);
     let p = return_bans_plan(this, pessoa);

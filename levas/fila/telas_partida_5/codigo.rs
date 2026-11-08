@@ -189,14 +189,14 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
     redesenhar();
 }
 
-unsafe extern "thiscall" fn comparar_is_forward_unavailable(gerente: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_forward_unavailable(gerente: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
     let n = is_forward_unavailable(gerente);
     SCOREBOARD.record(r == n, || format!("is_forward_unavailable original={} rust={}", r, n));
     r
 }
 
-unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
+unsafe extern "C" fn compare_get_heading_colour(x: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(%%I2%%)(x);
     let n = get_heading_colour(x);
     SCOREBOARD.record(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
@@ -206,7 +206,7 @@ unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
 /// O painel é comparado de verdade: as duas desenham a partir do mesmo estado e o gerente de telas, o
 /// `Display` da tela atual, os parâmetros (menos o 0x14, a hora que o redesenho 0x724520 grava), o
 /// `*topo` e o texto 0xde1f64 têm de sair iguais.
-unsafe extern "C" fn comparar_draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn compare_draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I0%%);
     let mut reg = screen_build_regions();
     let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;

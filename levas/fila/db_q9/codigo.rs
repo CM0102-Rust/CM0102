@@ -72,7 +72,7 @@ unsafe extern "C" fn staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize 
     pessoa
 }
 
-unsafe extern "C" fn comparar_staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32) -> u32 {
+unsafe extern "C" fn compare_staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(%%I0%%);
     if delta as u8 == 0 {
         let r = o(pessoa, delta, limitar);
@@ -88,7 +88,7 @@ unsafe extern "C" fn comparar_staff_adjust_morale(pessoa: usize, delta: u32, lim
     r
 }
 
-unsafe extern "C" fn comparar_database_non_player_to_attribute_vector(nao_jogador: usize, pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
+unsafe extern "C" fn compare_database_non_player_to_attribute_vector(nao_jogador: usize, pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32>(%%I1%%);
     let mut regioes = vec![(vetor, 21 * 3)];
     if !fim.is_null() {
@@ -100,7 +100,7 @@ unsafe extern "C" fn comparar_database_non_player_to_attribute_vector(nao_jogado
     r
 }
 
-unsafe extern "C" fn comparar_staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize {
+unsafe extern "C" fn compare_staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pessoa + 0x5e, 1)], || o(pessoa, elenco),
         || staff_set_squad_flags(pessoa, elenco));

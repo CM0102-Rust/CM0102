@@ -1,7 +1,7 @@
 # Mutacoes da leva148 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva148.py --carreira 2002-06-01
 MUTACOES = [
     ('i_angulo', "match_pl_ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0))", "match_pl_ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0) + 1.0)"),
-    ('i_ceu', "*b(engine::ABANDON_MINUTE) = if sortear(2) != 0 { (sortear(0x19) as u8).wrapping_add(0xf) }", "*b(engine::ABANDON_MINUTE) = if sortear(2) != 0 { (sortear(0x19) as u8).wrapping_add(0x10) }"),
+    ('i_ceu', "*b(engine::ABANDON_MINUTE) = if random(2) != 0 { (random(0x19) as u8).wrapping_add(0xf) }", "*b(engine::ABANDON_MINUTE) = if random(2) != 0 { (random(0x19) as u8).wrapping_add(0x10) }"),
     ('i_duracao', "    *b(engine::SUBSTITUTION_PENDING) = 0;\n    *w(engine::PERIOD_END) = 0x1ef;", "    *b(engine::SUBSTITUTION_PENDING) = 0;\n    *w(engine::PERIOD_END) = 0x1f0;"),
     ('i_folego', "    *w(engine::LAST_STANCE_CALL_TICK) = 0x2710;", "    *w(engine::LAST_STANCE_CALL_TICK) = 0x2700;"),
     ('i_desvio', "    *w(engine::BALL_DIRECTION) = 0xb4;", "    *w(engine::BALL_DIRECTION) = 0xb5;"),
@@ -10,12 +10,12 @@ MUTACOES = [
     ('i_desgaste', "let t = (read_f64_at(0x9688a8) - x) as f32;", "let t = (read_f64_at(0x9688a8) - x + 1.0) as f32;"),
     ('i_peso', "let a = (ga * read_f64_at(0x96a5c0) + read_f64_at(0x9688a0)) - x * read_f64_at(0x968a80);", "let a = (ga * read_f64_at(0x96a5c0) + read_f64_at(0x9688a0) + 1.0) - x * read_f64_at(0x968a80);"),
     ('i_saida', "            *b(engine::NEXT_KICKOFF_SIDE) = 1;\n            *b(engine::POSSESSION_SIDE) = 0;", "            *b(engine::NEXT_KICKOFF_SIDE) = 0;\n            *b(engine::POSSESSION_SIDE) = 1;"),
-    ('i_pontos', "                    if p > 5 && (p as i32) > sortear(0x1e) {", "                    if p > 6 && (p as i32) > sortear(0x1e) {", "prejogo insatisfeito pela posicao"),
+    ('i_pontos', "                    if p > 5 && (p as i32) > random(0x1e) {", "                    if p > 6 && (p as i32) > random(0x1e) {", "prejogo insatisfeito pela posicao"),
     ('i_ficha', "                    p += if f5b == 1 { 0x14 } else if f5b < 6 { 0xa } else { 5 };", "                    p += if f5b == 1 { 0x14 } else if f5b < 6 { 0xb } else { 5 };", "prejogo insatisfeito pela posicao"),
-    ('i_interesse', "            let r = sortear(7);\n            if (byte(pe, player_sheet::LEADERSHIP) as i32) > r + 6", "            let r = sortear(8);\n            if (byte(pe, player_sheet::LEADERSHIP) as i32) > r + 6", "prejogo interesse"),
+    ('i_interesse', "            let r = random(7);\n            if (byte(pe, player_sheet::LEADERSHIP) as i32) > r + 6", "            let r = random(8);\n            if (byte(pe, player_sheet::LEADERSHIP) as i32) > r + 6", "prejogo interesse"),
     ('i_forma', "            if form < 0x17 {\n                let m1", "            if form < 0x18 {\n                let m1", "prejogo forma em baixa"),
     ('i_alta', "            } else if form > 0x20 {", "            } else if form > 0x1f {", "prejogo forma em alta"),
-    ('i_contrato', "                let r = sortear(200) + 0x32;", "                let r = sortear(200) + 0x33;", "prejogo fim de contrato"),
+    ('i_contrato', "                let r = random(200) + 0x32;", "                let r = random(200) + 0x33;", "prejogo fim de contrato"),
     ('i_insatisfeito', "                push_prematch_event(m, f, club, 0, 0, k as u8, 0x13);", "                push_prematch_event(m, f, club, 0, 0, k as u8, 0x14);", "prejogo insatisfeito"),
     ('i_marcador', "    *w(engine::LAST_SHOT_MINUTE) = 0xffff;", "    *w(engine::LAST_SHOT_MINUTE) = 0;"),
 ]

@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../fog_of_war.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `chance_to_know` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_chance_to_know(person: usize, level: i8) -> i32 {
+pub(crate) unsafe extern "C" fn compare_chance_to_know(person: usize, level: i8) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, i8) -> i32>(IDX_CHANCE_TO_KNOW)(person, level);
     let v = chance_to_know(person, level);
     SCOREBOARD.record(r == v, || format!("chance_to_know({}, {}) original={} rust={}", *((person + 4) as *const i16), level, r, v));
@@ -12,7 +12,7 @@ pub(crate) unsafe extern "C" fn comparar_chance_to_know(person: usize, level: i8
 }
 
 /// Comparer for `know_person` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, person: usize, font: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_know_person(this: usize, person: usize, font: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_KNOW_PERSON);
     let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
     if person != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, person:
 }
 
 /// Comparer for `fog_after_match` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_fog_after_match(partida: usize, data: usize) {
+pub(crate) unsafe extern "stdcall" fn compare_fog_after_match(partida: usize, data: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize)>(IDX_FOG_AFTER_MATCH);
     // the registers the routine may touch (same tests, without the 0x32 of the reserves: leftover does not hurt)
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);

@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
 
 /// Comparador: só a original (ponytail: aloca, libera e troca a tabela dos árbitros, e as chamadas sorteiam: não pode
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
-unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
+unsafe extern "thiscall" fn compare_set_up_officials(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     SCOREBOARD.record(cqg9_d(this + 0xc) != 0 && cqg9_i(this + 4) == cqg9_i(0xae2390) && cqg9_d(this + 8) != 0,
         || format!("set_up_officials: blocos {:x}, conta {} x {}", cqg9_d(this + 0xc), cqg9_i(this + 4), cqg9_i(0xae2390)));
@@ -262,7 +262,7 @@ unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b: usize) ->
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = officials_manager_compare_comp_level(a, b);
     SCOREBOARD.record(r == n, || format!("officials_manager_compare_comp_level({:x}, {:x}) original={} rust={}", a, b, r, n));

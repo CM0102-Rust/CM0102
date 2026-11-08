@@ -86,21 +86,21 @@ unsafe extern "system" fn event_variant(e: *const i16, lados: u32, tipo: u8) -> 
     v
 }
 
-unsafe extern "C" fn comparar_day_match_order(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_day_match_order(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = day_match_order(a, b);
     SCOREBOARD.record(r == n, || format!("day_match_order({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_action_order(a: *const usize, b: *const usize) -> i32 {
+unsafe extern "C" fn compare_action_order(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = action_order(a, b);
     SCOREBOARD.record(r == n, || format!("action_order({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r
 }
 
-unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, tipo: u8) -> i16 {
+unsafe extern "system" fn compare_event_variant(e: *const i16, lados: u32, tipo: u8) -> i16 {
     let o = original_fn::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(%%I2%%);
     if is_recording_top_level() {
         return o(e, lados, tipo);

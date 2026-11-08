@@ -65,7 +65,7 @@ def main():
         for l in open(tab, encoding='utf-8'):
             x = l.rstrip('\n').split('\t')
             if len(x) >= 2 and x[0] == 'EXCLUDE':
-                EXCLUIR[o].add(x[1].strip().replace('comparar_', ''))
+                EXCLUIR[o].add(x[1].strip().replace('compare_', ''))
     rels = set(tipos)
     for d_, _, fs in os.walk(BASE):
         for f in fs:
@@ -82,7 +82,7 @@ def main():
         partes, pos = [], 0
         motor = bool(re.match(r'(compare/)?match_\w+\.rs$', rel))
         for nome, a, b in mover_rotinas.blocos(t):
-            vs = {v: o for v, o in PADRAO_MOTOR.items() if nome.replace('comparar_', '') not in EXCLUIR[o]} if motor else {}
+            vs = {v: o for v, o in PADRAO_MOTOR.items() if nome.replace('compare_', '') not in EXCLUIR[o]} if motor else {}
             vs.update(funcs.get(nome, {}))
             if not vs:
                 continue

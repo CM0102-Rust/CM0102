@@ -15,7 +15,7 @@
 //! `motor/<folder>/<file>.rs` holds the routines of the game's source file of the same name (`comp/leagues/eng_prm.rs`
 //! for `eng_prm.cpp`). Each rewritten routine has a header: what it does, then `Original: Class::method (address,
 //! source file, calling convention)`, then the Portuguese notes (`[pt]`). The vocabulary:
-//! - `comparar_<name>`: the comparer. In comparison mode (`CM_COMPARAR=1`) it runs the original and our copy side by
+//! - `compare_<name>`: the comparer. In comparison mode (`CM_COMPARAR=1`) it runs the original and our copy side by
 //!   side (or the original only, checking the outcome it planned) and records any difference (`PLACAR`).
 //! - `ramo("...")`: a branch counter; the tests use it to know which paths a career went through.
 //! - `read_u32(a)`, `write_u8(a, v)` (`mem.rs`): unaligned access to the game's records; `rec + 0x40` is a field of a
@@ -2232,9 +2232,9 @@ include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position o
 ///
 /// [pt] Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
-const MOTOR: usize = 0xf63b;
+const ENGINE_SIZE: usize = 0xf63b;
 
-const TABELA_GLOBAL: usize = 0xb67c30;
+const GLOBAL_TABLE: usize = 0xb67c30;
 
 unsafe fn byte(p: usize, off: usize) -> i8 {
     *((p + off) as *const i8)
@@ -2243,7 +2243,7 @@ unsafe fn byte(p: usize, off: usize) -> i8 {
 /// The player's value in a table of 11 words (one per side), by the player's position (0..=10).
 ///
 /// [pt] Valor do jogador numa tabela de 11 palavras (uma por lado), pela posicao dele (0..=10).
-unsafe fn tabela_por_posicao(this: usize, jogador: usize, campo: usize) -> u16 {
+unsafe fn table_by_position(this: usize, jogador: usize, campo: usize) -> u16 {
     let posicao = byte(jogador, 0x19);
     if !(0..=10).contains(&posicao) {
         return 0;
@@ -2256,11 +2256,11 @@ unsafe fn tabela_por_posicao(this: usize, jogador: usize, campo: usize) -> u16 {
 /// { 0x714d30 } (match_pl.cpp, 4 bytes, not hookable): the player's side. Read directly.
 ///
 /// [pt] { 0x714d30 } (match_pl.cpp, 4 bytes, nao desviavel): lado do jogador. Lido direto.
-unsafe fn lado(jogador: usize) -> i8 {
-    byte(jogador, 0x27)
+unsafe fn side_of_player(player: usize) -> i8 {
+    byte(player, match_player::SIDE)
 }
 
-unsafe fn sortear(n: i32) -> i32 {
+unsafe fn random(n: i32) -> i32 {
     let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     f(n)
 }
@@ -3324,7 +3324,7 @@ pub(crate) use self::zipdir::*;
 
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
-comparar_valor!(comparar_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
 
 // ---------- 162nd batch: the slots of the tactics table (tactics.cpp) ----------
 
@@ -3333,7 +3333,7 @@ comparar_valor!(comparar_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, 
 ///
 /// [pt] A linha `linha` da tabela tática do objeto `t` ([t+0x601], 0x91 bytes por linha: palavra da
 /// formação e 20 vagas de 4 bytes a partir de +2).
-unsafe fn linha_da_tabela(t: usize, linha: i32) -> usize {
+unsafe fn table_row(t: usize, linha: i32) -> usize {
     core::ptr::read_unaligned((t + 0x601) as *const usize).wrapping_add((linha as usize).wrapping_mul(0x91))
 }
 
@@ -3342,30 +3342,30 @@ unsafe fn linha_da_tabela(t: usize, linha: i32) -> usize {
 ///
 /// [pt] As regiões que as três podem tocar: a linha do clube na tabela (se houver) e as instruções
 /// pendentes com o contador (+0x30..+0x5f1).
-unsafe fn regioes_da_tabela(t: usize, clube: usize, humano: u32) -> Vec<(usize, usize)> {
+unsafe fn table_regions(t: usize, clube: usize, humano: u32) -> Vec<(usize, usize)> {
     let mut r = vec![(t + 0x30, 0x5c1)];
     if clube != 0 {
         let tactics_row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
         let l = tactics_row(clube, humano);
         if l != -1 {
-            r.push((linha_da_tabela(t, l), 0x91));
+            r.push((table_row(t, l), 0x91));
         }
     }
     r
 }
 
-unsafe extern "stdcall" fn comparar_set_piece_code(c: i16) -> u8 {
+unsafe extern "stdcall" fn compare_set_piece_code(c: i16) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(i16) -> u8>(IDX_SET_PIECE_CODE)(c);
     let n = set_piece_code(c);
     SCOREBOARD.record(r == n, || format!("set_piece_code({}) original={} rust={}", c, r, n));
     r
 }
-comparar_repartir!(comparar_add_disposition, add_disposition, IDX_ADD_DISPOSITION);
+compare_split!(compare_add_disposition, add_disposition, IDX_ADD_DISPOSITION);
 
-comparar_repartir!(comparar_split_d, split_d, IDX_SPLIT_D);
-comparar_repartir!(comparar_split_e, split_e, IDX_SPLIT_E);
-comparar_repartir!(comparar_split_f, split_f, IDX_SPLIT_F);
-unsafe extern "thiscall" fn comparar_remove_from_list(this: usize, alvo: usize) -> u8 {
+compare_split!(compare_split_d, split_d, IDX_SPLIT_D);
+compare_split!(compare_split_e, split_e, IDX_SPLIT_E);
+compare_split!(compare_split_f, split_f, IDX_SPLIT_F);
+unsafe extern "thiscall" fn compare_remove_from_list(this: usize, alvo: usize) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_REMOVE_FROM_LIST);
     let n = byte(this, 0x101).max(0) as usize;
     let reg = [(this + 0x101, 1), (this + 0x1ae, 4 * n)];
@@ -3373,39 +3373,39 @@ unsafe extern "thiscall" fn comparar_remove_from_list(this: usize, alvo: usize) 
     SCOREBOARD.record(igual && r == x, || format!("remove_from_list(n {}) original={} {:x?} rust={} {:x?}", n, r, mo, x, mr));
     r
 }
-unsafe extern "thiscall" fn comparar_take_the_field(this: usize, j: usize) -> u8 {
+unsafe extern "thiscall" fn compare_take_the_field(this: usize, j: usize) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_TAKE_THE_FIELD);
-    let l = lado(j) as isize;
+    let l = side_of_player(j) as isize;
     let n = *((this as isize + 0x4592 + l) as *const i8) as isize;
     let reg = [(j + 0x28, 1), (j + 0x102, 2), ((this as isize + 0x4592 + l) as usize, 1), ((this as isize + 0x453a + 4 * (n + 11 * l)) as usize, 4)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, j), || take_the_field(this, j));
     SCOREBOARD.record(igual && r == x, || format!("take_the_field(lado {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
     r
 }
-comparar_valor!(comparar_in_danger, in_danger, IDX_IN_DANGER, () -> u8);
+compare_value!(compare_in_danger, in_danger, IDX_IN_DANGER, () -> u8);
 
-comparar_valor!(comparar_clear_path, clear_path_to, IDX_CLEAR_PATH_TO, (l: i8, x: i8, y: i8) -> u8);
-comparar_valor!(comparar_reaches_the_point, reaches_the_point, IDX_REACHES_THE_POINT, (x: i8, y: i8) -> u8);
+compare_value!(compare_clear_path, clear_path_to, IDX_CLEAR_PATH_TO, (l: i8, x: i8, y: i8) -> u8);
+compare_value!(compare_reaches_the_point, reaches_the_point, IDX_REACHES_THE_POINT, (x: i8, y: i8) -> u8);
 
-unsafe extern "thiscall" fn comparar_choose_standout(this: usize) {
+unsafe extern "thiscall" fn compare_choose_standout(this: usize) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CHOOSE_STANDOUT);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x477a, 4)], || f(this), || choose_standout(this));
     SCOREBOARD.record(igual, || format!("choose_standout original={:x?} rust={:x?}", mo, mr));
 }
-unsafe extern "thiscall" fn comparar_choose_by_role_b(this: usize, arg: u32) -> u8 {
+unsafe extern "thiscall" fn compare_choose_by_role_b(this: usize, arg: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(IDX_CHOOSE_BY_ROLE_B);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg), || crate::rng::without_counting(|| choose_by_role_b(this, arg)));
     SCOREBOARD.record(igual && r == n, || format!("choose_by_role_b({:#x}) original={} rust={}", arg, r as i8, n as i8));
     r
 }
-unsafe extern "thiscall" fn comparar_formation_square(this: usize, j: usize, x: *mut u8, y: *mut u8) {
+unsafe extern "thiscall" fn compare_formation_square(this: usize, j: usize, x: *mut u8, y: *mut u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_FORMATION_SQUARE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this, j, x, y), || formation_square(this, j, x, y));
     SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, 0x8eae), byte(j, 0x27), byte(j, 0x19), mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_compute_percentages(this: usize, i: i8) {
+unsafe extern "thiscall" fn compare_compute_percentages(this: usize, i: i8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_COMPUTE_PERCENTAGES);
     let mut reg = Vec::new();
     for s in [i as isize, 3, 4] {
@@ -3416,7 +3416,7 @@ unsafe extern "thiscall" fn comparar_compute_percentages(this: usize, i: i8) {
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, i), || compute_percentages(this, i));
     SCOREBOARD.record(igual, || format!("compute_percentages({}) original={:x?} rust={:x?}", i, mo, mr));
 }
-unsafe extern "thiscall" fn comparar_choose_by_role_c(this: usize, arg: u32, modo: u32) -> u8 {
+unsafe extern "thiscall" fn compare_choose_by_role_c(this: usize, arg: u32, modo: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CHOOSE_BY_ROLE_C);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, modo), || crate::rng::without_counting(|| choose_by_role_c(this, arg, modo)));
@@ -3424,20 +3424,20 @@ unsafe extern "thiscall" fn comparar_choose_by_role_c(this: usize, arg: u32, mod
     r
 }
 
-comparar_valor!(comparar_value_by_condition, value_by_condition, IDX_VALUE_BY_CONDITION, (alvo: usize) -> i32);
-unsafe extern "thiscall" fn comparar_apply_to_team(this: usize, j: usize, f: f32) {
+compare_value!(compare_value_by_condition, value_by_condition, IDX_VALUE_BY_CONDITION, (alvo: usize) -> i32);
+unsafe extern "thiscall" fn compare_apply_to_team(this: usize, j: usize, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, f32)>(IDX_APPLY_TO_TEAM);
-    let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, lado(j), k) + 0x1a2, 4)).collect();
+    let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, side_of_player(j), k) + 0x1a2, 4)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, f), || apply_to_team(this, j, f));
     SCOREBOARD.record(igual, || format!("apply_to_team({}) original={:x?} rust={:x?}", f, mo, mr));
 }
-unsafe extern "thiscall" fn comparar_apply_to_side(this: usize, l: i8, f: f32) {
+unsafe extern "thiscall" fn compare_apply_to_side(this: usize, l: i8, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, f32)>(IDX_APPLY_TO_SIDE);
     let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, l, k) + 0x1a2, 4)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, f), || apply_to_side(this, l, f));
     SCOREBOARD.record(igual, || format!("apply_to_side({}, {}) original={:x?} rust={:x?}", l, f, mo, mr));
 }
-unsafe extern "thiscall" fn comparar_choose_by_condition(this: usize, l: i8, modo: u32) -> u8 {
+unsafe extern "thiscall" fn compare_choose_by_condition(this: usize, l: i8, modo: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u8>(IDX_CHOOSE_BY_CONDITION);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, l, modo), || crate::rng::without_counting(|| choose_by_condition(this, l, modo)));
@@ -3445,24 +3445,24 @@ unsafe extern "thiscall" fn comparar_choose_by_condition(this: usize, l: i8, mod
     r
 }
 
-comparar_valor!(comparar_read_1bc, read_1bc, IDX_READ_1BC, () -> u16);
-comparar_valor!(comparar_player_table_a_1a, player_table_a_1a, IDX_PLAYER_TABLE_A_1A, () -> u16);
-comparar_valor!(comparar_player_table_b, player_table_b, IDX_PLAYER_TABLE_B, () -> u16);
-comparar_valor!(comparar_difference_of_player, difference_of_player, IDX_DIFFERENCE_OF_PLAYER, () -> u8);
-comparar_valor!(comparar_player_marks_rot, player_marks_rot, IDX_PLAYER_MARKS_ROT, () -> u64);
-comparar_valor!(comparar_mark_800000, mark_800000, IDX_MARK_800000, () -> u8);
-comparar_valor!(comparar_near_own_goal, near_own_goal, IDX_NEAR_OWN_GOAL, () -> u8);
-comparar_valor!(comparar_role_880, role_880, IDX_ROLE_880, () -> u8);
-comparar_valor!(comparar_player_by_record, player_by_record, IDX_PLAYER_BY_RECORD, (ficha: usize) -> usize);
+compare_value!(compare_read_1bc, read_1bc, IDX_READ_1BC, () -> u16);
+compare_value!(compare_player_table_a_1a, player_table_a_1a, IDX_PLAYER_TABLE_A_1A, () -> u16);
+compare_value!(compare_player_table_b, player_table_b, IDX_PLAYER_TABLE_B, () -> u16);
+compare_value!(compare_difference_of_player, difference_of_player, IDX_DIFFERENCE_OF_PLAYER, () -> u8);
+compare_value!(compare_player_marks_rot, player_marks_rot, IDX_PLAYER_MARKS_ROT, () -> u64);
+compare_value!(compare_mark_800000, mark_800000, IDX_MARK_800000, () -> u8);
+compare_value!(compare_near_own_goal, near_own_goal, IDX_NEAR_OWN_GOAL, () -> u8);
+compare_value!(compare_role_880, role_880, IDX_ROLE_880, () -> u8);
+compare_value!(compare_player_by_record, player_by_record, IDX_PLAYER_BY_RECORD, (ficha: usize) -> usize);
 
-unsafe fn regioes_do_cartao(motor: usize, j: usize, tipo: *mut u8, peso: *mut f32) -> Vec<(usize, usize)> {
-    let mut reg = vec![(j, 0x40), (tipo as usize, 1), (peso as usize, 4), ((motor as isize + 0xf5c9 + 54 * lado(j) as isize) as usize, 1)];
+unsafe fn card_regions(motor: usize, j: usize, tipo: *mut u8, peso: *mut f32) -> Vec<(usize, usize)> {
+    let mut reg = vec![(j, 0x40), (tipo as usize, 1), (peso as usize, 4), ((motor as isize + 0xf5c9 + 54 * side_of_player(j) as isize) as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     reg
 }
 
 // The wrappers go through the inner (hooked) routine: they compare the same regions as it.
-unsafe extern "thiscall" fn comparar_engine_decide_foul(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
+unsafe extern "thiscall" fn compare_engine_decide_foul(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_ENGINE_DECIDE_FOUL);
     let mut reg = vec![(this + 0xf5b2 + 8, 2), (tipo as usize, 1), (valor as usize, 1), (this + 0x475a, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
@@ -3471,7 +3471,7 @@ unsafe extern "thiscall" fn comparar_engine_decide_foul(this: usize, j: usize, c
     r
 }
 
-unsafe extern "thiscall" fn comparar_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
+unsafe extern "thiscall" fn compare_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_LOOK_FOR_OFFSIDE);
     let motor = *(this as *const usize);
     let mut reg = vec![(this + 8, 2), (motor + 0x475a, 16)];
@@ -3480,7 +3480,7 @@ unsafe extern "thiscall" fn comparar_look_for_offside(this: usize, l: i8, linha:
     SCOREBOARD.record(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));
     r
 }
-unsafe extern "thiscall" fn comparar_engine_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
+unsafe extern "thiscall" fn compare_engine_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_ENGINE_LOOK_FOR_OFFSIDE);
     let mut reg = vec![(this + 0xf5b2 + 8, 2), (this + 0x475a, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
@@ -3489,14 +3489,14 @@ unsafe extern "thiscall" fn comparar_engine_look_for_offside(this: usize, l: i8,
     r
 }
 
-unsafe extern "thiscall" fn comparar_card_by_severity(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
+unsafe extern "thiscall" fn compare_card_by_severity(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8)>(IDX_CARD_BY_SEVERITY);
     let mut reg = vec![(j, 0x40), (tipo as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, tipo, g, flag), || crate::rng::without_counting(|| card_by_severity(this, j, tipo, g, flag)));
     SCOREBOARD.record(igual, || format!("card_by_severity(g {}, flag {}) original={:x?} rust={:x?}", g, flag, mo, mr));
 }
-unsafe extern "thiscall" fn comparar_engine_card_by_severity(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
+unsafe extern "thiscall" fn compare_engine_card_by_severity(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8)>(IDX_ENGINE_CARD_BY_SEVERITY);
     let mut reg = vec![(j, 0x40), (tipo as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
@@ -3504,7 +3504,7 @@ unsafe extern "thiscall" fn comparar_engine_card_by_severity(this: usize, j: usi
     SCOREBOARD.record(igual, || format!("engine_card_by_severity original={:x?} rust={:x?}", mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_choose_by_role_e(this: usize, arg: u32, modo: u32) -> u8 {
+unsafe extern "thiscall" fn compare_choose_by_role_e(this: usize, arg: u32, modo: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CHOOSE_BY_ROLE_E);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, modo), || crate::rng::without_counting(|| choose_by_role_e(this, arg, modo)));
@@ -3512,14 +3512,14 @@ unsafe extern "thiscall" fn comparar_choose_by_role_e(this: usize, arg: u32, mod
     r
 }
 
-unsafe extern "thiscall" fn comparar_possession_statistic(this: usize, l: i8, janela: u8) {
+unsafe extern "thiscall" fn compare_possession_statistic(this: usize, l: i8, janela: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u8)>(IDX_POSSESSION_STATISTIC);
     let reg = [(this, 0x230), (this + 0x8d40, 0x260)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, janela), || possession_statistic(this, l, janela));
     SCOREBOARD.record(igual, || format!("possession_statistic({}, {}) original={:x?} rust={:x?}", l, janela, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_match_summary(this: usize, momento: i16) {
+unsafe extern "thiscall" fn compare_match_summary(this: usize, momento: i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i16)>(IDX_MATCH_SUMMARY);
     if is_recording_top_level() {
         call_recording(0x6ce460, this, [momento as u16 as u32, 0, 0, 0, 0], || {
@@ -3534,10 +3534,10 @@ unsafe extern "thiscall" fn comparar_match_summary(this: usize, momento: i16) {
     SCOREBOARD.record(igual, || format!("match_summary({}) original={:x?} rust={:x?}", momento, mo, mr));
 }
 
-comparar_valor!(comparar_closest_on_side, closest_on_side, IDX_CLOSEST_ON_SIDE, (l: i8, a: i8, b: i8, todos: u8) -> usize);
+compare_value!(compare_closest_on_side, closest_on_side, IDX_CLOSEST_ON_SIDE, (l: i8, a: i8, b: i8, todos: u8) -> usize);
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_goalkeeper_save(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
+unsafe extern "thiscall" fn compare_goalkeeper_save(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u8, i8, *mut u8, *mut u8) -> u16>(IDX_GOALKEEPER_SAVE);
     let mut reg = vec![(saida as usize, 1), (rebote as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
@@ -3546,7 +3546,7 @@ unsafe extern "thiscall" fn comparar_goalkeeper_save(this: usize, a: i8, b: i8, 
     r
 }
 
-unsafe extern "thiscall" fn comparar_control_of_move(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
+unsafe extern "thiscall" fn compare_control_of_move(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u8, *mut u8) -> u16>(IDX_CONTROL_OF_MOVE);
     let mut reg = vec![(codigo as usize, 1), (a as usize, 1), (b as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
@@ -3564,8 +3564,8 @@ static RECORDING_6CD330: std::sync::atomic::AtomicBool = std::sync::atomic::Atom
 static TAPE_6CD330: std::sync::Mutex<Vec<((i8, usize, u32, u32, u32, u32, i8), u8, crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_search_on_side_recording(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
-    let r = comparar_procurar(this, lado, grupo, a3, a4, a5, a6, modo);
+unsafe extern "thiscall" fn compare_search_on_side_recording(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
+    let r = compare_procurar(this, lado, grupo, a3, a4, a5, a6, modo);
     if RECORDING_6CD330.load(std::sync::atomic::Ordering::Relaxed) {
         let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
         TAPE_6CD330.lock().unwrap_or_else(|e| e.into_inner()).push(((lado, grupo, a3, a4, a5, a6, modo), r, depois));
@@ -3574,11 +3574,11 @@ unsafe extern "thiscall" fn comparar_search_on_side_recording(this: usize, lado:
 }
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_trace_move(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, codigo: i8, a6: u32, a7: u32) -> u8 {
+unsafe extern "thiscall" fn compare_trace_move(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, codigo: i8, a6: u32, a7: u32) -> u8 {
     if is_recording_top_level() {
         // unit of the tape of the pass execution (the only one that calls it); inside, the comparison itself
         let xy = x0 as u8 as u32 | (y0 as u8 as u32) << 8 | (x1 as u8 as u32) << 16 | (y1 as u8 as u32) << 24;
-        return call_recording(0x6ccb60, this, [xy, codigo as u8 as u32, a6, a7, 0], || comparar_trace_move(this, x0, y0, x1, y1, codigo, a6, a7) as u32) as u8;
+        return call_recording(0x6ccb60, this, [xy, codigo as u8 as u32, a6, a7, 0], || compare_trace_move(this, x0, y0, x1, y1, codigo, a6, a7) as u32) as u8;
     }
     use std::sync::atomic::Ordering::Relaxed;
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, i8, u32, u32) -> u8>(IDX_TRACE_MOVE);
@@ -3621,8 +3621,8 @@ unsafe extern "thiscall" fn comparar_trace_move(this: usize, x0: i8, y0: i8, x1:
     r
 }
 
-comparar_valor!(comparar_has_match, has_match, IDX_HAS_MATCH, (clube: u32, so: u32) -> u32);
-unsafe extern "C" fn comparar_won_the_match(jogo: usize, clube: u32) -> u8 {
+compare_value!(compare_has_match, has_match, IDX_HAS_MATCH, (clube: u32, so: u32) -> u32);
+unsafe extern "C" fn compare_won_the_match(jogo: usize, clube: u32) -> u8 {
     if is_recording_post_match() {
         return call_recording(0x6b7cf0, 0, [jogo as u32, clube, 0, 0, 0], || original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_WON_THE_MATCH)(jogo, clube) as u32) as u8;
     }
@@ -3636,23 +3636,23 @@ unsafe extern "C" fn comparar_won_the_match(jogo: usize, clube: u32) -> u8 {
 // ported routine (with the RNG state afterwards); the Rust copy checks the sequence and does not run
 // the commentary again (avoids duplicate events). Outside recording, it just passes through.
 static mut PORT_6D6F70: usize = 0;
-static GRAVANDO_6D6F70: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static RECORDING_6D6F70: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// In the comparison of 0x70dfd0 the tape keeps the seventh argument of the narration in the high part of the code.
 ///
 /// [pt] Na comparacao da 0x70dfd0 a fita guarda o setimo argumento da narracao no alto do codigo.
-static GRAVAR_A7: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static RECORD_A7: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static TAPE_6D6F70: std::sync::Mutex<Vec<(usize, [u32; 7], crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
 const PROLOGUE_6D6F70: Prologue = Prologue { address: 0x6d6f70, bytes: &[0x8a, 0x44, 0x24, 0x10, 0x83, 0xec, 0x20] };
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32) {
+unsafe extern "thiscall" fn port_6d6f70(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32) {
     use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
     // 0x6d6f70 may call itself (one comment triggers another): only the outer call is recorded
     static DEPTH: AtomicU32 = AtomicU32::new(0);
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(PORT_6D6F70);
     // inside a tape recording (the last two arguments are -1 and 0 in the ported callers)
     if is_recording() {
-        let codigo = if GRAVAR_A7.load(Relaxed) { a1 & 0xffff | (a7 & 0xff) << 16 } else { a1 };
+        let codigo = if RECORD_A7.load(Relaxed) { a1 & 0xffff | (a7 & 0xff) << 16 } else { a1 };
         call_recording(0x6d6f70, this, [codigo, a2, a3, a4, a5], || {
             f(this, a1, a2, a3, a4, a5, a6, a7);
             0
@@ -3665,7 +3665,7 @@ unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32,
         f(this, a1, a2, a3, a4, a5, a6, a7);
     }
     DEPTH.fetch_sub(1, Relaxed);
-    if nivel == 0 && GRAVANDO_6D6F70.load(Relaxed) {
+    if nivel == 0 && RECORDING_6D6F70.load(Relaxed) {
         let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
         TAPE_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).push((this, [a1, a2, a3, a4, a5, a6, a7], depois));
     }
@@ -3674,8 +3674,8 @@ unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32,
 /// Runs the original recording the comments and the Rust copy replaying them; returns (equal, how many).
 ///
 /// [pt] Roda a original gravando os comentarios e a copia Rust reproduzindo-os; devolve (igual, quantos).
-unsafe fn comparar_com_comentarios(original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
-    comparar_com_comentarios_em(&[], original, rust)
+unsafe fn compare_with_commentary(original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
+    compare_with_commentary_at(&[], original, rust)
 }
 
 /// 0x6d6f70 reads the 1st argument as a word and the 3rd to 6th as bytes: the rest is stack garbage.
@@ -3687,14 +3687,14 @@ fn same_arguments(a: &[u32; 7], b: &[u32; 7]) -> bool {
     (0..7).all(|i| a[i] & MASK_6D6F70[i] == b[i] & MASK_6D6F70[i])
 }
 
-/// Like `comparar_com_comentarios`, also comparing the `extra` regions (besides the RNG state).
+/// Like `compare_com_comentarios`, also comparing the `extra` regions (besides the RNG state).
 ///
-/// [pt] Como `comparar_com_comentarios`, comparando tambem as `extra` (alem do estado do sorteio).
-unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
+/// [pt] Como `compare_com_comentarios`, comparando tambem as `extra` (alem do estado do sorteio).
+unsafe fn compare_with_commentary_at(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
     use std::sync::atomic::Ordering::Relaxed;
     // inside another comparison that is recording (a ported routine calls another that narrates, or a
     // tape recording is open): only the original runs, and its comments go into the outer recording
-    if GRAVANDO_6D6F70.load(Relaxed) || is_recording() {
+    if RECORDING_6D6F70.load(Relaxed) || is_recording() {
         original();
         return (true, 0);
     }
@@ -3706,9 +3706,9 @@ unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl F
     let (_, _, igual, _, _) = crate::comparison::side_by_side(
         &reg,
         || {
-            GRAVANDO_6D6F70.store(true, Relaxed);
+            RECORDING_6D6F70.store(true, Relaxed);
             original();
-            GRAVANDO_6D6F70.store(false, Relaxed);
+            RECORDING_6D6F70.store(false, Relaxed);
             *tape_lock.borrow_mut() = core::mem::take(&mut *TAPE_6D6F70.lock().unwrap_or_else(|e| e.into_inner()));
         },
         || {
@@ -3729,7 +3729,7 @@ unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl F
     (igual && sequencia.get(), n)
 }
 
-unsafe extern "thiscall" fn comparar_shot_value(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
+unsafe extern "thiscall" fn compare_shot_value(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u16) -> u16>(IDX_SHOT_VALUE);
     let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this + 0x39, 2)];
     reg.extend(crate::rng::STATE_REGIONS);
@@ -3739,49 +3739,49 @@ unsafe extern "thiscall" fn comparar_shot_value(this: usize, tipo: *mut i8, som:
     r
 }
 
-comparar_valor!(comparar_is_friendly, is_friendly, IDX_IS_FRIENDLY, (comp: usize) -> u32);
-comparar_valor!(comparar_contract_of, contract_of, IDX_CONTRACT_OF, (pessoa: usize) -> usize);
+compare_value!(compare_is_friendly, is_friendly, IDX_IS_FRIENDLY, (comp: usize) -> u32);
+compare_value!(compare_contract_of, contract_of, IDX_CONTRACT_OF, (pessoa: usize) -> usize);
 
-comparar_valor!(comparar_manager_9a01, manager_9a01, IDX_MANAGER_9A01, (pessoa: usize) -> u32);
-comparar_valor!(comparar_manager_9a05, manager_9a05, IDX_MANAGER_9A05, (pessoa: usize) -> u32);
+compare_value!(compare_manager_9a01, manager_9a01, IDX_MANAGER_9A01, (pessoa: usize) -> u32);
+compare_value!(compare_manager_9a05, manager_9a05, IDX_MANAGER_9A05, (pessoa: usize) -> u32);
 
-comparar_valor!(comparar_manager_9ace, manager_9ace, IDX_MANAGER_9ACE, (pessoa: usize) -> u32);
-comparar_valor!(comparar_side_under_control, side_under_control, IDX_SIDE_UNDER_CONTROL, (lado: i8) -> u8);
-comparar_valor!(comparar_tactics_byte, tactics_byte, IDX_TACTICS_BYTE, (clube: usize, pos: i8, humano: u32) -> u8);
-comparar_valor!(comparar_row_person, row_person, IDX_ROW_PERSON, (clube: usize, qual: i8, humano: u32) -> usize);
-comparar_valor!(comparar_club_in_competition, club_in_competition, IDX_CLUB_IN_COMPETITION, (clube: usize) -> u8);
-comparar_valor!(comparar_manager_9b23, manager_9b23, IDX_MANAGER_9B23, (i: i8, pessoa: usize) -> u8);
-comparar_valor!(comparar_contract_flags, contract_flags, IDX_CONTRACT_FLAGS, () -> u32);
-comparar_valor!(comparar_word_0c, word_0c, IDX_WORD_0C, (id: i32) -> i32);
-unsafe extern "C" fn comparar_round_below_1000(v: i32) -> i32 {
+compare_value!(compare_manager_9ace, manager_9ace, IDX_MANAGER_9ACE, (pessoa: usize) -> u32);
+compare_value!(compare_side_under_control, side_under_control, IDX_SIDE_UNDER_CONTROL, (lado: i8) -> u8);
+compare_value!(compare_tactics_byte, tactics_byte, IDX_TACTICS_BYTE, (clube: usize, pos: i8, humano: u32) -> u8);
+compare_value!(compare_row_person, row_person, IDX_ROW_PERSON, (clube: usize, qual: i8, humano: u32) -> usize);
+compare_value!(compare_club_in_competition, club_in_competition, IDX_CLUB_IN_COMPETITION, (clube: usize) -> u8);
+compare_value!(compare_manager_9b23, manager_9b23, IDX_MANAGER_9B23, (i: i8, pessoa: usize) -> u8);
+compare_value!(compare_contract_flags, contract_flags, IDX_CONTRACT_FLAGS, () -> u32);
+compare_value!(compare_word_0c, word_0c, IDX_WORD_0C, (id: i32) -> i32);
+unsafe extern "C" fn compare_round_below_1000(v: i32) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_ROUND_BELOW_1000)(v);
     let n = round_below_1000(v);
     SCOREBOARD.record(r == n, || format!("round_below_1000({:#x}) original={} rust={}", v, r, n));
     r
 }
-comparar_valor!(comparar_how_many_mark, how_many_mark, IDX_HOW_MANY_MARK, (alvo: usize) -> u8);
-comparar_valor!(comparar_who_marks, who_marks, IDX_WHO_MARKS, (alvo: usize) -> usize);
-comparar_ordem!(comparar_order_by_5f, order_by_5f, IDX_ORDER_BY_5F);
-comparar_ordem!(comparar_order_by_80, order_by_80, IDX_ORDER_BY_80);
-comparar_ordem!(comparar_order_by_80_desc, order_by_80_desc, IDX_ORDER_BY_80_DESC);
-comparar_ordem!(comparar_order_by_80_asc, order_by_80_asc, IDX_ORDER_BY_80_ASC);
-comparar_valor!(comparar_player_rating, player_rating, IDX_PLAYER_RATING, () -> i32);
-comparar_valor!(comparar_manager_table, manager_table, IDX_MANAGER_TABLE, (tecnico: usize) -> usize);
-comparar_valor!(comparar_sector_slot_taken, sector_slot_taken, IDX_SECTOR_SLOT_TAKEN, (mascara: u32, jogadores: usize) -> u32);
-comparar_valor!(comparar_slot_of_code, slot_of_code, IDX_SLOT_OF_CODE, (codigo: u16) -> u32);
-comparar_valor!(comparar_slot_code, slot_code, IDX_SLOT_CODE, (vaga: i8, segunda: u32) -> u16);
-comparar_valor!(comparar_read_person_mark, read_person_mark, IDX_READ_PERSON_MARK, (pessoa: usize, k: i8) -> u8);
-comparar_valor!(comparar_person_byte_44, person_byte_44, IDX_PERSON_BYTE_44, (pessoa: usize, k: i8) -> i32);
-comparar_valor!(comparar_person_field_3a, person_field_3a, IDX_PERSON_FIELD_3A, (pessoa: usize, k: i8) -> usize);
-comparar_valor!(comparar_person_competition, person_competition, IDX_PERSON_COMPETITION, (pessoa: usize) -> usize);
-comparar_valor!(comparar_national_side_byte_42, national_side_byte_42, IDX_NATIONAL_SIDE_BYTE_42, (clube: usize, flag: u32) -> u8);
-comparar_valor!(comparar_national_side_byte_43, national_side_byte_43, IDX_NATIONAL_SIDE_BYTE_43, (clube: usize, flag: u32) -> u8);
-comparar_valor!(comparar_ball_in_attack, ball_in_attack, IDX_BALL_IN_ATTACK, () -> u8);
-comparar_valor!(comparar_group_decided, group_decided, IDX_GROUP_DECIDED, (clube: usize, partida: usize) -> u32);
+compare_value!(compare_how_many_mark, how_many_mark, IDX_HOW_MANY_MARK, (alvo: usize) -> u8);
+compare_value!(compare_who_marks, who_marks, IDX_WHO_MARKS, (alvo: usize) -> usize);
+compare_order!(compare_order_by_5f, order_by_5f, IDX_ORDER_BY_5F);
+compare_order!(compare_order_by_80, order_by_80, IDX_ORDER_BY_80);
+compare_order!(compare_order_by_80_desc, order_by_80_desc, IDX_ORDER_BY_80_DESC);
+compare_order!(compare_order_by_80_asc, order_by_80_asc, IDX_ORDER_BY_80_ASC);
+compare_value!(compare_player_rating, player_rating, IDX_PLAYER_RATING, () -> i32);
+compare_value!(compare_manager_table, manager_table, IDX_MANAGER_TABLE, (tecnico: usize) -> usize);
+compare_value!(compare_sector_slot_taken, sector_slot_taken, IDX_SECTOR_SLOT_TAKEN, (mascara: u32, jogadores: usize) -> u32);
+compare_value!(compare_slot_of_code, slot_of_code, IDX_SLOT_OF_CODE, (codigo: u16) -> u32);
+compare_value!(compare_slot_code, slot_code, IDX_SLOT_CODE, (vaga: i8, segunda: u32) -> u16);
+compare_value!(compare_read_person_mark, read_person_mark, IDX_READ_PERSON_MARK, (pessoa: usize, k: i8) -> u8);
+compare_value!(compare_person_byte_44, person_byte_44, IDX_PERSON_BYTE_44, (pessoa: usize, k: i8) -> i32);
+compare_value!(compare_person_field_3a, person_field_3a, IDX_PERSON_FIELD_3A, (pessoa: usize, k: i8) -> usize);
+compare_value!(compare_person_competition, person_competition, IDX_PERSON_COMPETITION, (pessoa: usize) -> usize);
+compare_value!(compare_national_side_byte_42, national_side_byte_42, IDX_NATIONAL_SIDE_BYTE_42, (clube: usize, flag: u32) -> u8);
+compare_value!(compare_national_side_byte_43, national_side_byte_43, IDX_NATIONAL_SIDE_BYTE_43, (clube: usize, flag: u32) -> u8);
+compare_value!(compare_ball_in_attack, ball_in_attack, IDX_BALL_IN_ATTACK, () -> u8);
+compare_value!(compare_group_decided, group_decided, IDX_GROUP_DECIDED, (clube: usize, partida: usize) -> u32);
 /// The rows of the staff's club in the tactics bank (0x8982b0 for human manager or not).
 ///
 /// [pt] As linhas do clube da comissao no banco de taticas (0x8982b0 por tecnico humano ou nao).
-unsafe fn linhas_do_clube(clube: usize) -> Vec<(usize, usize)> {
+unsafe fn club_rows(clube: usize) -> Vec<(usize, usize)> {
     let taticas = *(G_TACTICS as *const usize);
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let mut v = Vec::new();
@@ -3796,7 +3796,7 @@ unsafe fn linhas_do_clube(clube: usize) -> Vec<(usize, usize)> {
 /// The first differing byte between the memories (the engine regions are large).
 ///
 /// [pt] O primeiro byte diferente entre as memorias (as regioes do motor sao grandes).
-fn primeira_diferenca(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
+fn first_difference(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
     mo.0.iter()
         .zip(mr.0.iter())
         .find_map(|(a, b)| {
@@ -3804,9 +3804,9 @@ fn primeira_diferenca(mo: &crate::comparison::MemorySnapshot, mr: &crate::compar
         })
         .unwrap_or_default()
 }
-comparar_valor!(comparar_players_on_path, players_on_path, IDX_PLAYERS_ON_PATH, (x1: i8, y1: i8, x2: i8, y2: i8) -> u8);
+compare_value!(compare_players_on_path, players_on_path, IDX_PLAYERS_ON_PATH, (x1: i8, y1: i8, x2: i8, y2: i8) -> u8);
 
-comparar_valor!(comparar_direct_marker, direct_marker, IDX_DIRECT_MARKER, (l: i8, k: i8) -> u8);
+compare_value!(compare_direct_marker, direct_marker, IDX_DIRECT_MARKER, (l: i8, k: i8) -> u8);
 
 /// Diagnosis: routines that stay original (to isolate a career difference without touching the
 /// game environment, which shifts the heap). Empty in normal use.
@@ -3818,8 +3818,8 @@ const SEM_ROTINAS: &[&str] = &[];
 /// Comparison of the set pieces of the 57th batch: whole engine and RNG.
 ///
 /// [pt] Comparacao das bolas paradas da 57a leva: motor inteiro e sorteio.
-unsafe fn comparar_reinicio(nome: &str, this: usize, o: unsafe extern "thiscall" fn(usize), r: unsafe extern "thiscall" fn(usize)) {
-    let mut regioes = vec![(this, MOTOR), (0xb67a34, 4)];
+unsafe fn compare_restart(nome: &str, this: usize, o: unsafe extern "thiscall" fn(usize), r: unsafe extern "thiscall" fn(usize)) {
+    let mut regioes = vec![(this, ENGINE_SIZE), (0xb67a34, 4)];
     regioes.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this), || crate::rng::without_counting(|| r(this)));
     SCOREBOARD.record(igual, || {
@@ -3839,7 +3839,7 @@ pub unsafe fn instalar(comparando: bool) {
         if let Some(t) = detours::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGUE_6F5C30, respond_hook as *const () as usize) {
             MATCH_PLAYER_RESPOND_TRAMPOLINE = t;
         }
-        if let Some(t) = detours::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGUE_6D6F70, porta_6d6f70 as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGUE_6D6F70, port_6d6f70 as *const () as usize) {
             PORT_6D6F70 = t;
         }
         if let Some(t) = detours::desviar("motor_porta_6eaea0 (gravacao)", &PROLOGUE_6EAEA0, init_player_hook as *const () as usize) {
@@ -5959,2098 +5959,2098 @@ pub unsafe fn instalar(comparando: bool) {
         spa_cup_record_season_honours_63d770 as *const () as usize,
     ];
     let comp: [usize; N] = [
-        comparar_table_a as *const () as usize,
-        comparar_table_b as *const () as usize,
-        comparar_diferenca as *const () as usize,
-        comparar_band as *const () as usize,
-        comparar_by_difference as *const () as usize,
-        comparar_limit as *const () as usize,
-        comparar_condicao as *const () as usize,
-        comparar_player_table as *const () as usize,
-        comparar_player_difference as *const () as usize,
-        comparar_side_byte as *const () as usize,
-        comparar_player_limit as *const () as usize,
-        comparar_player_band as *const () as usize,
-        comparar_position_byte as *const () as usize,
-        comparar_field_by_position as *const () as usize,
-        comparar_can_choose as *const () as usize,
-        comparar_aim_set_facing_direction as *const () as usize,
-        comparar_tire_fatigue as *const () as usize,
-        comparar_facing as *const () as usize,
-        comparar_search_on_side_recording as *const () as usize,
-        comparar_reaches as *const () as usize,
-        comparar_classificar as *const () as usize,
-        comparar_distance_to_point as *const () as usize,
-        comparar_distance_to_goal as *const () as usize,
-        comparar_mais_perto as *const () as usize,
-        comparar_na_linha as *const () as usize,
-        comparar_consegue as *const () as usize,
-        comparar_in_the_box as *const () as usize,
-        comparar_marcas as *const () as usize,
-        comparar_papel_ataque as *const () as usize,
-        comparar_papel_defesa as *const () as usize,
-        comparar_position_place_players as *const () as usize,
-        comparar_linhas as *const () as usize,
-        comparar_atualizar as *const () as usize,
-        comparar_momento as *const () as usize,
-        comparar_posicao_um as *const () as usize,
-        comparar_caminho as *const () as usize,
-        comparar_espaco as *const () as usize,
-        comparar_off_centre as *const () as usize,
-        comparar_alem as *const () as usize,
-        comparar_distance_between as *const () as usize,
-        comparar_ler_8ea7 as *const () as usize,
-        comparar_ler_8ea8 as *const () as usize,
-        comparar_ler_8ea9 as *const () as usize,
-        comparar_ler_8eaa as *const () as usize,
-        comparar_ler_8eb2 as *const () as usize,
-        comparar_gravar_8ea9 as *const () as usize,
-        comparar_gravar_8ea7 as *const () as usize,
-        comparar_gravar_8ea8 as *const () as usize,
-        comparar_gravar_8eaa as *const () as usize,
-        comparar_write_8ed8 as *const () as usize,
-        comparar_read_8f7a as *const () as usize,
-        comparar_posse as *const () as usize,
-        comparar_in_list as *const () as usize,
-        comparar_extremos as *const () as usize,
-        comparar_count_active as *const () as usize,
-        comparar_special_code as *const () as usize,
-        comparar_atras as *const () as usize,
-        comparar_no_match as *const () as usize,
-        comparar_pressao_area as *const () as usize,
-        comparar_mais_proximo as *const () as usize,
-        comparar_pressao_ponto as *const () as usize,
-        comparar_smallest_distance as *const () as usize,
-        comparar_split_a as *const () as usize,
-        comparar_split_b as *const () as usize,
-        comparar_split_c as *const () as usize,
-        comparar_escolher as *const () as usize,
-        comparar_direction as *const () as usize,
-        comparar_clear_stored as *const () as usize,
-        comparar_x_fora as *const () as usize,
-        comparar_is_the_stored as *const () as usize,
-        comparar_side_of_move as *const () as usize,
-        comparar_player_in_block as *const () as usize,
-        comparar_table_a_1a as *const () as usize,
-        comparar_marked_moment as *const () as usize,
-        comparar_side_state as *const () as usize,
-        comparar_opponent_state as *const () as usize,
-        comparar_write_19c as *const () as usize,
-        comparar_set_piece_code as *const () as usize,
-        comparar_near_goal as *const () as usize,
-        comparar_clear_move as *const () as usize,
-        comparar_add_disposition as *const () as usize,
-        comparar_split_d as *const () as usize,
-        comparar_split_e as *const () as usize,
-        comparar_split_f as *const () as usize,
-        comparar_record_move as *const () as usize,
-        comparar_remove_from_list as *const () as usize,
-        comparar_take_the_field as *const () as usize,
-        comparar_in_danger as *const () as usize,
-        comparar_check_move as *const () as usize,
-        comparar_clear_path as *const () as usize,
-        comparar_reaches_the_point as *const () as usize,
-        comparar_choose_standout as *const () as usize,
-        comparar_choose_by_role_b as *const () as usize,
-        comparar_formation_square as *const () as usize,
-        comparar_compute_percentages as *const () as usize,
-        comparar_choose_by_role_c as *const () as usize,
-        comparar_apply_factor as *const () as usize,
-        comparar_value_by_condition as *const () as usize,
-        comparar_apply_to_team as *const () as usize,
-        comparar_apply_to_side as *const () as usize,
-        comparar_choose_by_condition as *const () as usize,
-        comparar_read_1bc as *const () as usize,
-        comparar_add_2b as *const () as usize,
-        comparar_write_2b as *const () as usize,
-        comparar_player_table_a_1a as *const () as usize,
-        comparar_player_table_b as *const () as usize,
-        comparar_difference_of_player as *const () as usize,
-        comparar_player_marks_rot as *const () as usize,
-        comparar_mark_800000 as *const () as usize,
-        comparar_near_own_goal as *const () as usize,
-        comparar_role_880 as *const () as usize,
-        comparar_release_ball as *const () as usize,
-        comparar_player_by_record as *const () as usize,
-        comparar_code_byte as *const () as usize,
-        comparar_adjusted_rating as *const () as usize,
-        comparar_adjust_17 as *const () as usize,
-        comparar_take_ball as *const () as usize,
-        comparar_init_strictness as *const () as usize,
-        comparar_move_counts as *const () as usize,
-        comparar_decide_foul as *const () as usize,
-        comparar_punish_foul as *const () as usize,
-        comparar_punish_move as *const () as usize,
-        comparar_engine_decide_foul as *const () as usize,
-        comparar_engine_punish_move as *const () as usize,
-        comparar_engine_punish_foul as *const () as usize,
-        comparar_look_for_offside as *const () as usize,
-        comparar_engine_look_for_offside as *const () as usize,
-        comparar_card_by_severity as *const () as usize,
-        comparar_engine_card_by_severity as *const () as usize,
-        comparar_choose_by_role_e as *const () as usize,
-        comparar_possession_statistic as *const () as usize,
-        comparar_match_summary as *const () as usize,
-        comparar_closest_on_side as *const () as usize,
-        comparar_goalkeeper_save as *const () as usize,
-        comparar_move_to as *const () as usize,
-        comparar_choose_square as *const () as usize,
-        comparar_control_of_move as *const () as usize,
-        comparar_trace_move as *const () as usize,
-        comparar_has_match as *const () as usize,
-        comparar_won_the_match as *const () as usize,
-        comparar_commentary_a as *const () as usize,
-        comparar_commentary_b as *const () as usize,
-        comparar_ball_out as *const () as usize,
-        comparar_shot_value as *const () as usize,
-        comparar_team_strength as *const () as usize,
-        comparar_kick_off as *const () as usize,
-        comparar_roll_ball as *const () as usize,
-        comparar_condition_test as *const () as usize,
-        comparar_likes as *const () as usize,
-        comparar_dislikes as *const () as usize,
-        comparar_mark_position as *const () as usize,
-        comparar_fine_positions as *const () as usize,
-        comparar_units_digit as *const () as usize,
-        comparar_is_friendly as *const () as usize,
-        comparar_contract_of as *const () as usize,
-        comparar_is_national_team as *const () as usize,
-        comparar_manager_9a01 as *const () as usize,
-        comparar_manager_9a05 as *const () as usize,
-        comparar_square_bit as *const () as usize,
-        comparar_split_mask as *const () as usize,
-        comparar_is_second_national_team as *const () as usize,
-        comparar_aggregate_score as *const () as usize,
-        comparar_direct_marker as *const () as usize,
-        comparar_take_off_pitch as *const () as usize,
-        comparar_individual_marking as *const () as usize,
-        comparar_new_reputation as *const () as usize,
-        comparar_player_reputation as *const () as usize,
-        comparar_choose_taker as *const () as usize,
-        comparar_throw_in as *const () as usize,
-        comparar_corner as *const () as usize,
-        comparar_penalty as *const () as usize,
-        comparar_set_square as *const () as usize,
-        comparar_mark_stars as *const () as usize,
-        comparar_designated_for_position as *const () as usize,
-        comparar_designated_marked as *const () as usize,
-        comparar_main_national_team as *const () as usize,
-        comparar_b_national_team as *const () as usize,
-        comparar_who_to_mark as *const () as usize,
-        comparar_manager_9ace as *const () as usize,
-        comparar_manager_9a06 as *const () as usize,
-        comparar_human_club as *const () as usize,
-        comparar_side_under_control as *const () as usize,
-        comparar_tactics_row as *const () as usize,
-        comparar_tactics_byte as *const () as usize,
-        comparar_penalty_order as *const () as usize,
-        comparar_player_order as *const () as usize,
-        comparar_marked_slot as *const () as usize,
-        comparar_mark_slot as *const () as usize,
-        comparar_row_person as *const () as usize,
-        comparar_club_in_competition as *const () as usize,
-        comparar_special_club as *const () as usize,
-        comparar_foul_decision as *const () as usize,
-        comparar_choose_teammate as *const () as usize,
-        comparar_foul_in_engine as *const () as usize,
-        comparar_manager_9b23 as *const () as usize,
-        comparar_dislikes_club as *const () as usize,
-        comparar_likes_club as *const () as usize,
-        comparar_partner_club as *const () as usize,
-        comparar_contract_with_club as *const () as usize,
-        comparar_contract_level as *const () as usize,
-        comparar_chance_to_know as *const () as usize,
-        comparar_know_person as *const () as usize,
-        comparar_fog_after_match as *const () as usize,
-        comparar_shortlist_entry as *const () as usize,
-        comparar_contract_flags as *const () as usize,
-        comparar_next_list_item as *const () as usize,
-        comparar_word_0c as *const () as usize,
-        comparar_round_below_1000 as *const () as usize,
-        comparar_group_nation as *const () as usize,
-        comparar_how_many_mark as *const () as usize,
-        comparar_who_marks as *const () as usize,
-        comparar_competition_counts as *const () as usize,
-        comparar_order_by_5f as *const () as usize,
-        comparar_order_by_80 as *const () as usize,
-        comparar_order_by_80_desc as *const () as usize,
-        comparar_order_by_80_asc as *const () as usize,
-        comparar_player_rating as *const () as usize,
-        comparar_forget_person as *const () as usize,
-        comparar_manager_table as *const () as usize,
-        comparar_sector_slot_taken as *const () as usize,
-        comparar_slot_of_code as *const () as usize,
-        comparar_clear_assigned as *const () as usize,
-        comparar_formation_mask as *const () as usize,
-        comparar_slot_code as *const () as usize,
-        comparar_competition_criterion as *const () as usize,
-        comparar_type_not_11 as *const () as usize,
-        comparar_type_11_to_15 as *const () as usize,
-        comparar_national_side_class as *const () as usize,
-        comparar_read_person_mark as *const () as usize,
-        comparar_clear_person_mark as *const () as usize,
-        comparar_free_record as *const () as usize,
-        comparar_set_person_44 as *const () as usize,
-        comparar_person_byte_44 as *const () as usize,
-        comparar_person_field_3a as *const () as usize,
-        comparar_class_by_national_side as *const () as usize,
-        comparar_database_global_9b5984 as *const () as usize,
-        comparar_person_competition as *const () as usize,
-        comparar_national_side_byte_42 as *const () as usize,
-        comparar_national_side_byte_43 as *const () as usize,
-        comparar_national_or_special as *const () as usize,
-        comparar_dislikes_national_side as *const () as usize,
-        comparar_copy_date_and_mark as *const () as usize,
-        comparar_update_attributes as *const () as usize,
-        comparar_match_performance as *const () as usize,
-        comparar_side_strength as *const () as usize,
-        comparar_ball_in_attack as *const () as usize,
-        comparar_evolve_moment as *const () as usize,
-        comparar_match_of_interest as *const () as usize,
-        comparar_group_decided as *const () as usize,
-        comparar_narrate_qualification as *const () as usize,
-        comparar_look_for_play as *const () as usize,
-        comparar_players_on_path as *const () as usize,
-        comparar_intercept as *const () as usize,
-        comparar_advance_row as *const () as usize,
-        comparar_line_up_kickoff as *const () as usize,
-        comparar_line_up_set_piece as *const () as usize,
-        comparar_decide_off_ball as *const () as usize,
-        comparar_move_off_ball as *const () as usize,
-        comparar_decide_player as *const () as usize,
-        comparar_pass_ball as *const () as usize,
-        comparar_long_ball as *const () as usize,
-        comparar_deflect_ball as *const () as usize,
-        comparar_save_shot as *const () as usize,
-        comparar_recover_stamina as *const () as usize,
-        comparar_period_completed as *const () as usize,
-        comparar_pressure as *const () as usize,
-        comparar_opposition_challenge as *const () as usize,
-        comparar_develop_player as *const () as usize,
-        comparar_kit as *const () as usize,
-        comparar_injury_severity as *const () as usize,
-        comparar_injury_grade as *const () as usize,
-        comparar_tackle_injury as *const () as usize,
-        comparar_rate_player as *const () as usize,
-        comparar_best_rated as *const () as usize,
-        comparar_best_in_list as *const () as usize,
-        comparar_player_left as *const () as usize,
-        comparar_redo_team as *const () as usize,
-        comparar_substitute as *const () as usize,
-        comparar_pick as *const () as usize,
-        comparar_stance as *const () as usize,
-        comparar_choose_formation as *const () as usize,
-        comparar_instructions as *const () as usize,
-        comparar_put_in_place as *const () as usize,
-        comparar_order_by_table as *const () as usize,
-        comparar_order_by_condition as *const () as usize,
-        comparar_starters as *const () as usize,
-        comparar_store_tactic as *const () as usize,
-        comparar_apply_substitutions as *const () as usize,
-        comparar_punishments as *const () as usize,
-        comparar_penalties as *const () as usize,
-        comparar_apply_foul as *const () as usize,
-        comparar_tackle as *const () as usize,
-        comparar_contest as *const () as usize,
+        compare_table_a as *const () as usize,
+        compare_table_b as *const () as usize,
+        compare_diferenca as *const () as usize,
+        compare_band as *const () as usize,
+        compare_by_difference as *const () as usize,
+        compare_limit as *const () as usize,
+        compare_condicao as *const () as usize,
+        compare_player_table as *const () as usize,
+        compare_player_difference as *const () as usize,
+        compare_side_byte as *const () as usize,
+        compare_player_limit as *const () as usize,
+        compare_player_band as *const () as usize,
+        compare_position_byte as *const () as usize,
+        compare_field_by_position as *const () as usize,
+        compare_can_choose as *const () as usize,
+        compare_aim_set_facing_direction as *const () as usize,
+        compare_tire_fatigue as *const () as usize,
+        compare_facing as *const () as usize,
+        compare_search_on_side_recording as *const () as usize,
+        compare_reaches as *const () as usize,
+        compare_classificar as *const () as usize,
+        compare_distance_to_point as *const () as usize,
+        compare_distance_to_goal as *const () as usize,
+        compare_mais_perto as *const () as usize,
+        compare_na_linha as *const () as usize,
+        compare_consegue as *const () as usize,
+        compare_in_the_box as *const () as usize,
+        compare_marcas as *const () as usize,
+        compare_papel_ataque as *const () as usize,
+        compare_papel_defesa as *const () as usize,
+        compare_position_place_players as *const () as usize,
+        compare_linhas as *const () as usize,
+        compare_atualizar as *const () as usize,
+        compare_momento as *const () as usize,
+        compare_posicao_um as *const () as usize,
+        compare_caminho as *const () as usize,
+        compare_espaco as *const () as usize,
+        compare_off_centre as *const () as usize,
+        compare_alem as *const () as usize,
+        compare_distance_between as *const () as usize,
+        compare_ler_8ea7 as *const () as usize,
+        compare_ler_8ea8 as *const () as usize,
+        compare_ler_8ea9 as *const () as usize,
+        compare_ler_8eaa as *const () as usize,
+        compare_ler_8eb2 as *const () as usize,
+        compare_gravar_8ea9 as *const () as usize,
+        compare_gravar_8ea7 as *const () as usize,
+        compare_gravar_8ea8 as *const () as usize,
+        compare_gravar_8eaa as *const () as usize,
+        compare_write_8ed8 as *const () as usize,
+        compare_read_8f7a as *const () as usize,
+        compare_posse as *const () as usize,
+        compare_in_list as *const () as usize,
+        compare_extremos as *const () as usize,
+        compare_count_active as *const () as usize,
+        compare_special_code as *const () as usize,
+        compare_atras as *const () as usize,
+        compare_no_match as *const () as usize,
+        compare_pressao_area as *const () as usize,
+        compare_mais_proximo as *const () as usize,
+        compare_pressao_ponto as *const () as usize,
+        compare_smallest_distance as *const () as usize,
+        compare_split_a as *const () as usize,
+        compare_split_b as *const () as usize,
+        compare_split_c as *const () as usize,
+        compare_escolher as *const () as usize,
+        compare_direction as *const () as usize,
+        compare_clear_stored as *const () as usize,
+        compare_x_fora as *const () as usize,
+        compare_is_the_stored as *const () as usize,
+        compare_side_of_move as *const () as usize,
+        compare_player_in_block as *const () as usize,
+        compare_table_a_1a as *const () as usize,
+        compare_marked_moment as *const () as usize,
+        compare_side_state as *const () as usize,
+        compare_opponent_state as *const () as usize,
+        compare_write_19c as *const () as usize,
+        compare_set_piece_code as *const () as usize,
+        compare_near_goal as *const () as usize,
+        compare_clear_move as *const () as usize,
+        compare_add_disposition as *const () as usize,
+        compare_split_d as *const () as usize,
+        compare_split_e as *const () as usize,
+        compare_split_f as *const () as usize,
+        compare_record_move as *const () as usize,
+        compare_remove_from_list as *const () as usize,
+        compare_take_the_field as *const () as usize,
+        compare_in_danger as *const () as usize,
+        compare_check_move as *const () as usize,
+        compare_clear_path as *const () as usize,
+        compare_reaches_the_point as *const () as usize,
+        compare_choose_standout as *const () as usize,
+        compare_choose_by_role_b as *const () as usize,
+        compare_formation_square as *const () as usize,
+        compare_compute_percentages as *const () as usize,
+        compare_choose_by_role_c as *const () as usize,
+        compare_apply_factor as *const () as usize,
+        compare_value_by_condition as *const () as usize,
+        compare_apply_to_team as *const () as usize,
+        compare_apply_to_side as *const () as usize,
+        compare_choose_by_condition as *const () as usize,
+        compare_read_1bc as *const () as usize,
+        compare_add_2b as *const () as usize,
+        compare_write_2b as *const () as usize,
+        compare_player_table_a_1a as *const () as usize,
+        compare_player_table_b as *const () as usize,
+        compare_difference_of_player as *const () as usize,
+        compare_player_marks_rot as *const () as usize,
+        compare_mark_800000 as *const () as usize,
+        compare_near_own_goal as *const () as usize,
+        compare_role_880 as *const () as usize,
+        compare_release_ball as *const () as usize,
+        compare_player_by_record as *const () as usize,
+        compare_code_byte as *const () as usize,
+        compare_adjusted_rating as *const () as usize,
+        compare_adjust_17 as *const () as usize,
+        compare_take_ball as *const () as usize,
+        compare_init_strictness as *const () as usize,
+        compare_move_counts as *const () as usize,
+        compare_decide_foul as *const () as usize,
+        compare_punish_foul as *const () as usize,
+        compare_punish_move as *const () as usize,
+        compare_engine_decide_foul as *const () as usize,
+        compare_engine_punish_move as *const () as usize,
+        compare_engine_punish_foul as *const () as usize,
+        compare_look_for_offside as *const () as usize,
+        compare_engine_look_for_offside as *const () as usize,
+        compare_card_by_severity as *const () as usize,
+        compare_engine_card_by_severity as *const () as usize,
+        compare_choose_by_role_e as *const () as usize,
+        compare_possession_statistic as *const () as usize,
+        compare_match_summary as *const () as usize,
+        compare_closest_on_side as *const () as usize,
+        compare_goalkeeper_save as *const () as usize,
+        compare_move_to as *const () as usize,
+        compare_choose_square as *const () as usize,
+        compare_control_of_move as *const () as usize,
+        compare_trace_move as *const () as usize,
+        compare_has_match as *const () as usize,
+        compare_won_the_match as *const () as usize,
+        compare_commentary_a as *const () as usize,
+        compare_commentary_b as *const () as usize,
+        compare_ball_out as *const () as usize,
+        compare_shot_value as *const () as usize,
+        compare_team_strength as *const () as usize,
+        compare_kick_off as *const () as usize,
+        compare_roll_ball as *const () as usize,
+        compare_condition_test as *const () as usize,
+        compare_likes as *const () as usize,
+        compare_dislikes as *const () as usize,
+        compare_mark_position as *const () as usize,
+        compare_fine_positions as *const () as usize,
+        compare_units_digit as *const () as usize,
+        compare_is_friendly as *const () as usize,
+        compare_contract_of as *const () as usize,
+        compare_is_national_team as *const () as usize,
+        compare_manager_9a01 as *const () as usize,
+        compare_manager_9a05 as *const () as usize,
+        compare_square_bit as *const () as usize,
+        compare_split_mask as *const () as usize,
+        compare_is_second_national_team as *const () as usize,
+        compare_aggregate_score as *const () as usize,
+        compare_direct_marker as *const () as usize,
+        compare_take_off_pitch as *const () as usize,
+        compare_individual_marking as *const () as usize,
+        compare_new_reputation as *const () as usize,
+        compare_player_reputation as *const () as usize,
+        compare_choose_taker as *const () as usize,
+        compare_throw_in as *const () as usize,
+        compare_corner as *const () as usize,
+        compare_penalty as *const () as usize,
+        compare_set_square as *const () as usize,
+        compare_mark_stars as *const () as usize,
+        compare_designated_for_position as *const () as usize,
+        compare_designated_marked as *const () as usize,
+        compare_main_national_team as *const () as usize,
+        compare_b_national_team as *const () as usize,
+        compare_who_to_mark as *const () as usize,
+        compare_manager_9ace as *const () as usize,
+        compare_manager_9a06 as *const () as usize,
+        compare_human_club as *const () as usize,
+        compare_side_under_control as *const () as usize,
+        compare_tactics_row as *const () as usize,
+        compare_tactics_byte as *const () as usize,
+        compare_penalty_order as *const () as usize,
+        compare_player_order as *const () as usize,
+        compare_marked_slot as *const () as usize,
+        compare_mark_slot as *const () as usize,
+        compare_row_person as *const () as usize,
+        compare_club_in_competition as *const () as usize,
+        compare_special_club as *const () as usize,
+        compare_foul_decision as *const () as usize,
+        compare_choose_teammate as *const () as usize,
+        compare_foul_in_engine as *const () as usize,
+        compare_manager_9b23 as *const () as usize,
+        compare_dislikes_club as *const () as usize,
+        compare_likes_club as *const () as usize,
+        compare_partner_club as *const () as usize,
+        compare_contract_with_club as *const () as usize,
+        compare_contract_level as *const () as usize,
+        compare_chance_to_know as *const () as usize,
+        compare_know_person as *const () as usize,
+        compare_fog_after_match as *const () as usize,
+        compare_shortlist_entry as *const () as usize,
+        compare_contract_flags as *const () as usize,
+        compare_next_list_item as *const () as usize,
+        compare_word_0c as *const () as usize,
+        compare_round_below_1000 as *const () as usize,
+        compare_group_nation as *const () as usize,
+        compare_how_many_mark as *const () as usize,
+        compare_who_marks as *const () as usize,
+        compare_competition_counts as *const () as usize,
+        compare_order_by_5f as *const () as usize,
+        compare_order_by_80 as *const () as usize,
+        compare_order_by_80_desc as *const () as usize,
+        compare_order_by_80_asc as *const () as usize,
+        compare_player_rating as *const () as usize,
+        compare_forget_person as *const () as usize,
+        compare_manager_table as *const () as usize,
+        compare_sector_slot_taken as *const () as usize,
+        compare_slot_of_code as *const () as usize,
+        compare_clear_assigned as *const () as usize,
+        compare_formation_mask as *const () as usize,
+        compare_slot_code as *const () as usize,
+        compare_competition_criterion as *const () as usize,
+        compare_type_not_11 as *const () as usize,
+        compare_type_11_to_15 as *const () as usize,
+        compare_national_side_class as *const () as usize,
+        compare_read_person_mark as *const () as usize,
+        compare_clear_person_mark as *const () as usize,
+        compare_free_record as *const () as usize,
+        compare_set_person_44 as *const () as usize,
+        compare_person_byte_44 as *const () as usize,
+        compare_person_field_3a as *const () as usize,
+        compare_class_by_national_side as *const () as usize,
+        compare_database_global_9b5984 as *const () as usize,
+        compare_person_competition as *const () as usize,
+        compare_national_side_byte_42 as *const () as usize,
+        compare_national_side_byte_43 as *const () as usize,
+        compare_national_or_special as *const () as usize,
+        compare_dislikes_national_side as *const () as usize,
+        compare_copy_date_and_mark as *const () as usize,
+        compare_update_attributes as *const () as usize,
+        compare_match_performance as *const () as usize,
+        compare_side_strength as *const () as usize,
+        compare_ball_in_attack as *const () as usize,
+        compare_evolve_moment as *const () as usize,
+        compare_match_of_interest as *const () as usize,
+        compare_group_decided as *const () as usize,
+        compare_narrate_qualification as *const () as usize,
+        compare_look_for_play as *const () as usize,
+        compare_players_on_path as *const () as usize,
+        compare_intercept as *const () as usize,
+        compare_advance_row as *const () as usize,
+        compare_line_up_kickoff as *const () as usize,
+        compare_line_up_set_piece as *const () as usize,
+        compare_decide_off_ball as *const () as usize,
+        compare_move_off_ball as *const () as usize,
+        compare_decide_player as *const () as usize,
+        compare_pass_ball as *const () as usize,
+        compare_long_ball as *const () as usize,
+        compare_deflect_ball as *const () as usize,
+        compare_save_shot as *const () as usize,
+        compare_recover_stamina as *const () as usize,
+        compare_period_completed as *const () as usize,
+        compare_pressure as *const () as usize,
+        compare_opposition_challenge as *const () as usize,
+        compare_develop_player as *const () as usize,
+        compare_kit as *const () as usize,
+        compare_injury_severity as *const () as usize,
+        compare_injury_grade as *const () as usize,
+        compare_tackle_injury as *const () as usize,
+        compare_rate_player as *const () as usize,
+        compare_best_rated as *const () as usize,
+        compare_best_in_list as *const () as usize,
+        compare_player_left as *const () as usize,
+        compare_redo_team as *const () as usize,
+        compare_substitute as *const () as usize,
+        compare_pick as *const () as usize,
+        compare_stance as *const () as usize,
+        compare_choose_formation as *const () as usize,
+        compare_instructions as *const () as usize,
+        compare_put_in_place as *const () as usize,
+        compare_order_by_table as *const () as usize,
+        compare_order_by_condition as *const () as usize,
+        compare_starters as *const () as usize,
+        compare_store_tactic as *const () as usize,
+        compare_apply_substitutions as *const () as usize,
+        compare_punishments as *const () as usize,
+        compare_penalties as *const () as usize,
+        compare_apply_foul as *const () as usize,
+        compare_tackle as *const () as usize,
+        compare_contest as *const () as usize,
         respond_hook as *const () as usize,
         gate_try_block_shot as *const () as usize,
-        comparar_post_match_events as *const () as usize,
-        comparar_post_match_players as *const () as usize,
-        comparar_post_match_club as *const () as usize,
-        comparar_match_without_human as *const () as usize,
-        comparar_match_day_interest as *const () as usize,
-        comparar_restart_play as *const () as usize,
-        comparar_shot as *const () as usize,
-        comparar_referee_grade as *const () as usize,
-        comparar_record_referee_grade as *const () as usize,
-        comparar_stored_taker as *const () as usize,
-        comparar_store_instructions as *const () as usize,
-        comparar_competition_number as *const () as usize,
-        comparar_favourite_of as *const () as usize,
-        comparar_rejected_by as *const () as usize,
-        comparar_match_wrap_up as *const () as usize,
-        comparar_read_tactics_row as *const () as usize,
-        comparar_write_tactics_row as *const () as usize,
-        comparar_quick_simulation as *const () as usize,
-        comparar_injure as *const () as usize,
-        comparar_register_injury as *const () as usize,
-        comparar_player_highlight as *const () as usize,
-        comparar_shot_outcome as *const () as usize,
-        comparar_shot_on_goal as *const () as usize,
-        comparar_mover as *const () as usize,
-        comparar_dribble as *const () as usize,
-        comparar_engine_loop as *const () as usize,
-        comparar_execute_pass as *const () as usize,
-        comparar_behind_on_aggregate as *const () as usize,
-        comparar_free_teammate as *const () as usize,
-        comparar_shoot as *const () as usize,
-        comparar_build_engine as *const () as usize,
-        comparar_prepare_match as *const () as usize,
-        comparar_destroy_engine as *const () as usize,
-        comparar_select_side as *const () as usize,
-        comparar_end_day as *const () as usize,
-        comparar_pick_day_match as *const () as usize,
-        comparar_select_automatically as *const () as usize,
-        comparar_start_next_match as *const () as usize,
-        comparar_step_day_match as *const () as usize,
-        comparar_close_day_match as *const () as usize,
-        comparar_play_the_day as *const () as usize,
-        comparar_set_up_the_day as *const () as usize,
-        comparar_player_side as *const () as usize,
-        comparar_sounds_finished as *const () as usize,
-        comparar_record_events as *const () as usize,
-        comparar_read_events as *const () as usize,
-        comparar_network_step as *const () as usize,
-        comparar_read_events_cfg as *const () as usize,
-        comparar_event_text as *const () as usize,
-        comparar_confirm_network_match as *const () as usize,
-        comparar_commentate_on_panel as *const () as usize,
-        comparar_abrir_no_conteiner as *const () as usize,
-        comparar_buscar_no_conteiner as *const () as usize,
-        comparar_posicao_no_conteiner as *const () as usize,
-        comparar_position_mask as *const () as usize,
-        comparar_pitch_cell as *const () as usize,
-        comparar_slots_without_conflict as *const () as usize,
-        comparar_player_statistic as *const () as usize,
-        comparar_ratings_average as *const () as usize,
-        comparar_centre_backs_without_conflict as *const () as usize,
-        comparar_shortlist_slot_fits as *const () as usize,
-        comparar_position_code as *const () as usize,
-        comparar_staff_criterion as *const () as usize,
-        comparar_set_tactic_slot as *const () as usize,
-        comparar_tactic_slot_person as *const () as usize,
-        comparar_set_tactic_formation as *const () as usize,
-        comparar_stored_cell as *const () as usize,
-        comparar_set_formation_flag as *const () as usize,
-        comparar_reset_records as *const () as usize,
-        comparar_rotate_round as *const () as usize,
-        comparar_store_round_match as *const () as usize,
-        comparar_mark_calendar_year as *const () as usize,
-        comparar_extra_tactic_slot as *const () as usize,
-        comparar_national_team_ages as *const () as usize,
-        comparar_set_human_field as *const () as usize,
-        comparar_scout_record as *const () as usize,
-        comparar_human_runs_club as *const () as usize,
-        comparar_contract_category as *const () as usize,
-        comparar_ball_goal_end as *const () as usize,
-        comparar_match_abandoned as *const () as usize,
-        comparar_side_slots_without_conflict as *const () as usize,
-        comparar_side_centre_backs_without_conflict as *const () as usize,
-        comparar_construct_referee as *const () as usize,
-        comparar_destroy_match_player as *const () as usize,
-        comparar_event_at_front as *const () as usize,
-        comparar_construct_commentary_queue as *const () as usize,
-        comparar_free_event_tables as *const () as usize,
-        comparar_day_match_order as *const () as usize,
-        comparar_action_order as *const () as usize,
-        comparar_event_variant as *const () as usize,
-        comparar_combine_with_previous as *const () as usize,
-        comparar_context_commentary as *const () as usize,
-        comparar_construct_match_player as *const () as usize,
-        comparar_next_event as *const () as usize,
-        comparar_commentary_player_name as *const () as usize,
-        comparar_perceived_ability as *const () as usize,
-        comparar_apply_squad_rule as *const () as usize,
-        comparar_off_match_score as *const () as usize,
-        comparar_lineup_slot_score as *const () as usize,
-        comparar_person_in_list as *const () as usize,
-        comparar_contract_record as *const () as usize,
-        comparar_daily_wear as *const () as usize,
-        comparar_formation_record as *const () as usize,
-        comparar_competition_weight as *const () as usize,
-        comparar_set_news_field as *const () as usize,
-        comparar_recover_injury as *const () as usize,
-        comparar_person_in_transfer_list as *const () as usize,
-        comparar_table_penalty as *const () as usize,
-        comparar_record_bits as *const () as usize,
-        comparar_competition_flagged as *const () as usize,
-        comparar_league_record as *const () as usize,
-        comparar_game_average as *const () as usize,
-        comparar_contract_value as *const () as usize,
-        comparar_national_team_level as *const () as usize,
-        comparar_contract_offer as *const () as usize,
-        comparar_agreed_contract_offer as *const () as usize,
-        comparar_transfer_offer_closed as *const () as usize,
-        comparar_match_control_label as *const () as usize,
-        comparar_close_match_screen as *const () as usize,
-        comparar_open_waiting_screen as *const () as usize,
-        comparar_story_with_response_two as *const () as usize,
-        comparar_has_story as *const () as usize,
-        comparar_cup_match_importance as *const () as usize,
-        comparar_open_latest_scores as *const () as usize,
-        comparar_build_latest_scores as *const () as usize,
-        comparar_latest_scores_input as *const () as usize,
-        comparar_open_match_details as *const () as usize,
-        comparar_match_details_input as *const () as usize,
-        comparar_close_match_details as *const () as usize,
-        comparar_discipline_new_season as *const () as usize,
-        comparar_discipline_daily_update as *const () as usize,
-        comparar_discipline_set_slot as *const () as usize,
-        comparar_set_agreed_contract_flag as *const () as usize,
-        comparar_clear_agreed_contract_flag as *const () as usize,
-        comparar_offer_slot as *const () as usize,
-        comparar_open_match_screen as *const () as usize,
-        comparar_match_screens_handle_latest_scores_cycle as *const () as usize,
-        comparar_handle_team_stats_input as *const () as usize,
-        comparar_draw_latest_scores_panel as *const () as usize,
-        comparar_is_forward_unavailable as *const () as usize,
-        comparar_get_heading_colour as *const () as usize,
-        comparar_transfer_manager_get_shortlist_manager as *const () as usize,
-        comparar_training_manager_get_player_entry as *const () as usize,
-        comparar_set_training_load as *const () as usize,
-        comparar_is_own_comp_record as *const () as usize,
-        comparar_friendly_international_date_set as *const () as usize,
-        comparar_clear_manager_record as *const () as usize,
-        comparar_remove_loan_contract as *const () as usize,
-        comparar_clear_bid_markers_for_player as *const () as usize,
-        comparar_human_manager_get_stand_in_manager as *const () as usize,
-        comparar_get_agreed_contract_club as *const () as usize,
-        comparar_record_international_appearance as *const () as usize,
-        comparar_find_held_ban as *const () as usize,
-        comparar_find_retirement_entry as *const () as usize,
-        comparar_register_comp_objects as *const () as usize,
-        comparar_get_slot as *const () as usize,
-        comparar_remove_next_sale_percentage as *const () as usize,
-        comparar_remove_first_team_appearance_money as *const () as usize,
-        comparar_remove_international_team_appearance_money as *const () as usize,
-        comparar_remove_spare_non_player_record as *const () as usize,
-        comparar_remove_player_data_from_pool as *const () as usize,
-        comparar_calc_prize_fund as *const () as usize,
-        comparar_get_last_match_rating as *const () as usize,
-        comparar_set_slot_index as *const () as usize,
-        comparar_set_list_type as *const () as usize,
-        comparar_league_compare_h2h_rows as *const () as usize,
-        comparar_update_head_to_head as *const () as usize,
-        comparar_note_terms_offered_to_main_player as *const () as usize,
-        comparar_get_holiday_stamp as *const () as usize,
-        comparar_get_saved_lineup as *const () as usize,
-        comparar_set_manager as *const () as usize,
-        comparar_open_day_fixtures_screen as *const () as usize,
-        comparar_handle_day_fixtures_input as *const () as usize,
-        comparar_match_screens_find_best_rated_starter_slot as *const () as usize,
-        comparar_get_club_league_stat as *const () as usize,
-        comparar_fixture_entry_matches as *const () as usize,
-        comparar_match_stats_get_record_bucket as *const () as usize,
-        comparar_match_team_block_assign as *const () as usize,
-        comparar_match_player_row_assign as *const () as usize,
-        comparar_match_screens_tally_live_score as *const () as usize,
-        comparar_match_screens_handle_continue_command as *const () as usize,
-        comparar_match_screens_open_team_selection as *const () as usize,
-        comparar_match_screens_handle_team_selection_input as *const () as usize,
-        comparar_draw_team_stats_panel as *const () as usize,
-        comparar_draw_player_ratings_panel as *const () as usize,
-        comparar_draw_match_stats_panel as *const () as usize,
-        comparar_refresh_match_stats_values as *const () as usize,
-        comparar_refresh_action_zones_values as *const () as usize,
-        comparar_refresh_player_ratings_rows as *const () as usize,
-        comparar_draw_action_zones_panel as *const () as usize,
-        comparar_draw_match_report_panel as *const () as usize,
-        comparar_build_day_fixtures_screen as *const () as usize,
-        comparar_fill_team_stats_rows as *const () as usize,
-        comparar_refresh_latest_scores_rows as *const () as usize,
-        comparar_match_screens_handle_waiting_screen as *const () as usize,
-        comparar_read_match_record as *const () as usize,
-        comparar_match_screens_record_match as *const () as usize,
-        comparar_write_match_record as *const () as usize,
-        comparar_match_screens_draw_team_selection as *const () as usize,
-        comparar_match_screens_load as *const () as usize,
-        comparar_match_screens_save as *const () as usize,
-        comparar_area_layout as *const () as usize,
-        comparar_init as *const () as usize,
-        comparar_draw as *const () as usize,
-        comparar_build_match_screen as *const () as usize,
-        comparar_handle_match_screen_input as *const () as usize,
-        comparar_build_match_details_screen as *const () as usize,
-        comparar_refresh_possession_bar as *const () as usize,
-        comparar_draw_match_overview_panel as *const () as usize,
-        comparar_match_screens_draw_live_league_table as *const () as usize,
-        comparar_get_finable_story_kind as *const () as usize,
-        comparar_choose_injury_type as *const () as usize,
-        comparar_get_category as *const () as usize,
-        comparar_national_teams_remove_duplicate_squad_entries as *const () as usize,
-        comparar_find_selection_slot as *const () as usize,
-        comparar_pick_former_international_pundit as *const () as usize,
-        comparar_apply_round_rules_to_match as *const () as usize,
-        comparar_find_tree_slot_for_fixture as *const () as usize,
-        comparar_pick_tour_nation as *const () as usize,
-        comparar_transfer_manager_close_offer_contract_offers as *const () as usize,
-        comparar_queue_free_transfer as *const () as usize,
-        comparar_get_exchange_negotiations_for_player as *const () as usize,
-        comparar_national_teams_remove_player as *const () as usize,
-        comparar_get_time_slice as *const () as usize,
-        comparar_shortlist_manager_max_fee_for_squad_status as *const () as usize,
-        comparar_get_offers_for_player as *const () as usize,
-        comparar_update_club_target_reputation as *const () as usize,
-        comparar_comp_util_write_fixture_to_news_slots as *const () as usize,
-        comparar_fill_match_record as *const () as usize,
-        comparar_match_stats_compare_events as *const () as usize,
-        comparar_remove_language as *const () as usize,
-        comparar_can_sign_player as *const () as usize,
-        comparar_get_exchange_offers_for_player as *const () as usize,
-        comparar_count_unread as *const () as usize,
-        comparar_set_item_slot as *const () as usize,
-        comparar_news_club_has_human_manager as *const () as usize,
-        comparar_cup_set_round_draw_date as *const () as usize,
-        comparar_cup_set_round_match_date as *const () as usize,
-        comparar_remove_club_from_ai_plans as *const () as usize,
-        comparar_league_compare_table_rows as *const () as usize,
-        comparar_league_build_round_robin_grid as *const () as usize,
-        comparar_final_day_margin_needed as *const () as usize,
-        comparar_comp_util_read_fixture_from_news_slots as *const () as usize,
-        comparar_comp_util_classify_tie_result_for_news as *const () as usize,
-        comparar_cup_set_round_match_day as *const () as usize,
-        comparar_build_position_lookup as *const () as usize,
-        comparar_player_regen_score_club_for_player as *const () as usize,
-        comparar_is_watching_fixture as *const () as usize,
-        comparar_match_day_drop_viewer_and_finish_match as *const () as usize,
-        comparar_find_record_fixture as *const () as usize,
-        comparar_has_relegation as *const () as usize,
-        comparar_league_round_set_date as *const () as usize,
-        comparar_get_match_importance as *const () as usize,
-        comparar_record_holder_assign as *const () as usize,
-        comparar_match_record_assign as *const () as usize,
-        comparar_run_record_assign as *const () as usize,
-        comparar_is_fixture_watched as *const () as usize,
-        comparar_has_nickname as *const () as usize,
-        comparar_retire_record_assign as *const () as usize,
-        comparar_construct_match_stats as *const () as usize,
-        comparar_destroy_match_stats as *const () as usize,
-        comparar_zipdir_match_filename_pattern as *const () as usize,
-        comparar_zget_archive_id as *const () as usize,
-        comparar_zget_matching_size as *const () as usize,
-        comparar_zadd_matching_files as *const () as usize,
-        comparar_zextract_matching_files as *const () as usize,
-        comparar_utils_clear_temp_folder as *const () as usize,
-        comparar_zipdir_zread as *const () as usize,
-        comparar_zipdir_zwrite as *const () as usize,
-        comparar_zclose as *const () as usize,
-        comparar_check_saved_game_file as *const () as usize,
-        comparar_check_quick_start_file as *const () as usize,
-        comparar_valid_saved_game_version as *const () as usize,
-        comparar_save_fifa_transfer_rules as *const () as usize,
-        comparar_load_fifa_transfer_rules as *const () as usize,
-        comparar_build_save_game_summary as *const () as usize,
-        comparar_save_database_for_game as *const () as usize,
-        comparar_load_database_from_stream as *const () as usize,
-        comparar_free_game_data as *const () as usize,
-        comparar_create_game_from_setup_file as *const () as usize,
-        comparar_save_game_data as *const () as usize,
-        comparar_load_game_data as *const () as usize,
-        comparar_database_get_reputation_scope as *const () as usize,
-        comparar_database_get_staff_reputation_for_viewer as *const () as usize,
-        comparar_database_is_staff_foreign as *const () as usize,
-        comparar_database_get_staff_age as *const () as usize,
-        comparar_nation_allows_free_transfers as *const () as usize,
-        comparar_database_is_staff_eu_national as *const () as usize,
-        comparar_staff_is_transfer_listed_or_requested as *const () as usize,
-        comparar_staff_compute_player_attribute as *const () as usize,
-        comparar_staff_get_player_attribute as *const () as usize,
-        comparar_database_compare_comp_history_rows as *const () as usize,
-        comparar_database_player_to_attribute_vector as *const () as usize,
-        comparar_nation_is_uk_or_ireland as *const () as usize,
-        comparar_database_is_basque_club as *const () as usize,
-        comparar_staff_is_transfer_listed as *const () as usize,
-        comparar_staff_is_loan_listed as *const () as usize,
-        comparar_staff_is_listed_by_request as *const () as usize,
-        comparar_player_attribute_rating as *const () as usize,
-        comparar_database_club_has_reserve_squad as *const () as usize,
-        comparar_database_pick_first_name_for_nation as *const () as usize,
-        comparar_database_pick_second_name_for_nation as *const () as usize,
-        comparar_database_format_staff_name as *const () as usize,
-        comparar_database_get_club_kit_colours as *const () as usize,
-        comparar_database_get_club_manager as *const () as usize,
-        comparar_club_get_english_name as *const () as usize,
-        comparar_staff_adjust_morale as *const () as usize,
-        comparar_database_non_player_to_attribute_vector as *const () as usize,
-        comparar_staff_set_squad_flags as *const () as usize,
-        comparar_database_count_club_squad as *const () as usize,
-        comparar_database_collect_club_squad as *const () as usize,
-        comparar_club_can_be_managed as *const () as usize,
-        comparar_database_vector_to_non_player as *const () as usize,
-        comparar_database_vector_to_player as *const () as usize,
-        comparar_staff_normalise_non_player_attributes as *const () as usize,
-        comparar_database_get_colour_family as *const () as usize,
-        comparar_database_colours_clash as *const () as usize,
-        comparar_staff_compute_non_player_attribute as *const () as usize,
-        comparar_get_adjective_form_index as *const () as usize,
-        comparar_staff_get_non_player_attribute as *const () as usize,
-        comparar_player_attribute_rating_with_scaled_ability as *const () as usize,
-        comparar_database_pick_first_name_by_weight as *const () as usize,
-        comparar_database_get_comp_colours as *const () as usize,
-        comparar_database_club_has_room_for_job as *const () as usize,
-        comparar_database_add_staff_to_club as *const () as usize,
-        comparar_match_club_key_id as *const () as usize,
-        comparar_remap_club_key_id as *const () as usize,
-        comparar_match_nation_key_id as *const () as usize,
-        comparar_match_club_comp_key_id as *const () as usize,
-        comparar_match_staff_comp_key_id as *const () as usize,
-        comparar_db_files_read_continents as *const () as usize,
-        comparar_db_files_read_nations as *const () as usize,
-        comparar_db_files_read_cities as *const () as usize,
-        comparar_db_files_read_stadiums as *const () as usize,
-        comparar_db_files_read_staff_v1 as *const () as usize,
-        comparar_db_files_read_staff_history as *const () as usize,
-        comparar_db_files_read_comp_history as *const () as usize,
-        comparar_db_files_read_staff_comps as *const () as usize,
-        comparar_db_files_read_staff_comp_history as *const () as usize,
-        comparar_db_files_read_officials as *const () as usize,
-        comparar_db_files_read_colours as *const () as usize,
-        comparar_db_files_read_names as *const () as usize,
-        comparar_db_files_read_clubs as *const () as usize,
-        comparar_db_files_read_comps as *const () as usize,
-        comparar_db_files_read_players as *const () as usize,
-        comparar_db_files_read_non_players as *const () as usize,
-        comparar_db_files_read_staff as *const () as usize,
-        comparar_db_files_read_staff_extra as *const () as usize,
-        comparar_db_files_write_continents as *const () as usize,
-        comparar_db_files_write_nations as *const () as usize,
-        comparar_db_files_write_cities as *const () as usize,
-        comparar_db_files_write_stadiums as *const () as usize,
-        comparar_db_files_write_clubs as *const () as usize,
-        comparar_db_files_write_staff as *const () as usize,
-        comparar_db_files_write_players as *const () as usize,
-        comparar_db_files_write_non_players as *const () as usize,
-        comparar_db_files_write_staff_extra as *const () as usize,
-        comparar_db_files_write_staff_history as *const () as usize,
-        comparar_db_files_write_comps as *const () as usize,
-        comparar_db_files_write_comp_history as *const () as usize,
-        comparar_db_files_write_staff_comps as *const () as usize,
-        comparar_db_files_write_officials as *const () as usize,
-        comparar_db_files_write_records_0x3a as *const () as usize,
-        comparar_db_files_write_or_read_records_0x3c as *const () as usize,
-        comparar_db_files_open_for_read as *const () as usize,
-        comparar_db_files_open_for_write as *const () as usize,
-        comparar_database_free_staff_history_table as *const () as usize,
-        comparar_database_free_staff_comp_history_table as *const () as usize,
-        comparar_database_grow_comp_history_table as *const () as usize,
-        comparar_qsort_comparator_club_ids_by_reputation as *const () as usize,
-        comparar_qsort_comparator_squad_by_player_0xb as *const () as usize,
-        comparar_compare_staff_by_player_ability_desc as *const () as usize,
-        comparar_staff_normalise_player_physical_attributes as *const () as usize,
-        comparar_database_pick_second_name_by_weight as *const () as usize,
-        comparar_staff_normalise_player_attributes as *const () as usize,
-        comparar_db_files_read_clubs_v1 as *const () as usize,
-        comparar_db_files_read_players_v1 as *const () as usize,
-        comparar_db_files_read_non_players_v1 as *const () as usize,
-        comparar_db_files_read_comps_v1 as *const () as usize,
-        comparar_nation_get_english_name as *const () as usize,
-        comparar_club_get_english_short_name as *const () as usize,
-        comparar_database_trim_senior_and_b_team_squads as *const () as usize,
-        comparar_database_merge_b_team_staff as *const () as usize,
-        comparar_database_build_nation_name_index as *const () as usize,
-        comparar_database_remove_staff_from_club as *const () as usize,
-        comparar_database_get_club_scouts as *const () as usize,
-        comparar_club_is_in_season as *const () as usize,
-        comparar_club_is_in_major_nation as *const () as usize,
-        comparar_nation_is_major_nation as *const () as usize,
-        comparar_staff_clear_opinion_links as *const () as usize,
-        comparar_staff_add_opinion_link as *const () as usize,
-        comparar_staff_remove_opinion_link as *const () as usize,
-        comparar_database_get_club_assistant as *const () as usize,
-        comparar_database_get_club_coaches as *const () as usize,
-        comparar_database_count_club_coaches as *const () as usize,
-        comparar_nation_get_english_three_letter_name as *const () as usize,
-        comparar_comp_get_english_name as *const () as usize,
-        comparar_staff_comp_get_english_name as *const () as usize,
-        comparar_stadium_get_english_name as *const () as usize,
-        comparar_database_language_file_exists as *const () as usize,
-        comparar_eng_lng_free_tables as *const () as usize,
-        comparar_database_generate_extra_non_playing_staff as *const () as usize,
-        comparar_database_trim_club_table as *const () as usize,
-        comparar_database_prune_comp_history_table as *const () as usize,
-        comparar_resolve_database_indexes as *const () as usize,
-        comparar_database_sort_clubs_by_reputation as *const () as usize,
-        comparar_club_has_enough_defenders as *const () as usize,
-        comparar_club_has_enough_midfielders as *const () as usize,
-        comparar_club_has_enough_strikers as *const () as usize,
-        comparar_club_has_enough_hard_workers as *const () as usize,
-        comparar_club_has_fit_goalkeeper as *const () as usize,
-        comparar_club_has_ball_winning_midfielders as *const () as usize,
-        comparar_club_lacks_aerial_strikers as *const () as usize,
-        comparar_club_lacks_aerial_defenders as *const () as usize,
-        comparar_club_lacks_fast_defenders as *const () as usize,
-        comparar_club_has_fast_striker as *const () as usize,
-        comparar_club_has_two_creative_midfielders as *const () as usize,
-        comparar_club_squad_strength_band as *const () as usize,
-        comparar_club_reputation_for_staff as *const () as usize,
-        comparar_staff_count_disliked_staff_at_club as *const () as usize,
-        comparar_staff_count_favoured_staff_at_club as *const () as usize,
-        comparar_staff_remove_favoured_club as *const () as usize,
-        comparar_club_remove_favoured_staff as *const () as usize,
-        comparar_staff_remove_favoured_staff as *const () as usize,
-        comparar_staff_remove_disliked_staff as *const () as usize,
-        comparar_staff_get_favoured_staff as *const () as usize,
-        comparar_club_add_favoured_staff as *const () as usize,
-        comparar_club_add_disliked_staff as *const () as usize,
-        comparar_staff_add_favoured_staff as *const () as usize,
-        comparar_staff_add_disliked_club as *const () as usize,
-        comparar_staff_fade_staff_relationships as *const () as usize,
-        comparar_staff_get_disliked_staff as *const () as usize,
-        comparar_staff_get_natural_position_mask as *const () as usize,
-        comparar_club_count_squad_with_position_mask as *const () as usize,
-        comparar_staff_pick_favoured_team_mate as *const () as usize,
-        comparar_club_nation_is_not_argentina as *const () as usize,
-        comparar_club_nation_not_argentina_france_croatia as *const () as usize,
-        comparar_database_is_melanesian_nation as *const () as usize,
-        comparar_database_is_polynesian_nation as *const () as usize,
-        comparar_database_get_coaching_job_name as *const () as usize,
-        comparar_database_format_years_between_dates as *const () as usize,
-        comparar_database_compare_clubs_by_short_name as *const () as usize,
-        comparar_database_compare_staff_by_full_name as *const () as usize,
-        comparar_database_staff_matches_names as *const () as usize,
-        comparar_database_compare_clubs_by_latitude as *const () as usize,
-        comparar_database_compare_clubs_by_longitude as *const () as usize,
-        comparar_database_format_name_from_ids as *const () as usize,
-        comparar_database_format_official_name as *const () as usize,
-        comparar_position_mask_get_text as *const () as usize,
-        comparar_write_position_name as *const () as usize,
-        comparar_write_player_description as *const () as usize,
-        comparar_staff_is_best_favoured_candidate as *const () as usize,
-        comparar_staff_get_player_strength_flags as *const () as usize,
-        comparar_staff_get_player_weakness_flags as *const () as usize,
-        comparar_database_count_club_physios as *const () as usize,
-        comparar_club_is_b_team as *const () as usize,
-        comparar_club_collect_non_playing_staff as *const () as usize,
-        comparar_staff_is_player_attribute_visible as *const () as usize,
-        comparar_staff_get_player_attribute_for_viewer as *const () as usize,
-        comparar_database_get_non_player_attribute_name as *const () as usize,
-        comparar_database_compare_staff_by_surname as *const () as usize,
-        comparar_database_compare_clubs_by_reputation as *const () as usize,
-        comparar_database_club_nation_is_eec as *const () as usize,
-        comparar_get_regions_sorted_by_name as *const () as usize,
-        comparar_compare_region_names as *const () as usize,
-        comparar_staff_get_opinion_link_staff as *const () as usize,
-        comparar_database_format_name_from_strings as *const () as usize,
-        comparar_database_get_job_name as *const () as usize,
-        comparar_database_get_language_name as *const () as usize,
-        comparar_club_get_national_team_name as *const () as usize,
-        comparar_database_get_player_attribute_name as *const () as usize,
-        comparar_database_format_player_positions as *const () as usize,
-        comparar_get_region_name as *const () as usize,
-        comparar_get_continent_adjective as *const () as usize,
-        comparar_set_key_ids as *const () as usize,
-        comparar_set_key_ids_1080 as *const () as usize,
-        comparar_database_player_initialisation as *const () as usize,
-        comparar_nation_get_nationality_adjective as *const () as usize,
-        comparar_sort_table as *const () as usize,
-        comparar_build_h2h_table as *const () as usize,
-        comparar_free_table as *const () as usize,
-        comparar_league_check_complete as *const () as usize,
-        comparar_pay_tv_rights as *const () as usize,
-        comparar_league_record_season_honours as *const () as usize,
-        comparar_comp_util_add_history_record as *const () as usize,
-        comparar_comp_util_get_league_clash_type as *const () as usize,
-        comparar_comp_util_get_club_strength_score as *const () as usize,
-        comparar_comp_util_get_latest_placed_club as *const () as usize,
-        comparar_find_friendly_match as *const () as usize,
-        comparar_get_fixture_list_for_date as *const () as usize,
-        comparar_find_next_fixture as *const () as usize,
-        comparar_is_stadium_in_use as *const () as usize,
-        comparar_friendly_international_date_resolve as *const () as usize,
-        comparar_end_duty_for_competition as *const () as usize,
-        comparar_end_duty_for_nation_in_competition as *const () as usize,
-        comparar_prune_club_call_up_records as *const () as usize,
-        comparar_add_player_to_squad as *const () as usize,
-        comparar_national_teams_remove_player_from_squad as *const () as usize,
-        comparar_release_overage_u21_players as *const () as usize,
-        comparar_clear_current_competition as *const () as usize,
-        comparar_release_competitions_of_continent as *const () as usize,
-        comparar_call_up_replacement as *const () as usize,
-        comparar_build_selection_pools as *const () as usize,
-        comparar_compare_by_rating as *const () as usize,
-        comparar_compare_by_club as *const () as usize,
-        comparar_find_friendly_opponent as *const () as usize,
-        comparar_find_tour_opponent as *const () as usize,
-        comparar_apply_result_to_table as *const () as usize,
-        comparar_points_for_result as *const () as usize,
-        comparar_league_compare_table_rows_h2h as *const () as usize,
-        comparar_league_compare_dates as *const () as usize,
-        comparar_find_club_row as *const () as usize,
-        comparar_contains_club as *const () as usize,
-        comparar_rating_record_assign as *const () as usize,
-        comparar_man_of_match_record_assign as *const () as usize,
-        comparar_discipline_record_assign as *const () as usize,
-        comparar_count_record_assign as *const () as usize,
-        comparar_fans_player_record_assign as *const () as usize,
-        comparar_tally_record_construct as *const () as usize,
-        comparar_count_record_construct as *const () as usize,
-        comparar_transfer_fee_record_assign as *const () as usize,
-        comparar_goals_in_match_record_assign as *const () as usize,
-        comparar_news_operator as *const () as usize,
-        comparar_past_transfer_copy_construct as *const () as usize,
-        comparar_future_transfer_assign as *const () as usize,
-        comparar_regen_queue_entry_assign as *const () as usize,
-        comparar_is_on_shortlist as *const () as usize,
-        comparar_player_regen_pick_staff_for_non_player_data as *const () as usize,
-        comparar_discipline_operator as *const () as usize,
-        comparar_set_default_wage as *const () as usize,
-        comparar_get_match_condition as *const () as usize,
-        comparar_days_to_end_date as *const () as usize,
-        comparar_clear_all_grievances as *const () as usize,
-        comparar_check_transfer_request_withdrawal as *const () as usize,
-        comparar_get_squad_placement as *const () as usize,
-        comparar_move_to_first_team as *const () as usize,
-        comparar_move_to_reserves as *const () as usize,
-        comparar_contract_manager_operator as *const () as usize,
-        comparar_contract_manager_raise_match_morale as *const () as usize,
-        comparar_remove_talks_records as *const () as usize,
-        comparar_remove_transfer_interest as *const () as usize,
-        comparar_remove_scout_request as *const () as usize,
-        comparar_remove_nickname_from_all as *const () as usize,
-        comparar_remove_retirement as *const () as usize,
-        comparar_player_regen_check_unemployed_retirement as *const () as usize,
-        comparar_transfer_manager_offer_needs_work_permit as *const () as usize,
-        comparar_update_work_permits as *const () as usize,
-        comparar_get_scout as *const () as usize,
-        comparar_get_current_run as *const () as usize,
-        comparar_record_holder_construct as *const () as usize,
-        comparar_pick_rival_manager_id as *const () as usize,
-        comparar_transfer_fee_record_construct as *const () as usize,
-        comparar_transfer_fee_record_construct_2 as *const () as usize,
-        comparar_run_record_construct as *const () as usize,
-        comparar_won_run_record_construct as *const () as usize,
-        comparar_lost_run_record_construct as *const () as usize,
-        comparar_unbeaten_run_record_construct as *const () as usize,
-        comparar_winless_run_record_construct as *const () as usize,
-        comparar_goals_in_match_record_construct as *const () as usize,
-        comparar_youngest_player_record_construct as *const () as usize,
-        comparar_write_deadline_news_text as *const () as usize,
-        comparar_can_end_loan as *const () as usize,
-        comparar_pow_double as *const () as usize,
-        comparar_remove_held_offers as *const () as usize,
-        comparar_hold_bans_for_loan as *const () as usize,
-        comparar_fill_vacated_staff_job as *const () as usize,
-        comparar_send_to_nation_club_managers as *const () as usize,
-        comparar_get_scout_assignment as *const () as usize,
-        comparar_cup_check_complete as *const () as usize,
-        comparar_oldest_player_record_construct as *const () as usize,
-        comparar_find_work_permit as *const () as usize,
-        comparar_passes_work_permit_check as *const () as usize,
-        comparar_drop_held_bans as *const () as usize,
-        comparar_remove_pending_offers_for_staff as *const () as usize,
-        comparar_schedule_decision_for_transfer as *const () as usize,
-        comparar_send_to_all_managers as *const () as usize,
-        comparar_send_to_division_managers as *const () as usize,
-        comparar_send_to_nation_managers as *const () as usize,
-        comparar_offer_breaks_fee_record as *const () as usize,
-        comparar_get_condition as *const () as usize,
-        comparar_get_selection_limit as *const () as usize,
-        comparar_clear_invalid_watched_fixtures as *const () as usize,
-        comparar_collect_club_scout_targets as *const () as usize,
-        comparar_set_scout as *const () as usize,
-        comparar_update_board_after_fixture as *const () as usize,
-        comparar_process_match as *const () as usize,
-        comparar_collect_club_shortlist_entries as *const () as usize,
-        comparar_find_highest_offer_for_player as *const () as usize,
-        comparar_get_all_time_record as *const () as usize,
-        comparar_get_season_record as *const () as usize,
-        comparar_queue_record_news as *const () as usize,
-        comparar_add_spare_non_player_record as *const () as usize,
-        comparar_add_retirement as *const () as usize,
-        comparar_queue_staff_for_regen as *const () as usize,
-        comparar_trigger_relegation_clauses as *const () as usize,
-        comparar_remove_contract_offer as *const () as usize,
-        comparar_is_player_suspended as *const () as usize,
-        comparar_get_fixture_rules_scope as *const () as usize,
-        comparar_get_ineligibility_code as *const () as usize,
-        comparar_find_scheduled_friendly_slot as *const () as usize,
-        comparar_send_to_continent_managers as *const () as usize,
-        comparar_send_to_comp_region as *const () as usize,
-        comparar_is_important_for as *const () as usize,
-        comparar_get_slot_string as *const () as usize,
-        comparar_post_financial_trouble_news as *const () as usize,
-        comparar_can_club_scout_nation as *const () as usize,
-        comparar_get_language_fluency as *const () as usize,
-        comparar_rewind_staff_history as *const () as usize,
-        comparar_set_slot_position as *const () as usize,
-        comparar_club_has_offer_for_player as *const () as usize,
-        comparar_find_club_offer_for_player as *const () as usize,
-        comparar_player_has_pending_offer as *const () as usize,
-        comparar_is_player_under_offer as *const () as usize,
-        comparar_player_club_uses_bosman as *const () as usize,
-        comparar_check_board_veto as *const () as usize,
-        comparar_add_past_transfer as *const () as usize,
-        comparar_add_work_permit as *const () as usize,
-        comparar_add_first_team_appearance_money as *const () as usize,
-        comparar_get_free_staff_contract_space as *const () as usize,
-        comparar_add_staff_contract as *const () as usize,
-        comparar_add_decision_date as *const () as usize,
-        comparar_reset_morale_state as *const () as usize,
-        comparar_init_from_current_contract as *const () as usize,
-        comparar_get_expiry_band as *const () as usize,
-        comparar_log_story as *const () as usize,
-        comparar_expire_story_log as *const () as usize,
-        comparar_has_logged_story as *const () as usize,
-        comparar_add_transfer_interest as *const () as usize,
-        comparar_compare_id_pair_keys as *const () as usize,
-        comparar_compare_story_log_records as *const () as usize,
-        comparar_decide_fixture_winner as *const () as usize,
-        comparar_decide_tie_winner as *const () as usize,
-        comparar_cup_compare_draw_entries_by_seed as *const () as usize,
-        comparar_init_table_row as *const () as usize,
-        comparar_league_get_club_array as *const () as usize,
-        comparar_record_final_positions as *const () as usize,
-        comparar_move_club_to_division as *const () as usize,
-        comparar_comp_util_shuffle_pointer_array as *const () as usize,
-        comparar_comp_util_sort_and_shuffle_top_clubs as *const () as usize,
-        comparar_update_ban_progress as *const () as usize,
-        comparar_release_ban as *const () as usize,
-        comparar_clear_ban_history as *const () as usize,
-        comparar_roll_recurring_injury as *const () as usize,
-        comparar_reset_player_history as *const () as usize,
-        comparar_injury_reset_player as *const () as usize,
-        comparar_add_transfer_totals as *const () as usize,
-        comparar_club_records_update_career_records as *const () as usize,
-        comparar_update_season_rating_record as *const () as usize,
-        comparar_is_comp_current_on_date as *const () as usize,
-        comparar_candidate_has_nearby_date as *const () as usize,
-        comparar_add_planned_friendly as *const () as usize,
-        comparar_send_by_scope as *const () as usize,
-        comparar_send_to_club_manager as *const () as usize,
-        comparar_deliver_to_manager as *const () as usize,
-        comparar_auto_respond_all as *const () as usize,
-        comparar_has_urgent_items as *const () as usize,
-        comparar_set_slot_string as *const () as usize,
-        comparar_rate_player_form_for_story as *const () as usize,
-        comparar_write_financial_trouble_news_text as *const () as usize,
-        comparar_get_inbox_items as *const () as usize,
-        comparar_retire_from_playing_staff as *const () as usize,
-        comparar_pick_best_club_for_player as *const () as usize,
-        comparar_pick_club_from_nation_list as *const () as usize,
-        comparar_fix_missing_jobs as *const () as usize,
-        comparar_best_manager_candidate_score as *const () as usize,
-        comparar_schedule_offer as *const () as usize,
-        comparar_get_squad_status_for_club as *const () as usize,
-        comparar_shortlist_manager_estimate_squad_status as *const () as usize,
-        comparar_shortlist_manager_release_club_slot_targets as *const () as usize,
-        comparar_scout_covers_nation as *const () as usize,
-        comparar_remove_friendly_match as *const () as usize,
-        comparar_init_banned_nation_pairs as *const () as usize,
-        comparar_assess_transfer_deal as *const () as usize,
-        comparar_apply_transfer_confidence_changes as *const () as usize,
-        comparar_resolve_board_ultimatum as *const () as usize,
-        comparar_remove_contract as *const () as usize,
-        comparar_resubmit_held_offers as *const () as usize,
-        comparar_contract_manager_season_end_month as *const () as usize,
-        comparar_staff_records_daily_update as *const () as usize,
-        comparar_staff_records_end_season_for_nation as *const () as usize,
-        comparar_find_manager_of_the_month as *const () as usize,
-        comparar_process_pending_departures as *const () as usize,
-        comparar_manager_manager_remove_player_from_squad as *const () as usize,
-        comparar_remove_staff_from_club as *const () as usize,
-        comparar_construct_news_item as *const () as usize,
-        comparar_adjust_supporter_confidence as *const () as usize,
-        comparar_adjust_board_confidence as *const () as usize,
-        comparar_pick_ai_manager_response as *const () as usize,
-        comparar_mark_item_read as *const () as usize,
-        comparar_find_item_by_id as *const () as usize,
-        comparar_queue_player_gratitude_news as *const () as usize,
-        comparar_post_player_backing_request_news as *const () as usize,
-        comparar_post_player_criticism_reaction_news as *const () as usize,
-        comparar_build_position_lists as *const () as usize,
-        comparar_sort_position_lists as *const () as usize,
-        comparar_collect_interested_clubs as *const () as usize,
-        comparar_add_shortlist_entry as *const () as usize,
-        comparar_shortlist_manager_predict_selling_club_response as *const () as usize,
-        comparar_transfer_manager_get_loan_period as *const () as usize,
-        comparar_get_offer_response_delay as *const () as usize,
-        comparar_pay_transfer_instalments as *const () as usize,
-        comparar_remove_offer as *const () as usize,
-        comparar_add_ban as *const () as usize,
-        comparar_clear_bans_invalid_for_club as *const () as usize,
-        comparar_restore_held_bans as *const () as usize,
-        comparar_add_language as *const () as usize,
-        comparar_improve_language as *const () as usize,
-        comparar_player_stats_reset_player as *const () as usize,
-        comparar_set_current_competition as *const () as usize,
-        comparar_mark_clubs_with_fixtures as *const () as usize,
-        comparar_discipline_remove_player as *const () as usize,
-        comparar_compare_decision_dates as *const () as usize,
-        comparar_process_due_decision_dates as *const () as usize,
-        comparar_get_current_contract_offers as *const () as usize,
-        comparar_sign_loan_contract as *const () as usize,
-        comparar_end_loan as *const () as usize,
-        comparar_toggle_squad_placement as *const () as usize,
-        comparar_reset_board_for_new_manager as *const () as usize,
-        comparar_get_departure_reason as *const () as usize,
-        comparar_get_manager_record as *const () as usize,
-        comparar_is_staff_suitable_for_job as *const () as usize,
-        comparar_staff_can_take_job as *const () as usize,
-        comparar_contract_manager_lower_match_morale as *const () as usize,
-        comparar_shortlist_set_up_formation_slots as *const () as usize,
-        comparar_update_club_shortlist as *const () as usize,
-        comparar_suspend_clubs_shortlisting_player as *const () as usize,
-        comparar_add_player_to_club_shortlists as *const () as usize,
-        comparar_transfer_list_player as *const () as usize,
-        comparar_pay_appearance_money as *const () as usize,
-        comparar_club_rejects_offer as *const () as usize,
-        comparar_detach_offer_players as *const () as usize,
-        comparar_build_cash_offer_option as *const () as usize,
-        comparar_add_illness_outbreak as *const () as usize,
-        comparar_spread_illness_outbreaks as *const () as usize,
-        comparar_injury_player_in_close_season as *const () as usize,
-        comparar_init_squad_fitness as *const () as usize,
-        comparar_init_records as *const () as usize,
-        comparar_build_nation_club_lists as *const () as usize,
-        comparar_pick_fans_player_of_year as *const () as usize,
-        comparar_end_season_for_key_nation as *const () as usize,
-        comparar_update_transfer_fee_records as *const () as usize,
-        comparar_is_banned_nation_pair as *const () as usize,
-        comparar_compare_nations_by_reputation_desc as *const () as usize,
-        comparar_compare_fixture_records_by_date as *const () as usize,
-        comparar_can_schedule_club_fixture as *const () as usize,
-        comparar_compare_call_up_records_by_date as *const () as usize,
-        comparar_add_qualified_nation as *const () as usize,
-        comparar_cup_compare_entries_by_level_desc as *const () as usize,
-        comparar_cup_compare_entries_by_level_asc as *const () as usize,
-        comparar_limit_club_division_tier as *const () as usize,
-        comparar_consider_sacking_manager as *const () as usize,
-        comparar_issue_board_ultimatum as *const () as usize,
-        comparar_remove_club_manager as *const () as usize,
-        comparar_review_national_team_performance as *const () as usize,
-        comparar_is_club_in_financial_trouble as *const () as usize,
-        comparar_get_board_confidence_band as *const () as usize,
-        comparar_add_promotion_record as *const () as usize,
-        comparar_add_relegation_record as *const () as usize,
-        comparar_add_qualified_for_round_record as *const () as usize,
-        comparar_add_transfer_records as *const () as usize,
-        comparar_add_knocked_out_record as *const () as usize,
-        comparar_add_failed_to_qualify_record as *const () as usize,
-        comparar_transfer_manager_get_offer_completion_date as *const () as usize,
-        comparar_find_next_allowed_transfer_date as *const () as usize,
-        comparar_transfer_manager_get_next_window_dates as *const () as usize,
-        comparar_transfer_manager_calc_compensation_fee as *const () as usize,
-        comparar_pay_fee_and_record_clauses as *const () as usize,
-        comparar_transfer_manager_selling_club_must_accept as *const () as usize,
-        comparar_update_work_permit_on_move as *const () as usize,
-        comparar_complete_accepted_contract_offer as *const () as usize,
-        comparar_offer_contract_to_offer_player as *const () as usize,
-        comparar_collapse_offer as *const () as usize,
-        comparar_make_loan_offer as *const () as usize,
-        comparar_process_due_future_transfers as *const () as usize,
-        comparar_player_regen_score_non_player_candidate as *const () as usize,
-        comparar_player_regen_compare_retirements as *const () as usize,
-        comparar_player_regen_compare_queue_entries as *const () as usize,
-        comparar_get_category_record as *const () as usize,
-        comparar_create_stats as *const () as usize,
-        comparar_is_retirement_pending as *const () as usize,
-        comparar_randomize_round_teams as *const () as usize,
-        comparar_separate_shared_stadium_ties as *const () as usize,
-        comparar_comp_util_scale_by_round as *const () as usize,
-        comparar_comp_util_get_fixture_venue_side as *const () as usize,
-        comparar_compare_nation_coefficients_desc as *const () as usize,
-        comparar_has_scout_request as *const () as usize,
-        comparar_clear_selection_slot as *const () as usize,
-        comparar_set_set_piece_taker as *const () as usize,
-        comparar_fill_squad_restrictions as *const () as usize,
-        comparar_transfer_manager_check_matchday_squad_limit as *const () as usize,
-        comparar_player_needs_work_permit as *const () as usize,
-        comparar_can_club_bid_for_player as *const () as usize,
-        comparar_note_terms_offered_to_exchange_player as *const () as usize,
-        comparar_count_club_free_transfer_queue as *const () as usize,
-        comparar_get_future_transfer as *const () as usize,
-        comparar_remove_future_transfer as *const () as usize,
-        comparar_add_future_transfer as *const () as usize,
-        comparar_get_open_offers_for_club_players as *const () as usize,
-        comparar_collapse_offers_for_player as *const () as usize,
-        comparar_add_next_sale_percentage as *const () as usize,
-        comparar_init_club_board_records as *const () as usize,
-        comparar_process_ban_appeals as *const () as usize,
-        comparar_can_watch_fixture as *const () as usize,
-        comparar_player_regen_check_initial_retirement as *const () as usize,
-        comparar_player_regen_check_retirement as *const () as usize,
-        comparar_build_initial_retirement_list as *const () as usize,
-        comparar_find_new_retirements as *const () as usize,
-        comparar_player_regen_retire_from_non_playing_staff as *const () as usize,
-        comparar_add_free_release_records as *const () as usize,
-        comparar_get_player_injury_status as *const () as usize,
-        comparar_schedule_offer_decision as *const () as usize,
-        comparar_get_manager_of_year_candidates as *const () as usize,
-        comparar_update_projected_positions as *const () as usize,
-        comparar_compare_projection_by_reputation_desc as *const () as usize,
-        comparar_compare_projection_by_points_desc as *const () as usize,
-        comparar_find_fixtures as *const () as usize,
-        comparar_collect_comp_fixtures_on_day as *const () as usize,
-        comparar_fix_man_comp_has_fixture_on_date as *const () as usize,
-        comparar_friendly_is_club_free_on_date as *const () as usize,
-        comparar_has_club as *const () as usize,
-        comparar_fix_man_get_partner_key_nation_index as *const () as usize,
-        comparar_handle_transfer_request as *const () as usize,
-        comparar_is_contract_staff_job as *const () as usize,
-        comparar_staff_is_not_board_member as *const () as usize,
-        comparar_init_work_permits as *const () as usize,
-        comparar_get_clause_count as *const () as usize,
-        comparar_find_first_team_appearance_money as *const () as usize,
-        comparar_process_free_transfer_queue as *const () as usize,
-        comparar_find_next_window_open_date as *const () as usize,
-        comparar_find_negotiated_loan_contract as *const () as usize,
-        comparar_build_clause_offer_option as *const () as usize,
-        comparar_transfer_manager_is_rejection_reason_valid as *const () as usize,
-        comparar_transfer_manager_get_squad_status_reason as *const () as usize,
-        comparar_game_update_squad_relationships as *const () as usize,
-        comparar_game_check_club_dressing_room_unrest as *const () as usize,
-        comparar_game_spread_squad_morale_by_leadership as *const () as usize,
-        comparar_game_check_players_missing_training as *const () as usize,
-        comparar_game_update_comps_for_date as *const () as usize,
-        comparar_manager_manager_adjust_board_confidence as *const () as usize,
-        comparar_stadium_daily_update as *const () as usize,
-        comparar_add_booking as *const () as usize,
-        comparar_is_stadium_free_on_date as *const () as usize,
-        comparar_fixture_has_scouted_player as *const () as usize,
-        comparar_is_player_shortlisted as *const () as usize,
-        comparar_add_first_cap_record as *const () as usize,
-        comparar_player_stats_get_career_goals as *const () as usize,
-        comparar_add_loan_records as *const () as usize,
-        comparar_injury_compare_entry_dates as *const () as usize,
-        comparar_player_stats_get_goals_for_club as *const () as usize,
-        comparar_add_team_of_year_record as *const () as usize,
-        comparar_staff_records_compare_clubs_by_manager_points as *const () as usize,
-        comparar_find_stored_fixture as *const () as usize,
-        comparar_insert_fixture as *const () as usize,
-        comparar_remove_fixture as *const () as usize,
-        comparar_create_due_planned_friendlies as *const () as usize,
-        comparar_add_friendly_match as *const () as usize,
-        comparar_plan_friendly_on_free_date as *const () as usize,
-        comparar_cup_update_for_date as *const () as usize,
-        comparar_set_up_round as *const () as usize,
-        comparar_add_away_trip_illness_risk as *const () as usize,
-        comparar_count_results_in_period as *const () as usize,
-        comparar_update_rankings as *const () as usize,
-        comparar_compare_result_points_desc as *const () as usize,
-        comparar_append_result as *const () as usize,
-        comparar_get_nation_strength_tier as *const () as usize,
-        comparar_recalculate_scores as *const () as usize,
-        comparar_comp_active_key_nation_of_fixture as *const () as usize,
-        comparar_key_nation_is_world_cup_comp as *const () as usize,
-        comparar_key_nation_is_international_comp as *const () as usize,
-        comparar_key_nation_index_of_comp as *const () as usize,
-        comparar_collect_ranked_order as *const () as usize,
-        comparar_compare_ranking_score_desc as *const () as usize,
-        comparar_update_city_weather as *const () as usize,
-        comparar_read_region as *const () as usize,
-        comparar_read_region_period as *const () as usize,
-        comparar_game_update_nation_coefficients as *const () as usize,
-        comparar_is_player_regen_day as *const () as usize,
-        comparar_clamp_char_sum as *const () as usize,
-        comparar_score_venue_for_fixture as *const () as usize,
-        comparar_get_travel_distance_factor as *const () as usize,
-        comparar_load_config as *const () as usize,
-        comparar_get_coaching_factor as *const () as usize,
-        comparar_get_coach_assignments as *const () as usize,
-        comparar_get_training_load as *const () as usize,
-        comparar_apply_training_progress as *const () as usize,
-        comparar_find_position_training as *const () as usize,
-        comparar_has_fast_position_training as *const () as usize,
-        comparar_advance_week_counter as *const () as usize,
-        comparar_take_spare_non_player_record as *const () as usize,
-        comparar_get_recurring_injury_type as *const () as usize,
-        comparar_friendly_update_for_date as *const () as usize,
-        comparar_plan_ai_preseason_friendlies as *const () as usize,
-        comparar_set_preseason_windows as *const () as usize,
-        comparar_schedule_tour_matches as *const () as usize,
-        comparar_compare_friendly_candidates_by_band as *const () as usize,
-        comparar_compare_friendly_candidate_ptrs_by_nation as *const () as usize,
-        comparar_cup_rank_teams as *const () as usize,
-        comparar_comp_util_sort_clubs_by_strength as *const () as usize,
-        comparar_set_club_final_position as *const () as usize,
-        comparar_key_nation_index_of_nation as *const () as usize,
-        comparar_key_nation_index_of_club as *const () as usize,
-        comparar_key_nation_get_club_season_year as *const () as usize,
-        comparar_key_nation_club_in_season as *const () as usize,
-        comparar_key_nation_get_main_continent as *const () as usize,
-        comparar_key_nation_get_main_nation as *const () as usize,
-        comparar_get_stat as *const () as usize,
-        comparar_player_stats_compare_language_entries as *const () as usize,
-        comparar_player_stats_compare_history_by_club as *const () as usize,
-        comparar_has_active_release_clause as *const () as usize,
-        comparar_check_fifa_protected_period as *const () as usize,
-        comparar_staff_contract_is_bonus_type_allowed as *const () as usize,
-        comparar_check_postponement as *const () as usize,
-        comparar_get_club_finance as *const () as usize,
-        comparar_stadium_compare_bookings as *const () as usize,
-        comparar_get_match_weather as *const () as usize,
-        comparar_get_temperature as *const () as usize,
-        comparar_get_pitch_condition as *const () as usize,
-        comparar_get_wealth_band as *const () as usize,
-        comparar_compare_players_by_ability as *const () as usize,
-        comparar_stadium_compare_venues_by_capacity as *const () as usize,
-        comparar_set_default_schedules as *const () as usize,
-        comparar_set_type as *const () as usize,
-        comparar_get_manager_schedule as *const () as usize,
-        comparar_init_player_entries as *const () as usize,
-        comparar_add_player_data_to_pool as *const () as usize,
-        comparar_has_spare_non_player_record as *const () as usize,
-        comparar_make_points_ban as *const () as usize,
-        comparar_ruling_body_start_new_season as *const () as usize,
-        comparar_compact_entries as *const () as usize,
-        comparar_set_slot_coordinate as *const () as usize,
-        comparar_check_duplicate_position as *const () as usize,
-        comparar_set_marking_type as *const () as usize,
-        comparar_draw_team_order as *const () as usize,
-        comparar_get_fixture_side_teams as *const () as usize,
-        comparar_collect_possible_teams as *const () as usize,
-        comparar_player_search_get_club_target_rating as *const () as usize,
-        comparar_player_search_slot_get_match_entry as *const () as usize,
-        comparar_player_search_slot_sum_goals as *const () as usize,
-        comparar_advance_offer_to_club_approval as *const () as usize,
-        comparar_post_offer_accepted_news as *const () as usize,
-        comparar_post_loan_offer_news as *const () as usize,
-        comparar_handle_player_rejected_terms as *const () as usize,
-        comparar_post_board_confidence_update_news as *const () as usize,
-        comparar_post_board_expectations_news as *const () as usize,
-        comparar_hold_offers_at_window_close as *const () as usize,
-        comparar_post_fa_expectations_news as *const () as usize,
-        comparar_post_supporter_protest_news as *const () as usize,
-        comparar_add_transfer_negotiation as *const () as usize,
-        comparar_post_job_rumour_news as *const () as usize,
-        comparar_post_player_rejects_move_news as *const () as usize,
-        comparar_add_weekly_merchandising_income as *const () as usize,
-        comparar_sell_season_tickets as *const () as usize,
-        comparar_upgrade_training_facilities as *const () as usize,
-        comparar_process_club_finance_events as *const () as usize,
-        comparar_try_board_debt_payment as *const () as usize,
-        comparar_try_cash_injection as *const () as usize,
-        comparar_get_max_staff_wage as *const () as usize,
-        comparar_pay_bonuses as *const () as usize,
-        comparar_adjust_max_wage as *const () as usize,
-        comparar_apply_match_effects as *const () as usize,
-        comparar_find_match_injury as *const () as usize,
-        comparar_is_player_on_holiday as *const () as usize,
-        comparar_player_regen_sign_for_club as *const () as usize,
-        comparar_schedule_injury_retirement as *const () as usize,
-        comparar_player_regen_post_retirement_announcement_news as *const () as usize,
-        comparar_end_player_injury as *const () as usize,
-        comparar_media_queue_player_apology_news as *const () as usize,
-        comparar_clear_inbox as *const () as usize,
-        comparar_withdraw_injured_player as *const () as usize,
-        comparar_national_teams_post_player_withdrawn_news as *const () as usize,
-        comparar_national_teams_post_replacement_needed_news as *const () as usize,
-        comparar_national_teams_can_change_squad as *const () as usize,
-        comparar_national_teams_player_in_squad as *const () as usize,
-        comparar_schedule_assign_opponent as *const () as usize,
-        comparar_add_month_award_record as *const () as usize,
-        comparar_friendly_club_reputation_tier as *const () as usize,
-        comparar_friendly_get_rest_days_for_kind as *const () as usize,
-        comparar_get_contract_satisfaction as *const () as usize,
-        comparar_post_wants_new_contract_news as *const () as usize,
-        comparar_post_transfer_request_withdrawn_news as *const () as usize,
-        comparar_confirm_offer_by_club as *const () as usize,
-        comparar_try_complete_offer as *const () as usize,
-        comparar_settle_previous_transfer_clauses as *const () as usize,
-        comparar_try_loan_offer_for_player as *const () as usize,
-        comparar_post_contract_expiry_news as *const () as usize,
-        comparar_post_bosman_departure_news as *const () as usize,
-        comparar_add_contract_offer as *const () as usize,
-        comparar_remove_contract_offer_for_transfer as *const () as usize,
-        comparar_contract_manager_lowest_wage_demand as *const () as usize,
-        comparar_record_match_ratings as *const () as usize,
-        comparar_add_player_rating as *const () as usize,
-        comparar_find_best_player as *const () as usize,
-        comparar_award_best_rated_player as *const () as usize,
-        comparar_set_winner as *const () as usize,
-        comparar_award_raise_winner_reputation as *const () as usize,
-        comparar_update_player_fitness as *const () as usize,
-        comparar_get_league_confidence_band as *const () as usize,
-        comparar_set_board_ratings as *const () as usize,
-        comparar_injury_daily_update as *const () as usize,
-        comparar_post_due_recovery_news as *const () as usize,
-        comparar_is_one_booking_from_ban as *const () as usize,
-        comparar_process_regen_queue as *const () as usize,
-        comparar_media_pick_outlet_type_for_club as *const () as usize,
-        comparar_media_pick_outlet_type_for_person as *const () as usize,
-        comparar_league_add_result as *const () as usize,
-        comparar_copy_table as *const () as usize,
-        comparar_league_set_predicted_positions as *const () as usize,
-        comparar_record_international_result as *const () as usize,
-        comparar_format_squad_label as *const () as usize,
-        comparar_are_round_fixtures_known as *const () as usize,
-        comparar_record_club_call_ups as *const () as usize,
-        comparar_get_fixture_match_importance as *const () as usize,
-        comparar_get_stage as *const () as usize,
-        comparar_awol_daily_update as *const () as usize,
-        comparar_has_missed_training as *const () as usize,
-        comparar_has_fitness_incident as *const () as usize,
-        comparar_miss_training as *const () as usize,
-        comparar_end_absence as *const () as usize,
-        comparar_set_flags as *const () as usize,
-        comparar_reject_transfer_offer as *const () as usize,
-        comparar_withdraw_transfer_offer as *const () as usize,
-        comparar_post_offer_rejected_news as *const () as usize,
-        comparar_unsettle_player_after_bid as *const () as usize,
-        comparar_post_offer_collapsed_news as *const () as usize,
-        comparar_post_appearance_money_news as *const () as usize,
-        comparar_finalise_transfer as *const () as usize,
-        comparar_post_transfer_completed_news as *const () as usize,
-        comparar_post_transfer_agreed_news as *const () as usize,
-        comparar_add_config_loan as *const () as usize,
-        comparar_post_contract_end_news as *const () as usize,
-        comparar_post_transfer_delay_request_news as *const () as usize,
-        comparar_get_club_tactic as *const () as usize,
-        comparar_select_tactic_slot as *const () as usize,
-        comparar_get_active_tactic as *const () as usize,
-        comparar_remove_player_from_selection as *const () as usize,
-        comparar_swap_selection_slots as *const () as usize,
-        comparar_has_selection_undo as *const () as usize,
-        comparar_post_manager_under_pressure_news as *const () as usize,
-        comparar_post_manager_departure_news as *const () as usize,
-        comparar_post_manager_appointment_news as *const () as usize,
-        comparar_pay_prize_money as *const () as usize,
-        comparar_league_update_staff_records_for_status as *const () as usize,
-        comparar_announce_team_status as *const () as usize,
-        comparar_player_stats_record_match as *const () as usize,
-        comparar_update_league_position_records as *const () as usize,
-        comparar_send_record_news as *const () as usize,
-        comparar_select_squads_for_fixture as *const () as usize,
-        comparar_national_teams_post_player_called_up_news as *const () as usize,
-        comparar_add_team_result_news as *const () as usize,
-        comparar_count_slots_with_bids as *const () as usize,
-        comparar_shortlist_manager_remove_from_transfer_list as *const () as usize,
-        comparar_shortlist_manager_remove_from_loan_list as *const () as usize,
-        comparar_update_staff_status as *const () as usize,
-        comparar_shortlist_manager_add_to_loan_list as *const () as usize,
-        comparar_shortlist_manager_max_fee_for_player_status as *const () as usize,
-        comparar_allocate_transfer_budget as *const () as usize,
-        comparar_shortlist_manager_squad_status_allowed as *const () as usize,
-        comparar_scout_manager_write_list_name as *const () as usize,
-        comparar_update_international_friendlies as *const () as usize,
-        comparar_get_selected_list as *const () as usize,
-        comparar_set_selected_list as *const () as usize,
-        comparar_european_cup_collect_entrants as *const () as usize,
-        comparar_build_qualifying_entry_table as *const () as usize,
-        comparar_european_cup_advance_stage as *const () as usize,
-        comparar_process_fixture as *const () as usize,
-        comparar_european_cup_set_club_progress as *const () as usize,
-        comparar_counts_for_fixture_clash as *const () as usize,
-        comparar_choose_match_official as *const () as usize,
-        comparar_clear_busy_flags as *const () as usize,
-        comparar_renew_officials as *const () as usize,
-        comparar_officials_manager_add_random_officials as *const () as usize,
-        comparar_officials_manager_validate_officials as *const () as usize,
-        comparar_officials_manager_operator as *const () as usize,
-        comparar_add_year_award_record as *const () as usize,
-        comparar_match_record_is_bigger_win as *const () as usize,
-        comparar_match_record_is_bigger_defeat as *const () as usize,
-        comparar_update_appearance_clauses_after_match as *const () as usize,
-        comparar_add_international_team_appearance_money as *const () as usize,
-        comparar_post_transfer_finalised_news as *const () as usize,
-        comparar_check_board_transfer_veto as *const () as usize,
-        comparar_post_board_ultimatum_news as *const () as usize,
-        comparar_news_board_ultimatum_text as *const () as usize,
-        comparar_free_transfer_staff as *const () as usize,
-        comparar_set_on_holiday as *const () as usize,
-        comparar_post_contract_talks_news as *const () as usize,
-        comparar_eng_first_create_playoff_stage as *const () as usize,
-        comparar_eng_second_create_play_off_stage as *const () as usize,
-        comparar_eng_third_create_play_off_stage as *const () as usize,
-        comparar_eng_second_update_staff_records_for_status as *const () as usize,
-        comparar_eng_first_set_club_progress as *const () as usize,
-        comparar_eng_third_set_club_progress as *const () as usize,
-        comparar_update_positions_and_status as *const () as usize,
-        comparar_eng_first_advance_stage as *const () as usize,
-        comparar_eng_second_advance_stage as *const () as usize,
-        comparar_european_cup_update_staff_records_for_status as *const () as usize,
-        comparar_draw_quarter_finals as *const () as usize,
-        comparar_european_cup_collect_club_list as *const () as usize,
-        comparar_record_tactic_result as *const () as usize,
-        comparar_get_captain as *const () as usize,
-        comparar_set_captain as *const () as usize,
-        comparar_get_international_duty_club as *const () as usize,
-        comparar_national_teams_player_is_eligible as *const () as usize,
-        comparar_collect_duty_competitions as *const () as usize,
-        comparar_fill_match_record_from_fixture as *const () as usize,
-        comparar_fill_staff_name_ref as *const () as usize,
-        comparar_match_record_result_code as *const () as usize,
-        comparar_move_nearby_club_fixtures as *const () as usize,
-        comparar_reschedule_club_fixtures_near_date as *const () as usize,
-        comparar_queue_fixture_moved_news as *const () as usize,
-        comparar_report_poor_fitness as *const () as usize,
-        comparar_post_fine_reaction_news as *const () as usize,
-        comparar_post_coach_fine_feedback_news as *const () as usize,
-        comparar_pick_random_pundit as *const () as usize,
-        comparar_get_pundit_name as *const () as usize,
-        comparar_queue_manager_fa_complaint_story as *const () as usize,
-        comparar_update_wage_bill as *const () as usize,
-        comparar_refresh_all_wage_bills as *const () as usize,
-        comparar_finance_get_days_to_season_start as *const () as usize,
-        comparar_add_players_sold as *const () as usize,
-        comparar_pay_players_bought as *const () as usize,
-        comparar_pay_sign_on_fee as *const () as usize,
-        comparar_add_prize_money as *const () as usize,
-        comparar_add_tv_revenue as *const () as usize,
-        comparar_pay_wages as *const () as usize,
-        comparar_pay_round_prize_money as *const () as usize,
-        comparar_set_home_teams_for_round as *const () as usize,
-        comparar_record_team_progress as *const () as usize,
-        comparar_process_friendly_reply as *const () as usize,
-        comparar_send_friendly_request as *const () as usize,
-        comparar_build_nation_list as *const () as usize,
-        comparar_draw_round as *const () as usize,
-        comparar_comp_util_format_stage_round_name as *const () as usize,
-        comparar_club_in_higher_division as *const () as usize,
-        comparar_cup_update_staff_records_for_status as *const () as usize,
-        comparar_cup_record_season_honours as *const () as usize,
-        comparar_register_semi_final_losers_for_uefa as *const () as usize,
-        comparar_reject_loan_offer as *const () as usize,
-        comparar_check_squad_limits as *const () as usize,
-        comparar_find_next_sale_percentage as *const () as usize,
-        comparar_contains_player as *const () as usize,
-        comparar_sync_scout_lists as *const () as usize,
-        comparar_player_search_find_or_claim_player_slot as *const () as usize,
-        comparar_value_player_for_club as *const () as usize,
-        comparar_find_club_search_entry as *const () as usize,
-        comparar_find_international_appearance_money as *const () as usize,
-        comparar_update_after_match as *const () as usize,
-        comparar_contract_manager_get_player_morale as *const () as usize,
-        comparar_contract_manager_write_morale_text as *const () as usize,
-        comparar_calc_player_value as *const () as usize,
-        comparar_contract_manager_write_morale_comparison_text as *const () as usize,
-        comparar_get_squad_flags_for_club as *const () as usize,
-        comparar_board_named_players_after_match as *const () as usize,
-        comparar_get_player_match_rating_verdict as *const () as usize,
-        comparar_build_board_player_performance_text as *const () as usize,
-        comparar_record_match_result as *const () as usize,
-        comparar_add_league_finish_records as *const () as usize,
-        comparar_add_supporters_player_of_year_record as *const () as usize,
-        comparar_add_cup_runners_up_record as *const () as usize,
-        comparar_add_cup_third_place_record as *const () as usize,
-        comparar_record_manager_job_change as *const () as usize,
-        comparar_process_transfer_squad_reactions as *const () as usize,
-        comparar_queue_signing_celebration_story as *const () as usize,
-        comparar_queue_sale_unrest_story as *const () as usize,
-        comparar_process_match_income as *const () as usize,
-        comparar_calc_gate_receipts as *const () as usize,
-        comparar_pay_league_fine as *const () as usize,
-        comparar_try_finance_boost_event as *const () as usize,
-        comparar_try_board_takeover as *const () as usize,
-        comparar_pay_other_costs as *const () as usize,
-        comparar_build_international_date_table as *const () as usize,
-        comparar_resolve_international_dates as *const () as usize,
-        comparar_find_human_club_tournament as *const () as usize,
-        comparar_plan_club_friendlies as *const () as usize,
-        comparar_add_tournament as *const () as usize,
-        comparar_find_human_club_open_invitation as *const () as usize,
-        comparar_add_injury as *const () as usize,
-        comparar_injury_post_injury_news as *const () as usize,
-        comparar_is_player_awol as *const () as usize,
-        comparar_pay_former_club_fee_cuts as *const () as usize,
-        comparar_pay_next_sale_percentage as *const () as usize,
-        comparar_post_sale_percentage_news as *const () as usize,
-        comparar_is_work_permit_granted as *const () as usize,
-        comparar_transfer_manager_get_squad_status_for_reason as *const () as usize,
-        comparar_get_negotiation_slot as *const () as usize,
-        comparar_apply_squad_reaction_to_player_story as *const () as usize,
-        comparar_warn_squad_of_position_rival as *const () as usize,
-        comparar_media_format_response_option_label as *const () as usize,
-        comparar_serve_international_bans as *const () as usize,
-        comparar_apply_appeal_result as *const () as usize,
-        comparar_get_slot_text as *const () as usize,
-        comparar_manager_manager_remove as *const () as usize,
-        comparar_manager_manager_clear as *const () as usize,
-        comparar_get_current as *const () as usize,
-        comparar_sort_round_teams as *const () as usize,
-        comparar_check_round_teams_for_nation as *const () as usize,
-        comparar_cup_start_new_season as *const () as usize,
-        comparar_comp_active_key_nation_of_club as *const () as usize,
-        comparar_comp_active_key_nation_of_stadium as *const () as usize,
-        comparar_comp_key_nation_entry_from_active_index as *const () as usize,
-        comparar_resolve_same_day_clash as *const () as usize,
-        comparar_get_club_first_fixture_year as *const () as usize,
-        comparar_get_club_last_fixture_year as *const () as usize,
-        comparar_save_finance_dat as *const () as usize,
-        comparar_load_from_save as *const () as usize,
-        comparar_squad_manager_save as *const () as usize,
-        comparar_uefa_seeding_save_to_temp_file as *const () as usize,
-        comparar_conmebol_seeding_save_to_temp_file as *const () as usize,
-        comparar_save_temp_file as *const () as usize,
-        comparar_club_history_save as *const () as usize,
-        comparar_save_official_stats as *const () as usize,
-        comparar_simulated_stats_save as *const () as usize,
-        comparar_fix_man_save_club_dates as *const () as usize,
-        comparar_fix_man_load_club_dates as *const () as usize,
-        comparar_fix_man_save_fixture_leg_checks as *const () as usize,
-        comparar_fin_prm_end_season_for_nation as *const () as usize,
-        comparar_season_end_club_update as *const () as usize,
-        comparar_news_dividend as *const () as usize,
-        comparar_get_max_wage as *const () as usize,
-        comparar_news_ground_works as *const () as usize,
-        comparar_news_request_refused as *const () as usize,
-        comparar_collect_day_clashes as *const () as usize,
-        comparar_find_fixture_clashes as *const () as usize,
-        comparar_fix_man_load_fixture_leg_checks as *const () as usize,
-        comparar_find_new_fixture_date as *const () as usize,
-        comparar_add_fixture as *const () as usize,
-        comparar_set_year as *const () as usize,
-        comparar_create_tie_fixtures as *const () as usize,
-        comparar_post_draw_news as *const () as usize,
-        comparar_update_transfer_window_news as *const () as usize,
-        comparar_move_round_fixtures_to_set_dates as *const () as usize,
-        comparar_remove_exchange_player as *const () as usize,
-        comparar_check_offer_work_permits as *const () as usize,
-        comparar_update_board_confidence_after_match as *const () as usize,
-        comparar_post_board_match_reaction_news as *const () as usize,
-        comparar_post_fa_performance_news as *const () as usize,
-        comparar_set_season_expectations as *const () as usize,
-        comparar_add_job_vacancy as *const () as usize,
-        comparar_post_job_offer_news as *const () as usize,
-        comparar_process_transfer_interest as *const () as usize,
-        comparar_news_create_not_for_sale_story as *const () as usize,
-        comparar_queue_trophy_praise_story as *const () as usize,
-        comparar_arrange_international_friendlies as *const () as usize,
-        comparar_friendly_check_match_invitation as *const () as usize,
-        comparar_friendly_check_tournament_invitation as *const () as usize,
-        comparar_national_teams_daily_update as *const () as usize,
-        comparar_current_search_has_no_club as *const () as usize,
-        comparar_is_club_in_session_searches as *const () as usize,
-        comparar_select_squad as *const () as usize,
-        comparar_scout_manager_scout_match as *const () as usize,
-        comparar_get_edit_session as *const () as usize,
-        comparar_set_edit_session as *const () as usize,
-        comparar_transfer_manager_daily_update as *const () as usize,
-        comparar_process_due_offer as *const () as usize,
-        comparar_check_offer_restrictions as *const () as usize,
-        comparar_accept_transfer_bid as *const () as usize,
-        comparar_post_offer_made_news as *const () as usize,
-        comparar_transfer_manager_can_loan_player as *const () as usize,
-        comparar_league_update_for_date as *const () as usize,
-        comparar_create_fixtures as *const () as usize,
-        comparar_league_promote_and_relegate as *const () as usize,
-        comparar_fix_man_daily_update as *const () as usize,
-        comparar_get_fixture_list as *const () as usize,
-        comparar_load_fixtures as *const () as usize,
-        comparar_map_fixture_tree as *const () as usize,
-        comparar_get_first_stage_of_group as *const () as usize,
-        comparar_get_current_stage as *const () as usize,
-        comparar_update_player_training as *const () as usize,
-        comparar_get_player_schedule as *const () as usize,
-        comparar_get_category_level as *const () as usize,
-        comparar_remove_or_restore_training_progress as *const () as usize,
-        comparar_get_training_attribute_change as *const () as usize,
-        comparar_get_position_aptitude as *const () as usize,
-        comparar_process_retirements as *const () as usize,
-        comparar_player_regen_post_retirement_news as *const () as usize,
-        comparar_player_regen_post_youth_promotion_news as *const () as usize,
-        comparar_clear_awol as *const () as usize,
-        comparar_clear_missed_training as *const () as usize,
-        comparar_awol_post_missed_training_news as *const () as usize,
-        comparar_shortlist_manager_is_compensation_deal as *const () as usize,
-        comparar_shortlist_compare_slots_by_index as *const () as usize,
-        comparar_mark_player_under_offer as *const () as usize,
-        comparar_add_league_champions_record as *const () as usize,
-        comparar_add_cup_winners_record as *const () as usize,
-        comparar_clear_human_manager_record as *const () as usize,
-        comparar_ai_respond_to_bid as *const () as usize,
-        comparar_add_loan_negotiation as *const () as usize,
-        comparar_make_exchange_option as *const () as usize,
-        comparar_schedule_loan_end as *const () as usize,
-        comparar_make_club_bids as *const () as usize,
-        comparar_staff_interest_in_joining_club as *const () as usize,
-        comparar_construct_staff_contract as *const () as usize,
-        comparar_england_rules_can_loan_player as *const () as usize,
-        comparar_record_loan as *const () as usize,
-        comparar_england_rules_daily_update as *const () as usize,
-        comparar_england_rules_get_loan_period as *const () as usize,
-        comparar_scotland_rules_can_loan_player as *const () as usize,
-        comparar_scotland_rules_get_loan_period as *const () as usize,
-        comparar_italy_rules_can_loan_player as *const () as usize,
-        comparar_ireland_rules_can_loan_player as *const () as usize,
-        comparar_spain_rules_can_loan_player as *const () as usize,
-        comparar_move_fixtures_for_tv as *const () as usize,
-        comparar_send_group_draw_news as *const () as usize,
-        comparar_send_fixture_list_news as *const () as usize,
-        comparar_add_transfer_offer as *const () as usize,
-        comparar_accept_loan_offer as *const () as usize,
-        comparar_handle_player_accepted_terms as *const () as usize,
-        comparar_post_transfer_listed_news as *const () as usize,
-        comparar_contract_manager_offer_contract as *const () as usize,
-        comparar_draw_groups as *const () as usize,
-        comparar_run_group_draw as *const () as usize,
-        comparar_world_cup_update_for_date as *const () as usize,
-        comparar_world_cup_create_group_table as *const () as usize,
-        comparar_world_cup_create_group_stage as *const () as usize,
-        comparar_world_cup_set_predicted_positions as *const () as usize,
-        comparar_world_cup_create_schedule as *const () as usize,
-        comparar_add_qualified_team as *const () as usize,
-        comparar_seed_teams as *const () as usize,
-        comparar_update_coach_assignments as *const () as usize,
-        comparar_reassign_squad_schedules as *const () as usize,
-        comparar_training_manager_cpp_0x8b2230 as *const () as usize,
-        comparar_build_career_history as *const () as usize,
-        comparar_player_stats_years_since_at_club as *const () as usize,
-        comparar_player_stats_compare_history_by_staff as *const () as usize,
-        comparar_player_setup_injury_from_name as *const () as usize,
-        comparar_post_recovery_news as *const () as usize,
-        comparar_injury_get_category_name as *const () as usize,
-        comparar_player_search_scout_match as *const () as usize,
-        comparar_player_search_record_scouted_club_match as *const () as usize,
-        comparar_send_club_international_report_news as *const () as usize,
-        comparar_national_teams_post_call_up_news as *const () as usize,
-        comparar_national_teams_collect_fixture_opponents as *const () as usize,
-        comparar_scout_manager_daily_update as *const () as usize,
-        comparar_send_scout_reports as *const () as usize,
-        comparar_send_scout_report_news as *const () as usize,
-        comparar_sign_contract as *const () as usize,
-        comparar_regenerate_as_youth_player as *const () as usize,
-        comparar_remove_dispute as *const () as usize,
-        comparar_load_from_disk as *const () as usize,
-        comparar_swap_bytes_16_array as *const () as usize,
-        comparar_swap_bytes_32_array as *const () as usize,
-        comparar_set_up_officials as *const () as usize,
-        comparar_officials_manager_compare_comp_level as *const () as usize,
-        comparar_on_friendly_fixture_cancelled as *const () as usize,
-        comparar_friendly_cancel_national_fixture as *const () as usize,
-        comparar_cancel_tournament as *const () as usize,
-        comparar_officials_manager_compare_nation_then_quality_desc as *const () as usize,
-        comparar_officials_manager_compare_nation_then_quality_asc as *const () as usize,
-        comparar_archive_player_stats as *const () as usize,
-        comparar_player_setup_find_staff as *const () as usize,
-        comparar_player_setup_read_quoted_token as *const () as usize,
-        comparar_player_setup_type_from_name as *const () as usize,
-        comparar_draw_phase1_groups as *const () as usize,
-        comparar_european_cup_compare_clubs_by_seed as *const () as usize,
-        comparar_european_cup_rank_teams as *const () as usize,
-        comparar_draw_phase2_groups as *const () as usize,
-        comparar_european_cup_compare_phase2_draw_entries as *const () as usize,
-        comparar_comp_util_get_parent_stage_id as *const () as usize,
-        comparar_european_cup_create_round_table as *const () as usize,
-        comparar_set_club_season_expectations as *const () as usize,
-        comparar_relegate_club_to_division as *const () as usize,
-        comparar_all_stages_complete as *const () as usize,
-        comparar_comp_collect_club_list as *const () as usize,
-        comparar_find_club_progress as *const () as usize,
-        comparar_roll_coefficients as *const () as usize,
-        comparar_set_place_counts as *const () as usize,
-        comparar_uefa_find_nth_unplaced_club_of_nation as *const () as usize,
-        comparar_collect_european_clubs as *const () as usize,
-        comparar_assign_champions_league_places as *const () as usize,
-        comparar_assign_intertoto_places as *const () as usize,
-        comparar_assign_uefa_cup_places as *const () as usize,
-        comparar_pick_english_intertoto_club as *const () as usize,
-        comparar_update_season as *const () as usize,
-        comparar_assign_libertadores_places as *const () as usize,
-        comparar_find_nth_unqualified_club_of_nation as *const () as usize,
-        comparar_is_mercosur_invited_club as *const () as usize,
-        comparar_collect_conmebol_clubs as *const () as usize,
-        comparar_update_for_new_season as *const () as usize,
-        comparar_set_bra_champ_cup_winner as *const () as usize,
-        comparar_find_hosts as *const () as usize,
-        comparar_find_next_hosts as *const () as usize,
-        comparar_host_country_daily_update as *const () as usize,
-        comparar_construct_england_rules as *const () as usize,
-        comparar_construct_usa_rules as *const () as usize,
-        comparar_australia_rules as *const () as usize,
-        comparar_spain_rules_init_transfer_windows as *const () as usize,
-        comparar_italy_rules_init_transfer_windows as *const () as usize,
-        comparar_france_rules_init_transfer_windows as *const () as usize,
-        comparar_construct_brazil_rules as *const () as usize,
-        comparar_germany_rules_init_transfer_windows as *const () as usize,
-        comparar_construct_scotland_rules as *const () as usize,
-        comparar_intertoto_cup_update_for_date as *const () as usize,
-        comparar_intertoto_cup_update_staff_records_for_status as *const () as usize,
-        comparar_uefa_cup_update_staff_records_for_status as *const () as usize,
-        comparar_con_champ_select_qualified_clubs as *const () as usize,
-        comparar_con_champ_update_for_date as *const () as usize,
-        comparar_con_champ_set_up_rounds as *const () as usize,
-        comparar_ita_cup_set_up_rules as *const () as usize,
-        comparar_ita_c_cup_set_up_rules as *const () as usize,
-        comparar_bra_champ_cup_set_up_rules as *const () as usize,
-        comparar_african_nations_update_staff_records_for_status as *const () as usize,
-        comparar_goldcup_update_staff_records_for_status as *const () as usize,
-        comparar_wc_oceania_league_update_staff_records_for_status as *const () as usize,
-        comparar_conmebol_liber_set_up_rules as *const () as usize,
-        comparar_con_merc_cup_set_up_rules as *const () as usize,
-        comparar_oceania_club_champ_set_up_rules as *const () as usize,
-        comparar_wc_europe_league_set_up_rules as *const () as usize,
-        comparar_wc_south_american_league_set_up_rules as *const () as usize,
-        comparar_wc_asia_league_set_up_rules as *const () as usize,
-        comparar_goldcup_set_up_rules as *const () as usize,
-        comparar_african_nations_set_up_rules as *const () as usize,
-        comparar_wc_oceania_league_set_up_rules as *const () as usize,
-        comparar_conmebol_liber_select_qualified_clubs as *const () as usize,
-        comparar_conmebol_liber_update_staff_records_for_status as *const () as usize,
-        comparar_conmebol_liber_advance_stage as *const () as usize,
-        comparar_african_nations_advance_stage as *const () as usize,
-        comparar_init_group_a_table as *const () as usize,
-        comparar_african_nations_record_season_honours as *const () as usize,
-        comparar_bra_nat_first_set_up_rules as *const () as usize,
-        comparar_bra_nat_second_set_up_rules as *const () as usize,
-        comparar_bra_nat_third_set_up_rules as *const () as usize,
-        comparar_bra_reg_central_set_up_rules as *const () as usize,
-        comparar_bra_reg_gaucho_set_up_rules as *const () as usize,
-        comparar_bra_reg_santa_set_up_rules as *const () as usize,
-        comparar_bra_reg_parana_set_up_rules as *const () as usize,
-        comparar_bra_reg_pern_set_up_rules as *const () as usize,
-        comparar_bra_reg_rio_set_up_rules as *const () as usize,
-        comparar_bra_reg_goias_set_up_rules as *const () as usize,
-        comparar_jap_j1_set_up_rules as *const () as usize,
-        comparar_jap_j2_set_up_rules as *const () as usize,
-        comparar_aus_nsl_set_up_rules as *const () as usize,
-        comparar_usa_mls_set_up_rules as *const () as usize,
-        comparar_bra_reg_gaucho_record_season_honours as *const () as usize,
-        comparar_arg_second_record_season_honours as *const () as usize,
-        comparar_bra_nat_first_update_staff_records_for_status as *const () as usize,
-        comparar_bra_nat_third_update_staff_records_for_status as *const () as usize,
-        comparar_bra_reg_bahia_update_staff_records_for_status as *const () as usize,
-        comparar_bra_reg_central_update_staff_records_for_status as *const () as usize,
-        comparar_bra_reg_minas_gerais_update_staff_records_for_status as *const () as usize,
-        comparar_aus_nsl_update_staff_records_for_status as *const () as usize,
-        comparar_bra_reg_minas_gerais_set_club_progress as *const () as usize,
-        comparar_usa_mls_set_club_progress as *const () as usize,
-        comparar_bra_nat_third_set_club_progress as *const () as usize,
-        comparar_usa_mls_update_staff_records_for_status as *const () as usize,
-        comparar_usa_mls_add_result as *const () as usize,
-        comparar_usa_mls_get_club_all_star_conference as *const () as usize,
-        comparar_eng_prm_set_up_rules as *const () as usize,
-        comparar_eng_first_set_up_rules as *const () as usize,
-        comparar_eng_second_set_up_rules as *const () as usize,
-        comparar_eng_third_set_up_rules as *const () as usize,
-        comparar_eng_prm_create_table as *const () as usize,
-        comparar_eng_second_create_table as *const () as usize,
-        comparar_eng_third_create_table as *const () as usize,
-        comparar_eng_first_create_table as *const () as usize,
-        comparar_ita_ser_a_set_up_rules as *const () as usize,
-        comparar_ita_ser_b_set_up_rules as *const () as usize,
-        comparar_ita_ser_c1a_set_up_rules as *const () as usize,
-        comparar_ita_ser_c1b_set_up_rules as *const () as usize,
-        comparar_ita_ser_a_create_table as *const () as usize,
-        comparar_ita_ser_b_create_table as *const () as usize,
-        comparar_ita_ser_c1a_create_table as *const () as usize,
-        comparar_ita_ser_c1b_create_table as *const () as usize,
-        comparar_fra_first_set_up_rules as *const () as usize,
-        comparar_fra_second_set_up_rules as *const () as usize,
-        comparar_fra_third_set_up_rules as *const () as usize,
-        comparar_fra_first_create_table as *const () as usize,
-        comparar_fra_second_create_table as *const () as usize,
-        comparar_fra_third_create_table as *const () as usize,
-        comparar_spa_first_set_up_rules as *const () as usize,
-        comparar_spa_second_set_up_rules as *const () as usize,
-        comparar_spa_lower_set_up_rules as *const () as usize,
-        comparar_spa_first_create_table as *const () as usize,
-        comparar_ita_ser_c2a_update_staff_records_for_status as *const () as usize,
-        comparar_spa_first_set_club_progress as *const () as usize,
-        comparar_fra_cfa_create_group_table as *const () as usize,
-        comparar_fra_lower_create_table as *const () as usize,
-        comparar_ita_ser_c1a_set_club_progress as *const () as usize,
-        comparar_ita_ser_c1b_set_club_progress as *const () as usize,
-        comparar_eng_cc_cup_create_round_table as *const () as usize,
-        comparar_eng_fa_cup_create_round_table as *const () as usize,
-        comparar_eng_charity_create_round_table as *const () as usize,
-        comparar_fra_cup_create_round_table as *const () as usize,
-        comparar_fra_lge_cup_create_round_table as *const () as usize,
-        comparar_spa_cup_create_round_table as *const () as usize,
-        comparar_fra_super_create_round_table as *const () as usize,
-        comparar_spa_super_create_round_table as *const () as usize,
-        comparar_jap_super_create_round_table as *const () as usize,
-        comparar_eng_cc_cup_collect_entrants as *const () as usize,
-        comparar_eng_auto_cup_collect_entrants as *const () as usize,
-        comparar_eng_charity_select_teams as *const () as usize,
-        comparar_fra_cup_collect_entrants as *const () as usize,
-        comparar_fra_lge_cup_collect_entrants as *const () as usize,
-        comparar_fra_super_select_teams as *const () as usize,
-        comparar_spa_super_select_teams as *const () as usize,
-        comparar_jap_super_select_teams as *const () as usize,
-        comparar_usa_mls_all_stars_create_round_table as *const () as usize,
-        comparar_eng_cc_cup_update_for_date as *const () as usize,
-        comparar_eng_fa_cup_update_for_date as *const () as usize,
-        comparar_usa_mls_all_stars_update_for_date as *const () as usize,
-        comparar_jap_j_cup_create_round_table as *const () as usize,
-        comparar_jap_emp_cup_create_round_table as *const () as usize,
-        comparar_usa_open_cup_create_round_table as *const () as usize,
-        comparar_jap_j_cup_collect_entrants as *const () as usize,
-        comparar_usa_open_cup_collect_entrants as *const () as usize,
-        comparar_jap_emp_cup_collect_entrants as *const () as usize,
-        comparar_get_squad_number as *const () as usize,
-        comparar_club_uses_squad_numbers as *const () as usize,
-        comparar_set_squad_number as *const () as usize,
-        comparar_allocate_squad_number as *const () as usize,
-        comparar_assign_club_squad_numbers as *const () as usize,
-        comparar_init_new_game as *const () as usize,
-        comparar_assign_league_squad_numbers as *const () as usize,
-        comparar_select_euro_registered_players as *const () as usize,
-        comparar_construct_holland_rules as *const () as usize,
-        comparar_construct_croatia_rules as *const () as usize,
-        comparar_construct_ireland_rules as *const () as usize,
-        comparar_construct_norway_rules as *const () as usize,
-        comparar_construct_northern_ireland_rules as *const () as usize,
-        comparar_construct_wales_rules as *const () as usize,
-        comparar_construct_turkey_rules as *const () as usize,
-        comparar_construct_poland_rules as *const () as usize,
-        comparar_construct_finland_rules as *const () as usize,
-        comparar_argentina_rules_init_transfer_windows as *const () as usize,
-        comparar_portugal_rules_init_transfer_windows as *const () as usize,
-        comparar_construct_korea_rules as *const () as usize,
-        comparar_greece_rules_init_transfer_windows as *const () as usize,
-        comparar_russia_rules_init_transfer_windows as *const () as usize,
-        comparar_belgium_rules_init_transfer_windows as *const () as usize,
-        comparar_process_euro_registration as *const () as usize,
-        comparar_create_default_table as *const () as usize,
-        comparar_build_venue_list as *const () as usize,
-        comparar_bra_nat_first_create_table as *const () as usize,
-        comparar_bra_nat_second_create_table as *const () as usize,
-        comparar_bra_nat_third_create_table as *const () as usize,
-        comparar_bra_reg_bahia_create_table as *const () as usize,
-        comparar_bra_reg_central_load_region_clubs as *const () as usize,
-        comparar_bra_reg_gaucho_load_region_clubs as *const () as usize,
-        comparar_bra_reg_goias_create_table as *const () as usize,
-        comparar_bra_reg_minas_gerais_create_table as *const () as usize,
-        comparar_bra_reg_north_create_table as *const () as usize,
-        comparar_bra_reg_northeast_create_table as *const () as usize,
-        comparar_bra_reg_parana_create_table as *const () as usize,
-        comparar_bra_reg_pern_create_table as *const () as usize,
-        comparar_bra_reg_rio_create_table as *const () as usize,
-        comparar_bra_reg_santa_create_table as *const () as usize,
-        comparar_bra_reg_sp_create_table as *const () as usize,
-        comparar_jap_j1_create_table as *const () as usize,
-        comparar_jap_j2_create_table as *const () as usize,
-        comparar_aus_nsl_create_table as *const () as usize,
-        comparar_bra_reg_bahia_create_semi_final_stage as *const () as usize,
-        comparar_bra_reg_north_create_semi_final_stage as *const () as usize,
-        comparar_bra_reg_northeast_create_semi_final_stage as *const () as usize,
-        comparar_bra_reg_pern_create_semi_final_stage as *const () as usize,
-        comparar_bra_reg_santa_create_semi_final_stage as *const () as usize,
-        comparar_bra_reg_sp_create_semi_final_stage as *const () as usize,
-        comparar_bra_reg_gaucho_create_knockout_stage as *const () as usize,
-        comparar_bra_reg_central_create_knockout_stage as *const () as usize,
-        comparar_bra_reg_goias_create_knockout_stage as *const () as usize,
-        comparar_ita_ser_a_update_for_date as *const () as usize,
-        comparar_ita_ser_b_update_for_date as *const () as usize,
-        comparar_ita_league_sort_clubs_level_on_points as *const () as usize,
-        comparar_ita_ser_a_update_staff_records_for_status as *const () as usize,
-        comparar_ita_ser_c1a_advance_stage as *const () as usize,
-        comparar_create_playoff_stages as *const () as usize,
-        comparar_ita_ser_c1b_advance_stage as *const () as usize,
-        comparar_create_play_off_stages as *const () as usize,
-        comparar_eng_third_advance_stage as *const () as usize,
-        comparar_construct_eng_prm as *const () as usize,
-        comparar_construct_eng_first as *const () as usize,
-        comparar_construct_eng_second as *const () as usize,
-        comparar_construct_eng_third as *const () as usize,
-        comparar_construct_ita_ser_a as *const () as usize,
-        comparar_construct_ita_ser_b as *const () as usize,
-        comparar_construct_ita_ser_c1a as *const () as usize,
-        comparar_construct_ita_ser_c1b as *const () as usize,
-        comparar_construct_fra_second as *const () as usize,
-        comparar_construct_fra_third as *const () as usize,
-        comparar_construct_spa_second as *const () as usize,
-        comparar_construct_spa_first as *const () as usize,
-        comparar_construct_spa_lower as *const () as usize,
-        comparar_spa_second_create_table as *const () as usize,
-        comparar_spa_lower_create_table as *const () as usize,
-        comparar_fra_cfa_set_up_rules as *const () as usize,
-        comparar_construct_fra_cfa as *const () as usize,
-        comparar_construct_fra_lower as *const () as usize,
-        comparar_destroy_fra_cfa as *const () as usize,
-        comparar_destroy_fra_lower as *const () as usize,
-        comparar_create_fixed_fixtures as *const () as usize,
-        comparar_ita_ser_b_set_up_fixed_fixtures as *const () as usize,
-        comparar_ita_ser_c1a_set_up_fixed_fixtures as *const () as usize,
-        comparar_ita_ser_c1b_set_up_fixed_fixtures as *const () as usize,
-        comparar_stub_return_one_ret8 as *const () as usize,
-        comparar_stub_return_one_ret4 as *const () as usize,
-        comparar_set_fixture_venue as *const () as usize,
-        comparar_find_available_venue as *const () as usize,
-        comparar_calculate_match_attendance as *const () as usize,
-        comparar_fra_third_create_schedule as *const () as usize,
-        comparar_fra_second_create_schedule as *const () as usize,
-        comparar_fra_lower_create_schedule as *const () as usize,
-        comparar_fra_cfa_create_schedule as *const () as usize,
-        comparar_ita_ser_c1a_create_schedule as *const () as usize,
-        comparar_ita_ser_c1b_create_schedule as *const () as usize,
-        comparar_ita_ser_a_create_schedule as *const () as usize,
-        comparar_ita_ser_b_create_schedule as *const () as usize,
-        comparar_fra_first_create_schedule as *const () as usize,
-        comparar_bra_reg_minas_gerais_advance_stage as *const () as usize,
-        comparar_bra_reg_minas_gerais_create_final_stage as *const () as usize,
-        comparar_bra_reg_minas_gerais_record_season_honours as *const () as usize,
-        comparar_bra_reg_parana_advance_stage as *const () as usize,
-        comparar_bra_reg_parana_create_final_stage as *const () as usize,
-        comparar_bra_reg_parana_record_season_honours as *const () as usize,
-        comparar_bra_reg_rio_advance_stage as *const () as usize,
-        comparar_bra_reg_rio_create_final_stage as *const () as usize,
-        comparar_bra_reg_rio_record_season_honours as *const () as usize,
-        comparar_ita_cup_create_schedule as *const () as usize,
-        comparar_ita_c_cup_create_schedule as *const () as usize,
-        comparar_ita_super_create_round_table as *const () as usize,
-        comparar_ita_c1_super_create_round_table as *const () as usize,
-        comparar_ita_cup_select_entrants as *const () as usize,
-        comparar_ita_c_cup_select_entrants as *const () as usize,
-        comparar_ita_super_init_team_list as *const () as usize,
-        comparar_bra_cup_create_round_table as *const () as usize,
-        comparar_bra_cup_build_team_table as *const () as usize,
-        comparar_bra_cup_set_up_rounds as *const () as usize,
-        comparar_conmebol_liber_create_schedule as *const () as usize,
-        comparar_conmebol_merc_create_schedule as *const () as usize,
-        comparar_conmebol_merc_select_invited_clubs as *const () as usize,
-        comparar_eng_second_create_schedule as *const () as usize,
-        comparar_eng_third_create_schedule as *const () as usize,
-        comparar_eng_first_create_schedule as *const () as usize,
-        comparar_eng_prm_create_schedule as *const () as usize,
-        comparar_spa_first_create_schedule as *const () as usize,
-        comparar_bra_reg_bahia_start_new_season as *const () as usize,
-        comparar_bra_reg_bahia_advance_stage as *const () as usize,
-        comparar_bra_reg_central_start_new_season as *const () as usize,
-        comparar_bra_reg_central_advance_stage as *const () as usize,
-        comparar_bra_reg_gaucho_start_new_season as *const () as usize,
-        comparar_bra_reg_gaucho_advance_stage as *const () as usize,
-        comparar_bra_reg_goias_start_new_season as *const () as usize,
-        comparar_bra_reg_goias_advance_stage as *const () as usize,
-        comparar_bra_reg_north_start_new_season as *const () as usize,
-        comparar_bra_reg_north_advance_stage as *const () as usize,
-        comparar_bra_reg_northeast_start_new_season as *const () as usize,
-        comparar_bra_reg_northeast_advance_stage as *const () as usize,
-        comparar_bra_reg_pern_start_new_season as *const () as usize,
-        comparar_bra_reg_pern_advance_stage as *const () as usize,
-        comparar_bra_reg_santa_start_new_season as *const () as usize,
-        comparar_bra_reg_santa_advance_stage as *const () as usize,
-        comparar_bra_reg_sp_start_new_season as *const () as usize,
-        comparar_bra_reg_sp_advance_stage as *const () as usize,
-        comparar_spa_second_create_schedule as *const () as usize,
-        comparar_spa_lower_create_schedule as *const () as usize,
-        comparar_construct_fra_first as *const () as usize,
-        comparar_bra_nat_first_advance_stage as *const () as usize,
-        comparar_bra_nat_first_create_play_off_stage as *const () as usize,
-        comparar_bra_nat_second_advance_stage as *const () as usize,
-        comparar_bra_nat_second_create_play_off_stage as *const () as usize,
-        comparar_bra_nat_first_start_new_season as *const () as usize,
-        comparar_bra_nat_first_process_promotion_relegation_chain as *const () as usize,
-        comparar_bra_nat_second_start_new_season as *const () as usize,
-        comparar_jap_j1_advance_stage as *const () as usize,
-        comparar_create_championship_final_stage as *const () as usize,
-        comparar_jap_j1_start_new_season as *const () as usize,
-        comparar_init_default_table as *const () as usize,
-        comparar_post_host_news as *const () as usize,
-        comparar_load_temp_file as *const () as usize,
-        comparar_league_process_promotion_relegation_chain as *const () as usize,
-        comparar_send_prize_money_news as *const () as usize,
-        comparar_send_tv_rights_news as *const () as usize,
-        comparar_bra_champ_cup_create_schedule as *const () as usize,
-        comparar_con_merc_cup_create_schedule as *const () as usize,
-        comparar_eur_super_cup_create_round_table as *const () as usize,
-        comparar_asia_super_cup_create_round_table as *const () as usize,
-        comparar_asia_club_champ_create_round_table as *const () as usize,
-        comparar_asia_cup_winner_create_round_table as *const () as usize,
-        comparar_eng_auto_cup_create_round_table as *const () as usize,
-        comparar_goldcup_create_schedule as *const () as usize,
-        comparar_african_nations_create_schedule as *const () as usize,
-        comparar_fifa_confed_create_schedule as *const () as usize,
-        comparar_intertoto_cup_create_round_table as *const () as usize,
-        comparar_world_club_cup_create_round_table as *const () as usize,
-        comparar_inter_amer_cup_create_round_table as *const () as usize,
-        comparar_con_champ_create_round_table as *const () as usize,
-        comparar_uefa_cup_create_round_table as *const () as usize,
-        comparar_intertoto_cup_collect_entrants as *const () as usize,
-        comparar_intertoto_cup_collect_club_list as *const () as usize,
-        comparar_eur_super_cup_select_teams as *const () as usize,
-        comparar_asia_super_cup_select_teams as *const () as usize,
-        comparar_ita_c1_super_init_team_list as *const () as usize,
-        comparar_oceania_club_champ_create_schedule as *const () as usize,
-        comparar_asia_club_champ_build_team_table as *const () as usize,
-        comparar_create_team_entries as *const () as usize,
-        comparar_bra_reg_rio_create_half_season_stage as *const () as usize,
-        comparar_bra_reg_minas_gerais_create_half_season_stage as *const () as usize,
-        comparar_create_half_stage as *const () as usize,
-        comparar_jap_j1_create_half_season_stage as *const () as usize,
-        comparar_bra_reg_rio_start_new_season as *const () as usize,
-        comparar_bra_reg_minas_gerais_start_new_season as *const () as usize,
-        comparar_bra_reg_parana_start_new_season as *const () as usize,
-        comparar_aus_nsl_advance_stage as *const () as usize,
-        comparar_create_finals_series_stage as *const () as usize,
-        comparar_create_grand_final_stage as *const () as usize,
-        comparar_usa_mls_advance_stage as *const () as usize,
-        comparar_usa_mls_create_playoff_stage as *const () as usize,
-        comparar_usa_mls_create_final_stage as *const () as usize,
-        comparar_bra_cup_start_new_season as *const () as usize,
-        comparar_jap_emp_cup_start_new_season as *const () as usize,
-        comparar_jap_j_cup_start_new_season as *const () as usize,
-        comparar_jap_super_start_new_season as *const () as usize,
-        comparar_usa_open_cup_start_new_season as *const () as usize,
-        comparar_usa_mls_all_stars_start_new_season_90a760 as *const () as usize,
-        comparar_set_up_teams as *const () as usize,
-        comparar_conmebol_liber_update_for_date as *const () as usize,
-        comparar_build_first_group_table as *const () as usize,
-        comparar_conmebol_liber_create_group_stage as *const () as usize,
-        comparar_conmebol_merc_update_for_date as *const () as usize,
-        comparar_conmebol_merc_create_first_group_table as *const () as usize,
-        comparar_conmebol_merc_create_group_stage as *const () as usize,
-        comparar_con_merc_cup_update_for_date as *const () as usize,
-        comparar_con_merc_cup_create_first_group_table as *const () as usize,
-        comparar_con_merc_cup_create_group_stage as *const () as usize,
-        comparar_goldcup_update_for_date as *const () as usize,
-        comparar_goldcup_create_group_table as *const () as usize,
-        comparar_goldcup_create_group_stage as *const () as usize,
-        comparar_usa_mls_create_table as *const () as usize,
-        comparar_create_second_division_stage as *const () as usize,
-        comparar_create_third_division_stage as *const () as usize,
-        comparar_usa_mls_start_new_season as *const () as usize,
-        comparar_usa_mls_set_predicted_positions as *const () as usize,
-        comparar_usa_mls_get_club_array as *const () as usize,
-        comparar_bra_nat_third_create_group_stage as *const () as usize,
-        comparar_create_second_round_stage as *const () as usize,
-        comparar_create_third_round_groups as *const () as usize,
-        comparar_bra_nat_third_create_final_stage as *const () as usize,
-        comparar_bra_nat_third_start_new_season as *const () as usize,
-        comparar_bra_nat_third_set_predicted_positions as *const () as usize,
-        comparar_select_section_clubs as *const () as usize,
-        comparar_create_section_stage as *const () as usize,
-        comparar_eng_auto_cup_advance_stage as *const () as usize,
-        comparar_eng_auto_cup_create_final_stage as *const () as usize,
-        comparar_eng_auto_cup_rank_teams as *const () as usize,
-        comparar_construct_cup_stage as *const () as usize,
-        comparar_destroy_cup_stage as *const () as usize,
-        comparar_conmebol_liber_create_knockout_stage as *const () as usize,
-        comparar_con_merc_cup_create_semi_final_stage as *const () as usize,
-        comparar_con_merc_cup_advance_stage as *const () as usize,
-        comparar_con_merc_cup_select_invited_clubs as *const () as usize,
-        comparar_conmebol_merc_advance_stage as *const () as usize,
-        comparar_goldcup_advance_stage as *const () as usize,
-        comparar_set_up_team_list as *const () as usize,
-        comparar_goldcup_set_predicted_positions as *const () as usize,
-        comparar_goldcup_start_new_season as *const () as usize,
-        comparar_construct_bra_reg_bahia as *const () as usize,
-        comparar_construct_bra_reg_central as *const () as usize,
-        comparar_construct_bra_reg_gaucho as *const () as usize,
-        comparar_construct_bra_reg_goias as *const () as usize,
-        comparar_construct_bra_reg_minas_gerais as *const () as usize,
-        comparar_construct_bra_reg_north as *const () as usize,
-        comparar_construct_bra_reg_northeast as *const () as usize,
-        comparar_construct_bra_reg_parana as *const () as usize,
-        comparar_construct_bra_reg_pern as *const () as usize,
-        comparar_construct_bra_reg_rio as *const () as usize,
-        comparar_construct_bra_reg_santa as *const () as usize,
-        comparar_construct_bra_reg_sp as *const () as usize,
-        comparar_cqt4_atualizar_media_de_publico as *const () as usize,
-        comparar_oceania_club_champ_update_for_date as *const () as usize,
-        comparar_create_group_a_table as *const () as usize,
-        comparar_create_group_b_stage as *const () as usize,
-        comparar_oceania_club_champ_select_qualified_clubs as *const () as usize,
-        comparar_oceania_club_champ_advance_stage as *const () as usize,
-        comparar_oceania_club_champ_create_knockout_stage as *const () as usize,
-        comparar_asia_club_champ_advance_stage as *const () as usize,
-        comparar_create_group_stages as *const () as usize,
-        comparar_asia_club_champ_create_semi_final_stage as *const () as usize,
-        comparar_african_nations_update_for_date as *const () as usize,
-        comparar_draw_finalists as *const () as usize,
-        comparar_african_nations_create_group_stage as *const () as usize,
-        comparar_asia_cup_winner_create_knockout_stage as *const () as usize,
-        comparar_asia_cup_winner_advance_stage as *const () as usize,
-        comparar_create_finals_stage as *const () as usize,
-        comparar_ita_cup_create_first_group_table as *const () as usize,
-        comparar_init_first_group as *const () as usize,
-        comparar_ita_cup_advance_stage as *const () as usize,
-        comparar_ita_cup_advance_stage_63d950 as *const () as usize,
-        comparar_ita_cup_create_group_stage as *const () as usize,
-        comparar_ita_cup_create_group_stage_63d9e0 as *const () as usize,
-        comparar_ita_cup_create_knockout_stage as *const () as usize,
-        comparar_ita_cup_create_knockout_stage_63dc10 as *const () as usize,
-        comparar_euro_champ_qual_set_up_rules as *const () as usize,
-        comparar_get_group_team_count as *const () as usize,
-        comparar_get_qualification_status as *const () as usize,
-        comparar_init_group_one_table as *const () as usize,
-        comparar_build_entrants as *const () as usize,
-        comparar_spa_cup_update_for_date as *const () as usize,
-        comparar_spa_cup_record_season_honours as *const () as usize,
-        comparar_spa_cup_record_season_honours_5e93e0 as *const () as usize,
-        comparar_spa_cup_record_season_honours_637750 as *const () as usize,
-        comparar_spa_cup_record_season_honours_63d770 as *const () as usize,
+        compare_post_match_events as *const () as usize,
+        compare_post_match_players as *const () as usize,
+        compare_post_match_club as *const () as usize,
+        compare_match_without_human as *const () as usize,
+        compare_match_day_interest as *const () as usize,
+        compare_restart_play as *const () as usize,
+        compare_shot as *const () as usize,
+        compare_referee_grade as *const () as usize,
+        compare_record_referee_grade as *const () as usize,
+        compare_stored_taker as *const () as usize,
+        compare_store_instructions as *const () as usize,
+        compare_competition_number as *const () as usize,
+        compare_favourite_of as *const () as usize,
+        compare_rejected_by as *const () as usize,
+        compare_match_wrap_up as *const () as usize,
+        compare_read_tactics_row as *const () as usize,
+        compare_write_tactics_row as *const () as usize,
+        compare_quick_simulation as *const () as usize,
+        compare_injure as *const () as usize,
+        compare_register_injury as *const () as usize,
+        compare_player_highlight as *const () as usize,
+        compare_shot_outcome as *const () as usize,
+        compare_shot_on_goal as *const () as usize,
+        compare_mover as *const () as usize,
+        compare_dribble as *const () as usize,
+        compare_engine_loop as *const () as usize,
+        compare_execute_pass as *const () as usize,
+        compare_behind_on_aggregate as *const () as usize,
+        compare_free_teammate as *const () as usize,
+        compare_shoot as *const () as usize,
+        compare_build_engine as *const () as usize,
+        compare_prepare_match as *const () as usize,
+        compare_destroy_engine as *const () as usize,
+        compare_select_side as *const () as usize,
+        compare_end_day as *const () as usize,
+        compare_pick_day_match as *const () as usize,
+        compare_select_automatically as *const () as usize,
+        compare_start_next_match as *const () as usize,
+        compare_step_day_match as *const () as usize,
+        compare_close_day_match as *const () as usize,
+        compare_play_the_day as *const () as usize,
+        compare_set_up_the_day as *const () as usize,
+        compare_player_side as *const () as usize,
+        compare_sounds_finished as *const () as usize,
+        compare_record_events as *const () as usize,
+        compare_read_events as *const () as usize,
+        compare_network_step as *const () as usize,
+        compare_read_events_cfg as *const () as usize,
+        compare_event_text as *const () as usize,
+        compare_confirm_network_match as *const () as usize,
+        compare_commentate_on_panel as *const () as usize,
+        compare_abrir_no_conteiner as *const () as usize,
+        compare_buscar_no_conteiner as *const () as usize,
+        compare_posicao_no_conteiner as *const () as usize,
+        compare_position_mask as *const () as usize,
+        compare_pitch_cell as *const () as usize,
+        compare_slots_without_conflict as *const () as usize,
+        compare_player_statistic as *const () as usize,
+        compare_ratings_average as *const () as usize,
+        compare_centre_backs_without_conflict as *const () as usize,
+        compare_shortlist_slot_fits as *const () as usize,
+        compare_position_code as *const () as usize,
+        compare_staff_criterion as *const () as usize,
+        compare_set_tactic_slot as *const () as usize,
+        compare_tactic_slot_person as *const () as usize,
+        compare_set_tactic_formation as *const () as usize,
+        compare_stored_cell as *const () as usize,
+        compare_set_formation_flag as *const () as usize,
+        compare_reset_records as *const () as usize,
+        compare_rotate_round as *const () as usize,
+        compare_store_round_match as *const () as usize,
+        compare_mark_calendar_year as *const () as usize,
+        compare_extra_tactic_slot as *const () as usize,
+        compare_national_team_ages as *const () as usize,
+        compare_set_human_field as *const () as usize,
+        compare_scout_record as *const () as usize,
+        compare_human_runs_club as *const () as usize,
+        compare_contract_category as *const () as usize,
+        compare_ball_goal_end as *const () as usize,
+        compare_match_abandoned as *const () as usize,
+        compare_side_slots_without_conflict as *const () as usize,
+        compare_side_centre_backs_without_conflict as *const () as usize,
+        compare_construct_referee as *const () as usize,
+        compare_destroy_match_player as *const () as usize,
+        compare_event_at_front as *const () as usize,
+        compare_construct_commentary_queue as *const () as usize,
+        compare_free_event_tables as *const () as usize,
+        compare_day_match_order as *const () as usize,
+        compare_action_order as *const () as usize,
+        compare_event_variant as *const () as usize,
+        compare_combine_with_previous as *const () as usize,
+        compare_context_commentary as *const () as usize,
+        compare_construct_match_player as *const () as usize,
+        compare_next_event as *const () as usize,
+        compare_commentary_player_name as *const () as usize,
+        compare_perceived_ability as *const () as usize,
+        compare_apply_squad_rule as *const () as usize,
+        compare_off_match_score as *const () as usize,
+        compare_lineup_slot_score as *const () as usize,
+        compare_person_in_list as *const () as usize,
+        compare_contract_record as *const () as usize,
+        compare_daily_wear as *const () as usize,
+        compare_formation_record as *const () as usize,
+        compare_competition_weight as *const () as usize,
+        compare_set_news_field as *const () as usize,
+        compare_recover_injury as *const () as usize,
+        compare_person_in_transfer_list as *const () as usize,
+        compare_table_penalty as *const () as usize,
+        compare_record_bits as *const () as usize,
+        compare_competition_flagged as *const () as usize,
+        compare_league_record as *const () as usize,
+        compare_game_average as *const () as usize,
+        compare_contract_value as *const () as usize,
+        compare_national_team_level as *const () as usize,
+        compare_contract_offer as *const () as usize,
+        compare_agreed_contract_offer as *const () as usize,
+        compare_transfer_offer_closed as *const () as usize,
+        compare_match_control_label as *const () as usize,
+        compare_close_match_screen as *const () as usize,
+        compare_open_waiting_screen as *const () as usize,
+        compare_story_with_response_two as *const () as usize,
+        compare_has_story as *const () as usize,
+        compare_cup_match_importance as *const () as usize,
+        compare_open_latest_scores as *const () as usize,
+        compare_build_latest_scores as *const () as usize,
+        compare_latest_scores_input as *const () as usize,
+        compare_open_match_details as *const () as usize,
+        compare_match_details_input as *const () as usize,
+        compare_close_match_details as *const () as usize,
+        compare_discipline_new_season as *const () as usize,
+        compare_discipline_daily_update as *const () as usize,
+        compare_discipline_set_slot as *const () as usize,
+        compare_set_agreed_contract_flag as *const () as usize,
+        compare_clear_agreed_contract_flag as *const () as usize,
+        compare_offer_slot as *const () as usize,
+        compare_open_match_screen as *const () as usize,
+        compare_match_screens_handle_latest_scores_cycle as *const () as usize,
+        compare_handle_team_stats_input as *const () as usize,
+        compare_draw_latest_scores_panel as *const () as usize,
+        compare_is_forward_unavailable as *const () as usize,
+        compare_get_heading_colour as *const () as usize,
+        compare_transfer_manager_get_shortlist_manager as *const () as usize,
+        compare_training_manager_get_player_entry as *const () as usize,
+        compare_set_training_load as *const () as usize,
+        compare_is_own_comp_record as *const () as usize,
+        compare_friendly_international_date_set as *const () as usize,
+        compare_clear_manager_record as *const () as usize,
+        compare_remove_loan_contract as *const () as usize,
+        compare_clear_bid_markers_for_player as *const () as usize,
+        compare_human_manager_get_stand_in_manager as *const () as usize,
+        compare_get_agreed_contract_club as *const () as usize,
+        compare_record_international_appearance as *const () as usize,
+        compare_find_held_ban as *const () as usize,
+        compare_find_retirement_entry as *const () as usize,
+        compare_register_comp_objects as *const () as usize,
+        compare_get_slot as *const () as usize,
+        compare_remove_next_sale_percentage as *const () as usize,
+        compare_remove_first_team_appearance_money as *const () as usize,
+        compare_remove_international_team_appearance_money as *const () as usize,
+        compare_remove_spare_non_player_record as *const () as usize,
+        compare_remove_player_data_from_pool as *const () as usize,
+        compare_calc_prize_fund as *const () as usize,
+        compare_get_last_match_rating as *const () as usize,
+        compare_set_slot_index as *const () as usize,
+        compare_set_list_type as *const () as usize,
+        compare_league_compare_h2h_rows as *const () as usize,
+        compare_update_head_to_head as *const () as usize,
+        compare_note_terms_offered_to_main_player as *const () as usize,
+        compare_get_holiday_stamp as *const () as usize,
+        compare_get_saved_lineup as *const () as usize,
+        compare_set_manager as *const () as usize,
+        compare_open_day_fixtures_screen as *const () as usize,
+        compare_handle_day_fixtures_input as *const () as usize,
+        compare_match_screens_find_best_rated_starter_slot as *const () as usize,
+        compare_get_club_league_stat as *const () as usize,
+        compare_fixture_entry_matches as *const () as usize,
+        compare_match_stats_get_record_bucket as *const () as usize,
+        compare_match_team_block_assign as *const () as usize,
+        compare_match_player_row_assign as *const () as usize,
+        compare_match_screens_tally_live_score as *const () as usize,
+        compare_match_screens_handle_continue_command as *const () as usize,
+        compare_match_screens_open_team_selection as *const () as usize,
+        compare_match_screens_handle_team_selection_input as *const () as usize,
+        compare_draw_team_stats_panel as *const () as usize,
+        compare_draw_player_ratings_panel as *const () as usize,
+        compare_draw_match_stats_panel as *const () as usize,
+        compare_refresh_match_stats_values as *const () as usize,
+        compare_refresh_action_zones_values as *const () as usize,
+        compare_refresh_player_ratings_rows as *const () as usize,
+        compare_draw_action_zones_panel as *const () as usize,
+        compare_draw_match_report_panel as *const () as usize,
+        compare_build_day_fixtures_screen as *const () as usize,
+        compare_fill_team_stats_rows as *const () as usize,
+        compare_refresh_latest_scores_rows as *const () as usize,
+        compare_match_screens_handle_waiting_screen as *const () as usize,
+        compare_read_match_record as *const () as usize,
+        compare_match_screens_record_match as *const () as usize,
+        compare_write_match_record as *const () as usize,
+        compare_match_screens_draw_team_selection as *const () as usize,
+        compare_match_screens_load as *const () as usize,
+        compare_match_screens_save as *const () as usize,
+        compare_area_layout as *const () as usize,
+        compare_init as *const () as usize,
+        compare_draw as *const () as usize,
+        compare_build_match_screen as *const () as usize,
+        compare_handle_match_screen_input as *const () as usize,
+        compare_build_match_details_screen as *const () as usize,
+        compare_refresh_possession_bar as *const () as usize,
+        compare_draw_match_overview_panel as *const () as usize,
+        compare_match_screens_draw_live_league_table as *const () as usize,
+        compare_get_finable_story_kind as *const () as usize,
+        compare_choose_injury_type as *const () as usize,
+        compare_get_category as *const () as usize,
+        compare_national_teams_remove_duplicate_squad_entries as *const () as usize,
+        compare_find_selection_slot as *const () as usize,
+        compare_pick_former_international_pundit as *const () as usize,
+        compare_apply_round_rules_to_match as *const () as usize,
+        compare_find_tree_slot_for_fixture as *const () as usize,
+        compare_pick_tour_nation as *const () as usize,
+        compare_transfer_manager_close_offer_contract_offers as *const () as usize,
+        compare_queue_free_transfer as *const () as usize,
+        compare_get_exchange_negotiations_for_player as *const () as usize,
+        compare_national_teams_remove_player as *const () as usize,
+        compare_get_time_slice as *const () as usize,
+        compare_shortlist_manager_max_fee_for_squad_status as *const () as usize,
+        compare_get_offers_for_player as *const () as usize,
+        compare_update_club_target_reputation as *const () as usize,
+        compare_comp_util_write_fixture_to_news_slots as *const () as usize,
+        compare_fill_match_record as *const () as usize,
+        compare_match_stats_compare_events as *const () as usize,
+        compare_remove_language as *const () as usize,
+        compare_can_sign_player as *const () as usize,
+        compare_get_exchange_offers_for_player as *const () as usize,
+        compare_count_unread as *const () as usize,
+        compare_set_item_slot as *const () as usize,
+        compare_news_club_has_human_manager as *const () as usize,
+        compare_cup_set_round_draw_date as *const () as usize,
+        compare_cup_set_round_match_date as *const () as usize,
+        compare_remove_club_from_ai_plans as *const () as usize,
+        compare_league_compare_table_rows as *const () as usize,
+        compare_league_build_round_robin_grid as *const () as usize,
+        compare_final_day_margin_needed as *const () as usize,
+        compare_comp_util_read_fixture_from_news_slots as *const () as usize,
+        compare_comp_util_classify_tie_result_for_news as *const () as usize,
+        compare_cup_set_round_match_day as *const () as usize,
+        compare_build_position_lookup as *const () as usize,
+        compare_player_regen_score_club_for_player as *const () as usize,
+        compare_is_watching_fixture as *const () as usize,
+        compare_match_day_drop_viewer_and_finish_match as *const () as usize,
+        compare_find_record_fixture as *const () as usize,
+        compare_has_relegation as *const () as usize,
+        compare_league_round_set_date as *const () as usize,
+        compare_get_match_importance as *const () as usize,
+        compare_record_holder_assign as *const () as usize,
+        compare_match_record_assign as *const () as usize,
+        compare_run_record_assign as *const () as usize,
+        compare_is_fixture_watched as *const () as usize,
+        compare_has_nickname as *const () as usize,
+        compare_retire_record_assign as *const () as usize,
+        compare_construct_match_stats as *const () as usize,
+        compare_destroy_match_stats as *const () as usize,
+        compare_zipdir_match_filename_pattern as *const () as usize,
+        compare_zget_archive_id as *const () as usize,
+        compare_zget_matching_size as *const () as usize,
+        compare_zadd_matching_files as *const () as usize,
+        compare_zextract_matching_files as *const () as usize,
+        compare_utils_clear_temp_folder as *const () as usize,
+        compare_zipdir_zread as *const () as usize,
+        compare_zipdir_zwrite as *const () as usize,
+        compare_zclose as *const () as usize,
+        compare_check_saved_game_file as *const () as usize,
+        compare_check_quick_start_file as *const () as usize,
+        compare_valid_saved_game_version as *const () as usize,
+        compare_save_fifa_transfer_rules as *const () as usize,
+        compare_load_fifa_transfer_rules as *const () as usize,
+        compare_build_save_game_summary as *const () as usize,
+        compare_save_database_for_game as *const () as usize,
+        compare_load_database_from_stream as *const () as usize,
+        compare_free_game_data as *const () as usize,
+        compare_create_game_from_setup_file as *const () as usize,
+        compare_save_game_data as *const () as usize,
+        compare_load_game_data as *const () as usize,
+        compare_database_get_reputation_scope as *const () as usize,
+        compare_database_get_staff_reputation_for_viewer as *const () as usize,
+        compare_database_is_staff_foreign as *const () as usize,
+        compare_database_get_staff_age as *const () as usize,
+        compare_nation_allows_free_transfers as *const () as usize,
+        compare_database_is_staff_eu_national as *const () as usize,
+        compare_staff_is_transfer_listed_or_requested as *const () as usize,
+        compare_staff_compute_player_attribute as *const () as usize,
+        compare_staff_get_player_attribute as *const () as usize,
+        compare_database_compare_comp_history_rows as *const () as usize,
+        compare_database_player_to_attribute_vector as *const () as usize,
+        compare_nation_is_uk_or_ireland as *const () as usize,
+        compare_database_is_basque_club as *const () as usize,
+        compare_staff_is_transfer_listed as *const () as usize,
+        compare_staff_is_loan_listed as *const () as usize,
+        compare_staff_is_listed_by_request as *const () as usize,
+        compare_player_attribute_rating as *const () as usize,
+        compare_database_club_has_reserve_squad as *const () as usize,
+        compare_database_pick_first_name_for_nation as *const () as usize,
+        compare_database_pick_second_name_for_nation as *const () as usize,
+        compare_database_format_staff_name as *const () as usize,
+        compare_database_get_club_kit_colours as *const () as usize,
+        compare_database_get_club_manager as *const () as usize,
+        compare_club_get_english_name as *const () as usize,
+        compare_staff_adjust_morale as *const () as usize,
+        compare_database_non_player_to_attribute_vector as *const () as usize,
+        compare_staff_set_squad_flags as *const () as usize,
+        compare_database_count_club_squad as *const () as usize,
+        compare_database_collect_club_squad as *const () as usize,
+        compare_club_can_be_managed as *const () as usize,
+        compare_database_vector_to_non_player as *const () as usize,
+        compare_database_vector_to_player as *const () as usize,
+        compare_staff_normalise_non_player_attributes as *const () as usize,
+        compare_database_get_colour_family as *const () as usize,
+        compare_database_colours_clash as *const () as usize,
+        compare_staff_compute_non_player_attribute as *const () as usize,
+        compare_get_adjective_form_index as *const () as usize,
+        compare_staff_get_non_player_attribute as *const () as usize,
+        compare_player_attribute_rating_with_scaled_ability as *const () as usize,
+        compare_database_pick_first_name_by_weight as *const () as usize,
+        compare_database_get_comp_colours as *const () as usize,
+        compare_database_club_has_room_for_job as *const () as usize,
+        compare_database_add_staff_to_club as *const () as usize,
+        compare_match_club_key_id as *const () as usize,
+        compare_remap_club_key_id as *const () as usize,
+        compare_match_nation_key_id as *const () as usize,
+        compare_match_club_comp_key_id as *const () as usize,
+        compare_match_staff_comp_key_id as *const () as usize,
+        compare_db_files_read_continents as *const () as usize,
+        compare_db_files_read_nations as *const () as usize,
+        compare_db_files_read_cities as *const () as usize,
+        compare_db_files_read_stadiums as *const () as usize,
+        compare_db_files_read_staff_v1 as *const () as usize,
+        compare_db_files_read_staff_history as *const () as usize,
+        compare_db_files_read_comp_history as *const () as usize,
+        compare_db_files_read_staff_comps as *const () as usize,
+        compare_db_files_read_staff_comp_history as *const () as usize,
+        compare_db_files_read_officials as *const () as usize,
+        compare_db_files_read_colours as *const () as usize,
+        compare_db_files_read_names as *const () as usize,
+        compare_db_files_read_clubs as *const () as usize,
+        compare_db_files_read_comps as *const () as usize,
+        compare_db_files_read_players as *const () as usize,
+        compare_db_files_read_non_players as *const () as usize,
+        compare_db_files_read_staff as *const () as usize,
+        compare_db_files_read_staff_extra as *const () as usize,
+        compare_db_files_write_continents as *const () as usize,
+        compare_db_files_write_nations as *const () as usize,
+        compare_db_files_write_cities as *const () as usize,
+        compare_db_files_write_stadiums as *const () as usize,
+        compare_db_files_write_clubs as *const () as usize,
+        compare_db_files_write_staff as *const () as usize,
+        compare_db_files_write_players as *const () as usize,
+        compare_db_files_write_non_players as *const () as usize,
+        compare_db_files_write_staff_extra as *const () as usize,
+        compare_db_files_write_staff_history as *const () as usize,
+        compare_db_files_write_comps as *const () as usize,
+        compare_db_files_write_comp_history as *const () as usize,
+        compare_db_files_write_staff_comps as *const () as usize,
+        compare_db_files_write_officials as *const () as usize,
+        compare_db_files_write_records_0x3a as *const () as usize,
+        compare_db_files_write_or_read_records_0x3c as *const () as usize,
+        compare_db_files_open_for_read as *const () as usize,
+        compare_db_files_open_for_write as *const () as usize,
+        compare_database_free_staff_history_table as *const () as usize,
+        compare_database_free_staff_comp_history_table as *const () as usize,
+        compare_database_grow_comp_history_table as *const () as usize,
+        compare_qsort_comparator_club_ids_by_reputation as *const () as usize,
+        compare_qsort_comparator_squad_by_player_0xb as *const () as usize,
+        compare_compare_staff_by_player_ability_desc as *const () as usize,
+        compare_staff_normalise_player_physical_attributes as *const () as usize,
+        compare_database_pick_second_name_by_weight as *const () as usize,
+        compare_staff_normalise_player_attributes as *const () as usize,
+        compare_db_files_read_clubs_v1 as *const () as usize,
+        compare_db_files_read_players_v1 as *const () as usize,
+        compare_db_files_read_non_players_v1 as *const () as usize,
+        compare_db_files_read_comps_v1 as *const () as usize,
+        compare_nation_get_english_name as *const () as usize,
+        compare_club_get_english_short_name as *const () as usize,
+        compare_database_trim_senior_and_b_team_squads as *const () as usize,
+        compare_database_merge_b_team_staff as *const () as usize,
+        compare_database_build_nation_name_index as *const () as usize,
+        compare_database_remove_staff_from_club as *const () as usize,
+        compare_database_get_club_scouts as *const () as usize,
+        compare_club_is_in_season as *const () as usize,
+        compare_club_is_in_major_nation as *const () as usize,
+        compare_nation_is_major_nation as *const () as usize,
+        compare_staff_clear_opinion_links as *const () as usize,
+        compare_staff_add_opinion_link as *const () as usize,
+        compare_staff_remove_opinion_link as *const () as usize,
+        compare_database_get_club_assistant as *const () as usize,
+        compare_database_get_club_coaches as *const () as usize,
+        compare_database_count_club_coaches as *const () as usize,
+        compare_nation_get_english_three_letter_name as *const () as usize,
+        compare_comp_get_english_name as *const () as usize,
+        compare_staff_comp_get_english_name as *const () as usize,
+        compare_stadium_get_english_name as *const () as usize,
+        compare_database_language_file_exists as *const () as usize,
+        compare_eng_lng_free_tables as *const () as usize,
+        compare_database_generate_extra_non_playing_staff as *const () as usize,
+        compare_database_trim_club_table as *const () as usize,
+        compare_database_prune_comp_history_table as *const () as usize,
+        compare_resolve_database_indexes as *const () as usize,
+        compare_database_sort_clubs_by_reputation as *const () as usize,
+        compare_club_has_enough_defenders as *const () as usize,
+        compare_club_has_enough_midfielders as *const () as usize,
+        compare_club_has_enough_strikers as *const () as usize,
+        compare_club_has_enough_hard_workers as *const () as usize,
+        compare_club_has_fit_goalkeeper as *const () as usize,
+        compare_club_has_ball_winning_midfielders as *const () as usize,
+        compare_club_lacks_aerial_strikers as *const () as usize,
+        compare_club_lacks_aerial_defenders as *const () as usize,
+        compare_club_lacks_fast_defenders as *const () as usize,
+        compare_club_has_fast_striker as *const () as usize,
+        compare_club_has_two_creative_midfielders as *const () as usize,
+        compare_club_squad_strength_band as *const () as usize,
+        compare_club_reputation_for_staff as *const () as usize,
+        compare_staff_count_disliked_staff_at_club as *const () as usize,
+        compare_staff_count_favoured_staff_at_club as *const () as usize,
+        compare_staff_remove_favoured_club as *const () as usize,
+        compare_club_remove_favoured_staff as *const () as usize,
+        compare_staff_remove_favoured_staff as *const () as usize,
+        compare_staff_remove_disliked_staff as *const () as usize,
+        compare_staff_get_favoured_staff as *const () as usize,
+        compare_club_add_favoured_staff as *const () as usize,
+        compare_club_add_disliked_staff as *const () as usize,
+        compare_staff_add_favoured_staff as *const () as usize,
+        compare_staff_add_disliked_club as *const () as usize,
+        compare_staff_fade_staff_relationships as *const () as usize,
+        compare_staff_get_disliked_staff as *const () as usize,
+        compare_staff_get_natural_position_mask as *const () as usize,
+        compare_club_count_squad_with_position_mask as *const () as usize,
+        compare_staff_pick_favoured_team_mate as *const () as usize,
+        compare_club_nation_is_not_argentina as *const () as usize,
+        compare_club_nation_not_argentina_france_croatia as *const () as usize,
+        compare_database_is_melanesian_nation as *const () as usize,
+        compare_database_is_polynesian_nation as *const () as usize,
+        compare_database_get_coaching_job_name as *const () as usize,
+        compare_database_format_years_between_dates as *const () as usize,
+        compare_database_compare_clubs_by_short_name as *const () as usize,
+        compare_database_compare_staff_by_full_name as *const () as usize,
+        compare_database_staff_matches_names as *const () as usize,
+        compare_database_compare_clubs_by_latitude as *const () as usize,
+        compare_database_compare_clubs_by_longitude as *const () as usize,
+        compare_database_format_name_from_ids as *const () as usize,
+        compare_database_format_official_name as *const () as usize,
+        compare_position_mask_get_text as *const () as usize,
+        compare_write_position_name as *const () as usize,
+        compare_write_player_description as *const () as usize,
+        compare_staff_is_best_favoured_candidate as *const () as usize,
+        compare_staff_get_player_strength_flags as *const () as usize,
+        compare_staff_get_player_weakness_flags as *const () as usize,
+        compare_database_count_club_physios as *const () as usize,
+        compare_club_is_b_team as *const () as usize,
+        compare_club_collect_non_playing_staff as *const () as usize,
+        compare_staff_is_player_attribute_visible as *const () as usize,
+        compare_staff_get_player_attribute_for_viewer as *const () as usize,
+        compare_database_get_non_player_attribute_name as *const () as usize,
+        compare_database_compare_staff_by_surname as *const () as usize,
+        compare_database_compare_clubs_by_reputation as *const () as usize,
+        compare_database_club_nation_is_eec as *const () as usize,
+        compare_get_regions_sorted_by_name as *const () as usize,
+        compare_compare_region_names as *const () as usize,
+        compare_staff_get_opinion_link_staff as *const () as usize,
+        compare_database_format_name_from_strings as *const () as usize,
+        compare_database_get_job_name as *const () as usize,
+        compare_database_get_language_name as *const () as usize,
+        compare_club_get_national_team_name as *const () as usize,
+        compare_database_get_player_attribute_name as *const () as usize,
+        compare_database_format_player_positions as *const () as usize,
+        compare_get_region_name as *const () as usize,
+        compare_get_continent_adjective as *const () as usize,
+        compare_set_key_ids as *const () as usize,
+        compare_set_key_ids_1080 as *const () as usize,
+        compare_database_player_initialisation as *const () as usize,
+        compare_nation_get_nationality_adjective as *const () as usize,
+        compare_sort_table as *const () as usize,
+        compare_build_h2h_table as *const () as usize,
+        compare_free_table as *const () as usize,
+        compare_league_check_complete as *const () as usize,
+        compare_pay_tv_rights as *const () as usize,
+        compare_league_record_season_honours as *const () as usize,
+        compare_comp_util_add_history_record as *const () as usize,
+        compare_comp_util_get_league_clash_type as *const () as usize,
+        compare_comp_util_get_club_strength_score as *const () as usize,
+        compare_comp_util_get_latest_placed_club as *const () as usize,
+        compare_find_friendly_match as *const () as usize,
+        compare_get_fixture_list_for_date as *const () as usize,
+        compare_find_next_fixture as *const () as usize,
+        compare_is_stadium_in_use as *const () as usize,
+        compare_friendly_international_date_resolve as *const () as usize,
+        compare_end_duty_for_competition as *const () as usize,
+        compare_end_duty_for_nation_in_competition as *const () as usize,
+        compare_prune_club_call_up_records as *const () as usize,
+        compare_add_player_to_squad as *const () as usize,
+        compare_national_teams_remove_player_from_squad as *const () as usize,
+        compare_release_overage_u21_players as *const () as usize,
+        compare_clear_current_competition as *const () as usize,
+        compare_release_competitions_of_continent as *const () as usize,
+        compare_call_up_replacement as *const () as usize,
+        compare_build_selection_pools as *const () as usize,
+        compare_compare_by_rating as *const () as usize,
+        compare_compare_by_club as *const () as usize,
+        compare_find_friendly_opponent as *const () as usize,
+        compare_find_tour_opponent as *const () as usize,
+        compare_apply_result_to_table as *const () as usize,
+        compare_points_for_result as *const () as usize,
+        compare_league_compare_table_rows_h2h as *const () as usize,
+        compare_league_compare_dates as *const () as usize,
+        compare_find_club_row as *const () as usize,
+        compare_contains_club as *const () as usize,
+        compare_rating_record_assign as *const () as usize,
+        compare_man_of_match_record_assign as *const () as usize,
+        compare_discipline_record_assign as *const () as usize,
+        compare_count_record_assign as *const () as usize,
+        compare_fans_player_record_assign as *const () as usize,
+        compare_tally_record_construct as *const () as usize,
+        compare_count_record_construct as *const () as usize,
+        compare_transfer_fee_record_assign as *const () as usize,
+        compare_goals_in_match_record_assign as *const () as usize,
+        compare_news_operator as *const () as usize,
+        compare_past_transfer_copy_construct as *const () as usize,
+        compare_future_transfer_assign as *const () as usize,
+        compare_regen_queue_entry_assign as *const () as usize,
+        compare_is_on_shortlist as *const () as usize,
+        compare_player_regen_pick_staff_for_non_player_data as *const () as usize,
+        compare_discipline_operator as *const () as usize,
+        compare_set_default_wage as *const () as usize,
+        compare_get_match_condition as *const () as usize,
+        compare_days_to_end_date as *const () as usize,
+        compare_clear_all_grievances as *const () as usize,
+        compare_check_transfer_request_withdrawal as *const () as usize,
+        compare_get_squad_placement as *const () as usize,
+        compare_move_to_first_team as *const () as usize,
+        compare_move_to_reserves as *const () as usize,
+        compare_contract_manager_operator as *const () as usize,
+        compare_contract_manager_raise_match_morale as *const () as usize,
+        compare_remove_talks_records as *const () as usize,
+        compare_remove_transfer_interest as *const () as usize,
+        compare_remove_scout_request as *const () as usize,
+        compare_remove_nickname_from_all as *const () as usize,
+        compare_remove_retirement as *const () as usize,
+        compare_player_regen_check_unemployed_retirement as *const () as usize,
+        compare_transfer_manager_offer_needs_work_permit as *const () as usize,
+        compare_update_work_permits as *const () as usize,
+        compare_get_scout as *const () as usize,
+        compare_get_current_run as *const () as usize,
+        compare_record_holder_construct as *const () as usize,
+        compare_pick_rival_manager_id as *const () as usize,
+        compare_transfer_fee_record_construct as *const () as usize,
+        compare_transfer_fee_record_construct_2 as *const () as usize,
+        compare_run_record_construct as *const () as usize,
+        compare_won_run_record_construct as *const () as usize,
+        compare_lost_run_record_construct as *const () as usize,
+        compare_unbeaten_run_record_construct as *const () as usize,
+        compare_winless_run_record_construct as *const () as usize,
+        compare_goals_in_match_record_construct as *const () as usize,
+        compare_youngest_player_record_construct as *const () as usize,
+        compare_write_deadline_news_text as *const () as usize,
+        compare_can_end_loan as *const () as usize,
+        compare_pow_double as *const () as usize,
+        compare_remove_held_offers as *const () as usize,
+        compare_hold_bans_for_loan as *const () as usize,
+        compare_fill_vacated_staff_job as *const () as usize,
+        compare_send_to_nation_club_managers as *const () as usize,
+        compare_get_scout_assignment as *const () as usize,
+        compare_cup_check_complete as *const () as usize,
+        compare_oldest_player_record_construct as *const () as usize,
+        compare_find_work_permit as *const () as usize,
+        compare_passes_work_permit_check as *const () as usize,
+        compare_drop_held_bans as *const () as usize,
+        compare_remove_pending_offers_for_staff as *const () as usize,
+        compare_schedule_decision_for_transfer as *const () as usize,
+        compare_send_to_all_managers as *const () as usize,
+        compare_send_to_division_managers as *const () as usize,
+        compare_send_to_nation_managers as *const () as usize,
+        compare_offer_breaks_fee_record as *const () as usize,
+        compare_get_condition as *const () as usize,
+        compare_get_selection_limit as *const () as usize,
+        compare_clear_invalid_watched_fixtures as *const () as usize,
+        compare_collect_club_scout_targets as *const () as usize,
+        compare_set_scout as *const () as usize,
+        compare_update_board_after_fixture as *const () as usize,
+        compare_process_match as *const () as usize,
+        compare_collect_club_shortlist_entries as *const () as usize,
+        compare_find_highest_offer_for_player as *const () as usize,
+        compare_get_all_time_record as *const () as usize,
+        compare_get_season_record as *const () as usize,
+        compare_queue_record_news as *const () as usize,
+        compare_add_spare_non_player_record as *const () as usize,
+        compare_add_retirement as *const () as usize,
+        compare_queue_staff_for_regen as *const () as usize,
+        compare_trigger_relegation_clauses as *const () as usize,
+        compare_remove_contract_offer as *const () as usize,
+        compare_is_player_suspended as *const () as usize,
+        compare_get_fixture_rules_scope as *const () as usize,
+        compare_get_ineligibility_code as *const () as usize,
+        compare_find_scheduled_friendly_slot as *const () as usize,
+        compare_send_to_continent_managers as *const () as usize,
+        compare_send_to_comp_region as *const () as usize,
+        compare_is_important_for as *const () as usize,
+        compare_get_slot_string as *const () as usize,
+        compare_post_financial_trouble_news as *const () as usize,
+        compare_can_club_scout_nation as *const () as usize,
+        compare_get_language_fluency as *const () as usize,
+        compare_rewind_staff_history as *const () as usize,
+        compare_set_slot_position as *const () as usize,
+        compare_club_has_offer_for_player as *const () as usize,
+        compare_find_club_offer_for_player as *const () as usize,
+        compare_player_has_pending_offer as *const () as usize,
+        compare_is_player_under_offer as *const () as usize,
+        compare_player_club_uses_bosman as *const () as usize,
+        compare_check_board_veto as *const () as usize,
+        compare_add_past_transfer as *const () as usize,
+        compare_add_work_permit as *const () as usize,
+        compare_add_first_team_appearance_money as *const () as usize,
+        compare_get_free_staff_contract_space as *const () as usize,
+        compare_add_staff_contract as *const () as usize,
+        compare_add_decision_date as *const () as usize,
+        compare_reset_morale_state as *const () as usize,
+        compare_init_from_current_contract as *const () as usize,
+        compare_get_expiry_band as *const () as usize,
+        compare_log_story as *const () as usize,
+        compare_expire_story_log as *const () as usize,
+        compare_has_logged_story as *const () as usize,
+        compare_add_transfer_interest as *const () as usize,
+        compare_compare_id_pair_keys as *const () as usize,
+        compare_compare_story_log_records as *const () as usize,
+        compare_decide_fixture_winner as *const () as usize,
+        compare_decide_tie_winner as *const () as usize,
+        compare_cup_compare_draw_entries_by_seed as *const () as usize,
+        compare_init_table_row as *const () as usize,
+        compare_league_get_club_array as *const () as usize,
+        compare_record_final_positions as *const () as usize,
+        compare_move_club_to_division as *const () as usize,
+        compare_comp_util_shuffle_pointer_array as *const () as usize,
+        compare_comp_util_sort_and_shuffle_top_clubs as *const () as usize,
+        compare_update_ban_progress as *const () as usize,
+        compare_release_ban as *const () as usize,
+        compare_clear_ban_history as *const () as usize,
+        compare_roll_recurring_injury as *const () as usize,
+        compare_reset_player_history as *const () as usize,
+        compare_injury_reset_player as *const () as usize,
+        compare_add_transfer_totals as *const () as usize,
+        compare_club_records_update_career_records as *const () as usize,
+        compare_update_season_rating_record as *const () as usize,
+        compare_is_comp_current_on_date as *const () as usize,
+        compare_candidate_has_nearby_date as *const () as usize,
+        compare_add_planned_friendly as *const () as usize,
+        compare_send_by_scope as *const () as usize,
+        compare_send_to_club_manager as *const () as usize,
+        compare_deliver_to_manager as *const () as usize,
+        compare_auto_respond_all as *const () as usize,
+        compare_has_urgent_items as *const () as usize,
+        compare_set_slot_string as *const () as usize,
+        compare_rate_player_form_for_story as *const () as usize,
+        compare_write_financial_trouble_news_text as *const () as usize,
+        compare_get_inbox_items as *const () as usize,
+        compare_retire_from_playing_staff as *const () as usize,
+        compare_pick_best_club_for_player as *const () as usize,
+        compare_pick_club_from_nation_list as *const () as usize,
+        compare_fix_missing_jobs as *const () as usize,
+        compare_best_manager_candidate_score as *const () as usize,
+        compare_schedule_offer as *const () as usize,
+        compare_get_squad_status_for_club as *const () as usize,
+        compare_shortlist_manager_estimate_squad_status as *const () as usize,
+        compare_shortlist_manager_release_club_slot_targets as *const () as usize,
+        compare_scout_covers_nation as *const () as usize,
+        compare_remove_friendly_match as *const () as usize,
+        compare_init_banned_nation_pairs as *const () as usize,
+        compare_assess_transfer_deal as *const () as usize,
+        compare_apply_transfer_confidence_changes as *const () as usize,
+        compare_resolve_board_ultimatum as *const () as usize,
+        compare_remove_contract as *const () as usize,
+        compare_resubmit_held_offers as *const () as usize,
+        compare_contract_manager_season_end_month as *const () as usize,
+        compare_staff_records_daily_update as *const () as usize,
+        compare_staff_records_end_season_for_nation as *const () as usize,
+        compare_find_manager_of_the_month as *const () as usize,
+        compare_process_pending_departures as *const () as usize,
+        compare_manager_manager_remove_player_from_squad as *const () as usize,
+        compare_remove_staff_from_club as *const () as usize,
+        compare_construct_news_item as *const () as usize,
+        compare_adjust_supporter_confidence as *const () as usize,
+        compare_adjust_board_confidence as *const () as usize,
+        compare_pick_ai_manager_response as *const () as usize,
+        compare_mark_item_read as *const () as usize,
+        compare_find_item_by_id as *const () as usize,
+        compare_queue_player_gratitude_news as *const () as usize,
+        compare_post_player_backing_request_news as *const () as usize,
+        compare_post_player_criticism_reaction_news as *const () as usize,
+        compare_build_position_lists as *const () as usize,
+        compare_sort_position_lists as *const () as usize,
+        compare_collect_interested_clubs as *const () as usize,
+        compare_add_shortlist_entry as *const () as usize,
+        compare_shortlist_manager_predict_selling_club_response as *const () as usize,
+        compare_transfer_manager_get_loan_period as *const () as usize,
+        compare_get_offer_response_delay as *const () as usize,
+        compare_pay_transfer_instalments as *const () as usize,
+        compare_remove_offer as *const () as usize,
+        compare_add_ban as *const () as usize,
+        compare_clear_bans_invalid_for_club as *const () as usize,
+        compare_restore_held_bans as *const () as usize,
+        compare_add_language as *const () as usize,
+        compare_improve_language as *const () as usize,
+        compare_player_stats_reset_player as *const () as usize,
+        compare_set_current_competition as *const () as usize,
+        compare_mark_clubs_with_fixtures as *const () as usize,
+        compare_discipline_remove_player as *const () as usize,
+        compare_compare_decision_dates as *const () as usize,
+        compare_process_due_decision_dates as *const () as usize,
+        compare_get_current_contract_offers as *const () as usize,
+        compare_sign_loan_contract as *const () as usize,
+        compare_end_loan as *const () as usize,
+        compare_toggle_squad_placement as *const () as usize,
+        compare_reset_board_for_new_manager as *const () as usize,
+        compare_get_departure_reason as *const () as usize,
+        compare_get_manager_record as *const () as usize,
+        compare_is_staff_suitable_for_job as *const () as usize,
+        compare_staff_can_take_job as *const () as usize,
+        compare_contract_manager_lower_match_morale as *const () as usize,
+        compare_shortlist_set_up_formation_slots as *const () as usize,
+        compare_update_club_shortlist as *const () as usize,
+        compare_suspend_clubs_shortlisting_player as *const () as usize,
+        compare_add_player_to_club_shortlists as *const () as usize,
+        compare_transfer_list_player as *const () as usize,
+        compare_pay_appearance_money as *const () as usize,
+        compare_club_rejects_offer as *const () as usize,
+        compare_detach_offer_players as *const () as usize,
+        compare_build_cash_offer_option as *const () as usize,
+        compare_add_illness_outbreak as *const () as usize,
+        compare_spread_illness_outbreaks as *const () as usize,
+        compare_injury_player_in_close_season as *const () as usize,
+        compare_init_squad_fitness as *const () as usize,
+        compare_init_records as *const () as usize,
+        compare_build_nation_club_lists as *const () as usize,
+        compare_pick_fans_player_of_year as *const () as usize,
+        compare_end_season_for_key_nation as *const () as usize,
+        compare_update_transfer_fee_records as *const () as usize,
+        compare_is_banned_nation_pair as *const () as usize,
+        compare_compare_nations_by_reputation_desc as *const () as usize,
+        compare_compare_fixture_records_by_date as *const () as usize,
+        compare_can_schedule_club_fixture as *const () as usize,
+        compare_compare_call_up_records_by_date as *const () as usize,
+        compare_add_qualified_nation as *const () as usize,
+        compare_cup_compare_entries_by_level_desc as *const () as usize,
+        compare_cup_compare_entries_by_level_asc as *const () as usize,
+        compare_limit_club_division_tier as *const () as usize,
+        compare_consider_sacking_manager as *const () as usize,
+        compare_issue_board_ultimatum as *const () as usize,
+        compare_remove_club_manager as *const () as usize,
+        compare_review_national_team_performance as *const () as usize,
+        compare_is_club_in_financial_trouble as *const () as usize,
+        compare_get_board_confidence_band as *const () as usize,
+        compare_add_promotion_record as *const () as usize,
+        compare_add_relegation_record as *const () as usize,
+        compare_add_qualified_for_round_record as *const () as usize,
+        compare_add_transfer_records as *const () as usize,
+        compare_add_knocked_out_record as *const () as usize,
+        compare_add_failed_to_qualify_record as *const () as usize,
+        compare_transfer_manager_get_offer_completion_date as *const () as usize,
+        compare_find_next_allowed_transfer_date as *const () as usize,
+        compare_transfer_manager_get_next_window_dates as *const () as usize,
+        compare_transfer_manager_calc_compensation_fee as *const () as usize,
+        compare_pay_fee_and_record_clauses as *const () as usize,
+        compare_transfer_manager_selling_club_must_accept as *const () as usize,
+        compare_update_work_permit_on_move as *const () as usize,
+        compare_complete_accepted_contract_offer as *const () as usize,
+        compare_offer_contract_to_offer_player as *const () as usize,
+        compare_collapse_offer as *const () as usize,
+        compare_make_loan_offer as *const () as usize,
+        compare_process_due_future_transfers as *const () as usize,
+        compare_player_regen_score_non_player_candidate as *const () as usize,
+        compare_player_regen_compare_retirements as *const () as usize,
+        compare_player_regen_compare_queue_entries as *const () as usize,
+        compare_get_category_record as *const () as usize,
+        compare_create_stats as *const () as usize,
+        compare_is_retirement_pending as *const () as usize,
+        compare_randomize_round_teams as *const () as usize,
+        compare_separate_shared_stadium_ties as *const () as usize,
+        compare_comp_util_scale_by_round as *const () as usize,
+        compare_comp_util_get_fixture_venue_side as *const () as usize,
+        compare_compare_nation_coefficients_desc as *const () as usize,
+        compare_has_scout_request as *const () as usize,
+        compare_clear_selection_slot as *const () as usize,
+        compare_set_set_piece_taker as *const () as usize,
+        compare_fill_squad_restrictions as *const () as usize,
+        compare_transfer_manager_check_matchday_squad_limit as *const () as usize,
+        compare_player_needs_work_permit as *const () as usize,
+        compare_can_club_bid_for_player as *const () as usize,
+        compare_note_terms_offered_to_exchange_player as *const () as usize,
+        compare_count_club_free_transfer_queue as *const () as usize,
+        compare_get_future_transfer as *const () as usize,
+        compare_remove_future_transfer as *const () as usize,
+        compare_add_future_transfer as *const () as usize,
+        compare_get_open_offers_for_club_players as *const () as usize,
+        compare_collapse_offers_for_player as *const () as usize,
+        compare_add_next_sale_percentage as *const () as usize,
+        compare_init_club_board_records as *const () as usize,
+        compare_process_ban_appeals as *const () as usize,
+        compare_can_watch_fixture as *const () as usize,
+        compare_player_regen_check_initial_retirement as *const () as usize,
+        compare_player_regen_check_retirement as *const () as usize,
+        compare_build_initial_retirement_list as *const () as usize,
+        compare_find_new_retirements as *const () as usize,
+        compare_player_regen_retire_from_non_playing_staff as *const () as usize,
+        compare_add_free_release_records as *const () as usize,
+        compare_get_player_injury_status as *const () as usize,
+        compare_schedule_offer_decision as *const () as usize,
+        compare_get_manager_of_year_candidates as *const () as usize,
+        compare_update_projected_positions as *const () as usize,
+        compare_compare_projection_by_reputation_desc as *const () as usize,
+        compare_compare_projection_by_points_desc as *const () as usize,
+        compare_find_fixtures as *const () as usize,
+        compare_collect_comp_fixtures_on_day as *const () as usize,
+        compare_fix_man_comp_has_fixture_on_date as *const () as usize,
+        compare_friendly_is_club_free_on_date as *const () as usize,
+        compare_has_club as *const () as usize,
+        compare_fix_man_get_partner_key_nation_index as *const () as usize,
+        compare_handle_transfer_request as *const () as usize,
+        compare_is_contract_staff_job as *const () as usize,
+        compare_staff_is_not_board_member as *const () as usize,
+        compare_init_work_permits as *const () as usize,
+        compare_get_clause_count as *const () as usize,
+        compare_find_first_team_appearance_money as *const () as usize,
+        compare_process_free_transfer_queue as *const () as usize,
+        compare_find_next_window_open_date as *const () as usize,
+        compare_find_negotiated_loan_contract as *const () as usize,
+        compare_build_clause_offer_option as *const () as usize,
+        compare_transfer_manager_is_rejection_reason_valid as *const () as usize,
+        compare_transfer_manager_get_squad_status_reason as *const () as usize,
+        compare_game_update_squad_relationships as *const () as usize,
+        compare_game_check_club_dressing_room_unrest as *const () as usize,
+        compare_game_spread_squad_morale_by_leadership as *const () as usize,
+        compare_game_check_players_missing_training as *const () as usize,
+        compare_game_update_comps_for_date as *const () as usize,
+        compare_manager_manager_adjust_board_confidence as *const () as usize,
+        compare_stadium_daily_update as *const () as usize,
+        compare_add_booking as *const () as usize,
+        compare_is_stadium_free_on_date as *const () as usize,
+        compare_fixture_has_scouted_player as *const () as usize,
+        compare_is_player_shortlisted as *const () as usize,
+        compare_add_first_cap_record as *const () as usize,
+        compare_player_stats_get_career_goals as *const () as usize,
+        compare_add_loan_records as *const () as usize,
+        compare_injury_compare_entry_dates as *const () as usize,
+        compare_player_stats_get_goals_for_club as *const () as usize,
+        compare_add_team_of_year_record as *const () as usize,
+        compare_staff_records_compare_clubs_by_manager_points as *const () as usize,
+        compare_find_stored_fixture as *const () as usize,
+        compare_insert_fixture as *const () as usize,
+        compare_remove_fixture as *const () as usize,
+        compare_create_due_planned_friendlies as *const () as usize,
+        compare_add_friendly_match as *const () as usize,
+        compare_plan_friendly_on_free_date as *const () as usize,
+        compare_cup_update_for_date as *const () as usize,
+        compare_set_up_round as *const () as usize,
+        compare_add_away_trip_illness_risk as *const () as usize,
+        compare_count_results_in_period as *const () as usize,
+        compare_update_rankings as *const () as usize,
+        compare_compare_result_points_desc as *const () as usize,
+        compare_append_result as *const () as usize,
+        compare_get_nation_strength_tier as *const () as usize,
+        compare_recalculate_scores as *const () as usize,
+        compare_comp_active_key_nation_of_fixture as *const () as usize,
+        compare_key_nation_is_world_cup_comp as *const () as usize,
+        compare_key_nation_is_international_comp as *const () as usize,
+        compare_key_nation_index_of_comp as *const () as usize,
+        compare_collect_ranked_order as *const () as usize,
+        compare_compare_ranking_score_desc as *const () as usize,
+        compare_update_city_weather as *const () as usize,
+        compare_read_region as *const () as usize,
+        compare_read_region_period as *const () as usize,
+        compare_game_update_nation_coefficients as *const () as usize,
+        compare_is_player_regen_day as *const () as usize,
+        compare_clamp_char_sum as *const () as usize,
+        compare_score_venue_for_fixture as *const () as usize,
+        compare_get_travel_distance_factor as *const () as usize,
+        compare_load_config as *const () as usize,
+        compare_get_coaching_factor as *const () as usize,
+        compare_get_coach_assignments as *const () as usize,
+        compare_get_training_load as *const () as usize,
+        compare_apply_training_progress as *const () as usize,
+        compare_find_position_training as *const () as usize,
+        compare_has_fast_position_training as *const () as usize,
+        compare_advance_week_counter as *const () as usize,
+        compare_take_spare_non_player_record as *const () as usize,
+        compare_get_recurring_injury_type as *const () as usize,
+        compare_friendly_update_for_date as *const () as usize,
+        compare_plan_ai_preseason_friendlies as *const () as usize,
+        compare_set_preseason_windows as *const () as usize,
+        compare_schedule_tour_matches as *const () as usize,
+        compare_compare_friendly_candidates_by_band as *const () as usize,
+        compare_compare_friendly_candidate_ptrs_by_nation as *const () as usize,
+        compare_cup_rank_teams as *const () as usize,
+        compare_comp_util_sort_clubs_by_strength as *const () as usize,
+        compare_set_club_final_position as *const () as usize,
+        compare_key_nation_index_of_nation as *const () as usize,
+        compare_key_nation_index_of_club as *const () as usize,
+        compare_key_nation_get_club_season_year as *const () as usize,
+        compare_key_nation_club_in_season as *const () as usize,
+        compare_key_nation_get_main_continent as *const () as usize,
+        compare_key_nation_get_main_nation as *const () as usize,
+        compare_get_stat as *const () as usize,
+        compare_player_stats_compare_language_entries as *const () as usize,
+        compare_player_stats_compare_history_by_club as *const () as usize,
+        compare_has_active_release_clause as *const () as usize,
+        compare_check_fifa_protected_period as *const () as usize,
+        compare_staff_contract_is_bonus_type_allowed as *const () as usize,
+        compare_check_postponement as *const () as usize,
+        compare_get_club_finance as *const () as usize,
+        compare_stadium_compare_bookings as *const () as usize,
+        compare_get_match_weather as *const () as usize,
+        compare_get_temperature as *const () as usize,
+        compare_get_pitch_condition as *const () as usize,
+        compare_get_wealth_band as *const () as usize,
+        compare_compare_players_by_ability as *const () as usize,
+        compare_stadium_compare_venues_by_capacity as *const () as usize,
+        compare_set_default_schedules as *const () as usize,
+        compare_set_type as *const () as usize,
+        compare_get_manager_schedule as *const () as usize,
+        compare_init_player_entries as *const () as usize,
+        compare_add_player_data_to_pool as *const () as usize,
+        compare_has_spare_non_player_record as *const () as usize,
+        compare_make_points_ban as *const () as usize,
+        compare_ruling_body_start_new_season as *const () as usize,
+        compare_compact_entries as *const () as usize,
+        compare_set_slot_coordinate as *const () as usize,
+        compare_check_duplicate_position as *const () as usize,
+        compare_set_marking_type as *const () as usize,
+        compare_draw_team_order as *const () as usize,
+        compare_get_fixture_side_teams as *const () as usize,
+        compare_collect_possible_teams as *const () as usize,
+        compare_player_search_get_club_target_rating as *const () as usize,
+        compare_player_search_slot_get_match_entry as *const () as usize,
+        compare_player_search_slot_sum_goals as *const () as usize,
+        compare_advance_offer_to_club_approval as *const () as usize,
+        compare_post_offer_accepted_news as *const () as usize,
+        compare_post_loan_offer_news as *const () as usize,
+        compare_handle_player_rejected_terms as *const () as usize,
+        compare_post_board_confidence_update_news as *const () as usize,
+        compare_post_board_expectations_news as *const () as usize,
+        compare_hold_offers_at_window_close as *const () as usize,
+        compare_post_fa_expectations_news as *const () as usize,
+        compare_post_supporter_protest_news as *const () as usize,
+        compare_add_transfer_negotiation as *const () as usize,
+        compare_post_job_rumour_news as *const () as usize,
+        compare_post_player_rejects_move_news as *const () as usize,
+        compare_add_weekly_merchandising_income as *const () as usize,
+        compare_sell_season_tickets as *const () as usize,
+        compare_upgrade_training_facilities as *const () as usize,
+        compare_process_club_finance_events as *const () as usize,
+        compare_try_board_debt_payment as *const () as usize,
+        compare_try_cash_injection as *const () as usize,
+        compare_get_max_staff_wage as *const () as usize,
+        compare_pay_bonuses as *const () as usize,
+        compare_adjust_max_wage as *const () as usize,
+        compare_apply_match_effects as *const () as usize,
+        compare_find_match_injury as *const () as usize,
+        compare_is_player_on_holiday as *const () as usize,
+        compare_player_regen_sign_for_club as *const () as usize,
+        compare_schedule_injury_retirement as *const () as usize,
+        compare_player_regen_post_retirement_announcement_news as *const () as usize,
+        compare_end_player_injury as *const () as usize,
+        compare_media_queue_player_apology_news as *const () as usize,
+        compare_clear_inbox as *const () as usize,
+        compare_withdraw_injured_player as *const () as usize,
+        compare_national_teams_post_player_withdrawn_news as *const () as usize,
+        compare_national_teams_post_replacement_needed_news as *const () as usize,
+        compare_national_teams_can_change_squad as *const () as usize,
+        compare_national_teams_player_in_squad as *const () as usize,
+        compare_schedule_assign_opponent as *const () as usize,
+        compare_add_month_award_record as *const () as usize,
+        compare_friendly_club_reputation_tier as *const () as usize,
+        compare_friendly_get_rest_days_for_kind as *const () as usize,
+        compare_get_contract_satisfaction as *const () as usize,
+        compare_post_wants_new_contract_news as *const () as usize,
+        compare_post_transfer_request_withdrawn_news as *const () as usize,
+        compare_confirm_offer_by_club as *const () as usize,
+        compare_try_complete_offer as *const () as usize,
+        compare_settle_previous_transfer_clauses as *const () as usize,
+        compare_try_loan_offer_for_player as *const () as usize,
+        compare_post_contract_expiry_news as *const () as usize,
+        compare_post_bosman_departure_news as *const () as usize,
+        compare_add_contract_offer as *const () as usize,
+        compare_remove_contract_offer_for_transfer as *const () as usize,
+        compare_contract_manager_lowest_wage_demand as *const () as usize,
+        compare_record_match_ratings as *const () as usize,
+        compare_add_player_rating as *const () as usize,
+        compare_find_best_player as *const () as usize,
+        compare_award_best_rated_player as *const () as usize,
+        compare_set_winner as *const () as usize,
+        compare_award_raise_winner_reputation as *const () as usize,
+        compare_update_player_fitness as *const () as usize,
+        compare_get_league_confidence_band as *const () as usize,
+        compare_set_board_ratings as *const () as usize,
+        compare_injury_daily_update as *const () as usize,
+        compare_post_due_recovery_news as *const () as usize,
+        compare_is_one_booking_from_ban as *const () as usize,
+        compare_process_regen_queue as *const () as usize,
+        compare_media_pick_outlet_type_for_club as *const () as usize,
+        compare_media_pick_outlet_type_for_person as *const () as usize,
+        compare_league_add_result as *const () as usize,
+        compare_copy_table as *const () as usize,
+        compare_league_set_predicted_positions as *const () as usize,
+        compare_record_international_result as *const () as usize,
+        compare_format_squad_label as *const () as usize,
+        compare_are_round_fixtures_known as *const () as usize,
+        compare_record_club_call_ups as *const () as usize,
+        compare_get_fixture_match_importance as *const () as usize,
+        compare_get_stage as *const () as usize,
+        compare_awol_daily_update as *const () as usize,
+        compare_has_missed_training as *const () as usize,
+        compare_has_fitness_incident as *const () as usize,
+        compare_miss_training as *const () as usize,
+        compare_end_absence as *const () as usize,
+        compare_set_flags as *const () as usize,
+        compare_reject_transfer_offer as *const () as usize,
+        compare_withdraw_transfer_offer as *const () as usize,
+        compare_post_offer_rejected_news as *const () as usize,
+        compare_unsettle_player_after_bid as *const () as usize,
+        compare_post_offer_collapsed_news as *const () as usize,
+        compare_post_appearance_money_news as *const () as usize,
+        compare_finalise_transfer as *const () as usize,
+        compare_post_transfer_completed_news as *const () as usize,
+        compare_post_transfer_agreed_news as *const () as usize,
+        compare_add_config_loan as *const () as usize,
+        compare_post_contract_end_news as *const () as usize,
+        compare_post_transfer_delay_request_news as *const () as usize,
+        compare_get_club_tactic as *const () as usize,
+        compare_select_tactic_slot as *const () as usize,
+        compare_get_active_tactic as *const () as usize,
+        compare_remove_player_from_selection as *const () as usize,
+        compare_swap_selection_slots as *const () as usize,
+        compare_has_selection_undo as *const () as usize,
+        compare_post_manager_under_pressure_news as *const () as usize,
+        compare_post_manager_departure_news as *const () as usize,
+        compare_post_manager_appointment_news as *const () as usize,
+        compare_pay_prize_money as *const () as usize,
+        compare_league_update_staff_records_for_status as *const () as usize,
+        compare_announce_team_status as *const () as usize,
+        compare_player_stats_record_match as *const () as usize,
+        compare_update_league_position_records as *const () as usize,
+        compare_send_record_news as *const () as usize,
+        compare_select_squads_for_fixture as *const () as usize,
+        compare_national_teams_post_player_called_up_news as *const () as usize,
+        compare_add_team_result_news as *const () as usize,
+        compare_count_slots_with_bids as *const () as usize,
+        compare_shortlist_manager_remove_from_transfer_list as *const () as usize,
+        compare_shortlist_manager_remove_from_loan_list as *const () as usize,
+        compare_update_staff_status as *const () as usize,
+        compare_shortlist_manager_add_to_loan_list as *const () as usize,
+        compare_shortlist_manager_max_fee_for_player_status as *const () as usize,
+        compare_allocate_transfer_budget as *const () as usize,
+        compare_shortlist_manager_squad_status_allowed as *const () as usize,
+        compare_scout_manager_write_list_name as *const () as usize,
+        compare_update_international_friendlies as *const () as usize,
+        compare_get_selected_list as *const () as usize,
+        compare_set_selected_list as *const () as usize,
+        compare_european_cup_collect_entrants as *const () as usize,
+        compare_build_qualifying_entry_table as *const () as usize,
+        compare_european_cup_advance_stage as *const () as usize,
+        compare_process_fixture as *const () as usize,
+        compare_european_cup_set_club_progress as *const () as usize,
+        compare_counts_for_fixture_clash as *const () as usize,
+        compare_choose_match_official as *const () as usize,
+        compare_clear_busy_flags as *const () as usize,
+        compare_renew_officials as *const () as usize,
+        compare_officials_manager_add_random_officials as *const () as usize,
+        compare_officials_manager_validate_officials as *const () as usize,
+        compare_officials_manager_operator as *const () as usize,
+        compare_add_year_award_record as *const () as usize,
+        compare_match_record_is_bigger_win as *const () as usize,
+        compare_match_record_is_bigger_defeat as *const () as usize,
+        compare_update_appearance_clauses_after_match as *const () as usize,
+        compare_add_international_team_appearance_money as *const () as usize,
+        compare_post_transfer_finalised_news as *const () as usize,
+        compare_check_board_transfer_veto as *const () as usize,
+        compare_post_board_ultimatum_news as *const () as usize,
+        compare_news_board_ultimatum_text as *const () as usize,
+        compare_free_transfer_staff as *const () as usize,
+        compare_set_on_holiday as *const () as usize,
+        compare_post_contract_talks_news as *const () as usize,
+        compare_eng_first_create_playoff_stage as *const () as usize,
+        compare_eng_second_create_play_off_stage as *const () as usize,
+        compare_eng_third_create_play_off_stage as *const () as usize,
+        compare_eng_second_update_staff_records_for_status as *const () as usize,
+        compare_eng_first_set_club_progress as *const () as usize,
+        compare_eng_third_set_club_progress as *const () as usize,
+        compare_update_positions_and_status as *const () as usize,
+        compare_eng_first_advance_stage as *const () as usize,
+        compare_eng_second_advance_stage as *const () as usize,
+        compare_european_cup_update_staff_records_for_status as *const () as usize,
+        compare_draw_quarter_finals as *const () as usize,
+        compare_european_cup_collect_club_list as *const () as usize,
+        compare_record_tactic_result as *const () as usize,
+        compare_get_captain as *const () as usize,
+        compare_set_captain as *const () as usize,
+        compare_get_international_duty_club as *const () as usize,
+        compare_national_teams_player_is_eligible as *const () as usize,
+        compare_collect_duty_competitions as *const () as usize,
+        compare_fill_match_record_from_fixture as *const () as usize,
+        compare_fill_staff_name_ref as *const () as usize,
+        compare_match_record_result_code as *const () as usize,
+        compare_move_nearby_club_fixtures as *const () as usize,
+        compare_reschedule_club_fixtures_near_date as *const () as usize,
+        compare_queue_fixture_moved_news as *const () as usize,
+        compare_report_poor_fitness as *const () as usize,
+        compare_post_fine_reaction_news as *const () as usize,
+        compare_post_coach_fine_feedback_news as *const () as usize,
+        compare_pick_random_pundit as *const () as usize,
+        compare_get_pundit_name as *const () as usize,
+        compare_queue_manager_fa_complaint_story as *const () as usize,
+        compare_update_wage_bill as *const () as usize,
+        compare_refresh_all_wage_bills as *const () as usize,
+        compare_finance_get_days_to_season_start as *const () as usize,
+        compare_add_players_sold as *const () as usize,
+        compare_pay_players_bought as *const () as usize,
+        compare_pay_sign_on_fee as *const () as usize,
+        compare_add_prize_money as *const () as usize,
+        compare_add_tv_revenue as *const () as usize,
+        compare_pay_wages as *const () as usize,
+        compare_pay_round_prize_money as *const () as usize,
+        compare_set_home_teams_for_round as *const () as usize,
+        compare_record_team_progress as *const () as usize,
+        compare_process_friendly_reply as *const () as usize,
+        compare_send_friendly_request as *const () as usize,
+        compare_build_nation_list as *const () as usize,
+        compare_draw_round as *const () as usize,
+        compare_comp_util_format_stage_round_name as *const () as usize,
+        compare_club_in_higher_division as *const () as usize,
+        compare_cup_update_staff_records_for_status as *const () as usize,
+        compare_cup_record_season_honours as *const () as usize,
+        compare_register_semi_final_losers_for_uefa as *const () as usize,
+        compare_reject_loan_offer as *const () as usize,
+        compare_check_squad_limits as *const () as usize,
+        compare_find_next_sale_percentage as *const () as usize,
+        compare_contains_player as *const () as usize,
+        compare_sync_scout_lists as *const () as usize,
+        compare_player_search_find_or_claim_player_slot as *const () as usize,
+        compare_value_player_for_club as *const () as usize,
+        compare_find_club_search_entry as *const () as usize,
+        compare_find_international_appearance_money as *const () as usize,
+        compare_update_after_match as *const () as usize,
+        compare_contract_manager_get_player_morale as *const () as usize,
+        compare_contract_manager_write_morale_text as *const () as usize,
+        compare_calc_player_value as *const () as usize,
+        compare_contract_manager_write_morale_comparison_text as *const () as usize,
+        compare_get_squad_flags_for_club as *const () as usize,
+        compare_board_named_players_after_match as *const () as usize,
+        compare_get_player_match_rating_verdict as *const () as usize,
+        compare_build_board_player_performance_text as *const () as usize,
+        compare_record_match_result as *const () as usize,
+        compare_add_league_finish_records as *const () as usize,
+        compare_add_supporters_player_of_year_record as *const () as usize,
+        compare_add_cup_runners_up_record as *const () as usize,
+        compare_add_cup_third_place_record as *const () as usize,
+        compare_record_manager_job_change as *const () as usize,
+        compare_process_transfer_squad_reactions as *const () as usize,
+        compare_queue_signing_celebration_story as *const () as usize,
+        compare_queue_sale_unrest_story as *const () as usize,
+        compare_process_match_income as *const () as usize,
+        compare_calc_gate_receipts as *const () as usize,
+        compare_pay_league_fine as *const () as usize,
+        compare_try_finance_boost_event as *const () as usize,
+        compare_try_board_takeover as *const () as usize,
+        compare_pay_other_costs as *const () as usize,
+        compare_build_international_date_table as *const () as usize,
+        compare_resolve_international_dates as *const () as usize,
+        compare_find_human_club_tournament as *const () as usize,
+        compare_plan_club_friendlies as *const () as usize,
+        compare_add_tournament as *const () as usize,
+        compare_find_human_club_open_invitation as *const () as usize,
+        compare_add_injury as *const () as usize,
+        compare_injury_post_injury_news as *const () as usize,
+        compare_is_player_awol as *const () as usize,
+        compare_pay_former_club_fee_cuts as *const () as usize,
+        compare_pay_next_sale_percentage as *const () as usize,
+        compare_post_sale_percentage_news as *const () as usize,
+        compare_is_work_permit_granted as *const () as usize,
+        compare_transfer_manager_get_squad_status_for_reason as *const () as usize,
+        compare_get_negotiation_slot as *const () as usize,
+        compare_apply_squad_reaction_to_player_story as *const () as usize,
+        compare_warn_squad_of_position_rival as *const () as usize,
+        compare_media_format_response_option_label as *const () as usize,
+        compare_serve_international_bans as *const () as usize,
+        compare_apply_appeal_result as *const () as usize,
+        compare_get_slot_text as *const () as usize,
+        compare_manager_manager_remove as *const () as usize,
+        compare_manager_manager_clear as *const () as usize,
+        compare_get_current as *const () as usize,
+        compare_sort_round_teams as *const () as usize,
+        compare_check_round_teams_for_nation as *const () as usize,
+        compare_cup_start_new_season as *const () as usize,
+        compare_comp_active_key_nation_of_club as *const () as usize,
+        compare_comp_active_key_nation_of_stadium as *const () as usize,
+        compare_comp_key_nation_entry_from_active_index as *const () as usize,
+        compare_resolve_same_day_clash as *const () as usize,
+        compare_get_club_first_fixture_year as *const () as usize,
+        compare_get_club_last_fixture_year as *const () as usize,
+        compare_save_finance_dat as *const () as usize,
+        compare_load_from_save as *const () as usize,
+        compare_squad_manager_save as *const () as usize,
+        compare_uefa_seeding_save_to_temp_file as *const () as usize,
+        compare_conmebol_seeding_save_to_temp_file as *const () as usize,
+        compare_save_temp_file as *const () as usize,
+        compare_club_history_save as *const () as usize,
+        compare_save_official_stats as *const () as usize,
+        compare_simulated_stats_save as *const () as usize,
+        compare_fix_man_save_club_dates as *const () as usize,
+        compare_fix_man_load_club_dates as *const () as usize,
+        compare_fix_man_save_fixture_leg_checks as *const () as usize,
+        compare_fin_prm_end_season_for_nation as *const () as usize,
+        compare_season_end_club_update as *const () as usize,
+        compare_news_dividend as *const () as usize,
+        compare_get_max_wage as *const () as usize,
+        compare_news_ground_works as *const () as usize,
+        compare_news_request_refused as *const () as usize,
+        compare_collect_day_clashes as *const () as usize,
+        compare_find_fixture_clashes as *const () as usize,
+        compare_fix_man_load_fixture_leg_checks as *const () as usize,
+        compare_find_new_fixture_date as *const () as usize,
+        compare_add_fixture as *const () as usize,
+        compare_set_year as *const () as usize,
+        compare_create_tie_fixtures as *const () as usize,
+        compare_post_draw_news as *const () as usize,
+        compare_update_transfer_window_news as *const () as usize,
+        compare_move_round_fixtures_to_set_dates as *const () as usize,
+        compare_remove_exchange_player as *const () as usize,
+        compare_check_offer_work_permits as *const () as usize,
+        compare_update_board_confidence_after_match as *const () as usize,
+        compare_post_board_match_reaction_news as *const () as usize,
+        compare_post_fa_performance_news as *const () as usize,
+        compare_set_season_expectations as *const () as usize,
+        compare_add_job_vacancy as *const () as usize,
+        compare_post_job_offer_news as *const () as usize,
+        compare_process_transfer_interest as *const () as usize,
+        compare_news_create_not_for_sale_story as *const () as usize,
+        compare_queue_trophy_praise_story as *const () as usize,
+        compare_arrange_international_friendlies as *const () as usize,
+        compare_friendly_check_match_invitation as *const () as usize,
+        compare_friendly_check_tournament_invitation as *const () as usize,
+        compare_national_teams_daily_update as *const () as usize,
+        compare_current_search_has_no_club as *const () as usize,
+        compare_is_club_in_session_searches as *const () as usize,
+        compare_select_squad as *const () as usize,
+        compare_scout_manager_scout_match as *const () as usize,
+        compare_get_edit_session as *const () as usize,
+        compare_set_edit_session as *const () as usize,
+        compare_transfer_manager_daily_update as *const () as usize,
+        compare_process_due_offer as *const () as usize,
+        compare_check_offer_restrictions as *const () as usize,
+        compare_accept_transfer_bid as *const () as usize,
+        compare_post_offer_made_news as *const () as usize,
+        compare_transfer_manager_can_loan_player as *const () as usize,
+        compare_league_update_for_date as *const () as usize,
+        compare_create_fixtures as *const () as usize,
+        compare_league_promote_and_relegate as *const () as usize,
+        compare_fix_man_daily_update as *const () as usize,
+        compare_get_fixture_list as *const () as usize,
+        compare_load_fixtures as *const () as usize,
+        compare_map_fixture_tree as *const () as usize,
+        compare_get_first_stage_of_group as *const () as usize,
+        compare_get_current_stage as *const () as usize,
+        compare_update_player_training as *const () as usize,
+        compare_get_player_schedule as *const () as usize,
+        compare_get_category_level as *const () as usize,
+        compare_remove_or_restore_training_progress as *const () as usize,
+        compare_get_training_attribute_change as *const () as usize,
+        compare_get_position_aptitude as *const () as usize,
+        compare_process_retirements as *const () as usize,
+        compare_player_regen_post_retirement_news as *const () as usize,
+        compare_player_regen_post_youth_promotion_news as *const () as usize,
+        compare_clear_awol as *const () as usize,
+        compare_clear_missed_training as *const () as usize,
+        compare_awol_post_missed_training_news as *const () as usize,
+        compare_shortlist_manager_is_compensation_deal as *const () as usize,
+        compare_shortlist_compare_slots_by_index as *const () as usize,
+        compare_mark_player_under_offer as *const () as usize,
+        compare_add_league_champions_record as *const () as usize,
+        compare_add_cup_winners_record as *const () as usize,
+        compare_clear_human_manager_record as *const () as usize,
+        compare_ai_respond_to_bid as *const () as usize,
+        compare_add_loan_negotiation as *const () as usize,
+        compare_make_exchange_option as *const () as usize,
+        compare_schedule_loan_end as *const () as usize,
+        compare_make_club_bids as *const () as usize,
+        compare_staff_interest_in_joining_club as *const () as usize,
+        compare_construct_staff_contract as *const () as usize,
+        compare_england_rules_can_loan_player as *const () as usize,
+        compare_record_loan as *const () as usize,
+        compare_england_rules_daily_update as *const () as usize,
+        compare_england_rules_get_loan_period as *const () as usize,
+        compare_scotland_rules_can_loan_player as *const () as usize,
+        compare_scotland_rules_get_loan_period as *const () as usize,
+        compare_italy_rules_can_loan_player as *const () as usize,
+        compare_ireland_rules_can_loan_player as *const () as usize,
+        compare_spain_rules_can_loan_player as *const () as usize,
+        compare_move_fixtures_for_tv as *const () as usize,
+        compare_send_group_draw_news as *const () as usize,
+        compare_send_fixture_list_news as *const () as usize,
+        compare_add_transfer_offer as *const () as usize,
+        compare_accept_loan_offer as *const () as usize,
+        compare_handle_player_accepted_terms as *const () as usize,
+        compare_post_transfer_listed_news as *const () as usize,
+        compare_contract_manager_offer_contract as *const () as usize,
+        compare_draw_groups as *const () as usize,
+        compare_run_group_draw as *const () as usize,
+        compare_world_cup_update_for_date as *const () as usize,
+        compare_world_cup_create_group_table as *const () as usize,
+        compare_world_cup_create_group_stage as *const () as usize,
+        compare_world_cup_set_predicted_positions as *const () as usize,
+        compare_world_cup_create_schedule as *const () as usize,
+        compare_add_qualified_team as *const () as usize,
+        compare_seed_teams as *const () as usize,
+        compare_update_coach_assignments as *const () as usize,
+        compare_reassign_squad_schedules as *const () as usize,
+        compare_training_manager_cpp_0x8b2230 as *const () as usize,
+        compare_build_career_history as *const () as usize,
+        compare_player_stats_years_since_at_club as *const () as usize,
+        compare_player_stats_compare_history_by_staff as *const () as usize,
+        compare_player_setup_injury_from_name as *const () as usize,
+        compare_post_recovery_news as *const () as usize,
+        compare_injury_get_category_name as *const () as usize,
+        compare_player_search_scout_match as *const () as usize,
+        compare_player_search_record_scouted_club_match as *const () as usize,
+        compare_send_club_international_report_news as *const () as usize,
+        compare_national_teams_post_call_up_news as *const () as usize,
+        compare_national_teams_collect_fixture_opponents as *const () as usize,
+        compare_scout_manager_daily_update as *const () as usize,
+        compare_send_scout_reports as *const () as usize,
+        compare_send_scout_report_news as *const () as usize,
+        compare_sign_contract as *const () as usize,
+        compare_regenerate_as_youth_player as *const () as usize,
+        compare_remove_dispute as *const () as usize,
+        compare_load_from_disk as *const () as usize,
+        compare_swap_bytes_16_array as *const () as usize,
+        compare_swap_bytes_32_array as *const () as usize,
+        compare_set_up_officials as *const () as usize,
+        compare_officials_manager_compare_comp_level as *const () as usize,
+        compare_on_friendly_fixture_cancelled as *const () as usize,
+        compare_friendly_cancel_national_fixture as *const () as usize,
+        compare_cancel_tournament as *const () as usize,
+        compare_officials_manager_compare_nation_then_quality_desc as *const () as usize,
+        compare_officials_manager_compare_nation_then_quality_asc as *const () as usize,
+        compare_archive_player_stats as *const () as usize,
+        compare_player_setup_find_staff as *const () as usize,
+        compare_player_setup_read_quoted_token as *const () as usize,
+        compare_player_setup_type_from_name as *const () as usize,
+        compare_draw_phase1_groups as *const () as usize,
+        compare_european_cup_compare_clubs_by_seed as *const () as usize,
+        compare_european_cup_rank_teams as *const () as usize,
+        compare_draw_phase2_groups as *const () as usize,
+        compare_european_cup_compare_phase2_draw_entries as *const () as usize,
+        compare_comp_util_get_parent_stage_id as *const () as usize,
+        compare_european_cup_create_round_table as *const () as usize,
+        compare_set_club_season_expectations as *const () as usize,
+        compare_relegate_club_to_division as *const () as usize,
+        compare_all_stages_complete as *const () as usize,
+        compare_comp_collect_club_list as *const () as usize,
+        compare_find_club_progress as *const () as usize,
+        compare_roll_coefficients as *const () as usize,
+        compare_set_place_counts as *const () as usize,
+        compare_uefa_find_nth_unplaced_club_of_nation as *const () as usize,
+        compare_collect_european_clubs as *const () as usize,
+        compare_assign_champions_league_places as *const () as usize,
+        compare_assign_intertoto_places as *const () as usize,
+        compare_assign_uefa_cup_places as *const () as usize,
+        compare_pick_english_intertoto_club as *const () as usize,
+        compare_update_season as *const () as usize,
+        compare_assign_libertadores_places as *const () as usize,
+        compare_find_nth_unqualified_club_of_nation as *const () as usize,
+        compare_is_mercosur_invited_club as *const () as usize,
+        compare_collect_conmebol_clubs as *const () as usize,
+        compare_update_for_new_season as *const () as usize,
+        compare_set_bra_champ_cup_winner as *const () as usize,
+        compare_find_hosts as *const () as usize,
+        compare_find_next_hosts as *const () as usize,
+        compare_host_country_daily_update as *const () as usize,
+        compare_construct_england_rules as *const () as usize,
+        compare_construct_usa_rules as *const () as usize,
+        compare_australia_rules as *const () as usize,
+        compare_spain_rules_init_transfer_windows as *const () as usize,
+        compare_italy_rules_init_transfer_windows as *const () as usize,
+        compare_france_rules_init_transfer_windows as *const () as usize,
+        compare_construct_brazil_rules as *const () as usize,
+        compare_germany_rules_init_transfer_windows as *const () as usize,
+        compare_construct_scotland_rules as *const () as usize,
+        compare_intertoto_cup_update_for_date as *const () as usize,
+        compare_intertoto_cup_update_staff_records_for_status as *const () as usize,
+        compare_uefa_cup_update_staff_records_for_status as *const () as usize,
+        compare_con_champ_select_qualified_clubs as *const () as usize,
+        compare_con_champ_update_for_date as *const () as usize,
+        compare_con_champ_set_up_rounds as *const () as usize,
+        compare_ita_cup_set_up_rules as *const () as usize,
+        compare_ita_c_cup_set_up_rules as *const () as usize,
+        compare_bra_champ_cup_set_up_rules as *const () as usize,
+        compare_african_nations_update_staff_records_for_status as *const () as usize,
+        compare_goldcup_update_staff_records_for_status as *const () as usize,
+        compare_wc_oceania_league_update_staff_records_for_status as *const () as usize,
+        compare_conmebol_liber_set_up_rules as *const () as usize,
+        compare_con_merc_cup_set_up_rules as *const () as usize,
+        compare_oceania_club_champ_set_up_rules as *const () as usize,
+        compare_wc_europe_league_set_up_rules as *const () as usize,
+        compare_wc_south_american_league_set_up_rules as *const () as usize,
+        compare_wc_asia_league_set_up_rules as *const () as usize,
+        compare_goldcup_set_up_rules as *const () as usize,
+        compare_african_nations_set_up_rules as *const () as usize,
+        compare_wc_oceania_league_set_up_rules as *const () as usize,
+        compare_conmebol_liber_select_qualified_clubs as *const () as usize,
+        compare_conmebol_liber_update_staff_records_for_status as *const () as usize,
+        compare_conmebol_liber_advance_stage as *const () as usize,
+        compare_african_nations_advance_stage as *const () as usize,
+        compare_init_group_a_table as *const () as usize,
+        compare_african_nations_record_season_honours as *const () as usize,
+        compare_bra_nat_first_set_up_rules as *const () as usize,
+        compare_bra_nat_second_set_up_rules as *const () as usize,
+        compare_bra_nat_third_set_up_rules as *const () as usize,
+        compare_bra_reg_central_set_up_rules as *const () as usize,
+        compare_bra_reg_gaucho_set_up_rules as *const () as usize,
+        compare_bra_reg_santa_set_up_rules as *const () as usize,
+        compare_bra_reg_parana_set_up_rules as *const () as usize,
+        compare_bra_reg_pern_set_up_rules as *const () as usize,
+        compare_bra_reg_rio_set_up_rules as *const () as usize,
+        compare_bra_reg_goias_set_up_rules as *const () as usize,
+        compare_jap_j1_set_up_rules as *const () as usize,
+        compare_jap_j2_set_up_rules as *const () as usize,
+        compare_aus_nsl_set_up_rules as *const () as usize,
+        compare_usa_mls_set_up_rules as *const () as usize,
+        compare_bra_reg_gaucho_record_season_honours as *const () as usize,
+        compare_arg_second_record_season_honours as *const () as usize,
+        compare_bra_nat_first_update_staff_records_for_status as *const () as usize,
+        compare_bra_nat_third_update_staff_records_for_status as *const () as usize,
+        compare_bra_reg_bahia_update_staff_records_for_status as *const () as usize,
+        compare_bra_reg_central_update_staff_records_for_status as *const () as usize,
+        compare_bra_reg_minas_gerais_update_staff_records_for_status as *const () as usize,
+        compare_aus_nsl_update_staff_records_for_status as *const () as usize,
+        compare_bra_reg_minas_gerais_set_club_progress as *const () as usize,
+        compare_usa_mls_set_club_progress as *const () as usize,
+        compare_bra_nat_third_set_club_progress as *const () as usize,
+        compare_usa_mls_update_staff_records_for_status as *const () as usize,
+        compare_usa_mls_add_result as *const () as usize,
+        compare_usa_mls_get_club_all_star_conference as *const () as usize,
+        compare_eng_prm_set_up_rules as *const () as usize,
+        compare_eng_first_set_up_rules as *const () as usize,
+        compare_eng_second_set_up_rules as *const () as usize,
+        compare_eng_third_set_up_rules as *const () as usize,
+        compare_eng_prm_create_table as *const () as usize,
+        compare_eng_second_create_table as *const () as usize,
+        compare_eng_third_create_table as *const () as usize,
+        compare_eng_first_create_table as *const () as usize,
+        compare_ita_ser_a_set_up_rules as *const () as usize,
+        compare_ita_ser_b_set_up_rules as *const () as usize,
+        compare_ita_ser_c1a_set_up_rules as *const () as usize,
+        compare_ita_ser_c1b_set_up_rules as *const () as usize,
+        compare_ita_ser_a_create_table as *const () as usize,
+        compare_ita_ser_b_create_table as *const () as usize,
+        compare_ita_ser_c1a_create_table as *const () as usize,
+        compare_ita_ser_c1b_create_table as *const () as usize,
+        compare_fra_first_set_up_rules as *const () as usize,
+        compare_fra_second_set_up_rules as *const () as usize,
+        compare_fra_third_set_up_rules as *const () as usize,
+        compare_fra_first_create_table as *const () as usize,
+        compare_fra_second_create_table as *const () as usize,
+        compare_fra_third_create_table as *const () as usize,
+        compare_spa_first_set_up_rules as *const () as usize,
+        compare_spa_second_set_up_rules as *const () as usize,
+        compare_spa_lower_set_up_rules as *const () as usize,
+        compare_spa_first_create_table as *const () as usize,
+        compare_ita_ser_c2a_update_staff_records_for_status as *const () as usize,
+        compare_spa_first_set_club_progress as *const () as usize,
+        compare_fra_cfa_create_group_table as *const () as usize,
+        compare_fra_lower_create_table as *const () as usize,
+        compare_ita_ser_c1a_set_club_progress as *const () as usize,
+        compare_ita_ser_c1b_set_club_progress as *const () as usize,
+        compare_eng_cc_cup_create_round_table as *const () as usize,
+        compare_eng_fa_cup_create_round_table as *const () as usize,
+        compare_eng_charity_create_round_table as *const () as usize,
+        compare_fra_cup_create_round_table as *const () as usize,
+        compare_fra_lge_cup_create_round_table as *const () as usize,
+        compare_spa_cup_create_round_table as *const () as usize,
+        compare_fra_super_create_round_table as *const () as usize,
+        compare_spa_super_create_round_table as *const () as usize,
+        compare_jap_super_create_round_table as *const () as usize,
+        compare_eng_cc_cup_collect_entrants as *const () as usize,
+        compare_eng_auto_cup_collect_entrants as *const () as usize,
+        compare_eng_charity_select_teams as *const () as usize,
+        compare_fra_cup_collect_entrants as *const () as usize,
+        compare_fra_lge_cup_collect_entrants as *const () as usize,
+        compare_fra_super_select_teams as *const () as usize,
+        compare_spa_super_select_teams as *const () as usize,
+        compare_jap_super_select_teams as *const () as usize,
+        compare_usa_mls_all_stars_create_round_table as *const () as usize,
+        compare_eng_cc_cup_update_for_date as *const () as usize,
+        compare_eng_fa_cup_update_for_date as *const () as usize,
+        compare_usa_mls_all_stars_update_for_date as *const () as usize,
+        compare_jap_j_cup_create_round_table as *const () as usize,
+        compare_jap_emp_cup_create_round_table as *const () as usize,
+        compare_usa_open_cup_create_round_table as *const () as usize,
+        compare_jap_j_cup_collect_entrants as *const () as usize,
+        compare_usa_open_cup_collect_entrants as *const () as usize,
+        compare_jap_emp_cup_collect_entrants as *const () as usize,
+        compare_get_squad_number as *const () as usize,
+        compare_club_uses_squad_numbers as *const () as usize,
+        compare_set_squad_number as *const () as usize,
+        compare_allocate_squad_number as *const () as usize,
+        compare_assign_club_squad_numbers as *const () as usize,
+        compare_init_new_game as *const () as usize,
+        compare_assign_league_squad_numbers as *const () as usize,
+        compare_select_euro_registered_players as *const () as usize,
+        compare_construct_holland_rules as *const () as usize,
+        compare_construct_croatia_rules as *const () as usize,
+        compare_construct_ireland_rules as *const () as usize,
+        compare_construct_norway_rules as *const () as usize,
+        compare_construct_northern_ireland_rules as *const () as usize,
+        compare_construct_wales_rules as *const () as usize,
+        compare_construct_turkey_rules as *const () as usize,
+        compare_construct_poland_rules as *const () as usize,
+        compare_construct_finland_rules as *const () as usize,
+        compare_argentina_rules_init_transfer_windows as *const () as usize,
+        compare_portugal_rules_init_transfer_windows as *const () as usize,
+        compare_construct_korea_rules as *const () as usize,
+        compare_greece_rules_init_transfer_windows as *const () as usize,
+        compare_russia_rules_init_transfer_windows as *const () as usize,
+        compare_belgium_rules_init_transfer_windows as *const () as usize,
+        compare_process_euro_registration as *const () as usize,
+        compare_create_default_table as *const () as usize,
+        compare_build_venue_list as *const () as usize,
+        compare_bra_nat_first_create_table as *const () as usize,
+        compare_bra_nat_second_create_table as *const () as usize,
+        compare_bra_nat_third_create_table as *const () as usize,
+        compare_bra_reg_bahia_create_table as *const () as usize,
+        compare_bra_reg_central_load_region_clubs as *const () as usize,
+        compare_bra_reg_gaucho_load_region_clubs as *const () as usize,
+        compare_bra_reg_goias_create_table as *const () as usize,
+        compare_bra_reg_minas_gerais_create_table as *const () as usize,
+        compare_bra_reg_north_create_table as *const () as usize,
+        compare_bra_reg_northeast_create_table as *const () as usize,
+        compare_bra_reg_parana_create_table as *const () as usize,
+        compare_bra_reg_pern_create_table as *const () as usize,
+        compare_bra_reg_rio_create_table as *const () as usize,
+        compare_bra_reg_santa_create_table as *const () as usize,
+        compare_bra_reg_sp_create_table as *const () as usize,
+        compare_jap_j1_create_table as *const () as usize,
+        compare_jap_j2_create_table as *const () as usize,
+        compare_aus_nsl_create_table as *const () as usize,
+        compare_bra_reg_bahia_create_semi_final_stage as *const () as usize,
+        compare_bra_reg_north_create_semi_final_stage as *const () as usize,
+        compare_bra_reg_northeast_create_semi_final_stage as *const () as usize,
+        compare_bra_reg_pern_create_semi_final_stage as *const () as usize,
+        compare_bra_reg_santa_create_semi_final_stage as *const () as usize,
+        compare_bra_reg_sp_create_semi_final_stage as *const () as usize,
+        compare_bra_reg_gaucho_create_knockout_stage as *const () as usize,
+        compare_bra_reg_central_create_knockout_stage as *const () as usize,
+        compare_bra_reg_goias_create_knockout_stage as *const () as usize,
+        compare_ita_ser_a_update_for_date as *const () as usize,
+        compare_ita_ser_b_update_for_date as *const () as usize,
+        compare_ita_league_sort_clubs_level_on_points as *const () as usize,
+        compare_ita_ser_a_update_staff_records_for_status as *const () as usize,
+        compare_ita_ser_c1a_advance_stage as *const () as usize,
+        compare_create_playoff_stages as *const () as usize,
+        compare_ita_ser_c1b_advance_stage as *const () as usize,
+        compare_create_play_off_stages as *const () as usize,
+        compare_eng_third_advance_stage as *const () as usize,
+        compare_construct_eng_prm as *const () as usize,
+        compare_construct_eng_first as *const () as usize,
+        compare_construct_eng_second as *const () as usize,
+        compare_construct_eng_third as *const () as usize,
+        compare_construct_ita_ser_a as *const () as usize,
+        compare_construct_ita_ser_b as *const () as usize,
+        compare_construct_ita_ser_c1a as *const () as usize,
+        compare_construct_ita_ser_c1b as *const () as usize,
+        compare_construct_fra_second as *const () as usize,
+        compare_construct_fra_third as *const () as usize,
+        compare_construct_spa_second as *const () as usize,
+        compare_construct_spa_first as *const () as usize,
+        compare_construct_spa_lower as *const () as usize,
+        compare_spa_second_create_table as *const () as usize,
+        compare_spa_lower_create_table as *const () as usize,
+        compare_fra_cfa_set_up_rules as *const () as usize,
+        compare_construct_fra_cfa as *const () as usize,
+        compare_construct_fra_lower as *const () as usize,
+        compare_destroy_fra_cfa as *const () as usize,
+        compare_destroy_fra_lower as *const () as usize,
+        compare_create_fixed_fixtures as *const () as usize,
+        compare_ita_ser_b_set_up_fixed_fixtures as *const () as usize,
+        compare_ita_ser_c1a_set_up_fixed_fixtures as *const () as usize,
+        compare_ita_ser_c1b_set_up_fixed_fixtures as *const () as usize,
+        compare_stub_return_one_ret8 as *const () as usize,
+        compare_stub_return_one_ret4 as *const () as usize,
+        compare_set_fixture_venue as *const () as usize,
+        compare_find_available_venue as *const () as usize,
+        compare_calculate_match_attendance as *const () as usize,
+        compare_fra_third_create_schedule as *const () as usize,
+        compare_fra_second_create_schedule as *const () as usize,
+        compare_fra_lower_create_schedule as *const () as usize,
+        compare_fra_cfa_create_schedule as *const () as usize,
+        compare_ita_ser_c1a_create_schedule as *const () as usize,
+        compare_ita_ser_c1b_create_schedule as *const () as usize,
+        compare_ita_ser_a_create_schedule as *const () as usize,
+        compare_ita_ser_b_create_schedule as *const () as usize,
+        compare_fra_first_create_schedule as *const () as usize,
+        compare_bra_reg_minas_gerais_advance_stage as *const () as usize,
+        compare_bra_reg_minas_gerais_create_final_stage as *const () as usize,
+        compare_bra_reg_minas_gerais_record_season_honours as *const () as usize,
+        compare_bra_reg_parana_advance_stage as *const () as usize,
+        compare_bra_reg_parana_create_final_stage as *const () as usize,
+        compare_bra_reg_parana_record_season_honours as *const () as usize,
+        compare_bra_reg_rio_advance_stage as *const () as usize,
+        compare_bra_reg_rio_create_final_stage as *const () as usize,
+        compare_bra_reg_rio_record_season_honours as *const () as usize,
+        compare_ita_cup_create_schedule as *const () as usize,
+        compare_ita_c_cup_create_schedule as *const () as usize,
+        compare_ita_super_create_round_table as *const () as usize,
+        compare_ita_c1_super_create_round_table as *const () as usize,
+        compare_ita_cup_select_entrants as *const () as usize,
+        compare_ita_c_cup_select_entrants as *const () as usize,
+        compare_ita_super_init_team_list as *const () as usize,
+        compare_bra_cup_create_round_table as *const () as usize,
+        compare_bra_cup_build_team_table as *const () as usize,
+        compare_bra_cup_set_up_rounds as *const () as usize,
+        compare_conmebol_liber_create_schedule as *const () as usize,
+        compare_conmebol_merc_create_schedule as *const () as usize,
+        compare_conmebol_merc_select_invited_clubs as *const () as usize,
+        compare_eng_second_create_schedule as *const () as usize,
+        compare_eng_third_create_schedule as *const () as usize,
+        compare_eng_first_create_schedule as *const () as usize,
+        compare_eng_prm_create_schedule as *const () as usize,
+        compare_spa_first_create_schedule as *const () as usize,
+        compare_bra_reg_bahia_start_new_season as *const () as usize,
+        compare_bra_reg_bahia_advance_stage as *const () as usize,
+        compare_bra_reg_central_start_new_season as *const () as usize,
+        compare_bra_reg_central_advance_stage as *const () as usize,
+        compare_bra_reg_gaucho_start_new_season as *const () as usize,
+        compare_bra_reg_gaucho_advance_stage as *const () as usize,
+        compare_bra_reg_goias_start_new_season as *const () as usize,
+        compare_bra_reg_goias_advance_stage as *const () as usize,
+        compare_bra_reg_north_start_new_season as *const () as usize,
+        compare_bra_reg_north_advance_stage as *const () as usize,
+        compare_bra_reg_northeast_start_new_season as *const () as usize,
+        compare_bra_reg_northeast_advance_stage as *const () as usize,
+        compare_bra_reg_pern_start_new_season as *const () as usize,
+        compare_bra_reg_pern_advance_stage as *const () as usize,
+        compare_bra_reg_santa_start_new_season as *const () as usize,
+        compare_bra_reg_santa_advance_stage as *const () as usize,
+        compare_bra_reg_sp_start_new_season as *const () as usize,
+        compare_bra_reg_sp_advance_stage as *const () as usize,
+        compare_spa_second_create_schedule as *const () as usize,
+        compare_spa_lower_create_schedule as *const () as usize,
+        compare_construct_fra_first as *const () as usize,
+        compare_bra_nat_first_advance_stage as *const () as usize,
+        compare_bra_nat_first_create_play_off_stage as *const () as usize,
+        compare_bra_nat_second_advance_stage as *const () as usize,
+        compare_bra_nat_second_create_play_off_stage as *const () as usize,
+        compare_bra_nat_first_start_new_season as *const () as usize,
+        compare_bra_nat_first_process_promotion_relegation_chain as *const () as usize,
+        compare_bra_nat_second_start_new_season as *const () as usize,
+        compare_jap_j1_advance_stage as *const () as usize,
+        compare_create_championship_final_stage as *const () as usize,
+        compare_jap_j1_start_new_season as *const () as usize,
+        compare_init_default_table as *const () as usize,
+        compare_post_host_news as *const () as usize,
+        compare_load_temp_file as *const () as usize,
+        compare_league_process_promotion_relegation_chain as *const () as usize,
+        compare_send_prize_money_news as *const () as usize,
+        compare_send_tv_rights_news as *const () as usize,
+        compare_bra_champ_cup_create_schedule as *const () as usize,
+        compare_con_merc_cup_create_schedule as *const () as usize,
+        compare_eur_super_cup_create_round_table as *const () as usize,
+        compare_asia_super_cup_create_round_table as *const () as usize,
+        compare_asia_club_champ_create_round_table as *const () as usize,
+        compare_asia_cup_winner_create_round_table as *const () as usize,
+        compare_eng_auto_cup_create_round_table as *const () as usize,
+        compare_goldcup_create_schedule as *const () as usize,
+        compare_african_nations_create_schedule as *const () as usize,
+        compare_fifa_confed_create_schedule as *const () as usize,
+        compare_intertoto_cup_create_round_table as *const () as usize,
+        compare_world_club_cup_create_round_table as *const () as usize,
+        compare_inter_amer_cup_create_round_table as *const () as usize,
+        compare_con_champ_create_round_table as *const () as usize,
+        compare_uefa_cup_create_round_table as *const () as usize,
+        compare_intertoto_cup_collect_entrants as *const () as usize,
+        compare_intertoto_cup_collect_club_list as *const () as usize,
+        compare_eur_super_cup_select_teams as *const () as usize,
+        compare_asia_super_cup_select_teams as *const () as usize,
+        compare_ita_c1_super_init_team_list as *const () as usize,
+        compare_oceania_club_champ_create_schedule as *const () as usize,
+        compare_asia_club_champ_build_team_table as *const () as usize,
+        compare_create_team_entries as *const () as usize,
+        compare_bra_reg_rio_create_half_season_stage as *const () as usize,
+        compare_bra_reg_minas_gerais_create_half_season_stage as *const () as usize,
+        compare_create_half_stage as *const () as usize,
+        compare_jap_j1_create_half_season_stage as *const () as usize,
+        compare_bra_reg_rio_start_new_season as *const () as usize,
+        compare_bra_reg_minas_gerais_start_new_season as *const () as usize,
+        compare_bra_reg_parana_start_new_season as *const () as usize,
+        compare_aus_nsl_advance_stage as *const () as usize,
+        compare_create_finals_series_stage as *const () as usize,
+        compare_create_grand_final_stage as *const () as usize,
+        compare_usa_mls_advance_stage as *const () as usize,
+        compare_usa_mls_create_playoff_stage as *const () as usize,
+        compare_usa_mls_create_final_stage as *const () as usize,
+        compare_bra_cup_start_new_season as *const () as usize,
+        compare_jap_emp_cup_start_new_season as *const () as usize,
+        compare_jap_j_cup_start_new_season as *const () as usize,
+        compare_jap_super_start_new_season as *const () as usize,
+        compare_usa_open_cup_start_new_season as *const () as usize,
+        compare_usa_mls_all_stars_start_new_season_90a760 as *const () as usize,
+        compare_set_up_teams as *const () as usize,
+        compare_conmebol_liber_update_for_date as *const () as usize,
+        compare_build_first_group_table as *const () as usize,
+        compare_conmebol_liber_create_group_stage as *const () as usize,
+        compare_conmebol_merc_update_for_date as *const () as usize,
+        compare_conmebol_merc_create_first_group_table as *const () as usize,
+        compare_conmebol_merc_create_group_stage as *const () as usize,
+        compare_con_merc_cup_update_for_date as *const () as usize,
+        compare_con_merc_cup_create_first_group_table as *const () as usize,
+        compare_con_merc_cup_create_group_stage as *const () as usize,
+        compare_goldcup_update_for_date as *const () as usize,
+        compare_goldcup_create_group_table as *const () as usize,
+        compare_goldcup_create_group_stage as *const () as usize,
+        compare_usa_mls_create_table as *const () as usize,
+        compare_create_second_division_stage as *const () as usize,
+        compare_create_third_division_stage as *const () as usize,
+        compare_usa_mls_start_new_season as *const () as usize,
+        compare_usa_mls_set_predicted_positions as *const () as usize,
+        compare_usa_mls_get_club_array as *const () as usize,
+        compare_bra_nat_third_create_group_stage as *const () as usize,
+        compare_create_second_round_stage as *const () as usize,
+        compare_create_third_round_groups as *const () as usize,
+        compare_bra_nat_third_create_final_stage as *const () as usize,
+        compare_bra_nat_third_start_new_season as *const () as usize,
+        compare_bra_nat_third_set_predicted_positions as *const () as usize,
+        compare_select_section_clubs as *const () as usize,
+        compare_create_section_stage as *const () as usize,
+        compare_eng_auto_cup_advance_stage as *const () as usize,
+        compare_eng_auto_cup_create_final_stage as *const () as usize,
+        compare_eng_auto_cup_rank_teams as *const () as usize,
+        compare_construct_cup_stage as *const () as usize,
+        compare_destroy_cup_stage as *const () as usize,
+        compare_conmebol_liber_create_knockout_stage as *const () as usize,
+        compare_con_merc_cup_create_semi_final_stage as *const () as usize,
+        compare_con_merc_cup_advance_stage as *const () as usize,
+        compare_con_merc_cup_select_invited_clubs as *const () as usize,
+        compare_conmebol_merc_advance_stage as *const () as usize,
+        compare_goldcup_advance_stage as *const () as usize,
+        compare_set_up_team_list as *const () as usize,
+        compare_goldcup_set_predicted_positions as *const () as usize,
+        compare_goldcup_start_new_season as *const () as usize,
+        compare_construct_bra_reg_bahia as *const () as usize,
+        compare_construct_bra_reg_central as *const () as usize,
+        compare_construct_bra_reg_gaucho as *const () as usize,
+        compare_construct_bra_reg_goias as *const () as usize,
+        compare_construct_bra_reg_minas_gerais as *const () as usize,
+        compare_construct_bra_reg_north as *const () as usize,
+        compare_construct_bra_reg_northeast as *const () as usize,
+        compare_construct_bra_reg_parana as *const () as usize,
+        compare_construct_bra_reg_pern as *const () as usize,
+        compare_construct_bra_reg_rio as *const () as usize,
+        compare_construct_bra_reg_santa as *const () as usize,
+        compare_construct_bra_reg_sp as *const () as usize,
+        compare_cqt4_atualizar_media_de_publico as *const () as usize,
+        compare_oceania_club_champ_update_for_date as *const () as usize,
+        compare_create_group_a_table as *const () as usize,
+        compare_create_group_b_stage as *const () as usize,
+        compare_oceania_club_champ_select_qualified_clubs as *const () as usize,
+        compare_oceania_club_champ_advance_stage as *const () as usize,
+        compare_oceania_club_champ_create_knockout_stage as *const () as usize,
+        compare_asia_club_champ_advance_stage as *const () as usize,
+        compare_create_group_stages as *const () as usize,
+        compare_asia_club_champ_create_semi_final_stage as *const () as usize,
+        compare_african_nations_update_for_date as *const () as usize,
+        compare_draw_finalists as *const () as usize,
+        compare_african_nations_create_group_stage as *const () as usize,
+        compare_asia_cup_winner_create_knockout_stage as *const () as usize,
+        compare_asia_cup_winner_advance_stage as *const () as usize,
+        compare_create_finals_stage as *const () as usize,
+        compare_ita_cup_create_first_group_table as *const () as usize,
+        compare_init_first_group as *const () as usize,
+        compare_ita_cup_advance_stage as *const () as usize,
+        compare_ita_cup_advance_stage_63d950 as *const () as usize,
+        compare_ita_cup_create_group_stage as *const () as usize,
+        compare_ita_cup_create_group_stage_63d9e0 as *const () as usize,
+        compare_ita_cup_create_knockout_stage as *const () as usize,
+        compare_ita_cup_create_knockout_stage_63dc10 as *const () as usize,
+        compare_euro_champ_qual_set_up_rules as *const () as usize,
+        compare_get_group_team_count as *const () as usize,
+        compare_get_qualification_status as *const () as usize,
+        compare_init_group_one_table as *const () as usize,
+        compare_build_entrants as *const () as usize,
+        compare_spa_cup_update_for_date as *const () as usize,
+        compare_spa_cup_record_season_honours as *const () as usize,
+        compare_spa_cup_record_season_honours_5e93e0 as *const () as usize,
+        compare_spa_cup_record_season_honours_637750 as *const () as usize,
+        compare_spa_cup_record_season_honours_63d770 as *const () as usize,
     ];
     let nomes = [
         "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
@@ -8372,18 +8372,18 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x27) as *mut i8) = ((y >> 8) % 2) as i8;
             *((j + 0x103) as *mut i8) = ((y >> 16) % 13) as i8 - 2;
             let lado = [0u8, 1, 2, 255][((y >> 24) % 4) as usize];
-            comparar_table_a(m, j);
-            comparar_table_b(m, j);
-            comparar_diferenca(m, lado, (y >> 32) as u8);
-            comparar_band(lado, ((y >> 40) % 10) as i8 - 1, ((y >> 44) % 14) as i8 - 1);
-            comparar_limit(lado, ((y >> 48) % 14) as i8 - 2);
+            compare_table_a(m, j);
+            compare_table_b(m, j);
+            compare_diferenca(m, lado, (y >> 32) as u8);
+            compare_band(lado, ((y >> 40) % 10) as i8 - 1, ((y >> 44) % 14) as i8 - 1);
+            compare_limit(lado, ((y >> 48) % 14) as i8 - 2);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((y >> 52) % 4) as usize];
-            comparar_condicao(j);
+            compare_condicao(j);
             // coordinates with differences of -5..=5 (the global table is read from the game itself)
             let z = s.next_u64();
             let (a, b) = ((z % 20) as i8, ((z >> 8) % 20) as i8);
             let (c, d) = (a + ((z >> 16) % 11) as i8 - 5, b + ((z >> 24) % 11) as i8 - 5);
-            comparar_by_difference(m, a, b, c, d);
+            compare_by_difference(m, a, b, c, d);
             // routines that take side and values from the player itself
             let w = s.next_u64();
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][(w % 4) as usize];
@@ -8397,14 +8397,14 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x19e) as *mut usize) = if (w >> 26) % 4 == 0 { 0 } else { m };
             *((m + 0x8eac) as *mut u8) = (w >> 32) as u8;
             *((m + 0x8ead) as *mut u8) = (w >> 40) as u8;
-            comparar_player_difference(m, j);
-            comparar_player_limit(j);
-            comparar_player_band(j, lado);
+            compare_player_difference(m, j);
+            compare_player_limit(j);
+            compare_player_band(j, lado);
             // the ones going through 0x6c38c0 only get side 0 or 1 (index of the side table)
             let lado_real = *((j + 0x27) as *const i8);
             *((j + 0x27) as *mut i8) = ((w >> 16) % 2) as i8;
-            comparar_player_table(j);
-            comparar_side_byte(m, j);
+            compare_player_table(j);
+            compare_side_byte(m, j);
             // batch 3 (with side 0 or 1 still holding: 0x6f4600 indexes the side's block).
             // 0x6f4600 always has an engine (with 0x19e zeroed the original reads address 0 and crashes).
             *((j + 0x19e) as *mut usize) = m;
@@ -8418,9 +8418,9 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8eb2) as *mut u8) = ((u >> 22) % 3 == 0) as u8;
             *((m + 0xf57a) as *mut usize) = if (u >> 24) % 5 == 0 { j } else { o };
             *((j + 0x19) as *mut i8) = ((u >> 27) % 11) as i8;
-            comparar_position_byte(m + 0x91e2, ((u >> 31) % 16) as i8);
-            comparar_field_by_position(j);
-            comparar_can_choose(m, if (u >> 33) % 8 == 0 { 0 } else { j }, ((u >> 36) % 10) as i8 - 1, ((u >> 40) % 15) as i8 - 2);
+            compare_position_byte(m + 0x91e2, ((u >> 31) % 16) as i8);
+            compare_field_by_position(j);
+            compare_can_choose(m, if (u >> 33) % 8 == 0 { 0 } else { j }, ((u >> 36) % 10) as i8 - 1, ((u >> 40) % 15) as i8 - 2);
             *((j + 0x27) as *mut i8) = lado_real;
             // direction: neighbouring coordinates (including the same point and the fixed cases), attributes
             let v = s.next_u64();
@@ -8440,7 +8440,7 @@ pub unsafe fn autoteste(casos: u64) {
                 (a + ((v >> 52) % 11) as i8 - 5, b + ((v >> 56) % 11) as i8 - 5)
             };
             let (a, b) = if v % 3 == 1 { (c, d) } else { (a, b) };
-            comparar_aim_set_facing_direction(j, a, b, c, d);
+            compare_aim_set_facing_direction(j, a, b, c, d);
             // batch 4 (floating point): values around the ranges, negative and zero
             let q = s.next_u64();
             let faixas = [9500.0f32, 8750.0, 7750.0, 0.0, 10000.0, 100.0];
@@ -8449,10 +8449,10 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0xd5) as *mut f32) = ((q >> 20) % 400) as f32 / 10.0 - 5.0;
             let x = ((q >> 30) % 5000) as f32 / 7.0;
             let codigo = [-1i16, 19, 21, 33, 36, 46, 20, 47, 18, 0, -2, 1000][((q >> 44) % 12) as usize];
-            comparar_tire_fatigue(j, x, codigo);
+            compare_tire_fatigue(j, x, codigo);
             *((j + 0x10c) as *mut i8) = ((q >> 50) % 25) as i8 - 2;
             *((j + 0x19a) as *mut i16) = ((q >> 54) % 400) as i16 - 20;
-            comparar_facing(j, byte(j, 0x102).wrapping_add(((q >> 58) % 11) as i8 - 5), byte(j, 0x103).wrapping_add(((q >> 61) % 7) as i8 - 3));
+            compare_facing(j, byte(j, 0x102).wrapping_add(((q >> 58) % 11) as i8 - 5), byte(j, 0x103).wrapping_add(((q >> 61) % 7) as i8 - 3));
             // batch 5
             let g = s.next_u64();
             let gp = grupo.as_mut_ptr() as usize;
@@ -8466,12 +8466,12 @@ pub unsafe fn autoteste(casos: u64) {
             *((gp + 0x59) as *mut i8) = ((g >> 5) % 13) as i8 - 1;
             let lado_g = ((g >> 10) % 2) as i8;
             let modo = [0i8, 1, 2, 2][((g >> 12) % 4) as usize];
-            comparar_procurar(m, lado_g, gp, (g >> 14) as u32, (g >> 20) as u32, (g >> 26) as u32, (g >> 32) as u32, modo);
+            compare_procurar(m, lado_g, gp, (g >> 14) as u32, (g >> 20) as u32, (g >> 26) as u32, (g >> 32) as u32, modo);
             let h = s.next_u64();
             *((j + 0x27) as *mut i8) = [0i8, 1, 2][(h % 3) as usize];
             *((j + 0x102) as *mut i8) = ((h >> 2) % 9) as i8 - 1;
             *((j + 0x103) as *mut i8) = ((h >> 6) % 14) as i8 - 1;
-            comparar_reaches(j, ((h >> 10) % 9) as i8 - 1, ((h >> 14) % 14) as i8 - 1);
+            compare_reaches(j, ((h >> 10) % 9) as i8 - 1, ((h >> 14) % 14) as i8 - 1);
             *((j + 0x27) as *mut i8) = lado_real;
             // kick: angle by the global table (via fake engine), varied strength and attributes
             *((j + 0x19e) as *mut usize) = m;
@@ -8481,7 +8481,7 @@ pub unsafe fn autoteste(casos: u64) {
             let codigo = [0i16, 1, 3, 0x33, 0x5b, 0x40, 100, -1][((h >> 40) % 8) as usize];
             let (a, b) = (((h >> 43) % 12) as i8, ((h >> 47) % 12) as i8);
             let mut saida = 0xffffu16;
-            comparar_classificar(j, codigo, a, b, a + ((h >> 51) % 11) as i8 - 5, b + ((h >> 55) % 11) as i8 - 5, ((h >> 59) % 32) as f32 / 3.0, &mut saida);
+            compare_classificar(j, codigo, a, b, a + ((h >> 51) % 11) as i8 - 5, b + ((h >> 55) % 11) as i8 - 5, ((h >> 59) % 32) as f32 / 3.0, &mut saida);
             // batch 6: distances and the two blocks of 20 players in the engine
             let e = s.next_u64();
             for k in 0..40usize {
@@ -8499,9 +8499,9 @@ pub unsafe fn autoteste(casos: u64) {
             }
             let jj = m + 0x4796 + 8920 * ((e >> 50) % 2) as usize + ((e >> 52) % 20) as usize * 0x1be;
             *((jj + 0x19) as *mut i8) = 3;
-            comparar_distance_to_point(jj, ((e >> 40) % 9) as i8, ((e >> 44) % 12) as i8);
-            comparar_distance_to_goal(jj);
-            comparar_mais_perto(m, jj);
+            compare_distance_to_point(jj, ((e >> 40) % 9) as i8, ((e >> 44) % 12) as i8);
+            compare_distance_to_goal(jj);
+            compare_mais_perto(m, jj);
             // batch 7: grid with valid lists, lines in all directions, pass with RNG
             let w2 = s.next_u64();
             for cel in 0..108usize {
@@ -8520,7 +8520,7 @@ pub unsafe fn autoteste(casos: u64) {
                 1 => (((w2 >> 20) % 11) as i8 - 1, y1),
                 _ => pt(w2 >> 24),
             };
-            comparar_na_linha(m, x1, y1, x2, y2);
+            compare_na_linha(m, x1, y1, x2, y2);
             let v2 = s.next_u64();
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x27) as *mut i8) = (v2 % 2) as i8;
@@ -8531,8 +8531,8 @@ pub unsafe fn autoteste(casos: u64) {
             let (a, b) = (((v2 >> 24) % 9) as i8, ((v2 >> 28) % 12) as i8);
             let mut saida = 0u8;
             let ptr = if (v2 >> 32) % 3 == 0 { core::ptr::null_mut() } else { &mut saida as *mut u8 };
-            comparar_consegue(j, a, b, ((v2 >> 34) % 3 != 0) as i8, ((v2 >> 36) % 40) as f32 / 3.0, ((v2 >> 42) % 30) as f32 / 4.0, ptr);
-            comparar_in_the_box(j);
+            compare_consegue(j, a, b, ((v2 >> 34) % 3 != 0) as i8, ((v2 >> 36) % 40) as f32 / 3.0, ((v2 >> 42) % 30) as f32 / 4.0, ptr);
+            compare_in_the_box(j);
             // batch 8: positioning (formations with margin: the index goes negative with position < 0)
             let o2 = s.next_u64();
             for (l, f) in formacoes.iter_mut().enumerate() {
@@ -8562,11 +8562,11 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x102) as *mut i8) = ((p2 >> 5) % 12) as i8 - 2;
             *((j + 0x103) as *mut i8) = ((p2 >> 9) % 15) as i8 - 2;
             *((j + 0x19e) as *mut usize) = m;
-            comparar_marcas(m + 0x91e2, ((p2 >> 14) % 14) as i8);
-            comparar_papel_ataque(j);
-            comparar_papel_defesa(j);
+            compare_marcas(m + 0x91e2, ((p2 >> 14) % 14) as i8);
+            compare_papel_ataque(j);
+            compare_papel_defesa(j);
             let (mut sx, mut sy) = (0x55i8, 0x55i8);
-            comparar_position_place_players(m, j, &mut sx, &mut sy, 0);
+            compare_position_place_players(m, j, &mut sx, &mut sy, 0);
             // batch 9: defensive lines over the two blocks of 20 (already filled above), varied y
             let y2 = s.next_u64();
             for k in 0..40usize {
@@ -8574,7 +8574,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((p + 0x103) as *mut i8) = (y2.rotate_left(k as u32 * 2) % 16) as i8 - 2;
                 *((p + 0x19) as *mut i8) = (y2.rotate_left(k as u32 * 3 + 1) % 13) as i8 - 2;
             }
-            comparar_linhas(m);
+            compare_linhas(m);
             // batch 10: player update (all roles, varied attributes and ranges)
             let z = s.next_u64();
             let z2 = s.next_u64();
@@ -8604,7 +8604,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0xf5bf) as *mut u8) = ((z2 >> 48) % 4) as u8;
             *((m + 0xf5bf + 54) as *mut u8) = ((z2 >> 50) % 4) as u8;
             *((m + 0x8ed0) as *mut i16) = ((z2 >> 52) % 900) as i16 - 100;
-            comparar_atualizar(j);
+            compare_atualizar(j);
             *((j + 0x19e) as *mut usize) = m;
             // batch 11
             let q1 = s.next_u64();
@@ -8613,7 +8613,7 @@ pub unsafe fn autoteste(casos: u64) {
             for o in 0x10eusize..=0x117 {
                 *((j + o) as *mut i8) = (q1.rotate_left(o as u32) % 30) as i8 - 3;
             }
-            comparar_momento(j);
+            compare_momento(j);
             // tables with several 1s (position 1 and substitute), blocks with positions, substitutes and 0x20
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
@@ -8634,39 +8634,39 @@ pub unsafe fn autoteste(casos: u64) {
             let algum = |sh: u32| m + 0x4796 + 8920 * ((q2 >> sh) % 2) as usize + ((q2 >> (sh + 1)) % 20) as usize * 0x1be;
             *((m + 0xf59e) as *mut usize) = if (q2 >> 40) % 3 == 0 { 0 } else { algum(41) };
             *((m + 0xf5a2) as *mut usize) = if (q2 >> 47) % 3 == 0 { 0 } else { algum(48) };
-            comparar_posicao_um(m, ((q2 >> 55) % 3) as i8);
+            compare_posicao_um(m, ((q2 >> 55) % 3) as i8);
             let jj = algum(57);
-            comparar_caminho(m, jj, ((q2 >> 63) & 1) as i8);
-            comparar_espaco(m, jj);
-            comparar_off_centre(((q1 >> 40) % 12) as i8 - 2);
-            comparar_alem(m, ((q1 >> 44) % 14) as i8 - 1, ((q1 >> 48) % 3) as i8, ((q1 >> 50) & 1) as i8);
+            compare_caminho(m, jj, ((q2 >> 63) & 1) as i8);
+            compare_espaco(m, jj);
+            compare_off_centre(((q1 >> 40) % 12) as i8 - 2);
+            compare_alem(m, ((q1 >> 44) % 14) as i8 - 1, ((q1 >> 48) % 3) as i8, ((q1 >> 50) & 1) as i8);
             // batch 12
             let g2 = s.next_u64();
-            comparar_ler_8ea7(m);
-            comparar_ler_8ea8(m);
-            comparar_ler_8ea9(m);
-            comparar_ler_8eaa(m);
-            comparar_ler_8eb2(m);
-            comparar_gravar_8ea9(m, g2 as u8);
-            comparar_gravar_8ea7(m, (g2 >> 8) as u8);
-            comparar_gravar_8ea8(m, (g2 >> 16) as u8);
-            comparar_gravar_8eaa(m, (g2 >> 24) as u8);
-            comparar_write_8ed8(m, (g2 >> 32) as u16);
+            compare_ler_8ea7(m);
+            compare_ler_8ea8(m);
+            compare_ler_8ea9(m);
+            compare_ler_8eaa(m);
+            compare_ler_8eb2(m);
+            compare_gravar_8ea9(m, g2 as u8);
+            compare_gravar_8ea7(m, (g2 >> 8) as u8);
+            compare_gravar_8ea8(m, (g2 >> 16) as u8);
+            compare_gravar_8eaa(m, (g2 >> 24) as u8);
+            compare_write_8ed8(m, (g2 >> 32) as u16);
             *((m + 0x8f7a) as *mut u32) = (g2 >> 3) as u32;
             *((m + 0x8f7e) as *mut u8) = (g2 >> 11) as u8;
-            comparar_read_8f7a(m);
+            compare_read_8f7a(m);
             *((m + 0x8d46) as *mut i8) = ((g2 >> 40) % 30) as i8 - 5;
             *((m + 0x8d47) as *mut i8) = ((g2 >> 45) % 30) as i8 - 5;
-            comparar_posse(m, [-1i8, 0, 1, 2][((g2 >> 50) % 4) as usize]);
+            compare_posse(m, [-1i8, 0, 1, 2][((g2 >> 50) % 4) as usize]);
             *((j + 0x101) as *mut i8) = ((g2 >> 52) % 8) as i8 - 1;
             for k in 0..8usize {
                 *((j + 0x1ae + 4 * k) as *mut usize) = (g2 >> (k * 3)) as usize % 5;
             }
-            comparar_in_list(j, ((g2 >> 56) % 6) as usize);
+            compare_in_list(j, ((g2 >> 56) % 6) as usize);
             for k in 0..4usize {
                 *((m + 0xf58e + 4 * k) as *mut usize) = jogadores[k].as_ptr() as usize;
             }
-            comparar_extremos(m);
+            compare_extremos(m);
             // batch 13 (blocks already filled; some 0x2b zeroed; grid with counts)
             let h3 = s.next_u64();
             for k in 0..40usize {
@@ -8682,19 +8682,19 @@ pub unsafe fn autoteste(casos: u64) {
                     *((m + 0x21b6 + 90 * cel + l) as *mut i8) = if v % 8 == 0 { 1 + ((v >> 3) % 2) as i8 } else if v % 31 == 1 { -1 } else { 0 };
                 }
             }
-            comparar_count_active(m, ((h3 >> 3) % 2) as i8);
-            comparar_special_code(((h3 >> 5) % 110) as i8 - 5);
+            compare_count_active(m, ((h3 >> 3) % 2) as i8);
+            compare_special_code(((h3 >> 5) % 110) as i8 - 5);
             let jj3 = m + 0x4796 + 8920 * ((h3 >> 12) % 2) as usize + ((h3 >> 13) % 20) as usize * 0x1be;
-            comparar_atras(m, jj3);
+            compare_atras(m, jj3);
             let mut alvo = -2i32;
             *((m + 0x4792) as *mut usize) = if (h3 >> 18) & 1 == 0 { &mut alvo as *mut i32 as usize } else { m + 0x10 };
-            comparar_no_match(m);
-            comparar_pressao_area(m, ((h3 >> 19) % 2) as i8);
+            compare_no_match(m);
+            compare_pressao_area(m, ((h3 >> 19) % 2) as i8);
             let (a3, b3) = (((h3 >> 20) % 10) as i8 - 1, ((h3 >> 24) % 13) as i8 - 1);
-            comparar_mais_proximo(m, jj3, a3, b3);
-            comparar_mais_proximo(m, jj3, byte(jj3, 0x102), byte(jj3, 0x103));
-            comparar_pressao_ponto(m, ((h3 >> 28) % 2) as i8, a3, b3, ((h3 >> 29) & 1) as i8);
-            comparar_smallest_distance(m, ((h3 >> 30) % 2) as i8, a3, b3, ((h3 >> 31) & 1) as i8);
+            compare_mais_proximo(m, jj3, a3, b3);
+            compare_mais_proximo(m, jj3, byte(jj3, 0x102), byte(jj3, 0x103));
+            compare_pressao_ponto(m, ((h3 >> 28) % 2) as i8, a3, b3, ((h3 >> 29) & 1) as i8);
+            compare_smallest_distance(m, ((h3 >> 30) % 2) as i8, a3, b3, ((h3 >> 31) & 1) as i8);
             // batch 14 (tables with varied role bits, including none and 0x700)
             let h4 = s.next_u64();
             for t in tabelas.iter_mut() {
@@ -8704,76 +8704,76 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             let delta = ((h4 >> 20) % 4000) as i16 - 2000;
-            comparar_split_a(m, ((h4 >> 32) % 2) as i8, delta);
-            comparar_split_b(m, ((h4 >> 33) % 2) as i8, delta);
-            comparar_split_c(m, ((h4 >> 34) % 2) as i8, delta);
+            compare_split_a(m, ((h4 >> 32) % 2) as i8, delta);
+            compare_split_b(m, ((h4 >> 33) % 2) as i8, delta);
+            compare_split_c(m, ((h4 >> 34) % 2) as i8, delta);
             let alto = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h4 >> 36) % 5) as usize];
-            comparar_escolher(m, (alto & !0xff) | ((h4 >> 40) % 2) as u32);
+            compare_escolher(m, (alto & !0xff) | ((h4 >> 40) % 2) as u32);
             // batch 15 (accessors; range extremes and sides outside 0/1)
             let h5 = s.next_u64();
             let h6 = s.next_u64();
             *((j + 0x19a) as *mut u16) = h5 as u16;
-            comparar_direction(j);
+            compare_direction(j);
             *((m + 0xf59e) as *mut usize) = if h6 & 1 == 0 { j } else { o };
             *((m + 0xf5a2) as *mut usize) = if h6 & 2 == 0 { j } else { o };
-            comparar_clear_stored(m, [0u8, 1, 2, 255][((h5 >> 16) % 4) as usize]);
+            compare_clear_stored(m, [0u8, 1, 2, 255][((h5 >> 16) % 4) as usize]);
             *((j + 0x102) as *mut i8) = if (h5 >> 18) & 1 == 0 { ((h5 >> 19) % 11) as i8 - 1 } else { (h5 >> 19) as i8 };
-            comparar_x_fora(j);
+            compare_x_fora(j);
             *((j + 0x19e) as *mut usize) = m;
             *((m + 0xf582) as *mut usize) = if (h5 >> 27) & 1 == 0 { j } else { o };
-            comparar_is_the_stored(j);
+            compare_is_the_stored(j);
             *((m + 0x475a) as *mut u8) = if (h5 >> 28) % 3 == 0 { 0 } else { (h5 >> 30) as u8 | 1 };
             *((m + 0x4761) as *mut usize) = if (h5 >> 38) % 4 == 0 { 0 } else { j };
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h5 >> 40) % 4) as usize];
-            comparar_side_of_move(m);
-            comparar_side_state(j);
-            comparar_opponent_state(j);
+            compare_side_of_move(m);
+            compare_side_state(j);
+            compare_opponent_state(j);
             *((j + 0x103) as *mut i8) = if (h5 >> 42) & 1 == 0 { ((h5 >> 43) % 14) as i8 - 1 } else { (h5 >> 43) as i8 };
-            comparar_near_goal(j);
-            comparar_player_in_block(m, (h6 >> 3) as i8, (h6 >> 11) as i8);
+            compare_near_goal(j);
+            compare_player_in_block(m, (h6 >> 3) as i8, (h6 >> 11) as i8);
             *((j + 0x27) as *mut i8) = ((h5 >> 51) % 2) as i8;
             *((j + 0x1a) as *mut i8) = if (h5 >> 52) & 1 == 0 { ((h5 >> 53) % 14) as i8 - 2 } else { (h5 >> 53) as i8 };
-            comparar_table_a_1a(m, j);
+            compare_table_a_1a(m, j);
             *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 0, h6 as u16][((h6 >> 20) % 4) as usize];
             *((j + 0x38) as *mut u8) = (h6 >> 22) as u8;
             *((m + 0x4792) as *mut usize) = j;
-            comparar_marked_moment(m);
+            compare_marked_moment(m);
             let v19c = [200i16, 201, -200, -201, i16::MIN, i16::MAX, 0, (h6 >> 30) as i16 % 400][((h6 >> 46) % 8) as usize];
-            comparar_write_19c(j, v19c);
-            comparar_set_piece_code([12i16, 13, 21, 37, 46, 59, (h6 >> 49) as i16 % 70, (h6 >> 32) as i16][((h6 >> 61) % 8) as usize]);
+            compare_write_19c(j, v19c);
+            compare_set_piece_code([12i16, 13, 21, 37, 46, 59, (h6 >> 49) as i16 % 70, (h6 >> 32) as i16][((h6 >> 61) % 8) as usize]);
             for o2 in 0..16 {
                 *((m + 0x475a + o2) as *mut u8) = (h6 >> (o2 * 4)) as u8;
             }
-            comparar_clear_move(m);
+            compare_clear_move(m);
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 *((p + 0x19) as *mut i8) = (h6.rotate_left(k as u32) % 12) as i8 - 1;
             }
-            comparar_add_disposition(m, ((h5 >> 60) % 2) as i8, (h6 >> 7) as i16);
+            compare_add_disposition(m, ((h5 >> 60) % 2) as i8, (h6 >> 7) as i16);
             // batch 16 (role tables of the 14th batch still holding)
             let h7 = s.next_u64();
             let h8 = s.next_u64();
             let delta7 = ((h7 >> 20) % 4000) as i16 - 2000;
-            comparar_split_d(m, (h7 % 2) as i8, delta7);
-            comparar_split_e(m, ((h7 >> 1) % 2) as i8, delta7);
-            comparar_split_f(m, ((h7 >> 2) % 2) as i8, delta7);
+            compare_split_d(m, (h7 % 2) as i8, delta7);
+            compare_split_e(m, ((h7 >> 1) % 2) as i8, delta7);
+            compare_split_f(m, ((h7 >> 2) % 2) as i8, delta7);
             // guard by the player (0x4761), not by the other (0x4765): the two vary independently
             *((m + 0x4761) as *mut usize) = if (h7 >> 3) % 3 == 0 { j } else { 0 };
             *((m + 0x4765) as *mut usize) = if (h7 >> 4) % 2 == 0 { o } else { 0 };
-            comparar_record_move(m, (h8 >> 1) as u16, if (h8 >> 17) % 4 == 0 { 0 } else { j as u32 }, (h8 >> 19) as u32, (h8 >> 2) as u8, (h8 >> 10) as u8, (h8 >> 18) as u8, (h8 >> 26) as u8, (h8 >> 34) as u8, (h8 >> 42) as u8);
+            compare_record_move(m, (h8 >> 1) as u16, if (h8 >> 17) % 4 == 0 { 0 } else { j as u32 }, (h8 >> 19) as u32, (h8 >> 2) as u8, (h8 >> 10) as u8, (h8 >> 18) as u8, (h8 >> 26) as u8, (h8 >> 34) as u8, (h8 >> 42) as u8);
             *((j + 0x101) as *mut i8) = ((h7 >> 5) % 6) as i8 - 1;
             for k in 0..4usize {
                 *((j + 0x1ae + 4 * k) as *mut usize) = (h7 >> (8 + k * 3)) as usize % 5;
             }
-            comparar_remove_from_list(j, ((h7 >> 24) % 6) as usize);
+            compare_remove_from_list(j, ((h7 >> 24) % 6) as usize);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h7 >> 28) % 4) as usize];
             *((m as isize + 0x4592 + byte(j, 0x27) as isize) as *mut i8) = ((h7 >> 30) % 14) as i8 - 2;
-            comparar_take_the_field(m, j);
+            compare_take_the_field(m, j);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h7 >> 34) % 4) as usize];
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x102) as *mut i8) = ((h7 >> 36) % 11) as i8 - 1;
             *((j + 0x103) as *mut i8) = ((h7 >> 40) % 14) as i8 - 1;
-            comparar_in_danger(j);
+            compare_in_danger(j);
             // batch 17
             let h9 = s.next_u64();
             let h10 = s.next_u64();
@@ -8783,7 +8783,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8eae) as *mut i8) = [0i8, 1, 2][((h9 >> 7) % 3) as usize];
             *((m + 0x475b) as *mut i8) = ((h9 >> 9) % 10) as i8 - 1;
             *((m + 0x475c) as *mut i8) = ((h9 >> 13) % 14) as i8 - 1;
-            comparar_check_move(m);
+            compare_check_move(m);
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 let r = h10.rotate_left(k as u32 * 5);
@@ -8792,9 +8792,9 @@ pub unsafe fn autoteste(casos: u64) {
                 *((p + 0x103) as *mut i8) = ((r >> 8) % 12) as i8;
             }
             let (x9, y9) = (((h9 >> 20) % 11) as i8 - 1, ((h9 >> 24) % 15) as i8 - 2);
-            comparar_clear_path(m, [0i8, 1, 2, -1][((h9 >> 28) % 4) as usize], x9, y9);
+            compare_clear_path(m, [0i8, 1, 2, -1][((h9 >> 28) % 4) as usize], x9, y9);
             let pp9 = m + 0x4796 + 8920 * ((h9 >> 30) % 2) as usize + ((h9 >> 31) % 20) as usize * 0x1be;
-            comparar_clear_path(m, ((h9 >> 36) % 2) as i8, byte(pp9, 0x102), byte(pp9, 0x103));
+            compare_clear_path(m, ((h9 >> 36) % 2) as i8, byte(pp9, 0x102), byte(pp9, 0x103));
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h9 >> 37) % 4) as usize];
             *((j + 0x102) as *mut i8) = ((h9 >> 39) % 9) as i8;
@@ -8809,7 +8809,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((j + 0x10c) as *mut i8) = dif as i8;
                 }
             }
-            comparar_reaches_the_point(j, xa, ya);
+            compare_reaches_the_point(j, xa, ya);
             // batch 18 (own records and persons; 0x69 and 0x6d always valid in the block)
             let h11 = s.next_u64();
             let h12 = s.next_u64();
@@ -8836,14 +8836,14 @@ pub unsafe fn autoteste(casos: u64) {
             let partida11 = jogadores[0].as_mut_ptr() as usize;
             *((partida11 + 0x4d) as *mut u8) = (((h11 >> 40) % 10) as u8) | (((h11 >> 44) as u8) & 0xf0);
             *((m + 0x4792) as *mut usize) = partida11;
-            comparar_choose_standout(m);
+            compare_choose_standout(m);
             let alto11 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h11 >> 50) % 5) as usize];
-            comparar_choose_by_role_b(m, (alto11 & !0xff) | ((h11 >> 53) % 2) as u32);
+            compare_choose_by_role_b(m, (alto11 & !0xff) | ((h11 >> 53) % 2) as u32);
             *((m + 0x8eae) as *mut i8) = [0i8, 1, 2, -1][((h12 >> 54) % 4) as usize];
             *((j + 0x27) as *mut i8) = ((h12 >> 56) % 2) as i8;
             *((j + 0x19) as *mut i8) = ((h12 >> 57) % 17) as i8 - 2;
             let (mut fx, mut fy) = (0u8, 0u8);
-            comparar_formation_square(m, j, &mut fx, &mut fy);
+            compare_formation_square(m, j, &mut fx, &mut fy);
             // batch 19: counts (zeros, negatives and sums that overflow) and attributes
             let h13 = s.next_u64();
             let h14 = s.next_u64();
@@ -8857,7 +8857,7 @@ pub unsafe fn autoteste(casos: u64) {
                 };
                 *((m + 0x8f02 + 4 * k) as *mut i32) = v;
             }
-            comparar_compute_percentages(m, ((h13 >> 3) % 6) as i8 - 1);
+            compare_compute_percentages(m, ((h13 >> 3) % 6) as i8 - 1);
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 for (n, o) in [0xc9usize, 0xa1, 0x9d, 0x95, 0xb1, 0x7d, 0x99, 0xd9, 0xad, 0xa9].iter().enumerate() {
@@ -8889,60 +8889,60 @@ pub unsafe fn autoteste(casos: u64) {
             let pk = m + 0x4796 + 8920 * ((h16 >> 30) % 2) as usize + ((h16 >> 31) % 20) as usize * 0x1be;
             *((pk + 0x69) as *mut usize) = pessoas[0].as_ptr() as usize;
             let fat = [1.0f32, 0.0, 0.5, 1.5, 2.0, 0.95][((h15 >> 40) % 6) as usize] + ((h15 >> 43) % 9) as f32 / 64.0;
-            comparar_apply_factor(pk, fat);
-            comparar_value_by_condition(pk, [0usize, j, o][((h15 >> 47) % 3) as usize]);
-            comparar_value_by_condition(pk, *((pk + 0x1a6) as *const usize));
+            compare_apply_factor(pk, fat);
+            compare_value_by_condition(pk, [0usize, j, o][((h15 >> 47) % 3) as usize]);
+            compare_value_by_condition(pk, *((pk + 0x1a6) as *const usize));
             let jt = if (h16 >> 36) % 2 == 0 { pk } else { j };
             *((j + 0x27) as *mut i8) = ((h16 >> 37) % 2) as i8;
-            comparar_apply_to_team(m, jt, fat);
-            comparar_apply_to_side(m, ((h16 >> 38) % 2) as i8, fat);
-            comparar_choose_by_condition(m, ((h16 >> 39) % 2) as i8, [2u32, 0, 1, 0x102, (h16 >> 40) as u32][((h16 >> 44) % 5) as usize]);
+            compare_apply_to_team(m, jt, fat);
+            compare_apply_to_side(m, ((h16 >> 38) % 2) as i8, fat);
+            compare_choose_by_condition(m, ((h16 >> 39) % 2) as i8, [2u32, 0, 1, 0x102, (h16 >> 40) as u32][((h16 >> 44) % 5) as usize]);
             // batch 21
             let h17 = s.next_u64();
             let h18 = s.next_u64();
             *((j + 0x1bc) as *mut u16) = h17 as u16;
-            comparar_read_1bc(j);
+            compare_read_1bc(j);
             *((j + 0x2b) as *mut u8) = (h17 >> 16) as u8;
-            comparar_add_2b(j, (h17 >> 24) as u8);
-            comparar_write_2b(j, (h17 >> 32) as u8);
+            compare_add_2b(j, (h17 >> 24) as u8);
+            compare_write_2b(j, (h17 >> 32) as u8);
             *((j + 0x27) as *mut i8) = ((h17 >> 40) % 2) as i8;
             *((j + 0x19) as *mut i8) = ((h17 >> 41) % 15) as i8 - 2;
             *((j + 0x1a) as *mut i8) = ((h17 >> 45) % 15) as i8 - 2;
             *((j + 0x103) as *mut i8) = ((h17 >> 49) % 13) as i8 - 1;
             *((m + 0xf582) as *mut usize) = if (h17 >> 53) & 1 == 0 { j } else { o };
             *((j + 0x19e) as *mut usize) = if (h17 >> 54) % 4 == 0 { 0 } else { m };
-            comparar_player_table_a_1a(j);
-            comparar_player_table_b(j);
-            comparar_difference_of_player(j);
-            comparar_role_880(j);
+            compare_player_table_a_1a(j);
+            compare_player_table_b(j);
+            compare_difference_of_player(j);
+            compare_role_880(j);
             *((j + 0x19e) as *mut usize) = m;
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
                     *v = [0x80u16, 0x800, 0x880, 0, (h18 >> k) as u16][((h18 >> (k * 3)) % 5) as usize];
                 }
             }
-            comparar_role_880(j);
+            compare_role_880(j);
             *((j + 0x19) as *mut i8) = ((h17 >> 56) % 14) as i8 - 1;
             *((m + 0x9766 + 6371 * byte(j, 0x27) as usize) as *mut u32) = (h18 as u32) & 0x1801000;
             *((m + 6 + byte(j, 0x27) as usize) as *mut u8) = (h18 >> 32) as u8;
-            comparar_player_marks_rot(j);
-            comparar_mark_800000(j);
+            compare_player_marks_rot(j);
+            compare_mark_800000(j);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h18 >> 40) % 4) as usize];
             *((m + 0x8ea8) as *mut i8) = ((h18 >> 42) % 14) as i8 - 1;
-            comparar_near_own_goal(j);
+            compare_near_own_goal(j);
             *((m + 0x1a7) as *mut u8) = (h18 >> 8) as u8 | 1;
-            comparar_release_ball(j);
+            compare_release_ball(j);
             let dono = jogadores[1].as_mut_ptr() as usize;
             *((dono + 0x23) as *mut usize) = m + 0x4796 + 8920 * ((h18 >> 46) % 2) as usize;
             let alvo21 = if (h18 >> 47) % 4 == 0 { 0x1234 } else { *((side_player_slot(m, ((h18 >> 46) % 2) as i8, ((h18 >> 49) % 20) as usize) + 0x69) as *const usize) };
-            comparar_player_by_record(dono, alvo21);
+            compare_player_by_record(dono, alvo21);
             let cod = [0x1f40u32 - 1, 0x1f40, 0x1f40 + 0x2a4, 0x1f40 + 0x2a5, 0x1f40 + ((h18 >> 52) % 0x2a5) as u32, (h18 >> 20) as u32][((h18 >> 61) % 6) as usize];
             // the table (0xb68788) is in the uninitialised area and is zeroed at start: temporary values
             let ic = ((cod & 0x7fff) as i32 - 0x1f40) as i16;
             let alvo_t = (0xb68788 + 18 * ic.clamp(0, 0x2a5) as usize) as *mut u8;
             let antes = *alvo_t;
             *alvo_t = (h17 >> 8) as u8 | 1;
-            comparar_code_byte(cod | (((h18 >> 15) as u32 & 1) << 15) | ((h17 as u32) & 0xffff0000));
+            compare_code_byte(cod | (((h18 >> 15) as u32 & 1) << 15) | ((h17 as u32) & 0xffff0000));
             *alvo_t = antes;
             // batch 22
             let h19 = s.next_u64();
@@ -8961,12 +8961,12 @@ pub unsafe fn autoteste(casos: u64) {
             for (o, sh) in [(0x17usize, 11), (0x18, 16), (0x19, 21)] {
                 *pe22.add(o) = ((h19 >> sh) % 45) as u8;
             }
-            comparar_adjusted_rating(j, ((h19 >> 26) % 30) as i8 - 10);
+            compare_adjusted_rating(j, ((h19 >> 26) % 30) as i8 - 10);
             *((j + 0x19e) as *mut usize) = m;
             *((m + 0x477a) as *mut i32) = if (h19 >> 31) % 2 == 0 { -1 } else { (h19 >> 32) as i32 & 0xffff };
             *((j + 0x35) as *mut i16) = [7500i16, 7501, 7499, 9000, 3000, -5, (h20 >> 20) as i16][((h19 >> 34) % 7) as usize];
             *((j + 0x17) as *mut i8) = ((h19 >> 37) % 26) as i8 - 3;
-            comparar_adjust_17(j, if (h19 >> 42) % 4 == 0 { 0 } else { ((h19 >> 44) % 25) as i8 - 12 });
+            compare_adjust_17(j, if (h19 >> 42) % 4 == 0 { 0 } else { ((h19 >> 44) % 25) as i8 - 12 });
             // batch 23: possession (previous owner, pass from the same side or not, zones, role 1)
             let h21 = s.next_u64();
             let h22 = s.next_u64();
@@ -8995,7 +8995,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + v) as *mut u8) = match r % 4 { 0 => 0, 1 => 1, 2 => 0xff, _ => r };
             }
             *((m + 0x4782) as *mut u32) = (h22 >> 13) as u32;
-            comparar_take_ball(j);
+            compare_take_ball(j);
             // batch 24
             let h23 = s.next_u64();
             let h24 = s.next_u64();
@@ -9003,7 +9003,7 @@ pub unsafe fn autoteste(casos: u64) {
             let pe24 = pessoas[1].as_mut_ptr();
             *(pe24.add(0x1e) as *mut i16) = [0i16, 151, 150, 349, 350, -3, ((h23 >> 8) % 420) as i16][(h23 % 7) as usize];
             *pe24.add(0x28) = [0u8, 0xf1, 0xf0, 2, (h23 >> 16) as u8 % 20][((h23 >> 24) % 5) as usize];
-            comparar_init_strictness(arb, m as u32, if (h23 >> 27) % 4 == 0 { 0 } else { pe24 as usize });
+            compare_init_strictness(arb, m as u32, if (h23 >> 27) % 4 == 0 { 0 } else { pe24 as usize });
             *((arb + 4) as *mut usize) = if (h23 >> 29) % 4 == 0 { 0 } else { pe24 as usize };
             // kick: player of the move, ball owner and the line
             let jl = side_player_slot(m, ((h23 >> 31) % 2) as i8, ((h23 >> 32) % 20) as usize);
@@ -9013,7 +9013,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0xf582) as *mut usize) = if (h23 >> 47) % 6 == 0 { 0 } else { dn };
             *((m + 0x8ea8) as *mut i8) = ((h23 >> 49) % 13) as i8 - 1;
             *((m + 0x475c) as *mut i8) = ((h23 >> 53) % 13) as i8 - 1;
-            comparar_move_counts(m);
+            compare_move_counts(m);
             *((m + 0x475a) as *mut u8) = if (h24 >> 3) % 3 == 0 { 3 } else { 0 };
             *((m + 0x8ea9) as *mut i8) = ((h24 >> 5) % 5) as i8 - 1;
             let jf = if (h24 >> 8) % 2 == 0 { jl } else { dn };
@@ -9022,7 +9022,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((jf + 0x103) as *mut i8) = [0i8, 1, 10, 11, ((h24 >> 21) % 12) as i8][((h24 >> 25) % 5) as usize];
             *((arb + 8) as *mut u16) = (h24 >> 28) as u16;
             let (mut t24, mut v24) = (0u8, 0u8);
-            comparar_decide_foul(arb, jf, if (h24 >> 44) % 2 == 0 { 0x25 } else { (h24 >> 45) as u16 % 64 }, &mut t24, &mut v24);
+            compare_decide_foul(arb, jf, if (h24 >> 44) % 2 == 0 { 0x25 } else { (h24 >> 45) as u16 % 64 }, &mut t24, &mut v24);
             // batch 25: cards (type 1 mostly; 7 and others too)
             let h25 = s.next_u64();
             let h26 = s.next_u64();
@@ -9037,22 +9037,22 @@ pub unsafe fn autoteste(casos: u64) {
             let mut pc = 0f32;
             let sev = ((h25 >> 35) % 30) as i8 - 5;
             let flag = ((h25 >> 40) % 3 == 0) as u8 | (((h25 >> 41) as u8) & 0xfe & if (h25 >> 49) % 5 == 0 { 0xff } else { 0 });
-            comparar_punish_foul(arb, jc, &mut tc, ((h25 >> 42) % 90) as i8, sev, flag, &mut pc);
+            compare_punish_foul(arb, jc, &mut tc, ((h25 >> 42) % 90) as i8, sev, flag, &mut pc);
             let mut tc2 = [1u8, 1, 1, 7, 2, 0][((h26 >> 32) % 6) as usize];
             *((jc + 0x19) as *mut i8) = if (h26 >> 36) % 7 == 0 { -1 } else { ((h26 >> 37) % 11) as i8 };
-            comparar_punish_move(arb, jc, oc, &mut tc2, ((h26 >> 41) % 90) as i8, ((h26 >> 48) % 30) as i8 - 5, ((h26 >> 54) % 3 == 0) as u8, &mut pc, ((h26 >> 56) % 2) as u8);
+            compare_punish_move(arb, jc, oc, &mut tc2, ((h26 >> 41) % 90) as i8, ((h26 >> 48) % 30) as i8 - 5, ((h26 >> 54) % 3 == 0) as u8, &mut pc, ((h26 >> 56) % 2) as u8);
             // batch 26: the referee inside the engine (0xf5b2: engine, person, value)
             let h27 = s.next_u64();
             *((m + 0xf5b2) as *mut usize) = m;
             *((m + 0xf5b6) as *mut usize) = if h27 % 4 == 0 { 0 } else { pe24 as usize };
             *((m + 0xf5ba) as *mut u16) = (h27 >> 8) as u16;
             let (mut t26, mut v26) = (0u8, 0u8);
-            comparar_engine_decide_foul(m, jf, if (h27 >> 24) % 2 == 0 { 0x25 } else { (h27 >> 25) as u16 % 64 }, &mut t26, &mut v26);
+            compare_engine_decide_foul(m, jf, if (h27 >> 24) % 2 == 0 { 0x25 } else { (h27 >> 25) as u16 % 64 }, &mut t26, &mut v26);
             let mut tc3 = [1u8, 1, 7, 2][((h27 >> 32) % 4) as usize];
             let mut pc3 = 0f32;
-            comparar_engine_punish_foul(m, jc, &mut tc3, ((h27 >> 34) % 90) as i8, ((h27 >> 41) % 30) as i8 - 5, ((h27 >> 46) % 3 == 0) as u8, &mut pc3);
+            compare_engine_punish_foul(m, jc, &mut tc3, ((h27 >> 34) % 90) as i8, ((h27 >> 41) % 30) as i8 - 5, ((h27 >> 46) % 3 == 0) as u8, &mut pc3);
             let mut tc4 = [1u8, 1, 7, 2][((h27 >> 48) % 4) as usize];
-            comparar_engine_punish_move(m, jc, oc, &mut tc4, ((h27 >> 50) % 90) as i8, ((h27 >> 56) % 30) as i8 - 5, ((h27 >> 61) % 3 == 0) as u8, &mut pc3, ((h27 >> 63) & 1) as u8);
+            compare_engine_punish_move(m, jc, oc, &mut tc4, ((h27 >> 50) % 90) as i8, ((h27 >> 56) % 30) as i8 - 5, ((h27 >> 61) % 3 == 0) as u8, &mut pc3, ((h27 >> 63) & 1) as u8);
             // batch 27: offside (lines 0x8eaf/0x8eb0, attackers close to them)
             let h28 = s.next_u64();
             let h29 = s.next_u64();
@@ -9072,8 +9072,8 @@ pub unsafe fn autoteste(casos: u64) {
             let pas = if (h28 >> 16) % 3 == 0 { 0 } else { side_player_slot(m, l27.max(0).min(1), ((h28 >> 18) % 20) as usize) };
             let linha27 = ((h28 >> 24) % 12) as i8;
             let y27 = if (h28 >> 28) % 2 == 0 { linha27 + if l27 == 0 { 1 } else { -1 } } else { ((h28 >> 29) % 12) as i8 };
-            comparar_look_for_offside(m + 0xf5b2, l27, linha27, y27, pas);
-            comparar_engine_look_for_offside(m, l27, linha27, ((h29 >> 50) % 12) as i8, pas);
+            compare_look_for_offside(m + 0xf5b2, l27, linha27, y27, pas);
+            compare_engine_look_for_offside(m, l27, linha27, ((h29 >> 50) % 12) as i8, pas);
             // batch 28: card by severity (the referee's person always present here)
             let h30 = s.next_u64();
             let h31 = s.next_u64();
@@ -9089,9 +9089,9 @@ pub unsafe fn autoteste(casos: u64) {
             let gv = [1u8, 2, 3, 4, 5, 6, 0, 7][((h30 >> 26) % 8) as usize];
             let fg = ((h30 >> 29) % 4 == 0) as u8;
             if (h30 >> 31) & 1 == 0 {
-                comparar_card_by_severity(m + 0xf5b2, jg, &mut tg, gv, fg);
+                compare_card_by_severity(m + 0xf5b2, jg, &mut tg, gv, fg);
             } else {
-                comparar_engine_card_by_severity(m, jg, &mut tg, gv, fg);
+                compare_engine_card_by_severity(m, jg, &mut tg, gv, fg);
             }
             let _ = h31;
             // batch 29: person attributes at the thresholds (0x37, 0x43, sum of four)
@@ -9110,7 +9110,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             let alto32 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h32 >> 50) % 5) as usize];
-            comparar_choose_by_role_e(m, (alto32 & !0xff) | ((h32 >> 53) % 2) as u32, if (h32 >> 54) % 3 == 0 { 0x100 } else { (h32 >> 56) as u32 & 0xff });
+            compare_choose_by_role_e(m, (alto32 & !0xff) | ((h32 >> 53) % 2) as u32, if (h32 >> 54) % 3 == 0 { 0x100 } else { (h32 >> 56) as u32 & 0xff });
             // batch 30: window of 55 instants (index near the end), zones, periods
             let h33 = s.next_u64();
             *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 0x100, (h33 >> 4) as u16][(h33 % 4) as usize];
@@ -9124,7 +9124,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((m as isize + b + k) as *mut u8) = [0u8, 1, 0, 0xff][(h33.rotate_left((k as u32 + b as u32) % 64) % 4) as usize];
                 }
             }
-            comparar_possession_statistic(m, [0i8, 1, 2, -1, -2][((h33 >> 30) % 5) as usize], [0u8, 1, 0x80][((h33 >> 32) % 3) as usize]);
+            compare_possession_statistic(m, [0i8, 1, 2, -1, -2][((h33 >> 30) % 5) as usize], [0u8, 1, 0x80][((h33 >> 32) % 3) as usize]);
             // batch 31: summary (ratings at the limits 1 and 10, sums that overflow)
             let h34 = s.next_u64();
             for k in 0..40usize {
@@ -9138,7 +9138,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0xf5bd) as *mut u8) = [0u8, 3, 200, (h34 >> 10) as u8][((h34 >> 2) % 4) as usize];
             *((m + 0xf5f3) as *mut u8) = [0u8, 2, 100, (h34 >> 18) as u8][((h34 >> 4) % 4) as usize];
             *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 7][((h34 >> 6) % 3) as usize];
-            comparar_match_summary(m, [0i16, 1, 0x3de, 2, -1][((h34 >> 8) % 5) as usize]);
+            compare_match_summary(m, [0i16, 1, 0x3de, 2, -1][((h34 >> 8) % 5) as usize]);
             // batch 32: the closest on the side (including the own cell: distance zero)
             let h35 = s.next_u64();
             for k in 0..40usize {
@@ -9149,7 +9149,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((p + 0x102) as *mut i8) = ((r >> 8) % 9) as i8;
                 *((p + 0x103) as *mut i8) = ((r >> 12) % 12) as i8;
             }
-            comparar_closest_on_side(m, ((h35 >> 40) % 2) as i8, ((h35 >> 41) % 12) as i8, ((h35 >> 45) % 9) as i8, [0u8, 1, 2][((h35 >> 49) % 3) as usize]);
+            compare_closest_on_side(m, ((h35 >> 40) % 2) as i8, ((h35 >> 41) % 12) as i8, ((h35 >> 45) % 9) as i8, [0u8, 1, 2][((h35 >> 49) % 3) as usize]);
             // batch 33: the goalkeeper (role 1 almost always), in the area or outside, close to the ball
             let h36 = s.next_u64();
             let h37 = s.next_u64();
@@ -9176,7 +9176,7 @@ pub unsafe fn autoteste(casos: u64) {
             let (mut sd, mut rb) = (0u8, 0u8);
             let cod = [3i8, 4, 5, 26, 27, 0x33, 1, -2, ((h37 >> 52) % 60) as i8][((h37 >> 56) % 9) as usize];
             let alvo_y = yg + ((h37 >> 20) % 5) as i8 - 2;
-            comparar_goalkeeper_save(j, ((h37 >> 24) % 9) as i8, alvo_y, ((h37 >> 28) % 2) as u8, cod, &mut sd, &mut rb);
+            compare_goalkeeper_save(j, ((h37 >> 24) % 9) as i8, alvo_y, ((h37 >> 28) % 2) as u8, cod, &mut sd, &mut rb);
             // batch 34: consistent grid in both cells (lists with valid players)
             let h38 = s.next_u64();
             let lj = ((h38 >> 1) % 2) as i8;
@@ -9200,7 +9200,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((cn + 0x58 + lj as usize) as *mut i8) = ((h38 >> 46) % 11) as i8;
             }
             *((m + 0xf582) as *mut usize) = if (h38 >> 50) % 2 == 0 { jm } else { o };
-            comparar_move_to(jm, nx, ny);
+            compare_move_to(jm, nx, ny);
             // batch 35: choice of cell (grid with small counts and valid lists)
             let h39 = s.next_u64();
             let h40 = s.next_u64();
@@ -9238,7 +9238,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             let (mut sxc, mut syc) = (((h39 >> 44) % 10) as i8 - 1, ((h39 >> 48) % 13) as i8 - 1);
-            comparar_choose_square(m, jc5, &mut sxc, &mut syc, ((h39 >> 52) % 16) as u32 | if (h39 >> 56) % 4 == 0 { 0xff00 } else { 0 });
+            compare_choose_square(m, jc5, &mut sxc, &mut syc, ((h39 >> 52) % 16) as u32 | if (h39 >> 56) % 4 == 0 { 0xff00 } else { 0 });
             // batch 36: control (codes from the table, goalkeeper in the area, ball with or without owner)
             let h41 = s.next_u64();
             let h42 = s.next_u64();
@@ -9264,7 +9264,7 @@ pub unsafe fn autoteste(casos: u64) {
             let todos = [1i8, 12, 19, 21, 33, 34, 36, 37, 41, 42, 43, 44, 45, 46, 47, 49, 50, 0x15, 0x25];
             let mut cod36 = if dono36 == 0 { especiais[((h42 >> 24) % especiais.len() as u64) as usize] } else { todos[((h42 >> 24) % todos.len() as u64) as usize] };
             let (mut a36, mut b36) = (7u8, 7u8);
-            comparar_control_of_move(j, &mut cod36, &mut a36, &mut b36);
+            compare_control_of_move(j, &mut cod36, &mut a36, &mut b36);
             // batch 37: trace (lines in the four directions, points, exits from the pitch)
             let h43 = s.next_u64();
             let (tx0, ty0) = (((h43 >> 1) % 11) as i8 - 1, ((h43 >> 5) % 14) as i8 - 1);
@@ -9279,7 +9279,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((casa + 44 * l) as *mut usize) = side_player_slot(m, l as i8, ((r >> 5) % 20) as usize);
                 }
             }
-            comparar_trace_move(m, tx0, ty0, tx1, ty1, cod37, (h43 >> 26) as u32 & 0x1ff | 0xabcd0000, (h43 >> 40) as u32 & 0x7);
+            compare_trace_move(m, tx0, ty0, tx1, ty1, cod37, (h43 >> 26) as u32 & 0x1ff | 0xabcd0000, (h43 >> 40) as u32 & 0x7);
             // batch 38: list of the day's matches and scores (normal, extra time, penalties)
             let h44 = s.next_u64();
             let clubes = [0x1000u32, 0x2000, 0x3000, 0x4000];
@@ -9293,14 +9293,14 @@ pub unsafe fn autoteste(casos: u64) {
             let dia = jogadores[4].as_mut_ptr() as usize;
             *((dia + 0x19) as *mut usize) = jogos.as_ptr() as usize;
             *((dia + 0x21) as *mut i32) = ((h44 >> 10) % 12) as i32 - 1;
-            comparar_has_match(dia, [0x1000u32, 0x3000, 0x5000][((h44 >> 14) % 3) as usize], ((h44 >> 16) % 2) as u32);
+            compare_has_match(dia, [0x1000u32, 0x3000, 0x5000][((h44 >> 14) % 3) as usize], ((h44 >> 16) % 2) as u32);
             let jogo44 = jogadores[3].as_mut_ptr() as usize;
             *((jogo44 + 0x1c) as *mut u32) = 0x1000;
             *((jogo44 + 0x20) as *mut u32) = 0x2000;
             for (k, o) in [0x43usize, 0x44, 0x47, 0x48, 0x49, 0x4a].iter().enumerate() {
                 *((jogo44 + o) as *mut i8) = [-1i8, 0, 1, 2, 3][((h44 >> (20 + k * 3)) % 5) as usize];
             }
-            comparar_won_the_match(jogo44, [0x1000u32, 0x2000][((h44 >> 40) % 2) as usize]);
+            compare_won_the_match(jogo44, [0x1000u32, 0x2000][((h44 >> 40) % 2) as usize]);
             // batch 41: shot value (given and chosen types, zones, goalkeeper)
             let h45 = s.next_u64();
             let h46 = s.next_u64();
@@ -9333,7 +9333,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             let mut tc41 = [-1i8, -1, -1, -1, 0x33, 0x35, 3, 5, 0x16, 0x39, 0x3a, 0x1b][((h47 >> 53) % 12) as usize];
             let mut som41 = 0u16;
-            comparar_shot_value(j, &mut tc41, &mut som41);
+            compare_shot_value(j, &mut tc41, &mut som41);
             // batch 42: team strength (roles, attributes at the edges, competition, reputations)
             let h48 = s.next_u64();
             let h49 = s.next_u64();
@@ -9393,7 +9393,7 @@ pub unsafe fn autoteste(casos: u64) {
             for o in 0..0x10usize {
                 *((m + 0x1d8 + 2 * o) as *mut u16) = (h49 >> (o * 3)) as u16;
             }
-            comparar_team_strength(m, l42);
+            compare_team_strength(m, l42);
             // batch 43: kick-off (consistent grid, formations with distinct cells)
             let h50 = s.next_u64();
             let h51 = s.next_u64();
@@ -9459,7 +9459,7 @@ pub unsafe fn autoteste(casos: u64) {
                     linha(&format!("motor: grade inconsistente antes do pontape: {}", e));
                 }
             }
-            comparar_kick_off(m);
+            compare_kick_off(m);
             let grade47 = grid_inconsistent(m);
             if let Some(e) = &grade47 {
                 if avisar() {
@@ -9477,7 +9477,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             let mut saida47 = [0xa5u8; 0x100];
             if grade47.is_none() {
-                comparar_fine_positions(m, saida47.as_mut_ptr());
+                compare_fine_positions(m, saida47.as_mut_ptr());
             }
             // batch 52: take off the pitch (consistent kick-off grid, markings, modes,
             // goalkeeper kept, human manager with the globals swapped during the test)
@@ -9534,7 +9534,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((pa60 + 0x1c) as *mut usize) = clubes60[0].as_ptr() as usize;
                 *((pa60 + 0x20) as *mut usize) = clubes60[1].as_ptr() as usize;
                 *((m + 0x4792) as *mut usize) = pa60;
-                comparar_take_off_pitch(m, jt, [-1i8, -3, 0, 1, -2][((h61 >> 44) % 5) as usize]);
+                compare_take_off_pitch(m, jt, [-1i8, -3, 0, 1, -2][((h61 >> 44) % 5) as usize]);
                 // batch 56: choose the taker (types without the club's tactics: the object at
                 // 0xde1d08 only exists with the database loaded; corners and free kicks near the goal are left to the real game)
                 {
@@ -9614,7 +9614,7 @@ pub unsafe fn autoteste(casos: u64) {
                             *((reg + 0x1e05 + 4 * b) as *mut i32) = if z % 4 == 0 { ((z >> 8) % 20) as i32 } else { -1 };
                         }
                     }
-                    comparar_choose_taker(m, lado56, tipo, excl);
+                    compare_choose_taker(m, lado56, tipo, excl);
                     core::ptr::copy_nonoverlapping(antes_bloco56.as_ptr(), bloco56 as *mut u8, antes_bloco56.len());
                     *(G_STAFF_TABLE as *mut usize) = pessoas_antes;
                 }
@@ -9638,13 +9638,13 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8ea8) as *mut i8) = [0i8, 11, 5, 1, 10, -1, 12][((h52 >> 41) % 7) as usize];
             *((m + 0x8eab) as *mut i8) = [0i8, 1, 2][((h52 >> 44) % 3) as usize];
             *((m + 0x8eae) as *mut i8) = [0i8, 1, -1][((h52 >> 46) % 3) as usize];
-            comparar_roll_ball(m);
+            compare_roll_ball(m);
             // batch 67: order of the players (keeps the list, the count and 0xb67a64)
             {
                 let mut antes67 = [0u8; 4 * 40];
                 core::ptr::copy_nonoverlapping((m + 0x8f7e) as *const u8, antes67.as_mut_ptr(), antes67.len());
                 let (n67, g67) = (*((m + 0x8eb8) as *const u8), *(G_ACTION_ORDER_MATCH_ENGINE as *const u32));
-                comparar_player_order(m);
+                compare_player_order(m);
                 core::ptr::copy_nonoverlapping(antes67.as_ptr(), (m + 0x8f7e) as *mut u8, antes67.len());
                 *((m + 0x8eb8) as *mut u8) = n67;
                 *(G_ACTION_ORDER_MATCH_ENGINE as *mut u32) = g67;
@@ -9656,7 +9656,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x1a6) as *mut usize) = if (h53 >> 30) % 2 == 0 { o } else { 0 };
             let alvo53 = [0usize, o, j][((h53 >> 32) % 3) as usize];
             let cod53 = [1i8, 2, 3, 4, 5, 0, 6, -1, 1, 2, 5][((h53 >> 35) % 11) as usize];
-            comparar_condition_test(j, cod53, alvo53);
+            compare_condition_test(j, cod53, alvo53);
             // batch 46: preferences (nulls, each of the 3 slots, absent) and mark by position
             let h54 = s.next_u64();
             let pf = prefs46.as_mut_ptr() as usize;
@@ -9668,30 +9668,30 @@ pub unsafe fn autoteste(casos: u64) {
             *((pe46 + 0x65) as *mut usize) = if (h54 >> 12) % 6 == 0 { 0 } else { pf };
             let alvo54 = [0usize, j, o, 0, 0x1234][((h54 >> 15) % 5) as usize];
             let quem54 = if (h54 >> 18) % 7 == 0 { 0 } else { pe46 };
-            comparar_likes(alvo54, quem54);
-            comparar_dislikes(alvo54, quem54);
+            compare_likes(alvo54, quem54);
+            compare_dislikes(alvo54, quem54);
             // batch 72: preferred clubs (+0x04..+0x0c) and avoided ones (+0x10..+0x18)
             for k in 0..6usize {
                 *((pf + 4 + 4 * k) as *mut usize) = cand[((h54 >> (k * 2 + 22)) % 4) as usize];
             }
-            comparar_likes_club(quem54, alvo54);
-            comparar_dislikes_club(quem54, alvo54);
+            compare_likes_club(quem54, alvo54);
+            compare_dislikes_club(quem54, alvo54);
             let base54 = m + 0x91e2; // side 0: +0x187f still inside the fake engine
             *((base54 + 0x187f) as *mut u32) = (h54 >> 8) as u32 | 1;
             let v54 = (h54 >> 20) as u32;
             let ficha54: *const u32 = if (h54 >> 52) % 4 == 0 { core::ptr::null() } else { &v54 };
-            comparar_mark_position(base54, ((h54 >> 54) % 17) as i8 - 1, ficha54);
+            compare_mark_position(base54, ((h54 >> 54) % 17) as i8 - 1, ficha54);
             // batch 48: leaves of other modules (game globals swapped during the test)
             let h55 = s.next_u64();
             let globais = [0xae2378usize, 0xae2364, 0xae2d0c, 0xae235c, 0xae2350];
             let antes55: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
-            comparar_units_digit([0i32, 9, 10, 999, 1000, 1001, -1, -10, -999, i32::MIN, ((h55 >> 3) % 3000) as i32 - 1000][((h55 >> 60) % 11) as usize]);
+            compare_units_digit([0i32, 9, 10, 999, 1000, 1001, -1, -10, -999, i32::MIN, ((h55 >> 3) % 3000) as i32 - 1000][((h55 >> 60) % 11) as usize]);
             let ncomp = 200 + ((h55 >> 8) % 100) as i32;
             *(G_CLUB_COMP_COUNT as *mut i32) = ncomp;
             let mut comp55 = [0i32; 2];
             comp55[0] = [ncomp - 0x7f, ncomp - 0x80, ncomp, 0, -5, ((h55 >> 16) % 400) as i32][((h55 >> 24) % 6) as usize];
             let obj55 = [0usize, if (h55 >> 27) % 4 == 0 { comp55.as_ptr() as usize } else { 0x4321 }];
-            comparar_is_friendly(obj55.as_ptr() as usize, comp55.as_ptr() as usize);
+            compare_is_friendly(obj55.as_ptr() as usize, comp55.as_ptr() as usize);
             let npes = 50 + ((h55 >> 30) % 20) as i32;
             *(G_STAFF_COUNT as *mut i32) = npes;
             for k in 0..80usize {
@@ -9700,12 +9700,12 @@ pub unsafe fn autoteste(casos: u64) {
             *(G_STAFF_STATE_TABLE as *mut usize) = tabela55.as_mut_ptr() as usize;
             let pessoa55 = [[0i32, 1, npes - 1, npes, npes + 3, 2, ((h55 >> 36) % 70) as i32][((h55 >> 40) % 7) as usize]];
             let contratos55 = [0x10000usize, 0];
-            comparar_contract_of(contratos55.as_ptr() as usize, if (h55 >> 43) % 6 == 0 { 0 } else { pessoa55.as_ptr() as usize });
+            compare_contract_of(contratos55.as_ptr() as usize, if (h55 >> 43) % 6 == 0 { 0 } else { pessoa55.as_ptr() as usize });
             *(G_CLUB_COUNT as *mut i32) = 5000 + ((h55 >> 46) % 100) as i32;
             *(G_NATION_COUNT as *mut i32) = 200 + ((h55 >> 50) % 50) as i32;
             let limite55 = *(G_CLUB_COUNT as *const i32) - 2 * *(G_NATION_COUNT as *const i32);
             let clube55 = [[limite55, limite55 - 1, limite55 + 1, 0, 9999, -3][((h55 >> 54) % 6) as usize]];
-            comparar_is_national_team(clube55.as_ptr() as usize);
+            compare_is_national_team(clube55.as_ptr() as usize);
             for (i, &a) in globais.iter().enumerate() {
                 *(a as *mut u32) = antes55[i];
             }
@@ -9731,7 +9731,7 @@ pub unsafe fn autoteste(casos: u64) {
             let id56 = [[npes56 - 16, npes56 - 17, npes56 - 16 + ntec - 1, npes56 - 16 + ntec, npes56 - 1, npes56 - 20 + ((h56 >> 40) % 30) as i32][((h56 >> 44) % 6) as usize]];
             *(tab56 as *mut usize) = id56.as_ptr() as usize;
             let quem56 = if (h56 >> 47) % 4 == 0 { 0 } else { id56.as_ptr() as usize };
-            comparar_manager_9a01(obj56.as_ptr() as usize, quem56);
+            compare_manager_9a01(obj56.as_ptr() as usize, quem56);
             let dentro56 = id56[0] - npes56 + 16;
             if (0..ntec).contains(&dentro56) {
                 // batch 62: 0x9ace and 0x9a06 (person with club and nation of +0x88 at the edges)
@@ -9756,16 +9756,16 @@ pub unsafe fn autoteste(casos: u64) {
                     *(G_SCREEN_RECORDS_MANAGER as *mut usize) = outra62.as_ptr() as usize;
                 }
                 let quem62 = if (h56 >> 47) % 4 == 0 { 0 } else { pessoa62.as_ptr() as usize };
-                comparar_manager_9ace(obj56.as_ptr() as usize, quem62);
+                compare_manager_9ace(obj56.as_ptr() as usize, quem62);
                 for k in 0..16usize {
                     for b in 0..0x30usize {
                         *((regs56 + 42735 * k + 0x9b20 + b) as *mut u8) = (h56.rotate_left((k + b) as u32) as u8) ^ (b as u8);
                     }
                 }
-                comparar_manager_9b23(obj56.as_ptr() as usize, ((h56 >> 57) % 40) as i8 - 3, quem62);
+                compare_manager_9b23(obj56.as_ptr() as usize, ((h56 >> 57) % 40) as i8 - 3, quem62);
                 let mut saida62 = 7u32;
                 let sp = if (h56 >> 55) % 2 == 0 { core::ptr::null_mut() } else { &mut saida62 as *mut u32 };
-                comparar_manager_9a06(obj56.as_ptr() as usize, quem62, sp);
+                compare_manager_9a06(obj56.as_ptr() as usize, quem62, sp);
                 // batch 63: club controlled by a human (club, national side and second national side
                 // that falls back to the main one; manager of the club, another or none; with and without tactics)
                 let h63 = s.next_u64();
@@ -9794,7 +9794,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *(clube_a63.as_mut_ptr() as *mut i32) = [100i32, 4650, 4850][((h63 >> 36) % 3) as usize];
                 *(clube_a63.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h63 >> 38) % 3) as usize];
                 *(clube_a63.as_mut_ptr().add(0x53) as *mut usize) = nacao63.as_ptr() as usize;
-                comparar_human_club(
+                compare_human_club(
                     clube_a63.as_ptr() as usize,
                     ((h63 >> 40) & 1) as u32,
                     ((h63 >> 41) & 1) as u8,
@@ -9802,12 +9802,12 @@ pub unsafe fn autoteste(casos: u64) {
                     ((h63 >> 44) % 3 == 0) as u32,
                 );
                 // batch 82: class of the national side (clube_a63 goes through 0x5409b0 as in 63)
-                comparar_national_side_class(clube_a63.as_ptr() as usize, ((h63 >> 45) & 1) as u32);
+                compare_national_side_class(clube_a63.as_ptr() as usize, ((h63 >> 45) & 1) as u32);
                 // batch 83: class by the person's national side (no national side or with clube_a63)
                 let mut pessoa83 = [0u8; 0x60];
                 *(pessoa83.as_mut_ptr().add(0x24) as *mut usize) = if (h63 >> 47) % 4 == 0 { 0 } else { clube_a63.as_ptr() as usize };
                 pessoa83[0x5e] = (h63 >> 50) as u8;
-                comparar_class_by_national_side(pessoa83.as_ptr() as usize);
+                compare_class_by_national_side(pessoa83.as_ptr() as usize);
                 // batch 84: bytes of the national side's block, special national sides (0x9d00a4/a8 with the
                 // ids of clube_a63; 100 is not a national side, only it separates 0x9d00a8) and the person who dislikes the main national side (clube_b63)
                 let mut blocos84 = vec![0u8; 110 * 2];
@@ -9815,12 +9815,12 @@ pub unsafe fn autoteste(casos: u64) {
                     *b = (h63.rotate_left(k as u32 % 64) as u8) ^ (k as u8).wrapping_mul(7);
                 }
                 let obj84 = [0usize, blocos84.as_mut_ptr() as usize];
-                comparar_national_side_byte_42(obj84.as_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 48) & 1) as u32);
-                comparar_national_side_byte_43(obj84.as_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 49) & 1) as u32);
+                compare_national_side_byte_42(obj84.as_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 48) & 1) as u32);
+                compare_national_side_byte_43(obj84.as_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 49) & 1) as u32);
                 let especiais84 = (*(G_KEY_CLUB_MLS_ALL_STARS_EAST as *const u32), *(G_KEY_CLUB_MLS_ALL_STARS_WEST as *const u32));
                 *(G_KEY_CLUB_MLS_ALL_STARS_EAST as *mut u32) = [4650u32, 7, 9][((h63 >> 51) % 3) as usize];
                 *(G_KEY_CLUB_MLS_ALL_STARS_WEST as *mut u32) = [100u32, 8][((h63 >> 53) % 2) as usize];
-                comparar_national_or_special(clube_a63.as_ptr() as usize);
+                compare_national_or_special(clube_a63.as_ptr() as usize);
                 *(G_KEY_CLUB_MLS_ALL_STARS_EAST as *mut u32) = especiais84.0;
                 *(G_KEY_CLUB_MLS_ALL_STARS_WEST as *mut u32) = especiais84.1;
                 let mut pref84 = [0usize; 8];
@@ -9828,7 +9828,7 @@ pub unsafe fn autoteste(casos: u64) {
                 let mut pessoa84 = [0u8; 0x70];
                 *(pessoa84.as_mut_ptr().add(0x1a) as *mut usize) = nacao63.as_ptr() as usize;
                 *(pessoa84.as_mut_ptr().add(0x65) as *mut usize) = pref84.as_ptr() as usize;
-                comparar_dislikes_national_side(pessoa84.as_ptr() as usize);
+                compare_dislikes_national_side(pessoa84.as_ptr() as usize);
                 // batch 75: fog of war (today's date, knowledge table,
                 // synthetic persons; both sides with the synthetic human club)
                 {
@@ -9870,7 +9870,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *(clube_1_75.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h75 >> 1) % 3) as usize];
                     partida75[8] = clube_a63.as_ptr() as usize;
                     partida75[7] = clube_1_75.as_ptr() as usize;
-                    comparar_fog_after_match(partida75.as_ptr() as usize, dados75.as_ptr() as usize);
+                    compare_fog_after_match(partida75.as_ptr() as usize, dados75.as_ptr() as usize);
                     // the person directly, with and without a scout (the RNG only comes in with one)
                     let mut obs75 = [0u8; 0x20];
                     *(obs75.as_mut_ptr().add(4) as *mut i16) = if (h75 >> 40) & 1 == 0 { (h75 >> 41) as i16 } else { ((h75 >> 41) % 1200) as i16 - 600 };
@@ -9878,8 +9878,8 @@ pub unsafe fn autoteste(casos: u64) {
                     let mut fonte75 = [0u8; 0x70];
                     *(fonte75.as_mut_ptr().add(0x69) as *mut usize) = if (h75 >> 58) % 4 == 0 { 0 } else { obs75.as_ptr() as usize };
                     let quem75 = [[((h75 >> 20) % npes56 as u64) as i32, npes56, npes56 - 1, 0][((h75 >> 60) % 4) as usize]];
-                    comparar_know_person(obj75.as_ptr() as usize, if (h75 >> 62) & 1 == 1 && (h75 >> 61) & 1 == 1 { 0 } else { quem75.as_ptr() as usize }, if (h75 >> 59) % 5 == 0 { 0 } else { fonte75.as_ptr() as usize });
-                    comparar_chance_to_know(obs75.as_ptr() as usize, (h75 >> 33) as i8);
+                    compare_know_person(obj75.as_ptr() as usize, if (h75 >> 62) & 1 == 1 && (h75 >> 61) & 1 == 1 { 0 } else { quem75.as_ptr() as usize }, if (h75 >> 59) % 5 == 0 { 0 } else { fonte75.as_ptr() as usize });
+                    compare_chance_to_know(obs75.as_ptr() as usize, (h75 >> 33) as i8);
                     // batch 76: watch list (repeated ids at +0xf and +0x13, types
                     // 11 and others) and contract flags
                     let h76 = s.next_u64();
@@ -9897,12 +9897,12 @@ pub unsafe fn autoteste(casos: u64) {
                     *(gerente76.as_mut_ptr().add(0xdc) as *mut usize) = listas76.as_ptr() as usize;
                     let pessoa76 = [id76 as u32];
                     let alvo76 = [700 + ((h76 >> 40) % 8) as u32];
-                    comparar_shortlist_entry(gerente76.as_ptr() as usize, pessoa76.as_ptr() as usize, alvo76.as_ptr() as usize, ((h76 >> 50) & 1) as u32, ((h76 >> 51) & 1) as u32);
+                    compare_shortlist_entry(gerente76.as_ptr() as usize, pessoa76.as_ptr() as usize, alvo76.as_ptr() as usize, ((h76 >> 50) & 1) as u32, ((h76 >> 51) & 1) as u32);
                     let mut contrato76 = [0u32; 0x14];
                     for (k, c) in contrato76.iter_mut().enumerate() {
                         *c = (h76 as u32).rotate_left(k as u32) ^ k as u32;
                     }
-                    comparar_contract_flags(contrato76.as_ptr() as usize);
+                    compare_contract_flags(contrato76.as_ptr() as usize);
                     // batch 77: linked list (nodes of 10 bytes, unaligned), word
                     // +0xc in records of 31 bytes, rounding and nations of the group
                     let h77 = s.next_u64();
@@ -9915,7 +9915,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let mut cursor77 = [0u8; 0x10];
                     core::ptr::write_unaligned(cursor77.as_mut_ptr().add(0xa) as *mut usize, if (h77 >> 45) % 5 == 0 { 0 } else { base77 + 10 * ((h77 >> 46) % 4) as usize });
                     for _ in 0..3 {
-                        comparar_next_list_item(cursor77.as_mut_ptr() as usize);
+                        compare_next_list_item(cursor77.as_mut_ptr() as usize);
                     }
                     let n77 = *(G_STAFF_COUNT as *const i32);
                     let mut regs77 = vec![0u8; 31 * 8];
@@ -9924,16 +9924,16 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     let id77 = [n77 - 1, n77, n77 + 1, n77 - 8 + ((h77 >> 50) % 8) as i32][((h77 >> 48) % 4) as usize];
                     let tab77 = [(regs77.as_ptr() as usize).wrapping_sub(31usize.wrapping_mul((n77 - 8) as usize))];
-                    comparar_word_0c(tab77.as_ptr() as usize, id77);
+                    compare_word_0c(tab77.as_ptr() as usize, id77);
                     let v77 = [(h77 >> 10) as i32, 990 + ((h77 >> 20) % 20) as i32, -(((h77 >> 30) % 30000) as i32), ((h77 >> 3) as i32 & !0xffff) | 999][((h77 >> 56) % 4) as usize];
-                    comparar_round_below_1000(v77);
+                    compare_round_below_1000(v77);
                     let globais77 = [KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_RESERVE, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION];
                     let antes77: Vec<u32> = globais77.iter().map(|&a| *(a as *const u32)).collect();
                     for (k, &a) in globais77.iter().enumerate() {
                         *(a as *mut u32) = 60 + k as u32;
                     }
                     let nacao77 = [58 + ((h77 >> 58) % 10) as u32];
-                    comparar_group_nation(if (h77 >> 62) == 0 { 0 } else { nacao77.as_ptr() as usize });
+                    compare_group_nation(if (h77 >> 62) == 0 { 0 } else { nacao77.as_ptr() as usize });
                     for (k, &a) in globais77.iter().enumerate() {
                         *(a as *mut u32) = antes77[k];
                     }
@@ -9964,7 +9964,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *(rodada78.as_mut_ptr().add(0x60) as *mut i32) = 500 + ((h78 >> 42) % 3) as i32;
                     *(G_CLUB_COMP_TABLE as *mut usize) = tabela78.as_ptr() as usize;
                     *(G_COMP_OBJECT_TABLE as *mut usize) = ptrs78.as_ptr() as usize;
-                    comparar_competition_counts(((h78 >> 44) % 16) as i32);
+                    compare_competition_counts(((h78 >> 44) % 16) as i32);
                     for (k, &a) in globais78.iter().enumerate() {
                         *(a as *mut u32) = antes78[k];
                     }
@@ -9975,12 +9975,12 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     let pa78 = [if (h78 >> 60) % 4 == 0 { 0 } else { fichas78[0].as_ptr() as usize }];
                     let pb78 = [if (h78 >> 62) == 0 { 0 } else { fichas78[1].as_ptr() as usize }];
-                    comparar_order_by_5f(pa78.as_ptr(), pb78.as_ptr());
-                    comparar_order_by_80_desc(pa78.as_ptr(), pb78.as_ptr());
-                    comparar_order_by_80_asc(pa78.as_ptr(), pb78.as_ptr());
+                    compare_order_by_5f(pa78.as_ptr(), pb78.as_ptr());
+                    compare_order_by_80_desc(pa78.as_ptr(), pb78.as_ptr());
+                    compare_order_by_80_asc(pa78.as_ptr(), pb78.as_ptr());
                     let qa78 = [fichas78[0].as_ptr() as usize];
                     let qb78 = [fichas78[1].as_ptr() as usize];
-                    comparar_order_by_80(qa78.as_ptr(), qb78.as_ptr());
+                    compare_order_by_80(qa78.as_ptr(), qb78.as_ptr());
                     // batch 80: fog tables (16, some null or inactive; fog on or
                     // off) and the formation (cells of the eleven masks swapped, or random cells)
                     let h80 = s.next_u64();
@@ -9998,10 +9998,10 @@ pub unsafe fn autoteste(casos: u64) {
                         ptrs80[k] = if (h80 >> (k + 20)) % 4 == 0 { 0 } else { quadros80[k].as_ptr() as usize };
                     }
                     let pessoa80 = [n77 - 64 + ((h80 >> 40) % 66) as i32];
-                    comparar_forget_person(ptrs80.as_ptr() as usize, if (h80 >> 47) % 8 == 0 { 0 } else { pessoa80.as_ptr() as usize });
+                    compare_forget_person(ptrs80.as_ptr() as usize, if (h80 >> 47) % 8 == 0 { 0 } else { pessoa80.as_ptr() as usize });
                     *(G_ATTRIBUTE_MASKING_ENABLED as *mut u8) = antes_nevoa80;
                     let tecnico80 = [n77 - 1 - ((h80 >> 50) % 16) as i32];
-                    comparar_manager_table(ptrs80.as_ptr() as usize, if (h80 >> 54) % 6 == 0 { 0 } else { tecnico80.as_ptr() as usize });
+                    compare_manager_table(ptrs80.as_ptr() as usize, if (h80 >> 54) % 6 == 0 { 0 } else { tecnico80.as_ptr() as usize });
                     let codigos80: Vec<u16> = core::iter::once(1u16)
                         .chain([0x80u16, 0x100, 0x200, 0x400, 0x800].iter().flat_map(|&l| [2u16, 4, 8, 0x10, 0x20, 0x40].iter().map(move |&c| l | c)))
                         .collect();
@@ -10032,9 +10032,9 @@ pub unsafe fn autoteste(casos: u64) {
                         core::ptr::write_unaligned(form80.as_mut_ptr().add(0x5bf + 4 * k) as *mut u32, (h80 >> k) as u32);
                     }
                     let f80 = form80.as_mut_ptr() as usize;
-                    comparar_formation_mask(f80);
+                    compare_formation_mask(f80);
                     let codigo80 = if (h80 >> 60) % 3 == 0 { 0x1234 } else { casas80[((h80 >> 33) % 11) as usize] };
-                    comparar_slot_of_code(f80, codigo80);
+                    compare_slot_of_code(f80, codigo80);
                     let mut jogadores80 = vec![0u8; 20 * 0x1be];
                     for i in 0..20usize {
                         let z = h80.rotate_right(i as u32 * 3);
@@ -10043,8 +10043,8 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     // always with a sector bit (1..0x40): without it the original shows formation.cpp's error box
                     let mascara80 = ((h80 >> 13) as u32 & 0xfff) | 0x200 | 1 << ((h80 >> 5) % 7);
-                    comparar_sector_slot_taken(f80, mascara80, if (h80 >> 62) == 0 { 0 } else { jogadores80.as_ptr() as usize });
-                    comparar_clear_assigned(f80);
+                    compare_sector_slot_taken(f80, mascara80, if (h80 >> 62) == 0 { 0 } else { jogadores80.as_ptr() as usize });
+                    compare_clear_assigned(f80);
                     // batch 81: cell of the slot (only slots 0..10: outside them the original shows the
                     // error box) and the criterion by the record's bytes (the words need the configuration
                     // of 0xae3138, which does not exist here yet; they are left to the real game)
@@ -10052,7 +10052,7 @@ pub unsafe fn autoteste(casos: u64) {
                     for k in 0..0x30usize {
                         form80[0x12d + k] = (h81 >> (k % 56)) as u8 ^ (k as u8).wrapping_mul(13);
                     }
-                    comparar_slot_code(f80, ((h81 >> 2) % 11) as i8, ((h81 >> 6) & 1) as u32);
+                    compare_slot_code(f80, ((h81 >> 2) % 11) as i8, ((h81 >> 6) & 1) as u32);
                     let mut registro81 = [0u8; 0x60];
                     registro81[0x37] = (h81 >> 8) as u8;
                     registro81[0x52] = (h81 >> 16) as u8;
@@ -10061,8 +10061,8 @@ pub unsafe fn autoteste(casos: u64) {
                     // batch 82: types, marks by person and the free record (synthetic table,
                     // index kept or not; never 0 records: 0x90cfc0(0) is not a game case)
                     let h82 = s.next_u64();
-                    comparar_type_not_11(((h82 >> 1) % 20) as i8 - 2);
-                    comparar_type_11_to_15(((h82 >> 6) % 20) as i8 - 2);
+                    compare_type_not_11(((h82 >> 1) % 20) as i8 - 2);
+                    compare_type_11_to_15(((h82 >> 6) % 20) as i8 - 2);
                     let mut marcas82 = vec![0u8; 110 * 12 + 0x100];
                     for (k, b) in marcas82.iter_mut().enumerate() {
                         *b = (h82.rotate_left(k as u32 % 64) as u8) | 1;
@@ -10070,20 +10070,20 @@ pub unsafe fn autoteste(casos: u64) {
                     let obj82 = [0usize, marcas82.as_mut_ptr() as usize + 0x40];
                     let pessoa82 = [((h82 >> 11) % 10) as i32];
                     let k82 = ((h82 >> 15) % 9) as i8 - 2;
-                    comparar_read_person_mark(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k82);
-                    comparar_clear_person_mark(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h82 >> 19) % 9) as i8 - 2);
+                    compare_read_person_mark(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k82);
+                    compare_clear_person_mark(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h82 >> 19) % 9) as i8 - 2);
                     // batch 83: +0x44 (set and read, signed) and the address of +0x3a
                     let h83 = s.next_u64();
                     for (k, b) in marcas82.iter_mut().enumerate() {
                         *b = (h83.rotate_left(k as u32 % 64) as u8) ^ (k as u8);
                     }
                     let k83 = ((h83 >> 3) % 9) as i8 - 2;
-                    comparar_person_byte_44(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k83);
-                    comparar_set_person_44(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h83 >> 7) % 9) as i8 - 2);
-                    comparar_person_field_3a(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h83 >> 11) % 9) as i8 - 2);
+                    compare_person_byte_44(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k83);
+                    compare_set_person_44(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h83 >> 7) % 9) as i8 - 2);
+                    compare_person_field_3a(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h83 >> 11) % 9) as i8 - 2);
                     let antes83 = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
                     *(G_DATABASE_NAMES_LANGUAGE as *mut u32) = (h83 >> 20) as u32;
-                    comparar_database_global_9b5984();
+                    compare_database_global_9b5984();
                     // batch 84: the person's competition (index +4 negative or not) and date with mark
                     let h84 = s.next_u64();
                     let antes84 = *(G_CLUB_COMP_TABLE as *const usize);
@@ -10091,11 +10091,11 @@ pub unsafe fn autoteste(casos: u64) {
                     for k in 0..10usize {
                         *(marcas82.as_mut_ptr().add(0x40 + 110 * k + 4) as *mut i32) = if (h84 >> k) % 4 == 0 { -1 - k as i32 } else { (h84 >> (k + 10)) as i32 & 0xff };
                     }
-                    comparar_person_competition(obj82.as_ptr() as usize, if (h84 >> 30) % 6 == 0 { 0 } else { pessoa82.as_ptr() as usize });
+                    compare_person_competition(obj82.as_ptr() as usize, if (h84 >> 30) % 6 == 0 { 0 } else { pessoa82.as_ptr() as usize });
                     *(G_CLUB_COMP_TABLE as *mut usize) = antes84;
                     let origem84: [u8; 12] = core::array::from_fn(|k| (h84 >> (k * 5)) as u8);
                     let mut destino84 = [0u8; 12];
-                    comparar_copy_date_and_mark(destino84.as_mut_ptr() as usize, origem84.as_ptr() as usize);
+                    compare_copy_date_and_mark(destino84.as_mut_ptr() as usize, origem84.as_ptr() as usize);
                     *(G_DATABASE_NAMES_LANGUAGE as *mut u32) = antes83;
                     let globais82 = [0x9b59b4usize, 0xae23a0, 0xae23f8];
                     let antes82: Vec<u32> = globais82.iter().map(|&a| *(a as *const u32)).collect();
@@ -10107,11 +10107,11 @@ pub unsafe fn autoteste(casos: u64) {
                     *(G_COMMON_NAME_COUNT as *mut i32) = n82;
                     *(G_COMMON_NAME_TABLE as *mut usize) = tabela82.as_ptr() as usize;
                     *(G_EMPTY_COMMON_NAME_INDEX as *mut i32) = if (h82 >> 33) % 3 == 0 { ((h82 >> 35) % 9) as i32 } else { -1 };
-                    comparar_free_record();
+                    compare_free_record();
                     for (k, &a) in globais82.iter().enumerate() {
                         *(a as *mut u32) = antes82[k];
                     }
-                    comparar_competition_criterion(if (h81 >> 60) % 5 == 0 { 0 } else { registro81.as_ptr() as usize }, a81, b81, [1u8, 0, 2, 0x81][((h81 >> 61) % 4) as usize]);
+                    compare_competition_criterion(if (h81 >> 60) % 5 == 0 { 0 } else { registro81.as_ptr() as usize }, a81, b81, [1u8, 0, 2, 0x81][((h81 >> 61) % 4) as usize]);
                     for (k, &a) in globais75.iter().enumerate() {
                         *(a as *mut u32) = antes75[k];
                     }
@@ -10129,10 +10129,10 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                 }
                 let humano65 = ((h63 >> 54) & 1) as u32;
-                comparar_tactics_row(clube_a63.as_ptr() as usize, humano65);
+                compare_tactics_row(clube_a63.as_ptr() as usize, humano65);
                 let mut obj65 = [0u8; 0x608];
                 *(obj65.as_mut_ptr().add(0x601) as *mut usize) = TABELA65.as_ptr() as usize;
-                comparar_tactics_byte(obj65.as_mut_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 56) % 11) as i8, humano65);
+                compare_tactics_byte(obj65.as_mut_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 56) % 11) as i8, humano65);
                 // batch 68: slots of the tactics row (indices at +2.., +0x52, +0x56) over
                 // 30 synthetic persons of 110 bytes; the table is restored (mark_slot writes +0x52)
                 {
@@ -10161,9 +10161,9 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     let o68 = obj65.as_mut_ptr() as usize;
                     let c68 = clube_a63.as_ptr() as usize;
-                    comparar_marked_slot(o68, c68, humano65, ((h68 >> 40) & 1) as u32);
-                    comparar_mark_slot(o68, c68, ((h68 >> 41) % 20) as i8, humano65);
-                    comparar_row_person(o68, c68, ((h68 >> 46) % 2) as i8, humano65);
+                    compare_marked_slot(o68, c68, humano65, ((h68 >> 40) & 1) as u32);
+                    compare_mark_slot(o68, c68, ((h68 >> 41) % 20) as i8, humano65);
+                    compare_row_person(o68, c68, ((h68 >> 46) % 2) as i8, humano65);
                     for (n, &l) in linhas68.iter().enumerate() {
                         TABELA65[0x91 * l..0x91 * l + 0x91].copy_from_slice(&copia68[n]);
                     }
@@ -10214,7 +10214,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *(comp69.as_mut_ptr().add(0x3e) as *mut i16) = 3;
                     *(comp69.as_mut_ptr().add(0xa7) as *mut usize) = listas69[3].as_ptr() as usize;
                     *(comp69.as_mut_ptr().add(0xb1) as *mut usize) = tabelas69[3].as_ptr() as usize;
-                    comparar_club_in_competition(comp69.as_mut_ptr() as usize, alvo69);
+                    compare_club_in_competition(comp69.as_mut_ptr() as usize, alvo69);
                     // special club: the id of one of the nine kept, or another
                     // (before the database loads the nine ids are 0: distinct values during the test)
                     let guardados = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP];
@@ -10224,7 +10224,7 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     let id69 = if (h69 >> 35) % 3 == 0 { 0x7fff_0000u32 } else { *(guardados[((h69 >> 37) % 9) as usize] as *const u32) };
                     let especial69 = [id69, 0];
-                    comparar_special_club(if (h69 >> 41) % 7 == 0 { 0 } else { especial69.as_ptr() as usize });
+                    compare_special_club(if (h69 >> 41) % 7 == 0 { 0 } else { especial69.as_ptr() as usize });
                     // batch 73: partner club (globals of the 82 pairs and of the 3 nations with
                     // distinct values; some partners -1 and -5 for the two acceptance tests)
                     {
@@ -10255,7 +10255,7 @@ pub unsafe fn autoteste(casos: u64) {
                         let ponteiro73 = if (h73 >> 23) % 3 == 0 { core::ptr::null_mut() } else { &mut eh73 as *mut u32 };
                         let antes_base73 = *(G_CLUB_TABLE as *const u32);
                         *(G_CLUB_TABLE as *mut u32) = 0x0100_0000;
-                        comparar_partner_club(clube73.as_mut_ptr() as usize, ponteiro73, ((h73 >> 25) & 1) as u32);
+                        compare_partner_club(clube73.as_mut_ptr() as usize, ponteiro73, ((h73 >> 25) & 1) as u32);
                         // batch 74: contract with the club and contract level
                         if CLUBES74.is_empty() {
                             CLUBES74 = vec![0u8; 581 * 2200];
@@ -10287,8 +10287,8 @@ pub unsafe fn autoteste(casos: u64) {
                         }
                         let obj74 = [regs74.as_ptr() as usize, 0];
                         *(G_CONTRACT_MANAGER as *mut usize) = obj74.as_ptr() as usize;
-                        comparar_contract_with_club(obj74.as_ptr() as usize, pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
-                        comparar_contract_level(pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
+                        compare_contract_with_club(obj74.as_ptr() as usize, pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
+                        compare_contract_level(pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
                         // batch 79: player rating (engine with clube73 on both sides,
                         // person with the same id, record, plausible today's and birth dates)
                         let h79 = s.next_u64();
@@ -10317,7 +10317,7 @@ pub unsafe fn autoteste(casos: u64) {
                         let hoje79 = (*(G_CURRENT_DATE as *const u32), *(G_CURRENT_DATE_LEAP as *const u32));
                         *(G_CURRENT_DATE as *mut u32) = (2001u32 << 16) | ((h79 >> 52) % 366) as u32;
                         *(G_CURRENT_DATE_LEAP as *mut u32) = 0;
-                        comparar_player_rating(jog79.as_ptr() as usize);
+                        compare_player_rating(jog79.as_ptr() as usize);
                         *(G_CURRENT_DATE as *mut u32) = hoje79.0;
                         *(G_CURRENT_DATE_LEAP as *mut u32) = hoje79.1;
                         *(G_STAFF_STATE_TABLE as *mut usize) = antes74.0;
@@ -10345,7 +10345,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + 0x1ac) as *mut u8) = 2 + ((h63 >> 51) % 4) as u8;
                 *((m + 0x9766) as *mut u32) = (h63 >> 20) as u32 & 0x4400;
                 *((m + 0x9766 + 6371) as *mut u32) = (h63 >> 30) as u32 & 0x4400;
-                comparar_side_under_control(m, ((h63 >> 53) & 1) as i8);
+                compare_side_under_control(m, ((h63 >> 53) & 1) as i8);
                 // batch 66: penalty order by the tactics table (both sides with a human
                 // manager with mark 0x5f and without 0x9a01; +0x904b only with a national side, otherwise the choose_taker
                 // of the autotest blocks could give a fatal error)
@@ -10375,7 +10375,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let sel_a = *(clube_a63.as_ptr() as *const i32) >= 4600;
                     *((m + 0x904b) as *mut u8) = (sel_a && (h63 >> 59) & 1 == 1) as u8;
                     *((m + 0x911b) as *mut u8) = 0;
-                    comparar_penalty_order(m);
+                    compare_penalty_order(m);
                     *(G_TACTICS as *mut usize) = antes66.0;
                     *((m + 0x904d) as *mut usize) = antes66.1;
                     *((m + 0x911d) as *mut usize) = antes66.2;
@@ -10393,7 +10393,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
                 *(G_SCREEN_RECORDS_MANAGER as *mut u32) = antes_vaga0;
                 *(tab56 as *mut usize) = id56.as_ptr() as usize;
-                comparar_manager_9a05(obj56.as_ptr() as usize, quem56);
+                compare_manager_9a05(obj56.as_ptr() as usize, quem56);
             }
             *(tab56 as *mut u32) = antes_tab56;
             for (i, &a) in globais56.iter().enumerate() {
@@ -10409,15 +10409,15 @@ pub unsafe fn autoteste(casos: u64) {
             *(G_CLUB_COUNT as *mut i32) = 5000;
             *(G_NATION_COUNT as *mut i32) = 200;
             let clube57 = [[4800i32, 4799, 4801, 0, 4900][((h57 >> 2) % 5) as usize]];
-            comparar_is_second_national_team(clube57.as_ptr() as usize);
+            compare_is_second_national_team(clube57.as_ptr() as usize);
             // batch 60: club of the national side (arithmetic only; fake base and 0xae23a8)
             let globais60 = [0xae23b4usize, 0xae23a8];
             let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
             *(G_CLUB_TABLE as *mut u32) = 0x0100_0000 + ((h57 >> 53) as u32 & 0xfff) * 4;
             *(G_NATION_TABLE as *mut u32) = 0x0200_0000;
             let nacao60 = [[0i32, 1, 199, 200, -3, 7000][((h57 >> 30) % 6) as usize]];
-            comparar_main_national_team(nacao60.as_ptr() as usize);
-            comparar_b_national_team(nacao60.as_ptr() as usize);
+            compare_main_national_team(nacao60.as_ptr() as usize);
+            compare_b_national_team(nacao60.as_ptr() as usize);
             for (i, &a) in globais60.iter().enumerate() {
                 *(a as *mut u32) = antes60[i];
             }
@@ -10435,7 +10435,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8ed4) as *mut i16) = [0x3dei16, 0x3df, 0, 2000, -5][((h57 >> 51) % 5) as usize];
             let mut saidas57 = [0x77u8; 5];
             let sp = saidas57.as_mut_ptr();
-            comparar_aggregate_score(m, ((h57 >> 54) % 2) as i8, sp as *mut i8, sp.add(1) as *mut i8, sp.add(2), sp.add(3), sp.add(4), [0u8, 1, 0x80][((h57 >> 56) % 3) as usize]);
+            compare_aggregate_score(m, ((h57 >> 54) % 2) as i8, sp as *mut i8, sp.add(1) as *mut i8, sp.add(2), sp.add(3), sp.add(4), [0u8, 1, 0x80][((h57 >> 56) % 3) as usize]);
             // batch 51: direct marker (roles with sector and side, goalkeepers, outside, distances)
             let h58 = s.next_u64();
             let h59 = s.next_u64();
@@ -10457,7 +10457,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             for i in 0..10u32 {
                 let k = ((h58 >> (i * 6)) % 40) as i8;
-                comparar_direct_marker(m, k / 20, k % 20);
+                compare_direct_marker(m, k / 20, k % 20);
             }
             // batch 59: designated marked player (marks 4 and 0x10, indices in the fake person vector,
             // opposing formation closed, 0x106, tables A/B of the marked player)
@@ -10505,7 +10505,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((j + 0x27) as *mut i8) = l59 as i8;
                     *((j + 0x19) as *mut i8) = ((z >> 5) % 11) as i8;
                     *((j + 0x106) as *mut u8) = ((z >> 9) % 2) as u8;
-                    let alvo77 = comparar_designated_marked(j);
+                    let alvo77 = compare_designated_marked(j);
                     // batch 77: how many and who mark the target (or the player itself)
                     let alvo77 = if alvo77 != 0 && (z >> 20) % 4 != 0 { alvo77 } else { j };
                     // those of the other side with valid engine and side during both calls (0x7160f0 reads both)
@@ -10517,14 +10517,14 @@ pub unsafe fn autoteste(casos: u64) {
                         *((q + 0x27) as *mut i8) = outro77;
                         g
                     }).collect();
-                    comparar_how_many_mark(m, alvo77);
-                    comparar_who_marks(m, alvo77);
+                    compare_how_many_mark(m, alvo77);
+                    compare_who_marks(m, alvo77);
                     for (k, &(g, l)) in guardados77.iter().enumerate() {
                         let q = side_player_slot(m, outro77, k);
                         *((q + 0x19e) as *mut usize) = g;
                         *((q + 0x27) as *mut u8) = l;
                     }
-                    comparar_designated_for_position(form, [-1i8, 0, 5, 10][((z >> 12) % 4) as usize]);
+                    compare_designated_for_position(form, [-1i8, 0, 5, 10][((z >> 12) % 4) as usize]);
                 }
                 for (i, &b) in blocos.iter().enumerate() {
                     core::ptr::copy_nonoverlapping(antes59[i].as_ptr(), b as *mut u8, antes59[i].len());
@@ -10551,7 +10551,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let b = if z % 18 == 0 { mais[((z >> 8) % 2) as usize] } else { bits[((z >> 8) % 34) as usize] };
                     *((tabela58 + 0x188b + 8 * ((z >> 16) % 11) as usize) as *mut u64) = s.next_u64();
                     *((tabela58 + 0x187f) as *mut u32) = 0x5555;
-                    comparar_set_square(tabela58, ((z >> 16) % 11) as i8, b);
+                    compare_set_square(tabela58, ((z >> 16) % 11) as i8, b);
                 }
                 let bloco58 = side_player_slot(m, lado58 as i8, 0);
                 let antes58 = core::slice::from_raw_parts(bloco58 as *const u8, 20 * 0x1be).to_vec();
@@ -10569,7 +10569,7 @@ pub unsafe fn autoteste(casos: u64) {
                     pd[0x33] = ((z >> 8) % 21) as u8;
                     pd[0x27] = ((z >> 16) % 21) as u8;
                 }
-                comparar_mark_stars(m, lado58 as i8);
+                compare_mark_stars(m, lado58 as i8);
                 core::ptr::copy_nonoverlapping(antes58.as_ptr(), bloco58 as *mut u8, antes58.len());
             }
             // batch 53: individual marking (marks by position on both sides, records)
@@ -10587,7 +10587,7 @@ pub unsafe fn autoteste(casos: u64) {
             for (k, f) in fichas.iter_mut().enumerate() {
                 *f = 0x1000 + k as u32;
             }
-            comparar_individual_marking(m);
+            compare_individual_marking(m);
             // batch 54: new reputation (national side, type 8 with the codes, match -2, zero ratio)
             {
                 let globais = [0xae235cusize, 0xae2350, 0xb74350];
@@ -10624,7 +10624,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((m + 0x4792) as *mut usize) = pp;
                     *((m + 0x1d6) as *mut u32) = 0x55555555;
                     let valor = [0f32, 6.8, 1.0, 3.5, 10.0, 40.0][(r[11] % 6) as usize] + ((r[11] >> 8) % 1000) as f32 / 300.0 - 1.5;
-                    comparar_new_reputation(m, ((r[11] >> 20) % 2) as i8, valor, ((r[11] >> 21) % 2) as u8, ((r[11] >> 22) % 2) as u8);
+                    compare_new_reputation(m, ((r[11] >> 20) % 2) as i8, valor, ((r[11] >> 21) % 2) as u8, ((r[11] >> 22) % 2) as u8);
                     // batch 55: player's reputation (same match; record, the player's club)
                     let mut reg = [0u8; 0x20];
                     let mut jog = [0u8; 0x70];
@@ -10643,26 +10643,26 @@ pub unsafe fn autoteste(casos: u64) {
                     *((cl[1].as_mut_ptr() as usize + 0x53) as *mut usize) = [alvo, 0x4321, 0][((rr >> 12) % 3) as usize];
                     *((cp.as_mut_ptr() as usize + 0x5d) as *mut usize) = [alvo, 0x5678, 0][((rr >> 14) % 3) as usize];
                     let lado55 = ((rr >> 16) % 2) as usize;
-                    comparar_player_reputation(rp, cl[lado55].as_mut_ptr() as usize, cl[1 - lado55].as_mut_ptr() as usize, pp, valor, ((rr >> 17) % 2) as u8, ((rr >> 18) % 2) as u8);
+                    compare_player_reputation(rp, cl[lado55].as_mut_ptr() as usize, cl[1 - lado55].as_mut_ptr() as usize, pp, valor, ((rr >> 17) % 2) as u8, ((rr >> 18) % 2) as u8);
                 }
                 *((m + 0x4792) as *mut usize) = antes_m;
                 for (i, &a) in globais.iter().enumerate() {
                     *(a as *mut u32) = antes[i];
                 }
             }
-            comparar_square_bit(match (h56 >> 56) % 4 { 0 => c56 + 1, 1 => c56 - 1, 2 => (h56 >> 30) as i16, _ => c56 });
+            compare_square_bit(match (h56 >> 56) % 4 { 0 => c56 + 1, 1 => c56 - 1, 2 => (h56 >> 30) as i16, _ => c56 });
             let setor56 = [1u32, 2, 4, 8, 0x10, 0x20, 0x40, 0x41, 0x7f][((h56 >> 33) % 9) as usize];
             let lado56 = [0x80u32, 0x100, 0x200, 0x400, 0x800, 0xf80, 0xc00, 0x0][((h56 >> 37) % 8) as usize];
             let m56 = setor56 | lado56 | (((h56 >> 18) as u32) & 0xfffff000);
             if m56 & 0x7f != 0 && (m56 & 0xf80 != 0 || m56 & 1 != 0) {
                 let (mut st56, mut ld56) = (0x5555u16, 0xaaaau16);
-                comparar_split_mask(m56, &mut st56, &mut ld56);
+                compare_split_mask(m56, &mut st56, &mut ld56);
             }
             for (i, &a) in ids.iter().enumerate() {
                 *(a as *mut u32) = ids_antes[i];
             }
-            comparar_choose_by_role_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
-            comparar_distance_between(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
+            compare_choose_by_role_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
+            compare_distance_between(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
     });
     SYNTHETIC.store(false, std::sync::atomic::Ordering::Relaxed);

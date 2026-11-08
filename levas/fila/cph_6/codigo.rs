@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn update_work_permits(this: usize) {
 }
 
 /// Comparador: lado a lado pela ficha [0xae1080] e pelo cursor (+0xa) da lista de troca.
-unsafe extern "thiscall" fn comparar_transfer_manager_offer_needs_work_permit(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn compare_transfer_manager_offer_needs_work_permit(this: usize, oferta: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let lista = cph6_d(oferta + 4) as usize;
     let mut reg = vec![(0xae1080, 4)];
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_offer_needs_work_permit(th
 
 /// Comparador: lado a lado pelo vetor, pela contagem e, de cada permissão, pela marca da pessoa e pela segunda
 /// nacionalidade (+0x1e). Permissões com pessoa negativa não entram nas regiões (o original leria fora do vetor).
-unsafe extern "thiscall" fn comparar_update_work_permits(this: usize) {
+unsafe extern "thiscall" fn compare_update_work_permits(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = (*((this + 0x93e) as *const i32)).max(0) as usize;
     let vetor = cph6_d(this + 0x93a) as usize;

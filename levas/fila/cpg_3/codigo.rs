@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn get_match_condition(this: usize, jogador: usize, em_
     c as u16
 }
 
-unsafe extern "thiscall" fn comparar_discipline_operator(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_discipline_operator(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this, origem), || discipline_operator(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("discipline_operator {:x?} x {:x?}", mo, mr));
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn comparar_discipline_operator(this: usize, origem: us
 }
 
 /// Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
-unsafe extern "thiscall" fn comparar_set_default_wage(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn compare_set_default_wage(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0xc, 4)], || o(this, pessoa), || set_default_wage(this, pessoa));
     SCOREBOARD.record(igual && r == n, || format!("set_default_wage({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
@@ -68,4 +68,4 @@ unsafe extern "thiscall" fn comparar_set_default_wage(this: usize, pessoa: usize
 }
 
 // a original roda primeiro e atualiza o físico do dia (0x62c680, com sorteio); a cópia, depois, acha o dia já feito
-comparar_valor!(comparar_get_match_condition, get_match_condition, %%I2%%, (jogador: usize, em_porcento: u32) -> u16);
+compare_value!(compare_get_match_condition, get_match_condition, %%I2%%, (jogador: usize, em_porcento: u32) -> u16);

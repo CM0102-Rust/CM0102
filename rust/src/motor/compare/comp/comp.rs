@@ -4,12 +4,12 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/comp.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `send_prize_money_news` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_send_prize_money_news(this: usize, club: usize, lo: u32, hi: i32, position: u32, round: u32, partida: usize, kind: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_send_prize_money_news(this: usize, club: usize, lo: u32, hi: i32, position: u32, round: u32, partida: usize, kind: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(IDX_SEND_PRIZE_MONEY_NEWS)(this, club, lo, hi, position, round, partida, kind)
 }
 
 /// Comparer for `send_tv_rights_news` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_send_tv_rights_news(this: usize, club: usize, value: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_send_tv_rights_news(this: usize, club: usize, value: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SEND_TV_RIGHTS_NEWS)(this, club, value)
 }
 
@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_tv_rights_news(this: usize,
 ///
 /// [pt] Só a original (o método +0x10 marca a liga completa, grava recordes e paga prêmios: não roda duas vezes): a cópia
 /// leva os ramos.
-pub(crate) unsafe extern "thiscall" fn comparar_all_stages_complete(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_all_stages_complete(this: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_ALL_STAGES_COMPLETE)(this)
 }
 
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_all_stages_complete(this: usize)
 ///
 /// [pt] Lado a lado: a original com a saída de quem chama, a cópia com saída própria, a partir do mesmo [0xb67a34]; a conta
 /// e os clubes das duas listas iguais (a da cópia é liberada).
-pub(crate) unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usize, list: *mut usize, x: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn compare_comp_collect_club_list(this: usize, list: *mut usize, x: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_COMP_COLLECT_CLUB_LIST);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut l2 = 0usize;
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usi
 /// Comparer for `find_club_progress` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Lado a lado nas três saídas (a original e a cópia com saídas próprias, começando dos valores de quem chama).
-pub(crate) unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, club: usize, stage_id: *mut i16, round: *mut i16, status: *mut u8) {
+pub(crate) unsafe extern "thiscall" fn compare_find_club_progress(this: usize, club: usize, stage_id: *mut i16, round: *mut i16, status: *mut u8) {
     let (mut f2, mut r2, mut s2) = (*stage_id, *round, *status);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(IDX_FIND_CLUB_PROGRESS)(this, club, stage_id, round, status);
     find_club_progress(this, club, &mut f2, &mut r2, &mut s2);
@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, 
 ///
 /// [pt] O comparador da primeira fase do grupo: com o índice válido (−1..+0x30), as duas (só leem) e o mesmo índice; fora
 /// dele só a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: usize, k: i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_first_stage_of_group(this: usize, k: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_GET_FIRST_STAGE_OF_GROUP);
     if k < -1 || k > read_u32_as_usize(this + league::CURRENT_STAGE) as i32 {
         return o(this, k);
@@ -69,12 +69,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: u
 ///
 /// [pt] O comparador da fase atual: só a original (simplification: o método 0x10 das fases pode refazer a tabela; não roda duas
 /// vezes); a cópia se prova no modo Rust pelas telas.
-pub(crate) unsafe extern "thiscall" fn comparar_get_current_stage(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_get_current_stage(this: usize) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_GET_CURRENT_STAGE)(this)
 }
 
 /// Comparador: rotina pura; compara o byte devolvido.
-pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_club(club: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_club(club: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_CLUB)(club);
     let n = comp_active_key_nation_of_club(club);
     SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", club, r, n));
@@ -82,7 +82,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_club(club: us
 }
 
 /// Comparador: rotina pura; compara o byte devolvido.
-pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(stadium: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_stadium(stadium: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_STADIUM)(stadium);
     let n = comp_active_key_nation_of_stadium(stadium);
     SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", stadium, r, n));
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(stadi
 /// Comparer for `comp_key_nation_entry_from_active_index` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: rotina pura; compara a entrada devolvida. Sem entrada (a caixa): só a original.
-pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index(active: i8) -> i32 {
+pub(crate) unsafe extern "C" fn compare_comp_key_nation_entry_from_active_index(active: i8) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i8) -> i32>(IDX_COMP_KEY_NATION_ENTRY_FROM_ACTIVE_INDEX);
     if key_nation_by_active_index(active).is_none() {
         return o(active); // simplification: the box does not run twice
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index
 /// Comparer for `get_fixture_match_importance` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (a virtual da fase só lê; roda duas vezes).
-pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_GET_FIXTURE_MATCH_IMPORTANCE)(this, p, a, b);
     let n = get_fixture_match_importance(this, p, a, b);
     SCOREBOARD.record(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_match_importance(thi
 /// Comparer for `get_stage` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (só lê). A caixa: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_get_stage(this: usize, k: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_GET_STAGE);
     if k < -1 || k > read_usize(this + league::CURRENT_STAGE) as i32 {
         return o(this, k); // simplification: the box, original only
@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -
 }
 
 /// Comparer for `comp_active_key_nation_of_fixture` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
+pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_FIXTURE)(comp, partida);
     let n = comp_active_key_nation_of_fixture(comp, partida);
     SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp:
 /// Comparer for `are_round_fixtures_known` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (só lê). A caixa: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, stage: i32, round: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_are_round_fixtures_known(this: usize, stage: i32, round: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN);
     if stage < -1 && stage <= read_usize(this + league::CURRENT_STAGE) as i32 {
         return o(this, stage, round); // simplification: the box, original only
@@ -150,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: u
 }
 
 /// Comparer for `counts_for_fixture_clash` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, game: usize, other: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_counts_for_fixture_clash(this: usize, game: usize, other: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, game, other);
     let n = counts_for_fixture_clash(this, game, other);
     SCOREBOARD.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", read_i16(game + 0x30), r, n));
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: u
 }
 
 /// Comparer for `special_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_special_club(club: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn compare_special_club(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_SPECIAL_CLUB)(club);
     let v = special_club(club);
     SCOREBOARD.record(r == v, || format!("special_club({:#x}) original={} rust={}", club, r, v));

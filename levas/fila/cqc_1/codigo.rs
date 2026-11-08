@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize, entrada: 
 /// que a rotina garante e nenhuma chamada desfaz: o último clube da entrada (a ordem dos clubes) fica com os totais do
 /// ano (+0x110, 0x50 bytes) zerados. Ponytail: os anteriores podem ganhar valores pela 0x59cfa0 de um clube seguinte
 /// (o B que usa o registro do A, o estádio dividido); conferir todos pede o plano dessas exceções.
-unsafe extern "thiscall" fn comparar_fin_prm_end_season_for_nation(this: usize, entrada: usize) {
+unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(this: usize, entrada: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     if entrada == 0 || depois(0xae2c90, cqc1_d(0xdd6ec8) as u32, cqc1_d(0xdd6ecc) as u32) != 0 {
@@ -470,7 +470,7 @@ unsafe fn pay_dividend(this: usize, clube: usize, fin: usize) {
 /// (0x59ffb0, 0x59fae0, 0x59fe10) são montadas na pilha e só são entregues ao técnico humano (0x7861e0): com técnico da
 /// máquina elas não deixam nada além do sorteio(2) da recusa, que as duas rodadas fazem. Só a original: o técnico
 /// humano (a notícia entra na caixa dele) e o estádio dividido (mexe noutro clube e nas finanças dele).
-unsafe extern "thiscall" fn comparar_season_end_club_update(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_season_end_club_update(this: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if clube == 0 || selecao(clube) != 0 || fin_prm_has_human_manager(clube) {
@@ -514,6 +514,6 @@ unsafe extern "thiscall" fn news_dividend(_this: usize, clube: usize, valor: i32
 
 /// O comparador da notícia do dividendo: só a original (ponytail: a notícia vai para a caixa do técnico humano e não
 /// pode ser entregue duas vezes; com técnico da máquina não deixa nada).
-unsafe extern "thiscall" fn comparar_news_dividend(this: usize, clube: usize, valor: i32) {
+unsafe extern "thiscall" fn compare_news_dividend(this: usize, clube: usize, valor: i32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I2%%)(this, clube, valor)
 }

@@ -99,7 +99,7 @@ unsafe fn written_group_round_bytes(t: usize) -> Vec<u8> {
 /// Lado a lado nas fases de grupos: a original com as saídas de quem chama e a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas alocadas têm de ser iguais (a da cópia é liberada).
 /// O mata-mata: só a original.
-unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_world_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     if fase as u8 as i8 >= 7 {
         return o(this, fase, rodadas, id, liga);
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn add_qualified_team(this: usize, clube: usize) {
 }
 
 /// Lado a lado (+0x36 e a vaga da tabela); lista cheia (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_add_qualified_team(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_add_qualified_team(this: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let n = cqf6_w(this + 0x36);
     if n >= cqf6_w(this + 0x38) || cqf6_d(this + 0x14) == 0 {
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn seed_teams(this: usize) {
 
 /// Na Copa de 2002 (volta sem gravar nada) lado a lado em +0x4b; nas outras, só a original (caixas, e as saídas da
 /// 0x5fa730 que a original pode deixar sem gravar).
-unsafe extern "thiscall" fn comparar_seed_teams(this: usize) {
+unsafe extern "thiscall" fn compare_seed_teams(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqf6_w(this + 0x40) != 0x7d2 {
         return o(this);

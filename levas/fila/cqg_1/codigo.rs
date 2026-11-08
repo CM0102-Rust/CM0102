@@ -272,6 +272,6 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
 
 /// Comparador da 0x4cf720: só a original (inclui e tira a pessoa dos clubes, realoca o vetor dos contratos, entrega
 /// notícias, sorteia a segunda nacionalidade, recalcula a folha).
-unsafe extern "thiscall" fn comparar_sign_contract(this: usize, contrato: usize, cargo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_sign_contract(this: usize, contrato: usize, cargo: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, contrato, cargo) // ponytail: só a original
 }

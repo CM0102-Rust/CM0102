@@ -118,7 +118,7 @@ unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u
     ((eax as u32 & 0xffff_0000) | rep as u16 as u32).wrapping_add(bonus as u32)
 }
 
-unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize, pessoa: usize) -> u32 {
+unsafe extern "C" fn compare_club_reputation_for_staff(clube: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(clube, pessoa),
         || club_reputation_for_staff(clube, pessoa));
@@ -153,7 +153,7 @@ unsafe extern "C" fn staff_count_disliked_staff_at_club(pessoa: usize, clube: us
     count_preferred_people_at_club(pessoa, clube, 0x28) // os rejeitados
 }
 
-unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "C" fn compare_staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%)(pessoa, clube);
     let n = staff_count_disliked_staff_at_club(pessoa, clube);
     SCOREBOARD.record(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
@@ -166,7 +166,7 @@ unsafe extern "C" fn staff_count_favoured_staff_at_club(pessoa: usize, clube: us
     count_preferred_people_at_club(pessoa, clube, 0x1c) // os favoritos
 }
 
-unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "C" fn compare_staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(pessoa, clube);
     let n = staff_count_favoured_staff_at_club(pessoa, clube);
     SCOREBOARD.record(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));

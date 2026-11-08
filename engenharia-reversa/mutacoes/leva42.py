@@ -13,7 +13,7 @@ MUTACOES = [
     ('f_750', "} else if side_b == 1 && dif < -750", "} else if side_b == 1 && dif <= -750"),
     ('f_f5bd', "if byte(this, engine::SCORE) == 0 {", "if byte(this, engine::SCORE) != 0 {"),
     ('f_9c4', "*((casa + club::REPUTATION) as *const i16) < 0x9c4", "*((casa + club::REPUTATION) as *const i16) <= 0x9c4"),
-    ('f_sorte', "    if a < sortear(0x14) {", "    if a <= sortear(0x14) {"),
+    ('f_sorte', "    if a < random(0x14) {", "    if a <= random(0x14) {"),
     ('f_somaS', "let sum = byte(person, player_sheet::PLAYER_PACE).wrapping_add(byte(person, player_sheet::ACCELERATION));", "let sum = byte(person, player_sheet::PLAYER_PACE).wrapping_add(byte(person, player_sheet::AGGRESSION));"),
     ('f_faixa', "('>', 0x32, 0x96d3b0), ('>', 0x23, 0),", "('>', 0x32, 0x96d3b0), ('>', 0x24, 0),"),
     ('f_p4', "(13, 0x96d358, [1, 0x968f20", "(13, 0x96d358, [1, 0x968918"),

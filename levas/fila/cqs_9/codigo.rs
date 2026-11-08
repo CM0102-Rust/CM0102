@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
 
 /// Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
-unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_build_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let (a0, t0) = (cqs9_d(this + 0xa7), cqs9_d(this + 0x14));
     let base = cqs9_d(0xae23b4);

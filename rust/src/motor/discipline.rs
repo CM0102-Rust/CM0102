@@ -808,7 +808,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, source: 
 }
 
 // the original runs first and updates the day’s fitness (0x62c680, with a random roll); the copy, afterwards, finds the day already done
-comparar_valor!(comparar_get_match_condition, get_match_condition, IDX_GET_MATCH_CONDITION, (jogador: usize, em_porcento: u32) -> u16);
+compare_value!(compare_get_match_condition, get_match_condition, IDX_GET_MATCH_CONDITION, (jogador: usize, em_porcento: u32) -> u16);
 
 /// starts the new season of the competition's discipline rules (virtual method 0)
 /// Original: `discipline_new_season` (0x556210, discipline.cpp, thiscall).

@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize, jogo: usi
 /// Comparador da 0x5c6570: a original entrega notícias, cancela torneios e tira jogos do calendário (libera): só ela
 /// roda. Antes, a cópia acha a vaga do amistoso (0x5c6740, só leitura); depois a vaga tem de estar livre (+0x10 = 0 e
 /// +0x18 = 0).
-unsafe extern "thiscall" fn comparar_on_friendly_fixture_cancelled(this: usize, jogo: usize, quem: usize) {
+unsafe extern "thiscall" fn compare_on_friendly_fixture_cancelled(this: usize, jogo: usize, quem: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let mut vaga = 0usize;
     if cqg10_d(jogo + 0x14) == cqg10_d(this + 4) && cqg10_d(this + 0x34cc) != 0 {
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: usize, jogo: 
 
 /// Comparador da 0x5cb9e0: a original tira jogos do calendário (libera): só ela roda (ponytail: a cópia não tem o que
 /// conferir sem refazer a busca no calendário já mudado; a contagem do ramo prova no modo Rust).
-unsafe extern "thiscall" fn comparar_friendly_cancel_national_fixture(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn compare_friendly_cancel_national_fixture(this: usize, jogo: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, jogo);
 }
 
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn cancel_tournament(this: usize, torneio: usize, sem_o
 /// Comparador da 0x5c8260: a original entrega notícias, tira jogos do calendário e destrói a competição: só ela roda,
 /// com o plano conferido depois: o dono (+0) e a competição (+0x65) zerados, a vaga da tabela de competições zerada e
 /// o torneio fora da lista dos pendentes.
-unsafe extern "thiscall" fn comparar_cancel_tournament(this: usize, torneio: usize, sem_o_dono: u32) {
+unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, torneio: usize, sem_o_dono: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     if torneio == 0 {
         o(this, torneio, sem_o_dono);

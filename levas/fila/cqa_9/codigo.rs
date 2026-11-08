@@ -293,7 +293,7 @@ fn player_value_regions() -> [(usize, usize); 11] {
 
 /// Comparador: lado a lado (sem alocar) com o estado do sorteador (sem clube, sorteio(3)), o [0xae1080] e as estáticas
 /// das datas da compensação; a cópia sem contar os sorteios. Quente (5,6 milhões de chamadas): sem contador.
-unsafe extern "thiscall" fn comparar_calc_player_value(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, x: u32) -> i32 {
+unsafe extern "thiscall" fn compare_calc_player_value(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, x: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32>(%%I0%%);
     let regioes = player_value_regions();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, pessoa, clube, modo, habilidade, x),
@@ -336,7 +336,7 @@ unsafe fn cqa9_texto(a: usize) -> Vec<u8> {
 
 /// Comparador: a original escreve; a cópia escreve de novo (sobrescreve) e o texto e a diferença têm de bater; fica o
 /// texto da original.
-unsafe extern "stdcall" fn comparar_contract_manager_write_morale_comparison_text(a: usize, b: usize, saida: usize, x: u32) -> u8 {
+unsafe extern "stdcall" fn compare_contract_manager_write_morale_comparison_text(a: usize, b: usize, saida: usize, x: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, usize, u32) -> u8>(%%I1%%)(a, b, saida, x);
     let tr = cqa9_texto(saida);
     let n = contract_manager_write_morale_comparison_text(a, b, saida, x);
@@ -387,7 +387,7 @@ unsafe extern "thiscall" fn get_squad_flags_for_club(this: usize, pessoa: usize,
     (*((c0 + 0x35) as *const u8) & 0x40 != 0) as u8 + 1
 }
 
-unsafe extern "thiscall" fn comparar_get_squad_flags_for_club(this: usize, pessoa: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_squad_flags_for_club(this: usize, pessoa: usize, clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%);
     if clube == 0 || pessoa == 0 {
         return o(this, pessoa, clube);

@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn manager_manager_remove(this: usize, dado: usize) -> 
 /// Comparador: a 0x68d1f0 libera o nó e o item (não roda duas vezes): o plano antes (o nó achado pela cópia, a cabeça,
 /// a cauda, a conta, o cursor e os vizinhos); a original tira; confere a devolução, o cabeçalho (14 bytes) e os elos
 /// dos vizinhos.
-unsafe extern "thiscall" fn comparar_manager_manager_remove(this: usize, dado: usize) -> u32 {
+unsafe extern "thiscall" fn compare_manager_manager_remove(this: usize, dado: usize) -> u32 {
     let no = find_list_node_by_bytes(this, dado);
     let antes: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
     let (prox, ant) = if no != 0 { (cqb10_d(no + 6), cqb10_d(no + 0xa)) } else { (0, 0) };
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn manager_manager_clear(this: usize) {
 }
 
 /// Comparador: libera os nós (não roda duas vezes): só a original; confere o cabeçalho zerado (14 bytes).
-unsafe extern "thiscall" fn comparar_manager_manager_clear(this: usize) {
+unsafe extern "thiscall" fn compare_manager_manager_clear(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let depois: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
     SCOREBOARD.record(depois == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, depois));
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn get_current(this: usize) -> usize {
     cqb10_d(no)
 }
 
-unsafe extern "thiscall" fn comparar_get_current(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_get_current(this: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%)(this);
     let n = get_current(this);
     SCOREBOARD.record(r == n, || format!("get_current({:#x}) original={:#x} rust={:#x}", this, r, n));

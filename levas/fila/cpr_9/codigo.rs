@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn add_free_release_records(this: usize, pessoa: usize)
 
 // ponytail: a busca acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo Rust e a
 // carreira provam a cópia.
-unsafe extern "thiscall" fn comparar_find_new_retirements(this: usize) {
+unsafe extern "thiscall" fn compare_find_new_retirements(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -210,7 +210,7 @@ unsafe fn job_exit_is_memory_only(pessoa: usize) -> bool {
 
 /// Comparador: sem rotinas com efeito (job_exit_is_memory_only), lado a lado pela pessoa (0x6e bytes) e pelos dois clubes
 /// (0x245 bytes cada); senão (vaga do técnico, cancelamento de ofertas, listas do humano) só a original.
-unsafe extern "stdcall" fn comparar_player_regen_retire_from_non_playing_staff(pessoa: usize) {
+unsafe extern "stdcall" fn compare_player_regen_retire_from_non_playing_staff(pessoa: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I1%%);
     if !job_exit_is_memory_only(pessoa) {
         return o(pessoa);
@@ -227,6 +227,6 @@ unsafe fn job_exit_regions(pessoa: usize) -> Vec<(usize, usize)> {
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia sem ele só grava [0xae1080]: só a
 // original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_add_free_release_records(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_add_free_release_records(this: usize, pessoa: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, pessoa)
 }

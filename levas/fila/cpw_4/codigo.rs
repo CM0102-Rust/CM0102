@@ -150,7 +150,7 @@ static mut DRY_RUN_CONTRACT_OFFER_RECORD: [u8; 0x6f] = [0; 0x6f];
 /// estado, comparando a oferta (0x63 bytes), o contador e a cabeça da lista (o cursor). Oferta nova (acrescentada, aloca):
 /// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
 /// mesmos 0x63 primeiros bytes, com o contador + 1.
-unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, termos: usize, vaga: i32, valor: u32, marca: u32, a5: u32, decidir: u32, acertado: u32) {
+unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, termos: usize, vaga: i32, valor: u32, marca: u32, a5: u32, decidir: u32, acertado: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(%%I0%%);
     let id = cpw4_d(termos);
     let clube = cpw4_d(termos + 4);
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn remove_contract_offer_for_transfer(this: usize, pess
 
 /// Comparador: a original tira o item da lista (libera): só ela, conferindo o plano feito antes: com a oferta da pessoa
 /// pela vaga na lista, o contador desce 1; sem ela, fica.
-unsafe extern "thiscall" fn comparar_remove_contract_offer_for_transfer(this: usize, pessoa: usize, vaga: i32) {
+unsafe extern "thiscall" fn compare_remove_contract_offer_for_transfer(this: usize, pessoa: usize, vaga: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I1%%);
     let l = cpw4_d(this + 0x34);
     let mut achou = false;
@@ -280,7 +280,7 @@ unsafe extern "stdcall" fn contract_manager_lowest_wage_demand(pessoa: usize, cl
 
 /// Comparador: a original e a cópia a partir do mesmo estado (o sorteio e o último contrato pedido [0xae1080]); a
 /// devolução e a memória.
-unsafe extern "stdcall" fn comparar_contract_manager_lowest_wage_demand(pessoa: usize, clube: usize) -> i32 {
+unsafe extern "stdcall" fn compare_contract_manager_lowest_wage_demand(pessoa: usize, clube: usize) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i32>(%%I2%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::rng::STATE_REGIONS);

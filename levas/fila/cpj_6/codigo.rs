@@ -149,19 +149,19 @@ unsafe extern "thiscall" fn find_highest_offer_for_player(this: usize, jogador: 
 }
 
 /// Comparador: a 0x695240 mexe na diretoria (e pode dar notícia): só a original (a prova é a carreira e o modo Rust).
-unsafe extern "thiscall" fn comparar_update_board_after_fixture(this: usize, partida: usize, jogo: usize) {
+unsafe extern "thiscall" fn compare_update_board_after_fixture(this: usize, partida: usize, jogo: usize) {
     crate::comparison::branch("update_board_after_fixture");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, partida, jogo)
 }
 
 /// Comparador: o tribunal (0x7e7ff0) dá as suspensões: só a original.
-unsafe extern "thiscall" fn comparar_process_match(this: usize, partida: usize, resultado: u32) -> u32 {
+unsafe extern "thiscall" fn compare_process_match(this: usize, partida: usize, resultado: u32) -> u32 {
     crate::comparison::branch("process_match");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, partida, resultado)
 }
 
 /// Comparador: as entradas da cópia antes; a original acrescenta; confere os últimos itens da lista (8 bytes cada).
-unsafe extern "thiscall" fn comparar_collect_club_shortlist_entries(this: usize, clube: *const u32, lista: usize) {
+unsafe extern "thiscall" fn compare_collect_club_shortlist_entries(this: usize, clube: *const u32, lista: usize) {
     let esperado: Vec<[u8; 8]> = club_shortlist_entries(this, *clube).iter().map(|&e| core::ptr::read_unaligned(e as *const [u8; 8])).collect();
     let antes = list_items_capped(lista).len();
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32, usize)>(%%I2%%)(this, clube, lista);
@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn comparar_collect_club_shortlist_entries(this: usize,
 }
 
 /// Comparador: pelo valor (a 0x8e7a70 só calcula; as duas voltam o cursor da lista ao começo).
-unsafe extern "thiscall" fn comparar_find_highest_offer_for_player(this: usize, jogador: *const u32, clube: *const u32) -> usize {
+unsafe extern "thiscall" fn compare_find_highest_offer_for_player(this: usize, jogador: *const u32, clube: *const u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32) -> usize>(%%I3%%)(this, jogador, clube);
     let n = find_highest_offer_for_player(this, jogador, clube);
     SCOREBOARD.record(r == n, || format!("find_highest_offer_for_player({}, {}) original={:#x} rust={:#x}", *jogador, *clube, r, n));

@@ -9,7 +9,7 @@ MUTACOES = [
      '        q = 9000.0; // mutacao: a base mais baixa',
      'cpp_3 base no teto'),
     ('cpp_motivo_sorteio', '    let temporada = em_temporada(clube, 0xae2c90);',
-     '    let temporada = em_temporada(clube, 0xae2c90);\n    sortear(2); // mutacao: um sorteio a mais',
+     '    let temporada = em_temporada(clube, 0xae2c90);\n    random(2); // mutacao: um sorteio a mais',
      'cpp_3 motivo da saida'),
     ('cpp_registro_sem_vaga', '            cpp3_por(r + 0x86, cpp3_d(pessoa)); // a vaga fica com ele\n            break r;',
      '            return 0; // mutacao: sem criar o registro',

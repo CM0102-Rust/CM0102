@@ -3,8 +3,8 @@
 # mexem nos filtros, que mudam quantos chegam aos sorteios.
 # Uso: python mutacoes.py mutacoes\leva132.py --carreira 2002-06-01
 MUTACOES = [
-    ('c_100', "w(club + club::REPUTATION) < 0x128e && sortear(100) != 0 {", "w(club + club::REPUTATION) < 0x128e && sortear(2) != 0 {"),
-    ('c_80', "w(club + club::REPUTATION) < 0x128e && sortear(100) != 0 {", "w(club + club::REPUTATION) < 0x1000 && sortear(100) != 0 {"),
+    ('c_100', "w(club + club::REPUTATION) < 0x128e && random(100) != 0 {", "w(club + club::REPUTATION) < 0x128e && random(2) != 0 {"),
+    ('c_80', "w(club + club::REPUTATION) < 0x128e && random(100) != 0 {", "w(club + club::REPUTATION) < 0x1000 && random(100) != 0 {"),
     ('c_cf', "    if g(club + club::MANAGER) == 0 {\n        return;\n    }\n    if test_600a50", "    if g(club + club::ASSISTANT_MANAGER) == 0 {\n        return;\n    }\n    if test_600a50"),
     ('c_jovem', "|| byte(p, staff::YEAR_OF_BIRTH) > 0x14 {", "|| byte(p, staff::YEAR_OF_BIRTH) > 0x13 {", "clube segue"),
     ('c_59', "|| byte(p, staff::LOYALITY) <= 0xf {", "|| byte(p, staff::LOYALITY) <= 0xe {", "clube segue"),

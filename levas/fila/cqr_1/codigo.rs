@@ -95,22 +95,22 @@ unsafe extern "thiscall" fn jap_j1_create_half_season_stage(this: usize, k: u32)
     create_half_season_stage(this, k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: os pontos por vitória na J1
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_rio_create_half_season_stage(this: usize, k: u32) {
+unsafe extern "thiscall" fn compare_bra_reg_rio_create_half_season_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     compare_half_season_stage("bra_reg_rio_create_half_season_stage", this, k, || o(this, k))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_half_season_stage(this: usize, k: u32) {
+unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_create_half_season_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     compare_half_season_stage("bra_reg_minas_gerais_create_half_season_stage", this, k, || o(this, k))
 }
 
-unsafe extern "thiscall" fn comparar_create_half_stage(this: usize, k: u32) {
+unsafe extern "thiscall" fn compare_create_half_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%);
     compare_half_season_stage("create_half_stage", this, k, || o(this, k))
 }
 
-unsafe extern "thiscall" fn comparar_jap_j1_create_half_season_stage(this: usize, k: u32) {
+unsafe extern "thiscall" fn compare_jap_j1_create_half_season_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I3%%);
     compare_half_season_stage("jap_j1_create_half_season_stage", this, k, || o(this, k))
 }

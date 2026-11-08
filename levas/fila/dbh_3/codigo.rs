@@ -16,7 +16,7 @@ unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usize, use_zip:
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_db_files_write_or_read_records_0x3c(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn compare_db_files_write_or_read_records_0x3c(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%)(stream, use_zip, registros, n)
 }
 
@@ -50,7 +50,7 @@ unsafe extern "C" fn db_files_open_for_read(pasta: usize, nome: usize) -> usize 
 
 /// Comparador: abrir duas vezes deixaria outro FILE aberto (ou alocaria um lugar novo na tabela de FILE da
 /// CRT, que fica). Roda a original e compara só o caminho (sem efeito colateral).
-unsafe extern "C" fn comparar_db_files_open_for_read(pasta: usize, nome: usize) -> usize {
+unsafe extern "C" fn compare_db_files_open_for_read(pasta: usize, nome: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%)(pasta, nome);
     check_database_path("db_files_open_for_read", pasta, nome);
     r
@@ -68,7 +68,7 @@ unsafe extern "C" fn db_files_open_for_write(pasta: usize, nome: usize) -> usize
 
 /// Comparador: criar duas vezes truncaria o arquivo com dois FILE abertos. Roda a original e compara só o
 /// caminho.
-unsafe extern "C" fn comparar_db_files_open_for_write(pasta: usize, nome: usize) -> usize {
+unsafe extern "C" fn compare_db_files_open_for_write(pasta: usize, nome: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%)(pasta, nome);
     check_database_path("db_files_open_for_write", pasta, nome);
     r

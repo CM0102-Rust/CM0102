@@ -41,7 +41,7 @@ unsafe extern "C" fn staff_is_player_attribute_visible(quem_ve: usize, pessoa: u
     (a % divisor == 0 || b % 3 == 0) as u8
 }
 
-unsafe extern "C" fn comparar_staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn compare_staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I0%%)(quem_ve, pessoa, atributo);
     let n = staff_is_player_attribute_visible(quem_ve, pessoa, atributo);
     SCOREBOARD.record(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
@@ -71,7 +71,7 @@ unsafe extern "C" fn staff_get_player_attribute_for_viewer(quem_ve: usize, pesso
     calcular(pessoa, jogador, atributo) as u8
 }
 
-unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn compare_staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%)(quem_ve, pessoa, atributo);
     let x = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&x) {
@@ -122,7 +122,7 @@ unsafe extern "C" fn database_get_non_player_attribute_name(atributo: u32, texto
     1
 }
 
-unsafe extern "C" fn comparar_database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+unsafe extern "C" fn compare_database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I2%%);
     let x = atributo as u8 as i8;
     if !(1..=12).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {

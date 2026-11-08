@@ -171,7 +171,7 @@ unsafe extern "C" fn staff_normalise_player_physical_attributes(pessoa: usize) {
 /// Comparador de 0x538bc0 e 0x538ec0: o jogador inteiro (70 bytes) e o byte +0x58 da pessoa, com o gerente
 /// do treino ([0xde1f44]) zerado nos dois lados (o tirar e devolver do progresso mexe nas tabelas do treino,
 /// fora das regiões); com gerente, a original roda depois de verdade a partir do mesmo estado.
-unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), pessoa: usize,
+unsafe fn compare_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), pessoa: usize,
                                            nome: &'static str) {
     let jogador = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + 0x61) as *const usize) };
     if jogador == 0 {
@@ -190,8 +190,8 @@ unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust:
     }
 }
 
-unsafe extern "C" fn comparar_staff_normalise_player_physical_attributes(pessoa: usize) {
-    comparar_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(%%I0%%), staff_normalise_player_physical_attributes, pessoa,
+unsafe extern "C" fn compare_staff_normalise_player_physical_attributes(pessoa: usize) {
+    compare_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(%%I0%%), staff_normalise_player_physical_attributes, pessoa,
         "staff_normalise_player_physical_attributes");
 }
 
@@ -222,7 +222,7 @@ unsafe extern "C" fn database_pick_second_name_by_weight(nacao: usize) -> usize 
     linha(scaled_crt_rand(name_count_capped(0xae239c)))
 }
 
-unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) -> usize {
+unsafe extern "C" fn compare_database_pick_second_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
@@ -258,7 +258,7 @@ unsafe extern "C" fn staff_normalise_player_attributes(pessoa: usize) {
     remove_or_restore_training(pessoa, 1);
 }
 
-unsafe extern "C" fn comparar_staff_normalise_player_attributes(pessoa: usize) {
-    comparar_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(%%I2%%), staff_normalise_player_attributes, pessoa,
+unsafe extern "C" fn compare_staff_normalise_player_attributes(pessoa: usize) {
+    compare_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(%%I2%%), staff_normalise_player_attributes, pessoa,
         "staff_normalise_player_attributes");
 }

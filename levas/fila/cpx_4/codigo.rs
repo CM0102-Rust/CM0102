@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn add_config_loan(this: usize, p: usize, clube: usize,
 
 // ponytail: assina o empréstimo, mexe no elenco e nas permissões (não pode rodar duas vezes): só a original, com o
 // plano pelas mesmas condições (passando, a pessoa sai emprestada; senão o empréstimo dela fica como estava).
-unsafe extern "thiscall" fn comparar_add_config_loan(this: usize, p: usize, clube: usize, inicio: usize, fim: usize) {
+unsafe extern "thiscall" fn compare_add_config_loan(this: usize, p: usize, clube: usize, inicio: usize, fim: usize) {
     let emprestado: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     let tinha = emprestado(cpx4_d(0xae1050), p);
     let passa = config_loan_allowed(p, clube, inicio, fim).is_some();
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn post_contract_end_news(this: usize, p: usize, tipo: 
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_contract_end_news(this: usize, p: usize, tipo: u32, amplo: u32) {
+unsafe extern "thiscall" fn compare_post_contract_end_news(this: usize, p: usize, tipo: u32, amplo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%)(this, p, tipo, amplo)
 }
 
@@ -311,6 +311,6 @@ unsafe extern "thiscall" fn post_transfer_delay_request_news(this: usize, o: usi
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_transfer_delay_request_news(this: usize, o: usize, motivo: u32) {
+unsafe extern "thiscall" fn compare_post_transfer_delay_request_news(this: usize, o: usize, motivo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, o, motivo)
 }

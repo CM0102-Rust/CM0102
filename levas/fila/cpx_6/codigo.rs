@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usize) {
 }
 
 /// Comparador da 0x905510: só a original.
-unsafe extern "thiscall" fn comparar_uefa_seeding_save_to_temp_file(this: usize) {
+unsafe extern "thiscall" fn compare_uefa_seeding_save_to_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     // (o .tmp vai no .qst pelo zadd_matching_files)
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: usize) {
 }
 
 /// Comparador da 0x4c6b70: só a original.
-unsafe extern "thiscall" fn comparar_conmebol_seeding_save_to_temp_file(this: usize) {
+unsafe extern "thiscall" fn compare_conmebol_seeding_save_to_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn save_temp_file(this: usize) {
 }
 
 /// Comparador da 0x5fb320: só a original.
-unsafe extern "thiscall" fn comparar_save_temp_file(this: usize) {
+unsafe extern "thiscall" fn compare_save_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

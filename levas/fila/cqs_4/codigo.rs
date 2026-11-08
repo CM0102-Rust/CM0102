@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(this: usize) {
 /// O comparador da final: só a original (aloca a tabela e a fase e sorteia a rodada), com o plano feito antes: os
 /// campeões dos grupos da terceira fase. Depois, a fase da vaga 10 existe, com +0x3e = 2, os dois na lista dela (como
 /// conjunto) e +0x30 = 10.
-unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_nat_third_create_final_stage(this: usize) {
     let (a, b) = (stage_leader(this, 8), stage_leader(this, 9));
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let fase = cqs4_d(cqs4_d(this + 0xc) + 0x28);
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage(this: usiz
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
 /// grupos; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, os sete grupos nas vagas 0 a 6 e a
 /// lista dos 56 zerada.
-unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_nat_third_start_new_season(this: usize) -> u32 {
     let antes = cqs4_w(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this);
     let depois = cqs4_w(this + 0x40);
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(this: usize)
 /// O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não
 /// pode rodar duas vezes), com o plano feito antes: a lista dos 56 ordenada pela mesma qsort numa cópia; depois, a
 /// lista da liga na mesma ordem e a posição (+0x72 do registro achado por 0x4a4850) de cada clube.
-unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_positions(this: usize) {
+unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqs4_d(this + 8) == 0 || cqs4_d(this + 0xee) == 0 {
         return o(this);

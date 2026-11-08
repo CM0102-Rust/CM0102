@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn cup_update_staff_records_for_status(copa: usize, clu
 /// Comparador da 0x519890: só a original (os registros vão ao histórico das pessoas e mexem nas reputações e no moral,
 /// não podem rodar duas vezes). O plano, feito antes: o estado do clube (+0 do registro de 6 bytes) passa à Copa da
 /// UEFA quando o campeão ganha a vaga; senão não muda. Sem clube: só a original.
-unsafe extern "thiscall" fn comparar_cup_update_staff_records_for_status(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
+unsafe extern "thiscall" fn compare_cup_update_staff_records_for_status(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%);
     if clube == 0 || jogo == 0 {
         return o(copa, clube, desfecho, a3, a4, jogo, final_); // ponytail: sem clube ou jogo, só a original
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn cup_record_season_honours(copa: usize) {
 /// Comparador da 0x519a90: só a original (a 0x4afce0 pode crescer o histórico e a 0x519fc0 tem o seu comparador). O
 /// plano, feito antes: a linha livre do histórico (free_comp_history_row) recebe a competição (+4), o ano [0xae2c92] e os
 /// quatro de season_honours. Sem linha livre (o histórico cresce) ou sem a competição: só a original.
-unsafe extern "thiscall" fn comparar_cup_record_season_honours(copa: usize) {
+unsafe extern "thiscall" fn compare_cup_record_season_honours(copa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let linha = free_comp_history_row();
     if linha == 0 || cqa4_d(copa + 4) == 0 {
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn register_semi_final_losers_for_uefa(copa: usize) {
 
 /// Comparador da 0x519fc0: lado a lado na tabela da semeadura (+0x440, 50 vagas de 12 bytes, onde a 0x905790 grava; ela
 /// não aloca: acha a vaga da competição ou a primeira livre). Sem a semeadura: só a original.
-unsafe extern "thiscall" fn comparar_register_semi_final_losers_for_uefa(copa: usize) {
+unsafe extern "thiscall" fn compare_register_semi_final_losers_for_uefa(copa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let s = cqa4_d(0xde1f58);
     if s == 0 {

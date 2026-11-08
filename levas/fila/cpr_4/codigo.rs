@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn add_next_sale_percentage(this: usize, registro: usiz
 
 /// Comparador: sem `lista`, lado a lado por [0xae1080] e pela devolução; com `lista` (cresce a lista: não pode rodar
 /// duas vezes), a cópia conta antes sem lista e a original roda: confere a conta.
-unsafe extern "thiscall" fn comparar_get_open_offers_for_club_players(this: usize, clube: usize, lista: usize) -> u32 {
+unsafe extern "thiscall" fn compare_get_open_offers_for_club_players(this: usize, clube: usize, lista: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     if lista != 0 {
         let n = get_open_offers_for_club_players(this, clube, 0);
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn comparar_get_open_offers_for_club_players(this: usiz
 
 /// Comparador: agenda (aloca) e mexe nas listas de alvos: só a original. O plano antes: as ofertas pela pessoa (0x8c5cf0
 /// numa lista própria, destruída depois); depois confere que todas ficaram no estado 0xf com +0x2e = 3.
-unsafe extern "thiscall" fn comparar_collapse_offers_for_player(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_collapse_offers_for_player(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if cpr4_b(cpr4_d(this + 0x86e).wrapping_add(cpr4_d(pessoa).wrapping_mul(8)) + 1) == 0 {
         return o(this, pessoa);
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn comparar_collapse_offers_for_player(this: usize, pes
 
 /// Comparador: o plano antes (a conta e os 13 bytes), a original roda; confere a conta e que o registro está no vetor
 /// (reordenado).
-unsafe extern "thiscall" fn comparar_add_next_sale_percentage(this: usize, registro: usize) {
+unsafe extern "thiscall" fn compare_add_next_sale_percentage(this: usize, registro: usize) {
     let n = cpr4_d(this + 0x888);
     let alvo = core::slice::from_raw_parts(registro as *const u8, 0xd).to_vec();
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, registro);

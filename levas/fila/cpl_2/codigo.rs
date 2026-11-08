@@ -174,7 +174,7 @@ unsafe fn offer_cursor_and_lookup_regions(this: usize, pessoa: usize) -> [(usize
 }
 
 // ponytail: só lê (a lista local nasce e morre nela); com a pessoa nula, só a original (lê o endereço 0)
-unsafe extern "thiscall" fn comparar_is_player_under_offer(this: usize, pessoa: usize, visao: u32) -> u32 {
+unsafe extern "thiscall" fn compare_is_player_under_offer(this: usize, pessoa: usize, visao: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     if pessoa == 0 {
         return o(this, pessoa, visao);
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn comparar_is_player_under_offer(this: usize, pessoa: 
     r
 }
 
-unsafe extern "stdcall" fn comparar_player_club_uses_bosman(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn compare_player_club_uses_bosman(pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%);
     if pessoa == 0 {
         return o(pessoa);
@@ -198,7 +198,7 @@ unsafe extern "stdcall" fn comparar_player_club_uses_bosman(pessoa: usize) -> u3
 /// Comparador: a diretoria (0x696b10) mexe na confiança e não pode rodar duas vezes: o plano antes (as três palavras
 /// do jogador), a original roda e confere: devolução 0 ou 1; com motivo, 0x24 (as palavras a 90%), 0x17 ou 0x18 quando
 /// 1 e intocado quando 0; as palavras intocadas fora do motivo 0x24 (sem motivo, intocadas ou as três a 90%).
-unsafe extern "thiscall" fn comparar_check_board_veto(this: usize, oferta: usize, comprador: usize, vendedor: usize, jogador: usize, decide: usize, motivo: *mut u16) -> u32 {
+unsafe extern "thiscall" fn compare_check_board_veto(this: usize, oferta: usize, comprador: usize, vendedor: usize, jogador: usize, decide: usize, motivo: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, *mut u16) -> u32>(%%I2%%);
     let dados = if jogador == 0 { 0 } else { cpl2_d(jogador + 0x61) };
     if dados == 0 {

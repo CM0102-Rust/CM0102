@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn sort_round_teams(copa: usize, rodada: u32) {
 
 /// Comparador: sorteia (0x90cfc0) e só usa vetores temporários: lado a lado pelo estado do sorteador e pelos
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
-unsafe extern "thiscall" fn comparar_sort_round_teams(copa: usize, rodada: u32) {
+unsafe extern "thiscall" fn compare_sort_round_teams(copa: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(copa));
@@ -299,7 +299,7 @@ unsafe extern "thiscall" fn check_round_teams_for_nation(copa: usize, rodada: u3
 }
 
 /// Comparador: como o da 0x51d2d0 (sorteia; as contas e o vetor são temporários).
-unsafe extern "thiscall" fn comparar_check_round_teams_for_nation(copa: usize, rodada: u32) {
+unsafe extern "thiscall" fn compare_check_round_teams_for_nation(copa: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(copa));
@@ -319,7 +319,7 @@ unsafe extern "thiscall" fn cup_start_new_season(copa: usize) {
 }
 
 /// Comparador: lado a lado no byte +0xb1.
-unsafe extern "thiscall" fn comparar_cup_start_new_season(copa: usize) {
+unsafe extern "thiscall" fn compare_cup_start_new_season(copa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg = [(copa + 0xb1, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa), || cup_start_new_season(copa));

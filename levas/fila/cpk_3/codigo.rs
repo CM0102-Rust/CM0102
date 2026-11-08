@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn is_player_suspended(this: usize, jogador: usize, com
 
 /// Comparador: os contratos que a cópia acionaria (antes); a original aciona e dá as notícias (não roda duas vezes);
 /// confere que todos ficaram com 2.
-unsafe extern "thiscall" fn comparar_trigger_relegation_clauses(this: usize, clube: usize, liga: usize) {
+unsafe extern "thiscall" fn compare_trigger_relegation_clauses(this: usize, clube: usize, liga: usize) {
     let mut alvos = Vec::new();
     for c in club_and_b_team(clube) {
         if c != 0 {
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_trigger_relegation_clauses(this: usize, clu
 
 /// Comparador: a lista esperada (sem a primeira oferta da pessoa ao clube) e as pendentes antes; a original tira (e
 /// libera o item: nada dele é lido depois); confere os itens e o byte.
-unsafe extern "thiscall" fn comparar_remove_contract_offer(this: usize, pessoa: *const u32, clube: *const u32) {
+unsafe extern "thiscall" fn compare_remove_contract_offer(this: usize, pessoa: *const u32, clube: *const u32) {
     let l = cpk3_d(this + 0x34);
     if l == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(%%I1%%)(this, pessoa, clube);
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn comparar_remove_contract_offer(this: usize, pessoa: 
 }
 
 /// Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
-unsafe extern "thiscall" fn comparar_is_player_suspended(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_player_suspended(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(%%I2%%);
     let clube = if jogador != 0 { cpk3_d(jogador + 0x39) } else { 0 };
     let regioes: &[(usize, usize)] = if clube != 0 { &[(clube + 0x1e0, 80)] } else { &[] };

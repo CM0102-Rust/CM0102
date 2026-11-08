@@ -13,7 +13,7 @@ unsafe fn is_contracted_staff(p: usize) -> bool {
 /// "boa" = 15 ou mais): goleiro (+0xf) o 1; zagueiro ou líbero (+0x11, +0x10) o 2 se joga pela direita (+0x17), o 3 se
 /// pela esquerda (+0x18), senão o 4, o 5 ou o 6; volante, meia ou meia-atacante (+0x12, +0x13, +0x14) o 6, o 7 ou o 8;
 /// atacante (+0x15) o 8, o 9, o 10 ou o 11. Termina em 0xff. Nenhuma das posições boas: `None` (a original lê então a
-/// lista de 4 bytes sem valor na pilha, ver `comparar_allocate_squad_number`).
+/// lista de 4 bytes sem valor na pilha, ver `compare_allocate_squad_number`).
 unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
     let b = |o: usize| *((f + o) as *const i8) >= 15;
     if b(0xf) {
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usize, p: usiz
 /// Lado a lado: o +0x3a dos dois contratos da pessoa (a única que a rotina numera) e a marca da caixa. Quando nenhuma
 /// posição da ficha é boa, a original lê a lista de preferidos de 4 bytes sem valor na pilha (sobra de quem chamou):
 /// a cópia usa a lista vazia (um valor que o jogo produz quando a sobra é 0xff) e o comparador deixa só a original.
-unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usize, c: usize, p: usize) {
+unsafe extern "thiscall" fn compare_allocate_squad_number(this: usize, c: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if p == 0 || cql2_d(p + 0x61) == 0 || preferred_squad_numbers(cql2_d(p + 0x61) as usize).is_none() {
         return o(this, c, p);
@@ -300,7 +300,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
 
 /// Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
-unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: usize, manter: u32) {
+unsafe extern "thiscall" fn compare_assign_club_squad_numbers(this: usize, c: usize, manter: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let mut ps: Vec<usize> = (0..50).map(|k| cql2_d(c + 0xd7 + 4 * k) as usize).collect();

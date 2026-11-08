@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn remove_or_restore_training_progress(this: usize, p: 
 
 /// Comparador: lado a lado na ficha (+0xf..+0x41), na entrada do treino (6 bytes) e no guardado (0xde1f3c, 5 bytes);
 /// sem pessoa ou sem ficha (a caixa), só a original.
-unsafe extern "thiscall" fn comparar_remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
+unsafe extern "thiscall" fn compare_remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     if p == 0 || cqd9_d(p + 0x61) == 0 {
         return o(this, p, devolver);
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn get_training_attribute_change(this: usize, p: usize,
 }
 
 /// Comparador: lado a lado na ficha e na entrada do treino, com a devolução; sem pessoa ou sem ficha, só a original.
-unsafe extern "thiscall" fn comparar_get_training_attribute_change(this: usize, p: usize, atributo: u32) -> u8 {
+unsafe extern "thiscall" fn compare_get_training_attribute_change(this: usize, p: usize, atributo: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%);
     if p == 0 || cqd9_d(p + 0x61) == 0 {
         return o(this, p, atributo);
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usize, mascara
 }
 
 /// Comparador: a devolução inteira (só lê); máscara fora (a caixa), só a original.
-unsafe extern "thiscall" fn comparar_get_position_aptitude(this: usize, p: usize, mascara: u32) -> u32 {
+unsafe extern "thiscall" fn compare_get_position_aptitude(this: usize, p: usize, mascara: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     if !is_valid_position_mask(mascara as u16 as i16 as i32) {
         return o(this, p, mascara);

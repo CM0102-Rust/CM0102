@@ -416,7 +416,7 @@ unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: 
         nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_add_league_champions_record(this: usize, clube: usize, comp: usize) {
+unsafe extern "thiscall" fn compare_add_league_champions_record(this: usize, clube: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if clube == 0 || comp == 0 || cqd13_d(cqd13_d(0xadadfc).wrapping_add(4 * cqd13_d(comp))) == 0 {
         return o(this, clube, comp);
@@ -427,7 +427,7 @@ unsafe extern "thiscall" fn comparar_add_league_champions_record(this: usize, cl
         || add_league_champions_record(this, clube, comp));
 }
 
-unsafe extern "thiscall" fn comparar_add_cup_winners_record(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
     if clube == 0 || jogo == 0 || partida == 0 {
         return o(this, clube, jogo, partida);
@@ -457,7 +457,7 @@ unsafe extern "thiscall" fn clear_human_manager_record(this: usize, pessoa: usiz
 }
 
 /// Comparador: lado a lado pelo registro (os 0xd2 bytes que a rotina zera).
-unsafe extern "thiscall" fn comparar_clear_human_manager_record(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_clear_human_manager_record(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let id = cqd13_i(pessoa);
     let lim = cqd13_i(0xae2364);

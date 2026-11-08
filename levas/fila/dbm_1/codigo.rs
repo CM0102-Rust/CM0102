@@ -3,7 +3,7 @@
 /// Comparador dos nomes em inglês (0x5454c0, 0x5455a0, 0x5456a0): com o idioma dos nomes ([0x9b5984]) ≠ 0 e ≠ 1 e
 /// a tabela do eng.lng ([0xae2408]) ainda nula, o primeiro uso aloca e carrega sob o quadro SEH: só a original.
 /// Senão as duas, comparando o ponteiro devolvido (sem efeito na memória).
-unsafe fn comparar_nome_em_ingles(nome: &str, x: usize, o: unsafe extern "C" fn(usize) -> usize, r: unsafe extern "C" fn(usize) -> usize) -> usize {
+unsafe fn compare_nome_em_ingles(nome: &str, x: usize, o: unsafe extern "C" fn(usize) -> usize, r: unsafe extern "C" fn(usize) -> usize) -> usize {
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
         return o(x);
@@ -31,8 +31,8 @@ unsafe extern "C" fn nation_get_english_three_letter_name(nacao: usize) -> usize
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109)).wrapping_add(0x4f) // sigla na linha
 }
 
-unsafe extern "C" fn comparar_nation_get_english_three_letter_name(nacao: usize) -> usize {
-    comparar_nome_em_ingles("nation_get_english_three_letter_name", nacao, original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%), nation_get_english_three_letter_name)
+unsafe extern "C" fn compare_nation_get_english_three_letter_name(nacao: usize) -> usize {
+    compare_nome_em_ingles("nation_get_english_three_letter_name", nacao, original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%), nation_get_english_three_letter_name)
 }
 
 /// { 0x5455a0 } (cdecl, Database.cpp): `comp_get_english_name(competição)`: idioma 0 ou 1: o próprio nome (+4).
@@ -57,8 +57,8 @@ unsafe extern "C" fn comp_get_english_name(comp: usize) -> usize {
     }
 }
 
-unsafe extern "C" fn comparar_comp_get_english_name(comp: usize) -> usize {
-    comparar_nome_em_ingles("comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%), comp_get_english_name)
+unsafe extern "C" fn compare_comp_get_english_name(comp: usize) -> usize {
+    compare_nome_em_ingles("comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%), comp_get_english_name)
 }
 
 /// { 0x5456a0 } (cdecl, Database.cpp): `staff_comp_get_english_name(competição de pessoal)`: idioma 0 ou 1: o
@@ -77,8 +77,8 @@ unsafe extern "C" fn staff_comp_get_english_name(comp: usize) -> usize {
     (*((t + 0x3c) as *const usize)).wrapping_add((id as usize).wrapping_mul(79)) // competição de pessoal na tabela
 }
 
-unsafe extern "C" fn comparar_staff_comp_get_english_name(comp: usize) -> usize {
-    comparar_nome_em_ingles("staff_comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%), staff_comp_get_english_name)
+unsafe extern "C" fn compare_staff_comp_get_english_name(comp: usize) -> usize {
+    compare_nome_em_ingles("staff_comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%), staff_comp_get_english_name)
 }
 
 /// Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação): nem a carreira nem o save passam pelo caminho do eng.lng
@@ -102,9 +102,9 @@ pub unsafe fn autoteste_dbm_1() {
         *(0xae2408 as *mut usize) = tabela.as_mut_ptr() as usize;
         *(registro.as_mut_ptr() as *mut i32) = ((z >> 32) % 16) as i32 - 2;
         let r = registro.as_ptr() as usize;
-        comparar_nation_get_english_three_letter_name(r);
-        comparar_comp_get_english_name(r);
-        comparar_staff_comp_get_english_name(r);
+        compare_nation_get_english_three_letter_name(r);
+        compare_comp_get_english_name(r);
+        compare_staff_comp_get_english_name(r);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];

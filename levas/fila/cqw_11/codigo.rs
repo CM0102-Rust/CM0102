@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_selecoes(this: usize) -> 
 
 // ponytail: a lista é alocada: não roda duas vezes. Só a original; o plano: com 1, +0xf3 = 10 − +0xee, a lista com
 // seleções da Oceania (sem a Nova Caledônia e a Papua-Nova Guiné), sem repetição e pela reputação decrescente.
-unsafe extern "thiscall" fn comparar_cqw11_eliminatoria_oceania_selecoes(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqw11_eliminatoria_oceania_selecoes(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let r = o(this);
     if r == 1 {
@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_final(this: usize) {
 
 // ponytail: a fase é alocada e a rodada montada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com
 // os dois campeões (o do primeiro grupo e o da fase 0) na tabela de times (+0xa7, linhas de 6 bytes), nessa ordem.
-unsafe extern "thiscall" fn comparar_cqw11_eliminatoria_oceania_final(this: usize) {
+unsafe extern "thiscall" fn compare_cqw11_eliminatoria_oceania_final(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let fases = cqw11_d(this + 0xc);
     if fases == 0 || cqw11_d(fases) == 0 || cqw11_d(this + 0xb1) == 0 || cqw11_d(cqw11_d(fases) + 0xb1) == 0 {
@@ -239,7 +239,7 @@ unsafe extern "thiscall" fn cqw11_oceania_nacoes_segundo_grupo(this: usize, fase
 
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1, a
 // fase em [+0xc][fase], +0x30 = fase e as seleções 3, 4 e 5 da lista na tabela dela (em qualquer ordem).
-unsafe extern "thiscall" fn comparar_cqw11_oceania_nacoes_segundo_grupo(this: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn compare_cqw11_oceania_nacoes_segundo_grupo(this: usize, fase: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%);
     let lista = cqw11_d(this + 0xee);
     if lista == 0 || fase > 8 {

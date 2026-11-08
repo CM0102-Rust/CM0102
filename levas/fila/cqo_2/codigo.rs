@@ -385,7 +385,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
 
 /// Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
-unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
+unsafe extern "thiscall" fn compare_calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(%%I0%%);
     if jogo == 0 {
         return o(this, jogo, saida);

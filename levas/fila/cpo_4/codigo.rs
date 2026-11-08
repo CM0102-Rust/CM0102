@@ -247,7 +247,7 @@ unsafe extern "thiscall" fn remove_staff_from_club(_this: usize, pessoa: usize, 
 
 /// Comparador: a saída e a vaga (0x69b790, 0x69ba50) demitem e contratam: roda só a original.
 // ponytail: sem plano (a 0x69ba50 pode acrescentar saídas na mesma lista); a prova é a carreira e o modo Rust.
-unsafe extern "thiscall" fn comparar_process_pending_departures(this: usize) {
+unsafe extern "thiscall" fn compare_process_pending_departures(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -265,7 +265,7 @@ unsafe fn staff_job_fields(pessoa: usize, clube: usize) -> ([u8; 6], [u8; 5], [u
 
 /// Comparador: a original tira a pessoa das listas, da mídia e das táticas (não pode rodar duas vezes): roda só ela e
 /// confere o plano: a função e o clube (e a seleção) da pessoa e ela fora das 50 vagas do elenco.
-unsafe extern "thiscall" fn comparar_manager_manager_remove_player_from_squad(this: usize, pessoa: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn compare_manager_manager_remove_player_from_squad(this: usize, pessoa: usize, clube: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I1%%);
     let no_clube = cpo4_d(pessoa + 0x39) == clube;
     let na_selecao = cpo4_d(pessoa + 0x24) == clube;
@@ -296,7 +296,7 @@ unsafe extern "thiscall" fn comparar_manager_manager_remove_player_from_squad(th
 /// Comparador: a original tira o contrato e tira a pessoa da mídia e das listas do humano (não pode rodar duas vezes):
 /// roda só ela e confere o plano feito antes com o corpo (`detach_staff_from_club`) sobre cópias dos campos da pessoa e das vagas
 /// do clube. Pessoa humana: só a original (as listas do humano podem mexer no clube).
-unsafe extern "thiscall" fn comparar_remove_staff_from_club(this: usize, pessoa: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn compare_remove_staff_from_club(this: usize, pessoa: usize, clube: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
     if pessoa == 0 || clube == 0 || cpo4_i(pessoa) >= cpo4_i(0xae2364).wrapping_sub(0x10) {
         return o(this, pessoa, clube);

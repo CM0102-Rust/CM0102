@@ -18,7 +18,7 @@ unsafe extern "C" fn database_compare_clubs_by_short_name(a: usize, b: usize) ->
     compare_text_nocase(nome(a), nome(b))
 }
 
-unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = database_compare_clubs_by_short_name(a, b);
     SCOREBOARD.record(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -42,7 +42,7 @@ unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b: usize) -> 
     compare_text_nocase(na.as_ptr(), nb.as_ptr())
 }
 
-unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = database_compare_staff_by_full_name(a, b);
     SCOREBOARD.record(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -76,7 +76,7 @@ unsafe extern "C" fn database_staff_matches_names(pessoa: usize, nome: u32, sobr
     1
 }
 
-unsafe extern "C" fn comparar_database_staff_matches_names(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
+unsafe extern "C" fn compare_database_staff_matches_names(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(%%I2%%);
     if pessoa == 0 {
         return o(pessoa, nome, sobrenome, comum, data); // caixa: só a original

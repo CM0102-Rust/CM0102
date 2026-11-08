@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: 
     if e == 0 {
         crate::comparison::branch("cpr_10 nova decisao");
         let mut d = [0u8; 8];
-        injury_date_add_days(0xae2c90, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
+        injury_date_add_days(0xae2c90, (random(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
         let acrescentar: unsafe extern "thiscall" fn(usize, usize, *const u8, u32, u32) = core::mem::transmute(0x4cd6d0usize);
         acrescentar(this, pessoa, d.as_ptr(), 2, 3);
         let n = cpr10_d(this + 0x14);
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: 
         set_today_plus_days(data, (x / 3) as u32);
         advance_time_slice(e, ((x % 3) as u8).wrapping_add(*(0xae2c88 as *const u8)) as i8);
         if *((cpr10_d(of) + 0x2f) as *const u8) != 0 && dias(data, cpr10_d(0xae2c90) as u32, cpr10_d(0xae2c94) as u32) < 4 {
-            set_today_plus_days(data, (sortear(2) + 4) as u32);
+            set_today_plus_days(data, (random(2) + 4) as u32);
         }
     } else {
         let (td, ta) = (cpr10_w(0xae2c90), cpr10_u(0xae2c92));
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: 
                 let m = injury_date_add_days(0xae2c90, 0xb4, &mut t);
                 let (ma, ca) = (cpr10_u(m + 2), cpr10_u(c + 0x2f));
                 if ma > ca || (ma == ca && cpr10_w(m) > cpr10_w(c + 0x2d)) {
-                    set_today_plus_days(data, (sortear(4) + 4) as u32);
+                    set_today_plus_days(data, (random(4) + 4) as u32);
                 }
             }
         }
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usize, clubes: 
 
 /// Comparador: a original (com a forma do dia) e o estado relido pela regra (injury_status, sem rodar a 0x62c680 de
 /// novo: a original já a rodou).
-unsafe extern "thiscall" fn comparar_get_player_injury_status(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_player_injury_status(this: usize, pessoa: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, pessoa);
     if pessoa != 0 && (cpr10_d(pessoa) as i32) < cpr10_d(0xae2364) as i32 {
         let n = injury_status(this, pessoa);
@@ -245,7 +245,7 @@ const INJURY_DATE_STATICS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), 
 
 /// Comparador: sem a entrada (a 0x4cd6d0 acrescenta e pode realocar) só a original; com ela, lado a lado pelo sorteio,
 /// as datas estáticas, o vetor das decisões e +0x1c (a cópia sem contar).
-unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: usize, id: i32, vaga: i32) {
+unsafe extern "thiscall" fn compare_schedule_offer_decision(this: usize, id: i32, vaga: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32)>(%%I1%%);
     let mut limit = [0u8; 8];
     injury_date_add_days(0xae2c90, 0xe, &mut limit);
@@ -263,7 +263,7 @@ unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: usize, id: i3
 
 /// Comparador: lado a lado pelo vetor dos clubes e pela data estática da 0x54cab0, e a devolução (os registros dos
 /// técnicos que a 0x86f5b0 cria na original já existem para a cópia).
-unsafe extern "thiscall" fn comparar_get_manager_of_year_candidates(this: usize, clubes: usize, n: u32) -> u8 {
+unsafe extern "thiscall" fn compare_get_manager_of_year_candidates(this: usize, clubes: usize, n: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I2%%);
     let k = (n as u16 as i16).max(0) as usize;
     let reg = [(clubes, 4 * k), (0xae24c8, 8), (0xae24aa, 1)];

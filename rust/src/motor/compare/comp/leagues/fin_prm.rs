@@ -20,7 +20,7 @@ use super::*;
 /// que a rotina garante e nenhuma chamada desfaz: o último clube da entrada (a ordem dos clubes) fica com os totais do
 /// ano (+0x110, 0x50 bytes) zerados. Ponytail: os anteriores podem ganhar valores pela 0x59cfa0 de um clube seguinte
 /// (o B que usa o registro do A, o estádio dividido); conferir todos pede o plano dessas exceções.
-pub(crate) unsafe extern "thiscall" fn comparar_fin_prm_end_season_for_nation(this: usize, entry: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(this: usize, entry: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIN_PRM_END_SEASON_FOR_NATION);
     let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
     if entry == 0 || after(G_CURRENT_DATE, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 {
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fin_prm_end_season_for_nation(th
 /// (0x59ffb0, 0x59fae0, 0x59fe10) são montadas na pilha e só são entregues ao técnico humano (0x7861e0): com técnico da
 /// máquina elas não deixam nada além do sorteio(2) da recusa, que as duas rodadas fazem. Só a original: o técnico
 /// humano (a notícia entra na caixa dele) e o estádio dividido (mexe noutro clube e nas finanças dele).
-pub(crate) unsafe extern "thiscall" fn comparar_season_end_club_update(this: usize, club: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if club == 0 || national_team(club) != 0 || fin_prm_has_human_manager(club) {
@@ -93,14 +93,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_season_end_club_update(this: usi
 ///
 /// [pt] O comparador da notícia do dividendo: só a original (simplification: a notícia vai para a caixa do técnico humano e não
 /// pode ser entregue duas vezes; com técnico da máquina não deixa nada).
-pub(crate) unsafe extern "thiscall" fn comparar_news_dividend(this: usize, club: usize, value: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_news_dividend(this: usize, club: usize, value: i32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_NEWS_DIVIDEND)(this, club, value)
 }
 
 /// Comparer for `get_max_wage` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] O comparador do teto salarial: pela devolução (a rotina só lê; as chamadas de dentro também).
-pub(crate) unsafe extern "thiscall" fn comparar_get_max_wage(fin: usize, person: usize, job: u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_max_wage(fin: usize, person: usize, job: u32) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_GET_MAX_WAGE)(fin, person, job);
     let n = get_max_wage(fin, person, job);
     SCOREBOARD.record(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, person, job as u8 as i8, r, n));
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_max_wage(fin: usize, person:
 ///
 /// [pt] O comparador da notícia das obras: só a original (simplification: a notícia vai para a caixa do técnico humano e não pode
 /// ser entregue duas vezes; com técnico da máquina não deixa nada).
-pub(crate) unsafe extern "thiscall" fn comparar_news_ground_works(this: usize, club: usize, value: u32, kind: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_news_ground_works(this: usize, club: usize, value: u32, kind: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NEWS_GROUND_WORKS)(this, club, value, kind)
 }
 
@@ -119,14 +119,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_news_ground_works(this: usize, c
 ///
 /// [pt] O comparador da notícia da obra recusada: só a original (simplification: entrega ao técnico humano e sorteia; não pode
 /// rodar duas vezes).
-pub(crate) unsafe extern "thiscall" fn comparar_news_request_refused(this: usize, club: usize, assunto: u32, reason: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_news_request_refused(this: usize, club: usize, assunto: u32, reason: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NEWS_REQUEST_REFUSED)(this, club, assunto, reason)
 }
 
 /// Comparer for `save_finance_dat` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x59b3b0: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_save_finance_dat(this: usize, save: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_save_finance_dat(this: usize, save: usize) {
     // simplification: writes to the save container (cannot run twice); the copy is proven by the save proof
     // (the .qst saved in rust mode with and without the batch, item by item)
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SAVE_FINANCE_DAT)(this, save)
@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_save_finance_dat(this: usize, sa
 /// Comparer for `load_from_save` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x59b2a0: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_load_from_save(this: usize, save: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_load_from_save(this: usize, save: usize) -> u32 {
     // simplification: reads from the container (the item position advances; cannot run twice); the copy is proved by loading
     // of the holiday save in the save proof (levas/N/CARGA)
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_LOAD_FROM_SAVE)(this, save)
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_load_from_save(this: usize, save
 ///
 /// [pt] Comparador da 0x59a5d0: lado a lado nos dois registros de finanças e no estado do sorteio (os sorteios de 10, dos
 /// gastos e da manutenção). Sem resultado, sem partida, sem um dos clubes ou com seleção: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_process_match_income(table: usize, partida: usize, result: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_process_match_income(table: usize, partida: usize, result: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME);
     if result == 0 || partida == 0 || read_usize(partida + 0x1c) == 0 || read_usize(partida + 0x20) == 0 {
         return o(table, partida, result);
@@ -166,7 +166,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_match_income(table: usiz
 ///
 /// [pt] Comparador da 0x59af40: a devolução (só lê; a 0x540a50 pode zerar a marca +0x244 do clube, igual nas duas). Sem
 /// partida: só a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_calc_gate_receipts(table: usize, partida: usize, attendance: i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_calc_gate_receipts(table: usize, partida: usize, attendance: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(IDX_CALC_GATE_RECEIPTS);
     if partida == 0 {
         return o(table, partida, attendance);
@@ -180,14 +180,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_calc_gate_receipts(table: usize,
 /// Comparer for `pay_league_fine` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x599850: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_pay_league_fine(this: usize, value: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_pay_league_fine(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_LEAGUE_FINE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || pay_league_fine(this, value));
     SCOREBOARD.record(igual, || format!("pay_league_fine(valor {}) original={:x?} rust={:x?}", value, mo, mr));
 }
 
 /// Comparer for `try_finance_boost_event` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: usize, club: usize, fin: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_try_finance_boost_event(this: usize, club: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_FINANCE_BOOST_EVENT);
     let presence = if club != 0 { read_usize(club + club::CHAIRMAN) } else { 0 };
     let sheet = if presence != 0 { read_usize(presence + 0x69) } else { 0 };
@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: us
 }
 
 /// Comparer for `try_board_takeover` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, club: usize, fin: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_try_board_takeover(this: usize, club: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_BOARD_TAKEOVER);
     if club == 0 || fin == 0 {
         return o(this, club, fin); // simplification: without a club or without finances, original only
@@ -215,7 +215,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, 
 /// Comparer for `pay_other_costs` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x5999e0: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_pay_other_costs(this: usize, value: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_pay_other_costs(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_OTHER_COSTS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || pay_other_costs(this, value));
     SCOREBOARD.record(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", value, mo, mr));
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_other_costs(this: usize, val
 ///
 /// [pt] Comparador: lado a lado na folha (+0xc), no maior salário (+0x10), no teto (+0x14) e no último contrato consultado
 /// ([0xae1080], que o salário padrão 0x864550 grava); as outras chamadas (contratos, teto 0x5968d0) só leem.
-pub(crate) unsafe extern "thiscall" fn comparar_update_wage_bill(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_update_wage_bill(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_WAGE_BILL);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0xc, 12), (G_CONTRACT_LOOKUP_RESULT, 4)], || o(this), || update_wage_bill(this));
     SCOREBOARD.record(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
@@ -234,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_wage_bill(this: usize) {
 /// Comparer for `refresh_all_wage_bills` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado na tabela de finanças inteira ([this], [0xae235c] × 0x167 bytes) e em [0xae1080].
-pub(crate) unsafe extern "thiscall" fn comparar_refresh_all_wage_bills(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_refresh_all_wage_bills(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REFRESH_ALL_WAGE_BILLS);
     let n = (read_i32(G_CLUB_COUNT).max(0) as usize).wrapping_mul(0x167);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(read_usize(this), n), (G_CONTRACT_LOOKUP_RESULT, 4)], || o(this), || refresh_all_wage_bills(this));
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_refresh_all_wage_bills(this: usi
 ///
 /// [pt] Comparador: sem linha da nação, só a original (a caixa); senão lado a lado na saída `passou` e na data estática da
 /// 0x54cdb0 (0xae2470), com a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_finance_get_days_to_season_start(this: usize, club: usize, passou: *mut u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_finance_get_days_to_season_start(this: usize, club: usize, passou: *mut u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> i32>(IDX_FINANCE_GET_DAYS_TO_SEASON_START);
     let row: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     if (row(club) as i8) < 0 {
@@ -259,7 +259,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_finance_get_days_to_season_start
 /// Comparer for `add_players_sold` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_add_players_sold(this: usize, low: u32, high: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_add_players_sold(this: usize, low: u32, high: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_ADD_PLAYERS_SOLD);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, low, high), || add_players_sold(this, low, high));
     SCOREBOARD.record(igual, || format!("add_players_sold(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(low, high), mo, mr));
@@ -268,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_players_sold(this: usize, lo
 /// Comparer for `pay_players_bought` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_pay_players_bought(this: usize, low: u32, high: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_pay_players_bought(this: usize, low: u32, high: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_PAY_PLAYERS_BOUGHT);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, low, high), || pay_players_bought(this, low, high));
     SCOREBOARD.record(igual, || format!("pay_players_bought(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(low, high), mo, mr));
@@ -277,7 +277,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_players_bought(this: usize, 
 /// Comparer for `pay_sign_on_fee` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_pay_sign_on_fee(this: usize, value: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_pay_sign_on_fee(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_SIGN_ON_FEE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || pay_sign_on_fee(this, value));
     SCOREBOARD.record(igual, || format!("pay_sign_on_fee(fin {:#x}, {}) original={:x?} rust={:x?}", this, value, mo, mr));
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_sign_on_fee(this: usize, val
 /// Comparer for `add_prize_money` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_add_prize_money(this: usize, value: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_add_prize_money(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_ADD_PRIZE_MONEY);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || add_prize_money(this, value));
     SCOREBOARD.record(igual, || format!("add_prize_money(fin {:#x}, {}) original={:x?} rust={:x?}", this, value, mo, mr));
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_prize_money(this: usize, val
 /// Comparer for `add_tv_revenue` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_add_tv_revenue(this: usize, value: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_add_tv_revenue(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_ADD_TV_REVENUE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || add_tv_revenue(this, value));
     SCOREBOARD.record(igual, || format!("add_tv_revenue(fin {:#x}, {}) original={:x?} rust={:x?}", this, value, mo, mr));
@@ -304,7 +304,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_tv_revenue(this: usize, valu
 /// Comparer for `pay_wages` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_pay_wages(this: usize, value: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_pay_wages(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_WAGES);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || pay_wages(this, value));
     SCOREBOARD.record(igual, || format!("pay_wages(fin {:#x}, {}) original={:x?} rust={:x?}", this, value, mo, mr));
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_wages(this: usize, value: i3
 /// Comparer for `add_weekly_merchandising_income` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no registro de finanças do clube e no estado do sorteio.
-pub(crate) unsafe extern "thiscall" fn comparar_add_weekly_merchandising_income(this: usize, club: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_add_weekly_merchandising_income(this: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_WEEKLY_MERCHANDISING_INCOME);
     let mut regions = vec![(fin_prm_club_finance(this, club), 0x167)];
     regions.extend(crate::rng::STATE_REGIONS);
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_weekly_merchandising_income(
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (this), nos lugares do estádio (+0x3c) e no estado do sorteio
 /// (clube nulo: só a original).
-pub(crate) unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize, apply: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_sell_season_tickets(this: usize, apply: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_SELL_SEASON_TICKETS);
     let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(this + 8).wrapping_mul(club::SIZE));
     if club == 0 {
@@ -344,7 +344,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize,
 /// Comparer for `upgrade_training_facilities` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no nível do centro de treino (+0x7f) e no registro de finanças do clube.
-pub(crate) unsafe extern "thiscall" fn comparar_upgrade_training_facilities(this: usize, club: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_upgrade_training_facilities(this: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPGRADE_TRAINING_FACILITIES);
     let regions = [(club + club::TRAINING, 1), (fin_prm_club_finance(this, club), 0x167)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, club), || upgrade_training_facilities(this, club));
@@ -352,18 +352,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_upgrade_training_facilities(this
 }
 
 /// Comparer for `process_club_finance_events` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_process_club_finance_events(this: usize, club: usize, week: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_process_club_finance_events(this: usize, club: usize, week: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_CLUB_FINANCE_EVENTS)(this, club, week)
 }
 
 /// Comparer for `try_board_debt_payment` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_try_board_debt_payment(this: usize, club: usize, fin: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_try_board_debt_payment(this: usize, club: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_BOARD_DEBT_PAYMENT);
     compare_finance_event("try_board_debt_payment", fin, || o(this, club, fin), || try_board_debt_payment(this, club, fin))
 }
 
 /// Comparer for `try_cash_injection` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_try_cash_injection(this: usize, club: usize, fin: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_try_cash_injection(this: usize, club: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_CASH_INJECTION);
     compare_finance_event("try_cash_injection", fin, || o(this, club, fin), || try_cash_injection(this, club, fin))
 }
@@ -371,7 +371,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_cash_injection(this: usize, 
 /// Comparer for `get_max_staff_wage` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_get_max_staff_wage(this: usize, job: i8) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_max_staff_wage(this: usize, job: i8) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> i32>(IDX_GET_MAX_STAFF_WAGE)(this, job);
     let n = get_max_staff_wage(this, job);
     SCOREBOARD.record(r == n, || format!("get_max_staff_wage(fin {:#x}, cargo {}) original={} rust={}", this, job, r, n));
@@ -381,14 +381,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_max_staff_wage(this: usize, 
 /// Comparer for `pay_bonuses` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (0x167 bytes).
-pub(crate) unsafe extern "thiscall" fn comparar_pay_bonuses(this: usize, value: i32) {
+pub(crate) unsafe extern "thiscall" fn compare_pay_bonuses(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_BONUSES);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || pay_bonuses(this, value));
     SCOREBOARD.record(igual, || format!("pay_bonuses(fin {:#x}, {}) original={:x?} rust={:x?}", this, value, mo, mr));
 }
 
 /// Comparador: lado a lado no teto salarial (+0x14).
-pub(crate) unsafe extern "thiscall" fn comparar_adjust_max_wage(this: usize, write_percent_pair: i8) {
+pub(crate) unsafe extern "thiscall" fn compare_adjust_max_wage(this: usize, write_percent_pair: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_ADJUST_MAX_WAGE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x14, 4)], || o(this, write_percent_pair), || adjust_max_wage(this, write_percent_pair));
     SCOREBOARD.record(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, write_percent_pair, mo, mr));
@@ -397,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_adjust_max_wage(this: usize, wri
 /// Comparer for `get_wealth_band` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_get_wealth_band(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_get_wealth_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_GET_WEALTH_BAND)(this);
     let n = get_wealth_band(this);
     SCOREBOARD.record(r == n, || format!("get_wealth_band(financas {:#x}) original={} rust={}", this, r as i8, n as i8));

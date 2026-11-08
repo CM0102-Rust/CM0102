@@ -21,7 +21,7 @@ unsafe extern "C" fn database_get_club_assistant(clube: usize) -> usize {
     rd(p + 0xd3) // o auxiliar do parceiro
 }
 
-unsafe extern "C" fn comparar_database_get_club_assistant(clube: usize) -> usize {
+unsafe extern "C" fn compare_database_get_club_assistant(clube: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
@@ -74,7 +74,7 @@ unsafe extern "C" fn database_get_club_coaches(clube: usize, vetor: *mut usize) 
     1
 }
 
-unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
+unsafe extern "C" fn compare_database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor); // caixa: só a original
@@ -110,7 +110,7 @@ unsafe extern "C" fn database_count_club_coaches(clube: usize) -> u8 {
     n
 }
 
-unsafe extern "C" fn comparar_database_count_club_coaches(clube: usize) -> u8 {
+unsafe extern "C" fn compare_database_count_club_coaches(clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
     if clube == 0 {
         return o(clube); // caixa: só a original

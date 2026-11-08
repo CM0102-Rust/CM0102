@@ -18,7 +18,7 @@ unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, fase: u32, r
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &COPA_DO_BRASIL_ROUNDS, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
 }
 
-unsafe extern "thiscall" fn comparar_bra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_bra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     eng_cc_cup_compare_round_table("bra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| bra_cup_create_round_table(this, fase, r, e, s))
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> i32 {
 
 /// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a tabela dela em +0xa7, a cópia faz a
 /// sua, comparada nas 71 vagas (com a devolução 1) e liberada.
-unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_bra_cup_build_team_table(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn bra_cup_set_up_rounds(this: usize) -> i32 {
 
 /// Lado a lado: +0x28, +0x3a..+0x3d, +0x49/+0x4a e o [0xb67a34] a partir do mesmo estado; as tabelas das rodadas das
 /// duas (+0xa3) comparadas nos bytes gravados (eng_cc_cup_written_round_bytes) e a da cópia liberada.
-unsafe extern "thiscall" fn comparar_bra_cup_set_up_rounds(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_bra_cup_set_up_rounds(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);

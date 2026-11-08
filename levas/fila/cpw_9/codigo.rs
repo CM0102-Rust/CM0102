@@ -288,7 +288,7 @@ unsafe fn apply_injury_attribute_loss(this: usize, idx: i32, p: usize, categoria
 /// do fim) e a original a partir do mesmo estado (o cabeçalho do Injury, a tabela de lesões e o sorteio); a original é
 /// conferida quando chega às notícias da volta (0x62e010, desviada no mesmo item), antes das rotinas do fim. Com lesão
 /// nova (aloca e manda notícia) ou com o físico de todos (dia 180 da primeira temporada): só a original.
-unsafe extern "thiscall" fn comparar_injury_daily_update(this: usize) {
+unsafe extern "thiscall" fn compare_injury_daily_update(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let mut reg = vec![(this, 0x2c)];
     let n = cpw9_i(this + 8);
@@ -465,8 +465,8 @@ unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
 }
 
 // ponytail: as notícias da volta (0x630ee0) alocam e o físico do dia mexe no sorteio: só a original; a cópia leva o
-// ramo. É também o ponto de conferência da fase do treino do dia das lesões (comparar_injury_daily_update).
-unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usize) {
+// ramo. É também o ponto de conferência da fase do treino do dia das lesões (compare_injury_daily_update).
+unsafe extern "thiscall" fn compare_post_due_recovery_news(this: usize) {
     if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS)).take() {
         let mo = crate::comparison::MemorySnapshot::read(&reg);
         SCOREBOARD.record(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
@@ -497,7 +497,7 @@ unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pessoa: usize, 
     perguntar(o, cpw9_d(pessoa) as u32, 0, 0, cpw9_d(comp + 4) as u32)
 }
 
-unsafe extern "thiscall" fn comparar_is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, pessoa, competicao);
     let n = is_one_booking_from_ban(this, pessoa, competicao);
     SCOREBOARD.record(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", pessoa, competicao, r, n));

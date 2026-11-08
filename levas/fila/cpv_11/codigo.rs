@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn national_teams_post_replacement_needed_news(_this: u
 /// original roda. O caminho é decidido antes, só lendo (release_plan), e conferido depois: sem retirada, o clube da
 /// seleção (+0x24) e a marca de convocado (+0x28) ficam; com retirada, o jogador que estava numa das 50 vagas do time
 /// sai delas (+0x24 zerado pela 0x7762f0). Sem clube (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_withdraw_injured_player(this: usize, p: usize, dias: u32) {
+unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usize, p: usize, dias: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let clube = cpv11_d(p + 0x24);
     if (dias as u16 as i16) < 0xe || clube == 0 {
@@ -295,13 +295,13 @@ unsafe extern "thiscall" fn comparar_withdraw_injured_player(this: usize, p: usi
 }
 
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
-unsafe extern "thiscall" fn comparar_national_teams_post_player_withdrawn_news(this: usize, p: usize, nacao: usize, tipo: u32) {
+unsafe extern "thiscall" fn compare_national_teams_post_player_withdrawn_news(this: usize, p: usize, nacao: usize, tipo: u32) {
     crate::comparison::branch("national_teams_post_player_withdrawn_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, p, nacao, tipo)
 }
 
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
-unsafe extern "thiscall" fn comparar_national_teams_post_replacement_needed_news(this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
+unsafe extern "thiscall" fn compare_national_teams_post_replacement_needed_news(this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
     crate::comparison::branch("national_teams_post_replacement_needed_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, p, nacao, tipo, nivel)
 }

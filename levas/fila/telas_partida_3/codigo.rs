@@ -181,14 +181,14 @@ unsafe extern "C" fn close_match_details() {
 
 // ponytail: as três mexem em telas, menus e memória (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
-unsafe extern "C" fn comparar_open_match_details(partida: usize) {
+unsafe extern "C" fn compare_open_match_details(partida: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(%%I0%%)(partida)
 }
 
-unsafe extern "C" fn comparar_match_details_input(item: u32) -> i32 {
+unsafe extern "C" fn compare_match_details_input(item: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
 }
 
-unsafe extern "C" fn comparar_close_match_details() {
+unsafe extern "C" fn compare_close_match_details() {
     original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

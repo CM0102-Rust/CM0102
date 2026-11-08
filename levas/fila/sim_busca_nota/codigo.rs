@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn set_list_type(busca: usize, tipo: i8) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn comparar_get_last_match_rating(estatisticas: usize, id: *const i32) -> f32 {
+unsafe extern "thiscall" fn compare_get_last_match_rating(estatisticas: usize, id: *const i32) -> f32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> f32>(%%I0%%)(estatisticas, id);
     if id.is_null() {
         return r;
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn comparar_get_last_match_rating(estatisticas: usize, 
     r
 }
 
-unsafe extern "thiscall" fn comparar_set_slot_index(busca: usize, vaga: i8) -> u32 {
+unsafe extern "thiscall" fn compare_set_slot_index(busca: usize, vaga: i8) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(%%I1%%);
     if !(0..=9).contains(&vaga) {
         return o(busca, vaga);
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn comparar_set_slot_index(busca: usize, vaga: i8) -> u
     ro
 }
 
-unsafe extern "thiscall" fn comparar_set_list_type(busca: usize, tipo: i8) -> u32 {
+unsafe extern "thiscall" fn compare_set_list_type(busca: usize, tipo: i8) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(%%I2%%);
     if !(1..=4).contains(&tipo) {
         return o(busca, tipo);

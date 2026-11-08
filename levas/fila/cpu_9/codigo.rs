@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn init_player_entries(this: usize) {
 
 /// Comparador: a original aloca (não pode rodar duas vezes): roda só ela e confere cada ficha pela regra (a vaga 6
 /// ou 1 pela nota de goleiro e o bit 0x20 do +5 apagado).
-unsafe extern "thiscall" fn comparar_init_player_entries(this: usize) {
+unsafe extern "thiscall" fn compare_init_player_entries(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let base = cpu9_d(this + 0x651d);
     if base == 0 {
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pessoa: i32, na
 }
 
 /// Comparador: o id da ficha antes; a original acrescenta (pode realocar); confere a conta e o item novo.
-unsafe extern "thiscall" fn comparar_add_player_data_to_pool(this: usize, pessoa: i32, nacao: u32, segunda: u32) {
+unsafe extern "thiscall" fn compare_add_player_data_to_pool(this: usize, pessoa: i32, nacao: u32, segunda: u32) {
     let n = cpk2_d(this + 0x40);
     let id = cpk2_d(cpk2_d(cpk2_d(0xae23bc).wrapping_add((pessoa as u32).wrapping_mul(0x6e) as usize) + 0x61)) as u32;
     original_fn::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(%%I1%%)(this, pessoa, nacao, segunda);
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn has_spare_non_player_record(this: usize) -> u32 {
 }
 
 /// Comparador: a devolução.
-unsafe extern "thiscall" fn comparar_has_spare_non_player_record(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_has_spare_non_player_record(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let n = has_spare_non_player_record(this);
     SCOREBOARD.record(r == n, || format!("has_spare_non_player_record({:x}) original={:x} rust={:x}", this, r, n));

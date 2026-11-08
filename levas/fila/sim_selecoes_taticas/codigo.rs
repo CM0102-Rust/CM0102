@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, clube
     melhor
 }
 
-unsafe extern "stdcall" fn comparar_national_teams_remove_duplicate_squad_entries(nacao: usize) {
+unsafe extern "stdcall" fn compare_national_teams_remove_duplicate_squad_entries(nacao: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     if nacao == 0 {
         return o(nacao);
@@ -128,7 +128,7 @@ unsafe extern "stdcall" fn comparar_national_teams_remove_duplicate_squad_entrie
     SCOREBOARD.record(igual, || format!("national_teams_remove_duplicate_squad_entries {:x?} x {:x?}", mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_find_selection_slot(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
+unsafe extern "thiscall" fn compare_find_selection_slot(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(%%I1%%)(tatica, clube, pessoa, time);
     if clube == 0 || pessoa.is_null() {
         return r;
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_find_selection_slot(tatica: usize, clube: u
     r
 }
 
-unsafe extern "thiscall" fn comparar_pick_former_international_pundit(this: usize, clube: usize, assunto: usize) -> usize {
+unsafe extern "thiscall" fn compare_pick_former_international_pundit(this: usize, clube: usize, assunto: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
     if assunto == 0 && clube == 0 {
         return o(this, clube, assunto);

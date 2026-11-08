@@ -90,7 +90,7 @@ unsafe extern "stdcall" fn match_stats_get_record_bucket(jogo: usize, registro: 
     }
 }
 
-unsafe extern "thiscall" fn comparar_get_club_league_stat(estat: usize, jogador: usize, campo: i8) -> f32 {
+unsafe extern "thiscall" fn compare_get_club_league_stat(estat: usize, jogador: usize, campo: i8) -> f32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(%%I0%%)(estat, jogador, campo);
     if jogador == 0 || !(1..=2).contains(&campo) {
         return r;
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn comparar_get_club_league_stat(estat: usize, jogador:
     r
 }
 
-unsafe extern "thiscall" fn comparar_fixture_entry_matches(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
+unsafe extern "thiscall" fn compare_fixture_entry_matches(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(%%I1%%);
     if k < -1 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) {
         return o(estat, k, a, b, data_a, data_b);
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn comparar_fixture_entry_matches(estat: usize, k: i32,
     r
 }
 
-unsafe extern "stdcall" fn comparar_match_stats_get_record_bucket(jogo: usize, registro: usize) -> u8 {
+unsafe extern "stdcall" fn compare_match_stats_get_record_bucket(jogo: usize, registro: usize) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I2%%)(jogo, registro);
     let n = match_stats_get_record_bucket(jogo, registro);
     SCOREBOARD.record(r == n, || format!("match_stats_get_record_bucket original={} rust={}", r, n));

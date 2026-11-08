@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honours(this: usi
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
-unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_advance_stage(this: usize) {
     let antes = cqo7_d(this + 0x30) as i32;
     let ultima = antes >= (cqo7_d(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_stage(this: us
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
-unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_final_stage(this: usize) {
+unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_create_final_stage(this: usize) {
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let igual = if a == b {
@@ -175,6 +175,6 @@ unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_final_stage(thi
 /// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_7 historico da final" e "cqo_7 premios") e é provada pelas mutações e pelas duas carreiras Rust.
-unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_record_season_honours(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }

@@ -25,7 +25,7 @@
 # lido depois do push do delete (mov al, [esp + 0x62] com o push pendente). Comparadores: a 0x5ae380 em ensaio (a
 # copia para na decisao, antes do calendario e da caixa; lado a lado no cabecalho da lista: +2 o comeco e +0xa o
 # cursor, que a 0x68d1b0 anda) e a original depois (o calendario, a lista alocada e a noticia nao rodam duas vezes); as
-# duas dos anos comparam o valor (comparar_valor!). Iguais no cm0102-1080.exe.
+# duas dos anos comparam o valor (compare_value!). Iguais no cm0102-1080.exe.
 SAVE = False
 ROTINAS = [('conflito_de_jogos_no_mesmo_dia', 0x5ae380, [0x6a, 0xff, 0x68, 0x16, 0x98, 0x95, 0x00]),
            ('primeiro_ano_com_jogos', 0x5aee40, [0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x5c, 0x2a, 0xae, 0x00]),

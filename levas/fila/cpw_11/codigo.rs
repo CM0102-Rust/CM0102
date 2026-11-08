@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, jogo: usize
 /// original. Nos outros casos, o ensaio: a cópia sem a estatística (0x49f570 acha ou cria registros) e a original a
 /// partir do mesmo estado: a data em +0xc9, as linhas da tabela com os confrontos (as regiões da 0x685f60), o +0x3d/+0x3e
 /// da partida e a devolução.
-unsafe extern "thiscall" fn comparar_league_add_result(liga: usize, p: usize, jogo: usize) -> i32 {
+unsafe extern "thiscall" fn compare_league_add_result(liga: usize, p: usize, jogo: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
     if p == 0 || (*((liga + 0x44) as *const u8) == 0xff && *((p + 0x42) as *const u8) != 0xff) {
         return o(liga, p, jogo); // ponytail: a caixa ou a fase, só a original
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn copy_table(liga: usize) -> usize {
 /// Comparador: aloca (não roda duas vezes): só a original, com o plano completo conferido depois: o +0xa7 esperado
 /// (calculado antes) e a cópia devolvida igual à tabela, linha a linha (fora os ponteiros dos vetores novos), com os
 /// vetores de confrontos e de forma iguais aos da tabela.
-unsafe extern "thiscall" fn comparar_copy_table(liga: usize) -> usize {
+unsafe extern "thiscall" fn compare_copy_table(liga: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let tab = cpw11_d(liga + 0xb1);
     let n = cpw11_w(liga + 0x3e);
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn league_set_predicted_positions(liga: usize) {
 /// Comparador: grava e pode criar registros na estatística (não roda duas vezes): o plano sai antes, sobre uma cópia
 /// do vetor ordenada pelo núcleo da 0x4c08f0 (chaves num Vec); depois, o registro de cada clube (a última vez que ele
 /// aparece) tem de ter em +0x72 a posição planejada.
-unsafe extern "thiscall" fn comparar_league_set_predicted_positions(liga: usize) {
+unsafe extern "thiscall" fn compare_league_set_predicted_positions(liga: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let n = cpw11_w(liga + 0x3e) as i32;
     if cpw11_d(liga + 8) == 0 || n <= 0 {

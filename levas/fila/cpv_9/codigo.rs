@@ -100,7 +100,7 @@ unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usiz
 
 /// Comparador: o contrato novo aloca e o valor sorteia: só a original, conferindo o plano (a vaga, o clube da pessoa, a
 /// devolução e o +0x3a do contrato).
-unsafe extern "stdcall" fn comparar_player_regen_sign_for_club(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "stdcall" fn compare_player_regen_sign_for_club(pessoa: usize, clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I0%%);
     let k = first_free_squad_slot(clube);
     let r = o(pessoa, clube);
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, pessoa: usiz
 
 /// Comparador: lado a lado no estado do sorteio, na tabela (ponteiro, conta e capacidade, e as entradas até a
 /// capacidade). Com a tabela cheia (conta = capacidade − 1, a 0x7a8510 realoca): só a original.
-unsafe extern "thiscall" fn comparar_schedule_injury_retirement(this: usize, pessoa: usize, dias: i16) {
+unsafe extern "thiscall" fn compare_schedule_injury_retirement(this: usize, pessoa: usize, dias: i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i16)>(%%I1%%);
     let (n, cap) = (cpv9_d(this + 8), cpv9_d(this + 0xc));
     if pessoa == 0 || n >= cap.wrapping_sub(1) || cap <= 0 {
@@ -216,6 +216,6 @@ unsafe extern "stdcall" fn player_regen_post_retirement_announcement_news(pessoa
 }
 
 /// Comparador: a notícia vai para as caixas dos técnicos: só a original (a prova é a carreira e o modo Rust).
-unsafe extern "stdcall" fn comparar_player_regen_post_retirement_announcement_news(pessoa: usize, motivo: i8) {
+unsafe extern "stdcall" fn compare_player_regen_post_retirement_announcement_news(pessoa: usize, motivo: i8) {
     original_fn::<unsafe extern "stdcall" fn(usize, i8)>(%%I2%%)(pessoa, motivo)
 }

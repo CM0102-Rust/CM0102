@@ -1171,7 +1171,7 @@ unsafe extern "C" fn database_player_initialisation(data: usize) {
 /// jogadores inteiros, a tabela de 79 bytes por pessoa em [0xae2d0c]), [0x9b59b4], as bandeiras 0x9b59b8/9 e os quatro
 /// vetores globais dos moldes, o texto de 0xde1f64, a data guardada da 0x54cab0 e o estado do sorteador (a cópia sem
 /// contar sorteios). Sem pessoas (caixa e fim): só a original.
-unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
+unsafe extern "C" fn compare_database_player_initialisation(data: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(%%I0%%);
     let gi = |a: usize| (*(a as *const i32)).max(0) as usize;
     let rd = |a: usize| *(a as *const usize);

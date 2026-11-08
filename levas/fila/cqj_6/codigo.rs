@@ -147,18 +147,18 @@ unsafe fn fra_first_compare_league_table(nome: &str, this: usize, n: i16, g: usi
     r
 }
 
-unsafe extern "thiscall" fn comparar_fra_first_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_fra_first_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
     fra_first_compare_league_table("fra_first_create_table", this, n, 0x9cf5cc, Some(0x30d40), || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_fra_second_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_fra_second_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     fra_first_compare_league_table("fra_second_create_table", this, 0x14, 0x9cf5d0, None, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_fra_third_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_fra_third_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     fra_first_compare_league_table("fra_third_create_table", this, 0x14, 0x9cf5d4, Some(0x4e20), || o(this))
 }

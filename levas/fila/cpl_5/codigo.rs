@@ -146,7 +146,7 @@ unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize, usize)> {
 }
 
 /// Comparador: lado a lado no contrato e nos vínculos da pessoa (o idioma 0x7c6830 só lê).
-unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_reset_morale_state(this: usize, pessoa: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let regioes = morale_reset_regions(this, cpl5_d(this));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, pessoa, clube), || reset_morale_state(this, pessoa, clube));
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, pessoa: usi
 
 /// Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pessoa: usize, clube: usize, fim: usize, write_percent_pair: u32, sem_acesso: u32, multa: u32) {
+unsafe extern "thiscall" fn compare_init_from_current_contract(this: usize, pessoa: usize, clube: usize, fim: usize, write_percent_pair: u32, sem_acesso: u32, multa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I1%%);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     if contract_of(cpl5_d(0xae1050), pessoa) == 0 {
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pes
 }
 
 /// Comparador: só lê; compara a faixa.
-unsafe extern "thiscall" fn comparar_get_expiry_band(this: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_expiry_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(%%I2%%)(this);
     let n = get_expiry_band(this);
     SCOREBOARD.record(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", cpl5_d(this), r, n));

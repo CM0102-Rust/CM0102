@@ -89,16 +89,16 @@ unsafe extern "C" fn match_screens_find_best_rated_starter_slot(tatica: usize, c
 
 // ponytail: abrir e responder mexem em telas e menu (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
-unsafe extern "C" fn comparar_open_day_fixtures_screen(vaga: u32, grupo: usize) {
+unsafe extern "C" fn compare_open_day_fixtures_screen(vaga: u32, grupo: usize) {
     original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo)
 }
 
-unsafe extern "C" fn comparar_handle_day_fixtures_input(item: u32) -> i32 {
+unsafe extern "C" fn compare_handle_day_fixtures_input(item: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
 }
 
 /// Só lê: compara a vaga devolvida (tática nula: só a original, pela caixa de erro).
-unsafe extern "C" fn comparar_match_screens_find_best_rated_starter_slot(tatica: usize, contexto: i32) -> u8 {
+unsafe extern "C" fn compare_match_screens_find_best_rated_starter_slot(tatica: usize, contexto: i32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, i32) -> u8>(%%I2%%)(tatica, contexto);
     if tatica == 0 {
         return r;

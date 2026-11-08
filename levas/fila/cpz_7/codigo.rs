@@ -71,7 +71,7 @@ unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, s
 
 /// Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
 /// só a original.
-unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
+unsafe extern "C" fn compare_fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%);
     if jogo == 0 || clube == 0 || saida == 0 {
         return o(jogo, clube, saida);
@@ -110,7 +110,7 @@ unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
 }
 
 /// Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
-unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
+unsafe extern "C" fn compare_fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
     if pessoa == 0 || saida == 0 {
         return o(pessoa, saida);
@@ -141,7 +141,7 @@ unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 {
 }
 
 /// Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
-unsafe extern "C" fn comparar_match_record_result_code(registro: usize) -> u8 {
+unsafe extern "C" fn compare_match_record_result_code(registro: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
     if registro == 0 {
         return o(registro);

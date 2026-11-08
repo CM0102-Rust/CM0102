@@ -1293,7 +1293,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
     let name: unsafe extern "C" fn(u32, u32, u32, *mut u8, u32, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_NAME_FROM_IDS);
     let r = (pt as isize + player as isize * 0x49 + side as isize * 0x625) as usize;
     let d = |o: usize| *((r + o) as *const u32);
-    if curto != 0 && sortear(5) == 0 {
+    if curto != 0 && random(5) == 0 {
         name(d(0x198), d(0x19c), d(0x1a0), buf, size, 1, d(0x190));
         return;
     }

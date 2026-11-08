@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p: usize) {
 /// Comparador: a original roda antes; a cópia depois, em ensaio, a partir dos mesmos registros das duas nações (+0x32
 /// a +0x6c: marcas de hoje, datas dos elencos e marcas de convocado). Se a cópia pediu algum elenco (0x76c120 aloca e
 /// mexe nos elencos), a comparação não vale e fica a original; senão os registros têm de bater.
-unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: usize, p: usize) {
+unsafe extern "thiscall" fn compare_select_squads_for_fixture(this: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let regioes = [(cpx13_registro(this, cpx13_d(p + 0x1c)) + 0x32, 0x3a), (cpx13_registro(this, cpx13_d(p + 0x20)) + 0x32, 0x3a)];
     let antes = crate::comparison::MemorySnapshot::read(&regioes);
@@ -225,7 +225,7 @@ unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: us
 
 /// Comparador: a cópia em ensaio (sem entregar) e a original a partir do mesmo [0xae1080] (o último contrato lido, que
 /// as duas gravam).
-unsafe extern "stdcall" fn comparar_national_teams_post_player_called_up_news(jogador: usize, nacao: usize, vaga: u32) {
+unsafe extern "stdcall" fn compare_national_teams_post_player_called_up_news(jogador: usize, nacao: usize, vaga: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I1%%);
     let regioes = [(0xae1080usize, 4usize)];
     let antes = crate::comparison::MemorySnapshot::read(&regioes);
@@ -304,6 +304,6 @@ unsafe extern "thiscall" fn add_team_result_news(copa: usize, clube: usize, desf
 
 // ponytail: a virtual +0x44 da copa acrescenta registros às pessoas e a notícia vai às caixas dos técnicos (alocam): só
 // a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_add_team_result_news(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
+unsafe extern "thiscall" fn compare_add_team_result_news(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I2%%)(copa, clube, desfecho, a3, p, a5)
 }

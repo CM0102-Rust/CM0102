@@ -44,7 +44,7 @@ unsafe fn offer_list_regions(gerente: usize) -> Vec<(usize, usize)> {
     if lista == 0 { Vec::new() } else { vec![(lista, 0xe)] }
 }
 
-unsafe extern "thiscall" fn comparar_contract_offer(gerente: usize, pessoa: i32, clube: i32) -> usize {
+unsafe extern "thiscall" fn compare_contract_offer(gerente: usize, pessoa: i32, clube: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> usize>(%%I0%%);
     let reg = offer_list_regions(gerente);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, pessoa, clube), || contract_offer(gerente, pessoa, clube));
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn comparar_contract_offer(gerente: usize, pessoa: i32,
     r
 }
 
-unsafe extern "thiscall" fn comparar_agreed_contract_offer(gerente: usize, pessoa: i32) -> usize {
+unsafe extern "thiscall" fn compare_agreed_contract_offer(gerente: usize, pessoa: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I1%%);
     let reg = offer_list_regions(gerente);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, pessoa), || agreed_contract_offer(gerente, pessoa));
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn comparar_agreed_contract_offer(gerente: usize, pesso
     r
 }
 
-unsafe extern "system" fn comparar_transfer_offer_closed(o: usize) -> u32 {
+unsafe extern "system" fn compare_transfer_offer_closed(o: usize) -> u32 {
     let r = original_fn::<unsafe extern "system" fn(usize) -> u32>(%%I2%%)(o);
     let n = transfer_offer_closed(o);
     SCOREBOARD.record(r == n, || format!("transfer_offer_closed(estado {:#x}, {:#x}) original={} rust={}", *((o + 0x2c) as *const u8), *((o + 0x2e) as *const u8), r, n));

@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, pessoa: usiz
 }
 
 /// Comparador: a rotina só lê (o interesse 0x844780 sem a saída das razões): pela devolução.
-unsafe extern "thiscall" fn comparar_is_staff_suitable_for_job(this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
+unsafe extern "thiscall" fn compare_is_staff_suitable_for_job(this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(%%I0%%)(this, pessoa, clube, nota_minima);
     let n = is_staff_suitable_for_job(this, pessoa, clube, nota_minima);
     SCOREBOARD.record(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", pessoa, clube, nota_minima, r, n));
@@ -228,7 +228,7 @@ unsafe extern "stdcall" fn staff_can_take_job(cargo: u32, pessoa: usize) -> u32 
     r as u32
 }
 
-unsafe extern "stdcall" fn comparar_staff_can_take_job(cargo: u32, pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn compare_staff_can_take_job(cargo: u32, pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32, usize) -> u32>(%%I1%%)(cargo, pessoa);
     let n = staff_can_take_job(cargo, pessoa);
     SCOREBOARD.record(r == n, || format!("staff_can_take_job(cargo {}, pessoa {:x}) original={} rust={}", cargo as u8 as i8, pessoa, r, n));
@@ -387,7 +387,7 @@ unsafe extern "thiscall" fn contract_manager_lower_match_morale(this: usize, pes
             } else {
                 let mut feito = false;
                 if lugar(this, pessoa, clube) == 1 && cpp4_w(jogador + 0xb) > 0x4e2 && idade > 0x17
-                    && sortear(read_u8_volatile(pessoa + 0x59) as i8 as i32 + 5) == 0 {
+                    && random(read_u8_volatile(pessoa + 0x59) as i8 as i32 + 5) == 0 {
                     apagar(contrato, 4);
                     marcar(contrato, 0x10, 0);
                     feito = true;
@@ -395,14 +395,14 @@ unsafe extern "thiscall" fn contract_manager_lower_match_morale(this: usize, pes
                 if !feito {
                     let pot = cpp4_w(jogador + 0xd);
                     if (pot as i32) > cpp4_w(clube + 0x80) as i32 - 0x5dc && pot > 0x1f4
-                        && sortear(read_u8_volatile(pessoa + 0x57) as i8 as i32) != 0 && (read_u8_volatile(contrato + 0x3d) as i8) < 0
+                        && random(read_u8_volatile(pessoa + 0x57) as i8 as i32) != 0 && (read_u8_volatile(contrato + 0x3d) as i8) < 0
                         && transfer_window_open(pessoa, clube) {
                         apagar(contrato, 4);
                         marcar(contrato, 4, 0);
                     }
                 }
             }
-        } else if lugar(this, pessoa, clube) == 1 && sortear(read_u8_volatile(pessoa + 0x57) as i8 as i32) > 5
+        } else if lugar(this, pessoa, clube) == 1 && random(read_u8_volatile(pessoa + 0x57) as i8 as i32) > 5
             && cpp4_w(jogador + 0xb) > cpp4_w(clube + 0x80) && cpp4_w(jogador + 0xb) > 0x4e2 {
             apagar(contrato, 4);
             marcar(contrato, 0x10, 0);
@@ -414,7 +414,7 @@ unsafe extern "thiscall" fn contract_manager_lower_match_morale(this: usize, pes
 
 /// Comparador: as queixas (0x867700) sorteiam e podem abrir pedido de transferência: só a original; o plano (a queda
 /// `m`, calculada antes, sem efeito) diz a moral +0x44 que ela deixa (as queixas não a gravam) ou que ela não mexe.
-unsafe extern "thiscall" fn comparar_contract_manager_lower_match_morale(this: usize, pessoa: usize, clube: usize, contrato: usize) {
+unsafe extern "thiscall" fn compare_contract_manager_lower_match_morale(this: usize, pessoa: usize, clube: usize, contrato: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
     if contrato == 0 {
         return o(this, pessoa, clube, contrato);

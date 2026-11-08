@@ -113,17 +113,17 @@ unsafe fn spa_first_compare_league_rules(nome: &str, this: usize, escritas: Vec<
     r
 }
 
-unsafe extern "thiscall" fn comparar_spa_first_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_spa_first_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     spa_first_compare_league_rules("spa_first_set_up_rules", this, primera_rules(), || o(this), || spa_first_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_spa_second_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_spa_second_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     spa_first_compare_league_rules("spa_second_set_up_rules", this, segunda_rules(this), || o(this), || spa_second_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_spa_lower_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_spa_lower_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     spa_first_compare_league_rules("spa_lower_set_up_rules", this, lower_division_rules(), || o(this), || spa_lower_set_up_rules(this))
 }

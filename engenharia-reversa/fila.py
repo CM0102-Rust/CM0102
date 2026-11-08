@@ -1,7 +1,7 @@
 r"""A fila de levas: levas escritas antes da hora, com os índices calculados só ao integrar.
 
 Cada item fica em levas/fila/<nome>/:
-  codigo.rs    as rotinas e os comparadores; os índices de `orig::<..>(N)` e `comparar_valor!(.., N, ..)`
+  codigo.rs    as rotinas e os comparadores; os índices de `orig::<..>(N)` e `compare_value!(.., N, ..)`
                escritos como %%I0%%, %%I1%%, %%I2%% (na ordem de ROTINAS); viram IDX_<NOME> (build.rs)
   rotinas.py   ROTINAS = [(nome_rust, endereco, [bytes do prologo])]
                SAVE = True (opcional): item do bloco do save; a leva ganha levas/N/SAVE e a cadeia prova
@@ -51,13 +51,13 @@ pro = ''.join('    Prologue {{ address: %#x, bytes: &[%s] }},\n' % (e, ', '.join
 s = s[:m.start()] + pro + '];\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
 fins = [x.start() for x in re.finditer(r' as \*const \(\) as usize,\n    \];', s)]
 assert len(fins) == 2, fins
-for k, prefixo in ((1, 'comparar_'), (0, '')):
+for k, prefixo in ((1, 'compare_'), (0, '')):
     i = fins[k] + len(' as *const () as usize,\n')
     s = s[:i] + ''.join('        %s%s as *const () as usize,\n' % (prefixo, a) for a, _, _ in ROTINAS) + s[i:]
 anc = '\n    ];\n    for i in 0..N {{'
 assert s.count(anc) == 1
 s = s.replace(anc, ' ' + ' '.join('"motor_%s",' % a for a, _, _ in ROTINAS) + anc)
-anc = 'comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);\n'
+anc = 'compare_value!(compare_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);\n'
 assert s.count(anc) == 1
 s = s.replace(anc, anc + '\n' + open(os.path.join(aqui, 'codigo.rs'), encoding='utf-8').read().strip('\n') + '\n')
 open(p, 'w', encoding='utf-8').write(s)

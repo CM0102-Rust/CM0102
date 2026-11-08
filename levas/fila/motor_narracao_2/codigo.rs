@@ -402,11 +402,11 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
     let minuto = core::ptr::read_unaligned((m + 0x8ed0) as *const i16) as i32 / 11;
     // 0x6d587c / 0x6d5704: a linha da tabela (+o1, +o2) contra sorteios; grava +o2 em `saida`
     let tabela = |o1: usize, o2: usize| -> u32 {
-        if linha == 0 || core::ptr::read_unaligned((linha + o1) as *const i32) <= sortear(3) + 1 {
+        if linha == 0 || core::ptr::read_unaligned((linha + o1) as *const i32) <= random(3) + 1 {
             return 0;
         }
         let valor = core::ptr::read_unaligned((linha + o2) as *const i32);
-        if valor <= sortear(5) + 8 {
+        if valor <= random(5) + 8 {
             return 0;
         }
         if !saida.is_null() {
@@ -419,7 +419,7 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
     let nao_trava = if fase3 as i8 != -3 { 3 } else { 0 };
     match ev {
         0x21a3 => {
-            if !do_clube() || agregado <= sortear(3) || !na_competicao() {
+            if !do_clube() || agregado <= random(3) || !na_competicao() {
                 return 0;
             }
             if noticia(0x61, &d10) && media().is_some_and(|v| v > 8000) {
@@ -435,10 +435,10 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
         }
         0x21a4 | 0x21a5 => {
             if ev == 0x21a4 {
-                if !da_competicao() || agregado <= sortear(nao_trava) {
+                if !da_competicao() || agregado <= random(nao_trava) {
                     return 0;
                 }
-            } else if !do_clube() || agregado <= sortear(3) {
+            } else if !do_clube() || agregado <= random(3) {
                 return 0;
             }
             let (tipo, data) = if ev == 0x21a4 { (0x5c, &d30) } else { (0x5f, &d10) };
@@ -448,7 +448,7 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
             ate_media(0x1d4d)
         }
         0x21a6 | 0x21a7 | 0x21a9 => {
-            if !do_clube() || sortear(-3) <= agregado || minuto < 0x1f || !na_competicao() {
+            if !do_clube() || random(-3) <= agregado || minuto < 0x1f || !na_competicao() {
                 return 0;
             }
             let tipos: &[u32] = match ev {
@@ -462,13 +462,13 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
             fim()
         }
         0x21a8 => {
-            if !da_competicao() || sortear(-nao_trava) <= agregado || !na_competicao() || !noticia(0x5c, &d30) {
+            if !da_competicao() || random(-nao_trava) <= agregado || !na_competicao() || !noticia(0x5c, &d30) {
                 return 0;
             }
             fim()
         }
         0x21aa => {
-            if !do_clube() || agregado <= sortear(3) || minuto < 0x1f || !na_competicao() {
+            if !do_clube() || agregado <= random(3) || minuto < 0x1f || !na_competicao() {
                 return 0;
             }
             if !noticia(0x3f, &d10) && !noticia(0x60, &d10) {
@@ -477,7 +477,7 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
             ate_media(0x1b59)
         }
         0x21ab => {
-            if !do_clube() || agregado <= sortear(2) + 1 || minuto <= 0x1e {
+            if !do_clube() || agregado <= random(2) + 1 || minuto <= 0x1e {
                 return 0;
             }
             tabela(0x19, 0x41)
@@ -487,10 +487,10 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
                 return 0;
             }
             if ev == 0x21ac {
-                if -1 - sortear(2) <= agregado {
+                if -1 - random(2) <= agregado {
                     return 0;
                 }
-            } else if agregado <= sortear(3) + 1 {
+            } else if agregado <= random(3) + 1 {
                 return 0;
             }
             if minuto < 0x1f {
@@ -499,7 +499,7 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
             tabela(0x2d, 0x55)
         }
         0x21ae => {
-            if !do_clube() || sortear(-3) <= agregado || minuto < 0x1f || (minuto > 0x4b && agregado < -1) {
+            if !do_clube() || random(-3) <= agregado || minuto < 0x1f || (minuto > 0x4b && agregado < -1) {
                 return 0;
             }
             tabela(0x19, 0x41)
@@ -510,7 +510,7 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
             }
             match agregado {
                 -1 if minuto > 0x50 => tabela(0x19, 0x41),
-                -2 if minuto > sortear(10) + 0x46 => tabela(0x19, 0x41),
+                -2 if minuto > random(10) + 0x46 => tabela(0x19, 0x41),
                 _ => 0,
             }
         }
@@ -518,7 +518,7 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
     }
 }
 
-unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
+unsafe extern "thiscall" fn compare_combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i16>(%%I0%%);
     if is_recording_top_level() {
         return o(t, e, m);
@@ -530,7 +530,7 @@ unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, e: usize, m
     r
 }
 
-unsafe extern "thiscall" fn comparar_context_commentary(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
+unsafe extern "thiscall" fn compare_context_commentary(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32>(%%I1%%);
     if is_recording_top_level() {
         return o(m, lado, evento, saida);
@@ -575,7 +575,7 @@ unsafe extern "thiscall" fn construct_match_player(j: usize) -> usize {
     j
 }
 
-unsafe extern "thiscall" fn comparar_construct_match_player(j: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_match_player(j: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(j, 0x1bc)], || o(j), || construct_match_player(j));
     SCOREBOARD.record(igual && r == n, || format!("construct_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));

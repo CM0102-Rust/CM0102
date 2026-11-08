@@ -14,7 +14,7 @@ unsafe extern "C" fn get_regions_sorted_by_name(idioma: u32) -> usize {
     0xae2104
 }
 
-unsafe extern "C" fn comparar_get_regions_sorted_by_name(idioma: u32) -> usize {
+unsafe extern "C" fn compare_get_regions_sorted_by_name(idioma: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(%%I0%%);
     let reg = [(0xae2104, 14), (0xae232b, 1)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(idioma), || get_regions_sorted_by_name(idioma));
@@ -42,7 +42,7 @@ unsafe extern "C" fn compare_region_names(a: usize, b: usize) -> i32 {
     compare_text_nocase(na.as_ptr(), nb.as_ptr()) // (dbt)
 }
 
-unsafe extern "C" fn comparar_compare_region_names(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_region_names(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_region_names(a, b);
     SCOREBOARD.record(r == n, || format!("compare_region_names({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -77,7 +77,7 @@ unsafe extern "C" fn staff_get_opinion_link_staff(pessoa: usize, alvo: u32) -> u
     pessoas.wrapping_add((indice as usize).wrapping_mul(110))
 }
 
-unsafe extern "C" fn comparar_staff_get_opinion_link_staff(pessoa: usize, alvo: u32) -> usize {
+unsafe extern "C" fn compare_staff_get_opinion_link_staff(pessoa: usize, alvo: u32) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%)(pessoa, alvo);
     let n = staff_get_opinion_link_staff(pessoa, alvo);
     SCOREBOARD.record(r == n, || format!("staff_get_opinion_link_staff({:x}, {:x}) original={:x} rust={:x}", pessoa, alvo, r, n));

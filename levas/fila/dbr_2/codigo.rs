@@ -9,7 +9,7 @@ unsafe extern "C" fn database_is_polynesian_nation(nacao: usize) -> u32 {
     chaves.iter().any(|&k| *(k as *const u32) == id) as u32
 }
 
-unsafe extern "C" fn comparar_database_is_polynesian_nation(nacao: usize) -> u32 {
+unsafe extern "C" fn compare_database_is_polynesian_nation(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nacao);
     let n = database_is_polynesian_nation(nacao);
     SCOREBOARD.record(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nacao, r, n));
@@ -39,7 +39,7 @@ unsafe extern "C" fn database_get_coaching_job_name(cargo: u32, genero: usize) -
     0xae1980
 }
 
-unsafe extern "C" fn comparar_database_get_coaching_job_name(cargo: u32, genero: usize) -> usize {
+unsafe extern "C" fn compare_database_get_coaching_job_name(cargo: u32, genero: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32, usize) -> usize>(%%I1%%);
     // o texto (os nomes traduzidos cabem em 64) e o byte do gênero
     let com = [(0xae1980usize, 64usize), (genero, 1)];
@@ -68,7 +68,7 @@ unsafe extern "C" fn database_format_years_between_dates(fim: usize, inicio: usi
     1
 }
 
-unsafe extern "C" fn comparar_database_format_years_between_dates(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
+unsafe extern "C" fn compare_database_format_years_between_dates(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(%%I2%%);
     if texto == 0 || tamanho < 5 || fim == 0 || inicio == 0 {
         return o(fim, inicio, texto, tamanho); // caixa: só a original

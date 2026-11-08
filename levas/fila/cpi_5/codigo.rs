@@ -127,7 +127,7 @@ unsafe extern "stdcall" fn fill_vacated_staff_job(clube: usize, cargo: u32) {
 
 /// Comparador: o plano antes (a 0x68d1f0 libera o item tirado, que não pode mais ser lido); a original tira; confere
 /// que ficaram os itens de antes menos os da pessoa, na mesma ordem.
-unsafe extern "thiscall" fn comparar_remove_held_offers(this: usize, pessoa: u32) {
+unsafe extern "thiscall" fn compare_remove_held_offers(this: usize, pessoa: u32) {
     let l = cpi5_d(this + 0x38);
     let antes: Vec<usize> = if l != 0 { list_items_capped(l) } else { Vec::new() };
     let esperado: Vec<usize> = antes.iter().copied().filter(|&e| cpi5_d(e) as u32 != pessoa).collect();
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_remove_held_offers(this: usize, pessoa: u32
 
 /// Comparador: o plano da cópia (as vagas que não valem no clube do empréstimo) antes; a original guarda; confere o
 /// registro do jogador: as vagas do plano em −1, as outras iguais e o contador somado.
-unsafe extern "thiscall" fn comparar_hold_bans_for_loan(this: usize, jogador: usize) {
+unsafe extern "thiscall" fn compare_hold_bans_for_loan(this: usize, jogador: usize) {
     let ficha_de: unsafe extern "thiscall" fn(usize, *const i32) -> usize = core::mem::transmute(0x4cf6d0usize);
     let ficha = ficha_de(cpi5_d(0xae1050), jogador as *const i32);
     if ficha == 0 {
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn comparar_hold_bans_for_loan(this: usize, jogador: us
 }
 
 /// Comparador: a escolha da cópia antes; a original preenche; a pessoa escolhida tem de estar agora no clube (+0x39).
-unsafe extern "stdcall" fn comparar_fill_vacated_staff_job(clube: usize, cargo: u32) {
+unsafe extern "stdcall" fn compare_fill_vacated_staff_job(clube: usize, cargo: u32) {
     let escolhida = if clube != 0 { job_sought_by_slot(cargo).and_then(|c| first_unemployed_staff(clube, c as u8)) } else { None };
     original_fn::<unsafe extern "stdcall" fn(usize, u32)>(%%I2%%)(clube, cargo);
     if let Some(p) = escolhida {

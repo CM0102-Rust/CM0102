@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
 
 /// Comparador da 0x8c2180: só a original (entrega notícias, conclui ou recusa o empréstimo, assina contrato, registra a
 /// transferência, mexe nas listas).
-unsafe extern "thiscall" fn comparar_handle_player_accepted_terms(this: usize, pessoa: usize, vaga: i32, contrato: usize, tipo: u32, noticia: u32) {
+unsafe extern "thiscall" fn compare_handle_player_accepted_terms(this: usize, pessoa: usize, vaga: i32, contrato: usize, tipo: u32, noticia: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32, u32)>(%%I0%%)(this, pessoa, vaga, contrato, tipo, noticia) // ponytail: só a original
 }
 
@@ -395,6 +395,6 @@ unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usiz
 }
 
 /// Comparador da 0x4d71b0: só a original (sorteia, entrega a notícia, que aloca).
-unsafe extern "thiscall" fn comparar_post_transfer_listed_news(this: usize, jogador: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_post_transfer_listed_news(this: usize, jogador: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, jogador, clube) // ponytail: só a original
 }

@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
 
 /// Comparador da 0x59a5d0: lado a lado nos dois registros de finanças e no estado do sorteio (os sorteios de 10, dos
 /// gastos e da manutenção). Sem resultado, sem partida, sem um dos clubes ou com seleção: só a original.
-unsafe extern "thiscall" fn comparar_process_match_income(tabela: usize, partida: usize, resultado: usize) {
+unsafe extern "thiscall" fn compare_process_match_income(tabela: usize, partida: usize, resultado: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if resultado == 0 || partida == 0 || cqb1_d(partida + 0x1c) == 0 || cqb1_d(partida + 0x20) == 0 {
         return o(tabela, partida, resultado);
@@ -314,7 +314,7 @@ unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, pu
 
 /// Comparador da 0x59af40: a devolução (só lê; a 0x540a50 pode zerar a marca +0x244 do clube, igual nas duas). Sem
 /// partida: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_calc_gate_receipts(tabela: usize, partida: usize, publico: i32) -> i32 {
+unsafe extern "thiscall" fn compare_calc_gate_receipts(tabela: usize, partida: usize, publico: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(%%I1%%);
     if partida == 0 {
         return o(tabela, partida, publico);
@@ -334,7 +334,7 @@ unsafe extern "thiscall" fn pay_league_fine(this: usize, valor: i32) {
 }
 
 /// Comparador da 0x599850: lado a lado no registro de finanças (0x167 bytes).
-unsafe extern "thiscall" fn comparar_pay_league_fine(this: usize, valor: i32) {
+unsafe extern "thiscall" fn compare_pay_league_fine(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_league_fine(this, valor));
     SCOREBOARD.record(igual, || format!("pay_league_fine(valor {}) original={:x?} rust={:x?}", valor, mo, mr));

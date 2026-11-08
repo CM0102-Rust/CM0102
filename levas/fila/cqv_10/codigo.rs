@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_dia(this: usize, hoje: usize, c
 // ponytail: o sorteio, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano no dia do
 // sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e a fase do
 // segundo criadas.
-unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_cqv10_oceania_nacoes_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = completo != 0 && cqv10_d(this + 0x45) == 0 && {
         let (dia, ano) = cqv10_data_do_sorteio(this);
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_sorteio(this: usize) -> u32 {
 
 // ponytail: a lista é alocada e os sorteios contam: não roda duas vezes. Só a original; o plano: devolve 1, +0xf2 = 6 e,
 // na lista, a Austrália e a Nova Zelândia nas vagas 0 e 3 (em qualquer ordem).
-unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_sorteio(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqv10_oceania_nacoes_sorteio(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let r = o(this);
     if r == 1 {
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn cqv10_oceania_nacoes_primeiro_grupo(this: usize) -> 
 
 // ponytail: a tabela é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1,
 // +0x3e = 3 e na linha i a seleção i da lista com a posição i (+4).
-unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_primeiro_grupo(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqv10_oceania_nacoes_primeiro_grupo(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let lista = cqv10_d(this + 0xee);
     if lista == 0 {

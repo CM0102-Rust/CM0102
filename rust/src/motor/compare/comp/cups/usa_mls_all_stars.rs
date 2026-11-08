@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/cups/usa_mls_all_stars.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `usa_mls_all_stars_start_new_season_90a760` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON_90A760);
     compare_cup_new_season("usa_mls_all_stars_start_new_season_90a760", this, || o(this))
 }
@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_seas
 /// [pt] Lado a lado a partir do mesmo estado (o sorteador, +0x3e, os dois clubes das estrelas e [0xb67a34]); a original deixa
 /// a lista dela em +0xa7, a cópia faz a sua (sem contar o sorteio), comparada nos 12 bytes e liberada. A lista antiga
 /// (+0xa7 na entrada) não é liberada por nenhuma das duas (a virada já a liberou).
-pub(crate) unsafe extern "thiscall" fn comparar_set_up_teams(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_set_up_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SET_UP_TEAMS);
     let before = read_u32_as_usize(this + 0xa7);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_teams(this: usize) -> i32
 }
 
 /// Comparer for `usa_mls_all_stars_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ALL_STARS_UPDATE_FOR_DATE)(this, today, stage)
 }
 
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_update_for_dat
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
 /// fase −1, só a original (nenhuma grava nada).
-pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_USA_MLS_ALL_STARS_CREATE_ROUND_TABLE);
     if stage as u8 != 0xff {
         let a = o(this, stage, rounds, extra, out);

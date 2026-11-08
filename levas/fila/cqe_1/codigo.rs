@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
 
 /// Comparador da 0x8c8090: só a original (aceita, recusa ou contrapropõe, reagenda, mexe nas listas de observação e
 /// aloca e solta as opções).
-unsafe extern "thiscall" fn comparar_ai_respond_to_bid(this: usize, vaga: usize, ensaio: u32) {
+unsafe extern "thiscall" fn compare_ai_respond_to_bid(this: usize, vaga: usize, ensaio: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, vaga, ensaio) // ponytail: só a original
 }
 
@@ -346,6 +346,6 @@ unsafe extern "thiscall" fn add_loan_negotiation(this: usize, o: usize, a2: u32,
 }
 
 /// Comparador da 0x8bee50: só a original (a lista de contratos cresce, a negociação nova é alocada).
-unsafe extern "thiscall" fn comparar_add_loan_negotiation(this: usize, o: usize, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
+unsafe extern "thiscall" fn compare_add_loan_negotiation(this: usize, o: usize, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(%%I1%%)(this, o, a2, a3, a4, a5) // ponytail: só a original
 }

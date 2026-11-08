@@ -110,7 +110,7 @@ unsafe extern "stdcall" fn news_club_has_human_manager(clube: usize) -> u32 {
     1 // humano
 }
 
-unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
+unsafe extern "thiscall" fn compare_count_unread(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%);
     let entrada = if tecnico == 0 { None } else { manager_inbox_entry(noticias, tecnico) };
     let Some(entrada) = entrada else {
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, tecnico: usiz
     r
 }
 
-unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
+unsafe extern "thiscall" fn compare_set_item_slot(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(%%I1%%);
     let Ok(alvo) = set_slot_target(noticias, tecnico, id, vaga, copia) else {
         return o(noticias, tecnico, id, vaga, valor, copia);
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, tecnico: usi
     r
 }
 
-unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube: usize) -> u32 {
+unsafe extern "stdcall" fn compare_news_club_has_human_manager(clube: usize) -> u32 {
     // só consultas: as duas rodam de novo sem efeito
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
     let n = news_club_has_human_manager(clube);

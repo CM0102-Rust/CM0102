@@ -37,7 +37,7 @@ unsafe extern "C" fn database_format_name_from_ids(nome: i32, sobrenome: i32, co
     formatar(n, s, c, texto, tamanho, forma, -1)
 }
 
-unsafe extern "C" fn comparar_database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
+unsafe extern "C" fn compare_database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(%%I0%%);
     if texto == 0 || (tamanho as i16) < 0x69 {
         return o(nome, sobrenome, comum, texto, tamanho, forma, pessoa); // caixa: só a original
@@ -113,7 +113,7 @@ unsafe extern "C" fn database_format_official_name(oficial: usize, texto: usize,
     1
 }
 
-unsafe extern "C" fn comparar_database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn compare_database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if oficial == 0 || texto == 0 || (tamanho as i16) < 0x69 {
         return o(oficial, texto, tamanho, forma); // caixa: só a original
@@ -184,7 +184,7 @@ unsafe extern "C" fn position_mask_get_text(mascara: u32, texto: usize, maiuscul
     }
 }
 
-unsafe extern "C" fn comparar_position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
+unsafe extern "C" fn compare_position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32) -> u8>(%%I2%%);
     if texto == 0 {
         return o(mascara, texto, maiuscula);

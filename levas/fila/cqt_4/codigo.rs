@@ -141,17 +141,17 @@ unsafe extern "thiscall" fn construct_bra_reg_sp(this: usize, ano: u32, registro
     bra_reg_rio_construct_state_league(this, ano, registro, &PAULISTA_STATE_LEAGUE, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
 }
 
-unsafe extern "thiscall" fn comparar_construct_bra_reg_rio(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_bra_reg_rio(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_rio", this, ano, registro, &CARIOCA_CHAMPIONSHIP, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_bra_reg_santa(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_bra_reg_santa(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_santa", this, ano, registro, &CATARINENSE_STATE_CHAMPIONSHIP, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_bra_reg_sp(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_bra_reg_sp(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_sp", this, ano, registro, &PAULISTA_STATE_LEAGUE, || o(this, ano, registro))
 }
@@ -383,7 +383,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
 /// O comparador da média de público: lado a lado (a cópia sem contar os sorteios, com o estado do sorteador
 /// restaurado entre as duas) sobre a tabela dos clubes inteira (onde ficam +0x73, +0x77 e +0x7b) e o estado do
 /// sorteador; a tabela final (0x4a4b20) é alocada e liberada nas duas.
-unsafe extern "C" fn comparar_cqt4_atualizar_media_de_publico(liga: usize) {
+unsafe extern "C" fn compare_cqt4_atualizar_media_de_publico(liga: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(%%I3%%);
     let mut regioes = vec![(cqt4_d(0xae23b4), cqt4_d(0xae235c) * 0x245)];
     regioes.extend_from_slice(&crate::rng::STATE_REGIONS);

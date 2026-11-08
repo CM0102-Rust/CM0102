@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize) {
 }
 
 /// Comparador da 0x59b3b0: só a original.
-unsafe extern "thiscall" fn comparar_save_finance_dat(this: usize, save: usize) {
+unsafe extern "thiscall" fn compare_save_finance_dat(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     // (o .qst gravado no modo rust com e sem a leva, item a item)
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, save)
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) -> u32 {
 }
 
 /// Comparador da 0x59b2a0: só a original.
-unsafe extern "thiscall" fn comparar_load_from_save(this: usize, save: usize) -> u32 {
+unsafe extern "thiscall" fn compare_load_from_save(this: usize, save: usize) -> u32 {
     // ponytail: lê do contêiner (a posição do item anda; não pode rodar duas vezes); a cópia é provada pela carga
     // do save de férias na prova do save (levas/N/CARGA)
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, save)
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usize) -> u32 
 }
 
 /// Comparador da 0x859cc0: só a original.
-unsafe extern "thiscall" fn comparar_squad_manager_save(this: usize, save: usize) -> u32 {
+unsafe extern "thiscall" fn compare_squad_manager_save(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, save)
 }

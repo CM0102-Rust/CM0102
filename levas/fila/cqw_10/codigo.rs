@@ -87,7 +87,7 @@ unsafe fn cqw10_comparar(nome: &str, this: usize, comp: usize, vtable: usize, an
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqw10_africana(this: usize, ano: u32, comp: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw10_africana(this: usize, ano: u32, comp: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     cqw10_comparar("cqw10_africana", this, comp, 0x967270, cqw10_edicao((ano as i16).wrapping_add(1), 0), || o(this, ano, comp))
 }
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn cqw10_copa_america(this: usize, ano: u32, comp: usiz
     cqw10_torneio(this, edicao, comp, 0x96b400, 3, 0x5e12d0, 0x9cd640, (0x56, 0x5d))
 }
 
-unsafe extern "thiscall" fn comparar_cqw10_copa_america(this: usize, ano: u32, comp: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw10_copa_america(this: usize, ano: u32, comp: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     cqw10_comparar("cqw10_copa_america", this, comp, 0x96b400, cqw10_edicao(ano as i16, 1), || o(this, ano, comp))
 }
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn cqw10_oceania_nacoes(this: usize, ano: u32, comp: us
     cqw10_torneio(this, edicao, comp, 0x96e0cc, 2, 0x799690, 0xa6a0ec, (0x57, 0x5e))
 }
 
-unsafe extern "thiscall" fn comparar_cqw10_oceania_nacoes(this: usize, ano: u32, comp: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw10_oceania_nacoes(this: usize, ano: u32, comp: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     cqw10_comparar("cqw10_oceania_nacoes", this, comp, 0x96e0cc, cqw10_edicao((ano as i16).max(0x7d2), 0), || o(this, ano, comp))
 }

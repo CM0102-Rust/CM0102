@@ -131,12 +131,12 @@ unsafe extern "thiscall" fn find_first_team_appearance_money(this: usize, pessoa
 
 // ponytail: cresce o vetor das permissões (0x8c7070) e grava em todas as pessoas: só a original; a cópia leva os ramos
 // (roda uma vez, na criação do jogo).
-unsafe extern "thiscall" fn comparar_init_work_permits(this: usize) {
+unsafe extern "thiscall" fn compare_init_work_permits(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "thiscall" fn comparar_get_clause_count(this: usize, pessoa: usize, tipo: u32) -> u16 {
+unsafe extern "thiscall" fn compare_get_clause_count(this: usize, pessoa: usize, tipo: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, pessoa, tipo);
     let n = get_clause_count(this, pessoa, tipo);
     SCOREBOARD.record(r == n, || format!("get_clause_count(pessoa {}, tipo {}) original={} rust={}", cps2_d(pessoa), tipo as u8, r, n));
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn comparar_get_clause_count(this: usize, pessoa: usize
 }
 
 /// Comparador: lado a lado pelo byte do registro da pessoa, e pela devolução.
-unsafe extern "thiscall" fn comparar_find_first_team_appearance_money(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_first_team_appearance_money(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cps2_d(this + 0x86e).wrapping_add(cps2_d(pessoa).wrapping_mul(8));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1)], || o(this, pessoa), || find_first_team_appearance_money(this, pessoa));

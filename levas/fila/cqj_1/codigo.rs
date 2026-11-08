@@ -86,7 +86,7 @@ fn cqj1_dif(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::Memo
 }
 
 /// Lado a lado: os clubes do jogo e a marca da caixa.
-unsafe extern "thiscall" fn comparar_assign_libertadores_places(this: usize, clubes: usize, conta: u32) {
+unsafe extern "thiscall" fn compare_assign_libertadores_places(this: usize, clubes: usize, conta: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let n = (cqj1_d(0xae235c) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this: usize, cl
 }
 
 /// A devolução das duas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_find_nth_unqualified_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
+unsafe extern "thiscall" fn compare_find_nth_unqualified_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = find_nth_unqualified_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, clube: usize)
 }
 
 /// A devolução das duas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_is_mercosur_invited_club(this: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_mercosur_invited_club(this: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let r = o(this, clube);
     let c = is_mercosur_invited_club(this, clube);

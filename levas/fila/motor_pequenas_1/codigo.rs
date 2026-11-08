@@ -33,6 +33,6 @@ unsafe extern "thiscall" fn side_slots_without_conflict(m: usize, lado: i8) -> u
     f(m + if lado != 0 { 0xaac5 } else { 0x91e2 })
 }
 
-comparar_valor!(comparar_ball_goal_end, ball_goal_end, %%I0%%, () -> i8);
-comparar_valor!(comparar_match_abandoned, match_abandoned, %%I1%%, () -> u8);
-comparar_valor!(comparar_side_slots_without_conflict, side_slots_without_conflict, %%I2%%, (lado: i8) -> u8);
+compare_value!(compare_ball_goal_end, ball_goal_end, %%I0%%, () -> i8);
+compare_value!(compare_match_abandoned, match_abandoned, %%I1%%, () -> u8);
+compare_value!(compare_side_slots_without_conflict, side_slots_without_conflict, %%I2%%, (lado: i8) -> u8);

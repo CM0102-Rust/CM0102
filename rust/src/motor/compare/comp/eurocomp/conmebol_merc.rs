@@ -4,7 +4,7 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/eurocomp/conmebol_merc.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `conmebol_merc_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_update_for_date(this: usize, today: usize, full: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_MERC_UPDATE_FOR_DATE);
     let draws = read_u32_as_usize(this + 0x45) == 0
         && full != 0
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_update_for_date(th
 }
 
 /// Comparer for `conmebol_merc_create_first_group_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_first_group_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_first_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_MERC_CREATE_FIRST_GROUP_TABLE);
     let list = read_u32_as_usize(this + 0xee);
     if list == 0 {
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_first_group
 }
 
 /// Comparer for `conmebol_merc_create_group_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_group_stage(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CONMEBOL_MERC_CREATE_GROUP_STAGE);
     let list = read_u32_as_usize(this + 0xee);
     if list == 0 || !(0..4).contains(&g) {
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_group_stage
 }
 
 /// Comparer for `conmebol_merc_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CONMEBOL_MERC_CREATE_SCHEDULE);
     compare_south_american_cup_schedule("conmebol_merc_create_schedule", stage, rounds, extra, league, 4, &MERCOSUR_FINAL_EXTRA_WRITES, || o(this, stage, rounds, extra, league),
         |r, e, l| conmebol_merc_create_schedule(this, stage, r, e, l))
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_schedule(th
 ///
 /// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nos convidados que ela gravou e liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CONMEBOL_MERC_SELECT_INVITED_CLUBS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clu
 }
 
 /// Comparer for `conmebol_merc_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_MERC_ADVANCE_STAGE);
     con_merc_cup_compare_advance_stage("conmebol_merc_advance_stage", this, || o(this))
 }

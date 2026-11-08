@@ -48,7 +48,7 @@ unsafe extern "C" fn zipdir_match_filename_pattern(padrao: *const u8, nome: *con
     }
 }
 
-unsafe extern "C" fn comparar_zipdir_match_filename_pattern(padrao: *const u8, nome: *const u8) -> u32 {
+unsafe extern "C" fn compare_zipdir_match_filename_pattern(padrao: *const u8, nome: *const u8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(%%I0%%)(padrao, nome);
     let n = zipdir_match_filename_pattern(padrao, nome);
     SCOREBOARD.record(r == n, || {
@@ -111,7 +111,7 @@ unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
 }
 
 // O id e o tamanho só leem o arquivo e liberam o que alocam: as duas rodam lado a lado.
-unsafe extern "C" fn comparar_zget_archive_id(caminho: usize) -> u32 {
+unsafe extern "C" fn compare_zget_archive_id(caminho: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho);
     let n = zget_archive_id(caminho);
     SCOREBOARD.record(r == n, || format!("zget_archive_id {:#x} x {:#x}", r, n));
@@ -159,7 +159,7 @@ unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize) -> i32 {
     soma
 }
 
-unsafe extern "C" fn comparar_zget_matching_size(caminho: usize, padrao: usize) -> i32 {
+unsafe extern "C" fn compare_zget_matching_size(caminho: usize, padrao: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(caminho, padrao);
     let n = zget_matching_size(caminho, padrao);
     SCOREBOARD.record(r == n, || format!("zget_matching_size {} x {}", r, n));

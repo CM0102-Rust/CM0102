@@ -6,7 +6,7 @@ MUTACOES = [
     ('dbs_nome_da_posicao', '        write(0x9b7c9c, 2, 1); // utility player', '        write(0x9b7c94, 2, 1); // mutacao: "player" no lugar de "utility player"'),
     ('dbs_descricao', '    if q & 1 == 0 && age > person % 3 + 0x21 {', '    if q & 1 == 0 && age > person % 3 + 0x1e { // mutacao: veterano 3 anos antes'),
     ('dbs_candidato', '    n += id.wrapping_add(oid) % 500; // desempate pelos ids (dbs)', '    n += id.wrapping_add(oid) % 50; // mutacao: % 50 no lugar de % 500'),
-    ('dbs_forcas', '    if b(0x39) > sortear(50) && b(0x3e) > sortear(50) {', '    if b(0x39) >= sortear(50) && b(0x3e) > sortear(50) { // mutacao: >= no primeiro'),
+    ('dbs_forcas', '    if b(0x39) > random(50) && b(0x3e) > random(50) {', '    if b(0x39) >= random(50) && b(0x3e) > random(50) { // mutacao: >= no primeiro'),
     ('dbs_fraquezas', '    if b(0xf) < 20 { // the outfield players', '    if b(0xf) <= 20 { // mutacao: os goleiros tambem'),
     ('dbt_fisioterapeutas', 'validos(club) + if b != 0 { validos(b) } else { 0 } // those of the club and of the B team (dbt)', 'validos(club) * 2 + if b != 0 { validos(b) } else { 0 } // mutacao: os do clube contados duas vezes'),
     ('dbt_time_b', '(database_linked_b_team(club, &mut eh_a) != 0 && eh_a == 0) as u32 // is the B (dbt)', '(database_linked_b_team(club, &mut eh_a) != 0 && eh_a != 0) as u32 // mutacao: o A em vez do B'),

@@ -62,7 +62,7 @@ unsafe fn non_player_age_limit(pessoa: usize, saida: usize) -> i8 {
             }
         }
     };
-    (sortear(n) as u8).wrapping_add(base) as i8
+    (random(n) as u8).wrapping_add(base) as i8
 }
 
 /// O limite de idade do jogador pela ficha: 34 com +0xf ≥ 15; senão 30 com +0x15 ≥ 15; senão 31 com +0x14 < 15;
@@ -100,10 +100,10 @@ unsafe fn set_dates_tomorrow(saida: usize) {
 /// Sem nação-chave válida na aposentadoria pela idade: hoje + sorteio(20) nas duas datas; passando de 365, o dia
 /// sorteio(10) do ano seguinte.
 unsafe fn set_dates_no_key_nation(saida: usize) {
-    let a = (sortear(20) as u32).wrapping_add(cpr8_d(0xae2c90) as u32) as u16;
+    let a = (random(20) as u32).wrapping_add(cpr8_d(0xae2c90) as u32) as u16;
     let ano = cpr8_u(0xae2c92);
     if a as i16 > 0x16d {
-        let d = sortear(10) as u16;
+        let d = random(10) as u16;
         cpr8_pw(saida + 0x10, d);
         cpr8_pw(saida + 0x12, ano.wrapping_add(1));
         cpr8_pw(saida + 8, d);
@@ -140,16 +140,16 @@ unsafe fn set_retirement_dates(pessoa: usize, saida: usize, fora: unsafe fn(usiz
     }
     crate::comparison::branch("cpr_8 datas pela nacao");
     let ano = cpr8_u(0xae2c92);
-    let a = (sortear(95) as u32).wrapping_add(cpr8_d(0xae2c90) as u32).wrapping_add(1) as u16;
-    let (dia1, ano1) = if a as i16 > 0x16d { (sortear(60) as u16, ano.wrapping_add(1)) } else { (a, ano) };
+    let a = (random(95) as u32).wrapping_add(cpr8_d(0xae2c90) as u32).wrapping_add(1) as u16;
+    let (dia1, ano1) = if a as i16 > 0x16d { (random(60) as u16, ano.wrapping_add(1)) } else { (a, ano) };
     cpr8_pw(saida + 0xa, ano1);
     cpr8_pw(saida + 8, dia1);
     let t = 0xb63d60usize.wrapping_add((k as usize) * 0x48);
-    let d2 = (sortear(30) as u16).wrapping_add(cpr8_u(t + 0x15)); // o fim de temporada da nação
+    let d2 = (random(30) as u16).wrapping_add(cpr8_u(t + 0x15)); // o fim de temporada da nação
     cpr8_pw(saida + 0x10, d2);
     let mais_um = *((t + 0x1d) as *const u8) != 0;
     if d2 as i16 > 0x16d {
-        cpr8_pw(saida + 0x10, sortear(30) as u16);
+        cpr8_pw(saida + 0x10, random(30) as u16);
         cpr8_pw(saida + 0x12, ano.wrapping_add(if mais_um { 2 } else { 1 }));
     } else {
         cpr8_pw(saida + 0x12, if mais_um { ano.wrapping_add(1) } else { ano });
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, 
             n != 0 && *((n + 0x11c) as *const u8) == 0
         };
         if sorteia {
-            if sortear(3) != 0 {
+            if random(3) != 0 {
                 break 'm 1;
             }
             if clube == 0 || estatuto >= 0 {
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, 
             }
             return 0;
         }
-        if sortear(25 * cpr8_b(j + 0x3c) as i32) != 0 {
+        if random(25 * cpr8_b(j + 0x3c) as i32) != 0 {
             return 0;
         }
         2
@@ -314,7 +314,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
                 if cpr8_d(pessoa + 0x69) != 0 {
                     break 'm 1;
                 }
-                if cpr8_b(pessoa + 0x57) as i32 > sortear(20) {
+                if cpr8_b(pessoa + 0x57) as i32 > random(20) {
                     let (cur, pot) = (cpr8_w(j + 5) as f64, cpr8_w(j + 7) as f64);
                     if !(pot * read_f64_at(0x969520) <= cur) {
                         break 'm 1;
@@ -335,7 +335,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
         };
         if sorteia {
             crate::comparison::branch("cpr_8 fora do jogo");
-            if sortear(3) == 0 {
+            if random(3) == 0 {
                 break 'm 1; // cpr8: um em três se aposenta
             }
             if cpr8_d(pessoa + 0x39) != 0 && estatuto < 0 {
@@ -359,7 +359,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
             }
             return 0;
         }
-        if sortear(25 * cpr8_b(j + 0x3c) as i32) != 0 {
+        if random(25 * cpr8_b(j + 0x3c) as i32) != 0 {
             return 0;
         }
         2
@@ -412,7 +412,7 @@ unsafe fn retirement_decision_regions(saida: usize) -> Vec<(usize, usize)> {
 }
 
 /// Comparador: lado a lado pelo sorteio, [0xae1080], a saída e a data estática (a cópia sem contar), e a devolução.
-unsafe extern "thiscall" fn comparar_player_regen_check_initial_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn compare_player_regen_check_initial_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(saida), || o(this, pessoa, saida),
         || crate::rng::without_counting(|| player_regen_check_initial_retirement(this, pessoa, saida)));
@@ -421,7 +421,7 @@ unsafe extern "thiscall" fn comparar_player_regen_check_initial_retirement(this:
 }
 
 /// Comparador: como o da 0x7a79c0.
-unsafe extern "thiscall" fn comparar_player_regen_check_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn compare_player_regen_check_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(saida), || o(this, pessoa, saida),
         || crate::rng::without_counting(|| player_regen_check_retirement(this, pessoa, saida)));
@@ -431,6 +431,6 @@ unsafe extern "thiscall" fn comparar_player_regen_check_retirement(this: usize, 
 
 // ponytail: a lista inicial acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo
 // Rust e a carreira provam a cópia.
-unsafe extern "thiscall" fn comparar_build_initial_retirement_list(this: usize) {
+unsafe extern "thiscall" fn compare_build_initial_retirement_list(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

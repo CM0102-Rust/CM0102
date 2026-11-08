@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32
 /// Comparador da 0x4c11a0: lado a lado nos oito times (+0xa7, 48 bytes), em +0x3e e no estado do sorteador (a 0x4afbd0
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
-unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_con_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let l = concacaf_club_lists();
     let outro = cqi11_d(cqi11_d(0xadadfc).wrapping_add(cqi11_d(0x9cf728).wrapping_mul(4)));
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, hoje: usize, 
 // ponytail: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano: com a
 // tabela vazia e fase ≠ 0, a copa sai com 8 times e o time 0 preenchido (a 0x4c11a0 tem o seu comparador); senão +0x3e
 // não muda.
-unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn compare_con_champ_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if cqi11_d(this + 0xa7) == 0 {
         return o(this, hoje, fase);
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere o fundo de
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
-unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_con_champ_set_up_rounds(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     SCOREBOARD.record(r == 1 && cqi11_d(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, cqi11_d(this + 0x28)));
     r

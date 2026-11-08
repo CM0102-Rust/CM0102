@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn build_nation_club_lists(this: usize) {
 
 /// Comparador: lado a lado pelos registros de lesão (31 bytes × [0xae2364]), pelos clubes (as vagas) e pelo clube e
 /// cargo (+0x39..+0x3d) de quem não é jogador nas vagas.
-unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) {
+unsafe extern "thiscall" fn compare_init_squad_fitness(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let base = cpp9_d(0xae23b4);
     let mut regioes = vec![(cpp9_d(this), (cpp9_i(0xae2364).max(0) as usize) * 31), (base, (cpp9_i(0xae235c).max(0) as usize) * 0x245)];
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) {
 
 /// Comparador: a original aloca, sorteia e lesiona (0x62d250): roda só ela e confere o que a 0x62d250 não muda: o
 /// vetor alocado e o +0x1e = 50 de todos os registros.
-unsafe extern "thiscall" fn comparar_init_records(this: usize) {
+unsafe extern "thiscall" fn compare_init_records(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let v = cpp9_d(this);
     if v == 0 {
@@ -247,7 +247,7 @@ unsafe extern "thiscall" fn comparar_init_records(this: usize) {
 
 /// Comparador: a original aloca as listas: o plano antes (os ids dos clubes de cada nação, na ordem); a original roda;
 /// confere os itens de cada lista.
-unsafe extern "thiscall" fn comparar_build_nation_club_lists(this: usize) {
+unsafe extern "thiscall" fn compare_build_nation_club_lists(this: usize) {
     let n = cpp9_i(0xae2350).max(0) as usize;
     let mut plano: Vec<Vec<usize>> = vec![Vec::new(); n];
     let base = cpp9_d(0xae23b4);

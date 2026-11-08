@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn pay_tv_rights(liga: usize, valor: i32, filtro: usize
 
 /// Comparador: as finanças (0x167 bytes) de cada clube da tabela; a cópia roda sem a notícia (a da original fica, uma
 /// vez só). Clube nulo na tabela (a caixa da 0x5a0590): só a original.
-unsafe extern "thiscall" fn comparar_pay_tv_rights(liga: usize, valor: i32, filtro: usize) {
+unsafe extern "thiscall" fn compare_pay_tv_rights(liga: usize, valor: i32, filtro: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(%%I0%%);
     let financas = *(0xae2a38 as *const usize);
     let n = cpa2_w(liga + 0x3e).max(0) as usize;
@@ -110,7 +110,7 @@ unsafe fn comp_history_regions() -> Vec<(usize, usize)> {
 
 /// Comparador: os clubes (o +0x5b) e o histórico de competições. Sem linha livre no histórico (a 0x4afce0 faria
 /// realloc): só a original.
-unsafe extern "thiscall" fn comparar_league_record_season_honours(liga: usize) -> usize {
+unsafe extern "thiscall" fn compare_league_record_season_honours(liga: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     if free_comp_history_row() == 0 {
         return o(liga);
@@ -164,7 +164,7 @@ unsafe extern "C" fn comp_util_add_history_record(liga: usize, a: u32, b: u32, c
     r
 }
 
-unsafe extern "C" fn comparar_comp_util_add_history_record(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
+unsafe extern "C" fn compare_comp_util_add_history_record(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32) -> usize>(%%I2%%);
     if free_comp_history_row() == 0 {
         return o(liga, a, b, c, d); // cresce (realloc): só a original

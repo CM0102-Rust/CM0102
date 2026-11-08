@@ -31,7 +31,7 @@ unsafe extern "thiscall" fn match_team_block_assign(this: usize, src: usize) -> 
     this
 }
 
-unsafe extern "thiscall" fn comparar_match_team_block_assign(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn compare_match_team_block_assign(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
     SCOREBOARD.record(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn match_player_row_assign(this: usize, src: usize) -> 
     this
 }
 
-unsafe extern "thiscall" fn comparar_match_player_row_assign(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn compare_match_player_row_assign(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
     SCOREBOARD.record(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
@@ -111,7 +111,7 @@ unsafe extern "C" fn match_screens_tally_live_score(partida: usize, indice: u32,
     }
 }
 
-unsafe extern "C" fn comparar_match_screens_tally_live_score(partida: usize, indice: u32, res: usize) {
+unsafe extern "C" fn compare_match_screens_tally_live_score(partida: usize, indice: u32, res: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, usize)>(%%I2%%);
     if res == 0 {
         return o(partida, indice, res);

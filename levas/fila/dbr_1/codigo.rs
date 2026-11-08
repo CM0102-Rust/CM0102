@@ -23,7 +23,7 @@ unsafe extern "C" fn club_nation_is_not_argentina(clube: usize) -> u32 {
     }
 }
 
-unsafe extern "C" fn comparar_club_nation_is_not_argentina(clube: usize) -> u32 {
+unsafe extern "C" fn compare_club_nation_is_not_argentina(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(clube);
     let n = club_nation_is_not_argentina(clube);
     SCOREBOARD.record(r == n, || format!("club_nation_is_not_argentina({:x}) original={:x} rust={:x}", clube, r, n));
@@ -43,7 +43,7 @@ unsafe extern "C" fn club_nation_not_argentina_france_croatia(clube: usize) -> u
     }
 }
 
-unsafe extern "C" fn comparar_club_nation_not_argentina_france_croatia(clube: usize) -> u32 {
+unsafe extern "C" fn compare_club_nation_not_argentina_france_croatia(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(clube);
     let n = club_nation_not_argentina_france_croatia(clube);
     SCOREBOARD.record(r == n, || format!("club_nation_not_argentina_france_croatia({:x}) original={:x} rust={:x}", clube, r, n));
@@ -63,7 +63,7 @@ unsafe extern "C" fn database_is_melanesian_nation(nacao: usize) -> u32 {
     nation_is_one_of(nacao, &[0x9cf41c, 0x9cf478, 0x9cf530, 0x9cf2f8, 0x9cf500]) // melanésias
 }
 
-unsafe extern "C" fn comparar_database_is_melanesian_nation(nacao: usize) -> u32 {
+unsafe extern "C" fn compare_database_is_melanesian_nation(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nacao);
     let n = database_is_melanesian_nation(nacao);
     SCOREBOARD.record(r == n, || format!("database_is_melanesian_nation({:x}) original={} rust={}", nacao, r, n));

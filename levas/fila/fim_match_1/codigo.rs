@@ -145,11 +145,11 @@ unsafe extern "thiscall" fn find_record_fixture(estat: usize, k: i32, saida: usi
 // ponytail: a partida deixada cria e libera o motor, anda a partida até o fim e a registra no arquivo
 // temporário: rodar duas vezes não dá, então o comparador só chama a original; a cópia se prova no
 // modo Rust (o ramo), na sessão do Lucas com rede (só um jogador da rede saindo a chama).
-unsafe extern "C" fn comparar_match_day_drop_viewer_and_finish_match() {
+unsafe extern "C" fn compare_match_day_drop_viewer_and_finish_match() {
     original_fn::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
-unsafe extern "thiscall" fn comparar_find_record_fixture(estat: usize, k: i32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_find_record_fixture(estat: usize, k: i32, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%);
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return o(estat, k, saida);

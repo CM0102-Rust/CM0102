@@ -13,7 +13,7 @@ unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, tipo: u32) -> 
 
 // ponytail: grava as tabelas do banco no contêiner; não roda duas vezes. Só a original; a cópia
 // leva o ramo e é provada pela prova do save.
-unsafe extern "C" fn comparar_save_database_for_game(save: usize, a4: u32, tipo: u32) -> u32 {
+unsafe extern "C" fn compare_save_database_for_game(save: usize, a4: u32, tipo: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(%%I0%%)(save, a4, tipo)
 }
 
@@ -28,7 +28,7 @@ unsafe extern "C" fn load_database_from_stream(save: usize, compartilhado: u32) 
 
 // ponytail: carrega o banco inteiro do contêiner (aloca as tabelas); não roda duas vezes. Só a
 // original; a cópia leva o ramo (a etapa de carregar da prova do save a exercita).
-unsafe extern "C" fn comparar_load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
+unsafe extern "C" fn compare_load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%)(save, compartilhado)
 }
 
@@ -124,6 +124,6 @@ unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
 
 // ponytail: destrói todos os subsistemas e apaga os *.tmp; não roda duas vezes. Só a original; a
 // cópia leva o ramo e roda no modo Rust (abertura da carreira, fim do início rápido).
-unsafe extern "C" fn comparar_free_game_data(tela: u32) -> u32 {
+unsafe extern "C" fn compare_free_game_data(tela: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(u32) -> u32>(%%I2%%)(tela)
 }

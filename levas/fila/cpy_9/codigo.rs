@@ -30,7 +30,7 @@ unsafe fn cpy9_pb(a: usize, v: u8) {
 
 /// Um byte sorteado: sorteio(n) + k no al.
 unsafe fn random_byte_plus(n: i32, k: u8) -> u8 {
-    (sortear(n) as u8).wrapping_add(k)
+    (random(n) as u8).wrapping_add(k)
 }
 
 /// Uma ficha de árbitro nova em `r` (0x2b bytes) da nação `nacao`, na ordem da 0x79c6aa: primeiro e segundo nome pelo
@@ -55,8 +55,8 @@ unsafe fn generate_official(r: usize, nacao: usize) {
     cpy9_pb(r + 0x29, random_byte_plus(10, 7));
     cpy9_pb(r + 0x2a, random_byte_plus(10, 7));
     cpy9_pd(r + 0x1a, 0);
-    cpy9_pw(r + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
-    cpy9_pw(r + 0xc, sortear(0x12c).wrapping_add(1) as i16);
+    cpy9_pw(r + 0xe, random(10).wrapping_add(0x7a8) as i16);
+    cpy9_pw(r + 0xc, random(0x12c).wrapping_add(1) as i16);
 }
 
 /// { 0x79c5c0 } (thiscall com o this sem uso, ret 8, officials_manager.cpp): `officials_manager_add_random_officials(
@@ -99,7 +99,7 @@ unsafe fn same_official_record(g: &[u8; 0x2b], f: usize) -> bool {
 /// que é reposto; depois roda a original. Confere o estado final do sorteio, a conta nova ([0xae2390] + conta) e que
 /// cada ficha do ensaio esteja na tabela ordenada (campos que a original grava). Conta não positiva ou nação sem
 /// continente: só a original.
-unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this: usize, conta: i32, nacao: usize) {
+unsafe extern "thiscall" fn compare_officials_manager_add_random_officials(this: usize, conta: i32, nacao: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(%%I0%%);
     if conta <= 0 || (nacao != 0 && cpy9_d(nacao + 0x71) == 0) {
         return o(this, conta, nacao);
@@ -158,7 +158,7 @@ unsafe extern "C" fn officials_manager_validate_officials() {
             } else if cpy9_i(n2 + 0x37) >= 0 {
                 cpy9_i(n2 + 0x37)
             } else {
-                sortear(cpy9_i(0xae2350))
+                random(cpy9_i(0xae2350))
             };
             cpy9_pd(e + 0x16, cpy9_d(0xae23a8).wrapping_add(k.wrapping_mul(0x122) as usize));
         }
@@ -169,10 +169,10 @@ unsafe extern "C" fn officials_manager_validate_officials() {
         if fora(0x22) {
             let nac = cpy9_d(e + 0x16);
             let v = if nac != 0 {
-                let s = sortear(0x50) as u8;
+                let s = random(0x50) as u8;
                 s.wrapping_add(cpy9_b(cpy9_d(e + 0x16) + 0x8e)).wrapping_add(1)
             } else {
-                (sortear(0x50) as u8).wrapping_add(1)
+                (random(0x50) as u8).wrapping_add(1)
             };
             cpy9_pw(e + 0x22, v as i8 as i16);
         }
@@ -181,10 +181,10 @@ unsafe extern "C" fn officials_manager_validate_officials() {
                 crate::comparison::branch("cpy_9 nota consertada");
                 let nac = cpy9_d(e + 0x16);
                 let v = if nac != 0 {
-                    let s = sortear(0x50) as u8;
+                    let s = random(0x50) as u8;
                     s.wrapping_add(cpy9_b(cpy9_d(e + 0x16) + 0x8e) << 2).wrapping_add(1)
                 } else {
-                    (sortear(0x50) as u8).wrapping_add(1)
+                    (random(0x50) as u8).wrapping_add(1)
                 };
                 cpy9_pw(e + o, v as i8 as i16);
                 if o == 0x20 && cpy9_w(e + 0x20) < cpy9_w(e + 0x1e) {
@@ -203,22 +203,22 @@ unsafe extern "C" fn officials_manager_validate_officials() {
         fix_official_attribute(e, 0x27, || if cpy9_w(e + 0x1e) > 0x50 { random_byte_plus(0xf, 6) } else { random_byte_plus(0x14, 1) });
         fix_official_attribute(e, 0x28, || band((0xa, 0xb), (0xf, 5), (0xa, 7)));
         fix_official_attribute(e, 0x29, || band((0xd, 8), (0xe, 7), (0xf, 6)));
-        fix_official_attribute(e, 0x2a, || if sortear(0x64) != 0 { random_byte_plus(0xa, 0xb) } else { random_byte_plus(0xa, 5) });
+        fix_official_attribute(e, 0x2a, || if random(0x64) != 0 { random_byte_plus(0xa, 0xb) } else { random_byte_plus(0xa, 5) });
         let mut limit = [0u8; 8];
         let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> *const u8 = core::mem::transmute(0x549f70usize);
         let d = data(limit.as_mut_ptr(), 1, 1, 0x776, -1);
         let (dia, ano) = (cpy9_w(d as usize), cpy9_w(d as usize + 2) as u16);
         let ano_e = cpy9_w(e + 0xe) as u16;
         if ano > ano_e || (ano == ano_e && dia > cpy9_w(e + 0xc)) {
-            cpy9_pw(e + 0xe, sortear(10).wrapping_add(0x7a8) as i16);
-            cpy9_pw(e + 0xc, sortear(0x12c).wrapping_add(1) as i16);
+            cpy9_pw(e + 0xe, random(10).wrapping_add(0x7a8) as i16);
+            cpy9_pw(e + 0xc, random(0x12c).wrapping_add(1) as i16);
         }
         i += 1;
     }
 }
 
 /// Comparador: lado a lado pelas fichas de todos os árbitros e pelo estado do sorteio.
-unsafe extern "C" fn comparar_officials_manager_validate_officials() {
+unsafe extern "C" fn compare_officials_manager_validate_officials() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
     let total = cpy9_i(0xae2390).max(0) as usize;
     if cpy9_d(0xae23e8) == 0 {
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn officials_manager_operator(this: usize, src: usize) 
 }
 
 /// Comparador: lado a lado pela ficha de destino e pela devolução.
-unsafe extern "thiscall" fn comparar_officials_manager_operator(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn compare_officials_manager_operator(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x2b)], || o(this, src), || officials_manager_operator(this, src));
     SCOREBOARD.record(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));

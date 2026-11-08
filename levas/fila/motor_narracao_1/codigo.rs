@@ -91,14 +91,14 @@ unsafe extern "C" fn free_event_tables() {
 
 // ponytail: as tres enfileiram narracao, tocam som ou liberam memoria (nao rodam duas vezes): sem
 // comparacao propria, provadas pela carreira (fila de 19414 partidas, 285 mil eventos na frente).
-unsafe extern "thiscall" fn comparar_event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
+unsafe extern "thiscall" fn compare_event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32>(%%I0%%)(t, a, b, c, d, e, f, g)
 }
 
-unsafe extern "thiscall" fn comparar_construct_commentary_queue(t: usize, goal_crowd_reaction: u8) -> usize {
+unsafe extern "thiscall" fn compare_construct_commentary_queue(t: usize, goal_crowd_reaction: u8) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize, u8) -> usize>(%%I1%%)(t, goal_crowd_reaction)
 }
 
-unsafe extern "C" fn comparar_free_event_tables() {
+unsafe extern "C" fn compare_free_event_tables() {
     original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

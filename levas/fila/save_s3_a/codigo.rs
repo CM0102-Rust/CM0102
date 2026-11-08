@@ -50,7 +50,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
     let ajeitar: unsafe extern "C" fn(*mut u8) = core::mem::transmute(0x90bb70usize);
     let comeca: unsafe extern "C" fn(*const u8, usize, u32) -> i32 = core::mem::transmute(0x947120usize);
     let procurar: unsafe extern "C" fn(*const u8, usize) -> usize = core::mem::transmute(0x945a60usize);
-    let comparar_n: unsafe extern "C" fn(*const u8, *const u8, u32) -> i32 = core::mem::transmute(0x946fa0usize);
+    let compare_n: unsafe extern "C" fn(*const u8, *const u8, u32) -> i32 = core::mem::transmute(0x946fa0usize);
     let opcao: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5d7c60usize);
     let aplicar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5d8480usize);
     let trocar_idioma: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5d8020usize);
@@ -170,7 +170,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
                         *(0xae2d04 as *mut i32) += 1;
                     }
                     let tam = core::ffi::CStr::from_ptr(nome_da_nacao(n) as *const core::ffi::c_char).to_bytes().len() as u32;
-                    if (comparar_n(v, nome_da_nacao(n), tam) == 0 || nacao_casa(n, v) != 0) && u(0xae2d08) == 0 {
+                    if (compare_n(v, nome_da_nacao(n), tam) == 0 || nacao_casa(n, v) != 0) && u(0xae2d08) == 0 {
                         *(0xae2d08 as *mut u32) = n as u32;
                     }
                 }
@@ -311,6 +311,6 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
 // ponytail: cria o jogo inteiro (carrega o banco, sorteia, grava o .qst e libera tudo); não roda
 // duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst) e pelas
 // carreiras (o auto_setup.cfg).
-unsafe extern "C" fn comparar_create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
+unsafe extern "C" fn compare_create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
     original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(%%I0%%)(cfg, qst)
 }

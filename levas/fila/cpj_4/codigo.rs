@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn get_selection_limit(this: usize, partida: usize, sai
 
 /// Comparador: a 0x452710 cria os recordes do clube na primeira vez (a original primeiro; a cópia acha os mesmos):
 /// pelo valor.
-unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
+unsafe extern "thiscall" fn compare_offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%)(this, oferta, exigir);
     let n = offer_breaks_fee_record(this, oferta, exigir);
     SCOREBOARD.record(r == n, || format!("offer_breaks_fee_record({:x}, {}) original={} rust={}", oferta, exigir, r, n));
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, oferta
 }
 
 /// Comparador: pelo valor (a 0x62c400 só lê).
-unsafe extern "thiscall" fn comparar_get_condition(this: usize, jogador: usize, em_porcento: u32) -> u16 {
+unsafe extern "thiscall" fn compare_get_condition(this: usize, jogador: usize, em_porcento: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, jogador, em_porcento);
     let n = get_condition(this, jogador, em_porcento);
     SCOREBOARD.record(r == n, || format!("get_condition({:x}, {}) original={} rust={}", jogador, em_porcento, r, n));
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn comparar_get_condition(this: usize, jogador: usize, 
 }
 
 /// Comparador: lado a lado pelos 6 bytes da saída (a 0x8cf6b0 só escreve na tabela local).
-unsafe extern "thiscall" fn comparar_get_selection_limit(this: usize, partida: usize, saida: *mut u8) {
+unsafe extern "thiscall" fn compare_get_selection_limit(this: usize, partida: usize, saida: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(saida as usize, 6)], || o(this, partida, saida), || get_selection_limit(this, partida, saida));
     SCOREBOARD.record(igual, || format!("get_selection_limit({:x}) {:x?} x {:x?}", partida, mo, mr));

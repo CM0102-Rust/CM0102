@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecn
 
 /// Comparador: a entrega pode cair na caixa do humano (realloc, ids, resposta automática): roda só a original e confere
 /// o alcance; alcance fora de 0..5 devolve 0.
-unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, noticia: usize, clube: usize, competicao: usize, nacao: usize, continente: usize, alcance: u32) -> u32 {
+unsafe extern "thiscall" fn compare_send_by_scope(this: usize, noticia: usize, clube: usize, competicao: usize, nacao: usize, continente: usize, alcance: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%)(this, noticia, clube, competicao, nacao, continente, alcance);
     let fora = !(0..=5).contains(&(alcance as u8 as i8));
     SCOREBOARD.record(!fora || r == 0, || format!("send_by_scope alcance {} devolveu {}", alcance as u8 as i8, r));
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, noticia: usize, 
 
 /// Comparador: roda só a original (a entrega não pode rodar duas vezes) e confere o plano: o alcance zerado e, sem técnico
 /// humano, a devolução 0 (com humano, a entrega devolve 1 ou 0 sem memória).
-unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize, noticia: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_send_to_club_manager(this: usize, noticia: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if noticia == 0 || clube == 0 {
         return o(this, noticia, clube);
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize, noticia: 
 
 /// Comparador: a original realoca o vetor, numera e responde: roda só ela e confere o plano feito antes: o id da notícia,
 /// o contador de ids (News +0x10), o anel do humano (início, próxima vaga, conta), a vaga escrita com o id e +0xda = 0.
-unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, noticia: usize, tecnico: usize, livre: u32) -> u32 {
+unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, noticia: usize, tecnico: usize, livre: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if noticia == 0 || tecnico == 0 || news_human_manager_index(tecnico) < 0 {
         return o(this, noticia, tecnico, livre);

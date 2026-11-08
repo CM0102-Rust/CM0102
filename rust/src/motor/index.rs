@@ -2373,7 +2373,7 @@ pub(crate) unsafe extern "C" fn match_staff_comp_key_id(name: usize, row: u32) -
     r as u32 // eax of the last _stricmp (person competition key)
 }
 
-pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nation: usize, text: usize, size: u32, gender: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_nation_get_nationality_adjective(nation: usize, text: usize, size: u32, gender: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NATION_GET_NATIONALITY_ADJECTIVE);
     if text == 0 {
         return o(nation, text, size, gender);
@@ -2388,7 +2388,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nation
 }
 
 /// Comparer for `set_key_ids` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
+pub(crate) unsafe extern "C" fn compare_set_key_ids() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_globals();
@@ -2399,7 +2399,7 @@ pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
 }
 
 /// Comparer for `set_key_ids_1080` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
+pub(crate) unsafe extern "C" fn compare_set_key_ids_1080() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS_1080);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_ranges_1080();
@@ -2410,7 +2410,7 @@ pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
 }
 
 /// Comparer for `get_region_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_region_name(region: u32, text: usize, size: u32, form: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_get_region_name(region: u32, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
     let r = region as u8 as i8;
     if text == 0 || !(1..=14).contains(&r) || (size as u16 as i16) < 100 {
@@ -2424,7 +2424,7 @@ pub(crate) unsafe extern "C" fn comparar_get_region_name(region: u32, text: usiz
 }
 
 /// Comparer for `get_continent_adjective` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continent: usize, text: usize, size: u32, form: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_get_continent_adjective(continent: usize, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE);
     if continent == 0 || text == 0 || (size as u16 as i16) < 0x32 {
         return o(continent, text, size, form);
@@ -2437,7 +2437,7 @@ pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continent: usiz
 }
 
 /// Comparer for `match_club_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_club_key_id(name: usize, row: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_match_club_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_club_key_id(name, row));
@@ -2449,7 +2449,7 @@ pub(crate) unsafe extern "C" fn comparar_match_club_key_id(name: usize, row: u32
 }
 
 /// Comparer for `remap_club_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(old: u32, new: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_remap_club_key_id(old: u32, new: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(old, new), || remap_club_key_id(old, new));
@@ -2458,7 +2458,7 @@ pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(old: u32, new: u32) -
 }
 
 /// Comparer for `match_nation_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(name: usize, row: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_match_nation_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_NATION_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_nation_key_id(name, row));
@@ -2470,7 +2470,7 @@ pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(name: usize, row: u
 }
 
 /// Comparer for `match_club_comp_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(name: usize, row: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_match_club_comp_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0x4c0)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_club_comp_key_id(name, row));
@@ -2482,7 +2482,7 @@ pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(name: usize, row
 }
 
 /// Comparer for `match_staff_comp_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_staff_comp_key_id(name: usize, row: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_match_staff_comp_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_STAFF_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_STAFF_COMP_FIFA_WORLD_PLAYER_OF_THE_YEAR, 0x684)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_staff_comp_key_id(name, row));

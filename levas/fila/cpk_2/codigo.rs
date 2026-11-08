@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entrada: usize) {
 }
 
 /// Comparador: a original acrescenta (pode realocar); confere a conta e o item novo.
-unsafe extern "thiscall" fn comparar_add_spare_non_player_record(this: usize, id: u32, nacao: u32, segunda: u32) {
+unsafe extern "thiscall" fn compare_add_spare_non_player_record(this: usize, id: u32, nacao: u32, segunda: u32) {
     let n = cpk2_d(this + 0x20);
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(%%I0%%)(this, id, nacao, segunda);
     let item = cpk2_d(this + 0x1c).wrapping_add(n << 4);
@@ -163,7 +163,7 @@ unsafe fn retirement_entry_fields(r: usize) -> [u8; 26] {
 }
 
 /// Comparador: o registro copiado antes; a original acrescenta (pode realocar); confere a conta e os campos.
-unsafe extern "thiscall" fn comparar_add_retirement(this: usize, r: usize) {
+unsafe extern "thiscall" fn compare_add_retirement(this: usize, r: usize) {
     let n = cpk2_d(this + 8);
     let esperado = retirement_entry_fields(r);
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, r);
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_add_retirement(this: usize, r: usize) {
 
 /// Comparador: a original sorteia e realoca (não pode rodar duas vezes): o plano antes (o que entra em cada lista);
 /// confere as contas e os itens (a nação sorteada só pela faixa).
-unsafe extern "thiscall" fn comparar_queue_staff_for_regen(this: usize, entrada: usize) {
+unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize, entrada: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let id = cpk2_d(entrada) as i32;
     if id < 0 || id > *(0xae2364 as *const i32) {

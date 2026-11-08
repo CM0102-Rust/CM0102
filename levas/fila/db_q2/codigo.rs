@@ -74,7 +74,7 @@ unsafe extern "C" fn database_is_staff_eu_national(pessoa: usize, nacao_do_clube
     0
 }
 
-unsafe extern "C" fn comparar_database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
+unsafe extern "C" fn compare_database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
     let o = original_fn::<unsafe extern "C" fn(usize, *const u16) -> u16>(%%I0%%);
     if pessoa == 0 {
         return o(pessoa, data); // caixa: só a original
@@ -85,14 +85,14 @@ unsafe extern "C" fn comparar_database_get_staff_age(pessoa: usize, data: *const
     r
 }
 
-unsafe extern "C" fn comparar_nation_allows_free_transfers(nacao: usize) -> u32 {
+unsafe extern "C" fn compare_nation_allows_free_transfers(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(nacao);
     let n = nation_allows_free_transfers(nacao);
     SCOREBOARD.record(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
+unsafe extern "C" fn compare_database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(pessoa, nacao_do_clube);
     let n = database_is_staff_eu_national(pessoa, nacao_do_clube);
     SCOREBOARD.record(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));

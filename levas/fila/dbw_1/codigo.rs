@@ -201,7 +201,7 @@ unsafe extern "C" fn set_key_ids_1080() -> u32 {
 /// As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 const FIXED_KEY_REGIONS: [(usize, usize); 3] = [(0x9cf178, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
-unsafe extern "C" fn comparar_set_key_ids() -> u32 {
+unsafe extern "C" fn compare_set_key_ids() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_globals();
@@ -211,7 +211,7 @@ unsafe extern "C" fn comparar_set_key_ids() -> u32 {
     r
 }
 
-unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
+unsafe extern "C" fn compare_set_key_ids_1080() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_ranges_1080();

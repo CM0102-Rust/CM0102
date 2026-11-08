@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn remove_nickname_from_all(this: usize, id: usize) {
     media_crt_qsort(cph4_d(ultimo + 0xa6e3) as usize, cph4_d(ultimo + 0xa6eb) as i32, 0x1e, 0x601a10);
 }
 
-unsafe extern "thiscall" fn comparar_remove_transfer_interest(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_remove_transfer_interest(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let n = (*((this + 0x14) as *const i32)).max(0) as usize;
     let reg = [(this + 0xc, 0xc), (cph4_d(this + 0xc) as usize, n * 25)];
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn comparar_remove_transfer_interest(this: usize, pesso
     SCOREBOARD.record(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_remove_scout_request(this: usize, pessoa: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let n = (*((this + 0x64) as *const i32)).max(0) as usize;
     let reg = [(this + 0x5c, 0xc), (cph4_d(this + 0x5c) as usize, n * 17)];
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize, pessoa: u
 
 /// Comparador: lado a lado pelos vetores de apelidos e contagens de todos os técnicos humanos; sem técnicos (o qsort
 /// leria pelo `id`), só a original.
-unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: usize, id: usize) {
+unsafe extern "thiscall" fn compare_remove_nickname_from_all(this: usize, id: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let n = cph4_d(this + 4) as i32;
     if id == 0 || n <= 0 {

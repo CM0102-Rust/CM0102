@@ -13,7 +13,7 @@ use super::*;
 /// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_advance_stage(this: usize) {
     let before = read_usize(this + 0x30) as i32;
     let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_ADVANCE_STAGE)(this);
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_advance_stage(thi
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_create_final_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_create_final_stage(this: usize) {
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_CREATE_FINAL_STAGE)(this);
     let same = if a == b {
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_create_final_stag
 /// [pt] Comparador do fim da temporada: só a original (simplification: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_8 historico da final" e "cqo_8 premios") e é provada pelas mutações e pelas duas carreiras Rust.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_record_season_honours(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_RECORD_SEASON_HONOURS)(this)
 }
 
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_record_season_hon
 ///
 /// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_SET_UP_RULES)(this), || {
         parana_rules(this);
@@ -86,25 +86,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_set_up_rules(this
 }
 
 /// Comparer for `construct_bra_reg_parana` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_parana(this: usize, year: u32, record: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_parana(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_PARANA);
     bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_parana", this, year, record, &PARANA_CHAMPIONSHIP, || o(this, year, record))
 }
 
 /// Comparer for `bra_reg_parana_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_create_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_CREATE_TABLE);
     bra_reg_rio_compare_state_league_table("bra_reg_parana_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// Comparer for `create_half_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_create_half_stage(this: usize, k: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_create_half_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CREATE_HALF_STAGE);
     compare_half_season_stage("create_half_stage", this, k, || o(this, k))
 }
 
 /// Comparer for `bra_reg_parana_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_start_new_season(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_START_NEW_SEASON);
     compare_new_season("bra_reg_parana_start_new_season", this, || o(this))
 }

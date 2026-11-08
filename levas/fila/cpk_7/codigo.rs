@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u
 }
 
 /// Comparador: pelo valor (a 0x4cf5f0 e a busca só leem).
-unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
+unsafe extern "thiscall" fn compare_get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%)(this, pessoa, clube, idioma, pelo_contrato);
     let n = get_language_fluency(this, pessoa, clube, idioma, pelo_contrato);
     SCOREBOARD.record(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, pessoa: u
 }
 
 /// Comparador: lado a lado pelo par da pessoa (8 bytes; a 0x58f110 só grava o segundo).
-unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_rewind_staff_history(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if pessoa == 0 {
         return o(this, pessoa);
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize, pessoa: u
 
 /// Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
 /// +0x187f) e [0xb67a34] (a 0x5b73a0 zera quando falha).
-unsafe extern "thiscall" fn comparar_set_slot_position(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
+unsafe extern "thiscall" fn compare_set_slot_position(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I2%%);
     if !(0..=10).contains(&(casa as u8 as i8)) {
         return o(this, casa, posicao, extra);

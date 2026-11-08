@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn slots_without_conflict(this: usize) -> u8
     1
 }
 
-comparar_valor!(comparar_slots_without_conflict, slots_without_conflict, IDX_SLOTS_WITHOUT_CONFLICT, () -> u8);
+compare_value!(compare_slots_without_conflict, slots_without_conflict, IDX_SLOTS_WITHOUT_CONFLICT, () -> u8);
 
 /// Stores the slot coordinate for the phase and ball zone and picks the general and extra positions closest to the
 /// slot's 12 coordinates.

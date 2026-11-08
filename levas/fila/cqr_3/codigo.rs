@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     soltar(lista);
 }
 
-unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_aus_nsl_advance_stage(this: usize) {
     let antes = cqr3_d(this + 0x30) as i32;
     let ultima = antes >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usize) {
 /// O comparador da série final: só a original (aloca a tabela das rodadas e a fase e manda a notícia), com o plano feito
 /// antes: os seis primeiros da tabela. Depois, a devolução 1, a fase na vaga 0 com +0x3e = 6, +4 = o +4 da liga e os
 /// seis na tabela dela (+0xb1, como conjunto), e +0x30 = 0.
-unsafe extern "thiscall" fn comparar_create_finals_series_stage(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_create_finals_series_stage(this: usize) -> u32 {
     let mut seis = [0usize; 6];
     for (i, c) in seis.iter_mut().enumerate() {
         *c = aus_nsl_table_row_club(this, i);
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_create_finals_series_stage(this: usize) -> 
 /// O comparador da grande final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
-unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: usize) {
+unsafe extern "thiscall" fn compare_create_grand_final_stage(this: usize) {
     let serie = cqr3_d(cqr3_d(this + 0xc));
     let (a, b) = (aus_nsl_table_row_club(serie, 0), aus_nsl_table_row_club(serie, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);

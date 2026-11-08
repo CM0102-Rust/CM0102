@@ -90,7 +90,7 @@ unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, tamanho: u32, fo
     1
 }
 
-unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn compare_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I0%%);
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
@@ -168,7 +168,7 @@ unsafe extern "C" fn get_continent_adjective(continente: usize, texto: usize, ta
     1
 }
 
-unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn compare_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
         return o(continente, texto, tamanho, forma);

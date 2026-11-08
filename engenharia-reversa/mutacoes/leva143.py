@@ -2,7 +2,7 @@
 MUTACOES = [
     ('m_dois_passos', "            nx = step_towards(nx, x);\n            ny = step_towards(ny, y);", "            ny = step_towards(ny, y);"),
     ('m_base', "            0x12 => 0x13e,\n            _ => 0x13c,", "            0x12 => 0x13c,\n            _ => 0x13c,", "movimento com a bola"),
-    ('m_cubo', "at -= sortear(c * c * c * 50);", "at -= sortear(c * c * c * 51);", "movimento com a bola"),
+    ('m_cubo', "at -= random(c * c * c * 50);", "at -= random(c * c * c * 51);", "movimento com a bola"),
     ('m_aprox', "                } else {\n                    Some(0x2161)\n                }", "                } else {\n                    Some(0x2160)\n                }", "movimento aproximacao narrada"),
     ('m_cresce', "let v = read_f32_at(p + match_player::CONFIDENCE) as f64 * read_f32_at(0x96d3b8) as f64;", "let v = read_f32_at(p + match_player::CONFIDENCE) as f64 * read_f32_at(0x96d3b8) as f64 * 1.01;", "movimento cresce"),
     ('m_posse', "        let q = (m as isize + side as isize + 0x8d46) as *mut u8;\n        *q = (*q).wrapping_add(5);", "        let q = (m as isize + side as isize + 0x8d46) as *mut u8;\n        *q = (*q).wrapping_add(6);", "movimento passa"),
@@ -18,8 +18,8 @@ MUTACOES = [
     ('m_direcao', "let dx = byte(m, engine::BALL_X) as i32 + 4 + nx as i32;", "let dx = byte(m, engine::BALL_X) as i32 + 5 + nx as i32;"),
     ('m_perde', "            add(p, -0x96);", "            add(p, -0x95);", "movimento perde a bola"),
     ('m_vence', "gain = match_pl_ftol(gain as f64 * read_f64_at(0x969520)) as i16;", "gain = match_pl_ftol(gain as f64 * read_f64_at(0x969520) * 1.01) as i16;", "movimento desafiante vence"),
-    ('m_penalti', "if sortear(byte(u(e, match_player::STAFF), 0x5a) as i32 + 6) == 0 {", "if sortear(byte(u(e, match_player::STAFF), 0x5a) as i32 + 7) == 0 {", "movimento penalty"),
+    ('m_penalti', "if random(byte(u(e, match_player::STAFF), 0x5a) as i32 + 6) == 0 {", "if random(byte(u(e, match_player::STAFF), 0x5a) as i32 + 7) == 0 {", "movimento penalty"),
     ('m_acao', "            narrate(call, 0x1f4c, u32::MAX);", "            narrate(call, 0x1f4d, u32::MAX);"),
-    ('m_2173', "if strong && sortear(match_pl_ftol(read_f32_at(p + match_player::DRIBBLING) as f64)) < sortear(0x1e) { 0x2173 } else { 0x1f4a }", "if strong && sortear(match_pl_ftol(read_f32_at(p + match_player::DRIBBLING) as f64)) < sortear(0x1f) { 0x2173 } else { 0x1f4a }"),
+    ('m_2173', "if strong && random(match_pl_ftol(read_f32_at(p + match_player::DRIBBLING) as f64)) < random(0x1e) { 0x2173 } else { 0x1f4a }", "if strong && random(match_pl_ftol(read_f32_at(p + match_player::DRIBBLING) as f64)) < random(0x1f) { 0x2173 } else { 0x1f4a }"),
     ('m_so_vira', "        *w(p, match_player::ACTION) = 0x6f;\n        return;", "        *w(p, match_player::ACTION) = 0x70;\n        return;", "movimento so vira"),
 ]

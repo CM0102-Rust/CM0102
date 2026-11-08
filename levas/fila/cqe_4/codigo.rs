@@ -1251,7 +1251,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
 
 /// Comparador: lado a lado na nota (os bits do f64), nos motivos e em [0xae1080] (que a original e o salário padrão
 /// 0x864550 gravam); o resto das chamadas só lê, e o STAFF_CONTRACT do salário é local.
-unsafe extern "thiscall" fn comparar_staff_interest_in_joining_club(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
+unsafe extern "thiscall" fn compare_staff_interest_in_joining_club(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, *mut u32) -> f64>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     if !p6.is_null() {
@@ -1280,7 +1280,7 @@ unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> usize {
 }
 
 /// Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
-unsafe extern "thiscall" fn comparar_construct_staff_contract(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_staff_contract(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
     SCOREBOARD.record(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));

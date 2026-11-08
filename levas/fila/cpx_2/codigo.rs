@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     let c = get_contract_store_lookup(p);
     let do_contrato = if c == 0 { 0 } else { cpx2_clube(cpx2_d(c + 4)) };
     let comprador = cpx2_clube(cpx2_d(o + 8));
-    let r = sortear(0x1676);
+    let r = random(0x1676);
     crate::comparison::branch("cpx_2 sorteio do desassossego");
     if (cpx2_w(comprador + 0x80) as i32) > r.wrapping_add(0x109a) { // cpx2: o sorteio do desassossego
         *((o + 0x2d) as *mut u8) = 1;
@@ -90,13 +90,13 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     }
     if cpx2_b(c2 + 0x4e) & 8 != 0 {
         crate::comparison::branch("cpx_2 listado");
-        n = n.wrapping_add((-2000i32).wrapping_sub(sortear(0x1770)) as i16); // cpx2: o desconto do listado
+        n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: o desconto do listado
     }
     crate::comparison::branch("cpx_2 interesse avaliado");
     if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo
         return;
     }
-    if n as i32 >= -sortear(0x2bc) {
+    if n as i32 >= -random(0x2bc) {
         return;
     }
     if n >= -4000 && cpx2_sb(p + 0x5b) + cpx2_sb(p + 0x59) >= 0xf {
@@ -133,8 +133,8 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
             let sumir: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x419840usize);
             sumir(cpx2_d(0xad9c6c), p, comprador, 1);
             let forca = cpx2_sb(c2 + 0x44);
-            let r1 = sortear(0xc8);
-            let r2 = sortear(0x190);
+            let r1 = random(0xc8);
+            let r2 = random(0x190);
             if forca.wrapping_sub(r1).wrapping_add(r2) < -150 {
                 let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547e70usize);
                 rejeitar(p, do_contrato, 1);
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
 /// O comparador: a cópia em ensaio e a original a partir do mesmo estado (a oferta, [0xae1080] e o sorteio). Sem chegar
 /// à queixa (quase sempre), tudo igual; chegando, só a original (a queixa, a fuga e as antipatias não podem rodar duas
 /// vezes e a original sorteia mais).
-unsafe extern "thiscall" fn comparar_unsettle_player_after_bid(this: usize, o: usize) {
+unsafe extern "thiscall" fn compare_unsettle_player_after_bid(this: usize, o: usize) {
     let orig_f = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let mut regioes = vec![(o, 0x30usize), (0xae1080, 4)];
     regioes.extend(crate::rng::STATE_REGIONS);
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn post_offer_collapsed_news(this: usize, o: usize, clu
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_offer_collapsed_news(this: usize, o: usize, clube: usize, motivo: u32) {
+unsafe extern "thiscall" fn compare_post_offer_collapsed_news(this: usize, o: usize, clube: usize, motivo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, o, clube, motivo)
 }
 
@@ -255,6 +255,6 @@ unsafe extern "thiscall" fn post_appearance_money_news(this: usize, clausula: us
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_appearance_money_news(this: usize, clausula: usize, valor: u32, tipo: u32, calado: u32) {
+unsafe extern "thiscall" fn compare_post_appearance_money_news(this: usize, clausula: usize, valor: u32, tipo: u32, calado: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I2%%)(this, clausula, valor, tipo, calado)
 }

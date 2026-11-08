@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
 
 // ponytail: sorteia, põe as expectativas (0x6a3770) e abre vagas (0x69ba50, aloca): só a original; a cópia leva os
 // ramos (roda uma vez, no começo da carreira).
-unsafe extern "thiscall" fn comparar_init_club_board_records(this: usize) {
+unsafe extern "thiscall" fn compare_init_club_board_records(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -303,7 +303,7 @@ unsafe extern "thiscall" fn process_ban_appeals(this: usize) {
 }
 
 // ponytail: aplica a disciplina, solta a notícia e libera a apelação: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_process_ban_appeals(this: usize) {
+unsafe extern "thiscall" fn compare_process_ban_appeals(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
@@ -359,7 +359,7 @@ unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: usize, human
 }
 
 /// Comparador: a original e a cópia (as duas só leem; a volta da lista recomeça o cursor), pelo valor.
-unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, partida: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn compare_can_watch_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano);
     if partida == 0 {
         return r;

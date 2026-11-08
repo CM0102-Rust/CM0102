@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn asia_club_champ_create_round_table(this: usize, fase
     create_round_table(this, asian_club_champ_stage(fase), rodadas, extra, liga, 0x987a40)
 }
 
-unsafe extern "thiscall" fn comparar_asia_club_champ_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_asia_club_champ_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     asia_club_champ_compare_round_table("asia_club_champ_create_round_table", fase, asian_club_champ_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| asia_club_champ_create_round_table(this, fase, r, e, l))
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn asia_cup_winner_create_round_table(this: usize, fase
     create_round_table(this, asian_cup_winners_stage(fase), rodadas, extra, liga, 0x987b60)
 }
 
-unsafe extern "thiscall" fn comparar_asia_cup_winner_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_asia_cup_winner_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
     asia_club_champ_compare_round_table("asia_cup_winner_create_round_table", fase, asian_cup_winners_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| asia_cup_winner_create_round_table(this, fase, r, e, l))
@@ -296,7 +296,7 @@ unsafe extern "thiscall" fn eng_auto_cup_create_round_table(this: usize, fase: u
     create_round_table(this, ldv_trophy_stage(fase), rodadas, extra, liga, 0x9c4180)
 }
 
-unsafe extern "thiscall" fn comparar_eng_auto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_eng_auto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
     asia_club_champ_compare_round_table("eng_auto_cup_create_round_table", fase, ldv_trophy_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| eng_auto_cup_create_round_table(this, fase, r, e, l))

@@ -56,7 +56,7 @@ unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, partida: usi
     indice(comp)
 }
 
-unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
+unsafe extern "C" fn compare_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(comp, partida);
     let n = comp_active_key_nation_of_fixture(comp, partida);
     SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", cpt3_d(comp) as i32, partida, r, n));
@@ -82,7 +82,7 @@ unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32 {
     WORLD_CUP_COMPS.iter().any(|&g| cpt3_d(g) == id) as u32
 }
 
-unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usize) -> u32 {
+unsafe extern "C" fn compare_key_nation_is_world_cup_comp(comp: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
     if comp == 0 {
         return o(comp);
@@ -104,7 +104,7 @@ unsafe extern "C" fn key_nation_is_international_comp(comp: usize) -> u32 {
     INTERNATIONAL_TOURNAMENTS.iter().any(|&g| cpt3_d(g) == id) as u32
 }
 
-unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: usize) -> u32 {
+unsafe extern "C" fn compare_key_nation_is_international_comp(comp: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     if comp == 0 {
         return o(comp);

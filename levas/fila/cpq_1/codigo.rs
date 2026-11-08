@@ -278,7 +278,7 @@ unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clube: usize, 
 
 // ponytail: sorteia e, conforme o sorteio, aloca (a saída na lista, o ultimato, a notícia): o caminho só se sabe
 // rodando. Só a original; a cópia leva os ramos e a carreira a prova (as demissões mudam tudo).
-unsafe extern "thiscall" fn comparar_consider_sacking_manager(this: usize, clube: usize, conferir: u32) {
+unsafe extern "thiscall" fn compare_consider_sacking_manager(this: usize, clube: usize, conferir: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, conferir)
 }
 
@@ -348,7 +348,7 @@ unsafe extern "thiscall" fn issue_board_ultimatum(this: usize, clube: usize) -> 
 
 // ponytail: aloca a lista dos jogos, a notícia e o item da lista dos ultimatos: só a original, conferida pelo plano:
 // a lista dos ultimatos [this+0x10] cresce de 1 quando devolve 1 e fica igual com 0.
-unsafe extern "thiscall" fn comparar_issue_board_ultimatum(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn compare_issue_board_ultimatum(this: usize, clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%);
     if cpq1_d(this + 0x10) == 0 {
         return o(this, clube);
@@ -461,7 +461,7 @@ unsafe extern "thiscall" fn remove_club_manager(this: usize, clube: usize, tipo:
 
 // ponytail: tira o contrato, solta a notícia e grava o histórico em arquivo (não roda duas vezes): só a original,
 // conferida depois: sem `manter` a confiança em 3500 e, fora da seleção, nenhum contrato do elenco com as marcas.
-unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize, clube: usize, tipo: u32, motivo: u32, manter: u32) {
+unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, clube: usize, tipo: u32, motivo: u32, manter: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I2%%);
     let tira = manager_and_role(clube).is_some();
     o(this, clube, tipo, motivo, manter);

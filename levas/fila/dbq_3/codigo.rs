@@ -69,7 +69,7 @@ unsafe extern "C" fn staff_get_natural_position_mask(pessoa: usize) -> u32 {
     0x10
 }
 
-unsafe extern "C" fn comparar_staff_get_natural_position_mask(pessoa: usize) -> u32 {
+unsafe extern "C" fn compare_staff_get_natural_position_mask(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(pessoa);
     let n = staff_get_natural_position_mask(pessoa);
     SCOREBOARD.record(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", pessoa, r, n));
@@ -91,7 +91,7 @@ unsafe extern "C" fn club_count_squad_with_position_mask(clube: usize, mascara: 
     n
 }
 
-unsafe extern "C" fn comparar_club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
+unsafe extern "C" fn compare_club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%)(clube, mascara);
     let n = club_count_squad_with_position_mask(clube, mascara);
     SCOREBOARD.record(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
@@ -214,7 +214,7 @@ unsafe extern "C" fn staff_pick_favoured_team_mate(pessoa: usize, clube: usize) 
     melhor
 }
 
-unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(pessoa: usize, clube: usize) -> usize {
+unsafe extern "C" fn compare_staff_pick_favoured_team_mate(pessoa: usize, clube: usize) -> usize {
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);

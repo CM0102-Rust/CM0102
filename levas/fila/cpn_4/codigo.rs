@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn pick_club_from_nation_list(this: usize, jogador: usi
 
 /// Comparador: lado a lado pela pessoa (+0x24..+0x3d), pelas 50 vagas do clube e da seleção e pelo aviso em
 /// [0xde1f64]. A 0x896c60 tira a pessoa da tática: na segunda vez (a cópia) já não a acha, então a tática fica fora.
-unsafe extern "stdcall" fn comparar_retire_from_playing_staff(p: usize) {
+unsafe extern "stdcall" fn compare_retire_from_playing_staff(p: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     let mut reg = vec![(p + 0x24, 0x1a), (0xde1f64, 0x80)];
     for campo in [0x39usize, 0x24] {
@@ -246,7 +246,7 @@ unsafe extern "stdcall" fn comparar_retire_from_playing_staff(p: usize) {
 }
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x7ad220 sorteia), pelo clube devolvido.
-unsafe extern "thiscall" fn comparar_pick_best_club_for_player(this: usize, jogador: usize) -> usize {
+unsafe extern "thiscall" fn compare_pick_best_club_for_player(this: usize, jogador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, jogador), || crate::rng::without_counting(|| pick_best_club_for_player(this, jogador)));
@@ -256,7 +256,7 @@ unsafe extern "thiscall" fn comparar_pick_best_club_for_player(this: usize, joga
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio, pelo clube devolvido e pelo cursor (+0xa) das listas
 /// que podem ser percorridas (a da nação do jovem e a de [0x9cf2e4]).
-unsafe extern "thiscall" fn comparar_pick_club_from_nation_list(this: usize, jogador: usize) -> usize {
+unsafe extern "thiscall" fn compare_pick_club_from_nation_list(this: usize, jogador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for n in [cpn4_d(cpn4_d(jogador + 0x1a)), cpn4_d(0x9cf2e4)] {

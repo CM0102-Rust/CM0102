@@ -83,7 +83,7 @@ unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, por
 }
 
 /// Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
-unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
+unsafe extern "thiscall" fn compare_make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     let regioes = [(r, 0x70)];
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, r, j, por_jogos), || make_points_ban(this, r, j, por_jogos));
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
 
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
 // ponytail: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
-unsafe extern "thiscall" fn comparar_ruling_body_start_new_season(this: usize) {
+unsafe extern "thiscall" fn compare_ruling_body_start_new_season(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
 }
 
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn compact_entries(this: usize) {
 
 /// Comparador: a original realoca (não pode rodar duas vezes): as entradas ocupadas copiadas antes; roda só a
 /// original e confere a conta, a capacidade e as entradas na nova ordem.
-unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
+unsafe extern "thiscall" fn compare_compact_entries(this: usize) {
     let mut esperado: Vec<u8> = Vec::new();
     let base = cpu10_d(this + 0xb);
     for k in 0..cpu10_i(this + 0x13).max(0) as usize {

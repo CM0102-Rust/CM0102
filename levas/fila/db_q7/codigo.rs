@@ -241,7 +241,7 @@ unsafe extern "C" fn database_format_staff_name(pessoa: usize, destino: usize, t
     1
 }
 
-unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) -> usize {
+unsafe extern "C" fn compare_database_pick_first_name_for_nation(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
@@ -250,7 +250,7 @@ unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) 
     r
 }
 
-unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize) -> usize {
+unsafe extern "C" fn compare_database_pick_second_name_for_nation(nacao: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
         || crate::rng::without_counting(|| database_pick_second_name_for_nation(nacao)));
@@ -258,7 +258,7 @@ unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize)
     r
 }
 
-unsafe extern "C" fn comparar_database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
+unsafe extern "C" fn compare_database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%);
     if pessoa == 0 || destino == 0 || (tamanho as i16) < 0x69 || !(1..=7).contains(&(estilo as u8)) {
         return o(pessoa, destino, tamanho, estilo); // caixa: só a original

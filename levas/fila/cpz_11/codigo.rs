@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
 
 /// Comparador: lado a lado na folha (+0xc), no maior salário (+0x10), no teto (+0x14) e no último contrato consultado
 /// ([0xae1080], que o salário padrão 0x864550 grava); as outras chamadas (contratos, teto 0x5968d0) só leem.
-unsafe extern "thiscall" fn comparar_update_wage_bill(this: usize) {
+unsafe extern "thiscall" fn compare_update_wage_bill(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0xc, 12), (0xae1080, 4)], || o(this), || update_wage_bill(this));
     SCOREBOARD.record(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
 }
 
 /// Comparador: lado a lado na tabela de finanças inteira ([this], [0xae235c] × 0x167 bytes) e em [0xae1080].
-unsafe extern "thiscall" fn comparar_refresh_all_wage_bills(this: usize) {
+unsafe extern "thiscall" fn compare_refresh_all_wage_bills(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = (cpz11_i(0xae235c).max(0) as usize).wrapping_mul(0x167);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(cpz11_d(this), n), (0xae1080, 4)], || o(this), || refresh_all_wage_bills(this));
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: usize, clube
 
 /// Comparador: sem linha da nação, só a original (a caixa); senão lado a lado na saída `passou` e na data estática da
 /// 0x54cdb0 (0xae2470), com a devolução.
-unsafe extern "thiscall" fn comparar_finance_get_days_to_season_start(this: usize, clube: usize, passou: *mut u32) -> i32 {
+unsafe extern "thiscall" fn compare_finance_get_days_to_season_start(this: usize, clube: usize, passou: *mut u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> i32>(%%I2%%);
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x669360usize);
     if (linha(clube) as i8) < 0 {

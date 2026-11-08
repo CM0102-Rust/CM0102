@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
 
 /// Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
 /// achados antes, quando há fase).
-unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(this: usize) {
+unsafe extern "thiscall" fn compare_eng_auto_cup_create_final_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     o(this);
     let f = cqs6_d(cqs6_d(this + 0xc) + 4);
@@ -144,6 +144,6 @@ unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
 }
 
 // ponytail: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
-unsafe extern "thiscall" fn comparar_eng_auto_cup_rank_teams(this: usize) {
+unsafe extern "thiscall" fn compare_eng_auto_cup_rank_teams(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }

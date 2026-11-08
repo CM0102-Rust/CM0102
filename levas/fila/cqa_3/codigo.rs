@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn draw_round(copa: usize, rodada: u32) -> u32 {
 /// (sem +0x45 ou já sorteada), nada muda nos confrontos nem nas datas; com time em aberto, as datas previstas das
 /// rodadas (a desta mais 1 dia, as seguintes no mínimo essa); sorteada, todos os confrontos com +0x34 = 1 e +0xac com
 /// a soma prevista (as consultas da notícia não mudam com o sorteio).
-unsafe extern "thiscall" fn comparar_draw_round(copa: usize, rodada: u32) -> u32 {
+unsafe extern "thiscall" fn compare_draw_round(copa: usize, rodada: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I0%%);
     if cqa3_d(copa + 0x45) == 0 || cqa3_b(round_ties_array(copa, rodada) + 0x34) != 0 {
         return o(copa, rodada); // ponytail: nada a sortear, a original não faz nada
@@ -272,7 +272,7 @@ unsafe extern "C" fn comp_util_format_stage_round_name(fase: u32, rodada: u32, s
 }
 
 /// Comparador da 0x4bffc0: lado a lado na saída (até o tamanho, no máximo 0x400 bytes) e na devolução.
-unsafe extern "C" fn comparar_comp_util_format_stage_round_name(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
+unsafe extern "C" fn compare_comp_util_format_stage_round_name(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(%%I1%%);
     if saida.is_null() || tamanho < 0xc8 {
         return o(fase, rodada, saida, tamanho, estilo); // a caixa: só a original
@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn club_in_higher_division(_this: usize, a: usize, b: u
 }
 
 /// Comparador da 0x522360: pelo valor (só lê).
-unsafe extern "thiscall" fn comparar_club_in_higher_division(this: usize, a: usize, b: usize) -> usize {
+unsafe extern "thiscall" fn compare_club_in_higher_division(this: usize, a: usize, b: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, a, b);
     let n = club_in_higher_division(this, a, b);
     SCOREBOARD.record(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));

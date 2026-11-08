@@ -26,7 +26,7 @@
 #   jogador; ret 0x14 conferido); 0x8676f0 thiscall (mov ecx, ebp), 0, lê a palavra (test ah, 8); 0x867560 thiscall, 1.
 #   0x735160: stdcall (o chamador 0x742b3b põe ecx = [0xb6b7c8], que ela não lê), 4 (tipo palavra, opção byte, saída,
 #   tamanho palavra), ret 0x10; 0x66f4e0 cdecl (add esp, 8), 2.
-# Comparadores: 0x755340 e 0x758010 pela fita das portas do pós-jogo (comparar_pos: 0x547af0, 0x867560, 0x867700 e
+# Comparadores: 0x755340 e 0x758010 pela fita das portas do pós-jogo (compare_pos: 0x547af0, 0x867560, 0x867700 e
 # 0x72c1f0 já são portas; rodam só na original e a cópia confere a chamada e o estado antes dela), com o sorteador,
 # [0xae1080], as seis pessoas do clube, as preferências, os atributos +0x58..+0x5d e os contratos inteiros das pessoas
 # do vetor; 0x735160 lado a lado na saída. Iguais no cm0102-1080.exe.

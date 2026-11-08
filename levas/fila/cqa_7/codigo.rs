@@ -426,7 +426,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
 
 /// Comparador da 0x840d80: lado a lado na nota de saída e na devolução (o resto ela só lê). O técnico do clube sem a
 /// ficha +0x69 (a original sorteia uma): só a original.
-unsafe extern "thiscall" fn comparar_value_player_for_club(this: usize, clube: usize, p: usize, vaga: usize, saida: *mut i32, minimo: i32, teto: u32) -> i32 {
+unsafe extern "thiscall" fn compare_value_player_for_club(this: usize, clube: usize, p: usize, vaga: usize, saida: *mut i32, minimo: i32, teto: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(%%I0%%);
     let obs = cqa7_d(clube + 0xcf);
     if obs != 0 && cqa7_d(obs + 0x69) == 0 {
@@ -468,7 +468,7 @@ unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: usize) -> usi
 }
 
 /// Comparador da 0x7f8610: pela devolução (só lê).
-unsafe extern "thiscall" fn comparar_find_club_search_entry(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_club_search_entry(this: usize, p: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let r = o(this, p);
     let n = find_club_search_entry(this, p);
@@ -496,7 +496,7 @@ unsafe extern "thiscall" fn find_international_appearance_money(this: usize, p: 
 }
 
 /// Comparador da 0x8d0f00: lado a lado na marca da pessoa e na devolução.
-unsafe extern "thiscall" fn comparar_find_international_appearance_money(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_international_appearance_money(this: usize, p: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa7_d(this + 0x86e).wrapping_add(cqa7_d(p).wrapping_mul(8));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1)], || o(this, p), || find_international_appearance_money(this, p));

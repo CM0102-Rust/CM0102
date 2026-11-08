@@ -161,7 +161,7 @@ unsafe fn candidate_regions(candidatos: impl Iterator<Item = usize>) -> Vec<(usi
     reg
 }
 
-unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, band: u32, excluir: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, band: u32, excluir: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I0%%);
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| lista + 0x16 * i));
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, lista, n, band, excluir),
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn find_tour_opponent(this: usize, clube: usize, ordena
     0
 }
 
-unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, clube: usize, ordenados: usize, n: u32, faixa_max: u32, nacao: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_tour_opponent(this: usize, clube: usize, ordenados: usize, n: u32, faixa_max: u32, nacao: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I1%%);
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| cpe1_d(ordenados + 4 * i)));
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, ordenados, n, faixa_max, nacao),

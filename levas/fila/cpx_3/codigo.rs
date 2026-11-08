@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
 
 // ponytail: muda jogadores de clube, paga e agenda (não pode rodar duas vezes): só a original, com o plano do estado
 // final (0x14, que nenhuma chamada depois dele muda); a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_finalise_transfer(this: usize, o: usize) {
+unsafe extern "thiscall" fn compare_finalise_transfer(this: usize, o: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, o);
     let e = cpx3_b(o + 0x2c);
     SCOREBOARD.record(e == 0x14, || format!("finalise_transfer(oferta {:#x}) estado={:#x} (plano 0x14)", o, e));
@@ -306,7 +306,7 @@ unsafe extern "thiscall" fn post_transfer_completed_news(this: usize, o: usize) 
 }
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_transfer_completed_news(this: usize, o: usize) {
+unsafe extern "thiscall" fn compare_post_transfer_completed_news(this: usize, o: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, o)
 }
 
@@ -345,6 +345,6 @@ unsafe extern "thiscall" fn post_transfer_agreed_news(this: usize, o: usize, dat
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_transfer_agreed_news(this: usize, o: usize, data: usize) {
+unsafe extern "thiscall" fn compare_post_transfer_agreed_news(this: usize, o: usize, data: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, o, data)
 }

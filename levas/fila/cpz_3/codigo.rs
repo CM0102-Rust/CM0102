@@ -358,7 +358,7 @@ unsafe fn table_status_regions(this: usize) -> Vec<(usize, usize)> {
 /// as cláusulas (que mandam notícia, gravam registros e sorteiam o moral); a memória volta e a original roda inteira.
 /// As duas a partir do mesmo estado da tabela, de +0xa7 e das vagas europeias dos clubes da tabela, que têm de sair
 /// iguais (as virtuais e as cláusulas não gravam nelas). Sem linhas ou com +0xdd: só a original.
-unsafe extern "thiscall" fn comparar_update_positions_and_status(this: usize) {
+unsafe extern "thiscall" fn compare_update_positions_and_status(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpz3_d(this + 0xdd) != 0 || cpz3_w(this + 0x3e) <= 0 || cpz3_d(this + 0xb1) == 0 {
         return o(this);
@@ -414,12 +414,12 @@ unsafe fn compare_stage_advance(nome: &str, this: usize, original: impl FnOnce()
     SCOREBOARD.record(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_eng_first_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     compare_stage_advance("eng_first_advance_stage", this, || o(this), || eng_first_advance_stage(this))
 }
 
-unsafe extern "thiscall" fn comparar_eng_second_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_eng_second_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     compare_stage_advance("eng_second_advance_stage", this, || o(this), || eng_second_advance_stage(this))
 }

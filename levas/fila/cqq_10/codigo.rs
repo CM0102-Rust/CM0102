@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, 
     t
 }
 
-unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     eng_cc_cup_compare_round_table("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| uefa_cup_create_round_table(this, fase, r, e, s))
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usize) -> i32 {
 
 /// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
 /// sua, comparada nos inscritos (com a devolução 1) e liberada.
-unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_intertoto_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn intertoto_cup_collect_club_list(this: usize, saida: 
 
 /// Lado a lado: a original grava a lista dela em `saida` (de quem chama, que a libera); a cópia faz a sua numa saída
 /// própria, comparada na conta e nos ponteiros, e a libera.
-unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
+unsafe extern "thiscall" fn compare_intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(%%I2%%);
     let mut s2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];

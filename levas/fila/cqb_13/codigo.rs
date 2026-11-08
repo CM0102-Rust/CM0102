@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, con
 /// chamadas do calendário (tirar, juntar, conflitos que alocam a lista, a notícia), que não podem rodar duas vezes.
 /// A cópia roda em ensaio (para na decisão, sem a caixa) e a original depois, a partir do mesmo estado: lado a lado no
 /// cabeçalho da lista (+2 começo, +0xa cursor). Sem o jogo ou o primeiro da lista: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_resolve_same_day_clash(this: usize, jogo: usize, conflitos: usize) -> u32 {
+unsafe extern "thiscall" fn compare_resolve_same_day_clash(this: usize, jogo: usize, conflitos: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let cabeca = cqb13_d(conflitos + 2);
     if jogo == 0 || cabeca == 0 || cqb13_d(cabeca) == 0 {
@@ -153,5 +153,5 @@ unsafe extern "thiscall" fn get_club_last_fixture_year(_this: usize, id: usize) 
     if w & 0xfffe != 0 { w >> 1 } else { *(0xae2c92 as *const u16) }
 }
 
-comparar_valor!(comparar_get_club_first_fixture_year, get_club_first_fixture_year, %%I1%%, (id: usize) -> u16);
-comparar_valor!(comparar_get_club_last_fixture_year, get_club_last_fixture_year, %%I2%%, (id: usize) -> u16);
+compare_value!(compare_get_club_first_fixture_year, get_club_first_fixture_year, %%I1%%, (id: usize) -> u16);
+compare_value!(compare_get_club_last_fixture_year, get_club_last_fixture_year, %%I2%%, (id: usize) -> u16);

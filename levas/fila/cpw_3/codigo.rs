@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
 /// O comparador: a cópia em ensaio e a original a partir do mesmo estado ([0xae1080], o sorteio e as estáticas das
 /// operações de data). A cópia recusou (−1): a original também, com a mesma memória. A cópia atualizaria a lista (−3):
 /// a original devolve −1. A cópia faria a oferta (−2): a original não devolve −1.
-unsafe extern "thiscall" fn comparar_try_loan_offer_for_player(this: usize, jogador: usize, clube: usize) -> i32 {
+unsafe extern "thiscall" fn compare_try_loan_offer_for_player(this: usize, jogador: usize, clube: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::rng::STATE_REGIONS);
@@ -254,7 +254,7 @@ unsafe extern "thiscall" fn post_contract_expiry_news(this: usize, contrato: usi
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_contract_expiry_news(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
+unsafe extern "thiscall" fn compare_post_contract_expiry_news(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I1%%)(this, contrato, periodo, bosman, avisar)
 }
 
@@ -282,6 +282,6 @@ unsafe extern "thiscall" fn post_bosman_departure_news(this: usize, contrato: us
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_bosman_departure_news(this: usize, contrato: usize, destino: usize) {
+unsafe extern "thiscall" fn compare_post_bosman_departure_news(this: usize, contrato: usize, destino: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, contrato, destino)
 }

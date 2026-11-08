@@ -137,7 +137,7 @@ unsafe extern "C" fn staff_normalise_non_player_attributes(pessoa: usize) {
     devolver(nj, pessoa, v as usize);
 }
 
-unsafe extern "C" fn comparar_database_vector_to_non_player(nao_jogador: usize, pessoa: usize, vetor: usize) -> u32 {
+unsafe extern "C" fn compare_database_vector_to_non_player(nao_jogador: usize, pessoa: usize, vetor: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(nao_jogador + 0x0e, 21)],
         || o(nao_jogador, pessoa, vetor), || database_vector_to_non_player(nao_jogador, pessoa, vetor));
@@ -145,7 +145,7 @@ unsafe extern "C" fn comparar_database_vector_to_non_player(nao_jogador: usize, 
     r
 }
 
-unsafe extern "C" fn comparar_database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
+unsafe extern "C" fn compare_database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I1%%);
     // os deslocamentos de ATTRIBUTE_VECTOR_CELLS ficam em +0x0f..+0x44
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(jogador + 0x0f, 0x44 - 0x0f + 1), (pessoa + 0x58, 1)],
@@ -154,7 +154,7 @@ unsafe extern "C" fn comparar_database_vector_to_player(jogador: usize, pessoa: 
     r
 }
 
-unsafe extern "C" fn comparar_staff_normalise_non_player_attributes(pessoa: usize) {
+unsafe extern "C" fn compare_staff_normalise_non_player_attributes(pessoa: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(%%I2%%);
     let nj = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + 0x69) as *const usize) };
     if nj == 0 {

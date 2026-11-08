@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
 
 /// Só a original (o método +0x10 marca a liga completa, grava recordes e paga prêmios: não roda duas vezes): a cópia
 /// leva os ramos.
-unsafe extern "thiscall" fn comparar_all_stages_complete(this: usize) -> u8 {
+unsafe extern "thiscall" fn compare_all_stages_complete(this: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(%%I0%%)(this)
 }
 
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn comp_collect_club_list(this: usize, lista: *mut usiz
 
 /// Lado a lado: a original com a saída de quem chama, a cópia com saída própria, a partir do mesmo [0xb67a34]; a conta
 /// e os clubes das duas listas iguais (a da cópia é liberada).
-unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usize, lista: *mut usize, x: u32) -> u16 {
+unsafe extern "thiscall" fn compare_comp_collect_club_list(this: usize, lista: *mut usize, x: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(%%I1%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut l2 = 0usize;
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn find_club_progress(this: usize, clube: usize, fase_i
 }
 
 /// Lado a lado nas três saídas (a original e a cópia com saídas próprias, começando dos valores de quem chama).
-unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, clube: usize, fase_id: *mut i16, rodada: *mut i16, situacao: *mut u8) {
+unsafe extern "thiscall" fn compare_find_club_progress(this: usize, clube: usize, fase_id: *mut i16, rodada: *mut i16, situacao: *mut u8) {
     let (mut f2, mut r2, mut s2) = (*fase_id, *rodada, *situacao);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(%%I2%%)(this, clube, fase_id, rodada, situacao);
     find_club_progress(this, clube, &mut f2, &mut r2, &mut s2);

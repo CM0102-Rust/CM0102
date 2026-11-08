@@ -8,7 +8,7 @@ use super::*;
 /// [pt] O comparador da final: só a original (aloca a tabela e a fase e sorteia a rodada), com o plano feito antes: os
 /// campeões dos grupos da terceira fase. Depois, a fase da vaga 10 existe, com +0x3e = 2, os dois na lista dela (como
 /// conjunto) e +0x30 = 10.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_final_stage(this: usize) {
     let (a, b) = (stage_leader(this, 8), stage_leader(this, 9));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_CREATE_FINAL_STAGE)(this);
     let stage = read_usize(read_usize(this + 0xc) + 0x28);
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage
 /// [pt] O comparador da virada: só a original (simplification: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
 /// grupos; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, os sete grupos nas vagas 0 a 6 e a
 /// lista dos 56 zerada.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_start_new_season(this: usize) -> u32 {
     let before = read_i16(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_START_NEW_SEASON)(this);
     let after = read_i16(this + 0x40);
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(t
 /// [pt] O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não
 /// pode rodar duas vezes), com o plano feito antes: a lista dos 56 ordenada pela mesma qsort numa cópia; depois, a
 /// lista da liga na mesma ordem e a posição (+0x72 do registro achado por 0x4a4850) de cada clube.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_positions(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_SET_PREDICTED_POSITIONS);
     if read_usize(this + 8) == 0 || read_usize(this + 0xee) == 0 {
         return o(this);
@@ -79,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_posi
 /// [pt] O comparador de um grupo: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes: os
 /// sete clubes das vagas 7(g + 1).. da lista dos 56. Depois, a fase na vaga g com +0x3e = 7, os sete na tabela dela
 /// (como conjunto) e +0x30 = g.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage(this: usize, g: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_group_stage(this: usize, g: u32) {
     let k = g as u8 as i8 as i32;
     let mut plan = [0usize; 7];
     for (j, c) in plan.iter_mut().enumerate() {
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage
 /// [pt] O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes pela mesma escolha numa cópia dos registros: a fase da vaga 7 existe, com +0x3e = 16 e os dezesseis na ordem
 /// das vagas na lista dela (+0xa7, 6 bytes), e +0x30 = 7.
-pub(crate) unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: usize) {
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
         let t = read_usize(if g == -1 { this } else { read_usize(read_usize(this + 0xc) + 4 * g as usize) } + 0xb1);
@@ -150,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_second_round_stage(this: 
 ///
 /// [pt] O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
 /// vencedores da segunda fase; depois, as fases 8 e 9 com 4 clubes cada, os oito juntos (como conjunto) e +0x30 = 9.
-pub(crate) unsafe extern "thiscall" fn comparar_create_third_round_groups(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_create_third_round_groups(this: usize) {
     let second = read_usize(read_usize(this + 0xc) + 0x1c);
     let mut plan = [0usize; 8];
     let mut n = 0usize;
@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_third_round_groups(this: 
 /// [pt] O comparador da Série C: a original libera e aloca e sorteia: só ela. O plano, feito antes: os clubes cuja divisão é
 /// [this+4], na ordem do banco, até 56. Depois: a devolução 1, +0x3e = 7, a lista (+0xee) com os clubes do plano em
 /// alguma ordem (o sorteio) e as linhas 0..6 da tabela com os 7 primeiros da lista.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_CREATE_TABLE);
     let mut plan = Vec::new();
     let mut i: i32 = 0;
@@ -218,7 +218,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this:
 /// Comparer for `bra_nat_third_set_up_rules` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_SET_UP_RULES)(this), || {
         set_serie_c_rules(this);
@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_up_rules(this:
 /// Comparer for `bra_nat_third_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, l, dest) = serie_c_staff_records(this, club, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
@@ -240,7 +240,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_recor
 }
 
 /// Comparador: como o do Mineiro.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
     let e = bra_reg_minas_gerais_comp_stats_club_entry(this, club);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_NAT_THIRD_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || bra_nat_third_set_club_progress(this, club, stage, a, b, c));
     SCOREBOARD.record(igual && r == n, || format!("bra_nat_third_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, club, stage as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));

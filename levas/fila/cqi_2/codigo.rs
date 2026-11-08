@@ -112,7 +112,7 @@ unsafe fn club_regions() -> Vec<(usize, usize)> {
 
 /// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// linha de cada um em [0xae2d14], a devolução e os registros das duas tabelas.
-unsafe extern "thiscall" fn comparar_collect_european_clubs(this: usize, saida: *mut usize) -> u32 {
+unsafe extern "thiscall" fn compare_collect_european_clubs(this: usize, saida: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> u32>(%%I0%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut t2 = 0usize;
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
 }
 
 /// Lado a lado: a tabela das nações, os clubes e a marca da caixa.
-unsafe extern "thiscall" fn comparar_assign_champions_league_places(this: usize, clubes: usize, conta: u32) {
+unsafe extern "thiscall" fn compare_assign_champions_league_places(this: usize, clubes: usize, conta: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let mut reg = club_regions();
     reg.push((this, 0x440));
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn assign_intertoto_places(this: usize, clubes: usize, 
 /// Lado a lado em 2001 (a 0x903890 devolve 0 sem efeito) e sem a lista dos voluntários (soltá-la duas vezes não dá):
 /// a tabela das nações, os clubes e o sorteio (a cópia sem contar). Fora disso, só a original (a 0x903890 sorteia e
 /// entrega notícia).
-unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: usize, clubes: usize, conta: u32) {
+unsafe extern "thiscall" fn compare_assign_intertoto_places(this: usize, clubes: usize, conta: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     if *(0xae2c92 as *const i16) != 0x7d1 || cqi2_d(this + 0x43b) != 0 {
         return o(this, clubes, conta);

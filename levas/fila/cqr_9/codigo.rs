@@ -119,7 +119,7 @@ unsafe fn ita_cup_compare_knockout_stage(nome: &str, this: usize, fase: usize, c
     SCOREBOARD.record(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", nome, this, f, vagas));
 }
 
-unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage(this: usize) {
+unsafe extern "thiscall" fn compare_ita_cup_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     // ponytail: aloca a fase e sorteia a primeira rodada; não pode rodar duas vezes: só a original, com o plano
     ita_cup_compare_knockout_stage("ita_cup_create_knockout_stage", this, 7, 16, || o(this))
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
     create_knockout_stage(this, 0x20, times, 0xf, core::ptr::null(), 0x9ea204, 0x304);
 }
 
-unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage_63dc10(this: usize) {
+unsafe extern "thiscall" fn compare_ita_cup_create_knockout_stage_63dc10(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     // ponytail: monta e destrói a liga provisória, aloca a fase e sorteia; não pode rodar duas vezes: só a original
     ita_cup_compare_knockout_stage("ita_cup_create_knockout_stage_63dc10", this, 0xf, 10, || o(this))

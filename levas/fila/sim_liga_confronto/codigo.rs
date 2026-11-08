@@ -75,14 +75,14 @@ unsafe extern "thiscall" fn note_terms_offered_to_main_player(gerente: usize, k:
     }
 }
 
-unsafe extern "C" fn comparar_league_compare_h2h_rows(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_league_compare_h2h_rows(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = league_compare_h2h_rows(a, b);
     SCOREBOARD.record(r == n, || format!("league_compare_h2h_rows original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_update_head_to_head(liga: usize, tabela: usize, linha: i32, adversario: i32, pro: i8, contra: i8) {
+unsafe extern "thiscall" fn compare_update_head_to_head(liga: usize, tabela: usize, linha: i32, adversario: i32, pro: i8, contra: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, i32, i8, i8)>(%%I1%%);
     if linha < 0 || adversario < 0 {
         return o(liga, tabela, linha, adversario, pro, contra);
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn comparar_update_head_to_head(liga: usize, tabela: us
     SCOREBOARD.record(igual, || format!("update_head_to_head({}, {}, {}x{}) {:x?} x {:x?}", linha, adversario, pro, contra, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_note_terms_offered_to_main_player(gerente: usize, k: i32) {
+unsafe extern "thiscall" fn compare_note_terms_offered_to_main_player(gerente: usize, k: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     if k < 0 || k >= *((gerente + 4) as *const i32) {
         return o(gerente, k);

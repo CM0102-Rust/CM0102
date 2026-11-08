@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_projection_by_reputation_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_projection_by_reputation_desc(a, b);
     SCOREBOARD.record(r == n, || format!("compare_projection_by_reputation_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -142,7 +142,7 @@ unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b:
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_projection_by_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_projection_by_points_desc(a, b);
     SCOREBOARD.record(r == n, || format!("compare_projection_by_points_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -153,7 +153,7 @@ unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: usize, b: usi
 /// grava os bytes +0x73..+0x75 do registro do clube no Comp_Stats da liga (+8, achado pela 0x4a4850, que dentro da
 /// 0x4ae300 devolve o registro provisório dela): lado a lado nesses 3 bytes e na devolução. As duas versões que repassam
 /// a outra competição (0x48e380, 0x7ef100) gravam fora da região: aí só a devolução pesa.
-unsafe extern "thiscall" fn comparar_update_projected_positions(this: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_update_projected_positions(this: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let stats = cpr11_d(this + 8);
     let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);

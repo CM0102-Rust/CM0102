@@ -25,7 +25,7 @@ unsafe extern "C" fn player_setup_injury_from_name(nome: usize) -> u32 {
 }
 
 /// Comparador: a devolução (o al; só lê).
-unsafe extern "C" fn comparar_player_setup_injury_from_name(nome: usize) -> u32 {
+unsafe extern "C" fn compare_player_setup_injury_from_name(nome: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nome);
     let n = player_setup_injury_from_name(nome);
     SCOREBOARD.record(r as u8 == n as u8, || format!("player_setup_injury_from_name({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
 /// depois a original a partir do mesmo estado; compara o registro do jogador (0x6e), a ficha (0x46), o contrato (0x4f),
 /// o registro de forma (31), o byte +0xc do registro de 79 bytes, o registro do técnico do clube e o estado do sorteio.
 /// Com a fuga na cópia (a original põe na lista, sorteia e manda notícia): só a original.
-unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, estagio: u32, tipo: u32, forcar: u32, dias: u32) {
+unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p: usize, estagio: u32, tipo: u32, forcar: u32, dias: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
     if p == 0 {
         return o(this, p, estagio, tipo, forcar, dias);
@@ -377,7 +377,7 @@ unsafe extern "stdcall" fn injury_get_category_name(categoria: u32, texto: usize
 }
 
 /// Comparador: lado a lado no texto (o tamanho, até 0x100) e na devolução; o tamanho curto (a caixa): só a original.
-unsafe extern "stdcall" fn comparar_injury_get_category_name(categoria: u32, texto: usize, tamanho: i32) -> u32 {
+unsafe extern "stdcall" fn compare_injury_get_category_name(categoria: u32, texto: usize, tamanho: i32) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(u32, usize, i32) -> u32>(%%I2%%);
     if tamanho < 0x14 || texto == 0 {
         return o(categoria, texto, tamanho);

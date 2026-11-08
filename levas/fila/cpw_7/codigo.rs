@@ -263,7 +263,7 @@ unsafe fn resolve_awol_case(this: usize, r: usize) {
 
 // ponytail: sorteia, tira e libera nós das listas (0x68d1f0), dá notícia de volta (0x419710) e de falta (0x41a360): só
 // a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_awol_daily_update(this: usize) {
+unsafe extern "thiscall" fn compare_awol_daily_update(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -292,7 +292,7 @@ unsafe extern "thiscall" fn has_missed_training(this: usize, pessoa: usize) -> u
 
 /// O comparador da falta ao treino: lado a lado pela devolução (byte baixo) e pelo [0xae1080]; sem contrato com o bit 2,
 /// só a original (a 0x4197c0 tira e libera o nó da lista).
-unsafe extern "thiscall" fn comparar_has_missed_training(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn compare_has_missed_training(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
     if pessoa != 0 && cpw7_i(pessoa) < cpw7_i(0xae2364) && cpw7_b(cpw7_d(this + 0xc).wrapping_add(cpw7_i(pessoa) as usize)) & 2 != 0 {
         let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
@@ -344,7 +344,7 @@ unsafe extern "thiscall" fn has_fitness_incident(this: usize, pessoa: usize) -> 
 }
 
 /// O comparador do atraso: lado a lado pela devolução (byte baixo) e pelo cursor da lista.
-unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn compare_has_fitness_incident(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let l = cpw7_d(this + 8);
     let regioes: Vec<(usize, usize)> = if l != 0 { vec![(l + 0xa, 4)] } else { Vec::new() };
@@ -470,7 +470,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
 /// a partir do mesmo estado (sorteio, marca da pessoa, [0xae1080]); a decisão da original sai da marca (bit 1 novo:
 /// sumiu; bit 2 novo: faltou). Sem decisão, o estado inteiro tem de bater (os mesmos sorteios). O byte do caso (+0xc do
 /// registro) não entra: na original é resíduo da pilha.
-unsafe extern "thiscall" fn comparar_miss_training(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_miss_training(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I3%%);
     if pessoa == 0 || cpw7_d(pessoa + 0x61) == 0 || cpw7_i(pessoa) >= cpw7_i(0xae2364) {
         return o(this, pessoa);
@@ -532,7 +532,7 @@ unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
 
 /// O comparador do fim da ausência, em ensaio: a cópia sem a notícia e sem tirar da lista; a marca da pessoa e, sem
 /// notícia, o [0xae1080] têm de bater com os da original.
-unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usize) {
+unsafe extern "thiscall" fn compare_end_absence(this: usize, r: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I4%%);
     if r == 0 {
         return o(this, r);
@@ -601,7 +601,7 @@ unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
 
 /// O comparador das marcas do contrato, em ensaio: a cópia sem o pedido de transferência e a original a partir do mesmo
 /// estado (marcas e sorteio); sem pedido, tudo tem de bater; com pedido (que sorteia e dá notícia), só as marcas.
-unsafe extern "thiscall" fn comparar_set_flags(c: usize, marcas: u32) {
+unsafe extern "thiscall" fn compare_set_flags(c: usize, marcas: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I5%%);
     if marcas as i32 > 0x1000 {
         return o(c, marcas);

@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
 
 /// Comparador: sorteia (0x90cfc0) e só usa um vetor temporário: lado a lado pelo estado do sorteador e pelos
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
-unsafe extern "thiscall" fn comparar_randomize_round_teams(copa: usize, rodada: u32) {
+unsafe extern "thiscall" fn compare_randomize_round_teams(copa: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(copa));
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn separate_shared_stadium_ties(copa: usize, rodada: u3
 }
 
 /// Comparador: só grava confrontos (da rodada e das seguintes): lado a lado pelos confrontos de todas as rodadas.
-unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(copa: usize, rodada: u32) {
+unsafe extern "thiscall" fn compare_separate_shared_stadium_ties(copa: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     let reg = all_ties_regions(copa);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada), || separate_shared_stadium_ties(copa, rodada));
@@ -306,7 +306,7 @@ unsafe extern "C" fn comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32
 }
 
 /// Comparador: pura (pelo eax inteiro). Fora da faixa (a caixa de erro) só a original.
-unsafe extern "C" fn comparar_comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
+unsafe extern "C" fn compare_comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%);
     if !(0..=100).contains(&interpolate_by_round(baixo, alto, rodada, rodadas).1) {
         return o(baixo, alto, rodada, rodadas);

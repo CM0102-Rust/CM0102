@@ -349,7 +349,7 @@ unsafe extern "thiscall" fn process_retirements(this: usize) {
 
 // ponytail: chama as notícias (alocam e entregam), o regen como não jogador, os contratos novos e as listas: o caminho
 // só se sabe rodando e não pode rodar duas vezes. Só a original; a cópia leva os ramos e a carreira a prova.
-unsafe extern "thiscall" fn comparar_process_retirements(this: usize) {
+unsafe extern "thiscall" fn compare_process_retirements(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -462,7 +462,7 @@ unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize, motivo: u
 }
 
 // ponytail: aloca e entrega a notícia (0x77bbe0, 0x786780...). Só a original; a cópia leva o ramo.
-unsafe extern "stdcall" fn comparar_player_regen_post_retirement_news(p: usize, motivo: u32, anunciada: u32) {
+unsafe extern "stdcall" fn compare_player_regen_post_retirement_news(p: usize, motivo: u32, anunciada: u32) {
     original_fn::<unsafe extern "stdcall" fn(usize, u32, u32)>(%%I1%%)(p, motivo, anunciada)
 }
 
@@ -549,6 +549,6 @@ unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: usize, c: u
 }
 
 // ponytail: aloca e entrega a notícia e sorteia a opinião: só a original; a cópia leva o ramo.
-unsafe extern "stdcall" fn comparar_player_regen_post_youth_promotion_news(j: usize, c: usize) {
+unsafe extern "stdcall" fn compare_player_regen_post_youth_promotion_news(j: usize, c: usize) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize)>(%%I2%%)(j, c)
 }

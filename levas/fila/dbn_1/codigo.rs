@@ -425,7 +425,7 @@ fn first_memory_difference(mo: &crate::comparison::MemorySnapshot, mr: &crate::c
 /// Comparador de 0x527240: original e cópia lado a lado sobre as tabelas de clubes e de pessoas inteiras, [0x9b59b4], o
 /// texto de 0xde1f64 e o estado do sorteador (a cópia sem contar sorteios). Com a pessoa de cargo 8 fora das casas
 /// (caixa), só a original. O estouro das 23.000 (caixa) não é previsto aqui: a base de fábrica gera bem menos.
-unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32 {
+unsafe extern "C" fn compare_database_generate_extra_non_playing_staff() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(%%I0%%);
     if any_coach_missing_from_club() {
         return o();
@@ -450,12 +450,12 @@ unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32
 
 // ponytail: compacta e realoca a tabela de clubes, aloca [0xae23fc] e troca as chaves de clube; não roda duas
 // vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst tem a tabela cortada).
-unsafe extern "C" fn comparar_database_trim_club_table(tamanho: u32) {
+unsafe extern "C" fn compare_database_trim_club_table(tamanho: u32) {
     original_fn::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho)
 }
 
 // ponytail: compacta e realoca o histórico de competições; não roda duas vezes. Só a original; a cópia é provada
 // pela prova do save (o histórico podado vai para o .qst).
-unsafe extern "C" fn comparar_database_prune_comp_history_table() {
+unsafe extern "C" fn compare_database_prune_comp_history_table() {
     original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn set_scout(this: usize, olheiro: usize) -> u32 {
 }
 
 /// Comparador: lado a lado pelas 16 partidas assistidas (a 0x5fe700 só lê).
-unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_clear_invalid_watched_fixtures(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let reg: Vec<(usize, usize)> = (0..0x10).map(|i| (human_manager_watched_match_record(this, i), 79)).collect();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || clear_invalid_watched_fixtures(this));
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(this: usize)
 
 /// Comparador: os alvos da cópia antes; a original enche a lista; confere o valor e a lista (cada item, os 0x6e bytes
 /// da pessoa).
-unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this: usize, clube: *const u32, lista: usize) -> u32 {
+unsafe extern "thiscall" fn compare_collect_club_scout_targets(this: usize, clube: *const u32, lista: usize) -> u32 {
     let alvos = if clube.is_null() { Vec::new() } else { scouting_targets_of_club(this, *clube) };
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u32, usize) -> u32>(%%I1%%)(this, clube, lista);
     let mut igual = r == (!alvos.is_empty()) as u32;
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this: usize, clu
 }
 
 /// Comparador: lado a lado pelo olheiro e as missões (+0x174 a +0x199; a 0x53e990 só lê).
-unsafe extern "thiscall" fn comparar_set_scout(this: usize, olheiro: usize) -> u32 {
+unsafe extern "thiscall" fn compare_set_scout(this: usize, olheiro: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x174, 0x25)], || o(this, olheiro), || set_scout(this, olheiro));
     SCOREBOARD.record(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", olheiro, mo, mr));

@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn cqu11_recopa_classificados(this: usize) -> u32 {
 // ponytail: a lista é alocada e o embaralhamento sorteia: não roda duas vezes. Só a original; o plano: devolve 1, +0xb6
 // = 32, a lista em +0xb2, nenhum clube dela na Liga dos Campeões asiática e, fora das vagas 0 e 16 (a do campeão da
 // Recopa), cada clube na zona da sua nação e nenhuma nação repetida.
-unsafe extern "thiscall" fn comparar_cqu11_recopa_classificados(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqu11_recopa_classificados(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let r = o(this);
     if r == 1 {
@@ -254,7 +254,7 @@ unsafe fn cqu11_comparar_fase(nome: &str, this: usize, o: impl FnOnce()) {
     SCOREBOARD.record(cqu11_d(this + 0x30) == 0 && lidos == plano, || format!("{}({:#x}): times {:x?} plano {:x?} +0x30 {}", nome, this, lidos, plano, cqu11_d(this + 0x30) as i32));
 }
 
-unsafe extern "thiscall" fn comparar_cqu11_recopa_fase_oeste(this: usize) {
+unsafe extern "thiscall" fn compare_cqu11_recopa_fase_oeste(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqu11_comparar_fase("cqu11_recopa_fase_oeste", this, || o(this))
 }
@@ -342,7 +342,7 @@ unsafe fn cqu11_comparar_posicoes(nome: &str, this: usize, o: impl FnOnce()) {
     SCOREBOARD.record(erro.is_none(), || format!("{}({:#x}): posições pela reputação {:?}", nome, this, erro));
 }
 
-unsafe extern "thiscall" fn comparar_cqu11_recopa_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_cqu11_recopa_previstas(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqu11_comparar_posicoes("cqu11_recopa_previstas", this, || o(this))
 }

@@ -115,11 +115,11 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         return 0;
     }
     let mut attack: i32 = match byte(m, engine::BALL_HEIGHT) {
-        0 => sortear(300),
-        1 => sortear(400),
-        2 => sortear(500),
-        3 => sortear(1000),
-        4 => sortear(0x708),
+        0 => random(300),
+        1 => random(400),
+        2 => random(500),
+        3 => random(1000),
+        4 => random(0x708),
         _ => {
             // simplification: a original mostra a caixa "Error" (versao, arquivo, linha 0x4755); +0x8ea9
             // outside 0..4 does not happen in the game
@@ -132,13 +132,13 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         attack = match_pl_ftol(attack as i16 as f64 / st);
     }
     if byte(m, engine::LAST_POSSESSION_SIDE) == byte(j, match_player::SIDE) {
-        if sortear(attack as i16 as i32 + 100) != 0 {
+        if random(attack as i16 as i32 + 100) != 0 {
             return 0;
         }
         crate::comparison::branch("play bola do proprio lado");
         narrate(call, 0x1f5e, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
-        let r = sortear(byte(m, engine::BALL_ROLL) as i32);
+        let r = random(byte(m, engine::BALL_ROLL) as i32);
         espirra(call, r.wrapping_add(1), j);
         return 1;
     }
@@ -149,7 +149,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
             if table(m, j) == 1 { (*w(j, 0x11c), 1) } else { (*w(j, 0x144), 0x15) }
         } else if table(m, j) != 1 {
             (*w(j, 0x162), 0x24)
-        } else if byte(m, engine::BALL_HEIGHT) == 3 && sortear(4) != 0 {
+        } else if byte(m, engine::BALL_HEIGHT) == 3 && random(4) != 0 {
             (*w(j, 0x11c), 1)
         } else {
             (*w(j, 0x16c), 0x29)
@@ -159,7 +159,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         choose()
     } else {
         let ficha5c = byte(*((j + match_player::STAFF) as *const usize), 0x5c) as i32;
-        if sortear(em_area as i32 * 500 + 100 + ficha5c * 200) != 0 {
+        if random(em_area as i32 * 500 + 100 + ficha5c * 200) != 0 {
             choose()
         } else {
             crate::comparison::branch("play cabecada");
@@ -170,21 +170,21 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         crate::comparison::branch("play forte");
         valor = match_pl_ftol(valor as f64 * 0.85) as i16;
     }
-    let v = sortear(valor as i32);
+    let v = random(valor as i32);
     let rating = (v - strength as i32 / 3 - attack) as i16;
     if rating < -100 {
         crate::comparison::branch("play nota muito baixa");
-        *b(j, match_player::BUSY) = (*b(j, match_player::BUSY)).wrapping_add(sortear(2) as u8);
+        *b(j, match_player::BUSY) = (*b(j, match_player::BUSY)).wrapping_add(random(2) as u8);
         return 0;
     }
     if rating < 0 {
         return 0;
     }
-    let foul_strong = strength as i32 > sortear(0x96) + 0xc8;
+    let foul_strong = strength as i32 > random(0x96) + 0xc8;
     let (mut cartao, mut grav) = (0u8, 0u8);
     let mut t = decide(m, j, lance as u16, &mut cartao, &mut grav);
     if t != 0 {
-        if sortear(5) == 0 && !foul_strong {
+        if random(5) == 0 && !foul_strong {
             crate::comparison::branch("play falta registrada");
             register(m, lance as u16, j as u32, 0, 0, t, *b(j, match_player::CELL_X), *b(j, match_player::CELL_Y), cartao, grav);
         } else {
@@ -199,7 +199,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                 4 => 0x1ff8,
                 6 => 0x1ff5,
                 _ => {
-                    if grav as i8 as i32 > sortear(7) + 2 { 0x210a } else { -1 }
+                    if grav as i8 as i32 > random(7) + 2 { 0x210a } else { -1 }
                 }
             };
             let sound: u32;
@@ -208,7 +208,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                 *b(m, engine::RESTART_TYPE) = 7;
             } else if in_the_box() {
                 if colour == -1 {
-                    match sortear(4) {
+                    match random(4) {
                         0 => narrate(call, 0x20e9, u32::MAX, zero(j), u32::MAX),
                         1 => narrate(call, 0x20ec, u32::MAX, zero(j), u32::MAX),
                         _ => {}
@@ -232,9 +232,9 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
             }
             let sent_off = matches!(t, 3..=6);
             if colour > -1 {
-                if sortear(4) == 0 {
-                    let a = sortear(grav as i8 as i32);
-                    if a > sortear(0x14) {
+                if random(4) == 0 {
+                    let a = random(grav as i8 as i32);
+                    if a > random(0x14) {
                         let partida = *((m + engine::MATCH) as *const usize);
                         let club = *((partida + if byte(j, match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize);
                         let k = *((club + club::NATION) as *const usize);
@@ -272,12 +272,12 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                 }
             }
             if special(lance as i8) == 0 {
-                if sortear(9) == 0 {
+                if random(9) == 0 {
                     narrate(call, 0x20df, u32::MAX, ub(j, match_player::SIDE), u32::MAX);
-                    if sortear(3) == 0 {
+                    if random(3) == 0 {
                         narrate(call, 0x20e0, u32::MAX, ub(j, match_player::SIDE), u32::MAX);
                     }
-                    if (sent_off || sound == 0x1f7a) && sortear(2) == 0 {
+                    if (sent_off || sound == 0x1f7a) && random(2) == 0 {
                         narrate(call, 0x20d9, u32::MAX, ub(j, match_player::SIDE), u32::MAX);
                     }
                 }
@@ -314,7 +314,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         crate::comparison::branch("play meia-lua");
         narrate(call, 0x1ffd, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
-        espirra(call, sortear(3), 0);
+        espirra(call, random(3), 0);
     } else {
         crate::comparison::branch("play perdeu");
         if strong != 0 {
@@ -325,11 +325,11 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
             narrar7(call, 0x1f84, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, estilo);
         }
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
-        espirra(call, sortear(3), j);
+        espirra(call, random(3), j);
     }
     *w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_add(0x14);
     *b(j, match_player::BALLS_CONTESTED) = (*b(j, match_player::BALLS_CONTESTED)).wrapping_add(1);
-    *b(j, match_player::BUSY) = (*b(j, match_player::BUSY)).wrapping_add(sortear(2).wrapping_add(1) as u8);
+    *b(j, match_player::BUSY) = (*b(j, match_player::BUSY)).wrapping_add(random(2).wrapping_add(1) as u8);
     *w(j, match_player::ACTION) = lance;
     1
 }
@@ -438,8 +438,8 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                         && (d * 1.1 < w(row + 3) as f64 || d * 0.9 < w(row + 7) as f64 || d * 0.024 < w(g(p + staff::PLAYER) + 5) as f64)
                         && *(row as *const u8) <= 6
                         && placar(ts) <= placar(other)
-                        && ((sortear(10) + 5) as f64) < nota1
-                        && (*((g(p + staff::PLAYER) + 0x45) as *const i8) as i32) < sortear(10)
+                        && ((random(10) + 5) as f64) < nota1
+                        && (*((g(p + staff::PLAYER) + 0x45) as *const i8) as i32) < random(10)
                         && average() + 0.2 > nota11
                         && average() - 0.2 < nota11
                     {
@@ -450,10 +450,10 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             }
             if esp != 0 && comp != 0 && *((t + 0x4c) as *const u8) == 0 {
                 let nota1 = rating(comp, g(p + staff::PLAYER), 1);
-                if *(row as *const u8) >= 9 && placar(ts) >= placar(other) && ((sortear(5) + 2) as f64) < nota1 && !ja_34 {
+                if *(row as *const u8) >= 9 && placar(ts) >= placar(other) && ((random(5) + 2) as f64) < nota1 && !ja_34 {
                     let m = average();
                     let nota11 = rating(comp, g(p + staff::PLAYER), 0x11);
-                    let r = sortear(9);
+                    let r = random(9);
                     if r as f64 * 0.1 + m + 0.5 < nota11 {
                         crate::comparison::branch("jogadores noticia 0x34");
                         news_34(g(G_MEDIA), p, club, 0x34, partida);
@@ -480,7 +480,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                     && byte(p, staff::AMBITION) > 0xa
                     && byte(p, staff::LOYALITY) < 0xf
                     && (byte(p, staff::SPORTSMANSHIP) < 0xa || byte(p, staff::TEMPERAMENT) < 0xa)
-                    && ((read(previous) == read(KEY_NATION_FRANCE) && sortear(3) == 0) || sortear(10) == 0)
+                    && ((read(previous) == read(KEY_NATION_FRANCE) && random(3) == 0) || random(10) == 0)
                 {
                     let c = contract(g(G_CONTRACT_MANAGER), p, club);
                     if c != 0 && marks(c) & 0x20 == 0 {
@@ -567,7 +567,7 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
     // the comparison of 0x6f5c30 (128th batch): its hook is this port. It is only called by
     // 0x6cd330 (`search_on_side`), cuja comparacao a grava como unidade: a comparacao roda dentro
     // of the unit (nested, with the outer tape saved)
-    let comparar = || comparar_respond(p, a, b, c, d, &rodar) as u32;
+    let comparar = || compare_respond(p, a, b, c, d, &rodar) as u32;
     if RECORD_6F5C30.load(Relaxed) && is_recording() {
         return call_recording(FN_MATCH_PLAYER_TRY_INTERCEPT_BALL, p, [a, b, c, d, 0], comparar) as u8;
     }
@@ -577,31 +577,31 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
     comparar() as u8
 }
 
-comparar_leitor!(comparar_ler_8ea7, ler_8ea7, IDX_LER_8EA7);
-comparar_leitor!(comparar_ler_8ea8, ler_8ea8, IDX_LER_8EA8);
-comparar_leitor!(comparar_ler_8ea9, ler_8ea9, IDX_LER_8EA9);
-comparar_leitor!(comparar_ler_8eaa, ler_8eaa, IDX_LER_8EAA);
-comparar_leitor!(comparar_ler_8eb2, ler_8eb2, IDX_LER_8EB2);
-comparar_gravador!(comparar_gravar_8ea9, gravar_8ea9, IDX_GRAVAR_8EA9, 0x8ea9, u8);
-comparar_gravador!(comparar_gravar_8ea7, gravar_8ea7, IDX_GRAVAR_8EA7, 0x8ea7, u8);
-comparar_gravador!(comparar_gravar_8ea8, gravar_8ea8, IDX_GRAVAR_8EA8, 0x8ea8, u8);
-comparar_gravador!(comparar_gravar_8eaa, gravar_8eaa, IDX_GRAVAR_8EAA, 0x8eaa, u8);
-comparar_gravador!(comparar_write_8ed8, write_8ed8, IDX_WRITE_8ED8, 0x8ed8, u16);
+compare_reader!(compare_ler_8ea7, ler_8ea7, IDX_LER_8EA7);
+compare_reader!(compare_ler_8ea8, ler_8ea8, IDX_LER_8EA8);
+compare_reader!(compare_ler_8ea9, ler_8ea9, IDX_LER_8EA9);
+compare_reader!(compare_ler_8eaa, ler_8eaa, IDX_LER_8EAA);
+compare_reader!(compare_ler_8eb2, ler_8eb2, IDX_LER_8EB2);
+compare_recorder!(compare_gravar_8ea9, gravar_8ea9, IDX_GRAVAR_8EA9, 0x8ea9, u8);
+compare_recorder!(compare_gravar_8ea7, gravar_8ea7, IDX_GRAVAR_8EA7, 0x8ea7, u8);
+compare_recorder!(compare_gravar_8ea8, gravar_8ea8, IDX_GRAVAR_8EA8, 0x8ea8, u8);
+compare_recorder!(compare_gravar_8eaa, gravar_8eaa, IDX_GRAVAR_8EAA, 0x8eaa, u8);
+compare_recorder!(compare_write_8ed8, write_8ed8, IDX_WRITE_8ED8, 0x8ed8, u16);
 
-comparar_repartir!(comparar_split_a, split_a, IDX_SPLIT_A);
-comparar_repartir!(comparar_split_b, split_b, IDX_SPLIT_B);
-comparar_repartir!(comparar_split_c, split_c, IDX_SPLIT_C);
+compare_split!(compare_split_a, split_a, IDX_SPLIT_A);
+compare_split!(compare_split_b, split_b, IDX_SPLIT_B);
+compare_split!(compare_split_c, split_c, IDX_SPLIT_C);
 
-comparar_valor!(comparar_direction, direction, IDX_DIRECTION, () -> u16);
-comparar_valor!(comparar_x_fora, x_off_centre, IDX_X_OFF_CENTRE, () -> u8);
-comparar_valor!(comparar_is_the_stored, is_the_stored, IDX_IS_THE_STORED, () -> u8);
-comparar_valor!(comparar_side_of_move, side_of_move, IDX_SIDE_OF_MOVE, () -> u8);
-comparar_valor!(comparar_player_in_block, player_in_block, IDX_PLAYER_IN_BLOCK, (l: i8, k: i8) -> usize);
-comparar_valor!(comparar_table_a_1a, table_a_1a, IDX_TABLE_A_1A, (j: usize) -> u16);
-comparar_valor!(comparar_marked_moment, marked_moment, IDX_MARKED_MOMENT, () -> u32);
-comparar_valor!(comparar_side_state, side_state, IDX_SIDE_STATE, () -> u8);
-comparar_valor!(comparar_opponent_state, opponent_state, IDX_OPPONENT_STATE, () -> u8);
-comparar_valor!(comparar_near_goal, near_goal, IDX_NEAR_GOAL, () -> u8);
-comparar_valor!(comparar_behind_on_aggregate, behind_on_aggregate, IDX_BEHIND_ON_AGGREGATE, (lado: i8) -> u8);
-comparar_valor!(comparar_free_teammate, free_teammate, IDX_FREE_TEAMMATE, (p: usize) -> usize);
+compare_value!(compare_direction, direction, IDX_DIRECTION, () -> u16);
+compare_value!(compare_x_fora, x_off_centre, IDX_X_OFF_CENTRE, () -> u8);
+compare_value!(compare_is_the_stored, is_the_stored, IDX_IS_THE_STORED, () -> u8);
+compare_value!(compare_side_of_move, side_of_move, IDX_SIDE_OF_MOVE, () -> u8);
+compare_value!(compare_player_in_block, player_in_block, IDX_PLAYER_IN_BLOCK, (l: i8, k: i8) -> usize);
+compare_value!(compare_table_a_1a, table_a_1a, IDX_TABLE_A_1A, (j: usize) -> u16);
+compare_value!(compare_marked_moment, marked_moment, IDX_MARKED_MOMENT, () -> u32);
+compare_value!(compare_side_state, side_state, IDX_SIDE_STATE, () -> u8);
+compare_value!(compare_opponent_state, opponent_state, IDX_OPPONENT_STATE, () -> u8);
+compare_value!(compare_near_goal, near_goal, IDX_NEAR_GOAL, () -> u8);
+compare_value!(compare_behind_on_aggregate, behind_on_aggregate, IDX_BEHIND_ON_AGGREGATE, (lado: i8) -> u8);
+compare_value!(compare_free_teammate, free_teammate, IDX_FREE_TEAMMATE, (p: usize) -> usize);
 

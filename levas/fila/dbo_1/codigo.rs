@@ -75,7 +75,7 @@ unsafe extern "C" fn club_has_enough_defenders(clube: usize) -> u8 {
     (count_squad_above_ability(clube, limit, |j| *((j + 0x11) as *const u8) == 20) > 2) as u8 // zagueiros (dbo)
 }
 
-unsafe extern "C" fn comparar_club_has_enough_defenders(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_has_enough_defenders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_has_enough_defenders(clube);
     SCOREBOARD.record(r == n, || format!("club_has_enough_defenders({:x}) original={} rust={}", clube, r, n));
@@ -93,7 +93,7 @@ unsafe extern "C" fn club_has_enough_midfielders(clube: usize) -> u8 {
     (count_squad_above_ability(clube, limit, meia) > 2) as u8 // meias (dbo)
 }
 
-unsafe extern "C" fn comparar_club_has_enough_midfielders(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_has_enough_midfielders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_has_enough_midfielders(clube);
     SCOREBOARD.record(r == n, || format!("club_has_enough_midfielders({:x}) original={} rust={}", clube, r, n));
@@ -116,7 +116,7 @@ unsafe extern "C" fn club_has_enough_strikers(clube: usize) -> u8 {
     (count_squad_above_ability(clube, limit, |j| *((j + 0x15) as *const u8) == 20) > 1) as u8 // atacantes (dbo)
 }
 
-unsafe extern "C" fn comparar_club_has_enough_strikers(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_has_enough_strikers(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = club_has_enough_strikers(clube);
     SCOREBOARD.record(r == n, || format!("club_has_enough_strikers({:x}) original={} rust={}", clube, r, n));

@@ -2,7 +2,7 @@ r"""Rodada 4 da legibilidade (etapa 4 da reorganização, 07/11/2026), pelos ach
 
 1. tira as faixas de leva (`// ---------- Nª leva: ... ----------`) dos arquivos de rust/src/motor/ (a história fica no
    git, no wiki/log e em levas/N/);
-2. dá uma linha em inglês aos comparadores (`comparar_<x>`) que não têm (o comentário antigo fica como [pt]);
+2. dá uma linha em inglês aos comparadores (`compare_<x>`) que não têm (o comentário antigo fica como [pt]);
 3. tamanho de registro com nome: `* 0x245` -> `* club::SIZE` (e pessoa 0x6e, nação 0x122), com SIZE em fields.rs;
 4. mais globais com nome: um endereço de global de tipo não escalar (Date, objeto, ponteiro) em qualquer lugar do código
    (`dias(0xae2c90, ..)` -> `dias(G_CURRENT_DATE, ..)`); os escalares só onde o nome_globais.py já trocava.
@@ -85,7 +85,7 @@ def main():
         # comparadores sem linha em inglês
         partes, pos = [], 0
         for n, a, b in mover_rotinas.blocos(t2):
-            if not n.startswith('comparar_'):
+            if not n.startswith('compare_'):
                 continue
             bloco = t2[a:b]
             corpo_ini = re.search(r'^(?:pub\(crate\) )?(?:unsafe )?(?:extern "\w+" )?fn ', bloco, re.M).start()
@@ -94,7 +94,7 @@ def main():
             attrs = [l for l in topo if l.lstrip().startswith('#[')]
             if docs and (not PT.search(docs[0]) or any('[pt]' in l for l in docs)):
                 continue
-            alvo = n[len('comparar_'):]
+            alvo = n[len('compare_'):]
             cab = ['/// Comparer for `%s` (comparison mode: see the header of motor.rs).' % alvo]
             if docs:
                 docs[0] = docs[0].replace('/// ', '/// [pt] ', 1)

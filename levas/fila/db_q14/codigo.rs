@@ -89,7 +89,7 @@ unsafe extern "C" fn database_club_has_room_for_job(clube: usize, cargo: u32, pe
     tem as u32
 }
 
-unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nacao: usize) -> usize {
+unsafe extern "C" fn compare_database_pick_first_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
@@ -98,7 +98,7 @@ unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nacao: usize) -
     r
 }
 
-unsafe extern "C" fn comparar_database_get_comp_colours(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
+unsafe extern "C" fn compare_database_get_comp_colours(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(%%I1%%);
     if competicao == 0 {
         return o(competicao, frente, fundo); // caixa: só a original
@@ -110,7 +110,7 @@ unsafe extern "C" fn comparar_database_get_comp_colours(competicao: usize, frent
     r
 }
 
-unsafe extern "C" fn comparar_database_club_has_room_for_job(clube: usize, cargo: u32, pessoa: usize) -> u32 {
+unsafe extern "C" fn compare_database_club_has_room_for_job(clube: usize, cargo: u32, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, usize) -> u32>(%%I2%%);
     let r = o(clube, cargo, pessoa);
     let c = cargo as u8 as i8;

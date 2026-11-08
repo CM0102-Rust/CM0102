@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn set_current_competition(this: usize, nacao: usize, c
 
 /// Comparador: a 0x6a3770 (o aviso) não pode rodar duas vezes: o plano antes, a original roda; confere a competição
 /// atual e a da fila. Nação ou competição nula: só a original (caixa).
-unsafe extern "thiscall" fn comparar_set_current_competition(this: usize, nacao: usize, comp: usize) {
+unsafe extern "thiscall" fn compare_set_current_competition(this: usize, nacao: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if nacao == 0 || comp == 0 {
         return o(this, nacao, comp);
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, data: usize) {
 
 /// Comparador: na primeira (sem tabela: calloc) só a original; depois, lado a lado na tabela (n bytes). A lista do
 /// dia e o amistoso só leem (o cursor da lista volta ao começo a cada uso).
-unsafe extern "thiscall" fn comparar_mark_clubs_with_fixtures(this: usize, data: usize) {
+unsafe extern "thiscall" fn compare_mark_clubs_with_fixtures(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let n = (cpo13_d(0xae235c) as i32).wrapping_sub((cpo13_d(0xae2350) as i32).wrapping_mul(2));
     if cpo13_d(this + 0x24) == 0 || n <= 0 {
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn discipline_remove_player(this: usize, id: u32) {
 
 /// Comparador: a 0x556830 solta suspensões e tira (e libera) itens da lista: o plano antes (as entradas das vagas), a
 /// original roda; confere o registro (0xff, conta 0) e as entradas livres (+0 = −1).
-unsafe extern "thiscall" fn comparar_discipline_remove_player(this: usize, id: u32) {
+unsafe extern "thiscall" fn compare_discipline_remove_player(this: usize, id: u32) {
     let r = cpo13_d(this + 0x14).wrapping_add((id as usize).wrapping_mul(29));
     let mut entradas = Vec::new();
     for k in 0..4usize {

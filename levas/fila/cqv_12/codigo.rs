@@ -91,7 +91,7 @@ unsafe fn cqv12_comparar(nome: &str, this: usize, zera_45: bool, o: impl FnOnce(
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqv12_libertadores_virada(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqv12_libertadores_virada(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     cqv12_comparar("cqv12_libertadores_virada", this, true, || o(this))
 }
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn cqv12_mercosul_virada(this: usize) -> u32 {
     cqv12_regras(this, 0x9a7e5c, 0x1c6)
 }
 
-unsafe extern "thiscall" fn comparar_cqv12_mercosul_virada(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqv12_mercosul_virada(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     cqv12_comparar("cqv12_mercosul_virada", this, true, || o(this))
 }
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn cqv12_merconorte_virada(this: usize) -> u32 {
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqv12_merconorte_virada(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqv12_merconorte_virada(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     cqv12_comparar("cqv12_merconorte_virada", this, false, || o(this))
 }

@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
 /// Comparador: lado a lado na entrada (tipo) e no +0xe do registro quando nada sai da rotina (férias e sem notícia);
 /// com o histórico (arquivo) ou a notícia: só a original, conferindo o plano (tipo 0xff e +0xe −1). Sem pessoa: a
 /// original (caixa).
-unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, pessoa: usize, noticia: u32) {
+unsafe extern "thiscall" fn compare_end_player_injury(this: usize, pessoa: usize, noticia: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     if pessoa == 0 || cpv10_d(pessoa) >= cpv10_d(0xae2364) {
         return o(this, pessoa, noticia);
@@ -115,7 +115,7 @@ unsafe extern "stdcall" fn media_queue_player_apology_news(jogador: usize, clube
 }
 
 /// Comparador: a notícia sorteia e vai para a caixa do técnico: só a original (a prova é a carreira e o modo Rust).
-unsafe extern "stdcall" fn comparar_media_queue_player_apology_news(jogador: usize, clube: usize, historia: i16) {
+unsafe extern "stdcall" fn compare_media_queue_player_apology_news(jogador: usize, clube: usize, historia: i16) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize, i16)>(%%I1%%)(jogador, clube, historia)
 }
 
@@ -169,7 +169,7 @@ unsafe fn news_box_regions(this: usize, caixa: usize) -> Vec<(usize, usize)> {
 
 /// Comparador: lado a lado na caixa e nas 100 notícias; com resposta padrão a dar (clube ou seleção), só a original,
 /// conferindo o plano depois dela (+4 = +0, +8 = 0 e os dois campos das 100 notícias). Erros: a original.
-unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, tecnico: usize) {
+unsafe extern "thiscall" fn compare_clear_inbox(this: usize, tecnico: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     if tecnico == 0 {
         return o(this, tecnico);

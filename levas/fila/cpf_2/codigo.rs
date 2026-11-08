@@ -38,28 +38,28 @@ unsafe extern "thiscall" fn count_record_construct(this: usize) -> usize {
     this
 }
 
-unsafe extern "thiscall" fn comparar_count_record_assign(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_count_record_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this, origem), || count_record_assign(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("count_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_fans_player_record_assign(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_fans_player_record_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this, origem), || fans_player_record_assign(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("fans_player_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_tally_record_construct(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_tally_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x19)], || o(this), || tally_record_construct(this));
     SCOREBOARD.record(igual && r == n, || format!("tally_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_count_record_construct(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_count_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I3%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this), || count_record_construct(this));
     SCOREBOARD.record(igual && r == n, || format!("count_record_construct {:x?} x {:x?}", mo, mr));

@@ -323,6 +323,6 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
 
 // ponytail: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save.
-unsafe extern "C" fn comparar_save_game_data(caminho: *const u8, a4: u32) -> u32 {
+unsafe extern "C" fn compare_save_game_data(caminho: *const u8, a4: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(*const u8, u32) -> u32>(%%I0%%)(caminho, a4)
 }

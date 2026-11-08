@@ -247,11 +247,11 @@ unsafe extern "thiscall" fn apply_squad_reaction_to_player_story(_this: usize, t
     squad_reaction_to_story_with(topico, jogador, clube, ids, n, &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
 
-/// Comparador: pela fita das portas do pós-jogo (comparar_pos): as desafeições (0x547af0), a marca (0x867560) e as
+/// Comparador: pela fita das portas do pós-jogo (compare_pos): as desafeições (0x547af0), a marca (0x867560) e as
 /// queixas (0x867700) rodam uma vez, na original, e a cópia confere a chamada e recebe o estado de depois. Regiões: o
 /// sorteador, [0xae1080], as seis pessoas do clube (+0x9b, a 0x547940), o contrato do jogador e, de cada pessoa do
 /// vetor, as preferências (+0x1c..+0x33), o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
-unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
+unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_story(this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(%%I0%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((0xae1080, 4));
@@ -270,7 +270,7 @@ unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: 
             reg.extend(contract_region(p, clube));
         }
     }
-    comparar_pos("apply_squad_reaction_to_player_story", reg, || o(this, topico, jogador, clube, ids, n),
+    compare_pos("apply_squad_reaction_to_player_story", reg, || o(this, topico, jogador, clube, ids, n),
         |chamar| squad_reaction_to_story_with(topico, jogador, clube, ids, n, chamar));
 }
 
@@ -358,7 +358,7 @@ unsafe extern "thiscall" fn warn_squad_of_position_rival(_this: usize, jogador: 
 
 /// Comparador: pela fita das portas do pós-jogo (a história 0x72c1f0 e a marca 0x867560 rodam só na original). Regiões:
 /// o sorteador, [0xae1080] e, de cada um dos 50 do elenco, o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
-unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(this: usize, jogador: usize, clube: usize, a: u32, b: u32) {
+unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this: usize, jogador: usize, clube: usize, a: u32, b: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((0xae1080, 4));
@@ -371,7 +371,7 @@ unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(this: usize, j
             }
         }
     }
-    comparar_pos("warn_squad_of_position_rival", reg, || o(this, jogador, clube, a, b), |chamar| warn_position_rivals_with(jogador, clube, chamar));
+    compare_pos("warn_squad_of_position_rival", reg, || o(this, jogador, clube, a, b), |chamar| warn_position_rivals_with(jogador, clube, chamar));
 }
 
 /// As respostas 1 e 2 de cada caso da tabela de saltos da 0x735160 (a 3ª, de todos, é "No Comment", 0xa27808); o caso
@@ -404,7 +404,7 @@ unsafe extern "stdcall" fn media_format_response_option_label(tipo: u32, opcao: 
 }
 
 /// Comparador: lado a lado nos primeiros bytes da saída (até 0x50, o maior rótulo tem 61).
-unsafe extern "stdcall" fn comparar_media_format_response_option_label(tipo: u32, opcao: u32, saida: usize, tamanho: u32) {
+unsafe extern "stdcall" fn compare_media_format_response_option_label(tipo: u32, opcao: u32, saida: usize, tamanho: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(%%I2%%);
     let reg = if saida != 0 && (tamanho as i16) >= 0xf { vec![(saida, (tamanho as u16 as usize).min(0x50))] } else { Vec::new() };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(tipo, opcao, saida, tamanho), || media_format_response_option_label(tipo, opcao, saida, tamanho));

@@ -318,7 +318,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
 /// o que a 0x8b2be0 grava) e na carga da ficha de forma (31 bytes por jogador em [[0xb63d28]], +0x1e), com os sorteios
 /// da cópia fora da contagem. Só a original: os casos de erro e o jogador com treino de posição (0x8b4b20 antes de
 /// rodar): ali a 0x8b4450, a marca do contrato (0x867700) e a 0x5885c0 mexem fora dessas regiões.
-unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usize, pular: u32) {
+unsafe extern "thiscall" fn compare_update_player_training(this: usize, p: usize, pular: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     if p == 0 || cqd8_i(p) >= cqd8_i(0xae2364) || cqd8_d(p + 0x61) == 0 {
         return o(this, p, pular);
@@ -375,7 +375,7 @@ unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize) -> usize 
 }
 
 /// Comparador: a devolução e [0xae1080] lado a lado; sem pessoa ou sem ficha (a caixa), só a original.
-unsafe extern "thiscall" fn comparar_get_player_schedule(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn compare_get_player_schedule(this: usize, p: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if p == 0 || cqd8_d(p + 0x61) == 0 {
         return o(this, p);
@@ -395,7 +395,7 @@ unsafe extern "thiscall" fn get_category_level(this: usize, categoria: u32) -> u
 }
 
 /// Comparador: a devolução inteira (só lê).
-unsafe extern "thiscall" fn comparar_get_category_level(this: usize, categoria: u32) -> u32 {
+unsafe extern "thiscall" fn compare_get_category_level(this: usize, categoria: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, categoria);
     let n = get_category_level(this, categoria);
     SCOREBOARD.record(r == n, || format!("get_category_level({:x}, {}) original={:x} rust={:x}", this, categoria as u8 as i8, r, n));

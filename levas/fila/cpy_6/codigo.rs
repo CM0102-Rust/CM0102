@@ -115,7 +115,7 @@ unsafe fn nation_coefficient_word(clube: usize) -> usize {
 /// 0x585ab0: o coeficiente dos classificados), que só roda quando a fase (+0x30) anda: aí, sem comparação. As
 /// finanças não entram (a base paga o prêmio da rodada da copa nos mesmos campos, 0x51a2fe); o prêmio segue o ramo do
 /// placar que os pontos do coeficiente já conferem. Sem clube, nação, seleção ou finanças: só a original.
-unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jogo: usize, arg: u32) {
+unsafe extern "thiscall" fn compare_process_fixture(this: usize, jogo: usize, arg: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let (a, b) = if jogo != 0 { (cpy6_d(jogo + 0x1c), cpy6_d(jogo + 0x20)) } else { (0, 0) };
     if a == 0 || b == 0 {
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn european_cup_set_club_progress(this: usize, clube: u
 
 /// Comparador da 0x586c00: lado a lado nos três bytes do registro do clube (+0x73..+0x75); sem registro (a original
 /// cai), só a original.
-unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(this: usize, clube: usize, fase: u32, p1: u32, p2: u32, p3: u32) {
+unsafe extern "thiscall" fn compare_european_cup_set_club_progress(this: usize, clube: usize, fase: u32, p1: u32, p2: u32, p3: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
     let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let e = buscar(cpy6_d(this + 8), clube);
@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, jogo: usize, 
     (units_digit(cpy6_w(jogo + 0x30) as i32) == 0) as u32
 }
 
-unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, outro: usize) -> u32 {
+unsafe extern "thiscall" fn compare_counts_for_fixture_clash(this: usize, jogo: usize, outro: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, jogo, outro);
     let n = counts_for_fixture_clash(this, jogo, outro);
     SCOREBOARD.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", cpy6_w(jogo + 0x30), r, n));

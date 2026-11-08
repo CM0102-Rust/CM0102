@@ -26,21 +26,21 @@ unsafe extern "thiscall" fn youngest_player_record_construct(this: usize) -> usi
     this
 }
 
-unsafe extern "thiscall" fn comparar_winless_run_record_construct(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_winless_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || winless_run_record_construct(this));
     SCOREBOARD.record(igual && r == n, || format!("winless_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_goals_in_match_record_construct(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_goals_in_match_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x21)], || o(this), || goals_in_match_record_construct(this));
     SCOREBOARD.record(igual && r == n, || format!("goals_in_match_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_youngest_player_record_construct(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_youngest_player_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || youngest_player_record_construct(this));
     SCOREBOARD.record(igual && r == n, || format!("youngest_player_record_construct {:x?} x {:x?}", mo, mr));

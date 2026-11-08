@@ -29,9 +29,9 @@ unsafe fn board_row_by_id(this: usize, id: u32) -> usize {
 
 /// O humor novo (`mov word`): ftol do float `f32(sorteio1 + q)` menos `sorteio2` (os dois de 0..499), em dupla precisão.
 unsafe fn roll_mood(q: f32) -> i16 {
-    let s1 = sortear(0x1f4);
+    let s1 = random(0x1f4);
     let base = (s1 as f64 + q as f64) as f32; // fstp dword
-    let s2 = sortear(0x1f4);
+    let s2 = random(0x1f4);
     match_pl_ftol(base as f64 - s2 as f64) as i16
 }
 
@@ -78,13 +78,13 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
         let r = cpp3_w(clube + 0x80) as i32;
         atual = if r != 0 { (r / 2) as f32 } else { 5000.0 };
     } else if (atual as f64) < read_f32_at(0x96d1a8) as f64 {
-        atual = (sortear(0x3e8) + 0x1f4) as f32;
+        atual = (random(0x3e8) + 0x1f4) as f32;
     }
     let d = cpp3_w(clube + 0x80) as i32;
     let divisor = if d as f64 == zero {
         atual as f64
     } else if (d as f64) < read_f32_at(0x96d1a8) as f64 {
-        (sortear(0x2ee) + 0xfa) as f64
+        (random(0x2ee) + 0xfa) as f64
     } else {
         d as f64
     };
@@ -100,17 +100,17 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
     cpp3_por_w(board_row_by_id(this, id) + 6, h);
     let c = cpp3_w(board_row_by_id(this, id) + 6);
     if c < 0x186a {
-        cpp3_por_w(board_row_by_id(this, id) + 6, (sortear(0x4e2) + 0x186a) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 6, (random(0x4e2) + 0x186a) as i16);
     } else if c > 0x251c {
-        cpp3_por_w(board_row_by_id(this, id) + 6, (0x2710 - sortear(0x1f4)) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 6, (0x2710 - random(0x1f4)) as i16);
     }
-    let s1 = sortear(0x1f4);
+    let s1 = random(0x1f4);
     let parcial = cpp3_w(board_row_by_id(this, id) + 6).wrapping_sub(s1 as i16);
-    let s2 = sortear(0x1f4);
+    let s2 = random(0x1f4);
     cpp3_por_w(board_row_by_id(this, id) + 8, parcial.wrapping_add(s2 as i16));
     let c = cpp3_w(board_row_by_id(this, id) + 8);
     if c < 0x186a {
-        cpp3_por_w(board_row_by_id(this, id) + 8, (sortear(0x4e2) + 0x186a) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 8, (random(0x4e2) + 0x186a) as i16);
     } else if c > 0x2710 {
         cpp3_por_w(board_row_by_id(this, id) + 8, 0x2710);
     }
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
     cpp3_por_w(board_row_by_id(this, id) + 0xa, h);
     let c = cpp3_w(board_row_by_id(this, id) + 0xa);
     if c < 0x1482 {
-        cpp3_por_w(board_row_by_id(this, id) + 0xa, (sortear(0xfa) + 0x1482) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 0xa, (random(0xfa) + 0x1482) as i16);
     } else if c > 0x2710 {
         cpp3_por_w(board_row_by_id(this, id) + 0xa, 0x2710);
     }
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
     cpp3_por_w(board_row_by_id(this, id) + 0xc, h);
     let c = cpp3_w(board_row_by_id(this, id) + 0xc);
     if c < 0x1676 {
-        cpp3_por_w(board_row_by_id(this, id) + 0xc, (sortear(0xfa) + 0x1676) as i16);
+        cpp3_por_w(board_row_by_id(this, id) + 0xc, (random(0xfa) + 0x1676) as i16);
     } else if c > 0x2710 {
         cpp3_por_w(board_row_by_id(this, id) + 0xc, 0x2710);
     }
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
     *((board_row_by_id(this, cpp3_d(clube)) + 1) as *mut u8) = band;
 }
 
-unsafe extern "thiscall" fn comparar_reset_board_for_new_manager(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_reset_board_for_new_manager(this: usize, clube: usize) {
     // ponytail: as expectativas (0x6a3770) postam notícia e o registro (0x869aa0) grava o histórico em arquivo: não
     // rodam duas vezes; só a original, a cópia prova pela carreira no modo Rust (o ramo)
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube)
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
         }
     }
     let e = board_row_by_id(this, id);
-    if cpp3_w(e + 0x12) < -750 && tipo != 1 && sortear(3) == 0 {
+    if cpp3_w(e + 0x12) < -750 && tipo != 1 && random(3) == 0 {
         crate::comparison::branch("cpp_3 motivo 2");
         return 2;
     }
@@ -263,20 +263,20 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
     }
     let humor = cpp3_w(e + 0xa);
     if humor < cpp3_w(e + 6) {
-        let a = sortear(cpp3_w(board_row_by_id(this, id) + 6) as i32);
-        let b = sortear(humor as i32);
+        let a = random(cpp3_w(board_row_by_id(this, id) + 6) as i32);
+        let b = random(humor as i32);
         if b < a {
             return 8;
         }
     }
-    if cpp3_w(board_row_by_id(this, id) + 0x16) < -750 && sortear(3) != 0 {
+    if cpp3_w(board_row_by_id(this, id) + 0x16) < -750 && random(3) != 0 {
         return 4;
     }
     let tecnico = cpp3_d(clube + 0xcf) as usize;
     if tecnico != 0 {
         let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
         let d = dias(0xae2c90, cpp3_d(tecnico + 0x3e), cpp3_d(tecnico + 0x42));
-        if d > sortear(0x7d0) + 0x3e8 {
+        if d > random(0x7d0) + 0x3e8 {
             return 6;
         }
     }
@@ -285,7 +285,7 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteador (a rotina sorteia em vários caminhos), pela devolução;
 /// a cópia sem contar os sorteios.
-unsafe extern "thiscall" fn comparar_get_departure_reason(this: usize, id: u32) -> u8 {
+unsafe extern "thiscall" fn compare_get_departure_reason(this: usize, id: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, id),
         || crate::rng::without_counting(|| get_departure_reason(this, id)));
@@ -438,7 +438,7 @@ unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: usize, criar
 
 /// Comparador: lado a lado pelo registro do técnico (e, quando a vaga é de outro, pelo registro que a original zera),
 /// pela devolução. Pessoa nula (a caixa) e o humano sem situação: só a original.
-unsafe extern "thiscall" fn comparar_get_manager_record(this: usize, pessoa: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn compare_get_manager_record(this: usize, pessoa: usize, criar: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if pessoa == 0 {
         return o(this, pessoa, criar);

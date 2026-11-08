@@ -27,7 +27,7 @@ unsafe fn database_add_to_preference_list(lista: usize, outra: usize, quem: usiz
     if forcar == 0 {
         return;
     }
-    let k = sortear(3);
+    let k = random(3);
     if (0..3).contains(&k) {
         *((lista + 4 * k as usize) as *mut usize) = quem;
     }
@@ -54,7 +54,7 @@ unsafe extern "C" fn club_add_favoured_staff(clube: usize, pessoa: usize, forcar
     database_add_to_preference_list(clube + 0x9b, clube + 0xa7, pessoa, list3_contains(clube + 0x9b, pessoa), forcar) // as favoritas do clube
 }
 
-unsafe extern "C" fn comparar_club_add_favoured_staff(clube: usize, pessoa: usize, forcar: u32) {
+unsafe extern "C" fn compare_club_add_favoured_staff(clube: usize, pessoa: usize, forcar: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
     let reg = preference_regions(if clube != 0 { clube + 0x9b } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, pessoa, forcar),
@@ -73,7 +73,7 @@ unsafe extern "C" fn club_add_disliked_staff(clube: usize, pessoa: usize, forcar
     database_add_to_preference_list(clube + 0xa7, clube + 0x9b, pessoa, list3_contains(clube + 0xa7, pessoa), forcar) // as rejeitadas do clube
 }
 
-unsafe extern "C" fn comparar_club_add_disliked_staff(clube: usize, pessoa: usize, forcar: u32) {
+unsafe extern "C" fn compare_club_add_disliked_staff(clube: usize, pessoa: usize, forcar: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I1%%);
     let reg = preference_regions(if clube != 0 { clube + 0x9b } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, pessoa, forcar),
@@ -97,7 +97,7 @@ unsafe extern "C" fn staff_add_favoured_staff(pessoa: usize, outra: usize, forca
     database_add_to_preference_list(pref + 0x1c, pref + 0x28, outra, list3_contains(pref + 0x1c, outra), forcar) // as favoritas da pessoa
 }
 
-unsafe extern "C" fn comparar_staff_add_favoured_staff(pessoa: usize, outra: usize, forcar: u32) {
+unsafe extern "C" fn compare_staff_add_favoured_staff(pessoa: usize, outra: usize, forcar: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I2%%);
     let pref = if pessoa != 0 { dbq1_u32(pessoa + 0x65) } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + 0x1c } else { 0 });

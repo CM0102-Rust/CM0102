@@ -107,17 +107,17 @@ unsafe extern "thiscall" fn bra_reg_parana_start_new_season(this: usize) -> u32 
     start_new_season_two_halves(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: o ano seguinte do Paranaense
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_rio_start_new_season(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_rio_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     compare_new_season("bra_reg_rio_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     compare_new_season("bra_reg_minas_gerais_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_parana_start_new_season(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_parana_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     compare_new_season("bra_reg_parana_start_new_season", this, || o(this))
 }

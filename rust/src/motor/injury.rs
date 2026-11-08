@@ -101,7 +101,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
     let w = |x: usize| (m + x) as *mut i16;
     let b = |q: usize, x: usize| (q + x) as *mut u8;
     let n = *w(0xf639);
-    if n > 3 && sortear(n as i32) != 0 && sortear(0x1f4) != 0 {
+    if n > 3 && random(n as i32) != 0 && random(0x1f4) != 0 {
         return;
     }
     if *w(0xf639) > 6 {
@@ -124,9 +124,9 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
         *b(p, 0x1c) = 1;
         *folego = (*folego as f64 - (c * c) as f64) as f32;
     } else {
-        local = sortear(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32; // 0x968968 = 0.5
+        local = random(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32; // 0x968968 = 0.5
         *folego = (*folego as f64 - local as f64) as f32;
-        let r = sortear(match_pl_ftol(local as f64 * read_f32_at(0x968f18) as f64)); // 0x968f18 = 0.5
+        let r = random(match_pl_ftol(local as f64 * read_f32_at(0x968f18) as f64)); // 0x968f18 = 0.5
         *((p + match_player::STAMINA_BOOST) as *mut f32) = r as f32;
         let d5 = (p + match_player::STAMINA_ATTRIBUTE) as *mut f32;
         *d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64) as f32; // 0x968f18 = 0.5
@@ -201,13 +201,13 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
         return f(m, kind, chance, p, o);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, MOTOR), (0xb67a34, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4)]);
     if o != 0 {
         reg.push((o + 0x31, 2));
     }
     reg.extend(injury_list_regions());
     let write = RECORD_INJURY.swap(true, Relaxed);
-    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || f(m, kind, chance, p, o), |chamar| {
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || f(m, kind, chance, p, o), |chamar| {
         injure_with(m, kind, chance, p, o, &mut |rotina, this, args| chamar(rotina, this, args, [0, u32::MAX, 0, 0, 0]))
     });
     RECORD_INJURY.store(write, Relaxed);
@@ -257,10 +257,10 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     let algum = |de: u32, ate: u32, data: &[u8; 8]| (de..=ate).any(|k| search(k as u16 as u32, data));
     let r = match c {
         0x219e => common() && (algum(0, 0x1d, &d7) || algum(0x1e, 0x27, &d7)),
-        0x219f => atuacao >= sortear(0x7d0) + 0x1b58 && algum(0, 0x1d, &d7),
+        0x219f => atuacao >= random(0x7d0) + 0x1b58 && algum(0, 0x1d, &d7),
         0x21a0 => {
             let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-            if days(today, *((sheet + player_sheet::TACKLING) as *const u32), *((sheet + player_sheet::VERSATILITY) as *const u32)) < 0x5a || atuacao <= sortear(0x7d0) + 0x1b58 {
+            if days(today, *((sheet + player_sheet::TACKLING) as *const u32), *((sheet + player_sheet::VERSATILITY) as *const u32)) < 0x5a || atuacao <= random(0x7d0) + 0x1b58 {
                 false
             } else {
                 let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MEDIA_HAS_RESPONSE_TWO_FOR_PLAYER);
@@ -275,24 +275,24 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
                 if goals <= 4 || *((p + match_player::SHOT_QUALITY) as *const i16) <= 0xfa {
                     false
                 } else {
-                    let r = sortear(6) + 12;
+                    let r = random(6) + 12;
                     in_field / goals < r && search(0x52, &d7)
                 }
             } else if goals >= 3 || goals == 0 {
                 false
             } else {
-                let r = sortear(0x19) + 0x32;
+                let r = random(0x19) + 0x32;
                 minute > r && in_field / goals > 0x1e && search(0x52, &d7)
             }
         }
-        0x21b0 => atuacao > sortear(1000) + 0x1f40 && search(0x34, &d7),
+        0x21b0 => atuacao > random(1000) + 0x1f40 && search(0x34, &d7),
         0x21b1 => common() && search(0x34, &d7),
         0x21b2 => common() && search(0x33, &d30),
-        0x21b3 => atuacao > sortear(1000) + 0x1f40 && search(0x33, &d30),
-        0x21b4 => atuacao >= sortear(0x7d0) + 0x1b58 && algum(0x28, 0x3b, &d7),
-        0x21b5 => atuacao > sortear(1000) + 0x1f40 && b(0x30) != 0,
+        0x21b3 => atuacao > random(1000) + 0x1f40 && search(0x33, &d30),
+        0x21b4 => atuacao >= random(0x7d0) + 0x1b58 && algum(0x28, 0x3b, &d7),
+        0x21b5 => atuacao > random(1000) + 0x1f40 && b(0x30) != 0,
         0x21b6 => {
-            let sim = atuacao > sortear(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
+            let sim = atuacao > random(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
             if sim {
                 crate::comparison::branch("destaque marca 21b5");
                 *((m + 0xbf2 + side as usize * 4000) as *mut u32) = 1;
@@ -302,12 +302,12 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         0x21b7 => b(0x30) != 0 && b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && in_field >= 0x37 && atuacao <= limit(in_field),
         0x21b8 => {
             atuacao < 0x1964
-                && (b(0x14) as u8 as i32) > sortear(3)
+                && (b(0x14) as u8 as i32) > random(3)
                 && player_table(p) & 4 != 0
-                && byte(*((p + match_player::PLAYER) as *const usize), 0x11) as i32 > sortear(4) + 0xf
+                && byte(*((p + match_player::PLAYER) as *const usize), 0x11) as i32 > random(4) + 0xf
                 && b(0xc) == 0
-                && (b(0x17) as i32) < sortear(6)
-                && in_field > sortear(0x32) + 0x1e
+                && (b(0x17) as i32) < random(6)
+                && in_field > random(0x32) + 0x1e
         }
         _ => true,
     };
@@ -1635,7 +1635,7 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
 }
 
 // simplification: the second-leg news (0x630ee0) allocates and the day’s fitness touches the random roll: original only; the copy takes the
-// branch. It is also the checkpoint of the training stage on the injuries day (comparar_injury_daily_update).
+// branch. It is also the checkpoint of the training stage on the injuries day (compare_injury_daily_update).
 
 /// (id, person) of a 0x49-byte match slot (id at -0x30), or None when no id or out of range.
 ///
@@ -2677,7 +2677,7 @@ pub(crate) unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, m
     }
 }
 
-comparar_valor!(comparar_table_penalty, table_penalty, IDX_TABLE_PENALTY, (linha: i32, coluna: i8, tipo: i8) -> i32);
+compare_value!(compare_table_penalty, table_penalty, IDX_TABLE_PENALTY, (linha: i32, coluna: i8, tipo: i8) -> i32);
 
 /// Returns the player's condition: fitness × match condition / 10,000 (minimum 100, maximum 9000 while recovering), or
 /// as a percentage (maximum 100).

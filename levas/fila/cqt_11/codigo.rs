@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn oceania_club_champ_select_qualified_clubs(this: usiz
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 8 vagas e liberada.
-unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: usize) {
 
 // ponytail: as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da
 // última fase, que dá a caixa e não muda nada).
-unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_oceania_club_champ_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let f = cqt11_d(this + 0x30) as i32;
     let ultima = f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1);
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize
 
 // ponytail: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4 times,
 // o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: a rodada pode reordenar).
-unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(this: usize) {
+unsafe extern "thiscall" fn compare_oceania_club_champ_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqt11_d(this + 0xb1) == 0 || cqt11_d(this + 0xc) == 0 || cqt11_d(cqt11_d(this + 0xc)) == 0 {
         return o(this);

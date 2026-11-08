@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn cqw5_supercopa_asiatica(this: usize, ano: u32, dono:
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqw5_plano).
-unsafe extern "thiscall" fn comparar_cqw5_supercopa_asiatica(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw5_supercopa_asiatica(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x9676c8, &CQW5_CAMPOS_SUPERCOPA_ASIATICA, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqw5_supercopa_asiatica({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn cqw5_copa_interamericana(this: usize, ano: u32, dono
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqw5_plano).
-unsafe extern "thiscall" fn comparar_cqw5_copa_interamericana(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw5_copa_interamericana(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x96bad8, &CQW5_CAMPOS_COPA_INTERAMERICANA, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqw5_copa_interamericana({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn cqw5_copa_mercosul(this: usize, ano: u32, dono: usiz
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqw5_plano).
-unsafe extern "thiscall" fn comparar_cqw5_copa_mercosul(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw5_copa_mercosul(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x968b40, &CQW5_CAMPOS_COPA_MERCOSUL, false);
     SCOREBOARD.record(erro.is_none(), || format!("cqw5_copa_mercosul({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -296,7 +296,7 @@ unsafe extern "thiscall" fn cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: 
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqw5_plano).
-unsafe extern "thiscall" fn comparar_cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x9708f8, &CQW5_CAMPOS_JOGO_DAS_ESTRELAS, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqw5_jogo_das_estrelas({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));

@@ -153,7 +153,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
 }
 
 // ponytail: sorteia e a falta (0x41a360) multa, sorteia e mexe na forma: só a original; a cópia leva os ramos.
-unsafe extern "C" fn comparar_game_check_players_missing_training() {
+unsafe extern "C" fn compare_game_check_players_missing_training() {
     original_fn::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
@@ -179,7 +179,7 @@ unsafe extern "C" fn game_update_comps_for_date(marca: u32) {
 }
 
 // ponytail: passa o dia de todas as competições (virtuais) e do [0xae2a58]: só a original; a cópia leva o ramo.
-unsafe extern "C" fn comparar_game_update_comps_for_date(marca: u32) {
+unsafe extern "C" fn compare_game_update_comps_for_date(marca: u32) {
     original_fn::<unsafe extern "C" fn(u32)>(%%I1%%)(marca)
 }
 
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(this: usize,
 }
 
 /// Comparador: lado a lado pela confiança (2 bytes).
-unsafe extern "thiscall" fn comparar_manager_manager_adjust_board_confidence(this: usize, clube: usize, delta: u32) {
+unsafe extern "thiscall" fn compare_manager_manager_adjust_board_confidence(this: usize, clube: usize, delta: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     if clube == 0 {
         return o(this, clube, delta);

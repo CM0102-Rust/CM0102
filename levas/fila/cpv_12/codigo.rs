@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn schedule_assign_opponent(_this: usize, agenda: usize
 /// Comparador: lado a lado pela devolução e pelo motivo (a original no destino, a cópia num destino próprio do mesmo
 /// tamanho). As duas andam o cursor da lista [this] do mesmo jeito; a busca de jogos do dia monta e libera uma lista
 /// local (sem estado que fique). Sem nação ou destino curto (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
+unsafe extern "thiscall" fn compare_national_teams_can_change_squad(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, i32) -> u32>(%%I0%%);
     if nacao == 0 || (msg != 0 && tam < 0x32) {
         return o(this, nacao, tipo, p, entrando, msg, tam);
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize
 }
 
 /// Comparador: pura.
-unsafe extern "stdcall" fn comparar_national_teams_player_in_squad(p: usize, nacao: usize, tipo: u32) -> u32 {
+unsafe extern "stdcall" fn compare_national_teams_player_in_squad(p: usize, nacao: usize, tipo: u32) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I1%%)(p, nacao, tipo);
     let n = national_teams_player_in_squad(p, nacao, tipo);
     SCOREBOARD.record(r == n, || format!("national_teams_player_in_squad({:x}, {:x}, {}) original={} rust={}", p, nacao, tipo as u8, r, n));
@@ -217,7 +217,7 @@ unsafe extern "stdcall" fn comparar_national_teams_player_in_squad(p: usize, nac
 }
 
 /// Comparador: lado a lado pelas vagas da agenda (até a última possível, 25 · (n + 1) + 4 bytes).
-unsafe extern "thiscall" fn comparar_schedule_assign_opponent(this: usize, agenda: usize, adversario: usize) {
+unsafe extern "thiscall" fn compare_schedule_assign_opponent(this: usize, agenda: usize, adversario: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
     let n = cpv12_b(agenda + 8) as i8;
     if n <= 0 {

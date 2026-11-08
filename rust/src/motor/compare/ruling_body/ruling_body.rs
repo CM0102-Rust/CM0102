@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `make_points_ban` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
-pub(crate) unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_MAKE_POINTS_BAN);
     let regions = [(r, 0x70)];
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, r, j, by_games), || make_points_ban(this, r, j, by_games));
@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: 
 }
 
 /// Comparer for `ruling_body_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ruling_body_start_new_season(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_ruling_body_start_new_season(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RULING_BODY_START_NEW_SEASON)(this);
 }
 
@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ruling_body_start_new_season(thi
 ///
 /// [pt] Comparador: a original realoca (não pode rodar duas vezes): as entradas ocupadas copiadas antes; roda só a
 /// original e confere a conta, a capacidade e as entradas na nova ordem.
-pub(crate) unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_compact_entries(this: usize) {
     let mut expected: Vec<u8> = Vec::new();
     let base = read_u32_as_usize(this + 0xb);
     for k in 0..read_i32(this + 0x13).max(0) as usize {

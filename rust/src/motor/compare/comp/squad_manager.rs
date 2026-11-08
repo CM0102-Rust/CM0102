@@ -8,7 +8,7 @@ use super::*;
 /// [pt] Lado a lado: o ano das inscrições (+0), a marca +0x6d de todas as pessoas com contrato (a tabela inteira) e o
 /// [0xae1080] da 0x85aae0. Com algum clube das três copas com técnico humano (a notícia não roda duas vezes), só a
 /// original.
-pub(crate) unsafe extern "thiscall" fn comparar_process_euro_registration(this: usize, etapa: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_process_euro_registration(this: usize, etapa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_PROCESS_EURO_REGISTRATION);
     let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     let mut has_human = false;
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_euro_registration(this: 
 /// Comparer for `get_squad_number` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] A devolução das duas (a rotina só lê; as chamadas de dentro são buscas).
-pub(crate) unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p: usize, c: usize) -> i8 {
+pub(crate) unsafe extern "thiscall" fn compare_get_squad_number(this: usize, p: usize, c: usize) -> i8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(IDX_GET_SQUAD_NUMBER);
     let r = o(this, p, c);
     let n = get_squad_number(this, p, c);
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p:
 /// Comparer for `club_uses_squad_numbers` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
-pub(crate) unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usize, other: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_club_uses_squad_numbers(this: usize, c: usize, other: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CLUB_USES_SQUAD_NUMBERS);
     if c == 0 {
         return o(this, c, other);
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: us
 ///
 /// [pt] Lado a lado: o +0x3a dos dois contratos da pessoa (achados antes; as buscas só leem). Número fora da faixa (a caixa),
 /// sem pessoa ou sem clube: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_SET_SQUAD_NUMBER);
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p:
 /// [pt] Lado a lado: o +0x3a dos dois contratos da pessoa (a única que a rotina numera) e a marca da caixa. Quando nenhuma
 /// posição da ficha é boa, a original lê a lista de preferidos de 4 bytes sem valor na pilha (sobra de quem chamou):
 /// a cópia usa a lista vazia (um valor que o jogo produz quando a sobra é 0xff) e o comparador deixa só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usize, c: usize, p: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_allocate_squad_number(this: usize, c: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ALLOCATE_SQUAD_NUMBER);
     if p == 0 || read_u32(p + staff::PLAYER) == 0 || preferred_squad_numbers(read_u32(p + staff::PLAYER) as usize).is_none() {
         return o(this, c, p);
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usiz
 ///
 /// [pt] Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
-pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: usize, keep: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_assign_club_squad_numbers(this: usize, c: usize, keep: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CLUB_SQUAD_NUMBERS);
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut ps: Vec<usize> = (0..50).map(|k| read_u32(c + club::SQUAD + 4 * k) as usize).collect();
@@ -130,7 +130,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: 
 /// [pt] Só a original (ela numera as ligas pela 0x859e20, que manda notícia ao técnico humano: não roda duas vezes); o plano
 /// da cópia (as ligas, achadas antes, sem numerar) tem de ser o que a original fez (gravado pelo comparador da
 /// 0x859e20) e o +0 zerado.
-pub(crate) unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_init_new_game(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INIT_NEW_GAME);
     let mut plan = Vec::new();
     for_each_numbered_league(|c| plan.push(c));
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
 /// [pt] Lado a lado: o +0x3a dos contratos (o do clube e o de empréstimo) de quem está no elenco de cada clube da liga e
 /// no do clube ligado, e a marca da caixa. Com algum clube de técnico humano sem `automatico` (a notícia do pedido não
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
-pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, league: usize, initial: u32, automatico: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this: usize, league: usize, initial: u32, automatico: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_ASSIGN_LEAGUE_SQUAD_NUMBERS);
     if let Some(v) = (*core::ptr::addr_of_mut!(SQUAD_NUMBERS_PLAN)).as_mut() {
         v.push(league);
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
 ///
 /// [pt] Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize, c: usize, etapa: u32, mark: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_select_euro_registered_players(this: usize, c: usize, etapa: u32, mark: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(IDX_SELECT_EURO_REGISTERED_PLAYERS);
     let squad: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let mut sq = [0usize; 50];
@@ -224,7 +224,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_euro_registered_players(t
 /// Comparer for `squad_manager_save` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x859cc0: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_squad_manager_save(this: usize, save: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_squad_manager_save(this: usize, save: usize) -> u32 {
     // simplification: writes to the save container (cannot run twice); the copy is proven by the save proof
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SQUAD_MANAGER_SAVE)(this, save)
 }

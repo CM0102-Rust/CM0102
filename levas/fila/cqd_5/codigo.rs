@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
 /// O comparador do dia da liga: só a original (ponytail: chama os métodos de cada fase e da liga, as notícias, os
 /// recordes e os jogos para a TV, que mexem no calendário: não roda duas vezes). Confere o que a rotina garante: 0 só
 /// com a liga parada ou sem clubes e, completo, +0xd1 com a data.
-unsafe extern "thiscall" fn comparar_league_update_for_date(this: usize, data: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_league_update_for_date(this: usize, data: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let parada = cqd5_b(this + 0xb5) != 0 || cqd5_d(this + 0x45) == 0;
     let r = o(this, data, completo);
@@ -436,7 +436,7 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
 /// O comparador da criação dos jogos: só a original (ponytail: aloca a grade, sorteia a ordem dos clubes e põe os
 /// jogos no calendário, que aloca: não roda duas vezes). Confere o que a rotina garante: com a lista própria do ano, ela
 /// é liberada (+0xea = 0) quando devolve 1.
-unsafe extern "thiscall" fn comparar_create_fixtures(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqd5_d(this + 0xea);
     let propria = lista != 0 && cqd5_w(this + 0x40) as i32 == cqd5_w(lista + 2) as u16 as i32;
@@ -549,6 +549,6 @@ unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, acima: usize
 
 /// O comparador da promoção e do rebaixamento: só a original (ponytail: os contratos, o técnico demitido e as notícias
 /// não rodam duas vezes); a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
+unsafe extern "thiscall" fn compare_league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(%%I2%%)(ecx, acima, abaixo, contratos, aos_pares, sobem, descem)
 }

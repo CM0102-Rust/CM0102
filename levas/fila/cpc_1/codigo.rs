@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut u16, pdia:
     f
 }
 
-unsafe extern "thiscall" fn comparar_find_next_fixture(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
+unsafe extern "thiscall" fn compare_find_next_fixture(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, fase: i32, clube_a: i32, clube_b: i32, a9: u32, a10: u32, a11: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(%%I0%%);
     let antes = (*pano, *pdia, *pfatia);
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn is_stadium_in_use(this: usize, estadio: usize, dia: 
     0
 }
 
-comparar_valor!(comparar_is_stadium_in_use, is_stadium_in_use, %%I1%%, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
+compare_value!(compare_is_stadium_in_use, is_stadium_in_use, %%I1%%, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
 
 /// { 0x5cbdd0 } (thiscall, ret 4, friendly.cpp): `friendly_international_date_resolve(ano)`: a data (+3) da entrada
 /// de data internacional `this` pela 0x54a130 (Date.cpp: dia, mês, ano, dia da semana) com o dia (+1) e o dia da
@@ -193,7 +193,7 @@ unsafe fn call_original_with_year(o: usize, this: usize, ano: u32) -> u32 {
     r
 }
 
-unsafe extern "thiscall" fn comparar_friendly_international_date_resolve(this: usize, ano: u32) -> u32 {
+unsafe extern "thiscall" fn compare_friendly_international_date_resolve(this: usize, ano: u32) -> u32 {
     let o = original_fn::<usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 11)], || call_original_with_year(o, this, ano),
         || friendly_international_date_resolve(this, ano));

@@ -278,7 +278,7 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
 }
 
 // ponytail: chama originais que sorteiam, alocam notícias e mexem nos contratos: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_process_club_finance_events(this: usize, clube: usize, semana: u32) {
+unsafe extern "thiscall" fn compare_process_club_finance_events(this: usize, clube: usize, semana: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, semana)
 }
 
@@ -370,7 +370,7 @@ unsafe fn compare_finance_event(nome: &str, fin: usize, original: impl FnOnce() 
     r
 }
 
-unsafe extern "thiscall" fn comparar_try_board_debt_payment(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn compare_try_board_debt_payment(this: usize, clube: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     compare_finance_event("try_board_debt_payment", fin, || o(this, clube, fin), || try_board_debt_payment(this, clube, fin))
 }
@@ -451,7 +451,7 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
     1
 }
 
-unsafe extern "thiscall" fn comparar_try_cash_injection(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn compare_try_cash_injection(this: usize, clube: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
     compare_finance_event("try_cash_injection", fin, || o(this, clube, fin), || try_cash_injection(this, clube, fin))
 }

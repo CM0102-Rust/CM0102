@@ -280,7 +280,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
 /// elenco (0x4cbd20) sorteiam e alocam (não podem rodar duas vezes): só a original roda. Confere o que a rotina garante
 /// antes de qualquer sorteio: os bônus que cada clube paga (+0x138 das finanças soma o total previsto pelas mesmas
 /// regras da cópia, calculado antes). A cópia é provada pelos ramos e pelas mutações na carreira.
-unsafe extern "thiscall" fn comparar_update_after_match(this: usize, jogo: usize, resumo: usize) {
+unsafe extern "thiscall" fn compare_update_after_match(this: usize, jogo: usize, resumo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if cqa8_b(jogo + 0x40) == 0 || cqa8_b(jogo + 0x41) == 0 {
         return o(this, jogo, resumo);
@@ -328,7 +328,7 @@ unsafe extern "stdcall" fn contract_manager_get_player_morale(pessoa: usize) -> 
     (pessoa as u32 & 0xffff_ff00) | *((cqa8_d(pessoa + 0x61) + 0x45) as *const u8) as u32
 }
 
-unsafe extern "stdcall" fn comparar_contract_manager_get_player_morale(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn compare_contract_manager_get_player_morale(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%)(pessoa);
     let n = contract_manager_get_player_morale(pessoa);
     SCOREBOARD.record(r == n, || format!("contract_manager_get_player_morale({:x}) original={:#x} rust={:#x}", pessoa, r, n));
@@ -365,7 +365,7 @@ unsafe extern "stdcall" fn contract_manager_write_morale_text(pessoa: usize, sai
 
 /// Comparador: a original escreve a palavra; a cópia escreve de novo (o texto se sobrescreve) e as duas têm de bater;
 /// fica o texto da original.
-unsafe extern "stdcall" fn comparar_contract_manager_write_morale_text(pessoa: usize, saida: usize, x: u32) {
+unsafe extern "stdcall" fn compare_contract_manager_write_morale_text(pessoa: usize, saida: usize, x: u32) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I2%%)(pessoa, saida, x);
     let r = c_string_bytes(saida);
     contract_manager_write_morale_text(pessoa, saida, x);

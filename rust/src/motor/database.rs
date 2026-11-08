@@ -125,15 +125,15 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     let t = d(c20, 0xd3);
                     if ok && t != 0 && d(t, 0x69) != 0 {
                         let x = d(t, 0x69);
-                        let r1 = sortear(conhecer(x, byte(x, 0x17) as u8 as u32) as i32);
-                        if r1 > sortear(0x14) && byte(x, 0x14) > 5 {
+                        let r1 = random(conhecer(x, byte(x, 0x17) as u8 as u32) as i32);
+                        if r1 > random(0x14) && byte(x, 0x14) > 5 {
                             crate::comparison::branch("match_wrap_up proposta aceita");
                             mark(1, *(t as *const u32));
                             event(call, e);
                         } else {
                             let rep = injury_word_0c();
-                            let r = sortear(1000);
-                            let strength = w(club_ev(), 0x80) as i32 - r + sortear(1000);
+                            let r = random(1000);
+                            let strength = w(club_ev(), 0x80) as i32 - r + random(1000);
                             if rep as i32 > strength || rep > 7000 {
                                 mark(0, u32::MAX);
                                 event(call, e);
@@ -146,12 +146,12 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     let t = d(c1c, 0xd3);
                     if ok && t != 0 && d(t, 0x69) != 0 {
                         let x = d(t, 0x69);
-                        if sortear(conhecer(x, byte(x, 0x17) as u8 as u32) as i32) > 5 && byte(x, 0x14) > 5 {
+                        if random(conhecer(x, byte(x, 0x17) as u8 as u32) as i32) > 5 && byte(x, 0x14) > 5 {
                             crate::comparison::branch("match_wrap_up proposta aceita");
                             mark(1, *(t as *const u32));
                             event(call, e);
                         } else {
-                            if injury_word_0c() > w(club_ev(), 0x80) && sortear(4) == 0 {
+                            if injury_word_0c() > w(club_ev(), 0x80) && random(4) == 0 {
                                 mark(0, u32::MAX);
                             }
                             event(call, e);
@@ -173,7 +173,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                             crate::comparison::branch("match_wrap_up evento tipo 6");
                             byte(p, match_player::YELLOW_CARDS) == 2 || byte(p, 0x23) != 0
                         } else {
-                            byte(p, match_player::MATCH_GRADE) < 7 && sortear(byte(p, match_player::MATCH_FORM) as i32) == 0
+                            byte(p, match_player::MATCH_GRADE) < 7 && random(byte(p, match_player::MATCH_FORM) as i32) == 0
                         };
                         if vale {
                             crate::comparison::branch("match_wrap_up evento do jogador");
@@ -213,16 +213,16 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                         && partida() != 0
                         && byte(partida(), 0x40) != 0
                     {
-                        let r1 = sortear(match_pl_ftol(read_f32_at(p + match_player::CONFIDENCE) as f64));
-                        if r1 > sortear(100) {
-                            let r3 = sortear(byte(person, 0x5d) as i32);
-                            if r3 < sortear(10) {
+                        let r1 = random(match_pl_ftol(read_f32_at(p + match_player::CONFIDENCE) as f64));
+                        if r1 > random(100) {
+                            let r3 = random(byte(person, 0x5d) as i32);
+                            if r3 < random(10) {
                                 let f = read_f32_at(p + match_player::STAMINA);
-                                if ((sortear(0x5dc) + 0x1d4c) as f64) < f as f64 {
+                                if ((random(0x5dc) + 0x1d4c) as f64) < f as f64 {
                                     let b5b = byte(person, 0x5b);
                                     if b5b < 6 && byte(person, 0x57) > 10 {
-                                        let r6 = sortear(byte(person, 0x57) as i32);
-                                        if sortear(b5b as i32) < r6 {
+                                        let r6 = random(byte(person, 0x57) as i32);
+                                        if random(b5b as i32) < r6 {
                                             crate::comparison::branch("match_wrap_up pede para sair");
                                             let mut ev = [0u8; 0x19];
                                             ev[..4].copy_from_slice(&(*(person as *const u32)).to_le_bytes());
@@ -255,8 +255,8 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     }
                     let (a, b, c) = (byte(person, 0x5a) as i32, byte(person, 0x5b), byte(person, 0x5d));
                     if b < 6 && c < 10 {
-                        let r1 = sortear((a * b as i32 * c as i32 + 0x14) * 100);
-                        if r1 < sortear(x + 0x32) {
+                        let r1 = random((a * b as i32 * c as i32 + 0x14) * 100);
+                        if r1 < random(x + 0x32) {
                             crate::comparison::branch("match_wrap_up insatisfeito");
                             let mut ev = [0u8; 0x19];
                             ev[..4].copy_from_slice(&(*(person as *const u32)).to_le_bytes());
@@ -354,7 +354,7 @@ pub(crate) fn zero_stack_below() {
 /// eventos dela (+0xe e +0xf mudam).
 pub(crate) unsafe fn wrap_up_regions(m: usize) -> Vec<(usize, usize)> {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, MOTOR), (0xb67a34, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4)]);
     let list = *((m + engine::EVENT_LIST) as *const usize);
     if list != 0 {
         reg.push((list, 0xe));
@@ -444,7 +444,7 @@ pub(crate) unsafe extern "C" fn free_record() -> usize {
                 *(G_EMPTY_COMMON_NAME_INDEX as *mut i32) = k;
                 return base().wrapping_add(k as usize * 60);
             }
-            None => i = sortear(n),
+            None => i = random(n),
         }
     }
     base().wrapping_add((i as usize).wrapping_mul(60))
@@ -3112,7 +3112,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     let b = |k: usize| signed_byte_at(j(), k);
     let m = |kind: u32, attribute: u32| player_stat_average(person, kind, attribute);
     let mut f = natural_position_bits(j(), [1, 4, 2, 8, 0x10, 0x20, 0x40], 0);
-    let r = sortear(3);
+    let r = random(3);
     let id = read_usize(person) as u32;
     let nibble = (*(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(79) as usize).wrapping_add(0xb) as *const u8) & 0xf) as i32;
     if nibble > r && read_usize(G_TRANSFER_MANAGER) != 0 && away(read_usize(G_TRANSFER_MANAGER), person, 0) == 0 {
@@ -3121,7 +3121,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     if j() != 0 && (0x10..=0x19).map(b).sum::<i32>() > 110 {
         f += 0x80;
     }
-    if b(0x3c) > sortear(3) + 15 {
+    if b(0x3c) > random(3) + 15 {
         f += 0x100;
     }
     let mut adjust = 0i32;
@@ -3133,7 +3133,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
         let x = (m(2, 5) * read_f32_at(0x969560) as f64) as f32; // fstp dword; 0x969560 = 50
         adjust = adjust.wrapping_add(match_pl_ftol(x as f64 / m(2, 1)));
     }
-    if b(0x37).wrapping_add(adjust) > sortear(50) {
+    if b(0x37).wrapping_add(adjust) > random(50) {
         f += 0x200;
     }
     let v14 = m(2, 0xe);
@@ -3141,13 +3141,13 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     if v14 > read_f64_at(0x968f10) { // 0x968f10 = 8
         f += 0x800000;
     }
-    if b(0x39) > sortear(50) && b(0x3e) > sortear(50) {
+    if b(0x39) > random(50) && b(0x3e) > random(50) {
         let mut sim = false;
         if v14f as f64 > read_f64_at(0x9689a0) { // 0x9689a0 = 0
-            let r = sortear(10) + 5;
+            let r = random(10) + 5;
             sim = match_pl_ftol(v14f as f64) as i8 as i32 > r;
         }
-        if !sim && computed_player_attribute(person, 0x17) > sortear(5) + 15 {
+        if !sim && computed_player_attribute(person, 0x17) > random(5) + 15 {
             let x = m(2, 7) * read_f64_at(0x968f50); // fstp qword; 0x968f50 = 150
             sim = m(2, 0x16) > x;
         }
@@ -3156,21 +3156,21 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
         }
     }
     for (k, bit) in [(0x2e, 0x800), (0x40, 0x1000), (0x44, 0x2000)] {
-        if b(k) > sortear(5) + 15 {
+        if b(k) > random(5) + 15 {
             f += bit;
         }
     }
     for (a, bit) in [(4, 0x4000), (0xd, 0x20000), (0x14, 0x100000), (0x15, 0x200000), (1, 0x400000)] {
-        if computed_player_attribute(person, a) > sortear(5) + 15 {
+        if computed_player_attribute(person, a) > random(5) + 15 {
             f += bit;
         }
     }
-    if b(0x21) > sortear(3) + 16 {
+    if b(0x21) > random(3) + 16 {
         f += 0x8000;
     }
-    if computed_player_attribute(person, 0xb) > sortear(4) + 14 {
+    if computed_player_attribute(person, 0xb) > random(4) + 14 {
         let x = m(2, 0xf); // fstp qword
-        let r = sortear(20);
+        let r = random(20);
         if !(r as f64 * read_f64_at(0x967880) + read_f64_at(0x968eb0) >= x) { // 0x967880 = 0.1, 0x968eb0 = 7.5
             f += 0x10000;
         }
@@ -3180,7 +3180,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     if !(limit as f64 >= v) {
         let a = m(6, 2) as f32;
         let c = m(6, 1) as f32;
-        let r = sortear(3);
+        let r = random(3);
         if !((r as f64 * read_f64_at(0x967880) + read_f64_at(0x968968)) * c as f64 >= a as f64) { // 0x967880 = 0.1, 0x968968 = 0.5
             f += 0x40000;
         }
@@ -3230,7 +3230,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     let b = |k: usize| signed_byte_at(j(), k);
     let m = |kind: u32, attribute: u32| player_stat_average(person, kind, attribute);
     let mut f = natural_position_bits(j(), [0, 0x20, 0x10, 0x40, 0x80, 0x100, 0x200], 0x800000);
-    if (*((person + staff::TEMPERAMENT) as *const i8) as i32) < sortear(4) + 5 && (b(0x1c) > 15 || b(0x25) < 6) {
+    if (*((person + staff::TEMPERAMENT) as *const i8) as i32) < random(4) + 5 && (b(0x1c) > 15 || b(0x25) < 6) {
         let a = (m(2, 0xb) * read_f32_at(0x969584) as f64) as f32; // fstp dword; 0x969584 = 3
         let s = (m(2, 0xa) + a as f64) as f32; // fstp dword
         if !(m(2, 1) * read_f32_at(0x968f18) as f64 >= s as f64) { // 0x968f18 = 0.5
@@ -3239,13 +3239,13 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     }
     let mut n = 4;
     let w = word(read_usize(G_INJURY), read_usize(person) as i32) as i16 as i32;
-    if w > sortear(1000) + 500 {
+    if w > random(1000) + 500 {
         n = 8;
     }
-    if b(0x34) < sortear(12) {
+    if b(0x34) < random(12) {
         n += 3;
     }
-    if b(0x3c) < sortear(n) + 8 && b(0xf) < 20 {
+    if b(0x3c) < random(n) + 8 && b(0xf) < 20 {
         f += 2;
     }
     let tactic = read_usize(G_TACTICS);
@@ -3254,7 +3254,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
         let formation = formation_of(tactic, club, 0);
         let home = home_of(formation, (club as u32 & !0xff) | slot as u32, 0); // the argument with the slot byte
         let x = rating(person, home as u32, 0x800, 0, -1, 0);
-        if x < sortear(40) + 150 {
+        if x < random(40) + 150 {
             f += 4;
         }
     }
@@ -3267,14 +3267,14 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
         let x = (m(2, 5) * read_f32_at(0x969580) as f64) as f32; // fstp dword; 0x969580 = -50
         adjust = adjust.wrapping_add(match_pl_ftol(x as f64 / m(2, 1)));
     }
-    if b(0x37) < sortear(-50).wrapping_add(adjust) {
+    if b(0x37) < random(-50).wrapping_add(adjust) {
         f += 0x400;
     }
-    if b(0x39) < sortear(-50) && b(0x3e) < sortear(-50) {
+    if b(0x39) < random(-50) && b(0x3e) < random(-50) {
         let v = m(2, 0xe);
         let vf = v as f32; // fst dword
         if v > read_f64_at(0x9689a0) { // 0x9689a0 = 0
-            let r = sortear(10);
+            let r = random(10);
             if (match_pl_ftol(vf as f64) as i8 as i32) < r {
                 f += 0x800;
             }
@@ -3283,44 +3283,44 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     let bd = read_usize(G_INJURY);
     if bd != 0 {
         let w = word(bd, read_usize(person) as i32) as i16 as i32;
-        if w > sortear(500) + 750 {
+        if w > random(500) + 750 {
             f += 8;
         }
     }
-    if b(0x2e) < sortear(15) {
+    if b(0x2e) < random(15) {
         f += 0x1000;
     }
     if b(0xf) < 20 { // the outfield players
-        if b(0x40) < sortear(10) {
+        if b(0x40) < random(10) {
             f += 0x2000;
         }
-        if b(0x44) < sortear(12) {
+        if b(0x44) < random(12) {
             f += 0x4000;
         }
     }
-    if b(0x1e) < sortear(-50) {
+    if b(0x1e) < random(-50) {
         f += 0x8000;
     }
-    if b(0xf) < 20 && b(0x25) + b(0x1c) > sortear(20) + 25 {
+    if b(0xf) < 20 && b(0x25) + b(0x1c) > random(20) + 25 {
         f += 0x10000;
     }
-    if b(0x21) < 12 - sortear(10) {
+    if b(0x21) < 12 - random(10) {
         f += 0x20000;
     }
-    if b(0x11) < 15 && computed_player_attribute(person, 0xb) > sortear(4) + 14 {
+    if b(0x11) < 15 && computed_player_attribute(person, 0xb) > random(4) + 14 {
         let v = m(2, 0xf);
         let vf = v as f32; // fst dword
         if v > read_f64_at(0x9689a0) && computed_player_attribute(person, 0xb) as f64 * read_f64_at(0x969578) > vf as f64 { // 0x9689a0 = 0, 0x969578 = 0.28
             f += 0x40000;
         }
     }
-    if b(0x28) > sortear(5) + 13 {
+    if b(0x28) > random(5) + 13 {
         f += 0x80000;
     }
     if m(2, 0x16) > read_f32_at(0x969570) as f64 { // 0x969570 = 180
         let a = computed_player_attribute(person, 0xc);
         let t = (m(2, 0x10) + a as f64 - read_f32_at(0x968a78) as f64) as f32; // fstp dword; 0x968a78 = 10
-        if (sortear(20) + 20) as f64 > t as f64 {
+        if (random(20) + 20) as f64 > t as f64 {
             let x = m(6, 2); // fstp qword
             if m(6, 1) * read_f64_at(0x969510) > x { // 0x969510 = 0.35
                 f += 0x100000;
@@ -3768,7 +3768,7 @@ pub(crate) unsafe fn database_add_to_preference_list(list: usize, other: usize, 
     if force == 0 {
         return;
     }
-    let k = sortear(3);
+    let k = random(3);
     if (0..3).contains(&k) {
         *((list + 4 * k as usize) as *mut usize) = who;
     }
@@ -3881,7 +3881,7 @@ pub(crate) unsafe extern "C" fn staff_add_disliked_club(person: usize, club: usi
     if force == 0 {
         return;
     }
-    let k = sortear(3);
+    let k = random(3);
     if (0..3).contains(&k) {
         *((list + 4 * k as usize) as *mut usize) = club;
     }
@@ -3906,13 +3906,13 @@ pub(crate) unsafe extern "C" fn staff_fade_staff_relationships(person: usize) {
     let pref = read_usize(person + staff::STAFF_PREFERENCES);
     for k in 0..3 {
         let v = pref + preferences::STAFF_FAVOURITE_STAFF1 + 4 * k;
-        if read_usize(v) != 0 && sortear(*((person + staff::LOYALITY) as *const i8) as i32 + 15) == 0 { // the favorites
+        if read_usize(v) != 0 && random(*((person + staff::LOYALITY) as *const i8) as i32 + 15) == 0 { // the favorites
             *(v as *mut usize) = 0;
         }
     }
     for k in 0..3 {
         let v = pref + preferences::STAFF_DISLIKED_STAFF1 + 4 * k;
-        if read_usize(v) != 0 && sortear(35 - *((person + staff::TEMPERAMENT) as *const i8) as i32) == 0 { // the rejected ones
+        if read_usize(v) != 0 && random(35 - *((person + staff::TEMPERAMENT) as *const i8) as i32) == 0 { // the rejected ones
             *(v as *mut usize) = 0;
         }
     }
@@ -5638,9 +5638,9 @@ pub unsafe fn autoteste_dbm_1() {
         *(G_ENGLISH_NAME_TABLES as *mut usize) = tabela.as_mut_ptr() as usize;
         *(registro.as_mut_ptr() as *mut i32) = ((z >> 32) % 16) as i32 - 2;
         let r = registro.as_ptr() as usize;
-        comparar_nation_get_english_three_letter_name(r);
-        comparar_comp_get_english_name(r);
-        comparar_staff_comp_get_english_name(r);
+        compare_nation_get_english_three_letter_name(r);
+        compare_comp_get_english_name(r);
+        compare_staff_comp_get_english_name(r);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
@@ -5753,13 +5753,13 @@ pub unsafe fn autoteste_dbm_2() {
         tabela[13] = 0x3000_0000 + ((z >> 8) as usize & 0xffff0);
         *(G_ENGLISH_NAME_TABLES as *mut usize) = tabela.as_mut_ptr() as usize;
         *(registro.as_mut_ptr() as *mut i32) = ((z >> 32) % 16) as i32 - 2;
-        comparar_stadium_get_english_name(registro.as_ptr() as usize);
+        compare_stadium_get_english_name(registro.as_ptr() as usize);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
     }
     for idioma in -3..=16 {
-        comparar_database_language_file_exists(idioma);
+        compare_database_language_file_exists(idioma);
     }
     for _ in 0..64 {
         let z = s.next_u64();
@@ -7071,7 +7071,7 @@ pub unsafe fn autoteste_dbj_2() {
             continue;
         }
         let mut buf: Vec<u8> = (0..n * 107).map(|_| s.next_u64() as u8).collect();
-        comparar_db_files_read_comps_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
+        compare_db_files_read_comps_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
         fclose(f);
     }
     let _ = std::fs::remove_file(ARQ);
@@ -7094,8 +7094,8 @@ pub unsafe fn autoteste_dbj_2() {
         *(G_CLUB_ENGLISH_NAME_INDEX_TABLE as *mut usize) = if com_mapa { mapa.as_ptr() as usize } else { 0 };
         let id = if com_mapa { ((z >> 52) % 8) as i32 } else { ((z >> 52) % 14) as i32 - 2 };
         *(registro.as_mut_ptr() as *mut i32) = id;
-        comparar_nation_get_english_name(registro.as_ptr() as usize);
-        comparar_club_get_english_short_name(registro.as_ptr() as usize);
+        compare_nation_get_english_name(registro.as_ptr() as usize);
+        compare_club_get_english_short_name(registro.as_ptr() as usize);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];

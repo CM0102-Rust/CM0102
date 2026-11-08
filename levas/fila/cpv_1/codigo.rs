@@ -255,16 +255,16 @@ unsafe extern "thiscall" fn post_loan_offer_news(this: usize, oferta: usize, ter
 
 // ponytail: reagenda, cancela rivais, sorteia e decide pelos clubes (as chamadas mexem nas ofertas e alocam): não roda
 // duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_advance_offer_to_club_approval(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn compare_advance_offer_to_club_approval(this: usize, oferta: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, oferta)
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_offer_accepted_news(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn compare_post_offer_accepted_news(this: usize, oferta: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, oferta)
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_loan_offer_news(this: usize, oferta: usize, termos: usize) {
+unsafe extern "thiscall" fn compare_post_loan_offer_news(this: usize, oferta: usize, termos: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, oferta, termos)
 }

@@ -547,7 +547,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
 }
 
 /// O comparador do teto salarial: pela devolução (a rotina só lê; as chamadas de dentro também).
-unsafe extern "thiscall" fn comparar_get_max_wage(fin: usize, pessoa: usize, cargo: u32) -> i32 {
+unsafe extern "thiscall" fn compare_get_max_wage(fin: usize, pessoa: usize, cargo: u32) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%)(fin, pessoa, cargo);
     let n = get_max_wage(fin, pessoa, cargo);
     SCOREBOARD.record(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, pessoa, cargo as u8 as i8, r, n));
@@ -575,7 +575,7 @@ unsafe extern "thiscall" fn news_ground_works(_this: usize, clube: usize, valor:
 
 /// O comparador da notícia das obras: só a original (ponytail: a notícia vai para a caixa do técnico humano e não pode
 /// ser entregue duas vezes; com técnico da máquina não deixa nada).
-unsafe extern "thiscall" fn comparar_news_ground_works(this: usize, clube: usize, valor: u32, tipo: u32) {
+unsafe extern "thiscall" fn compare_news_ground_works(this: usize, clube: usize, valor: u32, tipo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%)(this, clube, valor, tipo)
 }
 
@@ -603,6 +603,6 @@ unsafe extern "thiscall" fn news_request_refused(_this: usize, clube: usize, ass
 
 /// O comparador da notícia da obra recusada: só a original (ponytail: entrega ao técnico humano e sorteia; não pode
 /// rodar duas vezes).
-unsafe extern "thiscall" fn comparar_news_request_refused(this: usize, clube: usize, assunto: u32, motivo: u32) {
+unsafe extern "thiscall" fn compare_news_request_refused(this: usize, clube: usize, assunto: u32, motivo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I2%%)(this, clube, assunto, motivo)
 }

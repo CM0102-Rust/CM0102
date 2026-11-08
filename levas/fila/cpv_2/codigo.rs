@@ -300,16 +300,16 @@ unsafe extern "thiscall" fn post_board_expectations_news(_this: usize, clube: us
 // ponytail: reagenda, mexe nas listas e na reputação, pode liberar a lista da troca e chama a resposta dos clubes e a
 // oferta seguinte (0x8c2f50): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e
 // pelas mutações.
-unsafe extern "thiscall" fn comparar_handle_player_rejected_terms(this: usize, pessoa: usize, indice: i32, silencioso: u32) {
+unsafe extern "thiscall" fn compare_handle_player_rejected_terms(this: usize, pessoa: usize, indice: i32, silencioso: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32)>(%%I0%%)(this, pessoa, indice, silencioso)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original. Quente (40 mil chamadas): sem contador.
-unsafe extern "thiscall" fn comparar_post_board_confidence_update_news(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_post_board_confidence_update_news(this: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_board_expectations_news(this: usize, clube: usize, expectativas: u32) {
+unsafe extern "thiscall" fn compare_post_board_expectations_news(this: usize, clube: usize, expectativas: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, clube, expectativas)
 }

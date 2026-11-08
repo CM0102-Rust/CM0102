@@ -30,7 +30,7 @@ def main():
     grupos = collections.defaultdict(list)
     for p, t in arquivos.items():
         for nome, a, b in mover_rotinas.blocos(t):
-            if nome in portadas or nome.startswith('comparar_'):
+            if nome in portadas or nome.startswith('compare_'):
                 continue
             corpo = t[a:b]
             # o texto sem os comentários de cima e com o próprio nome trocado

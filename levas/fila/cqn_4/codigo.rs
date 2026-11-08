@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 {
 }
 
 /// O calendário (a virtual +0x3c) aloca: só a original, conferindo os campos e a devolução 1.
-unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_fra_cfa_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let r = o(this);
     let b = |k: usize| *((this + k) as *const u8);
@@ -215,12 +215,12 @@ unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &
     r
 }
 
-unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_fra_cfa(this: usize, ano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%);
     compare_construct_group_league("construct_fra_cfa", this, ano, &FRA_CFA_CFA_LEAGUE, || o(this, ano))
 }
 
-unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_fra_lower(this: usize, ano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I2%%);
     compare_construct_group_league("construct_fra_lower", this, ano, &FRENCH_LOWER_DIVISION, || o(this, ano))
 }
@@ -276,10 +276,10 @@ unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
 }
 
 /// Soltam memória: só a original.
-unsafe extern "thiscall" fn comparar_destroy_fra_cfa(this: usize) {
+unsafe extern "thiscall" fn compare_destroy_fra_cfa(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I3%%)(this)
 }
 
-unsafe extern "thiscall" fn comparar_destroy_fra_lower(this: usize) {
+unsafe extern "thiscall" fn compare_destroy_fra_lower(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I4%%)(this)
 }

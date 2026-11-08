@@ -274,7 +274,7 @@ unsafe extern "C" fn apply_squad_rule(
 }
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn comparar_apply_squad_rule(
+unsafe extern "C" fn compare_apply_squad_rule(
     clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, starters: usize, banco: usize, reserva: usize,
     saida: usize, codigos: usize, curtos: usize, marcas: usize, bytes: usize, lado: usize,
 ) {
@@ -1552,7 +1552,7 @@ unsafe fn holiday_selection_bonus(p: usize, clube: usize, ferias: usize, pos: u3
     l4c
 }
 
-unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limit: i32, o: usize) -> i32 {
+unsafe extern "C" fn compare_off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limit: i32, o: usize) -> i32 {
     let f = original_fn::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(%%I1%%);
     if is_recording_top_level() {
         return f(p, pos, flags, clube, limit, o);
@@ -1565,7 +1565,7 @@ unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, cl
 }
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn comparar_lineup_slot_score(
+unsafe extern "C" fn compare_lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limit: i32, marca: u32, marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {

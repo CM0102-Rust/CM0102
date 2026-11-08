@@ -311,7 +311,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
 /// guardado do clube (0xb63d08..0xb63d34) e o sorteio. A cópia roda em ensaio, sem o fim da lesão (0x62e700): quando
 /// ela chega lá, fica a original sozinha (já rodou primeiro). Na primeira vez (estáticas por criar, com atexit) e sem
 /// registro (pessoa nula, id fora da tabela, sem ficha): só a original.
-unsafe extern "thiscall" fn comparar_update_player_fitness(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn compare_update_player_fitness(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     if *(0xb63d10 as *const u8) & 7 != 7 || pessoa == 0 || cpw8_i(pessoa) < 0 || cpw8_i(pessoa) >= cpw8_i(0xae2364) || cpw8_d(pessoa + 0x61) == 0 {
         return o(this, pessoa); // ponytail: as estáticas e o atexit da primeira vez não podem rodar duas vezes
@@ -357,7 +357,7 @@ unsafe extern "thiscall" fn get_league_confidence_band(this: usize, clube: usize
     }
 }
 
-unsafe extern "thiscall" fn comparar_get_league_confidence_band(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_league_confidence_band(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
     let n = get_league_confidence_band(this, clube);
     SCOREBOARD.record(r == n, || format!("get_league_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
@@ -374,7 +374,7 @@ unsafe extern "thiscall" fn set_board_ratings(this: usize, clube: usize, valor: 
     }
 }
 
-unsafe extern "thiscall" fn comparar_set_board_ratings(this: usize, clube: usize, valor: u32) {
+unsafe extern "thiscall" fn compare_set_board_ratings(this: usize, clube: usize, valor: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     let r = cpw8_d(this).wrapping_add((cpw8_i(clube) as u32).wrapping_mul(0x49) as usize);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 0x49)], || o(this, clube, valor), || set_board_ratings(this, clube, valor));

@@ -294,7 +294,7 @@ unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, 
 }
 
 /// Comparador: pela memória da notícia (0xde bytes; a original usa só uma temporária na pilha) e pela devolução.
-unsafe extern "thiscall" fn comparar_construct_news_item(this: usize, tipo: u32, importante: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_news_item(this: usize, tipo: u32, importante: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0xde)], || o(this, tipo, importante), || construct_news_item(this, tipo, importante));
     SCOREBOARD.record(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
@@ -303,7 +303,7 @@ unsafe extern "thiscall" fn comparar_construct_news_item(this: usize, tipo: u32,
 
 /// Comparador: a original sorteia e entrega a notícia (não pode rodar duas vezes): roda só ela e confere o plano feito
 /// antes: a confiança da torcida nova (a variação é pura).
-unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
+unsafe extern "thiscall" fn compare_adjust_supporter_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I1%%);
     if clube == 0 {
         return o(this, clube, sujeito, topico, alvo, variante);
@@ -318,7 +318,7 @@ unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, cl
 }
 
 /// Comparador: como o da torcida, pela confiança da diretoria nova.
-unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
+unsafe extern "thiscall" fn compare_adjust_board_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(%%I2%%);
     if clube == 0 {
         return o(this, clube, sujeito, topico, alvo, variante, sexto);

@@ -94,7 +94,7 @@ unsafe extern "C" fn write_position_name(mascara: u32, texto: usize, tamanho: i3
     g
 }
 
-unsafe extern "C" fn comparar_write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
+unsafe extern "C" fn compare_write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u8>(%%I0%%);
     if tamanho < 0x1e {
         return o(mascara, texto, tamanho); // caixa: só a original
@@ -211,7 +211,7 @@ unsafe extern "C" fn write_player_description(pessoa: i32, posicao: u32, qualida
     g
 }
 
-unsafe extern "C" fn comparar_write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
+unsafe extern "C" fn compare_write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(%%I1%%);
     if tamanho < 0x1e {
         return o(pessoa, posicao, qualidades, texto, tamanho, genero); // caixa: só a original
@@ -341,7 +341,7 @@ unsafe extern "C" fn staff_is_best_favoured_candidate(pessoa: usize, clube: usiz
     1
 }
 
-unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(pessoa: usize, clube: usize, candidato: usize) -> u8 {
+unsafe extern "C" fn compare_staff_is_best_favoured_candidate(pessoa: usize, clube: usize, candidato: usize) -> u8 {
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u8>(%%I2%%);

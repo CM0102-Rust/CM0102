@@ -1,4 +1,4 @@
-r"""Troca os índices numéricos das chamadas à original (`orig::<F>(1598)`, `comparar_valor!(x, y, 357, ...)`) pela
+r"""Troca os índices numéricos das chamadas à original (`orig::<F>(1598)`, `compare_value!(x, y, 357, ...)`) pela
 constante com nome que o build.rs gera da tabela (`IDX_POR_OFERTA_DE_TRANSFERENCIA`), no motor e nas listas de
 mutação (etapa 4 da reorganização, rodada 2, 07/11/2026). O valor é o mesmo.
 
@@ -11,7 +11,7 @@ import sys
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(R, 'rust', 'src')
 ORIG = re.compile(r'(orig::<.*?>\()(\d+)(\))')
-MACRO = re.compile(r'(comparar_(?:leitor|gravador|repartir|valor|ordem)!\(\w+, \w+, )(\d+)\b')
+MACRO = re.compile(r'(compare_(?:leitor|gravador|repartir|valor|ordem)!\(\w+, \w+, )(\d+)\b')
 
 
 def main():

@@ -746,7 +746,7 @@ unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
 /// As células são comparadas de verdade: montagem (`modo` ≠ 0) pela lista de exibição, atualização
 /// local pelo `Display` do gerente; os parâmetros (o 0x1a) e o texto 0xde1f64 também. Atualização que
 /// vai pela rede ou parâmetro 0x1c fora de 1 e 2: só a original.
-unsafe extern "C" fn comparar_fill_team_stats_rows(modo: u32, area: usize) {
+unsafe extern "C" fn compare_fill_team_stats_rows(modo: u32, area: usize) {
     let o = original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%);
     let coluna = get_screen_param(0x1c) as u8;
     let mut reg = match screen_update_regions(modo != 0) {
@@ -761,7 +761,7 @@ unsafe extern "C" fn comparar_fill_team_stats_rows(modo: u32, area: usize) {
 
 /// O redesenho é comparado de verdade (atualização local): o `Display` do gerente, os parâmetros (menos
 /// o 0x14, a hora que a rotina grava no fim) e o texto 0xde1f64. Pela rede: só a original.
-unsafe extern "C" fn comparar_refresh_latest_scores_rows() {
+unsafe extern "C" fn compare_refresh_latest_scores_rows() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
     let mut reg = match screen_update_regions(false) {
         Some(r) => r,
@@ -781,6 +781,6 @@ unsafe extern "C" fn comparar_refresh_latest_scores_rows() {
 
 // ponytail: a espera fecha as telas, mostra a mensagem e abre a tela da partida (rede); não roda duas
 // vezes: no modo comparação só a original (a cópia é provada no modo Rust pelo ramo)
-unsafe extern "C" fn comparar_match_screens_handle_waiting_screen() -> i32 {
+unsafe extern "C" fn compare_match_screens_handle_waiting_screen() -> i32 {
     original_fn::<unsafe extern "C" fn() -> i32>(%%I2%%)()
 }

@@ -223,13 +223,13 @@ pub(crate) unsafe fn is_contracted_staff(p: usize) -> bool {
 /// or 8; forward (+0x15): 8, 9, 10 or 11. Ends with 0xff.
 ///
 /// None of the positions good: `None` (the original then reads the 4-byte list with no value on the stack, see
-/// `comparar_allocate_squad_number`).
+/// `compare_allocate_squad_number`).
 ///
 /// [pt] Os números preferidos (índice = número − 1) pela posição da ficha de jogador `f` (as notas de posição de 1 a 20,
 /// "boa" = 15 ou mais): goleiro (+0xf) o 1; zagueiro ou líbero (+0x11, +0x10) o 2 se joga pela direita (+0x17), o 3 se
 /// pela esquerda (+0x18), senão o 4, o 5 ou o 6; volante, meia ou meia-atacante (+0x12, +0x13, +0x14) o 6, o 7 ou o 8;
 /// atacante (+0x15) o 8, o 9, o 10 ou o 11. Termina em 0xff. Nenhuma das posições boas: `None` (a original lê então a
-/// lista de 4 bytes sem valor na pilha, ver `comparar_allocate_squad_number`).
+/// lista de 4 bytes sem valor na pilha, ver `compare_allocate_squad_number`).
 pub(crate) unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
     let b = |o: usize| *((f + o) as *const i8) >= 15;
     if b(0xf) {

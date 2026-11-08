@@ -183,7 +183,7 @@ unsafe fn sort_regions(liga: usize, linhas: usize) -> Vec<(usize, usize)> {
     reg
 }
 
-unsafe extern "thiscall" fn comparar_sort_table(liga: usize, linhas: usize) -> u32 {
+unsafe extern "thiscall" fn compare_sort_table(liga: usize, linhas: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let reg = sort_regions(liga, linhas);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(liga, linhas), || sort_table(liga, linhas));
@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn build_h2h_table(liga: usize, linhas: usize) {
     free(t);
 }
 
-unsafe extern "thiscall" fn comparar_build_h2h_table(liga: usize, linhas: usize) {
+unsafe extern "thiscall" fn compare_build_h2h_table(liga: usize, linhas: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if linhas == 0 {
         return o(liga, linhas);
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn free_table(liga: usize, tabela: usize) {
 
 /// Comparador: liberar duas vezes soltaria os mesmos blocos duas vezes.
 // ponytail: só a original (como as liberações da 232ª); a prova é a carreira e o ramo da cópia no modo Rust.
-unsafe extern "thiscall" fn comparar_free_table(liga: usize, tabela: usize) {
+unsafe extern "thiscall" fn compare_free_table(liga: usize, tabela: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(liga, tabela)
 }
 
@@ -408,7 +408,7 @@ unsafe fn is_complete_check_read_only(liga: usize, fases: u32) -> bool {
     (0..n.max(0) as usize).any(|i| ((cpa1_b(tab + 0x3b * i + 0x11) as i8) as i16) < total)
 }
 
-unsafe extern "thiscall" fn comparar_league_check_complete(liga: usize, fases: u32, avisar: u32) -> u8 {
+unsafe extern "thiscall" fn compare_league_check_complete(liga: usize, fases: u32, avisar: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I3%%);
     if !is_complete_check_read_only(liga, fases) {
         return o(liga, fases, avisar); // fim de liga (registros, prêmios, fases, aviso): só a original

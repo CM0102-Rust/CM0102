@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn player_search_record_scouted_club_match(this: usize,
 /// Comparador da 0x7bd310: lado a lado nas 50 vagas (o registro inteiro). Com as máscaras ligadas e o técnico do clube
 /// humano, a 0x5b09d0 grava o que se sabe do jogador e sorteia: aí só a original roda (ponytail: o caso de um humano
 /// observando o próprio clube; a carreira automática não chega a esta rotina).
-unsafe extern "thiscall" fn comparar_player_search_record_scouted_club_match(this: usize, jogo: usize, resultado: usize) {
+unsafe extern "thiscall" fn compare_player_search_record_scouted_club_match(this: usize, jogo: usize, resultado: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let clube_obs = cqf10_clube(cqf10_d(this));
     if cqf10_b(0x9cc270) != 0 && cqf10_d(clube_obs + 0xcf) != 0 {
@@ -449,7 +449,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
 /// Comparador da 0x7b5be0: o relatório sorteia (0x7b62a0, 0x5b09d0) e põe registros na saída (aloca): só a original
 /// roda. Antes, a cópia em ensaio decide até o relatório sem os efeitos (sem o histórico e sem o relatório, com o estado
 /// do sorteador guardado e devolvido) e diz a devolução e se o começo da lista vai a amanhã; a original tem de bater.
-unsafe extern "thiscall" fn comparar_player_search_scout_match(this: usize, jogo: usize, resultado: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_player_search_scout_match(this: usize, jogo: usize, resultado: usize, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I0%%);
     if jogo == 0 || resultado == 0 {
         return o(this, jogo, resultado, saida);

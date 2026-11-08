@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn reject_loan_offer(this: usize, vaga: *mut usize, mar
 
 /// Comparador da 0x8bfa30: o da recusa e da retirada (`compare_reject_withdraw`: a cópia em ensaio e a original do mesmo estado;
 /// iguais o estado, +0x10, a marca +4 dos jogadores da troca e a marca de oferta da pessoa).
-unsafe extern "thiscall" fn comparar_reject_loan_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn compare_reject_loan_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I0%%);
     compare_reject_withdraw("reject_loan_offer", this, vaga, || o(this, vaga, marcar, motivo), || reject_loan_offer(this, vaga, marcar, motivo))
 }
@@ -304,7 +304,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
 /// os cursores da fila livre e da troca). Sem liberação: iguais a devolução e essas regiões. Com liberação (a cópia
 /// guardou o escolhido): iguais a devolução e o escolhido ter saído do clube (o contrato dele, pela 0x4cf5a0 que só
 /// lê, sem o clube); o resto a original refaz ao liberar. Clube nulo: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_check_squad_limits(this: usize, clube: usize, o: usize, contar_fila: u32, motivo: *mut u16) -> u32 {
+unsafe extern "thiscall" fn compare_check_squad_limits(this: usize, clube: usize, o: usize, contar_fila: u32, motivo: *mut u16) -> u32 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u16) -> u32>(%%I1%%);
     if clube == 0 {
         return f(this, clube, o, contar_fila, motivo);
@@ -368,7 +368,7 @@ unsafe extern "thiscall" fn find_next_sale_percentage(this: usize, p: usize) -> 
 }
 
 /// Comparador da 0x8d0dd0: lado a lado na marca da pessoa, em [0xae1080] e na devolução (só lê o resto).
-unsafe extern "thiscall" fn comparar_find_next_sale_percentage(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_next_sale_percentage(this: usize, p: usize) -> usize {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa5_d(this + 0x86e).wrapping_add(cqa5_d(p).wrapping_mul(8));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1), (0xae1080, 4)], || f(this, p), || find_next_sale_percentage(this, p));

@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn cqv11_mercosul_quartas(this: usize) {
 // melhor tabela entre os cinco segundos de antes (os de maior pontuação: [inferência] a ordem da tabela é a de
 // 0x6827d0, então só confere que cada um é segundo de um grupo e que nenhum clube se repete); a fase em [+0xc][4] tem
 // os 8 na sua tabela de times (+0xa7, linhas de 6 bytes).
-unsafe extern "thiscall" fn comparar_cqv11_mercosul_quartas(this: usize) {
+unsafe extern "thiscall" fn compare_cqv11_mercosul_quartas(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let q = *((this + 0xbe) as *const i8);
     let fases = cqv11_d(this + 0xc);
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn cqv11_libertadores_previstas(this: usize) {
     cqv11_previstas(this, 7, 8, 0x9a7de4, 0x30e)
 }
 
-unsafe extern "thiscall" fn comparar_cqv11_libertadores_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_cqv11_libertadores_previstas(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqv11_comparar_previstas("cqv11_libertadores_previstas", this, 7, 8, || o(this))
 }
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn cqv11_mercosul_previstas(this: usize) {
     cqv11_previstas(this, 4, 5, 0x9a7e5c, 0x338)
 }
 
-unsafe extern "thiscall" fn comparar_cqv11_mercosul_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_cqv11_mercosul_previstas(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqv11_comparar_previstas("cqv11_mercosul_previstas", this, 4, 5, || o(this))
 }

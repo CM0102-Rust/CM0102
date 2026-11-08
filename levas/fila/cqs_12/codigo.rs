@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn set_up_team_list(this: usize) -> u32 {
 
 /// Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
 /// cópia faz a sua, comparada nas 12 vagas e liberada.
-unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_set_up_team_list(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
 // ponytail: a estatística acha ou cria a entrada de cada seleção (aloca): não roda duas vezes. Só a original; o plano:
 // a lista ordenada pela reputação antes, e depois a posição (+0x72 da entrada, 0x4a4850 Comp_Stats::find_club_entry) de
 // cada uma das 12 igual à da faixa.
-unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize) {
+unsafe extern "thiscall" fn compare_goldcup_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     if cqs12_d(this + 8) == 0 || cqs12_d(this + 0xee) == 0 || cqs12_d(this + 0xf2) != 0xc {
         return o(this);
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
 // ponytail: libera as tabelas e destrói as fases: não roda duas vezes. Só a original; o plano: o ano sobe 2, +0x45 = 0,
 // +0x30 = −1, +0xba = 0 e +0x4c = 0 (as regras gravam a tabela das rodadas de novo em +0xba: conferida só que existe
 // quando havia antes).
-unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: usize) {
+unsafe extern "thiscall" fn compare_goldcup_start_new_season(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let ano = cqs12_w(this + 0x40);
     o(this);

@@ -172,14 +172,14 @@ unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida: usize, hum
     if mesma { 1 } else { 0 } // outra partida
 }
 
-unsafe extern "thiscall" fn comparar_build_position_lookup(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_build_position_lookup(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || build_position_lookup(this));
     SCOREBOARD.record(igual && r == n, || format!("build_position_lookup {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "stdcall" fn comparar_player_regen_score_club_for_player(jogador: usize, clube: usize, elenco: i8) -> i32 {
+unsafe extern "stdcall" fn compare_player_regen_score_club_for_player(jogador: usize, clube: usize, elenco: i8) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i8) -> i32>(%%I1%%);
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS,
         || o(jogador, clube, elenco), || crate::rng::without_counting(|| player_regen_score_club_for_player(jogador, clube, elenco)));
@@ -187,7 +187,7 @@ unsafe extern "stdcall" fn comparar_player_regen_score_club_for_player(jogador: 
     r
 }
 
-unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize, partida: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_watching_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
     let r = o(this, partida, humano);
     // ponytail: os casos de erro (caixa) só na original

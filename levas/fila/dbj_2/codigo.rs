@@ -36,7 +36,7 @@ unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, registr
 /// Comparador: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à posição do `ftell`
 /// 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo parou.
 // ponytail: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
-unsafe extern "C" fn comparar_db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn compare_db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%);
     if use_zip != 0 {
         return o(stream, use_zip, registros, n);
@@ -81,7 +81,7 @@ unsafe extern "C" fn nation_get_english_name(nacao: usize) -> usize {
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109))
 }
 
-unsafe extern "C" fn comparar_nation_get_english_name(nacao: usize) -> usize {
+unsafe extern "C" fn compare_nation_get_english_name(nacao: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
@@ -120,7 +120,7 @@ unsafe extern "C" fn club_get_english_short_name(clube: usize) -> usize {
     linhas.wrapping_add((i as usize).wrapping_mul(79)).wrapping_add(0x34) // nome curto na linha
 }
 
-unsafe extern "C" fn comparar_club_get_english_short_name(clube: usize) -> usize {
+unsafe extern "C" fn compare_club_get_english_short_name(clube: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
@@ -159,7 +159,7 @@ pub unsafe fn autoteste_dbj_2() {
             continue;
         }
         let mut buf: Vec<u8> = (0..n * 107).map(|_| s.next_u64() as u8).collect();
-        comparar_db_files_read_comps_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
+        compare_db_files_read_comps_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
         fclose(f);
     }
     let _ = std::fs::remove_file(ARQ);
@@ -182,8 +182,8 @@ pub unsafe fn autoteste_dbj_2() {
         *(0xae23fc as *mut usize) = if com_mapa { mapa.as_ptr() as usize } else { 0 };
         let id = if com_mapa { ((z >> 52) % 8) as i32 } else { ((z >> 52) % 14) as i32 - 2 };
         *(registro.as_mut_ptr() as *mut i32) = id;
-        comparar_nation_get_english_name(registro.as_ptr() as usize);
-        comparar_club_get_english_short_name(registro.as_ptr() as usize);
+        compare_nation_get_english_name(registro.as_ptr() as usize);
+        compare_club_get_english_short_name(registro.as_ptr() as usize);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];

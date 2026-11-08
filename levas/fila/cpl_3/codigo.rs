@@ -115,7 +115,7 @@ unsafe fn vector_contains_record(v: usize, n: usize, tam: usize, alvo: &[u8]) ->
 
 /// Comparador: a original acrescenta (pode realocar) e não pode rodar duas vezes: o plano antes (a conta, o registro),
 /// a original roda, confere a conta, o registro novo (as duplas e o byte +0x1c; a data é da 0x8cb940) e a devolução.
-unsafe extern "thiscall" fn comparar_add_past_transfer(this: usize, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_add_past_transfer(this: usize, registro: usize) -> usize {
     let n = cpl3_d(this + 0x86a);
     let fonte = core::slice::from_raw_parts(registro as *const u8, 0x1d).to_vec();
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%)(this, registro);
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn comparar_add_past_transfer(this: usize, registro: us
 
 /// Comparador: o plano antes (a conta e o registro esperado), a original roda; confere a conta, a marca 0x20 e que o
 /// registro está no vetor (com `ordenar`, em qualquer lugar).
-unsafe extern "thiscall" fn comparar_add_work_permit(this: usize, pessoa: usize, nacao: usize, ano: u32, nao_usado: u32, ordenar: u32) {
+unsafe extern "thiscall" fn compare_add_work_permit(this: usize, pessoa: usize, nacao: usize, ano: u32, nao_usado: u32, ordenar: u32) {
     let n = cpl3_d(this + 0x93e);
     let mut alvo = [0u8; 0xe];
     alvo[0..4].copy_from_slice(&(cpl3_d(pessoa) as u32).to_le_bytes());
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn comparar_add_work_permit(this: usize, pessoa: usize,
 
 /// Comparador: o plano antes (a conta e os 13 bytes), a original roda; confere a conta e que o registro está no vetor
 /// (reordenado).
-unsafe extern "thiscall" fn comparar_add_first_team_appearance_money(this: usize, registro: usize) {
+unsafe extern "thiscall" fn compare_add_first_team_appearance_money(this: usize, registro: usize) {
     let n = cpl3_d(this + 0x894);
     let alvo = core::slice::from_raw_parts(registro as *const u8, 0xd).to_vec();
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, registro);

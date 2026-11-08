@@ -352,6 +352,6 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
 }
 
 /// Comparador da 0x84a020: só a original (sorteia, faz lances e pedidos de empréstimo, aloca ofertas e termos).
-unsafe extern "thiscall" fn comparar_make_club_bids(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_make_club_bids(this: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube) // ponytail: só a original
 }

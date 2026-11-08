@@ -184,7 +184,7 @@ unsafe fn caps_update_regions(this: usize, p: usize, m: usize) -> Vec<(usize, us
 /// Comparador: o ensaio (a cópia sem o ranking, a primeira convocação, o registro de transferências e a notícia, que
 /// alocam, vão para o arquivo ou gravam fora) e a original a partir do mesmo estado, conferidos nas regiões que a
 /// rotina grava por conta própria (caps_update_regions). Fora de jogo entre seleções: só a original.
-unsafe extern "thiscall" fn comparar_record_international_result(this: usize, p: usize, m: usize) {
+unsafe extern "thiscall" fn compare_record_international_result(this: usize, p: usize, m: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if is_national_team(cpw12_d(p + 0x1c)) == 0 || is_national_team(cpw12_d(p + 0x20)) == 0 {
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn format_squad_label(this: usize, tipo: u32, sub23: u3
 }
 
 /// Comparador: lado a lado no começo da saída (até 64 bytes) e na devolução. A caixa: só a original.
-unsafe extern "thiscall" fn comparar_format_squad_label(this: usize, tipo: u32, sub23: u32, saida: usize, tamanho: i32, minusculo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_format_squad_label(this: usize, tipo: u32, sub23: u32, saida: usize, tamanho: i32, minusculo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, i32, u32) -> u32>(%%I1%%);
     if tamanho < 0x14 || saida == 0 {
         return o(this, tipo, sub23, saida, tamanho, minusculo); // ponytail: a caixa, só a original
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, fase: i32, rod
 }
 
 /// Comparador: pelo valor (só lê). A caixa: só a original.
-unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, fase: i32, rodada: i32) -> u32 {
+unsafe extern "thiscall" fn compare_are_round_fixtures_known(this: usize, fase: i32, rodada: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(%%I2%%);
     if fase < -1 && fase <= cpw12_d(this + 0x30) as i32 {
         return o(this, fase, rodada); // ponytail: a caixa, só a original

@@ -8,5 +8,5 @@ MUTACOES = [
     ('m_20', "        .wrapping_add((k as isize * 20) as usize)", "        .wrapping_add((k as u8 as isize * 20) as usize)"),
     ('r_guarda', "                *(G_EMPTY_COMMON_NAME_INDEX as *mut i32) = k;\n", ""),
     ('r_60', "                return base().wrapping_add(k as usize * 60);", "                return base().wrapping_add(k as usize * 61);"),
-    ('r_sorteio', "            None => i = sortear(n),", "            None => i = sortear(n - 1),"),
+    ('r_sorteio', "            None => i = random(n),", "            None => i = random(n - 1),"),
 ]

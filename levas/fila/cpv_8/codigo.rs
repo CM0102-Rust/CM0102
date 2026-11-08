@@ -138,7 +138,7 @@ unsafe fn has_injury_hit(this: usize, id: i32, pessoa: usize) -> bool {
 /// Comparador: lado a lado no estado do sorteio, no cursor da lista das batidas e na recuperação (+0xa, 4 bytes, do
 /// registro de 31 bytes em [this]) de cada pessoa das vagas. Partida com batida que chega ao tipo da lesão: só a original (a lesão nova aloca e manda a
 /// notícia; a gravidade da primeira batida pode ser sobra de pilha).
-unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, jogo: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let mut batida = false;
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn find_match_injury(this: usize, pessoa: usize) -> usi
 }
 
 /// Comparador: lado a lado no cursor da lista e na devolução.
-unsafe extern "thiscall" fn comparar_find_match_injury(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_match_injury(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let lista = cpv8_d(this + 0x28) as usize;
     let reg: &[(usize, usize)] = if lista == 0 { &[] } else { &[(lista + 0xa, 4)] };
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn is_player_on_holiday(_this: usize, pessoa: usize) ->
 }
 
 /// Comparador: a devolução (só o al).
-unsafe extern "thiscall" fn comparar_is_player_on_holiday(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn compare_is_player_on_holiday(this: usize, pessoa: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let r = o(this, pessoa);
     let n = is_player_on_holiday(this, pessoa);

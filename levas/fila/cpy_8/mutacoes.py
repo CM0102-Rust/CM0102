@@ -8,8 +8,8 @@
 # 3) nas competicoes dos tipos 2 e 4 o comeco do bloco em vez do quarto de cima (contador "cpy_8 arbitro neutro");
 #    pode escapar se nenhuma competicao desses tipos for play ate 2002-06-01 (o contador mostra).
 MUTACOES = [
-    ('cpy8_sorteio_conta_inteira', '        ini.wrapping_add(sortear(n.wrapping_sub(1))) // cpy8: o sorteio na band',
-     '        ini.wrapping_add(sortear(n)) // mutacao: a conta inteira',
+    ('cpy8_sorteio_conta_inteira', '        ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: o sorteio na band',
+     '        ini.wrapping_add(random(n)) // mutacao: a conta inteira',
      'cpy_8 arbitro sorteado'),
     ('cpy8_sem_faixa_da_liga', '                            band // cpy8: a band da liga',
      '                            { let _ = band; (cpy8_i(b + 8), cpy8_i(b + 4)) } // mutacao: o bloco inteiro',

@@ -148,7 +148,7 @@ unsafe extern "C" fn club_can_be_managed(clube: usize) -> u8 {
     (*((u(0x53) + 0x11c) as *const u8) & 2 != 0) as u8
 }
 
-unsafe extern "C" fn comparar_database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
+unsafe extern "C" fn compare_database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(%%I0%%);
     if clube == 0 {
         return o(clube, modo, filtro); // caixa: só a original
@@ -160,7 +160,7 @@ unsafe extern "C" fn comparar_database_count_club_squad(clube: usize, modo: u32,
     r
 }
 
-unsafe extern "C" fn comparar_database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
+unsafe extern "C" fn compare_database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor, dobro); // caixa: só a original
@@ -172,7 +172,7 @@ unsafe extern "C" fn comparar_database_collect_club_squad(clube: usize, vetor: *
     r
 }
 
-unsafe extern "C" fn comparar_club_can_be_managed(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_can_be_managed(clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
     let marca = [(clube.wrapping_add(0x244), 1)];
     let regioes = if clube == 0 { &marca[..0] } else { &marca[..] };

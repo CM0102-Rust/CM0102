@@ -8,7 +8,7 @@ MUTACOES = [
     ('f_area', "byte(u(engine::PENDING_PLAY_OFFENDER), 0x27) == 1 { (10..=11).contains(&y) }", "byte(u(engine::PENDING_PLAY_OFFENDER), 0x27) == 1 { (9..=11).contains(&y) }"),
     ('f_penalti', "*d = (*d).wrapping_sub(500);\n            sound = 0x1f7a;", "*d = (*d).wrapping_sub(499);\n            sound = 0x1f7a;"),
     ('f_parada', "matches!(k, 0 | 5..=13 | 0x3b | 0x3c)", "matches!(k, 0 | 5..=12 | 0x3b | 0x3c)"),
-    ('f_nove', "if sortear(9) == 0 {\n        narrate(call, 0x20df", "if sortear(8) == 0 {\n        narrate(call, 0x20df"),
+    ('f_nove', "if random(9) == 0 {\n        narrate(call, 0x20df", "if random(8) == 0 {\n        narrate(call, 0x20df"),
     ('f_lado', "let side_of = |p: usize| if sofreu { zero(p) } else { ub(p, match_player::SIDE) };", "let side_of = |p: usize| if sofreu { ub(p, match_player::SIDE) } else { zero(p) };"),
     ('p_achou', "                *((this + 0x1a6) as *mut u8) = 0;\n                *((this + 0x1a5) as *mut u8) = 0;\n                return 1;", "                *((this + 0x1a6) as *mut u8) = 0;\n                *((this + 0x1a5) as *mut u8) = 1;\n                return 1;"),
     ('f_cansar', "call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, u(engine::PENDING_PLAY_OFFENDER), [0; 5]);", "call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, u(engine::PENDING_PLAY_OFFENDER), [1, 0, 0, 0, 0]);"),

@@ -122,7 +122,7 @@ unsafe extern "C" fn game_update_nation_coefficients() {
 
 /// Comparador: a original aloca e solta o vetor (e o ordena), então roda só ela, conferida contra o plano feito antes
 /// pelas mesmas contas da cópia: a história (+0xb0..+0xd8) e a marca (+0x121) de cada nação e [0x9cd218] zerado.
-unsafe extern "C" fn comparar_game_update_nation_coefficients() {
+unsafe extern "C" fn compare_game_update_nation_coefficients() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     let iniciar = cpt6_b(0x9cd218) != 0;
     let hoje = cpt6_d(0xae2c90) as i16;
@@ -170,7 +170,7 @@ unsafe extern "C" fn is_player_regen_day(dia: u32) -> u32 {
 }
 
 /// Comparador: pelo al (o único byte que os chamadores leem).
-unsafe extern "C" fn comparar_is_player_regen_day(dia: u32) -> u32 {
+unsafe extern "C" fn compare_is_player_regen_day(dia: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(%%I1%%)(dia);
     let n = is_player_regen_day(dia);
     SCOREBOARD.record(r as u8 == n as u8, || format!("is_player_regen_day({}) {} x {}", dia as u16, r as u8, n as u8));
@@ -194,7 +194,7 @@ unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
 }
 
 /// Comparador: pelo ax (os 16 bits altos do eax da original são os do chamador).
-unsafe extern "C" fn comparar_clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
+unsafe extern "C" fn compare_clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(a, b, min, max);
     let n = clamp_char_sum(a, b, min, max);
     SCOREBOARD.record(r as u16 == n as u16, || format!("clamp_char_sum({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));

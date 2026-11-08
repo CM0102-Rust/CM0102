@@ -19,7 +19,7 @@ unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u32 {
     0
 }
 
-unsafe extern "thiscall" fn comparar_has_active_release_clause(c: usize) -> u32 {
+unsafe extern "thiscall" fn compare_has_active_release_clause(c: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(c);
     let n = has_active_release_clause(c);
     SCOREBOARD.record(r == n, || format!("has_active_release_clause({:x}) original={} rust={}", c, r, n));
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x: usize, no_
     0
 }
 
-unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
+unsafe extern "thiscall" fn compare_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
     // as saídas como estavam antes: a cópia parte delas (a original só grava `anos` no período)
     let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(%%I1%%)(c, x, no_limite, anos);
@@ -99,7 +99,7 @@ unsafe extern "C" fn staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u
     (tipo as u8 != 2) as u32
 }
 
-unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u32) -> u32 {
+unsafe extern "C" fn compare_staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%)(pessoa, tipo);
     let n = staff_contract_is_bonus_type_allowed(pessoa, tipo);
     SCOREBOARD.record(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));

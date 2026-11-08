@@ -4,7 +4,7 @@ MUTACOES = [
     ('r_parado', "        *b(engine::BALL_ROLL) = 0;" + chr(10) + "        *b(engine::BALL_HEIGHT) = 0;", "        *b(engine::BALL_ROLL) = 0;"),
     ('r_v2', "    let anda = if v >= 2 {", "    let anda = if v >= 3 {"),
     ('r_v0', "    } else if v <= 0 {" + chr(10) + "        false", "    } else if v < 0 {" + chr(10) + "        false"),
-    ('r_sorte', "        a >= sortear(2)", "        a > sortear(2)"),
+    ('r_sorte', "        a >= random(2)", "        a > random(2)"),
     ('r_8ea9', "        if *b(engine::BALL_HEIGHT) != 0 {", "        if *b(engine::BALL_HEIGHT) > 0 {"),
     ('r_220', "if dir > 0xdc && dir < 0x140 {", "if dir >= 0xdc && dir < 0x140 {"),
     ('r_140', "} else if dir > 0x28 && dir < 0x8c {", "} else if dir > 0x28 && dir <= 0x8c {"),

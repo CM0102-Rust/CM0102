@@ -342,17 +342,17 @@ unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, f: usize) {
 
 // ponytail: sorteia e monta rodadas (aloca jogos): não roda duas vezes. Só a original; a cópia leva os ramos (sorteio e
 // montagem; a atualização é diária em cada copa, 29.934 chamadas até 2002-06-01: sem ramo no caminho comum).
-unsafe extern "thiscall" fn comparar_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn compare_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, hoje, fase)
 }
 
 // ponytail: sorteia, cria os jogos e passa a rodada: não roda duas vezes. Só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_set_up_round(this: usize, rodada: u32) -> u32 {
+unsafe extern "thiscall" fn compare_set_up_round(this: usize, rodada: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, rodada)
 }
 
 // ponytail: acrescenta o risco de doença (não roda duas vezes; o caminho comum não faz nada). Só a original; a cópia leva
 // os ramos.
-unsafe extern "thiscall" fn comparar_add_away_trip_illness_risk(this: usize, f: usize) {
+unsafe extern "thiscall" fn compare_add_away_trip_illness_risk(this: usize, f: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, f)
 }

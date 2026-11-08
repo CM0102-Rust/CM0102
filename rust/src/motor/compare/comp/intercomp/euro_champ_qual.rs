@@ -7,7 +7,7 @@ use super::*;
 ///
 /// [pt] Lado a lado a partir do mesmo estado (os campos +0x3a..+0xc9 da copa, fora o ponteiro +0xba); a tabela das rodadas que
 /// cada lado aloca em +0xba (pela virtual +0x3c, original) só é conferida como montada, e a da cópia é liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_euro_champ_qual_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EURO_CHAMP_QUAL_SET_UP_RULES);
     let before = read_u32_as_usize(this + 0xba);
     let reg = [(this + 0x3a, 0x80usize), (this + 0xbe, 0xb)];
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(thi
 }
 
 /// Comparer for `get_group_team_count` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_group_team_count(this: usize, g: u32) -> i16 {
+pub(crate) unsafe extern "thiscall" fn compare_get_group_team_count(this: usize, g: u32) -> i16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> i16>(IDX_GET_GROUP_TEAM_COUNT);
     let r = o(this, g);
     if !matches!(*((this + 0xf6) as *const i8), 1 | 2) {
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_group_team_count(this: usize
 }
 
 /// Comparer for `get_qualification_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_qualification_status(this: usize, club: usize) -> i16 {
+pub(crate) unsafe extern "thiscall" fn compare_get_qualification_status(this: usize, club: usize) -> i16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i16>(IDX_GET_QUALIFICATION_STATUS);
     let r = o(this, club);
     let n = qualification_status(this, club);
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_qualification_status(this: u
 /// [pt] Só a original (a 0x687430 aloca a forma e o confronto direto de cada linha e a notícia vai aos humanos), conferindo o
 /// plano feito antes: devolve 1, +0x3e = o tamanho do grupo −1, +0xa7 = (+0x3e − 1) × +0x3c e as seleções de +0xf7 nas
 /// linhas, na ordem.
-pub(crate) unsafe extern "thiscall" fn comparar_init_group_one_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_init_group_one_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INIT_GROUP_ONE_TABLE);
     let n = if matches!(*((this + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this) };
     let plan: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xf7) + k * 4)).collect();

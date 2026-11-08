@@ -301,7 +301,7 @@ unsafe fn second_stage_clubs(this: usize) -> Vec<usize> {
 /// Só a original (sorteia, paga prêmios, aloca as fases e manda notícias; e se chama de novo), conferindo o plano: na
 /// chamada de fora (tentativa 0), as fases 8..11 existem, +0x30 = 11 e os clubes das tabelas delas (+0xb1, linhas de
 /// 0x3b bytes) são os 16 classificados.
-unsafe extern "thiscall" fn comparar_draw_phase2_groups(this: usize, tentativa: u32) {
+unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, tentativa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     if tentativa as u8 != 0 || cqg6_d(cqg6_d(0xadadfc) + cqg6_d(0x9cf6f0) * 4) == 0 {
         return o(this, tentativa);
@@ -341,7 +341,7 @@ unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usize, b: usize
 }
 
 /// Pura: a devolução.
-unsafe extern "C" fn comparar_european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = european_cup_compare_phase2_draw_entries(a, b);
     SCOREBOARD.record(r == n, || format!("european_cup_compare_phase2_draw_entries: original={} rust={}", r, n));
@@ -395,7 +395,7 @@ unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
 }
 
 /// Pura: a devolução.
-unsafe extern "C" fn comparar_comp_util_get_parent_stage_id(id: i32) -> i32 {
+unsafe extern "C" fn compare_comp_util_get_parent_stage_id(id: i32) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(%%I2%%)(id);
     let n = comp_util_get_parent_stage_id(id);
     SCOREBOARD.record(r == n, || format!("comp_util_get_parent_stage_id({:#x}): original={:#x} rust={:#x}", id, r, n));

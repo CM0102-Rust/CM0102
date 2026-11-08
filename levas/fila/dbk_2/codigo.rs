@@ -122,7 +122,7 @@ unsafe extern "C" fn database_get_club_scouts(clube: usize, vetor: *mut usize) -
     1
 }
 
-unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
+unsafe extern "C" fn compare_database_remove_staff_from_club(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%);
     if clube == 0 || pessoa == 0 {
         return o(clube, pessoa, data, desligar, como_jogador); // 0 ou caixa: só a original
@@ -145,7 +145,7 @@ unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: usize, pess
     r
 }
 
-unsafe extern "C" fn comparar_database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
+unsafe extern "C" fn compare_database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor); // caixa: só a original

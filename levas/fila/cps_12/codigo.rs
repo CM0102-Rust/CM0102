@@ -254,14 +254,14 @@ unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, anfitriao: u
 
 // ponytail: cria amistosos (aloca), manda os pedidos e libera o plano: não roda duas vezes. Só a original; a cópia leva o
 // ramo (pré-temporada da IA, 515 chamadas até 2002-06-01).
-unsafe extern "thiscall" fn comparar_create_due_planned_friendlies(this: usize) {
+unsafe extern "thiscall" fn compare_create_due_planned_friendlies(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// Comparador: aloca e acrescenta à lista (não roda duas vezes): a original faz e a cópia confere o resultado com o
 /// estádio de quem joga em casa visto antes (0x5ae870, só lê): ocupado → 0; senão o amistoso devolvido tem a data,
 /// +0xc o clube, +8 = 0, +0x18 = 1 e o mandante e o visitante pelo `em_casa`.
-unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usize, data: usize, adversario: usize, em_casa: u32) -> usize {
+unsafe extern "thiscall" fn compare_add_friendly_match(this: usize, clube: usize, data: usize, adversario: usize, em_casa: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize>(%%I1%%);
     let ocupada = home_stadium_busy_on(clube, data, adversario, em_casa);
     let (dia, ano) = (cps12_w(data), cps12_w(data + 2));
@@ -280,6 +280,6 @@ unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usiz
 }
 
 // ponytail: sorteia a data e acrescenta às listas: não roda duas vezes. Só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_plan_friendly_on_free_date(this: usize, anfitriao: usize, casa: usize, fora: usize) -> u32 {
+unsafe extern "thiscall" fn compare_plan_friendly_on_free_date(this: usize, anfitriao: usize, casa: usize, fora: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, anfitriao, casa, fora)
 }

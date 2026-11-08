@@ -248,7 +248,7 @@ unsafe extern "C" fn draw_match_stats_panel(topo: *mut i32, base: *mut i32) {
 /// 0xde1f64 têm de sair iguais. A lista (0x55fba0) também escreve num buffer de rede ([0xae2908] na
 /// posição [0xae290c]): a posição entra nas regiões (volta para a segunda rodada escrever no mesmo
 /// lugar e o tamanho escrito é comparado); o conteúdo desse buffer não.
-unsafe fn comparar_painel_pela_lista(nome: &str, original: impl FnOnce(), rust: impl FnOnce()) {
+unsafe fn compare_painel_pela_lista(nome: &str, original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
@@ -263,27 +263,27 @@ unsafe fn comparar_painel_pela_lista(nome: &str, original: impl FnOnce(), rust: 
     });
 }
 
-unsafe extern "C" fn comparar_draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn compare_draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(u32, *mut i32, *mut i32)>(%%I0%%);
-    comparar_painel_pela_lista("draw_team_stats_panel", || o(lado, topo, base), || draw_team_stats_panel(lado, topo, base));
+    compare_painel_pela_lista("draw_team_stats_panel", || o(lado, topo, base), || draw_team_stats_panel(lado, topo, base));
 }
 
-unsafe extern "C" fn comparar_draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn compare_draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
     // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
     // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
     if get_screen_param(0x1d) == 0 {
         return o(topo, base);
     }
-    comparar_painel_pela_lista("draw_player_ratings_panel", || o(topo, base), || draw_player_ratings_panel(topo, base));
+    compare_painel_pela_lista("draw_player_ratings_panel", || o(topo, base), || draw_player_ratings_panel(topo, base));
 }
 
-unsafe extern "C" fn comparar_draw_match_stats_panel(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn compare_draw_match_stats_panel(topo: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I2%%);
     // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
     // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
     if get_screen_param(0x1d) == 0 {
         return o(topo, base);
     }
-    comparar_painel_pela_lista("draw_match_stats_panel", || o(topo, base), || draw_match_stats_panel(topo, base));
+    compare_painel_pela_lista("draw_match_stats_panel", || o(topo, base), || draw_match_stats_panel(topo, base));
 }

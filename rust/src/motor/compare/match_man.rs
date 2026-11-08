@@ -4,13 +4,13 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../match_man.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `select_automatically` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_select_automatically(t: usize, other: usize, mode: u32) -> i8 {
+pub(crate) unsafe extern "thiscall" fn compare_select_automatically(t: usize, other: usize, mode: u32) -> i8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i8>(IDX_SELECT_AUTOMATICALLY)(t, other, mode)
 }
 
 /// Comparer for `apply_squad_rule` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn comparar_apply_squad_rule(
+pub(crate) unsafe extern "C" fn compare_apply_squad_rule(
     club: usize, manager: usize, rule: usize, mode: u32, nt: u32, nb: u32, nr: u32, starters: usize, bench: usize, reserve: usize,
     out: usize, codes: usize, curtos: usize, marks: usize, bytes: usize, side: usize,
 ) {
@@ -36,7 +36,7 @@ pub(crate) unsafe extern "C" fn comparar_apply_squad_rule(
 }
 
 /// Comparer for `off_match_score` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, club: usize, limit: i32, o: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_off_match_score(p: usize, pos: u32, flags: u32, club: usize, limit: i32, o: usize) -> i32 {
     let f = original_fn::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(IDX_OFF_MATCH_SCORE);
     if is_recording_top_level() {
         return f(p, pos, flags, club, limit, o);
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, fla
 
 /// Comparer for `lineup_slot_score` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn comparar_lineup_slot_score(
+pub(crate) unsafe extern "C" fn compare_lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, club: usize, side: usize, manager: usize, limit: i32, mark: u32, marca_alta: u32,
     bytes: u32, tactic: u32, pos2: u32, holiday: usize,
 ) -> i32 {
@@ -86,12 +86,12 @@ pub(crate) unsafe extern "C" fn comparar_lineup_slot_score(
 
 /// Comparer for `select_side` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_select_side(t: usize, m: usize, manager: usize, rows: usize, players: usize, side: u32, club: usize, other: usize, game: usize, slots: *mut i8) -> i8 {
+pub(crate) unsafe extern "thiscall" fn compare_select_side(t: usize, m: usize, manager: usize, rows: usize, players: usize, side: u32, club: usize, other: usize, game: usize, slots: *mut i8) -> i8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(IDX_SELECT_SIDE)(t, m, manager, rows, players, side, club, other, game, slots)
 }
 
 /// Comparer for `perceived_ability` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c: usize, kind: i8, rep: i16) -> i16 {
+pub(crate) unsafe extern "C" fn compare_perceived_ability(o: usize, p: usize, c: usize, kind: i8, rep: i16) -> i16 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(IDX_PERCEIVED_ABILITY)(o, p, c, kind, rep);
     let n = perceived_ability(o, p, c, kind, rep);
     SCOREBOARD.record(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, kind, rep, r, n));
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c
 
 /// Comparer for `pick` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn comparar_pick(
+pub(crate) unsafe extern "C" fn compare_pick(
     a1: usize, a2: u32, a3: usize, a4: u32, a5: u32, a6: usize, a7: u32, a8: usize, a9: usize, a10: u32, a11: u32, a12: usize, a13: usize, a14: u32, a15: usize,
 ) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, usize, u32, u32, usize, u32, usize, usize, u32, u32, usize, usize, u32, usize) -> u8>(IDX_PICK);
@@ -156,7 +156,7 @@ pub(crate) unsafe extern "C" fn comparar_pick(
 }
 
 /// Comparer for `stance` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_stance(c: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_stance(c: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_STANCE);
     let m = *((c + 0x12) as *const usize);
     // the active ones (engine+4/+5, 0x6cbbb0), the factor of both sides, the dates (0x54cdb0) and the pointer of the
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_stance(c: usize) -> u8 {
 }
 
 /// Comparer for `choose_formation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, sheets: usize, a2: u32, a3: u32, a4: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_choose_formation(c: usize, sheets: usize, a2: u32, a3: u32, a4: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8>(IDX_CHOOSE_FORMATION);
     let n = (a2 as u8 as i8).max(0) as usize;
     if is_recording_top_level() {
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, sheet
     // written and what the instructions touch), the rating dates (0x6e2f20) and the search pointer in the league
     let m = *((c + 0x12) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_COMP_STATS_SORT_CONTEXT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_COMP_STATS_SORT_CONTEXT, 4)]);
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let club = *((c + 0x2f) as *const usize);
@@ -201,13 +201,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, sheet
 }
 
 /// Comparer for `instructions` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_instructions(c: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_instructions(c: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INSTRUCTIONS);
     // the random roll, the engine (man-marking in the tactics block), the copied tactics (+0x2b) and the rows
     // of the club in the tactics database
     let m = *((c + 0x12) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4)]);
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let club = *((c + 0x2f) as *const usize);
@@ -227,15 +227,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_instructions(c: usize) {
 }
 
 /// Comparer for `put_in_place` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_put_in_place(c: usize, pos: u32, person: usize, extra: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_put_in_place(c: usize, pos: u32, person: usize, extra: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32) -> u8>(IDX_PUT_IN_PLACE);
     if is_recording_top_level() {
         // inside the starters (or the staff): tape unit
         return call_recording(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM, c, [pos, person as u32, extra, 0, 0], || o(c, pos, person, extra) as u32) as u8;
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(*((c + 0x12) as *const usize), MOTOR), (0xb67a34, 4)]);
-    let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || o(c, pos, person, extra), |chamar| {
+    reg.extend([(*((c + 0x12) as *const usize), ENGINE_SIZE), (0xb67a34, 4)]);
+    let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(c, pos, person, extra), |chamar| {
         place_in_slot_with(c, pos, person, extra, &mut |rotina, this, args| chamar(rotina, this, args, [u32::MAX, u32::MAX, 0xff, 0xff, 0xff]))
     });
     SCOREBOARD.record(igual && sequencia && r == rr, || format!("put_in_place({}, {:#x}) original={} rust={} {} chamadas: {}", pos as u8 as i8, person, r, rr, k, tape_detail()));
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_put_in_place(c: usize, pos: u32,
 }
 
 /// Comparer for `order_by_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_order_by_table(a: *const usize, b: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_order_by_table(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_ORDER_BY_TABLE)(a, b);
     let n = order_by_table(a, b);
     SCOREBOARD.record(r == n, || format!("order_by_table({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
@@ -251,7 +251,7 @@ pub(crate) unsafe extern "C" fn comparar_order_by_table(a: *const usize, b: *con
 }
 
 /// Comparer for `order_by_condition` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_order_by_condition(a: *const usize, b: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_order_by_condition(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_ORDER_BY_CONDITION)(a, b);
     let n = order_by_condition(a, b);
     SCOREBOARD.record(r == n, || format!("order_by_condition({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
@@ -259,15 +259,15 @@ pub(crate) unsafe extern "C" fn comparar_order_by_condition(a: *const usize, b: 
 }
 
 /// Comparer for `starters` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_starters(c: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_starters(c: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_STARTERS);
     if is_recording_top_level() {
         // inside the staff at the start of the match: tape unit
         return call_recording(FN_MATCH_MAN_PLACE_SELECTED_PLAYERS, c, [0, 0, 0, 0, 0], || o(c) as u32) as u8;
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(*((c + 0x12) as *const usize), MOTOR), (0xb67a34, 4)]);
-    let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || o(c), |chamar| {
+    reg.extend([(*((c + 0x12) as *const usize), ENGINE_SIZE), (0xb67a34, 4)]);
+    let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(c), |chamar| {
         starters_with(c, &mut |rotina, this, args| chamar(rotina, this, args, [0xff, u32::MAX, 0xff, 0, 0]))
     });
     SCOREBOARD.record(igual && sequencia && r == rr, || format!("starters(lado {}) original={} rust={} {} chamadas: {}", byte(c, 0x18), r, rr, k, tape_detail()));
@@ -275,16 +275,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_starters(c: usize) -> u8 {
 }
 
 /// Comparer for `store_tactic` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_store_tactic(c: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_store_tactic(c: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_STORE_TACTIC);
-    let mut reg = linhas_do_clube(*((c + 0x2f) as *const usize));
+    let mut reg = club_rows(*((c + 0x2f) as *const usize));
     reg.push((0xb67a34, 4));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c), || store_tactic(c));
-    SCOREBOARD.record(igual, || format!("store_tactic(humano {}) {}", byte(c, 0x19), primeira_diferenca(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("store_tactic(humano {}) {}", byte(c, 0x19), first_difference(&mo, &mr)));
 }
 
 /// Comparer for `substitute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_substitute(c: usize, goalkeeper: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_substitute(c: usize, goalkeeper: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SUBSTITUTE);
     if is_recording_top_level() {
         call_recording(FN_MATCH_MAN_MAKE_SUBSTITUTIONS, c, [goalkeeper, 0, 0, 0, 0], || {
@@ -295,8 +295,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_substitute(c: usize, goalkeeper:
     }
     let m = *((c + 0x12) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, MOTOR), (0xb67a34, 4)]);
-    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(c, goalkeeper), |chamar| {
+    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4)]);
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(c, goalkeeper), |chamar| {
         substitute_with(c, goalkeeper as u8, &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -311,7 +311,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_substitute(c: usize, goalkeeper:
 }
 
 /// Comparer for `redo_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_redo_team(c: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_redo_team(c: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REDO_TEAM);
     if is_recording_top_level() {
         call_recording(FN_MATCH_MAN_REASSIGN_POSITIONS, c, [0, 0, 0, 0, 0], || {
@@ -322,8 +322,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_redo_team(c: usize) {
     }
     let m = *((c + 0x12) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, MOTOR), (0xb67a34, 4)]);
-    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(c), |chamar| {
+    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4)]);
+    let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(c), |chamar| {
         rebuild_team_with(c, &mut |rotina, this, args| {
             let mask = match rotina {
                 0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
@@ -337,7 +337,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_redo_team(c: usize) {
 }
 
 /// Comparer for `best_in_list` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_best_in_list(this: usize, list: *const usize, n: i8) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_best_in_list(this: usize, list: *const usize, n: i8) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const usize, i8) -> usize>(IDX_BEST_IN_LIST);
     let reg = [crate::rng::STATE_REGIONS[0], crate::rng::STATE_REGIONS[1], (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
     let (r, rr, igual, _, _) = crate::comparison::side_by_side_light(&reg, || o(this, list, n), || best_in_list(this, list, n));
@@ -346,7 +346,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_best_in_list(this: usize, list: 
 }
 
 /// Comparer for `best_rated` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_best_rated(this: usize) -> i8 {
+pub(crate) unsafe extern "thiscall" fn compare_best_rated(this: usize) -> i8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i8>(IDX_BEST_RATED);
     let reg = [crate::rng::STATE_REGIONS[0], crate::rng::STATE_REGIONS[1], (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
     let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&reg, || o(this), || best_rated(this));
@@ -355,7 +355,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_best_rated(this: usize) -> i8 {
 }
 
 /// Comparer for `rate_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_rate_player(person: usize, player: usize, club: usize) -> i16 {
+pub(crate) unsafe extern "C" fn compare_rate_player(person: usize, player: usize, club: usize) -> i16 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> i16>(IDX_RATE_PLAYER);
     // 0x54cdb0 touches its static date: the comparison restores it
     let reg = [crate::rng::STATE_REGIONS[0], crate::rng::STATE_REGIONS[1], (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];

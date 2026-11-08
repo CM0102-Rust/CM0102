@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usiz
 /// ordem da original (vendedor: temporada, sempre; comprador: temporada, sempre; a segunda vez só acha), e com a fila
 /// de notícias sem folga para duas, só a original. Lado a lado pelos quatro registros (+0x365, 12 bytes), a conta das
 /// notícias e as duas vagas seguintes.
-unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
+unsafe extern "thiscall" fn compare_add_transfer_totals(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(%%I0%%);
     if comprador == 0 || vendedor == 0 || (cpm6_d(this + 0x28).wrapping_sub(cpm6_d(this + 0x2c)) as i32) < 2 {
         return o(this, valor, comprador, vendedor); // ponytail: com realloc da fila, só a original
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, valor: i32
 
 /// Comparador: o registro de sempre é pedido antes (pode ser criado; a segunda vez só acha); lado a lado pelos dois
 /// recordes e as referências (+0x247 a +0x27b). Nulos ou sem registro: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
+unsafe extern "thiscall" fn compare_club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I1%%);
     if jogador == 0 || clube == 0 {
         return o(this, jogador, clube, jogos, gols);
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: us
 }
 
 /// Comparador: lado a lado pelo recorde de nota (+0x1f1 a +0x210 do registro da temporada, pedido antes sem criar).
-unsafe extern "thiscall" fn comparar_update_season_rating_record(this: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_update_season_rating_record(this: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     if clube == 0 {
         return o(this, clube);

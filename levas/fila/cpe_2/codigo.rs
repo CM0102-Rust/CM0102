@@ -205,7 +205,7 @@ unsafe fn result_update_regions(p: usize, tab: usize, n: u32, pts_casa: *mut i16
     reg
 }
 
-unsafe extern "thiscall" fn comparar_apply_result_to_table(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
+unsafe extern "thiscall" fn compare_apply_result_to_table(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16)>(%%I0%%);
     let reg = result_update_regions(p, tab, n, pts_casa, pts_fora);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(liga, p, tab, n, marcar, pts_casa, pts_fora),
@@ -236,4 +236,4 @@ unsafe extern "thiscall" fn points_for_result(liga: usize, clube: usize, p: usiz
     (p as u32 & 0xffff_ff00) | v as u32
 }
 
-comparar_valor!(comparar_points_for_result, points_for_result, %%I1%%, (clube: usize, p: usize) -> u32);
+compare_value!(compare_points_for_result, points_for_result, %%I1%%, (clube: usize, p: usize) -> u32);

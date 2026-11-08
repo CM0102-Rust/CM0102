@@ -35,7 +35,7 @@ unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize) {
 
 // ponytail: os grupos e as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (os grupos gravam 2, o mesmo valor) fora da última fase, que dá a caixa e não muda nada.
-unsafe extern "thiscall" fn comparar_asia_club_champ_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_asia_club_champ_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let f = cqt12_d(this + 0x30) as i32;
     let ultima = f >= (cqt12_d(this + 0x2c) as i32).wrapping_sub(1);
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn create_group_stages(this: usize) {
 // ponytail: as fases são alocadas e as notícias vão aos técnicos: não roda duas vezes. Só a original; o plano: os vivos
 // lidos antes; depois as fases [+0xc][1] e [+0xc][2] com 4 times, o ano da copa e os 4 vivos de cada (em qualquer ordem:
 // o construtor ordena a tabela) e +0x30 = 2.
-unsafe extern "thiscall" fn comparar_create_group_stages(this: usize) {
+unsafe extern "thiscall" fn compare_create_group_stages(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     if cqt12_d(this + 0xc) == 0 || cqt12_d(cqt12_d(this + 0xc)) == 0 {
         return o(this);
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(this: usize)
 // ponytail: aloca a fase e sorteia a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][3] com 4
 // times, o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio pode
 // reordenar).
-unsafe extern "thiscall" fn comparar_asia_club_champ_create_semi_final_stage(this: usize) {
+unsafe extern "thiscall" fn compare_asia_club_champ_create_semi_final_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let fases = cqt12_d(this + 0xc);
     if fases == 0 || cqt12_d(fases + 4) == 0 || cqt12_d(fases + 8) == 0 {

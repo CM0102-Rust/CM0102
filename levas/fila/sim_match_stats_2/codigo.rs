@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn remove_language(estat: usize, ficha: usize, idioma: 
     *contagem -= 1;
 }
 
-unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
+unsafe extern "thiscall" fn compare_fill_match_record(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     // ponytail: a primeira chamada (data estática e atexit) e os erros só pela original
     if m == 0 || reg == 0 || *(0xb6b7c4 as *const u8) & 1 == 0 {
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, r
     r
 }
 
-unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
+unsafe extern "C" fn compare_match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(%%I1%%)(a, b);
     let n = match_stats_compare_events(a, b);
     SCOREBOARD.record(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
@@ -283,7 +283,7 @@ unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const
     r
 }
 
-unsafe extern "thiscall" fn comparar_remove_language(estat: usize, ficha: usize, idioma: i8) {
+unsafe extern "thiscall" fn compare_remove_language(estat: usize, ficha: usize, idioma: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(%%I2%%);
     let tabela = *((estat + 0x3c) as *const usize);
     let contagem = *((estat + 0x44) as *const i32);

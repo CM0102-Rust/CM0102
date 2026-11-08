@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -
 /// Comparador da 0x4c3f40: lado a lado com as duas listas (a original aloca a dela, a cópia a sua): a original roda e a
 /// lista dela fica; o estado do sorteador volta, a cópia roda sem contar e a lista dela é comparada com a da original e
 /// liberada (0x9452ca: push; add esp, 4 -> cdecl). Com menos de 32 inscritos (as caixas): só a original.
-unsafe extern "thiscall" fn comparar_conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let mut v = [0usize; 32];
     if libertadores_entrants(this, 0x20, &mut v) != 0x20 {
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this:
 // ponytail: os registros (histórico, convocações), o arquivo das estatísticas e as posições previstas do Mundial não
 // rodam duas vezes. Só a original; o plano: a devolução 0 e, no título (fase 7, desfecho 1), o campeão na vaga do
 // Mundial Interclubes que a regra escolhe (0 se lá está um clube do continente [0x9cfa1c], senão 1).
-unsafe extern "thiscall" fn comparar_conmebol_liber_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn compare_conmebol_liber_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%);
     let titulo = fase as u8 == 7 && desfecho as u8 == 1;
     let mut vaga = 0usize;
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn conmebol_liber_advance_stage(this: usize) {
 
 // ponytail: o mata-mata (0x4c3d10) aloca a fase e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa).
-unsafe extern "thiscall" fn comparar_conmebol_liber_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_conmebol_liber_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let f = cqk11_d(this + 0x30) as i32;
     if f >= (cqk11_d(this + 0x2c) as i32).wrapping_sub(1) {

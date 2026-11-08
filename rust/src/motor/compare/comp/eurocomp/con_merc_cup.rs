@@ -4,13 +4,13 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/eurocomp/con_merc_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `con_merc_cup_create_semi_final_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_semi_final_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_create_semi_final_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CON_MERC_CUP_CREATE_SEMI_FINAL_STAGE);
     con_merc_cup_compare_knockout_stage("con_merc_cup_create_semi_final_stage", this, 4, 3, 3, || o(this))
 }
 
 /// Comparer for `con_merc_cup_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CON_MERC_CUP_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
     let last = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this:
 /// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
 /// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_SELECT_INVITED_CLUBS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_club
 }
 
 /// Comparer for `con_merc_cup_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_MERC_CUP_UPDATE_FOR_DATE);
     let draws = read_u32_as_usize(this + 0x45) == 0
         && full != 0
@@ -82,7 +82,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(thi
 }
 
 /// Comparer for `con_merc_cup_create_first_group_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_first_group_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_create_first_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_CREATE_FIRST_GROUP_TABLE);
     let list = read_u32_as_usize(this + 0xee);
     if list == 0 {
@@ -103,7 +103,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_first_group_
 }
 
 /// Comparer for `con_merc_cup_create_group_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CON_MERC_CUP_CREATE_GROUP_STAGE);
     let list = read_u32_as_usize(this + 0xee);
     if list == 0 || !(0..3).contains(&g) {
@@ -124,14 +124,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_group_stage(
 }
 
 /// Comparer for `con_merc_cup_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_MERC_CUP_CREATE_SCHEDULE);
     compare_stage_schedule("con_merc_cup_create_schedule", stage, merconorte_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
         |r, e, l| con_merc_cup_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `con_merc_cup_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_SET_UP_RULES);
     check_cup_rules("con_merc_cup_set_up_rules", this, &MERCONORTE_RULES, || o(this))
 }

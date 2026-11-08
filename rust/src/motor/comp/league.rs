@@ -2679,7 +2679,7 @@ pub(crate) unsafe extern "thiscall" fn points_for_result(league: usize, club: us
     (p as u32 & 0xffff_ff00) | v as u32
 }
 
-comparar_valor!(comparar_points_for_result, points_for_result, IDX_POINTS_FOR_RESULT, (clube: usize, p: usize) -> u32);
+compare_value!(compare_points_for_result, points_for_result, IDX_POINTS_FOR_RESULT, (clube: usize, p: usize) -> u32);
 
 /// qsort callback comparing table rows with head-to-head: the own compare, the points, the club id with no games, the
 /// stored head-to-head position (+4) and the name.
@@ -2777,7 +2777,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_row(league: usize, club: usize,
     0
 }
 
-comparar_valor!(comparar_find_club_row, find_club_row, IDX_FIND_CLUB_ROW, (clube: usize, linhas: usize) -> usize);
+compare_value!(compare_find_club_row, find_club_row, IDX_FIND_CLUB_ROW, (clube: usize, linhas: usize) -> usize);
 
 /// 1 when the club has a row in the league table
 /// Original: `League::contains_club` (0x68abd0, league.cpp, thiscall, ret 4).
@@ -2803,7 +2803,7 @@ pub(crate) unsafe extern "thiscall" fn contains_club(league: usize, club: usize)
     0
 }
 
-comparar_valor!(comparar_contains_club, contains_club, IDX_CONTAINS_CLUB, (clube: usize) -> u32);
+compare_value!(compare_contains_club, contains_club, IDX_CONTAINS_CLUB, (clube: usize) -> u32);
 
 /// League table rows: 0x3b bytes each.
 ///
@@ -3817,8 +3817,8 @@ pub(crate) unsafe extern "thiscall" fn league_record(t: usize, i: i32) -> usize 
     core::ptr::read_unaligned((t + league::TABLE) as *const usize).wrapping_add((i as usize).wrapping_mul(59))
 }
 
-comparar_valor!(comparar_competition_flagged, competition_flagged, IDX_COMPETITION_FLAGGED, () -> u32);
-comparar_valor!(comparar_league_record, league_record, IDX_LEAGUE_RECORD, (i: i32) -> usize);
+compare_value!(compare_competition_flagged, competition_flagged, IDX_COMPETITION_FLAGGED, () -> u32);
+compare_value!(compare_league_record, league_record, IDX_LEAGUE_RECORD, (i: i32) -> usize);
 
 /// Returns the next position in the calendar rotation (special league, jumps of 3 by random draw, wrapping at n).
 ///

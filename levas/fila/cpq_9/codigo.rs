@@ -36,7 +36,7 @@ unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pessoa: usize
     if idade < 31 {
         return -10000;
     }
-    let mut nota = sortear((idade - 31) * 150); // a idade
+    let mut nota = random((idade - 31) * 150); // a idade
     let clube = cpq9_d(pessoa + 0x39);
     if clube != 0 {
         let injury_word_0c = cpq9_w(clube + 0x80);
@@ -48,7 +48,7 @@ unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pessoa: usize
     let jogador = cpq9_d(pessoa + 0x61);
     if jogador != 0 {
         let v = cpq9_b(jogador + 0x2f) / 2;
-        nota = nota.wrapping_add(sortear(match_pl_ftol(game_pow(v as f64, 3.0))));
+        nota = nota.wrapping_add(random(match_pl_ftol(game_pow(v as f64, 3.0))));
         if cpq9_w(jogador + 0xd) > 7500 {
             nota = nota.wrapping_add(100);
         }
@@ -64,15 +64,15 @@ unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pessoa: usize
         if cpq9_d(clube + 0xcf) == 0 {
             nota = nota.wrapping_add(75);
         }
-        return sortear(nota);
+        return random(nota);
     }
     let b = *((pessoa + 0x22) as *const u8) as i32;
     nota = nota.wrapping_add(b * b);
-    let r = sortear(10000); // sem clube
+    let r = random(10000); // sem clube
     if cpq9_w(cpq9_d(pessoa + 0x61) + 0xd) > r {
         nota = nota.wrapping_add(nota);
     }
-    sortear(nota)
+    random(nota)
 }
 
 /// A data que vale numa entrada da lista de aposentadorias: a do anúncio (+8: dia +0, ano +2) se ainda não passou da
@@ -136,7 +136,7 @@ unsafe extern "C" fn player_regen_compare_queue_entries(a: usize, b: usize) -> i
 }
 
 /// Comparador: lado a lado pelo estado do sorteio (a cópia sem contar), e a nota.
-unsafe extern "stdcall" fn comparar_player_regen_score_non_player_candidate(pessoa: usize) -> i32 {
+unsafe extern "stdcall" fn compare_player_regen_score_non_player_candidate(pessoa: usize) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> i32>(%%I0%%);
     let reg = crate::rng::STATE_REGIONS.to_vec();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa),
@@ -146,7 +146,7 @@ unsafe extern "stdcall" fn comparar_player_regen_score_non_player_candidate(pess
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_player_regen_compare_retirements(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_player_regen_compare_retirements(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = player_regen_compare_retirements(a, b);
     SCOREBOARD.record(r == n, || format!("player_regen_compare_retirements({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -154,7 +154,7 @@ unsafe extern "C" fn comparar_player_regen_compare_retirements(a: usize, b: usiz
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_player_regen_compare_queue_entries(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_player_regen_compare_queue_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = player_regen_compare_queue_entries(a, b);
     SCOREBOARD.record(r == n, || format!("player_regen_compare_queue_entries({:x}, {:x}) original={} rust={}", a, b, r, n));

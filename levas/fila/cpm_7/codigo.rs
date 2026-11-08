@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, 
 }
 
 /// Comparador: pelo valor (as datas e a vaga só são lidas). TapeCall pelas copas e ligas a cada data: sem contador.
-unsafe extern "thiscall" fn comparar_is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, comp, data);
     let n = is_comp_current_on_date(this, comp, data);
     SCOREBOARD.record(r == n, || format!("is_comp_current_on_date({}, {:?}) original={} rust={}", cpm7_d(comp), friendly_date_day_year(data), r, n));
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn comparar_is_comp_current_on_date(this: usize, comp: 
 }
 
 /// Comparador: lado a lado pelo cursor da lista (+0xa) e o valor.
-unsafe extern "thiscall" fn comparar_candidate_has_nearby_date(this: usize, clube: usize, data: usize) -> u32 {
+unsafe extern "thiscall" fn compare_candidate_has_nearby_date(this: usize, clube: usize, data: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let l = cpm7_d(clube + 0x12);
     let reg: &[(usize, usize)] = if l == 0 { &[] } else { &[(l + 0xa, 4)] };
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn comparar_candidate_has_nearby_date(this: usize, club
 
 /// Comparador: a original acrescenta (pode realocar, não roda duas vezes): o plano antes (a conta, os ids e a data),
 /// a original roda, confere o item novo e a conta.
-unsafe extern "thiscall" fn comparar_add_planned_friendly(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
+unsafe extern "thiscall" fn compare_add_planned_friendly(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
     let n = cpm7_d(this + 0x34e0);
     let esperado = [cpm7_d(data), cpm7_d(data + 4), 0, cpm7_d(anfitriao), cpm7_d(mandante), cpm7_d(visitante)];
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I2%%)(this, anfitriao, mandante, visitante, data);

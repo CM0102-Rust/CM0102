@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
 /// O comparador do dia do calendário: só a original (ponytail: as notícias vão aos técnicos, os nós dos amistosos e
 /// das filas são liberados e os jogos de reservas entram no calendário: não roda duas vezes). Confere o que a rotina
 /// garante: a fila das notícias some ([+0x1128] = 0 se havia) e a lista das conferências fica vazia.
-unsafe extern "thiscall" fn comparar_fix_man_daily_update(this: usize) {
+unsafe extern "thiscall" fn compare_fix_man_daily_update(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let havia = cqd6_d(this + 0x1128);
     let antes = cqd6_w(0xae2a48);
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn get_fixture_list(this: usize, ano: u32, dia: u32, fa
 
 /// O comparador da lista do dia: com o ano no bloco ou no outro bloco, as duas (só leem) e a mesma lista; senão só a
 /// original (ponytail: troca o bloco do outro ano, que grava e lê o arquivo, ou aloca um bloco novo).
-unsafe extern "thiscall" fn comparar_get_fixture_list(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
+unsafe extern "thiscall" fn compare_get_fixture_list(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(%%I1%%);
     let outro = cqd6_d(this + 0x112c);
     let direto = cqd6_w(this + 0x1130) == ano as i16 || (outro != 0 && cqd6_w(outro + 0x1130) == ano as i16);
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn load_fixtures(this: usize) {
 
 /// O comparador da carga dos jogos do ano: só a original (ponytail: lê o arquivo e aloca os nós das listas; não roda
 /// duas vezes). Confere o nome gravado em +0x1133.
-unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
+unsafe extern "thiscall" fn compare_load_fixtures(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let esperado = format!("fixtures_{}.tmp", cqd6_w(this + 0x1130) as u16);
     let s = core::slice::from_raw_parts((this + 0x1133) as *const u8, esperado.len() + 1);

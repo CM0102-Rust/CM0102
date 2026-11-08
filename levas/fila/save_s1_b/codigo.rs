@@ -68,7 +68,7 @@ unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize, padrao: u
 
 // ponytail: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
 // save compara o .qst gravado com e sem a leva.
-unsafe extern "C" fn comparar_zadd_matching_files(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
+unsafe extern "C" fn compare_zadd_matching_files(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(caminho, pasta, padrao, a4, tipo)
 }
 
@@ -177,7 +177,7 @@ unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: usize, padra
 
 // ponytail: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
 // (--sav) passa por aqui; a gravação não.
-unsafe extern "C" fn comparar_zextract_matching_files(caminho: usize, pasta: usize, padrao: usize) -> u32 {
+unsafe extern "C" fn compare_zextract_matching_files(caminho: usize, pasta: usize, padrao: usize) -> u32 {
     original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I1%%)(caminho, pasta, padrao)
 }
 
@@ -233,6 +233,6 @@ unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
 }
 
 // ponytail: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
-unsafe extern "C" fn comparar_utils_clear_temp_folder(padrao: usize) {
+unsafe extern "C" fn compare_utils_clear_temp_folder(padrao: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(%%I2%%)(padrao)
 }

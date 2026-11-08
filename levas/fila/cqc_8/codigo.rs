@@ -618,7 +618,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
 // ponytail: chama o pedido à federação (0x6a9e60), a notícia da reação (0x6a5fa0), as histórias da mídia (0x74b060), o
 // protesto, a demissão (0x69aba0) e tira item da lista dos ultimatos (0x68d1f0): alocam, liberam e sorteiam conforme o
 // caminho; não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_update_board_confidence_after_match(this: usize, clube: usize, partida: usize, jogo: usize, mandante: u32) {
+unsafe extern "thiscall" fn compare_update_board_confidence_after_match(this: usize, clube: usize, partida: usize, jogo: usize, mandante: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I0%%)(this, clube, partida, jogo, mandante)
 }
 
@@ -676,7 +676,7 @@ unsafe extern "thiscall" fn post_board_match_reaction_news(this: usize, clube: u
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_post_board_match_reaction_news(this: usize, clube: usize, outro: usize, partida: usize, marcas: u32, a: i32, b: i32, c: i32, d: i32) {
+unsafe extern "thiscall" fn compare_post_board_match_reaction_news(this: usize, clube: usize, outro: usize, partida: usize, marcas: u32, a: i32, b: i32, c: i32, d: i32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, i32, i32, i32, i32)>(%%I1%%)(this, clube, outro, partida, marcas, a, b, c, d)
 }
 
@@ -705,6 +705,6 @@ unsafe extern "thiscall" fn post_fa_performance_news(_this: usize, comp: usize, 
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_fa_performance_news(this: usize, comp: usize, selecao: usize, nota: u32) {
+unsafe extern "thiscall" fn compare_post_fa_performance_news(this: usize, comp: usize, selecao: usize, nota: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, comp, selecao, nota)
 }

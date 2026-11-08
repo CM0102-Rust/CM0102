@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
 /// ordem da lista; cada um do tipo da liga ocupa a vaga seguinte (de 7 em 7 bytes, até 0x38 e até a primeira 0xff), e
 /// a vaga do que está na data da rodada fica 0xff; as outras vagas não mudam. Sem a copa em [0xadadfc] depois: nada a
 /// conferir.
-unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates(this: usize, data: usize, rodada: u32) {
+unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(this: usize, data: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let e = cup_round_entry(this, rodada);
     if cqc7_w(e + 0xd) as u16 & 0x100 == 0 || cqc7_b(e + 0x29) == 0xff {
@@ -366,7 +366,7 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
 /// Comparador da 0x8c41c0: só a original (os nós da troca são liberados, a notícia vai aos técnicos e a oferta segue
 /// pela 0x8c2f50, que pode fechar a transferência e tirar outros jogadores das trocas, ou ser respondida pelo vendedor
 /// do computador, 0x8c8090, que pode mudar a oferta da vaga).
-unsafe extern "thiscall" fn comparar_remove_exchange_player(this: usize, pessoa: usize, oferta: usize, so_esta: u32, motivo: u32) {
+unsafe extern "thiscall" fn compare_remove_exchange_player(this: usize, pessoa: usize, oferta: usize, so_esta: u32, motivo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%)(this, pessoa, oferta, so_esta, motivo) // ponytail: o efeito segue por outras rotinas
 }
 
@@ -472,7 +472,7 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
 /// Comparador da 0x8c7690: só a original (as notícias alocam, a oferta é reagendada e segue pela 0x8c2f50). O plano,
 /// feito antes pelas consultas sem efeito (0x8c7560, 0x4cc9e0, 0x8c7950 sem sorteio): o alvo recusado devolve 0 com a
 /// oferta no status 0x10; senão 1.
-unsafe extern "thiscall" fn comparar_check_offer_work_permits(this: usize, oferta: usize, quieto: u32) -> u32 {
+unsafe extern "thiscall" fn compare_check_offer_work_permits(this: usize, oferta: usize, quieto: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     let (precisa, proposta, concedida) = check_work_permit(this, transfer_manager_staff_by_id(cqc7_d(oferta + 0xc)), transfer_manager_club_by_id(cqc7_d(oferta + 8)));
     let recusada = precisa && proposta != 0 && !concedida;

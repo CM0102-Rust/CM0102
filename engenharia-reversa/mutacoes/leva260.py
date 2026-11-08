@@ -8,7 +8,7 @@ MUTACOES = [
     ('cpx1_sem_desmarcar_comprador', '    clear_bid_markers(this, friendly_club_by_id(read_usize(o + 8)), p); // cpx1: desmarcar os lances do comprador', '    let _ = p; // mutacao: os lances do comprador ficam marcados', 'cpx_1 recusa desmarca'),
     ('cpx2_sorteio_2000', '    if (read_i16(buyer + club::REPUTATION) as i32) > r.wrapping_add(0x109a) { // cpx2: o sorteio do desassossego', '    if (read_i16(buyer + club::REPUTATION) as i32) > r.wrapping_add(2000) { // mutacao: o limite em 2000', 'cpx_2 sorteio do desassossego'),
     ('cpx2_interesse_4_5', '    if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo', '    if !(x >= 4.5) { // mutacao: o interesse minimo em 4,5', 'cpx_2 interesse avaliado'),
-    ('cpx2_sem_desconto_do_listado', '        n = n.wrapping_add((-2000i32).wrapping_sub(sortear(0x1770)) as i16); // cpx2: o desconto do listado', '        // mutacao: sem o desconto do listado', 'cpx_2 listado'),
+    ('cpx2_sem_desconto_do_listado', '        n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: o desconto do listado', '        // mutacao: sem o desconto do listado', 'cpx_2 listado'),
     ('cpx3_sem_pagamento', '        with_offer(0x8ca8a0, this); // cpx3: o pagamento da transferência', '        // mutacao: sem o pagamento', 'cpx_3 paga a transferencia'),
     ('cpx3_sem_parte_dos_anteriores', '        with_offer(0x8e4f20, this); // cpx3: a parte dos clubes anteriores', '        // mutacao: sem a parte dos clubes anteriores', 'cpx_3 parte dos clubes anteriores'),
     ('cpx3_sem_confianca', '    confianca(read_usize(G_MANAGER_MANAGER), o); // cpx3: a confiança das diretorias', '    let _ = confianca; // mutacao: sem a confianca das diretorias', 'cpx_3 confianca das diretorias'),

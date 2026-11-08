@@ -89,7 +89,7 @@ unsafe extern "C" fn club_get_national_team_name(clube: usize, variante: u32, te
     1
 }
 
-unsafe extern "C" fn comparar_club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
+unsafe extern "C" fn compare_club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(%%I0%%);
     let f = forma as u8 as i8;
     if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
@@ -160,7 +160,7 @@ unsafe extern "C" fn database_get_player_attribute_name(atributo: u32, texto: us
     1
 }
 
-unsafe extern "C" fn comparar_database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+unsafe extern "C" fn compare_database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I1%%);
     let x = atributo as u8 as i8;
     if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
@@ -331,7 +331,7 @@ unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usi
     1
 }
 
-unsafe extern "C" fn comparar_database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn compare_database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%);
     if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
         return o(jogador, texto, tamanho, forma); // caixa: só a original

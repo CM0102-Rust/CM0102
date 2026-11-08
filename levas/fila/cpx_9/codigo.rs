@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usi
 
 /// Comparador: lado a lado pela devolução, pela linha do clube na tabela tática (as vagas, as extras e os batedores) e
 /// pelas cópias para desfazer com a conta. Clube ou pessoa nulos (caixa): só a original.
-unsafe extern "thiscall" fn comparar_remove_player_from_selection(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
+unsafe extern "thiscall" fn compare_remove_player_from_selection(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%);
     if clube == 0 || pessoa == 0 {
         return o(this, clube, pessoa, time, papeis);
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn swap_selection_slots(this: usize, clube: usize, a: u
 
 /// Comparador: lado a lado pela devolução, pela linha tática do clube e pelas cópias para desfazer. Clube nulo ou vaga
 /// fora (caixa): só a original.
-unsafe extern "thiscall" fn comparar_swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
+unsafe extern "thiscall" fn compare_swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(%%I1%%);
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
     if clube == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: usize, time: 
 }
 
 /// Comparador: a devolução (rotina pura).
-unsafe extern "thiscall" fn comparar_has_selection_undo(this: usize, clube: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn compare_has_selection_undo(this: usize, clube: usize, time: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%)(this, clube, time);
     let n = has_selection_undo(this, clube, time);
     SCOREBOARD.record(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));

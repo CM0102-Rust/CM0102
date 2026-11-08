@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usize, n: u32,
 /// Só a original (a base, as alocações e a árvore, que sorteia: não roda duas vezes), conferindo o plano feito antes: devolve
 /// this, +0x3e = n, +0x3c = as rodadas, +0x40 = o ano, as duas tabelas montadas e, na lista, os mesmos clubes.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
+unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
     #[allow(clippy::type_complexity)]
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(%%I0%%);
@@ -157,6 +157,6 @@ unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
 }
 
 // ponytail: libera as tabelas e destrói a base; não pode rodar duas vezes: só a original
-unsafe extern "thiscall" fn comparar_destroy_cup_stage(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_destroy_cup_stage(this: usize) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%)(this)
 }

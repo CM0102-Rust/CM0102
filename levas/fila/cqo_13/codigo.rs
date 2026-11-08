@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn conmebol_liber_create_schedule(this: usize, fase: u3
         "cqo_13 grupos da libertadores", "cqo_13 mata-mata da libertadores")
 }
 
-unsafe extern "thiscall" fn comparar_conmebol_liber_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_conmebol_liber_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     compare_south_american_cup_schedule("conmebol_liber_create_schedule", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
         |r, e, l| conmebol_liber_create_schedule(this, fase, r, e, l))
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize, fase: u32
         "cqo_13 grupos da mercosul", "cqo_13 mata-mata da mercosul")
 }
 
-unsafe extern "thiscall" fn comparar_conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
     compare_south_american_cup_schedule("conmebol_merc_create_schedule", fase, rodadas, extra, liga, 4, &MERCOSUR_FINAL_EXTRA_WRITES, || o(this, fase, rodadas, extra, liga),
         |r, e, l| conmebol_merc_create_schedule(this, fase, r, e, l))
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn conmebol_merc_select_invited_clubs(this: usize) -> i
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nos convidados que ela gravou e liberada.
-unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);

@@ -8,7 +8,7 @@ use super::*;
 ///
 /// [pt] Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
 /// cópia faz a sua, comparada nas 12 vagas e liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_set_up_team_list(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SET_UP_TEAM_LIST);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) ->
 }
 
 /// Comparer for `goldcup_set_predicted_positions` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_SET_PREDICTED_POSITIONS);
     if read_u32_as_usize(this + 8) == 0 || read_u32_as_usize(this + 0xee) == 0 || read_u32_as_usize(this + 0xf2) != 0xc {
         return o(this);
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(
 }
 
 /// Comparer for `goldcup_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_start_new_season(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_START_NEW_SEASON);
     let year = read_i16(this + 0x40);
     o(this);
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: u
 }
 
 /// Comparer for `goldcup_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_FOR_DATE);
     let draws = read_u32_as_usize(this + 0x45) == 0
         && full == 0
@@ -87,7 +87,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: us
 }
 
 /// Comparer for `goldcup_create_group_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_CREATE_GROUP_TABLE);
     let list = read_u32_as_usize(this + 0xee);
     if list == 0 {
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this:
 }
 
 /// Comparer for `goldcup_create_group_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_GOLDCUP_CREATE_GROUP_STAGE);
     let list = read_u32_as_usize(this + 0xee);
     if list == 0 || !(0..2).contains(&g) {
@@ -129,26 +129,26 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this:
 }
 
 /// Comparer for `goldcup_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE);
     compare_phase_table("goldcup_create_schedule", stage, copa_america_phase(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
         |r, e, l| goldcup_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `goldcup_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES);
     check_set_up_rules("goldcup_set_up_rules", this, &COPA_AMERICA_RULE_FIELDS, (0x14, 2, 0, 5), 0, || o(this))
 }
 
 /// Comparer for `goldcup_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_ADVANCE_STAGE);
     con_merc_cup_compare_advance_stage("goldcup_advance_stage", this, || o(this))
 }
 
 /// Comparer for `goldcup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_goldcup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, a6);
     SCOREBOARD.record(r == 0, || format!("goldcup_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", club, outcome as u8, stage as u8, r));
     r

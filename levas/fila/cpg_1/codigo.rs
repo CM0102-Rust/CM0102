@@ -45,21 +45,21 @@ unsafe extern "thiscall" fn future_transfer_assign(this: usize, origem: usize) -
     this
 }
 
-unsafe extern "thiscall" fn comparar_news_operator(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_news_operator(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0xdf)], || o(this, origem), || news_operator(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("news_operator {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_past_transfer_copy_construct(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_past_transfer_copy_construct(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x25)], || o(this, origem), || past_transfer_copy_construct(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("past_transfer_copy_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_future_transfer_assign(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_future_transfer_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0xc)], || o(this, origem), || future_transfer_assign(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("future_transfer_assign {:x?} x {:x?}", mo, mr));

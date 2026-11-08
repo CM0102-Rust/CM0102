@@ -132,7 +132,7 @@ unsafe fn build_interest_record(jogador: usize, clube: usize, valor: i32, avalia
 
 /// Comparador: a original pode alocar e realocar (não roda duas vezes): o plano antes (já está? o registro novo);
 /// confere a conta e que o registro novo está no vetor (a ordem é a do qsort).
-unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
+unsafe extern "thiscall" fn compare_add_transfer_interest(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
     let n = cpl7_d(this + 0x14);
     let ja_esta = has_interest(this, &interest_key(jogador, clube));
     let esperado = if ja_esta { None } else { Some(build_interest_record(jogador, clube, valor, avaliacao)) };
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usize, jogador:
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_id_pair_keys(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_id_pair_keys(a, b);
     SCOREBOARD.record(r == n, || format!("compare_id_pair_keys({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -156,7 +156,7 @@ unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_compare_story_log_records(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_story_log_records(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_story_log_records(a, b);
     SCOREBOARD.record(r == n, || format!("compare_story_log_records({:x}, {:x}) original={} rust={}", a, b, r, n));

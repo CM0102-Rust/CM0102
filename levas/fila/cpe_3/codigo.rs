@@ -50,7 +50,7 @@ unsafe extern "C" fn league_compare_table_rows_h2h(a: usize, b: usize) -> i32 {
     }
 }
 
-unsafe extern "C" fn comparar_league_compare_table_rows_h2h(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_league_compare_table_rows_h2h(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = league_compare_table_rows_h2h(a, b);
     SCOREBOARD.record(r == n, || format!("league_compare_table_rows_h2h({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -75,7 +75,7 @@ unsafe extern "C" fn league_compare_dates(a: usize, b: usize) -> i32 {
     }
 }
 
-unsafe extern "C" fn comparar_league_compare_dates(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_league_compare_dates(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = league_compare_dates(a, b);
     SCOREBOARD.record(r == n, || format!("league_compare_dates({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn find_club_row(liga: usize, clube: usize, linhas: usi
     0
 }
 
-comparar_valor!(comparar_find_club_row, find_club_row, %%I2%%, (clube: usize, linhas: usize) -> usize);
+compare_value!(compare_find_club_row, find_club_row, %%I2%%, (clube: usize, linhas: usize) -> usize);
 
 /// { 0x68abd0 } (thiscall, ret 4, league.cpp; virtual +0x80 das ligas): `League::contains_club(clube)`: 1 se o
 /// clube tem linha na tabela da liga (+0xb1, +0x3e linhas; a linha no endereço 0 conta como não), senão 0.
@@ -126,4 +126,4 @@ unsafe extern "thiscall" fn contains_club(liga: usize, clube: usize) -> u32 {
     0
 }
 
-comparar_valor!(comparar_contains_club, contains_club, %%I3%%, (clube: usize) -> u32);
+compare_value!(compare_contains_club, contains_club, %%I3%%, (clube: usize) -> u32);

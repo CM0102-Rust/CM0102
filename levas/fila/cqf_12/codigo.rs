@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
 /// Comparador da 0x7f8750: os relatórios sorteiam e alocam e as buscas mexem nas listas dos humanos: só a original
 /// roda. Antes, a cópia em ensaio poda uma cópia dos pedidos (sem os relatórios) e os põe na ordem da original; os
 /// pedidos que a original deixa (conta e os 0x11 bytes de cada) têm de ser esses.
-unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_scout_manager_daily_update(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     if cqf12_b(0xae2c88) != 2 {
         return o(this);
@@ -306,7 +306,7 @@ unsafe extern "thiscall" fn send_scout_reports(this: usize, lista: usize) {
 /// Comparador da 0x7f9890: a original entrega notícias (aloca nas caixas): só ela roda, com o registro das chamadas à
 /// 0x7f9a60 ligado; antes, a cópia em ensaio (sem a 0x7f9a60) diz os grupos (jogador, clube, quantos) em ordem, e as
 /// chamadas da original têm de ser essas.
-unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, lista: usize) {
+unsafe extern "thiscall" fn compare_send_scout_reports(this: usize, lista: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let cursor = cqf12_d(lista + 0xa);
     *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) = Some(Vec::new());
@@ -376,7 +376,7 @@ unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: usize, quanto
 
 /// Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (ponytail: o efeito é a
 /// caixa de entrada; os grupos que chegam aqui são conferidos pela 0x7f9890). Com o registro ligado, anota a chamada.
-unsafe extern "thiscall" fn comparar_send_scout_report_news(this: usize, r: usize, quantos: u32) {
+unsafe extern "thiscall" fn compare_send_scout_report_news(this: usize, r: usize, quantos: u32) {
     if let Some(g) = &mut *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) {
         g.push((cqf12_d(r + 0x2b) as u32, cqf12_d(r + 0x50) as u32, quantos as u8));
     }

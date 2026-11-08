@@ -285,12 +285,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 *w(o) = match_pl_ftol(x + x) as i16;
             }
         }
-        let c7 = sortear(2) as u8;
+        let c7 = random(2) as u8;
         let mut round = 0u8;
         'rodadas: while *b(0x1a8) == 0 {
             side = if c7 != 0 { round as usize } else { (round == 0) as usize };
             let other = (side == 0) as usize;
-            let strong = || sortear(word(0x1de, side) + word(0x1da, side)) > sortear(word(0x1da, other) + word(0x1de, other));
+            let strong = || random(word(0x1de, side) + word(0x1da, side)) > random(word(0x1da, other) + word(0x1de, other));
             // the three attacks (the third by strength)
             for k in 0..3 {
                 if k >= 2 && !strong() {
@@ -299,7 +299,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 mais16(w(0xf5e2 + side * 0x36));
                 let mut t = 0u8;
                 let i = loop {
-                    let i = sortear(0x14) as i8;
+                    let i = random(0x14) as i8;
                     t += 1;
                     if t >= 0x78 || byte(jog(side, i), 0x19) >= 0 {
                         break i;
@@ -311,7 +311,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 }
                 let p = jog(side, i);
                 let f = (read_f32_at(p + match_player::PASSING) as f64 + read_f32_at(0x96afb0) as f64) as f32; // 0x96afb0 = 20
-                let r = sortear((word(0x1da, other) + 200) / 19);
+                let r = random((word(0x1da, other) + 200) / 19);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5e4 + side * 0x36));
                     add(p, 0x28);
@@ -328,7 +328,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 }
                 let p = jog(side, c as i8);
                 let f = (read_f32_at(p + match_player::TACKLING) as f64 + read_f32_at(0x96b020) as f64) as f32; // 0x96b020 = 15
-                let r = sortear(word(0x1de, other) / 5);
+                let r = random(word(0x1de, other) / 5);
                 if !(r as f64 >= f as f64) {
                     add(p, 0x28);
                     mais16(w(0xf5e8 + side * 0x36));
@@ -340,7 +340,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 mais16(w(0xf5ea + side * 0x36));
                 let mut t = 0u8;
                 let i = loop {
-                    let i = sortear(0x14) as i8;
+                    let i = random(0x14) as i8;
                     t += 1;
                     if t >= 0x78 {
                         end = true;
@@ -352,7 +352,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 };
                 let p = jog(side, i);
                 let f = (read_f32_at(p + match_player::JUMPING) as f64 + read_f32_at(0x96b020) as f64) as f32; // 0x96b020 = 15
-                let r = sortear((word(0x1f2, other) + 100) / 7);
+                let r = random((word(0x1f2, other) + 100) / 7);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5ec + side * 0x36));
                     add(p, 0x14);
@@ -360,19 +360,19 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     add(p, -8);
                 }
             }
-            if sortear(10) == 0 {
+            if random(10) == 0 {
                 more(b(0xf5c8 + side * 0x36));
             }
             let p = jog(side, choose_by_role(m, side as u32) as i8);
             let v = match_pl_ftol(read_f32_at(p + match_player::MOVEMENT) as f64 + read_f32_at(0x96afb0) as f64); // 0x96afb0 = 20
-            if sortear(v) < sortear(2) {
+            if random(v) < random(2) {
                 add(p, -0xf);
                 more(b(0xf5ca + side * 0x36));
             }
             // the other side’s cards, or the type of the move
             local_28 = 0;
             let mut c20 = false;
-            if sortear(word(0x1ea, other)) > sortear(0x640) {
+            if random(word(0x1ea, other)) > random(0x640) {
                 let mo = m + other * 0x36;
                 more((mo + 0xf5c9) as *mut u8);
                 let expulsar = |c: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
@@ -383,12 +383,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     team_strength(m, other as i8);
                     narrate(call, 0x1ff8, c, other);
                 };
-                if sortear(word(0x1ea, other)) > sortear(0x61a8) {
+                if random(word(0x1ea, other)) > random(0x61a8) {
                     crate::comparison::branch("simulacao rapida expulsao");
                     let c = choose_by_condition(m, other as i8, 4);
                     add(jog(other, c as i8), -0xfa);
                     expulsar(c, call);
-                } else if sortear(word(0x1ea, other)) > sortear(0x6a4) {
+                } else if random(word(0x1ea, other)) > random(0x6a4) {
                     crate::comparison::branch("simulacao rapida give_yellow_card");
                     let c = choose_by_condition(m, other as i8, 2);
                     let p = jog(other, c as i8);
@@ -418,13 +418,13 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         break 'rodadas;
                     }
                 }
-                if sortear(0x1e) != 0 {
+                if random(0x1e) != 0 {
                     c20 = true;
                     more((mo + 0xf5c6) as *mut u8);
                 } else {
                     local_28 = 1;
                 }
-            } else if sortear(word(0x1de, side)) > sortear(3000) {
+            } else if random(word(0x1de, side)) > random(3000) {
                 c20 = true;
                 more(b(0xf5c7 + side * 0x36));
             }
@@ -445,8 +445,8 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             } else {
                 (word(0x1da, other) as f64 * x * read_f64_at(0x96d318), split_b) // 0x96d318 = 4.8
             };
-            let r1 = sortear(match_pl_ftol(v));
-            let l24 = sortear(word(0x1de, side)).wrapping_sub(r1) as i16;
+            let r1 = random(match_pl_ftol(v));
+            let l24 = random(word(0x1de, side)).wrapping_sub(r1) as i16;
             if l24 > 0 {
                 split_a(m, side as i8, 0x1c);
                 repartir_outro(m, other as i8, -0x14);
@@ -455,23 +455,23 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 repartir_outro(m, other as i8, 0x28);
             }
             // o chute
-            if l24 > 0 && sortear(goals(1) + goals(0)) <= 3 {
+            if l24 > 0 && random(goals(1) + goals(0)) <= 3 {
                 let ml = m + side * 0x36;
                 if local_28 != 0 {
                     more((ml + 0xf5c0) as *mut u8);
                 }
                 more((ml + 0xf5be) as *mut u8);
                 let c8 = choose_by_role_e(m, side as u32, c20 as u32) as i8;
-                let a = if c20 { sortear(word(0x1ee, side)) } else { sortear(word(0x1e2, side) * (local_28 as i32 + 1)) };
+                let a = if c20 { random(word(0x1ee, side)) } else { random(word(0x1e2, side) * (local_28 as i32 + 1)) };
                 let us = a as i16 as i32;
-                if us + 0xa5 > sortear(0x172) + (0x168 - l24 as i32) {
+                if us + 0xa5 > random(0x172) + (0x168 - l24 as i32) {
                     more((ml + 0xf5bf) as *mut u8);
                     if c20 {
                         split_d(m, side as i8, a as i16);
                     } else {
                         split_e(m, side as i8, a as i16);
                     }
-                    if us + 0x2d > sortear((7 - local_28 as i32 * 3) * word(0x1e6, other)) {
+                    if us + 0x2d > random((7 - local_28 as i32 * 3) * word(0x1e6, other)) {
                         crate::comparison::branch("simulacao rapida gol");
                         let c9 = choose_by_role_c(m, side as u32, local_28 as u32);
                         let p = jog(side, c9 as i8);
@@ -487,7 +487,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         } else {
                             narrate(call, 0x1fcc, c9, side);
                             if c20 {
-                                let o = match sortear(4) {
+                                let o = match random(4) {
                                     0 | 1 => 0xf5c3,
                                     2 => 0xf5c5,
                                     _ => 0xf5c4,
@@ -599,14 +599,14 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     };
     if penalties {
         crate::comparison::branch("simulacao rapida penalties");
-        sortear(5);
-        sortear(5);
-        *pb(0x49) = sortear(5) as i8;
-        sortear(5);
-        sortear(5);
-        *pb(0x4a) = sortear(5) as i8;
+        random(5);
+        random(5);
+        *pb(0x49) = random(5) as i8;
+        random(5);
+        random(5);
+        *pb(0x4a) = random(5) as i8;
         if *pb(0x49) == *pb(0x4a) {
-            let o = if sortear(2) != 0 { 0x49 } else { 0x4a };
+            let o = if random(2) != 0 { 0x49 } else { 0x4a };
             *pb(o) = (*pb(o)).wrapping_add(1);
         }
     }
@@ -618,7 +618,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     }
     // the home goal
     let c1 = u(pt(), 0x1c);
-    if c1 != 0 && u(pt(), 0x14) == u(c1, club::DIVISION) && (*pb(0x43) as i32 + *pb(0x44) as i32) < 5 && *pb(0x43) == *pb(0x44) && sortear(4) == 0 {
+    if c1 != 0 && u(pt(), 0x14) == u(c1, club::DIVISION) && (*pb(0x43) as i32 + *pb(0x44) as i32) < 5 && *pb(0x43) == *pb(0x44) && random(4) == 0 {
         let (r0, r1) = (*((c1 + club::REPUTATION) as *const i16) as i32, *((u(pt(), 0x20) + 0x80) as *const i16) as i32);
         let s = if r0 > r1 { Some(0) } else if r0 + 0xfa < r1 { Some(1) } else { None };
         if let Some(s) = s {
@@ -648,14 +648,14 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 } else if !(f >= read_f32_at(0x96d308)) { // 0x96d308 = 8000
                     cl = cl.wrapping_add(5);
                 }
-                if sortear(cl as i8 as i32) < sortear(400) {
+                if random(cl as i8 as i32) < random(400) {
                     continue;
                 }
                 let comp = u(pt(), 0x14);
                 let league = u(G_FRIENDLY, 0);
                 let ceiling = if comp == 0 || (league != 0 && is_friendly(league, comp) != 0) { 0x5b } else { 0x66 };
-                let g = sortear(ceiling) as u8;
-                let kind = match sortear(10) {
+                let g = random(ceiling) as u8;
+                let kind = match random(10) {
                     0 => 1,
                     1..=3 => 3,
                     4..=6 => 4,
@@ -689,10 +689,10 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         if *w(a) < 10 {
             crate::comparison::branch("simulacao rapida contador reiniciado");
             *w(a) = 0x14;
-            *w(x) = (sortear(6) + 12) as i16;
+            *w(x) = (random(6) + 12) as i16;
         } else if *w(a) == *w(x) {
             crate::comparison::branch("simulacao rapida contador igual");
-            let r = sortear(3);
+            let r = random(3);
             *w(x) = (*w(x)).wrapping_add((-1i32).wrapping_sub(r) as i16);
         }
     }
@@ -1250,7 +1250,7 @@ pub(crate) unsafe extern "thiscall" fn formation_record(t: usize, f: i16, human:
     }
 }
 
-comparar_valor!(comparar_formation_record, formation_record, IDX_FORMATION_RECORD, (f: i16, humano: u32) -> usize);
+compare_value!(compare_formation_record, formation_record, IDX_FORMATION_RECORD, (f: i16, humano: u32) -> usize);
 
 /// Sets the two extra slots (+0x56, +0x5a) of the club's row.
 ///
@@ -1272,7 +1272,7 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, 
     if l == -1 {
         return 0;
     }
-    let row = linha_da_tabela(t, l);
+    let row = table_row(t, l);
     let home = (row + 0x56 + 4 * which as usize) as *mut u32;
     if !person.is_null() {
         crate::comparison::branch("vaga extra gravada");
@@ -1385,7 +1385,7 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, club: usize, sl
     if l == -1 {
         return 0;
     }
-    core::ptr::write_unaligned((linha_da_tabela(t, l) + 2 + 4 * slot as usize) as *mut u32, *person);
+    core::ptr::write_unaligned((table_row(t, l) + 2 + 4 * slot as usize) as *mut u32, *person);
     let pendentes = (t + 0x5f0) as *mut u8;
     if *pendentes != 0 {
         for k in 0..16 {
@@ -1422,7 +1422,7 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
     if l == -1 {
         return 0;
     }
-    let home = (linha_da_tabela(t, l) + 2 + 4 * slot as usize) as *mut i32;
+    let home = (table_row(t, l) + 2 + 4 * slot as usize) as *mut i32;
     let id = core::ptr::read_unaligned(home);
     if id <= -1 {
         return 0;
@@ -1461,7 +1461,7 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_formation(t: usize, club: usiz
     if l == -1 {
         return 0;
     }
-    core::ptr::write_unaligned(linha_da_tabela(t, l) as *mut i16, formation);
+    core::ptr::write_unaligned(table_row(t, l) as *mut i16, formation);
     1
 }
 

@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje: usize, co
 // ponytail: a lista, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano no
 // dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e as duas
 // fases criadas e a fase atual (+0x30) a última delas (1).
-unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_goldcup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = cqr13_d(this + 0x45) == 0
         && completo == 0
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -> u32 {
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado 3i com a posição i (+4).
-unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_goldcup_create_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqr13_d(this + 0xee);
     if lista == 0 {
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
-unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this: usize, g: i32) -> u32 {
+unsafe extern "thiscall" fn compare_goldcup_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(%%I2%%);
     let lista = cqr13_d(this + 0xee);
     if lista == 0 || !(0..2).contains(&g) {

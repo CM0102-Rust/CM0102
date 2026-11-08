@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nacao: usize, clu
 }
 
 /// Comparador: lado a lado pelos `n` bytes do destino.
-unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
+unsafe extern "thiscall" fn compare_get_slot_string(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(%%I0%%);
     let k = dado as u8 as i8;
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
@@ -107,13 +107,13 @@ unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, dado: u32, 
 
 /// Comparador: a notícia sorteia (0x90cfc0) e vai para as caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
-unsafe extern "thiscall" fn comparar_post_financial_trouble_news(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_post_financial_trouble_news(this: usize, clube: usize) {
     crate::comparison::branch("post_financial_trouble_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
 }
 
 /// Comparador: pelo valor (a 0x5a0590 só procura).
-unsafe extern "thiscall" fn comparar_can_club_scout_nation(this: usize, nacao: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_can_club_scout_nation(this: usize, nacao: usize, clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, nacao, clube);
     if club_or_current_human(clube) == 0 {
         return r;

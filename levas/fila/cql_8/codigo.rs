@@ -98,17 +98,17 @@ unsafe fn bra_reg_bahia_compare_state_league_table(nome: &str, this: usize, n: i
     r
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_table(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_bahia_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     bra_reg_bahia_compare_state_league_table("bra_reg_bahia_create_table", this, 0xa, 0x9cf9c0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_central_load_region_clubs(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_central_load_region_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     bra_reg_bahia_compare_state_league_table("bra_reg_central_load_region_clubs", this, 0xf, 0x9cf998, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     bra_reg_bahia_compare_state_league_table("bra_reg_gaucho_load_region_clubs", this, 0x11, 0x9cf9c8, || o(this))
 }

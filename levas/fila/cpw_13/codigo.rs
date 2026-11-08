@@ -137,7 +137,7 @@ unsafe fn callup_array_full(this: usize, time: usize) -> bool {
 /// Comparador: lado a lado no elenco do time (50 vagas) e, de cada clube do elenco que conta, no registro (6 bytes) e
 /// no vetor de entradas inteiro (capacidade × 9). Quando algum vetor pode crescer (0x945667 solta o velho; não roda
 /// duas vezes): só a original, conferindo depois o elenco ordenado pelo clube (o mesmo qsort sobre uma cópia, antes).
-unsafe extern "thiscall" fn comparar_record_club_call_ups(this: usize, time: usize, b: u32, p: usize) {
+unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize, time: usize, b: u32, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I0%%);
     if p != 0 && callup_array_full(this, time) {
         let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn get_fixture_match_importance(this: usize, p: usize, 
 }
 
 /// Comparador: pelo valor (a virtual da fase só lê; roda duas vezes).
-unsafe extern "thiscall" fn comparar_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
+unsafe extern "thiscall" fn compare_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I1%%)(this, p, a, b);
     let n = get_fixture_match_importance(this, p, a, b);
     SCOREBOARD.record(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn get_stage(this: usize, k: i32) -> usize {
 }
 
 /// Comparador: pelo valor (só lê). A caixa: só a original.
-unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -> usize {
+unsafe extern "thiscall" fn compare_get_stage(this: usize, k: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%);
     if k < -1 || k > cpw13_d(this + 0x30) as i32 {
         return o(this, k); // ponytail: a caixa, só a original

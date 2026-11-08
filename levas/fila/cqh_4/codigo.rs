@@ -76,7 +76,7 @@ unsafe fn league_written_table_bytes(t: usize) -> Vec<u8> {
 /// Lado a lado nas fases de grupos: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). As
 /// preliminares e o mata-mata: só a original.
-unsafe extern "thiscall" fn comparar_european_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_european_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     let f = fase as u8 as i8;
     if f == -1 || f >= 0xc {
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn set_club_season_expectations(this: usize) {
 }
 
 /// Só a original (as expectativas mudam a diretoria e mandam notícias; não rodam duas vezes): a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_set_club_season_expectations(this: usize) {
+unsafe extern "thiscall" fn compare_set_club_season_expectations(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, clube: usize
 
 /// Só a original (cláusulas de contrato e o técnico que sai não rodam duas vezes), conferindo o que ela grava: +0x57 =
 /// a divisão e +0x5b = a competição de antes.
-unsafe extern "thiscall" fn comparar_relegate_club_to_division(this: usize, clube: usize, divisao: usize, x: u32) {
+unsafe extern "thiscall" fn compare_relegate_club_to_division(this: usize, clube: usize, divisao: usize, x: u32) {
     let antiga = cqh4l_d(clube + 0x57);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, divisao, x);
     SCOREBOARD.record(cqh4l_d(clube + 0x57) == divisao && cqh4l_d(clube + 0x5b) == antiga, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", cqh4l_d(clube + 0x57), cqh4l_d(clube + 0x5b)));

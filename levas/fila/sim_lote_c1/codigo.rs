@@ -59,14 +59,14 @@ unsafe extern "thiscall" fn get_match_importance(liga: usize, partida: usize, la
     local
 }
 
-unsafe extern "thiscall" fn comparar_has_relegation(liga: usize) -> u32 {
+unsafe extern "thiscall" fn compare_has_relegation(liga: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(liga);
     let n = has_relegation(liga);
     SCOREBOARD.record(r == n, || format!("has_relegation original={} rust={}", r, n));
     r
 }
 
-unsafe extern "C" fn comparar_league_round_set_date(rodadas: usize, i: u32, dia: u32, mes: u32, anos: u32, semana: u32, codigo: u32, base: u32, valor: u32) -> usize {
+unsafe extern "C" fn compare_league_round_set_date(rodadas: usize, i: u32, dia: u32, mes: u32, anos: u32, semana: u32, codigo: u32, base: u32, valor: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let r = rodadas.wrapping_add((i as i16 as isize * 0x41) as usize);
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 0x41)], || o(rodadas, i, dia, mes, anos, semana, codigo, base, valor),
@@ -75,7 +75,7 @@ unsafe extern "C" fn comparar_league_round_set_date(rodadas: usize, i: u32, dia:
     a
 }
 
-unsafe extern "thiscall" fn comparar_get_match_importance(liga: usize, partida: usize, lado: u32, saida: *mut u8) -> u8 {
+unsafe extern "thiscall" fn compare_get_match_importance(liga: usize, partida: usize, lado: u32, saida: *mut u8) -> u8 {
     // a 0x68a4d0 só lê a liga e grava na local e na `saida`: pode rodar nos dois lados
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut u8) -> u8>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(saida as usize, 1)], || o(liga, partida, lado, saida),

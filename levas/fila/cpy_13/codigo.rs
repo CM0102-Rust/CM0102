@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
 // ponytail: paga, tira de listas, escalações, elenco e contrato (não pode rodar duas vezes): só a original, conferida
 // pelo plano: emprestada, a conta das transferências passadas fica; senão sobe 1 com o registro novo (a pessoa, o
 // clube, −1 e o tipo 5 ou 3) e, fora do só registro, sem contrato principal, com +0x52 e +0x6d zerados.
-unsafe extern "thiscall" fn comparar_free_transfer_staff(this: usize, p: usize, clube: usize, motivo: u32, compensacao: i32, so_registro: u32) {
+unsafe extern "thiscall" fn compare_free_transfer_staff(this: usize, p: usize, clube: usize, motivo: u32, compensacao: i32, so_registro: u32) {
     let ficha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     let emprestada = ficha(cpy13_d(0xae1050), p) != 0;
     let n = cpy13_d(this + 0x86a);
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn set_on_holiday(this: usize, ferias: u32, tecnico: us
 
 // ponytail: responde notícias e mexe no interesse do dia (não pode rodar duas vezes): só a original, conferida pelo
 // plano: a marca de férias passa a `férias` e a conta muda de ±1 só quando a marca muda.
-unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, ferias: u32, tecnico: usize) {
+unsafe extern "thiscall" fn compare_set_on_holiday(this: usize, ferias: u32, tecnico: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(%%I1%%);
     let t = if tecnico != 0 { tecnico } else { cpy13_d(0xb74c26 + 0x300 * (*(0xb77c7a as *const i16) as isize as usize)) };
     let i = if t == 0 { -1 } else { (cpy13_d(t) as i32).wrapping_sub(cpy13_d(0xae2364) as i32).wrapping_add(0x10) };
@@ -281,6 +281,6 @@ unsafe extern "thiscall" fn post_contract_talks_news(_this: usize, o: usize) {
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_post_contract_talks_news(this: usize, o: usize) {
+unsafe extern "thiscall" fn compare_post_contract_talks_news(this: usize, o: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, o)
 }

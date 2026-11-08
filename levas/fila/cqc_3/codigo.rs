@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
 /// O comparador dos conflitos de um dia: a cópia em ensaio (guarda os jogos em vez de acrescentar, com uma gravidade
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
 /// cada jogo, na ordem). As listas dos dias (0x5abf10) têm o cursor refeito nas duas.
-unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
+unsafe extern "thiscall" fn compare_collect_day_clashes(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(%%I0%%);
     if jogo == 0 || lista == 0 || grav.is_null() || cqc3_d(jogo + 0x1c) == 0 || cqc3_d(jogo + 0x20) == 0 {
         return o(this, jogo, grav, lista, nacoes, n, data, desloc);
@@ -407,7 +407,7 @@ unsafe extern "thiscall" fn find_fixture_clashes(this: usize, jogo: usize, saida
 /// (a original não muda o jogo: só cria a lista e mexe nos cursores das listas dos dias, que as duas refazem); confere a
 /// devolução (lista ou 0), a saída e os jogos das duas listas (0x4f bytes cada, na ordem), e destrói e libera a lista
 /// da cópia como o calendário faz (0x68d040, 0x944c94).
-unsafe extern "thiscall" fn comparar_find_fixture_clashes(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
+unsafe extern "thiscall" fn compare_find_fixture_clashes(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I1%%);
     if jogo == 0 || saida.is_null() {
         return o(this, jogo, saida, dois_dias);
@@ -463,6 +463,6 @@ unsafe extern "C" fn fix_man_load_fixture_leg_checks() {
 
 /// O comparador da carga das conferências: só a original (ponytail: lê o arquivo e aloca os nós da lista; não pode rodar
 /// duas vezes).
-unsafe extern "C" fn comparar_fix_man_load_fixture_leg_checks() {
+unsafe extern "C" fn compare_fix_man_load_fixture_leg_checks() {
     original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

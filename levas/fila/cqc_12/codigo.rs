@@ -184,7 +184,7 @@ unsafe fn count_items_on_day(this: usize, dia: i16) -> u32 {
 /// Comparador: a original convoca (0x76bab0: notícias, elencos), remarca jogos (0x7777e0), aloca a tabela (0x7775c0)
 /// e libera itens (0x68d1f0): não pode rodar duas vezes. Só ela roda, conferindo o plano do que a própria rotina grava:
 /// nenhum item do dia de hoje sobra na lista em +0.
-unsafe extern "thiscall" fn comparar_national_teams_daily_update(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn compare_national_teams_daily_update(this: usize, hoje: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let dia = cqc12_w(hoje);
     let antes = count_items_on_day(this, dia);
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn current_search_has_no_club(this: usize) -> u32 {
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_current_search_has_no_club(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_current_search_has_no_club(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     if matches!(current_human_index(), Ok(None)) {
         return o(this);
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn is_club_in_session_searches(this: usize, clube: usiz
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_is_club_in_session_searches(this: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_is_club_in_session_searches(this: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     if matches!(current_human_index(), Ok(None)) {
         return o(this, clube);
@@ -814,7 +814,7 @@ unsafe fn squad_selection_regions(this: usize, nacao: usize, t: i8, p: usize) ->
 /// da original volta no fim. Nos elencos de 23 e 25 a original passa a sobra da pilha nas vagas a partir da 22ª: elas
 /// ficam fora (correção conhecida, o ramo); as 22 primeiras e o resto conferem. Sem escala (técnico humano), nada a
 /// comparar. Dentro de uma gravação de fora, só a original.
-unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao: usize, tipo: u32, data: usize, p: usize, forcado: u32) {
+unsafe extern "thiscall" fn compare_select_squad(this: usize, nacao: usize, tipo: u32, data: usize, p: usize, forcado: u32) {
     use std::sync::atomic::Ordering::Relaxed;
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32)>(%%I3%%);
     if is_recording() {

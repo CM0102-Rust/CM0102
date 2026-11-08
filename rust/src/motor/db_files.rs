@@ -128,8 +128,8 @@ pub unsafe fn autoteste_dbj_1() {
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let (t0, d0) = SCOREBOARD.counts();
     let mut s = TestRng(0x5631_4442_4a31);
-    let casos: [(V1Converter, &[(usize, u32, usize)], usize); 3] = [(comparar_db_files_read_clubs_v1, &CLUB_V1_LAYOUT, 581),
-        (comparar_db_files_read_players_v1, &NON_PLAYER_V1_LAYOUT, 68), (comparar_db_files_read_non_players_v1, &PLAYER_V1_FIELDS, 70)];
+    let casos: [(V1Converter, &[(usize, u32, usize)], usize); 3] = [(compare_db_files_read_clubs_v1, &CLUB_V1_LAYOUT, 581),
+        (compare_db_files_read_players_v1, &NON_PLAYER_V1_LAYOUT, 68), (compare_db_files_read_non_players_v1, &PLAYER_V1_FIELDS, 70)];
     for (comparar, campos, tamanho) in casos {
         for caso in 0..64u64 {
             let n = 1 + (s.next_u64() % 6) as usize;

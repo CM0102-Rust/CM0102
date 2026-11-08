@@ -177,22 +177,22 @@ unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: u32, regist
     r
 }
 
-unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     compare_division_league_ctor("construct_fra_second", this, ano, registro, &FRENCH_SECOND_DIVISION, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     compare_division_league_ctor("construct_fra_third", this, ano, registro, &FRENCH_THIRD_DIVISION, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     compare_division_league_ctor("construct_spa_second", this, ano, registro, &SPANISH_SEGUNDA, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_spa_first(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_spa_first(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
     compare_division_league_ctor("construct_spa_first", this, ano, registro, &SPAIN_PRIMERA_DIVISION, || o(this, ano, registro))
 }

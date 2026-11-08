@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn player_needs_work_permit(this: usize, jogador: usize
 }
 
 /// Comparador: lado a lado pelos 42 bytes da tabela (o alcance e a virtual das regras só escrevem nela).
-unsafe extern "thiscall" fn comparar_fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
+unsafe extern "thiscall" fn compare_fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(t as usize, 42)], || o(this, partida, t, so_a_principal), || fill_squad_restrictions(this, partida, t, so_a_principal));
     SCOREBOARD.record(igual, || format!("fill_squad_restrictions({:x}, {}) {:x?} x {:x?}", partida, so_a_principal, mo, mr));
@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn comparar_fill_squad_restrictions(this: usize, partid
 
 /// Comparador: lado a lado pela saída (6 bytes) e pelo aviso (0x100 bytes, com `msg`), e pela devolução. A 0x8968f0 pode
 /// pôr −1 numa vaga sem pessoa válida: a original já deixou assim e a cópia acha a mesma vaga vazia.
-unsafe extern "thiscall" fn comparar_transfer_manager_check_matchday_squad_limit(this: usize, clube: usize, partida: usize, msg: usize, jogadores: usize, nao_usado: u32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_transfer_manager_check_matchday_squad_limit(this: usize, clube: usize, partida: usize, msg: usize, jogadores: usize, nao_usado: u32, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize) -> u32>(%%I1%%);
     let mut regioes = [(0usize, 0usize); 2];
     let mut n = 0;
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_check_matchday_squad_limit
 }
 
 /// Comparador: pelo valor (só lê). Jogador nulo com clube de nação: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_player_needs_work_permit(this: usize, jogador: usize, clube: usize, ignorar_a_dada: u32) -> u32 {
+unsafe extern "thiscall" fn compare_player_needs_work_permit(this: usize, jogador: usize, clube: usize, ignorar_a_dada: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if jogador == 0 {
         return o(this, jogador, clube, ignorar_a_dada);

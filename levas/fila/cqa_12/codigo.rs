@@ -168,13 +168,13 @@ unsafe fn compare_cup_placed(nome: &str, clube: usize, jogo: usize, partida: usi
     SCOREBOARD.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", nome, clube, jogo, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_add_cup_runners_up_record(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn compare_add_cup_runners_up_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I0%%);
     compare_cup_placed("add_cup_runners_up_record", clube, jogo, partida, || o(this, clube, jogo, partida),
         || add_cup_runners_up_record(this, clube, jogo, partida))
 }
 
-unsafe extern "thiscall" fn comparar_add_cup_third_place_record(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
     compare_cup_placed("add_cup_third_place_record", clube, jogo, partida, || o(this, clube, jogo, partida),
         || add_cup_third_place_record(this, clube, jogo, partida))
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn record_manager_job_change(this: usize, tecnico: usiz
 /// Comparador em ensaio: o registro do técnico criado antes (0x86f5b0, como a original faria nos dois caminhos que o
 /// pedem), a cópia sem os históricos e a original a partir do mesmo estado (o registro, 0xd2 bytes, e a data estática da
 /// 0x54cdb0). Nulos: só a original.
-unsafe extern "thiscall" fn comparar_record_manager_job_change(this: usize, tecnico: usize, clube: usize, contratado: u32) {
+unsafe extern "thiscall" fn compare_record_manager_job_change(this: usize, tecnico: usize, clube: usize, contratado: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%);
     if clube == 0 || tecnico == 0 {
         return o(this, tecnico, clube, contratado);

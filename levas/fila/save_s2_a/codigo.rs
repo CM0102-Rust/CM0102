@@ -15,7 +15,7 @@ unsafe extern "C" fn check_saved_game_file(caminho: usize) -> u32 {
 
 // O id só lê o arquivo e libera o que aloca: as duas rodam lado a lado. Caminho nulo (caixa de
 // erro) só a original.
-unsafe extern "C" fn comparar_check_saved_game_file(caminho: usize) -> u32 {
+unsafe extern "C" fn compare_check_saved_game_file(caminho: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(caminho);
     if caminho == 0 {
         return r;
@@ -47,7 +47,7 @@ unsafe extern "C" fn check_quick_start_file(caminho: usize) -> u32 {
 // ponytail: a versão (0x838eb0) abre o general.dat e não o fecha quando dá certo (o ZFILE e o
 // arquivo ficam abertos, como na original): rodar duas vezes deixaria dois. Só a original; a cópia
 // leva o ramo e roda no modo Rust (só a caixa de arquivos chama).
-unsafe extern "C" fn comparar_check_quick_start_file(caminho: usize) -> u32 {
+unsafe extern "C" fn compare_check_quick_start_file(caminho: usize) -> u32 {
     original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho)
 }
 
@@ -120,6 +120,6 @@ unsafe extern "C" fn valid_saved_game_version(caminho: usize) -> u32 {
 // ponytail: abre o item e, quando dá certo, não o fecha (o ZFILE e o arquivo ficam abertos, como na
 // original); nos erros, a caixa. Não roda duas vezes: só a original; a cópia leva o ramo e roda no
 // modo Rust (só a caixa de arquivos, pelo filtro do início rápido, chama).
-unsafe extern "C" fn comparar_valid_saved_game_version(caminho: usize) -> u32 {
+unsafe extern "C" fn compare_valid_saved_game_version(caminho: usize) -> u32 {
     original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(caminho)
 }

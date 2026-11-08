@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targets(this: us
 }
 
 /// Comparador: lado a lado pelo estatuto, pelo cargo de saída e por [0xae1080].
-unsafe extern "thiscall" fn comparar_get_squad_status_for_club(this: usize, pessoa: usize, clube: usize, cargo: *mut u8) -> u8 {
+unsafe extern "thiscall" fn compare_get_squad_status_for_club(this: usize, pessoa: usize, clube: usize, cargo: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8) -> u8>(%%I0%%);
     let saida = if cargo.is_null() { 0xae1080 } else { cargo as usize };
     let reg = [(0xae1080usize, 4usize), (saida, 1)];
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_get_squad_status_for_club(this: usize, pess
 }
 
 /// Comparador: pelo valor (o byte baixo; a original deixa a palavra de estado do x87 em ah).
-unsafe extern "stdcall" fn comparar_shortlist_manager_estimate_squad_status(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "stdcall" fn compare_shortlist_manager_estimate_squad_status(pessoa: usize, clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(pessoa, clube);
     let n = shortlist_manager_estimate_squad_status(pessoa, clube);
     SCOREBOARD.record(r as u8 == n as u8, || format!("shortlist_manager_estimate_squad_status({:#x}, {:#x}) original={:#x} rust={}", pessoa, clube, r, n));
@@ -173,6 +173,6 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_estimate_squad_status(pess
 /// Comparador: só a original.
 // ponytail: a 0x843e10 muda a lista do clube (e outras) a cada evento e não pode rodar duas vezes; a cópia tem o ramo
 // e a prova é pela carreira (modo Rust contra a original).
-unsafe extern "thiscall" fn comparar_shortlist_manager_release_club_slot_targets(this: usize, clube: usize, entrada: usize) {
+unsafe extern "thiscall" fn compare_shortlist_manager_release_club_slot_targets(this: usize, clube: usize, entrada: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, clube, entrada)
 }

@@ -74,10 +74,10 @@ unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
     }
 }
 
-comparar_valor!(comparar_person_in_list, person_in_list, %%I0%%, (p: *const i32) -> u8);
-comparar_valor!(comparar_contract_record, contract_record, %%I1%%, (p: *const i32) -> usize);
+compare_value!(compare_person_in_list, person_in_list, %%I0%%, (p: *const i32) -> u8);
+compare_value!(compare_contract_record, contract_record, %%I1%%, (p: *const i32) -> usize);
 
-unsafe extern "thiscall" fn comparar_daily_wear(t: usize, id: i32) {
+unsafe extern "thiscall" fn compare_daily_wear(t: usize, id: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if id < *(0xae2364 as *const i32) {

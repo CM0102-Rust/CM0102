@@ -7,7 +7,7 @@ use super::*;
 ///
 /// [pt] O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
-pub(crate) unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize, game: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_record_match_ratings(this: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RATINGS);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize
 ///
 /// [pt] O comparador da nota do mês: lado a lado (cabeçalho e os registros até o novo) quando a tabela não precisa crescer;
 /// senão só a original (realloc).
-pub(crate) unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_add_player_rating(this: usize, e: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     let found = tab != 0 && (0..n.max(0) as usize).any(|k| read_i32(tab + k * 12) == read_i32(e));
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e
 /// Comparer for `find_best_player` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
-pub(crate) unsafe extern "thiscall" fn comparar_find_best_player(this: usize, league: i32, age: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_find_best_player(this: usize, league: i32, age: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(IDX_FIND_BEST_PLAYER);
     let (tab, n) = (read_usize(this), read_i32(this + 4));
     let regions: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };

@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn cqv1_previstas_mineiro(this: usize) {
     cqv1_previstas(this, &CQV1_MINEIRO)
 }
 
-unsafe extern "thiscall" fn comparar_cqv1_previstas_mineiro(this: usize) {
+unsafe extern "thiscall" fn compare_cqv1_previstas_mineiro(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     cqv1_comparar("cqv1_previstas_mineiro", this, &CQV1_MINEIRO, || o(this));
 }
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn cqv1_previstas_norte(this: usize) {
     cqv1_previstas(this, &CQV1_NORTE)
 }
 
-unsafe extern "thiscall" fn comparar_cqv1_previstas_norte(this: usize) {
+unsafe extern "thiscall" fn compare_cqv1_previstas_norte(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqv1_comparar("cqv1_previstas_norte", this, &CQV1_NORTE, || o(this));
 }
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn cqv1_previstas_nordeste(this: usize) {
     cqv1_previstas(this, &CQV1_NORDESTE)
 }
 
-unsafe extern "thiscall" fn comparar_cqv1_previstas_nordeste(this: usize) {
+unsafe extern "thiscall" fn compare_cqv1_previstas_nordeste(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqv1_comparar("cqv1_previstas_nordeste", this, &CQV1_NORDESTE, || o(this));
 }
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn cqv1_previstas_paranaense(this: usize) {
     cqv1_previstas(this, &CQV1_PARANAENSE)
 }
 
-unsafe extern "thiscall" fn comparar_cqv1_previstas_paranaense(this: usize) {
+unsafe extern "thiscall" fn compare_cqv1_previstas_paranaense(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
     cqv1_comparar("cqv1_previstas_paranaense", this, &CQV1_PARANAENSE, || o(this));
 }

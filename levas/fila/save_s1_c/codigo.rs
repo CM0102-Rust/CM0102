@@ -113,7 +113,7 @@ unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize
 
 // ponytail: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
 // (carga, --sav) e a gravação (o zseek relê pela zread) passam por aqui.
-unsafe extern "C" fn comparar_zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
+unsafe extern "C" fn compare_zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
     original_fn::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(%%I0%%)(buf, tam, quantos, z)
 }
 
@@ -185,7 +185,7 @@ unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: us
 
 // ponytail: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
 // compara o .qst tipo 4 gravado com e sem a leva.
-unsafe extern "C" fn comparar_zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
+unsafe extern "C" fn compare_zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
     original_fn::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(%%I1%%)(buf, tam, quantos, z)
 }
 
@@ -235,6 +235,6 @@ unsafe extern "C" fn zclose(zz: *mut usize) {
 }
 
 // ponytail: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
-unsafe extern "C" fn comparar_zclose(zz: *mut usize) {
+unsafe extern "C" fn compare_zclose(zz: *mut usize) {
     original_fn::<unsafe extern "C" fn(*mut usize)>(%%I2%%)(zz)
 }

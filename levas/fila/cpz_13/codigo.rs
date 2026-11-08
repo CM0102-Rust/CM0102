@@ -23,7 +23,7 @@ unsafe extern "thiscall" fn add_prize_money(this: usize, valor: i32) {
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
-unsafe extern "thiscall" fn comparar_add_prize_money(this: usize, valor: i32) {
+unsafe extern "thiscall" fn compare_add_prize_money(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || add_prize_money(this, valor));
     SCOREBOARD.record(igual, || format!("add_prize_money(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn add_tv_revenue(this: usize, valor: i32) {
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
-unsafe extern "thiscall" fn comparar_add_tv_revenue(this: usize, valor: i32) {
+unsafe extern "thiscall" fn compare_add_tv_revenue(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || add_tv_revenue(this, valor));
     SCOREBOARD.record(igual, || format!("add_tv_revenue(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn pay_wages(this: usize, valor: i32) {
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
-unsafe extern "thiscall" fn comparar_pay_wages(this: usize, valor: i32) {
+unsafe extern "thiscall" fn compare_pay_wages(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_wages(this, valor));
     SCOREBOARD.record(igual, || format!("pay_wages(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));

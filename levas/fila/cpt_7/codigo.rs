@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, ma
 }
 
 // ponytail: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_score_venue_for_fixture(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
+unsafe extern "thiscall" fn compare_score_venue_for_fixture(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(%%I0%%)(this, est, marcas, casa, fora, jogo)
 }
 
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, jogo: usize
 }
 
 /// Comparador: pelo valor (os bits do double).
-unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
+unsafe extern "thiscall" fn compare_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(%%I1%%)(this, jogo, cid_est, cid_clube, base);
     let n = get_travel_distance_factor(this, jogo, cid_est, cid_clube, base);
     SCOREBOARD.record(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
@@ -240,6 +240,6 @@ unsafe extern "thiscall" fn load_config(this: usize) {
 }
 
 // ponytail: abre o arquivo, aloca e sorteia: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_load_config(this: usize) {
+unsafe extern "thiscall" fn compare_load_config(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

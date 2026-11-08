@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
 // ponytail: tira registros (o vetor), sorteia, constrói e entrega notícias e chama as reações e respostas (0x755340,
 // 0x758010, 0x741020, 0x587600): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e
 // pelas mutações.
-unsafe extern "thiscall" fn comparar_process_transfer_interest(this: usize) {
+unsafe extern "thiscall" fn compare_process_transfer_interest(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -337,7 +337,7 @@ unsafe extern "C" fn news_create_not_for_sale_story(jogador: usize, clube: usize
 }
 
 // ponytail: a notícia vai aos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "C" fn comparar_news_create_not_for_sale_story(jogador: usize, clube: usize, presidente: usize, outro: usize) {
+unsafe extern "C" fn compare_news_create_not_for_sale_story(jogador: usize, clube: usize, presidente: usize, outro: usize) {
     original_fn::<unsafe extern "C" fn(usize, usize, usize, usize)>(%%I1%%)(jogador, clube, presidente, outro)
 }
 
@@ -395,6 +395,6 @@ unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, clube: usize
 }
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_queue_trophy_praise_story(this: usize, clube: usize, comp: usize, marca: u32) {
+unsafe extern "thiscall" fn compare_queue_trophy_praise_story(this: usize, clube: usize, comp: usize, marca: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, comp, marca)
 }

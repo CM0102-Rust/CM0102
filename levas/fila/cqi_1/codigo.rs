@@ -78,7 +78,7 @@ unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
 }
 
 /// Lado a lado: a tabela das nações, as temporadas de cada nação e a posição gravada nas seleções.
-unsafe extern "thiscall" fn comparar_roll_coefficients(this: usize) {
+unsafe extern "thiscall" fn compare_roll_coefficients(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let reg = seeding_regions(this);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || roll_coefficients(this));
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn set_place_counts(this: usize) {
 }
 
 /// Lado a lado: a tabela das nações, o sorteio (a cópia sem contar) e a marca da caixa.
-unsafe extern "thiscall" fn comparar_set_place_counts(this: usize) {
+unsafe extern "thiscall" fn compare_set_place_counts(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let mut reg = vec![(this, 0x43b), (0xb67a34, 4)];
     reg.extend(crate::rng::STATE_REGIONS);
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_this: usize, 
 }
 
 /// A devolução das duas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_uefa_find_nth_unplaced_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
+unsafe extern "thiscall" fn compare_uefa_find_nth_unplaced_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = uefa_find_nth_unplaced_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);

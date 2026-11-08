@@ -128,10 +128,10 @@ unsafe extern "thiscall" fn destroy_match_stats(estat: usize) {
 // temporário; o destrutor libera o índice: rodar duas vezes não dá, então os comparadores só chamam a
 // original; as cópias se provam no modo Rust (os ramos: a carreira automática cria o jogo e passa pelo
 // construtor).
-unsafe extern "thiscall" fn comparar_construct_match_stats(estat: usize, zip: usize, n: i32) -> usize {
+unsafe extern "thiscall" fn compare_construct_match_stats(estat: usize, zip: usize, n: i32) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> usize>(%%I0%%)(estat, zip, n)
 }
 
-unsafe extern "thiscall" fn comparar_destroy_match_stats(estat: usize) {
+unsafe extern "thiscall" fn compare_destroy_match_stats(estat: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(estat)
 }

@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_tabela_da_preliminar(this: usize) -> u
 
 /// Só a original (a 0x687430 aloca e a notícia vai aos humanos), conferindo o plano feito antes: devolve 1, +0x3e = 3, os 3
 /// primeiros da lista +0x14 nas linhas, na ordem, e zerados na lista.
-unsafe extern "thiscall" fn comparar_cqt6_campeoes_tabela_da_preliminar(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqt6_campeoes_tabela_da_preliminar(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let plano: Vec<usize> = (0..3).map(|k| cqt6_d(cqt6_d(this + 0x14) + k * 6)).collect();
     let r = o(this);
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_preliminar(this: usize) {
 }
 
 /// Só a original (a tabela, os jogos e o sorteio da ordem alocam e sorteiam), conferindo o plano: +0x45 = 1 e +0x3e = 3.
-unsafe extern "thiscall" fn comparar_cqt6_campeoes_preliminar(this: usize) {
+unsafe extern "thiscall" fn compare_cqt6_campeoes_preliminar(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
     SCOREBOARD.record(cqt6_d(this + 0x45) == 1 && cqt6_w(this + 0x3e) == 3, || format!("cqt6_campeoes_preliminar({:#x}) +0x45 {} +0x3e {}", this, cqt6_d(this + 0x45), cqt6_w(this + 0x3e)));
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_fase_seguinte(this: usize) {
 
 /// Só a original (os grupos e as semifinais alocam e sorteiam), conferindo o plano: +0x30 sobe um fora da última fase (ou
 /// mais, quando os grupos ou as semifinais gravam a fase delas) e fica na última.
-unsafe extern "thiscall" fn comparar_cqt6_campeoes_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn compare_cqt6_campeoes_fase_seguinte(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let antes = cqt6_d(this + 0x30) as i32;
     let ultima = antes >= (cqt6_d(this + 0x2c) as i32).wrapping_sub(1);

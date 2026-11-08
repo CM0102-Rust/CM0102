@@ -8,7 +8,7 @@ use super::*;
 /// [pt] Só a original (a base, as alocações e a árvore, que sorteia: não roda duas vezes), conferindo o plano feito antes: devolve
 /// this, +0x3e = n, +0x3c = as rodadas, +0x40 = o ano, as duas tabelas montadas e, na lista, os mesmos clubes.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, template: usize, year: u32, stage: u32, b2: u32,
+pub(crate) unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, template: usize, year: u32, stage: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, by_order: u32, a14: u32, seeds: usize) -> usize {
     #[allow(clippy::type_complexity)]
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(IDX_CONSTRUCT_CUP_STAGE);
@@ -38,6 +38,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize,
 }
 
 /// Comparer for `destroy_cup_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_destroy_cup_stage(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_destroy_cup_stage(this: usize) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DESTROY_CUP_STAGE)(this)
 }

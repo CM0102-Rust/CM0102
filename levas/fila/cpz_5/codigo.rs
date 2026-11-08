@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u3
 
 /// Comparador da 0x896290: lado a lado nas linhas das táticas dos dois clubes (0x28 bytes cada) e na devolução; o
 /// registro da partida é local. Jogo ou clube nulos: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_record_tactic_result(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn compare_record_tactic_result(this: usize, jogo: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if jogo == 0 || cpz5_d(jogo + 0x1c) == 0 || cpz5_d(jogo + 0x20) == 0 {
         return o(this, jogo);
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn get_captain(this: usize, clube: usize, time: u32) ->
 }
 
 /// Comparador da 0x8976a0: pela devolução (só lê; a linha nula ou fora da faixa mostra a caixa nas duas).
-unsafe extern "thiscall" fn comparar_get_captain(this: usize, clube: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn compare_get_captain(this: usize, clube: usize, time: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if clube == 0 {
         return o(this, clube, time);
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn set_captain(this: usize, clube: usize, pessoa: usize
 
 /// Comparador da 0x897880: lado a lado no dword do capitão da linha (achada antes pela 0x8982b0, que só lê) e na
 /// devolução. Clube ou ponteiro nulos, ou sem linha: só a original.
-unsafe extern "thiscall" fn comparar_set_captain(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn compare_set_captain(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if clube == 0 || pessoa == 0 {
         return o(this, clube, pessoa, time);

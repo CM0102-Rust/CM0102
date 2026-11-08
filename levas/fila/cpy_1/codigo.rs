@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn count_slots_with_bids(this: usize, clube: usize, pos
 }
 
 /// Comparador: lado a lado pelas 40 vagas do clube e pelas datas estáticas, e a devolução.
-unsafe extern "thiscall" fn comparar_count_slots_with_bids(this: usize, clube: usize, posicao: u32) -> u8 {
+unsafe extern "thiscall" fn compare_count_slots_with_bids(this: usize, clube: usize, posicao: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%);
     let mut reg = SHORTLIST_MANAGER_DATE_STATICS.to_vec();
     reg.push((cpy1_d(cpy1_entrada(this, clube)), 40 * 0x25));
@@ -101,7 +101,7 @@ unsafe extern "stdcall" fn shortlist_manager_remove_from_transfer_list(pessoa: u
 }
 
 /// Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
-unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_transfer_list(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_transfer_list(pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%);
     let c = contract_of_staff(pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
@@ -123,7 +123,7 @@ unsafe extern "stdcall" fn shortlist_manager_remove_from_loan_list(pessoa: usize
 }
 
 /// Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
-unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_loan_list(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_loan_list(pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%);
     let c = contract_of_staff(pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };

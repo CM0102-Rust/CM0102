@@ -490,7 +490,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
 /// do mesmo estado: o sorteio, [0xae1080] (a ficha do último contrato), a data estática da 0x54cdb0, a linha da torcida
 /// do novo clube em [[0xb67a44]] e, de cada um dos elencos dos dois clubes (e da pessoa da história da mídia), o contrato
 /// com o clube (0x50 bytes) e a linha de opiniões em [0xae2d0c] (0x4f bytes). Quando a cópia para: só a original.
-unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
+unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I0%%);
     if p == 0 || novo == 0 || cqa13_d(p + 0x61) == 0 || cqa13_c(p + 0x18) < 0x13 || current_reputation(p) < 0x109a {
         return o(this, p, novo, velho, flag);
@@ -609,7 +609,7 @@ unsafe extern "thiscall" fn queue_signing_celebration_story(this: usize, p: usiz
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca) e sorteia: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_queue_signing_celebration_story(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
+unsafe extern "thiscall" fn compare_queue_signing_celebration_story(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize)>(%%I1%%)(this, p, clube, tipo, a, porta_voz)
 }
 
@@ -657,6 +657,6 @@ unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, velho: usize, 
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca) e sorteia: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_queue_sale_unrest_story(this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
+unsafe extern "thiscall" fn compare_queue_sale_unrest_story(this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I2%%)(this, velho, novo, p, comp)
 }

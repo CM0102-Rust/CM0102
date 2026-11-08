@@ -345,7 +345,7 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
 /// em +0x3802, que cada atualização de item zera e preenche), o `Display` da tela atual, o bloco de
 /// parâmetros, a cópia do estado (0xd7a bytes) e o texto 0xde1f64 têm de sair iguais. O conteúdo do
 /// buffer de mensagens ([gerente + 0x37fe]) não entra (como na leva das listas).
-unsafe fn comparar_valores_da_partida(nome: &str, original: impl FnOnce(), rust: impl FnOnce()) {
+unsafe fn compare_valores_da_partida(nome: &str, original: impl FnOnce(), rust: impl FnOnce()) {
     let copia = get_screen_param(0x1d);
     if copia == 0 {
         // ponytail: sem cópia a rotina aloca a cópia (0x944cf1) e a grava no parâmetro 0x1d; não dá
@@ -366,17 +366,17 @@ unsafe fn comparar_valores_da_partida(nome: &str, original: impl FnOnce(), rust:
     });
 }
 
-unsafe extern "C" fn comparar_refresh_match_stats_values() {
+unsafe extern "C" fn compare_refresh_match_stats_values() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
-    comparar_valores_da_partida("refresh_match_stats_values", || o(), || refresh_match_stats_values());
+    compare_valores_da_partida("refresh_match_stats_values", || o(), || refresh_match_stats_values());
 }
 
-unsafe extern "C" fn comparar_refresh_action_zones_values() {
+unsafe extern "C" fn compare_refresh_action_zones_values() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I1%%);
-    comparar_valores_da_partida("refresh_action_zones_values", || o(), || refresh_action_zones_values());
+    compare_valores_da_partida("refresh_action_zones_values", || o(), || refresh_action_zones_values());
 }
 
-unsafe extern "C" fn comparar_refresh_player_ratings_rows() {
+unsafe extern "C" fn compare_refresh_player_ratings_rows() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I2%%);
-    comparar_valores_da_partida("refresh_player_ratings_rows", || o(), || refresh_player_ratings_rows());
+    compare_valores_da_partida("refresh_player_ratings_rows", || o(), || refresh_player_ratings_rows());
 }

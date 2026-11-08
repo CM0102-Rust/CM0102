@@ -71,14 +71,14 @@ unsafe extern "C" fn nation_is_uk_or_ireland(nacao: usize) -> u32 {
     (id == g(0x9cf2e4) || id == g(0x9cf45c) || id == g(0x9cf2dc) || id == g(0x9cf510) || id == g(0x9cf3e4)) as u32
 }
 
-unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = database_compare_comp_history_rows(a, b);
     SCOREBOARD.record(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
+unsafe extern "C" fn compare_database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
                                                             fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(%%I1%%);
     let mut regioes = vec![(vetor, 0x3f * 3)];
@@ -94,7 +94,7 @@ unsafe extern "C" fn comparar_database_player_to_attribute_vector(jogador: usize
     r
 }
 
-unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nacao: usize) -> u32 {
+unsafe extern "C" fn compare_nation_is_uk_or_ireland(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nacao);
     let n = nation_is_uk_or_ireland(nacao);
     SCOREBOARD.record(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));

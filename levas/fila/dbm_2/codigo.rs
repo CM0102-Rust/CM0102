@@ -17,7 +17,7 @@ unsafe extern "C" fn stadium_get_english_name(estadio: usize) -> usize {
     (*((t + 0x34) as *const usize)).wrapping_add((id as usize).wrapping_mul(52)) // estádio na tabela
 }
 
-unsafe extern "C" fn comparar_stadium_get_english_name(estadio: usize) -> usize {
+unsafe extern "C" fn compare_stadium_get_english_name(estadio: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
@@ -48,7 +48,7 @@ unsafe extern "C" fn database_language_file_exists(idioma: i32) -> i32 {
 
 /// Comparador: as duas a partir do mesmo buffer do caminho (0xde279c, 0x104 bytes); compara a resposta e o caminho
 /// montado (acusa o nome trocado mesmo sem o arquivo na pasta).
-unsafe extern "C" fn comparar_database_language_file_exists(idioma: i32) -> i32 {
+unsafe extern "C" fn compare_database_language_file_exists(idioma: i32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i32) -> i32>(%%I1%%);
     let (r, x, igual, _, _) = crate::comparison::side_by_side(&[(0xde279c, 0x104)], || o(idioma), || database_language_file_exists(idioma));
     SCOREBOARD.record(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", idioma, r, x, igual));
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn eng_lng_free_tables(t: usize) {
 
 /// Comparador: soltar duas vezes soltaria os mesmos blocos duas vezes.
 // ponytail: só a original (como as da 232a); a cópia é provada pelo autoteste_dbm_2 (a ordem dos blocos soltos).
-unsafe extern "thiscall" fn comparar_eng_lng_free_tables(t: usize) {
+unsafe extern "thiscall" fn compare_eng_lng_free_tables(t: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(t)
 }
 
@@ -97,13 +97,13 @@ pub unsafe fn autoteste_dbm_2() {
         tabela[13] = 0x3000_0000 + ((z >> 8) as usize & 0xffff0);
         *(0xae2408 as *mut usize) = tabela.as_mut_ptr() as usize;
         *(registro.as_mut_ptr() as *mut i32) = ((z >> 32) % 16) as i32 - 2;
-        comparar_stadium_get_english_name(registro.as_ptr() as usize);
+        compare_stadium_get_english_name(registro.as_ptr() as usize);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
     }
     for idioma in -3..=16 {
-        comparar_database_language_file_exists(idioma);
+        compare_database_language_file_exists(idioma);
     }
     for _ in 0..64 {
         let z = s.next_u64();

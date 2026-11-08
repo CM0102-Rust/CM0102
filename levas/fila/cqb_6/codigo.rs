@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
 
 /// Comparador da 0x8e4f20: a cópia em ensaio (sem a notícia) e a original a partir do mesmo estado, lado a lado nas
 /// finanças do comprador (0x167 bytes) e em [0xae1080]; com entrega da notícia, só as finanças.
-unsafe extern "thiscall" fn comparar_pay_former_club_fee_cuts(this: usize, o: usize) {
+unsafe extern "thiscall" fn compare_pay_former_club_fee_cuts(this: usize, o: usize) {
     let original = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let fin = cqb6_financas(cqb6_clube(cqb6_d(o + 8)));
     FORMER_CLUB_FEE_DELIVERIES = 0;
@@ -245,7 +245,7 @@ unsafe fn clause_finance_regions(this: usize, p: usize) -> Option<(usize, usize)
 /// Comparador da 0x8cb0f0: a cópia em ensaio (sem a notícia e sem os totais do clube) e a original a partir do mesmo
 /// estado, lado a lado nas finanças dos dois clubes, em [0xae1080] e no sorteio (a 0x4d0c60 pode sortear); pago (a
 /// notícia e os totais da original podem regravar [0xae1080]), só as finanças e a devolução.
-unsafe extern "thiscall" fn comparar_pay_next_sale_percentage(this: usize, p: usize, o: usize) -> u32 {
+unsafe extern "thiscall" fn compare_pay_next_sale_percentage(this: usize, p: usize, o: usize) -> u32 {
     let original = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::rng::STATE_REGIONS);
@@ -303,6 +303,6 @@ unsafe extern "thiscall" fn post_sale_percentage_news(_this: usize, e: usize, pa
 
 /// Comparador da 0x8db3a0: só a original (a notícia é entregue e não pode sair duas vezes; a cópia leva o ramo no
 /// modo Rust). ponytail: sem plano a conferir além do que a original entrega.
-unsafe extern "thiscall" fn comparar_post_sale_percentage_news(this: usize, e: usize, parte: i32, o: usize, da_oferta: u32) {
+unsafe extern "thiscall" fn compare_post_sale_percentage_news(this: usize, e: usize, parte: i32, o: usize, da_oferta: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32)>(%%I2%%)(this, e, parte, o, da_oferta)
 }

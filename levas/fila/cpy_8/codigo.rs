@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
         (cpy8_i(b + 8), cpy8_i(b + 4))
     };
     let (ini, n) = if comp == 0 {
-        faixa_da_nacao(officials_manager_club_nation_id(mandante).unwrap_or_else(|| sortear(nacoes)))
+        faixa_da_nacao(officials_manager_club_nation_id(mandante).unwrap_or_else(|| random(nacoes)))
     } else {
         let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
         if amistoso(cpy8_d(0xae2c74), comp) != 0 {
@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
         } else {
             let c = cpy8_d(cpy8_d(0xadadfc).wrapping_add(cpy8_i(comp).wrapping_mul(4) as usize));
             if c == 0 {
-                faixa_da_nacao(officials_manager_club_nation_id(mandante).unwrap_or_else(|| sortear(nacoes)))
+                faixa_da_nacao(officials_manager_club_nation_id(mandante).unwrap_or_else(|| random(nacoes)))
             } else {
                 let tipo = cpy8_b(c + 0x42) as i8;
                 if tipo == 2 || tipo == 4 {
@@ -74,9 +74,9 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                     } else if let Some(k) = continente_do(visitante) {
                         k
                     } else {
-                        sortear(cpy8_i(0xae234c))
+                        random(cpy8_i(0xae234c))
                     };
-                    let inicio = sortear(nacoes);
+                    let inicio = random(nacoes);
                     let mut k = inicio;
                     loop {
                         let nac = cpy8_d(0xae23a8).wrapping_add(k.wrapping_mul(0x122) as usize);
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                     } else if let Some(k) = officials_manager_club_nation_id(visitante) {
                         k
                     } else {
-                        sortear(nacoes)
+                        random(nacoes)
                     };
                     let b = nation_officials_block(this, nacao);
                     let id = cpy8_i(comp);
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
         ini
     } else {
         crate::comparison::branch("cpy_8 arbitro sorteado");
-        ini.wrapping_add(sortear(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
+        ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
     };
     let ocupado = |k: i32| {
         let ficha = cpy8_d(0xae23e8).wrapping_add(k.wrapping_mul(0x2b) as usize);
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
 }
 
 /// Comparador: lado a lado pela palavra de saída e pelo estado do sorteio, e pela devolução.
-unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, jogo: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_choose_match_official(this: usize, jogo: usize, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((saida, 2));
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
 }
 
 /// Comparador: lado a lado pelos bytes de ocupado e pela devolução.
-unsafe extern "thiscall" fn comparar_clear_busy_flags(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_clear_busy_flags(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let n = cpy8_i(this + 4);
     let reg = if n > 0 && cpy8_d(this + 8) != 0 { vec![(cpy8_d(this + 8), n as usize)] } else { Vec::new() };
@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
     if conta(cpy8_i(comp)) == 0 {
         return 0;
     }
-    let nacao = if cpy8_d(comp + 0x5d) != 0 { cpy8_i(cpy8_d(comp + 0x5d)) } else { sortear(cpy8_i(0xae2350)) };
+    let nacao = if cpy8_d(comp + 0x5d) != 0 { cpy8_i(cpy8_d(comp + 0x5d)) } else { random(cpy8_i(0xae2350)) };
     let b = nation_officials_block(this, nacao);
     let mut band = None;
     for f in 0..cpy8_w(b + 0x10).max(0) as usize {
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
         let ano = cpy8_b(0xae2c92);
         let dif = (cpy8_w(ficha + 0xc) as i32).wrapping_sub(cpy8_w(0xae2c90) as i32);
         let idade = if dif > 0 { ano.wrapping_sub(cpy8_b(ficha + 0xe)).wrapping_sub(1) } else { ano.wrapping_sub(cpy8_b(ficha + 0xe)) } as i8;
-        if idade <= 0x28 || (idade <= 0x2d && sortear(3) != 0) {
+        if idade <= 0x28 || (idade <= 0x2d && random(3) != 0) {
             continue;
         }
         crate::comparison::branch("cpy_8 arbitro renovado");
@@ -240,16 +240,16 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
         core::ptr::write_unaligned((ficha + 4) as *mut usize, n1);
         let n2 = nome(cpy8_d(ficha + 0x16));
         core::ptr::write_unaligned((ficha + 8) as *mut usize, n2);
-        *((ficha + 0x25) as *mut u8) = if sortear(10) != 0 {
-            (sortear(0x10) as u8).wrapping_add(5)
+        *((ficha + 0x25) as *mut u8) = if random(10) != 0 {
+            (random(0x10) as u8).wrapping_add(5)
         } else {
-            let a = sortear(0xb) as u8;
-            a.wrapping_add(sortear(0xb) as u8)
+            let a = random(0xb) as u8;
+            a.wrapping_add(random(0xb) as u8)
         };
-        let r5 = sortear(5);
+        let r5 = random(5);
         let base = (cpy8_w(0xae2c92) as u16).wrapping_sub(0x1b);
         core::ptr::write_unaligned((ficha + 0xe) as *mut u16, (r5 as u16).wrapping_add(base));
-        core::ptr::write_unaligned((ficha + 0xc) as *mut u16, sortear(0x154) as u16);
+        core::ptr::write_unaligned((ficha + 0xc) as *mut u16, random(0x154) as u16);
     }
     if n > 0 {
         let linha = cpy8_d(this).wrapping_add(ini.wrapping_mul(0x11) as usize);
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
 /// Comparador: lado a lado pelas fichas de todos os árbitros ([0xae2390] × 0x2b), pelas linhas de estatísticas
 /// ([0xae2390] × 17), pelo estado do sorteio e por [0xb67a34], e pela devolução. Sem tabela de árbitros (a caixa a cada
 /// ficha): só a original.
-unsafe extern "thiscall" fn comparar_renew_officials(this: usize, comp: usize) -> u8 {
+unsafe extern "thiscall" fn compare_renew_officials(this: usize, comp: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let total = cpy8_i(0xae2390).max(0) as usize;
     if cpy8_d(0xae23e8) == 0 || cpy8_d(this) == 0 {

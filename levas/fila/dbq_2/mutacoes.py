@@ -5,7 +5,7 @@
 # 0x547e70 roda e acha vaga; a carreira PODE NAO acusar (o comparando acusa na primeira chamada).
 MUTACOES = [
     ('dbq_clube_rejeitado', '    let lista = pref + 0x10; // os clubes rejeitados', '    let lista = pref + 0x14; // mutacao: uma vaga adiante'),
-    ('dbq_esmaecer', '        if dbq2_u32(v) != 0 && sortear(*((pessoa + 0x59) as *const i8) as i32 + 15) == 0 { // as favoritas',
-     '        if dbq2_u32(v) != 0 && sortear(*((pessoa + 0x59) as *const i8) as i32 + 14) == 0 { // mutacao: 14 no lugar do 15'),
+    ('dbq_esmaecer', '        if dbq2_u32(v) != 0 && random(*((pessoa + 0x59) as *const i8) as i32 + 15) == 0 { // as favoritas',
+     '        if dbq2_u32(v) != 0 && random(*((pessoa + 0x59) as *const i8) as i32 + 14) == 0 { // mutacao: 14 no lugar do 15'),
     ('dbq_rejeitadas', '        let p = dbq2_u32(pref + 0x28 + 4 * k); // as rejeitadas', '        let p = dbq2_u32(pref + 0x1c + 4 * k); // mutacao: as favoritas'),
 ]

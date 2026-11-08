@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
     }
     let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     let c = chance(obs, *((obs + non_player::JUDGEMENT) as *const i8)) as i8;
-    let r = sortear(c as i32) as i8;
+    let r = random(c as i32) as i8;
     *level = if c < 15 && r == 0 {
         (*level).wrapping_add(1)
     } else if *level == 0 && r < 6 {

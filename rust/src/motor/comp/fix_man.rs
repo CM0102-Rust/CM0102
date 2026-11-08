@@ -1571,8 +1571,8 @@ pub(crate) unsafe extern "thiscall" fn get_club_last_fixture_year(_this: usize, 
     if w & 0xfffe != 0 { w >> 1 } else { *(G_CURRENT_DATE_YEAR as *const u16) }
 }
 
-comparar_valor!(comparar_get_club_first_fixture_year, get_club_first_fixture_year, IDX_GET_CLUB_FIRST_FIXTURE_YEAR, (id: usize) -> u16);
-comparar_valor!(comparar_get_club_last_fixture_year, get_club_last_fixture_year, IDX_GET_CLUB_LAST_FIXTURE_YEAR, (id: usize) -> u16);
+compare_value!(compare_get_club_first_fixture_year, get_club_first_fixture_year, IDX_GET_CLUB_FIRST_FIXTURE_YEAR, (id: usize) -> u16);
+compare_value!(compare_get_club_last_fixture_year, get_club_last_fixture_year, IDX_GET_CLUB_LAST_FIXTURE_YEAR, (id: usize) -> u16);
 
 /// LLIST constructor (0x68d020).
 ///
@@ -2548,7 +2548,7 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_in_use(this: usize, stadium: u
     0
 }
 
-comparar_valor!(comparar_is_stadium_in_use, is_stadium_in_use, IDX_IS_STADIUM_IN_USE, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
+compare_value!(compare_is_stadium_in_use, is_stadium_in_use, IDX_IS_STADIUM_IN_USE, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
 
 /// Calls the original routine (ret 4) with eax = year and ecx = this, as its only caller does.
 ///

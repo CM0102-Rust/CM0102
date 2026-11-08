@@ -78,7 +78,7 @@ unsafe extern "C" fn staff_compute_non_player_attribute(pessoa: usize, nao_jogad
     }
 }
 
-unsafe extern "C" fn comparar_database_get_colour_family(cor: usize) -> u8 {
+unsafe extern "C" fn compare_database_get_colour_family(cor: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%);
     let r = o(cor);
     if colour_family(cor).is_none() {
@@ -89,7 +89,7 @@ unsafe extern "C" fn comparar_database_get_colour_family(cor: usize) -> u8 {
     r
 }
 
-unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usize) -> u8 {
+unsafe extern "C" fn compare_database_colours_clash(a: usize, b: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%);
     let r = o(a, b);
     if colour_family(a).is_none() || colour_family(b).is_none() {
@@ -100,7 +100,7 @@ unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usize) -> u8 {
     r
 }
 
-unsafe extern "C" fn comparar_staff_compute_non_player_attribute(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn compare_staff_compute_non_player_attribute(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I2%%);
     let r = o(pessoa, nao_jogador, atributo);
     let a = atributo as u8 as i8;

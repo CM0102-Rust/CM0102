@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: u
 // ponytail: os registros vão para o arquivo, mexem nas reputações e no moral (sorteiam) e o título e o vice gravam o
 // elenco da final: não rodam duas vezes. Só a original roda; o plano confere o que a rotina mesma grava (+0x1db do
 // clube: −1 nos casos em que ele sai, intacto nos outros).
-unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a: u32, jogo: usize, fim: u32) -> u32 {
+unsafe extern "thiscall" fn compare_european_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a: u32, jogo: usize, fim: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%);
     let (d, f) = (desfecho as u8, fase as u8);
     // as faixas da original comparam o byte da fase com sinal (0x80 a 0xfe contam como fase 1)
@@ -162,18 +162,18 @@ unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_statu
 /// Os quatro sorteados da fase 2 (os índices dos grupos, todos diferentes): a, b ≠ a, c ≠ a, b e d ≠ a, b, c, cada um
 /// com sorteio(4) (0x90cfc0) até sair um que serve (a d sorteia pelo menos uma vez: começa igual à a).
 unsafe fn draw_four_groups() -> [i8; 4] {
-    let a = sortear(4) as i8;
-    let mut b = sortear(4) as i8;
+    let a = random(4) as i8;
+    let mut b = random(4) as i8;
     while b == a {
-        b = sortear(4) as i8;
+        b = random(4) as i8;
     }
-    let mut c = sortear(4) as i8;
+    let mut c = random(4) as i8;
     while c == a || c == b {
-        c = sortear(4) as i8;
+        c = random(4) as i8;
     }
     let mut d = a;
     while d == a || d == b || d == c {
-        d = sortear(4) as i8;
+        d = random(4) as i8;
     }
     [a, b, c, d]
 }
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
 // ponytail: o sorteio sorteia, a 0x7e9180 e o construtor alocam e a rodada cria os jogos: só a original. O plano,
 // feito antes: os 8 primeiros e segundos dos grupos e o 3º e 4º de cada um; depois, +0x30 = 12, a fase do mata-mata
 // com 8 clubes que são os primeiros e segundos (como conjunto) e o 3º e o 4º de cada grupo com +0x1db = −1.
-unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
+unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let mut vivos: Vec<usize> = Vec::new();
     let mut fora: Vec<usize> = Vec::new();
@@ -319,7 +319,7 @@ unsafe extern "thiscall" fn european_cup_collect_club_list(this: usize, saida: u
 /// Comparador da 0x586660: a original aloca a lista (só ela roda; quem chama libera). O plano, feito antes numa lista
 /// local pelos mesmos inscritos: a conta (palavra de baixo da devolução) e os clubes da lista dela iguais. Nos tipos
 /// que vão para a 0x48e1c0 e sem lista: a devolução e a saída como a original deixou.
-unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(this: usize, saida: usize, tipo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_european_cup_collect_club_list(this: usize, saida: usize, tipo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     let t = tipo as u8;
     let sem_7 = match t {

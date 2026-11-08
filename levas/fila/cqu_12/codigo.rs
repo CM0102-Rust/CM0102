@@ -83,7 +83,7 @@ unsafe extern "thiscall" fn cqu12_oceania_dia(this: usize, hoje: usize, completo
 
 // ponytail: as entradas nas competições, os jogos, a fase e o dia de liga não rodam duas vezes. Só a original; o plano
 // na montagem (a condição da cópia): +0x45 = 1, a fase do segundo grupo em [+0xc][0] e a fase atual (+0x30) = 0.
-unsafe extern "thiscall" fn comparar_cqu12_oceania_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_cqu12_oceania_dia(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let monta = cqu12_d(this + 0x45) == 0 && completo != 0 && {
         let (dia, ano) = cqu12_comeco(this);
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn cqu12_oceania_primeiro_grupo(this: usize) -> u32 {
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só
 // a original; o plano: devolve 1, +0x3e = 5 e na linha i (0x3b bytes) a seleção 2i da lista com a posição i (+4).
-unsafe extern "thiscall" fn comparar_cqu12_oceania_primeiro_grupo(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqu12_oceania_primeiro_grupo(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqu12_d(this + 0xef);
     if lista == 0 {
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn cqu12_oceania_segundo_grupo(this: usize) -> u32 {
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][0], +0x30 = 0, a fase com n times e o ano da eliminatória e, na tabela dela (+0xb1, linhas de 0x3b
 // bytes), as seleções das vagas ímpares da lista (em qualquer ordem: o construtor ordena a tabela).
-unsafe extern "thiscall" fn comparar_cqu12_oceania_segundo_grupo(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_cqu12_oceania_segundo_grupo(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let lista = cqu12_d(this + 0xef);
     if lista == 0 {

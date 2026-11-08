@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, 
 /// Comparador: lado a lado na comissão do humano (54 bytes) e na marca +0x244 do clube (a 0x53cb80/0x53cc30 pela
 /// 0x540a50 podem zerá-la). Sem humano ou clube de seleção: lado a lado só na marca. Técnico fora dos 16 humanos
 /// (a 0x8b4cd0 mostra a caixa e a original escreveria no nulo): só a original.
-unsafe extern "thiscall" fn comparar_update_coach_assignments(this: usize, clube: usize, tecnico: usize) {
+unsafe extern "thiscall" fn compare_update_coach_assignments(this: usize, clube: usize, tecnico: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if clube == 0 {
         return o(this, clube, tecnico);
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec: usize, an
 /// Comparador: lado a lado na entrada do treino e na carga de forma de cada jogador dos dois elencos, na comissão do
 /// técnico (a 0x8b2880 do fim) e na marca +0x244 dos clubes (a 0x541f90 pela 0x540a50). Com caixa (jogador sem
 /// ficha no elenco antigo ou técnico fora dos 16 humanos com clube novo): só a original.
-unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: usize, tec: usize, antigo: usize, novo: usize) {
+unsafe extern "thiscall" fn compare_reassign_squad_schedules(this: usize, tec: usize, antigo: usize, novo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
     let k = if tec == 0 { -1 } else { cqf7_i(0xae2364).wrapping_sub(cqf7_i(tec)).wrapping_sub(1) };
     if novo != 0 && !(0..0x10).contains(&k) {
@@ -285,7 +285,7 @@ unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize) {
 }
 
 /// Comparador: lado a lado nos 167 programas (0x9b bytes cada).
-unsafe extern "thiscall" fn comparar_training_manager_cpp_0x8b2230(this: usize) {
+unsafe extern "thiscall" fn compare_training_manager_cpp_0x8b2230(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(this, 0xa7 * 0x9b)], || o(this), || training_manager_cpp_0x8b2230(this));
     SCOREBOARD.record(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));

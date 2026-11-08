@@ -24,7 +24,7 @@ MUTACOES = [
     ('cpq8_contrato_fica', 'tirar_contrato(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), friendly_club_by_id(read_usize(offer + 8))); // the contract offer goes out', 'let _ = tirar_contrato; // mutacao: a oferta de contrato fica', 'cpq_8 desfazer oferta'),
     ('cpq8_salario', 'by_current(c.as_mut_ptr(), player, club, end, write_percent_pair, a5, a6); // the salary by percentage', 'by_current(c.as_mut_ptr(), player, club, end, percentual.wrapping_add(10), a5, a6); // mutacao', 'cpq_8 oferta de emprestimo'),
     ('cpq8_sem_conclusao', 'concluir(this, offer); // the transfer happens', 'let _ = concluir; // mutacao: nao acontece', 'cpq_8 transferencia futura'),
-    ('cpq9_sorteio_da_idade', 'let mut rating = sortear((age - 31) * 150); // a idade', 'let mut rating = 0i32; // mutacao: sem o sorteio da idade'),
+    ('cpq9_sorteio_da_idade', 'let mut rating = random((age - 31) * 150); // a idade', 'let mut rating = 0i32; // mutacao: sem o sorteio da idade'),
     ('cpq9_ordem_das_aposentadorias', 'return aa as i32 - ab as i32; // o ano mais cedo primeiro', 'return ab as i32 - aa as i32; // mutacao: o mais tarde primeiro'),
     ('cpq9_ordem_da_fila', 'let (ja, jb) = (read_i16_as_i32(a + 4), read_i16_as_i32(b + 4));', 'let (jb, ja) = (read_i16_as_i32(a + 4), read_i16_as_i32(b + 4)); // mutacao: o dia mais tarde primeiro'),
     ('cpq10_categoria_vizinha', 'let i = read_usize(slot) as i32; // the category index', 'let i = read_usize(slot ^ 4) as i32; // mutacao: a categoria vizinha'),

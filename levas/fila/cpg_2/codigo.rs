@@ -70,17 +70,17 @@ unsafe extern "thiscall" fn player_regen_pick_staff_for_non_player_data(this: us
     escolhida
 }
 
-unsafe extern "thiscall" fn comparar_regen_queue_entry_assign(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn compare_regen_queue_entry_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0xc)], || o(this, origem), || regen_queue_entry_assign(this, origem));
     SCOREBOARD.record(igual && r == n, || format!("regen_queue_entry_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-comparar_valor!(comparar_is_on_shortlist, is_on_shortlist, %%I1%%, (jogador: usize, clube: usize) -> u32);
+compare_value!(compare_is_on_shortlist, is_on_shortlist, %%I1%%, (jogador: usize, clube: usize) -> u32);
 
 /// Comparador: a 0x7a7150 sorteia (0x90cfc0) a cada pessoa; lado a lado pelo estado do sorteio, a cópia sem contar.
-unsafe extern "thiscall" fn comparar_player_regen_pick_staff_for_non_player_data(this: usize, nacao: usize) -> usize {
+unsafe extern "thiscall" fn compare_player_regen_pick_staff_for_non_player_data(this: usize, nacao: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let reg = crate::rng::STATE_REGIONS.to_vec();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nacao),

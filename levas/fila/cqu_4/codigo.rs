@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn cqu4_calendario_j2(this: usize, fase: u32, rodadas: 
     create_round_table(this, cqu4_j2_fase(fase), rodadas, extra, liga, 0x9eaedc)
 }
 
-unsafe extern "thiscall" fn comparar_cqu4_calendario_j2(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_cqu4_calendario_j2(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     asia_club_champ_compare_round_table("cqu4_calendario_j2", fase, cqu4_j2_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqu4_calendario_j2(this, fase, r, e, l))

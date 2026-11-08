@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, clube: 
 }
 
 /// Comparador: lado a lado no registro de finanças do clube e no estado do sorteio.
-unsafe extern "thiscall" fn comparar_add_weekly_merchandising_income(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_add_weekly_merchandising_income(this: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let mut regioes = vec![(fin_prm_club_finance(this, clube), 0x167)];
     regioes.extend(crate::rng::STATE_REGIONS);
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
 
 /// Comparador: lado a lado no registro de finanças (this), nos lugares do estádio (+0x3c) e no estado do sorteio
 /// (clube nulo: só a original).
-unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize, aplicar: i32) {
+unsafe extern "thiscall" fn compare_sell_season_tickets(this: usize, aplicar: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
     let clube = cpv5_d(0xae23b4).wrapping_add(cpv5_d(this + 8).wrapping_mul(0x245));
     if clube == 0 {
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, clube: usiz
 }
 
 /// Comparador: lado a lado no nível do centro de treino (+0x7f) e no registro de finanças do clube.
-unsafe extern "thiscall" fn comparar_upgrade_training_facilities(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_upgrade_training_facilities(this: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let regioes = [(clube + 0x7f, 1), (fin_prm_club_finance(this, clube), 0x167)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, clube), || upgrade_training_facilities(this, clube));

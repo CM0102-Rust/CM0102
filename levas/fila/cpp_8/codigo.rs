@@ -217,7 +217,7 @@ unsafe extern "stdcall" fn injury_player_in_close_season(pessoa: usize) -> u32 {
 /// Comparador: a original sorteia, aloca e reordena: o plano antes (os sorteios e a seleção, com o estado do sorteio
 /// guardado e devolvido); a original roda. Confere o mesmo estado do sorteio e, se o surto entrou, a conta +1 e o surto
 /// (data, tipo, clube, partida) no vetor; senão a conta igual.
-unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
+unsafe extern "thiscall" fn compare_add_illness_outbreak(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, usize)>(%%I0%%);
     let estado = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let entra = crate::rng::pause_trace(|| crate::rng::without_counting(|| outbreak_takes_hold(tipo as u8, clube_i)));
@@ -247,7 +247,7 @@ unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usi
 /// Comparador: a original sorteia e adoece (0x62d250, que pode acrescentar surtos): roda só ela e confere o plano
 /// feito antes: quantos surtos tinham mais de cinco dias (os que saem) e, depois, nenhum surto com mais de cinco dias e
 /// a conta pelo menos a de antes menos os que saem.
-unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
+unsafe extern "thiscall" fn compare_spread_illness_outbreaks(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let cinco = five_days_ago();
     let n0 = cpp8_i(this + 0x24);
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
 }
 
 /// Comparador: pelo valor (datas, a seleção e a temporada só calculam).
-unsafe extern "stdcall" fn comparar_injury_player_in_close_season(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn compare_injury_player_in_close_season(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
     let n = injury_player_in_close_season(pessoa);
     SCOREBOARD.record(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", pessoa, r, n));

@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn cqw2_calendario_mineiro(this: usize, fase: u32, roda
     create_round_table(this, cqw2_mineiro_fase(fase), rodadas, extra, liga, 0x98aed0)
 }
 
-unsafe extern "thiscall" fn comparar_cqw2_calendario_mineiro(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_cqw2_calendario_mineiro(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     asia_club_champ_compare_round_table("cqw2_calendario_mineiro", fase, cqw2_mineiro_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqw2_calendario_mineiro(this, fase, r, e, l))
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn cqw2_calendario_norte(this: usize, fase: u32, rodada
     create_round_table(this, cqw2_norte_fase(fase), rodadas, extra, liga, 0x98af14)
 }
 
-unsafe extern "thiscall" fn comparar_cqw2_calendario_norte(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_cqw2_calendario_norte(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
     asia_club_champ_compare_round_table("cqw2_calendario_norte", fase, cqw2_norte_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqw2_calendario_norte(this, fase, r, e, l))
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn cqw2_calendario_nordeste(this: usize, fase: u32, rod
     create_round_table(this, cqw2_nordeste_fase(fase), rodadas, extra, liga, 0x98af54)
 }
 
-unsafe extern "thiscall" fn comparar_cqw2_calendario_nordeste(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_cqw2_calendario_nordeste(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
     asia_club_champ_compare_round_table("cqw2_calendario_nordeste", fase, cqw2_nordeste_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqw2_calendario_nordeste(this, fase, r, e, l))
@@ -223,7 +223,7 @@ unsafe extern "thiscall" fn cqw2_calendario_paranaense(this: usize, fase: u32, r
     create_round_table(this, cqw2_paranaense_fase(fase), rodadas, extra, liga, 0x98af98)
 }
 
-unsafe extern "thiscall" fn comparar_cqw2_calendario_paranaense(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn compare_cqw2_calendario_paranaense(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
     asia_club_champ_compare_round_table("cqw2_calendario_paranaense", fase, cqw2_paranaense_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqw2_calendario_paranaense(this, fase, r, e, l))

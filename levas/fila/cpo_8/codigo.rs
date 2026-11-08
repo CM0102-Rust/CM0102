@@ -289,7 +289,7 @@ unsafe fn llist_pairs(lista: usize) -> Vec<(u32, u32)> {
 /// Comparador: só a original.
 // ponytail: a original solta e aloca os 32 vetores (e pode sortear a nação de quem não tem); não roda duas vezes. Confere
 // o resultado: as duas listas de cada vaga com os mesmos ids, cada entrada servindo para a vaga, a conta no limite.
-unsafe extern "thiscall" fn comparar_build_position_lists(this: usize, nao_usado: u32) {
+unsafe extern "thiscall" fn compare_build_position_lists(this: usize, nao_usado: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, nao_usado);
     let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(0x844300usize);
     let mut ruim = None;
@@ -311,7 +311,7 @@ unsafe extern "thiscall" fn comparar_build_position_lists(this: usize, nao_usado
 }
 
 /// Comparador: lado a lado pelos 32 vetores (12 bytes por entrada) e por [0xae1080].
-unsafe extern "thiscall" fn comparar_sort_position_lists(this: usize) {
+unsafe extern "thiscall" fn compare_sort_position_lists(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let mut reg = vec![(0xae1080usize, 4usize)];
     for vaga in 0..16usize {
@@ -329,7 +329,7 @@ unsafe extern "thiscall" fn comparar_sort_position_lists(this: usize) {
 }
 
 /// Comparador: a original na lista de saída e a cópia numa lista nova (0x68d020, solta com 0x68d080); compara os pares.
-unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: usize, jogador: usize, saida: usize, ignorar: u32, modo: u32, so_humanos: u32) {
+unsafe extern "thiscall" fn compare_collect_interested_clubs(this: usize, jogador: usize, saida: usize, ignorar: u32, modo: u32, so_humanos: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I2%%);
     o(this, jogador, saida, ignorar, modo, so_humanos);
     if saida == 0 {

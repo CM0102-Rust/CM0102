@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn cqu8_copa_do_imperador(this: usize, ano: u32, dono: 
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu8_plano).
-unsafe extern "thiscall" fn comparar_cqu8_copa_do_imperador(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqu8_copa_do_imperador(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu8_plano(this, r, ano, dono, 0x96c9a0, &CQU8_CAMPOS_COPA_DO_IMPERADOR, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqu8_copa_do_imperador({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn cqu8_copa_da_liga_japonesa(this: usize, ano: u32, do
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu8_plano).
-unsafe extern "thiscall" fn comparar_cqu8_copa_da_liga_japonesa(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqu8_copa_da_liga_japonesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu8_plano(this, r, ano, dono, 0x96cba8, &CQU8_CAMPOS_COPA_DA_LIGA_JAPONESA, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqu8_copa_da_liga_japonesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
@@ -242,7 +242,7 @@ unsafe extern "thiscall" fn cqu8_supercopa_japonesa(this: usize, ano: u32, dono:
 }
 
 /// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu8_plano).
-unsafe extern "thiscall" fn comparar_cqu8_supercopa_japonesa(this: usize, ano: u32, dono: usize) -> usize {
+unsafe extern "thiscall" fn compare_cqu8_supercopa_japonesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqu8_plano(this, r, ano, dono, 0x96cc48, &CQU8_CAMPOS_SUPERCOPA_JAPONESA, true);
     SCOREBOARD.record(erro.is_none(), || format!("cqu8_supercopa_japonesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));

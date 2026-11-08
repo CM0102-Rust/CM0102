@@ -3801,9 +3801,9 @@ pub(crate) unsafe fn board_row_by_id(this: usize, id: u32) -> usize {
 ///
 /// [pt] O humor novo (`mov word`): ftol do float `f32(sorteio1 + q)` menos `sorteio2` (os dois de 0..499), em dupla precisão.
 pub(crate) unsafe fn roll_mood(q: f32) -> i16 {
-    let s1 = sortear(0x1f4);
+    let s1 = random(0x1f4);
     let base = (s1 as f64 + q as f64) as f32; // fstp dword
-    let s2 = sortear(0x1f4);
+    let s2 = random(0x1f4);
     match_pl_ftol(base as f64 - s2 as f64) as i16
 }
 
@@ -3873,13 +3873,13 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
         let r = read_i16(club + club::REPUTATION) as i32;
         current = if r != 0 { (r / 2) as f32 } else { 5000.0 };
     } else if (current as f64) < read_f32_at(0x96d1a8) as f64 { // 0x96d1a8 = 500
-        current = (sortear(0x3e8) + 0x1f4) as f32;
+        current = (random(0x3e8) + 0x1f4) as f32;
     }
     let d = read_i16(club + club::REPUTATION) as i32;
     let divisor = if d as f64 == zero {
         current as f64
     } else if (d as f64) < read_f32_at(0x96d1a8) as f64 { // 0x96d1a8 = 500
-        (sortear(0x2ee) + 0xfa) as f64
+        (random(0x2ee) + 0xfa) as f64
     } else {
         d as f64
     };
@@ -3895,17 +3895,17 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     write_i16(board_row_by_id(this, id) + 6, h);
     let c = read_i16(board_row_by_id(this, id) + 6);
     if c < 0x186a {
-        write_i16(board_row_by_id(this, id) + 6, (sortear(0x4e2) + 0x186a) as i16);
+        write_i16(board_row_by_id(this, id) + 6, (random(0x4e2) + 0x186a) as i16);
     } else if c > 0x251c {
-        write_i16(board_row_by_id(this, id) + 6, (0x2710 - sortear(0x1f4)) as i16);
+        write_i16(board_row_by_id(this, id) + 6, (0x2710 - random(0x1f4)) as i16);
     }
-    let s1 = sortear(0x1f4);
+    let s1 = random(0x1f4);
     let parcial = read_i16(board_row_by_id(this, id) + 6).wrapping_sub(s1 as i16);
-    let s2 = sortear(0x1f4);
+    let s2 = random(0x1f4);
     write_i16(board_row_by_id(this, id) + 8, parcial.wrapping_add(s2 as i16));
     let c = read_i16(board_row_by_id(this, id) + 8);
     if c < 0x186a {
-        write_i16(board_row_by_id(this, id) + 8, (sortear(0x4e2) + 0x186a) as i16);
+        write_i16(board_row_by_id(this, id) + 8, (random(0x4e2) + 0x186a) as i16);
     } else if c > 0x2710 {
         write_i16(board_row_by_id(this, id) + 8, 0x2710);
     }
@@ -3913,7 +3913,7 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     write_i16(board_row_by_id(this, id) + 0xa, h);
     let c = read_i16(board_row_by_id(this, id) + 0xa);
     if c < 0x1482 {
-        write_i16(board_row_by_id(this, id) + 0xa, (sortear(0xfa) + 0x1482) as i16);
+        write_i16(board_row_by_id(this, id) + 0xa, (random(0xfa) + 0x1482) as i16);
     } else if c > 0x2710 {
         write_i16(board_row_by_id(this, id) + 0xa, 0x2710);
     }
@@ -3921,7 +3921,7 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     write_i16(board_row_by_id(this, id) + 0xc, h);
     let c = read_i16(board_row_by_id(this, id) + 0xc);
     if c < 0x1676 {
-        write_i16(board_row_by_id(this, id) + 0xc, (sortear(0xfa) + 0x1676) as i16);
+        write_i16(board_row_by_id(this, id) + 0xc, (random(0xfa) + 0x1676) as i16);
     } else if c > 0x2710 {
         write_i16(board_row_by_id(this, id) + 0xc, 0x2710);
     }
@@ -4051,7 +4051,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
         }
     }
     let e = board_row_by_id(this, id);
-    if read_i16(e + 0x12) < -750 && tipo != 1 && sortear(3) == 0 {
+    if read_i16(e + 0x12) < -750 && tipo != 1 && random(3) == 0 {
         crate::comparison::branch("cpp_3 motivo 2");
         return 2;
     }
@@ -4066,20 +4066,20 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     }
     let humor = read_i16(e + 0xa);
     if humor < read_i16(e + 6) {
-        let a = sortear(read_i16(board_row_by_id(this, id) + 6) as i32);
-        let b = sortear(humor as i32);
+        let a = random(read_i16(board_row_by_id(this, id) + 6) as i32);
+        let b = random(humor as i32);
         if b < a {
             return 8;
         }
     }
-    if read_i16(board_row_by_id(this, id) + 0x16) < -750 && sortear(3) != 0 {
+    if read_i16(board_row_by_id(this, id) + 0x16) < -750 && random(3) != 0 {
         return 4;
     }
     let manager = read_u32(club + club::MANAGER) as usize;
     if manager != 0 {
         let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
         let d = days(G_CURRENT_DATE, read_u32(manager + staff::DATE_JOINED_CLUB), read_u32(manager + 0x42));
-        if d > sortear(0x7d0) + 0x3e8 {
+        if d > random(0x7d0) + 0x3e8 {
             return 6;
         }
     }
@@ -5048,8 +5048,8 @@ pub(crate) unsafe extern "thiscall" fn person_in_list(t: usize, p: *const i32) -
     0
 }
 
-comparar_valor!(comparar_person_in_list, person_in_list, IDX_PERSON_IN_LIST, (p: *const i32) -> u8);
-comparar_valor!(comparar_contract_record, contract_record, IDX_CONTRACT_RECORD, (p: *const i32) -> usize);
+compare_value!(compare_person_in_list, person_in_list, IDX_PERSON_IN_LIST, (p: *const i32) -> u8);
+compare_value!(compare_contract_record, contract_record, IDX_CONTRACT_RECORD, (p: *const i32) -> usize);
 
 /// Decides whether the person is a realistic candidate for the club's manager job: vetoes and accepts by reputation,
 /// nation, contract and time in the job; otherwise their interest in the job against the minimum score (double).

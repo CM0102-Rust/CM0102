@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn accept_transfer_bid(this: usize, vaga: usize, marcar
 
 /// Comparador da 0x8c0080: só a original (muda o status, reagenda, solta a troca, aloca notícias e chama a resposta da
 /// IA).
-unsafe extern "thiscall" fn comparar_accept_transfer_bid(this: usize, vaga: usize, marcar: u32) {
+unsafe extern "thiscall" fn compare_accept_transfer_bid(this: usize, vaga: usize, marcar: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, vaga, marcar) // ponytail: só a original
 }
 
@@ -386,7 +386,7 @@ unsafe extern "thiscall" fn post_offer_made_news(this: usize, o: usize) {
 }
 
 /// Comparador da 0x8d3090: só a original (a notícia vai aos técnicos e não tem outro efeito).
-unsafe extern "thiscall" fn comparar_post_offer_made_news(this: usize, o: usize) {
+unsafe extern "thiscall" fn compare_post_offer_made_news(this: usize, o: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, o) // ponytail: só a notícia
 }
 
@@ -566,7 +566,7 @@ unsafe extern "thiscall" fn transfer_manager_can_loan_player(this: usize, clube:
 /// Comparador da 0x8d0040: lado a lado, com [0xae1080], o texto em [0xde1f64] e a mensagem (0x100 bytes), e o byte do
 /// registro de 8 bytes do jogador em [[0xde1f54]+0x86e] (o único que ela pode apagar); a devolução também. As regras,
 /// o período e as datas não sorteiam nem gravam fora das locais.
-unsafe extern "thiscall" fn comparar_transfer_manager_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize) -> u32 {
+unsafe extern "thiscall" fn compare_transfer_manager_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%);
     let mut regioes = [(0xae1080usize, 4usize), (0xde1f64, 0x100), (0, 0), (0, 0)];
     let mut k = 2;

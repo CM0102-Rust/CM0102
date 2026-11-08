@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn init_strictness(this: usize, engine: u32,
         return;
     }
     for (n, valor) in [(0x15e, 0x1e46u16), (0x12c, 0x1c52), (0xfa, 0x1a5e), (0xc8, 0x186a), (0x96, 0x1676)] {
-        let r = sortear(n);
+        let r = random(n);
         if *((person + staff::SECOND_NATION) as *const i16) as i32 > r {
             *v = valor;
             return;
@@ -64,24 +64,24 @@ pub(crate) unsafe extern "thiscall" fn decide_foul(this: usize, j: usize, code: 
     }
     let table: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     let in_the_box: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
-    if table(engine, j) & 1 != 0 && in_the_box(j, lado(j) as u8) as u8 != 0 {
+    if table(engine, j) & 1 != 0 && in_the_box(j, side_of_player(j) as u8) as u8 != 0 {
         return 0;
     }
     let person = *((this + 4) as *const usize);
     let v = (this + 8) as *mut u16;
-    if person != 0 && sortear(byte(person, 0x28) as i32 + 0xf) == 0 {
+    if person != 0 && random(byte(person, 0x28) as i32 + 0xf) == 0 {
         *v = (*v).wrapping_add(0xff06);
         return 0;
     }
-    if in_the_box(j, lado(j) as u8) as u8 != 0 && sortear(4) != 0 {
+    if in_the_box(j, side_of_player(j) as u8) as u8 != 0 && random(4) != 0 {
         return 0;
     }
     *v = (*v).wrapping_add(0xaf);
-    let mark = if code == 0x25 { sortear(0x14) != 0 } else { sortear(0x9b) == 0 && byte(engine, engine::BALL_HEIGHT) > 1 };
+    let mark = if code == 0x25 { random(0x14) != 0 } else { random(0x9b) == 0 && byte(engine, engine::BALL_HEIGHT) > 1 };
     if !mark {
         return 0;
     }
-    let r = sortear(byte(j, match_player::FOULS) as u8 as i32);
+    let r = random(byte(j, match_player::FOULS) as u8 as i32);
     *value = (r as u8).wrapping_add(1);
     *kind = 4;
     1
@@ -120,14 +120,14 @@ pub(crate) unsafe fn apply_card_penalty(engine: usize, j: usize) {
 ///
 /// [pt] Contador de faltas do lado no motor (0xf5c9 + 54 x lado).
 pub(crate) unsafe fn count_foul(engine: usize, j: usize) {
-    let c = (engine as isize + 0xf5c9 + 54 * lado(j) as isize) as *mut u8;
+    let c = (engine as isize + 0xf5c9 + 54 * side_of_player(j) as isize) as *mut u8;
     *c = (*c).wrapping_add(1);
 }
 
 /// Calls the match player is_in_penalty_area check for the player.
 pub(crate) unsafe fn is_in_penalty_area(j: usize) -> bool {
     let f: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
-    f(j, lado(j) as u8) as u8 != 0
+    f(j, side_of_player(j) as u8) as u8 != 0
 }
 
 /// The referee's punishment for a foul by player `j`: counts the foul; for a type 1 foul, either a straight red (type
@@ -149,11 +149,11 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
     let d = (j + match_player::MATCH_RATING) as *mut i16;
     let table: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     if flag == 0 && table(engine, j) & 1 == 0 {
-        if severidade as i32 > sortear(0xf) + 9 {
+        if severidade as i32 > random(0xf) + 9 {
             *d = (*d).wrapping_add(-1000);
             *kind = 4;
             *weight = 5.0;
-        } else if severidade as i32 > sortear(5) + 3 {
+        } else if severidade as i32 > random(5) + 3 {
             apply_card_penalty(engine, j);
             give_yellow_card(j, kind, x, weight);
         } else {
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
         }
         return;
     }
-    let r = sortear(0xbb8) as i16;
+    let r = random(0xbb8) as i16;
     if r > 0x1db {
         *d = (*d).wrapping_add(-750);
         *kind = 6;
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
         1 if byte(engine, engine::SHOOTOUT_STATE) == 0 => {
             count_foul(engine, j);
             if flag != 0 {
-                let r = sortear(0xbb8) as i16;
+                let r = random(0xbb8) as i16;
                 if r > 0x177 {
                     *d = (*d).wrapping_add(-750);
                     *kind = 5;
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
                     apply_card_penalty(engine, j);
                     give_yellow_card(j, kind, x, weight);
                 }
-            } else if severidade as i32 > sortear(0xf) + 7 {
+            } else if severidade as i32 > random(0xf) + 7 {
                 *d = (*d).wrapping_add(-1000);
                 *kind = 4;
                 *weight = 5.0;
@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
                 if expulsar != 0 {
                     *((j + match_player::SENT_OFF) as *mut u8) = 1;
                 }
-            } else if severidade as i32 > sortear(6) {
+            } else if severidade as i32 > random(6) {
                 apply_card_penalty(engine, j);
                 give_yellow_card(j, kind, x, weight);
             } else {
@@ -263,7 +263,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
     }
     let v = (this + 8) as *mut i16;
     let person = *((this + 4) as *const usize);
-    if person != 0 && sortear(byte(person, 0x29) as i32 + 0x19) == 0 {
+    if person != 0 && random(byte(person, 0x29) as i32 + 0x19) == 0 {
         *v = (*v).wrapping_add(-75);
         return 0;
     }
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
                 continue;
             }
             let dist = match_player_distance_to_cell(p, 4, y);
-            if ((sortear(4) + 1) as f64) < dist as f64 || dist.is_nan() {
+            if ((random(4) + 1) as f64) < dist as f64 || dist.is_nan() {
                 continue;
             }
         }
@@ -288,19 +288,19 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
             1 => (l1 as i32, -1, -15i16),
             _ => continue,
         };
-        if py == linha_d - 2 * sinal && sortear(6 * a + 500) == 0 {
+        if py == linha_d - 2 * sinal && random(6 * a + 500) == 0 {
             *v = (*v).wrapping_add(perto);
             return p;
         }
-        if py == linha_d - sinal && sortear(match_pl_ftol((a as f64) * (a as f64) * (a as f64) + read_f64_at(0x968890))) == 0 { // 0x968890 = 25
+        if py == linha_d - sinal && random(match_pl_ftol((a as f64) * (a as f64) * (a as f64) + read_f64_at(0x968890))) == 0 { // 0x968890 = 25
             *v = (*v).wrapping_add(-15);
             return p;
         }
-        if py == linha_d && sortear(3) != 0 && a < sortear(0x12) {
+        if py == linha_d && random(3) != 0 && a < random(0x12) {
             *v = (*v).wrapping_add(15);
             return p;
         }
-        if (py - linha_d) * sinal > 0 && a < sortear(0x64) {
+        if (py - linha_d) * sinal > 0 && a < random(0x64) {
             return p;
         }
     }
@@ -340,7 +340,7 @@ pub(crate) unsafe fn record_card_code(j: usize, code: u8, ate_um: bool) {
 /// sorteio(3 x 0x24 + 5) + 2, ou so tipo 9. O codigo do registro fica no lugar do argumento `j`
 /// (sem gravidade conhecida, o byte baixo do ponteiro).
 pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, kind: *mut u8, severity: u8, flag: u8) {
-    let mut rating = sortear(byte(j, match_player::FOULS) as u8 as i32) as u8;
+    let mut rating = random(byte(j, match_player::FOULS) as u8 as i32) as u8;
     let person = *((this + 4) as *const usize);
     if person != 0 {
         let a = byte(person, 0x25);
@@ -354,12 +354,12 @@ pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, k
         _ => (0, j as u8),
     };
     rating = rating.wrapping_add(soma);
-    if byte(j, match_player::YELLOW_CARDS) != 0 && (severity == 1 || severity == 6) && sortear(byte(person, 0x24) as i32) != 0 {
+    if byte(j, match_player::YELLOW_CARDS) != 0 && (severity == 1 || severity == 6) && random(byte(person, 0x24) as i32) != 0 {
         *kind = 9;
         return;
     }
     let active = byte(j, match_player::POSITION) >= 0 && flag == 0;
-    if severity != 1 && rating as i8 as i32 > sortear(0xf) + 7 {
+    if severity != 1 && rating as i8 as i32 > random(0xf) + 7 {
         if active {
             let d = (j + match_player::MATCH_RATING) as *mut i16;
             *d = (*d).wrapping_add(-1000);
@@ -371,7 +371,7 @@ pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, k
         }
         return;
     }
-    let r = sortear(3 * byte(j, match_player::YELLOW_CARDS) as i32 + 5);
+    let r = random(3 * byte(j, match_player::YELLOW_CARDS) as i32 + 5);
     if rating as i8 as i32 > r + 2 {
         if !active {
             return;
@@ -436,7 +436,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     }
     let paciencia = (this + 8) as *mut u16;
     let arb = *((this + 4) as *const usize);
-    if arb != 0 && sortear(byte(arb, 0x28) as i32 + 0xf) == 0 {
+    if arb != 0 && random(byte(arb, 0x28) as i32 + 0xf) == 0 {
         *paciencia = (*paciencia).wrapping_add(0xff06);
         return 0;
     }
@@ -444,18 +444,18 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     *paciencia = (*paciencia).wrapping_add(0xaf);
     let band_l: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
     let dura = |t: i8| t == 0x2a || t == 0xc || t == 0x15;
-    if arb != 0 && dura(kind) && band_l(j, 0) == 0 && band_l(j, 1) == 0 && sortear(50 - byte(arb, 0x24) as i32) == 0 {
+    if arb != 0 && dura(kind) && band_l(j, 0) == 0 && band_l(j, 1) == 0 && random(50 - byte(arb, 0x24) as i32) == 0 {
         *paciencia = (*paciencia).wrapping_add(0x19);
         return 0;
     }
-    if (band_l(j, 0) != 0 || band_l(j, 1) != 0) && (dura(kind) || kind == 0x2e) && sortear(3) != 0 {
+    if (band_l(j, 0) != 0 || band_l(j, 1) != 0) && (dura(kind) || kind == 0x2e) && random(3) != 0 {
         return 0;
     }
     // advantage: (20, or 5 in the band of its own side) x (+0x5c of `outro`’s profile)^1.5 / (1 or 3)
     let a = if band_l(j, byte(j, match_player::SIDE)) != 0 { 5.0 } else { 20.0 };
     let b = byte(*((other + match_player::STAFF) as *const usize), 0x5c) as f64;
     let div = if *((other + 0x1a6) as *const usize) != j { 1.0 } else { 3.0 };
-    *advantage = (sortear(match_pl_ftol(a * game_pow(b, read_f64_at(0x968940)) / div)) == 0) as u8; // 0x968940 = 1.5
+    *advantage = (random(match_pl_ftol(a * game_pow(b, read_f64_at(0x968940)) / div)) == 0) as u8; // 0x968940 = 1.5
     let word = |p: usize, d: i16| *((p + 0x31) as *mut i16) = (*((p + 0x31) as *const i16)).wrapping_add(d);
     if *advantage != 0 {
         word(other, -4);
@@ -469,11 +469,11 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         let mode = *((m as isize + side_j as isize + 0x1ad) as *const i8) as f64;
         factor += mode / (byte(arb, 0x27) as f64 * read_f64_at(0x968968) + read_f64_at(0x968930)); // 0x968968 = 0.5, 0x968930 = 3
         if byte(j, match_player::YELLOW_CARDS) != 0 {
-            let x = sortear(21 - sev as i32);
+            let x = random(21 - sev as i32);
             *grav = (*grav).wrapping_add((x / -5) as i8);
         }
         if *advantage != 0 {
-            let y = sortear(byte(arb, 0x28) as i32);
+            let y = random(byte(arb, 0x28) as i32);
             factor *= read_f64_at(0x968940) - y as f64 * read_f64_at(0x967888); // 0x968940 = 1.5, 0x967888 = 0.05
         }
         rigor = match sev {
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         if placar > byte(arb, 0x27) as i32 + 5 {
             *paciencia = (*paciencia).wrapping_add(0xff6a);
             rigor = rigor.wrapping_add(1);
-            let z = sortear(4);
+            let z = random(4);
             factor *= (read_f64_at(0x969000) - z as f64) * read_f64_at(0x967880) + read_f64_at(0x967890); // 0x969000 = 6, 0x967880 = 0.1, 0x967890 = 1
         }
     }
@@ -511,7 +511,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     let add = |v: i32| *grav = (*grav).wrapping_add(v as i8);
     let by_minute = |limit: i8| {
         if minute < limit {
-            *grav = sortear(*grav as i32) as i8;
+            *grav = random(*grav as i32) as i8;
         }
     };
     // final adjustment from `outro`’s record (+0x5c): 1 -> `um`; >= 6 -> +1 below 10; otherwise `senao`
@@ -533,18 +533,18 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     match kind {
         0x2a => {
             word(j, -4);
-            if sortear(match_pl_ftol(factor * read_f64_at(0x969000))) != 0 { // 0x969000 = 6
+            if random(match_pl_ftol(factor * read_f64_at(0x969000))) != 0 { // 0x969000 = 6
                 res = 1;
-                add(sortear(dureza) + 4);
+                add(random(dureza) + 4);
                 *card = 4;
                 by_minute(10);
             }
         }
         0x2b => {
             word(j, -3);
-            if sortear(match_pl_ftol(factor * read_f64_at(0x969558))) != 0 { // 0x969558 = 14
+            if random(match_pl_ftol(factor * read_f64_at(0x969558))) != 0 { // 0x969558 = 14
                 res = 7;
-                add(sortear(dureza) + 3);
+                add(random(dureza) + 3);
                 *card = 4;
                 by_minute(15);
             }
@@ -552,19 +552,19 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         0x2c => {
             let v = ceiling(factor * read_f64_at(0x9688b0), read_f64_at(0x968ff8)); // 0x9688b0 = 10, 0x968ff8 = 50
             word(j, -12);
-            if sortear(match_pl_ftol(v)) != 0 {
+            if random(match_pl_ftol(v)) != 0 {
                 res = 1;
-                add(sortear(dureza + 20) + rigor as i32 + 9);
+                add(random(dureza + 20) + rigor as i32 + 9);
                 *card = 10;
                 by_sheet(3, 2);
             }
         }
         0x2d => {
             word(j, -4);
-            if sortear(match_pl_ftol(factor * read_f64_at(0x968ea8))) != 0 { // 0x968ea8 = 20
-                if band_l(j, byte(j, match_player::SIDE)) == 0 || sortear(0x12) == 0 {
+            if random(match_pl_ftol(factor * read_f64_at(0x968ea8))) != 0 { // 0x968ea8 = 20
+                if band_l(j, byte(j, match_player::SIDE)) == 0 || random(0x12) == 0 {
                     res = 1;
-                    add(sortear(dureza) + rigor as i32 + 4);
+                    add(random(dureza) + rigor as i32 + 4);
                     *card = 7;
                 }
                 by_minute(6);
@@ -572,10 +572,10 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         }
         0x2e => {
             word(j, -1);
-            let r = sortear(match_pl_ftol(factor * read_f64_at(0x969000))); // 0x969000 = 6
-            if r != 0 || (other != 0 && player_table(other) == 1 && sortear(100) != 0) {
+            let r = random(match_pl_ftol(factor * read_f64_at(0x969000))); // 0x969000 = 6
+            if r != 0 || (other != 0 && player_table(other) == 1 && random(100) != 0) {
                 res = 1;
-                add(sortear(dureza) + rigor as i32 + 1);
+                add(random(dureza) + rigor as i32 + 1);
                 *card = 4;
                 by_minute(10);
             }
@@ -587,9 +587,9 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
                 (factor * read_f64_at(0x968ea8), -25) // 0x968ea8 = 20
             };
             word(j, d);
-            if sortear(match_pl_ftol(v)) != 0 {
+            if random(match_pl_ftol(v)) != 0 {
                 res = 1;
-                let y = sortear(if kind == 0x2f { dureza } else { dureza + 20 });
+                let y = random(if kind == 0x2f { dureza } else { dureza + 20 });
                 add(y + rigor as i32 + 9);
                 *card = 5;
                 by_sheet(5, 3);
@@ -597,17 +597,17 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         }
         0x5f => {
             word(j, -12);
-            if sortear(match_pl_ftol(factor * read_f64_at(0x9688b0))) != 0 { // 0x9688b0 = 10
+            if random(match_pl_ftol(factor * read_f64_at(0x9688b0))) != 0 { // 0x9688b0 = 10
                 res = 1;
-                add(sortear(dureza + 7) + rigor as i32 + 3);
+                add(random(dureza + 7) + rigor as i32 + 3);
                 *card = 5;
             }
         }
         0x61 => {
             word(j, -25);
-            if sortear(match_pl_ftol(factor + factor)) != 0 {
+            if random(match_pl_ftol(factor + factor)) != 0 {
                 res = 1;
-                add(sortear(dureza) + rigor as i32 + 20);
+                add(random(dureza) + rigor as i32 + 20);
                 *card = 5;
             }
         }
@@ -618,28 +618,28 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
                 _ => (0x968908, -60, 0, 18),
             };
             word(j, d);
-            if sortear(match_pl_ftol(factor * read_f64_at(k))) != 0 {
+            if random(match_pl_ftol(factor * read_f64_at(k))) != 0 {
                 res = 1;
-                add(sortear(dureza + extra) + rigor as i32 + mais);
+                add(random(dureza + extra) + rigor as i32 + mais);
                 *card = 11;
             }
         }
         0x13 | 0x21 | 0x22 => {
-            let segue = sortear(match_pl_ftol(read_f64_at(0x96d520) / factor)) == 0 // 0x96d520 = 75
-                || (who == 0x6c && sortear(if *advantage != 0 { 2 } else { 6 }) == 0);
-            if segue && (band_l(j, byte(j, match_player::SIDE)) == 0 || sortear(match_pl_ftol(read_f64_at(0x969550) / factor)) == 0) { // 0x969550 = 18
+            let segue = random(match_pl_ftol(read_f64_at(0x96d520) / factor)) == 0 // 0x96d520 = 75
+                || (who == 0x6c && random(if *advantage != 0 { 2 } else { 6 }) == 0);
+            if segue && (band_l(j, byte(j, match_player::SIDE)) == 0 || random(match_pl_ftol(read_f64_at(0x969550) / factor)) == 0) { // 0x969550 = 18
                 res = 1;
-                let a = sortear(dureza);
-                let b = sortear(5);
+                let a = random(dureza);
+                let b = random(5);
                 add(a + b + rigor as i32);
                 *card = 7;
                 by_sheet(5, 3);
             }
         }
         0x23 | 0x0c | 0x24 => {
-            if sortear(match_pl_ftol(read_f64_at(0x968f50) / factor)) == 0 { // 0x968f50 = 150
+            if random(match_pl_ftol(read_f64_at(0x968f50) / factor)) == 0 { // 0x968f50 = 150
                 res = if kind == 0x0c { 7 } else { 1 };
-                add(sortear(dureza) + 1);
+                add(random(dureza) + 1);
                 *card = 4;
                 if kind == 0x24 {
                     by_sheet(3, 2);
@@ -647,26 +647,26 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             }
         }
         0x15 | 0x38 => {
-            let r = sortear(match_pl_ftol(read_f64_at(0x968f50) / factor)); // 0x968f50 = 150
-            if r == 0 || (other != 0 && player_table(other) == 1 && sortear(5) == 0) {
+            let r = random(match_pl_ftol(read_f64_at(0x968f50) / factor)); // 0x968f50 = 150
+            if r == 0 || (other != 0 && player_table(other) == 1 && random(5) == 0) {
                 res = 1;
-                add(sortear(dureza) + 1);
+                add(random(dureza) + 1);
                 *card = 4;
                 by_minute(15);
             }
         }
         0x29 => {
-            if sortear(match_pl_ftol(read_f64_at(0x9688a8) / factor)) == 0 { // 0x9688a8 = 100
+            if random(match_pl_ftol(read_f64_at(0x9688a8) / factor)) == 0 { // 0x9688a8 = 100
                 res = 1;
-                add(sortear(dureza) + 2);
+                add(random(dureza) + 2);
                 *card = 7;
                 by_minute(10);
             }
         }
         0x01 => {
-            if sortear(match_pl_ftol(read_f64_at(0x968910) / factor)) == 0 { // 0x968910 = 10000
+            if random(match_pl_ftol(read_f64_at(0x968910) / factor)) == 0 { // 0x968910 = 10000
                 res = 1;
-                add(sortear(dureza) + 1);
+                add(random(dureza) + 1);
                 *card = 4;
                 by_minute(10);
             }

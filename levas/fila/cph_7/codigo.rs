@@ -131,18 +131,18 @@ unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube: usize) ->
 }
 
 // a 0x53e990 só lê: compara o valor
-comparar_valor!(comparar_get_scout, get_scout, %%I0%%, () -> usize);
+compare_value!(compare_get_scout, get_scout, %%I0%%, () -> usize);
 
 /// Comparador: a original grava nas saídas de verdade, a cópia em locais; a 0x4a4850 pode reordenar as estatísticas
 /// (a original primeiro; a cópia acha a tabela já em ordem e a mesma linha).
-unsafe extern "thiscall" fn comparar_get_current_run(this: usize, clube: usize, tipo: *mut u8, tamanho: *mut u8) {
+unsafe extern "thiscall" fn compare_get_current_run(this: usize, clube: usize, tipo: *mut u8, tamanho: *mut u8) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I1%%)(this, clube, tipo, tamanho);
     let (mut t, mut n) = (0u8, 0u8);
     get_current_run(this, clube, &mut t, &mut n);
     SCOREBOARD.record(*tipo == t && *tamanho == n, || format!("get_current_run({:x}) original={}/{} rust={}/{}", clube, *tipo, *tamanho, t, n));
 }
 
-unsafe extern "thiscall" fn comparar_record_holder_construct(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_record_holder_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x10, 8)], || o(this), || record_holder_construct(this));
     SCOREBOARD.record(igual && r == n, || format!("record_holder_construct {:x?} x {:x?}", mo, mr));
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn comparar_record_holder_construct(this: usize) -> usi
 
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio, a cópia em sem_contar (as escritas são só nas
 /// locais da pilha de cada uma).
-unsafe extern "thiscall" fn comparar_pick_rival_manager_id(this: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn compare_pick_rival_manager_id(this: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I3%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(this, clube),
         || crate::rng::without_counting(|| pick_rival_manager_id(this, clube)));

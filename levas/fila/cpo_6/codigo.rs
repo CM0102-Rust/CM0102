@@ -547,7 +547,7 @@ unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usize, id: u32
 
 /// Comparador: a resposta sorteia e pode pôr o jogador entre os rejeitados do técnico (0x547af0): lado a lado no
 /// estado do gerador e no bloco das preferências do técnico (+0x65, +0x1c..+0x34), a cópia sem contar os sorteios.
-unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, tecnico: usize, jogador: usize, tipo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_pick_ai_manager_response(this: usize, tecnico: usize, jogador: usize, tipo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     let mut regioes = crate::rng::STATE_REGIONS.to_vec();
     if tecnico != 0 && cpo6_d(tecnico + 0x65) != 0 {
@@ -564,7 +564,7 @@ unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, tecni
 
 /// Comparador: lado a lado no vetor das notícias (News +0, +4 vagas), nas entradas dos 16 humanos (News +8) e no texto
 /// do botão (0xde1f64; a 0x782b70 só consulta). Caixa "Error": só a original.
-unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize, id: u32, sincronizar: u32) -> u32 {
+unsafe extern "thiscall" fn compare_mark_item_read(this: usize, tecnico: usize, id: u32, sincronizar: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if tecnico == 0 || id == 0 || cpo6_i(tecnico).wrapping_sub(cpo6_i(0xae2364)).wrapping_add(0x10) < 0 || cpo6_d(this) == 0 {
         return o(this, tecnico, id, sincronizar);
@@ -580,7 +580,7 @@ unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize,
 }
 
 /// Comparador: pela notícia copiada em `saida` (0xdf bytes) e pela devolução. Caixa "Error": só a original.
-unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn compare_find_item_by_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(%%I2%%);
     if id == 0 || saida == 0 || (tecnico != 0 && cpo6_i(tecnico).wrapping_sub(cpo6_i(0xae2364)).wrapping_add(0x10) < 0) {
         return o(this, tecnico, id, saida);

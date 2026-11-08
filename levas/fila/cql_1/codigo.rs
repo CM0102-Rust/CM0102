@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -
 }
 
 /// A devolução das duas (a rotina só lê; as chamadas de dentro são buscas).
-unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p: usize, c: usize) -> i8 {
+unsafe extern "thiscall" fn compare_get_squad_number(this: usize, p: usize, c: usize) -> i8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(%%I0%%);
     let r = o(this, p, c);
     let n = get_squad_number(this, p, c);
@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: usize, outr
 }
 
 /// A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
-unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usize, outra: usize) -> u32 {
+unsafe extern "thiscall" fn compare_club_uses_squad_numbers(this: usize, c: usize, outra: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if c == 0 {
         return o(this, c, outra);
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, c: usize, n
 
 /// Lado a lado: o +0x3a dos dois contratos da pessoa (achados antes; as buscas só leem). Número fora da faixa (a caixa),
 /// sem pessoa ou sem clube: só a original.
-unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
+unsafe extern "thiscall" fn compare_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);

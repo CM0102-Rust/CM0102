@@ -325,7 +325,7 @@ unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, clube: usize) -
 
 /// Comparador: a avaliação pede o valor do jogador (0x4d0c60, que sorteia): lado a lado com o estado do sorteador, as
 /// duas palavras de marcas e os gastos líquidos do comprador e do vendedor; a cópia sem contar os sorteios.
-unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
+unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I0%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(f1, 2), (f2, 2)]);
@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: u
 
 /// Comparador: lado a lado com o estado do sorteador (a avaliação 0x696570 sorteia), as linhas da diretoria do
 /// comprador e do vendedor e as três pessoas favoritas do presidente do vendedor (0x547c10); a cópia sem contar.
-unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usize, transf: usize) {
+unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes(this: usize, transf: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let pessoa = cpo1_d(0xae23bc).wrapping_add(cpo1_d(transf + 0xc).wrapping_mul(0x6e));
@@ -363,7 +363,7 @@ unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usi
 
 /// Comparador: a original tira o item da lista (e o libera) e acrescenta a saída: roda só ela e confere o plano: a
 /// lista das saídas (+4) cresce de 1 quando devolve 1 (e a linha da diretoria fica com o bit 2) e fica igual com 0.
-unsafe extern "thiscall" fn comparar_resolve_board_ultimatum(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn compare_resolve_board_ultimatum(this: usize, clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let saidas = cpo1_d(this + 4);
     if saidas == 0 || cpo1_d(this + 0x10) == 0 {

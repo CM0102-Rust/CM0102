@@ -77,7 +77,7 @@ type V1Converter = unsafe extern "C" fn(usize, i32, usize, u32) -> i32;
 /// posição do `ftell` 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo
 /// parou. Fica a posição da Rust (a mesma, se iguais).
 // ponytail: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
-unsafe fn comparar_conversor_v1(nome: &str, o: V1Converter, rust: V1Converter, stream: usize, use_zip: i32,
+unsafe fn compare_conversor_v1(nome: &str, o: V1Converter, rust: V1Converter, stream: usize, use_zip: i32,
                                 registros: usize, n: u32, tamanho: usize) -> i32 {
     if use_zip != 0 {
         return o(stream, use_zip, registros, n);
@@ -105,16 +105,16 @@ unsafe fn comparar_conversor_v1(nome: &str, o: V1Converter, rust: V1Converter, s
     r
 }
 
-unsafe extern "C" fn comparar_db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_clubs_v1", original_fn::<V1Converter>(%%I0%%), db_files_read_clubs_v1, stream, use_zip, registros, n, 581)
+unsafe extern "C" fn compare_db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+    compare_conversor_v1("db_files_read_clubs_v1", original_fn::<V1Converter>(%%I0%%), db_files_read_clubs_v1, stream, use_zip, registros, n, 581)
 }
 
-unsafe extern "C" fn comparar_db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_players_v1", original_fn::<V1Converter>(%%I1%%), db_files_read_players_v1, stream, use_zip, registros, n, 68)
+unsafe extern "C" fn compare_db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+    compare_conversor_v1("db_files_read_players_v1", original_fn::<V1Converter>(%%I1%%), db_files_read_players_v1, stream, use_zip, registros, n, 68)
 }
 
-unsafe extern "C" fn comparar_db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_non_players_v1", original_fn::<V1Converter>(%%I2%%), db_files_read_non_players_v1, stream, use_zip, registros, n, 70)
+unsafe extern "C" fn compare_db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+    compare_conversor_v1("db_files_read_non_players_v1", original_fn::<V1Converter>(%%I2%%), db_files_read_non_players_v1, stream, use_zip, registros, n, 70)
 }
 
 /// Autoteste dos conversores da versão 1 (CM_AUTOTESTE=1, modo comparação: a base de fábrica e o save são
@@ -129,8 +129,8 @@ pub unsafe fn autoteste_dbj_1() {
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     let (t0, d0) = SCOREBOARD.counts();
     let mut s = TestRng(0x5631_4442_4a31);
-    let casos: [(V1Converter, &[(usize, u32, usize)], usize); 3] = [(comparar_db_files_read_clubs_v1, &CLUB_V1_LAYOUT, 581),
-        (comparar_db_files_read_players_v1, &NON_PLAYER_V1_LAYOUT, 68), (comparar_db_files_read_non_players_v1, &PLAYER_V1_FIELDS, 70)];
+    let casos: [(V1Converter, &[(usize, u32, usize)], usize); 3] = [(compare_db_files_read_clubs_v1, &CLUB_V1_LAYOUT, 581),
+        (compare_db_files_read_players_v1, &NON_PLAYER_V1_LAYOUT, 68), (compare_db_files_read_non_players_v1, &PLAYER_V1_FIELDS, 70)];
     for (comparar, campos, tamanho) in casos {
         for caso in 0..64u64 {
             let n = 1 + (s.next_u64() % 6) as usize;

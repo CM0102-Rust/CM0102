@@ -200,12 +200,12 @@ unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, u
     ro
 }
 
-unsafe extern "thiscall" fn comparar_england_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
+unsafe extern "thiscall" fn compare_england_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(%%I0%%), england_rules_can_loan_player, "england_rules_can_loan_player", this, clube, jogador, msg, motivo)
 }
 
 /// Comparador: lado a lado no byte da conta do clube da oferta.
-unsafe extern "thiscall" fn comparar_record_loan(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn compare_record_loan(this: usize, oferta: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let clube = cqe5_d(0xae23b4).wrapping_add(cqe5_d(oferta + 8).wrapping_mul(0x245));
     let regioes = [(season_loans_entry(clube), 1usize)];
@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn comparar_record_loan(this: usize, oferta: usize) {
 
 /// Comparador: lado a lado na tabela das contas inteira ([0xae235c] clubes × 16 bytes) só no dia em que ela muda (20
 /// de junho); nos outros dias as duas rodam sem gravar nada e só a original fica valendo.
-unsafe extern "thiscall" fn comparar_england_rules_daily_update(this: usize, data: usize) {
+unsafe extern "thiscall" fn compare_england_rules_daily_update(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(0x549f70usize);
     let mut d = [0u8; 8];

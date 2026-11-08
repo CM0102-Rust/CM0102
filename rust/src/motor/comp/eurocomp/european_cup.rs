@@ -977,18 +977,18 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
 /// [pt] Os quatro sorteados da fase 2 (os índices dos grupos, todos diferentes): a, b ≠ a, c ≠ a, b e d ≠ a, b, c, cada um
 /// com sorteio(4) (0x90cfc0) até sair um que serve (a d sorteia pelo menos uma vez: começa igual à a).
 pub(crate) unsafe fn draw_four_groups() -> [i8; 4] {
-    let a = sortear(4) as i8;
-    let mut b = sortear(4) as i8;
+    let a = random(4) as i8;
+    let mut b = random(4) as i8;
     while b == a {
-        b = sortear(4) as i8;
+        b = random(4) as i8;
     }
-    let mut c = sortear(4) as i8;
+    let mut c = random(4) as i8;
     while c == a || c == b {
-        c = sortear(4) as i8;
+        c = random(4) as i8;
     }
     let mut d = a;
     while d == a || d == b || d == c {
-        d = sortear(4) as i8;
+        d = random(4) as i8;
     }
     [a, b, c, d]
 }

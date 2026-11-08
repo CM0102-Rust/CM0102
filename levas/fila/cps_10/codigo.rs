@@ -52,7 +52,7 @@ unsafe extern "stdcall" fn player_stats_get_goals_for_club(pessoa: usize, clube:
 }
 
 /// Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
-unsafe extern "stdcall" fn comparar_player_stats_get_goals_for_club(pessoa: usize, clube: usize) -> u16 {
+unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(pessoa: usize, clube: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u16>(%%I0%%);
     if pessoa == 0 || clube == 0 || (cps10_i(pessoa) < cps10_i(0xae2364) && cps10_d(pessoa + 0x61) == 0) {
         return o(pessoa, clube);
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn add_team_of_year_record(this: usize, pessoa: usize, 
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_add_team_of_year_record(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
+unsafe extern "thiscall" fn compare_add_team_of_year_record(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(%%I1%%)(this, pessoa, clube, premio, a, b)
 }
 
@@ -118,7 +118,7 @@ unsafe extern "C" fn staff_records_compare_clubs_by_manager_points(a: usize, b: 
 }
 
 // ponytail: a 0x86f5b0 cria o registro que falta; a original roda antes e a cópia só acha os que ela criou.
-unsafe extern "C" fn comparar_staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = staff_records_compare_clubs_by_manager_points(a, b);
     SCOREBOARD.record(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", cps10_d(a), cps10_d(b), r, n));

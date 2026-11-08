@@ -49,7 +49,7 @@ unsafe extern "C" fn comp_util_get_fixture_venue_side(clube: usize, jogo: usize)
 }
 
 /// Comparador: pura (consulta 0x53b900, sem efeitos): pelo lado.
-unsafe extern "C" fn comparar_comp_util_get_fixture_venue_side(clube: usize, jogo: usize) -> u8 {
+unsafe extern "C" fn compare_comp_util_get_fixture_venue_side(clube: usize, jogo: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%);
     let r = o(clube, jogo);
     let n = comp_util_get_fixture_venue_side(clube, jogo);
@@ -73,7 +73,7 @@ unsafe extern "C" fn compare_nation_coefficients_desc(a: usize, b: usize) -> i32
     0
 }
 
-unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_nation_coefficients_desc(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
     let n = compare_nation_coefficients_desc(a, b);
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn has_scout_request(this: usize, jogador: usize, clube
 }
 
 /// Comparador: consulta pura (a busca binária e a data local): pelo valor; jogador nulo só a original (a caixa).
-unsafe extern "thiscall" fn comparar_has_scout_request(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
+unsafe extern "thiscall" fn compare_has_scout_request(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if jogador == 0 {
         return o(this, jogador, clube, so_vencidos);

@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
 /// O comparador de um grupo: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes: os
 /// sete clubes das vagas 7(g + 1).. da lista dos 56. Depois, a fase na vaga g com +0x3e = 7, os sete na tabela dela
 /// (como conjunto) e +0x30 = g.
-unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage(this: usize, g: u32) {
+unsafe extern "thiscall" fn compare_bra_nat_third_create_group_stage(this: usize, g: u32) {
     let k = g as u8 as i8 as i32;
     let mut plano = [0usize; 7];
     for (j, c) in plano.iter_mut().enumerate() {
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage(this: usiz
 /// O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes pela mesma escolha numa cópia dos registros: a fase da vaga 7 existe, com +0x3e = 16 e os dezesseis na ordem
 /// das vagas na lista dela (+0xa7, 6 bytes), e +0x30 = 7.
-unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
+unsafe extern "thiscall" fn compare_create_second_round_stage(this: usize) {
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
         let t = cqs3_d(if g == -1 { this } else { cqs3_d(cqs3_d(this + 0xc) + 4 * g as usize) } + 0xb1);
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
 
 /// O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
 /// vencedores da segunda fase; depois, as fases 8 e 9 com 4 clubes cada, os oito juntos (como conjunto) e +0x30 = 9.
-unsafe extern "thiscall" fn comparar_create_third_round_groups(this: usize) {
+unsafe extern "thiscall" fn compare_create_third_round_groups(this: usize) {
     let segunda = cqs3_d(cqs3_d(this + 0xc) + 0x1c);
     let mut plano = [0usize; 8];
     let mut n = 0usize;

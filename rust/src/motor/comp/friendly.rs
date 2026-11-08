@@ -1043,7 +1043,7 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -
     0
 }
 
-comparar_valor!(comparar_find_human_club_tournament, find_human_club_tournament, IDX_FIND_HUMAN_CLUB_TOURNAMENT, () -> usize);
+compare_value!(compare_find_human_club_tournament, find_human_club_tournament, IDX_FIND_HUMAN_CLUB_TOURNAMENT, () -> usize);
 
 /// True if the 8-byte date at `a` is before the current game date (G_CURRENT_DATE / G_CURRENT_DATE_YEAR).
 ///
@@ -3202,7 +3202,7 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_match(this: usize, data: us
     stored
 }
 
-comparar_valor!(comparar_find_friendly_match, find_friendly_match, IDX_FIND_FRIENDLY_MATCH, (data: usize, clube: usize) -> usize);
+compare_value!(compare_find_friendly_match, find_friendly_match, IDX_FIND_FRIENDLY_MATCH, (data: usize, clube: usize) -> usize);
 
 /// tells whether the competition is the friendlies one
 /// Original: `Friendly::is_own_comp_record` (0x5c2990, friendly.cpp, thiscall).

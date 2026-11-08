@@ -217,13 +217,13 @@ unsafe extern "thiscall" fn pay_appearance_money(this: usize, jogador: usize, jo
 /// Comparador: a 0x842e10 mexe nas vagas de muitos clubes (e as listas não cabem numa cópia barata): roda só a
 /// original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_add_player_to_club_shortlists(this: usize, jogador: usize, forcar: u32) {
+unsafe extern "thiscall" fn compare_add_player_to_club_shortlists(this: usize, jogador: usize, forcar: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, jogador, forcar)
 }
 
 /// Comparador: sorteia e dá notícia: roda só a original e confere o plano feito antes: sem listagem do clube e com
 /// contrato, o contrato fica à venda (+0x4e bit 1, +0x4f nibble alto 7).
-unsafe extern "thiscall" fn comparar_transfer_list_player(this: usize, jogador: usize, noticia: u32) {
+unsafe extern "thiscall" fn compare_transfer_list_player(this: usize, jogador: usize, noticia: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5444a0usize);
     let marca = listada(jogador, 0) == 0 && get_contract(jogador) != 0;
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn comparar_transfer_list_player(this: usize, jogador: 
 
 /// Comparador: dá notícia e mexe nas finanças: roda só a original e confere a devolução com o plano (contrato, clube,
 /// registro do prêmio e jogos, sem efeitos).
-unsafe extern "thiscall" fn comparar_pay_appearance_money(this: usize, jogador: usize, jogos: i32, tipo: u32, arg: u32) -> u32 {
+unsafe extern "thiscall" fn compare_pay_appearance_money(this: usize, jogador: usize, jogos: i32, tipo: u32, arg: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32) -> u32>(%%I2%%);
     let c = get_contract(jogador);
     let esperado = if c == 0 || cpp6_clube(cpp6_d(c + 4)) == 0 {

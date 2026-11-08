@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jog
 /// trecho +0x20..+0x27 do registro do jogador e o +0x3b do contrato; no jogo simulado (competição −2), também o estado
 /// do sorteio (e as duas categorias possíveis), com o sorteio da cópia fora da contagem. Partida ou jogo nulos, a caixa
 /// de uma competição sem tipo conhecido ou registro de categoria a criar (0x7c5d80 cresce o vetor): só a original.
-unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn compare_player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     if p == 0 || jogo == 0 {
         return o(this, p, jogo); // ponytail: as caixas, só a original
@@ -406,7 +406,7 @@ unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: u
 /// em ensaio (sem ordenar), a partir dos mesmos recordes: os 14 primeiros bytes dos registros da temporada e de sempre
 /// de cada clube da cadeia, o cabeçalho da fila (+0x24..+0x30) e a fila; e a devolução. Liga nula ou com +0x44 ≠ 0xff,
 /// registro a criar (0x4528d0/0x452710 alocam) ou fila que pode crescer: só a original.
-unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
+unsafe extern "thiscall" fn compare_update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if liga0 == 0 || cpx12_b(liga0 + 0x44) != 0xff {
         return o(this, liga0, sempre); // ponytail: as caixas, só a original
@@ -512,7 +512,7 @@ unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
 
 /// Comparador: a cópia em ensaio (sem preencher nem entregar, sem soltar) roda antes, enquanto a fila está viva, e a
 /// original depois a partir do mesmo cabeçalho (+0x24..+0x30): o cabeçalho e a devolução.
-unsafe extern "thiscall" fn comparar_send_record_news(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_send_record_news(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let regioes = [(this + 0x24, 0xc)];
     let antes = crate::comparison::MemorySnapshot::read(&regioes);

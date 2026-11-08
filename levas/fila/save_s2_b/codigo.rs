@@ -50,7 +50,7 @@ unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
 
 // ponytail: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
 // ramo e é provada pela prova do save (o .qst gravado com e sem a leva).
-unsafe extern "C" fn comparar_save_fifa_transfer_rules(save: usize) {
+unsafe extern "C" fn compare_save_fifa_transfer_rules(save: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(%%I0%%)(save)
 }
 
@@ -90,7 +90,7 @@ unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
 
 // ponytail: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
 // (arquivo = só a original). A cópia leva o ramo; a etapa de carregar da prova do save a exercita.
-unsafe extern "C" fn comparar_load_fifa_transfer_rules(save: usize) {
+unsafe extern "C" fn compare_load_fifa_transfer_rules(save: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(%%I1%%)(save)
 }
 
@@ -184,7 +184,7 @@ unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
 // Lado a lado sobre o resumo inteiro (0xf74) e o relógio do tempo de jogo ([0xdd7140], [0xdd7144]),
 // restaurados entre as duas; compara só +0..+0xf6c: o tempo de jogo e o time() (+0xf6c, +0xf70) são
 // relógio (fixos só no modo simulação), como na prova do save.
-unsafe extern "C" fn comparar_build_save_game_summary(resumo: *mut u8) {
+unsafe extern "C" fn compare_build_save_game_summary(resumo: *mut u8) {
     let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
     let (_, _, _, mo, mr) = crate::comparison::side_by_side(&regioes,
         || original_fn::<unsafe extern "C" fn(*mut u8)>(%%I2%%)(resumo),

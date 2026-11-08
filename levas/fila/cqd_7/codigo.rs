@@ -348,7 +348,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
 /// roda duas vezes). Confere o que ela garante quando devolve 1 com clubes: cada confronto das rodadas mapeadas aponta
 /// (+6 vaga, +8 lado, +0x12 rodada uma ou duas adiante) uma vaga que aponta de volta para ele (+0xa/+0xe mandante,
 /// +0xc/+0x10 visitante).
-unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let r = o(this);
     if r != 1 || cqd7_d(this + 0x45) == 0 {
@@ -410,7 +410,7 @@ unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: i32) -> i32
 
 /// O comparador da primeira fase do grupo: com o índice válido (−1..+0x30), as duas (só leem) e o mesmo índice; fora
 /// dele só a original (a caixa).
-unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: usize, k: i32) -> i32 {
+unsafe extern "thiscall" fn compare_get_first_stage_of_group(this: usize, k: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(%%I1%%);
     if k < -1 || k > cqd7_d(this + 0x30) as i32 {
         return o(this, k);
@@ -479,6 +479,6 @@ unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
 
 /// O comparador da fase atual: só a original (ponytail: o método 0x10 das fases pode refazer a tabela; não roda duas
 /// vezes); a cópia se prova no modo Rust pelas telas.
-unsafe extern "thiscall" fn comparar_get_current_stage(this: usize) -> usize {
+unsafe extern "thiscall" fn compare_get_current_stage(this: usize) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%)(this)
 }

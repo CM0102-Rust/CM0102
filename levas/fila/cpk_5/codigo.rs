@@ -87,18 +87,18 @@ unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: usize) -> u
 
 /// Comparadores: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
-unsafe extern "thiscall" fn comparar_send_to_continent_managers(this: usize, noticia: usize, continente: usize) -> u32 {
+unsafe extern "thiscall" fn compare_send_to_continent_managers(this: usize, noticia: usize, continente: usize) -> u32 {
     crate::comparison::branch("send_to_continent_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, continente)
 }
 
-unsafe extern "thiscall" fn comparar_send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
+unsafe extern "thiscall" fn compare_send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
     crate::comparison::branch("send_to_comp_region");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, comp)
 }
 
 /// Comparador: pelo valor (a 0x785670 só lê).
-unsafe extern "thiscall" fn comparar_is_important_for(noticia: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn compare_is_important_for(noticia: usize, pessoa: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(noticia, pessoa);
     let t = cpk5_d(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {

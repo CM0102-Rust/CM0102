@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn league_process_promotion_relegation_chain(this: usiz
 
 // ponytail: fecha temporadas e move clubes entre as ligas (contratos, técnicos, notícias): não roda duas vezes; só a
 // original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_league_process_promotion_relegation_chain(this: usize, aos_pares: u32) {
+unsafe extern "thiscall" fn compare_league_process_promotion_relegation_chain(this: usize, aos_pares: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, aos_pares)
 }
 
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube: usize, lo:
 }
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
+unsafe extern "thiscall" fn compare_send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(%%I1%%)(this, clube, lo, hi, posicao, rodada, partida, tipo)
 }
 
@@ -117,6 +117,6 @@ unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: usize, valor
 }
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_send_tv_rights_news(this: usize, clube: usize, valor: u32) {
+unsafe extern "thiscall" fn compare_send_tv_rights_news(this: usize, clube: usize, valor: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, clube, valor)
 }

@@ -152,12 +152,12 @@ unsafe extern "stdcall" fn transfer_manager_get_squad_status_reason(oferta: usiz
 }
 
 // ponytail: aloca e solta a oferta (0x944cf1, 0x944c94): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_build_clause_offer_option(this: usize, clube: usize, jogador: usize, saida: *mut usize, apelo: *mut u8, valor: u32) -> u32 {
+unsafe extern "thiscall" fn compare_build_clause_offer_option(this: usize, clube: usize, jogador: usize, saida: *mut usize, apelo: *mut u8, valor: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut usize, *mut u8, u32) -> u32>(%%I0%%)(this, clube, jogador, saida, apelo, valor)
 }
 
 /// Comparador: lado a lado pelo contrato da vez ([0xae1080]), e pela devolução.
-unsafe extern "stdcall" fn comparar_transfer_manager_is_rejection_reason_valid(motivo: u32, oferta: usize) -> u32 {
+unsafe extern "stdcall" fn compare_transfer_manager_is_rejection_reason_valid(motivo: u32, oferta: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(u32, usize) -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(0xae1080, 4)], || o(motivo, oferta), || transfer_manager_is_rejection_reason_valid(motivo, oferta));
     SCOREBOARD.record(igual && r == n, || format!("transfer_manager_is_rejection_reason_valid({:x}, pessoa {}) original={} rust={} {:x?} x {:x?}", motivo as u16, cps4_d(oferta + 0xc), r, n, mo, mr));
@@ -165,7 +165,7 @@ unsafe extern "stdcall" fn comparar_transfer_manager_is_rejection_reason_valid(m
 }
 
 /// Comparador: lado a lado pelo contrato da vez ([0xae1080]), e pela devolução.
-unsafe extern "stdcall" fn comparar_transfer_manager_get_squad_status_reason(oferta: usize) -> u16 {
+unsafe extern "stdcall" fn compare_transfer_manager_get_squad_status_reason(oferta: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(0xae1080, 4)], || o(oferta), || transfer_manager_get_squad_status_reason(oferta));
     SCOREBOARD.record(igual && r == n, || format!("transfer_manager_get_squad_status_reason(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps4_d(oferta + 0xc), r, n, mo, mr));

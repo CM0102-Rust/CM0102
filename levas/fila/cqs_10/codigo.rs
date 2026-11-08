@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn conmebol_liber_create_knockout_stage(this: usize) {
     build_knockout_stage(this, 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
 }
 
-unsafe extern "thiscall" fn comparar_conmebol_liber_create_knockout_stage(this: usize) {
+unsafe extern "thiscall" fn compare_conmebol_liber_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     con_merc_cup_compare_knockout_stage("conmebol_liber_create_knockout_stage", this, 0x10, 7, 7, || o(this))
 }
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn con_merc_cup_create_semi_final_stage(this: usize) {
     build_knockout_stage(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
 }
 
-unsafe extern "thiscall" fn comparar_con_merc_cup_create_semi_final_stage(this: usize) {
+unsafe extern "thiscall" fn compare_con_merc_cup_create_semi_final_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     con_merc_cup_compare_knockout_stage("con_merc_cup_create_semi_final_stage", this, 4, 3, 3, || o(this))
 }
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
 
 // ponytail: as semifinais (0x4c2330) alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa e não muda nada).
-unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_con_merc_cup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let f = cqs10_d(this + 0x30) as i32;
     let ultima = f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1);

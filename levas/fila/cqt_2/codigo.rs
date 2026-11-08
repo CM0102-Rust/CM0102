@@ -141,17 +141,17 @@ unsafe extern "thiscall" fn construct_bra_reg_north(this: usize, ano: u32, regis
     bra_reg_goias_construct_state_league(this, ano, registro, &NORTH_CHAMPIONSHIP, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
 }
 
-unsafe extern "thiscall" fn comparar_construct_bra_reg_goias(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_bra_reg_goias(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     bra_reg_goias_compare_state_league_ctor("construct_bra_reg_goias", this, ano, registro, &GOIANO_STATE_CHAMPIONSHIP, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_bra_reg_minas_gerais(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_bra_reg_minas_gerais(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     bra_reg_goias_compare_state_league_ctor("construct_bra_reg_minas_gerais", this, ano, registro, &MINEIRO_STATE_LEAGUE, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_bra_reg_north(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_bra_reg_north(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     bra_reg_goias_compare_state_league_ctor("construct_bra_reg_north", this, ano, registro, &NORTH_CHAMPIONSHIP, || o(this, ano, registro))
 }

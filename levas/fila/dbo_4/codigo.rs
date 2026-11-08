@@ -42,7 +42,7 @@ unsafe extern "C" fn club_has_fast_striker(clube: usize) -> u8 {
     (n > 0) as u8 // atacante rapido (dbo)
 }
 
-unsafe extern "C" fn comparar_club_has_fast_striker(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_has_fast_striker(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_has_fast_striker(clube);
     SCOREBOARD.record(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
@@ -61,7 +61,7 @@ unsafe extern "C" fn club_has_two_creative_midfielders(clube: usize) -> u8 {
     (n > 1) as u8 // meias criativos (dbo)
 }
 
-unsafe extern "C" fn comparar_club_has_two_creative_midfielders(clube: usize) -> u8 {
+unsafe extern "C" fn compare_club_has_two_creative_midfielders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_has_two_creative_midfielders(clube);
     SCOREBOARD.record(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
@@ -147,7 +147,7 @@ unsafe extern "C" fn club_squad_strength_band(clube: usize, outro: usize) -> u8 
     f.clamp(0, 6) as u8
 }
 
-unsafe extern "C" fn comparar_club_squad_strength_band(clube: usize, outro: usize) -> u8 {
+unsafe extern "C" fn compare_club_squad_strength_band(clube: usize, outro: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(clube, outro);
     let n = club_squad_strength_band(clube, outro);
     SCOREBOARD.record(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, outro, r, n));

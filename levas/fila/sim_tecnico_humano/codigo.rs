@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn set_manager(busca: usize, pessoa: usize) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn comparar_get_holiday_stamp(gerente: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn compare_get_holiday_stamp(gerente: usize, pessoa: usize) -> u32 {
     if human_manager_record(gerente, pessoa).is_none() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(gerente, pessoa);
     }
@@ -54,7 +54,7 @@ unsafe extern "thiscall" fn comparar_get_holiday_stamp(gerente: usize, pessoa: u
     r
 }
 
-unsafe extern "thiscall" fn comparar_get_saved_lineup(gerente: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn compare_get_saved_lineup(gerente: usize, pessoa: usize) -> usize {
     if human_manager_record(gerente, pessoa).is_none() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(gerente, pessoa);
     }
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn comparar_get_saved_lineup(gerente: usize, pessoa: us
     r
 }
 
-unsafe extern "thiscall" fn comparar_set_manager(busca: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn compare_set_manager(busca: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     if pessoa == 0 || *(pessoa as *const i32) < *(0xae2364 as *const i32) - 0x10 {
         return o(busca, pessoa);

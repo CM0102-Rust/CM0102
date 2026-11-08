@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn init_banned_nation_pairs(this: usize) {
 }
 
 /// Comparador: lado a lado pelo valor e pelas missões +0x18c..+0x1a0 (a 0x7aefd0 as copia sobre elas mesmas).
-unsafe extern "thiscall" fn comparar_scout_covers_nation(this: usize, nacao: usize) -> u32 {
+unsafe extern "thiscall" fn compare_scout_covers_nation(this: usize, nacao: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let reg = [(this + 0x18c, 0x15)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nacao), || scout_covers_nation(this, nacao));
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn comparar_scout_covers_nation(this: usize, nacao: usi
 /// Comparador: a 0x68d1f0 libera o que tira: o plano antes (os itens que ficam nas duas listas e a vaga do amistoso);
 /// a original roda; confere as listas, o cursor da +0x34d4 no começo e a vaga zerada. Jogo nulo ou sem a lista
 /// +0x34c8: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
+unsafe extern "thiscall" fn compare_remove_friendly_match(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if jogo == 0 || cpn7_d(this + 0x34c8) == 0 {
         return o(this, jogo, limpar_vaga);
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: us
 }
 
 /// Comparador: o malloc não pode rodar duas vezes: a original roda e confere o vetor e a conta com o plano.
-unsafe extern "thiscall" fn comparar_init_banned_nation_pairs(this: usize) {
+unsafe extern "thiscall" fn compare_init_banned_nation_pairs(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let v = cpn7_d(this + 0x3502);
     let ok = if v == 0 {

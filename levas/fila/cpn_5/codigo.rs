@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn schedule_offer(this: usize, oferta: usize, dias: u32
 
 /// Comparador: sem vaga a abrir (o plano pelo mesmo teste, com o cursor da lista devolvido), lado a lado pelo cursor
 /// da lista; com vaga a abrir (ou a caixa), só a original.
-unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
+unsafe extern "thiscall" fn compare_fix_missing_jobs(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let l = cpn5_d(this + 8);
     let cursor = cpn5_d(l + 0xa);
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x69d1b0 e a 0x69f810 podem sortear), pela nota e
 /// pelo cursor da lista de vagas (a 0x69fc60 o devolve).
-unsafe extern "thiscall" fn comparar_best_manager_candidate_score(this: usize, clube: usize, atual: usize) -> i32 {
+unsafe extern "thiscall" fn compare_best_manager_candidate_score(this: usize, clube: usize, atual: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I1%%);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((cpn5_d(this + 8) + 0xa, 4));
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn comparar_best_manager_candidate_score(this: usize, c
 /// Comparador: a original roda (a 0x68d0d0 aloca o nó) e o resultado é conferido com o plano feito antes: a data
 /// (+0x12) e a fatia (+0x1a) da oferta, a conta do balde mais 1 e a data base (+0x84d, 8 bytes) igual a hoje quando
 /// não havia.
-unsafe extern "thiscall" fn comparar_schedule_offer(this: usize, oferta: usize, dias: u32, fatias: u32) -> u32 {
+unsafe extern "thiscall" fn compare_schedule_offer(this: usize, oferta: usize, dias: u32, fatias: u32) -> u32 {
     let sem_base = cpn5_w(this + 0x84f) == 0;
     let (data, fatia, balde) = vacancy_schedule_plan(this, dias as u8, fatias as u8);
     let conta = cpn5_w(balde);

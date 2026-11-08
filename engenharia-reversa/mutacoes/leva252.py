@@ -7,7 +7,7 @@ MUTACOES = [
     ('cpp_fim_sem_volta', 'write_u32(person + staff::CLUB_JOB, volta as u32); // a pessoa volta ao dono', 'let _ = volta; // mutacao: a pessoa nao volta ao dono', 'cpp_2 encerrar emprestimo'),
     ('cpp_troca_marca', 'set_squad_flags(person, l as u32); // 1 principal, 2 reserva', 'set_squad_flags(person, 3 - l as u32); // mutacao: a marca trocada', 'cpp_2 trocar no clube'),
     ('cpp_base_da_diretoria', '        q = 10000.0;', '        q = 9000.0; // mutacao: a base mais baixa', 'cpp_3 base no teto'),
-    ('cpp_motivo_sorteio', '    let season = in_season(club, G_CURRENT_DATE);', '    let season = in_season(club, G_CURRENT_DATE);\n    sortear(2); // mutacao: um sorteio a mais', 'cpp_3 motivo da saida'),
+    ('cpp_motivo_sorteio', '    let season = in_season(club, G_CURRENT_DATE);', '    let season = in_season(club, G_CURRENT_DATE);\n    random(2); // mutacao: um sorteio a mais', 'cpp_3 motivo da saida'),
     ('cpp_registro_sem_vaga', '            write_u32(r + 0x86, read_u32(person)); // the slot stays with him\n            break r;', '            return 0; // mutacao: sem criar o registro', 'cpp_3 criar registro'),
     ('cpp_nota_do_candidato', '    if rating >= nota_minima { 1 } else { 0 }', '    if rating >= nota_minima + 0.5 { 1 } else { 0 } // mutacao: a nota minima mais alta'),
     ('cpp_cargo_pessoa_nula', '        return 0; // pessoa nula', '        return 1; // mutacao: a pessoa nula pode', 'cpp_4 pessoa nula'),

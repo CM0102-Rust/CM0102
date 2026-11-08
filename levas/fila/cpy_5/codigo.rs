@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn european_cup_collect_entrants(this: usize) -> u32 {
 /// Comparador da 0x584fa0: a original aloca (só ela roda); o plano confere depois tudo o que ela gravou: a lista nova
 /// copiada e repreenchida pela cópia (fill_champions_league_entrants só lê os clubes, que a original não muda) tem de sair igual,
 /// +0x36, +0x38 e a devolução.
-unsafe extern "thiscall" fn comparar_european_cup_collect_entrants(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_european_cup_collect_entrants(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let t = cpy5_d(this + 0x14);
     if t == 0 {
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn build_qualifying_entry_table(this: usize) -> i32 {
 
 /// Comparador da 0x584990: a original aloca (só ela roda); depois a tabela dela, copiada e remontada pela cópia,
 /// tem de sair igual, com +0x3e = 55 e a devolução.
-unsafe extern "thiscall" fn comparar_build_qualifying_entry_table(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_build_qualifying_entry_table(this: usize) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%)(this);
     let t = cpy5_d(this + 0xa7);
     if t == 0 || cpy5_w(this + 0x3e) != 0x37 {
@@ -220,6 +220,6 @@ unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
 }
 
 // ponytail: os sorteios sorteiam, alocam as fases e mandam notícias: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_european_cup_advance_stage(this: usize) {
+unsafe extern "thiscall" fn compare_european_cup_advance_stage(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

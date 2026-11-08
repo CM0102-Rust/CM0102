@@ -209,7 +209,7 @@ fn formation_regions(this: usize) -> [(usize, usize); 3] {
 }
 
 /// Comparador: grava só a formação (a 0x5b7e60 e a 0x5b73a0 são puras; a 0x5b59a0 refaz a máscara): lado a lado.
-unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32, fase: u32, band: u32, coord: u32) -> u32 {
+unsafe extern "thiscall" fn compare_set_slot_coordinate(this: usize, casa: u32, fase: u32, band: u32, coord: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%);
     let reg = formation_regions(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, casa, fase, band, coord), || set_slot_coordinate(this, casa, fase, band, coord));
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32,
 }
 
 /// Comparador: pura (grava só a saída): as duas sobre saídas próprias.
-unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, casa: u32, saida: *mut u32) -> u32 {
+unsafe extern "thiscall" fn compare_check_duplicate_position(this: usize, casa: u32, saida: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(%%I1%%);
     if !(0..=10).contains(&(casa as u8 as i8)) {
         return o(this, casa, saida); // ponytail: a caixa, só a original
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, casa:
 }
 
 /// Comparador: grava um byte e +0x187f: lado a lado.
-unsafe extern "thiscall" fn comparar_set_marking_type(this: usize, casa: u32, marca: u32) -> u32 {
+unsafe extern "thiscall" fn compare_set_marking_type(this: usize, casa: u32, marca: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%);
     if !matches!(marca as u8, 1 | 2 | 4 | 8 | 0x10) {
         return o(this, casa, marca); // ponytail: a caixa, só a original

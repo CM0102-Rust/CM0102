@@ -92,7 +92,7 @@ unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
 
 // ponytail: ~4 milhões de chamadas na carreira: comparação só do valor, sem regiões (a rotina só lê; a 0x4a4850 pode
 // reordenar a estatística, e a original já deixa ordenada para a cópia).
-unsafe extern "C" fn comparar_comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
+unsafe extern "C" fn compare_comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(a, b);
     let n = comp_util_get_league_clash_type(a, b);
     SCOREBOARD.record(r == n, || format!("comp_util_get_league_clash_type({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -147,7 +147,7 @@ unsafe extern "C" fn comp_util_get_club_strength_score(clube: usize) -> i32 {
 
 // ponytail: 1.117 chamadas; só o valor. A escalação e as notas têm comparadores próprios, e o físico que a nota
 // atualiza uma vez (0x62ed70, com sorteio) a original já deixa pronto para a cópia.
-unsafe extern "C" fn comparar_comp_util_get_club_strength_score(clube: usize) -> i32 {
+unsafe extern "C" fn compare_comp_util_get_club_strength_score(clube: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> i32>(%%I1%%)(clube);
     let n = comp_util_get_club_strength_score(clube);
     SCOREBOARD.record(r == n, || format!("comp_util_get_club_strength_score({:x}) original={} rust={}", clube, r, n));
@@ -186,7 +186,7 @@ unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, lugar: u32) -
     cpa3_d(p + [0xa, 0xe, 0x12][lugar as usize]) // campeão, vice, terceiro
 }
 
-unsafe extern "C" fn comparar_comp_util_get_latest_placed_club(comp: usize, lugar: u32) -> usize {
+unsafe extern "C" fn compare_comp_util_get_latest_placed_club(comp: usize, lugar: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%);
     if lugar as u8 > 2 {
         return o(comp, lugar);

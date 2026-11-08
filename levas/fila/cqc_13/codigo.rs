@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, res
 /// Comparador: a observação (0x7b5be0, original) grava o que os olheiros sabem e os relatórios, a 0x7ae9c0 começa
 /// buscas e a 0x7f9890 entrega as notícias: não pode rodar duas vezes. Só a original roda (ponytail: ela mesma só grava
 /// o vetor e a lista locais, que saem); confere a devolução (1).
-unsafe extern "thiscall" fn comparar_scout_manager_scout_match(this: usize, p: usize, resultado: usize) -> u32 {
+unsafe extern "thiscall" fn compare_scout_manager_scout_match(this: usize, p: usize, resultado: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, p, resultado);
     SCOREBOARD.record(r == 1, || format!("scout_manager_scout_match(partida {:x}) original={}", p, r));
     r
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn get_edit_session(this: usize, tecnico: usize) -> usi
 }
 
 /// Comparador: pelo valor (só lê); com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_get_edit_session(this: usize, tecnico: usize) -> usize {
+unsafe extern "thiscall" fn compare_get_edit_session(this: usize, tecnico: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if scout_manager_human_manager_index(tecnico).is_none() {
         return o(this, tecnico);
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn set_edit_session(this: usize, sessao: usize, tecnico
 }
 
 /// Comparador: lado a lado pelas 16 sessões e a devolução; com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_set_edit_session(this: usize, sessao: usize, tecnico: usize) -> u32 {
+unsafe extern "thiscall" fn compare_set_edit_session(this: usize, sessao: usize, tecnico: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
     if scout_manager_human_manager_index(tecnico).is_none() {
         return o(this, sessao, tecnico);

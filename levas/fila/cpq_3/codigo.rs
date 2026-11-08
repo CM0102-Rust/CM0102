@@ -259,7 +259,7 @@ unsafe fn promotion_regions(this: usize, clube: usize, acesso: bool) -> Option<V
 
 /// Comparador: lado a lado pelas regiões (a cópia sem os históricos em arquivo, que a original já gravou, e sem contar
 /// os sorteios); com renovação de contrato ou clube/competição nulos, só a original.
-unsafe extern "thiscall" fn comparar_add_promotion_record(this: usize, clube: usize, comp: usize, peso: u32) {
+unsafe extern "thiscall" fn compare_add_promotion_record(this: usize, clube: usize, comp: usize, peso: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%);
     let reg = if clube != 0 && comp != 0 { promotion_regions(this, clube, true) } else { None };
     let reg = match reg {
@@ -352,7 +352,7 @@ unsafe extern "thiscall" fn add_relegation_record(this: usize, clube: usize, com
 }
 
 /// Comparador: como o do acesso (sem o registro de pontos, que o rebaixamento não usa).
-unsafe extern "thiscall" fn comparar_add_relegation_record(this: usize, clube: usize, comp: usize) {
+unsafe extern "thiscall" fn compare_add_relegation_record(this: usize, clube: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let reg = if clube != 0 && comp != 0 { promotion_regions(this, clube, false) } else { None };
     let reg = match reg {
@@ -407,7 +407,7 @@ unsafe extern "thiscall" fn add_qualified_for_round_record(this: usize, clube: u
 
 /// Comparador: lado a lado pelo registro de pontos do técnico (criado antes, como a original faria), a cópia sem o
 /// histórico em arquivo; sem clube ou sem técnico, só a original.
-unsafe extern "thiscall" fn comparar_add_qualified_for_round_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
+unsafe extern "thiscall" fn compare_add_qualified_for_round_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I2%%);
     if clube == 0 || cpq3_d(clube + 0xcf) == 0 {
         return o(this, clube, comp, fase, rodada, peso);

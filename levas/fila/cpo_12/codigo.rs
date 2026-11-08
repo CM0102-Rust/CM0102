@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pessoa: usize
 /// Comparador: a 0x7c6a30 aloca e realoca a tabela (não pode rodar duas vezes): o plano antes (a conta e a
 /// capacidade depois, a fluência), a original roda; confere a conta, a capacidade e o registro novo (no fim sem ordenar;
 /// com `ordenar`, em algum lugar da tabela).
-unsafe extern "thiscall" fn comparar_add_language(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
+unsafe extern "thiscall" fn compare_add_language(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
     let (n, cap) = if cpo12_d(this + 0x3c) == 0 { (cpo12_d(this + 0x44), 100) } else { (cpo12_d(this + 0x44), cpo12_d(this + 0x40)) };
     let cap = if cap == n { cap.wrapping_add(100) } else { cap };
     let f = fluencia as u8;
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn comparar_add_language(this: usize, pessoa: usize, id
 
 /// Comparador: sem tabela ou sem o registro, só a original (o acréscimo 0x7c6a30 tem o comparador dele); com o
 /// registro, lado a lado nos 6 bytes dele.
-unsafe extern "thiscall" fn comparar_improve_language(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
+unsafe extern "thiscall" fn compare_improve_language(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I1%%);
     let r = if cpo12_d(this + 0x3c) == 0 { 0 } else { find_language_record(this, pessoa, idioma as u8) };
     if r == 0 {
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn comparar_improve_language(this: usize, pessoa: usize
 
 /// Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
 /// categoria liberados (a 0x58f110 só grava +0x1c, dentro do registro). Pessoa nula ou não jogadora: só a original.
-unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn compare_player_stats_reset_player(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     if pessoa == 0 || cpo12_d(pessoa + 0x61) == 0 {
         return o(this, pessoa);

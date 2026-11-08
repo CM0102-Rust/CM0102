@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn add_decision_date(this: usize, pessoa: usize, data: 
 // o plano antes, roda só a original e confere; o modo Rust e a carreira provam as cópias.
 
 /// Comparador: a vaga esperada (a primeira vazia, ou a do fim com a conta + 1 e a capacidade + 200 se cheio).
-unsafe extern "thiscall" fn comparar_get_free_staff_contract_space(this: usize, so_no_fim: u32) -> i32 {
+unsafe extern "thiscall" fn compare_get_free_staff_contract_space(this: usize, so_no_fim: u32) -> i32 {
     let (n, cap, p) = (cpl4_d(this + 8), cpl4_d(this + 4), cpl4_d(this));
     let mut livre = -1i32;
     if so_no_fim == 0 {
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn comparar_get_free_staff_contract_space(this: usize, 
 }
 
 /// Comparador: a vaga é a do fim (a conta de antes); confere a ligação da pessoa, o id no contrato e a conta.
-unsafe extern "thiscall" fn comparar_add_staff_contract(this: usize, pessoa: usize, valor: u32) -> u32 {
+unsafe extern "thiscall" fn compare_add_staff_contract(this: usize, pessoa: usize, valor: u32) -> u32 {
     let n = cpl4_d(this + 8);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, pessoa, valor);
     if cpl4_d(this) == 0 {
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn comparar_add_staff_contract(this: usize, pessoa: usi
 }
 
 /// Comparador: os lembretes e a entrada esperados antes da original; confere a conta e cada entrada nova.
-unsafe extern "thiscall" fn comparar_add_decision_date(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
+unsafe extern "thiscall" fn compare_add_decision_date(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
     let n = cpl4_d(this + 0x14);
     let (lembretes, k) = decision_reminder_dates(this, pessoa, data, tipo as u8);
     let d = core::ptr::read_unaligned(data as *const [u8; 8]);

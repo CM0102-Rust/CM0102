@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
 
 /// Comparador: lado a lado a partir do mesmo estado do registro da diretoria do clube, do contrato guardado em
 /// [0xae1080] e do sorteio; a devolução e tudo isso têm de bater (o rand da CRT, só sem a semente do relógio).
-unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: usize, j: usize, clube: usize, valor: i32, comprando: u32) -> u32 {
+unsafe extern "thiscall" fn compare_check_board_transfer_veto(this: usize, j: usize, clube: usize, valor: i32, comprando: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32) -> u32>(%%I0%%);
     let regioes = [(cpy12_diretoria(this, clube), 0x49), (0xae1080, 4), (0xde1f5c, 8), (0xad6c30, 4)];
     let (r, n, _, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, j, clube, valor, comprando),
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn post_board_ultimatum_news(_this: usize, clube: usize
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca) e sorteia: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_board_ultimatum_news(this: usize, clube: usize, adversario: usize, comp: usize) {
+unsafe extern "thiscall" fn compare_post_board_ultimatum_news(this: usize, clube: usize, adversario: usize, comp: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%)(this, clube, adversario, comp)
 }
 
@@ -328,7 +328,7 @@ unsafe extern "stdcall" fn news_board_ultimatum_text(noticia: usize, corpo: u32,
 }
 
 /// Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original.
-unsafe extern "stdcall" fn comparar_news_board_ultimatum_text(noticia: usize, corpo: u32, saida: usize) {
+unsafe extern "stdcall" fn compare_news_board_ultimatum_text(noticia: usize, corpo: u32, saida: usize) {
     // ponytail: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
     original_fn::<unsafe extern "stdcall" fn(usize, u32, usize)>(%%I2%%)(noticia, corpo, saida);
 }

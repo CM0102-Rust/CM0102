@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
 /// Comparador: a cópia em ensaio (sem pagar os prêmios) e a original a partir do mesmo estado do vetor das permissões
 /// de trabalho; os jogos (+4) e as faltas (+6) têm de bater. Seleção em casa: o elenco local da original começa com o
 /// lixo da pilha, só a original roda. Os prêmios se provam pela própria 0x8cb340 (comparada) e pela carreira.
-unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_match(this: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn compare_update_appearance_clauses_after_match(this: usize, jogo: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let v = cpy11_d(this + 0x93a);
@@ -243,7 +243,7 @@ unsafe extern "thiscall" fn add_international_team_appearance_money(this: usize,
 
 /// Comparador: a original acrescenta (pode realocar) e não pode rodar duas vezes: o plano antes (a conta e os 13
 /// bytes), a original roda; confere a conta e que o registro está no vetor (reordenado).
-unsafe extern "thiscall" fn comparar_add_international_team_appearance_money(this: usize, registro: usize) {
+unsafe extern "thiscall" fn compare_add_international_team_appearance_money(this: usize, registro: usize) {
     let n = cpy11_d(this + 0x8a0);
     let alvo = core::slice::from_raw_parts(registro as *const u8, 0xd).to_vec();
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, registro);
@@ -326,6 +326,6 @@ unsafe extern "thiscall" fn post_transfer_finalised_news(this: usize, o: usize) 
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_transfer_finalised_news(this: usize, o: usize) {
+unsafe extern "thiscall" fn compare_post_transfer_finalised_news(this: usize, o: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, o)
 }

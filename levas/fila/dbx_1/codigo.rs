@@ -42,7 +42,7 @@ unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, texto: usize
     1
 }
 
-unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
+unsafe extern "C" fn compare_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
     if texto == 0 {
         return o(nacao, texto, tamanho, genero);

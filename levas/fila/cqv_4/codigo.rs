@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn cqv4_construir_fase(this: usize, liga: usize, n: u32
 /// pontos, a categoria, os critérios e as vagas copiados, +0x43 = 2, +0x49/+0x4a da competição de cima, +0x28, +0xe1,
 /// a tabela e as rodadas alocadas e os clubes da tabela (como conjunto: a ordem os reordena) iguais aos da lista dada.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_cqv4_construir_fase(this: usize, liga: usize, n: u32, clubes: usize, turnos: u32, registro: u32, rodadas: usize,
+unsafe extern "thiscall" fn compare_cqv4_construir_fase(this: usize, liga: usize, n: u32, clubes: usize, turnos: u32, registro: u32, rodadas: usize,
                                                        nrod: u32, pv: u32, pe: u32, cat: u32, desempate: usize, vagas: usize, ano: u32, a13: u32,
                                                        a14: u32, a15: u32, a16: u32, a17: u32, a18: u32, a19: u32, a20: u32, a21: u32) -> usize {
     let mut lista: Vec<usize> = if clubes != 0 { (0..(n as u16 as i16).max(0) as usize).map(|i| cqv4_d(clubes + 4 * i)).collect() } else { Vec::new() };
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn cqv4_destruir_fase(this: usize) {
 }
 
 /// O comparador do destrutor: só a original (libera; não roda duas vezes), conferindo o vetor +0x18 zerado.
-unsafe extern "thiscall" fn comparar_cqv4_destruir_fase(this: usize) {
+unsafe extern "thiscall" fn compare_cqv4_destruir_fase(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     SCOREBOARD.record(cqv4_d(this + 0x18) == 0, || format!("cqv4_destruir_fase({:#x}): +0x18 = {:#x}", this, cqv4_d(this + 0x18)));
 }

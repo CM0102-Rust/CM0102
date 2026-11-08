@@ -431,7 +431,7 @@ unsafe fn finish_board_update(this: usize, clube: usize) {
 
 // ponytail: acrescenta na lista das saídas (0x68d0d0, aloca), posta as notícias (0x6a44a0, 0x6a4a20) e sorteia: não roda
 // duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_set_season_expectations(this: usize, clube: usize, noticia: u32) {
+unsafe extern "thiscall" fn compare_set_season_expectations(this: usize, clube: usize, noticia: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, noticia)
 }
 
@@ -792,7 +792,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
 // ponytail: acrescenta a vaga na lista [this+8] (0x68d0d0, aloca), sorteia, posta a notícia da oferta e chama as
 // candidaturas (0x69ca00): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas
 // mutações.
-unsafe extern "thiscall" fn comparar_add_job_vacancy(this: usize, clube: usize, saiu: usize) {
+unsafe extern "thiscall" fn compare_add_job_vacancy(this: usize, clube: usize, saiu: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, clube, saiu)
 }
 
@@ -828,6 +828,6 @@ unsafe extern "thiscall" fn post_job_offer_news(_this: usize, pessoa: usize, clu
 }
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_job_offer_news(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_post_job_offer_news(this: usize, pessoa: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, pessoa, clube)
 }

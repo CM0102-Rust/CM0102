@@ -24,21 +24,21 @@ unsafe extern "thiscall" fn set_training_load(lesoes: usize, id: *const i32, val
     *training_load_byte(lesoes, id) = valor;
 }
 
-unsafe extern "thiscall" fn comparar_transfer_manager_get_shortlist_manager(gerente: usize) -> usize {
+unsafe extern "thiscall" fn compare_transfer_manager_get_shortlist_manager(gerente: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%)(gerente);
     let n = transfer_manager_get_shortlist_manager(gerente);
     SCOREBOARD.record(r == n, || format!("transfer_manager_get_shortlist_manager original={:#x} rust={:#x}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_training_manager_get_player_entry(treino: usize, jogador: usize) -> usize {
+unsafe extern "thiscall" fn compare_training_manager_get_player_entry(treino: usize, jogador: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(treino, jogador);
     let n = training_manager_get_player_entry(treino, jogador);
     SCOREBOARD.record(r == n, || format!("training_manager_get_player_entry original={:#x} rust={:#x}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_set_training_load(lesoes: usize, id: *const i32, valor: u8) {
+unsafe extern "thiscall" fn compare_set_training_load(lesoes: usize, id: *const i32, valor: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, u8)>(%%I2%%);
     let a = training_load_byte(lesoes, id) as usize;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 1)], || o(lesoes, id, valor), || set_training_load(lesoes, id, valor));

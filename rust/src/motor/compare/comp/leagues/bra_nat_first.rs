@@ -4,19 +4,19 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/leagues/bra_nat_first.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_nat_first_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_advance_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_ADVANCE_STAGE);
     compare_state_league_advance_stage("bra_nat_first_advance_stage", this, || o(this))
 }
 
 /// Comparer for `bra_nat_first_create_play_off_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_stage(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_create_play_off_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_CREATE_PLAY_OFF_STAGE);
     compare_play_off_stage("bra_nat_first_create_play_off_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
 /// Comparer for `bra_nat_first_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_START_NEW_SEASON);
     compare_state_league_new_season("bra_nat_first_start_new_season", this, || o(this))
 }
@@ -25,12 +25,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season(t
 ///
 /// [pt] Comparador do acesso e rebaixamento: só a original (simplification: move clubes entre as listas das ligas, que realocam).
 /// A cópia roda no modo Rust (contador "cqq_8 acesso e rebaixamento") e é provada pelas mutações e pelas carreiras.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_process_promotion_relegation_chain(this: usize, pairs: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_process_promotion_relegation_chain(this: usize, pairs: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_BRA_NAT_FIRST_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, pairs)
 }
 
 /// Comparer for `bra_nat_first_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_CREATE_TABLE);
     compare_division_table("bra_nat_first_create_table", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, || o(this))
 }
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table(this:
 ///
 /// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto inteiro
 /// menos as saídas do calendário; a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_SET_UP_RULES)(this), || {
         set_serie_a_rules(this);
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules(this:
 ///
 /// [pt] Comparador: só a original (simplification: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação): a devolução e o destino gravado na linha.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, l, dest) = serie_a_staff_records(this, club, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_FIRST_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };

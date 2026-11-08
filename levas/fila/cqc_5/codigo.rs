@@ -268,7 +268,7 @@ unsafe fn club_fixtures_until(clube: u32, comp: u32, (ano, dia): (i32, i32)) -> 
 /// técnicos). O plano, feito antes: o confronto escolhido (o −1 procura a marca 1 ou 2), a devolução, a marca (2 ao
 /// adiar, 3 ao criar) e, criando com os dois times, os jogos do mandante na competição sobem 1 (2 na de duas mãos com a
 /// copa ainda ativa).
-unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
+unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I0%%);
     let ri = rodada as i16 as i32;
     let id = cqc5_d(cqc5_d(this + 4)) as u32;
@@ -425,7 +425,7 @@ unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: 
 }
 
 /// Comparador da 0x522950: só a original (a notícia vai aos técnicos e não tem outro efeito).
-unsafe extern "thiscall" fn comparar_post_draw_news(this: usize, rodada: u32, confronto: u32) {
+unsafe extern "thiscall" fn compare_post_draw_news(this: usize, rodada: u32, confronto: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I1%%)(this, rodada, confronto) // ponytail: só a notícia
 }
 
@@ -513,6 +513,6 @@ unsafe extern "thiscall" fn update_transfer_window_news(this: usize, hoje: usize
 
 /// Comparador da 0x8c6bc0: só a original (ela só grava nas locais; os avisos das regras alocam notícias e as ofertas
 /// em espera mudam de status e são reagendadas).
-unsafe extern "thiscall" fn comparar_update_transfer_window_news(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn compare_update_transfer_window_news(this: usize, hoje: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, hoje) // ponytail: nada próprio a conferir
 }

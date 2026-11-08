@@ -14,7 +14,7 @@ use super::*;
 /// [pt] Comparador da 0x7f8750: os relatórios sorteiam e alocam e as buscas mexem nas listas dos humanos: só a original
 /// roda. Antes, a cópia em ensaio poda uma cópia dos pedidos (sem os relatórios) e os põe na ordem da original; os
 /// pedidos que a original deixa (conta e os 0x11 bytes de cada) têm de ser esses.
-pub(crate) unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_scout_manager_daily_update(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SCOUT_MANAGER_DAILY_UPDATE);
     if read_u8(G_CURRENT_DAY_SLICE) != 2 {
         return o(this);
@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this:
 /// [pt] Comparador da 0x7f9890: a original entrega notícias (aloca nas caixas): só ela roda, com o registro das chamadas à
 /// 0x7f9a60 ligado; antes, a cópia em ensaio (sem a 0x7f9a60) diz os grupos (jogador, clube, quantos) em ordem, e as
 /// chamadas da original têm de ser essas.
-pub(crate) unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, list: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_send_scout_reports(this: usize, list: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_SCOUT_REPORTS);
     let cursor = read_usize(list + 0xa);
     *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) = Some(Vec::new());
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, 
 ///
 /// [pt] Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (simplification: o efeito é a
 /// caixa de entrada; os grupos que chegam aqui são conferidos pela 0x7f9890). Com o registro ligado, anota a chamada.
-pub(crate) unsafe extern "thiscall" fn comparar_send_scout_report_news(this: usize, r: usize, how_many: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_send_scout_report_news(this: usize, r: usize, how_many: u32) {
     if let Some(g) = &mut *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) {
         g.push((read_usize(r + 0x2b) as u32, read_usize(r + 0x50) as u32, how_many as u8));
     }
@@ -83,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_scout_report_news(this: usi
 /// Comparer for `current_search_has_no_club` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_current_search_has_no_club(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_current_search_has_no_club(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CURRENT_SEARCH_HAS_NO_CLUB);
     if matches!(current_human_index(), Ok(None)) {
         return o(this);
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_current_search_has_no_club(this:
 /// Comparer for `is_club_in_session_searches` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_is_club_in_session_searches(this: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_is_club_in_session_searches(this: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_CLUB_IN_SESSION_SEARCHES);
     if matches!(current_human_index(), Ok(None)) {
         return o(this, club);
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_club_in_session_searches(this
 /// [pt] Comparador: a observação (0x7b5be0, original) grava o que os olheiros sabem e os relatórios, a 0x7ae9c0 começa
 /// buscas e a 0x7f9890 entrega as notícias: não pode rodar duas vezes. Só a original roda (simplification: ela mesma só grava
 /// o vetor e a lista locais, que saem); confere a devolução (1).
-pub(crate) unsafe extern "thiscall" fn comparar_scout_manager_scout_match(this: usize, p: usize, result: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_scout_manager_scout_match(this: usize, p: usize, result: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SCOUT_MANAGER_SCOUT_MATCH)(this, p, result);
     SCOREBOARD.record(r == 1, || format!("scout_manager_scout_match(partida {:x}) original={}", p, r));
     r
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_scout_manager_scout_match(this: 
 /// Comparer for `get_edit_session` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_get_edit_session(this: usize, manager: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_get_edit_session(this: usize, manager: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_EDIT_SESSION);
     if scout_manager_human_manager_index(manager).is_none() {
         return o(this, manager);
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_edit_session(this: usize, ma
 /// Comparer for `set_edit_session` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelas 16 sessões e a devolução; com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_set_edit_session(this: usize, sessao: usize, manager: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_set_edit_session(this: usize, sessao: usize, manager: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SET_EDIT_SESSION);
     if scout_manager_human_manager_index(manager).is_none() {
         return o(this, sessao, manager);
@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_edit_session(this: usize, se
 /// Comparer for `get_selected_list` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução (rotina pura); nos casos de erro, só a original (caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_get_selected_list(this: usize, manager: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_get_selected_list(this: usize, manager: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_SELECTED_LIST);
     if manager_human_index(manager).is_none() {
         return o(this, manager);
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_selected_list(this: usize, m
 /// Comparer for `set_selected_list` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelos 16 bytes das listas escolhidas, e a devolução; nos casos de erro, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_set_selected_list(this: usize, list: u32, manager: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_set_selected_list(this: usize, list: u32, manager: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(IDX_SET_SELECTED_LIST);
     if manager_human_index(manager).is_none() {
         return o(this, list, manager);
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_selected_list(this: usize, l
 }
 
 /// Comparer for `fixture_has_scouted_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FIXTURE_HAS_SCOUTED_PLAYER)(this, partida);
     let n = fixture_has_scouted_player(this, partida);
     SCOREBOARD.record(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fixture_has_scouted_player(this:
 }
 
 /// Comparer for `is_player_shortlisted` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, person: usize, manager: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_is_player_shortlisted(this: usize, person: usize, manager: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_PLAYER_SHORTLISTED);
     if person == 0 || (manager == 0 && scout_manager_current_human_manager() == 0) {
         return o(this, person, manager);
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usiz
 }
 
 /// Comparer for `scout_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_scout_record(t: usize, which: i8, manager: *const i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_scout_record(t: usize, which: i8, manager: *const i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(IDX_SCOUT_RECORD)(t, which, manager);
     let n = scout_record(t, which, manager);
     SCOREBOARD.record(r == n, || format!("scout_record({:#x}, {}, {:p}) original={:#x} rust={:#x}", t, which, manager, r, n));
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_scout_record(t: usize, which: i8
 ///
 /// [pt] Comparador: os alvos da cópia antes; a original enche a lista; confere o valor e a lista (cada item, os 0x6e bytes
 /// da pessoa).
-pub(crate) unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this: usize, club: *const u32, list: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_collect_club_scout_targets(this: usize, club: *const u32, list: usize) -> u32 {
     let alvos = if club.is_null() { Vec::new() } else { scouting_targets_of_club(this, *club) };
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u32, usize) -> u32>(IDX_COLLECT_CLUB_SCOUT_TARGETS)(this, club, list);
     let mut same = r == (!alvos.is_empty()) as u32;
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this:
 }
 
 /// Comparer for `remove_scout_request` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize, person: usize, club: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_remove_scout_request(this: usize, person: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_REMOVE_SCOUT_REQUEST);
     let n = (*((this + 0x64) as *const i32)).max(0) as usize;
     let reg = [(this + 0x5c, 0xc), (read_u32(this + 0x5c) as usize, n * 17)];
@@ -238,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize
 /// Comparer for `can_club_scout_nation` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (a 0x5a0590 só procura).
-pub(crate) unsafe extern "thiscall" fn comparar_can_club_scout_nation(this: usize, nation: usize, club: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_can_club_scout_nation(this: usize, nation: usize, club: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CAN_CLUB_SCOUT_NATION)(this, nation, club);
     if club_or_current_human(club) == 0 {
         return r;
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_can_club_scout_nation(this: usiz
 ///
 /// [pt] Comparador da 0x7f7270: lado a lado nas 10 buscas do técnico (0x2b0 bytes cada, achadas antes pela 0x7f6cd0, que
 /// só lê) e na devolução. Sem técnico ou com a edição aberta (a 0x8043c0 mexe na edição): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, manager: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_sync_scout_lists(this: usize, manager: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SYNC_SCOUT_LISTS);
     let m = if manager != 0 { manager } else { scout_manager_current_human_manager() };
     if m == 0 {
@@ -277,7 +277,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, ma
 /// Comparer for `find_club_search_entry` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador da 0x7f8610: pela devolução (só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_find_club_search_entry(this: usize, p: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_find_club_search_entry(this: usize, p: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FIND_CLUB_SEARCH_ENTRY);
     let r = o(this, p);
     let n = find_club_search_entry(this, p);
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_club_search_entry(this: usi
 ///
 /// [pt] Comparador: lado a lado pelo texto (até 0x100 bytes do tamanho dado), e a devolução; nos casos de erro, só a
 /// original (caixa).
-pub(crate) unsafe extern "C" fn comparar_scout_manager_write_list_name(index: u32, text: usize, size: i32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_scout_manager_write_list_name(index: u32, text: usize, size: i32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u32>(IDX_SCOUT_MANAGER_WRITE_LIST_NAME);
     let k = index as u8 as i8;
     if !(0..=9).contains(&k) || text == 0 || size < 0x32 {
@@ -304,7 +304,7 @@ pub(crate) unsafe extern "C" fn comparar_scout_manager_write_list_name(index: u3
 /// Comparer for `has_scout_request` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: consulta pura (a busca binária e a data local): pelo valor; jogador nulo só a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_has_scout_request(this: usize, player: usize, club: usize, so_vencidos: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_has_scout_request(this: usize, player: usize, club: usize, so_vencidos: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_HAS_SCOUT_REQUEST);
     if player == 0 {
         return o(this, player, club, so_vencidos);

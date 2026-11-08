@@ -234,7 +234,7 @@ unsafe fn list_holds(l: usize, m: usize) -> bool {
 /// liberado pela 0x5c87b0). O plano, feito antes: a decisão (friendly_reply) e a vaga do amistoso (0x5c6740). Com 3 ou 4,
 /// a vaga fica com +0x18 = 3, ou com +0x10 = 0 e +0x18 = 0; sem decisão, o pedido continua com a mesma situação e sai
 /// da lista das respostas (+0x34d4). Sem quem pede ou sem nação num dos dois: só a original.
-unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usize, forcar: u32) {
+unsafe extern "thiscall" fn compare_process_friendly_reply(this: usize, m: usize, forcar: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let a = if m != 0 { cqa2_d(m + 0xc) } else { 0 };
     let outro = if m != 0 { other_friendly_club(m) } else { 0 };
@@ -304,7 +304,7 @@ unsafe fn list_len(l: usize) -> usize {
 /// Comparador da 0x5c5570: só a original (o nó da lista e a notícia alocam). O plano, feito antes: a lista das
 /// respostas fica com um nó a mais e guarda o pedido; a situação vai a 2 quando o outro clube, na situação 1, é de
 /// técnico humano; senão não muda.
-unsafe extern "thiscall" fn comparar_send_friendly_request(this: usize, m: usize) {
+unsafe extern "thiscall" fn compare_send_friendly_request(this: usize, m: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let outro = other_friendly_club(m);
     let antes = list_len(cqa2_d(this + 0x34d4));
@@ -358,7 +358,7 @@ unsafe extern "thiscall" fn build_nation_list(this: usize) {
 
 /// Comparador da 0x5ca3e0: só a original (aloca a lista). O plano, feito antes numa lista local com o mesmo qsort e a
 /// mesma ordem: a conta (+0x34fe) e as nações, na ordem.
-unsafe extern "thiscall" fn comparar_build_nation_list(this: usize) {
+unsafe extern "thiscall" fn compare_build_nation_list(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let mut plano = nations_with_continent();
     sort_by_reputation(plano.as_mut_ptr() as usize, plano.len() as u32);

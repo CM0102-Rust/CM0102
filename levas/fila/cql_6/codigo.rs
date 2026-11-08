@@ -172,22 +172,22 @@ unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u32, registr
     r
 }
 
-unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     compare_english_constructor("construct_eng_prm", this, ano, registro, &PREMIER_DIVISION, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
     compare_english_constructor("construct_eng_first", this, ano, registro, &FIRST_DIVISION, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_eng_second(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_eng_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
     compare_english_constructor("construct_eng_second", this, ano, registro, &ENG_SECOND_DIVISION, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn compare_construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
     compare_english_constructor("construct_eng_third", this, ano, registro, &THIRD_DIVISION, || o(this, ano, registro))
 }

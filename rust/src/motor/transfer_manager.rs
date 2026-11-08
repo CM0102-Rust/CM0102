@@ -4800,7 +4800,7 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     let c = get_contract_store_lookup(p);
     let of_contract = if c == 0 { 0 } else { friendly_club_by_id(read_usize(c + contract::CLUB)) };
     let buyer = friendly_club_by_id(read_usize(o + 8));
-    let r = sortear(0x1676);
+    let r = random(0x1676);
     crate::comparison::branch("cpx_2 sorteio do desassossego");
     if (read_i16(buyer + club::REPUTATION) as i32) > r.wrapping_add(0x109a) { // cpx2: o sorteio do desassossego
         *((o + 0x2d) as *mut u8) = 1;
@@ -4831,13 +4831,13 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     }
     if read_u8(c2 + contract::TRANSFER_STATUS) & 8 != 0 {
         crate::comparison::branch("cpx_2 listado");
-        n = n.wrapping_add((-2000i32).wrapping_sub(sortear(0x1770)) as i16); // cpx2: o desconto do listado
+        n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: o desconto do listado
     }
     crate::comparison::branch("cpx_2 interesse avaliado");
     if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo; 0x96d298 = 5.5
         return;
     }
-    if n as i32 >= -sortear(0x2bc) {
+    if n as i32 >= -random(0x2bc) {
         return;
     }
     if n >= -4000 && read_i8_as_i32(p + staff::PROFESSIONALISM) + read_i8_as_i32(p + staff::LOYALITY) >= 0xf {
@@ -4874,8 +4874,8 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
             let sumir: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_AWOL_START_ABSENCE);
             sumir(read_usize(G_AWOL), p, buyer, 1);
             let strength = read_i8_as_i32(c2 + 0x44);
-            let r1 = sortear(0xc8);
-            let r2 = sortear(0x190);
+            let r1 = random(0xc8);
+            let r2 = random(0x190);
             if strength.wrapping_sub(r1).wrapping_add(r2) < -150 {
                 let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_DISLIKED_CLUB);
                 rejeitar(p, of_contract, 1);

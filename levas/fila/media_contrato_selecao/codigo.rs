@@ -50,16 +50,16 @@ unsafe extern "stdcall" fn national_team_level(j: usize, rep: *const i16, base: 
     }
 }
 
-unsafe extern "thiscall" fn comparar_game_average(t: usize, segunda: u8) -> f64 {
+unsafe extern "thiscall" fn compare_game_average(t: usize, segunda: u8) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> f64>(%%I0%%)(t, segunda);
     let n = game_average(t, segunda);
     SCOREBOARD.record(o.to_bits() == n.to_bits(), || format!("game_average({:#x}, {}) original={} rust={}", t, segunda, o, n));
     o
 }
 
-comparar_valor!(comparar_contract_value, contract_value, %%I1%%, (p: *const i32) -> u32);
+compare_value!(compare_contract_value, contract_value, %%I1%%, (p: *const i32) -> u32);
 
-unsafe extern "stdcall" fn comparar_national_team_level(j: usize, rep: *const i16, base: u8) -> u8 {
+unsafe extern "stdcall" fn compare_national_team_level(j: usize, rep: *const i16, base: u8) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8>(%%I2%%)(j, rep, base);
     let n = national_team_level(j, rep, base);
     SCOREBOARD.record(r == n, || format!("national_team_level({:#x}, {}, {}) original={} rust={}", j, *rep, base, r, n));

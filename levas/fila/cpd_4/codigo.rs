@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn build_selection_pools(this: usize) {
 
 /// Comparador: os registros das nações e, em cada reserva (principal e sub-21), o trecho dos 4 níveis (a soma das
 /// vagas +0xe a partir do começo +8).
-unsafe extern "thiscall" fn comparar_build_selection_pools(this: usize) {
+unsafe extern "thiscall" fn compare_build_selection_pools(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = (*(0xae2350 as *const i32)).max(0) as usize;
     let recs = cpd4_d(this + 4);
@@ -157,7 +157,7 @@ unsafe extern "C" fn compare_by_rating(a: usize, b: usize) -> i32 {
     (slot_person_rating(b) as i32) - slot_person_rating(a) as i32 // decrescente
 }
 
-unsafe extern "C" fn comparar_compare_by_rating(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_by_rating(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_by_rating(a, b);
     SCOREBOARD.record(r == n, || format!("compare_by_rating({:x}, {:x}) original={} rust={}", a, b, r, n));
@@ -190,7 +190,7 @@ unsafe extern "C" fn compare_by_club(a: usize, b: usize) -> i32 {
     0
 }
 
-unsafe extern "C" fn comparar_compare_by_club(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_by_club(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_by_club(a, b);
     SCOREBOARD.record(r == n, || format!("compare_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));

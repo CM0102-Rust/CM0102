@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn count_results_in_period(this: usize, nacao: usize, m
     n // cpt1: os jogos no periodo
 }
 
-unsafe extern "thiscall" fn comparar_count_results_in_period(this: usize, nacao: usize, mes_de: u32, ano_de: u32, mes_ate: u32, ano_ate: u32) -> u16 {
+unsafe extern "thiscall" fn compare_count_results_in_period(this: usize, nacao: usize, mes_de: u32, ano_de: u32, mes_ate: u32, ano_ate: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(%%I0%%)(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
     let n = count_results_in_period(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
     SCOREBOARD.record(r == n, || format!("count_results_in_period(nação {}, {}/{} a {}/{}) original={} rust={}", cpt1_d(nacao), mes_de as u8, ano_de as u16, mes_ate as u8, ano_ate as u16, r, n));
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn update_rankings(this: usize, data: usize) {
 
 /// Comparador: lado a lado pelo objeto (+0..+0xd), pela tabela das nações e por cada histórico (capacidade +8 × 5);
 /// a ordem é alocada e liberada pelas duas.
-unsafe extern "thiscall" fn comparar_update_rankings(this: usize, data: usize) {
+unsafe extern "thiscall" fn compare_update_rankings(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let t = cpt1_d(this);
     let n = cpt1_d(0xae2350);
@@ -138,7 +138,7 @@ unsafe extern "C" fn compare_result_points_desc(a: usize, b: usize) -> i32 {
     cpt1_h(b) as i32 - cpt1_h(a) as i32
 }
 
-unsafe extern "C" fn comparar_compare_result_points_desc(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_compare_result_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_result_points_desc(a, b);
     SCOREBOARD.record(r == n, || format!("compare_result_points_desc({}, {}) original={} rust={}", cpt1_h(a), cpt1_h(b), r, n));

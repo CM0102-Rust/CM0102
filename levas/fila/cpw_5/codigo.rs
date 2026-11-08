@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: usize, parti
 
 /// O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
-unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn compare_record_match_ratings(this: usize, jogo: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let (tab, n, cap) = (cpw5_d(this), cpw5_i(this + 4), cpw5_i(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
 
 /// O comparador da nota do mês: lado a lado (cabeçalho e os registros até o novo) quando a tabela não precisa crescer;
 /// senão só a original (realloc).
-unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e: usize) {
+unsafe extern "thiscall" fn compare_add_player_rating(this: usize, e: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let (tab, n, cap) = (cpw5_d(this), cpw5_i(this + 4), cpw5_i(this + 8));
     let achou = tab != 0 && (0..n.max(0) as usize).any(|k| cpw5_i(tab + k * 12) == cpw5_i(e));
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, idade: u32)
 }
 
 /// O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
-unsafe extern "thiscall" fn comparar_find_best_player(this: usize, liga: i32, idade: u32) -> usize {
+unsafe extern "thiscall" fn compare_find_best_player(this: usize, liga: i32, idade: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(%%I2%%);
     let (tab, n) = (cpw5_d(this), cpw5_i(this + 4));
     let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };

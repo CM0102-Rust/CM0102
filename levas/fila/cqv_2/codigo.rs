@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn cqv2_previstas_pernambucano(this: usize) {
     cqv2_previstas(this, &CQV2_PERNAMBUCANO)
 }
 
-unsafe extern "thiscall" fn comparar_cqv2_previstas_pernambucano(this: usize) {
+unsafe extern "thiscall" fn compare_cqv2_previstas_pernambucano(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     cqv2_comparar("cqv2_previstas_pernambucano", this, &CQV2_PERNAMBUCANO, || o(this));
 }
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn cqv2_previstas_carioca(this: usize) {
     cqv2_previstas(this, &CQV2_CARIOCA)
 }
 
-unsafe extern "thiscall" fn comparar_cqv2_previstas_carioca(this: usize) {
+unsafe extern "thiscall" fn compare_cqv2_previstas_carioca(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     cqv2_comparar("cqv2_previstas_carioca", this, &CQV2_CARIOCA, || o(this));
 }
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn cqv2_previstas_catarinense(this: usize) {
     cqv2_previstas(this, &CQV2_CATARINENSE)
 }
 
-unsafe extern "thiscall" fn comparar_cqv2_previstas_catarinense(this: usize) {
+unsafe extern "thiscall" fn compare_cqv2_previstas_catarinense(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqv2_comparar("cqv2_previstas_catarinense", this, &CQV2_CATARINENSE, || o(this));
 }
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn cqv2_previstas_paulista(this: usize) {
     cqv2_previstas(this, &CQV2_PAULISTA)
 }
 
-unsafe extern "thiscall" fn comparar_cqv2_previstas_paulista(this: usize) {
+unsafe extern "thiscall" fn compare_cqv2_previstas_paulista(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
     cqv2_comparar("cqv2_previstas_paulista", this, &CQV2_PAULISTA, || o(this));
 }

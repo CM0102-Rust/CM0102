@@ -1,6 +1,6 @@
 r"""Tira do motor.rs as rotinas e os comparadores que ainda moram nele (etapa 4 da reorganização, rodada 3,
 07/11/2026). Cada rotina portada vai para o módulo do seu arquivo de origem (pelo endereço na tabela e o mapa de
-funções); cada comparador `comparar_<x>` vai para o módulo onde `<x>` está. Ficam no motor.rs o cabeçalho, as tabelas,
+funções); cada comparador `compare_<x>` vai para o módulo onde `<x>` está. Ficam no motor.rs o cabeçalho, as tabelas,
 a instalação, a linha-âncora do integrar.py, as macros e o que não é rotina nem comparador (diagnósticos, auxiliares das
 tabelas). Os módulos se enxergam todos: mover não muda o código gerado.
 
@@ -39,8 +39,8 @@ def main():
         if n in end and end[n] in mapa:
             plano[n] = partir_motor.destino(mapa[end[n]])
     for n, a, b in blocos:
-        if n.startswith('comparar_'):
-            x = n[len('comparar_'):]
+        if n.startswith('compare_'):
+            x = n[len('compare_'):]
             if x in plano:
                 plano[n] = plano[x]
             elif x in onde:

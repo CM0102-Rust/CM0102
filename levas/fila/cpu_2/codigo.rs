@@ -74,7 +74,7 @@ unsafe extern "C" fn key_nation_club_in_season(clube: usize, inicio: usize, fim:
     1 // cpu2: entre o inicio e o fim do ano
 }
 
-unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
+unsafe extern "C" fn compare_key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%)(clube, inicio, fim);
     let (mut i, mut f) = ([0u8; 8], [0u8; 8]);
     let n = key_nation_club_in_season(
@@ -107,7 +107,7 @@ unsafe extern "C" fn key_nation_get_main_continent() -> usize {
     0
 }
 
-unsafe extern "C" fn comparar_key_nation_get_main_continent() -> usize {
+unsafe extern "C" fn compare_key_nation_get_main_continent() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(%%I1%%)();
     let n = key_nation_get_main_continent();
     SCOREBOARD.record(r == n, || format!("key_nation_get_main_continent() original={:x} rust={:x}", r, n));
@@ -130,7 +130,7 @@ unsafe extern "C" fn key_nation_get_main_nation() -> usize {
     0
 }
 
-unsafe extern "C" fn comparar_key_nation_get_main_nation() -> usize {
+unsafe extern "C" fn compare_key_nation_get_main_nation() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(%%I2%%)();
     let n = key_nation_get_main_nation();
     SCOREBOARD.record(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));

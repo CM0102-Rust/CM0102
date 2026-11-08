@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn schedule_decision_for_transfer(this: usize, oferta: 
 
 /// Comparador: o plano da cópia (os itens do id que saem até o contador zerar) antes; a original tira; confere os
 /// itens que ficaram e o contador.
-unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pessoa: *const u32) {
+unsafe extern "thiscall" fn compare_drop_held_bans(this: usize, pessoa: *const u32) {
     let l = this + 0x1c;
     let n = stored_suspension_counter(this, *pessoa as usize);
     let antes = list_items_capped(l);
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pessoa: *const 
 }
 
 /// Comparador: o mesmo plano pelo byte de pendentes; a original tira (e desmarca); confere os itens e o byte.
-unsafe extern "thiscall" fn comparar_remove_pending_offers_for_staff(this: usize, pessoa: *const u32) {
+unsafe extern "thiscall" fn compare_remove_pending_offers_for_staff(this: usize, pessoa: *const u32) {
     let l = cpj2_d(this + 0x34);
     if l == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I1%%)(this, pessoa);
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn comparar_remove_pending_offers_for_staff(this: usize
 
 /// Comparador: a oferta que a cópia marcaria antes; a original marca e agenda (a 0x4cd230 pode acrescentar na lista
 /// das decisões); confere a marca e o valor.
-unsafe extern "thiscall" fn comparar_schedule_decision_for_transfer(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn compare_schedule_decision_for_transfer(this: usize, oferta: usize) -> u32 {
     let alvo = offer_to_schedule(cpj2_d(this + 0x34), oferta);
     let n = ability_above_club_reputation(oferta);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, oferta);

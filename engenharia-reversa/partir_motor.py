@@ -18,7 +18,7 @@ import sys
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(R, 'rust', 'src')
-ANCORA = 'comparar_valor!(comparar_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);\n'
+ANCORA = 'compare_value!(compare_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);\n'
 SECAO = re.compile(r'^// ---------- .* ----------$', re.M)
 
 

@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn process_euro_registration(this: usize, etapa: u32) {
 /// Lado a lado: o ano das inscrições (+0), a marca +0x6d de todas as pessoas com contrato (a tabela inteira) e o
 /// [0xae1080] da 0x85aae0. Com algum clube das três copas com técnico humano (a notícia não roda duas vezes), só a
 /// original.
-unsafe extern "thiscall" fn comparar_process_euro_registration(this: usize, etapa: u32) {
+unsafe extern "thiscall" fn compare_process_euro_registration(this: usize, etapa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let mut tem_humano = false;
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn create_default_table(this: usize) {
 
 /// Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
 /// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
-unsafe extern "thiscall" fn comparar_create_default_table(this: usize) {
+unsafe extern "thiscall" fn compare_create_default_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     o(this);
@@ -247,7 +247,7 @@ unsafe extern "thiscall" fn build_venue_list(this: usize) {
 /// Lado a lado à mão: a original no objeto de quem chama, a cópia num rascunho com os mesmos 0x20 bytes de antes e a
 /// lista velha zerada (a original já a soltou); iguais os campos (fora o ponteiro +0xc) e as listas (a do rascunho é
 /// solta). Sem o HostCountry (a caixa), só a original.
-unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
+unsafe extern "thiscall" fn compare_build_venue_list(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     if cqn3_d(0xb5e134) == 0 {

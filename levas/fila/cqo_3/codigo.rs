@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn init_default_table(this: usize) {
 
 /// Lado a lado (a cópia sem contar os sorteios) pela tabela (conta +4 × 0x22 bytes), pelo estado do sorteador e por
 /// [0xb67a34].
-unsafe extern "thiscall" fn comparar_init_default_table(this: usize) {
+unsafe extern "thiscall" fn compare_init_default_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cqo3_w(this + 4) as i16;
     if cqo3_d(this) == 0 || n <= 0 {
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn post_host_news(_this: usize, lista: usize) {
 }
 
 // ponytail: entrega notícias (aloca); só a original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_host_news(this: usize, lista: usize) {
+unsafe extern "thiscall" fn compare_post_host_news(this: usize, lista: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, lista)
 }
 
@@ -269,6 +269,6 @@ unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
 }
 
 // ponytail: abre o arquivo e aloca; só a original. A cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_load_temp_file(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_load_temp_file(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }

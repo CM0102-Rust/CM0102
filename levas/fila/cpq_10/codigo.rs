@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn is_retirement_pending(this: usize, pessoa: usize) ->
 }
 
 /// Comparador: pelo valor (só lê); os casos de erro só na original.
-unsafe extern "thiscall" fn comparar_get_category_record(this: usize, jogador: usize, categoria: u32) -> usize {
+unsafe extern "thiscall" fn compare_get_category_record(this: usize, jogador: usize, categoria: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, jogador, categoria);
     if category_slot(this, jogador, categoria).is_none() {
         return r;
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn comparar_get_category_record(this: usize, jogador: u
 /// Comparador: a original realoca o vetor, então só ela roda; antes, o plano (o índice que o jogador vai ter, a
 /// conta e os soltos depois); depois, o registro devolvido, o índice na vaga, a conta, os soltos e o registro
 /// zerado quando é novo. ponytail: os casos de erro e a falta de memória só na original, sem conferir.
-unsafe extern "thiscall" fn comparar_create_stats(this: usize, jogador: usize, categoria: u32) -> usize {
+unsafe extern "thiscall" fn compare_create_stats(this: usize, jogador: usize, categoria: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%);
     let vaga = match category_slot(this, jogador, categoria) {
         Some(v) => v,
@@ -165,4 +165,4 @@ unsafe extern "thiscall" fn comparar_create_stats(this: usize, jogador: usize, c
     r
 }
 
-comparar_valor!(comparar_is_retirement_pending, is_retirement_pending, %%I2%%, (pessoa: usize) -> u8);
+compare_value!(compare_is_retirement_pending, is_retirement_pending, %%I2%%, (pessoa: usize) -> u8);

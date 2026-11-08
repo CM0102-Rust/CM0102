@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
 }
 
 // ponytail: sorteia: só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_check_postponement(this: usize, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn compare_check_postponement(this: usize, jogo: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, jogo)
 }
 
@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn get_club_finance(this: usize, clube: usize) -> usize
 }
 
 /// Comparador: pelo valor (clube nulo: só a original, com a caixa de erro).
-unsafe extern "thiscall" fn comparar_get_club_finance(this: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn compare_get_club_finance(this: usize, clube: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if clube == 0 {
         return o(this, clube);
@@ -228,7 +228,7 @@ unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: pelo valor.
-unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_stadium_compare_bookings(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = stadium_compare_bookings(a, b);
     SCOREBOARD.record(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));

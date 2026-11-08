@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn find_scheduled_friendly_slot(this: usize, dia: u32, 
 }
 
 /// Comparador: lado a lado pelas três saídas (a 0x669470 e a 0x5c6710 só leem).
-unsafe extern "thiscall" fn comparar_get_fixture_rules_scope(this: usize, partida: usize, tipo: *mut u8, nacao: *mut usize, continente: *mut usize) {
+unsafe extern "thiscall" fn compare_get_fixture_rules_scope(this: usize, partida: usize, tipo: *mut u8, nacao: *mut usize, continente: *mut usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut usize, *mut usize)>(%%I0%%);
     let regioes = [(tipo as usize, 1), (nacao as usize, 4), (continente as usize, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, partida, tipo, nacao, continente), || get_fixture_rules_scope(this, partida, tipo, nacao, continente));
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn comparar_get_fixture_rules_scope(this: usize, partid
 
 /// Comparador: pelo valor. Jogador com a marca de ausente (0x418f60 com 1, que só lê): só a original (com 0 ela tira
 /// a marca de quem está sem clube e a segunda chamada veria outro estado).
-unsafe extern "thiscall" fn comparar_get_ineligibility_code(this: usize, jogador: usize, partida: usize) -> u8 {
+unsafe extern "thiscall" fn compare_get_ineligibility_code(this: usize, jogador: usize, partida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%);
     let ausente: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x418f60usize);
     if ausente(cpk4_d(0xad9c6c), jogador, 1) != 0 {
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn comparar_get_ineligibility_code(this: usize, jogador
 }
 
 /// Comparador: pelo valor (as duas voltam o cursor da lista ao começo e param no mesmo registro).
-unsafe extern "thiscall" fn comparar_find_scheduled_friendly_slot(this: usize, dia: u32, ano: u32, clube: usize, adversario: usize) -> usize {
+unsafe extern "thiscall" fn compare_find_scheduled_friendly_slot(this: usize, dia: u32, ano: u32, clube: usize, adversario: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize>(%%I2%%)(this, dia, ano, clube, adversario);
     let n = find_scheduled_friendly_slot(this, dia, ano, clube, adversario);
     SCOREBOARD.record(r == n, || format!("find_scheduled_friendly_slot({}/{}, {:x}, {:x}) original={:#x} rust={:#x}", dia as u16, ano as u16, clube, adversario, r, n));

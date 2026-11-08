@@ -53,7 +53,7 @@ unsafe fn squad_change_regions(time: usize, p: usize) -> [(usize, usize); 2] {
     [(time + 0xd7, 200), (p + 0x24, 0x3b)]
 }
 
-unsafe extern "thiscall" fn comparar_add_player_to_squad(this: usize, nacao: usize, tipo: u32, p: usize) {
+unsafe extern "thiscall" fn compare_add_player_to_squad(this: usize, nacao: usize, tipo: u32, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I0%%);
     let time = national_team_for_type(nacao, tipo as u8);
     if time == 0 || p == 0 {
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn national_teams_remove_player_from_squad(_this: usize
 
 /// Comparador: as vagas e a pessoa. A 0x896c60 tira a pessoa da tática: na segunda vez (a cópia) já não a acha e não
 /// muda nada, então a tática fica fora das regiões. Time ou pessoa nulos (a caixa da 0x896c60): só a original.
-unsafe extern "thiscall" fn comparar_national_teams_remove_player_from_squad(this: usize, nacao: usize, tipo: u32, p: usize) {
+unsafe extern "thiscall" fn compare_national_teams_remove_player_from_squad(this: usize, nacao: usize, tipo: u32, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I1%%);
     let time = national_team_for_type(nacao, tipo as u8);
     if time == 0 || p == 0 {
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn release_overage_u21_players(this: usize, nacao: usiz
 /// Comparador: o byte +0x6b do registro, as vagas do sub-21 e as pessoas delas (+0x24 a +0x5e). A 0x896c60 da
 /// cópia não acha mais as pessoas que a original já tirou (fica fora das regiões, como na 0x7762f0). Sub-21 nulo:
 /// só a original.
-unsafe extern "thiscall" fn comparar_release_overage_u21_players(this: usize, nacao: usize) {
+unsafe extern "thiscall" fn compare_release_overage_u21_players(this: usize, nacao: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     let time = sub21(nacao);

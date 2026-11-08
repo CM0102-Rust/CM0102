@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn apply_training_progress(this: usize, pessoa: usize, 
 
 /// Comparador: lado a lado na ficha (+0xf..+0x41) e na entrada de treino do jogador (6 bytes), sem os casos de erro e
 /// sem as pessoas que não são jogadores (só a original).
-unsafe extern "thiscall" fn comparar_apply_training_progress(this: usize, pessoa: usize, d: usize) {
+unsafe extern "thiscall" fn compare_apply_training_progress(this: usize, pessoa: usize, d: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if pessoa == 0 || cpt9_d(pessoa + 0x61) == 0 || cpt9_i(pessoa) >= cpt9_i(0xae2364) {
         return o(this, pessoa, d);
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn find_position_training(this: usize, pessoa: usize, s
 }
 
 /// Comparador: a devolução e a saída (reposta entre as duas), sem os casos de erro (só a original).
-unsafe extern "thiscall" fn comparar_find_position_training(this: usize, pessoa: usize, saida: *mut usize) -> i32 {
+unsafe extern "thiscall" fn compare_find_position_training(this: usize, pessoa: usize, saida: *mut usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32>(%%I1%%);
     if pessoa == 0 || saida.is_null() || cpt9_d(pessoa + 0x61) == 0 {
         return o(this, pessoa, saida);
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn has_fast_position_training(this: usize, pessoa: usiz
 }
 
 /// Comparador: a devolução (as duas só leem; a busca roda pelas duas).
-unsafe extern "thiscall" fn comparar_has_fast_position_training(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn compare_has_fast_position_training(this: usize, pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, pessoa);
     let n = has_fast_position_training(this, pessoa);
     SCOREBOARD.record(r == n, || format!("has_fast_position_training(pessoa {:x}) original={} rust={}", pessoa, r, n));

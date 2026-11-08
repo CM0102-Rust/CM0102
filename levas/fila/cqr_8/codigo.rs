@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn ita_cup_create_group_stage(this: usize, g: u32) -> u
     ita_cup_create_group_stage_cqr8_fase_do_grupo(this, g, 0x9ea23c, [0x263, 0x27c], "cqr_8 time do grupo da copa da italia")
 }
 
-unsafe extern "thiscall" fn comparar_ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
+unsafe extern "thiscall" fn compare_ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I0%%);
     compare_group_stage("ita_cup_create_group_stage", this, g, || o(this, g))
 }
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn ita_cup_create_group_stage_63d9e0(this: usize, g: u3
     ita_cup_create_group_stage_cqr8_fase_do_grupo(this, g, 0x9ea204, [0x265, 0x27e], "cqr_8 time do grupo da copa da serie c")
 }
 
-unsafe extern "thiscall" fn comparar_ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
+unsafe extern "thiscall" fn compare_ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%);
     compare_group_stage("ita_cup_create_group_stage_63d9e0", this, g, || o(this, g))
 }

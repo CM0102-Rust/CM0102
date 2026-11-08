@@ -201,7 +201,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
         return;
     }
     crate::comparison::branch("cpy_10 sorteio do agradecimento");
-    if sortear(v59 as i32) <= 5 {
+    if random(v59 as i32) <= 5 {
         return;
     }
     let agradece: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_POST_PLAYER_CREDITS_MANAGER_FOR_AWARD);

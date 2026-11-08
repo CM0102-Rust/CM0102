@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn construct_england_rules(this: usize, a1: u32, a2: u3
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-unsafe extern "thiscall" fn comparar_construct_england_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_england_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I0%%);
     let mut r = 0usize;
     compare_transfer_rules_ctor("construct_england_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn construct_usa_rules(this: usize, a1: u32, a2: u32, a
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-unsafe extern "thiscall" fn comparar_construct_usa_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn compare_construct_usa_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let mut r = 0usize;
     compare_transfer_rules_ctor("construct_usa_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn australia_rules(this: usize, a1: u32, a2: u32, a3: u
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-unsafe extern "thiscall" fn comparar_australia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn compare_australia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
     let mut r = 0usize;
     compare_transfer_rules_ctor("australia_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {

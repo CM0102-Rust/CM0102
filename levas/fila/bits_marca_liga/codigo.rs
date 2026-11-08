@@ -17,10 +17,10 @@ unsafe extern "thiscall" fn league_record(t: usize, i: i32) -> usize {
     core::ptr::read_unaligned((t + 0xb1) as *const usize).wrapping_add((i as usize).wrapping_mul(59))
 }
 
-comparar_valor!(comparar_competition_flagged, competition_flagged, %%I1%%, () -> u32);
-comparar_valor!(comparar_league_record, league_record, %%I2%%, (i: i32) -> usize);
+compare_value!(compare_competition_flagged, competition_flagged, %%I1%%, () -> u32);
+compare_value!(compare_league_record, league_record, %%I2%%, (i: i32) -> usize);
 
-unsafe extern "stdcall" fn comparar_record_bits(p: *const i32) -> u8 {
+unsafe extern "stdcall" fn compare_record_bits(p: *const i32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(*const i32) -> u8>(%%I0%%)(p);
     let n = record_bits(p);
     SCOREBOARD.record(r == n, || format!("record_bits({:p}) original={} rust={}", p, r, n));

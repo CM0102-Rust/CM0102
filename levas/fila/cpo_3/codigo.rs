@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, indice: i32) 
 
 /// Comparador: os pontos vão ao hall da fama (0x5ef270, soma): roda só a original e confere o plano: na virada, os pontos
 /// do mês zerados e o mês e o ano guardados; no primeiro dia do ano, os pontos do ano zerados.
-unsafe extern "thiscall" fn comparar_staff_records_daily_update(this: usize, data: usize) {
+unsafe extern "thiscall" fn compare_staff_records_daily_update(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let virada = date_month(data) as i32 != cpo3_w(this + 0x14) as u16 as i32 || cpo3_w(data + 2) != cpo3_w(this + 0x16);
     let ano = cpo3_w(data) == 0;
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn comparar_staff_records_daily_update(this: usize, dat
 
 /// Comparador: os pontos vão ao hall da fama (0x5ef330, soma): roda só a original e confere o plano feito antes: os
 /// quatro campos (+0xba, +0xbe, +0xc2, +0xc6) de cada registro.
-unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: usize, entrada: usize) {
+unsafe extern "thiscall" fn compare_staff_records_end_season_for_nation(this: usize, entrada: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let p = cpo3_d(entrada + 4);
     if !(p != 0 && cpo3_d(p) == cpo3_d(0x9cfa10)) && cpo3_d(entrada) == 0 {
@@ -223,7 +223,7 @@ unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: u
 }
 
 /// Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
-unsafe extern "thiscall" fn comparar_find_manager_of_the_month(this: usize, indice: i32) -> usize {
+unsafe extern "thiscall" fn compare_find_manager_of_the_month(this: usize, indice: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%);
     let liga = cpo3_d(cpo3_d(0xadadfc).wrapping_add((indice as usize).wrapping_mul(4)));
     if *((liga + 0x43) as *const u8) != 2 {

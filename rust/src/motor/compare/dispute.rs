@@ -8,7 +8,7 @@ use super::*;
 /// [pt] Comparador: sem a marca (nada a fazer), lado a lado na marca e no cursor da lista. Com a marca, só a original com o
 /// plano: a marca zerada e a conta da lista uma a menos quando a pessoa está nela (a procura feita antes, com o cursor
 /// devolvido).
-pub(crate) unsafe extern "thiscall" fn comparar_remove_dispute(this: usize, p: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_DISPUTE);
     if p == 0 || read_u32_as_usize(this + 4) == 0 {
         return o(this, p);

@@ -138,7 +138,7 @@ unsafe fn cqu13_comparar_clubes(nome: &str, this: usize, continentes: (usize, us
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqu13_intercontinental_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_cqu13_intercontinental_clubes(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     cqu13_comparar_clubes("cqu13_intercontinental_clubes", this, (0x9cfa10, 0x9cfa1c), || o(this))
 }
@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn cqu13_interamericana_clubes(this: usize) -> i32 {
     cqu13_fim(this)
 }
 
-unsafe extern "thiscall" fn comparar_cqu13_interamericana_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_cqu13_interamericana_clubes(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
     cqu13_comparar_clubes("cqu13_interamericana_clubes", this, (0x9cfa14, 0x9cfa1c), || o(this))
 }
@@ -276,7 +276,7 @@ unsafe fn cqu13_comparar_previstas(nome: &str, this: usize, _fase: u32, _grupo: 
     SCOREBOARD.record(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
 }
 
-unsafe extern "thiscall" fn comparar_cqu13_merconorte_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_cqu13_merconorte_previstas(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     cqu13_comparar_previstas("cqu13_merconorte_previstas", this, 3, 4, || o(this))
 }

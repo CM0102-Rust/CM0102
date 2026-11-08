@@ -92,7 +92,7 @@ unsafe extern "C" fn club_get_english_name(clube: usize) -> usize {
     }
 }
 
-unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: usize, kit: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
+unsafe extern "C" fn compare_database_get_club_kit_colours(clube: usize, kit: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(%%I0%%);
     if clube == 0 {
         return o(clube, kit, frente, fundo); // caixa: só a original
@@ -103,7 +103,7 @@ unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: usize, kit: u
     r
 }
 
-unsafe extern "C" fn comparar_database_get_club_manager(clube: usize) -> usize {
+unsafe extern "C" fn compare_database_get_club_manager(clube: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
@@ -116,7 +116,7 @@ unsafe extern "C" fn comparar_database_get_club_manager(clube: usize) -> usize {
     r
 }
 
-unsafe extern "C" fn comparar_club_get_english_name(clube: usize) -> usize {
+unsafe extern "C" fn compare_club_get_english_name(clube: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {

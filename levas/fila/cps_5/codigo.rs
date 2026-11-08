@@ -206,7 +206,7 @@ unsafe fn player_vs_manager_check(p: usize) {
 
 // ponytail: sorteia e mexe nas preferências (0x547a10, 0x547af0, 0x547c10, 0x547c50), briga e queixa: só a original;
 // a cópia leva os ramos (roda todo dia).
-unsafe extern "C" fn comparar_game_update_squad_relationships() {
+unsafe extern "C" fn compare_game_update_squad_relationships() {
     original_fn::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
@@ -232,7 +232,7 @@ unsafe extern "C" fn game_check_club_dressing_room_unrest(clube: usize) {
 
 // ponytail: a queixa (0x587c60) e a marca no vínculo (0x867700) não rodam duas vezes: só a original; a cópia leva o
 // ramo do atrito.
-unsafe extern "C" fn comparar_game_check_club_dressing_room_unrest(clube: usize) {
+unsafe extern "C" fn compare_game_check_club_dressing_room_unrest(clube: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(%%I1%%)(clube)
 }
 
@@ -307,6 +307,6 @@ unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
 }
 
 // ponytail: sorteia e muda o moral (0x544710, que também sorteia): só a original; a cópia leva os ramos.
-unsafe extern "C" fn comparar_game_spread_squad_morale_by_leadership() {
+unsafe extern "C" fn compare_game_spread_squad_morale_by_leadership() {
     original_fn::<unsafe extern "C" fn()>(%%I2%%)()
 }

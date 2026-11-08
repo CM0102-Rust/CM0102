@@ -724,7 +724,7 @@ pub(crate) unsafe extern "thiscall" fn game_average(t: usize, second: u8) -> f64
     n / q
 }
 
-comparar_valor!(comparar_contract_value, contract_value, IDX_CONTRACT_VALUE, (p: *const i32) -> u32);
+compare_value!(compare_contract_value, contract_value, IDX_CONTRACT_VALUE, (p: *const i32) -> u32);
 
 /// the game CRT pow (0x945ff0) of two doubles, result in st0
 /// Original: `pow_double` (0x5d5a20, game.cpp, cdecl).

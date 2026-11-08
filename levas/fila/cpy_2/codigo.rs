@@ -215,7 +215,7 @@ unsafe fn is_original_only_case(this: usize, pessoa: usize, clube: usize, evento
 /// Comparador: lado a lado pelos dois vetores de pares e suas contas, pelo byte da conta de listas da pessoa, pelas 40
 /// vagas e o +8 da entrada do clube, pelo byte +0x4f do contrato e pelas datas estáticas, e a devolução. Na recursão do
 /// evento 4 e no evento 1 que preenche a vaga, só a original (a cópia leva os ramos).
-unsafe extern "thiscall" fn comparar_update_staff_status(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> u8 {
+unsafe extern "thiscall" fn compare_update_staff_status(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%);
     if is_original_only_case(this, pessoa, clube, evento, tipo) {
         return o(this, pessoa, clube, evento, tipo);
@@ -258,7 +258,7 @@ unsafe extern "stdcall" fn shortlist_manager_add_to_loan_list(pessoa: usize) -> 
 }
 
 /// Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
-unsafe extern "stdcall" fn comparar_shortlist_manager_add_to_loan_list(pessoa: usize) -> usize {
+unsafe extern "stdcall" fn compare_shortlist_manager_add_to_loan_list(pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> usize>(%%I1%%);
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cpy2_d(0xae1050), pessoa);
@@ -285,7 +285,7 @@ unsafe extern "thiscall" fn shortlist_manager_max_fee_for_player_status(this: us
 }
 
 /// Comparador: a devolução (rotina pura).
-unsafe extern "thiscall" fn comparar_shortlist_manager_max_fee_for_player_status(this: usize, clube: usize, pessoa: usize, estatuto: u32) -> i32 {
+unsafe extern "thiscall" fn compare_shortlist_manager_max_fee_for_player_status(this: usize, clube: usize, pessoa: usize, estatuto: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32>(%%I2%%);
     let r = o(this, clube, pessoa, estatuto);
     let n = shortlist_manager_max_fee_for_player_status(this, clube, pessoa, estatuto);

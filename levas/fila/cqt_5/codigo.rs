@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje: usize, fa
 
 // ponytail: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
 // original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
-unsafe extern "thiscall" fn comparar_spa_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn compare_spa_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let antes = cqt5_d(this + 0x45);
     let vira = antes == 0 && cqt5_w(cqt5_d(0xde1f58) + 0x439) as u16 as i32 == cqt5_w(this + 0x40) as i32 && fase != 0;
@@ -105,18 +105,18 @@ unsafe extern "thiscall" fn spa_cup_record_season_honours_63d770(this: usize) ->
 }
 
 // ponytail: o histórico grava nas estatísticas das competições (acha ou acrescenta entradas: aloca); só a original
-unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_spa_cup_record_season_honours(this: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%)(this)
 }
 
-unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_5e93e0(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_spa_cup_record_season_honours_5e93e0(this: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%)(this)
 }
 
-unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_637750(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_spa_cup_record_season_honours_637750(this: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I3%%)(this)
 }
 
-unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_63d770(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_spa_cup_record_season_honours_63d770(this: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I4%%)(this)
 }

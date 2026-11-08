@@ -241,7 +241,7 @@ unsafe fn run_with_temp_list(lista: usize, conta_antes: u16, cauda_antes: u32, c
 /// Comparador: sem lista, pela devolução (a original e a cópia só andam os cursores das listas do calendário). Com
 /// lista, a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
+unsafe extern "thiscall" fn compare_find_fixtures(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
                                                                lista: usize, comp: u32, tipo: u32, lado: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32>(%%I0%%);
     if lista == 0 {
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0:
 
 /// Comparador: a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
+unsafe extern "thiscall" fn compare_collect_comp_fixtures_on_day(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
                                                                 tipo: u32, lista: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32>(%%I1%%);
     let (conta, cauda) = (*(lista as *const u16), cpr12_d(lista + 6));
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(this: usize, a
 }
 
 /// Comparador: pela devolução (só anda os cursores das listas do calendário).
-unsafe extern "stdcall" fn comparar_fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
+unsafe extern "stdcall" fn compare_fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(%%I2%%)(data, comp);
     let n = fix_man_comp_has_fixture_on_date(data, comp);
     SCOREBOARD.record(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));

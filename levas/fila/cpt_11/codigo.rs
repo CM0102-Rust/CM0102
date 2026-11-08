@@ -313,20 +313,20 @@ unsafe extern "thiscall" fn set_preseason_windows(_this: usize, ptrs: usize, n: 
 }
 
 /// Comparador: anda o calendário e planeja (aloca, sorteia): só a original.
-unsafe extern "thiscall" fn comparar_friendly_update_for_date(this: usize, hoje: usize, ativo: u32) -> u32 {
+unsafe extern "thiscall" fn compare_friendly_update_for_date(this: usize, hoje: usize, ativo: u32) -> u32 {
     // ponytail: cancela torneios, tira pedidos e cria amistosos (não roda duas vezes); a cópia se prova pela carreira
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, hoje, ativo)
 }
 
 /// Comparador: monta e planeja os amistosos da IA (aloca, sorteia): só a original.
-unsafe extern "thiscall" fn comparar_plan_ai_preseason_friendlies(this: usize) {
+unsafe extern "thiscall" fn compare_plan_ai_preseason_friendlies(this: usize) {
     // ponytail: os torneios, as excursões e os amistosos sorteiam e alocam; a cópia se prova pela carreira
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
 /// Comparador: grava as janelas e cria listas (não roda duas vezes): o plano antes (sem gravar), a original grava;
 /// cada candidato planejado tem de ter a janela e, quando é a ponta da tabela, uma lista em +0x12.
-unsafe extern "thiscall" fn comparar_set_preseason_windows(this: usize, ptrs: usize, n: i32) {
+unsafe extern "thiscall" fn compare_set_preseason_windows(this: usize, ptrs: usize, n: i32) {
     let plano = set_friendly_windows(ptrs, n, false);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I2%%)(this, ptrs, n);
     let erros: Vec<String> = plano.iter()

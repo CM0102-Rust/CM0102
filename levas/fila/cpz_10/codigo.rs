@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, tipo: 
 }
 
 /// O comparador: lado a lado nos cabeçalhos das duas listas (o cursor) e no sorteio, e a devolução.
-unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
+unsafe extern "thiscall" fn compare_pick_random_pundit(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(%%I0%%);
     let mut regioes = Vec::new();
     for l in [cpz10_d(this), cpz10_d(this + 4)] {
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn get_pundit_name(this: usize, tipo: u32, id: u32, nom
 
 /// O comparador: lado a lado no nome (até 0xd4 bytes: o nome do comentarista tem 0xd1 e o padrão menos), na marca e
 /// nos cabeçalhos das listas (o cursor).
-unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
+unsafe extern "thiscall" fn compare_get_pundit_name(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8)>(%%I1%%);
     let mut regioes = vec![(marca as usize, 1)];
     if nome != 0 {
@@ -243,6 +243,6 @@ unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: usize, clube:
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo. Sem notícia as duas não
 // fazem nada.
-unsafe extern "thiscall" fn comparar_queue_manager_fa_complaint_story(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
+unsafe extern "thiscall" fn compare_queue_manager_fa_complaint_story(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(%%I2%%)(this, clube, pessoa, tipo, a, b, c)
 }

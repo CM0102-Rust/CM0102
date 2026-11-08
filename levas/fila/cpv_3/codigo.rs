@@ -235,16 +235,16 @@ unsafe extern "thiscall" fn post_supporter_protest_news(_this: usize, clube: usi
 
 // ponytail: completa, retira, recusa e reagenda ofertas (as chamadas liberam e alocam): não roda duas vezes. Só a
 // original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_hold_offers_at_window_close(this: usize, nacao: usize) {
+unsafe extern "thiscall" fn compare_hold_offers_at_window_close(this: usize, nacao: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, nacao)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_fa_expectations_news(this: usize, selecao: usize, expectativa: u32, competicao: u32) {
+unsafe extern "thiscall" fn compare_post_fa_expectations_news(this: usize, selecao: usize, expectativa: u32, competicao: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%)(this, selecao, expectativa, competicao)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_post_supporter_protest_news(this: usize, clube: usize) {
+unsafe extern "thiscall" fn compare_post_supporter_protest_news(this: usize, clube: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, clube)
 }

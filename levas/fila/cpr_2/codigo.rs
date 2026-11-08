@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn count_club_free_transfer_queue(this: usize, clube: u
 /// Comparador: lado a lado pelo motivo, pela marca da pessoa (+0x86e) e pelo cursor da fila livre, e pela devolução.
 /// As outras gravações (tirar a marca 0x40, marcar +0x2d da oferta em negociação) a cópia repete sobre o que a original
 /// deixou e chega ao mesmo.
-unsafe extern "thiscall" fn comparar_can_club_bid_for_player(this: usize, jogador: usize, clube: usize, motivo: *mut u16, ignorar_abertas: u32) -> u32 {
+unsafe extern "thiscall" fn compare_can_club_bid_for_player(this: usize, jogador: usize, clube: usize, motivo: *mut u16, ignorar_abertas: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u16, u32) -> u32>(%%I0%%);
     let marca = cpr2_d(this + 0x86e).wrapping_add(cpr2_d(jogador).wrapping_mul(8));
     let regioes = [(marca, 1), (this + 0x936, 4), (motivo as usize, 2)];
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn comparar_can_club_bid_for_player(this: usize, jogado
 
 /// Comparador: lado a lado pelo estado da oferta, pelas marcas (+4) dos itens da troca e pelo cursor da lista. Fora da
 /// conta: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_note_terms_offered_to_exchange_player(this: usize, k: i32, pessoa: u32) {
+unsafe extern "thiscall" fn compare_note_terms_offered_to_exchange_player(this: usize, k: i32, pessoa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32)>(%%I1%%);
     if k < 0 || k >= cpr2_d(this + 4) as i32 || cpr2_d(cpr2_d(this).wrapping_add((k as usize).wrapping_mul(4))) == 0 {
         return o(this, k, pessoa);
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn comparar_note_terms_offered_to_exchange_player(this:
 }
 
 /// Comparador: lado a lado pelo cursor da fila e pela devolução (só lê). Clube nulo: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_count_club_free_transfer_queue(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn compare_count_club_free_transfer_queue(this: usize, clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     if clube == 0 {
         return o(this, clube);

@@ -12,7 +12,7 @@ use super::*;
 /// [pt] Comparador: lado a lado na comissão do humano (54 bytes) e na marca +0x244 do clube (a 0x53cb80/0x53cc30 pela
 /// 0x540a50 podem zerá-la). Sem humano ou clube de seleção: lado a lado só na marca. Técnico fora dos 16 humanos
 /// (a 0x8b4cd0 mostra a caixa e a original escreveria no nulo): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_update_coach_assignments(this: usize, club: usize, tecnico: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_update_coach_assignments(this: usize, club: usize, tecnico: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_COACH_ASSIGNMENTS);
     if club == 0 {
         return o(this, club, tecnico);
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_coach_assignments(this: u
 /// [pt] Comparador: lado a lado na entrada do treino e na carga de forma de cada jogador dos dois elencos, na comissão do
 /// técnico (a 0x8b2880 do fim) e na marca +0x244 dos clubes (a 0x541f90 pela 0x540a50). Com caixa (jogador sem
 /// ficha no elenco antigo ou técnico fora dos 16 humanos com clube novo): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: usize, manager: usize, old: usize, novo: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_reassign_squad_schedules(this: usize, manager: usize, old: usize, novo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_REASSIGN_SQUAD_SCHEDULES);
     let k = if manager == 0 { -1 } else { read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1) };
     if novo != 0 && !(0..0x10).contains(&k) {
@@ -79,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: u
 }
 
 /// Comparador: lado a lado nos 167 programas (0x9b bytes cada).
-pub(crate) unsafe extern "thiscall" fn comparar_training_manager_cpp_0x8b2230(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_training_manager_cpp_0x8b2230(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_TRAINING_MANAGER_CPP_0X8B2230);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(this, 0xa7 * 0x9b)], || o(this), || training_manager_cpp_0x8b2230(this));
     SCOREBOARD.record(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_training_manager_cpp_0x8b2230(th
 /// o que a 0x8b2be0 grava) e na carga da ficha de forma (31 bytes por jogador em [[0xb63d28]], +0x1e), com os sorteios
 /// da cópia fora da contagem. Só a original: os casos de erro e o jogador com treino de posição (0x8b4b20 antes de
 /// rodar): ali a 0x8b4450, a marca do contrato (0x867700) e a 0x5885c0 mexem fora dessas regiões.
-pub(crate) unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usize, skip: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usize, p: usize, skip: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_UPDATE_PLAYER_TRAINING);
     if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || read_u32_as_usize(p + staff::PLAYER) == 0 {
         return o(this, p, skip);
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_player_training(this: usi
 /// Comparer for `get_player_schedule` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução e [0xae1080] lado a lado; sem pessoa ou sem ficha (a caixa), só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_get_player_schedule(this: usize, p: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_get_player_schedule(this: usize, p: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_PLAYER_SCHEDULE);
     if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
         return o(this, p);
@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_player_schedule(this: usize,
 /// Comparer for `get_category_level` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução inteira (só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_get_category_level(this: usize, category: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_category_level(this: usize, category: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_GET_CATEGORY_LEVEL)(this, category);
     let n = get_category_level(this, category);
     SCOREBOARD.record(r == n, || format!("get_category_level({:x}, {}) original={:x} rust={:x}", this, category as u8 as i8, r, n));
@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_category_level(this: usize, 
 
 /// Comparador: lado a lado na ficha (+0xf..+0x41), na entrada do treino (6 bytes) e no guardado (0xde1f3c, 5 bytes);
 /// sem pessoa ou sem ficha (a caixa), só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_REMOVE_OR_RESTORE_TRAINING_PROGRESS);
     if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
         return o(this, p, devolver);
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_or_restore_training_progr
 /// Comparer for `get_training_attribute_change` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado na ficha e na entrada do treino, com a devolução; sem pessoa ou sem ficha, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_get_training_attribute_change(this: usize, p: usize, attribute: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_get_training_attribute_change(this: usize, p: usize, attribute: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_TRAINING_ATTRIBUTE_CHANGE);
     if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
         return o(this, p, attribute);
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_training_attribute_change(th
 /// Comparer for `get_position_aptitude` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução inteira (só lê); máscara fora (a caixa), só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_get_position_aptitude(this: usize, p: usize, mask: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_position_aptitude(this: usize, p: usize, mask: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GET_POSITION_APTITUDE);
     if !is_valid_position_mask(mask as u16 as i16 as i32) {
         return o(this, p, mask);
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_position_aptitude(this: usiz
 /// Comparer for `set_type` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado nos 0x16 bytes do programa (a vaga, os níveis e o tipo).
-pub(crate) unsafe extern "thiscall" fn comparar_set_type(this: usize, slot: i8, kind: i8) {
+pub(crate) unsafe extern "thiscall" fn compare_set_type(this: usize, slot: i8, kind: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8)>(IDX_SET_TYPE);
     let regions = [(this, 0x16)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, slot, kind), || set_type(this, slot, kind));
@@ -197,7 +197,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_type(this: usize, slot: i8, 
 /// Comparer for `set_default_schedules` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado nos 167 programas (0x651d bytes a partir de this; nomes incluídos) e no marcador de erro.
-pub(crate) unsafe extern "thiscall" fn comparar_set_default_schedules(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_set_default_schedules(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_DEFAULT_SCHEDULES);
     let regions = [(this, 0x651d), (0xb67a34, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this), || set_default_schedules(this));
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_default_schedules(this: usiz
 /// Comparer for `get_manager_schedule` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução, sem os casos de erro (só a original).
-pub(crate) unsafe extern "thiscall" fn comparar_get_manager_schedule(this: usize, manager: usize, slot: i8) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_get_manager_schedule(this: usize, manager: usize, slot: i8) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> usize>(IDX_GET_MANAGER_SCHEDULE);
     if !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1)) {
         return o(this, manager, slot);
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_manager_schedule(this: usize
 /// Comparer for `get_coaching_factor` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução inteira (a consulta só lê; a comissão do humano é lida pelas duas).
-pub(crate) unsafe extern "thiscall" fn comparar_get_coaching_factor(this: usize, club: usize, category: i8) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_coaching_factor(this: usize, club: usize, category: i8) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> u32>(IDX_GET_COACHING_FACTOR)(this, club, category);
     let n = get_coaching_factor(this, club, category);
     SCOREBOARD.record(r == n, || format!("get_coaching_factor(clube {:x}, categoria {}) original={:x} rust={:x}", club, category, r, n));
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_coaching_factor(this: usize,
 /// Comparer for `get_coach_assignments` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução, sem os casos de erro (só a original).
-pub(crate) unsafe extern "thiscall" fn comparar_get_coach_assignments(this: usize, manager: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_get_coach_assignments(this: usize, manager: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_COACH_ASSIGNMENTS);
     if manager == 0 || !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1)) {
         return o(this, manager);
@@ -249,7 +249,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_coach_assignments(this: usiz
 /// Comparer for `get_training_load` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_get_training_load(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_get_training_load(this: usize) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_GET_TRAINING_LOAD)(this);
     let n = get_training_load(this);
     SCOREBOARD.record(r == n, || format!("get_training_load({:x}) original={} rust={}", this, r, n));
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_training_load(this: usize) -
 ///
 /// [pt] Comparador: lado a lado na ficha (+0xf..+0x41) e na entrada de treino do jogador (6 bytes), sem os casos de erro e
 /// sem as pessoas que não são jogadores (só a original).
-pub(crate) unsafe extern "thiscall" fn comparar_apply_training_progress(this: usize, person: usize, d: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_apply_training_progress(this: usize, person: usize, d: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_APPLY_TRAINING_PROGRESS);
     if person == 0 || read_u32_as_usize(person + staff::PLAYER) == 0 || read_i32(person) >= read_i32(G_STAFF_COUNT) {
         return o(this, person, d);
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_training_progress(this: us
 /// Comparer for `find_position_training` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução e a saída (reposta entre as duas), sem os casos de erro (só a original).
-pub(crate) unsafe extern "thiscall" fn comparar_find_position_training(this: usize, person: usize, out: *mut usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_find_position_training(this: usize, person: usize, out: *mut usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32>(IDX_FIND_POSITION_TRAINING);
     if person == 0 || out.is_null() || read_u32_as_usize(person + staff::PLAYER) == 0 {
         return o(this, person, out);
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_position_training(this: usi
 /// Comparer for `has_fast_position_training` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a devolução (as duas só leem; a busca roda pelas duas).
-pub(crate) unsafe extern "thiscall" fn comparar_has_fast_position_training(this: usize, person: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_has_fast_position_training(this: usize, person: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_FAST_POSITION_TRAINING)(this, person);
     let n = has_fast_position_training(this, person);
     SCOREBOARD.record(r == n, || format!("has_fast_position_training(pessoa {:x}) original={} rust={}", person, r, n));
@@ -304,7 +304,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_fast_position_training(this:
 /// Comparer for `advance_week_counter` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado na semana do treino, com a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_advance_week_counter(this: usize, day: *const i16) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_advance_week_counter(this: usize, day: *const i16) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i16) -> i32>(IDX_ADVANCE_WEEK_COUNTER);
     let regions = [(this + 0x688d, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, day), || advance_week_counter(this, day));
@@ -316,7 +316,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_advance_week_counter(this: usize
 ///
 /// [pt] Comparador: a original aloca (não pode rodar duas vezes): roda só ela e confere cada ficha pela regra (a vaga 6
 /// ou 1 pela nota de goleiro e o bit 0x20 do +5 apagado).
-pub(crate) unsafe extern "thiscall" fn comparar_init_player_entries(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_init_player_entries(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INIT_PLAYER_ENTRIES)(this);
     let base = read_u32_as_usize(this + 0x651d);
     if base == 0 {

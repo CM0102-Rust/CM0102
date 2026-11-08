@@ -565,6 +565,6 @@ unsafe fn undo_holiday_managers() {
 
 // ponytail: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela carga da prova do save.
-unsafe extern "C" fn comparar_load_game_data(caminho: *const u8) -> u32 {
+unsafe extern "C" fn compare_load_game_data(caminho: *const u8) -> u32 {
     original_fn::<unsafe extern "C" fn(*const u8) -> u32>(%%I0%%)(caminho)
 }

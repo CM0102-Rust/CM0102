@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: usize) {
 /// dela (0x5abd90 numa lista provisória) e as vagas válidas (fatia 0..2) antes da primeira vazia; cada vaga válida leva
 /// um jogo enquanto a lista tiver (toda nota passa do −1 inicial), e a vaga fica 0xff: as vagas 0xff do bloco depois da
 /// original são min(válidas, jogos).
-unsafe extern "thiscall" fn comparar_move_fixtures_for_tv(this: usize, data: usize) {
+unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let e = match tv_date_entry(this, data) {
         Some(e) => e,
@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
 }
 
 /// Comparador da 0x684230: só a original (aloca a notícia e a entrega aos técnicos).
-unsafe extern "thiscall" fn comparar_send_group_draw_news(this: usize) {
+unsafe extern "thiscall" fn compare_send_group_draw_news(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this) // ponytail: só a notícia
 }
 
@@ -470,6 +470,6 @@ unsafe extern "thiscall" fn send_fixture_list_news(this: usize, lista: usize) {
 }
 
 /// Comparador da 0x683ee0: só a original (as notícias vão aos técnicos e a lista dos avisados cresce, alocando).
-unsafe extern "thiscall" fn comparar_send_fixture_list_news(this: usize, lista: usize) {
+unsafe extern "thiscall" fn compare_send_fixture_list_news(this: usize, lista: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, lista) // ponytail: só as notícias
 }
