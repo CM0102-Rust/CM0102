@@ -27,8 +27,8 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_set_up_rules(this: usi
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
 pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_CREATE_TABLE);
-    let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
-    let base = read_u32_as_usize(G_CLUB_TABLE);
+    let n = read_usize(G_CLUB_COUNT) as i32;
+    let base = read_usize(G_CLUB_TABLE);
     let mut plan: Vec<(usize, bool)> = Vec::new();
     for i in 0..n.max(0) as usize {
         let c = base + i * club::SIZE;
@@ -40,12 +40,12 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usi
         }
     }
     let r = o(this);
-    let t = read_u32_as_usize(this + league::TABLE);
+    let t = read_usize(this + league::TABLE);
     let mut ok = r == (plan.len() == 0x16) as u32 && read_i16(this + league::CLUB_COUNT) == 0x16 && t != 0;
     if ok {
         for (k, &(c, b)) in plan.iter().enumerate() {
             let l = t + k * 0x3b;
-            ok = ok && read_u32_as_usize(l) == c && (!b || *((l + league_table_row::STATUS) as *const u8) == 0xfc);
+            ok = ok && read_usize(l) == c && (!b || *((l + league_table_row::STATUS) as *const u8) == 0xfc);
         }
     }
     SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plan));

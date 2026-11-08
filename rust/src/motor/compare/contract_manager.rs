@@ -717,7 +717,7 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_offer_decision(this: usi
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend_from_slice(&INJURY_DATE_STATICS);
     reg.push((this + contract_manager_fields::DECISIONS_ADDED, 4));
-    reg.push((read_u32_as_usize(this + contract_manager_fields::DECISION_DATES), read_u32_as_usize(this + contract_manager_fields::DECISION_COUNT).wrapping_mul(14)));
+    reg.push((read_usize(this + contract_manager_fields::DECISION_DATES), read_usize(this + contract_manager_fields::DECISION_COUNT).wrapping_mul(14)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id, slot),
         || crate::rng::without_counting(|| schedule_offer_decision(this, id, slot)));
     SCOREBOARD.record(igual, || format!("schedule_offer_decision(id {}, vaga {}) {:x?} x {:x?}", id, slot, mo, mr));

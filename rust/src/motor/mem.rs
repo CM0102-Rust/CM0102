@@ -37,10 +37,6 @@ pub unsafe fn read_u32(a: usize) -> u32 {
     core::ptr::read_unaligned(a as *const u32)
 }
 
-pub unsafe fn read_u32_as_usize(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
-
 pub unsafe fn read_u8(a: usize) -> u8 {
     core::ptr::read_unaligned(a as *const u8)
 }
@@ -75,10 +71,6 @@ pub unsafe fn write_u32(a: usize, v: u32) {
 
 pub unsafe fn write_u32_at(o: usize, d: usize, v: u32) {
     core::ptr::write_unaligned((o + d) as *mut u32, v);
-}
-
-pub unsafe fn write_u32_from_usize(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32);
 }
 
 pub unsafe fn write_u8(a: usize, v: u8) {

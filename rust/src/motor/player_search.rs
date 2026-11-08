@@ -206,9 +206,9 @@ pub(crate) unsafe extern "thiscall" fn player_search_scout_match(this: usize, ga
     // 0x68d020 / 0x68d040: lea ecx, local -> thiscall
     let mut list = [0u8; 16];
     let l = list.as_mut_ptr() as usize;
-    exe::llist_llist(l);
+    exe::new_llist(l);
     let r = scout_match_body(this, game, result, out, l);
-    exe::llist_destructor_llist(l);
+    exe::drop_llist(l);
     r
 }
 

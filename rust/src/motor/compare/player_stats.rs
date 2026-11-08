@@ -27,15 +27,15 @@ pub(crate) unsafe extern "stdcall" fn compare_player_statistic(r: *const u8, whi
 /// +0x1c), que só a gravação da original move, ficam fora. Pessoa nula ou sem ficha: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize, p: usize, value: u32, loan: u32, end: u32, club_id: u32, other: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_ARCHIVE_PLAYER_STATS);
-    if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
+    if p == 0 || read_usize(p + staff::PLAYER) == 0 {
         return o(this, p, value, loan, end, club_id, other);
     }
-    let reg = read_u32_as_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(read_u32_as_usize(p + staff::PLAYER)) as isize * 0x27) as usize);
+    let reg = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(read_usize(p + staff::PLAYER)) as isize * 0x27) as usize);
     let mut regions = vec![(reg + player_stats_entry::CLUB_LEAGUE_GAMES, 4)];
     for cat in 0..6usize {
         let id = read_i32(reg + 4 * cat);
         if id != -1 {
-            regions.push((read_u32_as_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((id as isize * 0x20) as usize), 32));
+            regions.push((read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((id as isize * 0x20) as usize), 32));
         }
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize,
 /// de erro (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize, p: usize, count: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(IDX_BUILD_CAREER_HISTORY);
-    if p == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(p + staff::PLAYER) == 0) {
+    if p == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_usize(p + staff::PLAYER) == 0) {
         return o(this, p, count);
     }
     let r = o(this, p, count);
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
 /// [pt] Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p: usize, club: usize) -> i16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_PLAYER_STATS_YEARS_SINCE_AT_CLUB);
-    if p == 0 || club == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(p + staff::CLUB_JOB) != club && read_u32_as_usize(p + staff::PLAYER) == 0) {
+    if p == 0 || club == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_usize(p + staff::CLUB_JOB) != club && read_usize(p + staff::PLAYER) == 0) {
         return o(p, club);
     }
     let r = o(p, club);
@@ -159,7 +159,7 @@ pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_club(a: 
 /// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_career_goals(person: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(IDX_PLAYER_STATS_GET_CAREER_GOALS);
-    if person == 0 || (read_i32(person) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(person + staff::PLAYER) == 0) {
+    if person == 0 || (read_i32(person) < read_i32(G_STAFF_COUNT) && read_usize(person + staff::PLAYER) == 0) {
         return o(person);
     }
     let r = o(person);
@@ -232,23 +232,23 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
 /// capacidade depois, a fluência), a original roda; confere a conta, a capacidade e o registro novo (no fim sem ordenar;
 /// com `ordenar`, em algum lugar da tabela).
 pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person: usize, language: u32, fluencia: u32, sort: u32) {
-    let (n, cap) = if read_u32_as_usize(this + player_stats_fields::LANGUAGES) == 0 { (read_u32_as_usize(this + player_stats_fields::LANGUAGE_COUNT), 100) } else { (read_u32_as_usize(this + player_stats_fields::LANGUAGE_COUNT), read_u32_as_usize(this + player_stats_fields::LANGUAGE_CAPACITY)) };
+    let (n, cap) = if read_usize(this + player_stats_fields::LANGUAGES) == 0 { (read_usize(this + player_stats_fields::LANGUAGE_COUNT), 100) } else { (read_usize(this + player_stats_fields::LANGUAGE_COUNT), read_usize(this + player_stats_fields::LANGUAGE_CAPACITY)) };
     let cap = if cap == n { cap.wrapping_add(100) } else { cap };
     let f = fluencia as u8;
-    let new = (read_u32_as_usize(person) as u32, language as u8, if (f as i8) > 10 { 10 } else { f });
+    let new = (read_usize(person) as u32, language as u8, if (f as i8) > 10 { 10 } else { f });
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_ADD_LANGUAGE)(this, person, language, fluencia, sort);
-    let base = read_u32_as_usize(this + player_stats_fields::LANGUAGES);
+    let base = read_usize(this + player_stats_fields::LANGUAGES);
     let e = |i: usize| {
         let r = base.wrapping_add(i * 6);
-        (read_u32_as_usize(r) as u32, *((r + language_entry::LANGUAGE) as *const u8), *((r + language_entry::FLUENCY) as *const u8))
+        (read_usize(r) as u32, *((r + language_entry::LANGUAGE) as *const u8), *((r + language_entry::FLUENCY) as *const u8))
     };
-    let count = read_u32_as_usize(this + player_stats_fields::LANGUAGE_COUNT);
-    let mut ok = count == n.wrapping_add(1) && read_u32_as_usize(this + player_stats_fields::LANGUAGE_CAPACITY) == cap;
+    let count = read_usize(this + player_stats_fields::LANGUAGE_COUNT);
+    let mut ok = count == n.wrapping_add(1) && read_usize(this + player_stats_fields::LANGUAGE_CAPACITY) == cap;
     if ok {
         ok = if sort == 0 { e(n) == new } else { (0..count).any(|i| e(i) == new) };
     }
     SCOREBOARD.record(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
-        new, sort, count, n.wrapping_add(1), read_u32_as_usize(this + player_stats_fields::LANGUAGE_CAPACITY), cap));
+        new, sort, count, n.wrapping_add(1), read_usize(this + player_stats_fields::LANGUAGE_CAPACITY), cap));
 }
 
 /// Comparer for `improve_language`.
@@ -257,13 +257,13 @@ pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person:
 /// registro, lado a lado nos 6 bytes dele.
 pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, person: usize, language: u32, aumento: u32, sort: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_IMPROVE_LANGUAGE);
-    let r = if read_u32_as_usize(this + player_stats_fields::LANGUAGES) == 0 { 0 } else { find_language_record(this, person, language as u8) };
+    let r = if read_usize(this + player_stats_fields::LANGUAGES) == 0 { 0 } else { find_language_record(this, person, language as u8) };
     if r == 0 {
         return o(this, person, language, aumento, sort);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 6)],
         || o(this, person, language, aumento, sort), || improve_language(this, person, language, aumento, sort));
-    SCOREBOARD.record(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", read_u32_as_usize(person), language as u8, aumento as u8, mo, mr));
+    SCOREBOARD.record(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", read_usize(person), language as u8, aumento as u8, mo, mr));
 }
 
 /// Comparer for `player_stats_reset_player`.
@@ -272,19 +272,19 @@ pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, per
 /// categoria liberados (a 0x58f110 só grava +0x1c, dentro do registro). Pessoa nula ou não jogadora: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: usize, person: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER);
-    if person == 0 || read_u32_as_usize(person + staff::PLAYER) == 0 {
+    if person == 0 || read_usize(person + staff::PLAYER) == 0 {
         return o(this, person);
     }
-    let r = read_u32_as_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_u32_as_usize(read_u32_as_usize(person + staff::PLAYER)).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
+    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(read_usize(person + staff::PLAYER)).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
     let mut reg = vec![(r, 39), (this + player_stats_fields::FREE_CATEGORY_COUNT, 4)];
     for k in 0..6usize {
-        let i = read_u32_as_usize(r + 4 * k);
+        let i = read_usize(r + 4 * k);
         if i as u32 != 0xffff_ffff {
-            reg.push((read_u32_as_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(i << 5) + 0xe, 2));
+            reg.push((read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(i << 5) + 0xe, 2));
         }
     }
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person), || player_stats_reset_player(this, person));
-    SCOREBOARD.record(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", read_u32_as_usize(person), mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", read_usize(person), mo, mr));
     a
 }
 
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_last_match_rating(stats: usiz
 /// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(person: usize, club: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u16>(IDX_PLAYER_STATS_GET_GOALS_FOR_CLUB);
-    if person == 0 || club == 0 || (read_i32(person) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(person + staff::PLAYER) == 0) {
+    if person == 0 || club == 0 || (read_i32(person) < read_i32(G_STAFF_COUNT) && read_usize(person + staff::PLAYER) == 0) {
         return o(person, club);
     }
     let r = o(person, club);

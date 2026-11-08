@@ -201,7 +201,7 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
         return f(m, kind, chance, p, o);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     if o != 0 {
         reg.push((o + 0x31, 2));
     }
@@ -374,7 +374,7 @@ pub(crate) static mut RECOVERY_NEWS_WOULD_GO_AWOL: bool = false;
 ///
 /// [pt] O registro de forma do jogador na tabela das lesões ([this] + 31 × id).
 pub(crate) unsafe fn physical_record_of_player(this: usize, p: usize) -> usize {
-    read_u32_as_usize(this).wrapping_add((*(p as *const i32) as isize * 31) as usize)
+    read_usize(this).wrapping_add((*(p as *const i32) as isize * 31) as usize)
 }
 
 /// Calls a cdecl staff preference routine (likes/dislikes manager, remove from favourites/rejected) with person and
@@ -398,11 +398,11 @@ pub(crate) unsafe fn injury_add_to_preference_list(routine: usize, p: usize, man
 ///
 /// [pt] O técnico gostar mais: tira dos rejeitados e, com sorteio(+0x59) acima de 5, põe nos favoritos.
 pub(crate) unsafe fn like_manager_more(p: usize, club: usize) {
-    if read_u32_as_usize(club + club::MANAGER) != 0 && call_preference_routine(0x547840, p, read_u32_as_usize(club + club::MANAGER)) != 0 {
-        call_preference_routine(0x547c50, p, read_u32_as_usize(club + club::MANAGER));
+    if read_usize(club + club::MANAGER) != 0 && call_preference_routine(0x547840, p, read_usize(club + club::MANAGER)) != 0 {
+        call_preference_routine(0x547c50, p, read_usize(club + club::MANAGER));
     }
-    if read_u32_as_usize(club + club::MANAGER) != 0 && friendly_random(read_i8(p + staff::LOYALTY) as i32) > 5 {
-        injury_add_to_preference_list(0x547a10, p, read_u32_as_usize(club + club::MANAGER));
+    if read_usize(club + club::MANAGER) != 0 && friendly_random(read_i8(p + staff::LOYALTY) as i32) > 5 {
+        injury_add_to_preference_list(0x547a10, p, read_usize(club + club::MANAGER));
     }
 }
 
@@ -448,7 +448,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
         return;
     }
     if force as u8 == 0 {
-        let club = read_u32_as_usize(p + staff::CLUB_JOB);
+        let club = read_usize(p + staff::CLUB_JOB);
         if club == 0 {
             return;
         }
@@ -460,32 +460,32 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
     let given: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut news = [0u8; 0xe8];
     let n = news.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x7d1, 0);
+    exe::new_newsitem(n, 0x7d1, 0);
     let est = estagio as u8 as i8;
     let tp = kind as u8 as i8;
     given(n, 0, est as i32 as u32);
     given(n, 1, tp as i32 as u32);
-    given(n, 2, read_u32_as_usize(p) as u32);
-    given(n, 3, read_u32_as_usize(read_u32_as_usize(p + staff::FIRST_NAME) + 0x33) as u32);
-    given(n, 4, read_u32_as_usize(read_u32_as_usize(p + staff::SECOND_NAME) + 0x33) as u32);
-    given(n, 5, read_u32_as_usize(read_u32_as_usize(p + staff::COMMON_NAME) + 0x33) as u32);
+    given(n, 2, read_usize(p) as u32);
+    given(n, 3, read_usize(read_usize(p + staff::FIRST_NAME) + 0x33) as u32);
+    given(n, 4, read_usize(read_usize(p + staff::SECOND_NAME) + 0x33) as u32);
+    given(n, 5, read_usize(read_usize(p + staff::COMMON_NAME) + 0x33) as u32);
     given(n, 6, *((p + staff::DATE_OF_BIRTH) as *const i16) as i32 as u32);
     given(n, 7, *((p + 0x12) as *const u16) as u32);
     given(n, 8, days as u16 as i16 as i32 as u32);
-    let club = read_u32_as_usize(p + staff::CLUB_JOB);
+    let club = read_usize(p + staff::CLUB_JOB);
     let mut res: i8 = -1;
     let mut f1: i8 = 0;
     if *((0x9e7ad9 + tp as isize * 13) as *const u8) == 0xc {
         let s = friendly_random(32000) as i16;
         if tp == 0x51 {
             res = 0;
-            let c = exe::contract_manager_get_contract(read_u32_as_usize(G_CONTRACT_MANAGER), p);
-            if c == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 || club == 0 {
+            let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
+            if c == 0 || read_usize(p + staff::PLAYER) == 0 || club == 0 {
                 f1 = 1;
             } else {
                 let mut caiu = false;
                 for marca in [0x20000u32, 0x20] {
-                    if read_u32_as_usize(c + 0x45) as u32 & marca != 0 {
+                    if read_usize(c + 0x45) as u32 & marca != 0 {
                         let a = friendly_random(read_i8(p + staff::PROFESSIONALISM) as i32);
                         let b = friendly_random(0x19);
                         if a > b {
@@ -495,7 +495,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     }
                 }
                 let mut feliz = caiu;
-                if read_u32_as_usize(c + 0x45) as u32 & 0x40 != 0 {
+                if read_usize(c + 0x45) as u32 & 0x40 != 0 {
                     let a = friendly_random(read_i8(p + staff::PROFESSIONALISM) as i32);
                     let b = friendly_random(0x19);
                     if a > b {
@@ -517,7 +517,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     res = 2;
                     like_manager_more(p, club);
                 } else {
-                    if read_u32_as_usize(G_AWOL) != 0 && read_i8(p + staff::LOYALTY) < 0xc {
+                    if read_usize(G_AWOL) != 0 && read_i8(p + staff::LOYALTY) < 0xc {
                         let a = friendly_random(read_i8(p + staff::LOYALTY) as i32);
                         let b = friendly_random(5);
                         if a < b {
@@ -526,7 +526,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                                 return;
                             }
                             let fugir: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_AWOL_START_ABSENCE);
-                            fugir(read_u32_as_usize(G_AWOL), p, club, 4);
+                            fugir(read_usize(G_AWOL), p, club, 4);
                             return;
                         }
                     }
@@ -536,14 +536,14 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                 if follow {
                     let mut x = (read_i8(p + staff::PROFESSIONALISM) as i16).wrapping_add(read_i8(p + staff::LOYALTY) as i16);
                     f1 = 1;
-                    if *((read_u32_as_usize(p + staff::PLAYER) + 0xb) as *const i16) > 0x1c52 {
+                    if *((read_usize(p + staff::PLAYER) + 0xb) as *const i16) > 0x1c52 {
                         x = x.wrapping_sub(5);
                     }
                     let a = friendly_random(x as i32);
                     let b = friendly_random(0x14);
                     if a < b {
                         let r = friendly_random(4);
-                        let f = read_u32_as_usize(p + staff::PLAYER);
+                        let f = read_usize(p + staff::PLAYER);
                         let subir_57 = |p: usize| {
                             if read_i8(p + staff::AMBITION) < 0x14 {
                                 *((p + staff::AMBITION) as *mut i8) += 1;
@@ -597,11 +597,11 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     if read_i8(p + staff::TEMPERAMENT) < 5 {
                         f1 = -1;
                         if club != 0 {
-                            if read_u32_as_usize(club + club::MANAGER) != 0 && call_preference_routine(0x547810, p, read_u32_as_usize(club + club::MANAGER)) != 0 {
-                                call_preference_routine(0x547c10, p, read_u32_as_usize(club + club::MANAGER));
+                            if read_usize(club + club::MANAGER) != 0 && call_preference_routine(0x547810, p, read_usize(club + club::MANAGER)) != 0 {
+                                call_preference_routine(0x547c10, p, read_usize(club + club::MANAGER));
                             }
-                            if read_u32_as_usize(club + club::MANAGER) != 0 && friendly_random(read_i8(p + staff::TEMPERAMENT) as i32) == 0 {
-                                injury_add_to_preference_list(0x547af0, p, read_u32_as_usize(club + club::MANAGER));
+                            if read_usize(club + club::MANAGER) != 0 && friendly_random(read_i8(p + staff::TEMPERAMENT) as i32) == 0 {
+                                injury_add_to_preference_list(0x547af0, p, read_usize(club + club::MANAGER));
                             }
                         }
                     }
@@ -644,7 +644,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     res = 0;
                 }
             }
-            let e = read_u32_as_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * 0x4f + 0xc) as usize);
+            let e = read_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * 0x4f + 0xc) as usize);
             *(e as *mut u8) &= 0xfe; // cqf9: a marca +0xc cai
         }
     }
@@ -653,10 +653,10 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
     if RECOVERY_NEWS_DRY_RUN {
         return;
     }
-    let nation = if club != 0 { read_u32_as_usize(club + club::NATION) } else { read_u32_as_usize(p + staff::NATION) };
-    let continent = if nation != 0 { read_u32_as_usize(nation + nation::CONTINENT) } else { 0 };
+    let nation = if club != 0 { read_usize(club + club::NATION) } else { read_usize(p + staff::NATION) };
+    let continent = if nation != 0 { read_usize(nation + nation::CONTINENT) } else { 0 };
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_SEND_BY_SCOPE);
-    deliver(read_u32_as_usize(G_NEWS), n, club, 0, nation, continent, force);
+    deliver(read_usize(G_NEWS), n, club, 0, nation, continent, force);
 }
 
 /// Returns the translated injury category name and the name's gender in language 3.
@@ -1102,7 +1102,7 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nw = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(nw, 0x7d0, 0);
+    exe::new_newsitem(nw, 0x7d0, 0);
     write(nw, 0, read_usize(p) as u32);
     for k in 1..4usize {
         let q = read_usize(p + staff::FIRST_NAME * k);
@@ -1242,7 +1242,7 @@ pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     let list = read_usize(this + injury_fields::MATCH_HIT_LIST);
     if list != 0 {
         if !INJURY_DAILY_DRY_RUN {
-            exe::llist_destructor_llist(list);
+            exe::drop_llist(list);
             exe::crt_operator_delete(list);
         }
         core::ptr::write_unaligned((this + injury_fields::MATCH_HIT_LIST) as *mut u32, 0);
@@ -1887,14 +1887,14 @@ pub(crate) unsafe fn news_box_regions(this: usize, caixa: usize) -> Vec<(usize, 
 /// para a da lesão (+0x20 do registro de 48 bytes em [this+4], 0x54cc30) em anos × 365 + dias; abaixo de +0x2a, 2
 /// (lesionado); abaixo de +0x28, 1 (recuperando a forma); senão 0.
 pub(crate) unsafe fn injury_status(this: usize, person: usize) -> u8 {
-    let id = read_u32_as_usize(person);
-    let k = read_u32_as_usize(read_u32_as_usize(this).wrapping_add(id.wrapping_mul(31)) + 0xe) as i32;
+    let id = read_usize(person);
+    let k = read_usize(read_usize(this).wrapping_add(id.wrapping_mul(31)) + 0xe) as i32;
     if k == -1 {
         return 0;
     }
-    let l = read_u32_as_usize(this + injury_fields::INJURY_ENTRIES).wrapping_add((k as usize).wrapping_mul(48));
+    let l = read_usize(this + injury_fields::INJURY_ENTRIES).wrapping_add((k as usize).wrapping_mul(48));
     let mut t = [0u8; 8];
-    exe::date_get_difference(G_CURRENT_DATE, t.as_mut_ptr(), read_u32_as_usize(l + injury_entry::DATE) as u32, read_u32_as_usize(l + 0x24) as u32);
+    exe::date_get_difference(G_CURRENT_DATE, t.as_mut_ptr(), read_usize(l + injury_entry::DATE) as u32, read_usize(l + 0x24) as u32);
     let days = (read_u16(t.as_ptr() as usize + 2) as i32).wrapping_mul(365).wrapping_add(read_i16(t.as_ptr() as usize) as i32);
     if days < read_i16(l + injury_entry::TRAINING_RETURN_DAYS) as i32 {
         return 2; // cpr10: lesionado
@@ -1914,7 +1914,7 @@ pub(crate) unsafe extern "thiscall" fn get_player_injury_status(this: usize, per
         show_error_at(0x9e7f28, 0x556);
         return 0;
     }
-    if read_u32_as_usize(person) as i32 >= read_u32_as_usize(G_STAFF_COUNT) as i32 {
+    if read_usize(person) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
     }
     let atualizar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
@@ -1969,10 +1969,10 @@ pub(crate) unsafe fn advance_time_slice(e: usize, f: i8) {
 /// `alterar` só fica de fora) e a busca para; depois, a partir dessa posição (ou da conta − [this+0x1c], se maior),
 /// a de tipo 3 da pessoa. Devolve o endereço dela ou 0.
 pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], alterar: bool) -> usize {
-    let count = read_u32_as_usize(this + contract_manager_fields::DECISION_COUNT) as i32;
-    let base = read_u32_as_usize(this + contract_manager_fields::DECISION_DATES);
+    let count = read_usize(this + contract_manager_fields::DECISION_COUNT) as i32;
+    let base = read_usize(this + contract_manager_fields::DECISION_DATES);
     let (la, ld) = (u16::from_le_bytes([limit[2], limit[3]]), i16::from_le_bytes([limit[0], limit[1]]));
-    let mut i = read_u32_as_usize(this + contract_manager_fields::DECISION_NEXT_INDEX) as i32;
+    let mut i = read_usize(this + contract_manager_fields::DECISION_NEXT_INDEX) as i32;
     let mut anulada = -1i32;
     while i < count {
         let r = base.wrapping_add((i as usize).wrapping_mul(14));
@@ -1980,7 +1980,7 @@ pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], 
         if la < ra || (la == ra && ld < read_i16(r + decision_date::DATE)) {
             break;
         }
-        if *((r + decision_date::KIND) as *const u8) == 3 && read_u32_as_usize(r) as i32 == id {
+        if *((r + decision_date::KIND) as *const u8) == 3 && read_usize(r) as i32 == id {
             if alterar {
                 core::ptr::write_unaligned(r as *mut u32, u32::MAX);
             }
@@ -1989,11 +1989,11 @@ pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], 
         }
         i += 1;
     }
-    let count = read_u32_as_usize(this + contract_manager_fields::DECISION_COUNT) as i32;
-    i = i.max(count.wrapping_sub(read_u32_as_usize(this + contract_manager_fields::DECISIONS_ADDED) as i32));
+    let count = read_usize(this + contract_manager_fields::DECISION_COUNT) as i32;
+    i = i.max(count.wrapping_sub(read_usize(this + contract_manager_fields::DECISIONS_ADDED) as i32));
     while i < count {
-        let r = read_u32_as_usize(this + contract_manager_fields::DECISION_DATES).wrapping_add((i as usize).wrapping_mul(14));
-        if *((r + decision_date::KIND) as *const u8) == 3 && read_u32_as_usize(r) as i32 == id && i != anulada {
+        let r = read_usize(this + contract_manager_fields::DECISION_DATES).wrapping_add((i as usize).wrapping_mul(14));
+        if *((r + decision_date::KIND) as *const u8) == 3 && read_usize(r) as i32 == id && i != anulada {
             return r;
         }
         i += 1;
@@ -3081,10 +3081,10 @@ pub(crate) unsafe extern "thiscall" fn choose_injury_type(injuries: usize, categ
 /// +8 da chave antes da do item (0x456770), −1; depois (0x456740), 1; igual, 0.
 pub(crate) unsafe extern "C" fn injury_compare_entry_dates(key: usize, item: usize) -> i32 {
     let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
-    if exe::date_operator_3c(key + 8, read_u32_as_usize(item + 8) as u32, read_u32_as_usize(item + 0xc) as u32) != 0 {
+    if exe::date_operator_3c(key + 8, read_usize(item + 8) as u32, read_usize(item + 0xc) as u32) != 0 {
         return -1;
     }
-    if after(key + 8, read_u32_as_usize(item + 8) as u32, read_u32_as_usize(item + 0xc) as u32) != 0 {
+    if after(key + 8, read_usize(item + 8) as u32, read_usize(item + 0xc) as u32) != 0 {
         return 1;
     }
     crate::comparison::branch("cps_9 data igual");
@@ -3103,9 +3103,9 @@ pub(crate) unsafe extern "C" fn injury_compare_entry_dates(key: usize, item: usi
 /// bytes da pessoa, em [this]); pessoa nula, id a partir de [0xae2364] ou sem a ficha de jogador (+0x61): 0xff. Os
 /// chamadores leem só o al.
 pub(crate) unsafe extern "thiscall" fn get_recurring_injury_type(this: usize, person: usize) -> u8 {
-    if person == 0 || read_u32_as_usize(person) as i32 >= read_u32_as_usize(G_STAFF_COUNT) as i32 || read_u32_as_usize(person + staff::PLAYER) == 0 {
+    if person == 0 || read_usize(person) as i32 >= read_usize(G_STAFF_COUNT) as i32 || read_usize(person + staff::PLAYER) == 0 {
         return 0xff;
     }
-    *((read_u32_as_usize(this) + 31 * read_u32_as_usize(person)) as *const u8).add(0x12)
+    *((read_usize(this) + 31 * read_usize(person)) as *const u8).add(0x12)
 }
 

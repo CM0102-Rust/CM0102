@@ -112,12 +112,12 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
     }
     let mut k = 0i32;
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if k >= read_i16(this + cup::TEAM_COUNT) as i32 {
             break;
         }
-        let c = read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
-        if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) {
+        let c = read_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
+        if read_usize(c + 0x1db) == read_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) {
             core::ptr::write_unaligned((v + k as usize * 4) as *mut u32, c as u32);
             k += 1;
         }
@@ -137,15 +137,15 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
     crate::comparison::branch("cqq_10 inscritos da intertoto");
     let mut j: i16 = 0;
     while j < read_i16(this + cup::TEAM_COUNT) {
-        let c = read_u32_as_usize(v + j as usize * 4);
-        let e = read_u32_as_usize(this + cup::TEAM_TABLE) + j as usize * 6;
+        let c = read_usize(v + j as usize * 4);
+        let e = read_usize(this + cup::TEAM_TABLE) + j as usize * 6;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 4) as *mut u8) = *((c + 0x1df) as *const u8); // cqq10: the class by coefficient
         *((e + 5) as *mut u8) = 0;
         j = j.wrapping_add(1);
     }
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_u32_as_usize(this + cup::TEAM_TABLE), read_i16(this + cup::TEAM_COUNT) as i32 as u32, 6, 0x522190);
+    sort(read_usize(this + cup::TEAM_TABLE), read_i16(this + cup::TEAM_COUNT) as i32 as u32, 6, 0x522190);
     exe::crt_free(v);
     ((k == read_i16(this + cup::TEAM_COUNT) as i32) as i32, read_i16(this + cup::TEAM_COUNT) as i32)
 }
@@ -186,9 +186,9 @@ pub(crate) unsafe fn collect_club_list(this: usize, out: *mut usize, ativos: u32
     let mut k: i16 = 0;
     let mut i: i16 = 0;
     while i < read_i16(this + cup::TEAM_COUNT) {
-        let e = read_u32_as_usize(this + cup::TEAM_TABLE) + i as usize * 6;
+        let e = read_usize(this + cup::TEAM_TABLE) + i as usize * 6;
         let s = *((e + 5) as *const u8);
-        let c = read_u32_as_usize(e);
+        let c = read_usize(e);
         if (ativos as u8 == 0 || s == 1 || s == 0) && c != 0 && k < n { // cqq10: the clubs in the list
             core::ptr::write_unaligned((l + k as usize * 4) as *mut u32, c as u32);
             k = k.wrapping_add(1);
@@ -212,7 +212,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_club_list(this: usi
 ///
 /// [pt] O objeto da Copa da UEFA ([[0xadadfc] + 4 × [0x9cf6f0]]), ou 0.
 pub(crate) unsafe fn uefa_cup_object() -> usize {
-    read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(4)))
+    read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(4)))
 }
 
 /// The Intertoto winners (+5 = 1 in +0xa7) that fit the last three UEFA Cup slots, in the order 0x633d40 puts them →
@@ -231,9 +231,9 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: usize, uefa: usize) -> ([u
             if slot >= limit {
                 break;
             }
-            let e = read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add((i as isize * 6) as usize);
+            let e = read_usize(this + cup::TEAM_TABLE).wrapping_add((i as isize * 6) as usize);
             if read_u8(e + 5) == 1 {
-                v[k] = read_u32_as_usize(e);
+                v[k] = read_usize(e);
                 k += 1;
                 slot = slot.wrapping_add(1);
             }
@@ -268,8 +268,8 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: usize, uefa: usize) -> ([u
 /// novo as posições previstas (a original relê a UEFA). Sempre, no fim, a atualização da copa (0x51f890: push fase;
 /// push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    if read_u32_as_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) == 0 {
-        let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x10));
+    if read_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) == 0 {
+        let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x10));
         if acabou(this, 0, 1) as u8 != 0 {
             let uefa = uefa_cup_object();
             if uefa == 0 {
@@ -283,15 +283,15 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
                         if slot >= limit {
                             break;
                         }
-                        let e = read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add((i as isize * 6) as usize);
+                        let e = read_usize(this + cup::TEAM_TABLE).wrapping_add((i as isize * 6) as usize);
                         if read_u8(e + 5) == 1 {
                             crate::comparison::branch("cqi_10 vencedor na uefa");
-                            let s = read_u32_as_usize(uefa + cup::TEAM_TABLE).wrapping_add((slot as isize * 6) as usize);
-                            core::ptr::write_unaligned(s as *mut u32, read_u32_as_usize(e) as u32);
+                            let s = read_usize(uefa + cup::TEAM_TABLE).wrapping_add((slot as isize * 6) as usize);
+                            core::ptr::write_unaligned(s as *mut u32, read_usize(e) as u32);
                             *((s + 4) as *mut u8) = 0;
                             *((s + 5) as *mut u8) = 0;
-                            let l = read_u32_as_usize(uefa + cup::ENTRANT_BOOK).wrapping_add((read_i16(uefa + cup::ENTRANT_COUNT) as isize * 6) as usize);
-                            core::ptr::write_unaligned(l as *mut u32, read_u32_as_usize(s) as u32);
+                            let l = read_usize(uefa + cup::ENTRANT_BOOK).wrapping_add((read_i16(uefa + cup::ENTRANT_COUNT) as isize * 6) as usize);
+                            core::ptr::write_unaligned(l as *mut u32, read_usize(s) as u32);
                             *((l + 4) as *mut u8) = 4; // cqi10: the situation of the Intertoto winner in the UEFA book
                             core::ptr::write_unaligned((uefa + cup::ENTRANT_COUNT) as *mut i16, read_i16(uefa + cup::ENTRANT_COUNT).wrapping_add(1));
                             slot = slot.wrapping_add(1);
@@ -302,11 +302,11 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
                         }
                     }
                 }
-                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(uefa) + 0x5c));
+                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa) + 0x5c));
                 prever(uefa);
                 core::ptr::write_unaligned((this + intertoto_cup::WINNERS_SENT_TO_UEFA) as *mut u32, 1);
                 let uefa = uefa_cup_object();
-                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(uefa) + 0x5c));
+                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa) + 0x5c));
                 prever(uefa);
                 let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
                 return base(this, today, stage);
@@ -353,10 +353,10 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
     match outcome as u8 {
         1 => {
             let weight = scale_by_round(0x3c, 0x64, read_i16(game + 0x34), read_i16(this + cup::ROUND_COUNT) as u16 as u32);
-            let uefa = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
+            let uefa = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
             european_cup_add_qualified_record(club, uefa, 0, 0xa, weight);
             crate::comparison::branch("cqi_10 vencedor do intertoto");
-            core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut u32, read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
+            core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut u32, read_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
         }
         0 => {
             let r = read_i16(game + 0x34);
@@ -371,14 +371,14 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
             }
             let q = (r as i32 * 99) / div;
             let weight = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
-            let round = core::ptr::read_unaligned((read_u32_as_usize(this + cup::ROUND_TABLE).wrapping_add((next as isize * 0x68) as usize) + 7) as *const u16) as u32;
+            let round = core::ptr::read_unaligned((read_usize(this + cup::ROUND_TABLE).wrapping_add((next as isize * 0x68) as usize) + 7) as *const u16) as u32;
             // simplification: the stage goes in a register whose high 16 bits are those of the next round’s movsx (zero); clears
-            european_cup_add_qualified_record(club, read_u32_as_usize(this + 4), core::ptr::read_unaligned((game + 0x32) as *const u16) as u32, round, weight);
+            european_cup_add_qualified_record(club, read_usize(this + 4), core::ptr::read_unaligned((game + 0x32) as *const u16) as u32, round, weight);
         }
         0xff | 2 => {
             let weight = scale_by_round(0x14, 0x50, read_i16(game + 0x34), read_i16(this + cup::ROUND_COUNT) as u16 as u32);
             // simplification: round +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
-            european_cup_add_knocked_out_record(club, read_u32_as_usize(this + 4), 0, core::ptr::read_unaligned((game + 0x30) as *const u16) as u32, weight);
+            european_cup_add_knocked_out_record(club, read_usize(this + 4), 0, core::ptr::read_unaligned((game + 0x30) as *const u16) as u32, weight);
             crate::comparison::branch("cqi_10 caiu no intertoto");
             leave_euro_competition(club); // cqi10: whoever is knocked out in the Intertoto leaves the European competition
         }

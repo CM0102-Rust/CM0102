@@ -228,7 +228,7 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
     if p == 0 {
         return o(this, player, clear);
     }
-    let list = exe::llist_llist(p);
+    let list = exe::new_llist(p);
     interested(this, player, list, 1, 3, 0);
     // the items (8 bytes: player id, club id) through the nodes (+2 the first; node: +0 the data, +6 the next)
     let mut reg: Vec<(usize, usize)> = Vec::new();
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
         }
         no = read_usize(no + llist_node::NEXT);
     }
-    exe::llist_destructor_llist(list);
+    exe::drop_llist(list);
     exe::crt_operator_delete(list);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player, clear), || suspend_clubs_shortlisting_player(this, player, clear));
     SCOREBOARD.record(igual, || format!("suspend_clubs_shortlisting_player(jogador {:x}, limpar {}, {} regiões) primeira diferença {:x?}", read_usize(player), clear, reg.len(), first_memory_diff(&mo, &mr)));
@@ -318,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_interested_clubs(this: us
     }
     let mut new = [0u8; 0x10];
     let l = new.as_mut_ptr() as usize;
-    exe::llist_llist(l);
+    exe::new_llist(l);
     collect_interested_clubs(this, player, l, ignore, mode, so_humanos);
     let (a, b) = (llist_pairs(out), llist_pairs(l));
     exe::llist_clear(l);

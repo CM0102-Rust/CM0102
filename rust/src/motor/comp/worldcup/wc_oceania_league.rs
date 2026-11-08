@@ -17,7 +17,7 @@ use super::*;
 /// competição acaba.
 pub(crate) unsafe extern "thiscall" fn wc_oceania_league_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, out: usize, game: usize, _a6: u32) -> u32 {
     let (d, f) = (outcome as u8, stage as u8 as i8);
-    let comp = read_u32_as_usize(this + 4);
+    let comp = read_usize(this + 4);
     let eliminar = |weight: u32| {
         // simplification: +0x30 and +0x32 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
         european_cup_add_knocked_out_record(club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
@@ -39,9 +39,9 @@ pub(crate) unsafe extern "thiscall" fn wc_oceania_league_update_staff_records_fo
     } else if f == 2 {
         if d == 1 {
             crate::comparison::branch("cqj_10 oceania na copa do mundo");
-            let id = read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP);
-            european_cup_add_qualified_record(club, read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)), 0, 0, 0x64);
-            exe::worldcup_add_qualified_team(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))), club);
+            let id = read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP);
+            european_cup_add_qualified_record(club, read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)), 0, 0, 0x64);
+            exe::worldcup_add_qualified_team(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))), club);
             *(out as *mut u8) = 4;
         } else if d == 2 {
             eliminar(0x64);

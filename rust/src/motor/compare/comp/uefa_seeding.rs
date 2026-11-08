@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_roll_coefficients(this: usize) {
 /// [pt] Lado a lado: a tabela das nações, o sorteio (a cópia sem contar) e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn compare_set_place_counts(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_PLACE_COUNTS);
-    let mut reg = vec![(this, 0x43b), (0xb67a34, 4)];
+    let mut reg = vec![(this, 0x43b), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| set_place_counts(this)));
     SCOREBOARD.record(igual, || format!("set_place_counts: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_uefa_cup_places(this: usiz
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_UEFA_CUP_PLACES);
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     // the competition history too: 0x4afd80 reorders it (tied rows: the previous order changes the club found)
-    let mut reg = vec![(this, 0x698), (read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
+    let mut reg = vec![(this, 0x698), (read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, count), || crate::rng::without_counting(|| assign_uefa_cup_places(this, clubs, count)));
     SCOREBOARD.record(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));

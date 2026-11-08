@@ -650,7 +650,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_match_reaction_news(this: usiz
     let r = reg.as_mut_ptr() as usize;
     // the defeat and the 5 marks of those cited (bytes +0xe, +0x11, +0x13, +0x12, +0xf and +0x10 of the original)
     let (mut m1, mut m2, mut m3, mut m4, mut m5) = (0u8, 0u8, 0u8, 0u8, 0u8);
-    exe::newsitem_newsitem(n, 0x138c, 0);
+    exe::new_newsitem(n, 0x138c, 0);
     let mut k: u8 = 0;
     data_default(r);
     let mut ids = [-1i32; 3];
@@ -702,7 +702,7 @@ pub(crate) unsafe extern "thiscall" fn post_fa_performance_news(_this: usize, co
     crate::comparison::branch("cqc_8 avaliacao da federacao");
     let mut local = [0u32; 0x3a]; // the local news item (0xe8 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1781, 0);
+    exe::new_newsitem(n, 0x1781, 0);
     write(n, 0, read_usize(national_team) as u32);
     write(n, 1, read_usize(comp) as u32);
     write(n, 2, rating as i8 as i32 as u32);
@@ -1518,7 +1518,7 @@ pub(crate) unsafe extern "thiscall" fn post_job_offer_news(_this: usize, person:
     crate::comparison::branch("cqc_9 noticia da oferta");
     let mut local = [0u32; 0x3a]; // the local news item (0xe8 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1775, 0);
+    exe::new_newsitem(n, 0x1775, 0);
     write(n, 0, read_usize(person) as u32);
     write(n, 1, read_usize(read_usize(person + staff::FIRST_NAME) + 0x33) as u32);
     write(n, 2, read_usize(read_usize(person + staff::SECOND_NAME) + 0x33) as u32);
@@ -2012,7 +2012,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_ultimatum_news(_this: usize, c
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(nt, 0x178d, 0);
+    exe::new_newsitem(nt, 0x178d, 0);
     let t = read_usize(club + club::MANAGER);
     write(nt, 0, read_usize(t) as u32);
     write(nt, 1, read_usize(read_usize(t + staff::FIRST_NAME) + 0x33) as u32);
@@ -2283,7 +2283,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_under_pressure_news(this: us
     }
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1777, 0);
+    exe::new_newsitem(n, 0x1777, 0);
     news_set_person(n, 0, manager);
     news_set_slot(n, 4, read_usize(club) as u32);
     let presence = read_usize(club + club::CHAIRMAN);
@@ -2365,7 +2365,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_departure_news(this: usize, 
     }
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1770, 0);
+    exe::new_newsitem(n, 0x1770, 0);
     news_set_person(n, 0, manager);
     news_set_slot(n, 4, t as i32 as u32);
     news_set_slot(n, 5, read_usize(club) as u32);
@@ -2424,7 +2424,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_appointment_news(this: usize
     }
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1787, 0);
+    exe::new_newsitem(n, 0x1787, 0);
     news_set_person(n, 0, manager);
     news_set_slot(n, 4, if previous != 0 { read_usize(previous) as u32 } else { u32::MAX });
     news_set_slot(n, 5, read_usize(club) as u32);
@@ -2593,7 +2593,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_confidence_update_news(_this: 
     let by_reach: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_NEWS_SEND_BY_SCOPE);
     let mut local = [0u32; 0x3a]; // the local news item (0xe8 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1772, 0);
+    exe::new_newsitem(n, 0x1772, 0);
     write(n, 0, read_usize(club) as u32);
     let manager = read_usize(club + club::MANAGER);
     let days = if manager != 0 {
@@ -2624,7 +2624,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_expectations_news(_this: usize
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut local = [0u32; 0x3a]; // the local news item (0xe8 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1771, 0);
+    exe::new_newsitem(n, 0x1771, 0);
     write(n, 0, read_usize(club) as u32);
     write(n, 1, expectations as i16 as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
@@ -2694,7 +2694,7 @@ pub(crate) unsafe extern "thiscall" fn post_fa_expectations_news(_this: usize, n
     crate::comparison::branch("cpv_3 noticia da federacao");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x177e, 0);
+    exe::new_newsitem(n, 0x177e, 0);
     write(n, 0, read_usize(national_team) as u32);
     write(n, 1, expectativa as i16 as i32 as u32);
     write(n, 2, competition);
@@ -2723,7 +2723,7 @@ pub(crate) unsafe extern "thiscall" fn post_supporter_protest_news(_this: usize,
     crate::comparison::branch("cpv_3 noticia do protesto");
     let mut local = [0u32; 0x3a]; // the local news item (0xe8 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1782, 0);
+    exe::new_newsitem(n, 0x1782, 0);
     write(n, 0, read_usize(club) as u32);
     write(n, 1, read_usize(read_usize(club + club::MANAGER)) as u32);
     write(n, 2, read_usize(read_usize(read_usize(club + club::MANAGER) + 4) + 0x33) as u32);
@@ -3388,9 +3388,9 @@ pub(crate) unsafe fn issue_ultimatum(this: usize, club: usize, l: usize) -> u8 {
 pub(crate) unsafe extern "thiscall" fn issue_board_ultimatum(this: usize, club: usize) -> u8 {
     let mut list = [0u8; 16];
     let l = list.as_mut_ptr() as usize;
-    exe::llist_llist(l);
+    exe::new_llist(l);
     let r = issue_ultimatum(this, club, l);
-    exe::llist_destructor_llist(l);
+    exe::drop_llist(l);
     r
 }
 
@@ -5118,7 +5118,7 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_remove(this: usize, given
         crate::comparison::branch("cqb_10 cursor");
         write_usize(this + llist::CURSOR, read_usize(no + llist_node::NEXT)); // cqb10: o cursor anda
     }
-    exe::llist_node_destructor_llist_node(no);
+    exe::drop_llist_node(no);
     exe::crt_operator_delete(no);
     1
 }
@@ -5132,7 +5132,7 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_clear(this: usize) {
     while read_usize(this + llist::HEAD) != 0 {
         let no = read_usize(this + llist::HEAD);
         let next = read_usize(no + llist_node::NEXT);
-        exe::llist_node_destructor_llist_node(no);
+        exe::drop_llist_node(no);
         exe::crt_operator_delete(no);
         write_usize(this + llist::HEAD, next);
     }
@@ -5220,7 +5220,7 @@ pub(crate) unsafe extern "thiscall" fn post_job_rumour_news(_this: usize, person
     crate::comparison::branch("cpv_4 boato do tecnico");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x1776, 0);
+    exe::new_newsitem(n, 0x1776, 0);
     write(n, 0, read_usize(person) as u32);
     write(n, 1, read_usize(read_usize(person + staff::FIRST_NAME) + 0x33) as u32);
     write(n, 2, read_usize(read_usize(person + staff::SECOND_NAME) + 0x33) as u32);

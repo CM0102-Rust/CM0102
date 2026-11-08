@@ -151,7 +151,7 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: us
     let nation = read_usize(club + club::NATION);
     if nation != 0 {
         if let Some(k) = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation) {
-            row = 0xb63d60 + 72 * k;
+            row = G_LEAGUE_TABLE + 72 * k;
             c = read_i16(row + 0x39);
         }
     }

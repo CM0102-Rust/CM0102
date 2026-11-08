@@ -244,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
 /// [pt] As regiões que as duas primeiras gravam: o contrato (0x50 bytes), o registro de 0x4f bytes da pessoa de id `id`
 /// em [0xae2d0c] (os vínculos da 0x549c90, se o id está na tabela) e [0xb67a34] (a caixa).
 pub(crate) unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize, usize)> {
-    let mut r = vec![(this, 0x50), (0xb67a34, 4)];
+    let mut r = vec![(this, 0x50), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let id = read_usize(read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(staff::SIZE))) as i32;
     if id >= 0 && id < read_usize(G_STAFF_COUNT) as i32 {
         r.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(0x4f)), 0x4f));

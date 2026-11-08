@@ -340,7 +340,7 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn cm3_match_engine_cm3_match_engine(a0: usize) -> usize {
+    pub(crate) unsafe fn new_cm3_match_engine(a0: usize) -> usize {
         let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_CM3_MATCH_ENGINE);
         f(a0)
     }
@@ -370,7 +370,7 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn cm3_match_engine_destructor_cm3_match_engine(a0: usize) {
+    pub(crate) unsafe fn drop_cm3_match_engine(a0: usize) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_DESTRUCTOR_CM3_MATCH_ENGINE);
         f(a0)
     }
@@ -595,7 +595,7 @@ pub(crate) mod exe {
         f(a0, a1, a2)
     }
     #[inline(always)]
-    pub(crate) unsafe fn comp_comp(a0: usize) -> usize {
+    pub(crate) unsafe fn new_comp(a0: usize) -> usize {
         let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_COMP_COMP);
         f(a0)
     }
@@ -650,7 +650,7 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn comp_stats_comp_stats(a0: usize, a1: usize) -> usize {
+    pub(crate) unsafe fn new_comp_stats(a0: usize, a1: usize) -> usize {
         let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_COMP_STATS);
         f(a0, a1)
     }
@@ -1035,12 +1035,12 @@ pub(crate) mod exe {
         f(a0, a1, a2, a3)
     }
     #[inline(always)]
-    pub(crate) unsafe fn cup_cup(a0: usize) -> usize {
+    pub(crate) unsafe fn new_cup(a0: usize) -> usize {
         let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_CUP);
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn cup_destructor_cup(a0: usize) -> usize {
+    pub(crate) unsafe fn drop_cup(a0: usize) -> usize {
         let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_DESTRUCTOR_CUP);
         f(a0)
     }
@@ -1595,7 +1595,7 @@ pub(crate) mod exe {
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn fixture_manager_destructor_fixture_manager(a0: usize) {
+    pub(crate) unsafe fn drop_fixture_manager(a0: usize) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FIXTURE_MANAGER_DESTRUCTOR_FIXTURE_MANAGER);
         f(a0)
     }
@@ -1605,7 +1605,7 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn fixture_manager_fixture_manager(a0: usize, a1: u32, a2: usize, a3: u32) -> usize {
+    pub(crate) unsafe fn new_fixture_manager(a0: usize, a1: u32, a2: usize, a3: u32) -> usize {
         let f: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_FIXTURE_MANAGER);
         f(a0, a1, a2, a3)
     }
@@ -1735,7 +1735,7 @@ pub(crate) mod exe {
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn fracfa_fracfa(a0: usize, a1: u32) -> usize {
+    pub(crate) unsafe fn new_fracfa(a0: usize, a1: u32) -> usize {
         let f: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_FRACFA_FRACFA);
         f(a0, a1)
     }
@@ -1755,7 +1755,7 @@ pub(crate) mod exe {
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn fralower_fralower(a0: usize, a1: u32) -> usize {
+    pub(crate) unsafe fn new_fralower(a0: usize, a1: u32) -> usize {
         let f: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_FRALOWER_FRALOWER);
         f(a0, a1)
     }
@@ -2240,7 +2240,7 @@ pub(crate) mod exe {
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn league_destructor_league(a0: usize) {
+    pub(crate) unsafe fn drop_league(a0: usize) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_DESTRUCTOR_LEAGUE);
         f(a0)
     }
@@ -2260,7 +2260,7 @@ pub(crate) mod exe {
         f(a0, a1, a2)
     }
     #[inline(always)]
-    pub(crate) unsafe fn league_league(a0: usize) -> usize {
+    pub(crate) unsafe fn new_league(a0: usize) -> usize {
         let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
         f(a0)
     }
@@ -2360,7 +2360,7 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn llist_destructor_llist(a0: usize) {
+    pub(crate) unsafe fn drop_llist(a0: usize) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
         f(a0)
     }
@@ -2370,12 +2370,12 @@ pub(crate) mod exe {
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn llist_llist(a0: usize) -> usize {
+    pub(crate) unsafe fn new_llist(a0: usize) -> usize {
         let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn llist_node_destructor_llist_node(a0: usize) {
+    pub(crate) unsafe fn drop_llist_node(a0: usize) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_NODE_DESTRUCTOR_LLIST_NODE);
         f(a0)
     }
@@ -2800,7 +2800,7 @@ pub(crate) mod exe {
         f(a0, a1, a2, a3, a4, a5, a6, a7)
     }
     #[inline(always)]
-    pub(crate) unsafe fn match_official_match_official(a0: usize) {
+    pub(crate) unsafe fn new_match_official(a0: usize) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_OFFICIAL_MATCH_OFFICIAL);
         f(a0)
     }
@@ -3430,7 +3430,7 @@ pub(crate) mod exe {
         f(a0, a1)
     }
     #[inline(always)]
-    pub(crate) unsafe fn newsitem_newsitem(a0: usize, a1: u32, a2: u32) -> usize {
+    pub(crate) unsafe fn new_newsitem(a0: usize, a1: u32, a2: u32) -> usize {
         let f: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
         f(a0, a1, a2)
     }
@@ -4290,7 +4290,7 @@ pub(crate) mod exe {
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn spalower_spalower(a0: usize, a1: u32) -> usize {
+    pub(crate) unsafe fn new_spalower(a0: usize, a1: u32) -> usize {
         let f: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SPALOWER_SPALOWER);
         f(a0, a1)
     }
@@ -4705,12 +4705,12 @@ pub(crate) mod exe {
         f(a0, a1, a2, a3)
     }
     #[inline(always)]
-    pub(crate) unsafe fn text_destructor_text(a0: *mut usize) {
+    pub(crate) unsafe fn drop_text(a0: *mut usize) {
         let f: unsafe extern "thiscall" fn(*mut usize) = core::mem::transmute(FN_TEXT_DESTRUCTOR_TEXT);
         f(a0)
     }
     #[inline(always)]
-    pub(crate) unsafe fn text_text(a0: *mut usize, a1: usize) -> usize {
+    pub(crate) unsafe fn new_text(a0: *mut usize, a1: usize) -> usize {
         let f: unsafe extern "thiscall" fn(*mut usize, usize) -> usize = core::mem::transmute(FN_TEXT_TEXT);
         f(a0, a1)
     }
@@ -5315,7 +5315,7 @@ pub(crate) mod exe {
         f(a0, a1, a2, a3, a4, a5, a6, a7)
     }
     #[inline(always)]
-    pub(crate) unsafe fn transfer_rules_transfer_rules(a0: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    pub(crate) unsafe fn new_transfer_rules(a0: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
         let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_TRANSFER_RULES_TRANSFER_RULES);
         f(a0, a1, a2, a3, a4, a5)
     }

@@ -5,7 +5,7 @@ use super::*;
 /// [pt] O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
 /// vtable da nação e as janelas.
 pub(crate) unsafe fn construct_nation_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], file: usize, row: u32) {
-    exe::transfer_rules_transfer_rules(this, a[0], a[1], a[2], a[3], a[4]);
+    exe::new_transfer_rules(this, a[0], a[1], a[2], a[3], a[4]);
     core::ptr::write_unaligned(this as *mut u32, vtable);
     set_transfer_windows(this, n, t, file, row);
 }

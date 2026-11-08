@@ -16,6 +16,6 @@ pub(crate) unsafe extern "thiscall" fn compare_fra_super_create_round_table(this
 /// Comparer for `fra_super_select_teams`.
 pub(crate) unsafe extern "thiscall" fn compare_fra_super_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_SUPER_SELECT_TEAMS);
-    eng_cc_cup_compare_entrant_list("fra_super_select_teams", this, &[(this + cup::TEAM_COUNT, 2), (0xb67a34, 4)], || o(this), || french_super_cup_select_teams(this),
+    eng_cc_cup_compare_entrant_list("fra_super_select_teams", this, &[(this + cup::TEAM_COUNT, 2), (G_MOUSE_LEFT_BUTTON_DOWN, 4)], || o(this), || french_super_cup_select_teams(this),
         |r, _| if r == 1 { 12 } else { 0 })
 }

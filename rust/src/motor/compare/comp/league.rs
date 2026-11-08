@@ -15,9 +15,9 @@ pub(crate) unsafe extern "thiscall" fn compare_set_club_season_expectations(this
 /// [pt] Só a original (cláusulas de contrato e o técnico que sai não rodam duas vezes), conferindo o que ela grava: +0x57 =
 /// a divisão e +0x5b = a competição de antes.
 pub(crate) unsafe extern "thiscall" fn compare_relegate_club_to_division(this: usize, club: usize, division: usize, x: u32) {
-    let old = read_u32_as_usize(club + club::DIVISION);
+    let old = read_usize(club + club::DIVISION);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_RELEGATE_CLUB_TO_DIVISION)(this, club, division, x);
-    SCOREBOARD.record(read_u32_as_usize(club + club::DIVISION) == division && read_u32_as_usize(club + club::LAST_DIVISION) == old, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", read_u32_as_usize(club + club::DIVISION), read_u32_as_usize(club + club::LAST_DIVISION)));
+    SCOREBOARD.record(read_usize(club + club::DIVISION) == division && read_usize(club + club::LAST_DIVISION) == old, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", read_usize(club + club::DIVISION), read_usize(club + club::LAST_DIVISION)));
 }
 
 /// Comparer for `move_fixtures_for_tv`.
@@ -51,10 +51,10 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
     }
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    exe::llist_llist(l);
-    let n = exe::fixture_manager_collect_comp_fixtures_on_day(read_u32_as_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
-        read_u32_as_usize(read_u32_as_usize(this + 4)) as u32, u32::MAX, read_u8(this + league::STAGE_INDEX) as u32, l) as usize & 0xffff;
-    exe::llist_destructor_llist(l);
+    exe::new_llist(l);
+    let n = exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
+        read_usize(read_usize(this + 4)) as u32, u32::MAX, read_u8(this + league::STAGE_INDEX) as u32, l) as usize & 0xffff;
+    exe::drop_llist(l);
     o(this, data);
     let expected = if n == 0 { 0 } else { validas.min(n) };
     let movidas = (0..block).filter(|k| read_u8(e + k * 7 + 0xb) == 0xff).count();
@@ -89,11 +89,11 @@ pub(crate) unsafe extern "thiscall" fn compare_send_fixture_list_news(this: usiz
 /// com a liga parada ou sem clubes e, completo, +0xd1 com a data.
 pub(crate) unsafe extern "thiscall" fn compare_league_update_for_date(this: usize, data: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_LEAGUE_UPDATE_FOR_DATE);
-    let parada = read_u8(this + league::STOPPED) != 0 || read_u32_as_usize(this + league::ACTIVE) == 0;
+    let parada = read_u8(this + league::STOPPED) != 0 || read_usize(this + league::ACTIVE) == 0;
     let r = o(this, data, full);
     let ok = if parada { r as u8 == 0 } else { r as u8 == 1 && (full == 0 || same_date(this + league::LAST_UPDATE_DATE, data)) };
     SCOREBOARD.record(ok, || format!("league_update_for_date(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
-        full, parada, r as u8, read_u32_as_usize(this + league::LAST_UPDATE_DATE), read_u32_as_usize(data)));
+        full, parada, r as u8, read_usize(this + league::LAST_UPDATE_DATE), read_usize(data)));
     r
 }
 
@@ -108,11 +108,11 @@ pub(crate) unsafe extern "thiscall" fn compare_league_update_for_date(this: usiz
 /// é liberada (+0xea = 0) quando devolve 1.
 pub(crate) unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FIXTURES);
-    let list = read_u32_as_usize(this + league::FIXED_FIXTURES);
+    let list = read_usize(this + league::FIXED_FIXTURES);
     let propria = list != 0 && read_i16(this + league::YEAR) as i32 == read_i16(list + 2) as u16 as i32;
     let r = o(this);
-    let ok = !(propria && r == 1) || read_u32_as_usize(this + league::FIXED_FIXTURES) == 0;
-    SCOREBOARD.record(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", propria, r, read_u32_as_usize(this + league::FIXED_FIXTURES)));
+    let ok = !(propria && r == 1) || read_usize(this + league::FIXED_FIXTURES) == 0;
+    SCOREBOARD.record(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", propria, r, read_usize(this + league::FIXED_FIXTURES)));
     r
 }
 

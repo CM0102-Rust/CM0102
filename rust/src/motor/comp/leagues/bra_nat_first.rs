@@ -546,28 +546,28 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -
 /// [pt] Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, todos já em Rust):
 /// 0x86bdd0 classificou-se (clube, comp, fase, rodada, peso; ret 0x14).
 pub(crate) unsafe fn bra_nat_first_add_qualified_record(club: usize, comp: usize, stage: u32, round: u32, weight: u32) {
-    exe::staff_records_add_qualified_for_round_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, stage, round, weight);
+    exe::staff_records_add_qualified_for_round_record(read_usize(G_STAFF_RECORDS), club, comp, stage, round, weight);
 }
 
 /// Staff_Records add_relegation_record (club, league).
 ///
 /// [pt] 0x86a1c0 rebaixado (clube, liga; ret 8).
 pub(crate) unsafe fn bra_nat_first_add_relegation_record(club: usize, comp: usize) {
-    exe::staff_records_add_relegation_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
+    exe::staff_records_add_relegation_record(read_usize(G_STAFF_RECORDS), club, comp);
 }
 
 /// Staff_Records add_league_champions_record (club, league).
 ///
 /// [pt] 0x868c50 campeão da liga (clube, liga; ret 8).
 pub(crate) unsafe fn add_champions_record(club: usize, comp: usize) {
-    exe::staff_records_add_league_champions_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
+    exe::staff_records_add_league_champions_record(read_usize(G_STAFF_RECORDS), club, comp);
 }
 
 /// Staff_Records add_promotion_record (club, league, weight).
 ///
 /// [pt] 0x869480 promovido (clube, liga, peso; ret 0xc).
 pub(crate) unsafe fn bra_nat_first_add_promotion_record(club: usize, comp: usize, weight: u32) {
-    exe::staff_records_add_promotion_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, weight);
+    exe::staff_records_add_promotion_record(read_usize(G_STAFF_RECORDS), club, comp, weight);
 }
 
 /// League::find_club_row(club, 0): the club's row in the league table.
@@ -584,7 +584,7 @@ pub(crate) unsafe fn bra_nat_first_find_club_row(league: usize, club: usize) -> 
 /// (devolução, linha gravada ou 0, destino gravado).
 pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (status as u8, stage as u8);
-    let comp = read_u32_as_usize(this + 4);
+    let comp = read_usize(this + 4);
     if fa == 0xff {
         // the round-robin stage
         if st == 6 {
@@ -625,7 +625,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32
 /// [pt] A Série C (0x42eb00); como a da Série A.
 pub(crate) unsafe fn serie_c_staff_records(this: usize, club: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (status as u8, stage as u8 as i8);
-    let comp = read_u32_as_usize(this + 4);
+    let comp = read_usize(this + 4);
     if fa < 7 {
         // the groups
         if st == 6 && fazer {
@@ -655,14 +655,14 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, club: usize, status: u32
         let mut k: i8 = -1;
         let mut achada = 0;
         while k < 7 {
-            let league = if k == -1 { this } else { read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 4 * k as i32 as usize) };
+            let league = if k == -1 { this } else { read_usize(read_usize(this + league::STAGES) + 4 * k as i32 as usize) };
             let n = read_i16(league + league::CLUB_COUNT);
             if n > 0 {
-                let t = read_u32_as_usize(league + league::TABLE);
+                let t = read_usize(league + league::TABLE);
                 let mut i: i8 = 0;
                 while (i as i16) < n {
                     let r = t.wrapping_add(0x3b * i as i32 as usize);
-                    if read_u32_as_usize(r) == club {
+                    if read_usize(r) == club {
                         achada = r;
                         break;
                     }
@@ -697,7 +697,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, club: usize, status: u32
 /// [pt] O Baiano (0x430210); como a da Série A. O clube vem da tabela (+0xb1, +0x3e linhas), não da 0x68ab70.
 pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32, stage: u32, game: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (status as u8, stage as u8);
-    let comp = read_u32_as_usize(this + 4);
+    let comp = read_usize(this + 4);
     if fa == 0xff {
         if st == 6 {
             if fazer {
@@ -715,12 +715,12 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32,
     let n = read_i16(this + league::CLUB_COUNT) as i32;
     let mut i = 0i32;
     while i < n {
-        if read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize) == club {
+        if read_usize(read_usize(this + league::TABLE) + 0x3b * i as usize) == club {
             if st == 1 {
                 if fazer {
                     add_champions_record(club, comp);
                 }
-                let l = read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize;
+                let l = read_usize(this + league::TABLE) + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 5;
                 }
@@ -732,9 +732,9 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32,
                     // word, ecx with the upper half of the table pointer); 0x4bf850 and 0x86c000 only read the
                     // words (0x4b0870 / `as u16`): the words go.
                     let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2);
-                    exe::staff_records_add_knocked_out_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
+                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
                 }
-                let l = read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize;
+                let l = read_usize(this + league::TABLE) + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 0xfe;
                 }

@@ -179,7 +179,7 @@ pub(crate) const US_OPEN_CUP_ROUNDS: [JapJCupCupRound; 5] = [
 ///
 /// [pt] O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 pub(crate) unsafe fn jap_j_cup_club_by_index(i: i32) -> usize {
-    read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize)
+    read_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize)
 }
 
 /// Random 0..n-1 (0x90cfc0).
@@ -231,9 +231,9 @@ pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
     }
     let mut n = 0i32;
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
+        if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
             eng_cc_cup_write_entrant(this, n, c, 0);
             n += 1;
             if n == read_i16(this + cup::TEAM_COUNT) as i32 {
@@ -243,10 +243,10 @@ pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
         i = i.wrapping_add(1);
     }
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
-            let e = read_u32_as_usize(this + cup::TEAM_TABLE) + n as usize * 6;
+        if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
+            let e = read_usize(this + cup::TEAM_TABLE) + n as usize * 6;
             core::ptr::write_unaligned(e as *mut u32, c as u32);
             crate::comparison::branch("cqn_12 semente da j1");
             let s = jap_j_cup_random(0x14); // cqn12: the drawn class of the J1 clubs
@@ -259,7 +259,7 @@ pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
         }
         i = i.wrapping_add(1);
     }
-    sort_entrants(read_u32_as_usize(this + cup::TEAM_TABLE) + 0x42, 0x10);
+    sort_entrants(read_usize(this + cup::TEAM_TABLE) + 0x42, 0x10);
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
 
@@ -286,14 +286,14 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: 
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
     let a_ = crate::rng::STATE_REGIONS;
-    let reg = [(this + cup::TEAM_COUNT, 2usize), (0xb67a34, 4), a_[0], a_[1]];
+    let reg = [(this + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4), a_[0], a_[1]];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
-        lo.set(read_u32_as_usize(this + cup::TEAM_TABLE));
+        lo.set(read_usize(this + cup::TEAM_TABLE));
         r
     }, || {
         let (r, n) = crate::rng::without_counting(c);
-        lr.set(read_u32_as_usize(this + cup::TEAM_TABLE));
+        lr.set(read_usize(this + cup::TEAM_TABLE));
         nr.set(n);
         core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
         r
@@ -329,7 +329,7 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: 
 /// vetor com a classe 2 e depois todos os clubes da MLS ([0x9cf590]) com a classe 1 (sem conferir o espaço). Devolve 1.
 pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x20);
-    let comp = |id: usize| read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b));
+    let comp = |id: usize| read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(id).wrapping_mul(0x6b));
     let (a, b) = (comp(KEY_CLUB_COMP_AMERICAN_A_LEAGUE), comp(KEY_CLUB_COMP_AMERICAN_USISL));
     // simplification: the original’s local vectors start with whatever was on the stack; with fewer than 10 clubs in one of the
     // leagues it would copy that leftover (and 0x4afbd0 would already show the box): the copy starts with zero
@@ -337,12 +337,12 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     let mut vb = [0usize; 50];
     let (mut na, mut nb) = (0i8, 0i8);
     let mut i = 0i32;
-    while i < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while i < read_usize(G_CLUB_COUNT) as i32 {
         if na == 0x32 && nb == 0x32 {
             break;
         }
         let c = jap_j_cup_club_by_index(i);
-        let d = read_u32_as_usize(c + 0x57);
+        let d = read_usize(c + 0x57);
         if d == a && na < 0x32 {
             va[na as usize] = c;
             na += 1;
@@ -368,9 +368,9 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     }
     crate::comparison::branch("cqn_12 inscritos da copa dos eua");
     let mut i = 0i32;
-    while i < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while i < read_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) {
+        if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) {
             eng_cc_cup_write_entrant(this, k as i32, c, 1);
             k = k.wrapping_add(1);
         }
@@ -418,28 +418,28 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     let mut vc = [0usize; 30];
     let mut vd = [0usize; 6];
     let (mut na, mut nb, mut nc, mut nd) = (0i8, 0i8, 0i8, 0i8);
-    if read_u32_as_usize(G_CLUB_COUNT) as i32 > 0 {
+    if read_usize(G_CLUB_COUNT) as i32 > 0 {
         let mut i: i16 = 0;
-        while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+        while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
             let c = jap_j_cup_club_by_index(i as i32);
-            if read_u32_as_usize(c + 0x57) != 0 && comp_id_at(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_JAPAN)) {
-                let d = read_u32_as_usize(read_u32_as_usize(c + 0x57));
-                if d == read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_ADMINISTRATIVE_DIVISION) {
+            if read_usize(c + 0x57) != 0 && comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_JAPAN)) {
+                let d = read_usize(read_usize(c + 0x57));
+                if d == read_usize(KEY_CLUB_COMP_JAPANESE_ADMINISTRATIVE_DIVISION) {
                     if na < 0x64 {
                         va[na as usize] = c;
                         na += 1;
                     }
-                } else if d == read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_UNIVERSITY_LEAGUE) {
+                } else if d == read_usize(KEY_CLUB_COMP_JAPANESE_UNIVERSITY_LEAGUE) {
                     if nb < 0x1e {
                         vb[nb as usize] = c;
                         nb += 1;
                     }
-                } else if d == read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_FOOTBALL_LEAGUE) {
+                } else if d == read_usize(KEY_CLUB_COMP_JAPANESE_FOOTBALL_LEAGUE) {
                     if nc < 0x1e {
                         vc[nc as usize] = c;
                         nc += 1;
                     }
-                } else if d != read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2) && d != read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1) && nd < 6 {
+                } else if d != read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2) && d != read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1) && nd < 6 {
                     vd[nd as usize] = c;
                     nd += 1;
                 }
@@ -472,18 +472,18 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
         n += 1;
     }
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
+        if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
             eng_cc_cup_write_entrant(this, n, c, 0);
             n += 1;
         }
         i = i.wrapping_add(1);
     }
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
+        if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
             crate::comparison::branch("cqn_12 classe da j1 na copa do imperador");
             eng_cc_cup_write_entrant(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: the class of the J1 clubs in the Emperor’s Cup
             n += 1;
@@ -493,7 +493,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
         }
         i = i.wrapping_add(1);
     }
-    sort_entrants(read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
+    sort_entrants(read_usize(this + cup::TEAM_TABLE).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
 

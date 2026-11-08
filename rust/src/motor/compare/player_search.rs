@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_record_scouted_club
         o(this, game, result);
         return;
     }
-    let regions = [(this, 4 + 0x32 * 0x1a2), (0xae24d0, 0x100), (0xb67a34, 4)];
+    let regions = [(this, 4 + 0x32 * 0x1a2), (0xae24d0, 0x100), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, game, result),
         || player_search_record_scouted_club_match(this, game, result));
     SCOREBOARD.record(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", read_usize(this), game, mo, mr));

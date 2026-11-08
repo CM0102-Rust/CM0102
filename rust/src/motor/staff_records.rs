@@ -1057,7 +1057,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_of_year_record(this: usize, pers
     put_i32(&mut e, 0xd, read_i32(prize));
     put_i32(&mut e, 0x11, (a & 0xffff) as i32);
     put_i32(&mut e, 0x15, b as u8 as i8 as i32);
-    append_person_history_by_id(true, this, read_u32_as_usize(person), &e);
+    append_person_history_by_id(true, this, read_usize(person), &e);
 }
 
 // simplification: the history goes to the file (does not run twice) and the copy writes nothing else: original only; the
@@ -1068,11 +1068,11 @@ pub(crate) unsafe extern "thiscall" fn add_team_of_year_record(this: usize, pers
 ///
 /// [pt] O registro de pontos do técnico do clube (+0xcf; 0x86f5b0 do [0xdd7f00], criando), ou 0 sem técnico.
 pub(crate) unsafe fn club_manager_record_global(club: usize) -> usize {
-    let manager = read_u32_as_usize(club + club::MANAGER);
+    let manager = read_usize(club + club::MANAGER);
     if manager == 0 {
         return 0;
     }
-    exe::staff_records_get_manager_record(read_u32_as_usize(G_STAFF_RECORDS), manager, 1)
+    exe::staff_records_get_manager_record(read_usize(G_STAFF_RECORDS), manager, 1)
 }
 
 /// `staff_records_compare_clubs_by_manager_points(a, b)`: the qsort order of the manager of the year candidates
@@ -1087,7 +1087,7 @@ pub(crate) unsafe fn club_manager_record_global(club: usize) -> usize {
 /// só sem o de `a`, 1; só sem o de `b`, −1; com os dois, os pontos da temporada na liga (+0xba) de `b` menos os de
 /// `a` (mais pontos primeiro).
 pub(crate) unsafe extern "C" fn staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
-    let (ca, cb) = (read_u32_as_usize(a), read_u32_as_usize(b));
+    let (ca, cb) = (read_usize(a), read_usize(b));
     let ra = club_manager_record_global(ca);
     let rb = club_manager_record_global(cb);
     if ra == 0 {
@@ -2070,7 +2070,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
         if k as i8 >= 3 {
             break;
         }
-        let manager = read_u32_as_usize(read_u32_as_usize(clubs + 4 * i) + 0xcf);
+        let manager = read_usize(read_usize(clubs + 4 * i) + 0xcf);
         if manager == 0 {
             continue;
         }
@@ -2080,7 +2080,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
         }
         let r = exe::staff_records_get_manager_record(this, manager, 1);
         if r != 0 && read_i16(r + manager_record::GAMES) != 0 {
-            core::ptr::write_unaligned((clubs + 4 * k as usize) as *mut u32, read_u32_as_usize(clubs + 4 * i) as u32);
+            core::ptr::write_unaligned((clubs + 4 * k as usize) as *mut u32, read_usize(clubs + 4 * i) as u32);
             k += 1;
         }
     }
@@ -2231,21 +2231,21 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
 pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, person: usize) {
     crate::comparison::branch("cpr_9 liberado");
     let mut e = history_entry();
-    let c = exe::contract_manager_get_contract(read_u32_as_usize(G_CONTRACT_MANAGER), person);
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    let club = if c != 0 { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 };
-    if club != 0 && read_u32_as_usize(club + club::MANAGER) != 0 {
+    let club = if c != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 };
+    if club != 0 && read_usize(club + club::MANAGER) != 0 {
         stamp_game_date(e.as_mut_ptr());
         e[0xc] = 0x68;
         put_i32(&mut e, 8, read_i32(club));
         put_person_keys(&mut e, 0xd, person);
-        append_person_history_by_id(true, this, read_u32_as_usize(read_u32_as_usize(club + club::MANAGER)), &e);
+        append_person_history_by_id(true, this, read_usize(read_usize(club + club::MANAGER)), &e);
     }
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x67;
     put_i32(&mut e, 8, staff_records_id_or_minus_one(club));
     if person != 0 {
-        append_person_history_by_id(true, this, read_u32_as_usize(person), &e);
+        append_person_history_by_id(true, this, read_usize(person), &e);
     } else {
         show_error_at(0xa83b78, 0x1010);
     }
@@ -2268,21 +2268,21 @@ pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, per
 pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, person: usize, de: usize, club: usize) {
     crate::comparison::branch("cps_9 emprestimo");
     let mut e = history_entry();
-    if club != 0 && read_u32_as_usize(club + club::MANAGER) != 0 {
-        let manager = read_u32_as_usize(club + club::MANAGER);
+    if club != 0 && read_usize(club + club::MANAGER) != 0 {
+        let manager = read_usize(club + club::MANAGER);
         stamp_game_date(e.as_mut_ptr());
         e[0xc] = 0x69;
         put_i32(&mut e, 8, read_i32(club));
         put_person_keys(&mut e, 0xd, person);
         put_i32(&mut e, 0x1d, read_i32(de));
-        append_person_history_by_id(true, this, read_u32_as_usize(manager), &e);
+        append_person_history_by_id(true, this, read_usize(manager), &e);
     }
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x6a;
     put_i32(&mut e, 8, read_i32(club));
     put_i32(&mut e, 0xd, read_i32(de));
     if person != 0 {
-        append_person_history_by_id(true, this, read_u32_as_usize(person), &e);
+        append_person_history_by_id(true, this, read_usize(person), &e);
     } else {
         show_error_at(0xa83b78, 0x1010);
     }
@@ -2358,7 +2358,7 @@ pub(crate) unsafe extern "thiscall" fn add_first_cap_record(this: usize, person:
     put_i32(&mut e, 0xd, read_i32(opponent));
     put_i32(&mut e, 0x11, *((person + staff::AGE) as *const i8) as i32);
     if person != 0 {
-        append_person_history_by_id(true, this, read_u32_as_usize(person), &e);
+        append_person_history_by_id(true, this, read_usize(person), &e);
     } else {
         show_error_at(0xa83b78, 0x1010);
     }

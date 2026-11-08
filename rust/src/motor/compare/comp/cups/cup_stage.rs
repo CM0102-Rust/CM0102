@@ -15,19 +15,19 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, 
     let k = (n as u16 as i16).max(0) as usize;
     let plan: Vec<(usize, u8)> = (0..k).map(|i| {
         let s = if seeds != 0 { *((seeds + i) as *const u8) } else if by_order != 0 { i as u8 } else { 0 };
-        (read_u32_as_usize(teams + i * 4), s)
+        (read_usize(teams + i * 4), s)
     }).collect();
     let size = (rounds as u16 as i16 as i32 * 0x68).max(0) as usize;
     let template_before: Vec<u8> = core::slice::from_raw_parts(template as *const u8, size).to_vec();
     let r = o(this, parent, n, teams, rounds, a5, template, year, stage, b2, id, b3, arvore, by_order, a14, seeds);
-    let l = read_u32_as_usize(this + cup::TEAM_TABLE);
-    let t = read_u32_as_usize(this + cup::ROUND_TABLE);
+    let l = read_usize(this + cup::TEAM_TABLE);
+    let t = read_usize(this + cup::ROUND_TABLE);
     // the tree (called at the end) rewrites parts of the round table and of the list (in the 06/11 comparison the two
     // differed from what the constructor writes): checks the fixed fields, the built table and the set of clubs in the list
     let _ = &template_before;
     let ok = r == this && read_i16(this + cup::TEAM_COUNT) as u16 == n as u16 && read_i16(this + cup::ROUND_COUNT) as u16 == rounds as u16 && read_i16(this + cup::YEAR) as u16 == year as u16
         && t != 0 && l != 0 && {
-            let mut a: Vec<usize> = (0..plan.len()).map(|i| read_u32_as_usize(l + i * 6)).collect();
+            let mut a: Vec<usize> = (0..plan.len()).map(|i| read_usize(l + i * 6)).collect();
             let mut b: Vec<usize> = plan.iter().map(|x| x.0).collect();
             a.sort_unstable();
             b.sort_unstable();

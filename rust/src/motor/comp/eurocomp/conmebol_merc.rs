@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
 pub(crate) unsafe fn conmebol_merc_drawn_club(this: usize, k: usize) -> usize {
-    read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr11: o sorteado k
+    read_usize(read_usize(this + 0xee) + k * 4) // cqr11: o sorteado k
 }
 
 /// `update_for_date(today, full)` (virtual +0x14): the Copa Mercosur's day. Rule: the Mercosur has 20 invited clubs
@@ -52,10 +52,10 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
         && core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16)
         && read_i16(this + league::YEAR) as i32 != year_of_today as i32
     {
-        let virada: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 8));
+        let virada: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 8));
         virada(this);
     }
-    if read_u32_as_usize(this + league::ACTIVE) == 0 && full != 0 {
+    if read_usize(this + league::ACTIVE) == 0 && full != 0 {
         let day = read_i16(this + 0xb6) as u16; // cqr11: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
@@ -73,11 +73,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             for g in 0..4i32 {
                 exe::conmebolmerc_create_group_stage(this, g);
             }
-            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
+            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
             predicted(this);
-            exe::crt_free(read_u32_as_usize(this + 0xee));
-            write_u32_from_usize(this + 0xee, 0);
-            write_u32_from_usize(this + league::ACTIVE, 1);
+            exe::crt_free(read_usize(this + 0xee));
+            write_usize(this + 0xee, 0);
+            write_usize(this + league::ACTIVE, 1);
         }
     }
     league(this, today, full)
@@ -118,7 +118,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
-    write_u32_from_usize(this + league::TABLE, t);
+    write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0x9a7e5c, 0x155);
         return 0;
@@ -176,10 +176,10 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
         crate::comparison::branch("cqr_11 time do grupo");
-        write_u32_from_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: the team in the group slot
+        write_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: the team in the group slot
         k += 1;
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
     let p = new(0xee);
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
             read_i16(this + league::CLUB_COUNT) as u16 as u32,
             teams,
             read_i16(this + league::LEGS) as u16 as u32,
-            read_u32_as_usize(this + 4),
+            read_usize(this + 4),
             table,
             rodadas as u16 as u32,
             b(0xc2),
@@ -213,16 +213,16 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4, stage);
+    write_usize(read_usize(this + league::STAGES) + g as usize * 4, stage);
     exe::crt_free(teams);
     exe::crt_free(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4);
+    let f = read_usize(read_usize(this + league::STAGES) + g as usize * 4);
     if f == 0 {
         show_error_at(0x9a7e5c, 0x211);
         return 0;
     }
     exe::league_send_group_draw_news(f);
-    write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
+    write_usize(this + league::CURRENT_STAGE, g as usize);
     1
 }
 
@@ -417,20 +417,20 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     let shuffle: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
-    let clubs = || (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let clubs = || (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let mut k = 0i16;
     let mut i = 0i32;
     while i < clubs() {
-        let c = read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
-        if exe::conmebolseeding_is_mercosur_invited_club(read_u32_as_usize(G_CONMEBOL_SEEDING), c) != 0 {
-            core::ptr::write_unaligned((read_u32_as_usize(this + 0xee) + k as usize * 4) as *mut u32, c as u32);
+        let c = read_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
+        if exe::conmebolseeding_is_mercosur_invited_club(read_usize(G_CONMEBOL_SEEDING), c) != 0 {
+            core::ptr::write_unaligned((read_usize(this + 0xee) + k as usize * 4) as *mut u32, c as u32);
             k = k.wrapping_add(1);
         }
         i += 1;
     }
     crate::comparison::branch("cqo_13 convidados da mercosul");
     // simplification: the original pushes the word +0xf2 with garbage in the high 16 bits (the previous eax); 0x4afb40 reads the word
-    shuffle(read_u32_as_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
+    shuffle(read_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
     (1, k as i32)
 }
 

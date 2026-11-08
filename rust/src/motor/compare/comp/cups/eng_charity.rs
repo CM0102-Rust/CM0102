@@ -13,6 +13,6 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_charity_create_round_table(th
 /// Comparer for `eng_charity_select_teams`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_charity_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_CHARITY_SELECT_TEAMS);
-    eng_cc_cup_compare_entrant_list("eng_charity_select_teams", this, &[(this + cup::TEAM_COUNT, 2), (0xb67a34, 4)], || o(this), || select_charity_shield_teams(this),
+    eng_cc_cup_compare_entrant_list("eng_charity_select_teams", this, &[(this + cup::TEAM_COUNT, 2), (G_MOUSE_LEFT_BUTTON_DOWN, 4)], || o(this), || select_charity_shield_teams(this),
         |r, _| if r == 1 { 12 } else { 0 })
 }

@@ -6,5 +6,5 @@ MUTACOES = [
     ('m_52', "    *((linha + tactics_row::CAPTAIN) as *mut i32) = i;\n    1", "    *((linha + tactics_row::CAPTAIN) as *mut i32) = i + 1;\n    1"),
     ('m_vazia', "    if i == -1 {\n        return 0;\n    }\n    *((linha + tactics_row::CAPTAIN)", "    if i == -2 {\n        return 0;\n    }\n    *((linha + tactics_row::CAPTAIN)"),
     ('p_56', "    let i = *((linha + tactics_row::PLAYMAKER + 4 * which as usize) as *const i32);", "    let i = *((linha + tactics_row::PLAYMAKER + 4 * (1 - which) as usize) as *const i32);"),
-    ('p_neg', "    if i < 0 {\n        return 0;\n    }\n    (*(0xae23bc", "    if i < -1 {\n        return 0;\n    }\n    (*(0xae23bc"),
+    ('p_neg', "    if i < 0 {\n        return 0;\n    }\n    (*(G_STAFF_TABLE", "    if i < -1 {\n        return 0;\n    }\n    (*(G_STAFF_TABLE"),
 ]

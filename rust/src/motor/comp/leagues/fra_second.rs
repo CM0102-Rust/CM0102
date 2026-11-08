@@ -51,9 +51,9 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let baixo: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SPALOWER_SPALOWER);
-    exe::league_league(this);
-    write_u32_from_usize(this + 4, registro);
-    write_u32_from_usize(this, p.vtabela);
+    exe::new_league(this);
+    write_usize(this + 4, registro);
+    write_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = p.disciplina;
     if exe::league_load_from_temp_file(this, 1) != 0 {
@@ -61,9 +61,9 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     }
     crate::comparison::branch("cqm_5 divisao nova");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
-    write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    write_u32_from_usize(this + league::STAGE_COUNT, 0);
-    write_u32_from_usize(this + league::STAGES, 0);
+    write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
+    write_usize(this + league::STAGE_COUNT, 0);
+    write_usize(this + league::STAGES, 0);
     if regras(this) == 0 {
         show_error_at(p.arquivo, p.linhas[0]);
         return this;
@@ -81,24 +81,24 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
         return this;
     }
     let e = novo(0x5ce);
-    let s = if e != 0 { exe::comp_stats_comp_stats(e, this) } else { 0 };
-    write_u32_from_usize(this + 8, s);
+    let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
+    write_usize(this + 8, s);
     if s == 0 {
         show_error_at(p.arquivo, p.linhas[4]);
         return this;
     }
     exe::league_set_predicted_positions(this);
     if p.baixo {
-        let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
+        let nacao = read_usize(read_usize(this + 4) + 0x5d);
         if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division
             crate::comparison::branch("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
             // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
             // above; 0x851020 only reads the word (mov ax, word ptr [esp + 0x21c]).
             let b = if e != 0 { baixo(e, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32) } else { 0 };
-            write_u32_from_usize(this + 0xee, b);
+            write_usize(this + 0xee, b);
         } else {
-            write_u32_from_usize(this + 0xee, 0);
+            write_usize(this + 0xee, 0);
         }
     }
     this
@@ -159,17 +159,17 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, year: u
 /// conforme o bit 4 da nação.
 pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: usize, year: u32, record: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && read_u32_as_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == p.disciplina;
-    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
-        ok = ok && read_u32_as_usize(this + league::STAGE_COUNT) == 0 && read_u32_as_usize(this + league::STAGES) == 0;
+    let mut ok = r == this && read_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
+        && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == p.disciplina;
+    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
+        ok = ok && read_usize(this + league::STAGE_COUNT) == 0 && read_usize(this + league::STAGES) == 0;
         if p.baixo {
-            let nation = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
-            let has = read_u32_as_usize(this + 0xee) != 0;
+            let nation = read_usize(read_usize(this + 4) + 0x5d);
+            let has = read_usize(this + 0xee) != 0;
             ok = ok && has == (*((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0);
         }
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + league::STAGE_COUNT), read_u32_as_usize(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + league::STAGE_COUNT), read_usize(this + 8)));
     r
 }
 

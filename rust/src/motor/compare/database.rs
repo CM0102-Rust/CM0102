@@ -36,19 +36,19 @@ pub(crate) unsafe extern "C" fn compare_database_player_initialisation(data: usi
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_DATABASE_PLAYER_INITIALISATION);
     let gi = |a: usize| (*(a as *const i32)).max(0) as usize;
     let rd = |a: usize| *(a as *const usize);
-    if gi(0xae2364) == 0 || rd(G_STAFF_TABLE) == 0 {
+    if gi(G_STAFF_COUNT) == 0 || rd(G_STAFF_TABLE) == 0 {
         return o(data);
     }
     let mut regions = crate::rng::STATE_REGIONS.to_vec();
-    regions.extend_from_slice(&[(0x9b59b4, 4), (0x9b59b8, 2), (0xae2044, 0xbd), (0xae2114, 0xbd), (0xae18bc, 0xbd),
+    regions.extend_from_slice(&[(G_EMPTY_COMMON_NAME_INDEX, 4), (0x9b59b8, 2), (G_PLAYER_INIT_ATTRIBUTE_VECTOR_A, 0xbd), (G_PLAYER_INIT_ATTRIBUTE_VECTOR_B, 0xbd), (G_NON_PLAYER_ATTRIBUTE_VECTOR, 0xbd),
         (0xae2238, 0xbd), (0xde1f64, 0x100), (0xae24aa, 1), (G_SUB_WEEKS_RESULT_DATE, 8)]);
-    regions.push((rd(G_STAFF_TABLE), gi(0xae2364) * 110));
-    regions.push((rd(G_STAFF_STATE_TABLE), gi(0xae2364) * 0x4f));
+    regions.push((rd(G_STAFF_TABLE), gi(G_STAFF_COUNT) * 110));
+    regions.push((rd(G_STAFF_STATE_TABLE), gi(G_STAFF_COUNT) * 0x4f));
     if rd(G_PLAYER_DATA_TABLE) != 0 {
-        regions.push((rd(G_PLAYER_DATA_TABLE), gi(0xae236c) * 70));
+        regions.push((rd(G_PLAYER_DATA_TABLE), gi(G_PLAYER_DATA_COUNT) * 70));
     }
     if rd(G_NON_PLAYER_TABLE) != 0 {
-        regions.push((rd(G_NON_PLAYER_TABLE), gi(0xae2368) * 68));
+        regions.push((rd(G_NON_PLAYER_TABLE), gi(G_NON_PLAYER_COUNT) * 68));
     }
     let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regions, || o(data),
         || crate::rng::without_counting(|| database_player_initialisation(data)));
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "C" fn compare_database_club_nation_is_eec(club: usize)
 /// Comparer for `get_regions_sorted_by_name`.
 pub(crate) unsafe extern "C" fn compare_get_regions_sorted_by_name(language: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_GET_REGIONS_SORTED_BY_NAME);
-    let reg = [(G_REGIONS_SORTED_BY_NAME, 14), (0xae232b, 1)];
+    let reg = [(G_REGIONS_SORTED_BY_NAME, 14), (G_REGION_NAME_FORM, 1)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(language), || get_regions_sorted_by_name(language));
     SCOREBOARD.record(igual && r == n, || format!("get_regions_sorted_by_name({}) original={:x} rust={:x} {:x?} x {:x?}", language as u8, r, n, mo, mr));
     r
@@ -889,7 +889,7 @@ pub(crate) unsafe extern "C" fn compare_database_generate_extra_non_playing_staf
         return o();
     }
     let mut regions = crate::rng::STATE_REGIONS.to_vec();
-    regions.push((0x9b59b4, 4));
+    regions.push((G_EMPTY_COMMON_NAME_INDEX, 4));
     regions.push((0xde1f64, 0x40));
     regions.push((read_usize(G_CLUB_TABLE), read_i32(G_CLUB_COUNT).max(0) as usize * 581));
     regions.push((read_usize(G_STAFF_TABLE), read_i32(G_STAFF_COUNT).max(0) as usize * 110));
@@ -924,7 +924,7 @@ pub(crate) unsafe extern "C" fn compare_resolve_database_indexes(leniente: u32) 
     let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_RESOLVE_DATABASE_INDEXES);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| *(a as *const usize);
-    let (pessoas, n) = (rd(G_STAFF_TABLE), gi(0xae2364));
+    let (pessoas, n) = (rd(G_STAFF_TABLE), gi(G_STAFF_COUNT));
     let caixa = (0..n.max(0) as usize).any(|i| PERSON_RANGE_CHECK_FIELDS.iter().any(|&(d, teto, ..)| gi(pessoas + i * staff::SIZE + d) >= gi(teto)));
     if caixa {
         return o(leniente);
@@ -1768,7 +1768,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_person_mark(this: usize, pe
 pub(crate) unsafe extern "C" fn compare_free_record() -> usize {
     let o = original_fn::<unsafe extern "C" fn() -> usize>(IDX_FREE_RECORD);
     let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((0x9b59b4, 4));
+    reg.push((G_EMPTY_COMMON_NAME_INDEX, 4));
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || crate::rng::without_counting(|| free_record()));
     SCOREBOARD.record(igual && r == v, || format!("free_record original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
     r

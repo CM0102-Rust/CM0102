@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
 /// [pt] Os clubes do jogo, a linha de cada clube em [0xae2d14], a marca da caixa e o histórico das competições ([0xae23d4],\n/// [0xae237c] linhas de 0x1a: a 0x4afd80 o reordena, e com linhas empatadas a ordem de antes muda o clube achado).
 pub(crate) unsafe fn club_regions() -> Vec<(usize, usize)> {
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
-    vec![(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (read_u32(G_CLUB_STATE_TABLE) as usize, n * 6), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
+    vec![(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (read_u32(G_CLUB_STATE_TABLE) as usize, n * 6), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
 }
 
 /// the Champions League rule (the game's rounds 1 to 4 read as groups, third, second and first qualifying round
@@ -862,7 +862,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     }
     let mut news = [0u8; 0xe8];
     let n = news.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x17, 0);
+    exe::new_newsitem(n, 0x17, 0);
     write(n, 0, read_u32(best));
     exe::news_send_to_division_managers(read_u32(G_NEWS) as usize, n, read_u32(league + 4) as usize);
     best
@@ -920,7 +920,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
             let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
             let mut news = [0u8; 0xe8];
             let p = news.as_mut_ptr() as usize;
-            exe::newsitem_newsitem(p, 0x16, 0);
+            exe::new_newsitem(p, 0x16, 0);
             write(p, 0, 0);
             write(p, 2, read_i16(this + 0x439) as u16 as u32);
             let mut i = 0i16;

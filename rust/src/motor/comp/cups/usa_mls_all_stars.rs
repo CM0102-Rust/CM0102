@@ -26,28 +26,28 @@ use super::*;
 /// (virtual +0x94); por fim, com `previstas`, as posições previstas (virtual +0x5c), cujo eax ela devolve (o Jogo das
 /// Estrelas não as tem: devolve o eax da árvore).
 pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, entrants: usize, file: usize, rows: [u32; 3], year: i16, predicted: bool, ramo: &'static str) -> u32 {
-    write_u32_from_usize(this + cup::SEASON_CLOSED, 0);
+    write_usize(this + cup::SEASON_CLOSED, 0);
     for o in [0xa7usize, 0xa3] {
-        let l = read_u32_as_usize(this + o);
+        let l = read_usize(this + o);
         if l != 0 {
             exe::crt_free(l);
-            write_u32_from_usize(this + o, 0);
+            write_usize(this + o, 0);
         }
     }
-    if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
+    if read_usize(this + cup::TIE_TABLES) != 0 {
         let mut i = 0i32;
         while i < read_i16(this + cup::ROUND_COUNT) as i32 {
-            let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
+            let p = read_usize(read_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
                 exe::crt_free(p);
-                write_u32_from_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4, 0);
+                write_usize(read_usize(this + cup::TIE_TABLES) + i as usize * 4, 0);
             }
             i += 1;
         }
-        exe::crt_free(read_u32_as_usize(this + cup::TIE_TABLES));
-        write_u32_from_usize(this + cup::TIE_TABLES, 0);
+        exe::crt_free(read_usize(this + cup::TIE_TABLES));
+        write_usize(this + cup::TIE_TABLES, 0);
     }
-    let e = read_u32_as_usize(this + 8);
+    let e = read_usize(this + 8);
     if e != 0 {
         exe::comp_stats_archive_season_and_reset(e, 1);
     }
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90a760
 ///
 /// [pt] O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 pub(crate) unsafe fn usa_mls_all_stars_club_by_index(i: usize) -> usize {
-    read_u32_as_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(club::SIZE))
+    read_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(club::SIZE))
 }
 
 /// `UsaMlsAllStars::set_up_teams()` (0x90a540, thiscall, ret 0, usa_mls_all_stars.cpp): the two teams of the All-Star
@@ -127,46 +127,46 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0xc);
-    write_u32_from_usize(this + cup::TEAM_TABLE, l);
+    write_usize(this + cup::TEAM_TABLE, l);
     if l == 0 {
         show_error_at(0xaa20a0, 0xc6);
         return -1;
     }
-    let (a, b) = (read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST), read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST));
+    let (a, b) = (read_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST), read_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST));
     let conferencia = if read_i16(this + cup::YEAR) % 2 != 0 {
-        write_u32_from_usize(l, usa_mls_all_stars_club_by_index(a));
-        write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + 6, usa_mls_all_stars_club_by_index(b));
+        write_usize(l, usa_mls_all_stars_club_by_index(a));
+        write_usize(read_usize(this + cup::TEAM_TABLE) + 6, usa_mls_all_stars_club_by_index(b));
         0x413
     } else {
-        write_u32_from_usize(l + 6, usa_mls_all_stars_club_by_index(a));
-        write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE), usa_mls_all_stars_club_by_index(b));
+        write_usize(l + 6, usa_mls_all_stars_club_by_index(a));
+        write_usize(read_usize(this + cup::TEAM_TABLE), usa_mls_all_stars_club_by_index(b));
         0x414
     };
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let mut k = sortear(6) as u8; // cqr6: o estádio sorteado entre 6
     let division: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
     let mut i = 0usize;
-    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = usa_mls_all_stars_club_by_index(i);
-        let league = read_u32_as_usize(c + 0x57);
-        if league != 0 && read_u32_as_usize(league) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && division(c) as i32 == conferencia {
+        let league = read_usize(c + 0x57);
+        if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && division(c) as i32 == conferencia {
             if k == 0 {
                 crate::comparison::branch("cqr_6 estadio do jogo das estrelas");
-                let first = read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE));
-                write_u32_from_usize(first + 0x69, read_u32_as_usize(c + 0x69)); // cqr6: the stadium of the drawn club
-                *((read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE)) + 0x6d) as *mut u8) = 0;
+                let first = read_usize(read_usize(this + cup::TEAM_TABLE));
+                write_usize(first + 0x69, read_usize(c + 0x69)); // cqr6: the stadium of the drawn club
+                *((read_usize(read_usize(this + cup::TEAM_TABLE)) + 0x6d) as *mut u8) = 0;
                 break;
             }
             k = k.wrapping_sub(1);
         }
         i += 1;
     }
-    let nation = read_u32_as_usize(G_NATION_TABLE).wrapping_add(read_u32_as_usize(KEY_NATION_UNITED_STATES).wrapping_mul(nation::SIZE));
-    let l = read_u32_as_usize(this + cup::TEAM_TABLE);
-    write_u32_from_usize(read_u32_as_usize(l + 6) + 0x53, nation);
-    write_u32_from_usize(read_u32_as_usize(l) + 0x53, read_u32_as_usize(read_u32_as_usize(l + 6) + 0x53));
+    let nation = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_UNITED_STATES).wrapping_mul(nation::SIZE));
+    let l = read_usize(this + cup::TEAM_TABLE);
+    write_usize(read_usize(l + 6) + 0x53, nation);
+    write_usize(read_usize(l) + 0x53, read_usize(read_usize(l + 6) + 0x53));
     for o in [4usize, 5, 0xa, 0xb] {
-        *((read_u32_as_usize(this + cup::TEAM_TABLE) + o) as *mut u8) = 0;
+        *((read_usize(this + cup::TEAM_TABLE) + o) as *mut u8) = 0;
     }
     1
 }

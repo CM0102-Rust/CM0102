@@ -10,11 +10,11 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_init_default_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INIT_DEFAULT_TABLE);
     let n = read_u16(this + 4) as i16;
-    if read_u32_as_usize(this) == 0 || n <= 0 {
+    if read_usize(this) == 0 || n <= 0 {
         return o(this);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(read_u32_as_usize(this), n as usize * 0x22), (0xb67a34, 4)]);
+    reg.extend([(read_usize(this), n as usize * 0x22), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| init_default_table(this)));
     SCOREBOARD.record(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
 }

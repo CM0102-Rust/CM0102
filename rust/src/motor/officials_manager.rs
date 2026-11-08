@@ -46,7 +46,7 @@ pub(crate) unsafe fn official_record_region(manager: usize, id: i32) -> Vec<(usi
 ///
 /// [pt] O registro do árbitro `i` (0x2b bytes em [0xae23e8], [0xae2390] deles).
 pub(crate) unsafe fn official_record(i: i32) -> usize {
-    read_u32_as_usize(G_OFFICIAL_TABLE).wrapping_add((i as isize * 0x2b) as usize)
+    read_usize(G_OFFICIAL_TABLE).wrapping_add((i as isize * 0x2b) as usize)
 }
 
 /// Original's fatal out-of-memory end: box at officials_manager.cpp line, cleanup and exit(-1).
@@ -112,15 +112,15 @@ pub(crate) unsafe fn crt_free(p: usize) {
 /// (qsort 0x79d410) com a parte de cada uma; this+4 a conta e this+8 as marcas (calloc).
 pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     exe::officials_manager_validate_officials();
-    officials_manager_crt_qsort(read_u32_as_usize(G_OFFICIAL_TABLE), read_i32(G_OFFICIAL_COUNT) as u32, 0x2b, 0x79d4e0);
+    officials_manager_crt_qsort(read_usize(G_OFFICIAL_TABLE), read_i32(G_OFFICIAL_COUNT) as u32, 0x2b, 0x79d4e0);
     let n = read_i32(G_OFFICIAL_COUNT);
     let marks = crt_calloc(n as u32, 1);
     let mut ficam = 0i32;
     if n > 0 {
-        let mut current = read_u32_as_usize(official_record(0) + 0x16);
+        let mut current = read_usize(official_record(0) + 0x16);
         let mut group = 0i32;
         for i in 0..n {
-            let nation = read_u32_as_usize(official_record(i) + 0x16);
+            let nation = read_usize(official_record(i) + 0x16);
             if nation != current {
                 group = 0;
                 current = nation;
@@ -152,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         }
         i += 1;
     }
-    crt_free(read_u32_as_usize(G_OFFICIAL_TABLE));
+    crt_free(read_usize(G_OFFICIAL_TABLE));
     write_u32(G_OFFICIAL_TABLE, new as u32);
     write_u32(G_OFFICIAL_COUNT, ficam as u32);
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -180,48 +180,48 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     let active: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     for k in 0..read_i32(G_COMP_OBJECT_COUNT).max(0) {
-        if read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) == 0 || active(k) == 0 {
+        if read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) == 0 || active(k) == 0 {
             continue;
         }
-        let comp = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(k as usize * 0x6b);
-        if friendly(read_u32_as_usize(G_FRIENDLY), comp) != 0 {
+        let comp = read_usize(G_CLUB_COMP_TABLE).wrapping_add(k as usize * 0x6b);
+        if friendly(read_usize(G_FRIENDLY), comp) != 0 {
             continue;
         }
-        let nation = read_u32_as_usize(comp + competition::NATION);
+        let nation = read_usize(comp + competition::NATION);
         if nation == 0 {
             continue;
         }
         let b = blocos.wrapping_add((read_i32(nation) as isize * 0x102) as usize);
         let v = b.wrapping_add((read_i16(b + officials_nation_block::COMP_COUNT) as isize * 0x10) as usize);
         write_u32(v + 0x1e, k as u32);
-        let request = read_i16(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: the slot request
+        let request = read_i16(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: the slot request
         crate::comparison::branch("cqg_9 vaga de competicao");
         write_u32(v + 0x1a, request as u32);
         if read_i32(v + 0x1a) > read_i32(b + officials_nation_block::DEMAND) {
-            write_u32(b + officials_nation_block::DEMAND, read_u32_as_usize(v + 0x1a) as u32);
+            write_u32(b + officials_nation_block::DEMAND, read_usize(v + 0x1a) as u32);
         }
         write_i16(b + officials_nation_block::COMP_COUNT, read_i16(b + officials_nation_block::COMP_COUNT).wrapping_add(1));
     }
     for i in 0..read_i32(G_OFFICIAL_COUNT).max(0) {
-        let b = blocos.wrapping_add((read_i32(read_u32_as_usize(official_record(i) + 0x16)) as isize * 0x102) as usize);
-        write_u32(b + officials_nation_block::REFEREE_COUNT, read_u32_as_usize(b + officials_nation_block::REFEREE_COUNT).wrapping_add(1) as u32);
+        let b = blocos.wrapping_add((read_i32(read_usize(official_record(i) + 0x16)) as isize * 0x102) as usize);
+        write_u32(b + officials_nation_block::REFEREE_COUNT, read_usize(b + officials_nation_block::REFEREE_COUNT).wrapping_add(1) as u32);
     }
     for k in 0..read_i32(G_NATION_COUNT).max(0) {
         let b = blocos + k as usize * 0x102;
-        let nation = read_u32_as_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE);
+        let nation = read_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE);
         let c = read_i16(b + officials_nation_block::COMP_COUNT);
         if c > 0 {
             write_u32(b + officials_nation_block::DEMAND, (c as i32).wrapping_mul(read_i32(b + officials_nation_block::DEMAND)) as u32);
             if read_i32(b + officials_nation_block::DEMAND) > read_i32(b + officials_nation_block::REFEREE_COUNT) {
                 exe::officials_manager_add_random_officials(read_i32(b + officials_nation_block::DEMAND) - read_i32(b + officials_nation_block::REFEREE_COUNT), nation);
-                write_u32(b + officials_nation_block::REFEREE_COUNT, read_u32_as_usize(b + officials_nation_block::DEMAND) as u32);
+                write_u32(b + officials_nation_block::REFEREE_COUNT, read_usize(b + officials_nation_block::DEMAND) as u32);
             }
         } else if read_i32(b + officials_nation_block::REFEREE_COUNT) < 5 {
             if read_i16(nation + nation::REPUTATION) == 0 {
                 write_i16(nation + nation::REPUTATION, 1);
             }
             exe::officials_manager_add_random_officials((read_i16(nation + nation::REPUTATION) as i32).min(5), nation);
-            write_u32(b + officials_nation_block::REFEREE_COUNT, (read_i16(read_u32_as_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE) + 0x8e) as i32).min(5) as u32);
+            write_u32(b + officials_nation_block::REFEREE_COUNT, (read_i16(read_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE) + 0x8e) as i32).min(5) as u32);
         }
     }
     for i in 0..read_i32(G_OFFICIAL_COUNT).max(0) {
@@ -229,13 +229,13 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     }
     for i in 0..read_i32(G_OFFICIAL_COUNT).max(0) {
         let r = official_record(i);
-        let b = blocos.wrapping_add((read_i32(read_u32_as_usize(r + official::NATION)) as isize * 0x102) as usize);
+        let b = blocos.wrapping_add((read_i32(read_usize(r + official::NATION)) as isize * 0x102) as usize);
         if read_i32(r) < read_i32(b + officials_nation_block::FIRST_REFEREE) {
-            write_u32(b + officials_nation_block::FIRST_REFEREE, read_u32_as_usize(r) as u32);
+            write_u32(b + officials_nation_block::FIRST_REFEREE, read_usize(r) as u32);
         }
     }
     for k in 0..read_i32(G_NATION_COUNT).max(0) {
-        let b = read_u32_as_usize(this + officials_manager_fields::NATION_BLOCKS) + k as usize * 0x102;
+        let b = read_usize(this + officials_manager_fields::NATION_BLOCKS) + k as usize * 0x102;
         let c = read_i16(b + officials_nation_block::COMP_COUNT);
         if c == 0 {
             continue;
@@ -859,7 +859,7 @@ pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: us
         show_error_at(FONTE, 0x14a);
         return 0;
     }
-    if zip_write(0xae2390, 4, 1, z) != 1 {
+    if zip_write(G_OFFICIAL_COUNT, 4, 1, z) != 1 {
         return officials_save_error(0x150, &mut z);
     }
     if arbitros() == 0 {
@@ -868,7 +868,7 @@ pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: us
     if zip_write(read_usize(this), 0x11, arbitros(), z) != arbitros() {
         return officials_save_error(0x15c, &mut z);
     }
-    if zip_write(0xae2350, 4, 1, z) != 1 {
+    if zip_write(G_NATION_COUNT, 4, 1, z) != 1 {
         return officials_save_error(0x164, &mut z);
     }
     if zip_write(read_usize(this + officials_manager_fields::NATION_BLOCKS), 0x102, nations(), z) != nations() { // cpx7: the records of the nations

@@ -15,9 +15,9 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DRAW_GROUPS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend_from_slice(&[(this + 0xee, 0xa0), (this + league::ENTRANT_COUNT, 2), (0xb67a34, 4)]);
-    if read_i16(this + league::YEAR) == 0x7d2 && read_u32_as_usize(this + league::ENTRANT_BOOK) != 0 {
-        reg.push((read_u32_as_usize(this + league::ENTRANT_BOOK), 0xc0));
+    reg.extend_from_slice(&[(this + 0xee, 0xa0), (this + league::ENTRANT_COUNT, 2), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
+    if read_i16(this + league::YEAR) == 0x7d2 && read_usize(this + league::ENTRANT_BOOK) != 0 {
+        reg.push((read_usize(this + league::ENTRANT_BOOK), 0xc0));
     }
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| draw_groups(this)));
     let same = if a != 0 && b != 0 {
@@ -38,10 +38,10 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize
 /// terminada (+0x45 = 1), as sete fases dos grupos 2..8 existem e a fase atual (+0x30) é a última delas (6).
 pub(crate) unsafe extern "thiscall" fn compare_run_group_draw(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RUN_GROUP_DRAW)(this);
-    if read_u32_as_usize(this + league::ACTIVE) == 1 {
-        let stages = read_u32_as_usize(this + league::STAGES);
-        let ok = stages != 0 && (0..7).all(|g| read_u32_as_usize(stages + g * 4) != 0) && read_u32_as_usize(this + league::CURRENT_STAGE) == 6;
-        SCOREBOARD.record(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", read_u32_as_usize(this + league::CURRENT_STAGE) as i32));
+    if read_usize(this + league::ACTIVE) == 1 {
+        let stages = read_usize(this + league::STAGES);
+        let ok = stages != 0 && (0..7).all(|g| read_usize(stages + g * 4) != 0) && read_usize(this + league::CURRENT_STAGE) == 6;
+        SCOREBOARD.record(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", read_usize(this + league::CURRENT_STAGE) as i32));
     }
 }
 
@@ -53,10 +53,10 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_update_for_date(this: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_WORLD_CUP_UPDATE_FOR_DATE);
     let year = core::ptr::read_unaligned((today + 2) as *const u16) as i32;
     let day = core::ptr::read_unaligned(today as *const u16);
-    let draws = read_i16(this + league::NEXT_DRAW_DAY) as u16 == day && read_i16(this + league::NEXT_DRAW_YEAR_OFFSET) as i32 + read_i16(this + league::YEAR) as i32 == year && full != 0 && read_u32_as_usize(this + league::TABLE) == 0;
+    let draws = read_i16(this + league::NEXT_DRAW_DAY) as u16 == day && read_i16(this + league::NEXT_DRAW_YEAR_OFFSET) as i32 + read_i16(this + league::YEAR) as i32 == year && full != 0 && read_usize(this + league::TABLE) == 0;
     let r = o(this, today, full);
     if draws {
-        SCOREBOARD.record(read_u32_as_usize(this + league::TABLE) != 0 && read_u32_as_usize(this + league::ACTIVE) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", read_u32_as_usize(this + league::TABLE), read_u32_as_usize(this + league::ACTIVE)));
+        SCOREBOARD.record(read_usize(this + league::TABLE) != 0 && read_usize(this + league::ACTIVE) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", read_usize(this + league::TABLE), read_usize(this + league::ACTIVE)));
     }
     r
 }
@@ -70,8 +70,8 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_table(this
     let plan = group_clubs(list, 1);
     let r = o(this, list);
     if r == 1 {
-        let t = read_u32_as_usize(this + league::TABLE);
-        let ok = read_i16(this + league::CLUB_COUNT) == 4 && plan.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
+        let t = read_usize(this + league::TABLE);
+        let ok = read_i16(this + league::CLUB_COUNT) == 4 && plan.iter().enumerate().all(|(k, &c)| read_usize(t + k * 0x3b) == c);
         SCOREBOARD.record(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plan));
     }
     r
@@ -93,14 +93,14 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_stage(this
     let plan = group_clubs(list, g + 2);
     let r = o(this, g, list);
     if r == 1 {
-        let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4);
-        let t = read_u32_as_usize(f + league::TABLE);
+        let f = read_usize(read_usize(this + league::STAGES) + g as usize * 4);
+        let t = read_usize(f + league::TABLE);
         // the rounds (3) in the date count +0xa9 and the id (0x420 + g) at +0x3a: the order of the constructor’s arguments
-        let ok = f != 0 && read_u32_as_usize(this + league::CURRENT_STAGE) as i32 == g && read_i16(f + league::CLUB_COUNT) == read_i16(this + league::CLUB_COUNT) && read_i16(f + league::YEAR) == read_i16(this + league::YEAR)
+        let ok = f != 0 && read_usize(this + league::CURRENT_STAGE) as i32 == g && read_i16(f + league::CLUB_COUNT) == read_i16(this + league::CLUB_COUNT) && read_i16(f + league::YEAR) == read_i16(this + league::YEAR)
             && read_i16(f + league::ROUND_COUNT) == 3 && read_i16(f + league::STAGE_ID) as i32 == 0x420 + g
             && (t == 0 || {
                 // the stage rows do not follow the list order: checks the set of clubs
-                let mut a: Vec<usize> = (0..plan.len()).map(|k| read_u32_as_usize(t + k * 0x3b)).collect();
+                let mut a: Vec<usize> = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
                 let mut b = plan.clone();
                 a.sort_unstable();
                 b.sort_unstable();
@@ -122,17 +122,17 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_stage(this
 /// achado por 0x4a4850) de cada um dos 32 primeiros.
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_WORLD_CUP_SET_PREDICTED_POSITIONS);
-    if read_u32_as_usize(this + 8) == 0 || read_i16(this + league::ENTRANT_COUNT) < 0x20 || read_u32_as_usize(this + league::ENTRANT_BOOK) == 0 {
+    if read_usize(this + 8) == 0 || read_i16(this + league::ENTRANT_COUNT) < 0x20 || read_usize(this + league::ENTRANT_BOOK) == 0 {
         return o(this);
     }
     let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let n = read_i16(this + league::ENTRANT_COUNT) as usize;
-    let mut v: Vec<usize> = (0..n).map(|i| read_u32_as_usize(read_u32_as_usize(this + league::ENTRANT_BOOK) + i * 6)).collect();
+    let mut v: Vec<usize> = (0..n).map(|i| read_usize(read_usize(this + league::ENTRANT_BOOK) + i * 6)).collect();
     sort(v.as_mut_ptr(), n as u32, 4, 0x4b07d0);
     o(this);
     const FAIXAS: [u8; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     let errado = (0..32).find(|&k| {
-        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_u32_as_usize(this + 8), v[k]) } else { 0 };
+        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != FAIXAS[k]
     });
     SCOREBOARD.record(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
@@ -176,10 +176,10 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_schedule(this: u
 pub(crate) unsafe extern "thiscall" fn compare_add_qualified_team(this: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_QUALIFIED_TEAM);
     let n = read_i16(this + league::ENTRANT_COUNT);
-    if n >= read_i16(this + league::ENTRANT_CAPACITY) || read_u32_as_usize(this + league::ENTRANT_BOOK) == 0 {
+    if n >= read_i16(this + league::ENTRANT_CAPACITY) || read_usize(this + league::ENTRANT_BOOK) == 0 {
         return o(this, club);
     }
-    let reg = [(this + league::ENTRANT_COUNT, 2usize), (read_u32_as_usize(this + league::ENTRANT_BOOK).wrapping_add((n as i32 * 6) as usize), 6usize)];
+    let reg = [(this + league::ENTRANT_COUNT, 2usize), (read_usize(this + league::ENTRANT_BOOK).wrapping_add((n as i32 * 6) as usize), 6usize)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club), || add_qualified_team(this, club));
     SCOREBOARD.record(igual, || format!("add_qualified_team: {:x?} x {:x?}", mo, mr));
 }

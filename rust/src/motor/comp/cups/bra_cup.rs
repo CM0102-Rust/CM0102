@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
 pub(crate) unsafe fn call_cup_virtual(this: usize, o: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + o));
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_usize(read_usize(this) + o));
     f(this)
 }
 
@@ -34,26 +34,26 @@ pub(crate) unsafe fn call_cup_virtual(this: usize, o: usize) -> i32 {
 pub(crate) unsafe fn start_new_cup_season(this: usize, entrants: usize, file: usize, rows: [u32; 3], year: i16, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + cup::SEASON_CLOSED) as *mut u32, 0);
     for o in [0xa7usize, 0xa3] {
-        let l = read_u32_as_usize(this + o);
+        let l = read_usize(this + o);
         if l != 0 {
             exe::crt_free(l);
             core::ptr::write_unaligned((this + o) as *mut u32, 0);
         }
     }
-    if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
+    if read_usize(this + cup::TIE_TABLES) != 0 {
         let mut i = 0i32;
         while i < read_i16(this + cup::ROUND_COUNT) as i32 {
-            let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
+            let p = read_usize(read_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
                 exe::crt_free(p);
-                core::ptr::write_unaligned((read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4) as *mut u32, 0);
+                core::ptr::write_unaligned((read_usize(this + cup::TIE_TABLES) + i as usize * 4) as *mut u32, 0);
             }
             i += 1;
         }
-        exe::crt_free(read_u32_as_usize(this + cup::TIE_TABLES));
+        exe::crt_free(read_usize(this + cup::TIE_TABLES));
         core::ptr::write_unaligned((this + cup::TIE_TABLES) as *mut u32, 0);
     }
-    let e = read_u32_as_usize(this + 8);
+    let e = read_usize(this + 8);
     if e != 0 {
         exe::comp_stats_archive_season_and_reset(e, 1);
     }
@@ -161,8 +161,8 @@ pub(crate) unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
     while i < read_i16(this + cup::TEAM_COUNT) {
         let o = i as usize * 6;
         let font = o; // cqo12: the registration of each slot
-        let c = read_u32_as_usize(read_u32_as_usize(this + cup::ENTRANT_BOOK) + font);
-        let e = read_u32_as_usize(this + cup::TEAM_TABLE) + o;
+        let c = read_usize(read_usize(this + cup::ENTRANT_BOOK) + font);
+        let e = read_usize(this + cup::TEAM_TABLE) + o;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 5) as *mut u8) = 0xff;
         *((e + 4) as *mut u8) = 0;
@@ -196,7 +196,7 @@ pub(crate) unsafe fn set_up_brazil_cup_rounds(this: usize) -> i32 {
     *((this + cup::SUBSTITUTES_NAMED) as *mut u8) = 7;
     *((this + cup::SUBSTITUTIONS_ALLOWED) as *mut u8) = 3; // cqo12: the Copa do Brasil substitutions
     core::ptr::write_unaligned((this + cup::PRIZE_FUND) as *mut u32, 0x7a120);
-    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let t = table(this, 0xffff_ffff, this + cup::ROUND_COUNT, this + cup::STAGE_LABEL, 0);
     core::ptr::write_unaligned((this + cup::ROUND_TABLE) as *mut u32, t as u32);
     1

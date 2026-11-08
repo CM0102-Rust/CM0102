@@ -71,11 +71,11 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     while s < 8 {
         count[s as usize] = count[s as usize].wrapping_add(1);
         if s == 0 {
-            write_u32_from_usize(list, read_u32_as_usize(this + 0xee));
+            write_usize(list, read_usize(this + 0xee));
             write_u8(list + 4, 1);
             write_u8(this + 0xf2, 0xff);
         } else if s == 2 {
-            write_u32_from_usize(list + 0xa, read_u32_as_usize(this + 0xf3));
+            write_usize(list + 0xa, read_usize(this + 0xf3));
             write_u8(list + 0xe, 3);
             write_u8(this + 0xf7, 0xff);
         } else {
@@ -86,7 +86,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
             }
             let c = this.wrapping_add((k * 5) as usize);
             let e = list + s as usize * 5;
-            write_u32_from_usize(e, read_u32_as_usize(c + 0xee));
+            write_usize(e, read_usize(c + 0xee));
             write_u8(e + 4, (s as u8).wrapping_add(1));
             write_u8(c + 0xf2, 0xff);
         }
@@ -102,7 +102,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
             r = sorteio(8);
         }
         crate::comparison::branch("cqf_4 vaga no grupo");
-        write_u32_from_usize(dst, read_u32_as_usize(src));
+        write_usize(dst, read_usize(src));
         src += 5;
         write_u8(dst + 4, (r as u8).wrapping_add(1));
         dst += 5;
@@ -115,19 +115,19 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     }
     crate::comparison::branch("cqf_4 sorteio de 2002");
     for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: the nations of the real random draw
-        let nation = read_u32_as_usize(G_NATION_TABLE).wrapping_add((read_u32_as_usize(chave) as i32).wrapping_mul(0x122) as usize);
-        write_u32_from_usize(list + i * 5, read_u32_as_usize(exe::database_get_national_team(nation)));
+        let nation = read_usize(G_NATION_TABLE).wrapping_add((read_usize(chave) as i32).wrapping_mul(0x122) as usize);
+        write_usize(list + i * 5, read_usize(exe::database_get_national_team(nation)));
     }
     for i in 0..32usize {
         let e = list + i * 5;
-        let club = read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(e).wrapping_mul(club::SIZE));
-        write_u32_from_usize(read_u32_as_usize(this + 0x14) + i * 6, club);
-        write_u8(read_u32_as_usize(this + 0x14) + i * 6 + 4, 6);
+        let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(e).wrapping_mul(club::SIZE));
+        write_usize(read_usize(this + 0x14) + i * 6, club);
+        write_u8(read_usize(this + 0x14) + i * 6 + 4, 6);
         write_u8(e + 4, (i / 4) as u8 + 1);
     }
-    write_u8(read_u32_as_usize(this + 0x14) + 4, 2);
-    write_u8(read_u32_as_usize(this + 0x14) + 0x4c, 1);
-    write_u8(read_u32_as_usize(this + 0x14) + 0xac, 1);
+    write_u8(read_usize(this + 0x14) + 4, 2);
+    write_u8(read_usize(this + 0x14) + 0x4c, 1);
+    write_u8(read_usize(this + 0x14) + 0xac, 1);
     write_u16(this + 0x36, 0x20);
     list
 }
@@ -167,14 +167,14 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
         show_error_at(0xad5888, 0x47a);
         return;
     }
-    write_u32_from_usize(this + league::ACTIVE, 1);
+    write_usize(this + league::ACTIVE, 1);
     for g in 0..7 {
         exe::worldcup_create_group_stage(this, g, list);
     }
     exe::crt_free(list);
-    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
+    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
-    let body = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + league::DISCIPLINE_RULE) as i8 as i32 * 4) as usize));
+    let body = read_usize(read_usize(read_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + league::DISCIPLINE_RULE) as i8 as i32 * 4) as usize));
     exe::rulingbody_reset_bookings_for_club(body, 0);
 }
 
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
         exe::worldcup_seed_teams(this);
     }
     let day_of_draw = read_i16(this + 0xb6) as u16; // cqf4: the random draw day
-    if day_of_draw == day && read_i16(this + 0xb8) as i32 + read_i16(this + league::YEAR) as i32 == year && full != 0 && read_u32_as_usize(this + league::TABLE) == 0 {
+    if day_of_draw == day && read_i16(this + 0xb8) as i32 + read_i16(this + league::YEAR) as i32 == year && full != 0 && read_usize(this + league::TABLE) == 0 {
         crate::comparison::branch("cqf_4 dia do sorteio");
         exe::worldcup_run_group_draw(this);
     }
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
 ///
 /// [pt] O clube da entrada `i` da lista do sorteio (5 bytes: +0 o id): 0xae23b4 + id × 0x245.
 pub(crate) unsafe fn draw_list_club(list: usize, i: usize) -> usize {
-    read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(list + i * 5).wrapping_mul(club::SIZE))
+    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(list + i * 5).wrapping_mul(club::SIZE))
 }
 
 /// The World Cup itself becomes group 1: four teams, the allocated table, the group 1 teams of the draw list in the
@@ -239,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_table(this: usize,
     let row_of_table: unsafe extern "thiscall" fn(usize, u32, usize, u32, usize) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     write_u16(this + league::CLUB_COUNT, 4);
     let t = alloc(0xec);
-    write_u32_from_usize(this + league::TABLE, t);
+    write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xad5888, 0x2b1);
         return 0;
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
         let e = list + i as usize * 5;
         if read_u8(e + 4) as i8 as i32 == g + 2 {
             crate::comparison::branch("cqf_5 time do grupo");
-            write_u32_from_usize(teams + n as usize * 4, draw_list_club(list, i as usize)); // cqf5: the team in the group slot
+            write_usize(teams + n as usize * 4, draw_list_club(list, i as usize)); // cqf5: the team in the group slot
             n += 1;
         }
         i += 1;
@@ -322,7 +322,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
             break;
         }
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
     let p = new(0xee);
@@ -333,7 +333,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
             read_i16(this + league::CLUB_COUNT) as u16 as u32,
             teams,
             1,
-            read_u32_as_usize(this + 4),
+            read_usize(this + 4),
             table,
             rodadas as u16 as u32, // cqf5: the rounds (the dates, +0xa9 of the stage)
             read_u8(this + league::WIN_POINTS) as u32,
@@ -355,15 +355,15 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4, stage);
+    write_usize(read_usize(this + league::STAGES) + g as usize * 4, stage);
     exe::crt_free(teams);
     exe::crt_free(table);
-    if read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4) == 0 {
+    if read_usize(read_usize(this + league::STAGES) + g as usize * 4) == 0 {
         show_error_at(0xad5888, 0x380);
         return 0;
     }
-    write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
-    exe::league_send_group_draw_news(read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4));
+    write_usize(this + league::CURRENT_STAGE, g as usize);
+    exe::league_send_group_draw_news(read_usize(read_usize(this + league::STAGES) + g as usize * 4));
     1
 }
 
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
-    if read_u32_as_usize(this + 8) == 0 {
+    if read_usize(this + 8) == 0 {
         show_error_at(0xad5888, 0x671);
         return;
     }
@@ -407,18 +407,18 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
     }
     let mut i = 0i16;
     while i < read_i16(this + 0x36) {
-        write_u32_from_usize(v + i as usize * 4, read_u32_as_usize(read_u32_as_usize(this + 0x14) + i as usize * 6));
+        write_usize(v + i as usize * 4, read_usize(read_usize(this + 0x14) + i as usize * 6));
         i += 1;
     }
     sort(v, read_i16(this + 0x36) as i32 as u32, 4, 0x4b07d0);
     const FAIXAS: [u32; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     for (k, &p) in FAIXAS.iter().enumerate() {
-        position(read_u32_as_usize(this + 8), read_u32_as_usize(v + k * 4), p);
+        position(read_usize(this + 8), read_usize(v + k * 4), p);
     }
     let mut i = 0i16;
     while i < read_i16(this + 0x36) {
         crate::comparison::branch("cqf_5 competição da nação");
-        exe::nationalteams_set_current_competition(read_u32_as_usize(G_NATIONAL_TEAMS), read_u32_as_usize(read_u32_as_usize(v + i as usize * 4) + 0x53), read_u32_as_usize(this + 4));
+        exe::nationalteams_set_current_competition(read_usize(G_NATIONAL_TEAMS), read_usize(read_usize(v + i as usize * 4) + 0x53), read_usize(this + 4));
         i += 1; // cqf5: the next nation
     }
     exe::crt_free(v);
@@ -531,9 +531,9 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, club: usi
         return;
     }
     crate::comparison::branch("cqf_6 nação classificada");
-    let e = read_u32_as_usize(this + 0x14).wrapping_add((n as i32 * 6) as usize);
+    let e = read_usize(this + 0x14).wrapping_add((n as i32 * 6) as usize);
     write_u8(e + 4, 6);
-    write_u32_from_usize(read_u32_as_usize(this + 0x14).wrapping_add((read_i16(this + 0x36) as i32 * 6) as usize), club);
+    write_usize(read_usize(this + 0x14).wrapping_add((read_i16(this + 0x36) as i32 * 6) as usize), club);
     write_u16(this + 0x36, (read_i16(this + 0x36) as u16).wrapping_add(1));
 }
 
@@ -578,51 +578,51 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
         show_error_at(0xad5888, 0x59e);
         let mut k = 0i32;
         let mut desloc = 0usize;
-        if read_u32_as_usize(G_NATION_COUNT) as i32 > 0 {
+        if read_usize(G_NATION_COUNT) as i32 > 0 {
             while read_i16(this + 0x36) < 0x20 {
                 let mut j = 0i16;
                 let mut ja = false;
                 while j < read_i16(this + 0x36) {
-                    let c = exe::database_get_national_team(read_u32_as_usize(G_NATION_TABLE).wrapping_add(desloc));
-                    if read_u32_as_usize(read_u32_as_usize(this + 0x14) + j as usize * 6) == c {
+                    let c = exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(desloc));
+                    if read_usize(read_usize(this + 0x14) + j as usize * 6) == c {
                         ja = true;
                         break;
                     }
                     j += 1;
                 }
                 if !ja {
-                    let c = exe::database_get_national_team(read_u32_as_usize(G_NATION_TABLE).wrapping_add(desloc));
-                    write_u32_from_usize(read_u32_as_usize(this + 0x14) + read_i16(this + 0x36) as usize * 6, c);
+                    let c = exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(desloc));
+                    write_usize(read_usize(this + 0x14) + read_i16(this + 0x36) as usize * 6, c);
                     write_u16(this + 0x36, (read_i16(this + 0x36) as u16).wrapping_add(1));
                 }
                 k += 1;
                 desloc += 0x122;
-                if k >= read_u32_as_usize(G_NATION_COUNT) as i32 {
+                if k >= read_usize(G_NATION_COUNT) as i32 {
                     break;
                 }
             }
         }
     }
-    sort(read_u32_as_usize(this + 0x14), read_i16(this + 0x36) as i32 as u32, 6, 0x4b07b0);
+    sort(read_usize(this + 0x14), read_i16(this + 0x36) as i32 as u32, 6, 0x4b07b0);
     // simplification: both outputs start at −1 (no venue); the original leaves them with the stack leftover when 0x5fa730 does not
     // finds the Cup (it only writes them when it finds it)
     let (mut a, mut b) = (-1i32, -1i32);
-    sedes(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP), read_i16(this + league::YEAR) as u16 as u32, &mut a, &mut b, 1);
-    let sede1 = if a != -1 { exe::database_get_national_team(read_u32_as_usize(G_NATION_TABLE).wrapping_add(a.wrapping_mul(0x122) as usize)) } else { 0 };
-    let sede2 = if b != -1 { exe::database_get_national_team(read_u32_as_usize(G_NATION_TABLE).wrapping_add(b.wrapping_mul(0x122) as usize)) } else { 0 };
-    let detentor = exe::comp_util_get_latest_placed_club(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add((read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) as i32).wrapping_mul(0x6b) as usize), 0);
+    sedes(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP), read_i16(this + league::YEAR) as u16 as u32, &mut a, &mut b, 1);
+    let sede1 = if a != -1 { exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(a.wrapping_mul(0x122) as usize)) } else { 0 };
+    let sede2 = if b != -1 { exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(b.wrapping_mul(0x122) as usize)) } else { 0 };
+    let detentor = exe::comp_util_get_latest_placed_club(read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) as i32).wrapping_mul(0x6b) as usize), 0);
     let mut fixos = 0i8;
     for i in 0..32usize {
         for (vaga, alvo) in [(0usize, detentor), (1, sede1), (2, sede2)] {
-            let t = read_u32_as_usize(this + 0x14);
+            let t = read_usize(this + 0x14);
             let e = t + i * 6;
-            if read_u32_as_usize(e) == alvo {
-                let (c, w) = (read_u32_as_usize(e), read_i16(e + 4) as u16);
+            if read_usize(e) == alvo {
+                let (c, w) = (read_usize(e), read_i16(e + 4) as u16);
                 let f = t + vaga * 6;
-                write_u32_from_usize(e, read_u32_as_usize(f));
+                write_usize(e, read_usize(f));
                 write_u16(e + 4, read_i16(f + 4) as u16);
-                let t = read_u32_as_usize(this + 0x14) + vaga * 6;
-                write_u32_from_usize(t, c);
+                let t = read_usize(this + 0x14) + vaga * 6;
+                write_usize(t, c);
                 write_u16(t + 4, w);
                 if fixos < vaga as i8 + 1 {
                     fixos = vaga as i8 + 1;
@@ -637,36 +637,36 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     if sede1 == detentor {
         n = 1;
     }
-    sort(read_u32_as_usize(this + 0x14) + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
+    sort(read_usize(this + 0x14) + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
     for i in 0..0x20usize {
-        let club = read_u32_as_usize(read_u32_as_usize(this + 0x14) + i * 6);
+        let club = read_usize(read_usize(this + 0x14) + i * 6);
         let pote = this + 0xf2 + i * 5;
-        write_u32_from_usize(pote - 4, read_u32_as_usize(club));
+        write_usize(pote - 4, read_usize(club));
         if i < 8 {
             write_u8(pote, 0);
-            write_u8(read_u32_as_usize(this + 0x14) + i * 6 + 4, 3);
+            write_u8(read_usize(this + 0x14) + i * 6 + 4, 3);
             continue;
         }
-        let nation = read_u32_as_usize(club + club::NATION);
-        let count = if nation != 0 { read_u32_as_usize(nation + nation::CONTINENT) } else { 0 };
+        let nation = read_usize(club + club::NATION);
+        let count = if nation != 0 { read_usize(nation + nation::CONTINENT) } else { 0 };
         if count == 0 {
             show_error_at(0xad5888, 0x61e);
             continue;
         }
-        let c = read_u32_as_usize(count);
-        let (p, s) = if c == read_u32_as_usize(KEY_CONTINENT_EUROPE) {
+        let c = read_usize(count);
+        let (p, s) = if c == read_usize(KEY_CONTINENT_EUROPE) {
             (1, 0xa)
-        } else if c == read_u32_as_usize(KEY_CONTINENT_OCEANIA) || c == read_u32_as_usize(KEY_CONTINENT_ASIA) || c == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) {
+        } else if c == read_usize(KEY_CONTINENT_OCEANIA) || c == read_usize(KEY_CONTINENT_ASIA) || c == read_usize(KEY_CONTINENT_SOUTH_AMERICA) {
             (2, 0xb)
-        } else if c == read_u32_as_usize(KEY_CONTINENT_AFRICA) || c == read_u32_as_usize(KEY_CONTINENT_NORTH_AMERICA) {
+        } else if c == read_usize(KEY_CONTINENT_AFRICA) || c == read_usize(KEY_CONTINENT_NORTH_AMERICA) {
             (3, 0xc)
         } else {
             continue;
         };
         write_u8(pote, p);
-        write_u8(read_u32_as_usize(this + 0x14) + i * 6 + 4, s);
+        write_u8(read_usize(this + 0x14) + i * 6 + 4, s);
     }
-    sort(read_u32_as_usize(this + 0x14) + 0x30, 0x18, 6, 0x92f660);
+    sort(read_usize(this + 0x14) + 0x30, 0x18, 6, 0x92f660);
     sort(this + 0x116, 0x18, 5, 0x92f660);
 }
 

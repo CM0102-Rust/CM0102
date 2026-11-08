@@ -10,11 +10,11 @@ use super::*;
 /// devolvido).
 pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_DISPUTE);
-    if p == 0 || read_u32_as_usize(this + 4) == 0 {
+    if p == 0 || read_usize(this + 4) == 0 {
         return o(this, p);
     }
-    let m = read_u32_as_usize(this + 4).wrapping_add(read_i32(p) as isize as usize);
-    let list = read_u32_as_usize(this);
+    let m = read_usize(this + 4).wrapping_add(read_i32(p) as isize as usize);
+    let list = read_usize(this);
     if *(m as *const u8) == 0 {
         let mut reg = vec![(m, 1)];
         if list != 0 {
@@ -27,8 +27,8 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
     let mut found = 0i16;
     let count_before = if list != 0 { read_i16(list) } else { 0 };
     if list != 0 {
-        let cursor = read_u32_as_usize(list + llist::CURSOR);
-        core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_u32_as_usize(list + llist::HEAD) as u32);
+        let cursor = read_usize(list + llist::CURSOR);
+        core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_usize(list + llist::HEAD) as u32);
         let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
         for _ in 0..count_before.max(0) {
             let no = next(list);

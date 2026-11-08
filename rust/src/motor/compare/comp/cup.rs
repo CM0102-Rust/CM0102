@@ -18,7 +18,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, round: u32, tie: u32, adiar: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_CREATE_TIE_FIXTURES);
     let ri = round as i16 as i32;
-    let id = read_u32_as_usize(read_u32_as_usize(this + 4)) as u32;
+    let id = read_usize(read_usize(this + 4)) as u32;
     let (mut k, mut ad) = (tie as i16 as i32, adiar);
     if k == -1 {
         let n = read_i16(round_entry(this, ri) + 0x1a) as i32;
@@ -41,8 +41,8 @@ pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, 
     let full = read_i16(t) != -1 && read_i16(t + cup_tie::AWAY_TEAM) != -1;
     let e = round_entry(this, ri);
     let duas = read_u8(e + cup_round::LEGS) == 2;
-    let home = if full { read_u32_as_usize(cup_team_entry(this, read_i16(t))) } else { 0 };
-    let ic = if home != 0 { read_u32_as_usize(home) as u32 } else { u32::MAX };
+    let home = if full { read_usize(cup_team_entry(this, read_i16(t))) } else { 0 };
+    let ic = if home != 0 { read_usize(home) as u32 } else { u32::MAX };
     let check = ad == 0 && full && ic != u32::MAX;
     // the end of the window: the round’s date (+ the days until the second leg), tomorrow or the next round’s date (+0x6b/+0x6d), the
     // that comes next, + 14 days. On a clash, 0x5aa680 reschedules the match (0x5ab510): cup (type 2) up to the date of the
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, 
     let mut ok = r == 1 && mark == if ad != 0 { 2 } else { 3 };
     let mut expected = 0;
     let mut after = 0;
-    if check && read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + id as usize * 4) != 0 {
+    if check && read_usize(read_usize(G_COMP_OBJECT_TABLE) + id as usize * 4) != 0 {
         expected = 1 + duas as u32;
         after = club_fixtures_until(ic, id, end);
         ok = ok && after == before + expected;
@@ -332,10 +332,10 @@ pub(crate) unsafe extern "thiscall" fn compare_register_semi_final_losers_for_ue
 /// devolução, a conta global e a saída têm de bater.
 pub(crate) unsafe extern "thiscall" fn compare_get_fixture_side_teams(this: usize, round: i32, game: i32, side: u32, out: *mut i16) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(IDX_GET_FIXTURE_SIDE_TEAMS);
-    if out.is_null() || round < 0 || round > read_i16(this + cup::ROUND_COUNT) as i32 || read_u32_as_usize(this + cup::TEAM_TABLE) == 0 || game == -1 {
+    if out.is_null() || round < 0 || round > read_i16(this + cup::ROUND_COUNT) as i32 || read_usize(this + cup::TEAM_TABLE) == 0 || game == -1 {
         return o(this, round, game, side, out); // simplification: the box, original only
     }
-    let reg = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + round as usize * 4) + (game as usize).wrapping_mul(0x35);
+    let reg = read_usize(read_usize(this + cup::TIE_TABLES) + round as usize * 4) + (game as usize).wrapping_mul(0x35);
     let (c, r, j) = if side as u8 != 0 { (read_i16(reg), reg + cup_tie::HOME_LINK_ROUND, reg + cup_tie::HOME_LINK_TIE) } else { (read_i16(reg + cup_tie::AWAY_TEAM), reg + cup_tie::AWAY_LINK_ROUND, reg + cup_tie::AWAY_LINK_TIE) };
     let mut expected = vec![0i16; 0x100];
     let mut n: i32 = 0;
@@ -562,17 +562,17 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
     if read_i16(e + cup_round::TIE_RULES) as u16 & 0x100 == 0 || read_u8(e + cup_round::SLOT_CODE) == 0xff {
         return o(this, data, round);
     }
-    let id = read_u32_as_usize(read_u32_as_usize(this + 4));
+    let id = read_usize(read_usize(this + 4));
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    exe::llist_llist(l);
+    exe::new_llist(l);
     let mut expected = [0u8; 8];
     for k in 0..8 {
         expected[k] = read_u8(e + k * 7 + 0x29);
     }
     if collect_round_fixtures(this, data, round, l) != 0 {
-        write_u32_from_usize(l + llist::CURSOR, read_u32_as_usize(l + llist::HEAD));
+        write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
         let mut j = 0usize;
         let mut f = next(l);
         while f != 0 {
@@ -585,9 +585,9 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
             f = next(l);
         }
     }
-    exe::llist_destructor_llist(l);
+    exe::drop_llist(l);
     o(this, data, round);
-    if read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + id * 4) == 0 {
+    if read_usize(read_usize(G_COMP_OBJECT_TABLE) + id * 4) == 0 {
         return; // simplification: the cup has left the game; nothing to check
     }
     let e = cup_round_entry(this, round);
@@ -611,7 +611,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
 pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_MAP_FIXTURE_TREE);
     let r = o(this);
-    if r != 1 || read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 {
+    if r != 1 || read_usize(this + cup::SEASON_SET_UP) == 0 {
         return r;
     }
     let nr = read_i16(this + cup::ROUND_COUNT);
@@ -648,10 +648,10 @@ pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> 
 pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_RANK_TEAMS);
     let n = read_i16(this + cup::TEAM_COUNT) as i32;
-    if read_u32_as_usize(this + 8) == 0 || n <= 0 {
+    if read_usize(this + 8) == 0 || n <= 0 {
         return o(this); // simplification: the box or nothing to sort, original only
     }
-    let mut v: Vec<u32> = (0..n as usize).map(|i| read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + i * 6) as u32).collect();
+    let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(read_usize(this + cup::TEAM_TABLE) + i * 6) as u32).collect();
     let mut k = vec![0i32; n as usize];
     sort_clubs_by_strength(v.as_mut_ptr(), k.as_mut_ptr(), n);
     // simplification: with more slots in the rounds than clubs, the original reads past the vector (block leftover); the plan reads 0
@@ -663,7 +663,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
         if c == 0 || plan[i + 1..].iter().any(|x| x.0 == c) {
             continue;
         }
-        let e = exe::comp_stats_find_club_entry(read_u32_as_usize(this + 8), c);
+        let e = exe::comp_stats_find_club_entry(read_usize(this + 8), c);
         if e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + comp_stats_club::DANGER_POSITION) as *const u8) as i32 }));
         }

@@ -214,10 +214,10 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_update_staff_records_for_
 /// 1, a marca +0x42 do jogo (1 no estágio 1; senão -1 se estava abaixo de 2) e o bloco +8 devolvido.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, game: usize, stats: u32) -> u32 {
     let mark = *((game + fixture::STAGE_INDEX) as *const i8);
-    let block = read_u32_as_usize(this + 8);
-    let esperada = if read_u32_as_usize(this + league::CURRENT_STAGE) == 1 { 1 } else if mark < 2 { -1 } else { mark };
+    let block = read_usize(this + 8);
+    let esperada = if read_usize(this + league::CURRENT_STAGE) == 1 { 1 } else if mark < 2 { -1 } else { mark };
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this, game, stats);
-    let (m, b) = (*((game + fixture::STAGE_INDEX) as *const i8), read_u32_as_usize(this + 8));
+    let (m, b) = (*((game + fixture::STAGE_INDEX) as *const i8), read_usize(this + 8));
     SCOREBOARD.record(r == 1 && m == esperada && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, game, r, m, esperada, b, block));
     r
 }
@@ -227,8 +227,8 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, g
 /// [pt] Comparador: a devolução (só lê; o caso de erro fica com a original sozinha).
 pub(crate) unsafe extern "C" fn compare_usa_mls_get_club_all_star_conference(club: usize) -> u16 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_USA_MLS_GET_CLUB_ALL_STAR_CONFERENCE)(club);
-    let nation = read_u32_as_usize(club + club::DIVISION);
-    if nation != 0 && read_u32_as_usize(nation) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && r == 0 {
+    let nation = read_usize(club + club::DIVISION);
+    if nation != 0 && read_usize(nation) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && r == 0 {
         return r; // the error case (the box has already been shown in the original)
     }
     let n = usa_mls_get_club_all_star_conference(club);

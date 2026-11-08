@@ -15,9 +15,9 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_schedule(this: u
 pub(crate) unsafe extern "thiscall" fn compare_construct_spa_lower(this: usize, year: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_SPA_LOWER);
     let r = o(this, year);
-    let ok = r == this && read_u32_as_usize(this) == 0x96fb1c && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && *((this + league::DISCIPLINE_RULE) as *const u8) == 0xff && read_u32_as_usize(this + 4) == comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
-    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4)));
+    let ok = r == this && read_usize(this) == 0x96fb1c && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
+        && *((this + league::DISCIPLINE_RULE) as *const u8) == 0xff && read_usize(this + 4) == comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
+    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, read_usize(this), read_usize(this + 4)));
     r
 }
 
@@ -45,15 +45,15 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_table(this: usiz
         });
     }
     let r = o(this);
-    let t = read_u32_as_usize(this + league::TABLE);
+    let t = read_usize(this + league::TABLE);
     let mut ok = read_i16(this + league::CLUB_COUNT) == 0x16 && t != 0;
     if ok {
         for (i, &c) in plan.iter().enumerate() {
-            ok = ok && read_u32_as_usize(t + i * 0x3b) == c;
+            ok = ok && read_usize(t + i * 0x3b) == c;
         }
     }
     SCOREBOARD.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plan,
-        (0..plan.len()).map(|i| if t != 0 { read_u32_as_usize(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
+        (0..plan.len()).map(|i| if t != 0 { read_usize(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
     r
 }
 

@@ -118,9 +118,9 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     let definir: unsafe extern "thiscall" fn(*mut crate::date::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_SET);
     let mut d = crate::date::Data { dia: 40, ano: 1972, bissexto: 1 };
     for &(off, t, v) in HOST_COUNTRY_TABLE.iter() {
-        let e = read_u32_as_usize(this) + off as usize;
+        let e = read_usize(this) + off as usize;
         match t {
-            0 => write_u32(e, read_u32_as_usize(v as usize) as u32),
+            0 => write_u32(e, read_usize(v as usize) as u32),
             1 => write_u32(e, v),
             2 => *(e as *mut u8) = v as u8,
             3 => write_u16(e, v as u16),
@@ -130,11 +130,11 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
             }
             _ => {
                 let (ini, n, g, ano, step_towards, intervalo) = HOST_COUNTRY_LOOPS[v as usize];
-                let mut e = read_u32_as_usize(this) + ini as usize;
+                let mut e = read_usize(this) + ini as usize;
                 let mut y = ano;
                 for _ in 0..n {
                     write_u16(e + 4, y);
-                    write_u32(e, read_u32_as_usize(g as usize) as u32);
+                    write_u32(e, read_usize(g as usize) as u32);
                     write_u16(e + 0x1f, d.dia as u16);
                     *((e + 0x21) as *mut u8) = intervalo;
                     e += 0x22;
@@ -148,15 +148,15 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     let mut k: i16 = 0;
     while k < n {
         let o = (k as i32 * 0x22) as usize;
-        let p = read_u32_as_usize(this) + o + 0x1f;
+        let p = read_usize(this) + o + 0x1f;
         crate::comparison::branch("cqo_3 sorteio do dia");
         let r = sortear(0x46); // cqo3: the random draw of the decision day
         write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
-        let e = read_u32_as_usize(this) + o;
-        if *((e + 0x1e) as *const u8) != 0xfd && (read_u32_as_usize(e + 0x12) as u32 != u32::MAX || read_u32_as_usize(e + 0x1a) as u32 != u32::MAX) {
+        let e = read_usize(this) + o;
+        if *((e + 0x1e) as *const u8) != 0xfd && (read_usize(e + 0x12) as u32 != u32::MAX || read_usize(e + 0x1a) as u32 != u32::MAX) {
             show_error_at(0x9cf0d8, 0x226);
-            write_u32(read_u32_as_usize(this) + o + 0x12, u32::MAX);
-            write_u32(read_u32_as_usize(this) + o + 0x1a, u32::MAX);
+            write_u32(read_usize(this) + o + 0x12, u32::MAX);
+            write_u32(read_usize(this) + o + 0x1a, u32::MAX);
         }
         k += 1;
     }
@@ -186,43 +186,43 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
     let continent: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
     let all: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
     crate::comparison::branch("cqo_3 noticia das sedes");
-    write_u32(list + 0xa, read_u32_as_usize(list + 2) as u32);
+    write_u32(list + 0xa, read_usize(list + 2) as u32);
     let mut it = next(list);
     while it != 0 {
-        let e = read_u32_as_usize(it);
+        let e = read_usize(it);
         let k = *((e + 0x1e) as *const i8);
         let skip = ((k > 0 || k == -3) && read_u16(G_CURRENT_DATE_YEAR) as u32 == (read_u16(e + 4) as u32).wrapping_sub(8))
-            || read_u32_as_usize(e) == read_u32_as_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES)
-            || (read_u32_as_usize(e) == read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_u16(e + 4) == 0x7d6 && read_u32_as_usize(e + 6) == read_u32_as_usize(KEY_NATION_GERMANY));
+            || read_usize(e) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES)
+            || (read_usize(e) == read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_u16(e + 4) == 0x7d6 && read_usize(e + 6) == read_usize(KEY_NATION_GERMANY));
         if !skip {
             // the local news (0xe8 bytes, as in the other copies)
             let mut n = [0u8; 0xe8];
             let p = n.as_mut_ptr() as usize;
             if k == -1 {
-                exe::newsitem_newsitem(p, 4, 0);
-                given(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
-                given(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
+                exe::new_newsitem(p, 4, 0);
+                given(p, 0, read_usize(read_usize(it)) as u32);
+                given(p, 1, read_u16(read_usize(it) + 4) as u32);
                 for (i, off) in [6usize, 0xa, 0xe, 0x12, 0x16, 0x1a].iter().enumerate() {
-                    given(p, 2 + i as u32, read_u32_as_usize(read_u32_as_usize(it) + off) as u32);
+                    given(p, 2 + i as u32, read_usize(read_usize(it) + off) as u32);
                 }
             } else {
-                exe::newsitem_newsitem(p, 5, 0);
-                let mut b = *((read_u32_as_usize(it) + 0x1e) as *const i8);
+                exe::new_newsitem(p, 5, 0);
+                let mut b = *((read_usize(it) + 0x1e) as *const i8);
                 if b == -3 {
                     b = 0;
                 }
-                given(p, 0, read_u32_as_usize(read_u32_as_usize(it)) as u32);
-                given(p, 1, read_u16(read_u32_as_usize(it) + 4) as u32);
+                given(p, 0, read_usize(read_usize(it)) as u32);
+                given(p, 1, read_u16(read_usize(it) + 4) as u32);
                 let o = (b as i32 * 8) as usize;
-                given(p, 2, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 6) as u32);
-                given(p, 3, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 0xa) as u32);
+                given(p, 2, read_usize(read_usize(it).wrapping_add(o) + 6) as u32);
+                given(p, 3, read_usize(read_usize(it).wrapping_add(o) + 0xa) as u32);
             }
-            let id = read_u32_as_usize(read_u32_as_usize(it));
-            let c = read_u32_as_usize(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
+            let id = read_usize(read_usize(it));
+            let c = read_usize(read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
             if c != 0 {
-                continent(read_u32_as_usize(G_NEWS), p, c);
+                continent(read_usize(G_NEWS), p, c);
             } else {
-                all(read_u32_as_usize(G_NEWS), p);
+                all(read_usize(G_NEWS), p);
             }
         }
         it = next(list);
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     if read(b, 0x22, n, f) != read_u16(this + 4) as i16 as i32 as u32 {
         show_error_at(0x9cf0d8, 0x45c);
         exe::crt_fclose(f);
-        exe::crt_free(read_u32_as_usize(this));
+        exe::crt_free(read_usize(this));
         return 0;
     }
     exe::crt_fclose(f);
@@ -421,7 +421,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
     let end = start.wrapping_add((n as i32 * 0x22 - 0x22) as usize);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    exe::llist_llist(l);
+    exe::new_llist(l);
     let year = read_u16(today + 2);
     let day = read_u16(today);
     if year != 0x7d1 {
@@ -474,7 +474,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
         sort(read_u32(this) as usize, read_u16(this + 4) as i16 as i32, 0x22, 0x5fb3f0);
     }
     exe::hostcountry_post_host_news(this, l);
-    exe::llist_destructor_llist(l);
+    exe::drop_llist(l);
 }
 
 /// writes CM3_TEMP\HostCountry.tmp: the count (+4, u16) and 0x22 bytes per host from [+0], without checking the writes;

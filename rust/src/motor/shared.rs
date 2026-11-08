@@ -387,7 +387,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
     let ub = |a: usize| *(a as *const u8) as i32;
-    let club_of = |id: i32| (g(0xae23b4) as isize + id as isize * 0x245) as usize;
+    let club_of = |id: i32| (g(G_CLUB_TABLE) as isize + id as isize * 0x245) as usize;
     let average = || {
         let b = g(G_PLAYER_STATS);
         let d = core::ptr::read_unaligned((b + 0x18) as *const f64);
@@ -411,7 +411,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 continue;
             }
             let p = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
-            if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(0xae2364)) {
+            if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(G_STAFF_COUNT)) {
                 continue;
             }
             if comp != 0 && read(partida + 0x14) == read(club + club::DIVISION) && *((t + 0x4c) as *const u8) == 0 {

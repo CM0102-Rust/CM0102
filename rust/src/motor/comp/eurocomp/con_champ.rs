@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O registro da competição `id` no banco ([0xae23d0] + 0x6b × id).
 pub(crate) unsafe fn club_comp_record(id: usize) -> usize {
-    read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b))
+    read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b))
 }
 
 /// The four lists of 0x4c11a0 (Mexican, Central American, Caribbean and MLS clubs) with their counts.
@@ -30,28 +30,28 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
     // the comparer sends this case to the original alone)
     let mut l = ConcacafClubLists { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
     let (mut a, mut b, mut c, mut m) = (0u8, 0u8, 0u8, 0i8);
-    let mut club = read_u32_as_usize(G_CLUB_TABLE);
+    let mut club = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
-    while i < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    while i < read_usize(G_CLUB_COUNT) as i32 {
         if national_team(club) != 0 {
             break;
         }
-        let nation = read_u32_as_usize(club + club::NATION);
+        let nation = read_usize(club + club::NATION);
         if nation != 0 {
-            let id = read_u32_as_usize(nation);
-            if id == read_u32_as_usize(KEY_NATION_MEXICO) {
+            let id = read_usize(nation);
+            if id == read_usize(KEY_NATION_MEXICO) {
                 if a < 0xc8 {
                     l.mex[a as usize] = club;
                     a += 1;
                 }
             } else {
-                let div = read_u32_as_usize(club + club::DIVISION);
-                if div != 0 && read_u32_as_usize(div) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
+                let div = read_usize(club + club::DIVISION);
+                if div != 0 && read_usize(div) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
                     if m < 0xc {
                         l.mls[m as usize] = club;
                         m += 1;
                     }
-                } else if id != read_u32_as_usize(KEY_NATION_UNITED_STATES) && read_u8(nation + nation::REGION) == 7 {
+                } else if id != read_usize(KEY_NATION_UNITED_STATES) && read_u8(nation + nation::REGION) == 7 {
                     if b < 0xc8 {
                         l.centro[b as usize] = club;
                         b += 1;
@@ -87,13 +87,13 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
 /// objeto) e, se for o mesmo clube, o 0 passa ao último vice da MLS (lugar 1). Depois +4 e +5 de cada time zerados.
 pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32 {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 8);
-    let other = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
+    let other = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     let mut l = concacaf_club_lists();
     exe::comp_util_sort_and_shuffle_top_clubs(l.mex.as_mut_ptr() as usize, l.n[0], 2);
     exe::comp_util_sort_and_shuffle_top_clubs(l.centro.as_mut_ptr() as usize, l.n[1], 3); // cqi11: três centro-americanos
     exe::comp_util_sort_and_shuffle_top_clubs(l.caribe.as_mut_ptr() as usize, l.n[2], 1);
     exe::comp_util_sort_and_shuffle_top_clubs(l.mls.as_mut_ptr() as usize, l.n[3], 1);
-    let t = |k: usize| read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add(k * 6);
+    let t = |k: usize| read_usize(this + cup::TEAM_TABLE).wrapping_add(k * 6);
     let pd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut u32, v as u32);
     crate::comparison::branch("cqi_11 classificados");
     pd(t(2), l.mex[0]);
@@ -107,17 +107,17 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
         pd(t(1), l.mls[1]);
     } else {
         crate::comparison::branch("cqi_11 campeao da mls");
-        let mls = club_comp_record(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
+        let mls = club_comp_record(read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
         pd(t(0), exe::comp_util_get_latest_placed_club(mls, 0));
-        pd(t(1), exe::comp_util_get_latest_placed_club(read_u32_as_usize(other + 4), 0));
-        if read_u32_as_usize(t(0)) == read_u32_as_usize(t(1)) { // cqi11: the champion of both gives the slot to the MLS runner-up
+        pd(t(1), exe::comp_util_get_latest_placed_club(read_usize(other + 4), 0));
+        if read_usize(t(0)) == read_usize(t(1)) { // cqi11: the champion of both gives the slot to the MLS runner-up
             pd(t(0), exe::comp_util_get_latest_placed_club(mls, 1));
         }
     }
     let mut i = 0i32;
     while i < read_i16(this + cup::TEAM_COUNT) as i32 {
-        *((read_u32_as_usize(this + cup::TEAM_TABLE) + i as usize * 6 + 4) as *mut u8) = 0;
-        *((read_u32_as_usize(this + cup::TEAM_TABLE) + i as usize * 6 + 5) as *mut u8) = 0;
+        *((read_usize(this + cup::TEAM_TABLE) + i as usize * 6 + 4) as *mut u8) = 0;
+        *((read_usize(this + cup::TEAM_TABLE) + i as usize * 6 + 5) as *mut u8) = 0;
         i += 1;
     }
     1
@@ -137,14 +137,14 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
 /// thiscall, ret 0; negativo, a caixa da linha 0x1ba e devolve 0) e as posições previstas (virtual +0x5c). Depois a
 /// atualização da copa (0x51f890: push fase; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    if read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE)) == 0 && stage != 0 {
+    if read_usize(read_usize(this + cup::TEAM_TABLE)) == 0 && stage != 0 {
         if exe::conchamp_select_qualified_clubs(this) < 0 {
             // simplification: 0x4c11a0 always returns 1; the error case stays with the box and the original’s 0
             show_error_at(0x9a7d30, 0x1ba);
             return 0;
         }
         crate::comparison::branch("cqi_11 dia da selecao");
-        let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
+        let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
         prever(this);
     }
     exe::cup_update_for_date(this, today, stage)
@@ -166,7 +166,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
 /// push −1; mov ecx, this -> thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
     core::ptr::write_unaligned((this + cup::PRIZE_FUND) as *mut u32, 0x1e8480);
-    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let t = table(this, 0xffff_ffff, this + cup::ROUND_COUNT, this + cup::STAGE_LABEL, 0);
     core::ptr::write_unaligned((this + cup::ROUND_TABLE) as *mut u32, t as u32);
     1

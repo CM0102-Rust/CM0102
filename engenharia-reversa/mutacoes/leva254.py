@@ -20,7 +20,7 @@ MUTACOES = [
     ('cpr8_fim_de_temporada_31', 'let d2 = (random(30) as u16).wrapping_add(read_u16(t + key_nation_record::SEASON_END_DAY)); // the nation’s end of season', 'let d2 = (random(31) as u16).wrapping_add(read_u16(t + key_nation_record::SEASON_END_DAY)); // mutacao: sorteio(31)', 'cpr_8 datas pela nacao'),
     ('cpr9_sem_desempregado', '} else if exe::player_regen_check_unemployed_retirement(p, e.as_mut_ptr()) != 0 {', '} else if false && exe::player_regen_check_unemployed_retirement(p, e.as_mut_ptr()) != 0 { // mutacao: sem o desempregado', 'cpr_9 desempregado'),
     ('cpr9_treinador_fica', 'clear(0x19f, 5); // cpr9: the coach slots', '// mutacao: as vagas de treinador ficam', 'cpr_9 treinador'),
-    ('cpr9_vaga_nao_abre', 'open(read_u32_as_usize(G_MANAGER_MANAGER), c, person); // cpr9: the manager slot opens', 'let _ = open; // mutacao: a vaga nao abre', 'cpr_9 tecnico'),
+    ('cpr9_vaga_nao_abre', 'open(read_usize(G_MANAGER_MANAGER), c, person); // cpr9: the manager slot opens', 'let _ = open; // mutacao: a vaga nao abre', 'cpr_9 tecnico'),
     ('cpr10_lesionado_como_recuperando', 'return 2; // cpr10: lesionado', 'return 1; // mutacao: lesionado como recuperando'),
     ('cpr10_recuperando_como_pronto', '(days < read_i16(l + injury_entry::DAYS_OUT) as i32) as u8 // cpr10: recuperando a forma', '0 // mutacao: recuperando como pronto'),
     ('cpr10_decisao_mais_tarde', 'injury_date_add_days(G_CURRENT_DATE, (random(5) + 1) as u32, &mut d); // cpr10: the decision in 1 to 5 days', 'injury_date_add_days(G_CURRENT_DATE, (random(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias', 'cpr_10 nova decisao'),

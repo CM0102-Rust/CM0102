@@ -726,7 +726,7 @@ pub(crate) unsafe fn formation_watched_match_record(this: usize, human: usize) -
     let h = if human != 0 {
         human
     } else {
-        *((0xb74c26 + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize) as *const usize)
+        *((0xb74c26 + 0x300 * *(0xb77c7a as *const i16) as isize) as *const usize)
     };
     if h == 0 {
         return Ok(0);

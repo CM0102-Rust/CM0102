@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn compare_restart_play(m: usize) {
         return o(m);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -160,7 +160,7 @@ pub(crate) unsafe fn compare_play(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, 
     use std::sync::atomic::Ordering::Relaxed;
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn compare_quick_simulation(m: usize) {
     // the whole engine, the random roll, the error, 0xae1080, the tactic row of both clubs (the sending-off
     // may change the captain) and the match record (scores and aggregate)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     reg.push((t, 0x50));
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
@@ -361,7 +361,7 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_square(this: usize, j: usi
 /// Comparer for `team_strength`.
 pub(crate) unsafe extern "thiscall" fn compare_team_strength(this: usize, l: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_TEAM_STRENGTH);
-    let mut reg = vec![(this + 0x1d8, 0x20), (0xb67a34, 4)];
+    let mut reg = vec![(this + 0x1d8, 0x20), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     for k in 0..20 {
         let p = side_player_slot(this, l, k);
         reg.extend([(p + match_player::MATCH_RATING, 2), (p + match_player::STAMINA, 4)]);
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "thiscall" fn compare_roll_ball(this: usize) {
 /// Comparer for `fine_positions`.
 pub(crate) unsafe extern "thiscall" fn compare_fine_positions(this: usize, out: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u8)>(IDX_FINE_POSITIONS);
-    let mut reg = vec![(out as usize, 2 + 6 * 22), (0xb67a34, 4)];
+    let mut reg = vec![(out as usize, 2 + 6 * 22), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, out), || crate::rng::without_counting(|| fine_positions(this, out)));
     SCOREBOARD.record(igual, || format!("fine_positions original={:x?} rust={:x?}", mo, mr));
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_substitutions(m: usize) {
     // the whole engine (players and staff), the random roll, the error, 0xae1080 and the tactics row of both
     // clubs (the captain at +0x52, which the substitution changes)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -508,7 +508,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punishments(m: usize, first: usiz
     }
     // the whole engine, the random state, the error, 0xae1080 and the tactics row of both clubs (the captain)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -538,7 +538,7 @@ pub(crate) unsafe extern "thiscall" fn compare_penalties(m: usize, mode: u32) {
     // the whole engine, the random roll, the error, the commentator (+0x8f7a points outside) and the match score
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let game = *((m + engine::MATCH) as *const usize);
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (*((m + engine::COMMENTATOR) as *const usize), 1), (game + fixture::HOME_PENALTIES, 2)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (*((m + engine::COMMENTATOR) as *const usize), 1), (game + fixture::HOME_PENALTIES, 2)]);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m, mode), |chamar| {
         penalty_shootout_step_with(m, mode, &mut |rotina, this, args| {
             let mask = match rotina {
@@ -563,7 +563,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_foul(m: usize) -> u8 {
     // the whole engine, the random roll, the error, 0xae1080 and the tactic row of both clubs (the sending-off
     // pode trocar o capitao)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -596,7 +596,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contest(m: usize, x: u32, y: u32)
     // the whole engine, the random roll, the error, 0xae1080 and the tactic row of both clubs (the sending-off
     // pode trocar o capitao)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -640,7 +640,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
     // the whole engine (the grid, the players, the staff +0x9032), the random roll and what the side’s strength
     // e o erro tocam
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     // the captain kept in the tactic row (+0x52) of both clubs: the substitution (0x6e1090) swaps him
     // before the compared one checks whether the player who left was the captain
     let taticas = *(G_TACTICS as *const usize);
@@ -930,7 +930,7 @@ pub(crate) unsafe extern "thiscall" fn compare_who_to_mark(m: usize, j: usize) -
 /// Comparer for `take_off_pitch`.
 pub(crate) unsafe extern "thiscall" fn compare_take_off_pitch(this: usize, j: usize, mode: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_TAKE_OFF_PITCH);
-    let reg = [(this, ENGINE_SIZE), (0xb67a34, 4)];
+    let reg = [(this, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, mode), || take_off_pitch(this, j, mode));
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);

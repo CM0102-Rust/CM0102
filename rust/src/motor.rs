@@ -3822,7 +3822,7 @@ const SEM_ROTINAS: &[&str] = &[];
 ///
 /// [pt] Comparacao das bolas paradas da 57a leva: motor inteiro e sorteio.
 unsafe fn compare_restart(nome: &str, this: usize, o: unsafe extern "thiscall" fn(usize), r: unsafe extern "thiscall" fn(usize)) {
-    let mut regioes = vec![(this, ENGINE_SIZE), (0xb67a34, 4)];
+    let mut regioes = vec![(this, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     regioes.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this), || crate::rng::without_counting(|| r(this)));
     SCOREBOARD.record(igual, || {
@@ -9509,7 +9509,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + 0xf59e) as *mut usize) = if (h60 >> 34) % 3 == 0 { jt } else { 0 };
                 *((m + 0xf5a2) as *mut usize) = if (h60 >> 36) % 3 == 0 { jt } else { 0 };
                 // human manager
-                let globais60 = [0xae2364usize, 0xb63c98];
+                let globais60 = [0xae2364usize, G_HUMAN_MANAGER];
                 let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
                 *(G_STAFF_COUNT as *mut i32) = 1000;
                 let regs60 = tecnicos56.as_mut_ptr() as usize;
@@ -9526,7 +9526,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((m + 0x904d + 208 * l) as *mut usize) = if (h61 >> (37 + l)) % 3 == 0 { 0 } else { tec60.as_ptr() as usize };
                     *((m + 0x904b + 208 * l) as *mut u8) = ((h61 >> (40 + l)) % 2) as u8;
                 }
-                let globais_sel = [0xae235cusize, 0xae2350];
+                let globais_sel = [0xae235cusize, G_NATION_COUNT];
                 let antes_sel: Vec<u32> = globais_sel.iter().map(|&a| *(a as *const u32)).collect();
                 *(G_CLUB_COUNT as *mut i32) = 5000;
                 *(G_NATION_COUNT as *mut i32) = 200;
@@ -9684,7 +9684,7 @@ pub unsafe fn autoteste(casos: u64) {
             compare_mark_position(base54, ((h54 >> 54) % 17) as i8 - 1, ficha54);
             // batch 48: leaves of other modules (game globals swapped during the test)
             let h55 = s.next_u64();
-            let globais = [0xae2378usize, 0xae2364, 0xae2d0c, 0xae235c, 0xae2350];
+            let globais = [0xae2378usize, G_STAFF_COUNT, G_STAFF_STATE_TABLE, G_CLUB_COUNT, G_NATION_COUNT];
             let antes55: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
             compare_units_digit([0i32, 9, 10, 999, 1000, 1001, -1, -10, -999, i32::MIN, ((h55 >> 3) % 3000) as i32 - 1000][((h55 >> 60) % 11) as usize]);
             let ncomp = 200 + ((h55 >> 8) % 100) as i32;
@@ -9713,13 +9713,13 @@ pub unsafe fn autoteste(casos: u64) {
             // batch 49: human manager (indices at the edges, no person for the current manager),
             // cell codes (all valid ones and neighbours) and formation masks
             let h56 = s.next_u64();
-            let globais56 = [0xae2364usize, 0xb77c7a];
+            let globais56 = [0xae2364usize, G_SCREEN_MANAGER_CURRENT_SLOT];
             let antes56: Vec<u32> = globais56.iter().map(|&a| *(a as *const u32)).collect();
             let npes56 = 1000 + ((h56 >> 2) % 50) as i32;
             *(G_STAFF_COUNT as *mut i32) = npes56;
             let atual56 = ((h56 >> 8) % 4) as i16;
             *(G_SCREEN_MANAGER_CURRENT_SLOT as *mut i16) = atual56;
-            let tab56 = 0xb74c26 + 768 * atual56 as usize;
+            let tab56 = G_SCREEN_RECORDS_MANAGER + 768 * atual56 as usize;
             let antes_tab56 = *(tab56 as *const u32);
             let ntec = 1 + ((h56 >> 12) % 16) as i32;
             let regs56 = tecnicos56.as_mut_ptr() as usize;
@@ -9770,7 +9770,7 @@ pub unsafe fn autoteste(casos: u64) {
                 // batch 63: club controlled by a human (club, national side and second national side
                 // that falls back to the main one; manager of the club, another or none; with and without tactics)
                 let h63 = s.next_u64();
-                let globais63 = [0xb63c98usize, 0xae235c, 0xae2350, 0xae23b4, 0xae23a8];
+                let globais63 = [0xb63c98usize, G_CLUB_COUNT, G_NATION_COUNT, G_CLUB_TABLE, G_NATION_TABLE];
                 let antes63: Vec<u32> = globais63.iter().map(|&a| *(a as *const u32)).collect();
                 *(G_HUMAN_MANAGER as *mut usize) = obj56.as_ptr() as usize;
                 *(G_CLUB_COUNT as *mut i32) = 5000;
@@ -9834,7 +9834,7 @@ pub unsafe fn autoteste(casos: u64) {
                 // synthetic persons; both sides with the synthetic human club)
                 {
                     let h75 = s.next_u64();
-                    let globais75 = [0xae2a60usize, 0xae23bc, 0xae2c90, 0xae2c94];
+                    let globais75 = [0xae2a60usize, G_STAFF_TABLE, G_CURRENT_DATE, G_CURRENT_DATE_LEAP];
                     let antes75: Vec<u32> = globais75.iter().map(|&a| *(a as *const u32)).collect();
                     *(G_CURRENT_DATE as *mut u32) = (h75 >> 3) as u32;
                     *(G_CURRENT_DATE_LEAP as *mut u32) = (h75 >> 29) as u32;
@@ -9941,7 +9941,7 @@ pub unsafe fn autoteste(casos: u64) {
                     // batch 78: competition that counts (3 globals, table of 107 bytes,
                     // objects with stage, rounds and the first round) and the sorting comparisons
                     let h78 = s.next_u64();
-                    let globais78 = [KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0xae23d0, 0xadadfc];
+                    let globais78 = [KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, G_CLUB_COMP_TABLE, G_COMP_OBJECT_TABLE];
                     let antes78: Vec<u32> = globais78.iter().map(|&a| *(a as *const u32)).collect();
                     for k in 0..3usize {
                         *(globais78[k] as *mut i32) = 10 + k as i32;
@@ -10098,7 +10098,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let mut destino84 = [0u8; 12];
                     compare_copy_date_and_mark(destino84.as_mut_ptr() as usize, origem84.as_ptr() as usize);
                     *(G_DATABASE_NAMES_LANGUAGE as *mut u32) = antes83;
-                    let globais82 = [0x9b59b4usize, 0xae23a0, 0xae23f8];
+                    let globais82 = [0x9b59b4usize, G_COMMON_NAME_COUNT, G_COMMON_NAME_TABLE];
                     let antes82: Vec<u32> = globais82.iter().map(|&a| *(a as *const u32)).collect();
                     let n82 = 1 + ((h82 >> 23) % 8) as i32;
                     let mut tabela82 = vec![1u8; 60 * 9];
@@ -10405,14 +10405,14 @@ pub unsafe fn autoteste(casos: u64) {
             let c56 = codigos56[((h56 >> 50) % 31) as usize];
             // batch 50: second national side and aggregate score (draws, away goals, no first leg, bits of +0x38)
             let h57 = s.next_u64();
-            let globais57 = [0xae235cusize, 0xae2350];
+            let globais57 = [0xae235cusize, G_NATION_COUNT];
             let antes57: Vec<u32> = globais57.iter().map(|&a| *(a as *const u32)).collect();
             *(G_CLUB_COUNT as *mut i32) = 5000;
             *(G_NATION_COUNT as *mut i32) = 200;
             let clube57 = [[4800i32, 4799, 4801, 0, 4900][((h57 >> 2) % 5) as usize]];
             compare_is_second_national_team(clube57.as_ptr() as usize);
             // batch 60: club of the national side (arithmetic only; fake base and 0xae23a8)
-            let globais60 = [0xae23b4usize, 0xae23a8];
+            let globais60 = [0xae23b4usize, G_NATION_TABLE];
             let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
             *(G_CLUB_TABLE as *mut u32) = 0x0100_0000 + ((h57 >> 53) as u32 & 0xfff) * 4;
             *(G_NATION_TABLE as *mut u32) = 0x0200_0000;
@@ -10591,7 +10591,7 @@ pub unsafe fn autoteste(casos: u64) {
             compare_individual_marking(m);
             // batch 54: new reputation (national side, type 8 with the codes, match -2, zero ratio)
             {
-                let globais = [0xae235cusize, 0xae2350, 0xb74350];
+                let globais = [0xae235cusize, G_NATION_COUNT, G_PLAYER_STATS];
                 let antes: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
                 let mut est = [0f64; 6];
                 let mut pa = vec![0u8; 0x60];

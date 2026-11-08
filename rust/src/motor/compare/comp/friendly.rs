@@ -382,10 +382,10 @@ pub(crate) unsafe extern "thiscall" fn compare_set_preseason_windows(this: usize
     let erros: Vec<String> = plan.iter()
         .filter(|&&(c, ini, fim, nova)| {
             core::ptr::read_unaligned((c + preseason_candidate::WINDOW_START) as *const i16) != ini || core::ptr::read_unaligned((c + preseason_candidate::WINDOW_END) as *const i16) != fim
-                || (nova && read_u32_as_usize(c + preseason_candidate::PLANNED_DATES) == 0)
+                || (nova && read_usize(c + preseason_candidate::PLANNED_DATES) == 0)
         })
         .map(|&(c, ini, fim, nova)| format!("candidato {:x}: esperado {}..{} lista {} obtido {}..{} lista {:x}", c, ini, fim, nova,
-            core::ptr::read_unaligned((c + preseason_candidate::WINDOW_START) as *const i16), core::ptr::read_unaligned((c + preseason_candidate::WINDOW_END) as *const i16), read_u32_as_usize(c + preseason_candidate::PLANNED_DATES)))
+            core::ptr::read_unaligned((c + preseason_candidate::WINDOW_START) as *const i16), core::ptr::read_unaligned((c + preseason_candidate::WINDOW_END) as *const i16), read_usize(c + preseason_candidate::PLANNED_DATES)))
         .collect();
     SCOREBOARD.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plan.len(), erros.join("; ")));
 }
@@ -442,8 +442,8 @@ pub(crate) unsafe extern "thiscall" fn compare_add_friendly_match(this: usize, c
         r == 0
     } else {
         // simplification: r = 0 without being occupied only when out of memory (the box has already shown): not checked
-        r == 0 || (read_u16(r) == dia && read_u16(r + 2) == ano && read_u32_as_usize(r + friendly_match::REQUESTING_CLUB) == club && read_u32_as_usize(r + 8) == 0
-            && *((r + friendly_match::STATUS) as *const u8) == 1 && read_u32_as_usize(r + friendly_match::HOME_CLUB) == casa && read_u32_as_usize(r + friendly_match::AWAY_CLUB) == fora)
+        r == 0 || (read_u16(r) == dia && read_u16(r + 2) == ano && read_usize(r + friendly_match::REQUESTING_CLUB) == club && read_usize(r + 8) == 0
+            && *((r + friendly_match::STATUS) as *const u8) == 1 && read_usize(r + friendly_match::HOME_CLUB) == casa && read_usize(r + friendly_match::AWAY_CLUB) == fora)
     };
     SCOREBOARD.record(same, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
         club, dia, ano, opponent, in_home, ocupada, r));

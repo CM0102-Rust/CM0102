@@ -149,7 +149,7 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
 /// Vélez Sarsfield, Cruzeiro, São Paulo, Palmeiras, Corinthians, Flamengo, Rosario Central, Vasco, Colo-Colo,
 /// Universidad de Chile, Universidad Católica, Peñarol, Nacional, Olimpia, Cerro Porteño e Grêmio), na ordem da original.
 pub(crate) const MERCOSUR_INVITED_CLUBS: [usize; 20] = [
-    0x9d00ac, 0x9d00d0, 0x9d00b4, 0x9d00d8, 0x9d00b0, 0x9d026c, 0x9d0270, 0x9d0274, 0x9d0278, 0x9d0358,
+    0x9d00ac, 0x9d00d0, 0x9d00b4, 0x9d00d8, 0x9d00b0, G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE, G_KEY_CLUB_SAO_PAULO_FUTEBOL_CLUBE, G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS, 0x9d0278, 0x9d0358,
     0x9d00e0, 0x9d0354, 0x9d0280, 0x9d0284, 0x9d0288, 0x9d0298, 0x9d028c, 0x9d0290, 0x9d0294, 0x9d027c,
 ];
 
@@ -258,7 +258,7 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
 /// [pt] Os clubes do jogo, a marca da caixa e o histórico das competições (a 0x4afd80 o reordena: ver a cqj_1).
 pub(crate) unsafe fn club_seeding_regions() -> Vec<(usize, usize)> {
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
-    vec![(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
+    vec![(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
 }
 
 /// The Libertadores calendar: every new game year it builds the CONMEBOL club table and gives out the places.

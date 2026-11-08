@@ -402,12 +402,12 @@ pub(crate) unsafe extern "thiscall" fn compare_set_current_competition(this: usi
         return o(this, nation, comp);
     }
     let p = current_comp_plan(this, nation, comp);
-    let (atual, fila) = (read_u32_as_usize(p.vaga) as u32, read_u32_as_usize(p.fila) as u32);
+    let (atual, fila) = (read_usize(p.vaga) as u32, read_usize(p.fila) as u32);
     o(this, nation, comp);
-    let (atual2, fila2) = (read_u32_as_usize(p.vaga) as u32, read_u32_as_usize(p.fila) as u32);
+    let (atual2, fila2) = (read_usize(p.vaga) as u32, read_usize(p.fila) as u32);
     let ok = atual2 == p.nova.unwrap_or(atual) && fila2 == p.na_fila.unwrap_or(fila);
     SCOREBOARD.record(ok, || format!("set_current_competition(nação {}, comp {}) atual {:#x} -> {:#x} (esperava {:x?}), fila {:#x} -> {:#x} (esperava {:x?})",
-        read_u32_as_usize(nation), read_u32_as_usize(comp), atual, atual2, p.nova, fila, fila2, p.na_fila));
+        read_usize(nation), read_usize(comp), atual, atual2, p.nova, fila, fila2, p.na_fila));
 }
 
 /// Comparer for `mark_clubs_with_fixtures`.
@@ -416,11 +416,11 @@ pub(crate) unsafe extern "thiscall" fn compare_set_current_competition(this: usi
 /// dia e o amistoso só leem (o cursor da lista volta ao começo a cada uso).
 pub(crate) unsafe extern "thiscall" fn compare_mark_clubs_with_fixtures(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MARK_CLUBS_WITH_FIXTURES);
-    let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
-    if read_u32_as_usize(this + national_teams_fields::CLUB_MARKS) == 0 || n <= 0 {
+    let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    if read_usize(this + national_teams_fields::CLUB_MARKS) == 0 || n <= 0 {
         return o(this, data);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(read_u32_as_usize(this + national_teams_fields::CLUB_MARKS), n as usize)], || o(this, data), || mark_clubs_with_fixtures(this, data));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(read_usize(this + national_teams_fields::CLUB_MARKS), n as usize)], || o(this, data), || mark_clubs_with_fixtures(this, data));
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<(usize, u8, u8)> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).map(|i| (i, a[i], b[i])).collect();

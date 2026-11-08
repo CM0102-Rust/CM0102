@@ -50,7 +50,7 @@ pub(crate) unsafe extern "C" fn compare_match_stats_compare_events(a: *const u8,
 /// marcas 0xb6b7a8/ac/b0, o texto 0xde1f64 e a posição do buffer de rede ([0xae290c]), mais `extra`.
 pub(crate) unsafe fn compare_montagem_da_partida(name: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
-    reg.push((0xb6b7a8, 12));
+    reg.push((G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 12));
     let slot = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
     let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + slot * 0x300) as *const usize);
     if block != 0 {
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "C" fn compare_refresh_latest_scores_rows() {
         Some(r) => r,
         None => return o(),
     };
-    reg.push((0xb6b7a8, 12));
+    reg.push((G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 12));
     let slot = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
     let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + slot * 0x300) as *const usize);
     if block != 0 {
@@ -341,7 +341,7 @@ pub(crate) unsafe extern "C" fn compare_draw_action_zones_panel(top: *mut i32, b
         // simplification: the allocation does not run twice; this design is proven in Rust mode
         return o(top, base);
     }
-    let extra = [(top as usize, 4), (0xb6b7a4, 2), (0xb6b7b4, 1), (foto, 0xd7a)];
+    let extra = [(top as usize, 4), (G_ACTION_ZONES_STATIC_COLOUR, 2), (G_ACTION_ZONES_STATIC_GUARD, 1), (foto, 0xd7a)];
     compare_pela_lista_com("draw_action_zones_panel", &extra, || o(top, base), || draw_action_zones_panel(top, base));
 }
 

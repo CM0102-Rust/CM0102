@@ -122,7 +122,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: us
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for lado in 0..2usize {
-        let club = (g(0xae23b4) as isize + read(t + 4 * lado) as isize * 0x245) as usize;
+        let club = (g(G_CLUB_TABLE) as isize + read(t + 4 * lado) as isize * 0x245) as usize;
         let ts = t + lado * 0x625;
         reg.push((club + club::REPUTATION, 2));
         for k in 0..20usize {

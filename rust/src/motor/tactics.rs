@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, club: usiz
 pub(crate) unsafe fn tactics_row_regions(this: usize, club: usize, p: usize, human: u32) -> Vec<(usize, usize)> {
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = row(club, human);
-    let mut reg = vec![(0xb67a34, 4), (p, 0x91)];
+    let mut reg = vec![(G_MOUSE_LEFT_BUTTON_DOWN, 4), (p, 0x91)];
     if k != -1 && k < *((this + tactics_fields::ROW_COUNT) as *const i32) {
         reg.push(((*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91), 0x91));
     }
@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, club: usi
     if read_u8(this + tactics_fields::UNDO_COUNT) == 0 {
         return 0;
     }
-    let t = read_usize((read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize);
+    let t = read_usize((read_i16(0xb77c7a) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize);
     if t == 0 {
         return 0;
     }

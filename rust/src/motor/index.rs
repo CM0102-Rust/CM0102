@@ -140,7 +140,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
     }
     let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let f = if gi(0x9b5984) != 0 { open(path(0x987da0, 0x9b632c), 0x98f928) } else { 0 }; // CM3_TEMP\eng.lng, "rb"
+    let f = if gi(G_DATABASE_NAMES_LANGUAGE) != 0 { open(path(0x987da0, 0x9b632c), 0x98f928) } else { 0 }; // CM3_TEMP\eng.lng, "rb"
     if f != 0 {
         let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -168,7 +168,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
             let mut i = 0i32;
             loop {
                 let list = rd(G_CLUB_ENGLISH_NAME_INDEX_TABLE); // the database’s club list
-                if i >= if list != 0 { gi(0xae235c) } else { c[0] } {
+                if i >= if list != 0 { gi(G_CLUB_COUNT) } else { c[0] } {
                     break;
                 }
                 let row = if list != 0 { em(b, gi(em(list, i, 4)), 0x4f) } else { em(b, i, 0x4f) };
@@ -202,14 +202,14 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
         exe::crt_fclose(f);
         mark = u32::MAX;
     } else {
-        let mut rodou = key_ids_loop(|| gi(0xae2350), |i| { exe::match_nation_key_id(em(rd(G_NATION_TABLE), i, 0x122) + 4, i as u32); });
-        rodou |= key_ids_loop(|| gi(0xae2378).wrapping_sub(0x7f), |i| { exe::match_club_comp_key_id(em(rd(G_CLUB_COMP_TABLE), i, 0x6b) + 4, i as u32); });
-        rodou |= key_ids_loop(|| gi(0xae234c), |i| {
+        let mut rodou = key_ids_loop(|| gi(G_NATION_COUNT), |i| { exe::match_nation_key_id(em(rd(G_NATION_TABLE), i, 0x122) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(G_CLUB_COMP_COUNT).wrapping_sub(0x7f), |i| { exe::match_club_comp_key_id(em(rd(G_CLUB_COMP_TABLE), i, 0x6b) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(G_CONTINENT_COUNT), |i| {
             let name = em(rd(G_CONTINENT_TABLE), i, 0xc6) + 4;
             match_key_name_chain(name, &CONTINENTES_DAS_CHAVES, i as u32); // continents of the database
         });
         rodou |= key_ids_loop(|| gi(0xae2388), |i| { exe::match_staff_comp_key_id(em(rd(G_STAFF_COMP_TABLE), i, 0x65) + 4, i as u32); });
-        rodou |= key_ids_loop(|| gi(0xae235c), |i| { exe::match_club_key_id(em(rd(G_CLUB_TABLE), i, 0x245) + 4, i as u32); }); // database clubs
+        rodou |= key_ids_loop(|| gi(G_CLUB_COUNT), |i| { exe::match_club_key_id(em(rd(G_CLUB_TABLE), i, 0x245) + 4, i as u32); }); // database clubs
         if rodou {
             mark = u32::MAX;
         }
@@ -2424,7 +2424,7 @@ pub(crate) unsafe extern "C" fn compare_get_continent_adjective(continent: usize
 /// Comparer for `match_club_key_id`.
 pub(crate) unsafe extern "C" fn compare_match_club_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
-    let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
+    let reg: [(usize, usize); 2] = [(G_KEY_CLUB_MLS_ALL_STARS_EAST, 0x484), (0xb63c9c, 0x68)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_club_key_id(name, row));
     SCOREBOARD.record(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
@@ -2436,7 +2436,7 @@ pub(crate) unsafe extern "C" fn compare_match_club_key_id(name: usize, row: u32)
 /// Comparer for `remap_club_key_id`.
 pub(crate) unsafe extern "C" fn compare_remap_club_key_id(old: u32, new: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
-    let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
+    let reg: [(usize, usize); 2] = [(G_KEY_CLUB_MLS_ALL_STARS_EAST, 0x484), (0xb63c9c, 0x68)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(old, new), || remap_club_key_id(old, new));
     SCOREBOARD.record(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", old as i32, new as i32, r, n, describe_key_diffs(&mo, &mr)));
     r

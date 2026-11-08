@@ -293,15 +293,15 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
 ///
 /// [pt] O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
 pub(crate) unsafe fn comp_record_of_key(g: usize) -> usize {
-    read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
+    read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(g).wrapping_mul(0x6b))
 }
 
 /// Is the club's competition (+0x57) the one with key id [g]?
 ///
 /// [pt] A competição do clube (+0x57, o id no +0) é a de id [g]?
 pub(crate) unsafe fn spa_lower_is_in_comp(c: usize, g: usize) -> bool {
-    let comp = read_u32_as_usize(c + club::DIVISION);
-    comp != 0 && read_u32_as_usize(comp) == read_u32_as_usize(g)
+    let comp = read_usize(c + club::DIVISION);
+    comp != 0 && read_usize(comp) == read_usize(g)
 }
 
 /// `SpaLower::SpaLower(year)` (SEH frame only on the exception path): the Spanish lower division, a background league
@@ -323,18 +323,18 @@ pub(crate) unsafe fn spa_lower_is_in_comp(c: usize, g: usize) -> bool {
 /// (League::create_fixtures 0x6835c0), todos mov ecx -> thiscall, ret 0; cada falha, a caixa da sua linha (0x3f,
 /// 0x46, 0x4d do fonte 0xa82880) e fim. Devolve this.
 pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u32) -> usize {
-    exe::league_league(this);
-    write_u32_from_usize(this, 0x96fb1c);
+    exe::new_league(this);
+    write_usize(this, 0x96fb1c);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xff;
-    write_u32_from_usize(this + 4, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
+    write_usize(this + 4, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch("cqm_6 divisao de baixo nova");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
-    write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    write_u32_from_usize(this + league::STAGE_COUNT, 0);
+    write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
+    write_usize(this + league::STAGE_COUNT, 0);
     if exe::spalower_set_up_rules(this) == 0 {
         show_error_at(0xa82880, 0x3f);
         return this;
@@ -374,17 +374,17 @@ pub(crate) unsafe fn is_b_team_of_comp_club(c: usize, g: usize) -> bool {
 pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut v = Vec::new();
-    let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
-    let base = read_u32_as_usize(G_CLUB_TABLE);
+    let n = read_usize(G_CLUB_COUNT) as i32;
+    let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n && v.len() < 100 {
         let c = base + (i as u16 as usize) * club::SIZE;
-        let comp = read_u32_as_usize(c + club::DIVISION);
-        let nation = read_u32_as_usize(c + club::NATION);
+        let comp = read_usize(c + club::DIVISION);
+        let nation = read_usize(c + club::NATION);
         if comp != 0 && nation != 0 {
-            let id = read_u32_as_usize(comp);
-            let group = [KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B3, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4].iter().any(|&g| id == read_u32_as_usize(g));
-            if group || (read_u32_as_usize(nation) == read_u32_as_usize(KEY_NATION_SPAIN) && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) {
+            let id = read_usize(comp);
+            let group = [KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B3, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4].iter().any(|&g| id == read_usize(g));
+            if group || (read_usize(nation) == read_usize(KEY_NATION_SPAIN) && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) {
                 let mut eh_a: u32 = 0;
                 if partner(c, &mut eh_a, 1) == 0 {
                     v.push(c);
@@ -403,18 +403,18 @@ pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
 /// banco, até 22 linhas (`k` já usadas). Os últimos `2 × [0xae2350]` clubes do banco ficam de fora [inferência: os
 /// clubes criados depois, sem divisão].
 pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mut por: impl FnMut(usize, bool)) {
-    let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
-    let base = read_u32_as_usize(G_CLUB_TABLE);
+    let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE;
-        let comp = read_u32_as_usize(c + club::DIVISION);
-        let nation = read_u32_as_usize(c + club::NATION);
-        if comp != 0 && nation != 0 && read_u32_as_usize(nation) == read_u32_as_usize(KEY_NATION_SPAIN) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
+        let comp = read_usize(c + club::DIVISION);
+        let nation = read_usize(c + club::NATION);
+        if comp != 0 && nation != 0 && read_usize(nation) == read_usize(KEY_NATION_SPAIN) && read_usize(comp) != read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_usize(comp) != read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
             let mut eh_a: u32 = 0;
             let p = partner(c, &mut eh_a, 1);
-            let enters = p != 0 && eh_a == 0 && read_u32_as_usize(p + club::DIVISION) != 0 && (*k as i8 as i16) < rows && read_u32_as_usize(read_u32_as_usize(p + club::DIVISION)) == read_u32_as_usize(g);
+            let enters = p != 0 && eh_a == 0 && read_usize(p + club::DIVISION) != 0 && (*k as i8 as i16) < rows && read_usize(read_usize(p + club::DIVISION)) == read_usize(g);
             if enters {
                 *k = k.wrapping_add(1);
             }
@@ -446,19 +446,19 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
     let t = alloc(0x512);
-    write_u32_from_usize(this + league::TABLE, t);
+    write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xa82880, 0x2ac);
         return 0;
     }
     // the clubs of this division move to the generic one
-    let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
-    let base = read_u32_as_usize(G_CLUB_TABLE);
+    let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE;
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
-            write_u32_from_usize(c + club::DIVISION, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
+            write_usize(c + club::DIVISION, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
         }
         i = i.wrapping_add(1);
     }
@@ -471,9 +471,9 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
             if entra {
                 iniciar(this, k as u32, c, 0, 0);
                 k = k.wrapping_add(1);
-                write_u32_from_usize(c + club::RESERVE_DIVISION, read_u32_as_usize(this + 4));
+                write_usize(c + club::RESERVE_DIVISION, read_usize(this + 4));
             } else {
-                write_u32_from_usize(c + club::RESERVE_DIVISION, 0);
+                write_usize(c + club::RESERVE_DIVISION, 0);
             }
         });
     }
@@ -488,7 +488,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
         let c = list[j as usize];
         iniciar(this, k as u32, c, 0, 0);
         k = k.wrapping_add(1);
-        write_u32_from_usize(c + club::RESERVE_DIVISION, read_u32_as_usize(this + 4));
+        write_usize(c + club::RESERVE_DIVISION, read_usize(this + 4));
         j += 1;
     }
     (k as i8 as i16 == read_i16(this + league::CLUB_COUNT)) as u32

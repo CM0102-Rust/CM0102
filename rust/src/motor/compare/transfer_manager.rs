@@ -15,17 +15,17 @@ use super::*;
 /// de série gravados na oferta de entrada e a série que sobe.
 pub(crate) unsafe extern "thiscall" fn compare_add_transfer_offer(this: usize, offer: usize, terms: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ADD_TRANSFER_OFFER);
-    let (alvo, comprador) = (read_u32_as_usize(offer + offer::TARGET_STAFF_ID), read_u32_as_usize(offer + offer::BUYER_CLUB_ID));
-    let first = read_u8(read_u32_as_usize(this + transfer_manager_fields::PERSON_FLAGS).wrapping_add(alvo.wrapping_mul(8)) + 1) == 0;
-    let (lidas, conta) = (read_u32_as_usize(this + transfer_manager_fields::OFFER_CAPACITY) as i32, read_u32_as_usize(this + transfer_manager_fields::OFFER_COUNT) as i32);
+    let (alvo, comprador) = (read_usize(offer + offer::TARGET_STAFF_ID), read_usize(offer + offer::BUYER_CLUB_ID));
+    let first = read_u8(read_usize(this + transfer_manager_fields::PERSON_FLAGS).wrapping_add(alvo.wrapping_mul(8)) + 1) == 0;
+    let (lidas, conta) = (read_usize(this + transfer_manager_fields::OFFER_CAPACITY) as i32, read_usize(this + transfer_manager_fields::OFFER_COUNT) as i32);
     let cap = if conta == lidas { lidas.wrapping_add(0x32) } else { lidas };
-    let (vaga, _) = find_offer_slot_and_rival(read_u32_as_usize(this), lidas, cap, conta, alvo, comprador, read_u32_as_usize(this + transfer_manager_fields::LOWEST_FREE_SLOT) as i32, first);
-    let serie = read_u32_as_usize(this + transfer_manager_fields::NEXT_SERIAL);
+    let (vaga, _) = find_offer_slot_and_rival(read_usize(this), lidas, cap, conta, alvo, comprador, read_usize(this + transfer_manager_fields::LOWEST_FREE_SLOT) as i32, first);
+    let serie = read_usize(this + transfer_manager_fields::NEXT_SERIAL);
     o(this, offer, terms); // simplification: original only
     if vaga == -1 {
         return;
     }
-    let (v, s, s2) = (read_u32_as_usize(offer + offer::SLOT_INDEX) as i32, read_u32_as_usize(offer + offer::SERIAL), read_u32_as_usize(this + transfer_manager_fields::NEXT_SERIAL));
+    let (v, s, s2) = (read_usize(offer + offer::SLOT_INDEX) as i32, read_usize(offer + offer::SERIAL), read_usize(this + transfer_manager_fields::NEXT_SERIAL));
     // the serial goes up at least once: a nested offer made inside the call (news, scheduling) raises it again
     // (8-league audit of 07/11/2026, ENG SCO IRL ITA ESP, 2002-050: 4625 against 4624)
     // [pt] a série sobe pelo menos uma vez: uma oferta aninhada feita dentro da chamada (notícia, agenda) a sobe de novo
@@ -84,11 +84,11 @@ pub(crate) unsafe extern "thiscall" fn compare_make_exchange_option(this: usize,
     let r = o(this, buyer, target, offer, out, atracao, value);
     let after = crate::comparison::MemorySnapshot::read(&regions);
     let (ao, fo) = (*atracao, if r != 0 && *out != 0 { option_offer_snapshot(*out) } else { Vec::new() });
-    let e_o = read_u32_as_usize(G_CONTRACT_LOOKUP_RESULT);
+    let e_o = read_usize(G_CONTRACT_LOOKUP_RESULT);
     before.write_back();
     let n = crate::rng::pause_trace(|| crate::rng::without_counting(|| make_exchange_option(this, buyer, target, offer, out, atracao, value)));
     let (an, fn_) = (*atracao, if n != 0 && *out != 0 { option_offer_snapshot(*out) } else { Vec::new() });
-    let e_n = read_u32_as_usize(G_CONTRACT_LOOKUP_RESULT);
+    let e_n = read_usize(G_CONTRACT_LOOKUP_RESULT);
     if n != 0 && *out != 0 {
         let s = *out;
         destroy(s);
@@ -133,9 +133,9 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_can_loan_player(
         regions[k] = (msg, 0x100);
         k += 1;
     }
-    let gm = read_u32_as_usize(G_TRANSFER_MANAGER);
-    if gm != 0 && read_u32_as_usize(gm + transfer_manager_fields::PERSON_FLAGS) != 0 {
-        regions[k] = (read_u32_as_usize(gm + transfer_manager_fields::PERSON_FLAGS).wrapping_add(read_u32_as_usize(player).wrapping_mul(8)), 1);
+    let gm = read_usize(G_TRANSFER_MANAGER);
+    if gm != 0 && read_usize(gm + transfer_manager_fields::PERSON_FLAGS) != 0 {
+        regions[k] = (read_usize(gm + transfer_manager_fields::PERSON_FLAGS).wrapping_add(read_usize(player).wrapping_mul(8)), 1);
         k += 1;
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions[..k], || o(this, club, player, msg),
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_exchange_player(this: usiz
 /// oferta no status 0x10; senão 1.
 pub(crate) unsafe extern "thiscall" fn compare_check_offer_work_permits(this: usize, offer: usize, quieto: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CHECK_OFFER_WORK_PERMITS);
-    let (precisa, proposta, concedida) = check_work_permit(this, transfer_manager_staff_by_id(read_u32_as_usize(offer + offer::TARGET_STAFF_ID)), transfer_manager_club_by_id(read_u32_as_usize(offer + offer::BUYER_CLUB_ID)));
+    let (precisa, proposta, concedida) = check_work_permit(this, transfer_manager_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), transfer_manager_club_by_id(read_usize(offer + offer::BUYER_CLUB_ID)));
     let recusada = precisa && proposta != 0 && !concedida;
     let r = o(this, offer, quieto);
     let ok = if recusada { r == 0 && read_u8(offer + offer::STATUS) == 0x10 } else { r == 1 };
@@ -231,9 +231,9 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_daily_update(thi
         let p5 = new(d5.as_mut_ptr() as usize, 100, year.wrapping_sub(5) as u32);
         let p2 = new(d2.as_mut_ptr() as usize, 100, year.wrapping_sub(2) as u32);
         let p10 = new(d10.as_mut_ptr() as usize, 100, year.wrapping_sub(10) as u32);
-        let mut s = read_u32_as_usize(G_STAFF_TABLE);
-        for _ in 0..(read_u32_as_usize(G_STAFF_COUNT) as i32).max(0) {
-            if meets_residency_naturalisation(s, p2, p5, p10, community) && read_u32_as_usize(s + staff::SECOND_NATION) != read_u32_as_usize(read_u32_as_usize(s + staff::CLUB_JOB) + 0x53) {
+        let mut s = read_usize(G_STAFF_TABLE);
+        for _ in 0..(read_usize(G_STAFF_COUNT) as i32).max(0) {
+            if meets_residency_naturalisation(s, p2, p5, p10, community) && read_usize(s + staff::SECOND_NATION) != read_usize(read_usize(s + staff::CLUB_JOB) + 0x53) {
                 erradas += 1;
             }
             s += 0x6e;
@@ -933,7 +933,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collapse_offers_for_player(this: 
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
-    exe::llist_llist(l);
+    exe::new_llist(l);
     exe::transfer_manager_get_offers_for_player(this, person, l, 0);
     let mut target = Vec::new();
     write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
@@ -942,7 +942,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collapse_offers_for_player(this: 
         target.push(read_usize(read_usize(this).wrapping_add(read_usize(e).wrapping_mul(4))));
         e = next(l);
     }
-    exe::llist_destructor_llist(l);
+    exe::drop_llist(l);
     o(this, person);
     let ok = target.iter().all(|&of| read_u8(of + offer::STATUS) == 0xf && read_u8(of + offer::RESPONSE_ROUND) == 3);
     SCOREBOARD.record(ok, || format!("collapse_offers_for_player(pessoa {}): {} ofertas, estados {:x?}", read_usize(person), target.len(), target.iter().map(|&of| (read_u8(of + offer::STATUS), read_u8(of + offer::RESPONSE_ROUND))).collect::<Vec<_>>()));
@@ -1084,7 +1084,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_cash_offer_option(this: usi
 /// [pt] Comparador: lado a lado pelas duas saídas, o sorteio, [0xae1080] e [0xb67a34] (a caixa da falta de ficha).
 pub(crate) unsafe extern "thiscall" fn compare_get_offer_response_delay(this: usize, offer: usize, days: *mut u8, fatias: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_GET_OFFER_RESPONSE_DELAY);
-    let mut reg = vec![(days as usize, 1usize), (fatias as usize, 1), (G_CONTRACT_LOOKUP_RESULT, 4), (0xb67a34, 4)];
+    let mut reg = vec![(days as usize, 1usize), (fatias as usize, 1), (G_CONTRACT_LOOKUP_RESULT, 4), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(
         &reg,

@@ -1,0 +1,17 @@
+Leitor de fora, rodada 8 (08/11/2026, noite). Veredito: claramente melhor, mas só em parte. Campos com nome ~20.100
+contra ~4.000 `+ 0x..` crus no código (eram ~7.800); 3.606 transmute(FN_..) fora do exe_calls.rs; 3.613 chamadas exe::;
+~11.800 literais hex que parecem endereços.
+Português: a API da infraestrutura (desviar, instalar, isolar, contar, RETORNO, VENENO, PASSAGEM, aplicar_resolucao;
+PROLOGOS; allocator novo/liberar/regiao_do_jogo; date dia_da_semana; registro::linha, apresentacao, conteiner); ~480
+locais; ~40 comentários finais (marcas de mutação); os textos de registro e os 1.758 rótulos de branch.
+Os 8 obstáculos: 1. as funções do exe mais usadas sem invólucro (CRT_MALLOC 180, LLIST_GET_NEXT 126, IS_HUMAN_CLUB 111 com
+4 assinaturas...): escolher uma assinatura verdadeira e gerar assim mesmo; 2. 968 floats lidos por endereço; 3. endereços
+crus de globais e textos (0xae3184 x76 com G_ existente; 0xde1f64 x97; show_error_at(0xa161d4, ..) x520); 4. ~24.600 hex
+nos docs em inglês; 5. acessores de memória demais (read_usize x read_u32_as_usize iguais no i686; ~4.200 derefs crus;
+read_f32_at/read_f64_at duplicados no match_pl.rs); 6. 592 closures de acesso locais; 7. as tabelas paralelas do motor.rs;
+8. andaime de teste (1.758 branch(), 1.051 marcas, 250 comparadores só de passagem).
+Inconsistente: invólucros com parâmetros a0..aN, 7 nomes at_<endereço>, construtores gaguejados (cup_cup, llist_llist...);
+21 módulos com _fields; stadium x stadium_obj; fragmento órfão em match_pl.rs:107; rotinas sem a linha Original:;
+comparison::branch com Mutex e busca linear em todo caminho quente; rng.rs ainda diz aleatorio(n).
+Bom: fields.rs limpo; o código com exe:: e campos lê quase como fonte; cabeçalhos uniformes; mem.rs pequeno; docs de
+rng.rs e do motor.rs; detours.rs confere prólogo e hash; README.en; a estratégia (base fixa, ftol único) coerente.

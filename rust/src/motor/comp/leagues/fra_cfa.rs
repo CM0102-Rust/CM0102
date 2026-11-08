@@ -320,12 +320,12 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 
     *((this + league::RELEGATED_COUNT) as *mut u8) = 0;
     // simplification: the original writes to +0x1c the id of [0x9cf624] (the same global the Spanish Segunda uses for the
     // Primera); fiel.
-    write_u32_from_usize(this + league::UPPER_DIVISION_ID, read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION));
-    write_u32_from_usize(this + league::LOWER_DIVISION_ID, 0xffff_ffff);
+    write_usize(this + league::UPPER_DIVISION_ID, read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION));
+    write_usize(this + league::LOWER_DIVISION_ID, 0xffff_ffff);
     core::ptr::write_unaligned((this + league::LEAGUE_FLAGS) as *mut u16, 0x43); // cqn4: the rule bits of the lower leagues
-    let calendario: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let calendario: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let g = calendario(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
-    write_u32_from_usize(this + league::ROUND_DATES, g);
+    write_usize(this + league::ROUND_DATES, g);
     1
 }
 
@@ -391,14 +391,14 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(p.tabela);
     let soltar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    exe::league_league(this);
-    write_u32_from_usize(this, p.vtabela);
+    exe::new_league(this);
+    write_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
-    write_u32_from_usize(this + league::STAGE_COUNT, 0);
+    write_usize(this + league::STAGE_COUNT, 0);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xff;
-    write_u32_from_usize(this + 4, comp_record_of_key(p.competicao));
+    write_usize(this + 4, comp_record_of_key(p.competicao));
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
-    write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
+    write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
     if exe::fracfa_set_up_rules(this) == 0 {
         show_error_at(p.arquivo, p.linhas[0]);
         return this;
@@ -407,14 +407,14 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
     let mut lista = vec![0usize; p.maximo as usize];
     let mut k: i16 = 0;
     let mut genericos: i16 = 0;
-    let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
-    let base_clubes = read_u32_as_usize(G_CLUB_TABLE);
+    let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let base_clubes = read_usize(G_CLUB_TABLE);
     let mut i: i32 = 0;
     while i < n {
         let c = base_clubes + (i as usize) * club::SIZE;
-        let comp = read_u32_as_usize(c + club::DIVISION);
-        let id = if comp != 0 { read_u32_as_usize(comp) } else { 0 };
-        if comp != 0 && p.todas.iter().any(|&g| id == read_u32_as_usize(g)) {
+        let comp = read_usize(c + club::DIVISION);
+        let id = if comp != 0 { read_usize(comp) } else { 0 };
+        if comp != 0 && p.todas.iter().any(|&g| id == read_usize(g)) {
             lista[k as usize] = c;
             k += 1;
             if k == p.maximo {
@@ -423,12 +423,12 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
         } else {
             let entra = match p.nacao {
                 Some(g) => {
-                    let nacao = read_u32_as_usize(c + club::NATION);
-                    nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(g) && read_u32_as_usize(c + club::RESERVE_DIVISION) == 0 && comp != 0 && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)
+                    let nacao = read_usize(c + club::NATION);
+                    nacao != 0 && read_usize(nacao) == read_usize(g) && read_usize(c + club::RESERVE_DIVISION) == 0 && comp != 0 && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)
                 }
                 None => {
-                    let reserva = read_u32_as_usize(c + club::RESERVE_DIVISION);
-                    comp != 0 && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && reserva != 0 && read_u32_as_usize(reserva) == read_u32_as_usize(p.competicao)
+                    let reserva = read_usize(c + club::RESERVE_DIVISION);
+                    comp != 0 && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && reserva != 0 && read_usize(reserva) == read_usize(p.competicao)
                 }
             };
             if entra && genericos < p.genericos { // cqn4: the maximum clubs of the generic division
@@ -504,10 +504,10 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, year: u32)
 /// tabela no fim (+0x3e = 0, +0xb1 = 0: a última tabela foi solta).
 pub(crate) unsafe fn compare_construct_group_league(name: &str, this: usize, year: u32, p: &BackgroundLeague, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && *((this + league::DISCIPLINE_RULE) as *const u8) == 0xff && read_u32_as_usize(this + 4) == comp_record_of_key(p.competicao)
-        && read_u32_as_usize(this + league::TABLE) == 0;
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4), read_u32_as_usize(this + league::TABLE)));
+    let ok = r == this && read_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
+        && *((this + league::DISCIPLINE_RULE) as *const u8) == 0xff && read_usize(this + 4) == comp_record_of_key(p.competicao)
+        && read_usize(this + league::TABLE) == 0;
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this, r, read_usize(this), read_usize(this + 4), read_usize(this + league::TABLE)));
     r
 }
 
@@ -526,33 +526,33 @@ pub(crate) unsafe fn compare_construct_group_league(name: &str, this: usize, yea
 /// League::~League (0x682300: mov ecx -> thiscall, ret 0).
 pub(crate) unsafe fn destroy_group_league(this: usize, vtabela: usize) {
     let release_table: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    write_u32_from_usize(this, vtabela);
+    write_usize(this, vtabela);
     release_table(this, 0);
-    let g = read_u32_as_usize(this + league::ROUND_DATES);
+    let g = read_usize(this + league::ROUND_DATES);
     if g != 0 {
         exe::crt_free(g);
-        write_u32_from_usize(this + league::ROUND_DATES, 0);
+        write_usize(this + league::ROUND_DATES, 0);
     }
-    if (read_u32_as_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
+    if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i: i32 = 0;
         loop {
-            let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + i as usize * 4);
+            let f = read_usize(read_usize(this + league::STAGES) + i as usize * 4);
             if f != 0 {
-                let destroy: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(f)));
+                let destroy: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(read_usize(read_usize(f)));
                 destroy(f, 1);
             }
             i += 1;
-            if i > read_u32_as_usize(this + league::CURRENT_STAGE) as i32 {
+            if i > read_usize(this + league::CURRENT_STAGE) as i32 {
                 break;
             }
         }
     }
-    let v = read_u32_as_usize(this + league::STAGES);
+    let v = read_usize(this + league::STAGES);
     if v != 0 {
         exe::crt_free(v);
-        write_u32_from_usize(this + league::STAGES, 0);
+        write_usize(this + league::STAGES, 0);
     }
-    exe::league_destructor_league(this);
+    exe::drop_league(this);
 }
 
 /// frees the table, the schedule, the stages and their vector and destroys the league

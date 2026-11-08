@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn distance_to_point(this: usize, a: i8, b: 
     distance_table_cell(byte(this, match_player::CELL_Y) as i32 - b as i32, byte(this, match_player::CELL_X) as i32 - a as i32)
 }
 
-/// to (4, 11) for side 0, (4, 0) for the other
+/// Distance from the player to the goal he attacks (column 4; row 11 for side 0, row 0 for the other).
 /// Original: `distance_to_goal` (0x6fa1e0, thiscall, `float` in st0).
 ///
 /// [pt] { 0x6fa1e0 } (match_pl.cpp): distancia ao gol que o jogador ataca (coluna 4; linha 11 do lado 0, 0 do outro).
@@ -3459,7 +3459,7 @@ pub(crate) unsafe fn compare_shot_outcome_inner(p: usize, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, f32)>(IDX_SHOT_OUTCOME);
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -4872,7 +4872,7 @@ pub(crate) unsafe fn compare_player_move(p: usize, a1: u32, a2: u32, a3: u32, a4
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32>(IDX_PLAYER_MOVE);
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -4910,7 +4910,7 @@ pub(crate) unsafe fn compare_shot_on_goal_inner(p: usize, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, f32)>(IDX_SHOT_ON_GOAL);
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -5734,7 +5734,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
         }
     }
     // the list’s destructor (0x68d040): in the comparison’s Rust copy it stays empty
-    exe::llist_destructor_llist(la);
+    exe::drop_llist(la);
     volta
 }
 
@@ -5808,7 +5808,7 @@ pub(crate) unsafe fn compare_dribble_inner(p: usize, mode: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_DRIBBLE);
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -6845,7 +6845,7 @@ pub(crate) unsafe fn compare_execute_pass_inner(p: usize, x: u32, y: u32, kind: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, *mut u8, usize, u32, u32) -> u8>(IDX_EXECUTE_PASS);
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4), (out as usize, 1)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4), (out as usize, 1)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));
@@ -8482,7 +8482,7 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
     let round: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
     let of_group: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let object = || *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((*(comp() as *const i32) as usize).wrapping_mul(4)) as *const usize);
-    let manager = |s: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(((g(0xae2364) - s - 1) as usize).wrapping_mul(110));
+    let manager = |s: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(((g(G_STAFF_COUNT) - s - 1) as usize).wrapping_mul(110));
     let u = |a: usize| *(a as *const usize);
     if id == g(KEY_CLUB_COMP_FRIENDLY) || id == g(KEY_CLUB_COMP_RESERVE) {
         let sel = |o: usize| is_national_team(u(p + o)) != 0 && *((u(u(p + o) + 0x53) + 0x11c) as *const u8) != 0;

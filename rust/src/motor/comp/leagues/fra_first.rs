@@ -12,10 +12,10 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
     if c == 0 {
         return 0;
     }
-    exe::comp_comp(c);
-    write_u32_from_usize(c, vtabela);
+    exe::new_comp(c);
+    write_usize(c, vtabela);
     *((c + 0x42) as *mut u8) = 1;
-    write_u32_from_usize(c + 4, comp_record_of_key(g));
+    write_usize(c + 4, comp_record_of_key(g));
     *((c + 0x50) as *mut u8) = 0xff;
     c
 }
@@ -67,32 +67,32 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u32, record: usize) -> usize {
     let sort: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    exe::league_league(this);
-    write_u32_from_usize(this, 0x96aa24);
+    exe::new_league(this);
+    write_usize(this, 0x96aa24);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
-    write_u32_from_usize(this + 4, record);
+    write_usize(this + 4, record);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xc; // cqq6: the discipline of the French first division
     let m = new_marker_comp(0x96a994, KEY_CLUB_COMP_FRENCH_CFA);
-    write_u32_from_usize(this + fra_first::CFA_MARKER, m);
+    write_usize(this + fra_first::CFA_MARKER, m);
     let m = new_marker_comp(0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
-    write_u32_from_usize(this + fra_first::LOWER_MARKER, m);
+    write_usize(this + fra_first::LOWER_MARKER, m);
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch("cqq_6 primeira francesa nova");
-    let n = || (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let n = || (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     if n() > 0 {
-        let mut p = read_u32_as_usize(G_CLUB_TABLE) + 0x57;
+        let mut p = read_usize(G_CLUB_TABLE) + 0x57;
         let mut i: i32 = 0;
         loop {
-            let comp = read_u32_as_usize(p);
+            let comp = read_usize(p);
             if comp != 0 {
-                if read_u32_as_usize(comp) == read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA) {
-                    write_u32_from_usize(p + 9, comp); // cqq6: the CFA becomes the reserve competition
-                    write_u32_from_usize(p, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
-                } else if read_u32_as_usize(comp) == read_u32_as_usize(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {
-                    write_u32_from_usize(p + 9, 0); // cqq6: the lower division is left without reserves
-                    write_u32_from_usize(p, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
+                if read_usize(comp) == read_usize(KEY_CLUB_COMP_FRENCH_CFA) {
+                    write_usize(p + 9, comp); // cqq6: the CFA becomes the reserve competition
+                    write_usize(p, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
+                } else if read_usize(comp) == read_usize(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {
+                    write_usize(p + 9, 0); // cqq6: the lower division is left without reserves
+                    write_usize(p, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
                 }
             }
             i += 1;
@@ -103,9 +103,9 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
         }
     }
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
-    write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    write_u32_from_usize(this + league::STAGE_COUNT, 0);
-    write_u32_from_usize(this + league::STAGES, 0);
+    write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
+    write_usize(this + league::STAGE_COUNT, 0);
+    write_usize(this + league::STAGES, 0);
     if exe::frafirst_set_up_rules(this) == 0 {
         show_error_at(0x9ccb5c, 0x65);
         return this;
@@ -123,8 +123,8 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
         return this;
     }
     let e = new(0x5ce);
-    let s = if e != 0 { exe::comp_stats_comp_stats(e, this) } else { 0 };
-    write_u32_from_usize(this + 8, s);
+    let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
+    write_usize(this + 8, s);
     if s == 0 {
         show_error_at(0x9ccb5c, 0x83);
         return this;
@@ -132,12 +132,12 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     exe::league_set_predicted_positions(this);
     let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
     let a = new(0xee);
-    let ligas_cfa = if a != 0 { exe::fracfa_fracfa(a, year) } else { 0 };
+    let ligas_cfa = if a != 0 { exe::new_fracfa(a, year) } else { 0 };
     let b = new(0xee);
-    let ligas_baixo = if b != 0 { exe::fralower_fralower(b, year) } else { 0 };
+    let ligas_baixo = if b != 0 { exe::new_fralower(b, year) } else { 0 };
     for l in [ligas_cfa, ligas_baixo] {
         if l != 0 {
-            let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(l)));
+            let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(l)));
             destroy(l, 1);
         }
     }
@@ -180,34 +180,34 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
     let n = league_match_count(this);
     let block = new((n as u32).wrapping_mul(16).wrapping_add(4));
     let array = if block != 0 {
-        write_u32_from_usize(block, n as usize);
+        write_usize(block, n as usize);
         construct(block + 4, 0x10, n as u32, 0x645800, 0x5a53c0);
         block + 4
     } else {
         0
     };
-    write_u32_from_usize(this + league::FIXED_FIXTURES, array);
+    write_usize(this + league::FIXED_FIXTURES, array);
     if array == 0 {
         show_error_at(file, row);
         return;
     }
     for (k, &(dia, mes, ano, casa, fora)) in table.iter().enumerate() {
-        exe::fixed_fixture_set_by_club_names(read_u32_as_usize(this + league::FIXED_FIXTURES) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
+        exe::fixed_fixture_set_by_club_names(read_usize(this + league::FIXED_FIXTURES) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
     }
     crate::comparison::branch("cqn_6 calendario fixo");
     let n = league_match_count(this);
     if n <= 0 {
         return;
     }
-    let v = read_u32_as_usize(this + league::FIXED_FIXTURES);
+    let v = read_usize(this + league::FIXED_FIXTURES);
     for i in 0..n as usize {
         let f = v + i * 0x10;
-        if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn6: a club not found drops the list
+        if read_usize(f + 8) == 0xffff_ffff || read_usize(f + 0xc) == 0xffff_ffff { // cqn6: a club not found drops the list
             if v != 0 {
-                destroy(v, 0x10, read_u32_as_usize(v - 4) as u32, 0x5a53c0);
+                destroy(v, 0x10, read_usize(v - 4) as u32, 0x5a53c0);
                 exe::crt_operator_delete(v - 4);
             }
-            write_u32_from_usize(this + league::FIXED_FIXTURES, 0);
+            write_usize(this + league::FIXED_FIXTURES, 0);
             return;
         }
     }
@@ -219,9 +219,9 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
 /// cada jogo com os dois clubes achados), ou foi derrubada (+0xea = 0).
 pub(crate) unsafe fn fra_first_compare_fixed_fixtures(name: &str, this: usize, original: impl FnOnce()) {
     original();
-    let v = read_u32_as_usize(this + league::FIXED_FIXTURES);
+    let v = read_usize(this + league::FIXED_FIXTURES);
     let n = league_match_count(this);
-    let ok = v == 0 || (read_u32_as_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_u32_as_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_u32_as_usize(v + i * 0x10 + 0xc) != 0xffff_ffff));
+    let ok = v == 0 || (read_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_usize(v + i * 0x10 + 0xc) != 0xffff_ffff));
     SCOREBOARD.record(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", name, this, v));
 }
 

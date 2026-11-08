@@ -29,11 +29,11 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_create_schedule(this: usize, st
 pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let r = exe::league_update_for_date(this, today, full);
-    if read_u32_as_usize(this + league::COMPLETE) == 0 || read_u32_as_usize(this + league::STAGE_COUNT) != 0 || full == 0 || read_u32_as_usize(this + league::TIEBREAK_MATCHES) == 0 {
+    if read_usize(this + league::COMPLETE) == 0 || read_usize(this + league::STAGE_COUNT) != 0 || full == 0 || read_usize(this + league::TIEBREAK_MATCHES) == 0 {
         return r;
     }
     let z = serie_b_zones();
-    write_u32_from_usize(this + league::SEASON_CLOSED, 0);
+    write_usize(this + league::SEASON_CLOSED, 0);
     crate::comparison::branch("cql_4 fim da serie b");
     let mut found = false;
     let mut i: i16 = 0;
@@ -47,16 +47,16 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
         i = i.wrapping_add(1);
     }
     if found {
-        write_u32_from_usize(this + league::STAGE_COUNT, 1);
+        write_usize(this + league::STAGE_COUNT, 1);
         let v = alloc(4);
-        write_u32_from_usize(this + league::STAGES, v);
-        let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x28));
+        write_usize(this + league::STAGES, v);
+        let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x28));
         proxima(this);
         return r;
     }
-    write_u32_from_usize(this + league::COMPLETE, 0);
-    write_u32_from_usize(this + league::TIEBREAK_MATCHES, 0);
-    let status: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x94));
+    write_usize(this + league::COMPLETE, 0);
+    write_usize(this + league::TIEBREAK_MATCHES, 0);
+    let status: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x94));
     status(this);
     r
 }
@@ -77,12 +77,12 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
 /// add esp, 0x10 -> cdecl; sem linha, o qsort recebe 0 e 0) e renumera a posição (+4) de todas as linhas.
 pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(this: usize, points: u32) {
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    exe::league_rank_by_head_to_head(this, read_u32_as_usize(this + league::TABLE));
+    exe::league_rank_by_head_to_head(this, read_usize(this + league::TABLE));
     let n = read_i16(this + league::CLUB_COUNT);
     let mut first = 0usize;
     let mut how_many: u32 = 0;
     if n > 0 {
-        let mut l = read_u32_as_usize(this + league::TABLE);
+        let mut l = read_usize(this + league::TABLE);
         for _ in 0..n as i32 {
             if read_i16(l + 0x19) == points as u16 as i16 {
                 if first == 0 {

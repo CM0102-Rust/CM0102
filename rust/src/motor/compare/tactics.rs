@@ -12,7 +12,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stored_taker(this: usize, club: u
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = row(club, human);
-    let mut reg = vec![(0xb67a34, 4)];
+    let mut reg = vec![(G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     if k != -1 {
         reg.push(((*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4), 4));
     }

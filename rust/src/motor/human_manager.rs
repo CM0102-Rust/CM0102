@@ -52,7 +52,7 @@ pub(crate) unsafe extern "C" fn human_club(club: usize, without_tactic: u32, any
 /// [pt] A pessoa (ou, sem ela, o tecnico humano atual) e o registro dela; `None` nos casos de erro do
 /// original (caixa de mensagem), que ficam com ele.
 pub(crate) unsafe fn person_and_human_record(this: usize, person: usize) -> Option<(usize, usize)> {
-    let p = if person != 0 { person } else { *((0xb74c26 + 768 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize) as *const usize) };
+    let p = if person != 0 { person } else { *((0xb74c26 + 768 * *(0xb77c7a as *const i16) as isize) as *const usize) };
     if p == 0 {
         return None;
     }
@@ -214,7 +214,7 @@ pub(crate) unsafe fn manager_or_current_human(manager: usize) -> usize {
     if manager != 0 {
         return manager;
     }
-    read_usize((read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize)
+    read_usize((read_i16(0xb77c7a) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize)
 }
 
 /// Index of the human manager record (id - [0xae2364] + 16) if within 0..count-1, else None (original error box).
@@ -372,7 +372,7 @@ pub(crate) unsafe fn human_index_for_nickname(this: usize, human: usize) -> Opti
     let h = if human != 0 {
         human
     } else {
-        *((0xb74c26 + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize) as *const usize)
+        *((0xb74c26 + 0x300 * *(0xb77c7a as *const i16) as isize) as *const usize)
     };
     if h == 0 {
         return None;
@@ -424,7 +424,7 @@ pub(crate) unsafe extern "thiscall" fn has_nickname(this: usize, person: usize, 
 /// vez, [0xb74c26 + 0x300 × vaga]). Os humanos são as 16 últimas pessoas: índice = id − ([0xae2364] − 16),
 /// válido de 0 a [gerente+4] − 1. `None` quando a original dá a caixa de erro.
 pub(crate) unsafe fn human_manager_record(manager: usize, person: usize) -> Option<usize> {
-    let person = if person != 0 { person } else { *((0xb74c26 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 0x300) as *const usize) };
+    let person = if person != 0 { person } else { *((0xb74c26 + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize) };
     if person == 0 {
         return None;
     }

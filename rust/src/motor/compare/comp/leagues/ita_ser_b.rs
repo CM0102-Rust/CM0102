@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_b_update_for_date(this: u
 /// bloco).
 pub(crate) unsafe extern "thiscall" fn compare_ita_league_sort_clubs_level_on_points(this: usize, points: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);
-    let t = read_u32_as_usize(this + league::TABLE);
+    let t = read_usize(this + league::TABLE);
     let n = read_i16(this + league::CLUB_COUNT).max(0) as usize;
     if t == 0 || n == 0 {
         return o(this, points);

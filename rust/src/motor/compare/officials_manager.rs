@@ -20,8 +20,8 @@ pub(crate) unsafe extern "thiscall" fn compare_record_referee_grade(this: usize,
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
 pub(crate) unsafe extern "thiscall" fn compare_set_up_officials(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_UP_OFFICIALS)(this);
-    SCOREBOARD.record(read_u32_as_usize(this + officials_manager_fields::NATION_BLOCKS) != 0 && read_i32(this + officials_manager_fields::BUSY_COUNT) == read_i32(G_OFFICIAL_COUNT) && read_u32_as_usize(this + officials_manager_fields::BUSY_FLAGS) != 0,
-        || format!("set_up_officials: blocos {:x}, conta {} x {}", read_u32_as_usize(this + officials_manager_fields::NATION_BLOCKS), read_i32(this + officials_manager_fields::BUSY_COUNT), read_i32(G_OFFICIAL_COUNT)));
+    SCOREBOARD.record(read_usize(this + officials_manager_fields::NATION_BLOCKS) != 0 && read_i32(this + officials_manager_fields::BUSY_COUNT) == read_i32(G_OFFICIAL_COUNT) && read_usize(this + officials_manager_fields::BUSY_FLAGS) != 0,
+        || format!("set_up_officials: blocos {:x}, conta {} x {}", read_usize(this + officials_manager_fields::NATION_BLOCKS), read_i32(this + officials_manager_fields::BUSY_COUNT), read_i32(G_OFFICIAL_COUNT)));
 }
 
 /// Comparer for `officials_manager_compare_comp_level`.
@@ -91,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn compare_renew_officials(this: usize, comp
         return o(this, comp);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(read_usize(G_OFFICIAL_TABLE), total * 0x2b), (read_usize(this), total * 0x11), (0xb67a34, 4)]);
+    reg.extend([(read_usize(G_OFFICIAL_TABLE), total * 0x2b), (read_usize(this), total * 0x11), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, comp),
         || crate::rng::without_counting(|| renew_officials(this, comp)));
     SCOREBOARD.record(igual && r == n, || {

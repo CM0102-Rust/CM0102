@@ -8,7 +8,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_libertadores_places(this: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_LIBERTADORES_PLACES);
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     // the competition history too: 0x4afd80 reorders it (tied rows: the previous order changes the club found)
-    let reg = [(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
+    let reg = [(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, count), || assign_libertadores_places(this, clubs, count));
     SCOREBOARD.record(igual, || {
         let base = read_u32(G_CLUB_TABLE) as usize;

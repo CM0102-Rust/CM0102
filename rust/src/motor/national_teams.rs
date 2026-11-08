@@ -282,7 +282,7 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
                 }
                 j += 1;
             }
-            exe::newsitem_newsitem(nt, 0x24, 0);
+            exe::new_newsitem(nt, 0x24, 0);
             if !montado {
                 montado = true;
                 record_of_match(game, club, reg);
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
             }
         }
         crate::comparison::branch("cqf_11 noticia da convocacao");
-        exe::newsitem_newsitem(nt, 0x1d, 0);
+        exe::new_newsitem(nt, 0x1d, 0);
         write(nt, 0, read_usize(national_team) as u32);
         write(nt, 1, read_usize(club) as u32);
         write(nt, 2, sem_adversarios);
@@ -448,7 +448,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
         n = 0;
     }
     if list != 0 && adversarios == 0 {
-        exe::llist_destructor_llist(list);
+        exe::drop_llist(list);
         exe::crt_operator_delete(list);
     }
 }
@@ -488,12 +488,12 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     let ensaio = (*core::ptr::addr_of!(FIXTURE_OPPONENTS_PLAN)).is_some();
     let mut local = [0u8; 16];
     let l = local.as_mut_ptr() as usize;
-    exe::llist_llist(l);
+    exe::new_llist(l);
     let mut nl = 0usize;
     if !ensaio {
         let m = novo(0xe);
         if m != 0 {
-            nl = exe::llist_llist(m);
+            nl = exe::new_llist(m);
         }
     }
     let mut por = |v: usize| {
@@ -546,7 +546,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
         }
         item = next(l);
     }
-    exe::llist_destructor_llist(l);
+    exe::drop_llist(l);
     nl
 }
 
@@ -945,7 +945,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
             let comp = read_usize(p + fixture::COMPETITION);
             if read_usize(this) == 0 {
                 let m = new(0xe);
-                write_usize(this, if m != 0 { exe::llist_llist(m) } else { 0 });
+                write_usize(this, if m != 0 { exe::new_llist(m) } else { 0 });
             }
             let mut item = [0u8; 0x12];
             let pi = item.as_mut_ptr() as usize;
@@ -1182,9 +1182,9 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let mut list = [0u8; 0x10];
     let pl = list.as_mut_ptr() as usize;
-    exe::llist_llist(pl);
+    exe::new_llist(pl);
     let sai = |r: usize| -> usize {
-        exe::llist_destructor_llist(pl);
+        exe::drop_llist(pl);
         r
     };
     if club != 0 {
@@ -1290,7 +1290,7 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
         return sai(0);
     }
     for i in 0..0x32usize {
-        for g in [0x9d00a8usize, 0x9d00a4] {
+        for g in [0x9d00a8usize, G_KEY_CLUB_MLS_ALL_STARS_EAST] {
             if read_usize(all_star_club(g) + 0xd7 + 4 * i) == player {
                 if comentario != 0 {
                     text(0xde1f64, 0xa62fa4, 0xad9c64usize);
@@ -1603,7 +1603,7 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
     crate::comparison::branch("cpx_13 noticia do convocado");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x21, 0);
+    exe::new_newsitem(n, 0x21, 0);
     write(n, 0, read_usize(player) as u32);
     write(n, 1, read_usize(read_usize(player + staff::FIRST_NAME) + 0x33) as u32);
     write(n, 2, read_usize(read_usize(player + staff::SECOND_NAME) + 0x33) as u32);
@@ -2101,7 +2101,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news
     crate::comparison::branch("cpv_11 notícia da saída");
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x20, 0);
+    exe::new_newsitem(n, 0x20, 0);
     set_news_player_slots(n, p);
     let (sel, um) = match kind as u8 {
         0 => (exe::database_get_national_team(nation), 0),
@@ -2147,7 +2147,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_replacement_needed_ne
     };
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(n, 0x22, 0);
+    exe::new_newsitem(n, 0x22, 0);
     set_news_player_slots(n, p);
     write(n, 4, read_usize(time) as u32);
     write(n, 5, um);
@@ -2307,10 +2307,10 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
         let mut slice: u8 = 0;
         let mut l = [0u32; 4];
         let lp = l.as_mut_ptr() as usize;
-        exe::llist_llist(lp);
+        exe::new_llist(lp);
         let found = search(read_usize(G_FIXTURE_MANAGER), &mut v_year, &mut v_day, &mut slice, 1, -1, -1, -1, read_usize(time) as u32, -1, 0, 0, 0, 1, lp, 1, -2,
             (segundo == 0) as u32, 0);
-        exe::llist_destructor_llist(lp);
+        exe::drop_llist(lp);
         if found != 0 {
             return 1;
         }
@@ -2474,7 +2474,7 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_nation(this: usize, nation:
 pub(crate) unsafe fn is_major_finals(id: u32) -> bool {
     [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP]
         .iter()
-        .any(|&g| read_u32_as_usize(g) as u32 == id)
+        .any(|&g| read_usize(g) as u32 == id)
 }
 
 /// What `0x775220` writes.
@@ -2499,15 +2499,15 @@ pub(crate) struct NationCurrentCompUpdate {
 /// fica (sem aviso); senão, se a nova é fase final grande e há atual, a atual vai para a fila; a nova vira a atual e o
 /// gerenciador dos técnicos ([0xb67a44], se existe) é avisado.
 pub(crate) unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -> NationCurrentCompUpdate {
-    let id = read_u32_as_usize(nacao);
-    let vaga = read_u32_as_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add(id.wrapping_mul(110)) + 4;
-    let fila = read_u32_as_usize(this + national_teams_fields::NEXT_COMPETITIONS).wrapping_add(id.wrapping_mul(4));
-    let atual = read_u32_as_usize(vaga) as u32;
-    let nova = read_u32_as_usize(comp) as u32;
-    let mut p = NationCurrentCompUpdate { vaga, nova: Some(nova), fila, na_fila: None, avisa: read_u32_as_usize(G_MANAGER_MANAGER) != 0 };
+    let id = read_usize(nacao);
+    let vaga = read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add(id.wrapping_mul(110)) + 4;
+    let fila = read_usize(this + national_teams_fields::NEXT_COMPETITIONS).wrapping_add(id.wrapping_mul(4));
+    let atual = read_usize(vaga) as u32;
+    let nova = read_usize(comp) as u32;
+    let mut p = NationCurrentCompUpdate { vaga, nova: Some(nova), fila, na_fila: None, avisa: read_usize(G_MANAGER_MANAGER) != 0 };
     if atual != 0xffff_ffff {
-        let r = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add((atual as usize).wrapping_mul(107)); // 107-byte records
-        if r != 0 && is_major_finals(read_u32_as_usize(r) as u32) {
+        let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add((atual as usize).wrapping_mul(107)); // 107-byte records
+        if r != 0 && is_major_finals(read_usize(r) as u32) {
             return NationCurrentCompUpdate { vaga, nova: None, fila, na_fila: Some(nova), avisa: false };
         }
         if is_major_finals(nova) {
@@ -2540,7 +2540,7 @@ pub(crate) unsafe extern "thiscall" fn set_current_competition(this: usize, nati
     };
     crate::comparison::branch("cpo_13 competicao atual");
     write_u32(p.vaga, nova);
-    let g = read_u32_as_usize(G_MANAGER_MANAGER);
+    let g = read_usize(G_MANAGER_MANAGER);
     if g != 0 {
         exe::manager_manager_set_season_expectations(g, exe::database_get_national_team(nation), 1);
     }
@@ -2550,8 +2550,8 @@ pub(crate) unsafe extern "thiscall" fn set_current_competition(this: usize, nati
 ///
 /// [pt] Marca o clube `c` (se existe e o id < n) com o código na tabela [this+0x24].
 pub(crate) unsafe fn mark_club_code(this: usize, c: usize, n: i32, code: u8) {
-    if c != 0 && (read_u32_as_usize(c) as i32) < n {
-        *(read_u32_as_usize(this + national_teams_fields::CLUB_MARKS).wrapping_add(read_u32_as_usize(c)) as *mut u8) = code;
+    if c != 0 && (read_usize(c) as i32) < n {
+        *(read_usize(this + national_teams_fields::CLUB_MARKS).wrapping_add(read_usize(c)) as *mut u8) = code;
     }
 }
 
@@ -2559,7 +2559,7 @@ pub(crate) unsafe fn mark_club_code(this: usize, c: usize, n: i32, code: u8) {
 ///
 /// [pt] O clube tem nação marcada (+0x53, +0x11c ≠ 0)?
 pub(crate) unsafe fn has_flagged_nation(c: usize) -> bool {
-    let n = read_u32_as_usize(c + club::NATION);
+    let n = read_usize(c + club::NATION);
     n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) != 0
 }
 
@@ -2577,8 +2577,8 @@ pub(crate) unsafe fn has_flagged_nation(c: usize) -> bool {
 /// clubes (+0x1c, +0x20) de nação ativa; com nação, 1 quando a competição do jogo (+0x14) é a da liga do mandante (+0x57)
 /// ou a +0x60 do visitante, senão 2, para os dois. Lida pela remarcação dos jogos dos clubes com convocados (0x7777e0).
 pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, data: usize) {
-    let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
-    if read_u32_as_usize(this + national_teams_fields::CLUB_MARKS) == 0 {
+    let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    if read_usize(this + national_teams_fields::CLUB_MARKS) == 0 {
         let calloc: unsafe extern "C" fn(i32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
         let p = calloc(n, 1);
         write_u32(this + national_teams_fields::CLUB_MARKS, p as u32);
@@ -2592,7 +2592,7 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     for i in 0..0x21usize {
         let e = G_LEAGUE_WORLD_CLUB_NATION + i * 0x48;
-        let nation = read_u32_as_usize(e);
+        let nation = read_usize(e);
         if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
@@ -2602,12 +2602,12 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
             if list == 0 {
                 continue;
             }
-            write_u32(list + llist::CURSOR, read_u32_as_usize(list + llist::HEAD) as u32);
+            write_u32(list + llist::CURSOR, read_usize(list + llist::HEAD) as u32);
             let mut game = next(list);
             while game != 0 {
-                if friendly(read_u32_as_usize(G_FRIENDLY), read_u32_as_usize(game + fixture::COMPETITION)) == 0 {
-                    let (casa, fora) = (read_u32_as_usize(game + fixture::HOME_CLUB), read_u32_as_usize(game + fixture::AWAY_CLUB));
-                    if read_u32_as_usize(e) == 0 {
+                if friendly(read_usize(G_FRIENDLY), read_usize(game + fixture::COMPETITION)) == 0 {
+                    let (casa, fora) = (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB));
+                    if read_usize(e) == 0 {
                         if casa != 0 && has_flagged_nation(casa) {
                             mark_club_code(this, casa, n, 3);
                         }
@@ -2615,9 +2615,9 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
                             mark_club_code(this, fora, n, 3);
                         }
                     } else {
-                        let comp = read_u32_as_usize(game + fixture::COMPETITION);
+                        let comp = read_usize(game + fixture::COMPETITION);
                         // the away side +0x60 is read without checking the pointer (like the original)
-                        let code = if casa != 0 && (read_u32_as_usize(casa + club::DIVISION) == comp || read_u32_as_usize(fora + club::RESERVE_DIVISION) == comp) { 1 } else { 2 };
+                        let code = if casa != 0 && (read_usize(casa + club::DIVISION) == comp || read_usize(fora + club::RESERVE_DIVISION) == comp) { 1 } else { 2 };
                         crate::comparison::branch("cpo_13 clubes com jogo");
                         mark_club_code(this, casa, n, code); // o mandante
                         mark_club_code(this, fora, n, code); // o visitante

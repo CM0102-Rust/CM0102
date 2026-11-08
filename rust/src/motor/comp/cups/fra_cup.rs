@@ -162,15 +162,15 @@ pub(crate) const COPA_DEL_REY_ROUNDS: [FraCupCupRound; 7] = [
 ///
 /// [pt] O id da competição apontada por `c + o` (+0 do registro), ou None sem ela.
 pub(crate) unsafe fn comp_id_at(c: usize, o: usize) -> Option<usize> {
-    let d = read_u32_as_usize(c + o);
-    if d == 0 { None } else { Some(read_u32_as_usize(d)) }
+    let d = read_usize(c + o);
+    if d == 0 { None } else { Some(read_usize(d)) }
 }
 
 /// Writes entrant n (club, class 0, status 0) in the 6-byte list at +0xa7 and counts it.
 ///
 /// [pt] Grava a inscrição `n` da lista (+0xa7, 6 bytes: o clube, +4 classe 0, +5 situação 0) e conta.
 pub(crate) unsafe fn add_entrant(this: usize, n: &mut i32, club: usize) {
-    let e = read_u32_as_usize(this + cup::TEAM_TABLE) + *n as usize * 6;
+    let e = read_usize(this + cup::TEAM_TABLE) + *n as usize * 6;
     core::ptr::write_unaligned(e as *mut u32, club as u32);
     *((e + 4) as *mut u8) = 0;
     *((e + 5) as *mut u8) = 0;
@@ -199,7 +199,7 @@ pub(crate) unsafe fn enter_clubs_pass(this: usize, n: &mut i32, ate: impl Fn() -
 ///
 /// [pt] Os clubes da divisão [id] enquanto cabem (n < +0x3e), até encher.
 pub(crate) unsafe fn fra_cup_enter_division_clubs(this: usize, n: &mut i32, id: usize) {
-    enter_clubs_pass(this, n, || read_u32_as_usize(G_CLUB_COUNT) as i32, true, |c, n| comp_id_at(c, 0x57) == Some(read_u32_as_usize(id)) && n < read_i16(this + cup::TEAM_COUNT) as i32);
+    enter_clubs_pass(this, n, || read_usize(G_CLUB_COUNT) as i32, true, |c, n| comp_id_at(c, 0x57) == Some(read_usize(id)) && n < read_i16(this + cup::TEAM_COUNT) as i32);
 }
 
 /// Amateur entrant limit of the French Cup: 0xb8 in 2001, 0xb6 otherwise.
@@ -239,18 +239,18 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
         return (-1, 0);
     }
     let mut n = 0i32;
-    let all = || read_u32_as_usize(G_CLUB_COUNT) as i32;
-    enter_clubs_pass(this, &mut n, all, false, |c, _| comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)));
+    let all = || read_usize(G_CLUB_COUNT) as i32;
+    enter_clubs_pass(this, &mut n, all, false, |c, _| comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)));
     enter_clubs_pass(this, &mut n, all, true, |c, n| {
-        comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && comp_id_at(c, 0x60) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < french_cup_amateur_limit(this)
+        comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && comp_id_at(c, 0x60) == Some(read_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < french_cup_amateur_limit(this)
     });
     enter_clubs_pass(this, &mut n, all, true, |c, n| {
-        comp_id_at(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_FRANCE)) && comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && read_u32_as_usize(c + 0x60) == 0
+        comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE)) && comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && read_usize(c + 0x60) == 0
             && n < french_cup_amateur_limit(this)
     });
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    enter_clubs_pass(this, &mut n, || read_u32_as_usize(G_CLUB_COUNT) as i32 - 2 * read_u32_as_usize(G_NATION_COUNT) as i32, true, |c, n| {
-        read_u32_as_usize(c + 0x53) != 0 && national_team(c) == 0 && read_u32_as_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_FRANCE))
+    enter_clubs_pass(this, &mut n, || read_usize(G_CLUB_COUNT) as i32 - 2 * read_usize(G_NATION_COUNT) as i32, true, |c, n| {
+        read_usize(c + 0x53) != 0 && national_team(c) == 0 && read_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE))
             && n < french_cup_amateur_limit(this)
     });
     crate::comparison::branch("cqm_11 inscritos da copa da franca");
@@ -302,16 +302,16 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
         return (-1, 0);
     }
     let mut n = 0i32;
-    let all = || read_u32_as_usize(G_CLUB_COUNT) as i32;
+    let all = || read_usize(G_CLUB_COUNT) as i32;
     let limit = if read_i16(this + cup::YEAR) == 0x7d1 { 0x10 } else { 0xe };
     enter_clubs_pass(this, &mut n, all, true, |c, n| {
-        comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_u32_as_usize(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limit
+        comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_usize(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(read_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limit
     });
     // the original tests the size before each club: the pass stops when the list reaches 16
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 && n * 6 < 0x60 {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n * 6 < 0x60 {
         let c = eng_cc_cup_club_by_index(i);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && comp_id_at(c, 0x5b) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA)) {
+        if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && comp_id_at(c, 0x5b) == Some(read_usize(KEY_CLUB_COMP_FRENCH_CFA)) {
             add_entrant(this, &mut n, c);
             if n == read_i16(this + cup::TEAM_COUNT) as i32 {
                 break;

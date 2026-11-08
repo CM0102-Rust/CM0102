@@ -1524,7 +1524,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     let manager = *(G_HUMAN_MANAGER as *const usize);
     let mut mode = mode;
 
-    exe::llist_llist(f + 0x80);
+    exe::new_llist(f + 0x80);
     data_default(f + 0x38);
     more_days(G_CURRENT_DATE, f + 0xac, 2);
     if other == 0 {
@@ -2142,7 +2142,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             }
         }
     }
-    exe::llist_destructor_llist(f + 0x80);
+    exe::drop_llist(f + 0x80);
     *b(0x37) as i8
 }
 

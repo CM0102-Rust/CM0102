@@ -591,7 +591,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list:
 ///
 /// [pt] 0x86c1d0 Staff_Records::add_failed_to_qualify_record (thiscall em [0xdd7f00], ret 0x10; já em Rust).
 pub(crate) unsafe fn usa_mls_add_failed_to_qualify_record(club: usize, comp: usize, stage: u32, weight: u32) {
-    exe::staff_records_add_failed_to_qualify_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, stage, weight);
+    exe::staff_records_add_failed_to_qualify_record(read_usize(G_STAFF_RECORDS), club, comp, stage, weight);
 }
 
 /// comp_util_scale_by_round: weight 50..70 by the match round.
@@ -607,7 +607,7 @@ pub(crate) unsafe fn weight_by_round(game: usize) -> u32 {
 /// [pt] A MLS no fim das fases (0x908200). `fazer` = falso: o ensaio do comparador (só a devolução).
 pub(crate) unsafe fn mls_stage_outcome(this: usize, club: usize, status: u32, stage: u32, game: usize, fazer: bool) -> u32 {
     let (st, fa) = (status as u8, stage as u8 as i8);
-    let comp = read_u32_as_usize(this + 4);
+    let comp = read_usize(this + 4);
     if fa < 2 {
         // the season (-1) and the first two play-off rounds
         if st == 6 {
@@ -642,14 +642,14 @@ pub(crate) unsafe fn mls_stage_outcome(this: usize, club: usize, status: u32, st
         } else if st == 0xff || st == 2 {
             if fazer {
                 let weight = weight_by_round(game);
-                exe::staff_records_add_knocked_out_record(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
+                exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
             }
         }
         return 0;
     }
     if st == 1 && fazer {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-        f(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
+        f(read_usize(G_STAFF_RECORDS), club, comp);
     }
     0
 }
@@ -687,15 +687,15 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
         *((game + 0x42) as *mut u8) = 0xff;
     }
     exe::league_add_result(this, game, stats);
-    if read_u32_as_usize(this + league::CURRENT_STAGE) != 1 {
+    if read_usize(this + league::CURRENT_STAGE) != 1 {
         return 1;
     }
-    let stored = read_u32_as_usize(this + 8);
+    let stored = read_usize(this + 8);
     *((this + 8) as *mut u32) = 0;
     *((game + 0x42) as *mut u8) = 0;
     let estagio = |k: usize| -> (usize, unsafe extern "thiscall" fn(usize, usize, u32) -> u32) {
-        let e = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 4 * k);
-        (e, core::mem::transmute(read_u32_as_usize(read_u32_as_usize(e) + 4)))
+        let e = read_usize(read_usize(this + league::STAGES) + 4 * k);
+        (e, core::mem::transmute(read_usize(read_usize(e) + 4)))
     };
     let (e0, f0) = estagio(0);
     f0(e0, game, stats);
@@ -722,18 +722,18 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
 /// San Jose e Chicago (0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c); 0 para clube cuja liga (+0x57) não
 /// é a MLS (chave 0x9cf590); clube da MLS fora dos doze: a caixa "Error" (a original).
 pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(club: usize) -> u16 {
-    let nation = read_u32_as_usize(club + club::DIVISION);
-    if nation == 0 || read_u32_as_usize(nation) != read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
+    let nation = read_usize(club + club::DIVISION);
+    if nation == 0 || read_usize(nation) != read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
         return 0;
     }
-    let id = read_u32_as_usize(club);
+    let id = read_usize(club);
     const LESTE: [usize; 6] = [0x9d0390, 0x9d0394, 0x9d0388, 0x9d0384, 0x9d03a4, 0x9d0380];
     const OESTE: [usize; 6] = [0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c];
-    if LESTE.iter().any(|&k| read_u32_as_usize(k) == id) {
+    if LESTE.iter().any(|&k| read_usize(k) == id) {
         crate::comparison::branch("cqk_9 conferencia 0x413");
         return 0x413; // cqk9: a primeira conferência
     }
-    if OESTE.iter().any(|&k| read_u32_as_usize(k) == id) {
+    if OESTE.iter().any(|&k| read_usize(k) == id) {
         return 0x414;
     }
     original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_USA_MLS_GET_CLUB_ALL_STAR_CONFERENCE)(club)

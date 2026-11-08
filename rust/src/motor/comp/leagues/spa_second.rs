@@ -294,14 +294,14 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
     let t = alloc(0x512);
-    write_u32_from_usize(this + league::TABLE, t);
+    write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xa828bc, 0x298);
         return 0;
     }
     let mut k: u8 = 0;
-    let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
-    let base = read_u32_as_usize(G_CLUB_TABLE);
+    let n = read_usize(G_CLUB_COUNT) as i32;
+    let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE; // cqm6: club i in the database
@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
             iniciar(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
                 crate::comparison::branch("cqm_6 time b na segunda");
-                *((read_u32_as_usize(this + league::TABLE) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
+                *((read_usize(this + league::TABLE) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
             k = k.wrapping_add(1);
             if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
@@ -323,7 +323,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
         return 0;
     }
     let f = premios(this, 0xc350);
-    write_u32_from_usize(this + league::PRIZE_FUND, f as usize);
+    write_usize(this + league::PRIZE_FUND, f as usize);
     *((this + league::PRIZE_MODE) as *mut u8) = 1;
     1
 }

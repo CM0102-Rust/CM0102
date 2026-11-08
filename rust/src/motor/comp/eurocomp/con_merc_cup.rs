@@ -11,7 +11,7 @@ pub(crate) unsafe fn qualifiers_per_group(this: usize) -> i32 {
 ///
 /// [pt] O clube da linha i da tabela do grupo 1 (a da própria copa: +0xb1, linhas de 0x3b bytes).
 pub(crate) unsafe fn group_one_club(this: usize, i: usize) -> usize {
-    read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + i * 0x3b) // cqs10: the group 1 row
+    read_usize(read_usize(this + league::TABLE) + i * 0x3b) // cqs10: the group 1 row
 }
 
 /// Club at position j of stage f (League::get_table_row).
@@ -20,8 +20,8 @@ pub(crate) unsafe fn group_one_club(this: usize, i: usize) -> usize {
 /// mov ecx, fase -> thiscall, ret 4) e o clube no +0 dela.
 pub(crate) unsafe fn stage_club_at(this: usize, f: usize, j: i32) -> usize {
     let row: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
-    let stage = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + f * 4);
-    read_u32_as_usize(row(stage, j)) // cqs10: position j of the stage
+    let stage = read_usize(read_usize(this + league::STAGES) + f * 4);
+    read_usize(row(stage, j)) // cqs10: position j of the stage
 }
 
 /// Builds the knockout stage after the groups (qualifier list, round table, Cup_Stage) and draws round 0.
@@ -63,7 +63,7 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
     let mut n = 0usize;
     let mut i = 0i32;
     while i < qualifiers_per_group(this) {
-        write_u32_from_usize(list + n * 4, group_one_club(this, i as usize));
+        write_usize(list + n * 4, group_one_club(this, i as usize));
         n += 1;
         i += 1;
     }
@@ -71,12 +71,12 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
         let mut j = 0i32;
         while j < qualifiers_per_group(this) {
             crate::comparison::branch(ramo);
-            write_u32_from_usize(list + n * 4, stage_club_at(this, f, j)); // cqs10: the qualifiers of each stage
+            write_usize(list + n * 4, stage_club_at(this, f, j)); // cqs10: the qualifiers of each stage
             n += 1;
             j += 1;
         }
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, knockout, &mut rodadas, &mut id, 0);
     let p = new(0xb2);
@@ -84,14 +84,14 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, teams, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + league::YEAR) as u16 as u32, knockout, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this, teams, list, rodadas as u16 as u32, read_usize(this + 4), table, read_i16(this + league::YEAR) as u16 as u32, knockout, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + knockout as usize * 4, stage);
+    write_usize(read_usize(this + league::STAGES) + knockout as usize * 4, stage);
     exe::crt_free(list);
     exe::crt_free(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + knockout as usize * 4);
+    let f = read_usize(read_usize(this + league::STAGES) + knockout as usize * 4);
     if f == 0 {
         return show_error_at(file, row_without_stage);
     }
@@ -111,25 +111,25 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
 /// bytes) iguais aos do plano como conjunto (o sorteio pode reordenar).
 pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: usize, teams: usize, stages: usize, knockout: usize, original: impl FnOnce()) {
     let q = qualifiers_per_group(this).max(0) as usize;
-    let mut plan: Vec<usize> = (0..q).map(|i| read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + i * 0x3b)).collect();
+    let mut plan: Vec<usize> = (0..q).map(|i| read_usize(read_usize(this + league::TABLE) + i * 0x3b)).collect();
     for f in 0..stages {
-        let stage = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + f * 4);
+        let stage = read_usize(read_usize(this + league::STAGES) + f * 4);
         for j in 0..q {
-            plan.push(read_u32_as_usize(read_u32_as_usize(stage + 0xb1) + j * 0x3b));
+            plan.push(read_usize(read_usize(stage + 0xb1) + j * 0x3b));
         }
     }
     original();
-    let stage = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + knockout * 4);
+    let stage = read_usize(read_usize(this + league::STAGES) + knockout * 4);
     if stage == 0 {
         SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
-    let list = read_u32_as_usize(stage + 0xa7);
-    let mut found: Vec<usize> = (0..teams).map(|k| read_u32_as_usize(list + 6 * k)).collect();
+    let list = read_usize(stage + 0xa7);
+    let mut found: Vec<usize> = (0..teams).map(|k| read_usize(list + 6 * k)).collect();
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + 0x3e) as usize == teams && read_u32_as_usize(stage + 4) == read_u32_as_usize(this + 4);
+    let same = plan == found && read_i16(stage + 0x3e) as usize == teams && read_usize(stage + 4) == read_usize(this + 4);
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
@@ -152,12 +152,12 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_semi_final_stage(this
 /// Merconorte: na última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x1c7; senão +0x30 sobe e, chegando a 3
 /// (depois dos grupos), as semifinais (0x4c2330: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
-    let f = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
-    if f >= (read_u32_as_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let f = read_usize(this + league::CURRENT_STAGE) as i32;
+    if f >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(0x9a7d6c, 0x1c7);
     }
     let f = f + 1;
-    write_u32_from_usize(this + league::CURRENT_STAGE, f as usize);
+    write_usize(this + league::CURRENT_STAGE, f as usize);
     if f == 3 { // cqs10: the Merconorte semifinals after the groups
         crate::comparison::branch("cqs_10 semifinais da merconorte");
         exe::conmerccup_create_semi_final_stage(this);
@@ -234,10 +234,10 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let shuffle: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
-    write_u32_from_usize(this + 0xf2, 0x10);
-    let americana = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP) * 4);
+    write_usize(this + 0xf2, 0x10);
+    let americana = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_US_OPEN_CUP) * 4);
     let list = alloc(0x40);
-    write_u32_from_usize(this + 0xee, list);
+    write_usize(this + 0xee, list);
     if list == 0 {
         show_error_at(0x9a7d6c, 0x262);
         return 0;
@@ -246,25 +246,25 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
     let mut mls = [0usize; 12];
     let mut n_mls = 0i8;
     let mut i = 0i32;
-    let mut c = read_u32_as_usize(G_CLUB_TABLE);
-    while i < read_u32_as_usize(G_CLUB_COUNT) as i32 {
+    let mut c = read_usize(G_CLUB_TABLE);
+    while i < read_usize(G_CLUB_COUNT) as i32 {
         if national_team(c) != 0 {
             break;
         }
-        let nation = read_u32_as_usize(c + 0x53);
+        let nation = read_usize(c + 0x53);
         if nation != 0 {
-            let id = read_u32_as_usize(nation);
-            if id == read_u32_as_usize(KEY_NATION_MEXICO) {
+            let id = read_usize(nation);
+            if id == read_usize(KEY_NATION_MEXICO) {
                 mexico.por(c);
-            } else if id == read_u32_as_usize(KEY_NATION_COLOMBIA) {
+            } else if id == read_usize(KEY_NATION_COLOMBIA) {
                 colombia.por(c);
-            } else if id == read_u32_as_usize(KEY_NATION_PERU) {
+            } else if id == read_usize(KEY_NATION_PERU) {
                 peru.por(c);
-            } else if id == read_u32_as_usize(KEY_NATION_BOLIVIA) {
+            } else if id == read_usize(KEY_NATION_BOLIVIA) {
                 bolivia.por(c);
             } else {
-                let league = read_u32_as_usize(c + 0x57);
-                if league != 0 && read_u32_as_usize(league) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && n_mls < 0xc {
+                let league = read_usize(c + 0x57);
+                if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && n_mls < 0xc {
                     mls[n_mls as usize] = c;
                     n_mls += 1;
                 }
@@ -279,7 +279,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
     exe::comp_util_sort_and_shuffle_top_clubs(peru.clubes.as_mut_ptr() as usize, peru.n as u32, 3);
     exe::comp_util_sort_and_shuffle_top_clubs(bolivia.clubes.as_mut_ptr() as usize, bolivia.n as u32, 2);
     exe::comp_util_sort_and_shuffle_top_clubs(mls.as_mut_ptr() as usize, n_mls as i16 as u16 as u32, 2);
-    let slot = |k: usize, v: usize| write_u32_from_usize(read_u32_as_usize(this + 0xee) + k * 4, v);
+    let slot = |k: usize, v: usize| write_usize(read_usize(this + 0xee) + k * 4, v);
     slot(2, mexico.clubes[0]);
     slot(3, mexico.clubes[1]);
     slot(4, mexico.clubes[2]);
@@ -296,16 +296,16 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         slot(0, mls[0]);
         slot(1, mls[1]);
     } else {
-        let record = read_u32_as_usize(G_CLUB_COMP_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) * 0x6b;
+        let record = read_usize(G_CLUB_COMP_TABLE) + read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) * 0x6b;
         crate::comparison::branch("cqs_11 campeao da liga americana");
         slot(0, exe::comp_util_get_latest_placed_club(record, 0)); // cqs11: the American league champion
-        slot(1, exe::comp_util_get_latest_placed_club(read_u32_as_usize(americana + 4), 0));
-        let l = read_u32_as_usize(this + 0xee);
-        if read_u32_as_usize(l) == read_u32_as_usize(l + 4) {
+        slot(1, exe::comp_util_get_latest_placed_club(read_usize(americana + 4), 0));
+        let l = read_usize(this + 0xee);
+        if read_usize(l) == read_usize(l + 4) {
             slot(0, exe::comp_util_get_latest_placed_club(record, 1));
         }
     }
-    shuffle(read_u32_as_usize(this + 0xee), 0x10);
+    shuffle(read_usize(this + 0xee), 0x10);
     1
 }
 
@@ -332,12 +332,12 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: u
 /// +0x2c − 1, com sinal), a caixa da linha e volta; senão +0x30 sobe e, chegando a `mata`, o mata-mata (call direto com
 /// o ecx da copa -> thiscall, ret 0).
 pub(crate) unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: usize, file: usize, row: u32, knockout: i32, routine: usize, ramo: &'static str) {
-    let f = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
-    if f >= (read_u32_as_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let f = read_usize(this + league::CURRENT_STAGE) as i32;
+    if f >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(file, row);
     }
     let f = f + 1;
-    write_u32_from_usize(this + league::CURRENT_STAGE, f as usize);
+    write_usize(this + league::CURRENT_STAGE, f as usize);
     if f == knockout {
         crate::comparison::branch(ramo);
         let m: unsafe extern "thiscall" fn(usize) = core::mem::transmute(routine);
@@ -349,10 +349,10 @@ pub(crate) unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: usize,
 // stage, which shows the box and changes nothing).
 /// Comparer: runs only the original and checks +0x30 increased by one (unchanged on the last stage).
 pub(crate) unsafe fn con_merc_cup_compare_advance_stage(name: &str, this: usize, original: impl FnOnce()) {
-    let f = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
-    let last = f >= (read_u32_as_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
+    let f = read_usize(this + league::CURRENT_STAGE) as i32;
+    let last = f >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
     original();
-    let after = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
+    let after = read_usize(this + league::CURRENT_STAGE) as i32;
     SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", name, this, f, after));
 }
 
@@ -360,7 +360,7 @@ pub(crate) unsafe fn con_merc_cup_compare_advance_stage(name: &str, this: usize,
 ///
 /// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
 pub(crate) unsafe fn con_merc_cup_drawn_club(this: usize, k: usize) -> usize {
-    read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr12: o sorteado k
+    read_usize(read_usize(this + 0xee) + k * 4) // cqr12: o sorteado k
 }
 
 /// rule: the Merconorte has 16 invited clubs (the best of four nations and two clubs of the American league
@@ -383,7 +383,7 @@ pub(crate) unsafe fn con_merc_cup_drawn_club(this: usize, k: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
-    if read_u32_as_usize(this + league::ACTIVE) == 0 && full != 0 {
+    if read_usize(this + league::ACTIVE) == 0 && full != 0 {
         let day = read_i16(this + 0xb6) as u16; // cqr12: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
@@ -407,11 +407,11 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
             for g in 0..3i32 {
                 exe::conmerccup_create_group_stage(this, g);
             }
-            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
+            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
             predicted(this);
-            exe::crt_free(read_u32_as_usize(this + 0xee));
-            write_u32_from_usize(this + 0xee, 0);
-            write_u32_from_usize(this + league::ACTIVE, 1);
+            exe::crt_free(read_usize(this + 0xee));
+            write_usize(this + 0xee, 0);
+            write_usize(this + league::ACTIVE, 1);
         }
     }
     league(this, today, full)
@@ -441,7 +441,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
-    write_u32_from_usize(this + league::TABLE, t);
+    write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0x9a7d6c, 0x145);
         return 0;
@@ -499,10 +499,10 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
         crate::comparison::branch("cqr_12 time do grupo");
-        write_u32_from_usize(teams + n * 4, con_merc_cup_drawn_club(this, k as usize)); // cqr12: the team in the group slot
+        write_usize(teams + n * 4, con_merc_cup_drawn_club(this, k as usize)); // cqr12: the team in the group slot
         k += 1;
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
     let p = new(0xee);
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
             4,
             teams,
             read_i16(this + league::LEGS) as u16 as u32,
-            read_u32_as_usize(this + 4),
+            read_usize(this + 4),
             table,
             rodadas as u16 as u32,
             b(0xc2),
@@ -536,16 +536,16 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4, stage);
+    write_usize(read_usize(this + league::STAGES) + g as usize * 4, stage);
     exe::crt_free(teams);
     exe::crt_free(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4);
+    let f = read_usize(read_usize(this + league::STAGES) + g as usize * 4);
     if f == 0 {
         show_error_at(0x9a7d6c, 0x1ff);
         return 0;
     }
     exe::league_send_group_draw_news(f);
-    write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
+    write_usize(this + league::CURRENT_STAGE, g as usize);
     1
 }
 

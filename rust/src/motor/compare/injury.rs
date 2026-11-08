@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_highlight(p: usize, code: 
     }
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(p, code), || crate::rng::without_counting(|| player_highlight(p, code)));
     SCOREBOARD.record(igual && r == n, || format!("player_highlight({:#x}) original={} rust={} {:x?} x {:x?}", code as u16, r, n, mo, mr));
     r
@@ -45,21 +45,21 @@ pub(crate) unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p
     }
     let mut reg: Vec<(usize, usize)> = Vec::from(crate::rng::STATE_REGIONS);
     reg.push((p, 0x6e));
-    if read_u32_as_usize(p + staff::PLAYER) != 0 {
-        reg.push((read_u32_as_usize(p + staff::PLAYER), 0x46));
+    if read_usize(p + staff::PLAYER) != 0 {
+        reg.push((read_usize(p + staff::PLAYER), 0x46));
     }
-    let before_1080 = read_u32_as_usize(G_CONTRACT_LOOKUP_RESULT);
-    let c = exe::contract_manager_get_contract(read_u32_as_usize(G_CONTRACT_MANAGER), p);
+    let before_1080 = read_usize(G_CONTRACT_LOOKUP_RESULT);
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = before_1080;
     if c != 0 {
         reg.push((c, 0x4f));
     }
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     reg.push((physical_record_of_player(this, p), 31));
-    reg.push((read_u32_as_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * 0x4f) as usize), 0x4f));
-    let club = read_u32_as_usize(p + staff::CLUB_JOB);
-    if club != 0 && read_u32_as_usize(club + club::MANAGER) != 0 {
-        reg.push((read_u32_as_usize(club + club::MANAGER), 0x6e));
+    reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * 0x4f) as usize), 0x4f));
+    let club = read_usize(p + staff::CLUB_JOB);
+    if club != 0 && read_usize(club + club::MANAGER) != 0 {
+        reg.push((read_usize(club + club::MANAGER), 0x6e));
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
     RECOVERY_NEWS_DRY_RUN = true;
@@ -290,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn compare_end_player_injury(this: usize, pe
 /// novo: a original já a rodou).
 pub(crate) unsafe extern "thiscall" fn compare_get_player_injury_status(this: usize, person: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_PLAYER_INJURY_STATUS)(this, person);
-    if person != 0 && (read_u32_as_usize(person) as i32) < read_u32_as_usize(G_STAFF_COUNT) as i32 {
+    if person != 0 && (read_usize(person) as i32) < read_usize(G_STAFF_COUNT) as i32 {
         let n = injury_status(this, person);
         SCOREBOARD.record(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", person, r, n));
     }

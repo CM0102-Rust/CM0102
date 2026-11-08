@@ -1836,7 +1836,7 @@ pub(crate) unsafe fn trace_line_interception_with(engine: usize, x0: i8, y0: i8,
             let r = random(2) as i8;
             let ex = (x as i32 - x0 as i32).abs() as i8;
             let ey = (y as i32 - y0 as i32).abs() as i8;
-            let dist = if (0..=8).contains(&ex) && (0..=11).contains(&ey) { *((0xa15e44 + 4 * (ey as usize * 9 + ex as usize)) as *const u32) } else { 0x447a0000 };
+            let dist = if (0..=8).contains(&ex) && (0..=11).contains(&ey) { *((G_CELL_DISTANCE_TABLE + 4 * (ey as usize * 9 + ex as usize)) as *const u32) } else { 0x447a0000 };
             if call(r, home, dist, a6, kind as u32, a7) != 0 || call((r == 0) as i8, home, dist, a6, kind as u32, a7) != 0 {
                 return 1;
             }
@@ -3270,8 +3270,8 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
     let humano_de_verdade = |side: usize| -> bool {
         let p = g(m + engine::SIDE0_MANAGER + side * 0xd0);
         p != 0
-            && read(p) >= read(0xae2364) - 0x10
-            && read(p) < read(0xae2364)
+            && read(p) >= read(G_STAFF_COUNT) - 0x10
+            && read(p) < read(G_STAFF_COUNT)
             && *((p + staff::CLASSIFICATION) as *const u8) != 0
             && lista_humanos(g(G_HUMAN_MANAGER), p) == 0
     };
@@ -3464,7 +3464,7 @@ pub(crate) unsafe fn restart_play_with(m: usize, call: &mut dyn FnMut(usize, usi
                 return;
             }
             let club = club_of(side_club);
-            for (fixo, code) in [(0x9d0230usize, 0x2127u32), (0x9d0234, 0x2128), (0x9d0238, 0x2163), (0x9d0268, 0x2166), (0x9d023c, 0x212b), (0x9d0240, 0x212c), (0x9d0244, 0x212d)] {
+            for (fixo, code) in [(0x9d0230usize, 0x2127u32), (0x9d0234, 0x2128), (0x9d0238, 0x2163), (0x9d0268, 0x2166), (0x9d023c, 0x212b), (0x9d0240, 0x212c), (G_KEY_CLUB_LIVERPOOL, 0x212d)] {
                 if random(2) == 0 && read(club) == read(fixo) {
                     canto(call, code, side_club as u32);
                     return;
@@ -6010,7 +6010,7 @@ pub(crate) unsafe fn compare_shoot_tape(p: usize, a1: u32, a2: u32, a3: u32, a4:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32)>(IDX_SHOOT);
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     if a6 != 0 {
         // the teammates list: the cursor (+0xa) moves
         reg.push((a6 as usize, 14));
@@ -6075,7 +6075,7 @@ pub(crate) unsafe extern "thiscall" fn build_engine(m: usize) -> usize {
     array(m + engine::MATCH_MANAGERS, 0xd0, 2, 0x5961c0, 0x6dbb10);
     array(m + engine::TACTICS, 0x18e3, 2, 0x5b27c0, 0x5a53c0);
     array(m + engine::TACTICS_BACKUP, 0x18e3, 2, 0x5b27c0, 0x5a53c0);
-    exe::match_official_match_official(m + engine::REFEREE);
+    exe::new_match_official(m + engine::REFEREE);
     *((m + engine::EVENT_LIST) as *mut usize) = 0;
     m
 }
@@ -6097,7 +6097,7 @@ pub(crate) unsafe extern "thiscall" fn destroy_engine(m: usize) {
     }
     let list = *((m + engine::EVENT_LIST) as *const usize);
     if list != 0 {
-        exe::llist_destructor_llist(list);
+        exe::drop_llist(list);
         exe::crt_operator_delete(list);
         *((m + engine::EVENT_LIST) as *mut usize) = 0;
     }
@@ -6436,7 +6436,7 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, rapida: u8, comme
     // the list of pre-match events
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xe);
-    let list = if p != 0 { exe::llist_llist(p) } else { 0 };
+    let list = if p != 0 { exe::new_llist(p) } else { 0 };
     *dw(engine::EVENT_LIST) = list as u32;
     'eventos: {
         if list == 0 || is_national_team(casa) != 0 {
@@ -7400,7 +7400,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
     let by = byte(m, engine::BALL_Y) as i32;
     let cx = ((bx - 4).abs()) as i8;
     let cy = ((if flag == 1 { by - 11 } else { by }).abs()) as i8;
-    let base = if (0..=8).contains(&cx) && (0..=11).contains(&cy) { *((0xa15e44 + (cy as usize * 9 + cx as usize) * 4) as *const f32) } else { read_f32_at(0x96d2dc) }; // 0x96d2dc = 1000
+    let base = if (0..=8).contains(&cx) && (0..=11).contains(&cy) { *((G_CELL_DISTANCE_TABLE + (cy as usize * 9 + cx as usize) * 4) as *const f32) } else { read_f32_at(0x96d2dc) }; // 0x96d2dc = 1000
     let mut dist = (base as f64 + read_f64_at(0x968968)) as f32; // 0x968968 = 0.5
     if dist as f64 > read_f64_at(0x967890) { // 0x967890 = 1
         let x = dist as f64 * read_f64_at(0x968968); // 0x968968 = 0.5

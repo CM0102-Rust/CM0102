@@ -114,7 +114,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_slot_position(this: usize, ho
     if !(0..=10).contains(&(home as u8 as i8)) {
         return o(this, home, position, extra);
     }
-    let reg = [(this + formation_fields::SLOT_CELLS, 0x584 - 0x12d), (this + formation_fields::FORMATION_MASK, 8), (0xb67a34, 4)];
+    let reg = [(this + formation_fields::SLOT_CELLS, 0x584 - 0x12d), (this + formation_fields::FORMATION_MASK, 8), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, home, position, extra), || set_slot_position(this, home, position, extra));
     SCOREBOARD.record(igual && r == n, || format!("set_slot_position({}, {:#x}, {}) {:x?} x {:x?}", home as u8 as i8, position as u16, extra, mo, mr));
     r
@@ -163,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn compare_formation_mask(this: usize) -> u3
 /// Comparer for `set_square`.
 pub(crate) unsafe extern "thiscall" fn compare_set_square(this: usize, position: i8, mask: u64) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u64) -> u32>(IDX_SET_SQUARE);
-    let regions = [(this + formation_fields::CHANGED_FLAG, 0x64), (0xb67a34, 4)];
+    let regions = [(this + formation_fields::CHANGED_FLAG, 0x64), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, position, mask), || set_square(this, position, mask));
     SCOREBOARD.record(igual && r == n, || format!("set_square({}, {:x}) original={} rust={} {:x?} x {:x?}", position, mask, r, n, mo, mr));
     r
@@ -172,7 +172,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_square(this: usize, position:
 /// Comparer for `mark_stars`.
 pub(crate) unsafe extern "thiscall" fn compare_mark_stars(this: usize, side: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_MARK_STARS);
-    let regions = [(this, ENGINE_SIZE), (0xb67a34, 4)];
+    let regions = [(this, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, side), || mark_stars(this, side));
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);

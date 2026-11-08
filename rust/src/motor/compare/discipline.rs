@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
             (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", *(s as *const u8), jogos, read_i16(s + ban_record::DAYS), dias))
         }
         SuspensionPlan::Nova { vaga, conta } => {
-            let s = read_u32_as_usize(this + discipline_fields::BANS).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
+            let s = read_usize(this + discipline_fields::BANS).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
             let mut ok = read_i16(this + discipline_fields::BAN_COUNT) == conta && *(s as *const u8) == *(ban as *const u8) && read_i16(s + ban_record::DAYS) == read_i16(ban + ban_record::DAYS);
             for k in 0..4usize {
                 ok &= *((s + ban_record::RULES + k) as *const u8) == rules[k];
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
 /// e as entradas), a original roda; confere as vagas liberadas (0xff, −1, a entrada −1) e as outras intactas. Uma
 /// entrada repetida em duas vagas não entra na conferência da segunda.
 pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this: usize, person: usize, nada: u32, club: usize) {
-    let id = read_u32_as_usize(person) as u32;
+    let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
     let mut before = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, before.as_mut_ptr(), 29);
@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
         }
         let v = &after[k * 5..k * 5 + 5];
         ok &= match plan[k] {
-            Some(e) => v == [0xff; 5] && read_u32_as_usize(e) as u32 == 0xffff_ffff,
+            Some(e) => v == [0xff; 5] && read_usize(e) as u32 == 0xffff_ffff,
             None => *v == before[k * 5..k * 5 + 5],
         };
     }
@@ -175,7 +175,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
 /// e solta suspensões: o plano antes, a original roda; confere [0xae1080], as vagas devolvidas (os 5 bytes guardados), as
 /// soltas (0xff, −1, a entrada −1), a conta de guardadas e as outras vagas intactas.
 pub(crate) unsafe extern "thiscall" fn compare_restore_held_bans(this: usize, person: usize) {
-    let id = read_u32_as_usize(person) as u32;
+    let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
     let p = return_bans_plan(this, person);
     let mut before = [0u8; 29];
@@ -187,10 +187,10 @@ pub(crate) unsafe extern "thiscall" fn compare_restore_held_bans(this: usize, pe
     for (k, b) in &p.guardadas {
         expected[k * 5..k * 5 + 5].copy_from_slice(b);
     }
-    let mut ok = read_u32_as_usize(G_CONTRACT_LOOKUP_RESULT) == p.contrato;
+    let mut ok = read_usize(G_CONTRACT_LOOKUP_RESULT) == p.contrato;
     for (k, e) in &p.soltas {
         expected[k * 5..k * 5 + 5].copy_from_slice(&[0xff; 5]);
-        ok &= read_u32_as_usize(*e) as u32 == 0xffff_ffff;
+        ok &= read_usize(*e) as u32 == 0xffff_ffff;
     }
     expected[0x1c] = p.resto;
     ok &= after == expected;
@@ -366,7 +366,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_match(this: usize, partid
 /// [pt] Comparador: a 0x556830 solta suspensões e tira (e libera) itens da lista: o plano antes (as entradas das vagas), a
 /// original roda; confere o registro (0xff, conta 0) e as entradas livres (+0 = −1).
 pub(crate) unsafe extern "thiscall" fn compare_discipline_remove_player(this: usize, id: u32) {
-    let r = read_u32_as_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
+    let r = read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
     let mut entradas = Vec::new();
     for k in 0..4usize {
         let rule = *((r + k * 5) as *const u8);
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_remove_player(this: us
     let mut after = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, after.as_mut_ptr(), 29);
     let ok = after[..0x1c].iter().all(|&b| b == 0xff) && after[0x1c] == 0
-        && entradas.iter().all(|&e| read_u32_as_usize(e) as u32 == 0xffff_ffff);
+        && entradas.iter().all(|&e| read_usize(e) as u32 == 0xffff_ffff);
     SCOREBOARD.record(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, after, entradas));
 }
 

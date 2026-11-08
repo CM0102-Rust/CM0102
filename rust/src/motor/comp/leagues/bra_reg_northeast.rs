@@ -51,7 +51,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: 
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
-    exe::league_league(this);
+    exe::new_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
     core::ptr::write_unaligned(this as *mut usize, e.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
@@ -83,7 +83,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: 
         return this;
     }
     let n = novo(0x5ce);
-    let s = if n != 0 { exe::comp_stats_comp_stats(n, this) } else { 0 };
+    let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
         show_error_at(e.arquivo, e.linhas[4]);

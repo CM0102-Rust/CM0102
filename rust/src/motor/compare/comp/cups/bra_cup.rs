@@ -24,14 +24,14 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_cup_build_team_table(this: us
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_BUILD_TEAM_TABLE);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let reg = [(this + cup::TEAM_COUNT, 2usize), (0xb67a34, 4)];
+    let reg = [(this + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
-        lo.set(read_u32_as_usize(this + cup::TEAM_TABLE));
+        lo.set(read_usize(this + cup::TEAM_TABLE));
         r
     }, || {
         let r = build_brazil_cup_teams(this);
-        lr.set(read_u32_as_usize(this + cup::TEAM_TABLE));
+        lr.set(read_usize(this + cup::TEAM_TABLE));
         core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
         r
     });
@@ -57,16 +57,16 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_cup_set_up_rounds(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_SET_UP_ROUNDS);
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
-    let before = read_u32_as_usize(this + cup::ROUND_TABLE);
-    let reg = [(this + cup::PRIZE_FUND, 4usize), (this + cup::STAGE_LABEL, 4), (this + cup::SUBSTITUTES_NAMED, 2), (0xb67a34, 4)];
+    let before = read_usize(this + cup::ROUND_TABLE);
+    let reg = [(this + cup::PRIZE_FUND, 4usize), (this + cup::STAGE_LABEL, 4), (this + cup::SUBSTITUTES_NAMED, 2), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
-        to.set(read_u32_as_usize(this + cup::ROUND_TABLE));
+        to.set(read_usize(this + cup::ROUND_TABLE));
         core::ptr::write_unaligned((this + cup::ROUND_TABLE) as *mut u32, before as u32);
         r
     }, || {
         let r = set_up_brazil_cup_rounds(this);
-        tr.set(read_u32_as_usize(this + cup::ROUND_TABLE));
+        tr.set(read_usize(this + cup::ROUND_TABLE));
         core::ptr::write_unaligned((this + cup::ROUND_TABLE) as *mut u32, to.get() as u32);
         r
     });

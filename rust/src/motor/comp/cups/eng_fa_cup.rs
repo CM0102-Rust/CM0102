@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize
 /// dá a caixa (linhas 0x3d6, 0x3dd, 0x3e4) e 1 —, a ordem prevista (virtual +0x5c) e o sorteio da 1ª rodada (0x51c800:
 /// push 0; mov ecx, copa -> thiscall, ret 4). Sempre, no fim, a atualização da copa.
 pub(crate) unsafe extern "thiscall" fn eng_fa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    if read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 && stage != 0 {
+    if read_usize(this + cup::SEASON_SET_UP) == 0 && stage != 0 {
         if is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), today) && *((this + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED) as *const u8) == 0 {
             // simplification: the 1999 question builds and delivers a news item (only on that day, outside any new career)
             return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_FA_CUP_UPDATE_FOR_DATE)(this, today, stage);

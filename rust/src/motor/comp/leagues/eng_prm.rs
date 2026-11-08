@@ -59,9 +59,9 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.create_table);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    exe::league_league(this);
-    write_u32_from_usize(this + 4, registro);
-    write_u32_from_usize(this, p.vtable);
+    exe::new_league(this);
+    write_usize(this + 4, registro);
+    write_usize(this, p.vtable);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = 9; // cql6: the discipline rule of the English leagues
     if let Some((capacidade, sentados)) = p.stadium {
@@ -73,13 +73,13 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     }
     crate::comparison::branch("cql_6 divisao inglesa nova");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
-    write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    write_u32_from_usize(this + league::STAGE_COUNT, p.extra_stages as usize);
+    write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
+    write_usize(this + league::STAGE_COUNT, p.extra_stages as usize);
     if p.extra_stages != 0 {
         let v = alocar(4);
-        write_u32_from_usize(this + league::STAGES, v);
+        write_usize(this + league::STAGES, v);
     } else {
-        write_u32_from_usize(this + league::STAGES, 0);
+        write_usize(this + league::STAGES, 0);
     }
     if set_up_rules(this) == 0 {
         show_error_at(p.source_file, p.box_lines[0]);
@@ -98,8 +98,8 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
         return this;
     }
     let e = novo(0x5ce);
-    let s = if e != 0 { exe::comp_stats_comp_stats(e, this) } else { 0 };
-    write_u32_from_usize(this + 8, s);
+    let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
+    write_usize(this + 8, s);
     if s == 0 {
         show_error_at(p.source_file, p.box_lines[4]);
         return this;
@@ -164,15 +164,15 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 /// fases, a fase atual −1 e as estatísticas em +8.
 pub(crate) unsafe fn compare_english_constructor(name: &str, this: usize, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_u32_as_usize(this) == p.vtable && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && read_u32_as_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 9;
+    let mut ok = r == this && read_usize(this) == p.vtable && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
+        && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 9;
     if let Some((c, s)) = p.stadium {
         ok = ok && core::ptr::read_unaligned((this + league::REQUIRED_CAPACITY) as *const u16) == c && core::ptr::read_unaligned((this + league::REQUIRED_SEATS) as *const u16) == s;
     }
-    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
-        ok = ok && read_u32_as_usize(this + league::STAGE_COUNT) == p.extra_stages as usize && (read_u32_as_usize(this + league::STAGES) != 0) == (p.extra_stages != 0);
+    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
+        ok = ok && read_usize(this + league::STAGE_COUNT) == p.extra_stages as usize && (read_usize(this + league::STAGES) != 0) == (p.extra_stages != 0);
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + league::STAGE_COUNT), read_u32_as_usize(this + league::STAGES), read_u32_as_usize(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + league::STAGE_COUNT), read_usize(this + league::STAGES), read_usize(this + 8)));
     r
 }
 

@@ -11,14 +11,14 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_construct_fra_first(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_FIRST);
     let r = o(this, year, record);
-    let marker = |m: usize, vt: usize, g: usize| m == 0 || (read_u32_as_usize(m) == vt && read_u32_as_usize(m + 4) == comp_record_of_key(g) && *((m + league::DISCIPLINE_RULE) as *const u8) == 0xff);
-    let mut ok = r == this && read_u32_as_usize(this) == 0x96aa24 && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && read_u32_as_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 0xc
-        && marker(read_u32_as_usize(this + 0xee), 0x96a994, KEY_CLUB_COMP_FRENCH_CFA) && marker(read_u32_as_usize(this + 0xf2), 0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
-    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
-        ok = ok && read_u32_as_usize(this + league::STAGE_COUNT) == 0 && read_u32_as_usize(this + league::STAGES) == 0;
+    let marker = |m: usize, vt: usize, g: usize| m == 0 || (read_usize(m) == vt && read_usize(m + 4) == comp_record_of_key(g) && *((m + league::DISCIPLINE_RULE) as *const u8) == 0xff);
+    let mut ok = r == this && read_usize(this) == 0x96aa24 && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
+        && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 0xc
+        && marker(read_usize(this + 0xee), 0x96a994, KEY_CLUB_COMP_FRENCH_CFA) && marker(read_usize(this + 0xf2), 0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
+    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
+        ok = ok && read_usize(this + league::STAGE_COUNT) == 0 && read_usize(this + league::STAGES) == 0;
     }
-    SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0xee), read_u32_as_usize(this + 0xf2), read_u32_as_usize(this + 8)));
+    SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, read_usize(this), read_usize(this + 0xee), read_usize(this + 0xf2), read_usize(this + 8)));
     r
 }
 

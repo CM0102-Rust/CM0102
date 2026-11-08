@@ -233,7 +233,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
         if *v.offset(s as isize) == 0 {
             break;
         }
-        let count = |r: i32| read_i16(read_u32_as_usize(this + cup::ROUND_TABLE) + r as usize * 0x68 + 0x1a) as i32;
+        let count = |r: i32| read_i16(read_usize(this + cup::ROUND_TABLE) + r as usize * 0x68 + 0x1a) as i32;
         if r == read_i16(this + cup::ROUND_COUNT) as i32 - 2 {
             let mut j = 0;
             while j < count(r) {
@@ -241,7 +241,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
                 s = s.wrapping_add(1);
                 chamadas.push((c, a));
                 if write != 0 {
-                    write_position(read_u32_as_usize(this + 8), c, a as u32);
+                    write_position(read_usize(this + 8), c, a as u32);
                 }
                 b = b.wrapping_add(1);
                 j += 1;
@@ -256,7 +256,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
                 chamadas.push((c, a));
                 if write != 0 {
                     crate::comparison::branch("cpt_13 posição pela rodada");
-                    write_position(read_u32_as_usize(this + 8), c, a as u32);
+                    write_position(read_usize(this + 8), c, a as u32);
                 }
             }
             b = b.wrapping_add(1);

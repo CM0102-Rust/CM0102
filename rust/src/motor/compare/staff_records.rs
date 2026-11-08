@@ -155,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_team_of_year_record(this: usi
 pub(crate) unsafe extern "C" fn compare_staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STAFF_RECORDS_COMPARE_CLUBS_BY_MANAGER_POINTS)(a, b);
     let n = staff_records_compare_clubs_by_manager_points(a, b);
-    SCOREBOARD.record(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", read_u32_as_usize(a), read_u32_as_usize(b), r, n));
+    SCOREBOARD.record(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", read_usize(a), read_usize(b), r, n));
     r
 }
 

@@ -187,7 +187,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     const FONTE: usize = 0xa159b0; // match_events.cpp
     const TABELA: usize = 0xb68788;
-    const FIM: usize = 0xb6b723;
+    const FIM: usize = G_MATCH_EVENT_CONFIG_LOADED_FLAG;
     const BUF: usize = 0xde1f64;
     let event = |k: i32| TABELA.wrapping_add((k as isize * 0x12) as usize);
     let sons = |e: usize| core::ptr::read_unaligned((e + event_type::VARIANTS) as *const usize);
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     for k in 0..0x2a5i32 {
         let e = event(k);
         if sons(e) == 0 {
-            core::ptr::write_unaligned((e + event_type::VARIANTS) as *mut usize, 0xb68670);
+            core::ptr::write_unaligned((e + event_type::VARIANTS) as *mut usize, G_MATCH_EVENT_DEFAULT_VARIANT);
             core::ptr::write_unaligned((e + event_type::VARIANT_COUNT) as *mut i16, 1);
             format(BUF, 0xa15b38, k);
             show_error_at(FONTE, 0xe46);
@@ -993,12 +993,12 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             *(dest(out) as *mut u8) = 0;
                         }
                         b'Y' | b'y' => {
-                            colours_default(&mut cor1, &mut cor2, 0xaebdec);
+                            colours_default(&mut cor1, &mut cor2, G_GUI_COLOUR_YELLOW);
                             *(dest(out) as *mut u8) = 0;
                         }
                         b'R' | b'r' => {
                             if t(pos + 2) != b'f' {
-                                colours_default(&mut cor1, &mut cor2, 0xae31a8);
+                                colours_default(&mut cor1, &mut cor2, G_GUI_COLOUR_RED);
                                 *(dest(out) as *mut u8) = 0;
                             } else {
                                 let fixo = if x == b'R' { 0xa15a14usize } else { 0xa159e0 };
@@ -1822,7 +1822,7 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
     let mut e = 0xb68790usize;
     while e < G_MATCH_EVENT_TABLE_END_MARKER {
         let table = core::ptr::read_unaligned(e as *const usize);
-        if table != 0xb68670 && table != 0 {
+        if table != G_MATCH_EVENT_DEFAULT_VARIANT && table != 0 {
             let mut k = 0i32;
             while k < core::ptr::read_unaligned((e + 4) as *const i16) as i32 {
                 let r = table + k as usize * 0x110;

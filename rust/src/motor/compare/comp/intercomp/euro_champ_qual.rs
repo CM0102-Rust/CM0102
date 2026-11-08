@@ -9,18 +9,18 @@ use super::*;
 /// cada lado aloca em +0xba (pela virtual +0x3c, original) só é conferida como montada, e a da cópia é liberada.
 pub(crate) unsafe extern "thiscall" fn compare_euro_champ_qual_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EURO_CHAMP_QUAL_SET_UP_RULES);
-    let before = read_u32_as_usize(this + league::ROUND_DATES);
+    let before = read_usize(this + league::ROUND_DATES);
     let reg = [(this + league::STAGE_ID, 0x80usize), (this + league::PROMOTED_COUNT, 0xb)];
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
-        to.set(read_u32_as_usize(this + league::ROUND_DATES));
+        to.set(read_usize(this + league::ROUND_DATES));
         core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, before as u32);
         r
     }, || {
         let r = set_up_rules(this);
-        tr.set(read_u32_as_usize(this + league::ROUND_DATES));
+        tr.set(read_usize(this + league::ROUND_DATES));
         core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, to.get() as u32);
         r
     });
@@ -69,11 +69,11 @@ pub(crate) unsafe extern "thiscall" fn compare_get_qualification_status(this: us
 pub(crate) unsafe extern "thiscall" fn compare_init_group_one_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INIT_GROUP_ONE_TABLE);
     let n = if matches!(*((this + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this) };
-    let plan: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xf7) + k * 4)).collect();
+    let plan: Vec<usize> = (0..n as usize).map(|k| read_usize(read_usize(this + 0xf7) + k * 4)).collect();
     let r = o(this);
-    let t = read_u32_as_usize(this + league::TABLE);
+    let t = read_usize(this + league::TABLE);
     let ok = r == 1 && read_i16(this + league::CLUB_COUNT) == n && read_i16(this + league::GAMES_PER_CLUB) == (n - 1).wrapping_mul(read_i16(this + league::LEGS)) && t != 0
-        && plan.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
+        && plan.iter().enumerate().all(|(k, &c)| read_usize(t + k * 0x3b) == c);
     SCOREBOARD.record(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plan));
     r
 }

@@ -71,7 +71,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     let future: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(nt, 0xbc6, 0);
+    exe::new_newsitem(nt, 0xbc6, 0);
     set_news_person_slots(nt, 0, player);
     set_news_slot(nt, 4, reason as i8 as u32);
     set_news_slot(nt, 5, reacao as i8 as u32);
@@ -114,7 +114,7 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usiz
     crate::comparison::branch("cpz_9 noticia do retorno do treinador");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(nt, 0x1394, 0);
+    exe::new_newsitem(nt, 0x1394, 0);
     set_news_person_slots(nt, 0, player);
     set_news_person_slots(nt, 4, coach);
     set_news_slot(nt, 8, outcome as i8 as u32);

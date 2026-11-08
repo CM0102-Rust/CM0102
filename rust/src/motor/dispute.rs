@@ -12,30 +12,30 @@ use super::*;
 /// (+4), ou com a marca da pessoa zerada: nada. Senão zera a marca e, com a lista (+0), volta o cursor ao começo (+0xa =
 /// +2) e procura, nas `conta` (+0, palavra) primeiras, a entrada do id da pessoa (0x68d1b0): achando, tira-a (0x68d1f0).
 pub(crate) unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
-    if p == 0 || read_u32_as_usize(this + 4) == 0 {
+    if p == 0 || read_usize(this + 4) == 0 {
         return;
     }
-    let m = (read_u32_as_usize(this + 4) as isize + read_i32(p) as isize) as *mut u8;
+    let m = (read_usize(this + 4) as isize + read_i32(p) as isize) as *mut u8;
     if *m == 0 {
         return;
     }
     *m = 0;
-    let list = read_u32_as_usize(this);
+    let list = read_usize(this);
     if list == 0 {
         return;
     }
-    core::ptr::write_unaligned((list + 0xa) as *mut u32, read_u32_as_usize(list + 2) as u32);
+    core::ptr::write_unaligned((list + 0xa) as *mut u32, read_usize(list + 2) as u32);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut k = 0i32;
-    while (k as i16 as i32) < read_i16(read_u32_as_usize(this)) as i32 {
-        let no = next(read_u32_as_usize(this));
+    while (k as i16 as i32) < read_i16(read_usize(this)) as i32 {
+        let no = next(read_usize(this));
         if no == 0 {
             return;
         }
         if read_i32(no) == read_i32(p) {
             crate::comparison::branch("cqg_7 saiu da contest");
             let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LLIST_REMOVE);
-            remove(read_u32_as_usize(this), no);
+            remove(read_usize(this), no);
             return;
         }
         k += 1;

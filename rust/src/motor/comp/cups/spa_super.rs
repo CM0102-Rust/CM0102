@@ -91,14 +91,14 @@ pub(crate) unsafe extern "thiscall" fn spa_super_select_teams(this: usize) -> i3
 pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let reg = [(this + cup::TEAM_COUNT, 2usize), (0xb67a34, 4)];
+    let reg = [(this + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
-        lo.set(read_u32_as_usize(this + cup::TEAM_TABLE));
+        lo.set(read_usize(this + cup::TEAM_TABLE));
         r
     }, || {
         let (r, _) = c();
-        lr.set(read_u32_as_usize(this + cup::TEAM_TABLE));
+        lr.set(read_usize(this + cup::TEAM_TABLE));
         core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
         r
     });
@@ -141,22 +141,22 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
     if !set_team_slot(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    if read_u32_as_usize(a + 0x53) == 0 && !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
+    if read_usize(a + 0x53) == 0 && !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
         return (0, 0);
     }
     let b = latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 0);
     if !set_team_slot(l, 1, b, F, 0xe0) {
         return (0, 0);
     }
-    if read_u32_as_usize(b + 0x53) == 0 && !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
+    if read_usize(b + 0x53) == 0 && !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
         return (0, 0);
     }
-    if read_u32_as_usize(l) == read_u32_as_usize(l + 6) {
+    if read_usize(l) == read_usize(l + 6) {
         crate::comparison::branch("cqm_12 dobradinha japonesa");
         if !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xf9) {
             return (0, 0);
         }
-        if read_u32_as_usize(l) == read_u32_as_usize(l + 6) && !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0x105) {
+        if read_usize(l) == read_usize(l + 6) && !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0x105) {
             return (0, 0);
         }
     }

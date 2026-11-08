@@ -16,10 +16,10 @@ use super::*;
 /// garante: a fila das notícias some ([+0x1128] = 0 se havia) e a lista das conferências fica vazia.
 pub(crate) unsafe extern "thiscall" fn compare_fix_man_daily_update(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_FIX_MAN_DAILY_UPDATE);
-    let havia = read_u32_as_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
+    let havia = read_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
     let before = read_i16(G_FIXTURE_LEGS_LIST);
     o(this);
-    let queue = read_u32_as_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
+    let queue = read_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
     let after = read_i16(G_FIXTURE_LEGS_LIST);
     SCOREBOARD.record((havia == 0 || queue == 0) && (before == 0 || after == 0),
         || format!("fix_man_daily_update: fila das notícias {:x} -> {:x}, conferências {} -> {}", havia, queue, before, after));
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fix_man_daily_update(this: usize)
 /// original (simplification: troca o bloco do outro ano, que grava e lê o arquivo, ou aloca um bloco novo).
 pub(crate) unsafe extern "thiscall" fn compare_get_fixture_list(this: usize, year: u32, day: u32, slice: u32, kind: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(IDX_GET_FIXTURE_LIST);
-    let other = read_u32_as_usize(this + fixture_manager::OTHER_YEAR);
+    let other = read_usize(this + fixture_manager::OTHER_YEAR);
     let direct = read_i16(this + fixture_manager::YEAR) == year as i16 || (other != 0 && read_i16(other + fixture_manager::YEAR) == year as i16);
     if !direct {
         return o(this, year, day, slice, kind);
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_fixture_clashes(this: usize,
     let same = (r == 0) == (nr == 0) && go == gr && lo == lr;
     SCOREBOARD.record(same, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", game, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
     if nr != 0 {
-        exe::llist_destructor_llist(nr);
+        exe::drop_llist(nr);
         exe::crt_operator_delete(nr);
     }
     r
@@ -290,9 +290,9 @@ pub(crate) unsafe extern "thiscall" fn compare_insert_fixture(this: usize, f: us
     }
     let count = read_u16(l);
     o(this, f);
-    let cauda = read_u32_as_usize(l + 6);
+    let cauda = read_usize(l + 6);
     let same = read_u16(l) == count.wrapping_add(1) && cauda != 0
-        && core::slice::from_raw_parts(read_u32_as_usize(cauda) as *const u8, 0x4f) == core::slice::from_raw_parts(f as *const u8, 0x4f);
+        && core::slice::from_raw_parts(read_usize(cauda) as *const u8, 0x4f) == core::slice::from_raw_parts(f as *const u8, 0x4f);
     SCOREBOARD.record(same, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, count, read_u16(l)));
 }
 
@@ -307,12 +307,12 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_fixture(this: usize, f: us
         return o(this, f); // simplification: no memory for the block, original only (the box)
     }
     let count = read_u16(l);
-    let mut no = read_u32_as_usize(l + 2);
+    let mut no = read_usize(l + 2);
     let mut has = false;
     while no != 0 && !has {
         let n = *((no + 4) as *const i16) as isize as usize;
-        has = core::slice::from_raw_parts(read_u32_as_usize(no) as *const u8, n) == core::slice::from_raw_parts(f as *const u8, n);
-        no = read_u32_as_usize(no + 6);
+        has = core::slice::from_raw_parts(read_usize(no) as *const u8, n) == core::slice::from_raw_parts(f as *const u8, n);
+        no = read_usize(no + 6);
     }
     let r = o(this, f);
     let expected = has as u32;

@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O clube da linha `i` da tabela [+0xb1] (0x3b bytes).
 pub(crate) unsafe fn ita_ser_c1a_league_row_club(league: usize, i: usize) -> usize {
-    read_u32_as_usize(read_u32_as_usize(league + league::TABLE) + i * 0x3b)
+    read_usize(read_usize(league + league::TABLE) + i * 0x3b)
 }
 
 /// Stage advance of the three (League::advance_stage, slot +0x28; the body of 0x64b9e0, 0x64fba0 and 0x578330): error
@@ -18,13 +18,13 @@ pub(crate) unsafe fn ita_ser_c1a_league_row_club(league: usize, i: usize) -> usi
 /// fase atual (+0x30) já na última (+0x2c − 1, com sinal), a caixa do fonte `arquivo` na linha `linha`; senão +0x30 + 1
 /// e, ao chegar à fase 0 (a primeira depois da liga), cria as fases (`criar`: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe fn ita_ser_c1a_advance_stage_cql5_passar_de_fase(this: usize, file: usize, row: u32, create: usize) {
-    let stage = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
-    if stage >= (read_u32_as_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let stage = read_usize(this + league::CURRENT_STAGE) as i32;
+    if stage >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
         show_error_at(file, row);
         return;
     }
     let new = stage.wrapping_add(1);
-    write_u32_from_usize(this + league::CURRENT_STAGE, new as usize);
+    write_usize(this + league::CURRENT_STAGE, new as usize);
     if new == 0 {
         crate::comparison::branch("cql_5 fases do fim da liga");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(create);
@@ -47,8 +47,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_advance_stage(this: usize) {
 /// [pt] O comparador das três: sem criar fase (a fase atual só sobe), lado a lado em +0x30; na caixa ou ao criar as fases
 /// (alocam), só a original (a criação tem o seu comparador).
 pub(crate) unsafe fn ita_ser_c1a_compare_advance_stage(name: &str, this: usize, original: impl FnOnce(), copy: impl FnOnce()) {
-    let stage = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
-    if stage >= (read_u32_as_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) || stage.wrapping_add(1) == 0 {
+    let stage = read_usize(this + league::CURRENT_STAGE) as i32;
+    if stage >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) || stage.wrapping_add(1) == 0 {
         return original();
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + league::CURRENT_STAGE, 4)], original, copy);
@@ -117,15 +117,15 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     let stage_of_cup: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     // the Série C1 Super Cup
-    let cup = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
-    let entrants = read_u32_as_usize(cup + cup::TEAM_TABLE);
+    let cup = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
+    let entrants = read_usize(cup + cup::TEAM_TABLE);
     let champion = ita_ser_c1a_league_row_club(this, 0);
-    if read_u32_as_usize(entrants) != 0 {
-        write_u32_from_usize(entrants + 6, champion);
+    if read_usize(entrants) != 0 {
+        write_usize(entrants + 6, champion);
     } else {
-        write_u32_from_usize(entrants, champion);
+        write_usize(entrants, champion);
     }
     let list = alloc(0x10);
     if list == 0 {
@@ -133,11 +133,11 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
         return;
     }
     for (k, &i) in PROMOTION_PLAYOFF_ROWS.iter().enumerate() {
-        write_u32_from_usize(list + k * 4, ita_ser_c1a_league_row_club(this, i));
+        write_usize(list + k * 4, ita_ser_c1a_league_row_club(this, i));
     }
     let clubs = *((this + league::PROMOTION_PLAYOFF_COUNT) as *const i8) as i16 as u16 as u32;
     let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
-    let record = read_u32_as_usize(this + 4);
+    let record = read_usize(this + 4);
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let gabarito = calendario(this, 0, &mut rodadas, &mut extra, 0);
     let positions: [u8; 4] = [4, 1, 3, 2]; // cql5: the play-off positions
@@ -145,25 +145,25 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     if stage != 0 {
         stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 0, 1, extra & 0xffff, 0x14, 0, 0, 0, positions.as_ptr());
     }
-    write_u32_from_usize(read_u32_as_usize(this + league::STAGES), stage);
-    if read_u32_as_usize(read_u32_as_usize(this + league::STAGES)) == 0 {
+    write_usize(read_usize(this + league::STAGES), stage);
+    if read_usize(read_usize(this + league::STAGES)) == 0 {
         show_error_at(file, rows[1]);
         return;
     }
-    sortear(read_u32_as_usize(read_u32_as_usize(this + league::STAGES)), 0);
+    sortear(read_usize(read_usize(this + league::STAGES)), 0);
     exe::crt_free(gabarito);
     let (mut rodadas, mut extra) = (0u32, 0u32);
-    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let gabarito = calendario(this, 1, &mut rodadas, &mut extra, 0);
     for (k, &i) in PLAYOUT_ROWS.iter().enumerate() {
-        write_u32_from_usize(list + k * 4, ita_ser_c1a_league_row_club(this, i));
+        write_usize(list + k * 4, ita_ser_c1a_league_row_club(this, i));
     }
     let positions: [u8; 4] = [0x10, 0xd, 0xf, 0xe];
     let mut stage = new(0xb2);
     if stage != 0 {
         stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 1, 1, extra & 0xffff, 0x14, 0, 0, 0, positions.as_ptr());
     }
-    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + 4, stage);
+    write_usize(read_usize(this + league::STAGES) + 4, stage);
     if lista_primeiro {
         exe::crt_free(list);
         exe::crt_free(gabarito);
@@ -171,12 +171,12 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
         exe::crt_free(gabarito);
         exe::crt_free(list);
     }
-    if read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 4) == 0 {
+    if read_usize(read_usize(this + league::STAGES) + 4) == 0 {
         show_error_at(file, rows[2]);
         return;
     }
-    sortear(read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 4), 0);
-    write_u32_from_usize(this + league::CURRENT_STAGE, 1);
+    sortear(read_usize(read_usize(this + league::STAGES) + 4), 0);
+    write_usize(this + league::CURRENT_STAGE, 1);
 }
 
 /// the C1/A rule (18 clubs): the champion goes up directly and enters the Serie C1 Super Cup; 2nd v 5th and 3rd v 4th
@@ -198,14 +198,14 @@ pub(crate) unsafe extern "thiscall" fn create_playoff_stages(this: usize) {
 /// [pt] O comparador das duas: alocam e sorteiam: só a original. O plano, feito antes: o campeão e a vaga da Supercopa. Depois:
 /// a vaga com o campeão, as duas fases em [+0xc] e +0x30 = 1.
 pub(crate) unsafe fn compare_end_of_league_stages(name: &str, this: usize, original: impl FnOnce()) {
-    let cup = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
-    let entrants = read_u32_as_usize(cup + cup::TEAM_TABLE);
+    let cup = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
+    let entrants = read_usize(cup + cup::TEAM_TABLE);
     let champion = ita_ser_c1a_league_row_club(this, 0);
-    let slot = if read_u32_as_usize(entrants) != 0 { entrants + 6 } else { entrants };
+    let slot = if read_usize(entrants) != 0 { entrants + 6 } else { entrants };
     original();
-    let stages = read_u32_as_usize(this + league::STAGES);
-    let ok = read_u32_as_usize(slot) == champion && stages != 0 && read_u32_as_usize(stages) != 0 && read_u32_as_usize(stages + 4) != 0 && read_u32_as_usize(this + league::CURRENT_STAGE) == 1;
-    SCOREBOARD.record(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", name, this, read_u32_as_usize(slot), champion, stages, read_u32_as_usize(this + league::CURRENT_STAGE) as i32));
+    let stages = read_usize(this + league::STAGES);
+    let ok = read_usize(slot) == champion && stages != 0 && read_usize(stages) != 0 && read_usize(stages + 4) != 0 && read_usize(this + league::CURRENT_STAGE) == 1;
+    SCOREBOARD.record(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", name, this, read_usize(slot), champion, stages, read_usize(this + league::CURRENT_STAGE) as i32));
 }
 
 /// the Serie C1 schedule (each group of 18): 34 rounds from 5 September to 7 May, nearly all on the same weekday (6)

@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         crate::comparison::branch("cpx_12 noticia de recorde");
         let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
         let n = local.as_mut_ptr() as usize;
-        exe::newsitem_newsitem(n, 0x3e8, 0);
+        exe::new_newsitem(n, 0x3e8, 0);
         let reg = if read_u8(e + record_news_item::PERIOD) == 2 { club_season_record(this, club, 0) } else { club_all_time_record(this, club, 0) };
         if RECORD_NEWS_DRY_RUN {
             continue;

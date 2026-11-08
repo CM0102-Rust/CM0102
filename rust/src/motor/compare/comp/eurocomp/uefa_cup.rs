@@ -9,23 +9,23 @@ use super::*;
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
 pub(crate) unsafe extern "thiscall" fn compare_build_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_ENTRANTS);
-    let (a0, t0) = (read_u32_as_usize(this + cup::TEAM_TABLE), read_u32_as_usize(this + cup::ENTRANT_BOOK));
-    let base = read_u32_as_usize(G_CLUB_TABLE);
-    let mut reg: Vec<(usize, usize)> = vec![(this + cup::ENTRANT_COUNT, 4), (this + cup::TEAM_COUNT, 2), (this + 0xb2, 1), (0xb67a34, 4)];
-    reg.extend((0..read_u32_as_usize(G_CLUB_COUNT)).map(|i| (base + i * club::SIZE + 0x1db, 4)));
+    let (a0, t0) = (read_usize(this + cup::TEAM_TABLE), read_usize(this + cup::ENTRANT_BOOK));
+    let base = read_usize(G_CLUB_TABLE);
+    let mut reg: Vec<(usize, usize)> = vec![(this + cup::ENTRANT_COUNT, 4), (this + cup::TEAM_COUNT, 2), (this + 0xb2, 1), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
+    reg.extend((0..read_usize(G_CLUB_COUNT)).map(|i| (base + i * club::SIZE + 0x1db, 4)));
     let lo = core::cell::Cell::new((0usize, 0usize));
     let lr = core::cell::Cell::new((0usize, 0usize));
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
-        lo.set((read_u32_as_usize(this + cup::TEAM_TABLE), read_u32_as_usize(this + cup::ENTRANT_BOOK)));
-        write_u32_from_usize(this + cup::TEAM_TABLE, a0);
-        write_u32_from_usize(this + cup::ENTRANT_BOOK, t0);
+        lo.set((read_usize(this + cup::TEAM_TABLE), read_usize(this + cup::ENTRANT_BOOK)));
+        write_usize(this + cup::TEAM_TABLE, a0);
+        write_usize(this + cup::ENTRANT_BOOK, t0);
         r
     }, || {
         let r = uefa_cup_build_entrants(this);
-        lr.set((read_u32_as_usize(this + cup::TEAM_TABLE), read_u32_as_usize(this + cup::ENTRANT_BOOK)));
-        write_u32_from_usize(this + cup::TEAM_TABLE, lo.get().0);
-        write_u32_from_usize(this + cup::ENTRANT_BOOK, lo.get().1);
+        lr.set((read_usize(this + cup::TEAM_TABLE), read_usize(this + cup::ENTRANT_BOOK)));
+        write_usize(this + cup::TEAM_TABLE, lo.get().0);
+        write_usize(this + cup::ENTRANT_BOOK, lo.get().1);
         r
     });
     let ((ao, to), (ar, tr)) = (lo.get(), lr.get());
@@ -55,10 +55,10 @@ pub(crate) unsafe extern "thiscall" fn compare_uefa_cup_update_staff_records_for
         return o(this, club, outcome, a3, a4, game, a6);
     }
     let d = outcome as u8;
-    let before = read_u32_as_usize(club + club::CONTINENTAL_COMP_ID);
+    let before = read_usize(club + club::CONTINENTAL_COMP_ID);
     let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { before };
     let r = o(this, club, outcome, a3, a4, game, a6);
-    let after = read_u32_as_usize(club + club::CONTINENTAL_COMP_ID);
+    let after = read_usize(club + club::CONTINENTAL_COMP_ID);
     SCOREBOARD.record(r == 0 && after == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club, d, before, after, previsto, r));
     r
 }

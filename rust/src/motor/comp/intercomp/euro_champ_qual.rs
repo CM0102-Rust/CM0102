@@ -45,7 +45,7 @@ pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
     crate::comparison::branch("cqs_8 regras da eurocopa");
-    let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
     core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, t as u32);
     1
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32)
 /// 0x4a2e10: push 0x12; push clube; mov ecx, [this+8] -> thiscall, ret 8, devolve float), truncada (_ftol 0x945640): com o
 /// byte de baixo menor que 14 (com sinal), −2; senão −3 (word).
 pub(crate) unsafe fn qualification_status(this: usize, club: usize) -> i16 {
-    let x = ftol(exe::comp_stats_get_club_stat(read_u32_as_usize(this + 8), club, 0x12));
+    let x = ftol(exe::comp_stats_get_club_stat(read_usize(this + 8), club, 0x12));
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: the situation by statistic 0x12
 }
 
@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
     let mut i: i8 = 0;
     if n > 0 {
         loop {
-            let c = read_u32_as_usize(read_u32_as_usize(this + 0xf7) + i as isize as usize * 4);
+            let c = read_usize(read_usize(this + 0xf7) + i as isize as usize * 4);
             iniciar(this, i as u8 as u32, c, 0, 0);
             i = i.wrapping_add(1);
             if (i as i16) >= read_i16(this + league::CLUB_COUNT) {

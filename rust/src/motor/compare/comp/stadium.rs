@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_fixture_venue(this: usize, ma
         return o(this, marks, partida, stadium);
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, partida, stadium), || crate::rng::without_counting(|| set_fixture_venue(this, marks, partida, stadium)));
-    SCOREBOARD.record(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marks, read_u32_as_usize(partida), mo, mr));
+    SCOREBOARD.record(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marks, read_usize(partida), mo, mr));
 }
 
 /// Comparer for `calculate_match_attendance`.
@@ -49,11 +49,11 @@ pub(crate) unsafe extern "thiscall" fn compare_calculate_match_attendance(this: 
     if !out.is_null() {
         reg.push((out as usize, 12));
     }
-    if read_u32_as_usize(game + fixture::STADIUM) != 0 {
-        reg.push((read_u32_as_usize(game + fixture::STADIUM) + 0x3c, 4));
+    if read_usize(game + fixture::STADIUM) != 0 {
+        reg.push((read_usize(game + fixture::STADIUM) + 0x3c, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, out), || crate::rng::without_counting(|| calculate_match_attendance(this, game, out)));
-    SCOREBOARD.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_u32_as_usize(game), read_u8(game + fixture::CATEGORY), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_usize(game), read_u8(game + fixture::CATEGORY), r, n, mo, mr));
     r
 }
 
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stadium_daily_update(this: usize,
         regions[m] = (read_usize(this), n as usize * 12);
         m += 1;
     }
-    regions[m] = (0xa835a4, 4);
+    regions[m] = (G_STADIUM_STASHED_VENUE_ID, 4);
     m += 1;
     let nation = england_nation();
     regions[m] = (nation + nation::NATIONAL_STADIUM, 4);

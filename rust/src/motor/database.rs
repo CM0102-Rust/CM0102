@@ -351,7 +351,7 @@ pub(crate) fn zero_stack_below() {
 /// eventos dela (+0xe e +0xf mudam).
 pub(crate) unsafe fn wrap_up_regions(m: usize) -> Vec<(usize, usize)> {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let list = *((m + engine::EVENT_LIST) as *const usize);
     if list != 0 {
         reg.push((list, 0xe));
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "C" fn free_record() -> usize {
 pub(crate) const A_B_CLUB_PAIRS: [(usize, usize); 82] = [
     (0x9d012c, 0x9d0130), (0x9d0120, 0x9d0134), (0x9d0138, 0x9d013c), (0x9d0140, 0x9d0144), (0x9d0148, 0x9d014c), (0x9d0150, 0x9d0154),
     (0x9d0158, 0x9d015c), (0x9d0160, 0x9d0164), (0x9d0168, 0x9d016c), (0x9d0170, 0x9d0174), (0x9d0178, 0x9d017c), (0x9d0180, 0x9d0184),
-    (0x9d0188, 0x9d018c), (0x9d0190, 0x9d0194), (0x9d0198, 0x9d019c), (0x9d0128, 0x9d01a0), (0x9d0254, 0x9d0258), (0x9d02e4, 0x9d0328),
+    (0x9d0188, 0x9d018c), (0x9d0190, 0x9d0194), (0x9d0198, 0x9d019c), (G_KEY_CLUB_REAL_SOCIEDAD_C_F, G_KEY_CLUB_REAL_SOCIEDAD_C_F_B), (0x9d0254, 0x9d0258), (0x9d02e4, 0x9d0328),
     (0x9d03ac, 0x9d03b0), (0x9d03b4, 0x9d03b8), (0x9d03bc, 0x9d03c0), (0x9d03c4, 0x9d03c8), (0x9d0124, 0x9d03d4), (0x9d03d8, 0x9d03dc),
     (0x9d03e0, 0x9d03e4), (0x9d03e8, 0x9d03ec), (0x9d03f0, 0x9d03f4), (0x9d03f8, 0x9d03fc), (0x9d0400, 0x9d0404), (0x9d0408, 0x9d040c),
     (0x9d0410, 0x9d0414), (0x9d0418, 0x9d041c), (0xb63cdc, 0xb63c9c), (0xb63cbc, 0xb63ca0), (0xb63ce8, 0xb63cac), (0xb63cd8, 0xb63cd0),
@@ -470,7 +470,7 @@ pub(crate) const A_B_CLUB_PAIRS: [(usize, usize); 82] = [
 pub(crate) const CLUB_PAIRS_B_A: [(usize, usize); 82] = [
     (0x9d0130, 0x9d012c), (0x9d0134, 0x9d0120), (0x9d013c, 0x9d0138), (0x9d0144, 0x9d0140), (0x9d014c, 0x9d0148), (0x9d0154, 0x9d0150),
     (0x9d015c, 0x9d0158), (0x9d0164, 0x9d0160), (0x9d016c, 0x9d0168), (0x9d0174, 0x9d0170), (0x9d017c, 0x9d0178), (0x9d0184, 0x9d0180),
-    (0x9d018c, 0x9d0188), (0x9d0194, 0x9d0190), (0x9d019c, 0x9d0198), (0x9d01a0, 0x9d0128), (0x9d0258, 0x9d0254), (0x9d0328, 0x9d02e4),
+    (0x9d018c, 0x9d0188), (0x9d0194, 0x9d0190), (0x9d019c, 0x9d0198), (G_KEY_CLUB_REAL_SOCIEDAD_C_F_B, G_KEY_CLUB_REAL_SOCIEDAD_C_F), (0x9d0258, 0x9d0254), (0x9d0328, 0x9d02e4),
     (0x9d03b0, 0x9d03ac), (0x9d03b8, 0x9d03b4), (0x9d03c0, 0x9d03bc), (0x9d03c8, 0x9d03c4), (0x9d03d4, 0x9d0124), (0x9d03dc, 0x9d03d8),
     (0x9d03e4, 0x9d03e0), (0x9d03ec, 0x9d03e8), (0x9d03f4, 0x9d03f0), (0x9d03fc, 0x9d03f8), (0x9d0404, 0x9d0400), (0x9d040c, 0x9d0408),
     (0x9d0414, 0x9d0410), (0x9d041c, 0x9d0418), (0xb63c9c, 0xb63cdc), (0xb63ca0, 0xb63cbc), (0xb63cac, 0xb63ce8), (0xb63cd0, 0xb63cd8),
@@ -861,7 +861,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
     let mut lixo = [[0u32; 2]; 12]; // the stack-passed dates (nobody reads them afterwards)
     let l = |k: usize, t: &mut [[u32; 2]; 12]| t[k].as_mut_ptr() as usize;
 
-    let cent = gi(0xae2364) / 100;
+    let cent = gi(G_STAFF_COUNT) / 100;
     text(0xde1f64, 0x9b6414);
     mostrar(G_SCREEN_MANAGER, 0xde1f64, 0, 100, -1);
     let mut v1 = [0u8; 189];
@@ -873,12 +873,12 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
 
     let mut i = 0i32;
     let mut p = rd(G_STAFF_TABLE);
-    while i < gi(0xae2364) {
+    while i < gi(G_STAFF_COUNT) {
         // o nome comum
         if gi(p + staff::COMMON_NAME) == -2 {
-            let mut k = gi(0x9b59b4);
+            let mut k = gi(G_EMPTY_COMMON_NAME_INDEX);
             if k == -1 {
-                let n = gi(0xae23a0);
+                let n = gi(G_COMMON_NAME_COUNT);
                 let base = rd(G_COMMON_NAME_TABLE);
                 let mut j = 0i32;
                 let mut found = false;
@@ -1017,7 +1017,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             } else if c != 0 && rd(c + club::NATION) != 0 {
                 wd(p + staff::NATION, rd(c + club::NATION));
             } else {
-                let r = sorteio(gi(0xae2350));
+                let r = sorteio(gi(G_NATION_COUNT));
                 wd(p + staff::NATION, rd(G_NATION_TABLE).wrapping_add((r as usize).wrapping_mul(0x122)));
             }
         }
@@ -1416,18 +1416,18 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 let mut molde = 0usize;
                 let mut count = 0xfai32;
                 loop {
-                    let r = sorteio(gi(0xae2364));
+                    let r = sorteio(gi(G_STAFF_COUNT));
                     let q = rd(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(110));
                     let cj = rd(q + staff::PLAYER);
                     if cj != 0 && in_range(w(cj + 5), 1, 200) {
                         let mut e35 = 0i8;
                         if b(0x9b59b8) != 0 {
-                            clear_attr_vector(0xae2044);
-                            clear_attr_vector(0xae2114);
+                            clear_attr_vector(G_PLAYER_INIT_ATTRIBUTE_VECTOR_A);
+                            clear_attr_vector(G_PLAYER_INIT_ATTRIBUTE_VECTOR_B);
                             wb(0x9b59b8, 0);
                         }
-                        exe::database_player_to_attribute_vector(j, p, 0xae2044, &mut e1a, core::ptr::null_mut(), core::ptr::null_mut());
-                        exe::database_player_to_attribute_vector(cj, q, 0xae2114, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
+                        exe::database_player_to_attribute_vector(j, p, G_PLAYER_INIT_ATTRIBUTE_VECTOR_A, &mut e1a, core::ptr::null_mut(), core::ptr::null_mut());
+                        exe::database_player_to_attribute_vector(cj, q, G_PLAYER_INIT_ATTRIBUTE_VECTOR_B, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
                         let dif = (w(j + player_sheet::CURRENT_ABILITY) as i32 - w(cj + 5) as i32).abs();
                         let mut esc = ftol(dif as f64 * read_f64_at(0x968e18)); // 0x968e18 = 2.5
                         let g0 = w(G_PLAYER_INIT_ATTRIBUTE_VECTOR_A);
@@ -1713,17 +1713,17 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 let mut best = e10;
                 let mut count = 0xfai32;
                 loop {
-                    let r = sorteio(gi(0xae2364));
+                    let r = sorteio(gi(G_STAFF_COUNT));
                     let q = rd(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(110));
                     let cn = rd(q + staff::NON_PLAYER);
                     if cn != 0 && in_range(w(cn + 4), 1, 200) {
                         let mut e35 = 0i8;
                         if b(0x9b59b9) != 0 {
-                            clear_attr_vector(0xae18bc);
+                            clear_attr_vector(G_NON_PLAYER_ATTRIBUTE_VECTOR);
                             clear_attr_vector(0xae2238);
                             wb(0x9b59b9, 0);
                         }
-                        exe::database_non_player_to_attribute_vector(nj, p, 0xae18bc, core::ptr::null_mut());
+                        exe::database_non_player_to_attribute_vector(nj, p, G_NON_PLAYER_ATTRIBUTE_VECTOR, core::ptr::null_mut());
                         exe::database_non_player_to_attribute_vector(cn, q, 0xae2238, core::ptr::null_mut());
                         let dif = (w(nj + non_player::CURRENT_ABILITY) as i32 - w(cn + 4) as i32).abs();
                         let mut esc = ftol(dif as f64 * read_f64_at(0x968e18)); // 0x968e18 = 2.5
@@ -1890,7 +1890,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
     let mut v3 = [0u8; 189];
     let mut q = rd(G_STAFF_TABLE);
     let mut k = 0i32;
-    while k < gi(0xae2364) {
+    while k < gi(G_STAFF_COUNT) {
         let jj = rd(q + staff::PLAYER);
         let nn = rd(q + staff::NON_PLAYER);
         if jj != 0 {
@@ -5883,11 +5883,11 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
     if any_coach_missing_from_club() {
         database_error_box(0x62f);
     }
-    let national_team = |c: usize| gi(c) >= gi(0xae235c) - 2 * gi(0xae2350);
+    let national_team = |c: usize| gi(c) >= gi(G_CLUB_COUNT) - 2 * gi(G_NATION_COUNT);
     let mut gerados = 0i32;
     for &(d, k, cargo, linha) in &[(0x19fusize, 5usize, 8u8, 0x65fu32), (0x1b3, 7, 9, 0x6aa), (0x1cf, 3, 10, 0x6f5)] {
         let mut i = 0i32;
-        while i < gi(0xae235c) {
+        while i < gi(G_CLUB_COUNT) {
             let c = rd(G_CLUB_TABLE) + i as usize * 581;
             i += 1;
             if is_weak_english_club(c) || national_team(c) {
@@ -5923,7 +5923,7 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
         }
     }
     let mut i = 0i32;
-    while i < gi(0xae235c) {
+    while i < gi(G_CLUB_COUNT) {
         let c = rd(G_CLUB_TABLE) + i as usize * 581;
         i += 1;
         if is_weak_english_club(c) {
@@ -5998,19 +5998,19 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     let rep = |c: usize| core::ptr::read_unaligned((c + club::REPUTATION) as *const i16);
     let rep_id = |id: i32| rep(rd(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(581)));
     let byte = |a: usize| *(a as *const u8);
-    let novos = new((gi(0xae235c) as u32).wrapping_mul(4));
+    let novos = new((gi(G_CLUB_COUNT) as u32).wrapping_mul(4));
     if novos == 0 {
         return;
     }
     let t = size as u8;
     let pequena = t == 2 || t == 1;
-    let marcados = calloc(gi(0xae235c) as u32, 4);
+    let marcados = calloc(gi(G_CLUB_COUNT) as u32, 4);
     if marcados == 0 {
         database_fatal_error(0x513);
     }
     let mark = |id: i32| wi(marcados.wrapping_add((id as usize).wrapping_mul(4)), 1);
-    let last = rd(G_CLUB_TABLE).wrapping_add((gi(0xae235c) as usize).wrapping_mul(581)).wrapping_sub(581);
-    let nations = calloc(gi(0xae2350) as u32, 0xd0);
+    let last = rd(G_CLUB_TABLE).wrapping_add((gi(G_CLUB_COUNT) as usize).wrapping_mul(581)).wrapping_sub(581);
+    let nations = calloc(gi(G_NATION_COUNT) as u32, 0xd0);
     if nations == 0 {
         database_fatal_error(0x51b);
     }
@@ -6050,7 +6050,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
         c += 581;
     }
     let mut k = 0i32;
-    while k < gi(0xae2350) {
+    while k < gi(G_NATION_COUNT) {
         let l = nations + k as usize * 0xd0;
         for j in 0..gi(l + nation_club_bucket::CLUB_COUNT) {
             mark(gi(l + j as usize * 4));
@@ -6059,7 +6059,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     }
     exe::crt_free(nations);
     let mut s = rd(G_STAFF_TABLE);
-    let end = s.wrapping_add((gi(0xae2364) as usize).wrapping_mul(110)).wrapping_sub(110);
+    let end = s.wrapping_add((gi(G_STAFF_COUNT) as usize).wrapping_mul(110)).wrapping_sub(110);
     while s <= end {
         for &d in &[0x39usize, 0x24] { // the person’s club and national team stay
             let p = rd(s + d);
@@ -6070,13 +6070,13 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
         s += 110;
     }
     let mut h = rd(G_CLUB_COMP_HISTORY_TABLE);
-    let end = h.wrapping_add((gi(0xae237c) as usize).wrapping_mul(0x1a)).wrapping_sub(0x1a);
+    let end = h.wrapping_add((gi(G_CLUB_COMP_HISTORY_COUNT) as usize).wrapping_mul(0x1a)).wrapping_sub(0x1a);
     while h <= end {
         for &d in &[0xausize, 0xe, 0x12] {
             let p = rd(h + d);
             if p != 0 {
                 let id = gi(p);
-                if id < gi(0xae235c) && id >= 0 {
+                if id < gi(G_CLUB_COUNT) && id >= 0 {
                     mark(id);
                 }
             }
@@ -6085,7 +6085,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     }
     if !pequena {
         let mut h = rd(G_STAFF_HISTORY_TABLE);
-        let end = h.wrapping_add((gi(0xae2374) as usize).wrapping_mul(0x11)).wrapping_sub(0x11);
+        let end = h.wrapping_add((gi(G_STAFF_HISTORY_COUNT) as usize).wrapping_mul(0x11)).wrapping_sub(0x11);
         while h <= end {
             let club = rd(h + 0xa);
             let q = rd(h + 4);
@@ -6106,7 +6106,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
         let id = gi(c);
         let fica = if exe::remap_club_key_id(id, (target.wrapping_sub(table) as i32) / 581) != 0
             || gi(marcados.wrapping_add((id as usize).wrapping_mul(4))) != 0
-            || id >= gi(0xae235c) - 2 * gi(0xae2350)
+            || id >= gi(G_CLUB_COUNT) - 2 * gi(G_NATION_COUNT)
         {
             true
         } else {
@@ -6130,10 +6130,10 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     };
     for &(cont, base, tam, campos) in &[
         (0xae235cusize, G_CLUB_TABLE, 581usize, &[0xb3usize, 0xb7, 0xbb][..]),
-        (0xae2364, G_STAFF_TABLE, 110, &[0x39, 0x24][..]),
+        (G_STAFF_COUNT, G_STAFF_TABLE, 110, &[0x39, 0x24][..]),
         (0xae2370, G_PREFERENCES_TABLE, 0x34, &[4, 8, 0xc, 0x10, 0x14, 0x18][..]),
-        (0xae2374, G_STAFF_HISTORY_TABLE, 0x11, &[0xa][..]),
-        (0xae237c, G_CLUB_COMP_HISTORY_TABLE, 0x1a, &[0xa, 0xe, 0x12, 0x16][..]),
+        (G_STAFF_HISTORY_COUNT, G_STAFF_HISTORY_TABLE, 0x11, &[0xa][..]),
+        (G_CLUB_COMP_HISTORY_COUNT, G_CLUB_COMP_HISTORY_TABLE, 0x1a, &[0xa, 0xe, 0x12, 0x16][..]),
     ] {
         let mut i = 0i32;
         while i < gi(cont) {
@@ -6143,7 +6143,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
             i += 1;
         }
     }
-    let n = gi(0xae235c);
+    let n = gi(G_CLUB_COUNT);
     let ficam = (0..n).filter(|&i| rd(novos + i as usize * 4) != 0).count();
     let ids = alloc((ficam as u32) << 2);
     *(G_CLUB_ENGLISH_NAME_INDEX_TABLE as *mut usize) = ids;
@@ -6169,7 +6169,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
         database_fatal_error(0x4ca);
     }
     exe::crt_operator_delete(novos);
-    format(0xde1f64, 0x9b5af4, gi(0xae235c));
+    format(0xde1f64, 0x9b5af4, gi(G_CLUB_COUNT));
 }
 
 /// `database_prune_comp_history_table()`: called once at creation. Compacts the club competition history ([0xae23d4],
@@ -6226,16 +6226,16 @@ pub(crate) fn first_memory_difference(mo: &crate::comparison::MemorySnapshot, mr
 
 /// As tabelas do banco: (ponteiro, quantidade, bytes por linha).
 pub(crate) const DATABASE_TABLES: [(usize, usize, usize); 12] = [
-    (G_CLUB_TABLE, 0xae235c, 581), (G_NATION_TABLE, 0xae2350, 0x122), (G_OFFICIAL_TABLE, 0xae2390, 0x2b), (G_STADIUM_TABLE, 0xae2358, 0x4e),
-    (G_PREFERENCES_TABLE, 0xae2370, 0x34), (G_NON_PLAYER_TABLE, 0xae2368, 0x44), (G_STAFF_TABLE, 0xae2364, 0x6e), (G_STAFF_COMP_TABLE, 0xae2388, 0x65),
-    (G_STAFF_HISTORY_TABLE, 0xae2374, 0x11), (G_CITY_TABLE, 0xae2354, 0x38), (G_CLUB_COMP_HISTORY_TABLE, 0xae237c, 0x1a), (G_CLUB_COMP_TABLE, 0xae2378, 0x6b),
+    (G_CLUB_TABLE, G_CLUB_COUNT, 581), (G_NATION_TABLE, G_NATION_COUNT, 0x122), (G_OFFICIAL_TABLE, G_OFFICIAL_COUNT, 0x2b), (G_STADIUM_TABLE, G_STADIUM_COUNT, 0x4e),
+    (G_PREFERENCES_TABLE, 0xae2370, 0x34), (G_NON_PLAYER_TABLE, G_NON_PLAYER_COUNT, 0x44), (G_STAFF_TABLE, G_STAFF_COUNT, 0x6e), (G_STAFF_COMP_TABLE, 0xae2388, 0x65),
+    (G_STAFF_HISTORY_TABLE, G_STAFF_HISTORY_COUNT, 0x11), (G_CITY_TABLE, G_CITY_COUNT, 0x38), (G_CLUB_COMP_HISTORY_TABLE, G_CLUB_COMP_HISTORY_COUNT, 0x1a), (G_CLUB_COMP_TABLE, G_CLUB_COMP_COUNT, 0x6b),
 ];
 
 /// Os campos de pessoa que, fora da faixa, abrem a caixa na 0x5315a0: (campo, teto, tabela, bytes, texto, linha).
 pub(crate) const PERSON_RANGE_CHECK_FIELDS: [(usize, usize, usize, usize, usize, u32); 3] = [
-    (0x61, 0xae236c, G_PLAYER_DATA_TABLE, 0x46, 0x9b60b4, 0x18f6), // jogador
+    (0x61, G_PLAYER_DATA_COUNT, G_PLAYER_DATA_TABLE, 0x46, 0x9b60b4, 0x18f6), // jogador
     (0x65, 0xae2370, G_PREFERENCES_TABLE, 0x34, 0x9b6088, 0x1907), // preferences
-    (0x69, 0xae2368, G_NON_PLAYER_TABLE, 0x44, 0x9b605c, 0x1918), // non-player
+    (0x69, G_NON_PLAYER_COUNT, G_NON_PLAYER_TABLE, 0x44, 0x9b605c, 0x1918), // non-player
 ];
 
 /// `resolve_database_indexes(lenient)`: replaces every id field of the 12 tables with the record pointer (table + id ×
@@ -6308,22 +6308,22 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
             i += 1;
         }
     };
-    rows(0xae235c, G_CLUB_TABLE, 581, &|e, i| {
-        if let Some(v) = b(e + 0x53, 0xae2350, G_NATION_TABLE, 0x122) {
+    rows(G_CLUB_COUNT, G_CLUB_TABLE, 581, &|e, i| {
+        if let Some(v) = b(e + 0x53, G_NATION_COUNT, G_NATION_TABLE, 0x122) {
             format(0xde1f64, 0x9b62b0, v);
             wr(e + 0x53, 0);
         }
-        if b(e + 0x57, 0xae2378, G_CLUB_COMP_TABLE, 0x6b).is_some() {
+        if b(e + 0x57, G_CLUB_COMP_COUNT, G_CLUB_COMP_TABLE, 0x6b).is_some() {
             wr(e + 0x57, 0);
         }
-        if let Some(v) = b(e + 0x5b, 0xae2378, G_CLUB_COMP_TABLE, 0x6b) {
+        if let Some(v) = b(e + 0x5b, G_CLUB_COMP_COUNT, G_CLUB_COMP_TABLE, 0x6b) {
             format(0xde1f64, 0x9b6274, v);
             wr(e + 0x60, 0); // bug in the original: zeroes +0x60 and +0x5b stays raw
         }
-        if b(e + 0x60, 0xae2378, G_CLUB_COMP_TABLE, 0x6b).is_some() {
+        if b(e + 0x60, G_CLUB_COMP_COUNT, G_CLUB_COMP_TABLE, 0x6b).is_some() {
             wr(e + 0x60, 0);
         }
-        if let Some(v) = b(e + 0x69, 0xae2358, G_STADIUM_TABLE, 0x4e) {
+        if let Some(v) = b(e + 0x69, G_STADIUM_COUNT, G_STADIUM_TABLE, 0x4e) {
             format(0xde1f64, 0x9b6240, v);
             wr(e + 0x69, 0);
         }
@@ -6331,9 +6331,9 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
             (0x6eusize, 0xae2358usize, G_STADIUM_TABLE, 0x4eusize),
             (0x83, 0xae2394, G_COLOUR_TABLE, 0x3a), (0x8b, 0xae2394, G_COLOUR_TABLE, 0x3a), (0x93, 0xae2394, G_COLOUR_TABLE, 0x3a),
             (0x87, 0xae2394, G_COLOUR_TABLE, 0x3a), (0x8f, 0xae2394, G_COLOUR_TABLE, 0x3a), (0x97, 0xae2394, G_COLOUR_TABLE, 0x3a),
-            (0x9b, 0xae2364, G_STAFF_TABLE, 0x6e), (0x9f, 0xae2364, G_STAFF_TABLE, 0x6e), (0xa3, 0xae2364, G_STAFF_TABLE, 0x6e),
-            (0xa7, 0xae2364, G_STAFF_TABLE, 0x6e), (0xab, 0xae2364, G_STAFF_TABLE, 0x6e), (0xaf, 0xae2364, G_STAFF_TABLE, 0x6e),
-            (0xb3, 0xae235c, G_CLUB_TABLE, 581), (0xb7, 0xae235c, G_CLUB_TABLE, 581), (0xbb, 0xae235c, G_CLUB_TABLE, 581),
+            (0x9b, G_STAFF_COUNT, G_STAFF_TABLE, 0x6e), (0x9f, G_STAFF_COUNT, G_STAFF_TABLE, 0x6e), (0xa3, G_STAFF_COUNT, G_STAFF_TABLE, 0x6e),
+            (0xa7, G_STAFF_COUNT, G_STAFF_TABLE, 0x6e), (0xab, G_STAFF_COUNT, G_STAFF_TABLE, 0x6e), (0xaf, G_STAFF_COUNT, G_STAFF_TABLE, 0x6e),
+            (0xb3, G_CLUB_COUNT, G_CLUB_TABLE, 581), (0xb7, G_CLUB_COUNT, G_CLUB_TABLE, 581), (0xbb, G_CLUB_COUNT, G_CLUB_TABLE, 581),
         ] {
             if b(e + d, ceiling, base, size).is_some() {
                 wr(e + d, 0);
@@ -6342,8 +6342,8 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
         for j in 0..50 {
             let f = e + 0xd7 + 4 * j;
             let v = gi(f);
-            if leniente == 0 && v >= gi(0xae2364) { // the squad without the extra rows
-                if v > gi(0xae2364) + 0x52d {
+            if leniente == 0 && v >= gi(G_STAFF_COUNT) { // the squad without the extra rows
+                if v > gi(G_STAFF_COUNT) + 0x52d {
                     format(0xde1f64, 0x9b6218, i, v);
                 }
                 wr(f, 0);
@@ -6357,14 +6357,14 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
         {
             for j in 0..k {
                 let f = e + d + 4 * j;
-                if let Some(v) = c(f, 0xae2364, G_STAFF_TABLE, 0x6e) {
+                if let Some(v) = c(f, G_STAFF_COUNT, G_STAFF_TABLE, 0x6e) {
                     format(0xde1f64, texto, i, v);
                     wr(f, 0);
                 }
             }
         }
     });
-    rows(0xae2350, G_NATION_TABLE, 0x122, &|e, _| {
+    rows(G_NATION_COUNT, G_NATION_TABLE, 0x122, &|e, _| {
         for &(d, base, size) in &[(0x71usize, G_CONTINENT_TABLE, 0xc6usize), (0x7a, G_CITY_TABLE, 0x38), (0x80, G_STADIUM_TABLE, 0x4e),
             (0x90, G_COLOUR_TABLE, 0x3a), (0x98, G_COLOUR_TABLE, 0x3a), (0xa0, G_COLOUR_TABLE, 0x3a), (0x94, G_COLOUR_TABLE, 0x3a),
             (0x9c, G_COLOUR_TABLE, 0x3a), (0xa4, G_COLOUR_TABLE, 0x3a), (0x110, G_NATION_TABLE, 0x122), (0x114, G_NATION_TABLE, 0x122),
@@ -6373,16 +6373,16 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
             a(e + d, base, size);
         }
     });
-    rows(0xae2390, G_OFFICIAL_TABLE, 0x2b, &|e, _| {
+    rows(G_OFFICIAL_COUNT, G_OFFICIAL_TABLE, 0x2b, &|e, _| {
         for &(d, base, size) in &[(4usize, G_FIRST_NAME_TABLE, 0x3cusize), (8, G_SECOND_NAME_TABLE, 0x3c), (0x16, G_NATION_TABLE, 0x122), (0x1a, G_CITY_TABLE, 0x38)] {
             a(e + d, base, size);
         }
     });
-    rows(0xae2358, G_STADIUM_TABLE, 0x4e, &|e, _| {
-        if b(e + 0x38, 0xae2354, G_CITY_TABLE, 0x38).is_some() {
+    rows(G_STADIUM_COUNT, G_STADIUM_TABLE, 0x4e, &|e, _| {
+        if b(e + 0x38, G_CITY_COUNT, G_CITY_TABLE, 0x38).is_some() {
             wr(e + 0x38, 0);
         }
-        if b(e + 0x48, 0xae2358, G_STADIUM_TABLE, 0x4e).is_some() {
+        if b(e + 0x48, G_STADIUM_COUNT, G_STADIUM_TABLE, 0x4e).is_some() {
             wr(e + 0x38, 0); // bug in the original: clears the city and +0x48 is left raw
         }
     });
@@ -6394,14 +6394,14 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
             a(e + d, G_STAFF_TABLE, 0x6e);
         }
     });
-    rows(0xae2368, G_NON_PLAYER_TABLE, 0x44, &|e, _| {
+    rows(G_NON_PLAYER_COUNT, G_NON_PLAYER_TABLE, 0x44, &|e, _| {
         for d in (0x23..=0x3f).step_by(4) {
-            if c(e + d, 0xae2364, G_STAFF_TABLE, 0x6e).is_some() {
+            if c(e + d, G_STAFF_COUNT, G_STAFF_TABLE, 0x6e).is_some() {
                 wr(e + d, 0);
             }
         }
     });
-    rows(0xae2364, G_STAFF_TABLE, 0x6e, &|e, i| {
+    rows(G_STAFF_COUNT, G_STAFF_TABLE, 0x6e, &|e, i| {
         for &(d, base, size) in &[(4usize, G_FIRST_NAME_TABLE, 0x3cusize), (8, G_SECOND_NAME_TABLE, 0x3c), (0xc, G_COMMON_NAME_TABLE, 0x3c),
             (0x1a, G_NATION_TABLE, 0x122), (0x39, G_CLUB_TABLE, 581), (0x1e, G_NATION_TABLE, 0x122), (0x24, G_CLUB_TABLE, 581)]
         {
@@ -6416,7 +6416,7 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
         }
     });
     rows(0xae2388, G_STAFF_COMP_TABLE, 0x65, &|e, _| {
-        for &(d, ceiling, base, size) in &[(0x53usize, 0xae234cusize, G_CONTINENT_TABLE, 0xc6usize), (0x57, 0xae2350, G_NATION_TABLE, 0x122),
+        for &(d, ceiling, base, size) in &[(0x53usize, 0xae234cusize, G_CONTINENT_TABLE, 0xc6usize), (0x57, G_NATION_COUNT, G_NATION_TABLE, 0x122),
             (0x5b, 0xae2394, G_COLOUR_TABLE, 0x3a), (0x5f, 0xae2394, G_COLOUR_TABLE, 0x3a)]
         {
             if c(e + d, ceiling, base, size).is_some() {
@@ -6424,24 +6424,24 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
             }
         }
     });
-    rows(0xae2374, G_STAFF_HISTORY_TABLE, 0x11, &|e, _| {
+    rows(G_STAFF_HISTORY_COUNT, G_STAFF_HISTORY_TABLE, 0x11, &|e, _| {
         a(e + 4, G_STAFF_TABLE, 0x6e);
         a(e + 0xa, G_CLUB_TABLE, 581);
     });
-    rows(0xae2354, G_CITY_TABLE, 0x38, &|e, _| {
+    rows(G_CITY_COUNT, G_CITY_TABLE, 0x38, &|e, _| {
         a(e + 0x1f, G_NATION_TABLE, 0x122); // the city’s nation
     });
-    rows(0xae237c, G_CLUB_COMP_HISTORY_TABLE, 0x1a, &|e, _| {
+    rows(G_CLUB_COMP_HISTORY_COUNT, G_CLUB_COMP_HISTORY_TABLE, 0x1a, &|e, _| {
         a(e + 4, G_CLUB_COMP_TABLE, 0x6b);
         a(e + 0xa, G_CLUB_TABLE, 581);
         a(e + 0xe, G_CLUB_TABLE, 581);
         for &d in &[0x12usize, 0x16] {
-            if b(e + d, 0xae235c, G_CLUB_TABLE, 581).is_some() {
+            if b(e + d, G_CLUB_COUNT, G_CLUB_TABLE, 581).is_some() {
                 wr(e + d, 0);
             }
         }
     });
-    rows(0xae2378, G_CLUB_COMP_TABLE, 0x6b, &|e, _| {
+    rows(G_CLUB_COMP_COUNT, G_CLUB_COMP_TABLE, 0x6b, &|e, _| {
         for &(d, base, size) in &[(0x5dusize, G_NATION_TABLE, 0x122usize), (0x59, G_CONTINENT_TABLE, 0xc6), (0x61, G_COLOUR_TABLE, 0x3a), (0x65, G_COLOUR_TABLE, 0x3a)] {
             a(e + d, base, size);
         }
@@ -6465,12 +6465,12 @@ pub(crate) unsafe extern "C" fn database_sort_clubs_by_reputation(redo: u32) {
     let rd = |a: usize| *(a as *const usize);
     if redo as u8 != 0 {
         let mut i = 0i32;
-        while i < gi(0xae235c) {
+        while i < gi(G_CLUB_COUNT) {
             *((rd(G_CLUB_REPUTATION_ORDER) + i as usize * 4) as *mut i32) = gi(rd(G_CLUB_TABLE) + i as usize * 581);
             i += 1;
         }
     }
-    sort(rd(G_CLUB_REPUTATION_ORDER), gi(0xae235c) as u32, 4, 0x540020); // all clubs by reputation
+    sort(rd(G_CLUB_REPUTATION_ORDER), gi(G_CLUB_COUNT) as u32, 4, 0x540020); // all clubs by reputation
 }
 
 /// Frees a database table with GlobalFree when the database uses the shared block (G_DATABASE_SHARED_ALLOC_MODE), else
@@ -7259,7 +7259,7 @@ pub(crate) unsafe fn fill_nation_name_index(t: usize) {
     for &(qtd, tabela, d_inicio, d_soma, d_quantos) in &[
         (0xae239cusize, G_SECOND_NAME_TABLE, 4usize, 0x10usize, 0x1cusize),
         (0xae2398, G_FIRST_NAME_TABLE, 0, 0xc, 0x18),
-        (0xae23a0, G_COMMON_NAME_TABLE, 8, 0x14, 0x20),
+        (G_COMMON_NAME_COUNT, G_COMMON_NAME_TABLE, 8, 0x14, 0x20),
     ] {
         let (mut atual, mut inicio, mut soma, mut quantos) = (0usize, -1i32, 0i32, 0i32);
         let mut l = 0i32;
@@ -7366,7 +7366,7 @@ pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, per
         return original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB)(club, person, data, desligar, como_jogador);
     }
     let gi = |a: usize| *(a as *const i32);
-    let national_team = || gi(club) >= gi(0xae235c).wrapping_sub(gi(0xae2350).wrapping_mul(2));
+    let national_team = || gi(club) >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2));
     if data != 0 {
         let d = if national_team() { person + staff::DATE_JOINED_NATION } else { person + staff::DATE_JOINED_CLUB };
         core::ptr::write_unaligned((d + 2) as *mut u16, core::ptr::read_unaligned((data + 2) as *const u16));
@@ -7394,8 +7394,8 @@ pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, per
         5 => {
             let ok = remove_of_home(0xcf, 1);
             let id = gi(club);
-            let n = gi(0xae235c);
-            if ok && id >= n.wrapping_sub(gi(0xae2350).wrapping_mul(2)) && id < n.wrapping_sub(gi(0xae2350)) {
+            let n = gi(G_CLUB_COUNT);
+            if ok && id >= n.wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2)) && id < n.wrapping_sub(gi(G_NATION_COUNT)) {
                 let s = exe::database_get_national_u21_team(rd(0x53));
                 if core::ptr::read_unaligned((s + club::MANAGER) as *const usize) == person {
                     core::ptr::write_unaligned((s + club::MANAGER) as *mut usize, 0); // the U21 coach
@@ -7698,8 +7698,8 @@ pub(crate) unsafe extern "C" fn database_add_staff_to_club(club: usize, person: 
         return original_fn::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(IDX_DATABASE_ADD_STAFF_TO_CLUB)(club, person, job, data, write, reduzir);
     }
     let gi = |a: usize| *(a as *const i32);
-    let national_team = || gi(club) >= gi(0xae235c).wrapping_sub(gi(0xae2350).wrapping_mul(2));
-    if gi(person) >= gi(0xae2364).wrapping_sub(16) && job as u8 != 5 {
+    let national_team = || gi(club) >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2));
+    if gi(person) >= gi(G_STAFF_COUNT).wrapping_sub(16) && job as u8 != 5 {
         return 0;
     }
     if data != 0 {
@@ -8286,7 +8286,7 @@ pub(crate) unsafe fn name_donor_nation(nation: usize, count: usize, start: usize
     }
     if !direct {
         for _ in 0..40 {
-            esi = nation_of(scaled_crt_rand(g(0xae2350)));
+            esi = nation_of(scaled_crt_rand(g(G_NATION_COUNT)));
             if *((esi + nation::FIRST_LANGUAGE) as *const i8) == group && g(nation_name_index(esi) + 0x18) > 5 {
                 break;
             }
@@ -8940,7 +8940,7 @@ pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(club: usize) -> 
     let g = |a: usize| *(a as *const u32);
     let gi = |a: usize| *(a as *const i32);
     let id = gi(club);
-    if id >= gi(0xae235c).wrapping_sub(gi(0xae2350)) {
+    if id >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT)) {
         return 0; // national team
     }
     if partner(club, 0, 1) != 0 {
@@ -8951,7 +8951,7 @@ pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(club: usize) -> 
         return 1;
     }
     let n = g(nation);
-    if id >= gi(0xae235c).wrapping_sub(gi(0xae2350).wrapping_mul(2)) {
+    if id >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2)) {
         if [KEY_NATION_SPAIN, KEY_NATION_NORWAY, KEY_NATION_ITALY, KEY_NATION_BRAZIL, KEY_NATION_ARGENTINA].iter().any(|&a| n == g(a)) {
             return 0;
         }

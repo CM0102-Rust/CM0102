@@ -480,7 +480,7 @@ pub(crate) unsafe extern "thiscall" fn news_dividend(_this: usize, club: usize, 
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(p, 0x177c, 0);
+    exe::new_newsitem(p, 0x177c, 0);
     write(p, 0, read_usize(club) as u32);
     write(p, 1, value as u32);
     write(p, 2, read_u8(club + club::PLC) as i8 as i32 as u32);
@@ -1061,7 +1061,7 @@ pub(crate) unsafe extern "thiscall" fn news_ground_works(_this: usize, club: usi
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(p, 0x177d, 0);
+    exe::new_newsitem(p, 0x177d, 0);
     write(p, 0, read_usize(club) as u32);
     write(p, 1, value);
     write(p, 2, kind as u8 as i8 as i32 as u32);
@@ -1090,7 +1090,7 @@ pub(crate) unsafe extern "thiscall" fn news_request_refused(_this: usize, club: 
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(p, 0x1788, 0);
+    exe::new_newsitem(p, 0x1788, 0);
     write(p, 1, assunto as u16 as i16 as i32 as u32);
     let v = if reason as u16 == 2 { 2 } else { sortear(2) };
     write(p, 2, v as u16 as i16 as i32 as u32);

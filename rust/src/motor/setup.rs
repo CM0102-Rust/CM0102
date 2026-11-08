@@ -376,15 +376,15 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     *(G_GAME_PLAY_TIME_LAST_STAMP as *mut i32) = exe::at_946ebb(&mut now);
     let mut nation = 0i32;
     let fields: [(usize, u32, u32, usize); 10] = [
-        (0xdd7120, 4, 0x23cf, 0xa8166c),
+        (G_GAME_RANDOM_SEED, 4, 0x23cf, 0xa8166c),
         (0xdd7114, 1, 0x23d7, 0xa81634),
         (G_GAME_START_DATE, 8, 0x23df, 0xa81604),
         (data_do_jogo.as_mut_ptr() as usize, 8, 0x23e7, 0xa81604),
-        (0xae2c88, 1, 0x23ef, 0xa815d0),
+        (G_CURRENT_DAY_SLICE, 1, 0x23ef, 0xa815d0),
         (G_LAST_PROCESSED_DATE, 8, 0x23f7, 0xa8159c),
         (0xae2cfc, 1, 0x23ff, 0xa81560),
-        (0xae2d00, 4, 0x2407, 0xa8151c),
-        (0xae2d04, 4, 0x240f, 0xa814cc),
+        (G_NATIONS_TO_LOAD_COUNT, 4, 0x2407, 0xa8151c),
+        (G_SELECTED_NATION_COUNT, 4, 0x240f, 0xa814cc),
         (&mut nation as *mut i32 as usize, 4, 0x2417, 0xa81490),
     ];
     for (buf, tam, linha, msg) in fields {
@@ -393,7 +393,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         }
     }
     *(G_MAIN_NATION as *mut usize) = if nation > -1 { (u(G_NATION_TABLE) as usize).wrapping_add((nation as usize).wrapping_mul(nation::SIZE)) } else { 0 };
-    if read(0xae2d10, 4, 1, z) != 1 {
+    if read(G_STAFF_STATE_COUNT, 4, 1, z) != 1 {
         return load_read_error(0x2420, 0xa81450, &mut z);
     }
     let persons = reservar(u(G_STAFF_STATE_COUNT).wrapping_mul(0x4f));
@@ -1182,27 +1182,27 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
         false
     };
     let u = |a: usize| *(a as *const u32);
-    if !field(0xdd7110, 4, 1, 0x29aa, 0xa81b1c) {
+    if !field(G_GAME_DATA_VERSION, 4, 1, 0x29aa, 0xa81b1c) {
         return 0;
     }
     exe::build_save_game_summary(summary.as_mut_ptr());
     if !field(summary.as_ptr() as usize, 0xf74, 1, 0x29b5, 0xa81ae0)
-        || !field(0xdd7120, 4, 1, 0x29bd, 0xa81aa4)
+        || !field(G_GAME_RANDOM_SEED, 4, 1, 0x29bd, 0xa81aa4)
         || !field(0xdd7114, 1, 1, 0x29c5, 0xa81a6c)
         || !field(G_GAME_START_DATE, 8, 1, 0x29cd, 0xa81a3c)
         || !field(G_CURRENT_DATE, 8, 1, 0x29d5, 0xa81a3c)
-        || !field(0xae2c88, 1, 1, 0x29dd, 0xa81a04)
+        || !field(G_CURRENT_DAY_SLICE, 1, 1, 0x29dd, 0xa81a04)
         || !field(G_LAST_PROCESSED_DATE, 8, 1, 0x29e5, 0xa819d0)
         || !field(0xae2cfc, 1, 1, 0x29ed, 0xa81994)
-        || !field(0xae2d00, 4, 1, 0x29f5, 0xa8194c)
-        || !field(0xae2d04, 4, 1, 0x29fd, 0xa818fc)
+        || !field(G_NATIONS_TO_LOAD_COUNT, 4, 1, 0x29f5, 0xa8194c)
+        || !field(G_SELECTED_NATION_COUNT, 4, 1, 0x29fd, 0xa818fc)
     {
         return 0;
     }
     let default = u(G_MAIN_NATION);
     let nation_default: u32 = if default != 0 { u(default as usize) } else { 0xffffffff };
     if !field(&nation_default as *const u32 as usize, 4, 1, 0x2a06, 0xa818c0)
-        || !field(0xae2d10, 4, 1, 0x2a0e, 0xa81880)
+        || !field(G_STAFF_STATE_COUNT, 4, 1, 0x2a0e, 0xa81880)
         || !field(u(G_STAFF_STATE_TABLE) as usize, 0x4f, u(G_STAFF_STATE_COUNT), 0x2a14, 0xa81848)
         || !field(u(G_CLUB_STATE_TABLE) as usize, 6, u(G_CLUB_STATE_COUNT), 0x2a1c, 0xa81814)
         || !field(u(G_CLUB_REPUTATION_ORDER) as usize, 4, u(G_CLUB_COUNT), 0x2a24, 0xa817dc)
@@ -1476,12 +1476,12 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
         setup_warning(0x3b2c);
         return;
     }
-    if write(0xae233c, 1, 1, z) != 1 {
+    if write(G_FIFA_TRANSFER_RULES_IN_FORCE, 1, 1, z) != 1 {
         setup_warning(0x3b32);
         exe::zclose(&mut z);
         return;
     }
-    if write(0xa83608, 1, 1, z) != 1 {
+    if write(G_MAX_CONTRACT_LENGTH_YEARS, 1, 1, z) != 1 {
         setup_warning(0x3b38);
         exe::zclose(&mut z);
         return;

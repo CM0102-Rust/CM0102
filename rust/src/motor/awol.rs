@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     // pushes; add esp, 0x14 -> cdecl (clube, 0, 1, 0, 0) e (clube, 1, 1, 0, 0)
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(nt, 0xbc9, 0);
+    exe::new_newsitem(nt, 0xbc9, 0);
     write(nt, 0, read_usize(player) as u32);
     write(nt, 1, read_usize(read_usize(player + staff::FIRST_NAME) + 0x33) as u32);
     write(nt, 2, read_usize(read_usize(player + staff::SECOND_NAME) + 0x33) as u32);
@@ -840,7 +840,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
         }
         let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
         let nt = local.as_mut_ptr() as usize;
-        exe::newsitem_newsitem(nt, 0x138f, 0);
+        exe::new_newsitem(nt, 0x138f, 0);
         set_news_slot(nt, 0, read_u32(player));
         set_news_slot(nt, 1, read_u32(club));
         let r = friendly_random(2);

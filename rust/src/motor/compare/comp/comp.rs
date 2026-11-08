@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_club_progress(this: usize, c
 /// dele só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn compare_get_first_stage_of_group(this: usize, k: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_GET_FIRST_STAGE_OF_GROUP);
-    if k < -1 || k > read_u32_as_usize(this + league::CURRENT_STAGE) as i32 {
+    if k < -1 || k > read_usize(this + league::CURRENT_STAGE) as i32 {
         return o(this, k);
     }
     let r = o(this, k);

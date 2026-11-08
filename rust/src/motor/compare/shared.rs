@@ -174,7 +174,7 @@ pub(crate) unsafe fn compare_respond(p: usize, a: u32, b: u32, c: u32, d: u32, r
     use std::sync::atomic::Ordering::Relaxed;
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
         reg.extend(club_rows(clube));

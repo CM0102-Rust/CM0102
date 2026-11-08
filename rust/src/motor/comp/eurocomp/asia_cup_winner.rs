@@ -17,8 +17,8 @@ pub(crate) const AFRICAN_NATIONS_QUARTER_FINAL_SLOTS: [(i32, i32); 8] = [
 /// [pt] O clube da posição `p` do grupo `g` (pela 0x6826d0 League::get_table_row: push p; mov ecx, grupo -> thiscall, ret 4).
 pub(crate) unsafe fn group_table_club(this: usize, g: i32, p: i32) -> usize {
     let row: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
-    let group = if g < 0 { this } else { read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4) };
-    read_u32_as_usize(row(group, p))
+    let group = if g < 0 { this } else { read_usize(read_usize(this + 0xc) + g as usize * 4) };
+    read_usize(row(group, p))
 }
 
 /// `AfricanNations::create_knockout_stage()` (`0x402090`, thiscall, ret 0, `african_nations.cpp`): builds the
@@ -57,9 +57,9 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
     }
     crate::comparison::branch("cqt_13 quartas da copa africana");
     for (k, &(g, p)) in AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().enumerate() {
-        write_u32_from_usize(list + k * 4, group_table_club(this, g, p));
+        write_usize(list + k * 4, group_table_club(this, g, p));
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, 3, &mut rodadas, &mut id, 0);
     let p = new(0xb2);
@@ -67,19 +67,19 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 8, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + league::YEAR) as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this, 8, list, rodadas as u16 as u32, read_usize(this + 4), table, read_i16(this + league::YEAR) as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + 0xc, stage);
+    write_usize(read_usize(this + league::STAGES) + 0xc, stage);
     exe::crt_free(list);
     exe::crt_free(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 0xc);
+    let f = read_usize(read_usize(this + league::STAGES) + 0xc);
     if f == 0 {
         return show_error_at(0x9870f8, 0x32c);
     }
     build(f, 0);
-    write_u32_from_usize(this + league::CURRENT_STAGE, 3);
+    write_usize(this + league::CURRENT_STAGE, 3);
 }
 
 // simplification: allocates the stage and sets up the round: does not run twice. Original only; the plan: the stage at [+0xc][3] with 8 teams,
@@ -93,12 +93,12 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
 /// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x328; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
 /// das duas zonas), as finais (0x40e030: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize) {
-    let f = read_u32_as_usize(this + cup::CURRENT_STAGE) as i32;
-    if f >= (read_u32_as_usize(this + cup::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let f = read_usize(this + cup::CURRENT_STAGE) as i32;
+    if f >= (read_usize(this + cup::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(0x987b60, 0x328);
     }
     let f = f + 1;
-    write_u32_from_usize(this + cup::CURRENT_STAGE, f as usize);
+    write_usize(this + cup::CURRENT_STAGE, f as usize);
     if f == 1 {
         crate::comparison::branch("cqt_13 finais da recopa asiatica");
         exe::asiacupwinner_create_finals_stage(this);
@@ -125,12 +125,12 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: usize) -> [usize; 4] {
     let mut v = [0usize; 4];
     let mut n = 0i16;
     let teams = read_i16(this + cup::TEAM_COUNT);
-    for tabela in [read_u32_as_usize(this + cup::TEAM_TABLE), read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) + 0xa7)] {
+    for tabela in [read_usize(this + cup::TEAM_TABLE), read_usize(read_usize(read_usize(this + cup::STAGES)) + 0xa7)] {
         let mut i = 0i16;
         while i < teams && n < 4 {
             let e = tabela + i as usize * 6;
             if *((e + 5) as *const u8) == 1 {
-                v[n as usize] = read_u32_as_usize(e);
+                v[n as usize] = read_usize(e);
                 n += 1;
             }
             i += 1;
@@ -176,9 +176,9 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     crate::comparison::branch("cqt_13 finalistas da recopa asiatica");
     // simplification: with fewer than 4 alive the original leaves in the slots what malloc gave; the copy writes 0 (in this career there are 4)
     for (k, &c) in asian_cup_winners_finalists(this).iter().enumerate() {
-        write_u32_from_usize(list + k * 4, c);
+        write_usize(list + k * 4, c);
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, 1, &mut rodadas, &mut id, 0);
     let p = new(0xb2);
@@ -186,13 +186,13 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 4, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this, 4, list, rodadas as u16 as u32, read_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + cup::STAGES) + 4, stage);
+    write_usize(read_usize(this + cup::STAGES) + 4, stage);
     exe::crt_free(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + 4);
+    let f = read_usize(read_usize(this + cup::STAGES) + 4);
     if f == 0 {
         return show_error_at(0x987b60, 0x375);
     }

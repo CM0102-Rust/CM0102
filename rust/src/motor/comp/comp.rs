@@ -77,7 +77,7 @@ pub(crate) unsafe extern "stdcall" fn special_club(club: usize) -> u32 {
 /// [pt] O slot 0xa4 da vtable da liga (thiscall, sem argumentos) [inferência: fecha a classificação final da temporada e
 /// marca os que sobem e descem (+0x37 dos clubes), que a 0x689c80 lê].
 pub(crate) unsafe fn finalize_league_table(league: usize) {
-    let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(league) + 0xa4));
+    let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(league) + 0xa4));
     f(league)
 }
 
@@ -114,20 +114,20 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe8];
     let p = n.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(p, 0x1a, 0);
-    given(p, 0, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
+    exe::new_newsitem(p, 0x1a, 0);
+    given(p, 0, read_usize(read_usize(this + 4)) as u32);
     given(p, 1, lo);
-    given(p, 2, read_u32_as_usize(club) as u32);
+    given(p, 2, read_usize(club) as u32);
     given(p, 3, position as u8 as i8 as i32 as u32);
     given(p, 4, round as u16 as i16 as i32 as u32);
     given(p, 7, kind as u8 as i8 as i32 as u32);
     let b = |a: usize| *(a as *const i8);
     let venceu = if partida != 0 {
-        if read_u32_as_usize(partida + fixture::HOME_CLUB) == club {
-            given(p, 5, read_u32_as_usize(read_u32_as_usize(partida + fixture::AWAY_CLUB)) as u32);
+        if read_usize(partida + fixture::HOME_CLUB) == club {
+            given(p, 5, read_usize(read_usize(partida + fixture::AWAY_CLUB)) as u32);
             b(partida + fixture::HOME_RESULT_MARK) != 0 || b(partida + fixture::HOME_AGGREGATE) > b(partida + fixture::AWAY_AGGREGATE) || b(partida + fixture::HOME_GOALS) > b(partida + fixture::AWAY_GOALS)
         } else {
-            given(p, 5, read_u32_as_usize(read_u32_as_usize(partida + fixture::HOME_CLUB)) as u32);
+            given(p, 5, read_usize(read_usize(partida + fixture::HOME_CLUB)) as u32);
             b(partida + fixture::AWAY_RESULT_MARK) != 0 || b(partida + fixture::HOME_AGGREGATE) < b(partida + fixture::AWAY_AGGREGATE) || b(partida + fixture::HOME_GOALS) < b(partida + fixture::AWAY_GOALS)
         }
     } else {
@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
         false
     };
     given(p, 6, venceu as u32);
-    exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), p, club);
+    exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 
 // simplification: delivers the news (allocates); original only. The copy takes the branch.
@@ -158,12 +158,12 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, club: us
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let mut n = [0u8; 0xe8];
     let p = n.as_mut_ptr() as usize;
-    exe::newsitem_newsitem(p, 0x1f, 0);
-    given(p, 0, read_u32_as_usize(club) as u32);
-    given(p, 1, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
+    exe::new_newsitem(p, 0x1f, 0);
+    given(p, 0, read_usize(club) as u32);
+    given(p, 1, read_usize(read_usize(this + 4)) as u32);
     given(p, 2, value);
     given(p, 3, *((this + league::YEAR) as *const i16) as i32 as u32);
-    exe::news_send_to_club_manager(read_u32_as_usize(G_NEWS), p, club);
+    exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
 }
 
 // simplification: delivers the news (allocates); original only. The copy takes the branch.
@@ -179,24 +179,24 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, club: us
 /// competição do topo (+0x1c ≤ −1), completa (método +0x10 com 1, 1: push 1; push 1; mov ecx -> thiscall, ret 8) ela e
 /// cada uma da cadeia de baixo (+0x20, o índice em [0xadadfc]); devolve 1 ou 0 (no al).
 pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
-    if (read_u32_as_usize(this + league::UPPER_DIVISION_ID) as i32) > -1 {
+    if (read_usize(this + league::UPPER_DIVISION_ID) as i32) > -1 {
         return 0;
     }
     let completa = |c: usize| -> u8 {
-        let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(c) + 0x10));
+        let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(c) + 0x10));
         f(c, 1, 1)
     };
     if completa(this) == 0 {
         return 0;
     }
-    let mut i = read_u32_as_usize(this + league::LOWER_DIVISION_ID) as i32;
+    let mut i = read_usize(this + league::LOWER_DIVISION_ID) as i32;
     while i >= 0 {
-        let c = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + i as usize * 4);
+        let c = read_usize(read_usize(G_COMP_OBJECT_TABLE) + i as usize * 4);
         if completa(c) == 0 {
             return 0;
         }
         crate::comparison::branch("cqh_6 liga de baixo completa");
-        i = read_u32_as_usize(c + league::LOWER_DIVISION_ID) as i32; // cqh6: the lower league
+        i = read_usize(c + league::LOWER_DIVISION_ID) as i32; // cqh6: the lower league
     }
     1
 }
@@ -225,13 +225,13 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
     }
     let mut n = 0i16;
     let mut s = -1i8;
-    while s as i32 <= read_u32_as_usize(this + league::CURRENT_STAGE) as i32 {
-        let f = if s == -1 { this } else { read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + (s as i32 * 4) as usize) };
+    while s as i32 <= read_usize(this + league::CURRENT_STAGE) as i32 {
+        let f = if s == -1 { this } else { read_usize(read_usize(this + league::STAGES) + (s as i32 * 4) as usize) };
         let league = read_u8(f + 0x43) == 2;
         let mut i = 0i16;
         while i < read_i16(f + 0x3e) {
-            let club = if league { read_u32_as_usize(read_u32_as_usize(f + 0xb1) + i as usize * 0x3b) } else { read_u32_as_usize(read_u32_as_usize(f + 0xa7) + i as usize * 6) };
-            if club != 0 && !(0..n).any(|k| read_u32_as_usize(v + k as usize * 4) == club) && n < 0xc8 { // cqh6: até 200 clubes
+            let club = if league { read_usize(read_usize(f + 0xb1) + i as usize * 0x3b) } else { read_usize(read_usize(f + 0xa7) + i as usize * 6) };
+            if club != 0 && !(0..n).any(|k| read_usize(v + k as usize * 4) == club) && n < 0xc8 { // cqh6: até 200 clubes
                 crate::comparison::branch("cqh_6 clube na lista");
                 core::ptr::write_unaligned((v + n as usize * 4) as *mut u32, club as u32); // cqh6: the club in the list
                 n += 1;
@@ -262,14 +262,14 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
 /// +0xad com 0x35 bytes) com um confronto em que o time joga (+0 ou +2): rodada = +7 da rodada, e volta.
 pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usize, stage_id: *mut i16, round: *mut i16, status: *mut u8) {
     let row: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
-    let mut f = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
+    let mut f = read_usize(this + league::CURRENT_STAGE) as i32;
     while f >= -1 {
-        let s = if f > -1 { read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + f as usize * 4) } else { this };
+        let s = if f > -1 { read_usize(read_usize(this + league::STAGES) + f as usize * 4) } else { this };
         if read_i16(s + 0x3a) != 0x3fc {
             if read_u8(s + 0x43) == 2 {
                 let mut i = 0i8;
                 while (i as i16) < read_i16(s + 0x3e) {
-                    if read_u32_as_usize(row(s, i as i32)) == club {
+                    if read_usize(row(s, i as i32)) == club {
                         *stage_id = read_i16(s + 0x3a);
                         *status = read_u8(row(s, i as i32) + 0x37);
                         return;
@@ -280,8 +280,8 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usi
                 let mut team: i16 = -1;
                 let mut k = 0i16;
                 while k < read_i16(s + 0x3e) {
-                    let t = read_u32_as_usize(s + 0xa7) + k as usize * 6;
-                    if read_u32_as_usize(t) == club {
+                    let t = read_usize(s + 0xa7) + k as usize * 6;
+                    if read_usize(t) == club {
                         *stage_id = read_i16(s + 0x3a);
                         crate::comparison::branch("cqh_6 progresso na copa");
                         *status = read_u8(t + 5); // cqh6: the team’s situation
@@ -292,13 +292,13 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usi
                 if team != -1 {
                     let mut r = (read_u8(s + 0xab) as i8 as i16).wrapping_sub(1);
                     while r >= 0 {
-                        let n = read_i16(read_u32_as_usize(s + 0xa3) + r as usize * 0x68 + 0x1a);
-                        let confrontos = read_u32_as_usize(read_u32_as_usize(s + 0xad) + r as usize * 4);
+                        let n = read_i16(read_usize(s + 0xa3) + r as usize * 0x68 + 0x1a);
+                        let confrontos = read_usize(read_usize(s + 0xad) + r as usize * 4);
                         let mut j = 0i16;
                         while j < n {
                             let c = confrontos.wrapping_add((j as i32 * 0x35) as usize);
                             if read_i16(c) == team || read_i16(c + 2) == team {
-                                *round = read_i16(read_u32_as_usize(s + 0xa3) + r as usize * 0x68 + 7);
+                                *round = read_i16(read_usize(s + 0xa3) + r as usize * 0x68 + 7);
                                 return;
                             }
                             j += 1;
@@ -316,14 +316,14 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usi
 ///
 /// [pt] O confronto `p` (0x35 bytes) da rodada `r` da copa (vetores em [+0xad]).
 pub(crate) unsafe fn cup_tie(cup: usize, r: i32, p: i32) -> usize {
-    read_u32_as_usize(read_u32_as_usize(cup + cup::TIE_TABLES) + (r as isize * 4) as usize).wrapping_add((p as isize * 0x35) as usize)
+    read_usize(read_usize(cup + cup::TIE_TABLES) + (r as isize * 4) as usize).wrapping_add((p as isize * 0x35) as usize)
 }
 
 /// Address of cup round r (0x68 bytes in table [+0xa3]).
 ///
 /// [pt] A rodada `r` da copa (0x68 bytes na tabela [+0xa3]).
 pub(crate) unsafe fn comp_cup_round(cup: usize, r: i32) -> usize {
-    read_u32_as_usize(cup + cup::ROUND_TABLE).wrapping_add((r as isize * 0x68) as usize)
+    read_usize(cup + cup::ROUND_TABLE).wrapping_add((r as isize * 0x68) as usize)
 }
 
 /// Stage k of the competition as the original reads it: -1 itself, 0..+0x30 from [+0xc]; out of range shows the
@@ -332,11 +332,11 @@ pub(crate) unsafe fn comp_cup_round(cup: usize, r: i32) -> usize {
 /// [pt] A fase `k` da competição como a original a lê no meio das rotinas: −1 a própria, 0..+0x30 em [+0xc]; fora disso a
 /// caixa da linha 0x36e de comp.cpp e 0.
 pub(crate) unsafe fn comp_stage(comp: usize, k: i32) -> usize {
-    if k < -1 || k > read_u32_as_usize(comp + league::CURRENT_STAGE) as i32 {
+    if k < -1 || k > read_usize(comp + league::CURRENT_STAGE) as i32 {
         show_error_at(0x99b80c, 0x36e);
         return 0;
     }
-    if k == -1 { comp } else { read_u32_as_usize(read_u32_as_usize(comp + league::STAGES) + k as usize * 4) }
+    if k == -1 { comp } else { read_usize(read_usize(comp + league::STAGES) + k as usize * 4) }
 }
 
 /// From the given stage backwards, returns the index of the first stage of the same group.
@@ -401,18 +401,18 @@ pub(crate) unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
         s
     };
     let end = |s: i32| -> usize {
-        if s < -1 || s > read_u32_as_usize(this + league::CURRENT_STAGE) as i32 {
+        if s < -1 || s > read_usize(this + league::CURRENT_STAGE) as i32 {
             show_error_at(0x99b80c, 0x36e);
             return this;
         }
-        let f = if s == -1 { this } else { read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + s as usize * 4) };
+        let f = if s == -1 { this } else { read_usize(read_usize(this + league::STAGES) + s as usize * 4) };
         if f != 0 { f } else { this }
     };
     let mut e: i32 = -1;
-    if read_u32_as_usize(this + league::CURRENT_STAGE) as i32 >= -1 {
+    if read_usize(this + league::CURRENT_STAGE) as i32 >= -1 {
         loop {
             let f = comp_stage(this, e);
-            let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(f) + 0x10));
+            let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x10));
             if acabou(f, 0, 1) as u8 == 0 {
                 if f == 0 {
                     break;
@@ -423,19 +423,19 @@ pub(crate) unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
                 return f;
             }
             e += 1;
-            if e > read_u32_as_usize(this + league::CURRENT_STAGE) as i32 {
+            if e > read_usize(this + league::CURRENT_STAGE) as i32 {
                 break;
             }
         }
     }
-    end(go_back(read_u32_as_usize(this + league::CURRENT_STAGE) as i32))
+    end(go_back(read_usize(this + league::CURRENT_STAGE) as i32))
 }
 
 /// Address of entry k (72 bytes) of the 35 key nations table at 0xb63d60 (+0 nation, +0x14 active index).
 ///
 /// [pt] A entrada `k` (72 bytes) da tabela das 35 nações-chave em 0xb63d60: +0 a nação, +0x14 o índice ativo.
 pub(crate) fn key_nation_entry(k: i8) -> usize {
-    0xb63d60 + k as i32 as usize * 72
+    G_LEAGUE_TABLE + k as i32 as usize * 72
 }
 
 /// Index k of the nation in the key nations table (active nation entry), or None.
