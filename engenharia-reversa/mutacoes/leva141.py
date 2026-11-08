@@ -12,7 +12,7 @@ MUTACOES = [
     ('r_soma', '*g = if *chance as i8 as i32 + *g as i8 as i32 > 0x64 { 0x64 }', '*g = if *chance as i8 as i32 + *g as i8 as i32 > 0x63 { 0x63 }', 'lesao agravada'),
     ('r_grave', '} else if *chance as i8 > *g as i8 {\n        crate::comparison::branch("lesao mais grave");', '} else if *chance as i8 >= *g as i8 + 3 {\n        crate::comparison::branch("lesao mais grave");', 'lesao mais grave'),
     ('r_nova', 'r[5] = *chance;', 'r[5] = (*chance).wrapping_add(1);', 'lesao registrada'),
-    ('l_para3', 'if local >= read_f32_at(0x96d1a8) && *b(p, 0x1c) != 0 {', 'if local > read_f32_at(0x96d1a8) * 1.5 && *b(p, 0x1c) != 0 {', 'lesao para 3 e sai'),
+    ('l_para3', 'if local >= read_f32_at(0x96d1a8) && *b(p, match_player::INJURY_FORCES_OFF) != 0 {', 'if local > read_f32_at(0x96d1a8) * 1.5 && *b(p, match_player::INJURY_FORCES_OFF) != 0 {', 'lesao para 3 e sai'),
     ('d_21b5', '0x21b5 => atuacao > random(1000) + 0x1f40 && b(0x30) != 0,', '0x21b5 => atuacao > random(1000) + 0x1f40,'),
     ('d_sim', 'crate::comparison::branch(if r { "destaque sim" } else { "destaque nao" });', 'let r = r || c == 0x21b1;\n    crate::comparison::branch(if r { "destaque sim" } else { "destaque nao" });'),
 ]

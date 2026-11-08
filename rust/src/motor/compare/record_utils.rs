@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../record_utils.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../record_utils.rs.
 // [pt] Os comparadores das rotinas de ../record_utils.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `fill_match_record_from_fixture` (comparison mode: see the header of motor.rs).
+/// Comparer for `fill_match_record_from_fixture`.
 ///
 /// [pt] Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
 /// só a original.
@@ -17,7 +17,7 @@ pub(crate) unsafe extern "C" fn compare_fill_match_record_from_fixture(game: usi
     r
 }
 
-/// Comparer for `fill_staff_name_ref` (comparison mode: see the header of motor.rs).
+/// Comparer for `fill_staff_name_ref`.
 ///
 /// [pt] Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
 pub(crate) unsafe extern "C" fn compare_fill_staff_name_ref(person: usize, out: usize) -> u32 {
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "C" fn compare_fill_staff_name_ref(person: usize, out: 
     r
 }
 
-/// Comparer for `match_record_result_code` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_record_result_code`.
 ///
 /// [pt] Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
 pub(crate) unsafe extern "C" fn compare_match_record_result_code(record: usize) -> u8 {
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "C" fn compare_match_record_result_code(record: usize) 
     r
 }
 
-/// Comparer for `match_record_is_bigger_win` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_record_is_bigger_win`.
 ///
 /// [pt] Comparador: pura; registro nulo (a caixa), só a original.
 pub(crate) unsafe extern "C" fn compare_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
@@ -57,7 +57,7 @@ pub(crate) unsafe extern "C" fn compare_match_record_is_bigger_win(a: usize, b: 
     r
 }
 
-/// Comparer for `match_record_is_bigger_defeat` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_record_is_bigger_defeat`.
 ///
 /// [pt] Comparador: pura; registro nulo (a caixa), só a original.
 pub(crate) unsafe extern "C" fn compare_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {

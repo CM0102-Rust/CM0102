@@ -478,7 +478,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                     && f != 0
                     && w(f + 0xb) > 0x1676
                     && byte(p, staff::AMBITION) > 0xa
-                    && byte(p, staff::LOYALITY) < 0xf
+                    && byte(p, staff::LOYALTY) < 0xf
                     && (byte(p, staff::SPORTSMANSHIP) < 0xa || byte(p, staff::TEMPERAMENT) < 0xa)
                     && ((read(previous) == read(KEY_NATION_FRANCE) && random(3) == 0) || random(10) == 0)
                 {

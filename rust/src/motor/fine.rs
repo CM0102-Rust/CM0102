@@ -81,7 +81,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     let r = friendly_random(2);
     set_news_slot(nt, 6, r as u32);
     let p = read_i8_as_i32(player + staff::TEMPERAMENT) + read_i8_as_i32(player + staff::PROFESSIONALISM) < 0xc
-        && read_i8_as_i32(player + staff::LOYALITY) < 6
+        && read_i8_as_i32(player + staff::LOYALTY) < 6
         && core::ptr::read_unaligned((read_usize(player + staff::PLAYER) + 0xb) as *const i16) > 0x1482;
     set_news_slot(nt, 7, p as u32);
     set_news_slot(nt, 8, (deadline as u8 == 1) as u32);

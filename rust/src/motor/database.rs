@@ -106,11 +106,11 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
             if e == 0 {
                 break;
             }
-            let kind = w(e, 0x13);
+            let kind = w(e, match_incident::KIND);
             crate::comparison::branch("match_wrap_up evento do dia");
             let mark = |value: u8, who: u32| {
-                *((e + 0xe) as *mut u8) = value;
-                core::ptr::write_unaligned((e + 0xf) as *mut u32, who);
+                *((e + match_incident::OUTCOME) as *mut u8) = value;
+                core::ptr::write_unaligned((e + match_incident::RESPONDER_ID) as *mut u32, who);
             };
             let pt = partida();
             let club_ev = || (*(G_CLUB_TABLE as *const usize)).wrapping_add(d(e, 4) * club::SIZE);
@@ -171,7 +171,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                         let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
                         let vale = if kind == 6 {
                             crate::comparison::branch("match_wrap_up evento tipo 6");
-                            byte(p, match_player::YELLOW_CARDS) == 2 || byte(p, 0x23) != 0
+                            byte(p, match_player::YELLOW_CARDS) == 2 || byte(p, match_player::RED_CARDS) != 0
                         } else {
                             byte(p, match_player::MATCH_GRADE) < 7 && random(byte(p, match_player::MATCH_FORM) as i32) == 0
                         };
@@ -2555,7 +2555,7 @@ pub(crate) unsafe extern "C" fn database_format_official_name(oficial: usize, te
         return o(oficial, text, size, form);
     }
     let (a, b) = (read_usize(oficial + 4), read_usize(oficial + 8));
-    let nation = read_usize(oficial + 0x16);
+    let nation = read_usize(oficial + official::NATION);
     let so_sobrenome = nation != 0 && read_usize(nation) == read_usize(KEY_NATION_SPAIN);
     let f = form as u8;
     if !so_sobrenome && !(1..=6).contains(&f) {
@@ -2933,8 +2933,8 @@ pub(crate) unsafe fn favourite_colleague_score(person: usize, club: usize, o: us
     if m1 > read_f32_at(0x968990) as f64 { // 0x968990 = 5
         let g = read_usize(G_PLAYER_STATS);
         let ratio = || {
-            let d = read_f64_at(g + 0x18);
-            if d == 0.0 || d.is_nan() { read_f64_at(0x968998) } else { read_f64_at(g + 0x10) / d } // 0x968998 = 6.8
+            let d = read_f64_at(g + player_stats_fields::RATED_COUNT);
+            if d == 0.0 || d.is_nan() { read_f64_at(0x968998) } else { read_f64_at(g + player_stats_fields::RATING_SUM) / d } // 0x968998 = 6.8
         };
         // fcompp: C0 (below or unordered) adds
         if !(ratio() + read_f64_at(0x968918) >= l0) { // 0x968918 = 0.2
@@ -2967,7 +2967,7 @@ pub(crate) unsafe fn favourite_colleague_score(person: usize, club: usize, o: us
     }
     let nation = read_usize(person + staff::NATION);
     if nation != read_usize(club + club::NATION) && read_usize(o + staff::NATION) == nation {
-        if read_usize(contract + staff_contract::GRIEVANCES) & 0x20020 != 0 {
+        if read_usize(contract + contract::GRIEVANCES) & 0x20020 != 0 {
             n += 1750;
         } else if age(G_CURRENT_DATE, read_usize(person + staff::DATE_JOINED_CLUB), read_usize(person + 0x42)) < 350 && read_i8_as_i32(person + staff::AGE) < 24 {
             n += 250;
@@ -2999,7 +2999,7 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, 
     let age: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let id = read_usize(person) as i32;
     let r6 = id % 6;
-    if read_i8_as_i32(person + staff::LOYALITY) < r6 + 6 || read_i8_as_i32(person + staff::AMBITION) > 15 - r6 {
+    if read_i8_as_i32(person + staff::LOYALTY) < r6 + 6 || read_i8_as_i32(person + staff::AMBITION) > 15 - r6 {
         return 0;
     }
     if age(G_CURRENT_DATE, read_usize(person + staff::DATE_JOINED_CLUB), read_usize(person + 0x42)) < id % 28 + 14 {
@@ -3906,7 +3906,7 @@ pub(crate) unsafe extern "C" fn staff_fade_staff_relationships(person: usize) {
     let pref = read_usize(person + staff::STAFF_PREFERENCES);
     for k in 0..3 {
         let v = pref + preferences::STAFF_FAVOURITE_STAFF1 + 4 * k;
-        if read_usize(v) != 0 && random(*((person + staff::LOYALITY) as *const i8) as i32 + 15) == 0 { // the favorites
+        if read_usize(v) != 0 && random(*((person + staff::LOYALTY) as *const i8) as i32 + 15) == 0 { // the favorites
             *(v as *mut usize) = 0;
         }
     }
@@ -4085,7 +4085,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let id = read_usize(person) as i32;
     let r6 = id % 6;
-    if (read_i8(person + staff::LOYALITY) as i32) < r6 + 6 || read_i8(person + staff::AMBITION) as i32 > 15 - r6 {
+    if (read_i8(person + staff::LOYALTY) as i32) < r6 + 6 || read_i8(person + staff::AMBITION) as i32 > 15 - r6 {
         return 0;
     }
     if age(G_CURRENT_DATE, read_usize(person + staff::DATE_JOINED_CLUB), read_usize(person + 0x42)) < id % 28 + 14 {
@@ -4126,8 +4126,8 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         if m1 > read_f32_at(0x968990) as f64 { // 0x968990 = 5
             let g = read_usize(G_PLAYER_STATS);
             let ratio = || {
-                let d = read_f64_at(g + 0x18);
-                if d == 0.0 || d.is_nan() { read_f64_at(0x968998) } else { read_f64_at(g + 0x10) / d } // 0x968998 = 6.8
+                let d = read_f64_at(g + player_stats_fields::RATED_COUNT);
+                if d == 0.0 || d.is_nan() { read_f64_at(0x968998) } else { read_f64_at(g + player_stats_fields::RATING_SUM) / d } // 0x968998 = 6.8
             };
             // fcompp: C0 (below or unordered) adds
             if !(ratio() + read_f64_at(0x968918) >= l0) { // 0x968918 = 0.2
@@ -4160,7 +4160,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         }
         let nation = read_usize(person + staff::NATION);
         if nation != read_usize(club + club::NATION) && read_usize(o + staff::NATION) == nation {
-            if read_usize(contract + staff_contract::GRIEVANCES) & 0x20020 != 0 {
+            if read_usize(contract + contract::GRIEVANCES) & 0x20020 != 0 {
                 rating += 1750;
             } else if age(G_CURRENT_DATE, read_usize(person + staff::DATE_JOINED_CLUB), read_usize(person + 0x42)) < 350 && read_i8(person + staff::AGE) < 24 {
                 rating += 250;
@@ -4417,7 +4417,7 @@ pub(crate) unsafe extern "C" fn database_staff_matches_names(person: usize, name
 pub(crate) unsafe fn order_by_city_coordinate(ca: usize, cb: usize, d: usize) -> i32 {
     let city = |c: usize| {
         let e = core::ptr::read_unaligned((c + club::STADIUM) as *const usize);
-        if e == 0 { 0 } else { core::ptr::read_unaligned((e + stadium::STADIUM_CITY) as *const usize) }
+        if e == 0 { 0 } else { core::ptr::read_unaligned((e + stadium::CITY) as *const usize) }
     };
     let (xa, xb) = (city(ca), city(cb));
     let x = if xa != 0 { core::ptr::read_unaligned((xa + d) as *const f64) } else { read_f64_at(0x9689a0) }; // 0x9689a0 = 0
@@ -5027,7 +5027,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
         return rep as u16 as u32;
     }
     let league = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(comp).wrapping_mul(4)));
-    let division = read_i16(comp + competition::CLUB_COMP_REPUTATION);
+    let division = read_i16(comp + competition::REPUTATION);
     let high = (division as i32).wrapping_mul(500);
     if league != 0 && high > rep as i32 {
         let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
@@ -5037,7 +5037,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
         }
         let n = read_i16(league + league::CLUB_COUNT) as i32;
         let weight = |k: i32| read_f64_at(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
-        let mut position = *((e + 0x73) as *const u8) as i32 - 1;
+        let mut position = *((e + comp_stats_club::CURRENT_POSITION) as *const u8) as i32 - 1;
         if n != 0 && n != 20 {
             position = position * 20 / n;
         }
@@ -5927,7 +5927,7 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
                 continue;
             }
             let nation = rd(c + club::NATION);
-            if nation == 0 || byte(nation + nation::NATION_LEAGUE_SELECTED) == 0 {
+            if nation == 0 || byte(nation + nation::LEAGUE_SELECTED) == 0 {
                 continue;
             }
             let mut eh_a = 0u32;
@@ -5963,7 +5963,7 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
             continue;
         }
         let nation = rd(c + club::NATION);
-        let vale = national_team(c) || (nation != 0 && rd(c + club::DIVISION) != 0 && byte(nation + nation::NATION_LEAGUE_SELECTED) != 0 && rep(c) != 0) || rep(c) > 7500;
+        let vale = national_team(c) || (nation != 0 && rd(c + club::DIVISION) != 0 && byte(nation + nation::LEAGUE_SELECTED) != 0 && rep(c) != 0) || rep(c) > 7500;
         if !vale || rd(c + club::MANAGER) != 0 {
             continue;
         }
@@ -6059,8 +6059,8 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
         if nation != 0 {
             let id = gi(nation);
             let l = nations.wrapping_add((id as usize).wrapping_mul(0xd0));
-            let cont = gi(l + 0xc8);
-            let strong = byte(nation + nation::NATION_LEAGUE_SELECTED) != 0 || keys.iter().any(|&k| id == gi(k));
+            let cont = gi(l + nation_club_bucket::CLUB_COUNT);
+            let strong = byte(nation + nation::LEAGUE_SELECTED) != 0 || keys.iter().any(|&k| id == gi(k));
             let enters = strong || match t {
                 2 => cont <= 4,
                 1 => cont <= 10,
@@ -6069,15 +6069,15 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
             if enters {
                 if cont < limit {
                     wi(l + cont as usize * 4, gi(c));
-                    if cont == 0 || rep(c) < rep_id(gi(l + gi(l + 0xcc) as usize * 4)) {
-                        wi(l + 0xcc, cont);
+                    if cont == 0 || rep(c) < rep_id(gi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4)) {
+                        wi(l + nation_club_bucket::WEAKEST_SLOT, cont);
                     }
-                    wi(l + 0xc8, cont + 1);
-                } else if rep(c) > rep_id(gi(l + gi(l + 0xcc) as usize * 4)) {
-                    wi(l + gi(l + 0xcc) as usize * 4, gi(c));
+                    wi(l + nation_club_bucket::CLUB_COUNT, cont + 1);
+                } else if rep(c) > rep_id(gi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4)) {
+                    wi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4, gi(c));
                     for j in 0..cont {
-                        if j == 0 || rep_id(gi(l + j as usize * 4)) < rep_id(gi(l + gi(l + 0xcc) as usize * 4)) {
-                            wi(l + 0xcc, j);
+                        if j == 0 || rep_id(gi(l + j as usize * 4)) < rep_id(gi(l + gi(l + nation_club_bucket::WEAKEST_SLOT) as usize * 4)) {
+                            wi(l + nation_club_bucket::WEAKEST_SLOT, j);
                         }
                     }
                 }
@@ -6088,7 +6088,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     let mut k = 0i32;
     while k < gi(0xae2350) {
         let l = nations + k as usize * 0xd0;
-        for j in 0..gi(l + 0xc8) {
+        for j in 0..gi(l + nation_club_bucket::CLUB_COUNT) {
             mark(gi(l + j as usize * 4));
         }
         k += 1;
@@ -6128,7 +6128,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
             if club != 0 && q != 0 {
                 let nq = rd(q + staff::NATION);
                 let nc = rd(club + club::NATION);
-                if (nq != 0 && byte(nq + nation::NATION_LEAGUE_SELECTED) != 0) || (nc != 0 && byte(nc + nation::NATION_LEAGUE_SELECTED) != 0) {
+                if (nq != 0 && byte(nq + nation::LEAGUE_SELECTED) != 0) || (nc != 0 && byte(nc + nation::LEAGUE_SELECTED) != 0) {
                     mark(gi(club));
                 }
             }
@@ -6147,7 +6147,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
             true
         } else {
             let nation = rd(c + club::NATION);
-            !(nation == 0 || byte(nation + nation::NATION_LEAGUE_SELECTED) == 0 || (gi(nation) == gi(KEY_NATION_ENGLAND) && rep(c) <= 500 && pequena))
+            !(nation == 0 || byte(nation + nation::LEAGUE_SELECTED) == 0 || (gi(nation) == gi(KEY_NATION_ENGLAND) && rep(c) <= 500 && pequena))
         };
         let home = novos.wrapping_add((id as usize).wrapping_mul(4));
         if fica {
@@ -6231,8 +6231,8 @@ pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
         let l = read_usize(G_CLUB_COMP_HISTORY_TABLE) + i as usize * 0x1a;
         let comp = read_usize(l + 4);
         if comp != 0 {
-            let nation = read_usize(comp + competition::CLUB_COMP_NATION);
-            if nation == 0 || *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 { // a linha fica
+            let nation = read_usize(comp + competition::NATION);
+            if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 { // a linha fica
                 core::ptr::copy(l as *const u8, (read_usize(G_CLUB_COMP_HISTORY_TABLE) + k * 0x1a) as *mut u8, 0x1a);
                 k += 1;
             }
@@ -6906,9 +6906,9 @@ pub(crate) unsafe extern "C" fn database_pick_second_name_by_weight(nation: usiz
     let row = |i: i32| (*(G_SECOND_NAME_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nation != 0 {
         let e = nation_name_index(nation);
-        let how_many = *((e + 0x1c) as *const i32);
+        let how_many = *((e + nation_name_index::SECOND_NAME_COUNT) as *const i32);
         if how_many > 0xa {
-            let start = *((e + 4) as *const i32);
+            let start = *((e + nation_name_index::SECOND_NAME_START) as *const i32);
             let (mut melhor, mut escolhido) = (-1i8, 0i32);
             for _ in 0..3 { // 3 weighted draws
                 let i = scaled_crt_rand(how_many).wrapping_add(start);
@@ -7602,7 +7602,7 @@ pub(crate) unsafe extern "C" fn database_pick_first_name_by_weight(nation: usize
     let row = |i: i32| (*(G_FIRST_NAME_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nation != 0 {
         let e = nation_name_index(nation);
-        let how_many = *((e + 0x18) as *const i32);
+        let how_many = *((e + nation_name_index::FIRST_NAME_COUNT) as *const i32);
         if how_many > 0xf {
             let start = *(e as *const i32);
             let (mut melhor, mut escolhido) = (-1i8, 0i32);
@@ -7641,8 +7641,8 @@ pub(crate) unsafe extern "C" fn database_get_comp_colours(competition: usize, fr
     core::ptr::write_unaligned(front, *(G_GUI_COLOUR_PALE_GREY as *const u16));
     core::ptr::write_unaligned(bottom, *(G_GUI_COLOUR_DARK_BLUE as *const u16));
     let r = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
-    let owner = r(competition, competition::CLUB_COMP_NATION);
-    let (a, b) = if owner != 0 { (r(owner, nation::FOREGROUND_COLOUR1), r(owner, nation::BACKGROUND_COLOUR1)) } else { (r(competition, competition::CLUB_COMP_FOREGROUND_COLOUR), r(competition, competition::CLUB_COMP_BACKGROUND_COLOUR)) };
+    let owner = r(competition, competition::NATION);
+    let (a, b) = if owner != 0 { (r(owner, nation::FOREGROUND_COLOUR1), r(owner, nation::BACKGROUND_COLOUR1)) } else { (r(competition, competition::FOREGROUND_COLOUR), r(competition, competition::BACKGROUND_COLOUR)) };
     let pixel = |c: usize| {
         let byte = |d: usize| *((c + d) as *const u8) as u32;
         colour(byte(0x37), byte(0x38), byte(0x39), 0) as u16
@@ -8385,7 +8385,7 @@ pub(crate) unsafe extern "C" fn database_pick_first_name_for_nation(nation: usiz
         return row(G_FIRST_NAME_TABLE, scaled_crt_rand(name_count_capped(0xae2398)));
     }
     let e = nation_name_index(nation);
-    let how_many = *((e + 0x18) as *const i32);
+    let how_many = *((e + nation_name_index::FIRST_NAME_COUNT) as *const i32);
     if how_many > 100 {
         let start = *(e as *const i32);
         let (mut melhor, mut escolhido) = (-1i8, 0i32);
@@ -8421,9 +8421,9 @@ pub(crate) unsafe extern "C" fn database_pick_second_name_for_nation(nation: usi
         return row(scaled_crt_rand(name_count_capped(0xae239c)));
     }
     let e = nation_name_index(nation);
-    let how_many = *((e + 0x1c) as *const i32);
+    let how_many = *((e + nation_name_index::SECOND_NAME_COUNT) as *const i32);
     if how_many > 100 {
-        let start = *((e + 4) as *const i32);
+        let start = *((e + nation_name_index::SECOND_NAME_START) as *const i32);
         let (mut melhor, mut escolhido) = (-1i8, 0i32);
         for _ in 0..20 { // 20 random rolls of the second name
             let i = scaled_crt_rand(how_many).wrapping_add(start);

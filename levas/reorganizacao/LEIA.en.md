@@ -19,12 +19,14 @@ Each step was proved before its commit, on a bench (`engenharia-reversa/bancada.
 
 | Files | What they are | Tool |
 |---|---|---|
-| `leitor_de_fora_rodada1..6.txt` | the outside reader's reports, round by round | — |
+| `leitor_de_fora_rodada1..7.txt` | the outside reader's reports, round by round | — |
 | `tipos_*.tsv`, `tipos2_*.tsv`, `tipos3_*.tsv` | the record or object each variable holds in each function (`file\tfunction\tvariable\tobject`) | `aplicar_tipos_variaveis.py` |
 | `campos_motor/` | the fields of the match engine and of the in-match player, and the functions where `m`/`j` are something else | `aplicar_campos_motor.py`, `aplicar_tipos_variaveis.py` |
 | `cabecalhos_en/` | the complete English of the headers whose detail was only in `[pt]` | `cabecalhos_completos.py` |
 | `docs_en/` | the English of the other docs (`///`) that were only in Portuguese or short (key: the block's hash) | `docs_em_ingles.py` |
 | `rodada5/` | the 5th typing round: variables (`tipos5_*`) and 835 proposed fields (`campos5_*`, 113 new objects) | `juntar_campos.py`, `aplicar_tipos_variaveis.py` |
+| `rodada6/` | the 6th round (motor.rs, managers, match, comparers): `tipos6_*`, `campos6_*` | `juntar_campos.py`, `aplicar_tipos_variaveis.py` |
+| `comentarios5/` | the English of 873 body comments | `aplicar_comentarios.py` |
 | `objetos/` | the fields of 5 objects that had no module (the scheduled match, the match-day manager, Finance, Stadium, FIXTURE_MANAGER) and who holds them | `aplicar_tipos_variaveis.py` |
 
 The tools are in `engenharia-reversa/`, and the readability steps after integrating a batch are in

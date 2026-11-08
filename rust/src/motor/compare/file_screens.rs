@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../file_screens.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../file_screens.rs.
 // [pt] Os comparadores das rotinas de ../file_screens.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `build_save_game_summary` (comparison mode: see the header of motor.rs).
+/// Comparer for `build_save_game_summary`.
 pub(crate) unsafe extern "C" fn compare_build_save_game_summary(summary: *mut u8) {
     let regions = [(summary as usize, 0xf6c), (summary as usize + 0xf6c, 8), (0xdd7140, 8)];
     let (_, _, _, mo, mr) = crate::comparison::side_by_side(&regions,

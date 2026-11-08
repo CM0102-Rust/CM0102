@@ -1,0 +1,11 @@
+engine	0xaf	SIDE_OUT_OF_POSITION	2	per-side count of players marked as playing out of their position during the strength rating; cleared by side_strength [inference]
+engine	0x453a	ON_PITCH_PLAYERS	88	per-side list of the match players taken onto the pitch, 11 dwords per side (+0x453a + 4 x (n + 11 x side)); count at ON_PITCH_COUNT
+engine	0x4592	ON_PITCH_COUNT	2	per-side number of entries in ON_PITCH_PLAYERS (i8, +0x4592 + side); the player's order is stored in his CELL_SLOT by take_the_field
+engine	0xf5c9	SIDE_FOUL_TALLY	1	side 0 foul tally (side 1 at +0xf5ff; SIDE_STATS +0xd): incremented per foul and compared with the referee's +0x27 to raise strictness [inference]
+match_player	0x1a6	LAST_FOULED_BY	4	match player who last fouled him (stored by the referee's foul decision); value_by_condition uses its own formula against him
+grid_cell	0x0	OCCUPANTS	88	per-side list of the match players standing on the cell, 11 pointers per side (side 1 at +0x2c)
+grid_cell	0x58	OCCUPANT_COUNT	2	per-side number of OCCUPANTS (i8, +0x58 + side); engine GRID + 0x58 is the first cell's
+formation	0x5b4	MARKING_TYPES	11	per position (0..10) marking-type byte: bits 0..2 marking 1/2/4, bits 3..4 marking 8/0x10
+formation	0x5bf	ASSIGNED_RECORDS	44	per position (0..10) i32 index of the designated person record (-1 none)
+formation	0x187f	CHANGED_FLAG	4	flag dword cleared whenever a position's instruction, marking or assignment is changed [inference]
+formation	0x188b	PLAYER_INSTRUCTIONS	88	per position (0..10) 64-bit instruction mask (+0x188b + 8 x position); bits of a group are mutually exclusive

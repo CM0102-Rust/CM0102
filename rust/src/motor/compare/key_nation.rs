@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../key_nation.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../key_nation.rs.
 // [pt] Os comparadores das rotinas de ../key_nation.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `key_nation_index_of_nation` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_index_of_nation`.
 pub(crate) unsafe extern "C" fn compare_key_nation_index_of_nation(nation: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_NATION)(nation);
     let n = key_nation_index_of_nation(nation);
@@ -11,7 +11,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_index_of_nation(nation: usize
     r
 }
 
-/// Comparer for `key_nation_index_of_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_index_of_club`.
 pub(crate) unsafe extern "C" fn compare_key_nation_index_of_club(club: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_CLUB);
     if hits_key_nation_error(club) {
@@ -23,7 +23,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_index_of_club(club: usize) ->
     r
 }
 
-/// Comparer for `key_nation_get_club_season_year` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_get_club_season_year`.
 pub(crate) unsafe extern "C" fn compare_key_nation_get_club_season_year(club: usize) -> u16 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_KEY_NATION_GET_CLUB_SEASON_YEAR);
     if club != 0 && hits_key_nation_error(club) {
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_get_club_season_year(club: us
     r
 }
 
-/// Comparer for `key_nation_club_in_season` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_club_in_season`.
 pub(crate) unsafe extern "C" fn compare_key_nation_club_in_season(club: usize, start: usize, end: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_KEY_NATION_CLUB_IN_SEASON)(club, start, end);
     let (mut i, mut f) = ([0u8; 8], [0u8; 8]);
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_club_in_season(club: usize, s
     r
 }
 
-/// Comparer for `key_nation_get_main_continent` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_get_main_continent`.
 pub(crate) unsafe extern "C" fn compare_key_nation_get_main_continent() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(IDX_KEY_NATION_GET_MAIN_CONTINENT)();
     let n = key_nation_get_main_continent();
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_get_main_continent() -> usize
     r
 }
 
-/// Comparer for `key_nation_get_main_nation` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_get_main_nation`.
 pub(crate) unsafe extern "C" fn compare_key_nation_get_main_nation() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(IDX_KEY_NATION_GET_MAIN_NATION)();
     let n = key_nation_get_main_nation();
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_get_main_nation() -> usize {
     r
 }
 
-/// Comparer for `key_nation_is_world_cup_comp` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_is_world_cup_comp`.
 pub(crate) unsafe extern "C" fn compare_key_nation_is_world_cup_comp(comp: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_KEY_NATION_IS_WORLD_CUP_COMP);
     if comp == 0 {
@@ -81,7 +81,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_is_world_cup_comp(comp: usize
     r
 }
 
-/// Comparer for `key_nation_is_international_comp` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_is_international_comp`.
 pub(crate) unsafe extern "C" fn compare_key_nation_is_international_comp(comp: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_KEY_NATION_IS_INTERNATIONAL_COMP);
     if comp == 0 {
@@ -93,7 +93,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_is_international_comp(comp: u
     r
 }
 
-/// Comparer for `key_nation_index_of_comp` (comparison mode: see the header of motor.rs).
+/// Comparer for `key_nation_index_of_comp`.
 pub(crate) unsafe extern "C" fn compare_key_nation_index_of_comp(comp: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_COMP)(comp);
     let n = key_nation_index_of_comp(comp);

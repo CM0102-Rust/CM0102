@@ -121,7 +121,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
     let mut local = 0f32;
     if g as i8 > 0x32 {
         crate::comparison::branch("lesao grave");
-        *b(p, 0x1c) = 1;
+        *b(p, match_player::INJURY_FORCES_OFF) = 1;
         *folego = (*folego as f64 - (c * c) as f64) as f32;
     } else {
         local = random(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32; // 0x968968 = 0.5
@@ -135,7 +135,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
         crate::comparison::branch("lesao sem folego");
         *b(m, engine::SUBSTITUTION_PENDING) = 1;
         *b(p, match_player::INJURY_PENDING) = 1;
-        *b(p, 0x1c) = 1;
+        *b(p, match_player::INJURY_FORCES_OFF) = 1;
     } else {
         let person = *((p + match_player::PLAYER) as *const usize);
         let v = (byte(person, player_sheet::INJURY_PRONENESS) as i32 * 25) as f64 + read_f64_at(0x96d458); // 0x96d458 = 7100
@@ -146,7 +146,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
             *b(p, match_player::INJURY_PENDING) = 1;
         } else {
             write_2b(p, 3);
-            if local >= read_f32_at(0x96d1a8) && *b(p, 0x1c) != 0 { // 0x96d1a8 = 500
+            if local >= read_f32_at(0x96d1a8) && *b(p, match_player::INJURY_FORCES_OFF) != 0 { // 0x96d1a8 = 500
                 crate::comparison::branch("lesao para 3 e sai");
                 *b(m, engine::SUBSTITUTION_PENDING) = 1;
                 *b(p, match_player::INJURY_PENDING) = 1;
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     let common = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && atuacao <= limit(in_field);
     let search = |cod: u32, data: &[u8; 8]| {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, *const [u8; 8]) -> u32 = core::mem::transmute(FN_MEDIA_HAS_LOGGED_STORY);
-        f(*(G_MEDIA as *const usize), sheet, *((p + 0xf9) as *const usize), -1, cod, data) != 0
+        f(*(G_MEDIA as *const usize), sheet, *((p + match_player::CLUB) as *const usize), -1, cod, data) != 0
     };
     let algum = |de: u32, ate: u32, data: &[u8; 8]| (de..=ate).any(|k| search(k as u16 as u32, data));
     let r = match c {
@@ -401,7 +401,7 @@ pub(crate) unsafe fn like_manager_more(p: usize, club: usize) {
     if read_u32_as_usize(club + club::MANAGER) != 0 && call_preference_routine(0x547840, p, read_u32_as_usize(club + club::MANAGER)) != 0 {
         call_preference_routine(0x547c50, p, read_u32_as_usize(club + club::MANAGER));
     }
-    if read_u32_as_usize(club + club::MANAGER) != 0 && friendly_random(read_i8(p + staff::LOYALITY) as i32) > 5 {
+    if read_u32_as_usize(club + club::MANAGER) != 0 && friendly_random(read_i8(p + staff::LOYALTY) as i32) > 5 {
         injury_add_to_preference_list(0x547a10, p, read_u32_as_usize(club + club::MANAGER));
     }
 }
@@ -520,8 +520,8 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     res = 2;
                     like_manager_more(p, club);
                 } else {
-                    if read_u32_as_usize(G_AWOL) != 0 && read_i8(p + staff::LOYALITY) < 0xc {
-                        let a = friendly_random(read_i8(p + staff::LOYALITY) as i32);
+                    if read_u32_as_usize(G_AWOL) != 0 && read_i8(p + staff::LOYALTY) < 0xc {
+                        let a = friendly_random(read_i8(p + staff::LOYALTY) as i32);
                         let b = friendly_random(5);
                         if a < b {
                             if RECOVERY_NEWS_DRY_RUN {
@@ -537,7 +537,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     follow = true;
                 }
                 if follow {
-                    let mut x = (read_i8(p + staff::PROFESSIONALISM) as i16).wrapping_add(read_i8(p + staff::LOYALITY) as i16);
+                    let mut x = (read_i8(p + staff::PROFESSIONALISM) as i16).wrapping_add(read_i8(p + staff::LOYALTY) as i16);
                     f1 = 1;
                     if *((read_u32_as_usize(p + staff::PLAYER) + 0xb) as *const i16) > 0x1c52 {
                         x = x.wrapping_sub(5);
@@ -570,8 +570,8 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                             descer_5d_44(p, f);
                         }
                         if r == 0 || r == 1 {
-                            if read_i8(p + staff::LOYALITY) > 1 {
-                                *((p + staff::LOYALITY) as *mut i8) -= 1;
+                            if read_i8(p + staff::LOYALTY) > 1 {
+                                *((p + staff::LOYALTY) as *mut i8) -= 1;
                             }
                         }
                     }
@@ -588,11 +588,11 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     res = 2;
                     *((form + physical_record::RECURRING_TYPE) as *mut u8) = 0xff;
                     *((form + physical_record::RECURRENCE_GRADE) as *mut u8) = 0;
-                    v = Some(read_i8(p + staff::LOYALITY));
+                    v = Some(read_i8(p + staff::LOYALTY));
                 } else if s < 5 {
                     res = 1;
                     *((form + physical_record::RECURRENCE_GRADE) as *mut u8) = 0;
-                    if read_i8(p + staff::LOYALITY) > 0xf {
+                    if read_i8(p + staff::LOYALTY) > 0xf {
                         v = Some(read_i8(p + staff::AMBITION));
                     }
                 } else {
@@ -2432,7 +2432,7 @@ pub(crate) unsafe fn injury_youth_list_nation(club: usize) -> usize {
     if nation == 0 || read_usize(nation + nation::CONTINENT) == 0 {
         return 0;
     }
-    if read_u8(nation + nation::NATION_LEAGUE_SELECTED) != 0 {
+    if read_u8(nation + nation::LEAGUE_SELECTED) != 0 {
         crate::comparison::branch("cpp_9 nacao chave");
         if !(read_i16(club + club::REPUTATION) <= 2 && read_usize(club + club::DIVISION) != 0) { // nation with +0x11c
             return 0;

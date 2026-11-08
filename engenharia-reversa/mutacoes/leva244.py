@@ -6,7 +6,7 @@ MUTACOES = [
     ('cph_descer', 'toggle_placement_if_in(this, person, club, [2, 4]) // senior team or club with a B team', 'toggle_placement_if_in(this, person, club, [2, 2]) // mutacao: sem o clube com time B'),
     ('cph_copia_bytes', 'for o in 0x1c..0x21 {\n        b(o); // the five bytes', 'for o in 0x1c..0x20 {\n        b(o); // mutacao: so quatro'),
     ('cph_moral_teto', 'let mut ceiling: i8 = if queixas & 2 != 0 { 50 } else { 100 };', 'let mut ceiling: i8 = if queixas & 2 != 0 { 50 } else { 90 }; // mutacao'),
-    ('cph_moral_ganho', 'let happiness = (read_u8(contract + staff_contract::MATCHES_LEFT_OUT) as i8 as i32 + 5) as f64; // +0x3f + 5', 'let happiness = (read_u8(contract + staff_contract::MATCHES_LEFT_OUT) as i8 as i32 + 6) as f64; // mutacao: + 6'),
+    ('cph_moral_ganho', 'let happiness = (read_u8(contract + contract::MATCHES_LEFT_OUT) as i8 as i32 + 5) as f64; // +0x3f + 5', 'let happiness = (read_u8(contract + contract::MATCHES_LEFT_OUT) as i8 as i32 + 6) as f64; // mutacao: + 6'),
     ('cph_conversas_clube', '&& (club == 0 || read_u32(r + contract_talks::CLUB_ID) == read_u32(club)) // o clube', '&& (club == 0 || true) // mutacao: sem o clube'),
     ('cph_interesse_ordem', 'if *n != 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0);', 'if *n < 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0); // mutacao: sem reordenar'),
     ('cph_pedido_data', 'copy_data(r + 8, &mut local, r + 0x19);', 'copy_data(r + 8, &mut local, r + 8); // mutacao: a data fica'),

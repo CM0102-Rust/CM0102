@@ -47,8 +47,8 @@ weather.rs	get_match_weather	home	TClub
 weather.rs	get_match_weather	c	TStadiums
 weather.rs	get_match_weather	cid	TCities
 weather.rs	get_pitch_condition	est	TStadiums
-staff_contracts.rs	reset_contract_morale	this	staff_contract
-staff_contracts.rs	contract_flags	this	staff_contract
+staff_contracts.rs	reset_contract_morale	this	TContract
+staff_contracts.rs	contract_flags	this	TContract
 staff_contracts.rs	init_from_current_contract	this	TContract
 staff_contracts.rs	should_withdraw_transfer_request	this	TContract
 staff_contracts.rs	get_contract_satisfaction	this	TContract

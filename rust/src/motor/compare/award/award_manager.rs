@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../award/award_manager.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../award/award_manager.rs.
 // [pt] Os comparadores das rotinas de ../award/award_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `award_raise_winner_reputation` (comparison mode: see the header of motor.rs).
+/// Comparer for `award_raise_winner_reputation`.
 pub(crate) unsafe extern "C" fn compare_award_raise_winner_reputation(person: usize, club: usize, nation: u32, mundo: u32, player: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32, u32)>(IDX_AWARD_RAISE_WINNER_REPUTATION);
     let mut regions = Vec::new();

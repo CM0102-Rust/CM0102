@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../comp/friendly.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/friendly.rs.
 // [pt] Os comparadores das rotinas de ../comp/friendly.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `on_friendly_fixture_cancelled` (comparison mode: see the header of motor.rs).
+/// Comparer for `on_friendly_fixture_cancelled`.
 ///
 /// [pt] Comparador da 0x5c6570: a original entrega notícias, cancela torneios e tira jogos do calendário (libera): só ela
 /// roda. Antes, a cópia acha a vaga do amistoso (0x5c6740, só leitura); depois a vaga tem de estar livre (+0x10 = 0 e
@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_on_friendly_fixture_cancelled(thi
     SCOREBOARD.record(free, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", game, slot));
 }
 
-/// Comparer for `friendly_cancel_national_fixture` (comparison mode: see the header of motor.rs).
+/// Comparer for `friendly_cancel_national_fixture`.
 ///
 /// [pt] Comparador da 0x5cb9e0: a original tira jogos do calendário (libera): só ela roda (simplification: a cópia não tem o que
 /// conferir sem refazer a busca no calendário já mudado; a contagem do ramo prova no modo Rust).
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
         tournament, read_usize(tournament), read_usize(tournament + tournament_slot::COMPETITION), read_usize(slot), in_list));
 }
 
-/// Comparer for `arrange_international_friendlies` (comparison mode: see the header of motor.rs).
+/// Comparer for `arrange_international_friendlies`.
 ///
 /// The original routine creates friendlies (0x5c6f00, 0x5c5f40), adds to the lists (0x68d0d0) and draws at random, so
 /// only it runs, with the plan in rehearsal mode. The first part of the rehearsal runs before it (afterwards the
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn compare_arrange_international_friendlies(
     });
 }
 
-/// Comparer for `friendly_check_match_invitation` (comparison mode: see the header of motor.rs).
+/// Comparer for `friendly_check_match_invitation`.
 ///
 /// [pt] Comparador: lado a lado pelo texto e a devolução (as listas locais nascem e morrem nas duas); com a caixa, só a
 /// original.
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn compare_friendly_check_match_invitation(t
     r
 }
 
-/// Comparer for `friendly_check_tournament_invitation` (comparison mode: see the header of motor.rs).
+/// Comparer for `friendly_check_tournament_invitation`.
 ///
 /// [pt] Comparador: lado a lado pelo texto e a devolução; com a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_friendly_check_tournament_invitation(this: usize, club: usize, tournament: usize, text: usize, size: u32) -> u32 {
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn compare_friendly_check_tournament_invitat
     r
 }
 
-/// Comparer for `build_international_date_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `build_international_date_table`.
 ///
 /// Comparer of 0x5ca4f0: the copy first (it allocates its own table, which is copied out and freed: free 0x9452ca,
 /// cdecl), then the original routine from the same +0x34ec..+0x34f5; checks the count, the last day done and the 110
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_international_date_table(th
     SCOREBOARD.record(mo.0[0].1 == mr.0[0].1 && mo.0[1].1 == mr.0[1].1, || format!("build_international_date_table original={:x?} rust={:x?}", mo, mr));
 }
 
-/// Comparer for `resolve_international_dates` (comparison mode: see the header of motor.rs).
+/// Comparer for `resolve_international_dates`.
 ///
 /// [pt] Comparador da 0x5cc510: lado a lado nas datas da tabela (só grava nelas; o qsort e a 0x54a130 não sorteiam).
 pub(crate) unsafe extern "thiscall" fn compare_resolve_international_dates(this: usize) {
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn compare_plan_club_friendlies(this: usize,
     SCOREBOARD.record(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
 }
 
-/// Comparer for `add_tournament` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_tournament`.
 ///
 /// [pt] Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido passar) e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, anfitriao: usize, kind: u32, start: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, name: usize) -> usize {
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, anfit
     r
 }
 
-/// Comparer for `find_human_club_open_invitation` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_human_club_open_invitation`.
 ///
 /// [pt] Comparador da 0x5c68b0: lado a lado no cursor da lista (+0xa) e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_find_human_club_open_invitation(this: usize) -> usize {
@@ -287,7 +287,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_friendly_reply(this: usiz
     SCOREBOARD.record(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
 }
 
-/// Comparer for `send_friendly_request` (comparison mode: see the header of motor.rs).
+/// Comparer for `send_friendly_request`.
 ///
 /// Comparer of 0x5c5570: only the original routine runs (the list node and the news item allocate). The plan, made
 /// beforehand: the reply list gets one more node and keeps the request; the status goes to 2 when the other club, in
@@ -322,7 +322,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     SCOREBOARD.record(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, before, list_len(l), read_u8(m + friendly_match::STATUS), s));
 }
 
-/// Comparer for `build_nation_list` (comparison mode: see the header of motor.rs).
+/// Comparer for `build_nation_list`.
 ///
 /// [pt] Comparador da 0x5ca3e0: só a original (aloca a lista). O plano, feito antes numa lista local com o mesmo qsort e a
 /// mesma ordem: a conta (+0x34fe) e as nações, na ordem.
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "stdcall" fn compare_friendly_club_reputation_tier(club
     r
 }
 
-/// Comparer for `friendly_get_rest_days_for_kind` (comparison mode: see the header of motor.rs).
+/// Comparer for `friendly_get_rest_days_for_kind`.
 ///
 /// [pt] Comparador: pura; os tipos da caixa, só a original.
 pub(crate) unsafe extern "stdcall" fn compare_friendly_get_rest_days_for_kind(kind: u32) -> u8 {
@@ -358,7 +358,7 @@ pub(crate) unsafe extern "stdcall" fn compare_friendly_get_rest_days_for_kind(ki
     r
 }
 
-/// Comparer for `friendly_update_for_date` (comparison mode: see the header of motor.rs).
+/// Comparer for `friendly_update_for_date`.
 ///
 /// [pt] Comparador: anda o calendário e planeja (aloca, sorteia): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_friendly_update_for_date(this: usize, today: usize, active: u32) -> u32 {
@@ -366,7 +366,7 @@ pub(crate) unsafe extern "thiscall" fn compare_friendly_update_for_date(this: us
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_FRIENDLY_UPDATE_FOR_DATE)(this, today, active)
 }
 
-/// Comparer for `plan_ai_preseason_friendlies` (comparison mode: see the header of motor.rs).
+/// Comparer for `plan_ai_preseason_friendlies`.
 ///
 /// [pt] Comparador: monta e planeja os amistosos da IA (aloca, sorteia): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_plan_ai_preseason_friendlies(this: usize) {
@@ -374,7 +374,7 @@ pub(crate) unsafe extern "thiscall" fn compare_plan_ai_preseason_friendlies(this
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PLAN_AI_PRESEASON_FRIENDLIES)(this)
 }
 
-/// Comparer for `set_preseason_windows` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_preseason_windows`.
 ///
 /// [pt] Comparador: grava as janelas e cria listas (não roda duas vezes): o plano antes (sem gravar), a original grava;
 /// cada candidato planejado tem de ter a janela e, quando é a ponta da tabela, uma lista em +0x12.
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_preseason_windows(this: usize
     SCOREBOARD.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plan.len(), erros.join("; ")));
 }
 
-/// Comparer for `schedule_tour_matches` (comparison mode: see the header of motor.rs).
+/// Comparer for `schedule_tour_matches`.
 ///
 /// [pt] Comparador: sorteia, monta amistosos e cria listas (não roda duas vezes): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_tour_matches(this: usize
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_SCHEDULE_TOUR_MATCHES)(this, cand, adv, n)
 }
 
-/// Comparer for `compare_friendly_candidates_by_band` (comparison mode: see the header of motor.rs).
+/// Comparer for `compare_friendly_candidates_by_band`.
 ///
 /// [pt] Comparador: rotina pura, pela devolução.
 pub(crate) unsafe extern "C" fn compare_compare_friendly_candidates_by_band(a: usize, b: usize) -> i32 {
@@ -410,7 +410,7 @@ pub(crate) unsafe extern "C" fn compare_compare_friendly_candidates_by_band(a: u
     r
 }
 
-/// Comparer for `compare_friendly_candidate_ptrs_by_nation` (comparison mode: see the header of motor.rs).
+/// Comparer for `compare_friendly_candidate_ptrs_by_nation`.
 ///
 /// [pt] Comparador: rotina pura, pela devolução.
 pub(crate) unsafe extern "C" fn compare_compare_friendly_candidate_ptrs_by_nation(a: usize, b: usize) -> i32 {
@@ -420,12 +420,12 @@ pub(crate) unsafe extern "C" fn compare_compare_friendly_candidate_ptrs_by_natio
     r
 }
 
-/// Comparer for `create_due_planned_friendlies` (comparison mode: see the header of motor.rs).
+/// Comparer for `create_due_planned_friendlies`.
 pub(crate) unsafe extern "thiscall" fn compare_create_due_planned_friendlies(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_DUE_PLANNED_FRIENDLIES)(this)
 }
 
-/// Comparer for `add_friendly_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_friendly_match`.
 ///
 /// It allocates and appends to the list (it does not run twice): the original does it and the copy checks the result
 /// against the home side's stadium, looked up beforehand (0x5ae870, read-only): occupied → 0; otherwise the returned
@@ -452,12 +452,12 @@ pub(crate) unsafe extern "thiscall" fn compare_add_friendly_match(this: usize, c
     r
 }
 
-/// Comparer for `plan_friendly_on_free_date` (comparison mode: see the header of motor.rs).
+/// Comparer for `plan_friendly_on_free_date`.
 pub(crate) unsafe extern "thiscall" fn compare_plan_friendly_on_free_date(this: usize, anfitriao: usize, home: usize, away: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_PLAN_FRIENDLY_ON_FREE_DATE)(this, anfitriao, home, away)
 }
 
-/// Comparer for `friendly_is_club_free_on_date` (comparison mode: see the header of motor.rs).
+/// Comparer for `friendly_is_club_free_on_date`.
 ///
 /// [pt] Comparador: a cópia roda com a lista provisória dela, como a original: pela devolução.
 pub(crate) unsafe extern "stdcall" fn compare_friendly_is_club_free_on_date(data: usize, club: usize, kind: u32) -> u32 {
@@ -467,7 +467,7 @@ pub(crate) unsafe extern "stdcall" fn compare_friendly_is_club_free_on_date(data
     r
 }
 
-/// Comparer for `is_banned_nation_pair` (comparison mode: see the header of motor.rs).
+/// Comparer for `is_banned_nation_pair`.
 ///
 /// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "thiscall" fn compare_is_banned_nation_pair(this: usize, a: i32, b: i32) -> u32 {
@@ -477,7 +477,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_banned_nation_pair(this: usize
     r
 }
 
-/// Comparer for `compare_nations_by_reputation_desc` (comparison mode: see the header of motor.rs).
+/// Comparer for `compare_nations_by_reputation_desc`.
 ///
 /// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn compare_compare_nations_by_reputation_desc(a: usize, b: usize) -> i32 {
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "C" fn compare_compare_nations_by_reputation_desc(a: us
     r
 }
 
-/// Comparer for `compare_fixture_records_by_date` (comparison mode: see the header of motor.rs).
+/// Comparer for `compare_fixture_records_by_date`.
 ///
 /// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn compare_compare_fixture_records_by_date(a: usize, b: usize) -> i32 {
@@ -537,7 +537,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_friendly_match(this: usize
     r
 }
 
-/// Comparer for `init_banned_nation_pairs` (comparison mode: see the header of motor.rs).
+/// Comparer for `init_banned_nation_pairs`.
 ///
 /// [pt] Comparador: o malloc não pode rodar duas vezes: a original roda e confere o vetor e a conta com o plano.
 pub(crate) unsafe extern "thiscall" fn compare_init_banned_nation_pairs(this: usize) {
@@ -552,7 +552,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_banned_nation_pairs(this: us
     SCOREBOARD.record(ok, || format!("init_banned_nation_pairs: conta {} vetor {:#x}", read_u8(this + friendly::BANNED_PAIR_COUNT), v));
 }
 
-/// Comparer for `is_comp_current_on_date` (comparison mode: see the header of motor.rs).
+/// Comparer for `is_comp_current_on_date`.
 ///
 /// [pt] Comparador: pelo valor (as datas e a vaga só são lidas). TapeCall pelas copas e ligas a cada data: sem contador.
 pub(crate) unsafe extern "thiscall" fn compare_is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
@@ -562,7 +562,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_comp_current_on_date(this: usi
     r
 }
 
-/// Comparer for `candidate_has_nearby_date` (comparison mode: see the header of motor.rs).
+/// Comparer for `candidate_has_nearby_date`.
 ///
 /// [pt] Comparador: lado a lado pelo cursor da lista (+0xa) e o valor.
 pub(crate) unsafe extern "thiscall" fn compare_candidate_has_nearby_date(this: usize, club: usize, data: usize) -> u32 {
@@ -574,7 +574,7 @@ pub(crate) unsafe extern "thiscall" fn compare_candidate_has_nearby_date(this: u
     r
 }
 
-/// Comparer for `add_planned_friendly` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_planned_friendly`.
 ///
 /// [pt] Comparador: a original acrescenta (pode realocar, não roda duas vezes): o plano antes (a conta, os ids e a data),
 /// a original roda, confere o item novo e a conta.
@@ -593,7 +593,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_planned_friendly(this: usize,
     });
 }
 
-/// Comparer for `find_friendly_opponent` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_friendly_opponent`.
 pub(crate) unsafe extern "thiscall" fn compare_find_friendly_opponent(this: usize, club: usize, list: usize, n: u32, band: u32, excluir: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(IDX_FIND_FRIENDLY_OPPONENT);
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| list + 0x16 * i));
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_friendly_opponent(this: usiz
     r
 }
 
-/// Comparer for `find_tour_opponent` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_tour_opponent`.
 pub(crate) unsafe extern "thiscall" fn compare_find_tour_opponent(this: usize, club: usize, ordenados: usize, n: u32, band_max: u32, nation: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(IDX_FIND_TOUR_OPPONENT);
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| read_usize(ordenados + 4 * i)));
@@ -615,7 +615,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_tour_opponent(this: usize, c
     r
 }
 
-/// Comparer for `is_own_comp_record` (comparison mode: see the header of motor.rs).
+/// Comparer for `is_own_comp_record`.
 pub(crate) unsafe extern "thiscall" fn compare_is_own_comp_record(friendly: usize, competition: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_OWN_COMP_RECORD)(friendly, competition);
     let n = is_own_comp_record(friendly, competition);
@@ -623,7 +623,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_own_comp_record(friendly: usiz
     r
 }
 
-/// Comparer for `friendly_international_date_set` (comparison mode: see the header of motor.rs).
+/// Comparer for `friendly_international_date_set`.
 pub(crate) unsafe extern "thiscall" fn compare_friendly_international_date_set(data: usize, day: u8, month: u8, duracao: u8, year: u8, continent: u32, competition: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8, u8, u8, u8, u32, u32)>(IDX_FRIENDLY_INTERNATIONAL_DATE_SET);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(data, 0x14)], || o(data, day, month, duracao, year, continent, competition),
@@ -631,7 +631,7 @@ pub(crate) unsafe extern "thiscall" fn compare_friendly_international_date_set(d
     SCOREBOARD.record(igual, || format!("friendly_international_date_set {:x?} x {:x?}", mo, mr));
 }
 
-/// Comparer for `schedule_assign_opponent` (comparison mode: see the header of motor.rs).
+/// Comparer for `schedule_assign_opponent`.
 ///
 /// [pt] Comparador: lado a lado pelas vagas da agenda (até a última possível, 25 · (n + 1) + 4 bytes).
 pub(crate) unsafe extern "thiscall" fn compare_schedule_assign_opponent(this: usize, agenda: usize, opponent: usize) {
@@ -645,7 +645,7 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_assign_opponent(this: us
     SCOREBOARD.record(igual, || format!("schedule_assign_opponent({:x}, {:x}) {:x?} x {:x?}", agenda, opponent, mo, mr));
 }
 
-/// Comparer for `register_comp_objects` (comparison mode: see the header of motor.rs).
+/// Comparer for `register_comp_objects`.
 pub(crate) unsafe extern "thiscall" fn compare_register_comp_objects(friendly: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REGISTER_COMP_OBJECTS);
     let table = *(G_COMP_OBJECT_TABLE as *const usize) as isize;
@@ -655,7 +655,7 @@ pub(crate) unsafe extern "thiscall" fn compare_register_comp_objects(friendly: u
     SCOREBOARD.record(igual, || format!("register_comp_objects {:x?} x {:x?}", mo, mr));
 }
 
-/// Comparer for `update_international_friendlies` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_international_friendlies`.
 ///
 /// On the first day of the year (the lists are emptied, freeing memory) and when there are friendlies to arrange
 /// (0x5cbdf0 creates matches and draws at random), only the original routine runs, checking the plan: the day set at
@@ -683,7 +683,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_international_friendlies(t
     SCOREBOARD.record(igual, || format!("update_international_friendlies(sem amistosos) {:x?} x {:x?}", mo, mr));
 }
 
-/// Comparer for `find_scheduled_friendly_slot` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_scheduled_friendly_slot`.
 ///
 /// [pt] Comparador: pelo valor (as duas voltam o cursor da lista ao começo e param no mesmo registro).
 pub(crate) unsafe extern "thiscall" fn compare_find_scheduled_friendly_slot(this: usize, day: u32, year: u32, club: usize, opponent: usize) -> usize {
@@ -693,7 +693,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_scheduled_friendly_slot(this
     r
 }
 
-/// Comparer for `remove_club_from_ai_plans` (comparison mode: see the header of motor.rs).
+/// Comparer for `remove_club_from_ai_plans`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_club_from_ai_plans(amistosos: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_CLUB_FROM_AI_PLANS);
     let mut regions = vec![];
@@ -722,7 +722,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_from_ai_plans(amistos
     SCOREBOARD.record(igual, || format!("remove_club_from_ai_plans({:#x}) {:x?} x {:x?}", club, mo, mr));
 }
 
-/// Comparer for `pick_tour_nation` (comparison mode: see the header of motor.rs).
+/// Comparer for `pick_tour_nation`.
 pub(crate) unsafe extern "thiscall" fn compare_pick_tour_nation(this: usize, club: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PICK_TOUR_NATION);
     let reg = crate::rng::STATE_REGIONS.to_vec();
@@ -732,7 +732,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_tour_nation(this: usize, clu
     r
 }
 
-/// Comparer for `friendly_international_date_resolve` (comparison mode: see the header of motor.rs).
+/// Comparer for `friendly_international_date_resolve`.
 pub(crate) unsafe extern "thiscall" fn compare_friendly_international_date_resolve(this: usize, year: u32) -> u32 {
     let o = original_fn::<usize>(IDX_FRIENDLY_INTERNATIONAL_DATE_RESOLVE);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 11)], || call_original_with_year(o, this, year),

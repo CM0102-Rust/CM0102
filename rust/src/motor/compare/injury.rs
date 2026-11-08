@@ -1,16 +1,16 @@
 use super::*;
 
-// The comparers of the routines in ../injury.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../injury.rs.
 // [pt] Os comparadores das rotinas de ../injury.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `register_injury` (comparison mode: see the header of motor.rs).
+/// Comparer for `register_injury`.
 ///
 /// [pt] A 0x62be00 so e chamada pela 0x6d0980: a comparacao e a dela (a lista entra nas regioes).
 pub(crate) unsafe extern "thiscall" fn compare_register_injury(this: usize, sheet: usize, kind: *mut u8, chance: *mut u8) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_REGISTER_INJURY)(this, sheet, kind, chance)
 }
 
-/// Comparer for `player_highlight` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_highlight`.
 pub(crate) unsafe extern "thiscall" fn compare_player_highlight(p: usize, code: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_PLAYER_HIGHLIGHT);
     if is_recording_top_level() {
@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p
     SCOREBOARD.record(mo == mr, || format!("post_recovery_news(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, kind as u8, mo.0, mr.0));
 }
 
-/// Comparer for `injury_get_category_name` (comparison mode: see the header of motor.rs).
+/// Comparer for `injury_get_category_name`.
 ///
 /// [pt] Comparador: lado a lado no texto (o tamanho, até 0x100) e na devolução; o tamanho curto (a caixa): só a original.
 pub(crate) unsafe extern "stdcall" fn compare_injury_get_category_name(category: u32, text: usize, size: i32) -> u32 {
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_injury(this: usize, kind_arg:
     r
 }
 
-/// Comparer for `injury_post_injury_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `injury_post_injury_news`.
 ///
 /// [pt] Comparador da 0x62dca0: só a original (entrega a notícia, que não pode sair duas vezes; a cópia leva o ramo no modo
 /// Rust). simplification: sem plano a conferir além do que a original entrega.
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn compare_injury_daily_update(this: usize) 
     *core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS) = None;
 }
 
-/// Comparer for `post_due_recovery_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `post_due_recovery_news`.
 pub(crate) unsafe extern "thiscall" fn compare_post_due_recovery_news(this: usize) {
     if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS)).take() {
         let mo = crate::comparison::MemorySnapshot::read(&reg);
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_due_recovery_news(this: usiz
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_POST_DUE_RECOVERY_NEWS)(this)
 }
 
-/// Comparer for `apply_match_effects` (comparison mode: see the header of motor.rs).
+/// Comparer for `apply_match_effects`.
 ///
 /// Side by side on the random generator's state, on the cursor of the knocks list and on the recovery (+0xa, 4 bytes,
 /// of the 31-byte record at [this]) of each person in the slots.
@@ -232,7 +232,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, 
     SCOREBOARD.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", game, partida, mo, mr));
 }
 
-/// Comparer for `find_match_injury` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_match_injury`.
 ///
 /// [pt] Comparador: lado a lado no cursor da lista e na devolução.
 pub(crate) unsafe extern "thiscall" fn compare_find_match_injury(this: usize, person: usize) -> usize {
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_match_injury(this: usize, pe
     r
 }
 
-/// Comparer for `is_player_on_holiday` (comparison mode: see the header of motor.rs).
+/// Comparer for `is_player_on_holiday`.
 ///
 /// [pt] Comparador: a devolução (só o al).
 pub(crate) unsafe extern "thiscall" fn compare_is_player_on_holiday(this: usize, person: usize) -> u8 {
@@ -255,7 +255,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_player_on_holiday(this: usize,
     r
 }
 
-/// Comparer for `end_player_injury` (comparison mode: see the header of motor.rs).
+/// Comparer for `end_player_injury`.
 ///
 /// [pt] Comparador: lado a lado na entrada (tipo) e no +0xe do registro quando nada sai da rotina (férias e sem notícia);
 /// com o histórico (arquivo) ou a notícia: só a original, conferindo o plano (tipo 0xff e +0xe −1). Sem pessoa: a
@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn compare_end_player_injury(this: usize, pe
     SCOREBOARD.record(igual, || format!("end_player_injury({:x}, {}) {:x?} x {:x?}", person, news, mo, mr));
 }
 
-/// Comparer for `get_player_injury_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_player_injury_status`.
 ///
 /// [pt] Comparador: a original (com a forma do dia) e o estado relido pela regra (injury_status, sem rodar a 0x62c680 de
 /// novo: a original já a rodou).
@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_player_injury_status(this: us
     r
 }
 
-/// Comparer for `add_illness_outbreak` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_illness_outbreak`.
 ///
 /// The original routine draws at random, allocates and reorders: the plan first (the draws and the selection, with the
 /// random generator's state saved and restored); then the original runs.
@@ -336,7 +336,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_illness_outbreak(this: usize,
     });
 }
 
-/// Comparer for `spread_illness_outbreaks` (comparison mode: see the header of motor.rs).
+/// Comparer for `spread_illness_outbreaks`.
 ///
 /// The original routine draws at random and makes people ill (0x62d250, which may add outbreaks): only it runs, and the
 /// plan made beforehand is checked: how many outbreaks were more than five days old (the ones that leave) and,
@@ -369,7 +369,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spread_illness_outbreaks(this: us
     });
 }
 
-/// Comparer for `injury_player_in_close_season` (comparison mode: see the header of motor.rs).
+/// Comparer for `injury_player_in_close_season`.
 ///
 /// [pt] Comparador: pelo valor (datas, a seleção e a temporada só calculam).
 pub(crate) unsafe extern "stdcall" fn compare_injury_player_in_close_season(person: usize) -> u32 {
@@ -379,7 +379,7 @@ pub(crate) unsafe extern "stdcall" fn compare_injury_player_in_close_season(pers
     r
 }
 
-/// Comparer for `init_squad_fitness` (comparison mode: see the header of motor.rs).
+/// Comparer for `init_squad_fitness`.
 ///
 /// [pt] Comparador: lado a lado pelos registros de lesão (31 bytes × [0xae2364]), pelos clubes (as vagas) e pelo clube e
 /// cargo (+0x39..+0x3d) de quem não é jogador nas vagas.
@@ -399,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_squad_fitness(this: usize) {
     SCOREBOARD.record(igual, || format!("init_squad_fitness: memória difere ({} regiões)", regions.len()));
 }
 
-/// Comparer for `init_records` (comparison mode: see the header of motor.rs).
+/// Comparer for `init_records`.
 ///
 /// [pt] Comparador: a original aloca, sorteia e lesiona (0x62d250): roda só ela e confere o que a 0x62d250 não muda: o
 /// vetor alocado e o +0x1e = 50 de todos os registros.
@@ -448,7 +448,7 @@ pub(crate) unsafe extern "thiscall" fn compare_roll_recurring_injury(this: usize
     });
 }
 
-/// Comparer for `reset_player_history` (comparison mode: see the header of motor.rs).
+/// Comparer for `reset_player_history`.
 ///
 /// [pt] Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
 pub(crate) unsafe extern "thiscall" fn compare_reset_player_history(this: usize, person: usize) -> usize {
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn compare_reset_player_history(this: usize,
     a
 }
 
-/// Comparer for `injury_reset_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `injury_reset_player`.
 ///
 /// [pt] Comparador: a 0x68d1f0 libera o item tirado e a 0x62e700 grava o histórico no arquivo: o plano antes (os itens
 /// que ficam, o byte do registro de 79 bytes, os bytes do registro que não mudam); a original roda; confere.
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn compare_injury_reset_player(this: usize, 
     ret
 }
 
-/// Comparer for `recover_injury` (comparison mode: see the header of motor.rs).
+/// Comparer for `recover_injury`.
 pub(crate) unsafe extern "thiscall" fn compare_recover_injury(t: usize, p: *const i32, mark: i16, ritmo: i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, i16, i16)>(IDX_RECOVER_INJURY);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -498,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn compare_recover_injury(t: usize, p: *cons
     SCOREBOARD.record(igual, || format!("recover_injury({:#x}, {:p}, {}, {}) {:x?} x {:x?}", t, p, mark, ritmo, mo, mr));
 }
 
-/// Comparer for `get_condition` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_condition`.
 ///
 /// [pt] Comparador: pelo valor (a 0x62c400 só lê).
 pub(crate) unsafe extern "thiscall" fn compare_get_condition(this: usize, player: usize, em_porcento: u32) -> u16 {
@@ -508,7 +508,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_condition(this: usize, player
     r
 }
 
-/// Comparer for `set_training_load` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_training_load`.
 pub(crate) unsafe extern "thiscall" fn compare_set_training_load(injuries: usize, id: *const i32, value: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, u8)>(IDX_SET_TRAINING_LOAD);
     let a = training_load_byte(injuries, id) as usize;
@@ -551,7 +551,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_fitness(this: usize
     SCOREBOARD.record(igual, || format!("update_player_fitness(pessoa {:x}) {:x?} x {:x?}", person, mo, mr));
 }
 
-/// Comparer for `daily_wear` (comparison mode: see the header of motor.rs).
+/// Comparer for `daily_wear`.
 pub(crate) unsafe extern "thiscall" fn compare_daily_wear(t: usize, id: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_DAILY_WEAR);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -562,7 +562,7 @@ pub(crate) unsafe extern "thiscall" fn compare_daily_wear(t: usize, id: i32) {
     SCOREBOARD.record(igual, || format!("daily_wear({:#x}, {}) {:x?} x {:x?}", t, id, mo, mr));
 }
 
-/// Comparer for `choose_injury_type` (comparison mode: see the header of motor.rs).
+/// Comparer for `choose_injury_type`.
 pub(crate) unsafe extern "thiscall" fn compare_choose_injury_type(injuries: usize, category: i8, severity: i8, player: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8>(IDX_CHOOSE_INJURY_TYPE);
     // simplification: a null player opens the error box of 0x62ed70; does not run twice
@@ -580,7 +580,7 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_injury_type(injuries: usiz
     r
 }
 
-/// Comparer for `injury_compare_entry_dates` (comparison mode: see the header of motor.rs).
+/// Comparer for `injury_compare_entry_dates`.
 pub(crate) unsafe extern "C" fn compare_injury_compare_entry_dates(key: usize, item: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_INJURY_COMPARE_ENTRY_DATES)(key, item);
     let n = injury_compare_entry_dates(key, item);
@@ -596,7 +596,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_recurring_injury_type(this: u
     r
 }
 
-/// Comparer for `injury_severity` (comparison mode: see the header of motor.rs).
+/// Comparer for `injury_severity`.
 pub(crate) unsafe extern "thiscall" fn compare_injury_severity(injuries: usize, kind: i8) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u8>(IDX_INJURY_SEVERITY)(injuries, kind);
     let n = injury_severity(injuries, kind);
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn compare_injury_severity(injuries: usize, 
     r
 }
 
-/// Comparer for `injury_grade` (comparison mode: see the header of motor.rs).
+/// Comparer for `injury_grade`.
 pub(crate) unsafe extern "thiscall" fn compare_injury_grade(injuries: usize, person: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_INJURY_GRADE)(injuries, person);
     let n = injury_grade(injuries, person);

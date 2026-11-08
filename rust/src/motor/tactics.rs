@@ -374,10 +374,10 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             let mut c20 = false;
             if random(word(0x1ea, other)) > random(0x640) {
                 let mo = m + other * 0x36;
-                more((mo + 0xf5c9) as *mut u8);
+                more((mo + engine::SIDE_FOUL_TALLY) as *mut u8);
                 let expulsar = |c: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
                     let p = jog(other, c as i8);
-                    more((p + 0x23) as *mut u8);
+                    more((p + match_player::RED_CARDS) as *mut u8);
                     more((mo + engine::CARDS) as *mut u8);
                     player_left_pitch_with(m, p, 1, call);
                     team_strength(m, other as i8);
@@ -420,7 +420,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 }
                 if random(0x1e) != 0 {
                     c20 = true;
-                    more((mo + 0xf5c6) as *mut u8);
+                    more((mo + engine::SET_PIECES) as *mut u8);
                 } else {
                     local_28 = 1;
                 }

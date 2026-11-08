@@ -502,13 +502,13 @@ pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, news: us
     if news == 0 || comp == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp); // message box: original only
     }
-    let nation = read_usize(comp + competition::CLUB_COMP_NATION);
+    let nation = read_usize(comp + competition::NATION);
     if nation != 0 {
         crate::comparison::branch("cpk_5 noticia da nacao da competicao");
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_CLUB_MANAGERS);
         return f(this, news, nation);
     }
-    let continent = read_usize(comp + competition::CLUB_COMP_CONTINENT);
+    let continent = read_usize(comp + competition::CONTINENT);
     if continent != 0 {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
         return f(this, news, continent);

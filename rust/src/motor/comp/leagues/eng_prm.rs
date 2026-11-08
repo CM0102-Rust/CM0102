@@ -4,20 +4,28 @@ use super::*;
 ///
 /// [pt] O que muda de uma divisão inglesa para outra no construtor.
 pub(crate) struct EnglishDivision {
-    /// a vtable da classe derivada
-    pub(crate) vtabela: usize,
+    /// The vtable of the derived class.
+    ///
+    /// [pt] a vtable da classe derivada
+    pub(crate) vtable: usize,
     /// The minimum stadium capacity (`+0xe2`) and the minimum seated places (`+0xe4`), when the division writes them.
     ///
     /// [pt] a capacidade mínima do estádio (+0xe2) e os lugares sentados mínimos (+0xe4), quando a divisão os grava
-    pub(crate) estadio: Option<(u16, u16)>,
-    /// quantas fases além da liga (+0x2c): 1 = o play-off de acesso (o vetor [+0xc] de 1 fase, malloc de 4)
-    pub(crate) fases: u32,
-    /// set_up_rules e create_table da divisão (mov ecx, this -> thiscall, ret 0; devolvem 0 na falha)
-    pub(crate) regras: usize,
-    pub(crate) tabela: usize,
-    /// o fonte e as linhas das cinco caixas (regras, tabela, jogos, ordem, estatísticas)
-    pub(crate) arquivo: usize,
-    pub(crate) linhas: [u32; 5],
+    pub(crate) stadium: Option<(u16, u16)>,
+    /// How many stages besides the league (+0x2c): 1 = the promotion play-off (the [+0xc] vector of 1 stage, malloc of 4).
+    ///
+    /// [pt] quantas fases além da liga (+0x2c): 1 = o play-off de acesso (o vetor [+0xc] de 1 fase, malloc de 4)
+    pub(crate) extra_stages: u32,
+    /// The division’s set_up_rules and create_table (thiscall, ret 0; they return 0 on failure).
+    ///
+    /// [pt] set_up_rules e create_table da divisão (mov ecx, this -> thiscall, ret 0; devolvem 0 na falha)
+    pub(crate) set_up_rules: usize,
+    pub(crate) create_table: usize,
+    /// The source file and the lines of the five error boxes (rules, table, fixtures, order, statistics).
+    ///
+    /// [pt] o fonte e as linhas das cinco caixas (regras, tabela, jogos, ordem, estatísticas)
+    pub(crate) source_file: usize,
+    pub(crate) box_lines: [u32; 5],
 }
 
 /// The body of the four English division constructors (thiscall(this, year, record), ret 8, SEH frame only for the
@@ -49,8 +57,8 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.regras);
-    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.tabela);
+    let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.set_up_rules);
+    let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.create_table);
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
@@ -58,12 +66,12 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_PREDICTED_POSITIONS);
     base(this);
     write_u32_from_usize(this + 4, registro);
-    write_u32_from_usize(this, p.vtabela);
+    write_u32_from_usize(this, p.vtable);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
     *((this + league::DISCIPLINE_RULE) as *mut u8) = 9; // cql6: the discipline rule of the English leagues
-    if let Some((capacidade, sentados)) = p.estadio {
-        core::ptr::write_unaligned((this + league::REQUIRED_SEATS) as *mut u16, capacidade);
-        core::ptr::write_unaligned((this + league::REQUIRED_CAPACITY) as *mut u16, sentados);
+    if let Some((capacidade, sentados)) = p.stadium {
+        core::ptr::write_unaligned((this + league::REQUIRED_CAPACITY) as *mut u16, capacidade);
+        core::ptr::write_unaligned((this + league::REQUIRED_SEATS) as *mut u16, sentados);
     }
     if carregar(this, 1) != 0 {
         return this;
@@ -71,34 +79,34 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     crate::comparison::branch("cql_6 divisao inglesa nova");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    write_u32_from_usize(this + league::STAGE_COUNT, p.fases as usize);
-    if p.fases != 0 {
+    write_u32_from_usize(this + league::STAGE_COUNT, p.extra_stages as usize);
+    if p.extra_stages != 0 {
         let v = alocar(4);
         write_u32_from_usize(this + league::STAGES, v);
     } else {
         write_u32_from_usize(this + league::STAGES, 0);
     }
-    if regras(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[0]);
+    if set_up_rules(this) == 0 {
+        show_error_at(p.source_file, p.box_lines[0]);
         return this;
     }
-    if tabela(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[1]);
+    if create_table(this) == 0 {
+        show_error_at(p.source_file, p.box_lines[1]);
         return this;
     }
     if jogos(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[2]);
+        show_error_at(p.source_file, p.box_lines[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        show_error_at(p.arquivo, p.linhas[3]);
+        show_error_at(p.source_file, p.box_lines[3]);
         return this;
     }
     let e = novo(0x5ce);
     let s = if e != 0 { estatisticas(e, this) } else { 0 };
     write_u32_from_usize(this + 8, s);
     if s == 0 {
-        show_error_at(p.arquivo, p.linhas[4]);
+        show_error_at(p.source_file, p.box_lines[4]);
         return this;
     }
     previstas(this);
@@ -106,40 +114,40 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
 }
 
 pub(crate) const PREMIER_DIVISION: EnglishDivision = EnglishDivision {
-    vtabela: 0x969d1c,
-    estadio: Some((0x2710, 0x2710)),
-    fases: 0,
-    regras: 0x574b70,
-    tabela: 0x574a20,
-    arquivo: 0x9c43b0,
-    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+    vtable: 0x969d1c,
+    stadium: Some((0x2710, 0x2710)),
+    extra_stages: 0,
+    set_up_rules: 0x574b70,
+    create_table: 0x574a20,
+    source_file: 0x9c43b0,
+    box_lines: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
 };
 pub(crate) const FIRST_DIVISION: EnglishDivision = EnglishDivision {
-    vtabela: 0x969c68,
-    estadio: None,
-    fases: 1, // cql6: the First Division play-off
-    regras: 0x572d90,
-    tabela: 0x572bf0,
-    arquivo: 0x9c4374,
-    linhas: [0x49, 0x50, 0x57, 0x60, 0x68],
+    vtable: 0x969c68,
+    stadium: None,
+    extra_stages: 1, // cql6: the First Division play-off
+    set_up_rules: 0x572d90,
+    create_table: 0x572bf0,
+    source_file: 0x9c4374,
+    box_lines: [0x49, 0x50, 0x57, 0x60, 0x68],
 };
 pub(crate) const ENG_SECOND_DIVISION: EnglishDivision = EnglishDivision {
-    vtabela: 0x969dd0,
-    estadio: None,
-    fases: 1, // cql6: the Second Division play-off
-    regras: 0x576780,
-    tabela: 0x576630,
-    arquivo: 0x9c43e8,
-    linhas: [0x4a, 0x51, 0x58, 0x61, 0x68],
+    vtable: 0x969dd0,
+    stadium: None,
+    extra_stages: 1, // cql6: the Second Division play-off
+    set_up_rules: 0x576780,
+    create_table: 0x576630,
+    source_file: 0x9c43e8,
+    box_lines: [0x4a, 0x51, 0x58, 0x61, 0x68],
 };
 pub(crate) const THIRD_DIVISION: EnglishDivision = EnglishDivision {
-    vtabela: 0x969e84,
-    estadio: Some((0x1770, 0x3e8)),
-    fases: 1,
-    regras: 0x5780c0,
-    tabela: 0x577f70,
-    arquivo: 0x9c4424,
-    linhas: [0x4e, 0x55, 0x5c, 0x65, 0x6d],
+    vtable: 0x969e84,
+    stadium: Some((0x1770, 0x3e8)),
+    extra_stages: 1,
+    set_up_rules: 0x5780c0,
+    create_table: 0x577f70,
+    source_file: 0x9c4424,
+    box_lines: [0x4e, 0x55, 0x5c, 0x65, 0x6d],
 };
 
 /// the Premiership: discipline rule 9 (the English leagues one), minimum ground of 10,000 all seated, only the league
@@ -161,13 +169,13 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 /// fases, a fase atual −1 e as estatísticas em +8.
 pub(crate) unsafe fn compare_english_constructor(name: &str, this: usize, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
+    let mut ok = r == this && read_u32_as_usize(this) == p.vtable && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
         && read_u32_as_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 9;
-    if let Some((c, s)) = p.estadio {
-        ok = ok && core::ptr::read_unaligned((this + league::REQUIRED_SEATS) as *const u16) == c && core::ptr::read_unaligned((this + league::REQUIRED_CAPACITY) as *const u16) == s;
+    if let Some((c, s)) = p.stadium {
+        ok = ok && core::ptr::read_unaligned((this + league::REQUIRED_CAPACITY) as *const u16) == c && core::ptr::read_unaligned((this + league::REQUIRED_SEATS) as *const u16) == s;
     }
     if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
-        ok = ok && read_u32_as_usize(this + league::STAGE_COUNT) == p.fases as usize && (read_u32_as_usize(this + league::STAGES) != 0) == (p.fases != 0);
+        ok = ok && read_u32_as_usize(this + league::STAGE_COUNT) == p.extra_stages as usize && (read_u32_as_usize(this + league::STAGES) != 0) == (p.extra_stages != 0);
     }
     SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + league::STAGE_COUNT), read_u32_as_usize(this + league::STAGES), read_u32_as_usize(this + 8)));
     r
@@ -259,7 +267,7 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Third, 2 turnos e 3 pontos
     v.extend_from_slice(&[(0xbe, 1, 3), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) as u32)]);
     let nation = read_usize(read_usize(this + 4) + 0x5d);
-    let abaixo = if *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) as u32 } else { 0xffff_ffff };
+    let abaixo = if *((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) as u32 } else { 0xffff_ffff };
     v.extend_from_slice(&[(0x20, 4, abaixo), (0x4a, 1, 3), (0x49, 1, 5)]);
     v
 }

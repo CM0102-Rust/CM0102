@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../fine.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../fine.rs.
 // [pt] Os comparadores das rotinas de ../fine.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `post_fine_reaction_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `post_fine_reaction_news`.
 ///
 /// [pt] O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
 /// sorteio). Sem notícia, tudo igual; com notícia (que sorteia e vai às caixas), só [0xae1080].
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "stdcall" fn compare_post_fine_reaction_news(player: us
     SCOREBOARD.record(same, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", player, montaria, mo, mr));
 }
 
-/// Comparer for `post_coach_fine_feedback_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `post_coach_fine_feedback_news`.
 pub(crate) unsafe extern "stdcall" fn compare_post_coach_fine_feedback_news(player: usize, coach: usize, outcome: u32) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_POST_COACH_FINE_FEEDBACK_NEWS)(player, coach, outcome)
 }

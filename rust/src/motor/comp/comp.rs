@@ -452,7 +452,7 @@ pub(crate) unsafe fn find_key_nation_index(nation: usize) -> Option<i8> {
     let mut k: i8 = 0;
     while k < 0x23 {
         let e = *(key_nation_entry(k) as *const usize);
-        if e != 0 && *((e + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && e == nation {
+        if e != 0 && *((e + nation::LEAGUE_SELECTED) as *const u8) != 0 && e == nation {
             return Some(k);
         }
         k += 1;
@@ -492,10 +492,10 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
 /// tabela, 3. Devolve só `al`.
 pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(stadium: usize) -> u8 {
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    if stadium == 0 || u(stadium + stadium::STADIUM_CITY) == 0 || u(u(stadium + stadium::STADIUM_CITY) + 0x1f) == 0 {
+    if stadium == 0 || u(stadium + stadium::CITY) == 0 || u(u(stadium + stadium::CITY) + 0x1f) == 0 {
         return 3;
     }
-    match find_key_nation_index(u(u(stadium + stadium::STADIUM_CITY) + 0x1f)) {
+    match find_key_nation_index(u(u(stadium + stadium::CITY) + 0x1f)) {
         Some(k) => {
             crate::comparison::branch("cqb_12 nacao chave do estadio");
             *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: the active index of the stadium’s nation
@@ -539,7 +539,7 @@ pub(crate) unsafe fn club_callup_record(this: usize, c: usize) -> Option<usize> 
         return None;
     }
     let nation = read_usize(c + club::NATION);
-    if nation == 0 || *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 || read_usize(nation) == read_usize(KEY_NATION_BRAZIL) {
+    if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 || read_usize(nation) == read_usize(KEY_NATION_BRAZIL) {
         return None;
     }
     Some(read_usize(this + 0x20).wrapping_add(6 * id as usize))
@@ -667,9 +667,9 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let row = |nation: usize| (0..0x23usize).find(|&k| {
         let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        n != 0 && *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && n == nation
+        n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) != 0 && n == nation
     });
-    let nation = read_usize(comp + competition::CLUB_COMP_NATION);
+    let nation = read_usize(comp + competition::NATION);
     let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
     if (friendly(read_usize(G_FRIENDLY), comp) != 0 || read_usize(comp) == reservas) && partida != 0 {
         let pc = read_usize(partida + fixture::COMPETITION);
@@ -679,7 +679,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             }
             let home = read_usize(partida + fixture::HOME_CLUB);
             let a = read_usize(home + club::NATION);
-            if a != read_usize(read_usize(partida + fixture::AWAY_CLUB) + 0x53) || *((a + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
+            if a != read_usize(read_usize(partida + fixture::AWAY_CLUB) + 0x53) || *((a + nation::LEAGUE_SELECTED) as *const u8) == 0 {
                 return 3;
             }
             if let Some(k) = row(a) {
@@ -688,7 +688,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             return if national_team(home) != 0 { 0 } else { 3 };
         }
     }
-    if read_usize(comp + competition::CLUB_COMP_NATION) != 0 {
+    if read_usize(comp + competition::NATION) != 0 {
         return match row(nation) {
             Some(k) => *((0xb63d74 + 72 * k) as *const u8), // cpt3: the competition’s key nation
             None => 3,

@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../simulated_stats.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../simulated_stats.rs.
 // [pt] Os comparadores das rotinas de ../simulated_stats.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `simulated_stats_save` (comparison mode: see the header of motor.rs).
+/// Comparer for `simulated_stats_save`.
 ///
 /// [pt] Comparador da 0x84c680: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_simulated_stats_save(this: usize, save: usize) {

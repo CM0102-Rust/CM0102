@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../comp/leagues/ita_ser_c2a.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/leagues/ita_ser_c2a.rs.
 // [pt] Os comparadores das rotinas de ../comp/leagues/ita_ser_c2a.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `ita_ser_c2a_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `ita_ser_c2a_update_staff_records_for_status`.
 ///
 /// Comparer of 0x654180: the records go to the people's history and change reputations and morale (they cannot run
 /// twice), so only the original routine runs.
@@ -21,9 +21,9 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c2a_update_staff_records_
     let (s, f) = (status as u8, stage as u8);
     let mut plan: Option<(usize, u8)> = None;
     if f <= 1 {
-        let n = read_i16(this + 0x3e) as i32;
+        let n = read_i16(this + league::CLUB_COUNT) as i32;
         for i in 0..n.max(0) as usize {
-            let l = read_usize(this + 0xb1) + i * 0x3b;
+            let l = read_usize(this + league::TABLE) + i * 0x3b;
             if read_usize(l) == club && (s == 1 || s == 2 || s == 0xff) {
                 plan = Some((l, match (f, s) {
                     (0, 1) => 0,
@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c2a_update_staff_records_
         }
     }
     let r = o(this, club, status, stage, a4, game, a6);
-    let same = r == 0 && plan.map_or(true, |(l, v)| *((l + 0x37) as *const u8) == v);
+    let same = r == 0 && plan.map_or(true, |(l, v)| *((l + league_table_row::STATUS) as *const u8) == v);
     SCOREBOARD.record(same, || format!("ita_ser_c2a_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, club, s, f, r, plan));
     r
 }

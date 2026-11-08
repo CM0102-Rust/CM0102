@@ -798,9 +798,9 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     // the stadium (”stadium, city”; without a city only the name, without a stadium ”Unknown Stadium”)
     let stadium = rd(p + live_match::STADIUM);
     let r: usize = if stadium != 0 {
-        let city = rd(stadium + stadium::STADIUM_CITY);
+        let city = rd(stadium + stadium::CITY);
         if city != 0 {
-            let (a, b) = (sx(stadium + stadium::STADIUM_GENDER_NAME), sx(city + city::CITY_GENDER_NAME));
+            let (a, b) = (sx(stadium + stadium::GENDER_NAME), sx(city + city::GENDER_NAME));
             text(BUF, 0x9902a4, a, a, b, b, stadium + stadium::NAME, city + 4) as usize
         } else {
             // the original’s strcpy leaves eax and ecx at 0
@@ -1630,9 +1630,9 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
         let g = get_screen_param(0x1f);
         let st = u(g + fixture::STADIUM);
         if st != 0 {
-            let city = u(st + stadium::STADIUM_CITY);
+            let city = u(st + stadium::CITY);
             if city != 0 {
-                let (a, c) = (i8_(st + stadium::STADIUM_GENDER_NAME), i8_(city + city::CITY_GENDER_NAME));
+                let (a, c) = (i8_(st + stadium::GENDER_NAME), i8_(city + city::GENDER_NAME));
                 text(BUF, 0x9902a4, a, a, c, c, st + stadium::NAME, city + 4);
             } else {
                 copy_to_work_text(st + stadium::NAME);

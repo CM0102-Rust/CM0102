@@ -1,6 +1,6 @@
 use super::*;
 
-// The comparers of the routines in ../training_manager.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../training_manager.rs.
 // [pt] Os comparadores das rotinas de ../training_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `update_coach_assignments` (comparison mode: see the header of motor.rs): side by side on the human's
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_coach_assignments(this: us
     SCOREBOARD.record(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", club, tecnico, mo.0, mr.0));
 }
 
-/// Comparer for `reassign_squad_schedules` (comparison mode: see the header of motor.rs).
+/// Comparer for `reassign_squad_schedules`.
 ///
 /// Side by side over the training entry and fitness load of each player of the two squads, the manager's staff
 /// (0x8b2880 at the end) and the clubs' mark +0x244 (0x541f90 via 0x540a50). With an error box (a player with no player
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usiz
     SCOREBOARD.record(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, skip as u16, mo.0, mr.0));
 }
 
-/// Comparer for `get_player_schedule` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_player_schedule`.
 ///
 /// [pt] Comparador: a devolução e [0xae1080] lado a lado; sem pessoa ou sem ficha (a caixa), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_player_schedule(this: usize, p: usize) -> usize {
@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_player_schedule(this: usize, 
     r
 }
 
-/// Comparer for `get_category_level` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_category_level`.
 ///
 /// [pt] Comparador: a devolução inteira (só lê).
 pub(crate) unsafe extern "thiscall" fn compare_get_category_level(this: usize, category: u32) -> u32 {
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_or_restore_training_progre
     SCOREBOARD.record(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
 }
 
-/// Comparer for `get_training_attribute_change` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_training_attribute_change`.
 ///
 /// [pt] Comparador: lado a lado na ficha e na entrada do treino, com a devolução; sem pessoa ou sem ficha, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_training_attribute_change(this: usize, p: usize, attribute: u32) -> u8 {
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_training_attribute_change(thi
     r
 }
 
-/// Comparer for `get_position_aptitude` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_position_aptitude`.
 ///
 /// [pt] Comparador: a devolução inteira (só lê); máscara fora (a caixa), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_position_aptitude(this: usize, p: usize, mask: u32) -> u32 {
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_position_aptitude(this: usize
     r
 }
 
-/// Comparer for `set_type` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_type`.
 ///
 /// [pt] Comparador: lado a lado nos 0x16 bytes do programa (a vaga, os níveis e o tipo).
 pub(crate) unsafe extern "thiscall" fn compare_set_type(this: usize, slot: i8, kind: i8) {
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_type(this: usize, slot: i8, k
     SCOREBOARD.record(igual, || format!("set_type({:x}, {}, {}) {:x?} x {:x?}", this, slot, kind, mo, mr));
 }
 
-/// Comparer for `set_default_schedules` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_default_schedules`.
 ///
 /// [pt] Comparador: lado a lado nos 167 programas (0x651d bytes a partir de this; nomes incluídos) e no marcador de erro.
 pub(crate) unsafe extern "thiscall" fn compare_set_default_schedules(this: usize) {
@@ -208,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_default_schedules(this: usize
     });
 }
 
-/// Comparer for `get_manager_schedule` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_manager_schedule`.
 ///
 /// [pt] Comparador: a devolução, sem os casos de erro (só a original).
 pub(crate) unsafe extern "thiscall" fn compare_get_manager_schedule(this: usize, manager: usize, slot: i8) -> usize {
@@ -222,7 +222,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_manager_schedule(this: usize,
     r
 }
 
-/// Comparer for `get_coaching_factor` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_coaching_factor`.
 ///
 /// [pt] Comparador: a devolução inteira (a consulta só lê; a comissão do humano é lida pelas duas).
 pub(crate) unsafe extern "thiscall" fn compare_get_coaching_factor(this: usize, club: usize, category: i8) -> u32 {
@@ -232,7 +232,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_coaching_factor(this: usize, 
     r
 }
 
-/// Comparer for `get_coach_assignments` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_coach_assignments`.
 ///
 /// [pt] Comparador: a devolução, sem os casos de erro (só a original).
 pub(crate) unsafe extern "thiscall" fn compare_get_coach_assignments(this: usize, manager: usize) -> usize {
@@ -246,7 +246,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_coach_assignments(this: usize
     r
 }
 
-/// Comparer for `get_training_load` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_training_load`.
 ///
 /// [pt] Comparador: a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_get_training_load(this: usize) -> i32 {
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_training_load(this: usize) ->
     r
 }
 
-/// Comparer for `apply_training_progress` (comparison mode: see the header of motor.rs).
+/// Comparer for `apply_training_progress`.
 ///
 /// [pt] Comparador: lado a lado na ficha (+0xf..+0x41) e na entrada de treino do jogador (6 bytes), sem os casos de erro e
 /// sem as pessoas que não são jogadores (só a original).
@@ -272,7 +272,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_training_progress(this: usi
     SCOREBOARD.record(igual, || format!("apply_training_progress(pessoa {:x}, d {:x?}) {:x?} x {:x?}", person, core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
 }
 
-/// Comparer for `find_position_training` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_position_training`.
 ///
 /// [pt] Comparador: a devolução e a saída (reposta entre as duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "thiscall" fn compare_find_position_training(this: usize, person: usize, out: *mut usize) -> i32 {
@@ -291,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_position_training(this: usiz
     r
 }
 
-/// Comparer for `has_fast_position_training` (comparison mode: see the header of motor.rs).
+/// Comparer for `has_fast_position_training`.
 ///
 /// [pt] Comparador: a devolução (as duas só leem; a busca roda pelas duas).
 pub(crate) unsafe extern "thiscall" fn compare_has_fast_position_training(this: usize, person: usize) -> u32 {
@@ -301,7 +301,7 @@ pub(crate) unsafe extern "thiscall" fn compare_has_fast_position_training(this: 
     r
 }
 
-/// Comparer for `advance_week_counter` (comparison mode: see the header of motor.rs).
+/// Comparer for `advance_week_counter`.
 ///
 /// [pt] Comparador: lado a lado na semana do treino, com a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_advance_week_counter(this: usize, day: *const i16) -> i32 {
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn compare_advance_week_counter(this: usize,
     r
 }
 
-/// Comparer for `init_player_entries` (comparison mode: see the header of motor.rs).
+/// Comparer for `init_player_entries`.
 ///
 /// [pt] Comparador: a original aloca (não pode rodar duas vezes): roda só ela e confere cada ficha pela regra (a vaga 6
 /// ou 1 pela nota de goleiro e o bit 0x20 do +5 apagado).

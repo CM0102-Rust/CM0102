@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../award/month_ratings.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../award/month_ratings.rs.
 // [pt] Os comparadores das rotinas de ../award/month_ratings.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `record_match_ratings` (comparison mode: see the header of motor.rs).
+/// Comparer for `record_match_ratings`.
 ///
 /// [pt] O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_match_ratings(this: usize,
     SCOREBOARD.record(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
-/// Comparer for `add_player_rating` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_player_rating`.
 ///
 /// [pt] O comparador da nota do mês: lado a lado (cabeçalho e os registros até o novo) quando a tabela não precisa crescer;
 /// senão só a original (realloc).
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_rating(this: usize, e:
     SCOREBOARD.record(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", read_i32(e), mo, mr));
 }
 
-/// Comparer for `find_best_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_best_player`.
 ///
 /// [pt] O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
 pub(crate) unsafe extern "thiscall" fn compare_find_best_player(this: usize, league: i32, age: u32) -> usize {

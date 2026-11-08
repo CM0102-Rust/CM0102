@@ -350,10 +350,10 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
                     let row = read_u32(c + club::LAST_DIVISION) as usize;
                     if row != 0 {
                         crate::comparison::branch("cqi_2 nivel da divisao");
-                        core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((row + competition::CLUB_COMP_REPUTATION) as *const u16)); // cqi2: the division level
+                        core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((row + competition::REPUTATION) as *const u16)); // cqi2: the division level
                         *((r + 0xb) as *mut u8) = read_u8(c + club::LAST_POSITION);
                         let comp = read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize;
-                        if comp == 0 || read_u8(comp + nation::NATION_LEAGUE_SELECTED) == 0 {
+                        if comp == 0 || read_u8(comp + nation::LEAGUE_SELECTED) == 0 {
                             core::ptr::write_unaligned((c + club::LAST_DIVISION) as *mut u32, 0);
                             *((c + club::LAST_POSITION) as *mut u8) = 0;
                         }
@@ -667,7 +667,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                 loop {
                     let mut tentar_de_novo = false;
                     let c = if chosen == 0 {
-                        if read_u8(nation + nation::NATION_LEAGUE_SELECTED) == 0 {
+                        if read_u8(nation + nation::LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
                             let cup = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + (row(nation) as i32 * 0x48) as usize) as usize;
@@ -722,7 +722,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                             }
                         }
                     } else if chosen == 1 {
-                        if read_u8(nation + nation::NATION_LEAGUE_SELECTED) == 0 {
+                        if read_u8(nation + nation::LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
                             let cup = read_u32(G_LEAGUE_WORLD_CUP_SECOND_CUP_COMP + (row(nation) as i32 * 0x48) as usize) as usize;

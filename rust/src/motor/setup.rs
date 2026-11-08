@@ -823,7 +823,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
             while league < G_KEY_NATION_SETUP_FUNC_LOOP_END {
                 let n = u(league - 8) as usize;
                 if n != 0 && u(league) != 0 && (procurar(v, name_of_nation(n) as usize) != 0 || nation_home(n, v) != 0) {
-                    let m = (n + nation::NATION_LEAGUE_SELECTED) as *mut u8;
+                    let m = (n + nation::LEAGUE_SELECTED) as *mut u8;
                     let mark = ((!(u(opcoes() + 4) as u8) & 2) | 1) << 1;
                     if *m == 0 {
                         *m = mark;
@@ -850,7 +850,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
             while league < G_KEY_NATION_SETUP_FUNC_LOOP_END {
                 let n = u(league - 8) as usize;
                 if n != 0 && u(league) != 0 && (procurar(v, name_of_nation(n) as usize) != 0 || nation_home(n, v) != 0) {
-                    let m = (n + nation::NATION_LEAGUE_SELECTED) as *mut u8;
+                    let m = (n + nation::LEAGUE_SELECTED) as *mut u8;
                     if *m == 0 {
                         *m = ((!(u(opcoes() + 4) as u8) & 2) << 1) | 1;
                         *(G_NATIONS_TO_LOAD_COUNT as *mut i32) += 1;
@@ -905,7 +905,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         return 0;
     }
     let default = u(G_MAIN_NATION) as usize;
-    if default == 0 || *((default + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 == 0 {
+    if default == 0 || *((default + nation::LEAGUE_SELECTED) as *const u8) & 2 == 0 {
         return 0;
     }
     *(G_NEW_GAME_SETUP_DONE_FLAG as *mut u32) = 1;
@@ -958,7 +958,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
             continue;
         }
         let nation = core::ptr::read_unaligned((c + club::NATION) as *const usize);
-        if nation == 0 || *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 == 0 || accepted(c) == 0 {
+        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) & 2 == 0 || accepted(c) == 0 {
             continue;
         }
         break c;
@@ -1575,12 +1575,12 @@ pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
         setup_warning(0x3b57);
         return;
     }
-    if read_item(0xae233c, 1, 1, z) != 1 {
+    if read_item(G_FIFA_TRANSFER_RULES_IN_FORCE, 1, 1, z) != 1 {
         setup_warning(0x3b5d);
         close_item(&mut z);
         return;
     }
-    if read_item(0xa83608, 1, 1, z) != 1 {
+    if read_item(G_MAX_CONTRACT_LENGTH_YEARS, 1, 1, z) != 1 {
         setup_warning(0x3b63);
         close_item(&mut z);
         return;

@@ -298,12 +298,12 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if national_team(club) != 0 {
         let nation = read_ptr(field as usize + 0x38);
-        if nation != 0 && read_u32(nation + city::CITY_NATION) == read_u32(club + club::NATION) {
+        if nation != 0 && read_u32(nation + city::NATION) == read_u32(club + club::NATION) {
             return 1;
         }
         let home = read_ptr(game + fixture::HOME_CLUB);
         let other = if home == club { read_ptr(game + fixture::AWAY_CLUB) } else { home };
-        if nation != 0 && read_u32(nation + city::CITY_NATION) == read_u32(other + club::NATION) {
+        if nation != 0 && read_u32(nation + city::NATION) == read_u32(other + club::NATION) {
             return 2;
         }
         return 3;

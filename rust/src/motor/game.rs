@@ -93,12 +93,12 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
             write_f64(e + 4, s);
             if dez {
                 let mut h = nation_coefficient_history(na);
-                let mut mark = read_u8(na + nation::NATION_GAMES_PLAYED);
+                let mut mark = read_u8(na + nation::GAMES_PLAYED);
                 roll_coefficient_year(na, &mut h, &mut mark);
                 for (k, x) in h.iter().enumerate() {
                     write_f64(na + nation::FIFACOEFFICIENT91 + k * 8, *x);
                 }
-                *((na + nation::NATION_GAMES_PLAYED) as *mut u8) = mark;
+                *((na + nation::GAMES_PLAYED) as *mut u8) = mark;
             }
             i = i.wrapping_add(1);
             na += 0x122;
@@ -337,9 +337,9 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
     if friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM) + 5) != 0 && friendly_random(read_i8_as_i32(p + staff::TEMPERAMENT) + 5) != 0 && friendly_random(read_i8_as_i32(p + staff::PRESSURE) + 5) != 0 {
         return;
     }
-    let mut e = read_i8_as_i32(p + staff::PROFESSIONALISM) + (read_i8_as_i32(p + staff::PRESSURE) + read_i8_as_i32(p + staff::LOYALITY)) + (read_i8_as_i32(p + staff::SPORTSMANSHIP) + read_i8_as_i32(p + staff::AGE));
+    let mut e = read_i8_as_i32(p + staff::PROFESSIONALISM) + (read_i8_as_i32(p + staff::PRESSURE) + read_i8_as_i32(p + staff::LOYALTY)) + (read_i8_as_i32(p + staff::SPORTSMANSHIP) + read_i8_as_i32(p + staff::AGE));
     crate::comparison::branch("cps_5 tecnico sorteado");
-    if friendly_random(read_i8_as_i32(p + staff::LOYALITY)) == 0 { // cps5: o primeiro desconto
+    if friendly_random(read_i8_as_i32(p + staff::LOYALTY)) == 0 { // cps5: o primeiro desconto
         e -= 3;
     }
     if friendly_random(read_i8_as_i32(p + staff::PRESSURE)) == 0 {

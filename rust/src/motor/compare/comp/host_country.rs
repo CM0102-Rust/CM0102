@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../comp/host_country.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/host_country.rs.
 // [pt] Os comparadores das rotinas de ../comp/host_country.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `init_default_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `init_default_table`.
 ///
 /// [pt] Lado a lado (a cópia sem contar os sorteios) pela tabela (conta +4 × 0x22 bytes), pelo estado do sorteador e por
 /// [0xb67a34].
@@ -19,17 +19,17 @@ pub(crate) unsafe extern "thiscall" fn compare_init_default_table(this: usize) {
     SCOREBOARD.record(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
 }
 
-/// Comparer for `post_host_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `post_host_news`.
 pub(crate) unsafe extern "thiscall" fn compare_post_host_news(this: usize, list: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_HOST_NEWS)(this, list)
 }
 
-/// Comparer for `load_temp_file` (comparison mode: see the header of motor.rs).
+/// Comparer for `load_temp_file`.
 pub(crate) unsafe extern "thiscall" fn compare_load_temp_file(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_LOAD_TEMP_FILE)(this)
 }
 
-/// Comparer for `find_hosts` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_hosts`.
 ///
 /// [pt] A devolução (o al) e as duas saídas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn compare_find_hosts(this: usize, comp: u32, year: u32, a: *mut u32, b: *mut u32, default: u32) -> u32 {
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_hosts(this: usize, comp: u32
     r
 }
 
-/// Comparer for `find_next_hosts` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_next_hosts`.
 ///
 /// [pt] A devolução (o al) e as duas saídas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn compare_find_next_hosts(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
@@ -57,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_next_hosts(this: usize, comp
     r
 }
 
-/// Comparer for `host_country_daily_update` (comparison mode: see the header of motor.rs).
+/// Comparer for `host_country_daily_update`.
 ///
 /// [pt] Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
 pub(crate) unsafe extern "thiscall" fn compare_host_country_daily_update(this: usize, today: usize) {
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn compare_host_country_daily_update(this: u
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HOST_COUNTRY_DAILY_UPDATE)(this, today)
 }
 
-/// Comparer for `save_temp_file` (comparison mode: see the header of motor.rs).
+/// Comparer for `save_temp_file`.
 ///
 /// [pt] Comparador da 0x5fb320: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_save_temp_file(this: usize) {

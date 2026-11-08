@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../club_records.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../club_records.rs.
 // [pt] Os comparadores das rotinas de ../club_records.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `update_league_position_records` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_league_position_records`.
 ///
 /// The original routine runs first (it sorts the tables, which 0x6827d0 checks on its own) and the copy afterwards, as
 /// a dry run (without sorting), from the same records: the first 14 bytes of each chain club's season and all-time
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
     ro
 }
 
-/// Comparer for `send_record_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `send_record_news`.
 ///
 /// [pt] Comparador: a cópia em ensaio (sem preencher nem entregar, sem soltar) roda antes, enquanto a fila está viva, e a
 /// original depois a partir do mesmo cabeçalho (+0x24..+0x30): o cabeçalho e a devolução.
@@ -82,7 +82,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_record_news(this: usize) -> 
     ro
 }
 
-/// Comparer for `pick_fans_player_of_year` (comparison mode: see the header of motor.rs).
+/// Comparer for `pick_fans_player_of_year`.
 ///
 /// [pt] Comparador: lado a lado pela referência do escolhido (registro +0x371, 0x18 bytes) e pela devolução.
 pub(crate) unsafe extern "thiscall" fn compare_pick_fans_player_of_year(this: usize, club: usize, record: usize) -> u32 {
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_fans_player_of_year(this: us
     r
 }
 
-/// Comparer for `update_transfer_fee_records` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_transfer_fee_records`.
 ///
 /// The original routine puts items in the news queue (it reallocates) and the liking draws at random, so: the plan
 /// first (the four records created in the same order as the original, and the expected paid and received records); the
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     r
 }
 
-/// Comparer for `add_transfer_totals` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_transfer_totals`.
 ///
 /// The records may be created (realloc) and the news item reallocates: the four records are requested beforehand, in
 /// the original's order (seller: season, all-time; buyer: season, all-time; the second time only finds them), and if
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_totals(this: usize, 
     r
 }
 
-/// Comparer for `club_records_update_career_records` (comparison mode: see the header of motor.rs).
+/// Comparer for `club_records_update_career_records`.
 ///
 /// [pt] Comparador: o registro de sempre é pedido antes (pode ser criado; a segunda vez só acha); lado a lado pelos dois
 /// recordes e as referências (+0x247 a +0x27b). Nulos ou sem registro: só a original (a caixa).
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn compare_club_records_update_career_record
     r
 }
 
-/// Comparer for `update_season_rating_record` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_season_rating_record`.
 ///
 /// [pt] Comparador: lado a lado pelo recorde de nota (+0x1f1 a +0x210 do registro da temporada, pedido antes sem criar).
 pub(crate) unsafe extern "thiscall" fn compare_update_season_rating_record(this: usize, club: usize) -> u32 {
@@ -217,7 +217,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_season_rating_record(this:
     r
 }
 
-/// Comparer for `get_all_time_record` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_all_time_record`.
 ///
 /// [pt] Comparador: a criação realoca e não pode rodar duas vezes: o plano da cópia antes, a original roda, confere.
 pub(crate) unsafe extern "thiscall" fn compare_get_all_time_record(this: usize, club: usize, create: u32) -> usize {
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_season_record(this: usize, cl
     r
 }
 
-/// Comparer for `queue_record_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `queue_record_news`.
 ///
 /// [pt] Comparador: a original acrescenta (pode realocar); confere a conta, o item novo (id, tipo) e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_queue_record_news(this: usize, id: u32, kind: u32) -> u32 {
@@ -262,7 +262,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_record_news(this: usize, id
     r
 }
 
-/// Comparer for `offer_breaks_fee_record` (comparison mode: see the header of motor.rs).
+/// Comparer for `offer_breaks_fee_record`.
 ///
 /// [pt] Comparador: a 0x452710 cria os recordes do clube na primeira vez (a original primeiro; a cópia acha os mesmos):
 /// pelo valor.
@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn compare_offer_breaks_fee_record(this: usi
     r
 }
 
-/// Comparer for `transfer_fee_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `transfer_fee_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_transfer_fee_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_FEE_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || transfer_fee_record_construct(this));
@@ -281,7 +281,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_fee_record_construct(thi
     r
 }
 
-/// Comparer for `transfer_fee_record_construct_2` (comparison mode: see the header of motor.rs).
+/// Comparer for `transfer_fee_record_construct_2`.
 pub(crate) unsafe extern "thiscall" fn compare_transfer_fee_record_construct_2(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_FEE_RECORD_CONSTRUCT_2);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || transfer_fee_record_construct_2(this));
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_fee_record_construct_2(t
     r
 }
 
-/// Comparer for `run_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `run_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || run_record_construct(this));
@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn compare_run_record_construct(this: usize)
     r
 }
 
-/// Comparer for `won_run_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `won_run_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_won_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_WON_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || won_run_record_construct(this));
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn compare_won_run_record_construct(this: us
     r
 }
 
-/// Comparer for `lost_run_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `lost_run_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_lost_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_LOST_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || lost_run_record_construct(this));
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn compare_lost_run_record_construct(this: u
     r
 }
 
-/// Comparer for `unbeaten_run_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `unbeaten_run_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_unbeaten_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_UNBEATEN_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || unbeaten_run_record_construct(this));
@@ -321,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn compare_unbeaten_run_record_construct(thi
     r
 }
 
-/// Comparer for `winless_run_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `winless_run_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_winless_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_WINLESS_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || winless_run_record_construct(this));
@@ -329,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn compare_winless_run_record_construct(this
     r
 }
 
-/// Comparer for `goals_in_match_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `goals_in_match_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_goals_in_match_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_GOALS_IN_MATCH_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x21)], || o(this), || goals_in_match_record_construct(this));
@@ -337,7 +337,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goals_in_match_record_construct(t
     r
 }
 
-/// Comparer for `youngest_player_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `youngest_player_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_youngest_player_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_YOUNGEST_PLAYER_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || youngest_player_record_construct(this));
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn compare_youngest_player_record_construct(
     r
 }
 
-/// Comparer for `oldest_player_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `oldest_player_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_oldest_player_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_OLDEST_PLAYER_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || oldest_player_record_construct(this));
@@ -353,7 +353,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oldest_player_record_construct(th
     r
 }
 
-/// Comparer for `rating_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `rating_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_rating_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RATING_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1f)], || o(this, source), || rating_record_assign(this, source));
@@ -361,7 +361,7 @@ pub(crate) unsafe extern "thiscall" fn compare_rating_record_assign(this: usize,
     r
 }
 
-/// Comparer for `man_of_match_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `man_of_match_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_man_of_match_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MAN_OF_MATCH_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1b)], || o(this, source), || man_of_match_record_assign(this, source));
@@ -369,7 +369,7 @@ pub(crate) unsafe extern "thiscall" fn compare_man_of_match_record_assign(this: 
     r
 }
 
-/// Comparer for `discipline_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `discipline_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_discipline_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_DISCIPLINE_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1c)], || o(this, source), || discipline_record_assign(this, source));
@@ -377,7 +377,7 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_record_assign(this: us
     r
 }
 
-/// Comparer for `count_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `count_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_count_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COUNT_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this, source), || count_record_assign(this, source));
@@ -385,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn compare_count_record_assign(this: usize, 
     r
 }
 
-/// Comparer for `fans_player_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `fans_player_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_fans_player_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FANS_PLAYER_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this, source), || fans_player_record_assign(this, source));
@@ -393,7 +393,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fans_player_record_assign(this: u
     r
 }
 
-/// Comparer for `tally_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `tally_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_tally_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TALLY_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x19)], || o(this), || tally_record_construct(this));
@@ -401,7 +401,7 @@ pub(crate) unsafe extern "thiscall" fn compare_tally_record_construct(this: usiz
     r
 }
 
-/// Comparer for `count_record_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `count_record_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_count_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_COUNT_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this), || count_record_construct(this));
@@ -409,7 +409,7 @@ pub(crate) unsafe extern "thiscall" fn compare_count_record_construct(this: usiz
     r
 }
 
-/// Comparer for `transfer_fee_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `transfer_fee_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_transfer_fee_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRANSFER_FEE_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x29)], || o(this, source), || transfer_fee_record_assign(this, source));
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_fee_record_assign(this: 
     r
 }
 
-/// Comparer for `goals_in_match_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `goals_in_match_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_goals_in_match_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GOALS_IN_MATCH_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x38)], || o(this, source), || goals_in_match_record_assign(this, source));
@@ -425,7 +425,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goals_in_match_record_assign(this
     r
 }
 
-/// Comparer for `record_holder_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `record_holder_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_record_holder_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RECORD_HOLDER_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x18)], || o(this, source), || record_holder_assign(this, source));
@@ -433,7 +433,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_holder_assign(this: usize,
     r
 }
 
-/// Comparer for `match_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_match_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1f)], || o(this, source), || match_record_assign(this, source));
@@ -441,7 +441,7 @@ pub(crate) unsafe extern "thiscall" fn compare_match_record_assign(this: usize, 
     r
 }
 
-/// Comparer for `run_record_assign` (comparison mode: see the header of motor.rs).
+/// Comparer for `run_record_assign`.
 pub(crate) unsafe extern "thiscall" fn compare_run_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RUN_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this, source), || run_record_assign(this, source));
@@ -449,7 +449,7 @@ pub(crate) unsafe extern "thiscall" fn compare_run_record_assign(this: usize, so
     r
 }
 
-/// Comparer for `reset_records` (comparison mode: see the header of motor.rs).
+/// Comparer for `reset_records`.
 pub(crate) unsafe extern "C" fn compare_reset_records(r: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_RESET_RECORDS);
     let reg = if r == 0 { vec![] } else { vec![(r, 0x381)] };
@@ -458,7 +458,7 @@ pub(crate) unsafe extern "C" fn compare_reset_records(r: usize) -> u32 {
     a
 }
 
-/// Comparer for `record_holder_construct` (comparison mode: see the header of motor.rs).
+/// Comparer for `record_holder_construct`.
 pub(crate) unsafe extern "thiscall" fn compare_record_holder_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_RECORD_HOLDER_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + record_holder::DATE, 8)], || o(this), || record_holder_construct(this));

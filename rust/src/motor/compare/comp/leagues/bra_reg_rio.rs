@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../comp/leagues/bra_reg_rio.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/leagues/bra_reg_rio.rs.
 // [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_rio.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `construct_bra_reg_rio` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_bra_reg_rio`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_rio(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_RIO);
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_rio", this, year, record, &CARIOCA_CHAMPIONSHIP, || o(this, year, record))
@@ -27,19 +27,19 @@ pub(crate) unsafe extern "C" fn compare_cqt4_atualizar_media_de_publico(league: 
     SCOREBOARD.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", league));
 }
 
-/// Comparer for `bra_reg_rio_create_half_season_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_reg_rio_create_half_season_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_create_half_season_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_REG_RIO_CREATE_HALF_SEASON_STAGE);
     compare_half_season_stage("bra_reg_rio_create_half_season_stage", this, k, || o(this, k))
 }
 
-/// Comparer for `bra_reg_rio_start_new_season` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_reg_rio_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_START_NEW_SEASON);
     compare_new_season("bra_reg_rio_start_new_season", this, || o(this))
 }
 
-/// Comparer for `bra_reg_rio_advance_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_reg_rio_advance_stage`.
 ///
 /// The next-stage comparer: only the original routine runs (simplification: on reaching 2 it builds the final, which
 /// allocates and draws; it cannot run twice), checking the plan.
@@ -51,15 +51,15 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_start_new_season(this
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_advance_stage(this: usize) {
-    let before = read_usize(this + 0x30) as i32;
-    let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
+    let before = read_usize(this + league::CURRENT_STAGE) as i32;
+    let last = before >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_RIO_ADVANCE_STAGE)(this);
-    let after = read_usize(this + 0x30) as i32;
+    let after = read_usize(this + league::CURRENT_STAGE) as i32;
     let same = if last { after == before } else if before + 1 == 2 { after == 2 || after == 1 } else { after == before + 1 };
     SCOREBOARD.record(same, || format!("bra_reg_rio_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
-/// Comparer for `bra_reg_rio_create_final_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_reg_rio_create_final_stage`.
 ///
 /// The final's comparer: only the original routine runs (it allocates the list, the table and the stage and draws the
 /// round), checking the plan made beforehand: the champions of the two halves.
@@ -76,23 +76,23 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_create_final_stage(th
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_RIO_CREATE_FINAL_STAGE)(this);
     let same = if a == b {
-        let mark = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
-        let in_league = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
-            let row = read_usize(this + 0xb1) + i * 0x3b;
-            read_usize(row) != a || *((row + 0x37) as *const u8) == 5
+        let mark = |k: usize| *((read_usize(read_usize(read_usize(this + league::STAGES) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
+        let in_league = (0..read_i16(this + league::CLUB_COUNT).max(0) as usize).all(|i| {
+            let row = read_usize(this + league::TABLE) + i * 0x3b;
+            read_usize(row) != a || *((row + league_table_row::STATUS) as *const u8) == 5
         });
-        read_usize(this + 0x30) == 1 && read_usize(this + 0x2c) == 2 && mark(0) && mark(1) && in_league
+        read_usize(this + league::CURRENT_STAGE) == 1 && read_usize(this + league::STAGE_COUNT) == 2 && mark(0) && mark(1) && in_league
     } else {
-        let stage = read_usize(read_usize(this + 0xc) + 8);
+        let stage = read_usize(read_usize(this + league::STAGES) + 8);
         if stage == 0 {
             false
         } else {
-            let l = read_usize(stage + 0xa7);
+            let l = read_usize(stage + cup::TEAM_TABLE);
             let (x, y) = (read_usize(l), read_usize(l + 6));
-            read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
+            read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + league::CURRENT_STAGE) == 2
         }
     };
-    SCOREBOARD.record(same, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
+    SCOREBOARD.record(same, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + league::CURRENT_STAGE), read_usize(this + league::STAGE_COUNT)));
 }
 
 /// Comparer for `bra_reg_rio_record_season_honours` (comparison mode: see the header of motor.rs): the comparer of the
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_record_season_honours
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_RECORD_SEASON_HONOURS)(this)
 }
 
-/// Comparer for `bra_reg_rio_create_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_reg_rio_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_CREATE_TABLE);
     bra_reg_rio_compare_state_league_table("bra_reg_rio_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, || o(this))

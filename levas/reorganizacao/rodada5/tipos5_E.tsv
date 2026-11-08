@@ -151,11 +151,11 @@ database.rs	match_wrap_up_with	meu	TClub
 database.rs	match_wrap_up_with	person	TStaff
 database.rs	partner_club	club	TClub
 database.rs	aggregate_score	partida	fixture
-database.rs	favourite_colleague_score	contract	staff_contract
+database.rs	favourite_colleague_score	contract	TContract
 database.rs	favourite_colleague_score	person	TStaff
 database.rs	staff_is_best_favoured_candidate	person	TStaff
 database.rs	staff_pick_favoured_team_mate	person	TStaff
-database.rs	staff_pick_favoured_team_mate	contract	staff_contract
+database.rs	staff_pick_favoured_team_mate	contract	TContract
 database.rs	database_staff_matches_names	n	TNames
 database.rs	database_staff_matches_names	person	TStaff
 database.rs	nation_get_english_three_letter_name	t	english_name_tables

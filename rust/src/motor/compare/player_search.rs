@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../player_search.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../player_search.rs.
 // [pt] Os comparadores das rotinas de ../player_search.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `player_search_record_scouted_club_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_search_record_scouted_club_match`.
 ///
 /// Comparer of 0x7bd310: side by side over the 50 slots (the whole record).
 ///
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_scout_match(this: u
         return o(this, game, result, out);
     }
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
-    let before = (read_usize(this + 0x1a5), read_usize(this + 0x1a9));
+    let before = (read_usize(this + player_search_fields::SCOUTING_START_DATE), read_usize(this + 0x1a9));
     SCOUT_MATCH_DRY_RUN = true;
     SCOUT_MATCH_WOULD_REPORT = false;
     let n = crate::rng::without_counting(|| player_search_scout_match(this, game, result, out));
@@ -56,16 +56,16 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_scout_match(this: u
         let a = more(G_CURRENT_DATE, t.as_mut_ptr() as usize, 1);
         (read_i16(a + 2) as u16, read_i16(a))
     } else {
-        (read_i16(this + 0x1a7) as u16, read_i16(this + 0x1a5))
+        (read_i16(this + player_search_fields::SCOUTING_START_YEAR) as u16, read_i16(this + player_search_fields::SCOUTING_START_DATE))
     };
     let r = o(this, game, result, out);
-    let after = (read_i16(this + 0x1a7) as u16, read_i16(this + 0x1a5));
+    let after = (read_i16(this + player_search_fields::SCOUTING_START_YEAR) as u16, read_i16(this + player_search_fields::SCOUTING_START_DATE));
     SCOREBOARD.record(r == n && after == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
         this, game, r, n, before, previsto, after));
     r
 }
 
-/// Comparer for `contains_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `contains_player`.
 ///
 /// [pt] Comparador da 0x7af600: pela devolução (só lê; as datas e a chave são locais). Pessoa nula: a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_contains_player(this: usize, person: usize) -> u32 {
@@ -79,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contains_player(this: usize, pers
     r
 }
 
-/// Comparer for `player_search_find_or_claim_player_slot` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_search_find_or_claim_player_slot`.
 ///
 /// [pt] Comparador da 0x7bd700: sem `reservar`, pela devolução (só lê); com ele, lado a lado nas 50 vagas e na devolução.
 pub(crate) unsafe extern "thiscall" fn compare_player_search_find_or_claim_player_slot(this: usize, person: usize, reservar: u32) -> usize {
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_find_or_claim_playe
     r
 }
 
-/// Comparer for `player_search_get_club_target_rating` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_search_get_club_target_rating`.
 ///
 /// [pt] Comparador: pura (lê o clube, o elenco e as finanças; grava só `*base`): as duas sobre bases próprias.
 pub(crate) unsafe extern "C" fn compare_player_search_get_club_target_rating(club: usize, base: *mut i32, forcada: *const i16) -> i32 {
@@ -113,7 +113,7 @@ pub(crate) unsafe extern "C" fn compare_player_search_get_club_target_rating(clu
     r
 }
 
-/// Comparer for `player_search_slot_get_match_entry` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_search_slot_get_match_entry`.
 ///
 /// [pt] Comparador: pura: compara a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_slot_get_match_entr
     r
 }
 
-/// Comparer for `player_search_slot_sum_goals` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_search_slot_sum_goals`.
 ///
 /// [pt] Comparador: pura: compara a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_player_search_slot_sum_goals(this: usize) -> u16 {
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_slot_sum_goals(this
     r
 }
 
-/// Comparer for `set_slot_index` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_slot_index`.
 pub(crate) unsafe extern "thiscall" fn compare_set_slot_index(search: usize, slot: i8) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_SET_SLOT_INDEX);
     if !(0..=9).contains(&slot) {
@@ -144,28 +144,28 @@ pub(crate) unsafe extern "thiscall" fn compare_set_slot_index(search: usize, slo
     ro
 }
 
-/// Comparer for `set_list_type` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_list_type`.
 pub(crate) unsafe extern "thiscall" fn compare_set_list_type(search: usize, kind: i8) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_SET_LIST_TYPE);
     if !(1..=4).contains(&kind) {
         return o(search, kind);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(search + 0xa, 1)], || o(search, kind), || set_list_type(search, kind));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(search + player_search_fields::LIST_TYPE, 1)], || o(search, kind), || set_list_type(search, kind));
     SCOREBOARD.record(igual && ro == rr, || format!("set_list_type({}) original={} rust={} {:x?} x {:x?}", kind, ro, rr, mo, mr));
     ro
 }
 
-/// Comparer for `set_scout` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_scout`.
 ///
 /// [pt] Comparador: lado a lado pelo olheiro e as missões (+0x174 a +0x199; a 0x53e990 só lê).
 pub(crate) unsafe extern "thiscall" fn compare_set_scout(this: usize, scout: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_SCOUT);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x174, 0x25)], || o(this, scout), || set_scout(this, scout));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + player_search_fields::SCOUT_NAME_REF, 0x25)], || o(this, scout), || set_scout(this, scout));
     SCOREBOARD.record(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", scout, mo, mr));
     r
 }
 
-/// Comparer for `set_manager` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_manager`.
 pub(crate) unsafe extern "thiscall" fn compare_set_manager(search: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_MANAGER);
     if person == 0 || *(person as *const i32) < *(G_STAFF_COUNT as *const i32) - 0x10 {
@@ -176,7 +176,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_manager(search: usize, person
     ro
 }
 
-/// Comparer for `get_scout_assignment` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_scout_assignment`.
 ///
 /// [pt] Comparador: lado a lado pelas seis saídas (a 0x53e990 só lê); com a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_scout_assignment(this: usize, club: *mut u32, nation: *mut u32, region: *mut u8, comp: *mut u32, base: *mut u32, opponent: *mut u32) -> u32 {
@@ -191,12 +191,12 @@ pub(crate) unsafe extern "thiscall" fn compare_get_scout_assignment(this: usize,
     r
 }
 
-/// Comparer for `scout_covers_nation` (comparison mode: see the header of motor.rs).
+/// Comparer for `scout_covers_nation`.
 ///
 /// [pt] Comparador: lado a lado pelo valor e pelas missões +0x18c..+0x1a0 (a 0x7aefd0 as copia sobre elas mesmas).
 pub(crate) unsafe extern "thiscall" fn compare_scout_covers_nation(this: usize, nation: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCOUT_COVERS_NATION);
-    let reg = [(this + 0x18c, 0x15)];
+    let reg = [(this + player_search_fields::ASSIGNED_NATION, 0x15)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nation), || scout_covers_nation(this, nation));
     SCOREBOARD.record(igual && r == n, || format!("scout_covers_nation(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nation, r, n, mo, mr));
     r

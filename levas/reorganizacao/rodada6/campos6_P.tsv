@@ -1,0 +1,41 @@
+engine	0x8ea2	SHOOTOUT_KICKS_LEFT_SIDE1	1	side 1 entry of SHOOTOUT_KICKS_LEFT: shootout kicks side 1 still has
+engine	0x8ead	GOALKEEPER_NEAREST_SIDE1	1	side 1 entry of GOALKEEPER_NEAREST: 1 when side 1's goalkeeper is the team-mate closest to the ball
+engine	0x8eb0	OFFSIDE_LINE_SIDE1	1	side 1 entry of OFFSIDE_LINE: offside line row used against side 1's attackers
+engine	0x8ec0	POSITION_TABLE_SIDE1	4	side 1 entry of POSITION_TABLE: pointer to side 1's position table (set to POSITION_TABLE_DATA_SIDE1 at preparation)
+engine	0x8ec8	ARROW_TABLE_SIDE1	4	side 1 entry of ARROW_TABLE: pointer to side 1's position arrow table (set to ARROW_TABLE_DATA_SIDE1 at preparation)
+engine	0xf572	FORMATION_TABLE_SIDE1	4	side 1 entry of FORMATION_TABLE: pointer to side 1's formation/set-piece position table (set to FORMATION_TABLE_DATA_SIDE1 at preparation)
+engine	0x930f	POSITION_TABLE_DATA	?	side 0 position table inside its tactics object (TACTICS + 0x12d), pointed to by POSITION_TABLE
+engine	0xabf2	POSITION_TABLE_DATA_SIDE1	?	side 1 position table inside its tactics object (TACTICS + 0x18e3 + 0x12d), pointed to by POSITION_TABLE_SIDE1
+engine	0x9330	ARROW_TABLE_DATA	?	side 0 position arrow table inside its tactics object (TACTICS + 0x14e), pointed to by ARROW_TABLE
+engine	0xac13	ARROW_TABLE_DATA_SIDE1	?	side 1 position arrow table inside its tactics object (TACTICS + 0x18e3 + 0x14e), pointed to by ARROW_TABLE_SIDE1
+engine	0x97cd	FORMATION_TABLE_DATA	?	side 0 formation/set-piece position table (216 bytes per position), pointed to by FORMATION_TABLE at preparation
+engine	0xb9f8	FORMATION_TABLE_DATA_SIDE1	?	side 1 formation/set-piece position table (216 bytes per position), pointed to by FORMATION_TABLE_SIDE1 at preparation
+engine	0x9049	SIDE0_MANAGER_SUBSTITUTIONS_LEFT	1	match manager +0x17 of side 0: substitutions still available (side 1 at +0xd0); nonzero lets the staff replace an injured goalkeeper
+engine	0x904b	SIDE0_MANAGER_TACTIC_SLOT	1	match manager +0x19 of side 0 (side 1 at +0xd0); zero skips the automatic changes for a human-managed side
+engine	0x9051	SIDE0_MANAGER_SHEET	4	match manager +0x1f of side 0: the manager's non-player sheet (side 1 at +0xd0)
+engine	0x905d	SIDE0_MANAGER_TACTICS	4	match manager +0x2b of side 0: the side's tactics object in the engine (side 1 at +0xd0)
+engine	0x9102	MATCH_MANAGERS_SIDE1	208	side 1's match manager object (MATCH_MANAGERS + 0xd0)
+engine	0xb049	TACTICS_FLAGS_SIDE1	4	side 1 tactics flag dword (tactics +0x584 of side 1; TACTICS_FLAGS + 0x18e3)
+engine	0xf58a	NEAREST_TO_BALL_SIDE1	4	side 1 entry of NEAREST_TO_BALL: side 1's player nearest to the ball
+engine	0xf592	LOWEST_Y_PLAYER_SIDE1	4	side 1 entry of LOWEST_Y_PLAYER (side 1 stores its largest-y player)
+engine	0xf59a	FURTHEST_FORWARD_SIDE1	4	side 1 entry of FURTHEST_FORWARD (side 1 stores its smallest-y player)
+engine	0xf5a2	GOALKEEPER_SIDE1	4	side 1 entry of GOALKEEPER: side 1's goalkeeper on the pitch
+engine	0xf601	CARDS_SIDE1	1	side 1 cards (CARDS + 0x36)
+engine	0xf602	FOULS_SIDE1	1	side 1 fouls (FOULS + 0x36)
+engine	0xf5c6	SET_PIECES	1	side 0 set pieces lined up by line_up_set_piece (side 1 at +0x36); SIDE_STATS +0xa [inference: free kicks]
+engine	0xf5c7	CORNER_KICKS	1	side 0 corners taken (side 1 at +0x36); SIDE_STATS +0xb
+engine	0xf5c8	THROW_INS	1	side 0 throw-ins taken (side 1 at +0x36); SIDE_STATS +0xc
+engine	0x453a	ENTRY_CELL	90	grid cell (8, 6) of GRID where a player is put when he takes the field: occupant pointers, 11 per side
+engine	0x4592	ENTRY_CELL_COUNT	2	occupant count per side of ENTRY_CELL (cell +0x58 + side)
+engine	0x1da	TEAM_STRENGTH	28	team strength in seven words per side (+0x1da + 4 x n + 2 x side, i16), summed over the 20 players by team_strength
+engine	0x1de	TEAM_STRENGTH_2	4	second team strength word per side (i16 + 2 x side), scaled by competition and side adjustments in team_strength
+match_player	0x18	ACTION_ORDER	1	his index in the engine ACTIVE_LIST, refreshed each tick by the engine loop
+match_player	0x1c	INJURY_FORCES_OFF	1	set when his pending injury forces him off: the substitution pass removes him from the pitch; stamina recovery skips the injury cap while set [inference]
+match_player	0x23	RED_CARDS	1	incremented when he leaves the pitch (player_left_pitch); added to YELLOW_CARDS for his card total and to the side summary cards [inference: sendings-off]
+match_player	0x3d	GOAL_COUNTS	10	five i16 goal tallies (+0x3d..+0x45), incremented with each goal and undone when it is disallowed; read by the scorer milestone commentaries 0x200a..0x2012 [inference: career/season counts]
+match_player	0xf9	CLUB	4	his club pointer (tested with is_national_team and is_human_club)
+match_player	0xff	ANGER	1	anger byte: +1 when a foul against him passes his anger check, decays each moment toward a floor from FRUSTRATION and his dirtiness [inference]
+match_player	0x100	FRUSTRATION	1	frustration byte: grows for a goalkeeper after conceding; raises his anger floor and lowers some commentary chances [inference]
+match_player	0x1a6	ANGER_TARGET	4	opponent whose foul provoked his anger (stored by the referee's foul decision); retaliation and condition tests weigh him more
+tactics_fields	0x188b	POSITION_MARKS	88	per tactical position mark bits, one u64 per position (11), read by position_marks [inference: same block layout as the engine tactics]
+league	0xdb	ROUND_DRAW_RULES	2	round rule word copied to each created fixture's ROUND_DRAW_RULES

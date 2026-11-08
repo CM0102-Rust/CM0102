@@ -458,12 +458,12 @@ pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
     let copy: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut rascunho = [0u8; 8];
     for k in 0..5 {
-        core::ptr::write_unaligned((a + d + 4 * k) as *mut usize, read_usize(o + d + 4 * k));
+        core::ptr::write_unaligned((a + d + transfer_fee_record::HOLDER * k) as *mut usize, read_usize(o + d + transfer_fee_record::HOLDER * k));
     }
-    copy(a + d + 0x14, rascunho.as_mut_ptr(), o + d + 0x14);
-    core::ptr::write_unaligned((a + d + 0x1c) as *mut usize, read_usize(o + d + 0x1c));
-    copy(a + d + 0x20, rascunho.as_mut_ptr(), o + d + 0x20);
-    *((a + d + 0x28) as *mut u8) = read_u8(o + d + 0x28);
+    copy(a + d + transfer_fee_record::HOLDER_DATE, rascunho.as_mut_ptr(), o + d + transfer_fee_record::HOLDER_DATE);
+    core::ptr::write_unaligned((a + d + transfer_fee_record::OTHER_CLUB_ID) as *mut usize, read_usize(o + d + transfer_fee_record::OTHER_CLUB_ID));
+    copy(a + d + transfer_fee_record::DATE, rascunho.as_mut_ptr(), o + d + transfer_fee_record::DATE);
+    *((a + d + transfer_fee_record::FLAG) as *mut u8) = read_u8(o + d + transfer_fee_record::FLAG);
 }
 
 /// `Club_Records::update_transfer_fee_records(transfer)`: updates the buyer's paid record and the seller's received

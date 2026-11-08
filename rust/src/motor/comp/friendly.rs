@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
     for k in 0..0x23usize {
         let league = 0xb63d60 + k * 0x48;
         let nation = read_usize(league);
-        if nation == 0 || *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
+        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
         if is_before_today(league + 0x2a) {
@@ -1385,14 +1385,14 @@ pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
     }
     if second {
         let (fa, fo) = (read_usize(a + club::STADIUM), read_usize(o + club::STADIUM));
-        let sa = if fa != 0 { read_usize(fa + stadium::STADIUM_CITY) } else { 0 };
-        let so = if sa != 0 && fo != 0 { read_usize(fo + stadium::STADIUM_CITY) } else { 0 };
+        let sa = if fa != 0 { read_usize(fa + stadium::CITY) } else { 0 };
+        let so = if sa != 0 && fo != 0 { read_usize(fo + stadium::CITY) } else { 0 };
         if sa != 0 && so != 0 {
             if count {
                 crate::comparison::branch("cqa_2 distancia do amistoso");
             }
-            let dx = read_f64_at(sa + city::CITY_LONGITUDE) - read_f64_at(so + city::CITY_LONGITUDE);
-            let dy = read_f64_at(sa + city::CITY_LATITUDE) - read_f64_at(so + city::CITY_LATITUDE);
+            let dx = read_f64_at(sa + city::LONGITUDE) - read_f64_at(so + city::LONGITUDE);
+            let dy = read_f64_at(sa + city::LATITUDE) - read_f64_at(so + city::LATITUDE);
             let i = read_i32(a + club::MIN_ATTENDANCE) as f64;
             let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(0x96a5d8) + read_f64_at(0x967890)) * read_f64_at(0x96af28)) + read_f64_at(0x967890); // 0x96a5d8 = 0.55, 0x967890 = 1, 0x96af28 = 40000
             f *= v; // cqa2: the distance factor
@@ -1725,7 +1725,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, club: us
     if read_usize(k + 0x45) != 0 {
         return;
     }
-    let v59 = read_u8(p + staff::LOYALITY) as i8;
+    let v59 = read_u8(p + staff::LOYALTY) as i8;
     if v59 <= 0xf { // cpv13: o +0x59
         return;
     }
@@ -2032,7 +2032,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
     for k in 0..0x23 {
         let ent = 0xb63d60 + k * 0x48;
         let nation = read_u32_as_usize(ent);
-        if nation == 0 || *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
+        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
         let (mut prim, mut ult) = (u32::MAX as usize, u32::MAX as usize);
@@ -2628,7 +2628,7 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
     let w = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const u16);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let nation = read_u32(club + club::NATION) as usize;
-    if k != 0 && national_team(club) == 0 && nation != 0 && *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 {
+    if k != 0 && national_team(club) == 0 && nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
         let index: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_NATION);
         let reg = (index(nation) as u8 as i8 as isize * 72) as usize;
         let start = G_LEAGUE_WORLD_CUP_START_DATE.wrapping_add(reg); // the key nation’s season

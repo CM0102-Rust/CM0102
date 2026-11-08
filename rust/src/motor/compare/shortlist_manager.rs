@@ -1,16 +1,16 @@
 use super::*;
 
-// The comparers of the routines in ../shortlist_manager.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../shortlist_manager.rs.
 // [pt] Os comparadores das rotinas de ../shortlist_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `make_club_bids` (comparison mode: see the header of motor.rs).
+/// Comparer for `make_club_bids`.
 ///
 /// [pt] Comparador da 0x84a020: só a original (sorteia, faz lances e pedidos de empréstimo, aloca ofertas e termos).
 pub(crate) unsafe extern "thiscall" fn compare_make_club_bids(this: usize, club: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MAKE_CLUB_BIDS)(this, club) // simplification: original only
 }
 
-/// Comparer for `staff_interest_in_joining_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `staff_interest_in_joining_club`.
 ///
 /// [pt] Comparador: lado a lado na nota (os bits do f64), nos motivos e em [0xae1080] (que a original e o salário padrão
 /// 0x864550 gravam); o resto das chamadas só lê, e o STAFF_CONTRACT do salário é local.
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_interest_in_joining_club(th
     ro
 }
 
-/// Comparer for `shortlist_manager_is_compensation_deal` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_is_compensation_deal`.
 ///
 /// [pt] Comparador: lado a lado (rotina pura: só a taxa e a devolução), pelas cópias leves.
 pub(crate) unsafe extern "thiscall" fn compare_shortlist_manager_is_compensation_deal(this: usize, slot: usize, contract: usize, club: usize, taxa: *mut i32) -> u32 {
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn compare_shortlist_manager_is_compensation
     r
 }
 
-/// Comparer for `shortlist_compare_slots_by_index` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_compare_slots_by_index`.
 ///
 /// [pt] Comparador: a devolução (pura).
 pub(crate) unsafe extern "C" fn compare_shortlist_compare_slots_by_index(a: usize, b: usize) -> i32 {
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "C" fn compare_shortlist_compare_slots_by_index(a: usiz
     r
 }
 
-/// Comparer for `mark_player_under_offer` (comparison mode: see the header of motor.rs).
+/// Comparer for `mark_player_under_offer`.
 ///
 /// [pt] Comparador: lado a lado pelas listas de 40 vagas dos clubes interessados (a cópia e a original montam e soltam a
 /// mesma lista local) e pelo cursor da lista `troca`.
@@ -69,14 +69,14 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_player_under_offer(this: usi
         player, buyer, swap, mo, mr));
 }
 
-/// Comparer for `value_player_for_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `value_player_for_club`.
 ///
 /// [pt] Comparador da 0x840d80: lado a lado na nota de saída e na devolução (o resto ela só lê). O técnico do clube sem a
 /// ficha +0x69 (a original sorteia uma): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_value_player_for_club(this: usize, club: usize, p: usize, slot: usize, out: *mut i32, minimum: i32, ceiling: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(IDX_VALUE_PLAYER_FOR_CLUB);
     let obs = read_usize(club + club::MANAGER);
-    if obs != 0 && read_usize(obs + 0x69) == 0 {
+    if obs != 0 && read_usize(obs + staff::NON_PLAYER) == 0 {
         return o(this, club, p, slot, out, minimum, ceiling);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out as usize, 4)], || o(this, club, p, slot, out, minimum, ceiling), || value_player_for_club(this, club, p, slot, out, minimum, ceiling));
@@ -86,7 +86,7 @@ pub(crate) unsafe extern "thiscall" fn compare_value_player_for_club(this: usize
     r
 }
 
-/// Comparer for `count_slots_with_bids` (comparison mode: see the header of motor.rs).
+/// Comparer for `count_slots_with_bids`.
 ///
 /// [pt] Comparador: lado a lado pelas 40 vagas do clube e pelas datas estáticas, e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_count_slots_with_bids(this: usize, club: usize, position: u32) -> u8 {
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn compare_count_slots_with_bids(this: usize
     r
 }
 
-/// Comparer for `shortlist_manager_remove_from_transfer_list` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_remove_from_transfer_list`.
 ///
 /// [pt] Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_transfer_list(person: usize) -> u32 {
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_tran
     r
 }
 
-/// Comparer for `shortlist_manager_remove_from_loan_list` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_remove_from_loan_list`.
 ///
 /// [pt] Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_loan_list(person: usize) -> u32 {
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_staff_status(this: usize, 
     r
 }
 
-/// Comparer for `shortlist_manager_add_to_loan_list` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_add_to_loan_list`.
 ///
 /// [pt] Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_add_to_loan_list(person: usize) -> usize {
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_add_to_loan_list
     r
 }
 
-/// Comparer for `shortlist_manager_max_fee_for_player_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_max_fee_for_player_status`.
 ///
 /// [pt] Comparador: a devolução (rotina pura).
 pub(crate) unsafe extern "thiscall" fn compare_shortlist_manager_max_fee_for_player_status(this: usize, club: usize, person: usize, status: u32) -> i32 {
@@ -185,12 +185,12 @@ pub(crate) unsafe extern "thiscall" fn compare_shortlist_manager_max_fee_for_pla
     r
 }
 
-/// Comparer for `allocate_transfer_budget` (comparison mode: see the header of motor.rs).
+/// Comparer for `allocate_transfer_budget`.
 pub(crate) unsafe extern "thiscall" fn compare_allocate_transfer_budget(this: usize, club: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ALLOCATE_TRANSFER_BUDGET)(this, club)
 }
 
-/// Comparer for `shortlist_manager_squad_status_allowed` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_squad_status_allowed`.
 ///
 /// [pt] Comparador: a devolução (rotina pura); sem ficha de jogador, só a original (caixa).
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_squad_status_allowed(person: usize, status: u32) -> u32 {
@@ -212,12 +212,12 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_set_up_formation_slots(e
     SCOREBOARD.record(igual, || format!("shortlist_set_up_formation_slots(formacao {}) primeira diferença {:x?}", *((entry + 7) as *const i8), first_memory_diff(&mo, &mr)));
 }
 
-/// Comparer for `update_club_shortlist` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_club_shortlist`.
 pub(crate) unsafe extern "thiscall" fn compare_update_club_shortlist(this: usize, club: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPDATE_CLUB_SHORTLIST)(this, club)
 }
 
-/// Comparer for `suspend_clubs_shortlisting_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `suspend_clubs_shortlisting_player`.
 ///
 /// [pt] Comparador: lado a lado pelas entradas (9 bytes) e, com `limpar`, pelas vagas (40 × 0x25) dos clubes do plano: os
 /// clubes que a 0x842180 (pura) junta antes, numa lista própria. Cada lado cria e libera a sua lista.
@@ -251,12 +251,12 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
     SCOREBOARD.record(igual, || format!("suspend_clubs_shortlisting_player(jogador {:x}, limpar {}, {} regiões) primeira diferença {:x?}", read_usize(player), clear, reg.len(), first_memory_diff(&mo, &mr)));
 }
 
-/// Comparer for `add_player_to_club_shortlists` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_player_to_club_shortlists`.
 pub(crate) unsafe extern "thiscall" fn compare_add_player_to_club_shortlists(this: usize, player: usize, force: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ADD_PLAYER_TO_CLUB_SHORTLISTS)(this, player, force)
 }
 
-/// Comparer for `transfer_list_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `transfer_list_player`.
 ///
 /// [pt] Comparador: sorteia e dá notícia: roda só a original e confere o plano feito antes: sem listagem do clube e com
 /// contrato, o contrato fica à venda (+0x4e bit 1, +0x4f nibble alto 7).
@@ -272,7 +272,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_list_player(this: usize,
     }
 }
 
-/// Comparer for `build_position_lists` (comparison mode: see the header of motor.rs).
+/// Comparer for `build_position_lists`.
 pub(crate) unsafe extern "thiscall" fn compare_build_position_lists(this: usize, not_used: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BUILD_POSITION_LISTS)(this, not_used);
     let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(FN_SHORTLIST_STAFF_FITS_SLOT_POSITION);
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sort_position_lists(this: usize) 
     });
 }
 
-/// Comparer for `collect_interested_clubs` (comparison mode: see the header of motor.rs).
+/// Comparer for `collect_interested_clubs`.
 ///
 /// [pt] Comparador: a original na lista de saída e a cópia numa lista nova (0x68d020, solta com 0x68d080); compara os pares.
 pub(crate) unsafe extern "thiscall" fn compare_collect_interested_clubs(this: usize, player: usize, out: usize, ignore: u32, mode: u32, so_humanos: u32) {
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_interested_clubs(this: us
     SCOREBOARD.record(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", player, a, b));
 }
 
-/// Comparer for `add_shortlist_entry` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_shortlist_entry`.
 pub(crate) unsafe extern "thiscall" fn compare_add_shortlist_entry(this: usize, person: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_SHORTLIST_ENTRY);
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
@@ -354,7 +354,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_shortlist_entry(this: usize, 
     });
 }
 
-/// Comparer for `shortlist_manager_predict_selling_club_response` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_predict_selling_club_response`.
 ///
 /// [pt] Comparador: pelo valor (o byte baixo) e lado a lado pelo sorteio e [0xae1080] (as chamadas de preço podem sortear).
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_predict_selling_club_response(seller: usize, player: usize, offer: i64, buyer: usize, request: i64, loan: u32) -> u8 {
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_predict_selling_
     r
 }
 
-/// Comparer for `get_squad_status_for_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_squad_status_for_club`.
 ///
 /// [pt] Comparador: lado a lado pelo estatuto, pelo cargo de saída e por [0xae1080].
 pub(crate) unsafe extern "thiscall" fn compare_get_squad_status_for_club(this: usize, person: usize, club: usize, job: *mut u8) -> u8 {
@@ -382,7 +382,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_squad_status_for_club(this: u
     r
 }
 
-/// Comparer for `shortlist_manager_estimate_squad_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_estimate_squad_status`.
 ///
 /// [pt] Comparador: pelo valor (o byte baixo; a original deixa a palavra de estado do x87 em ah).
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_estimate_squad_status(person: usize, club: usize) -> u32 {
@@ -392,12 +392,12 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_estimate_squad_s
     r
 }
 
-/// Comparer for `shortlist_manager_release_club_slot_targets` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_release_club_slot_targets`.
 pub(crate) unsafe extern "thiscall" fn compare_shortlist_manager_release_club_slot_targets(this: usize, club: usize, entry: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_SHORTLIST_MANAGER_RELEASE_CLUB_SLOT_TARGETS)(this, club, entry)
 }
 
-/// Comparer for `passes_work_permit_check` (comparison mode: see the header of motor.rs).
+/// Comparer for `passes_work_permit_check`.
 ///
 /// [pt] Comparador: a 0x8c7950 (sem sorteio pedido) pode mexer no sorteio: lado a lado pelo estado dele, a cópia em
 /// sem_contar.
@@ -409,7 +409,7 @@ pub(crate) unsafe extern "stdcall" fn compare_passes_work_permit_check(player: u
     r
 }
 
-/// Comparer for `try_loan_offer_for_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `try_loan_offer_for_player`.
 ///
 /// The copy as a dry run and the original routine from the same state ([0xae1080], the random generator and the statics
 /// of the date operations).
@@ -442,7 +442,7 @@ pub(crate) unsafe extern "thiscall" fn compare_try_loan_offer_for_player(this: u
     r
 }
 
-/// Comparer for `clear_bid_markers_for_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `clear_bid_markers_for_player`.
 pub(crate) unsafe extern "thiscall" fn compare_clear_bid_markers_for_player(manager: usize, club: *const i32, player: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, *const i32)>(IDX_CLEAR_BID_MARKERS_FOR_PLAYER);
     let l = club_shortlist(manager, club);
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bid_markers_for_player(mana
     SCOREBOARD.record(igual, || format!("clear_bid_markers_for_player({}, {}) {:x?} x {:x?}", *club, *player, mo, mr));
 }
 
-/// Comparer for `collect_club_shortlist_entries` (comparison mode: see the header of motor.rs).
+/// Comparer for `collect_club_shortlist_entries`.
 ///
 /// [pt] Comparador: as entradas da cópia antes; a original acrescenta; confere os últimos itens da lista (8 bytes cada).
 pub(crate) unsafe extern "thiscall" fn compare_collect_club_shortlist_entries(this: usize, club: *const u32, list: usize) {
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_club_shortlist_entries(th
     SCOREBOARD.record(new == expected, || format!("collect_club_shortlist_entries({}) original {} itens, rust {}", *club, new.len(), expected.len()));
 }
 
-/// Comparer for `shortlist_manager_max_fee_for_squad_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_manager_max_fee_for_squad_status`.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_max_fee_for_squad_status(club: usize, positions: u32, kind: u32) -> i32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> i32>(IDX_SHORTLIST_MANAGER_MAX_FEE_FOR_SQUAD_STATUS)(club, positions, kind);
     let n = shortlist_manager_max_fee_for_squad_status(club, positions, kind);
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_max_fee_for_squa
     r
 }
 
-/// Comparer for `update_club_target_reputation` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_club_target_reputation`.
 pub(crate) unsafe extern "thiscall" fn compare_update_club_target_reputation(this: usize, club: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(IDX_UPDATE_CLUB_TARGET_REPUTATION);
     let reg = [(shopping_list_entry(this, club) + 5, 2)];
@@ -479,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_club_target_reputation(thi
     r
 }
 
-/// Comparer for `shortlist_slot_fits` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_slot_fits`.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_slot_fits(j: usize, slot: i8) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, i8) -> u8>(IDX_SHORTLIST_SLOT_FITS)(j, slot);
     let n = shortlist_slot_fits(j, slot);
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_slot_fits(j: usize, slot
     r
 }
 
-/// Comparer for `position_code` (comparison mode: see the header of motor.rs).
+/// Comparer for `position_code`.
 pub(crate) unsafe extern "stdcall" fn compare_position_code(m: i16) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(i16) -> u8>(IDX_POSITION_CODE)(m);
     let n = position_code(m);
@@ -495,7 +495,7 @@ pub(crate) unsafe extern "stdcall" fn compare_position_code(m: i16) -> u8 {
     r
 }
 
-/// Comparer for `shortlist_entry` (comparison mode: see the header of motor.rs).
+/// Comparer for `shortlist_entry`.
 pub(crate) unsafe extern "thiscall" fn compare_shortlist_entry(this: usize, person: usize, target: usize, not_11: u32, tambem_13: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize>(IDX_SHORTLIST_ENTRY)(this, person, target, not_11, tambem_13);
     let v = shortlist_entry(this, person, target, not_11, tambem_13);

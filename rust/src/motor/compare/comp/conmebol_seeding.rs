@@ -1,6 +1,6 @@
 use super::*;
 
-// The comparers of the routines in ../comp/conmebol_seeding.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/conmebol_seeding.rs.
 // [pt] Os comparadores das rotinas de ../comp/conmebol_seeding.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Lado a lado: os clubes do jogo e a marca da caixa.
@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_libertadores_places(this: 
     });
 }
 
-/// Comparer for `find_nth_unqualified_club_of_nation` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_nth_unqualified_club_of_nation`.
 ///
 /// [pt] A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn compare_find_nth_unqualified_club_of_nation(this: usize, clubs: usize, count: u32, nation: u32, n: u32, without_slot: u32, without_human: u32) -> usize {
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_nth_unqualified_club_of_nati
     r
 }
 
-/// Comparer for `is_mercosur_invited_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `is_mercosur_invited_club`.
 ///
 /// [pt] A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn compare_is_mercosur_invited_club(this: usize, club: usize) -> u32 {
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_mercosur_invited_club(this: us
     r
 }
 
-/// Comparer for `collect_conmebol_clubs` (comparison mode: see the header of motor.rs).
+/// Comparer for `collect_conmebol_clubs`.
 ///
 /// [pt] Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// devolução e os registros das duas tabelas.
@@ -66,13 +66,13 @@ pub(crate) unsafe extern "stdcall" fn compare_collect_conmebol_clubs(out: *mut u
     a
 }
 
-/// Comparer for `update_for_new_season` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_for_new_season`.
 ///
 /// [pt] Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
 pub(crate) unsafe extern "thiscall" fn compare_update_for_new_season(this: usize, skip: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_UPDATE_FOR_NEW_SEASON);
     let mut reg = club_seeding_regions();
-    reg.push((this + 0x6f, 2));
+    reg.push((this + conmebol_seeding::LAST_SEASON_YEAR, 2));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, skip), || update_for_new_season(this, skip));
     SCOREBOARD.record(igual, || format!("update_for_new_season({}): diferenças em {:x?}", skip, memory_diff_addresses(&mo, &mr)));
 }
@@ -80,12 +80,12 @@ pub(crate) unsafe extern "thiscall" fn compare_update_for_new_season(this: usize
 /// Lado a lado: o +0x71.
 pub(crate) unsafe extern "thiscall" fn compare_set_bra_champ_cup_winner(this: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SET_BRA_CHAMP_CUP_WINNER);
-    let reg = [(this + 0x71, 4)];
+    let reg = [(this + conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID, 4)];
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, club), || set_bra_champ_cup_winner(this, club));
     SCOREBOARD.record(igual, || format!("set_bra_champ_cup_winner({:x})", club));
 }
 
-/// Comparer for `conmebol_seeding_save_to_temp_file` (comparison mode: see the header of motor.rs).
+/// Comparer for `conmebol_seeding_save_to_temp_file`.
 ///
 /// [pt] Comparador da 0x4c6b70: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_conmebol_seeding_save_to_temp_file(this: usize) {

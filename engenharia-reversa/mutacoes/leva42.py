@@ -18,7 +18,7 @@ MUTACOES = [
     ('f_faixa', "('>', 0x32, 0x96d3b0), ('>', 0x23, 0),", "('>', 0x32, 0x96d3b0), ('>', 0x24, 0),"),
     ('f_p4', "(13, 0x96d358, [1, 0x968f20", "(13, 0x96d358, [1, 0x968918"),
     ('f_desg', "tire_fatigue(p, (30 - byte(person, player_sheet::STAMINA) as i32) as f32, -1);", "tire_fatigue(p, (31 - byte(person, player_sheet::STAMINA) as i32) as f32, -1);"),
-    ('f_abs', "*w(0x1de) = match_pl_ftol(*((this + 0x1de) as *const i16) as f64 * read_f32_at(k) as f64) as i16;", "*w(0x1de) = match_pl_ftol(*w(0x1de) as f64 * read_f32_at(k) as f64) as i16;"),
+    ('f_abs', "*w(0x1de) = match_pl_ftol(*((this + engine::TEAM_STRENGTH_2) as *const i16) as f64 * read_f32_at(k) as f64) as i16;", "*w(0x1de) = match_pl_ftol(*w(0x1de) as f64 * read_f32_at(k) as f64) as i16;"),
     ('f_2f', "(byte(person, player_sheet::LEADERSHIP) >> 2)", "(byte(person, player_sheet::LEADERSHIP) >> 3)"),
     ('f_kw8', "} else if papel & 8 != 0 {" + chr(10) + "                0x96d3c0", "} else if papel & 8 != 0 {" + chr(10) + "                0x967898"),
     ('f_t3sum', "('<', 10, 0x96d320), ('<', 0x19, 0x96d364)", "('<', 10, 0x96d320), ('<', 0x18, 0x96d364)"),

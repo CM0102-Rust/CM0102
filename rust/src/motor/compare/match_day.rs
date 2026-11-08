@@ -1,44 +1,44 @@
 use super::*;
 
-// The comparers of the routines in ../match_day.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../match_day.rs.
 // [pt] Os comparadores das rotinas de ../match_day.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `end_day` (comparison mode: see the header of motor.rs).
+/// Comparer for `end_day`.
 pub(crate) unsafe extern "thiscall" fn compare_end_day(day: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_END_DAY)(day)
 }
 
-/// Comparer for `pick_day_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `pick_day_match`.
 pub(crate) unsafe extern "thiscall" fn compare_pick_day_match(day: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_PICK_DAY_MATCH)(day)
 }
 
-/// Comparer for `start_next_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `start_next_match`.
 pub(crate) unsafe extern "thiscall" fn compare_start_next_match(day: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_START_NEXT_MATCH)(day)
 }
 
-/// Comparer for `step_day_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `step_day_match`.
 pub(crate) unsafe extern "thiscall" fn compare_step_day_match(day: usize, until_end: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_STEP_DAY_MATCH)(day, until_end)
 }
 
-/// Comparer for `close_day_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `close_day_match`.
 pub(crate) unsafe extern "thiscall" fn compare_close_day_match(day: usize, p: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CLOSE_DAY_MATCH)(day, p)
 }
 
-/// Comparer for `play_the_day` (comparison mode: see the header of motor.rs).
+/// Comparer for `play_the_day`.
 pub(crate) unsafe extern "thiscall" fn compare_play_the_day(day: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_PLAY_THE_DAY)(day)
 }
 
-/// Comparer for `set_up_the_day` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_up_the_day`.
 pub(crate) unsafe extern "thiscall" fn compare_set_up_the_day(day: usize, data: usize, mode: u32) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_SET_UP_THE_DAY)(day, data, mode)
 }
 
-/// Comparer for `match_day_interest` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_day_interest`.
 pub(crate) unsafe extern "thiscall" fn compare_match_day_interest(d: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_MATCH_DAY_INTEREST);
     if is_recording_top_level() {
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn compare_match_day_interest(d: usize) -> u
     r
 }
 
-/// Comparer for `match_without_human` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_without_human`.
 pub(crate) unsafe extern "C" fn compare_match_without_human(partida: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MATCH_WITHOUT_HUMAN);
     if is_recording_top_level() {
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "C" fn compare_match_without_human(partida: usize) -> u
     r
 }
 
-/// Comparer for `pos` (comparison mode: see the header of motor.rs).
+/// Comparer for `pos`.
 ///
 /// [pt] Roda a comparacao de uma rotina do pos-jogo pela fita: as 14 do banco entram como unidades.
 pub(crate) unsafe fn compare_pos(name: &str, reg: Vec<(usize, usize)>, original: impl FnOnce(), rust: impl FnOnce(&mut dyn FnMut(usize, usize, [u32; 5]) -> u32)) {
@@ -77,7 +77,7 @@ pub(crate) unsafe fn compare_pos(name: &str, reg: Vec<(usize, usize)>, original:
     SCOREBOARD.record(igual && sequencia, || format!("{} ({} chamadas): {}", name, k, tape_detail()));
 }
 
-/// Comparer for `post_match_events` (comparison mode: see the header of motor.rs).
+/// Comparer for `post_match_events`.
 pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_POST_MATCH_EVENTS);
     // the list cursor, the two clubs’ rows in [[0xb67a44]] and the flags of the events’ contracts
@@ -113,7 +113,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
     compare_pos("post_match_events", reg, || o(partida), |chamar| post_match_events_injected(partida, chamar));
 }
 
-/// Comparer for `post_match_players` (comparison mode: see the header of motor.rs).
+/// Comparer for `post_match_players`.
 pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize)>(IDX_POST_MATCH_PLAYERS);
     // the player records (+0x45, +9 to +0xe), the contracts, +0x80 of the clubs and the records of the
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: us
     compare_pos("post_match_players", reg, || o(partida, t), |chamar| post_match_players_with(partida, t, chamar));
 }
 
-/// Comparer for `post_match_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `post_match_club`.
 pub(crate) unsafe extern "C" fn compare_post_match_club(club: usize, other: usize, partida: usize, n: u32, t: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_POST_MATCH_CLUB);
     // the copy does not write to the database: only the calls and the random rolls
@@ -162,12 +162,12 @@ pub(crate) unsafe extern "C" fn compare_post_match_club(club: usize, other: usiz
     compare_pos("post_match_club", reg, || o(club, other, partida, n, t), |chamar| post_match_club_with(club, other, partida, n, t, chamar));
 }
 
-/// Comparer for `match_day_drop_viewer_and_finish_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_day_drop_viewer_and_finish_match`.
 pub(crate) unsafe extern "C" fn compare_match_day_drop_viewer_and_finish_match() {
     original_fn::<unsafe extern "C" fn()>(IDX_MATCH_DAY_DROP_VIEWER_AND_FINISH_MATCH)()
 }
 
-/// Comparer for `find_record_fixture` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_record_fixture`.
 pub(crate) unsafe extern "thiscall" fn compare_find_record_fixture(stats: usize, k: i32, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE);
     if k < 0 || k > (*((stats + match_stats::CAPACITY) as *const i32)).wrapping_sub(1) || out == 0 {
@@ -178,17 +178,17 @@ pub(crate) unsafe extern "thiscall" fn compare_find_record_fixture(stats: usize,
     r
 }
 
-/// Comparer for `network_step` (comparison mode: see the header of motor.rs).
+/// Comparer for `network_step`.
 pub(crate) unsafe extern "thiscall" fn compare_network_step(day: usize, p: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_NETWORK_STEP)(day, p)
 }
 
-/// Comparer for `confirm_network_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `confirm_network_match`.
 pub(crate) unsafe extern "thiscall" fn compare_confirm_network_match(day: usize, p: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CONFIRM_NETWORK_MATCH)(day, p)
 }
 
-/// Comparer for `competition_number` (comparison mode: see the header of motor.rs).
+/// Comparer for `competition_number`.
 pub(crate) unsafe extern "C" fn compare_competition_number(code: u32, second: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_COMPETITION_NUMBER);
     let r = o(code, second);

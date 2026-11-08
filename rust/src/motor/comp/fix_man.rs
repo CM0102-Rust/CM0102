@@ -464,7 +464,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
     }
     if flag == 0 {
         let comp = read_usize(game + fixture::COMPETITION);
-        let nc = if comp != 0 { read_usize(comp + competition::CLUB_COMP_NATION) } else { 0 };
+        let nc = if comp != 0 { read_usize(comp + competition::NATION) } else { 0 };
         let e_da = |g: usize| nc != 0 && read_i32(nc) == read_i32(g);
         if same(day_of_year(0x19, 0xb, year())) && !e_da(KEY_NATION_JAPAN) {
             crate::comparison::branch("cqc_3 natal");
@@ -1740,7 +1740,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
     for k in 0..2 {
         let club = read_usize(game + if k == 0 { 0x1c } else { 0x20 });
         let nation = read_usize(club + club::NATION);
-        if nation == 0 || *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
+        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
         // dois dias antes
@@ -2581,7 +2581,7 @@ pub(crate) unsafe fn call_original_with_year(o: usize, this: usize, year: u32) -
 pub(crate) unsafe extern "thiscall" fn get_time_slice(_this: usize, comp: usize, day: u32) -> u8 {
     let day = day as i16;
     if comp != 0 {
-        let nation = core::ptr::read_unaligned((comp + competition::CLUB_COMP_NATION) as *const usize);
+        let nation = core::ptr::read_unaligned((comp + competition::NATION) as *const usize);
         if nation != 0 {
             let id = *(nation as *const u32);
             if [KEY_NATION_HOLLAND, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_BELGIUM, KEY_NATION_FRANCE].iter().any(|&g| id == *(g as *const u32)) {
@@ -2609,11 +2609,11 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
     if stadium == 0 {
         return;
     }
-    let city = read_u32_as_usize(stadium + stadium::STADIUM_CITY);
+    let city = read_u32_as_usize(stadium + stadium::CITY);
     if city == 0 {
         return;
     }
-    let nation = read_u32_as_usize(city + city::CITY_NATION);
+    let nation = read_u32_as_usize(city + city::NATION);
     if nation == 0 {
         return;
     }
@@ -2631,7 +2631,7 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
         crate::comparison::branch("cps_13 doenca do visitante");
         // the year in the stadium’s ecx and the day in the city’s edx
         let (e, c) = (read_u32_as_usize(f + fixture::STADIUM), read_u32_as_usize(read_u32_as_usize(f + fixture::STADIUM) + 0x38));
-        add_illness_risk_before_match(f, read_u32_as_usize(f + fixture::AWAY_CLUB_ID), read_u32_as_usize(c + city::CITY_NATION), c as u32, e as u32);
+        add_illness_risk_before_match(f, read_u32_as_usize(f + fixture::AWAY_CLUB_ID), read_u32_as_usize(c + city::NATION), c as u32, e as u32);
     }
 }
 
@@ -2662,7 +2662,7 @@ pub(crate) unsafe extern "C" fn fix_man_get_partner_key_nation_index(club: usize
     let target = read_u32(G_NATION_TABLE).wrapping_add(other.wrapping_mul(0x122)) as usize;
     for i in 0..0x23usize {
         let p = read_u32(G_LEAGUE_TABLE + i * 72) as usize;
-        if p != 0 && *((p + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && p == target {
+        if p != 0 && *((p + nation::LEAGUE_SELECTED) as *const u8) != 0 && p == target {
             return *((0xb63d74 + i * 72) as *const u8);
         }
     }

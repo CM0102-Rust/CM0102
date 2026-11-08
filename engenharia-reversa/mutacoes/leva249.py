@@ -6,7 +6,7 @@ MUTACOES = [
     ('cpm_confronto_adversario', 'write_usize(p + 14 * k, read_usize(table + j as usize * TABLE_ROW_SIZE)); // the opposing club', 'write_usize(p + 14 * k, read_usize(table + a as usize * TABLE_ROW_SIZE)); // mutacao: o proprio clube', 'cpm_2 confrontos diretos'),
     ('cpm_vetor_conta', '*n = read_i16(this + league::CLUB_COUNT); // a conta', '*n = read_i16(this + league::CLUB_COUNT) - 1; // mutacao: sem o ultimo', 'cpm_2 vetor dos clubes'),
     ('cpm_posicao_final', '*((c + club::LAST_POSITION) as *mut u8) = (i as u8).wrapping_add(1); // the final position', '*((c + club::LAST_POSITION) as *mut u8) = (i as u8).wrapping_add(2); // mutacao: uma abaixo', 'cpm_2 posicao final'),
-    ('cpm_estadio_obra', 'obra(f, capacity as i32, lugares as i32, id, 0); // the stadium works', 'let _ = (obra, f, capacity); // mutacao: sem a obra', 'cpm_3 estadio da divisao'),
+    ('cpm_estadio_obra', 'obra(f, required_seats as i32, required_capacity as i32, id, 0); // the stadium works', 'let _ = (obra, f, required_seats); // mutacao: sem a obra', 'cpm_3 estadio da divisao'),
     ('cpm_melhores_trocas', 'for _ in 0..m as i32 { // m trocas', 'for _ in 1..m as i32 { // mutacao: uma troca a menos', 'cpm_3 embaralhar os melhores'),
     ('cpm_ponteiros_trocas', 'k = k.wrapping_add(1); // one more swap', 'k = k.wrapping_add(2); // mutacao: metade das trocas', 'cpm_3 embaralhar ponteiros'),
     ('cpm4_jogo_cumprido_dois', 'let n = (*((s + ban_record::MATCHES_SERVED) as *const u8)).wrapping_add(1); // mais um jogo cumprido', 'let n = (*((s + ban_record::MATCHES_SERVED) as *const u8)).wrapping_add(2); // mutacao: dois jogos', 'cpm_4 jogo cumprido'),

@@ -1,33 +1,33 @@
 use super::*;
 
-// The comparers of the routines in ../comp/leagues/bra_nat_second.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/leagues/bra_nat_second.rs.
 // [pt] Os comparadores das rotinas de ../comp/leagues/bra_nat_second.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `bra_nat_second_advance_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_nat_second_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_second_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_SECOND_ADVANCE_STAGE);
     compare_state_league_advance_stage("bra_nat_second_advance_stage", this, || o(this))
 }
 
-/// Comparer for `bra_nat_second_create_play_off_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_nat_second_create_play_off_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_second_create_play_off_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_SECOND_CREATE_PLAY_OFF_STAGE);
     compare_play_off_stage("bra_nat_second_create_play_off_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-/// Comparer for `bra_nat_second_start_new_season` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_nat_second_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_second_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_SECOND_START_NEW_SEASON);
     compare_state_league_new_season("bra_nat_second_start_new_season", this, || o(this))
 }
 
-/// Comparer for `bra_nat_second_create_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_nat_second_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_second_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_SECOND_CREATE_TABLE);
     compare_division_table("bra_nat_second_create_table", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, || o(this))
 }
 
-/// Comparer for `bra_nat_second_set_up_rules` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_nat_second_set_up_rules`.
 ///
 /// [pt] Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_second_set_up_rules(this: usize) -> u32 {

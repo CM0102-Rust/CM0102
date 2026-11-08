@@ -2641,7 +2641,7 @@ pub(crate) unsafe fn mark_club_code(this: usize, c: usize, n: i32, code: u8) {
 /// [pt] O clube tem nação marcada (+0x53, +0x11c ≠ 0)?
 pub(crate) unsafe fn has_flagged_nation(c: usize) -> bool {
     let n = read_u32_as_usize(c + club::NATION);
-    n != 0 && *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0
+    n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) != 0
 }
 
 /// in the one-byte-per-club table, marks the clubs of the non-friendly fixtures on the date: 1 the club's league game,
@@ -2674,7 +2674,7 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
     for i in 0..0x21usize {
         let e = G_LEAGUE_WORLD_CLUB_NATION + i * 0x48;
         let nation = read_u32_as_usize(e);
-        if nation != 0 && *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
+        if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
         for fatia in 0..3u32 {

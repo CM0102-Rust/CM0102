@@ -1,14 +1,14 @@
 use super::*;
 
-// The comparers of the routines in ../weather.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../weather.rs.
 // [pt] Os comparadores das rotinas de ../weather.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `check_postponement` (comparison mode: see the header of motor.rs).
+/// Comparer for `check_postponement`.
 pub(crate) unsafe extern "thiscall" fn compare_check_postponement(this: usize, game: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_CHECK_POSTPONEMENT)(this, game)
 }
 
-/// Comparer for `get_club_finance` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_club_finance`.
 ///
 /// [pt] Comparador: pelo valor (clube nulo: só a original, com a caixa de erro).
 pub(crate) unsafe extern "thiscall" fn compare_get_club_finance(this: usize, club: usize) -> usize {
@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_club_finance(this: usize, clu
     r
 }
 
-/// Comparer for `get_match_weather` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_match_weather`.
 ///
 /// [pt] Comparador: lado a lado nos 4 bytes da saída.
 pub(crate) unsafe extern "thiscall" fn compare_get_match_weather(this: usize, s: *mut u8, game: usize) {
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_match_weather(this: usize, s:
     SCOREBOARD.record(igual, || format!("get_match_weather(jogo {:#x}) {:x?} x {:x?}", game, mo.0, mr.0));
 }
 
-/// Comparer for `get_temperature` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_temperature`.
 ///
 /// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "thiscall" fn compare_get_temperature(this: usize, band: u32, game: usize) -> u8 {
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_temperature(this: usize, band
     r
 }
 
-/// Comparer for `get_pitch_condition` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_pitch_condition`.
 ///
 /// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "thiscall" fn compare_get_pitch_condition(this: usize, clima: *const u8, game: usize) -> u8 {
@@ -52,22 +52,22 @@ pub(crate) unsafe extern "thiscall" fn compare_get_pitch_condition(this: usize, 
     r
 }
 
-/// Comparer for `update_city_weather` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_city_weather`.
 pub(crate) unsafe extern "thiscall" fn compare_update_city_weather(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_CITY_WEATHER)(this)
 }
 
-/// Comparer for `read_region` (comparison mode: see the header of motor.rs).
+/// Comparer for `read_region`.
 pub(crate) unsafe extern "thiscall" fn compare_read_region(this: usize, f: usize, region: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_READ_REGION)(this, f, region)
 }
 
-/// Comparer for `read_region_period` (comparison mode: see the header of motor.rs).
+/// Comparer for `read_region_period`.
 pub(crate) unsafe extern "thiscall" fn compare_read_region_period(this: usize, f: usize, period: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_READ_REGION_PERIOD)(this, f, period)
 }
 
-/// Comparer for `load_config` (comparison mode: see the header of motor.rs).
+/// Comparer for `load_config`.
 pub(crate) unsafe extern "thiscall" fn compare_load_config(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LOAD_CONFIG)(this)
 }

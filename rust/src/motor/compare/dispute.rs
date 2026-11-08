@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../dispute.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../dispute.rs.
 // [pt] Os comparadores das rotinas de ../dispute.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `remove_dispute` (comparison mode: see the header of motor.rs).
+/// Comparer for `remove_dispute`.
 ///
 /// [pt] Comparador: sem a marca (nada a fazer), lado a lado na marca e no cursor da lista. Com a marca, só a original com o
 /// plano: a marca zerada e a conta da lista uma a menos quando a pessoa está nela (a procura feita antes, com o cursor
@@ -27,8 +27,8 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
     let mut found = 0i16;
     let count_before = if list != 0 { read_i16(list) } else { 0 };
     if list != 0 {
-        let cursor = read_u32_as_usize(list + 0xa);
-        core::ptr::write_unaligned((list + 0xa) as *mut u32, read_u32_as_usize(list + 2) as u32);
+        let cursor = read_u32_as_usize(list + llist::CURSOR);
+        core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_u32_as_usize(list + llist::HEAD) as u32);
         let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
         for _ in 0..count_before.max(0) {
             let no = next(list);
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
                 break;
             }
         }
-        core::ptr::write_unaligned((list + 0xa) as *mut u32, cursor as u32);
+        core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, cursor as u32);
     }
     o(this, p);
     let count_after = if list != 0 { read_i16(list) } else { 0 };

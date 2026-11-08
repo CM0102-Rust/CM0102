@@ -3,7 +3,7 @@
 //! # How a routine replaces the original
 //! The DLL is loaded by the untouched `cm0102.exe` (3.9.68). For each rewritten routine, `detours.rs` writes a jump at
 //! the start of the original routine (a "detour"); the jump goes to our Rust copy. Before writing it, the DLL checks the
-//! first bytes of the original (`PROLOGOS`, one `Prologue { endereco, bytes }` per routine) and the hash of the whole
+//! first bytes of the original (`PROLOGOS`, one `Prologue { address, bytes }` per routine) and the hash of the whole
 //! routine (`signatures.rs`): if the exe was changed there (another patch), the routine stays original.
 //!
 //! The four tables in `instalar` are aligned by position: entry `i` of `PROLOGOS` is the original address, entry `i`
@@ -17,7 +17,7 @@
 //! source file, calling convention)`, then the Portuguese notes (`[pt]`). The vocabulary:
 //! - `compare_<name>`: the comparer. In comparison mode (`CM_COMPARAR=1`) it runs the original and our copy side by
 //!   side (or the original only, checking the outcome it planned) and records any difference (`PLACAR`).
-//! - `ramo("...")`: a branch counter; the tests use it to know which paths a career went through.
+//! - `comparison::branch("...")`: a branch counter; the tests use it to know which paths a career went through.
 //! - `read_u32(a)`, `write_u8(a, v)` (`mem.rs`): unaligned access to the game's records; `rec + 0x40` is a field of a
 //!   record (see `docs/CAMPOS.en.md` for the known fields).
 //! - `KEY_*` (`keys.rs`): the address of a global that holds the pointer to a fixed nation, club... (`read_usize(KEY_..)`).
@@ -2244,11 +2244,11 @@ unsafe fn byte(p: usize, off: usize) -> i8 {
 ///
 /// [pt] Valor do jogador numa tabela de 11 palavras (uma por lado), pela posicao dele (0..=10).
 unsafe fn table_by_position(this: usize, jogador: usize, campo: usize) -> u16 {
-    let posicao = byte(jogador, 0x19);
+    let posicao = byte(jogador, match_player::POSITION);
     if !(0..=10).contains(&posicao) {
         return 0;
     }
-    let lado = byte(jogador, 0x27) as isize;
+    let lado = byte(jogador, match_player::SIDE) as isize;
     let tabela = *((this as isize + campo as isize + lado * 4) as *const usize) as *const u16;
     *tabela.add(posicao as usize)
 }
@@ -3334,7 +3334,7 @@ compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, ()
 /// [pt] A linha `linha` da tabela tática do objeto `t` ([t+0x601], 0x91 bytes por linha: palavra da
 /// formação e 20 vagas de 4 bytes a partir de +2).
 unsafe fn table_row(t: usize, linha: i32) -> usize {
-    core::ptr::read_unaligned((t + 0x601) as *const usize).wrapping_add((linha as usize).wrapping_mul(0x91))
+    core::ptr::read_unaligned((t + tactics_fields::ROWS) as *const usize).wrapping_add((linha as usize).wrapping_mul(0x91))
 }
 
 /// The regions the three can touch: the club's row in the table (if any) and the pending
@@ -3343,7 +3343,7 @@ unsafe fn table_row(t: usize, linha: i32) -> usize {
 /// [pt] As regiões que as três podem tocar: a linha do clube na tabela (se houver) e as instruções
 /// pendentes com o contador (+0x30..+0x5f1).
 unsafe fn table_regions(t: usize, clube: usize, humano: u32) -> Vec<(usize, usize)> {
-    let mut r = vec![(t + 0x30, 0x5c1)];
+    let mut r = vec![(t + tactics_fields::UNDO_SLOTS, 0x5c1)];
     if clube != 0 {
         let tactics_row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
         let l = tactics_row(clube, humano);
@@ -3367,8 +3367,8 @@ compare_split!(compare_split_e, split_e, IDX_SPLIT_E);
 compare_split!(compare_split_f, split_f, IDX_SPLIT_F);
 unsafe extern "thiscall" fn compare_remove_from_list(this: usize, alvo: usize) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_REMOVE_FROM_LIST);
-    let n = byte(this, 0x101).max(0) as usize;
-    let reg = [(this + 0x101, 1), (this + 0x1ae, 4 * n)];
+    let n = byte(this, match_player::MARKER_COUNT).max(0) as usize;
+    let reg = [(this + match_player::MARKER_COUNT, 1), (this + match_player::MARKERS, 4 * n)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, alvo), || remove_from_list(this, alvo));
     SCOREBOARD.record(igual && r == x, || format!("remove_from_list(n {}) original={} {:x?} rust={} {:x?}", n, r, mo, x, mr));
     r
@@ -3377,7 +3377,7 @@ unsafe extern "thiscall" fn compare_take_the_field(this: usize, j: usize) -> u8 
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_TAKE_THE_FIELD);
     let l = side_of_player(j) as isize;
     let n = *((this as isize + 0x4592 + l) as *const i8) as isize;
-    let reg = [(j + 0x28, 1), (j + 0x102, 2), ((this as isize + 0x4592 + l) as usize, 1), ((this as isize + 0x453a + 4 * (n + 11 * l)) as usize, 4)];
+    let reg = [(j + match_player::CELL_SLOT, 1), (j + match_player::CELL_X, 2), ((this as isize + 0x4592 + l) as usize, 1), ((this as isize + 0x453a + 4 * (n + 11 * l)) as usize, 4)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, j), || take_the_field(this, j));
     SCOREBOARD.record(igual && r == x, || format!("take_the_field(lado {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
     r
@@ -3389,7 +3389,7 @@ compare_value!(compare_reaches_the_point, reaches_the_point, IDX_REACHES_THE_POI
 
 unsafe extern "thiscall" fn compare_choose_standout(this: usize) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CHOOSE_STANDOUT);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x477a, 4)], || f(this), || choose_standout(this));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::ADJUSTED_PLAYER_ID, 4)], || f(this), || choose_standout(this));
     SCOREBOARD.record(igual, || format!("choose_standout original={:x?} rust={:x?}", mo, mr));
 }
 unsafe extern "thiscall" fn compare_choose_by_role_b(this: usize, arg: u32) -> u8 {
@@ -3402,7 +3402,7 @@ unsafe extern "thiscall" fn compare_choose_by_role_b(this: usize, arg: u32) -> u
 unsafe extern "thiscall" fn compare_formation_square(this: usize, j: usize, x: *mut u8, y: *mut u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_FORMATION_SQUARE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this, j, x, y), || formation_square(this, j, x, y));
-    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, 0x8eae), byte(j, 0x27), byte(j, 0x19), mo, mr));
+    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, engine::POSSESSION_SIDE), byte(j, match_player::SIDE), byte(j, match_player::POSITION), mo, mr));
 }
 
 unsafe extern "thiscall" fn compare_compute_percentages(this: usize, i: i8) {
@@ -3464,7 +3464,7 @@ unsafe fn card_regions(motor: usize, j: usize, tipo: *mut u8, peso: *mut f32) ->
 // The wrappers go through the inner (hooked) routine: they compare the same regions as it.
 unsafe extern "thiscall" fn compare_engine_decide_foul(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_ENGINE_DECIDE_FOUL);
-    let mut reg = vec![(this + 0xf5b2 + 8, 2), (tipo as usize, 1), (valor as usize, 1), (this + 0x475a, 16)];
+    let mut reg = vec![(this + engine::REFEREE + 8, 2), (tipo as usize, 1), (valor as usize, 1), (this + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, codigo, tipo, valor), || crate::rng::without_counting(|| engine_decide_foul(this, j, codigo, tipo, valor)));
     SCOREBOARD.record(igual && r == n, || format!("engine_decide_foul original={} {:x?} rust={} {:x?}", r, mo, n, mr));
@@ -3474,7 +3474,7 @@ unsafe extern "thiscall" fn compare_engine_decide_foul(this: usize, j: usize, co
 unsafe extern "thiscall" fn compare_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_LOOK_FOR_OFFSIDE);
     let motor = *(this as *const usize);
-    let mut reg = vec![(this + 8, 2), (motor + 0x475a, 16)];
+    let mut reg = vec![(this + 8, 2), (motor + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| look_for_offside(this, l, linha, y, passador)));
     SCOREBOARD.record(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));
@@ -3482,7 +3482,7 @@ unsafe extern "thiscall" fn compare_look_for_offside(this: usize, l: i8, linha: 
 }
 unsafe extern "thiscall" fn compare_engine_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_ENGINE_LOOK_FOR_OFFSIDE);
-    let mut reg = vec![(this + 0xf5b2 + 8, 2), (this + 0x475a, 16)];
+    let mut reg = vec![(this + engine::REFEREE + 8, 2), (this + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| engine_look_for_offside(this, l, linha, y, passador)));
     SCOREBOARD.record(igual && r == n, || format!("engine_look_for_offside original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
@@ -3528,7 +3528,7 @@ unsafe extern "thiscall" fn compare_match_summary(this: usize, momento: i16) {
         });
         return;
     }
-    let mut reg = vec![(this + 0x4796, 40 * 0x1be), (this + 0xf5b0, 0x90)];
+    let mut reg = vec![(this + engine::PLAYERS, 40 * 0x1be), (this + 0xf5b0, 0x90)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, momento), || crate::rng::without_counting(|| match_summary(this, momento)));
     SCOREBOARD.record(igual, || format!("match_summary({}) original={:x?} rust={:x?}", momento, mo, mr));
@@ -3731,7 +3731,7 @@ unsafe fn compare_with_commentary_at(extra: &[(usize, usize)], original: impl Fn
 
 unsafe extern "thiscall" fn compare_shot_value(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u16) -> u16>(IDX_SHOT_VALUE);
-    let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this + 0x39, 2)];
+    let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this + match_player::SHOT_QUALITY, 2)];
     reg.extend(crate::rng::STATE_REGIONS);
     let t0 = *tipo;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tipo, som), || crate::rng::without_counting(|| shot_value(this, tipo, som)));
@@ -3788,7 +3788,7 @@ unsafe fn club_rows(clube: usize) -> Vec<(usize, usize)> {
     for humano in 0..2u32 {
         let l = if clube == 0 || taticas == 0 { -1 } else { linha(clube, humano) };
         if l != -1 {
-            v.push(((*((taticas + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
+            v.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
     }
     v
@@ -8306,12 +8306,12 @@ unsafe fn grid_inconsistent(m: usize) -> Option<String> {
                 }
                 for i in 0..n as usize {
                     let p = *((casa + 4 * (11 * l + i)) as *const usize);
-                    let base = m + 0x4796 + 8920 * l;
+                    let base = m + engine::PLAYERS + 8920 * l;
                     if p < base || p >= base + 20 * 0x1be || (p - base) % 0x1be != 0 {
                         return Some(format!("casa ({},{}) lado {} entrada {}/{} = {:#x}", x, y, l, i, n, p));
                     }
-                    if byte(p, 0x102) != x || byte(p, 0x103) != y || byte(p, 0x28) != i as i8 {
-                        return Some(format!("casa ({},{}) lado {} entrada {}: jogador em ({},{}) indice {}", x, y, l, i, byte(p, 0x102), byte(p, 0x103), byte(p, 0x28)));
+                    if byte(p, match_player::CELL_X) != x || byte(p, match_player::CELL_Y) != y || byte(p, match_player::CELL_SLOT) != i as i8 {
+                        return Some(format!("casa ({},{}) lado {} entrada {}: jogador em ({},{}) indice {}", x, y, l, i, byte(p, match_player::CELL_X), byte(p, match_player::CELL_Y), byte(p, match_player::CELL_SLOT)));
                     }
                 }
             }

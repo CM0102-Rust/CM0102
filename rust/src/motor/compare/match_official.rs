@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../match_official.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../match_official.rs.
 // [pt] Os comparadores das rotinas de ../match_official.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `construct_referee` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_referee`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_referee(a: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUCT_REFEREE);
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side_light(&[(a, 8)], || o(a), || construct_referee(a));
@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_referee(a: usize) -> us
     r
 }
 
-/// Comparer for `init_strictness` (comparison mode: see the header of motor.rs).
+/// Comparer for `init_strictness`.
 pub(crate) unsafe extern "thiscall" fn compare_init_strictness(this: usize, engine: u32, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_INIT_STRICTNESS);
     let mut reg = vec![(this, 10)];
@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_strictness(this: usize, engi
     SCOREBOARD.record(igual, || format!("init_strictness original={:x?} rust={:x?}", mo, mr));
 }
 
-/// Comparer for `move_counts` (comparison mode: see the header of motor.rs).
+/// Comparer for `move_counts`.
 pub(crate) unsafe extern "thiscall" fn compare_move_counts(this: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_MOVE_COUNTS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::PENDING_PLAY_KIND, 16)], || o(this), || move_counts(this));
@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_counts(this: usize) -> u8 {
     r
 }
 
-/// Comparer for `decide_foul` (comparison mode: see the header of motor.rs).
+/// Comparer for `decide_foul`.
 pub(crate) unsafe extern "thiscall" fn compare_decide_foul(this: usize, j: usize, code: u16, kind: *mut u8, value: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_DECIDE_FOUL);
     let engine = *(this as *const usize);
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_foul(this: usize, j: usize
     r
 }
 
-/// Comparer for `punish_foul` (comparison mode: see the header of motor.rs).
+/// Comparer for `punish_foul`.
 pub(crate) unsafe extern "thiscall" fn compare_punish_foul(this: usize, j: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32)>(IDX_PUNISH_FOUL);
     let reg = card_regions(*(this as *const usize), j, kind, weight);
@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punish_foul(this: usize, j: usize
     SCOREBOARD.record(igual, || format!("punish_foul(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
 }
 
-/// Comparer for `punish_move` (comparison mode: see the header of motor.rs).
+/// Comparer for `punish_move`.
 pub(crate) unsafe extern "thiscall" fn compare_punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32, expulsar: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8)>(IDX_PUNISH_MOVE);
     let mut reg = card_regions(*(this as *const usize), j, kind, weight);
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punish_move(this: usize, j: usize
     SCOREBOARD.record(igual, || format!("punish_move(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
 }
 
-/// Comparer for `foul_decision` (comparison mode: see the header of motor.rs).
+/// Comparer for `foul_decision`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_foul_decision(
     this: usize, j: usize, other: usize, kind: i8, who: i8, card: *mut u8, grav: *mut i8, advantage: *mut u8,

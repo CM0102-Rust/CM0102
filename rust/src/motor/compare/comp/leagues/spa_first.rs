@@ -1,21 +1,21 @@
 use super::*;
 
-// The comparers of the routines in ../comp/leagues/spa_first.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/leagues/spa_first.rs.
 // [pt] Os comparadores das rotinas de ../comp/leagues/spa_first.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `spa_first_create_schedule` (comparison mode: see the header of motor.rs).
+/// Comparer for `spa_first_create_schedule`.
 pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_FIRST_CREATE_SCHEDULE);
     compare_league_round_table("spa_first_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| spa_first_create_schedule(this, stage, r, e, l))
 }
 
-/// Comparer for `spa_first_set_up_rules` (comparison mode: see the header of motor.rs).
+/// Comparer for `spa_first_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_spa_first_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_FIRST_SET_UP_RULES);
     spa_first_compare_league_rules("spa_first_set_up_rules", this, primera_rules(), || o(this), || spa_first_set_up_rules(this))
 }
 
-/// Comparer for `spa_first_create_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `spa_first_create_table`.
 ///
 /// Comparer of 0x84fc70: the original routine allocates the table, changes the clubs' division and pays the TV money
 /// (with a news item), so only it runs. The plan, made beforehand: the clubs of the lower Spanish division (which move
@@ -41,23 +41,23 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_table(this: usiz
         }
     }
     let r = o(this);
-    let t = read_usize(this + 0xb1);
+    let t = read_usize(this + league::TABLE);
     let generica = comp_record_of(KEY_CLUB_COMP_A_LOWER_DIVISION);
-    let mut same = r == (plano.len() == 0x14) as u32 && read_i16(this + 0x3e) == 0x14 && t != 0 && baixo.iter().all(|&c| read_usize(c + 0x57) == generica);
+    let mut same = r == (plano.len() == 0x14) as u32 && read_i16(this + league::CLUB_COUNT) == 0x14 && t != 0 && baixo.iter().all(|&c| read_usize(c + club::DIVISION) == generica);
     let mut found: Vec<usize> = Vec::new();
     if same {
         found = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plano;
         if r == 1 {
             let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-            same = same && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == prize(this, 0x3d090);
+            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, 0x3d090);
         }
     }
     SCOREBOARD.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, found));
     r
 }
 
-/// Comparer for `spa_first_set_club_progress` (comparison mode: see the header of motor.rs).
+/// Comparer for `spa_first_set_club_progress`.
 ///
 /// [pt] Comparador da 0x850880: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
@@ -68,11 +68,11 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_set_club_progress(this:
     if e == 0 {
         return o(this, club, stage, current, best, worst);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], || o(this, club, stage, current, best, worst), || spa_first_set_club_progress(this, club, stage, current, best, worst));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + comp_stats_club::CURRENT_POSITION, 3)], || o(this, club, stage, current, best, worst), || spa_first_set_club_progress(this, club, stage, current, best, worst));
     SCOREBOARD.record(igual, || format!("spa_first_set_club_progress({:#x}, {:#x}) original={:x?} rust={:x?}", this, club, mo, mr));
 }
 
-/// Comparer for `construct_spa_first` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_spa_first`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_spa_first(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_FIRST);
     compare_division_league_ctor("construct_spa_first", this, year, record, &SPAIN_PRIMERA_DIVISION, || o(this, year, record))

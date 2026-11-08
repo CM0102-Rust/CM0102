@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../match_events.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../match_events.rs.
 // [pt] Os comparadores das rotinas de ../match_events.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `record_events` (comparison mode: see the header of motor.rs).
+/// Comparer for `record_events`.
 pub(crate) unsafe extern "thiscall" fn compare_record_events(e: usize, desc: *mut u32, human: u8) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, u8) -> u8>(IDX_RECORD_EVENTS)(e, desc, human)
 }
@@ -23,12 +23,12 @@ pub(crate) unsafe extern "thiscall" fn compare_read_events(e: usize, desc: *cons
     r
 }
 
-/// Comparer for `read_events_cfg` (comparison mode: see the header of motor.rs).
+/// Comparer for `read_events_cfg`.
 pub(crate) unsafe extern "C" fn compare_read_events_cfg() {
     original_fn::<unsafe extern "C" fn()>(IDX_READ_EVENTS_CFG)()
 }
 
-/// Comparer for `event_text` (comparison mode: see the header of motor.rs).
+/// Comparer for `event_text`.
 ///
 /// [pt] O texto do evento so escreve nos buffers de texto ([0xb67ea0], [0xb67dd8]) e no `qual` do evento:
 /// a original e a copia montam o mesmo texto e o resultado e conferido.
@@ -43,13 +43,13 @@ pub(crate) unsafe extern "stdcall" fn compare_event_text(ev: usize, ctx: usize, 
     r as usize
 }
 
-/// Comparer for `commentate_on_panel` (comparison mode: see the header of motor.rs).
+/// Comparer for `commentate_on_panel`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, panel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, panel, width, quebrar, font, mode)
 }
 
-/// Comparer for `next_event` (comparison mode: see the header of motor.rs).
+/// Comparer for `next_event`.
 pub(crate) unsafe extern "thiscall" fn compare_next_event(t: usize, out: *mut usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(IDX_NEXT_EVENT);
     let mut reg = vec![(t, 0x2db4)];
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn compare_next_event(t: usize, out: *mut us
     r
 }
 
-/// Comparer for `commentary_player_name` (comparison mode: see the header of motor.rs).
+/// Comparer for `commentary_player_name`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn compare_commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, curto: u8, x: u32, longa: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(IDX_COMMENTARY_PLAYER_NAME);
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "C" fn compare_commentary_player_name(pt: usize, player
     SCOREBOARD.record(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", player, side, mo, mr));
 }
 
-/// Comparer for `combine_with_previous` (comparison mode: see the header of motor.rs).
+/// Comparer for `combine_with_previous`.
 pub(crate) unsafe extern "thiscall" fn compare_combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i16>(IDX_COMBINE_WITH_PREVIOUS);
     if is_recording_top_level() {
@@ -84,27 +84,27 @@ pub(crate) unsafe extern "thiscall" fn compare_combine_with_previous(t: usize, e
     r
 }
 
-/// Comparer for `event_at_front` (comparison mode: see the header of motor.rs).
+/// Comparer for `event_at_front`.
 pub(crate) unsafe extern "thiscall" fn compare_event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32>(IDX_EVENT_AT_FRONT)(t, a, b, c, d, e, f, g)
 }
 
-/// Comparer for `construct_commentary_queue` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_commentary_queue`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_commentary_queue(t: usize, goal_crowd_reaction: u8) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize, u8) -> usize>(IDX_CONSTRUCT_COMMENTARY_QUEUE)(t, goal_crowd_reaction)
 }
 
-/// Comparer for `free_event_tables` (comparison mode: see the header of motor.rs).
+/// Comparer for `free_event_tables`.
 pub(crate) unsafe extern "C" fn compare_free_event_tables() {
     original_fn::<unsafe extern "C" fn()>(IDX_FREE_EVENT_TABLES)()
 }
 
-/// Comparer for `sounds_finished` (comparison mode: see the header of motor.rs).
+/// Comparer for `sounds_finished`.
 pub(crate) unsafe extern "thiscall" fn compare_sounds_finished(e: usize, ativos: *const u32) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32) -> u8>(IDX_SOUNDS_FINISHED)(e, ativos)
 }
 
-/// Comparer for `event_variant` (comparison mode: see the header of motor.rs).
+/// Comparer for `event_variant`.
 pub(crate) unsafe extern "system" fn compare_event_variant(e: *const i16, sides: u32, kind: u8) -> i16 {
     let o = original_fn::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(IDX_EVENT_VARIANT);
     if is_recording_top_level() {

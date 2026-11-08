@@ -41,7 +41,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if national_team(club) == 0 {
         let nation = read_usize(club + club::NATION);
-        if nation != 0 && *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 {
+        if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
             for k in 0..0x23usize {
                 if read_usize(G_LEAGUE_TABLE + 72 * k) == nation {
                     return k as u8; // cpu1: the row of the chosen nation
@@ -71,7 +71,7 @@ pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {
     let nation = read_usize(club + club::NATION);
     national_team(club) == 0
         && nation != 0
-        && *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0
+        && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation)
 }
 
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "C" fn key_nation_get_main_continent() -> usize {
     }
     for k in 0..0x23usize {
         let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        if n != 0 && *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 != 0 {
+        if n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) & 2 != 0 {
             return read_usize(n + nation::CONTINENT);
         }
     }
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "C" fn key_nation_get_main_nation() -> usize {
     }
     for k in 0..0x23usize {
         let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        if n != 0 && *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 != 0 {
+        if n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) & 2 != 0 {
             return n;
         }
     }
@@ -291,7 +291,7 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
 /// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
 /// conferir a competição nula (o caso de erro nunca chega à caixa). TapeCall a cada partida: sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
-    let nation = read_usize(comp + competition::CLUB_COMP_NATION);
+    let nation = read_usize(comp + competition::NATION);
     if nation != 0 {
         let row = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation); // cpt4: the nation search
         return match row {
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
         return 2;
     }
     for k in 0..0x23usize {
-        let c = read_usize(comp + competition::CLUB_COMP_CONTINENT);
+        let c = read_usize(comp + competition::CONTINENT);
         if read_usize(G_LEAGUE_TABLE + 72 * k) == 0 && c != 0 && c == read_usize(G_LEAGUE_WORLD_CUP_CONTINENT + 72 * k) {
             return k as u8; // cpt4: the continent row
         }

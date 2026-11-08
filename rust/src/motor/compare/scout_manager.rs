@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../scout_manager.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../scout_manager.rs.
 // [pt] Os comparadores das rotinas de ../scout_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `scout_manager_daily_update` (comparison mode: see the header of motor.rs).
+/// Comparer for `scout_manager_daily_update`.
 ///
 /// Comparer of 0x7f8750: the reports draw at random and allocate and the searches change the human players' lists, so
 /// only the original routine runs.
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn compare_scout_manager_daily_update(this: 
     r
 }
 
-/// Comparer for `send_scout_reports` (comparison mode: see the header of motor.rs).
+/// Comparer for `send_scout_reports`.
 ///
 /// Comparer of 0x7f9890: the original routine delivers news items (allocating in the inboxes), so only it runs, with
 /// logging of the calls to 0x7f9a60 turned on; beforehand, the copy as a dry run (without 0x7f9a60) gives the groups
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_scout_reports(this: usize, l
     SCOREBOARD.record(done == plan, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", list, done, plan));
 }
 
-/// Comparer for `send_scout_report_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `send_scout_report_news`.
 ///
 /// [pt] Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (simplification: o efeito é a
 /// caixa de entrada; os grupos que chegam aqui são conferidos pela 0x7f9890). Com o registro ligado, anota a chamada.
@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_scout_report_news(this: usiz
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SEND_SCOUT_REPORT_NEWS)(this, r, how_many);
 }
 
-/// Comparer for `current_search_has_no_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `current_search_has_no_club`.
 ///
 /// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_current_search_has_no_club(this: usize) -> u32 {
@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn compare_current_search_has_no_club(this: 
     r
 }
 
-/// Comparer for `is_club_in_session_searches` (comparison mode: see the header of motor.rs).
+/// Comparer for `is_club_in_session_searches`.
 ///
 /// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_is_club_in_session_searches(this: usize, club: usize) -> u32 {
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_club_in_session_searches(this:
     r
 }
 
-/// Comparer for `scout_manager_scout_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `scout_manager_scout_match`.
 ///
 /// The scouting (0x7b5be0, original) writes what the scouts know and the reports, 0x7ae9c0 starts searches and 0x7f9890
 /// delivers the news: it cannot run twice. Only the original runs (simplification: the routine itself only writes the
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_scout_manager_scout_match(this: u
     r
 }
 
-/// Comparer for `get_edit_session` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_edit_session`.
 ///
 /// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_edit_session(this: usize, manager: usize) -> usize {
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_edit_session(this: usize, man
     r
 }
 
-/// Comparer for `set_edit_session` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_edit_session`.
 ///
 /// [pt] Comparador: lado a lado pelas 16 sessões e a devolução; com a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_set_edit_session(this: usize, sessao: usize, manager: usize) -> u32 {
@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_edit_session(this: usize, ses
     r
 }
 
-/// Comparer for `get_selected_list` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_selected_list`.
 ///
 /// [pt] Comparador: a devolução (rotina pura); nos casos de erro, só a original (caixa).
 pub(crate) unsafe extern "thiscall" fn compare_get_selected_list(this: usize, manager: usize) -> u8 {
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_selected_list(this: usize, ma
     r
 }
 
-/// Comparer for `set_selected_list` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_selected_list`.
 ///
 /// [pt] Comparador: lado a lado pelos 16 bytes das listas escolhidas, e a devolução; nos casos de erro, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_set_selected_list(this: usize, list: u32, manager: usize) -> u32 {
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_selected_list(this: usize, li
     r
 }
 
-/// Comparer for `fixture_has_scouted_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `fixture_has_scouted_player`.
 pub(crate) unsafe extern "thiscall" fn compare_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FIXTURE_HAS_SCOUTED_PLAYER)(this, partida);
     let n = fixture_has_scouted_player(this, partida);
@@ -189,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fixture_has_scouted_player(this: 
     r
 }
 
-/// Comparer for `is_player_shortlisted` (comparison mode: see the header of motor.rs).
+/// Comparer for `is_player_shortlisted`.
 pub(crate) unsafe extern "thiscall" fn compare_is_player_shortlisted(this: usize, person: usize, manager: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_PLAYER_SHORTLISTED);
     if person == 0 || (manager == 0 && scout_manager_current_human_manager() == 0) {
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_player_shortlisted(this: usize
     r
 }
 
-/// Comparer for `scout_record` (comparison mode: see the header of motor.rs).
+/// Comparer for `scout_record`.
 pub(crate) unsafe extern "thiscall" fn compare_scout_record(t: usize, which: i8, manager: *const i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(IDX_SCOUT_RECORD)(t, which, manager);
     let n = scout_record(t, which, manager);
@@ -209,7 +209,7 @@ pub(crate) unsafe extern "thiscall" fn compare_scout_record(t: usize, which: i8,
     r
 }
 
-/// Comparer for `collect_club_scout_targets` (comparison mode: see the header of motor.rs).
+/// Comparer for `collect_club_scout_targets`.
 ///
 /// [pt] Comparador: os alvos da cópia antes; a original enche a lista; confere o valor e a lista (cada item, os 0x6e bytes
 /// da pessoa).
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_club_scout_targets(this: 
     r
 }
 
-/// Comparer for `remove_scout_request` (comparison mode: see the header of motor.rs).
+/// Comparer for `remove_scout_request`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_scout_request(this: usize, person: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_REMOVE_SCOUT_REQUEST);
     let n = (*((this + scout_manager_fields::SCOUT_REQUEST_COUNT) as *const i32)).max(0) as usize;
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_scout_request(this: usize,
     SCOREBOARD.record(igual, || format!("remove_scout_request({:x}, {:x}) {:x?} x {:x?}", person, club, mo, mr));
 }
 
-/// Comparer for `can_club_scout_nation` (comparison mode: see the header of motor.rs).
+/// Comparer for `can_club_scout_nation`.
 ///
 /// [pt] Comparador: pelo valor (a 0x5a0590 só procura).
 pub(crate) unsafe extern "thiscall" fn compare_can_club_scout_nation(this: usize, nation: usize, club: usize) -> u32 {
@@ -248,7 +248,7 @@ pub(crate) unsafe extern "thiscall" fn compare_can_club_scout_nation(this: usize
     r
 }
 
-/// Comparer for `sync_scout_lists` (comparison mode: see the header of motor.rs).
+/// Comparer for `sync_scout_lists`.
 ///
 /// [pt] Comparador da 0x7f7270: lado a lado nas 10 buscas do técnico (0x2b0 bytes cada, achadas antes pela 0x7f6cd0, que
 /// só lê) e na devolução. Sem técnico ou com a edição aberta (a 0x8043c0 mexe na edição): só a original.
@@ -274,7 +274,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sync_scout_lists(this: usize, man
     r
 }
 
-/// Comparer for `find_club_search_entry` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_club_search_entry`.
 ///
 /// [pt] Comparador da 0x7f8610: pela devolução (só lê).
 pub(crate) unsafe extern "thiscall" fn compare_find_club_search_entry(this: usize, p: usize) -> usize {
@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_club_search_entry(this: usiz
     r
 }
 
-/// Comparer for `scout_manager_write_list_name` (comparison mode: see the header of motor.rs).
+/// Comparer for `scout_manager_write_list_name`.
 ///
 /// [pt] Comparador: lado a lado pelo texto (até 0x100 bytes do tamanho dado), e a devolução; nos casos de erro, só a
 /// original (caixa).
@@ -301,7 +301,7 @@ pub(crate) unsafe extern "C" fn compare_scout_manager_write_list_name(index: u32
     r
 }
 
-/// Comparer for `has_scout_request` (comparison mode: see the header of motor.rs).
+/// Comparer for `has_scout_request`.
 ///
 /// [pt] Comparador: consulta pura (a busca binária e a data local): pelo valor; jogador nulo só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn compare_has_scout_request(this: usize, player: usize, club: usize, so_vencidos: u32) -> u32 {

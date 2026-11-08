@@ -53,10 +53,10 @@ pub(crate) unsafe fn match_weight(club: usize, partida: usize, factor: &mut f64)
         return read_f64(0x967880);
     }
     if comp == read_usize(read_usize(partida + fixture::HOME_CLUB) + 0x57) {
-        *factor = read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32 as f64 * read_f64(0x96d1e0) + read_f64(0x96d1d8);
+        *factor = read_i16(comp + competition::REPUTATION) as i32 as f64 * read_f64(0x96d1e0) + read_f64(0x96d1d8);
         return read_f64(0x967890);
     }
-    let x = (read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32).wrapping_mul(500).wrapping_sub(read_i16(club + club::REPUTATION) as i32);
+    let x = (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(500).wrapping_sub(read_i16(club + club::REPUTATION) as i32);
     let mut p = read_f64(0x967890) - (x as f64).abs() * read_f64(0x968d78);
     if read_u8(partida + fixture::CATEGORY) == 8 {
         p *= read_f64(0x968928);
@@ -155,13 +155,13 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     let city = |p: usize| p != 0 && read_usize(p + 0x38) != 0;
     let mut aj: i32 = 0;
     if manager_manager_is_national_team(club) != 0 {
-        if city(ev) && read_usize(read_usize(ev + stadium::STADIUM_CITY) + 0x1f) == read_usize(club + club::NATION) {
+        if city(ev) && read_usize(read_usize(ev + stadium::CITY) + 0x1f) == read_usize(club + club::NATION) {
             aj = -20;
         } else if read_usize(club + club::STADIUM) == ev {
             aj = -20;
         } else if read_usize(other + club::STADIUM) == ev {
             aj = 20;
-        } else if city(ev) && read_usize(read_usize(ev + stadium::STADIUM_CITY) + 0x1f) == read_usize(other + club::NATION) {
+        } else if city(ev) && read_usize(read_usize(ev + stadium::CITY) + 0x1f) == read_usize(other + club::NATION) {
             aj = 20;
         }
     } else if read_usize(club + club::STADIUM) == ev {
@@ -364,19 +364,19 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     // the derby and the rival
     let rival = read_usize(club + club::RIVAL1) == other || read_usize(club + club::RIVAL2) == other || read_usize(club + club::RIVAL3) == other;
     let f1 = read_usize(club + club::STADIUM);
-    let same = f1 != 0 && read_usize(other + club::STADIUM) != 0 && read_usize(f1 + stadium::STADIUM_CITY) == read_usize(read_usize(other + club::STADIUM) + 0x38);
+    let same = f1 != 0 && read_usize(other + club::STADIUM) != 0 && read_usize(f1 + stadium::CITY) == read_usize(read_usize(other + club::STADIUM) + 0x38);
     if same {
         fl |= if rival { 0x40 } else { 0x80 };
     } else if rival {
         fl |= 0x80;
         if f1 != 0 {
-            let e1 = read_usize(f1 + stadium::STADIUM_CITY);
+            let e1 = read_usize(f1 + stadium::CITY);
             let f2 = read_usize(other + club::STADIUM);
             if e1 != 0 && f2 != 0 {
-                let e2 = read_usize(f2 + stadium::STADIUM_CITY);
+                let e2 = read_usize(f2 + stadium::CITY);
                 if e2 != 0 {
-                    let x = read_f64(e1 + city::CITY_LONGITUDE) - read_f64(e2 + city::CITY_LONGITUDE);
-                    let y = read_f64(e1 + city::CITY_LATITUDE) - read_f64(e2 + city::CITY_LATITUDE);
+                    let x = read_f64(e1 + city::LONGITUDE) - read_f64(e2 + city::LONGITUDE);
+                    let y = read_f64(e1 + city::LATITUDE) - read_f64(e2 + city::LATITUDE);
                     if (y * y + x * x).sqrt() * read_f64(0x96d1b8) <= read_f64(0x968890) {
                         fl |= 0x40;
                     }
@@ -558,7 +558,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     let comp = read_usize(partida + fixture::COMPETITION);
     if (aj as i16) > 0 && read_usize(club + club::MANAGER) != 0 {
         if comp != 0 {
-            let n = read_i16(comp + competition::CLUB_COMP_REPUTATION);
+            let n = read_i16(comp + competition::REPUTATION);
             if n > 5 {
                 let rep = read_i16(club + club::REPUTATION);
                 let stage = read_i16(partida + fixture::ROUND_NAME) as u16;
@@ -873,7 +873,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     }
     let div = read_usize(club + club::DIVISION);
     let nation = read_usize(club + club::NATION);
-    if div == 0 || nation == 0 || read_u8(nation + nation::NATION_LEAGUE_SELECTED) == 0 || club_division_comp(club) == 0 {
+    if div == 0 || nation == 0 || read_u8(nation + nation::LEAGUE_SELECTED) == 0 || club_division_comp(club) == 0 {
         write_i16(ln() + 0xe, 0x10);
         post_expectations_news(this, club, news);
         finish_board_update(this, club);
@@ -927,7 +927,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     }
     let (d57, d5b) = (read_usize(club + club::DIVISION), read_usize(club + club::LAST_DIVISION));
     if d57 != 0 && d5b != 0 && d57 != d5b {
-        if read_i16(d57 + competition::CLUB_COMP_REPUTATION) > read_i16(d5b + competition::CLUB_COMP_REPUTATION) {
+        if read_i16(d57 + competition::REPUTATION) > read_i16(d5b + competition::REPUTATION) {
             if meta() > 10 {
                 por(meta() + 1);
             }
@@ -1113,8 +1113,8 @@ pub(crate) unsafe fn finish_board_update(this: usize, club: usize) {
         }
     }
     let manager = read_usize(club + club::MANAGER);
-    if manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) && read_i8(manager + staff::LOYALITY) < 0x14 {
-        write_u8(manager + staff::LOYALITY, read_u8(manager + staff::LOYALITY).wrapping_add(1));
+    if manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) && read_i8(manager + staff::LOYALTY) < 0x14 {
+        write_u8(manager + staff::LOYALTY, read_u8(manager + staff::LOYALTY).wrapping_add(1));
     }
     write_u8(ln() + 2, read_u8(ln() + 2) & 0xfe);
     write_u8(ln() + 4, 0);
@@ -1397,7 +1397,7 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, club: usize,
                     if c != 0 {
                         let na = read_usize(c + 0x53);
                         let d57 = read_usize(c + 0x57);
-                        let strong = (na != 0 && read_u8(na + nation::NATION_LEAGUE_SELECTED) != 0 && d57 != 0
+                        let strong = (na != 0 && read_u8(na + nation::LEAGUE_SELECTED) != 0 && d57 != 0
                             && read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(d57) as usize).wrapping_mul(4))) != 0)
                             || read_i16(c + 0x80) > 0x1964;
                         if strong && read_u8(q + staff::JOB_FOR_CLUB) == 5 {
@@ -1967,7 +1967,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         let count: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(FN_DATABASE_COUNT_CLUB_SQUAD);
         let nation = read_usize(club + club::NATION);
         let division = read_usize(club + club::DIVISION);
-        if nation != 0 && read_u8(nation + nation::NATION_LEAGUE_SELECTED) != 0 && division != 0 && read_usize(division) != read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && (count(club, 0, 0) as i8) < 0xf {
+        if nation != 0 && read_u8(nation + nation::LEAGUE_SELECTED) != 0 && division != 0 && read_usize(division) != read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && (count(club, 0, 0) as i8) < 0xf {
             add_board_confidence(this, club, 6, -0x4e2);
             add_board_confidence(this, club, 0x14, -0x4e2);
             add_board_confidence(this, club, 0x16, -500);
@@ -2470,7 +2470,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_appointment_news(this: usize
     }
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let nation = read_usize(club + club::NATION);
-    let active = nation != 0 && read_u8(nation + nation::NATION_LEAGUE_SELECTED) != 0 && {
+    let active = nation != 0 && read_u8(nation + nation::LEAGUE_SELECTED) != 0 && {
         let div = read_usize(club + club::DIVISION);
         div != 0 && read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(div).wrapping_mul(4) as usize)) != 0
     };
@@ -2990,7 +2990,7 @@ pub(crate) unsafe extern "thiscall" fn init_club_board_records(this: usize) {
                 let objs = read_usize(G_COMP_OBJECT_TABLE);
                 let comp = read_usize(club + club::DIVISION);
                 let n = read_usize(club + club::NATION);
-                if objs == 0 || comp == 0 || n == 0 || read_usize(objs + read_usize(comp) * 4) == 0 || read_u8(n + nation::NATION_LEAGUE_SELECTED) & 3 == 0 {
+                if objs == 0 || comp == 0 || n == 0 || read_usize(objs + read_usize(comp) * 4) == 0 || read_u8(n + nation::LEAGUE_SELECTED) & 3 == 0 {
                     continue;
                 }
             }
@@ -4022,7 +4022,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     if season != 0 {
         let league = read_u32(club + club::DIVISION) as usize;
         let nation = read_u32(club + club::NATION) as usize;
-        if league != 0 && nation != 0 && read_u8(nation + nation::NATION_LEAGUE_SELECTED) != 0 {
+        if league != 0 && nation != 0 && read_u8(nation + nation::LEAGUE_SELECTED) != 0 {
             let comp = read_u32((read_u32(G_COMP_OBJECT_TABLE) as usize).wrapping_add((read_u32(league) as usize).wrapping_mul(4))) as usize;
             if comp != 0 {
                 let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
@@ -5106,7 +5106,7 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
     }
     let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let tempo = |p: usize| days(G_CURRENT_DATE, read_u32(p + staff::DATE_JOINED_CLUB), read_u32(p + 0x42));
-    let limit = |p: usize| (read_u8_volatile(p + staff::LOYALITY) as i8 as i32 + 0x15) * 10;
+    let limit = |p: usize| (read_u8_volatile(p + staff::LOYALTY) as i8 as i32 + 0x15) * 10;
     if read_u8_volatile(person + staff::JOB_FOR_CLUB) == 0xb {
         let player = read_u32(person + staff::PLAYER) as usize;
         if player != 0 && read_i16(player + player_sheet::CURRENT_REPUTATION) > 0x128e && rep(club) < 0x1a5e {
@@ -5137,7 +5137,7 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
         let current = read_u32(person + staff::CLUB_JOB) as usize;
         if league != 0 && current != 0 && read_u32(current + club::DIVISION) != 0 {
             let liga2 = read_u32(current + club::DIVISION) as usize;
-            if read_i16(league + competition::CLUB_COMP_REPUTATION) < read_i16(liga2 + competition::CLUB_COMP_REPUTATION) {
+            if read_i16(league + competition::REPUTATION) < read_i16(liga2 + competition::REPUTATION) {
                 return 0; // his club is in a better division
             }
             if league == liga2 && (rep(club) as i32 - 0x4e2) < rep(current) as i32 {
@@ -5190,7 +5190,7 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
         let current = read_u32(person + staff::CLUB_JOB) as usize;
         if current != 0 {
             let dele = perceived_club_reputation(current);
-            let ceiling = (read_u8_volatile(person + staff::LOYALITY) as i8 as i16).wrapping_mul(25) as i32 + dele as i32 + 0xfa;
+            let ceiling = (read_u8_volatile(person + staff::LOYALTY) as i8 as i16).wrapping_mul(25) as i32 + dele as i32 + 0xfa;
             if vista as i32 > ceiling {
                 return 1;
             }

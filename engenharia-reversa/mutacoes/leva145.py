@@ -17,6 +17,6 @@ MUTACOES = [
     ('l_trinta', "*w(engine::CLOCK) = (*w(engine::CLOCK) as i32 / 30 * 30) as i16;", "*w(engine::CLOCK) = (*w(engine::CLOCK) as i32 / 15 * 15) as i16;", "laco fim para os penalties"),
     ('l_agregado', "*tb(fixture::AWAY_AGGREGATE) = (*tb(fixture::AWAY_AGGREGATE)).wrapping_add(*tb(fixture::AWAY_GOALS_EXTRA_TIME));", "*tb(fixture::AWAY_AGGREGATE) = (*tb(fixture::AWAY_AGGREGATE)).wrapping_add(*tb(fixture::HOME_GOALS_EXTRA_TIME));"),
     ('l_vagas', "            if k < 3 {\n                *((target + match_player::MARKERS + k as usize * 4) as *mut usize) = q;", "            if k < 2 {\n                *((target + match_player::MARKERS + k as usize * 4) as *mut usize) = q;"),
-    ('l_pressao_area', "if *((m + 0xb049) as *const u32) & 0x1000 != 0 {", "if *((m + 0xb049) as *const u32) & 0x2000 != 0 {"),
+    ('l_pressao_area', "if *((m + engine::TACTICS_FLAGS_SIDE1) as *const u32) & 0x1000 != 0 {", "if *((m + engine::TACTICS_FLAGS_SIDE1) as *const u32) & 0x2000 != 0 {"),
     ('l_disputa', "if byte(m, engine::BALL_TRANSIT_TICKS) == 0 && byte(m, engine::BALL_HEIGHT) == 4 && u(engine::BALL_RECEIVER) == 0 {", "if byte(m, engine::BALL_TRANSIT_TICKS) == 0 && byte(m, engine::BALL_HEIGHT) == 3 && u(engine::BALL_RECEIVER) == 0 {", "laco contest marcada"),
 ]

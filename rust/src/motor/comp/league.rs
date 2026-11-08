@@ -402,8 +402,8 @@ pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: u
                     if read_u8(v + league_round_date::TV_SLOT_KIND) == 3 {
                         let est = read_u32_as_usize(f + fixture::STADIUM);
                         s = 50;
-                        if national_team(read_u32_as_usize(f + fixture::HOME_CLUB)) != 0 && est != 0 && read_u32_as_usize(est + stadium::STADIUM_CITY) != 0 {
-                            let g = read_u32_as_usize(read_u32_as_usize(est + stadium::STADIUM_CITY) + 0x1f);
+                        if national_team(read_u32_as_usize(f + fixture::HOME_CLUB)) != 0 && est != 0 && read_u32_as_usize(est + stadium::CITY) != 0 {
+                            let g = read_u32_as_usize(read_u32_as_usize(est + stadium::CITY) + 0x1f);
                             if read_u32_as_usize(read_u32_as_usize(f + fixture::HOME_CLUB) + 0x53) == g || read_u32_as_usize(read_u32_as_usize(f + fixture::AWAY_CLUB) + 0x53) == g {
                                 s = 100;
                             }
@@ -802,7 +802,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
     let table = read_u32_as_usize(this + league::TABLE);
     if table != 0 && read_u8(table + league_table_row::PLAYED) == 0 && read_u8(this + league::STAGE_INDEX) == 0xff && full != 0 && !same_date(this + league::LAST_UPDATE_DATE, data) {
         let c = read_u32_as_usize(this + 4);
-        if read_u32_as_usize(c + competition::CLUB_COMP_NATION) != 0 {
+        if read_u32_as_usize(c + competition::NATION) != 0 {
             let k = key(c) as i8 as isize;
             let mut day = (read_i16((0xb63d75 + k * 72) as usize) as u16).wrapping_add(1);
             if day > 0x16c {
@@ -894,8 +894,8 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
         // simplification: the original pushes the day and the year in registers with leftovers in the high bytes; 0x549ef0 only reads the words
         new(pt, read_i16(e) as u16 as u32, read_i16(e + 2).wrapping_add(read_i16(this + league::YEAR)) as u16 as u32);
         let c = read_u32_as_usize(this + 4);
-        let nation = if c != 0 && read_u32_as_usize(c + competition::CLUB_COMP_NATION) != 0 { read_u32_as_usize(read_u32_as_usize(c + competition::CLUB_COMP_NATION)) } else { 0 };
-        let has = c != 0 && read_u32_as_usize(c + competition::CLUB_COMP_NATION) != 0;
+        let nation = if c != 0 && read_u32_as_usize(c + competition::NATION) != 0 { read_u32_as_usize(read_u32_as_usize(c + competition::NATION)) } else { 0 };
+        let has = c != 0 && read_u32_as_usize(c + competition::NATION) != 0;
         let days = if has && nation == read_u32_as_usize(KEY_NATION_ARGENTINA) {
             5
         } else if has && nation == read_u32_as_usize(KEY_NATION_ITALY) {
@@ -1045,7 +1045,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     write_u16(r + fixture::TIE_RULES, read_i16(this + league::MATCH_RULES) as u16);
     write_u16(r + fixture::SQUAD_RULES, read_i16(r + fixture::SQUAD_RULES) as u16 & 0xfbff);
     write_u8(r + fixture::CATEGORY, read_u8(this + league::MATCH_CATEGORY));
-    write_u16(r + fixture::ROUND_DRAW_RULES, read_i16(this + 0xdb) as u16);
+    write_u16(r + fixture::ROUND_DRAW_RULES, read_i16(this + league::ROUND_DRAW_RULES) as u16);
     write_u16(r + fixture::ROUND_NAME, 0);
     for k in 0x43..=0x4cusize {
         write_u8(r + k, 0xff);
@@ -1630,7 +1630,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
             if count(read_i32(read_usize(this + 4))) != 0 && read_i32(this + league::UPPER_DIVISION_ID) == -1 {
                 let slot = read_usize(G_CLUB_STATE_TABLE) + (read_i32(read_usize(li)) as usize).wrapping_mul(6);
                 let reg = read_usize(this + 4);
-                let nation = read_usize(reg + competition::CLUB_COMP_NATION);
+                let nation = read_usize(reg + competition::NATION);
                 if read_i32(slot) == -1 && nation != 0 && read_i32(nation) != read_i32(KEY_NATION_SCOTLAND) {
                     let cont = read_usize(nation + nation::CONTINENT);
                     if cont != 0 && read_i32(cont) == read_i32(KEY_CONTINENT_EUROPE) {
@@ -3983,14 +3983,14 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
     if comps != 0 {
         let comp = read_usize(comps + 4 * id);
         if comp != 0 && read_usize(club + club::STADIUM) != 0 && *((comp + league::COMP_TYPE) as *const u8) == 2 {
-            let lugares = core::ptr::read_unaligned((comp + league::REQUIRED_SEATS) as *const i16);
-            if lugares != -1 {
+            let required_capacity = core::ptr::read_unaligned((comp + league::REQUIRED_CAPACITY) as *const i16);
+            if required_capacity != -1 {
                 crate::comparison::branch("cpm_3 estadio da divisao");
-                let capacity = core::ptr::read_unaligned((comp + league::REQUIRED_CAPACITY) as *const i16);
+                let required_seats = core::ptr::read_unaligned((comp + league::REQUIRED_SEATS) as *const i16);
                 let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
                 let obra: unsafe extern "thiscall" fn(usize, i32, i32, usize, u32) -> u32 = core::mem::transmute(FN_FINANCE_UPGRADE_STADIUM_FOR_LEAGUE);
                 let f = finances(read_usize(G_FINANCE_TABLE), club);
-                obra(f, capacity as i32, lugares as i32, id, 0); // the stadium works
+                obra(f, required_seats as i32, required_capacity as i32, id, 0); // the stadium works
             }
         }
     }
@@ -4163,7 +4163,7 @@ pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubs: i32) 
                         if ej == 0 {
                             break;
                         }
-                        if read_u32_as_usize(ei + stadium::STADIUM_NEARBY_STADIUM) == ej || read_u32_as_usize(ej + stadium::STADIUM_NEARBY_STADIUM) == ei {
+                        if read_u32_as_usize(ei + stadium::NEARBY_STADIUM) == ej || read_u32_as_usize(ej + stadium::NEARBY_STADIUM) == ei {
                             if k >= half_n {
                                 show_error_at(0x9f15f4, 0xfa3);
                             } else {

@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn defensive_lines(this: usize) {
     let greater = ativos(1).fold(6i8, |m, p| m.max(byte(p, match_player::CELL_Y)));
     *((this + engine::OFFSIDE_LINE) as *mut i8) = greater.wrapping_add(1);
     let smaller = ativos(0).fold(5i8, |m, p| m.min(byte(p, match_player::CELL_Y)));
-    *((this + 0x8eb0) as *mut i8) = smaller.wrapping_sub(1);
+    *((this + engine::OFFSIDE_LINE_SIDE1) as *mut i8) = smaller.wrapping_sub(1);
 }
 
 /// ranges by the attributes and, by the tactical role (bits 1, 2, 4, 8, 0x10, 0x20, 0x40 of `table_a`; "strong" = bits
@@ -2674,7 +2674,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
             kind = byte(m, engine::BALL_HEIGHT);
             ((byte(j, match_player::MOMENT_AGILITY) as i16 - 20).wrapping_mul(10).wrapping_add(*w(j, 0x132)), 0xc)
         } else {
-            let v = match_pl_ftol(((read_f32_at(j + match_player::CONFIDENCE) as f64 * read_f64_at(0x967898) + 0.75) * byte(j, 0xff) as f64 + 5.0) * 0.5) as i8; // 0x967898 = 0.01
+            let v = match_pl_ftol(((read_f32_at(j + match_player::CONFIDENCE) as f64 * read_f64_at(0x967898) + 0.75) * byte(j, match_player::ANGER) as f64 + 5.0) * 0.5) as i8; // 0x967898 = 0.01
             let r1 = random(byte(j, match_player::YELLOW_CARDS) as i32 * 80 + na_propria as i32 * 1500 + 0x46);
             if random(v as i32) > r1 { (*w(j, 0x176), 0x2e) } else { (*w(j, 0x144), 0x15) }
         }
@@ -3355,7 +3355,7 @@ pub(crate) unsafe fn shot_outcome_goal(m: usize, p: usize, g: usize, side: i8, o
                 let r = random(s * s) as u8;
                 let pf = byte(p, match_player::GOALS_CONCEDED) as u8;
                 let v = if ((r as i8) as i32) < pf as i32 { pf } else { r };
-                *((g + 0x100) as *mut u8) = (byte(g, 0x100) as u8).wrapping_add(v);
+                *((g + match_player::FRUSTRATION) as *mut u8) = (byte(g, match_player::FRUSTRATION) as u8).wrapping_add(v);
                 match_performance(g, 0);
             }
             add(g, -500);
@@ -3740,7 +3740,7 @@ pub(crate) unsafe fn shot_on_goal_injected(p: usize, f_in: f32, call: &mut dyn F
                 let r = random(s * s) as u8;
                 let pf = byte(p, match_player::GOALS_CONCEDED) as u8;
                 let v = if ((r as i8) as i32) < pf as i32 { pf } else { r };
-                *((g + 0x100) as *mut u8) = (byte(g, 0x100) as u8).wrapping_add(v);
+                *((g + match_player::FRUSTRATION) as *mut u8) = (byte(g, match_player::FRUSTRATION) as u8).wrapping_add(v);
                 match_performance(g, 0);
             }
             add(g, -500);
@@ -4619,8 +4619,8 @@ pub(crate) unsafe fn punish_move_foul_injected(m: usize, e: usize, p: usize, mut
             && u(e, match_player::STAFF) != 0
             && *(u(e, match_player::STAFF) as *const i32) < base
             && (u(p, match_player::STAFF) == 0 || *(u(p, match_player::STAFF) as *const i32) < base)
-            && u(e, 0xf9) != 0
-            && human(u(e, 0xf9), 0, 1, 0, 0) == 0
+            && u(e, match_player::CLUB) != 0
+            && human(u(e, match_player::CLUB), 0, 1, 0, 0) == 0
             && (byte(u(e, match_player::STAFF), 0x5b) as i32) < v as i32 + 10
         {
             let person = u(e, match_player::PLAYER);
@@ -4633,7 +4633,7 @@ pub(crate) unsafe fn punish_move_foul_injected(m: usize, e: usize, p: usize, mut
                 crate::comparison::branch("movimento evento 0x82");
                 let mut ev = [0u8; 0x19];
                 ev[0..4].copy_from_slice(&*(u(e, match_player::STAFF) as *const [u8; 4]));
-                ev[4..8].copy_from_slice(&*(u(e, 0xf9) as *const [u8; 4]));
+                ev[4..8].copy_from_slice(&*(u(e, match_player::CLUB) as *const [u8; 4]));
                 ev[0xd] = side as u8;
                 ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());
                 ev[0x13..0x15].copy_from_slice(&0x82u16.to_le_bytes());
@@ -4765,10 +4765,10 @@ pub(crate) unsafe fn grid_step_injected(m: usize, p: usize, ox: i8, oy: i8, nx: 
             *((m + engine::FURTHEST_FORWARD) as *mut usize) = p;
         }
     } else if side == 1 {
-        let q = u(m, 0xf59a);
+        let q = u(m, engine::FURTHEST_FORWARD_SIDE1);
         let qy = if q == 0 { 9 } else { byte(q, match_player::CELL_Y) };
         if ny < qy {
-            *((m + 0xf59a) as *mut usize) = p;
+            *((m + engine::FURTHEST_FORWARD_SIDE1) as *mut usize) = p;
         }
     }
     release_marked_players(m, p, call);
@@ -5157,7 +5157,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
                 if r == 0 || best < 2000 {
                     crate::comparison::branch("conducao falta na area");
                     x = 4;
-                    y = if side == 0 { byte(m, engine::OFFSIDE_LINE).wrapping_sub(2) } else { byte(m, 0x8eb0).wrapping_add(2) };
+                    y = if side == 0 { byte(m, engine::OFFSIDE_LINE).wrapping_sub(2) } else { byte(m, engine::OFFSIDE_LINE_SIDE1).wrapping_add(2) };
                     r = 0;
                 }
                 pass_ball(call, 0x37, r, moveu, x, y);
@@ -5277,7 +5277,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, mode: u8, call: &mut dyn FnMut(u
             l30 = l30.wrapping_mul(2);
             if !(m != 0 && table_a(m, p) == 1) && random((dif * 3 + byte(u(p, match_player::STAFF), 0x5b) as i32) * 2) < 1 {
                 crate::comparison::branch("conducao mata-mata perde folego");
-                *b(p, 0x100) = (*b(p, 0x100)).wrapping_sub(1);
+                *b(p, match_player::FRUSTRATION) = (*b(p, match_player::FRUSTRATION)).wrapping_sub(1);
             }
         } else if (fora as i32) < home as i32 - 2 {
             l10 = l10.wrapping_add((dif + 2) * 3000);
@@ -5957,7 +5957,7 @@ pub(crate) unsafe fn pass_rating_by_position(p: usize, base: i16, l20: i32, l14:
     let ta = || if m != 0 { table_a(m, p) } else { 0 };
     let tb = || if m != 0 { table_b(m, p) } else { 0 };
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let club = *((p + 0xf9) as *const usize);
+    let club = *((p + match_player::CLUB) as *const usize);
     let dirigido = || club != 0 && human(club, 0, 1, 0, 0) != 0;
     let y = byte(p, match_player::CELL_Y);
     let marks = || position_marks(m + engine::TACTICS + byte(p, match_player::SIDE) as isize as usize * 0x18e3, byte(p, match_player::POSITION));
@@ -6149,8 +6149,8 @@ pub(crate) unsafe fn pass_foul_injected(m: usize, e: usize, p: usize, mut kind: 
         && u(e, match_player::STAFF) != 0
         && *(u(e, match_player::STAFF) as *const i32) < base
         && (u(p, match_player::STAFF) == 0 || *(u(p, match_player::STAFF) as *const i32) < base)
-        && u(e, 0xf9) != 0
-        && human(u(e, 0xf9), 0, 1, 0, 0) == 0
+        && u(e, match_player::CLUB) != 0
+        && human(u(e, match_player::CLUB), 0, 1, 0, 0) == 0
         && (byte(u(e, match_player::STAFF), 0x5b) as i32) < v as i32 + 10
     {
         let person = u(e, match_player::PLAYER);
@@ -6163,7 +6163,7 @@ pub(crate) unsafe fn pass_foul_injected(m: usize, e: usize, p: usize, mut kind: 
             crate::comparison::branch("passe evento 0x82");
             let mut ev = [0u8; 0x19];
             ev[0..4].copy_from_slice(&*(u(e, match_player::STAFF) as *const [u8; 4]));
-            ev[4..8].copy_from_slice(&*(u(e, 0xf9) as *const [u8; 4]));
+            ev[4..8].copy_from_slice(&*(u(e, match_player::CLUB) as *const [u8; 4]));
             ev[0xd] = side as u8;
             ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());
             ev[0x13..0x15].copy_from_slice(&0x82u16.to_le_bytes());
@@ -7196,7 +7196,7 @@ pub(crate) unsafe extern "thiscall" fn recover_stamina(j: usize, ceiling: u8) {
         } else {
             let v = if mark > 0x2d && mark < 0x41 { (mark as f64 * read_f64_at(0x96d798) - read_f64_at(0x96d790)) * k as f64 } else { k as f64 }; // 0x96d798 = 5.56, 0x96d790 = 255.76
             *f(match_player::STAMINA_CEILING) = (v * factor + *f(match_player::STAMINA) as f64) as f32;
-            if byte(j, 0x1c) == 0 && person != 0 {
+            if byte(j, match_player::INJURY_FORCES_OFF) == 0 && person != 0 {
                 let l = limit(injuries, person, 0).min(0x1964);
                 if l as f32 > *f(match_player::STAMINA_CEILING) {
                     *f(match_player::STAMINA_CEILING) = 6500.0;
@@ -7924,9 +7924,9 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
         };
         if dir == 0 {
             if base && by > y && y < 6 {
-                let gk = u(m + 0xf59a);
+                let gk = u(m + engine::FURTHEST_FORWARD_SIDE1);
                 let gy = |gk: usize| if gk != 0 { byte(gk, match_player::CELL_Y) } else { 9 };
-                let l = byte(m, 0x8eb0);
+                let l = byte(m, engine::OFFSIDE_LINE_SIDE1);
                 if gy(gk) <= l {
                     let d = y as i32 - l as i32;
                     if *((block + tactics_fields::FLAGS) as *const u32) & 0x400 != 0 && d < 2 && d > -2 {
@@ -7934,8 +7934,8 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
                         return;
                     }
                     let r2 = random(100);
-                    if b(0x106) as i32 * b(0x10b) as i32 > r2 && y as i32 - byte(m, 0x8eb0) as i32 == 1 && gy(u(m + 0xf59a)) as i32 + 1 <= byte(m, 0x8eb0) as i32 {
-                        corre(call, byte(m, 0x8eb0), 2);
+                    if b(0x106) as i32 * b(0x10b) as i32 > r2 && y as i32 - byte(m, engine::OFFSIDE_LINE_SIDE1) as i32 == 1 && gy(u(m + engine::FURTHEST_FORWARD_SIDE1)) as i32 + 1 <= byte(m, engine::OFFSIDE_LINE_SIDE1) as i32 {
+                        corre(call, byte(m, engine::OFFSIDE_LINE_SIDE1), 2);
                         return;
                     }
                 }
@@ -7987,7 +7987,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, call: &mut dyn FnMut(usize
             if dir == 0 && y < 6 {
                 !((by as i32 - 1) < y as i32 || byte(m, engine::OFFSIDE_LINE) <= byte(marked, match_player::CELL_Y))
             } else if dir == 1 {
-                y <= 5 || (by as i32 + 1 <= y as i32 && byte(m, 0x8eb0) < byte(marked, match_player::CELL_Y))
+                y <= 5 || (by as i32 + 1 <= y as i32 && byte(m, engine::OFFSIDE_LINE_SIDE1) < byte(marked, match_player::CELL_Y))
             } else {
                 true
             }
@@ -8498,7 +8498,7 @@ pub(crate) unsafe fn advance_row_injected(this: usize, direct: u8, call: &mut dy
         y -= 1;
     }
     if direct != 0 {
-        let row = if sobe { byte(engine, 0x8eb0).wrapping_add(1) } else { byte(engine, engine::OFFSIDE_LINE).wrapping_sub(1) };
+        let row = if sobe { byte(engine, engine::OFFSIDE_LINE_SIDE1).wrapping_add(1) } else { byte(engine, engine::OFFSIDE_LINE).wrapping_sub(1) };
         return call(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL, [x as u8 as u32, row as u8 as u32, 0, 0, 0]);
     }
     call(FN_MATCH_PLAYER_MOVE_TO, [x as u8 as u32, y as u8 as u32, u32::MAX, 0, 0])
@@ -8536,8 +8536,8 @@ pub(crate) unsafe extern "thiscall" fn evolve_moment(this: usize) {
     if random(11) != 0 {
         return;
     }
-    let ff = (this + 0xff) as *mut i8;
-    let h = (byte(this, 0x100) as i32 / 2 + byte(*((this + match_player::PLAYER) as *const usize), 0x25) as i32 + 10) / 4;
+    let ff = (this + match_player::ANGER) as *mut i8;
+    let h = (byte(this, match_player::FRUSTRATION) as i32 / 2 + byte(*((this + match_player::PLAYER) as *const usize), 0x25) as i32 + 10) / 4;
     if *ff as i32 > h {
         *ff = (*ff).wrapping_sub(1);
     }
@@ -8993,7 +8993,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         let pj = *((j + match_player::STAFF) as *const usize);
         let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
         let read = |o: usize| core::ptr::read_unaligned((pj + o) as *const u32);
-        if days(G_CURRENT_DATE, read(staff::DATE_JOINED_CLUB), read(0x42)) < (50 - b(pj, staff::LOYALITY)) * 10 {
+        if days(G_CURRENT_DATE, read(staff::DATE_JOINED_CLUB), read(0x42)) < (50 - b(pj, staff::LOYALTY)) * 10 {
             l18 = m(l18, 0x96a32c);
         }
         if b(pj, staff::PROFESSIONALISM) < 10 {
@@ -9057,16 +9057,16 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     } else {
         let id = *(p as *const i32);
-        let v = w(sheet(), 5) as f64 + l18 as f64 * q(0x968f98) - l1c as f64 - tabela79(id) as f64 + (byte(this, 0x100) as i32 / 2) as f64;
+        let v = w(sheet(), 5) as f64 + l18 as f64 * q(0x968f98) - l1c as f64 - tabela79(id) as f64 + (byte(this, match_player::FRUSTRATION) as i32 / 2) as f64;
         *((this + match_player::EFFECTIVE_ABILITY) as *mut i16) = match_pl_ftol(v) as i16;
         let h = (level(p, club_side()) as i8 as i32) / 2;
         let h17 = byte(this, match_player::MATCH_FORM) as i32 / 2 - 5;
-        let a = (h as f64 + h17 as f64) + (l30 as f64 - l1c as f64) + bl as f64 + byte(this, 0x100) as f64;
+        let a = (h as f64 + h17 as f64) + (l30 as f64 - l1c as f64) + bl as f64 + byte(this, match_player::FRUSTRATION) as f64;
         if (byte(this, 0x118) as f64) > a {
             l14 = (byte(this, 0x119) as f64 * teto30(w(this, match_player::EFFECTIVE_ABILITY)) * f(0x96d6e8)) as f32;
         }
     }
-    if is_national_team(*((this + 0xf9) as *const usize)) != 0 && ta() != 1 {
+    if is_national_team(*((this + match_player::CLUB) as *const usize)) != 0 && ta() != 1 {
         l14 = (l14 as f64 + f(0x968990)) as f32;
     }
     *((this + match_player::EFFECTIVE_ABILITY) as *mut i16) = match_pl_ftol(((byte(this, match_player::MATCH_FORM) as i32 - 10) * byte(this, 0x118) as i32) as f64 * q(0x969020) + w(this, match_player::EFFECTIVE_ABILITY) as f64) as i16;
@@ -9076,7 +9076,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         if t != 0 {
             let t14 = *((t + fixture::COMPETITION) as *const usize);
             if t14 != 0 && byte(t, fixture::CATEGORY) != 6 {
-                let ax = w(t14, competition::CLUB_COMP_REPUTATION);
+                let ax = w(t14, competition::REPUTATION);
                 let pv = person();
                 if ax != 0 && !(pv != 0 && *(pv as *const i32) >= n_persons()) && (byte(pv, staff::YEAR_OF_BIRTH) as i32) < 24 {
                     let age = byte(pv, staff::YEAR_OF_BIRTH) as i32;
@@ -9204,7 +9204,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if a_20_0c() {
         wr(0x99, rd(match_player::FINISHING) * q(0x9689d0));
     }
-    if rd(match_player::FINISHING) > q(0x969508) && maior150 && is_national_team(*((this + 0xf9) as *const usize)) == 0 {
+    if rd(match_player::FINISHING) > q(0x969508) && maior150 && is_national_team(*((this + match_player::CLUB) as *const usize)) == 0 {
         pow(0x99, q(0x969508), q(0x968928));
     }
     // +0xa5, +0xa9, +0xb1, +0xb5
@@ -9446,7 +9446,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         if c1c != 0 {
             let c57 = *((c1c + club::DIVISION) as *const usize);
             if c57 != 0 && *((t + fixture::COMPETITION) as *const usize) == c57 {
-                let ax = w(c57, competition::CLUB_COMP_REPUTATION);
+                let ax = w(c57, competition::REPUTATION);
                 if ax < 5 {
                     wr(0xd5, rd(match_player::STAMINA_ATTRIBUTE) + q(0x968928));
                 } else if ax < 9 {
@@ -9494,7 +9494,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let b44 = fb(0x44);
     let v44 = if l12f < 36 { b44 } else { b44 * q(0x969040) };
     let h = (b(person(), 0x5b) / 2 + 10) as f64;
-    wr(0xf5, (byte(this, 0x100) as f64 + v44) - l14 as f64 / h + l24 as f64 * q(0x968968));
+    wr(0xf5, (byte(this, match_player::FRUSTRATION) as f64 + v44) - l14 as f64 / h + l24 as f64 * q(0x968968));
     let p = person();
     if p != 0 && *(p as *const i32) >= n_persons() {
         return;
@@ -9507,23 +9507,23 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     }
     if l2c != 0 {
         let c = l2c;
-        let c45 = || core::ptr::read_unaligned((c + staff_contract::GRIEVANCES) as *const u32);
+        let c45 = || core::ptr::read_unaligned((c + contract::GRIEVANCES) as *const u32);
         if c45() & 0x40000 != 0 && b(p, staff::PRESSURE) + l12f < random(50) {
             for (o, k) in [(0xf5, 0x96b014), (0x9d, 0x96a32c), (0xf1, 0x96a32c), (0x95, 0x96b014), (0x91, 0x96b014), (0xc1, 0x96b014)] {
                 mul(o, k);
             }
         }
         let pa61 = *((p + staff::PLAYER) as *const usize);
-        if pa61 != 0 && byte(c, staff_contract::MORALE) < -25 && byte(pa61, player_sheet::WORK_RATE) < 15 && b(p, staff::PROFESSIONALISM) < 10 && w(pa61, player_sheet::CURRENT_REPUTATION) > 3750 && w(pa61, player_sheet::CURRENT_REPUTATION) > w(club_side(), 0x80) + 250 {
+        if pa61 != 0 && byte(c, contract::MORALE) < -25 && byte(pa61, player_sheet::WORK_RATE) < 15 && b(p, staff::PROFESSIONALISM) < 10 && w(pa61, player_sheet::CURRENT_REPUTATION) > 3750 && w(pa61, player_sheet::CURRENT_REPUTATION) > w(club_side(), 0x80) + 250 {
             mul(0xf5, 0x96b014);
             mul(0x7d, 0x96a32c);
-            if byte(c, staff_contract::MORALE) < -75 {
+            if byte(c, contract::MORALE) < -75 {
                 for (o, k) in [(0xf1, 0x96a32c), (0x9d, 0x96a32c), (0x95, 0x96b014), (0x99, 0x96a32c), (0xc1, 0x96b014)] {
                     mul(o, k);
                 }
             }
         }
-        if byte(c, staff_contract::GRIEVANCES) as u8 & 0x17 != 0 {
+        if byte(c, contract::GRIEVANCES) as u8 & 0x17 != 0 {
             if b(p, staff::PROFESSIONALISM) > 15 && b(p, staff::AMBITION) > 15 {
                 mul(0xf5, 0x96a33c);
             } else if b(p, staff::PROFESSIONALISM) < 5 {
@@ -9557,7 +9557,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
                 }
             }
         }
-        if byte(c, staff_contract::GRIEVANCES) as u8 & 0x40 != 0 {
+        if byte(c, contract::GRIEVANCES) as u8 & 0x40 != 0 {
             if fraco() {
                 for (o, k) in strong {
                     mul(o, k);
@@ -9624,7 +9624,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     // contract history (+0x10 and +0x14 over +0xc matches)
     if l2c != 0 {
         let c = l2c;
-        let c0c = *((c + staff_contract::WAGE) as *const i32);
+        let c0c = *((c + contract::WAGE) as *const i32);
         for (o, tira) in [(0x10usize, true), (0x14, false)] {
             let e = *((c + o) as *const i32);
             if e > -1 && c0c > 0 {
@@ -9703,7 +9703,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
 /// 2 a 5: sorteio(K / v) < limite, K = 400 mil, 2, 4 e 8 milhoes (mais condicao, mais chance).
 /// Outros codigos: 0.
 pub(crate) unsafe extern "thiscall" fn condition_test(this: usize, code: i8, target: usize) -> u8 {
-    let limit: i32 = if target != 0 && target == *((this + 0x1a6) as *const usize) { 8 } else { 1 };
+    let limit: i32 = if target != 0 && target == *((this + match_player::LAST_FOULED_BY) as *const usize) { 8 } else { 1 };
     let c = read_f32_at(this + match_player::CONFIDENCE) as f64;
     let v = match_pl_ftol(game_pow(c, read_f64_at(0x968950))) as f64; // 0x968950 = 2
     let n = match code {

@@ -229,10 +229,10 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                     let division = read_u32(c + club::LAST_DIVISION) as usize;
                     if division != 0 {
                         crate::comparison::branch("cqj_2 nivel da divisao");
-                        core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((division + competition::CLUB_COMP_REPUTATION) as *const u16)); // cqj2: the division level
+                        core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((division + competition::REPUTATION) as *const u16)); // cqj2: the division level
                         *((r + 0xb) as *mut u8) = *((c + club::LAST_POSITION) as *const u8);
                         let comp = read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize;
-                        if comp == 0 || *((comp + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
+                        if comp == 0 || *((comp + nation::LEAGUE_SELECTED) as *const u8) == 0 {
                             core::ptr::write_unaligned((c + club::LAST_DIVISION) as *mut u32, 0);
                             *((c + club::LAST_POSITION) as *mut u8) = 0;
                         }

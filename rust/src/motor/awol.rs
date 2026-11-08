@@ -708,7 +708,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
         for bit in [0x2000u32, 0x800] {
             if read_usize(k2 + 0x45) as u32 & bit != 0
                 && friendly_random(read_u8(person + staff::PROFESSIONALISM) as i8 as i32 + 10) == 0
-                && friendly_random(read_u8(person + staff::LOYALITY) as i8 as i32 + 10) == 0
+                && friendly_random(read_u8(person + staff::LOYALTY) as i8 as i32 + 10) == 0
             {
                 crate::comparison::branch("cpw_7 sumiu em vez de faltar");
                 if MISS_TRAINING_DRY_RUN {

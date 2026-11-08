@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     if obj == 0 {
         return show_error_at(0xa83b78, 0x224);
     }
-    let weight = read_i16(comp + competition::CLUB_COMP_REPUTATION);
+    let weight = read_i16(comp + competition::REPUTATION);
     raise_champion_reputation(club, weight, true); // cqd13: the reputation of the league champion
     if read_usize(club + club::DIVISION) != 0 {
         let b = read_usize(club + club::STADIUM);
@@ -197,9 +197,9 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
             if x < 150000 && x < read_i32(club + club::ATTENDANCE).wrapping_add(500) {
                 write_i32(club + club::MAX_ATTENDANCE, x.wrapping_add((weight as i32).wrapping_mul(20)));
             }
-            let y = read_i32(b + stadium::STADIUM_EXPANSION_CAPACITY);
+            let y = read_i32(b + stadium::EXPANSION_CAPACITY);
             if y < 120000 {
-                write_i32(b + stadium::STADIUM_EXPANSION_CAPACITY, y.wrapping_add(((weight as i32).wrapping_add(20)).wrapping_mul(25)));
+                write_i32(b + stadium::EXPANSION_CAPACITY, y.wrapping_add(((weight as i32).wrapping_add(20)).wrapping_mul(25)));
             }
         }
     }
@@ -306,7 +306,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         return show_error_at(0xa83b78, 0x51e);
     }
     let comp = read_usize(game + fixture::COMPETITION);
-    let weight = read_i16(comp + competition::CLUB_COMP_REPUTATION);
+    let weight = read_i16(comp + competition::REPUTATION);
     raise_champion_reputation(club, weight, false);
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         if r != 0 {
             core::ptr::write_unaligned((r + manager_record::CUPS_WON) as *mut i16, read_i16(r + manager_record::CUPS_WON).wrapping_add(1));
             // fild weight; fld 4.0; _CIpow (base in st1); fmul 0.5; ftol
-            let v = match_pl_ftol(game_pow(read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: the title weight; 0x968938 = 4, 0x968968 = 0.5
+            let v = match_pl_ftol(game_pow(read_i16(comp + competition::REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: the title weight; 0x968938 = 4, 0x968968 = 0.5
             write_i32(r + manager_record::YEAR_POINTS, read_i32(r + manager_record::YEAR_POINTS).wrapping_add(v));
             write_i32(r + manager_record::MONTH_POINTS, read_i32(r + manager_record::MONTH_POINTS).wrapping_add(v));
             if is_national_team(club) != 0 {
@@ -347,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     let morale: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     for j in 0..50usize {
-        if (read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32).wrapping_mul(400) < read_i16(club + club::REPUTATION) as i32 {
+        if (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(400) < read_i16(club + club::REPUTATION) as i32 {
             break;
         }
         let p = read_usize(club + club::SQUAD + 4 * j);
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     add_club_history(this, club, 0, comp);
     if read_usize(G_MEDIA) != 0 && weight > 10 {
         post_trophy_praise(club, comp, 1);
-        if read_i16(comp + competition::CLUB_COMP_REPUTATION) > 12 || read_i16(club + club::REPUTATION) < 0x9c4 {
+        if read_i16(comp + competition::REPUTATION) > 12 || read_i16(club + club::REPUTATION) < 0x9c4 {
             post_trophy_praise(club, comp, 3);
         }
     }
@@ -727,7 +727,7 @@ pub(crate) unsafe extern "thiscall" fn add_supporters_player_of_year_record(this
     put_i32(&mut e, 0xd, (a & 0xffff) as i32);
     put_i32(&mut e, 0x11, b as i32);
     append_person_history_by_id(!SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN, this, read_usize(person), &e);
-    let r1 = friendly_random(0x15 - read_i8_as_i32(person + staff::LOYALITY));
+    let r1 = friendly_random(0x15 - read_i8_as_i32(person + staff::LOYALTY));
     if r1 < friendly_random(10) {
         crate::comparison::branch("cqa_11 goal_crowd_reaction favorita");
         let gosta: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_FAVOURED_CLUB);
@@ -793,7 +793,7 @@ pub(crate) unsafe fn raise_side_rating(a: usize, weight: i16, k: i32) {
 pub(crate) unsafe fn update_cup_placed_club(this: usize, club: usize, game: usize, partida: usize, kind: u8) {
     let (limiar, teto, k, metade) = if kind == 1 { (500, 350, 300, 150) } else { (500, 200, 200, 100) };
     let comp = read_usize(game + fixture::COMPETITION);
-    let weight = read_i16(comp + competition::CLUB_COMP_REPUTATION);
+    let weight = read_i16(comp + competition::REPUTATION);
     let target = (weight as i32).wrapping_mul(limiar); // cqa12: the reputation threshold
     let rep = read_i16(club + club::REPUTATION) as i32;
     if rep < target {
@@ -1261,7 +1261,7 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: usize, comp: usize, weig
     }
     let v = read_i32(club + club::MAX_ATTENDANCE);
     if v < 0x249f0 && v < read_i32(club + club::ATTENDANCE).wrapping_add(500) {
-        write_i32(club + club::MAX_ATTENDANCE, v.wrapping_add(read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32 * 10));
+        write_i32(club + club::MAX_ATTENDANCE, v.wrapping_add(read_i16(comp + competition::REPUTATION) as i32 * 10));
     }
     if read_usize(club + club::MANAGER) != 0 {
         let manager = read_usize(club + club::MANAGER);
@@ -1278,7 +1278,7 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: usize, comp: usize, weig
                 let foreign: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
                 (200, if foreign(manager, read_usize(club + club::NATION), 1) != 0 { 200 } else { 400 })
             };
-            let x = read_i16(pela + competition::CLUB_COMP_REPUTATION) as i32;
+            let x = read_i16(pela + competition::REPUTATION) as i32;
             let nj = || read_usize(read_usize(club + club::MANAGER) + 0x69);
             crate::comparison::branch("cpq_3 acesso do tecnico");
             raise_promotion_rating(nj() + 0xa, x, 400);
@@ -1289,7 +1289,7 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: usize, comp: usize, weig
         let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         let r = record(this, read_usize(club + club::MANAGER), 1);
         if r != 0 {
-            let points = (read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32).wrapping_mul(weight as u8 as i8 as i32).wrapping_mul(2500) / 100;
+            let points = (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(weight as u8 as i8 as i32).wrapping_mul(2500) / 100;
             staff_records_add_i32(r + manager_record::YEAR_POINTS, points);
             staff_records_add_i32(r + manager_record::SEASON_POINTS, points);
             staff_records_add_i32(r + manager_record::MONTH_POINTS, points);
@@ -1425,7 +1425,7 @@ pub(crate) unsafe fn apply_relegation(this: usize, club: usize, comp: usize, wri
             let foreign: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
             let factor: i16 = if foreign(manager, read_usize(club + club::NATION), 1) != 0 { -8 } else { -16 };
             let nj = || read_usize(read_usize(club + club::MANAGER) + 0x69);
-            let x = || read_i16(comp + competition::CLUB_COMP_REPUTATION);
+            let x = || read_i16(comp + competition::REPUTATION);
             crate::comparison::branch("cpq_3 rebaixamento do tecnico");
             add_rating_clamped(nj() + 0xa, x().wrapping_mul(-16));
             add_rating_clamped(nj() + 8, x().wrapping_mul(factor));
@@ -1505,7 +1505,7 @@ pub(crate) unsafe fn record_qualification(this: usize, club: usize, comp: usize,
         return;
     }
     // simplification: the original does pow(x, 2.0) (0x945ff0): x × x, exact for the importance (16 bits)
-    let x = read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64;
+    let x = read_i16(comp + competition::REPUTATION) as f64;
     let points = match_pl_ftol(x * x * (weight as u8 as i8 as i32) as f64);
     staff_records_add_i32(r + manager_record::YEAR_POINTS, points);
     staff_records_add_i32(r + manager_record::MONTH_POINTS, points);
@@ -1984,7 +1984,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this:
     let comp = read_usize(entry);
     let id = if comp != 0 { read_i32(comp) } else { -1 };
     let hall: unsafe extern "thiscall" fn(usize, usize, i32, usize) = core::mem::transmute(FN_HALLOFFAME_ADD_LEAGUE_ENTRY);
-    let guarda = |c: usize| c != 0 && *((c + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0;
+    let guarda = |c: usize| c != 0 && *((c + nation::LEAGUE_SELECTED) as *const u8) != 0;
     let base = read_usize(this + staff_records_fields::MANAGER_RECORDS);
     let mut k = 0i32;
     while k < manager_record_count() {

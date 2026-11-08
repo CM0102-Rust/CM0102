@@ -1,14 +1,14 @@
 use super::*;
 
-// The comparers of the routines in ../transfer/scotland_rules.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../transfer/scotland_rules.rs.
 // [pt] Os comparadores das rotinas de ../transfer/scotland_rules.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `scotland_rules_can_loan_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `scotland_rules_can_loan_player`.
 pub(crate) unsafe extern "thiscall" fn compare_scotland_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_SCOTLAND_RULES_CAN_LOAN_PLAYER), scotland_rules_can_loan_player, "scotland_rules_can_loan_player", this, club, player, msg, reason)
 }
 
-/// Comparer for `scotland_rules_get_loan_period` (comparison mode: see the header of motor.rs).
+/// Comparer for `scotland_rules_get_loan_period`.
 ///
 /// [pt] Comparador: lado a lado nas quatro saídas e em [0xae1080].
 pub(crate) unsafe extern "thiscall" fn compare_scotland_rules_get_loan_period(this: usize, a1: usize, a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_scotland_rules_get_loan_period(th
     SCOREBOARD.record(igual, || format!("scotland_rules_get_loan_period(regras {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, player, mo, mr));
 }
 
-/// Comparer for `construct_scotland_rules` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_scotland_rules`.
 ///
 /// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn compare_construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {

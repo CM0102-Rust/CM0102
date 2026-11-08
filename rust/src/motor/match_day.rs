@@ -396,10 +396,10 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
         let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
         for k in 0..2 {
             let c = u(game, fixture::AWAY_CLUB);
-            if c == 0 || human(c, 0, 1, 0, 0) == 0 || u(c, 0x57) == 0 {
+            if c == 0 || human(c, 0, 1, 0, 0) == 0 || u(c, club::DIVISION) == 0 {
                 continue;
             }
-            let id = *(u(c, 0x57) as *const i32);
+            let id = *(u(c, club::DIVISION) as *const i32);
             if id != *(game as *const i32) {
                 continue;
             }
@@ -1147,7 +1147,7 @@ pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
     let mut v = Vec::new();
     for e in (0xb63d60usize..0xb64738).step_by(0x48) {
         let p = *(e as *const usize);
-        if p != 0 && *((p + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 != 0 {
+        if p != 0 && *((p + nation::LEAGUE_SELECTED) as *const u8) & 2 != 0 {
             let q = *((p + nation::CONTINENT) as *const usize);
             if q != 0 {
                 v.push(0xb67a58 + *(q as *const usize));
@@ -1253,7 +1253,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     }
     if (x as i8) > -1 {
         let e = g(0xb63d60 + x as usize * 0x48);
-        if e != 0 && *((e + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 != 0 {
+        if e != 0 && *((e + nation::LEAGUE_SELECTED) as *const u8) & 2 != 0 {
             return 0;
         }
     }
@@ -1331,7 +1331,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
             if free
                 && g(s + staff::PLAYER) != 0
                 && w(g(s + staff::PLAYER) + 0xb) > 0x109a
-                && byte(s, staff::LOYALITY) > 5
+                && byte(s, staff::LOYALTY) > 5
                 && byte(s, staff::AMBITION) > 0xf
                 && byte(s, staff::DETERMINATION) > 0xa
                 && n > 2
@@ -1358,7 +1358,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
         if c == 0 || read(c + 0x45) != 0 || ub(partida + fixture::HOME_SIDE_MARK) == 0 || ub(partida + fixture::AWAY_SIDE_MARK) == 0 {
             continue;
         }
-        if read(partida + fixture::COMPETITION) == 0 || read(partida + fixture::COMPETITION) != read(club + club::DIVISION) || away(club) != 0 || byte(p, staff::LOYALITY) <= 0xf {
+        if read(partida + fixture::COMPETITION) == 0 || read(partida + fixture::COMPETITION) != read(club + club::DIVISION) || away(club) != 0 || byte(p, staff::LOYALTY) <= 0xf {
             continue;
         }
         crate::comparison::branch("clube jovem");

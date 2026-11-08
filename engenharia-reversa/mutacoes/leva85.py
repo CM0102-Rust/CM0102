@@ -3,7 +3,7 @@
 MUTACOES = [
     ('a_nan', "        if !(v >= q(0x9689a0)) {", "        if v < q(0x9689a0) {"),
     ('a_idade', "        if age < 18 {", "        if age < 17 {"),
-    ('a_f5', "    wr(0xf5, (byte(this, 0x100) as f64 + v44) - l14 as f64 / h + l24 as f64 * q(0x968968));", "    wr(0xf5, (byte(this, 0x100) as f64 + v44) - l14 as f64 / h + l24 as f64 * q(0x967880));"),
+    ('a_f5', "    wr(0xf5, (byte(this, match_player::FRUSTRATION) as f64 + v44) - l14 as f64 / h + l24 as f64 * q(0x968968));", "    wr(0xf5, (byte(this, match_player::FRUSTRATION) as f64 + v44) - l14 as f64 / h + l24 as f64 * q(0x967880));"),
     ('a_7d', "    wr(0x7d, rd(match_player::ANTICIPATION) * q(0x968968) + q(0x9688a0));", "    wr(0x7d, rd(match_player::ANTICIPATION) * q(0x968968) + q(0x9688b0));"),
     ('a_150', "    let maior150 = *p3b > 150;", "    let maior150 = *p3b > 160;"),
     ('a_pos', "            } else if x & 0x40 != 0 {\n                5", "            } else if x & 0x40 != 0 {\n                4"),

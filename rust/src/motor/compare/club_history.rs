@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../club_history.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../club_history.rs.
 // [pt] Os comparadores das rotinas de ../club_history.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `club_history_save` (comparison mode: see the header of motor.rs).
+/// Comparer for `club_history_save`.
 ///
 /// [pt] Comparador da 0x443f50: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_club_history_save(this: usize, save: usize) -> u32 {

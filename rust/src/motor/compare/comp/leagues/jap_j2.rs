@@ -1,6 +1,6 @@
 use super::*;
 
-// The comparers of the routines in ../comp/leagues/jap_j2.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/leagues/jap_j2.rs.
 // [pt] Os comparadores das rotinas de ../comp/leagues/jap_j2.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparador: como o do Goiano.
@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_j2_set_up_rules(this: usize) 
     r
 }
 
-/// Comparer for `jap_j2_create_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `jap_j2_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j2_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J2_CREATE_TABLE);
     compare_japanese_table("jap_j2_create_table", this, 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))

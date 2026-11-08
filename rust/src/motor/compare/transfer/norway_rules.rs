@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../transfer/norway_rules.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../transfer/norway_rules.rs.
 // [pt] Os comparadores das rotinas de ../transfer/norway_rules.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `construct_norway_rules` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_norway_rules`.
 ///
 /// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn compare_construct_norway_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {

@@ -44,7 +44,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
         let mut first = true;
         for i in 0..0x23usize {
             let n = *((0xb63d60 + i * 0x48) as *const usize);
-            if n == 0 || *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) & bit == 0 {
+            if n == 0 || *((n + nation::LEAGUE_SELECTED) as *const u8) & bit == 0 {
                 continue;
             }
             if first {

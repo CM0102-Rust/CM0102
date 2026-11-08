@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../fog_of_war.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../fog_of_war.rs.
 // [pt] Os comparadores das rotinas de ../fog_of_war.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `chance_to_know` (comparison mode: see the header of motor.rs).
+/// Comparer for `chance_to_know`.
 pub(crate) unsafe extern "C" fn compare_chance_to_know(person: usize, level: i8) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, i8) -> i32>(IDX_CHANCE_TO_KNOW)(person, level);
     let v = chance_to_know(person, level);
@@ -11,7 +11,7 @@ pub(crate) unsafe extern "C" fn compare_chance_to_know(person: usize, level: i8)
     r
 }
 
-/// Comparer for `know_person` (comparison mode: see the header of motor.rs).
+/// Comparer for `know_person`.
 pub(crate) unsafe extern "thiscall" fn compare_know_person(this: usize, person: usize, font: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_KNOW_PERSON);
     let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn compare_know_person(this: usize, person: 
     SCOREBOARD.record(igual, || format!("know_person original={:x?} rust={:x?}", mo, mr));
 }
 
-/// Comparer for `fog_after_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `fog_after_match`.
 pub(crate) unsafe extern "stdcall" fn compare_fog_after_match(partida: usize, data: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize)>(IDX_FOG_AFTER_MATCH);
     // the registers the routine may touch (same tests, without the 0x32 of the reserves: leftover does not hurt)
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "stdcall" fn compare_fog_after_match(partida: usize, da
     let n = *(G_STAFF_COUNT as *const i32);
     let mut reg: Vec<(usize, usize)> = Vec::new();
     for lado in 0..2usize {
-        let club = *((partida + 0x20 - 4 * lado) as *const usize);
+        let club = *((partida + fixture::AWAY_CLUB - 4 * lado) as *const usize);
         if human(club, 0, 1, 0, 0) == 0 || *((club + club::MANAGER) as *const usize) == 0 {
             continue;
         }

@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../match_pl.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../match_pl.rs.
 // [pt] Os comparadores das rotinas de ../match_pl.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `shot` (comparison mode: see the header of motor.rs).
+/// Comparer for `shot`.
 pub(crate) unsafe extern "thiscall" fn compare_shot(j: usize, strength: u32, x: u32, y: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(IDX_SHOT);
     if is_recording_top_level() {
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_shot(j: usize, strength: u32, x: 
     SCOREBOARD.record(igual && sequencia, || format!("shot(forca {}, alvo {} {}) {} chamadas: {}", strength as i16, x as i8, y as i8, k, tape_detail()));
 }
 
-/// Comparer for `shot_outcome` (comparison mode: see the header of motor.rs).
+/// Comparer for `shot_outcome`.
 pub(crate) unsafe extern "thiscall" fn compare_shot_outcome(p: usize, f: f32) {
     if is_recording() {
         // unit of the outer tape; inside, its own comparison (nested tape)
@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn compare_shot_outcome(p: usize, f: f32) {
     compare_shot_outcome_inner(p, f);
 }
 
-/// Comparer for `shot_on_goal` (comparison mode: see the header of motor.rs).
+/// Comparer for `shot_on_goal`.
 pub(crate) unsafe extern "thiscall" fn compare_shot_on_goal(p: usize, f: f32) {
     if is_recording() {
         // unit of the outer tape; inside, its own comparison (nested tape)
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn compare_shot_on_goal(p: usize, f: f32) {
     compare_shot_on_goal_inner(p, f);
 }
 
-/// Comparer for `mover` (comparison mode: see the header of motor.rs).
+/// Comparer for `mover`.
 pub(crate) unsafe extern "thiscall" fn compare_mover(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
     if is_recording() {
         // unit of the outer tape; inside, its own comparison (nested tape)
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mover(p: usize, a1: u32, a2: u32,
     compare_player_move(p, a1, a2, a3, a4, a5)
 }
 
-/// Comparer for `dribble` (comparison mode: see the header of motor.rs).
+/// Comparer for `dribble`.
 pub(crate) unsafe extern "thiscall" fn compare_dribble(p: usize, mode: u32) -> u32 {
     if is_recording() {
         // outer tape unit (penalties, player decision); inside, the comparison itself
@@ -79,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn compare_dribble(p: usize, mode: u32) -> u
     compare_dribble_inner(p, mode)
 }
 
-/// Comparer for `execute_pass` (comparison mode: see the header of motor.rs).
+/// Comparer for `execute_pass`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_execute_pass(p: usize, x: u32, y: u32, kind: u32, out: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
     if is_recording() {
@@ -94,12 +94,12 @@ pub(crate) unsafe extern "thiscall" fn compare_execute_pass(p: usize, x: u32, y:
     compare_execute_pass_inner(p, x, y, kind, out, receptor, tx, ty)
 }
 
-/// Comparer for `player_side` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_side`.
 pub(crate) unsafe extern "thiscall" fn compare_player_side(j: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PLAYER_SIDE)(j)
 }
 
-/// Comparer for `shoot` (comparison mode: see the header of motor.rs).
+/// Comparer for `shoot`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_shoot(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
     if is_recording() {
@@ -113,14 +113,14 @@ pub(crate) unsafe extern "thiscall" fn compare_shoot(p: usize, a1: u32, a2: u32,
     compare_shoot_tape(p, a1, a2, a3, a4, a5, a6)
 }
 
-/// Comparer for `destroy_match_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `destroy_match_player`.
 pub(crate) unsafe extern "thiscall" fn compare_destroy_match_player(j: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_MATCH_PLAYER);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(j + match_player::ENGINE, 4)], || o(j), || destroy_match_player(j));
     SCOREBOARD.record(igual, || format!("destroy_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));
 }
 
-/// Comparer for `construct_match_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_match_player`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_match_player(j: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUCT_MATCH_PLAYER);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(j, 0x1bc)], || o(j), || construct_match_player(j));
@@ -128,42 +128,42 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_match_player(j: usize) 
     r
 }
 
-/// Comparer for `clear_stored` (comparison mode: see the header of motor.rs).
+/// Comparer for `clear_stored`.
 pub(crate) unsafe extern "thiscall" fn compare_clear_stored(this: usize, l: u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u8)>(IDX_CLEAR_STORED);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::GOALKEEPER, 8)], || f(this, l), || clear_stored(this, l));
     SCOREBOARD.record(igual, || format!("clear_stored({}) original={:x?} rust={:x?}", l, mo, mr));
 }
 
-/// Comparer for `write_19c` (comparison mode: see the header of motor.rs).
+/// Comparer for `write_19c`.
 pub(crate) unsafe extern "thiscall" fn compare_write_19c(this: usize, v: i16) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i16)>(IDX_WRITE_19C);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + match_player::BALL_CONTROL, 2)], || f(this, v), || write_19c(this, v));
     SCOREBOARD.record(igual, || format!("write_19c({}) original={:x?} rust={:x?}", v, mo, mr));
 }
 
-/// Comparer for `clear_move` (comparison mode: see the header of motor.rs).
+/// Comparer for `clear_move`.
 pub(crate) unsafe extern "thiscall" fn compare_clear_move(this: usize) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CLEAR_MOVE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::PENDING_PLAY_KIND, 16)], || f(this), || clear_move(this));
     SCOREBOARD.record(igual, || format!("clear_move original={:x?} rust={:x?}", mo, mr));
 }
 
-/// Comparer for `add_2b` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_2b`.
 pub(crate) unsafe extern "thiscall" fn compare_add_2b(this: usize, v: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8)>(IDX_ADD_2B);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + match_player::BUSY, 1)], || o(this, v), || add_2b(this, v));
     SCOREBOARD.record(igual, || format!("add_2b({}) original={:x?} rust={:x?}", v, mo, mr));
 }
 
-/// Comparer for `write_2b` (comparison mode: see the header of motor.rs).
+/// Comparer for `write_2b`.
 pub(crate) unsafe extern "thiscall" fn compare_write_2b(this: usize, v: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8)>(IDX_WRITE_2B);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + match_player::BUSY, 1)], || o(this, v), || write_2b(this, v));
     SCOREBOARD.record(igual, || format!("write_2b({}) original={:x?} rust={:x?}", v, mo, mr));
 }
 
-/// Comparer for `release_ball` (comparison mode: see the header of motor.rs).
+/// Comparer for `release_ball`.
 pub(crate) unsafe extern "thiscall" fn compare_release_ball(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RELEASE_BALL);
     let m = *((this + match_player::ENGINE) as *const usize);
@@ -172,7 +172,7 @@ pub(crate) unsafe extern "thiscall" fn compare_release_ball(this: usize) {
     SCOREBOARD.record(igual, || format!("release_ball original={:x?} rust={:x?}", mo, mr));
 }
 
-/// Comparer for `code_byte` (comparison mode: see the header of motor.rs).
+/// Comparer for `code_byte`.
 pub(crate) unsafe extern "stdcall" fn compare_code_byte(c: u32) -> i32 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32) -> i32>(IDX_CODE_BYTE)(c);
     let n = code_byte(c);
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "stdcall" fn compare_code_byte(c: u32) -> i32 {
     r
 }
 
-/// Comparer for `adjusted_rating` (comparison mode: see the header of motor.rs).
+/// Comparer for `adjusted_rating`.
 pub(crate) unsafe extern "thiscall" fn compare_adjusted_rating(this: usize, base: i8) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> i32>(IDX_ADJUSTED_RATING);
     let reg = crate::rng::STATE_REGIONS;
@@ -189,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn compare_adjusted_rating(this: usize, base
     r
 }
 
-/// Comparer for `adjust_17` (comparison mode: see the header of motor.rs).
+/// Comparer for `adjust_17`.
 pub(crate) unsafe extern "thiscall" fn compare_adjust_17(this: usize, delta: i8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u8>(IDX_ADJUST_17);
     let mut reg = vec![(this + match_player::MATCH_FORM, 1)];
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_17(this: usize, delta: i8)
     r
 }
 
-/// Comparer for `take_ball` (comparison mode: see the header of motor.rs).
+/// Comparer for `take_ball`.
 pub(crate) unsafe extern "thiscall" fn compare_take_ball(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_TAKE_BALL);
     if is_recording_top_level() {
@@ -234,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn compare_take_ball(this: usize) {
     SCOREBOARD.record(igual, || format!("take_ball(lado {}, {} {}) original={:x?} rust={:x?}", side_of_player(this), byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y), mo, mr));
 }
 
-/// Comparer for `move_to` (comparison mode: see the header of motor.rs).
+/// Comparer for `move_to`.
 pub(crate) unsafe extern "thiscall" fn compare_move_to(this: usize, x: i8, y: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8)>(IDX_MOVE_TO);
     if is_recording_top_level() {
@@ -260,21 +260,21 @@ pub(crate) unsafe extern "thiscall" fn compare_move_to(this: usize, x: i8, y: i8
     SCOREBOARD.record(igual, || format!("move_to({}, {}) original={:x?} rust={:x?}", x, y, mo, mr));
 }
 
-/// Comparer for `commentary_a` (comparison mode: see the header of motor.rs).
+/// Comparer for `commentary_a`.
 pub(crate) unsafe extern "thiscall" fn compare_commentary_a(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32)>(IDX_COMMENTARY_A);
     let (igual, n) = compare_with_commentary(|| o(this, a1, a2, a3, a4, a5), |c| commentary_two_blank(this, a1, a2, a3, a4, a5, c));
     SCOREBOARD.record(igual, || format!("commentary_a({:#x} {:#x} {:#x} {:#x} {:#x}) {} chamadas", a1, a2, a3, a4, a5, n));
 }
 
-/// Comparer for `commentary_b` (comparison mode: see the header of motor.rs).
+/// Comparer for `commentary_b`.
 pub(crate) unsafe extern "thiscall" fn compare_commentary_b(this: usize, a1: u32, a2: u32, a3: u32, a4: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(IDX_COMMENTARY_B);
     let (igual, n) = compare_with_commentary(|| o(this, a1, a2, a3, a4), |c| commentary_three_blank(this, a1, a2, a3, a4, c));
     SCOREBOARD.record(igual, || format!("commentary_b({:#x} {:#x} {:#x} {:#x}) {} chamadas", a1, a2, a3, a4, n));
 }
 
-/// Comparer for `condition_test` (comparison mode: see the header of motor.rs).
+/// Comparer for `condition_test`.
 pub(crate) unsafe extern "thiscall" fn compare_condition_test(this: usize, code: i8, target: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, usize) -> u8>(IDX_CONDITION_TEST);
     let reg = crate::rng::STATE_REGIONS;
@@ -283,7 +283,7 @@ pub(crate) unsafe extern "thiscall" fn compare_condition_test(this: usize, code:
     r
 }
 
-/// Comparer for `update_attributes` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_attributes`.
 pub(crate) unsafe extern "thiscall" fn compare_update_attributes(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_ATTRIBUTES);
     // only the player’s record changes: word +0x3b and the fields from +0x71 to +0xf8
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_attributes(this: usize) {
     SCOREBOARD.record(igual, || format!("update_attributes original={:x?} rust={:x?}", mo, mr));
 }
 
-/// Comparer for `match_performance` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_performance`.
 pub(crate) unsafe extern "thiscall" fn compare_match_performance(this: usize, mark: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8)>(IDX_MATCH_PERFORMANCE);
     // the player’s whole record (0x6ec010, itself and 0x6f44a0 write to it), the side byte at
@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn compare_match_performance(this: usize, ma
     SCOREBOARD.record(igual, || format!("match_performance({}) original={:x?} rust={:x?}", mark, mo, mr));
 }
 
-/// Comparer for `evolve_moment` (comparison mode: see the header of motor.rs).
+/// Comparer for `evolve_moment`.
 pub(crate) unsafe extern "thiscall" fn compare_evolve_moment(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EVOLVE_MOMENT);
     let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
@@ -318,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn compare_evolve_moment(this: usize) {
     SCOREBOARD.record(igual, || format!("evolve_moment original={:x?} rust={:x?}", mo, mr));
 }
 
-/// Comparer for `match_of_interest` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_of_interest`.
 pub(crate) unsafe extern "C" fn compare_match_of_interest(p: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MATCH_OF_INTEREST)(p);
     let v = match_of_interest(p);
@@ -326,7 +326,7 @@ pub(crate) unsafe extern "C" fn compare_match_of_interest(p: usize) -> u32 {
     r
 }
 
-/// Comparer for `tackle` (comparison mode: see the header of motor.rs).
+/// Comparer for `tackle`.
 pub(crate) unsafe extern "thiscall" fn compare_tackle(j: usize, strong: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_TACKLE);
     if is_recording_top_level() {
@@ -360,7 +360,7 @@ pub(crate) unsafe extern "thiscall" fn compare_tackle(j: usize, strong: u32) {
     SCOREBOARD.record(igual && sequencia, || format!("tackle(forte {}) {} chamadas: {}", strong as u8, k, tape_detail()));
 }
 
-/// Comparer for `recover_stamina` (comparison mode: see the header of motor.rs).
+/// Comparer for `recover_stamina`.
 pub(crate) unsafe extern "thiscall" fn compare_recover_stamina(j: usize, ceiling: u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u8)>(IDX_RECOVER_STAMINA);
     let regions = [(j + match_player::STAMINA, 8)];
@@ -368,7 +368,7 @@ pub(crate) unsafe extern "thiscall" fn compare_recover_stamina(j: usize, ceiling
     SCOREBOARD.record(igual, || format!("recover_stamina(teto {}) original={:x?} rust={:x?}", ceiling, mo, mr));
 }
 
-/// Comparer for `save_shot` (comparison mode: see the header of motor.rs).
+/// Comparer for `save_shot`.
 pub(crate) unsafe extern "thiscall" fn compare_save_shot(j: usize, strength: i16) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i16) -> u32>(IDX_SAVE_SHOT);
     if is_recording_top_level() {
@@ -386,7 +386,7 @@ pub(crate) unsafe extern "thiscall" fn compare_save_shot(j: usize, strength: i16
     r
 }
 
-/// Comparer for `long_ball` (comparison mode: see the header of motor.rs).
+/// Comparer for `long_ball`.
 pub(crate) unsafe extern "thiscall" fn compare_long_ball(j: usize, mode: i8, refinar: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u8)>(IDX_LONG_BALL);
     if is_recording_top_level() {
@@ -411,7 +411,7 @@ pub(crate) unsafe extern "thiscall" fn compare_long_ball(j: usize, mode: i8, ref
     SCOREBOARD.record(igual && sequencia, || format!("long_ball(modo {} refinar {}) {} chamadas: {}", mode, refinar, k, tape_detail()));
 }
 
-/// Comparer for `pass_ball` (comparison mode: see the header of motor.rs).
+/// Comparer for `pass_ball`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_pass_ball(j: usize, kind: u8, receptor: usize, a3: u32, a4: u32, a5: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8, usize, u32, u32, u32)>(IDX_PASS_BALL);
@@ -435,7 +435,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pass_ball(j: usize, kind: u8, rec
     SCOREBOARD.record(igual && sequencia, || format!("pass_ball(tipo {:#x}) {} chamadas: {}", kind, k, tape_detail()));
 }
 
-/// Comparer for `decide_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `decide_player`.
 pub(crate) unsafe extern "thiscall" fn compare_decide_player(j: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DECIDE_PLAYER);
     if is_recording_top_level() {
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_player(j: usize) {
     SCOREBOARD.record(igual && sequencia, || format!("decide_player acao {:#x} {} chamadas", *((j + match_player::ACTION) as *const u16), k));
 }
 
-/// Comparer for `move_off_ball` (comparison mode: see the header of motor.rs).
+/// Comparer for `move_off_ball`.
 pub(crate) unsafe extern "thiscall" fn compare_move_off_ball(j: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_MOVE_OFF_BALL);
     if is_recording_top_level() {
@@ -486,7 +486,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_off_ball(j: usize) {
     SCOREBOARD.record(igual && sequencia, || format!("move_off_ball acao {:#x} {} chamadas", *((j + match_player::ACTION) as *const u16), k));
 }
 
-/// Comparer for `decide_off_ball` (comparison mode: see the header of motor.rs).
+/// Comparer for `decide_off_ball`.
 pub(crate) unsafe extern "thiscall" fn compare_decide_off_ball(j: usize, a: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DECIDE_OFF_BALL);
     if is_recording_top_level() {
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_off_ball(j: usize, a: u32)
     SCOREBOARD.record(igual && sequencia && k == 1, || format!("decide_off_ball acao {:#x} {} chamadas: {}", *((j + match_player::ACTION) as *const u16), k, tape_detail()));
 }
 
-/// Comparer for `advance_row` (comparison mode: see the header of motor.rs).
+/// Comparer for `advance_row`.
 pub(crate) unsafe extern "thiscall" fn compare_advance_row(this: usize, direct: u8) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> u32>(IDX_ADVANCE_ROW);
     if is_recording_top_level() {
@@ -530,7 +530,7 @@ pub(crate) unsafe extern "thiscall" fn compare_advance_row(this: usize, direct: 
     r
 }
 
-/// Comparer for `designated_marked` (comparison mode: see the header of motor.rs).
+/// Comparer for `designated_marked`.
 pub(crate) unsafe extern "thiscall" fn compare_designated_marked(this: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DESIGNATED_MARKED)(this);
     let n = designated_marked(this);

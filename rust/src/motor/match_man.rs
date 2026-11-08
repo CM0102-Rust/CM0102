@@ -2748,8 +2748,8 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
     let mut x = 0.0f64;
     let e = contract(*(G_CONTRACT_MANAGER as *const usize), p, club);
     if e != 0 {
-        x = byte(e, staff_contract::MORALE) as f64 * d8(0x968ef8) + d8(0x968968);
-        let adjust = match byte(e, staff_contract::SQUAD_STATUS) as u8 >> 4 {
+        x = byte(e, contract::MORALE) as f64 * d8(0x968ef8) + d8(0x968968);
+        let adjust = match byte(e, contract::SQUAD_STATUS) as u8 >> 4 {
             0 | 5 => -d8(0x9688b0),
             1 => d8(0x968e18),
             2 => d8(0x968950),
@@ -2786,7 +2786,7 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
     if let Some(k) = k {
         v = match_pl_ftol(v as f64 * k) as i16;
     }
-    if a < ((0x32 - byte(p, staff::LOYALITY) as i32) * 10) as f64 {
+    if a < ((0x32 - byte(p, staff::LOYALTY) as i32) * 10) as f64 {
         v = match_pl_ftol(v as f64 * d8(0x9689d8)) as i16;
     }
     let morale = byte(p, staff::PROFESSIONALISM);
@@ -3614,8 +3614,8 @@ pub(crate) unsafe fn work_permit_appearance_pct(p: usize) -> Option<i8> {
 /// [pt] O extra do contrato (flag 0x10000): +0x44 pelas bandeiras +0x45, o tipo (+0x4f >> 4) e a lista
 /// de transferências.
 pub(crate) unsafe fn contract_extra(p: usize, contract: usize, flags: u32, l28: i32) -> i32 {
-    let e = *((contract + staff_contract::GRIEVANCES) as *const u32);
-    let s44 = *((contract + staff_contract::MORALE) as *const i8) as f64;
+    let e = *((contract + contract::GRIEVANCES) as *const u32);
+    let s44 = *((contract + contract::MORALE) as *const i8) as f64;
     let mut extra = 0i32;
     if e & 0x2808 != 0 {
         let x = s44 * read_f64_at(0x96a670); // 0x96a670 = 0.6666666667
@@ -3635,7 +3635,7 @@ pub(crate) unsafe fn contract_extra(p: usize, contract: usize, flags: u32, l28: 
                 extra += 10;
                 false
             } else {
-                let d = (*((contract + contract::UNKNOWN18_2) as *const i8) as i32 - *((contract + staff_contract::MATCHES_LEFT_OUT) as *const i8) as i32) * 5;
+                let d = (*((contract + contract::UNHAPPY_FLAG) as *const i8) as i32 - *((contract + contract::MATCHES_LEFT_OUT) as *const i8) as i32) * 5;
                 extra += match_pl_ftol(d as f64 + (l28 as i16 as f64 * read_f64_at(0x968e18) - read_f64_at(0x96d570))); // 0x968e18 = 2.5, 0x96d570 = 225
                 true
             }
@@ -3706,7 +3706,7 @@ pub(crate) unsafe fn appearances_or_club_adjust(p: usize, f: usize, flags: u32, 
     if s == 0 {
         return l4c;
     }
-    l4c + match_pl_ftol((core::ptr::read_unaligned((s + competition::CLUB_COMP_REPUTATION) as *const i16) as i32 - 0x10) as f64 * read_f64_at(0x9688a0)) // 0x9688a0 = 5
+    l4c + match_pl_ftol((core::ptr::read_unaligned((s + competition::REPUTATION) as *const i16) as i32 - 0x10) as f64 * read_f64_at(0x9688a0)) // 0x9688a0 = 5
 }
 
 /// At the player's own club (+0x39): rating up by 5 or 5%, whichever is larger.
@@ -4242,7 +4242,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     let mut base = l40;
     if !da_base && club != 0 {
         let nation = *((club + club::NATION) as *const usize);
-        if nation != 0 && *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 {
+        if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
             l4c -= 0x46;
             base = l40 - 0x78;
         }
@@ -4290,7 +4290,7 @@ pub(crate) unsafe fn match_fatigue_offset(reg: usize, goalkeeper: i32) -> i32 {
             let g9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
             if g9a01(tecnicos, t) != 0 {
                 false
-            } else if *((base + 0x904b) as *const u8) != 0 {
+            } else if *((base + engine::SIDE0_MANAGER_TACTIC_SLOT) as *const u8) != 0 {
                 let c = *((*((m + engine::MATCH) as *const usize) + if side == 0 { 0x1c } else { 0x20 }) as *const usize);
                 let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
                 if national_team(c) != 0 {

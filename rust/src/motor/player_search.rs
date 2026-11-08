@@ -229,8 +229,8 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     // the nation of the match’s competition (+0x18 → +0x38 → +0x1f) or the home club’s (+0x1c → +0x53)
     let mut nation = 0usize;
     let t = read_usize(game + fixture::STADIUM);
-    if t != 0 && read_usize(t + stadium::STADIUM_CITY) != 0 && read_usize(read_usize(t + stadium::STADIUM_CITY) + 0x1f) != 0 {
-        nation = read_usize(read_usize(t + stadium::STADIUM_CITY) + 0x1f);
+    if t != 0 && read_usize(t + stadium::CITY) != 0 && read_usize(read_usize(t + stadium::CITY) + 0x1f) != 0 {
+        nation = read_usize(read_usize(t + stadium::CITY) + 0x1f);
     }
     if nation == 0 {
         nation = read_usize(read_usize(game + fixture::HOME_CLUB) + 0x53);
@@ -263,7 +263,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     // the dates: today before the start (+0x1a5: day, +0x1a7: year) leaves; before the end (+0x1ad/+0x1af) only with a player
     // accompanied; year unsigned, day signed, like the original
     let (dia, ano) = (read_i16(G_CURRENT_DATE), read_i16(G_CURRENT_DATE_YEAR) as u16);
-    let (dia_ini, ano_ini) = (read_i16(this + 0x1a5), read_i16(this + 0x1a7) as u16);
+    let (dia_ini, ano_ini) = (read_i16(this + player_search_fields::SCOUTING_START_DATE), read_i16(this + player_search_fields::SCOUTING_START_YEAR) as u16);
     if ano < ano_ini || (ano == ano_ini && dia < dia_ini) {
         return 0;
     }
@@ -348,7 +348,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
         SCOUT_MATCH_WOULD_REPORT = true;
         return 1;
     }
-    copy(this + 0x1a5, copia.as_mut_ptr() as usize, amanha);
+    copy(this + player_search_fields::SCOUTING_START_DATE, copia.as_mut_ptr() as usize, amanha);
     let mut mark = copia[0] & !0xff;
     let quadro: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FOG_OF_WAR_GET_MANAGER_MAP);
     let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FOG_OF_WAR_MAP_RAISE_KNOWLEDGE);
@@ -600,14 +600,14 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         let mut n = rep;
         let mut l = rep;
         if nation != 0 {
-            let c = read_i16(nation + competition::CLUB_COMP_REPUTATION) as i32;
+            let c = read_i16(nation + competition::REPUTATION) as i32;
             if c > rep / 500 {
                 n = c * 500;
                 l = n;
             }
         }
         if league != 0 {
-            let c = read_i16(league + competition::CLUB_COMP_REPUTATION) as i32;
+            let c = read_i16(league + competition::REPUTATION) as i32;
             if c > rep / 500 {
                 l = c * 600;
             }
@@ -652,7 +652,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         } else {
             let nation = read_i32(club + club::DIVISION) as usize;
             if with_nation(nation) {
-                let t2 = match_pl_ftol(read_i16(nation + competition::CLUB_COMP_REPUTATION) as i32 as f64 * read_f64_at(0x969588) + read_f64_at(0x968ea8)) as u8; // 0x969588 = 1.35, 0x968ea8 = 20
+                let t2 = match_pl_ftol(read_i16(nation + competition::REPUTATION) as i32 as f64 * read_f64_at(0x969588) + read_f64_at(0x968ea8)) as u8; // 0x969588 = 1.35, 0x968ea8 = 20
                 let foul = (squad as u8).wrapping_sub(t2) as i8;
                 if foul < 0 {
                     let v = if foul > -10 { foul as i32 } else { -10 };

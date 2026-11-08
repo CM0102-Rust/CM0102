@@ -95,7 +95,7 @@ def main():
             if docs and (not PT.search(docs[0]) or any('[pt]' in l for l in docs)):
                 continue
             alvo = n[len('compare_'):]
-            cab = ['/// Comparer for `%s` (comparison mode: see the header of motor.rs).' % alvo]
+            cab = ['/// Comparer for `%s`.' % alvo]
             if docs:
                 docs[0] = docs[0].replace('/// ', '/// [pt] ', 1)
                 cab += ['///'] + docs

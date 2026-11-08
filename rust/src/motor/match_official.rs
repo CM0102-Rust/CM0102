@@ -249,7 +249,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
     if valendo(engine) != 0 {
         return 0;
     }
-    let (l0, l1) = (byte(engine, engine::OFFSIDE_LINE), byte(engine, 0x8eb0));
+    let (l0, l1) = (byte(engine, engine::OFFSIDE_LINE), byte(engine, engine::OFFSIDE_LINE_SIDE1));
     match side_b {
         0 if !(y > row && y >= l0) => return 0,
         1 if !(y < row && y <= l1) => return 0,
@@ -321,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn engine_look_for_offside(this: usize, side
 /// [pt] Grava o codigo do cartao no registro do jogador: 0x25 com (0x23 + 0x24) == 1 (ou <= 1, `ate_um`),
 /// 0x26 com outro total diferente de zero.
 pub(crate) unsafe fn record_card_code(j: usize, code: u8, ate_um: bool) {
-    let t = byte(j, 0x23) as i32 + byte(j, match_player::YELLOW_CARDS) as i32;
+    let t = byte(j, match_player::RED_CARDS) as i32 + byte(j, match_player::YELLOW_CARDS) as i32;
     if t == 1 || (ate_um && t <= 1) {
         *((j + match_player::FIRST_CARD_CODE) as *mut u8) = code;
     } else if t != 0 {
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, k
             let d = (j + match_player::MATCH_RATING) as *mut i16;
             *d = (*d).wrapping_add(-1000);
             *kind = 4;
-            let t = byte(j, 0x23) as i32 + byte(j, match_player::YELLOW_CARDS) as i32;
+            let t = byte(j, match_player::RED_CARDS) as i32 + byte(j, match_player::YELLOW_CARDS) as i32;
             *((j + if t == 0 { 0x25 } else { 0x26 }) as *mut u8) = codigo;
         } else if codigo == 12 || codigo == 8 {
             record_card_code(j, codigo, true);
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     // advantage: (20, or 5 in the band of its own side) x (+0x5c of `outro`’s profile)^1.5 / (1 or 3)
     let a = if band_l(j, byte(j, match_player::SIDE)) != 0 { 5.0 } else { 20.0 };
     let b = byte(*((other + match_player::STAFF) as *const usize), 0x5c) as f64;
-    let div = if *((other + 0x1a6) as *const usize) != j { 1.0 } else { 3.0 };
+    let div = if *((other + match_player::LAST_FOULED_BY) as *const usize) != j { 1.0 } else { 3.0 };
     *advantage = (random(match_pl_ftol(a * game_pow(b, read_f64_at(0x968940)) / div)) == 0) as u8; // 0x968940 = 1.5
     let word = |p: usize, d: i16| *((p + 0x31) as *mut i16) = (*((p + 0x31) as *const i16)).wrapping_add(d);
     if *advantage != 0 {
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             5..=9 => -1,
             _ => (sev > 2) as i8 - 3,
         };
-        let placar = *((m + 0xf5c9 + 54 * side_j as usize) as *const u8) as i32;
+        let placar = *((m + engine::SIDE_FOUL_TALLY + 54 * side_j as usize) as *const u8) as i32;
         if placar > byte(arb, 0x27) as i32 + 5 {
             *paciencia = (*paciencia).wrapping_add(0xff6a);
             rigor = rigor.wrapping_add(1);
@@ -679,9 +679,9 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         let test: unsafe extern "thiscall" fn(usize, i8, usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_PASSES_ANGER_CHECK);
         multiplicar(other, (*grav as f64 * read_f64_at(0x968918) + read_f64_at(0x967890)) as f32); // 0x968918 = 0.2, 0x967890 = 1
         if test(other, 1, 0) != 0 {
-            *((other + 0xff) as *mut u8) = (*((other + 0xff) as *const u8)).wrapping_add(1);
+            *((other + match_player::ANGER) as *mut u8) = (*((other + match_player::ANGER) as *const u8)).wrapping_add(1);
             if test(other, 1, 0) != 0 {
-                *((other + 0x1a6) as *mut usize) = j;
+                *((other + match_player::LAST_FOULED_BY) as *mut usize) = j;
             }
         }
     }

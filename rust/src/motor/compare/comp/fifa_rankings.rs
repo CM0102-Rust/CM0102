@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../comp/fifa_rankings.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/fifa_rankings.rs.
 // [pt] Os comparadores das rotinas de ../comp/fifa_rankings.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `count_results_in_period` (comparison mode: see the header of motor.rs).
+/// Comparer for `count_results_in_period`.
 pub(crate) unsafe extern "thiscall" fn compare_count_results_in_period(this: usize, nation: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(IDX_COUNT_RESULTS_IN_PERIOD)(this, nation, month_of, year_of, month_until, year_until);
     let n = count_results_in_period(this, nation, month_of, year_of, month_until, year_until);
@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn compare_count_results_in_period(this: usi
     r
 }
 
-/// Comparer for `update_rankings` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_rankings`.
 ///
 /// [pt] Comparador: lado a lado pelo objeto (+0..+0xd), pela tabela das nações e por cada histórico (capacidade +8 × 5);
 /// a ordem é alocada e liberada pelas duas.
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_rankings(this: usize, data
     });
 }
 
-/// Comparer for `compare_result_points_desc` (comparison mode: see the header of motor.rs).
+/// Comparer for `compare_result_points_desc`.
 pub(crate) unsafe extern "C" fn compare_compare_result_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_RESULT_POINTS_DESC)(a, b);
     let n = compare_result_points_desc(a, b);
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "C" fn compare_compare_result_points_desc(a: usize, b: 
     r
 }
 
-/// Comparer for `append_result` (comparison mode: see the header of motor.rs).
+/// Comparer for `append_result`.
 pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation: usize, points: u32, partida: usize) {
     let e = ranking_entry(this, nation);
     let (conta, cap) = (read_i16(e + 0xa), read_i16(e + 8));
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation
     SCOREBOARD.record(lido == plan, || format!("append_result(nação {}, pontos {}) original={:?} plano={:?}", read_usize(nation), points as u16, lido, plan));
 }
 
-/// Comparer for `get_nation_strength_tier` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_nation_strength_tier`.
 pub(crate) unsafe extern "thiscall" fn compare_get_nation_strength_tier(this: usize, nation: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_NATION_STRENGTH_TIER)(this, nation);
     let n = get_nation_strength_tier(this, nation);
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_nation_strength_tier(this: us
     r
 }
 
-/// Comparer for `recalculate_scores` (comparison mode: see the header of motor.rs).
+/// Comparer for `recalculate_scores`.
 pub(crate) unsafe extern "thiscall" fn compare_recalculate_scores(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RECALCULATE_SCORES);
     let reg = [(read_usize(this), read_usize(G_NATION_COUNT) * 0x2c)];
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn compare_recalculate_scores(this: usize) {
     });
 }
 
-/// Comparer for `collect_ranked_order` (comparison mode: see the header of motor.rs).
+/// Comparer for `collect_ranked_order`.
 pub(crate) unsafe extern "thiscall" fn compare_collect_ranked_order(this: usize, count: *mut i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(IDX_COLLECT_RANKED_ORDER)(this, count);
     if r == 0 {
@@ -91,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_ranked_order(this: usize,
     r
 }
 
-/// Comparer for `compare_ranking_score_desc` (comparison mode: see the header of motor.rs).
+/// Comparer for `compare_ranking_score_desc`.
 pub(crate) unsafe extern "C" fn compare_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_RANKING_SCORE_DESC)(a, b);
     let n = compare_ranking_score_desc(a, b);
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "C" fn compare_compare_ranking_score_desc(a: usize, b: 
     r
 }
 
-/// Comparer for `create_default_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `create_default_table`.
 ///
 /// [pt] Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
 /// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).

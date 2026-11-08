@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../transfer/england_rules.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../transfer/england_rules.rs.
 // [pt] Os comparadores das rotinas de ../transfer/england_rules.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `construct_england_rules` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_england_rules`.
 ///
 /// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn compare_construct_england_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_england_rules(this: usi
     r
 }
 
-/// Comparer for `england_rules_can_loan_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `england_rules_can_loan_player`.
 pub(crate) unsafe extern "thiscall" fn compare_england_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_ENGLAND_RULES_CAN_LOAN_PLAYER), england_rules_can_loan_player, "england_rules_can_loan_player", this, club, player, msg, reason)
 }
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_loan(this: usize, offer: u
     SCOREBOARD.record(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", offer, mo, mr));
 }
 
-/// Comparer for `england_rules_daily_update` (comparison mode: see the header of motor.rs).
+/// Comparer for `england_rules_daily_update`.
 ///
 /// [pt] Comparador: lado a lado na tabela das contas inteira ([0xae235c] clubes × 16 bytes) só no dia em que ela muda (20
 /// de junho); nos outros dias as duas rodam sem gravar nada e só a original fica valendo.
@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn compare_england_rules_daily_update(this: 
     SCOREBOARD.record(igual, || format!("england_rules_daily_update(regras {:#x}) tabela diverge", this));
 }
 
-/// Comparer for `england_rules_get_loan_period` (comparison mode: see the header of motor.rs).
+/// Comparer for `england_rules_get_loan_period`.
 ///
 /// [pt] Comparador: lado a lado nas quatro saídas e em [0xae1080] (a regra base pode consultar contratos).
 pub(crate) unsafe extern "thiscall" fn compare_england_rules_get_loan_period(this: usize, club: usize, a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {

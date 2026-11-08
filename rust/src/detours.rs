@@ -510,7 +510,7 @@ pub unsafe fn aplicar_resolucao() {
     }
     // remove the variable from the environment before the exe's CRT copies it to the heap (the CRT runs after DllMain):
     // one extra variable shifts the heap and changes the career (see simular.py, rodar)
-    let name: Vec<u16> = "CM_RESOLUCAO ".encode_utf16().collect();
+    let name: Vec<u16> = "CM_RESOLUCAO\0".encode_utf16().collect();
     win::SetEnvironmentVariableW(name.as_ptr(), core::ptr::null());
     let (mut applied, mut already, mut left_out) = (0, 0, 0);
     for &(va, before, after) in crate::resolution::TROCAS.iter() {

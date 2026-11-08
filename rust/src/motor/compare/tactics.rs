@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../tactics.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../tactics.rs.
 // [pt] Os comparadores das rotinas de ../tactics.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `stored_taker` (comparison mode: see the header of motor.rs).
+/// Comparer for `stored_taker`.
 pub(crate) unsafe extern "thiscall" fn compare_stored_taker(this: usize, club: usize, kind: u32, side: u32, human: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize>(IDX_STORED_TAKER);
     let (t, l) = (kind as u8 as i8, side as u8 as i8);
@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stored_taker(this: usize, club: u
     r
 }
 
-/// Comparer for `store_instructions` (comparison mode: see the header of motor.rs).
+/// Comparer for `store_instructions`.
 pub(crate) unsafe extern "thiscall" fn compare_store_instructions(this: usize, club: usize, person: u32, usar: u32, volta: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_STORE_INSTRUCTIONS);
     if is_recording_top_level() || club == 0 {
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_store_instructions(this: usize, c
     r
 }
 
-/// Comparer for `read_tactics_row` (comparison mode: see the header of motor.rs).
+/// Comparer for `read_tactics_row`.
 pub(crate) unsafe extern "thiscall" fn compare_read_tactics_row(this: usize, club: usize, target: *mut u8, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32) -> u32>(IDX_READ_TACTICS_ROW);
     if is_recording_top_level() || club == 0 {
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn compare_read_tactics_row(this: usize, clu
     r
 }
 
-/// Comparer for `write_tactics_row` (comparison mode: see the header of motor.rs).
+/// Comparer for `write_tactics_row`.
 pub(crate) unsafe extern "thiscall" fn compare_write_tactics_row(this: usize, club: usize, source: *const u8, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const u8, u32) -> u32>(IDX_WRITE_TACTICS_ROW);
     if is_recording_top_level() || club == 0 {
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn compare_write_tactics_row(this: usize, cl
     r
 }
 
-/// Comparer for `record_tactic_result` (comparison mode: see the header of motor.rs).
+/// Comparer for `record_tactic_result`.
 ///
 /// [pt] Comparador da 0x896290: lado a lado nas linhas das táticas dos dois clubes (0x28 bytes cada) e na devolução; o
 /// registro da partida é local. Jogo ou clube nulos: a caixa, só a original.
@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_tactic_result(this: usize,
     r
 }
 
-/// Comparer for `get_captain` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_captain`.
 ///
 /// [pt] Comparador da 0x8976a0: pela devolução (só lê; a linha nula ou fora da faixa mostra a caixa nas duas).
 pub(crate) unsafe extern "thiscall" fn compare_get_captain(this: usize, club: usize, team: u32) -> u32 {
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_captain(this: usize, club: us
     r
 }
 
-/// Comparer for `set_captain` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_captain`.
 ///
 /// [pt] Comparador da 0x897880: lado a lado no dword do capitão da linha (achada antes pela 0x8982b0, que só lê) e na
 /// devolução. Clube ou ponteiro nulos, ou sem linha: só a original.
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_captain(this: usize, club: us
     r
 }
 
-/// Comparer for `remove_player_from_selection` (comparison mode: see the header of motor.rs).
+/// Comparer for `remove_player_from_selection`.
 ///
 /// [pt] Comparador: lado a lado pela devolução, pela linha do clube na tabela tática (as vagas, as extras e os batedores) e
 /// pelas cópias para desfazer com a conta. Clube ou pessoa nulos (caixa): só a original.
@@ -127,7 +127,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_player_from_selection(this
     r
 }
 
-/// Comparer for `swap_selection_slots` (comparison mode: see the header of motor.rs).
+/// Comparer for `swap_selection_slots`.
 ///
 /// [pt] Comparador: lado a lado pela devolução, pela linha tática do clube e pelas cópias para desfazer. Clube nulo ou vaga
 /// fora (caixa): só a original.
@@ -143,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn compare_swap_selection_slots(this: usize,
     r
 }
 
-/// Comparer for `has_selection_undo` (comparison mode: see the header of motor.rs).
+/// Comparer for `has_selection_undo`.
 ///
 /// [pt] Comparador: a devolução (rotina pura).
 pub(crate) unsafe extern "thiscall" fn compare_has_selection_undo(this: usize, club: usize, team: u32) -> u32 {
@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn compare_has_selection_undo(this: usize, c
     r
 }
 
-/// Comparer for `clear_selection_slot` (comparison mode: see the header of motor.rs).
+/// Comparer for `clear_selection_slot`.
 ///
 /// [pt] Comparador: só grava a vaga e os espaços guardados: lado a lado pela linha da escalação (20 dwords), pelos 16
 /// espaços e pela conta (+0x5f0). Clube nulo ou vaga fora: só a original (a caixa).
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_selection_slot(this: usize,
     r
 }
 
-/// Comparer for `set_set_piece_taker` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_set_piece_taker`.
 ///
 /// [pt] Comparador: só grava a linha dos batedores: lado a lado pelos 10 dwords (+0x5e) da linha do clube. Clube nulo,
 /// papel ou escolha fora: só a original (a caixa).
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_set_piece_taker(this: usize, 
     r
 }
 
-/// Comparer for `extra_tactic_slot` (comparison mode: see the header of motor.rs).
+/// Comparer for `extra_tactic_slot`.
 pub(crate) unsafe extern "thiscall" fn compare_extra_tactic_slot(t: usize, club: usize, which: i8, person: *const u32, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_EXTRA_TACTIC_SLOT);
     let reg = table_regions(t, club, human);
@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn compare_extra_tactic_slot(t: usize, club:
     r
 }
 
-/// Comparer for `get_club_tactic` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_club_tactic`.
 ///
 /// [pt] Comparador: lado a lado pela devolução e, havendo técnico humano no clube, pelo byte da vaga ativa dele (a 0x5fbe20
 /// grava). Clube nulo (caixa): só a original.
@@ -222,7 +222,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_club_tactic(this: usize, club
     r
 }
 
-/// Comparer for `find_selection_slot` (comparison mode: see the header of motor.rs).
+/// Comparer for `find_selection_slot`.
 pub(crate) unsafe extern "thiscall" fn compare_find_selection_slot(tactic: usize, club: usize, person: *const i32, team: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(IDX_FIND_SELECTION_SLOT)(tactic, club, person, team);
     if club == 0 || person.is_null() {
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_selection_slot(tactic: usize
     r
 }
 
-/// Comparer for `set_tactic_slot` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_tactic_slot`.
 pub(crate) unsafe extern "thiscall" fn compare_set_tactic_slot(t: usize, club: usize, slot: i8, person: *const u32, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_SET_TACTIC_SLOT);
     let reg = table_regions(t, club, human);
@@ -242,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_tactic_slot(t: usize, club: u
     r
 }
 
-/// Comparer for `tactic_slot_person` (comparison mode: see the header of motor.rs).
+/// Comparer for `tactic_slot_person`.
 pub(crate) unsafe extern "thiscall" fn compare_tactic_slot_person(t: usize, club: usize, slot: i8, human: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_TACTIC_SLOT_PERSON);
     let reg = table_regions(t, club, human);
@@ -251,7 +251,7 @@ pub(crate) unsafe extern "thiscall" fn compare_tactic_slot_person(t: usize, club
     r
 }
 
-/// Comparer for `set_tactic_formation` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_tactic_formation`.
 pub(crate) unsafe extern "thiscall" fn compare_set_tactic_formation(t: usize, club: usize, formation: i16, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i16, u32) -> u32>(IDX_SET_TACTIC_FORMATION);
     let reg = table_regions(t, club, human);
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_tactic_formation(t: usize, cl
     r
 }
 
-/// Comparer for `marked_slot` (comparison mode: see the header of motor.rs).
+/// Comparer for `marked_slot`.
 pub(crate) unsafe extern "thiscall" fn compare_marked_slot(this: usize, club: usize, human: u32, minus_one: u32) -> i8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(IDX_MARKED_SLOT)(this, club, human, minus_one);
     let v = marked_slot(this, club, human, minus_one);
@@ -268,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn compare_marked_slot(this: usize, club: us
     r
 }
 
-/// Comparer for `mark_slot` (comparison mode: see the header of motor.rs).
+/// Comparer for `mark_slot`.
 pub(crate) unsafe extern "thiscall" fn compare_mark_slot(this: usize, club: usize, slot: i8, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(IDX_MARK_SLOT);
     if is_recording_top_level() {
@@ -284,7 +284,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_slot(this: usize, club: usiz
     r
 }
 
-/// Comparer for `tactics_row` (comparison mode: see the header of motor.rs).
+/// Comparer for `tactics_row`.
 pub(crate) unsafe extern "stdcall" fn compare_tactics_row(club: usize, human: u32) -> i32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club, human);
     let v = tactics_row(club, human);

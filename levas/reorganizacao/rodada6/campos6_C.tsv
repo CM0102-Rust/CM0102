@@ -1,0 +1,38 @@
+league	0x14	ENTRANT_BOOK	4	Pointer to the entrant book, 6-byte entries (+0 club or nation, +4 class, +5 status); the World Cup keeps its qualified nations here (inherited from Comp, as cup ENTRANT_BOOK)
+league	0x36	ENTRANT_COUNT	2	Number of entries used in ENTRANT_BOOK (inherited from Comp)
+league	0x38	ENTRANT_CAPACITY	2	Capacity of ENTRANT_BOOK; add_qualified_team only adds while ENTRANT_COUNT is below it (inherited from Comp)
+eng_auto_cup	0xb6	SELECTED_COUNT	4	Number of club slots in SELECTED_CLUBS filled by select_section_clubs (compared up to 0x38) [inference]
+conmebol_seeding	0x6f	LAST_SEASON_YEAR	2	Game year of the last update_for_new_season; the club table and the Libertadores places are rebuilt only when the year changes
+conmebol_seeding	0x71	BRA_CHAMP_CUP_WINNER_ID	4	Club id of the Copa dos Campeoes winner (its Libertadores place from 2003 on), set by set_bra_champ_cup_winner
+uefa_seeding	0x43b	INTERTOTO_VOLUNTEERS	4	Pointer to the list of up to 30 club ids volunteering for the Intertoto (0x78 bytes; count at +0x43f), freed after the places are given
+uefa_seeding	0x440	CUP_FINALS	600	50 records of 12 bytes (cup, winner, runner-up) of national cup finals, written by register_semi_final_losers_for_uefa and read when giving UEFA places
+comp_history_row	0xa	CHAMPION	4	Club pointer of the season's champion (team table status 1) in a competition history row (row +4 competition, +8 year)
+comp_history_row	0xe	RUNNER_UP	4	Club pointer of the runner-up (team table status 2)
+comp_history_row	0x12	THIRD_PLACE	4	Club pointer of the third-placed team (team table status 3)
+comp_history_row	0x16	HOST	4	Host of the competition, fourth value of season_honours [inference]
+conmebol_liber	0xee	DRAWN_CLUBS	4	Pointer to the drawn list of qualified club pointers that fills the first group tables; freed and zeroed once the groups are built
+conmebol_liber	0xf2	DRAWN_CLUB_COUNT	?	Number of clubs in DRAWN_CLUBS [inference]
+conmebol_merc	0xee	DRAWN_CLUBS	4	Pointer to the drawn list of invited club pointers that fills the first group tables; freed and zeroed once the groups are built
+conmebol_merc	0xf2	DRAWN_CLUB_COUNT	?	Number of clubs in DRAWN_CLUBS [inference]
+con_merc_cup	0xee	DRAWN_CLUBS	4	Pointer to the shuffled list of invited club pointers (Mexico, Colombia, Peru, Bolivia, MLS) that fills the group tables
+con_merc_cup	0xf2	DRAWN_CLUB_COUNT	?	Number of clubs in DRAWN_CLUBS (16 once selected)
+oceania_club_champ	0xee	DRAWN_CLUBS	4	Pointer to the 8 selected club pointers (group A slots 0..3, group B 4..7); freed and zeroed once the groups are built
+oceania_club_champ	0xf2	DRAWN_CLUB_COUNT	?	Number of clubs in DRAWN_CLUBS, zeroed with the list [inference]
+african_nations	0xee	DRAWN_CLUBS	4	Pointer to the nations drawn from 4 pots into 4 groups of 4; freed and zeroed once the group stages are built
+african_nations	0xf2	DRAWN_CLUB_COUNT	2	Number of entries in DRAWN_CLUBS, zeroed with the list
+goldcup	0xee	DRAWN_CLUBS	4	Pointer to the list of team pointers (the continent's nations and the guests) built by set_up_team_list
+goldcup	0xf2	DRAWN_CLUB_COUNT	4	Number of teams in DRAWN_CLUBS (12 when full)
+euro_champ_qual	0xf6	GROUP_FORMAT	1	Group format (1 or 2): decides whether group g has 6 or 5 teams (get_group_team_count)
+awol_fields	0xc	PERSON_FLAGS	4	Pointer to one absence flag byte per staff id (bit 1 absent without leave, bit 2 missed training; flipped by the mark routines) [inference]
+player_search_fields	0x1a5	SCOUTING_START_DATE	8	Start date of a match-watching scout assignment (TCMDate: day +0x1a5, year +0x1a7); moved to tomorrow by scout_match; end date at +0x1ad
+player_search_fields	0x1a7	SCOUTING_START_YEAR	2	Year half of SCOUTING_START_DATE
+ruling_body	0xb	ENTRIES	4	Pointer to the 14-byte ruling body entries (ruling_body_entry)
+ruling_body	0xf	ENTRY_CAPACITY	4	Allocated entries in ENTRIES (count + 100 after compact_entries)
+ruling_body	0x13	ENTRY_COUNT	4	Number of entries used in ENTRIES
+formation	0x12d	SLOT_CELLS	22	Tactical grid cell codes of the 11 formation slots (words; a second set follows at +0x14e)
+formation	0x584	FLAGS	4	Tactics flag dword (0x1000 marking by ball side, 0x4000, 0x400...), changed by set_formation_flag
+formation	0x5b4	MARKING_TYPES	11	Marking type byte of each of the 11 slots (4 and 8 become 2 in clear_assigned)
+formation	0x5bf	DESIGNATED_PEOPLE	44	Person record index designated for each of the 11 positions (-1 none)
+formation	0x5eb	POSITION_LOOKUP	4752	Position lookup tables built by build_position_lookup (up to FORMATION_MASK)
+formation	0x187b	FORMATION_MASK	4	OR of the position bits of the 11 slots (formation_mask)
+formation	0x187f	CHANGED_FLAG	4	Changed flag of the formation, cleared by set_square and written with the marking and formation flags

@@ -1252,7 +1252,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
 pub(crate) unsafe fn division_level(club: usize) -> i16 {
     let d = read_usize(club + club::DIVISION);
     if d != 0 {
-        read_i16(d + competition::CLUB_COMP_REPUTATION)
+        read_i16(d + competition::REPUTATION)
     } else {
         0
     }
@@ -1324,7 +1324,7 @@ pub(crate) unsafe fn wins_uefa_cup_place(comp: usize, club: usize) -> bool {
     if read_i32(comp) == read_i32(KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP) {
         return true;
     }
-    let nation = read_usize(comp + competition::CLUB_COMP_NATION);
+    let nation = read_usize(comp + competition::NATION);
     if nation == 0 {
         return false;
     }

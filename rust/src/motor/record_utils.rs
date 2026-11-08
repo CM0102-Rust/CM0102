@@ -193,7 +193,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
     if read_usize(k + 0x45) != 0 {
         return;
     }
-    let v59 = read_u8(p + staff::LOYALITY) as i8;
+    let v59 = read_u8(p + staff::LOYALTY) as i8;
     if v59 <= 0xf { // cpy10: o +0x59
         return;
     }

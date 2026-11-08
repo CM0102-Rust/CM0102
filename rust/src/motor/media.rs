@@ -160,11 +160,11 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             write(n, 4, if dono != 0 { read_usize(dono) as u32 } else { 0xffff_ffff });
             let mut pede = false;
             let mut sai = false;
-            if read_i8(person + staff::PROFESSIONALISM) < 0xf && read_i8(person + staff::LOYALITY) < 0xf {
+            if read_i8(person + staff::PROFESSIONALISM) < 0xf && read_i8(person + staff::LOYALTY) < 0xf {
                 crate::comparison::branch("cqc_10 pedido de transferencia");
                 let rr = friendly_random(0x30d4); // cqc10: the reputation random draw for the request
                 if (read_i16(read_usize(person + staff::PLAYER) + 0xd) as i32) > rr {
-                    let lim = read_i8(person + staff::LOYALITY) as i32 as f64 * 12.5 + 500.0;
+                    let lim = read_i8(person + staff::LOYALTY) as i32 as f64 * 12.5 + 500.0;
                     if lim < read_i32(r + transfer_interest::RATING) as f64 {
                         write(n, 5, 0x24);
                         pede = true;
@@ -624,10 +624,10 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topic: u32, player: usize, clu
                 }
             }
         }
-        if topic == 0x20 && read_i8(p + staff::LOYALITY) > 0xf && read_i8(p + staff::TEMPERAMENT) < 6 {
+        if topic == 0x20 && read_i8(p + staff::LOYALTY) > 0xf && read_i8(p + staff::TEMPERAMENT) < 6 {
             rating = rating.wrapping_sub(5);
         }
-        let a59 = read_i8(p + staff::LOYALITY);
+        let a59 = read_i8(p + staff::LOYALTY);
         if a59 > 0xf {
             if read_i8(p + staff::PROFESSIONALISM) != 0x14 {
                 rating = rating.wrapping_sub(2);
@@ -1014,7 +1014,7 @@ pub(crate) unsafe fn squad_spokesman(club: usize, p: usize) -> usize {
         if r <= 0x109a {
             continue;
         }
-        let mut x = (r as i32).wrapping_add((read_i8_as_i32(m + staff::PROFESSIONALISM) + read_i8_as_i32(m + staff::LOYALITY)) * 20);
+        let mut x = (r as i32).wrapping_add((read_i8_as_i32(m + staff::PROFESSIONALISM) + read_i8_as_i32(m + staff::LOYALTY)) * 20);
         let age = read_i8_as_i32(m + staff::AGE);
         x += if age < 0x13 {
             -0x5dc
@@ -1201,7 +1201,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         if read_i16(sheet + player_sheet::WORLD_REPUTATION) > 0x186a
             && read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32 + 0x2ee > read_i16(new + club::REPUTATION) as i32
             && read_i8_as_i32(p + staff::PROFESSIONALISM) > 0xa
-            && read_i8_as_i32(p + staff::LOYALITY) > 6
+            && read_i8_as_i32(p + staff::LOYALTY) > 6
             && friendly_random(3) != 0
         {
             let who = squad_spokesman(new, p);
@@ -1332,7 +1332,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
         && read_i16(sheet + player_sheet::WORLD_REPUTATION) > 0x186a
         && read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32 + 0x2ee > read_i16(old + club::REPUTATION) as i32
         && read_i8_as_i32(p + staff::PROFESSIONALISM) > 0xa
-        && read_i8_as_i32(p + staff::LOYALITY) > 6
+        && read_i8_as_i32(p + staff::LOYALTY) > 6
         && friendly_random(3) != 0
     {
         let who = squad_spokesman(old, p);
@@ -1446,7 +1446,7 @@ pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, old
     if old == 0 || read_usize(old + club::MANAGER) == 0 || is_national_team(old) != 0 {
         return;
     }
-    if comp == 0 || read_usize(comp + competition::CLUB_COMP_FOREGROUND_COLOUR) == 0 || p == 0 || read_usize(p + staff::PLAYER) == 0 {
+    if comp == 0 || read_usize(comp + competition::FOREGROUND_COLOUR) == 0 || p == 0 || read_usize(p + staff::PLAYER) == 0 {
         return;
     }
     crate::comparison::branch("cqa_13 noticia do desassossego");
@@ -1888,7 +1888,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     }
     write(n, b, m);
     b += 1;
-    write(n, b, (sujeito != 0 && read_i8_as_i32(sujeito + staff::LOYALITY) > 0xe) as u32);
+    write(n, b, (sujeito != 0 && read_i8_as_i32(sujeito + staff::LOYALTY) > 0xe) as u32);
     b += 1;
     write(n, b, (sujeito != 0 && read_i8_as_i32(sujeito + staff::PROFESSIONALISM) > 0xe) as u32);
     b += 1;
@@ -2076,14 +2076,14 @@ pub(crate) unsafe extern "thiscall" fn post_player_backing_request_news(_this: u
     let (a, b): (i32, i32) = if read_i16(read_usize(player + staff::PLAYER) + 0xb) > 0x109a {
         if read_i8_as_i32(player + staff::AMBITION) > 0xf && read_i8_as_i32(player + staff::TEMPERAMENT) < 6 {
             (1, 1)
-        } else if target && read_i8_as_i32(player + staff::LOYALITY) > 0xf && read_i8_as_i32(player + staff::PROFESSIONALISM) > 0xa && days_since_arrival(player) > 0xd2 {
+        } else if target && read_i8_as_i32(player + staff::LOYALTY) > 0xf && read_i8_as_i32(player + staff::PROFESSIONALISM) > 0xa && days_since_arrival(player) > 0xd2 {
             (1, 3)
         } else {
             (1, 2)
         }
-    } else if read_i8_as_i32(player + staff::PROFESSIONALISM) < 0xa && read_i8_as_i32(player + staff::LOYALITY) < 6 {
+    } else if read_i8_as_i32(player + staff::PROFESSIONALISM) < 0xa && read_i8_as_i32(player + staff::LOYALTY) < 6 {
         (2, 1)
-    } else if target && read_i8_as_i32(player + staff::LOYALITY) > 0xf && read_i8_as_i32(player + staff::PROFESSIONALISM) > 0xa && days_since_arrival(player) > 0xd2 {
+    } else if target && read_i8_as_i32(player + staff::LOYALTY) > 0xf && read_i8_as_i32(player + staff::PROFESSIONALISM) > 0xa && days_since_arrival(player) > 0xd2 {
         (2, 3)
     } else {
         (2, 2)
@@ -2136,7 +2136,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     let mark = (f45 & 0x2000 != 0 || f45 & 8 != 0)
         && read_i8_as_i32(player + staff::PROFESSIONALISM) < 0xa
         && read_i8_as_i32(player + staff::TEMPERAMENT) > 0xa
-        && read_i8_as_i32(player + staff::LOYALITY) < 0xf
+        && read_i8_as_i32(player + staff::LOYALTY) < 0xf
         && read_i8_as_i32(player + staff::AGE) > 0x17;
     set_person_slots_optional(gravar, n, 0, player, true);
     gravar(n, 4, read_usize(club) as u32);
@@ -2147,9 +2147,9 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
         let manager = read_usize(G_CONTRACT_MANAGER);
         let cat_ok = category(manager, player, contract) == 1 || category(manager, player, contract) == 2;
         if cat_ok && read_i8_as_i32(player + staff::AGE) > 0x16 {
-            if read_i8_as_i32(player + staff::LOYALITY) < 0xa && read_i8_as_i32(player + staff::AMBITION) > 0xf && read_i8_as_i32(player + staff::TEMPERAMENT) < 6 {
+            if read_i8_as_i32(player + staff::LOYALTY) < 0xa && read_i8_as_i32(player + staff::AMBITION) > 0xf && read_i8_as_i32(player + staff::TEMPERAMENT) < 6 {
                 reacao = if mark && r == 2 { 3 } else { 1 };
-            } else if days_since_arrival(player) > 0x3e8 && read_i8_as_i32(player + staff::LOYALITY) > 0xf && read_usize(contract + 0x45) & 0x181 == 0 {
+            } else if days_since_arrival(player) > 0x3e8 && read_i8_as_i32(player + staff::LOYALTY) > 0xf && read_usize(contract + 0x45) & 0x181 == 0 {
                 reacao = if mark && r == 2 { 4 } else { 2 };
             }
         }
@@ -3100,7 +3100,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         return if x >= y { 3 } else { 1 };
     }
     // the sum of the knowledge (+0x19), of +0x1d of the profile and of +0x59 of the manager
-    let sum = || ch(0x19) + read_i8_as_i32(f() + 0x1d) + read_i8_as_i32(manager + staff::LOYALITY);
+    let sum = || ch(0x19) + read_i8_as_i32(f() + 0x1d) + read_i8_as_i32(manager + staff::LOYALTY);
     match k as i32 {
         0x3c | 0x3d => {
             let x = sorteio(ch(0x1b));
@@ -3115,7 +3115,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if sorteio(read_i8_as_i32(manager + staff::PRESSURE)) == 0 {
                 return 1;
             }
-            let x = sorteio(read_i8_as_i32(manager + staff::LOYALITY));
+            let x = sorteio(read_i8_as_i32(manager + staff::LOYALTY));
             let y = sorteio(0x28);
             if x > y {
                 return 1;
@@ -3157,7 +3157,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if sorteio(read_i8_as_i32(read_usize(player + staff::PLAYER) + 0x45)) == 0 {
                 return 1;
             }
-            let x = sorteio(read_i8_as_i32(manager + staff::LOYALITY));
+            let x = sorteio(read_i8_as_i32(manager + staff::LOYALTY));
             let y = sorteio(0x14 - rating);
             if x <= y { 3 } else { 1 }
         }
@@ -3168,7 +3168,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                 let e = entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), club, player, 0, 0);
                 if e != 0 && read_usize(e + 0xf) == read_usize(player) && rating > -10 {
                     crate::comparison::branch("cpo_6 sorteio descartado");
-                    sorteio(read_i8_as_i32(manager + staff::LOYALITY)); // the original discards the result
+                    sorteio(read_i8_as_i32(manager + staff::LOYALTY)); // the original discards the result
                 }
             }
             let x = sorteio(ch(0x19));
@@ -3180,7 +3180,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                     let x = sorteio(read_i8_as_i32(f() + 0x1d));
                     let y = sorteio(10);
                     if x < y {
-                        let x = sorteio(read_i8_as_i32(manager + staff::LOYALITY));
+                        let x = sorteio(read_i8_as_i32(manager + staff::LOYALTY));
                         let y = sorteio(10);
                         if x < y {
                             let x = sorteio(rating);
@@ -3246,7 +3246,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                     return 2;
                 }
             }
-            let x = sorteio(read_i8_as_i32(f() + 0x1d) + read_i8_as_i32(manager + staff::LOYALITY));
+            let x = sorteio(read_i8_as_i32(f() + 0x1d) + read_i8_as_i32(manager + staff::LOYALTY));
             let y = sorteio(0x96);
             if x > y {
                 if read_i16(read_usize(player + staff::PLAYER) + 0xb) as i32 <= read_i16(club + club::REPUTATION) as i32 + 0x1f4 {
@@ -3298,7 +3298,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             }
             let t = contract_squad_status(contract);
             if t != 0 && t != 0x70 && t != 0x80 && listed_by_club(player, 0) == 0 {
-                let x = sorteio(read_i8_as_i32(manager + staff::LOYALITY));
+                let x = sorteio(read_i8_as_i32(manager + staff::LOYALTY));
                 let y = sorteio(6);
                 if x > y {
                     let x = sorteio(ch(0x19));
@@ -3316,7 +3316,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if t != 0x70 && t != 0x40 {
                 return 3;
             }
-            let x = sorteio(read_i8_as_i32(manager + staff::LOYALITY));
+            let x = sorteio(read_i8_as_i32(manager + staff::LOYALTY));
             let y = sorteio(5);
             if x >= y {
                 return 3;
@@ -3331,7 +3331,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x >= y { 3 } else { 2 }
         }
         5 => {
-            if sorteio(read_i8_as_i32(manager + staff::LOYALITY)) != 0 && sorteio(ch(0x19)) != 0 && sorteio(read_i8_as_i32(player + staff::PROFESSIONALISM)) != 0 {
+            if sorteio(read_i8_as_i32(manager + staff::LOYALTY)) != 0 && sorteio(ch(0x19)) != 0 && sorteio(read_i8_as_i32(player + staff::PROFESSIONALISM)) != 0 {
                 let x = sorteio(rating);
                 let y = sorteio(-5);
                 if x > y {
@@ -3351,7 +3351,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x >= y { 3 } else { 2 }
         }
         6 => {
-            if sorteio(read_i8_as_i32(manager + staff::LOYALITY)) != 0 {
+            if sorteio(read_i8_as_i32(manager + staff::LOYALTY)) != 0 {
                 let x = sorteio(read_i8_as_i32(f() + 0x1f));
                 let y = sorteio(10);
                 if x > y {
@@ -3421,7 +3421,7 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
     write(n, 2, v as u32);
     let news = read_usize(G_NEWS);
     let division = read_usize(club + club::DIVISION);
-    if read_i16(club + club::REPUTATION) >= 9000 && division != 0 && read_i16(division + competition::CLUB_COMP_REPUTATION) > 12 {
+    if read_i16(club + club::REPUTATION) >= 9000 && division != 0 && read_i16(division + competition::REPUTATION) > 12 {
         let all: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
         all(news, n);
     } else {

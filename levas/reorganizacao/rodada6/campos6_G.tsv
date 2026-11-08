@@ -1,0 +1,19 @@
+staff_state	0xe	FORMER_CLUB_ID	4	club id of the first of five former-club slots (5-byte steps; -1 empty), paid a share of the fee on a sale
+staff_state	0x12	FORMER_CLUB_WEIGHT	1	signed weight of the first former-club slot (5-byte steps) in the fee-share split
+match_record_row	0x27	ASSISTS	1	assists in the match (multiplied by the contract ASSIST_BONUS)
+match_incident	0x4	CLUB_ID	4	club id of the day incident (0x19-byte entries of the match-day player incident list; +0 the person id)
+match_incident	0xe	OUTCOME	1	outcome mark set at the match wrap-up (1 accepted by the other manager, 0 otherwise)
+match_incident	0xf	RESPONDER_ID	4	staff id of the manager who answered the incident (-1 none)
+match_incident	0x13	KIND	2	incident kind (0x82, 0x1e, 0x0b...) selecting the news and reactions
+match_incident	0x15	OTHER_PERSON_ID	4	second person of the incident (passed with +0 to the two-person news)
+nation_club_bucket	0xc8	CLUB_COUNT	4	number of club ids kept in the bucket (0xd0-byte per-nation buckets of up to 50 ids at +0, database_trim_club_table)
+nation_club_bucket	0xcc	WEAKEST_SLOT	4	index of the kept club with the lowest reputation, replaced first
+nation_name_index	0x0	FIRST_NAME_START	4	first row of the nation's first names in the first-name table (0x24-byte entries at [0xae2338]; -1 none)
+nation_name_index	0x4	SECOND_NAME_START	4	first row of the nation's second names (-1 none)
+nation_name_index	0x8	COMMON_NAME_START	4	first row of the nation's common names (-1 none)
+nation_name_index	0xc	FIRST_NAME_WEIGHT_SUM	4	sum of the weights (TNames Count) of the nation's first names
+nation_name_index	0x10	SECOND_NAME_WEIGHT_SUM	4	sum of the weights of the nation's second names
+nation_name_index	0x14	COMMON_NAME_WEIGHT_SUM	4	sum of the weights of the nation's common names
+nation_name_index	0x18	FIRST_NAME_COUNT	4	number of first names of the nation
+nation_name_index	0x1c	SECOND_NAME_COUNT	4	number of second names of the nation
+nation_name_index	0x20	COMMON_NAME_COUNT	4	number of common names of the nation

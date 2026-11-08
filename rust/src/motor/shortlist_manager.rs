@@ -420,8 +420,8 @@ pub(crate) unsafe fn is_150_days_since(t: usize) -> bool {
 ///
 /// [pt] A distância entre as cidades `a` e `b` (coordenadas f64 em +0x23 e +0x2b), × 55.
 pub(crate) unsafe fn shortlist_manager_city_distance(a: usize, b: usize) -> f64 {
-    let dx = read_f64(a + city::CITY_LONGITUDE) - read_f64(b + city::CITY_LONGITUDE);
-    let dy = read_f64(a + city::CITY_LATITUDE) - read_f64(b + city::CITY_LATITUDE);
+    let dx = read_f64(a + city::LONGITUDE) - read_f64(b + city::LONGITUDE);
+    let dy = read_f64(a + city::LATITUDE) - read_f64(b + city::LATITUDE);
     (dy * dy + dx * dx).sqrt() * read_f64(0x96d1b8)
 }
 
@@ -446,11 +446,11 @@ pub(crate) unsafe fn average_reputation3(f: usize) -> i32 {
 pub(crate) unsafe fn reputation_by_stadium(club: usize) -> i32 {
     let rep = read_i16(club + club::REPUTATION) as i32;
     let e = read_usize(club + club::STADIUM);
-    let city = if e != 0 { read_usize(e + stadium::STADIUM_CITY) } else { 0 };
+    let city = if e != 0 { read_usize(e + stadium::CITY) } else { 0 };
     if city == 0 {
         return match_pl_ftol(rep as f64 * read_f64(0x96d5e0));
     }
-    let imp = read_i8(city + city::CITY_ATTRACTION);
+    let imp = read_i8(city + city::ATTRACTION);
     if imp == 0 {
         return rep / 2;
     }
@@ -474,7 +474,7 @@ pub(crate) unsafe fn reputation_by_division(club: usize) -> i16 {
     if comp == 0 {
         return rep as i16;
     }
-    let cv = read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32;
+    let cv = read_i16(comp + competition::REPUTATION) as i32;
     let t = cv.wrapping_mul(500);
     if rep >= 0x1d4c && read_usize(club + club::ATTENDANCE) as i32 > 0x88b8 {
         (if t > rep { t } else { rep }) as i16
@@ -510,7 +510,7 @@ pub(crate) unsafe fn reputation_by_competition(club: usize, by_division: i16) ->
         reg = read_usize(G_CLUB_COMP_TABLE).wrapping_add((idx as usize).wrapping_mul(0x6b));
         if reg != 0 {
             let id = read_usize(reg);
-            let s: i16 = if id == read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) { 15000 } else { read_i16(reg + competition::CLUB_COMP_REPUTATION).wrapping_mul(600) };
+            let s: i16 = if id == read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) { 15000 } else { read_i16(reg + competition::REPUTATION).wrapping_mul(600) };
             // 0x4a4850: push clube; mov ecx, [[0xadadfc] + 4 × id] + 8 -> thiscall, ret 4
             let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
             let r = find(read_usize(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))) + 8), club);
@@ -714,13 +714,13 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         if a0 & 0x10 != 0 {
             s = match_pl_ftol(s as f64 * k(0x968968)) as i16;
         }
-        let lim = read_i8(p1 + staff::LOYALITY) as i32 * 10 + 0x465;
+        let lim = read_i8(p1 + staff::LOYALTY) as i32 * 10 + 0x465;
         let s: i32 = if s < 0 { 0 } else if s as i32 > lim { lim as i16 as i32 } else { s as i32 };
         if a0 & 0x161a8 == 0 {
             let id = read_usize(p1) as i32;
             if days < id % 0x23 + 0x14
                 && read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(0x4f)) + 0xb) & 0xf == 0
-                && r1 + read_i8(p1 + staff::AMBITION) as i32 * 20 < (read_i8(p1 + staff::LOYALITY) as i32 + 0xaa) * 25 + s
+                && r1 + read_i8(p1 + staff::AMBITION) as i32 * 20 < (read_i8(p1 + staff::LOYALTY) as i32 + 0xaa) * 25 + s
             {
                 return k(0x968e38);
             }
@@ -791,7 +791,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         fl(2);
     }
     if dislikes_club(p1, d4) != 0 {
-        let s = read_u8(p1 + staff::PRESSURE).wrapping_add(read_u8(p1 + staff::LOYALITY)).wrapping_add(read_u8(p1 + staff::PROFESSIONALISM)) as i8;
+        let s = read_u8(p1 + staff::PRESSURE).wrapping_add(read_u8(p1 + staff::LOYALTY)).wrapping_add(read_u8(p1 + staff::PROFESSIONALISM)) as i8;
         if s > 0x2d {
             f8 *= k(0x968928);
         } else if s > 0x19 {
@@ -818,7 +818,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         let i2 = read_usize(p2);
         let i4 = read_usize(d4);
         if (i2 == e1 || i2 == e2) && (i4 == e1 || i4 == e2) {
-            f8 = (k(0x967878) / max1(read_i8(p1 + staff::LOYALITY)) as f64) * f8;
+            f8 = (k(0x967878) / max1(read_i8(p1 + staff::LOYALTY)) as f64) * f8;
             fl(0x20);
         } else {
             let n2 = read_usize(read_usize(p2 + club::NATION));
@@ -832,9 +832,9 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             } else {
                 if p2 == read_usize(d4 + club::RIVAL1) || p2 == read_usize(d4 + club::RIVAL2) || p2 == read_usize(d4 + club::RIVAL3) {
                     let m = if n2 == read_usize(KEY_NATION_ITALY) {
-                        k(0x967890) - read_i8(p1 + staff::LOYALITY) as i32 as f64 * k(0x968a98)
+                        k(0x967890) - read_i8(p1 + staff::LOYALTY) as i32 as f64 * k(0x968a98)
                     } else {
-                        k(0x968918) / max1(read_i8(p1 + staff::LOYALITY)) as f64
+                        k(0x968918) / max1(read_i8(p1 + staff::LOYALTY)) as f64
                     };
                     f8 = m * f8;
                     if !p6.is_null() && m < k(0x968e40) {
@@ -843,9 +843,9 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 }
                 if rival(p2, d4) != 0 {
                     let m = if read_usize(read_usize(p2 + club::NATION)) == read_usize(KEY_NATION_ITALY) {
-                        k(0x967890) - read_i8(p1 + staff::LOYALITY) as i32 as f64 * k(0x968a98)
+                        k(0x967890) - read_i8(p1 + staff::LOYALTY) as i32 as f64 * k(0x968a98)
                     } else {
-                        k(0x969040) / max1(read_i8(p1 + staff::LOYALITY)) as f64
+                        k(0x969040) / max1(read_i8(p1 + staff::LOYALTY)) as f64
                     };
                     f8 = m * f8;
                     if !p6.is_null() && m < k(0x968e40) {
@@ -1277,10 +1277,10 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             let e: i32 = if p4b {
                 (20 - c1 as i32 / 5).wrapping_mul(dd)
             } else {
-                if read_usize(c + 0x45) == 0 && dd < (read_i8(p1 + staff::LOYALITY) as i32 + 8) * 15 {
+                if read_usize(c + 0x45) == 0 && dd < (read_i8(p1 + staff::LOYALTY) as i32 + 8) * 15 {
                     return zero;
                 }
-                let dv = read_i8(p1 + staff::LOYALITY) as i32 + 10;
+                let dv = read_i8(p1 + staff::LOYALTY) as i32 + 10;
                 dd.wrapping_mul(20) / if dv < 1 { 1 } else { dv }
             };
             if e < 0 {
@@ -1298,7 +1298,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     } else {
         // the club itself: the squad status by the demand, with the manager there for more than 150 days
         if human(p2, 0, 1, 0, 0) != 0 && is_150_days_since(read_usize(p2 + club::MANAGER)) {
-            let lim = 0xceu8.wrapping_sub(read_u8(p1 + staff::LOYALITY)) as i8;
+            let lim = 0xceu8.wrapping_sub(read_u8(p1 + staff::LOYALTY)) as i8;
             if c1 < lim && ea != 5 && ea != 6 {
                 ea = 7;
             } else if c1 < 0 {
@@ -2271,8 +2271,8 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, club: 
         }
     }
     let bc = read_usize(club + club::DIVISION);
-    if bc != 0 && read_i16(bc + competition::CLUB_COMP_REPUTATION) < 0x10 {
-        let b69 = read_i16(bc + competition::CLUB_COMP_REPUTATION) as i32;
+    if bc != 0 && read_i16(bc + competition::REPUTATION) < 0x10 {
+        let b69 = read_i16(bc + competition::REPUTATION) as i32;
         let ri = read_i16(club + club::REPUTATION) as i32 / 500;
         let m = if ri > b69 { ri } else { b69 };
         let mut lim = m.wrapping_mul(670000);

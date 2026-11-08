@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../comp/cups/cup_stage.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/cups/cup_stage.rs.
 // [pt] Os comparadores das rotinas de ../comp/cups/cup_stage.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `construct_cup_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `construct_cup_stage`.
 ///
 /// [pt] Só a original (a base, as alocações e a árvore, que sorteia: não roda duas vezes), conferindo o plano feito antes: devolve
 /// this, +0x3e = n, +0x3c = as rodadas, +0x40 = o ano, as duas tabelas montadas e, na lista, os mesmos clubes.
@@ -20,12 +20,12 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, 
     let size = (rounds as u16 as i16 as i32 * 0x68).max(0) as usize;
     let template_before: Vec<u8> = core::slice::from_raw_parts(template as *const u8, size).to_vec();
     let r = o(this, parent, n, teams, rounds, a5, template, year, stage, b2, id, b3, arvore, by_order, a14, seeds);
-    let l = read_u32_as_usize(this + 0xa7);
-    let t = read_u32_as_usize(this + 0xa3);
+    let l = read_u32_as_usize(this + cup::TEAM_TABLE);
+    let t = read_u32_as_usize(this + cup::ROUND_TABLE);
     // the tree (called at the end) rewrites parts of the round table and of the list (in the 06/11 comparison the two
     // differed from what the constructor writes): checks the fixed fields, the built table and the set of clubs in the list
     let _ = &template_before;
-    let ok = r == this && read_i16(this + 0x3e) as u16 == n as u16 && read_i16(this + 0x3c) as u16 == rounds as u16 && read_i16(this + 0x40) as u16 == year as u16
+    let ok = r == this && read_i16(this + cup::TEAM_COUNT) as u16 == n as u16 && read_i16(this + cup::ROUND_COUNT) as u16 == rounds as u16 && read_i16(this + cup::YEAR) as u16 == year as u16
         && t != 0 && l != 0 && {
             let mut a: Vec<usize> = (0..plan.len()).map(|i| read_u32_as_usize(l + i * 6)).collect();
             let mut b: Vec<usize> = plan.iter().map(|x| x.0).collect();
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, 
     r
 }
 
-/// Comparer for `destroy_cup_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `destroy_cup_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_destroy_cup_stage(this: usize) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DESTROY_CUP_STAGE)(this)
 }

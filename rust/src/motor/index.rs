@@ -2387,7 +2387,7 @@ pub(crate) unsafe extern "C" fn compare_nation_get_nationality_adjective(nation:
     r
 }
 
-/// Comparer for `set_key_ids` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_key_ids`.
 pub(crate) unsafe extern "C" fn compare_set_key_ids() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
@@ -2398,7 +2398,7 @@ pub(crate) unsafe extern "C" fn compare_set_key_ids() -> u32 {
     r
 }
 
-/// Comparer for `set_key_ids_1080` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_key_ids_1080`.
 pub(crate) unsafe extern "C" fn compare_set_key_ids_1080() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS_1080);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
@@ -2409,7 +2409,7 @@ pub(crate) unsafe extern "C" fn compare_set_key_ids_1080() -> u32 {
     r
 }
 
-/// Comparer for `get_region_name` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_region_name`.
 pub(crate) unsafe extern "C" fn compare_get_region_name(region: u32, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
     let r = region as u8 as i8;
@@ -2423,7 +2423,7 @@ pub(crate) unsafe extern "C" fn compare_get_region_name(region: u32, text: usize
     x
 }
 
-/// Comparer for `get_continent_adjective` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_continent_adjective`.
 pub(crate) unsafe extern "C" fn compare_get_continent_adjective(continent: usize, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE);
     if continent == 0 || text == 0 || (size as u16 as i16) < 0x32 {
@@ -2436,7 +2436,7 @@ pub(crate) unsafe extern "C" fn compare_get_continent_adjective(continent: usize
     r
 }
 
-/// Comparer for `match_club_key_id` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_club_key_id`.
 pub(crate) unsafe extern "C" fn compare_match_club_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
@@ -2448,7 +2448,7 @@ pub(crate) unsafe extern "C" fn compare_match_club_key_id(name: usize, row: u32)
     r
 }
 
-/// Comparer for `remap_club_key_id` (comparison mode: see the header of motor.rs).
+/// Comparer for `remap_club_key_id`.
 pub(crate) unsafe extern "C" fn compare_remap_club_key_id(old: u32, new: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
@@ -2457,7 +2457,7 @@ pub(crate) unsafe extern "C" fn compare_remap_club_key_id(old: u32, new: u32) ->
     r
 }
 
-/// Comparer for `match_nation_key_id` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_nation_key_id`.
 pub(crate) unsafe extern "C" fn compare_match_nation_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_NATION_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
@@ -2469,7 +2469,7 @@ pub(crate) unsafe extern "C" fn compare_match_nation_key_id(name: usize, row: u3
     r
 }
 
-/// Comparer for `match_club_comp_key_id` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_club_comp_key_id`.
 pub(crate) unsafe extern "C" fn compare_match_club_comp_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0x4c0)];
@@ -2481,7 +2481,7 @@ pub(crate) unsafe extern "C" fn compare_match_club_comp_key_id(name: usize, row:
     r
 }
 
-/// Comparer for `match_staff_comp_key_id` (comparison mode: see the header of motor.rs).
+/// Comparer for `match_staff_comp_key_id`.
 pub(crate) unsafe extern "C" fn compare_match_staff_comp_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_STAFF_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_STAFF_COMP_FIFA_WORLD_PLAYER_OF_THE_YEAR, 0x684)];

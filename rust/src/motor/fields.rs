@@ -7,18 +7,18 @@ use super::*;
 /// `TCities` record. [pt] Registro `TCities`.
 #[allow(dead_code)]
 pub(crate) mod city {
-    pub(crate) const CITY_GENDER_NAME: usize = 0x1e; // 1 byte(s), char
-    pub(crate) const CITY_NATION: usize = 0x1f; // 4 byte(s), int
-    pub(crate) const CITY_ATTRACTION: usize = 0x33; // 1 byte(s), char
-    pub(crate) const CITY_WEATHER: usize = 0x34; // 4 byte(s), int
-    pub(crate) const CITY_LATITUDE: usize = 0x23; // 8 byte(s), double
-    pub(crate) const CITY_LONGITUDE: usize = 0x2b; // 8 byte(s), double
+    pub(crate) const GENDER_NAME: usize = 0x1e; // 1 byte(s), char
+    pub(crate) const NATION: usize = 0x1f; // 4 byte(s), int
+    pub(crate) const LATITUDE: usize = 0x23; // 8 byte(s), double
+    pub(crate) const LONGITUDE: usize = 0x2b; // 8 byte(s), double
+    pub(crate) const ATTRACTION: usize = 0x33; // 1 byte(s), char
+    pub(crate) const WEATHER: usize = 0x34; // 4 byte(s), int
 }
 
 /// `TClub` record. [pt] Registro `TClub`.
 #[allow(dead_code)]
 pub(crate) mod club {
-    pub(crate) const SIZE: usize = 0x245; // the record size (581 bytes)
+    pub(crate) const NAME: usize = 0x4; // 51 byte(s), byte[][51]
     pub(crate) const GENDER_NAME: usize = 0x37; // 1 byte(s), byte
     pub(crate) const SHORT_NAME: usize = 0x38; // 26 byte(s), byte[][26]
     pub(crate) const SHORT_GENDER_NAME: usize = 0x52; // 1 byte(s), byte
@@ -31,12 +31,19 @@ pub(crate) mod club {
     pub(crate) const CASH: usize = 0x65; // 4 byte(s), int
     pub(crate) const STADIUM: usize = 0x69; // 4 byte(s), int
     pub(crate) const OWN_STADIUM: usize = 0x6d; // 1 byte(s), byte
+    pub(crate) const MATCH_DAY: usize = 0x72; // 1 byte(s), byte
     pub(crate) const ATTENDANCE: usize = 0x73; // 4 byte(s), int
     pub(crate) const MIN_ATTENDANCE: usize = 0x77; // 4 byte(s), int
     pub(crate) const MAX_ATTENDANCE: usize = 0x7b; // 4 byte(s), int
     pub(crate) const TRAINING: usize = 0x7f; // 1 byte(s), byte
     pub(crate) const REPUTATION: usize = 0x80; // 2 byte(s), UInt16
     pub(crate) const PLC: usize = 0x82; // 1 byte(s), byte
+    pub(crate) const FORE_COLOUR1: usize = 0x83; // 4 byte(s), int
+    pub(crate) const BACK_COLOUR1: usize = 0x87; // 4 byte(s), int
+    pub(crate) const FORE_COLOUR2: usize = 0x8b; // 4 byte(s), int
+    pub(crate) const BACK_COLOUR2: usize = 0x8f; // 4 byte(s), int
+    pub(crate) const FORE_COLOUR3: usize = 0x93; // 4 byte(s), int
+    pub(crate) const BACK_COLOUR3: usize = 0x97; // 4 byte(s), int
     pub(crate) const FAV_STAFF1: usize = 0x9b; // 4 byte(s), int
     pub(crate) const DIS_STAFF1: usize = 0xa7; // 4 byte(s), int
     pub(crate) const RIVAL1: usize = 0xb3; // 4 byte(s), int
@@ -51,80 +58,83 @@ pub(crate) mod club {
     pub(crate) const SCOUTS: usize = 0x1b3; // 28 byte(s), int[][7]
     pub(crate) const PHYSIOS: usize = 0x1cf; // 12 byte(s), int[][3]
     pub(crate) const CONTINENTAL_COMP_ID: usize = 0x1db; // id of the continental competition the club is entered in (-1 none); 4 byte(s), int
+    pub(crate) const EURO_FLAG: usize = 0x1db; // 4 byte(s), int
+    pub(crate) const EURO_SEEDING: usize = 0x1df; // 1 byte(s), byte
     pub(crate) const TEAM_SELECTED: usize = 0x1e0; // 80 byte(s), int[][20]
     pub(crate) const HAS_LINKED_CLUB: usize = 0x244; // 1 byte(s), byte
-    pub(crate) const MATCH_DAY: usize = 0x72; // 1 byte(s), byte
-    pub(crate) const EURO_SEEDING: usize = 0x1df; // 1 byte(s), byte
-    pub(crate) const NAME: usize = 0x4; // 51 byte(s), byte[][51]
-    pub(crate) const BACK_COLOUR1: usize = 0x87; // 4 byte(s), int
-    pub(crate) const BACK_COLOUR2: usize = 0x8f; // 4 byte(s), int
-    pub(crate) const BACK_COLOUR3: usize = 0x97; // 4 byte(s), int
-    pub(crate) const FORE_COLOUR1: usize = 0x83; // 4 byte(s), int
-    pub(crate) const FORE_COLOUR2: usize = 0x8b; // 4 byte(s), int
-    pub(crate) const FORE_COLOUR3: usize = 0x93; // 4 byte(s), int
+    pub(crate) const SIZE: usize = 0x245; // the record size (581 bytes)
 }
 
 /// `TComp` record. [pt] Registro `TComp`.
 #[allow(dead_code)]
 pub(crate) mod competition {
+    pub(crate) const NAME: usize = 0x4; // 51 byte(s), byte[][51]
+    pub(crate) const GENDER_NAME: usize = 0x37; // 1 byte(s), byte
     pub(crate) const SHORT_NAME: usize = 0x38; // 26 byte(s), byte[][26]
     pub(crate) const SHORT_GENDER_NAME: usize = 0x52; // 1 byte(s), byte
-    pub(crate) const CLUB_COMP_CONTINENT: usize = 0x59; // 4 byte(s), int
-    pub(crate) const CLUB_COMP_NATION: usize = 0x5d; // 4 byte(s), int
-    pub(crate) const CLUB_COMP_FOREGROUND_COLOUR: usize = 0x61; // 4 byte(s), int
-    pub(crate) const CLUB_COMP_REPUTATION: usize = 0x69; // 2 byte(s), Int16
-    pub(crate) const GENDER_NAME: usize = 0x37; // 1 byte(s), byte
-    pub(crate) const NAME: usize = 0x4; // 51 byte(s), byte[][51]
-    pub(crate) const CLUB_COMP_BACKGROUND_COLOUR: usize = 0x65; // 4 byte(s), int
+    pub(crate) const CONTINENT: usize = 0x59; // 4 byte(s), int
+    pub(crate) const NATION: usize = 0x5d; // 4 byte(s), int
+    pub(crate) const FOREGROUND_COLOUR: usize = 0x61; // 4 byte(s), int
+    pub(crate) const BACKGROUND_COLOUR: usize = 0x65; // 4 byte(s), int
+    pub(crate) const REPUTATION: usize = 0x69; // 2 byte(s), Int16
 }
 
 /// `TContract` record. [pt] Registro `TContract`.
 #[allow(dead_code)]
 pub(crate) mod contract {
+    pub(crate) const CLUB: usize = 0x4; // 4 byte(s), int
+    pub(crate) const UNKNOWN: usize = 0x8; // 4 byte(s), int
     pub(crate) const WAGE: usize = 0xc; // 4 byte(s), int
     pub(crate) const GOAL_BONUS: usize = 0x10; // 4 byte(s), int
     pub(crate) const ASSIST_BONUS: usize = 0x14; // 4 byte(s), int
     pub(crate) const CLEAN_SHEET_BONUS: usize = 0x18; // 4 byte(s), int
+    pub(crate) const NON_PROMOTION_RC: usize = 0x1c; // 1 byte(s), byte
+    pub(crate) const MINIMUM_FEE_RC: usize = 0x1d; // 1 byte(s), byte
     pub(crate) const RELEGATION_RC: usize = 0x1f; // 1 byte(s), byte
+    pub(crate) const MANAGER_JOB_RC: usize = 0x20; // 1 byte(s), byte
     pub(crate) const RELEASE_FEE: usize = 0x21; // 4 byte(s), int
     pub(crate) const DATE_STARTED: usize = 0x25; // 8 byte(s), TCMDate
     pub(crate) const CONTRACT_EXPIRES: usize = 0x2d; // 8 byte(s), TCMDate
+    pub(crate) const CONTRACT_EXPIRES_YEAR: usize = 0x2f; // 2 byte(s): Year half of CONTRACT_EXPIRES
     pub(crate) const CONTRACT_TYPE: usize = 0x35; // 1 byte(s), byte
-    pub(crate) const UNKNOWN18_2: usize = 0x3e; // 8 byte(s), UInt64
+    pub(crate) const PREVIOUS_WAGE: usize = 0x36; // 4 byte(s): Copy of the wage taken when the contract is set up [inference]
+    pub(crate) const CLUB_APPEARANCES: usize = 0x3b; // 2 byte(s): Games for the club under this contract (zeroed on signing; clause counts)
+    pub(crate) const HAPPINESS: usize = 0x3d; // 1 byte(s): Signed happiness -100..100: set from the squad role (1->75, 2->50, 3->40), moved by minutes played after each match
+    pub(crate) const UNHAPPY_FLAG: usize = 0x3e; // 1 byte(s): Byte cleared when a transfer request is withdrawn or morale is reset [inference]
+    pub(crate) const MATCHES_LEFT_OUT: usize = 0x3f; // 1 byte(s): Count of matches the person was left out; 5 or more outside the human club sets the squad mark [inference]
+    pub(crate) const FLAGS: usize = 0x40; // 4 byte(s): Contract flags (set_flags ORs marks in)
+    pub(crate) const MORALE: usize = 0x44; // 1 byte(s): Morale in the contract (signed); set to professionalism + loyalty + 5 on request withdrawal
+    pub(crate) const GRIEVANCES: usize = 0x45; // 4 byte(s): Grievance bits (0x10, 1, 4, 8, 0x100, 0x80, ...)
+    pub(crate) const UNKNOWN18_3: usize = 0x46; // 2 byte(s), short
     pub(crate) const LEAVING_ON_BOSMAN: usize = 0x49; // 1 byte(s), byte
+    pub(crate) const TRANSFER_ARRANGED_FOR: usize = 0x4a; // 4 byte(s), int
     pub(crate) const TRANSFER_STATUS: usize = 0x4e; // 1 byte(s), byte
     pub(crate) const SQUAD_STATUS: usize = 0x4f; // 1 byte(s), byte
-    pub(crate) const NON_PROMOTION_RC: usize = 0x1c; // 1 byte(s), byte
-    pub(crate) const MINIMUM_FEE_RC: usize = 0x1d; // 1 byte(s), byte
-    pub(crate) const MANAGER_JOB_RC: usize = 0x20; // 1 byte(s), byte
-    pub(crate) const UNKNOWN18_1: usize = 0x36; // 8 byte(s), UInt64
-    pub(crate) const UNKNOWN18_3: usize = 0x46; // 2 byte(s), short
-    pub(crate) const TRANSFER_ARRANGED_FOR: usize = 0x4a; // 4 byte(s), int
-    pub(crate) const CLUB: usize = 0x4; // 4 byte(s), int
-    pub(crate) const UNKNOWN: usize = 0x8; // 4 byte(s), int
 }
 
 /// `TNation` record. [pt] Registro `TNation`.
 #[allow(dead_code)]
 pub(crate) mod nation {
-    pub(crate) const SIZE: usize = 0x122; // the record size (290 bytes)
     pub(crate) const SHORT_NAME: usize = 0x38; // 26 byte(s), byte[][26]
+    pub(crate) const SHORT_GENDER_NAME: usize = 0x52; // 1 byte(s), byte
     pub(crate) const THREE_LETTER_NAME: usize = 0x53; // 4 byte(s), byte[][4]
     pub(crate) const NATIONALITY: usize = 0x57; // 26 byte(s), byte[][26]
     pub(crate) const CONTINENT: usize = 0x71; // 4 byte(s), int
     pub(crate) const REGION: usize = 0x75; // 1 byte(s), sbyte
     pub(crate) const ACTUAL_REGION: usize = 0x76; // 1 byte(s), sbyte
     pub(crate) const FIRST_LANGUAGE: usize = 0x77; // 1 byte(s), sbyte
+    pub(crate) const SECOND_LANGUAGE: usize = 0x78; // 1 byte(s), sbyte
+    pub(crate) const THIRD_LANGUAGE: usize = 0x79; // 1 byte(s), sbyte
     pub(crate) const STATE_OF_DEVELOPMENT: usize = 0x7e; // 1 byte(s), sbyte
     pub(crate) const GROUP_MEMBERSHIP: usize = 0x7f; // 1 byte(s), sbyte
     pub(crate) const NATIONAL_STADIUM: usize = 0x80; // 4 byte(s), int
-    pub(crate) const LEAGUE_STANDARD: usize = 0x85; // 1 byte(s), sbyte
-    pub(crate) const REPUTATION: usize = 0x8e; // 2 byte(s), Int16
-    pub(crate) const NATION_LEAGUE_SELECTED: usize = 0x11c; // 1 byte(s), sbyte
-    pub(crate) const SHORT_GENDER_NAME: usize = 0x52; // 1 byte(s), byte
     pub(crate) const GAME_IMPORTANCE: usize = 0x84; // 1 byte(s), sbyte
+    pub(crate) const LEAGUE_STANDARD: usize = 0x85; // 1 byte(s), sbyte
     pub(crate) const NUMBER_CLUBS: usize = 0x86; // 2 byte(s), Int16
     pub(crate) const NUMBER_STAFF: usize = 0x88; // 4 byte(s), int
+    pub(crate) const REPUTATION: usize = 0x8e; // 2 byte(s), Int16
+    pub(crate) const FOREGROUND_COLOUR1: usize = 0x90; // 4 byte(s), int
+    pub(crate) const BACKGROUND_COLOUR1: usize = 0x94; // 4 byte(s), int
     pub(crate) const FIFACOEFFICIENT91: usize = 0xb0; // 8 byte(s), double
     pub(crate) const FIFACOEFFICIENT92: usize = 0xb8; // 8 byte(s), double
     pub(crate) const FIFACOEFFICIENT93: usize = 0xc0; // 8 byte(s), double
@@ -137,34 +147,35 @@ pub(crate) mod nation {
     pub(crate) const UEFACOEFFICIENT94: usize = 0xf8; // 8 byte(s), double
     pub(crate) const UEFACOEFFICIENT95: usize = 0x100; // 8 byte(s), double
     pub(crate) const UEFACOEFFICIENT96: usize = 0x108; // 8 byte(s), double
-    pub(crate) const NATION_GAMES_PLAYED: usize = 0x121; // 1 byte(s), sbyte
-    pub(crate) const BACKGROUND_COLOUR1: usize = 0x94; // 4 byte(s), int
-    pub(crate) const FOREGROUND_COLOUR1: usize = 0x90; // 4 byte(s), int
-    pub(crate) const SECOND_LANGUAGE: usize = 0x78; // 1 byte(s), sbyte
-    pub(crate) const THIRD_LANGUAGE: usize = 0x79; // 1 byte(s), sbyte
+    pub(crate) const LEAGUE_SELECTED: usize = 0x11c; // 1 byte(s), sbyte
+    pub(crate) const GAMES_PLAYED: usize = 0x121; // 1 byte(s), sbyte
+    pub(crate) const SIZE: usize = 0x122; // the record size (290 bytes)
 }
 
 /// `TStadiums` record. [pt] Registro `TStadiums`.
 #[allow(dead_code)]
 pub(crate) mod stadium {
-    pub(crate) const STADIUM_GENDER_NAME: usize = 0x37; // 1 byte(s), byte
-    pub(crate) const STADIUM_CITY: usize = 0x38; // 4 byte(s), int
-    pub(crate) const STADIUM_CAPACITY: usize = 0x3c; // 4 byte(s), int
-    pub(crate) const STADIUM_SEATING_CAPACITY: usize = 0x40; // 4 byte(s), int
-    pub(crate) const STADIUM_EXPANSION_CAPACITY: usize = 0x44; // 4 byte(s), int
-    pub(crate) const STADIUM_NEARBY_STADIUM: usize = 0x48; // 4 byte(s), int
-    pub(crate) const STADIUM_COVERED: usize = 0x4c; // 1 byte(s), byte
-    pub(crate) const STADIUM_UNDER_SOIL_HEATING: usize = 0x4d; // 1 byte(s), byte
     pub(crate) const NAME: usize = 0x4; // 51 byte(s), byte[][51]
+    pub(crate) const GENDER_NAME: usize = 0x37; // 1 byte(s), byte
+    pub(crate) const CITY: usize = 0x38; // 4 byte(s), int
+    pub(crate) const CAPACITY: usize = 0x3c; // 4 byte(s), int
+    pub(crate) const STADIUM_CAPACITY: usize = 0x3c; // 4 byte(s), int
+    pub(crate) const SEATING_CAPACITY: usize = 0x40; // 4 byte(s), int
+    pub(crate) const EXPANSION_CAPACITY: usize = 0x44; // 4 byte(s), int
+    pub(crate) const NEARBY_STADIUM: usize = 0x48; // 4 byte(s), int
+    pub(crate) const COVERED: usize = 0x4c; // 1 byte(s), byte
+    pub(crate) const UNDER_SOIL_HEATING: usize = 0x4d; // 1 byte(s), byte
 }
 
 /// `TStaff` record. [pt] Registro `TStaff`.
 #[allow(dead_code)]
 pub(crate) mod staff {
-    pub(crate) const SIZE: usize = 0x6e; // the record size (110 bytes)
+    pub(crate) const FIRST_NAME: usize = 0x4; // 4 byte(s), int
+    pub(crate) const SECOND_NAME: usize = 0x8; // 4 byte(s), int
     pub(crate) const COMMON_NAME: usize = 0xc; // 4 byte(s), int
     pub(crate) const DATE_OF_BIRTH: usize = 0x10; // 8 byte(s), TCMDate
     pub(crate) const AGE: usize = 0x18; // 2 byte(s): the age in years (read as i8): the year of birth from the file is replaced by the age at the game start (database setup)
+    pub(crate) const YEAR_OF_BIRTH: usize = 0x18; // 2 byte(s), UInt16: the year of birth as stored in the file; database setup replaces it with the age (see AGE)
     pub(crate) const NATION: usize = 0x1a; // 4 byte(s), int
     pub(crate) const SECOND_NATION: usize = 0x1e; // 4 byte(s), int
     pub(crate) const INT_APPS: usize = 0x22; // 1 byte(s), byte
@@ -181,9 +192,10 @@ pub(crate) mod staff {
     pub(crate) const ADAPTABILITY: usize = 0x56; // 1 byte(s), byte
     pub(crate) const AMBITION: usize = 0x57; // 1 byte(s), byte
     pub(crate) const DETERMINATION: usize = 0x58; // 1 byte(s), byte
-    pub(crate) const LOYALITY: usize = 0x59; // 1 byte(s), byte
+    pub(crate) const LOYALTY: usize = 0x59; // 1 byte(s), byte
     pub(crate) const PRESSURE: usize = 0x5a; // 1 byte(s), byte
     pub(crate) const PROFESSIONALISM: usize = 0x5b; // 1 byte(s), byte
+    pub(crate) const SPORTSMANSHIP: usize = 0x5c; // 1 byte(s), byte
     pub(crate) const TEMPERAMENT: usize = 0x5d; // 1 byte(s), byte
     pub(crate) const PLAYING_SQUAD: usize = 0x5e; // 1 byte(s), byte
     pub(crate) const CLASSIFICATION: usize = 0x5f; // 1 byte(s), byte
@@ -191,10 +203,7 @@ pub(crate) mod staff {
     pub(crate) const STAFF_PREFERENCES: usize = 0x65; // 4 byte(s), int
     pub(crate) const NON_PLAYER: usize = 0x69; // 4 byte(s), int
     pub(crate) const SQUAD_SELECTED_FOR: usize = 0x6d; // 1 byte(s), byte
-    pub(crate) const SPORTSMANSHIP: usize = 0x5c; // 1 byte(s), byte
-    pub(crate) const FIRST_NAME: usize = 0x4; // 4 byte(s), int
-    pub(crate) const SECOND_NAME: usize = 0x8; // 4 byte(s), int
-    pub(crate) const YEAR_OF_BIRTH: usize = 0x18; // 2 byte(s), UInt16: the year of birth as stored in the file; database setup replaces it with the age (see AGE)
+    pub(crate) const SIZE: usize = 0x6e; // the record size (110 bytes)
 }
 
 /// Fields of the `bra_nat_third` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `bra_nat_third`.
@@ -206,6 +215,8 @@ pub(crate) mod bra_nat_third {
 /// Fields of the `contract_manager_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `contract_manager_fields`.
 #[allow(dead_code)]
 pub(crate) mod contract_manager_fields {
+    pub(crate) const CONTRACT_CAPACITY: usize = 0x4; // 4 byte(s): Capacity of the 0x50-byte contract array at +0 (grows by 100 or 200)
+    pub(crate) const CONTRACT_COUNT: usize = 0x8; // 4 byte(s): Number of slots used in the contract array (free slot = person -1)
     pub(crate) const DECISION_DATES: usize = 0xc; // 4 byte(s): Array of 14-byte decision date entries (person, date, slice, type at +0xd), sorted
     pub(crate) const DECISION_CAPACITY: usize = 0x10; // 4 byte(s): Capacity of the decision date array (grows by 100)
     pub(crate) const DECISION_COUNT: usize = 0x14; // 4 byte(s): Number of decision date entries
@@ -215,8 +226,6 @@ pub(crate) mod contract_manager_fields {
     pub(crate) const TALKS_COUNT: usize = 0x2c; // 4 byte(s): Number of talks records
     pub(crate) const CONTRACT_OFFERS: usize = 0x34; // 4 byte(s): Linked list of current contract offers
     pub(crate) const HELD_OFFERS: usize = 0x38; // 4 byte(s): Linked list of held contract offers awaiting resubmission
-    pub(crate) const CONTRACT_CAPACITY: usize = 0x4; // 4 byte(s): Capacity of the 0x50-byte contract array at +0 (grows by 100 or 200)
-    pub(crate) const CONTRACT_COUNT: usize = 0x8; // 4 byte(s): Number of slots used in the contract array (free slot = person -1)
 }
 
 /// Fields of the `cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `cup`.
@@ -255,6 +264,7 @@ pub(crate) mod cup {
 #[allow(dead_code)]
 pub(crate) mod eng_auto_cup {
     pub(crate) const SELECTED_CLUBS: usize = 0xb2; // 4 byte(s): Pointer to the array of the 56 chosen club pointers (north half then south half, sorted by latitude and reputation)
+    pub(crate) const SELECTED_COUNT: usize = 0xb6; // 4 byte(s): Number of club slots in SELECTED_CLUBS filled by select_section_clubs (compared up to 0x38) [inference]
 }
 
 /// Fields of the `eng_cc_cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `eng_cc_cup`.
@@ -297,16 +307,19 @@ pub(crate) mod friendly {
     pub(crate) const INTL_DATE_TABLE: usize = 0x34ec; // 4 byte(s): Array of 0x14-byte international friendly date entries
     pub(crate) const INTL_DATE_COUNT: usize = 0x34f0; // 4 byte(s): Number of international date entries (starts at 0xc8)
     pub(crate) const INTL_LAST_DAY_DONE: usize = 0x34f4; // 2 byte(s): Last day processed by update_international_friendlies (400 = none)
+    pub(crate) const NATION_LISTS: usize = 0x34f6; // 4 byte(s): pointer to the array of per-nation friendly lists (indexed by nation id, then by position in SORTED_NATIONS)
     pub(crate) const SORTED_NATIONS: usize = 0x34fa; // 4 byte(s): Array of nation pointers with a continent, sorted by reputation
     pub(crate) const SORTED_NATION_COUNT: usize = 0x34fe; // 4 byte(s): Number of entries in the sorted nation array
     pub(crate) const BANNED_NATION_PAIRS: usize = 0x3502; // 4 byte(s): Array of 8-byte banned nation pairs (-1 = any)
     pub(crate) const BANNED_PAIR_COUNT: usize = 0x3506; // 1 byte(s): Number of banned nation pairs (signed byte)
-    pub(crate) const NATION_LISTS: usize = 0x34f6; // 4 byte(s): pointer to the array of per-nation friendly lists (indexed by nation id, then by position in SORTED_NATIONS)
 }
 
 /// Fields of the `injury_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `injury_fields`.
 #[allow(dead_code)]
 pub(crate) mod injury_fields {
+    pub(crate) const PHYSICAL_RECORDS: usize = 0x0; // 4 byte(s): array of 31-byte physical records per person id (physical_record)
+    pub(crate) const INJURY_ENTRIES: usize = 0x4; // 4 byte(s): array of 0x30-byte injuries (injury_entry; byte 0xff marks a free slot)
+    pub(crate) const INJURY_ENTRY_COUNT: usize = 0x8; // 4 byte(s): number of slots in INJURY_ENTRIES
     pub(crate) const INJURY_HISTORY: usize = 0xc; // 4 byte(s): Injury history object (per-person past injuries)
     pub(crate) const RECOVERY_NEWS_QUEUE: usize = 0x10; // 4 byte(s): Array of 22-byte return-from-injury news entries, sorted by date
     pub(crate) const RECOVERY_NEWS_COUNT: usize = 0x18; // 4 byte(s): Number of recovery news entries
@@ -314,9 +327,6 @@ pub(crate) mod injury_fields {
     pub(crate) const OUTBREAK_CAPACITY: usize = 0x20; // 4 byte(s): Capacity of the outbreak array
     pub(crate) const OUTBREAK_COUNT: usize = 0x24; // 4 byte(s): Number of illness outbreaks
     pub(crate) const MATCH_HIT_LIST: usize = 0x28; // 4 byte(s): Linked list of knocks taken in today's matches (freed daily)
-    pub(crate) const PHYSICAL_RECORDS: usize = 0x0; // 4 byte(s): array of 31-byte physical records per person id (physical_record)
-    pub(crate) const INJURY_ENTRIES: usize = 0x4; // 4 byte(s): array of 0x30-byte injuries (injury_entry; byte 0xff marks a free slot)
-    pub(crate) const INJURY_ENTRY_COUNT: usize = 0x8; // 4 byte(s): number of slots in INJURY_ENTRIES
 }
 
 /// Fields of the `intertoto_cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `intertoto_cup`.
@@ -329,29 +339,36 @@ pub(crate) mod intertoto_cup {
 #[allow(dead_code)]
 pub(crate) mod league {
     pub(crate) const STAGES: usize = 0xc; // 4 byte(s): pointer to the array of extra stage objects (4 bytes each, STAGE_COUNT entries)
+    pub(crate) const ENTRANT_BOOK: usize = 0x14; // 4 byte(s): Pointer to the entrant book, 6-byte entries (+0 club or nation, +4 class, +5 status); the World Cup keeps its qualified nations here (inherited from Comp, as cup ENTRANT_BOOK)
     pub(crate) const UPPER_DIVISION_ID: usize = 0x1c; // 4 byte(s): competition id of the division above (promotion target); -1 = none (top of the pyramid)
     pub(crate) const LOWER_DIVISION_ID: usize = 0x20; // 4 byte(s): competition id of the division below (relegation target); -1 = none
     pub(crate) const FIXED_STADIUM_ID: usize = 0x24; // 4 byte(s): stadium id used for the fixtures; the club whose stadium (+0x69) matches plays at home; -1 = none [inference]
     pub(crate) const PRIZE_FUND: usize = 0x28; // 4 byte(s): total prize money shared by table position at season end (fund / (1+2+..+n) per share)
     pub(crate) const STAGE_COUNT: usize = 0x2c; // 4 byte(s): number of stages beyond the league itself (play-offs, second phase...)
     pub(crate) const CURRENT_STAGE: usize = 0x30; // 4 byte(s): index of the current extra stage; -1 = still in the league stage
+    pub(crate) const ENTRANT_COUNT: usize = 0x36; // 2 byte(s): Number of entries used in ENTRANT_BOOK (inherited from Comp)
+    pub(crate) const ENTRANT_CAPACITY: usize = 0x38; // 2 byte(s): Capacity of ENTRANT_BOOK; add_qualified_team only adds while ENTRANT_COUNT is below it (inherited from Comp)
     pub(crate) const STAGE_ID: usize = 0x3a; // 2 byte(s): stage/round code (output of create_schedule; copied to each fixture +0x32, announced in status news)
     pub(crate) const LEGS: usize = 0x3c; // 2 byte(s): times each pair of clubs meets (2 = home and away)
     pub(crate) const CLUB_COUNT: usize = 0x3e; // 2 byte(s): number of clubs (rows in TABLE)
     pub(crate) const YEAR: usize = 0x40; // 2 byte(s): season year of the league
     pub(crate) const CLUB_SIDES: usize = 0x42; // 1 byte(s): 1 = played by club sides (written by every set_up_rules) [inference]
+    pub(crate) const COMP_TYPE: usize = 0x43; // 1 byte(s): competition type: 1 = cup, 2 = league
     pub(crate) const STAGE_INDEX: usize = 0x44; // 1 byte(s): index of this object as a stage of its parent; 0xff = the main competition itself, 0xfe = special stage
     pub(crate) const ACTIVE: usize = 0x45; // 4 byte(s): nonzero when the competition has clubs/is active; zero makes the day update, sort and completion checks skip [inference]
     pub(crate) const SEASON_CLOSED: usize = 0x4c; // 4 byte(s): set once the season-end history and records were written; cleared by start_new_season
     pub(crate) const DISCIPLINE_RULE: usize = 0x50; // 1 byte(s): discipline (suspension) rule set code (9 English, 0xc French, 0x11 Italian, 0x1a Spanish...)
     pub(crate) const IMPORTANCE: usize = 0x51; // 1 byte(s): competition importance (0xf for state leagues); match importance = (IMPORTANCE - 10) / 4 + 10
     pub(crate) const SQUAD_FLAGS: usize = 0x52; // 1 byte(s): flags; bit 2 = squad registration with fixed squad numbers (registration deadline before the first round)
+    pub(crate) const CUSTOM_COMPARE: usize = 0xa3; // 4 byte(s): optional extra table-row compare function used by sort_table before the standard criteria
     pub(crate) const GAMES_PER_CLUB: usize = 0xa7; // 2 byte(s): league games each club plays = (CLUB_COUNT - 1) x LEGS; -1 = not computed yet
     pub(crate) const ROUND_COUNT: usize = 0xa9; // 2 byte(s): number of rounds (entries in ROUND_DATES)
     pub(crate) const MATCH_RULES: usize = 0xab; // 2 byte(s): match rules flags copied to each fixture +0x38: bit 2 extra time, bits 0x21 penalties
     pub(crate) const TABLE_COLUMN: usize = 0xad; // 4 byte(s): head-to-head column used when sorting (14 bytes per column in the rows); 0 = main table
     pub(crate) const TABLE: usize = 0xb1; // 4 byte(s): pointer to the league table: CLUB_COUNT rows of 0x3b bytes
     pub(crate) const STOPPED: usize = 0xb5; // 1 byte(s): nonzero = league stopped/closed: no daily update, never complete [inference]
+    pub(crate) const NEXT_DRAW_DAY: usize = 0xb6; // 2 byte(s): day of the upcoming draw; 0xffff = none
+    pub(crate) const NEXT_DRAW_YEAR_OFFSET: usize = 0xb8; // 2 byte(s): year of the upcoming draw, relative to YEAR
     pub(crate) const ROUND_DATES: usize = 0xba; // 4 byte(s): pointer to the round date table (0x41-byte entries: day, year - YEAR, code, TV slots, +0x3d stadium value)
     pub(crate) const PROMOTED_COUNT: usize = 0xbe; // 1 byte(s): clubs promoted directly (top band)
     pub(crate) const PROMOTION_PLAYOFF_COUNT: usize = 0xbf; // 1 byte(s): clubs going to the promotion play-off (band below PROMOTED_COUNT)
@@ -364,21 +381,20 @@ pub(crate) mod league {
     pub(crate) const LAST_RESULT_DATE: usize = 0xc9; // 8 byte(s): date of the last result added; on that date the day update re-sorts the table and updates statuses
     pub(crate) const LAST_UPDATE_DATE: usize = 0xd1; // 8 byte(s): date of the last full daily update (new-day check)
     pub(crate) const LEAGUE_FLAGS: usize = 0xd9; // 2 byte(s): rule bits: 1 champion status, 2/4/8 promotion status 0/7/6, 0x20 mid-table status, 0x40/0x80 round order, 0x100 fixed table slots
+    pub(crate) const ROUND_DRAW_RULES: usize = 0xdb; // 2 byte(s): round rule word copied to each created fixture's ROUND_DRAW_RULES
     pub(crate) const COMPLETE: usize = 0xdd; // 4 byte(s): league stage finished (all games played or ended by date)
     pub(crate) const PRIZE_MODE: usize = 0xe1; // 1 byte(s): prize payment mode: 1 = PRIZE_FUND by position, 2 = nothing, 3 = paid by the competition (virtual +0x6c)
+    pub(crate) const REQUIRED_CAPACITY: usize = 0xe2; // 2 byte(s): capacity a club's stadium must have in this division (-1 none); passed to Finance::upgrade_stadium_for_league [inference]
+    pub(crate) const REQUIRED_SEATS: usize = 0xe4; // 2 byte(s): seated places a club's stadium must have in this division, passed to Finance::upgrade_stadium_for_league [inference]
     pub(crate) const TIEBREAK_MATCHES: usize = 0xe6; // 4 byte(s): a points tie across a band boundary goes to a tie-break match (no prizes or end records until resolved)
     pub(crate) const FIXED_FIXTURES: usize = 0xea; // 4 byte(s): pointer to a fixed fixture list (0x10-byte entries, +8/+0xc club ids) used instead of the round robin; 0 = none
-    pub(crate) const COMP_TYPE: usize = 0x43; // 1 byte(s): competition type: 1 = cup, 2 = league
-    pub(crate) const CUSTOM_COMPARE: usize = 0xa3; // 4 byte(s): optional extra table-row compare function used by sort_table before the standard criteria
-    pub(crate) const NEXT_DRAW_DAY: usize = 0xb6; // 2 byte(s): day of the upcoming draw; 0xffff = none
-    pub(crate) const NEXT_DRAW_YEAR_OFFSET: usize = 0xb8; // 2 byte(s): year of the upcoming draw, relative to YEAR
-    pub(crate) const REQUIRED_SEATS: usize = 0xe2; // 2 byte(s): seats a club's stadium must have in this division (-1 none); passed to Finance::upgrade_stadium_for_league [inference]
-    pub(crate) const REQUIRED_CAPACITY: usize = 0xe4; // 2 byte(s): capacity a club's stadium must have in this division, passed to Finance::upgrade_stadium_for_league [inference]
 }
 
 /// Fields of the `player_regen_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `player_regen_fields`.
 #[allow(dead_code)]
 pub(crate) mod player_regen_fields {
+    pub(crate) const RETIREMENTS: usize = 0x4; // 4 byte(s): Pointer to the 0x1a-byte pending retirement records, sorted by 0x7ae2a0
+    pub(crate) const RETIREMENT_COUNT: usize = 0x8; // 4 byte(s): Number of pending retirements
     pub(crate) const RETIREMENT_CAPACITY: usize = 0xc; // 4 byte(s): Capacity of the retirements array (grows by 250)
     pub(crate) const REGEN_QUEUE: usize = 0x10; // 4 byte(s): Array of 12-byte regen queue entries (staff id, date)
     pub(crate) const REGEN_QUEUE_COUNT: usize = 0x14; // 4 byte(s): Number of regen queue entries
@@ -389,8 +405,6 @@ pub(crate) mod player_regen_fields {
     pub(crate) const PLAYER_DATA_POOL: usize = 0x3c; // 4 byte(s): Array of 16-byte free player-data records (record id, nation, second nation) reused by youth regens
     pub(crate) const PLAYER_DATA_POOL_COUNT: usize = 0x40; // 4 byte(s): Number of free player-data records
     pub(crate) const PLAYER_DATA_POOL_CAPACITY: usize = 0x44; // 4 byte(s): Capacity of the player-data pool (grows by 250)
-    pub(crate) const RETIREMENTS: usize = 0x4; // 4 byte(s): Pointer to the 0x1a-byte pending retirement records, sorted by 0x7ae2a0
-    pub(crate) const RETIREMENT_COUNT: usize = 0x8; // 4 byte(s): Number of pending retirements
 }
 
 /// Fields of the `player_search_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `player_search_fields`.
@@ -405,6 +419,8 @@ pub(crate) mod player_search_fields {
     pub(crate) const ASSIGNED_COMP: usize = 0x195; // 4 byte(s): Scout assignment: competition (-1 = none)
     pub(crate) const ASSIGNED_BASE: usize = 0x199; // 4 byte(s): Scout assignment flag: scout the region of the club's base [inference]
     pub(crate) const ASSIGNED_OPPONENT: usize = 0x19d; // 4 byte(s): Scout assignment flag: scout the next opposition [inference]
+    pub(crate) const SCOUTING_START_DATE: usize = 0x1a5; // 8 byte(s): Start date of a match-watching scout assignment (TCMDate: day +0x1a5, year +0x1a7); moved to tomorrow by scout_match; end date at +0x1ad
+    pub(crate) const SCOUTING_START_YEAR: usize = 0x1a7; // 2 byte(s): Year half of SCOUTING_START_DATE
     pub(crate) const RESULTS: usize = 0x1ee; // 4 byte(s): Sorted array of 0x2d-byte search results
     pub(crate) const RESULT_COUNT: usize = 0x1f6; // 4 byte(s): Number of search results
 }
@@ -412,6 +428,8 @@ pub(crate) mod player_search_fields {
 /// Fields of the `shortlist_manager_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `shortlist_manager_fields`.
 #[allow(dead_code)]
 pub(crate) mod shortlist_manager_fields {
+    pub(crate) const PAIRS_BY_CLUB: usize = 0x4; // 4 byte(s): Pointer to the sorted 8-byte (person, club) pair array keyed by club (count at PAIRS_BY_CLUB_COUNT)
+    pub(crate) const PAIRS_BY_PERSON_CAPACITY: usize = 0x8; // 4 byte(s): Capacity of the by-person pair array at +0 (starts at 100)
     pub(crate) const PAIRS_BY_CLUB_CAPACITY: usize = 0xc; // 4 byte(s): Capacity of the by-club pair array (starts at 100)
     pub(crate) const PAIRS_BY_PERSON_COUNT: usize = 0x10; // 4 byte(s): Number of by-person pairs
     pub(crate) const PAIRS_BY_CLUB_COUNT: usize = 0x14; // 4 byte(s): Number of by-club pairs
@@ -420,46 +438,19 @@ pub(crate) mod shortlist_manager_fields {
     pub(crate) const POSITION_LIST_COUNTS: usize = 0x98; // 0x40 byte(s): 16 counts, one per position list
     pub(crate) const POSITION_LIST_CAPACITY: usize = 0xd8; // 4 byte(s): Size of each position list (largest number of people)
     pub(crate) const CLUB_SHORTLISTS: usize = 0xdc; // 4 byte(s): Table of 9-byte per-club shortlist records (pointer to 40 entries of 37 bytes, active flag +4, days +8)
-    pub(crate) const PAIRS_BY_CLUB: usize = 0x4; // 4 byte(s): Pointer to the sorted 8-byte (person, club) pair array keyed by club (count at PAIRS_BY_CLUB_COUNT)
-    pub(crate) const PAIRS_BY_PERSON_CAPACITY: usize = 0x8; // 4 byte(s): Capacity of the by-person pair array at +0 (starts at 100)
-}
-
-/// Fields of the `staff_contract` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `staff_contract`.
-#[allow(dead_code)]
-pub(crate) mod staff_contract {
-    pub(crate) const WAGE: usize = 0xc; // 4 byte(s): Weekly wage (minimum 55 by default)
-    pub(crate) const GOAL_BONUS: usize = 0x10; // 4 byte(s): Goal bonus (-1 = none)
-    pub(crate) const ASSIST_BONUS: usize = 0x14; // 4 byte(s): Assist bonus (-1 = none)
-    pub(crate) const CLEAN_SHEET_BONUS: usize = 0x18; // 4 byte(s): Clean sheet bonus (-1 = none)
-    pub(crate) const NON_PROMOTION_RC: usize = 0x1c; // 1 byte(s): Non-promotion release clause (2 = active)
-    pub(crate) const MINIMUM_FEE_RC: usize = 0x1d; // 1 byte(s): Minimum fee release clause (1 = active)
-    pub(crate) const RELEASE_FEE: usize = 0x21; // 4 byte(s): Release fee
-    pub(crate) const DATE_STARTED: usize = 0x25; // 8 byte(s): Contract start date
-    pub(crate) const CONTRACT_EXPIRES: usize = 0x2d; // 8 byte(s): Contract end date
-    pub(crate) const CONTRACT_TYPE: usize = 0x35; // 1 byte(s): Bit field: low 6 bits the contract type, bits 6-7 flags
-    pub(crate) const PREVIOUS_WAGE: usize = 0x36; // 4 byte(s): Copy of the wage taken when the contract is set up [inference]
-    pub(crate) const UNHAPPY_FLAG: usize = 0x3e; // 1 byte(s): Byte cleared when a transfer request is withdrawn or morale is reset [inference]
-    pub(crate) const FLAGS: usize = 0x40; // 4 byte(s): Contract flags (set_flags ORs marks in)
-    pub(crate) const MORALE: usize = 0x44; // 1 byte(s): Morale in the contract (signed); set to professionalism + loyalty + 5 on request withdrawal
-    pub(crate) const GRIEVANCES: usize = 0x45; // 4 byte(s): Grievance bits (0x10, 1, 4, 8, 0x100, 0x80, ...)
-    pub(crate) const LEAVING_ON_BOSMAN: usize = 0x49; // 1 byte(s): Leaving on a free transfer
-    pub(crate) const TRANSFER_ARRANGED_FOR: usize = 0x4a; // 4 byte(s): Club the transfer is arranged with (-1 = none)
-    pub(crate) const TRANSFER_STATUS: usize = 0x4e; // 1 byte(s): Transfer status bits (bit 1 listed, bit 3 transfer requested)
-    pub(crate) const SQUAD_STATUS: usize = 0x4f; // 1 byte(s): Squad status (high nibble the role, 7 = for sale)
-    pub(crate) const CONTRACT_EXPIRES_YEAR: usize = 0x2f; // 2 byte(s): Year half of CONTRACT_EXPIRES
-    pub(crate) const CLUB_APPEARANCES: usize = 0x3b; // 2 byte(s): Games for the club under this contract (zeroed on signing; clause counts)
-    pub(crate) const HAPPINESS: usize = 0x3d; // 1 byte(s): Signed happiness -100..100: set from the squad role (1->75, 2->50, 3->40), moved by minutes played after each match
-    pub(crate) const MATCHES_LEFT_OUT: usize = 0x3f; // 1 byte(s): Count of matches the person was left out; 5 or more outside the human club sets the squad mark [inference]
 }
 
 /// Fields of the `transfer_manager_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `transfer_manager_fields`.
 #[allow(dead_code)]
 pub(crate) mod transfer_manager_fields {
+    pub(crate) const OFFER_CAPACITY: usize = 0x4; // 4 byte(s): Capacity of the offer pointer array at +0 (grows by 50)
+    pub(crate) const OFFER_COUNT: usize = 0x8; // 4 byte(s): Number of live offers in the offer array
     pub(crate) const NEGOTIATIONS: usize = 0xc; // 4 byte(s): Pointer to the array of negotiation pointers
     pub(crate) const NEGOTIATION_CAPACITY: usize = 0x10; // 4 byte(s): Capacity of the negotiation array (grows by 50)
     pub(crate) const NEGOTIATION_COUNT: usize = 0x14; // 4 byte(s): Number of live negotiations
     pub(crate) const DAY_CURSOR: usize = 0x84c; // 1 byte(s): Current day index into SCHEDULE_BUCKETS (0..49, wraps)
     pub(crate) const CURRENT_DATE: usize = 0x84d; // 8 byte(s): Date the manager is processing (day i16 at +0, year i16 at +2; year 0 = not started)
+    pub(crate) const CURRENT_YEAR: usize = 0x84f; // 2 byte(s): Year half of CURRENT_DATE (0 = not started)
     pub(crate) const CURRENT_SLICE: usize = 0x855; // 1 byte(s): Day slice the manager is processing (0..2)
     pub(crate) const SHORTLIST_MANAGER: usize = 0x856; // 4 byte(s): Pointer to the SHORTLIST_MANAGER used for bid markers, interest and squad status
     pub(crate) const NEXT_SERIAL: usize = 0x85a; // 4 byte(s): Next serial number given to a new offer or negotiation
@@ -468,6 +459,7 @@ pub(crate) mod transfer_manager_fields {
     pub(crate) const PAST_TRANSFER_COUNT: usize = 0x86a; // 4 byte(s): Number of past-transfer records
     pub(crate) const PERSON_FLAGS: usize = 0x86e; // 4 byte(s): Pointer to the 8-byte per-person transfer record array (indexed by staff id; bit flags, offer counts)
     pub(crate) const INSTALMENTS: usize = 0x872; // 14 byte(s): Inline LLIST of 13-byte instalment records (amount, paying club, receiving club, remaining)
+    pub(crate) const INSTALMENTS_HEAD: usize = 0x874; // 4 byte(s): HEAD of the inline INSTALMENTS LLIST (copied to its cursor to iterate)
     pub(crate) const NEXT_SALE_PERCENTAGES: usize = 0x880; // 4 byte(s): Pointer to the sell-on percentage array (13-byte records, sorted)
     pub(crate) const NEXT_SALE_PERCENTAGE_COUNT: usize = 0x888; // 4 byte(s): Number of sell-on percentage records
     pub(crate) const APPEARANCE_MONEY: usize = 0x88c; // 4 byte(s): Pointer to the first-team appearance money array (13-byte records, sorted by person)
@@ -480,15 +472,11 @@ pub(crate) mod transfer_manager_fields {
     pub(crate) const FUTURE_TRANSFERS: usize = 0x920; // 4 byte(s): Pointer to the future-transfer array (12-byte records: date +0, offer slot +8; sorted)
     pub(crate) const FUTURE_TRANSFER_COUNT: usize = 0x928; // 4 byte(s): Number of future-transfer records
     pub(crate) const FREE_TRANSFER_QUEUE: usize = 0x92c; // 14 byte(s): Inline LLIST of 9-byte free-transfer queue records (person id, reason, compensation)
+    pub(crate) const FREE_TRANSFER_QUEUE_HEAD: usize = 0x92e; // 4 byte(s): HEAD of the inline FREE_TRANSFER_QUEUE LLIST
+    pub(crate) const FREE_TRANSFER_QUEUE_CURSOR: usize = 0x936; // 4 byte(s): CURSOR of the inline FREE_TRANSFER_QUEUE LLIST
     pub(crate) const WORK_PERMITS: usize = 0x93a; // 4 byte(s): Pointer to the work-permit array (14-byte records: person +0, year +8, nation +0xa; sorted)
     pub(crate) const WORK_PERMIT_COUNT: usize = 0x93e; // 4 byte(s): Number of work-permit records
     pub(crate) const LOAN_NEGOTIATIONS: usize = 0x946; // 4 byte(s): Pointer to the LLIST of loan negotiation items (0x50 bytes: person, club, offer copy); created on demand
-    pub(crate) const OFFER_CAPACITY: usize = 0x4; // 4 byte(s): Capacity of the offer pointer array at +0 (grows by 50)
-    pub(crate) const OFFER_COUNT: usize = 0x8; // 4 byte(s): Number of live offers in the offer array
-    pub(crate) const CURRENT_YEAR: usize = 0x84f; // 2 byte(s): Year half of CURRENT_DATE (0 = not started)
-    pub(crate) const INSTALMENTS_HEAD: usize = 0x874; // 4 byte(s): HEAD of the inline INSTALMENTS LLIST (copied to its cursor to iterate)
-    pub(crate) const FREE_TRANSFER_QUEUE_HEAD: usize = 0x92e; // 4 byte(s): HEAD of the inline FREE_TRANSFER_QUEUE LLIST
-    pub(crate) const FREE_TRANSFER_QUEUE_CURSOR: usize = 0x936; // 4 byte(s): CURSOR of the inline FREE_TRANSFER_QUEUE LLIST
 }
 
 /// Fields of the `uefa_cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `uefa_cup`.
@@ -500,10 +488,13 @@ pub(crate) mod uefa_cup {
 /// Fields of the `offer` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `offer`.
 #[allow(dead_code)]
 pub(crate) mod offer {
+    pub(crate) const EXCHANGE_PLAYERS: usize = 0x4; // 4 byte(s): Pointer to the LLIST of exchange-player items offered with the bid (0 = none)
+    pub(crate) const BUYER_CLUB_ID: usize = 0x8; // 4 byte(s): Id of the bidding club
     pub(crate) const TARGET_STAFF_ID: usize = 0xc; // 4 byte(s): Id of the person the offer is for
     pub(crate) const TERMS_STATE: usize = 0x10; // 1 byte(s): Personal-terms progress (0 none, 2 target accepted terms, 4 collapsed) [inference]
     pub(crate) const JOB_TYPE: usize = 0x11; // 1 byte(s): Job the target would take at the buyer (11..15 = player jobs), set when terms are accepted [inference]
     pub(crate) const DUE_DATE: usize = 0x12; // 8 byte(s): Date the offer is next processed (day i16 +0x12, year i16 +0x14)
+    pub(crate) const DUE_YEAR: usize = 0x14; // 2 byte(s): Year half of DUE_DATE (compared with today's year)
     pub(crate) const DUE_SLICE: usize = 0x1a; // 1 byte(s): Day slice the offer is next processed on
     pub(crate) const FEE: usize = 0x1b; // 4 byte(s): Transfer fee offered
     pub(crate) const OFFER_TYPE: usize = 0x1f; // 1 byte(s): 1 = loan offer, otherwise transfer
@@ -511,207 +502,113 @@ pub(crate) mod offer {
     pub(crate) const SERIAL: usize = 0x24; // 4 byte(s): Serial number of the offer (from NEXT_SERIAL)
     pub(crate) const NEGOTIATION_INDEX: usize = 0x28; // 4 byte(s): Index in the manager's negotiation array, -1 if none
     pub(crate) const STATUS: usize = 0x2c; // 1 byte(s): Offer status (2 rejected, 3 withdrawn, 5 accepted, 7, 8, 0xa waiting, 0xf, 0x13 future transfer, ...)
+    pub(crate) const PLAYER_AWARE: usize = 0x2d; // 1 byte(s): Set to 1 when the target is told of or unsettled by the bid (2 on a new offer becomes 1); non-zero counts as under offer [inference]
     pub(crate) const RESPONSE_ROUND: usize = 0x2e; // 1 byte(s): Response counter; with status 0xf, >= 3 means closed [inference]
+    pub(crate) const PRE_CONTRACT: usize = 0x2f; // 1 byte(s): Agreement that completes at the end of the target's contract: the seller's approval is skipped and the news gives the contract end [inference]
     pub(crate) const COMPLETION_TIMING: usize = 0x30; // 1 byte(s): Low nibble: when the move completes (0 now, 1/4 first allowed day, 2 season end +7, 3 contract end, 5 fixed window)
+    pub(crate) const OFFER_KIND: usize = 0x31; // 4 byte(s): Dword whose low nibble is the offer kind (copied from the incoming offer, news slot 0xe; kinds 1 and 2 excluded when valuing the best bid) [inference]
     pub(crate) const APPEARANCE_FEE: usize = 0x35; // 4 byte(s): First-team appearance clause amount
     pub(crate) const APPEARANCE_GAMES: usize = 0x39; // 1 byte(s): First-team games needed for the appearance clause
     pub(crate) const INTERNATIONAL_FEE: usize = 0x3a; // 4 byte(s): International appearance clause amount
     pub(crate) const INTERNATIONAL_GAMES: usize = 0x3e; // 1 byte(s): International caps needed for the international clause
     pub(crate) const SELL_ON_PERCENT: usize = 0x3f; // 1 byte(s): Percentage of the next sale owed to the selling club
     pub(crate) const INSTALMENTS: usize = 0x40; // 1 byte(s): Instalments of the fee (cleared when the fee is 0) [inference]
-    pub(crate) const EXCHANGE_PLAYERS: usize = 0x4; // 4 byte(s): Pointer to the LLIST of exchange-player items offered with the bid (0 = none)
-    pub(crate) const BUYER_CLUB_ID: usize = 0x8; // 4 byte(s): Id of the bidding club
-    pub(crate) const DUE_YEAR: usize = 0x14; // 2 byte(s): Year half of DUE_DATE (compared with today's year)
-    pub(crate) const PLAYER_AWARE: usize = 0x2d; // 1 byte(s): Set to 1 when the target is told of or unsettled by the bid (2 on a new offer becomes 1); non-zero counts as under offer [inference]
-    pub(crate) const PRE_CONTRACT: usize = 0x2f; // 1 byte(s): Agreement that completes at the end of the target's contract: the seller's approval is skipped and the news gives the contract end [inference]
-    pub(crate) const OFFER_KIND: usize = 0x31; // 4 byte(s): Dword whose low nibble is the offer kind (copied from the incoming offer, news slot 0xe; kinds 1 and 2 excluded when valuing the best bid) [inference]
 }
 
 /// `TPlayer` record. [pt] Registro `TPlayer`.
 #[allow(dead_code)]
 pub(crate) mod player_sheet {
+    pub(crate) const CURRENT_ABILITY: usize = 0x5; // 2 byte(s), UInt16
+    pub(crate) const POTENTIAL_ABILITY: usize = 0x7; // 2 byte(s), Int16
+    pub(crate) const HOME_REPUTATION: usize = 0x9; // 2 byte(s), UInt16
     pub(crate) const CURRENT_REPUTATION: usize = 0xb; // 2 byte(s), UInt16
     pub(crate) const WORLD_REPUTATION: usize = 0xd; // 2 byte(s), UInt16
     pub(crate) const GOALKEEPER: usize = 0xf; // 1 byte(s), sbyte
     pub(crate) const SWEEPER: usize = 0x10; // 1 byte(s), sbyte
+    pub(crate) const DEFENDER: usize = 0x11; // 1 byte(s), sbyte
     pub(crate) const DEFENSIVE_MIDFIELDER: usize = 0x12; // 1 byte(s), sbyte
     pub(crate) const MIDFIELDER: usize = 0x13; // 1 byte(s), sbyte
     pub(crate) const ATTACKING_MIDFIELDER: usize = 0x14; // 1 byte(s), sbyte
     pub(crate) const ATTACKER: usize = 0x15; // 1 byte(s), sbyte
     pub(crate) const WING_BACK: usize = 0x16; // 1 byte(s), sbyte
-    pub(crate) const BRAVERY: usize = 0x20; // 1 byte(s), sbyte
-    pub(crate) const DIRTINESS: usize = 0x25; // 1 byte(s), sbyte
-    pub(crate) const FINISHING: usize = 0x27; // 1 byte(s), sbyte
-    pub(crate) const INJURY_PRONENESS: usize = 0x2d; // 1 byte(s), sbyte
-    pub(crate) const LEADERSHIP: usize = 0x2f; // 1 byte(s), sbyte
-    pub(crate) const NATURAL_FITNESS: usize = 0x34; // 1 byte(s), sbyte
-    pub(crate) const PENALTIES: usize = 0x38; // 1 byte(s), sbyte
-    pub(crate) const STAMINA: usize = 0x3c; // 1 byte(s), sbyte
-    pub(crate) const TACKLING: usize = 0x3e; // 1 byte(s), sbyte
-    pub(crate) const VERSATILITY: usize = 0x42; // 1 byte(s), sbyte
-    pub(crate) const VISION: usize = 0x43; // 1 byte(s), sbyte
-    pub(crate) const WORK_RATE: usize = 0x44; // 1 byte(s), sbyte
-    pub(crate) const DEFENDER: usize = 0x11; // 1 byte(s), sbyte
+    pub(crate) const RIGHT_SIDE: usize = 0x17; // 1 byte(s), sbyte
+    pub(crate) const LEFT_SIDE: usize = 0x18; // 1 byte(s), sbyte
     pub(crate) const CENTRAL: usize = 0x19; // 1 byte(s), sbyte
+    pub(crate) const FREE_ROLE: usize = 0x1a; // 1 byte(s), sbyte
     pub(crate) const ACCELERATION: usize = 0x1b; // 1 byte(s), sbyte
+    pub(crate) const AGGRESSION: usize = 0x1c; // 1 byte(s), sbyte
     pub(crate) const AGILITY: usize = 0x1d; // 1 byte(s), sbyte
     pub(crate) const ANTICIPATION: usize = 0x1e; // 1 byte(s), sbyte
+    pub(crate) const BRAVERY: usize = 0x20; // 1 byte(s), sbyte
     pub(crate) const CONSISTENCY: usize = 0x21; // 1 byte(s), sbyte
     pub(crate) const CORNERS: usize = 0x22; // 1 byte(s), sbyte
     pub(crate) const CROSSING: usize = 0x23; // 1 byte(s), sbyte
     pub(crate) const DECISIONS: usize = 0x24; // 1 byte(s), sbyte
+    pub(crate) const DIRTINESS: usize = 0x25; // 1 byte(s), sbyte
     pub(crate) const DRIBBLING: usize = 0x26; // 1 byte(s), sbyte
+    pub(crate) const FINISHING: usize = 0x27; // 1 byte(s), sbyte
     pub(crate) const FREE_KICKS: usize = 0x29; // 1 byte(s), sbyte
     pub(crate) const HANDLING: usize = 0x2a; // 1 byte(s), sbyte
     pub(crate) const HEADING: usize = 0x2b; // 1 byte(s), sbyte
     pub(crate) const IMPORTANT_MATCHES: usize = 0x2c; // 1 byte(s), sbyte
+    pub(crate) const INJURY_PRONENESS: usize = 0x2d; // 1 byte(s), sbyte
     pub(crate) const JUMPING: usize = 0x2e; // 1 byte(s), sbyte
+    pub(crate) const LEADERSHIP: usize = 0x2f; // 1 byte(s), sbyte
+    pub(crate) const LEFT_FOOT: usize = 0x30; // 1 byte(s), sbyte
     pub(crate) const LONG_SHOTS: usize = 0x31; // 1 byte(s), sbyte
     pub(crate) const MARKING: usize = 0x32; // 1 byte(s), sbyte
     pub(crate) const MOVEMENT: usize = 0x33; // 1 byte(s), sbyte
+    pub(crate) const NATURAL_FITNESS: usize = 0x34; // 1 byte(s), sbyte
     pub(crate) const ONE_ON_ONES: usize = 0x35; // 1 byte(s), sbyte
     pub(crate) const PLAYER_PACE: usize = 0x36; // 1 byte(s), sbyte
     pub(crate) const PASSING: usize = 0x37; // 1 byte(s), sbyte
+    pub(crate) const PENALTIES: usize = 0x38; // 1 byte(s), sbyte
     pub(crate) const POSITIONING: usize = 0x39; // 1 byte(s), sbyte
     pub(crate) const REFLEXES: usize = 0x3a; // 1 byte(s), sbyte
+    pub(crate) const RIGHT_FOOT: usize = 0x3b; // 1 byte(s), sbyte
+    pub(crate) const STAMINA: usize = 0x3c; // 1 byte(s), sbyte
     pub(crate) const STRENGTH: usize = 0x3d; // 1 byte(s), sbyte
+    pub(crate) const TACKLING: usize = 0x3e; // 1 byte(s), sbyte
     pub(crate) const TEAMWORK: usize = 0x3f; // 1 byte(s), sbyte
     pub(crate) const TECHNIQUE: usize = 0x40; // 1 byte(s), sbyte
     pub(crate) const THROW_INS: usize = 0x41; // 1 byte(s), sbyte
+    pub(crate) const VERSATILITY: usize = 0x42; // 1 byte(s), sbyte
+    pub(crate) const VISION: usize = 0x43; // 1 byte(s), sbyte
+    pub(crate) const WORK_RATE: usize = 0x44; // 1 byte(s), sbyte
     pub(crate) const PLAYER_MORALE: usize = 0x45; // 1 byte(s), byte
-    pub(crate) const CURRENT_ABILITY: usize = 0x5; // 2 byte(s), UInt16
-    pub(crate) const POTENTIAL_ABILITY: usize = 0x7; // 2 byte(s), Int16
-    pub(crate) const HOME_REPUTATION: usize = 0x9; // 2 byte(s), UInt16
-    pub(crate) const RIGHT_SIDE: usize = 0x17; // 1 byte(s), sbyte
-    pub(crate) const LEFT_SIDE: usize = 0x18; // 1 byte(s), sbyte
-    pub(crate) const FREE_ROLE: usize = 0x1a; // 1 byte(s), sbyte
-    pub(crate) const AGGRESSION: usize = 0x1c; // 1 byte(s), sbyte
-    pub(crate) const LEFT_FOOT: usize = 0x30; // 1 byte(s), sbyte
-    pub(crate) const RIGHT_FOOT: usize = 0x3b; // 1 byte(s), sbyte
 }
 
 /// Fields of the match `engine` object, named from how the engine uses them. [pt] Campos do objeto `engine` do motor.
 #[allow(dead_code)]
 pub(crate) mod engine {
+    pub(crate) const POSSESSION_WINDOW_LOW: usize = 0xa; // 55 byte(s): ring of the last 55 possession ticks: 1 when the ball was in rows 0..3 at that tick (indexed by POSSESSION_WINDOW_INDEX)
+    pub(crate) const POSSESSION_WINDOW_MIDDLE: usize = 0x41; // 55 byte(s): ring of the last 55 possession ticks: 1 when the ball was in rows 4..7 at that tick
+    pub(crate) const POSSESSION_WINDOW_HIGH: usize = 0x78; // 55 byte(s): ring of the last 55 possession ticks: 1 when the ball was in rows 8..11 at that tick
+    pub(crate) const SIDE_OUT_OF_POSITION: usize = 0xaf; // 2 byte(s): per-side count of players marked as playing out of their position during the strength rating; cleared by side_strength [inference]
+    pub(crate) const PENDING_INCIDENTS: usize = 0xb1; // ? byte(s): pending incident entries, 11 bytes each (count at PENDING_INCIDENT_COUNT); entry +0 is the offending match player
+    pub(crate) const PENDING_INCIDENT_VICTIM: usize = 0xb5; // 4 byte(s): first pending incident entry +4: the player who suffered it (passed to the referee's foul punishment)
+    pub(crate) const PENDING_INCIDENT_SEVERITY: usize = 0xb9; // 1 byte(s): first pending incident entry +8: severity passed to the referee's foul punishment
+    pub(crate) const PENDING_INCIDENT_PLAY: usize = 0xba; // 1 byte(s): first pending incident entry +9: play code of the incident (minus 0x25 selects the codes without commentary) [inference]
+    pub(crate) const PENDING_INCIDENT_REASON: usize = 0xbb; // 1 byte(s): first pending incident entry +0xa: reason byte passed to the referee's foul punishment
     pub(crate) const PENDING_INCIDENT_COUNT: usize = 0x1a3; // 1 byte(s): number of pending incident entries at +0xb1
+    pub(crate) const SIDE_PLAYED_BALL: usize = 0x1a5; // 2 byte(s): per-side flag set when a player of that side deliberately plays or takes the ball (cleared for the other side and on interceptions); while clear the goalkeeper may pick it up [inference: back-pass rule]
     pub(crate) const SHOT_PENDING: usize = 0x1a7; // 1 byte(s): set when a shot is taken, cleared when the ball is released [inference]
-    pub(crate) const PENALTY_TAKER_ORDER: usize = 0x1af; // 22 byte(s): shootout taker order, 11 signed bytes per side (-1 empty)
-    pub(crate) const SIDE_SENT_OFF: usize = 0x1cb; // 2 byte(s): per-side flag set when a player of that side is sent off (goalkeeper: table 1)
-    pub(crate) const GRID: usize = 0x215e; // 9720 byte(s): pitch occupancy grid, 9 x 12 cells of 90 bytes (cell = +0x215e + 90 x (12 x x + y))
-    pub(crate) const WEATHER: usize = 0x4756; // ? byte(s): weather block of the match (filled at preparation; its factor scatters passes)
-    pub(crate) const PENDING_PLAY_CODE: usize = 0x475f; // 2 byte(s): commentary/play code of the pending incident (0xffff none)
-    pub(crate) const PENDING_PLAY_OFFENDER: usize = 0x4761; // 4 byte(s): player who committed the pending incident
-    pub(crate) const PENDING_PLAY_VICTIM: usize = 0x4765; // 4 byte(s): player who suffered the pending incident
-    pub(crate) const STANCE_FACTOR: usize = 0x476a; // 8 byte(s): stored stance factor per side (f32 per side; -1000.0 at start)
-    pub(crate) const ADJUSTED_PLAYER_ID: usize = 0x477a; // 4 byte(s): id (first dword of the record) of the last player adjusted by the disposition adjust [inference]
-    pub(crate) const BALL_RECEIVER: usize = 0x477e; // 4 byte(s): player due to receive the ball in transit
-    pub(crate) const MOMENTUM_A: usize = 0x4782; // 4 byte(s): signed momentum score changed by shots and goals (i32) [inference]
-    pub(crate) const MOMENTUM_B: usize = 0x4786; // 4 byte(s): second signed momentum score changed by shots and goals (i32) [inference]
-    pub(crate) const FOULED_PLAYER: usize = 0x478a; // 4 byte(s): player who suffered the last foul/tackle (0 none) [inference]
-    pub(crate) const EVENT_LIST: usize = 0x478e; // 4 byte(s): pointer to the list of match/pre-match events
-    pub(crate) const MATCH: usize = 0x4792; // 4 byte(s): pointer to the match (fixture) record being played
-    pub(crate) const PLAYERS: usize = 0x4796; // 17840 byte(s): the 40 match players, 20 per side, 0x1be bytes each (+0x4796 + 0x22d8 x side + 0x1be x k)
-    pub(crate) const PLAYERS_SIDE1: usize = 0x6a6e; // 8920 byte(s): side 1's 20 match players (+0x4796 + 0x22d8)
-    pub(crate) const POSSESSION_COUNTER: usize = 0x8d46; // 2 byte(s): possession counter byte per side (+1 for the side, -10 for the other)
-    pub(crate) const OWNS_COMMENTATOR: usize = 0x8e9d; // 1 byte(s): the commentator was created by the engine and must be freed with it
-    pub(crate) const BALL_X: usize = 0x8ea7; // 1 byte(s): ball column (0..8)
-    pub(crate) const BALL_Y: usize = 0x8ea8; // 1 byte(s): ball row (0..11)
-    pub(crate) const POSSESSION_SIDE: usize = 0x8eae; // 1 byte(s): side with the ball (0 or 1; -1 nobody)
-    pub(crate) const RESTART_TYPE: usize = 0x8eb2; // 1 byte(s): pending set piece/restart (2 throw-in, 3 corner, 4 goal kick, 5 penalty, 6 free kick, 8 kick-off; 0 open play)
-    pub(crate) const PUNISHMENT_STATE: usize = 0x8eb4; // 1 byte(s): pending punishments step (0 not prepared, 1 prepared, 2 done)
-    pub(crate) const SUBSTITUTION_PENDING: usize = 0x8eb5; // 1 byte(s): substitutions pending, cleared after they are applied
-    pub(crate) const ACTIVE_LIST_COUNT: usize = 0x8eb8; // 1 byte(s): count of the active-player action list at +0x8f7e
-    pub(crate) const POSITION_TABLE: usize = 0x8ebc; // 8 byte(s): pointer per side to the position table (11 words by tactical position)
-    pub(crate) const CLOCK: usize = 0x8ed0; // 2 byte(s): match clock in ticks (minute x 11)
-    pub(crate) const PERIOD_END: usize = 0x8ed4; // 2 byte(s): end tick of the current period (0x1ef first half, 0x3de second half, then extra time)
-    pub(crate) const PASS_POWER: usize = 0x8ed6; // 2 byte(s): power of the pass/shot handed to the receiver
-    pub(crate) const BALL_DIRECTION: usize = 0x8ed8; // 2 byte(s): direction of the loose ball in degrees
-    pub(crate) const SHOOTOUT_TAKEN: usize = 0x8eda; // 40 byte(s): per-side marks of the shootout takers already chosen, 20 bytes per side
-    pub(crate) const COMMENTATOR: usize = 0x8f7a; // 4 byte(s): pointer to the match commentator
-    pub(crate) const ACTIVE_LIST: usize = 0x8f7e; // ? byte(s): list of active players in action order, count at +0x8eb8
-    pub(crate) const MATCH_MANAGERS: usize = 0x9032; // 416 byte(s): the two sides' match manager objects, 0xd0 bytes each (+0x9032 + 0xd0 x side)
-    pub(crate) const SIDE0_MANAGER: usize = 0x904d; // 4 byte(s): match manager +0x1b: the side's manager (person) pointer (side 1 at +0xd0)
-    pub(crate) const PITCH_CONDITION: usize = 0x91d2; // 12 byte(s): pitch condition values (three dwords: 100, 90, 10 by default)
-    pub(crate) const ACTION_FIRST_PLAYER: usize = 0x91de; // 4 byte(s): player put first in the action order after the ball holder
-    pub(crate) const TACTICS: usize = 0x91e2; // 12742 byte(s): the two sides' tactics objects, 6371 bytes each (+0x91e2 + 0x18e3 x side)
-    pub(crate) const TACTICS_FLAGS: usize = 0x9766; // 4 byte(s): side 0 tactics flag dword (tactics +0x584; side 1 at +0x18e3)
-    pub(crate) const TACTICS_BACKUP: usize = 0xc3a8; // 12742 byte(s): copy of both tactics objects taken at preparation
-    pub(crate) const FORMATION_TABLE: usize = 0xf56e; // 8 byte(s): pointer per side to the formation/set-piece position table (216 bytes per position)
-    pub(crate) const PASSER: usize = 0xf576; // 4 byte(s): player who made the current pass/took the set piece
-    pub(crate) const SET_PIECE_TAKER: usize = 0xf57a; // 4 byte(s): set-piece taker
-    pub(crate) const BALL_HOLDER: usize = 0xf582; // 4 byte(s): player with the ball (0 loose)
-    pub(crate) const NEAREST_TO_BALL: usize = 0xf586; // 8 byte(s): each side's player nearest to the ball, pointer per side
-    pub(crate) const LOWEST_Y_PLAYER: usize = 0xf58e; // 8 byte(s): stored extreme player per side (side 0 smallest y at +0xf58e, side 1 largest y at +0xf592)
-    pub(crate) const FURTHEST_FORWARD: usize = 0xf596; // 8 byte(s): stored opposite-extreme player per side (side 0 largest y, side 1 smallest y at +0xf59a)
-    pub(crate) const GOALKEEPER: usize = 0xf59e; // 8 byte(s): each side's goalkeeper on the pitch, pointer per side
-    pub(crate) const ASSIST_CANDIDATE: usize = 0xf5a6; // 4 byte(s): previous passer, credited with the assist if the receiver scores
-    pub(crate) const PASS_RECEIVER: usize = 0xf5aa; // 4 byte(s): receiver of the last pass (cleared when someone else gets the ball)
-    pub(crate) const REFEREE: usize = 0xf5b2; // ? byte(s): embedded match referee object (decides fouls and cards)
-    pub(crate) const REFEREE_ID: usize = 0xf5b6; // 4 byte(s): match referee's id (-1 none); referee object +4
-    pub(crate) const REFEREE_RATING: usize = 0xf5ba; // 2 byte(s): referee base rating used for the post-match grade (/1000); referee object +8 [inference]
-    pub(crate) const SIDE_STATS: usize = 0xf5bc; // 108 byte(s): per-side match stats block, 0x36 bytes per side (+0xf5bc + 0x36 x side); +0 shootout goals
-    pub(crate) const SCORE: usize = 0xf5bd; // 1 byte(s): side 0 goals (side 1 at +0xf5f3); SIDE_STATS +1
-    pub(crate) const SIDE_SUMMARY: usize = 0xf5c0; // ? byte(s): side summary (player ratings) in SIDE_STATS +4
-    pub(crate) const OFFSIDES: usize = 0xf5ca; // 1 byte(s): side 0 offsides (side 1 at +0xf600); SIDE_STATS +0xe
-    pub(crate) const CARDS: usize = 0xf5cb; // 1 byte(s): side 0 cards (side 1 at +0xf601); SIDE_STATS +0xf
-    pub(crate) const FOULS: usize = 0xf5cc; // 1 byte(s): side 0 fouls (side 1 at +0xf602); SIDE_STATS +0x10
-    pub(crate) const SCORE_SIDE1: usize = 0xf5f3; // 1 byte(s): side 1 goals (SIDE_STATS of side 1 +1)
-    pub(crate) const ABANDON_MINUTE: usize = 0xf638; // 1 byte(s): minute at which the match is abandoned (0xff never)
-    pub(crate) const INJURY_COUNT: usize = 0xf639; // 2 byte(s): number of injuries in the match
     pub(crate) const GOLDEN_GOAL_SCORED: usize = 0x1a8; // 1 byte(s): set when a goal is scored in a golden-goal period (marked_moment); the match then ends and restarts are skipped
     pub(crate) const SIDE_STANCE: usize = 0x1ab; // 2 byte(s): current stance code per side (+0x1ab + side), from the match manager's stance; -1 at preparation
+    pub(crate) const PENALTY_TAKER_ORDER: usize = 0x1af; // 22 byte(s): shootout taker order, 11 signed bytes per side (-1 empty)
     pub(crate) const BALL_TRANSIT_TICKS: usize = 0x1c5; // 1 byte(s): ticks left until the ball in flight reaches its target (0 = not in transit)
     pub(crate) const TRANSIT_TARGET_X: usize = 0x1c6; // 1 byte(s): column the ball in transit is heading to
     pub(crate) const TRANSIT_TARGET_Y: usize = 0x1c7; // 1 byte(s): row the ball in transit is heading to
     pub(crate) const TRANSIT_ORIGIN_X: usize = 0x1c8; // 1 byte(s): column the ball in transit was played from (passer's column)
     pub(crate) const TRANSIT_ORIGIN_Y: usize = 0x1c9; // 1 byte(s): row the ball in transit was played from (passer's row)
     pub(crate) const KICKOFF_ANNOUNCED: usize = 0x1ca; // 1 byte(s): the pending kick-off has been narrated (0x212f/0x1f74); cleared when a new kick-off is set
+    pub(crate) const SIDE_SENT_OFF: usize = 0x1cb; // 2 byte(s): per-side flag set when a player of that side is sent off (goalkeeper: table 1)
     pub(crate) const SHOT_REBOUND: usize = 0x1cd; // 1 byte(s): set when a shot leaves the ball loose (blocked, saved or stopped); picking it up in front of goal gets the rebound commentary [inference]
     pub(crate) const SIDE_STRENGTH: usize = 0x1ce; // 4 byte(s): team modifier per side, i16 (+0x1ce + 2 x side; 110 at preparation, 100 neutral), rebuilt by the side strength routine
     pub(crate) const LAST_STANCE_CALL_TICK: usize = 0x1d2; // 4 byte(s): clock tick of each side's last narrated stance change, i16 per side (10000 at start; 15 minutes = 0xa5 ticks)
     pub(crate) const SIDE_REPUTATION: usize = 0x1d6; // 4 byte(s): match reputation per side, i16 (+0x1d6 + 2 x side); starts as the club's +0x80 reputation, clamped 1..10000
-    pub(crate) const PENDING_PLAY_KIND: usize = 0x475a; // 1 byte(s): kind of the pending incident (0 none; 3..6 foul/penalty kinds, 7 and 8 special restarts)
-    pub(crate) const PENDING_PLAY_X: usize = 0x475b; // 1 byte(s): column where the pending incident happened (0xff none)
-    pub(crate) const PENDING_PLAY_Y: usize = 0x475c; // 1 byte(s): row where the pending incident happened (0xff none)
-    pub(crate) const PENDING_PLAY_REASON: usize = 0x475d; // 1 byte(s): reason byte of the pending incident passed to the referee's punishment (0xff none)
-    pub(crate) const PENDING_PLAY_SEVERITY: usize = 0x475e; // 1 byte(s): severity of the pending incident passed to the referee's punishment (0xff none)
-    pub(crate) const PENDING_PLAY_SERIOUS: usize = 0x4769; // 1 byte(s): serious-foul flag of the pending incident passed to the referee's punishment
-    pub(crate) const STOPPAGE_ANNOUNCED: usize = 0x8d48; // 2 byte(s): per half, the stoppage time has been narrated (0x21c1): +0x8d48 first half, +0x8d49 second half
-    pub(crate) const PASS_TYPE: usize = 0x8d4a; // 2 byte(s): type/action code of the last pass (0xffff at start)
-    pub(crate) const LAST_SHOT_MINUTE: usize = 0x8d4c; // 2 byte(s): minute of the last shot (0xffff at start)
-    pub(crate) const LAST_SHOT_SIDE: usize = 0x8d4e; // 1 byte(s): side that took the last shot
-    pub(crate) const SIDE_KIT: usize = 0x8d4f; // 2 byte(s): kit (1..3) each side wears, chosen against the opponent's colours (home +0x8d4f, away +0x8d50)
-    pub(crate) const SHOOTOUT_KICKING_SIDE: usize = 0x8e9e; // 1 byte(s): side taking the next shootout kick
-    pub(crate) const SHOOTOUT_KICKS_TAKEN: usize = 0x8e9f; // 2 byte(s): shootout kicks taken per side (+0x8e9f + side); indexes PENALTY_TAKER_ORDER modulo 11
-    pub(crate) const SHOOTOUT_KICKS_LEFT: usize = 0x8ea1; // 2 byte(s): shootout kicks left per side (+0x8ea1 + side; 5 at the start, 1 each in sudden death)
-    pub(crate) const SHOOTOUT_SUDDEN_DEATH: usize = 0x8ea3; // 1 byte(s): the shootout is in sudden death (both sides ran out of their five kicks level)
-    pub(crate) const SAVED_COMMENTATOR_FLAG: usize = 0x8ea4; // 1 byte(s): commentator's first byte saved (and the commentator muted) during the shootout, restored at its end
-    pub(crate) const MATCH_RUNNING: usize = 0x8ea5; // 1 byte(s): set at the end of match preparation; while set, match managers rate players by their in-match scores
-    pub(crate) const PASS_TARGET_Y: usize = 0x8ea6; // 1 byte(s): row the current pass is aimed at (0xff none)
-    pub(crate) const BALL_HEIGHT: usize = 0x8ea9; // 1 byte(s): ball height level (0 on the ground, 4 high in the air, -1 held by the goalkeeper; 5 forced temporarily)
-    pub(crate) const BALL_ROLL: usize = 0x8eaa; // 1 byte(s): cells the loose ball still rolls (its momentum); cleared at set pieces
-    pub(crate) const LAST_POSSESSION_SIDE: usize = 0x8eab; // 1 byte(s): side that last had the ball (-1 none); a ball going out is awarded against it, and possession ticks count for it at +0x8d46
-    pub(crate) const OFFSIDE_LINE: usize = 0x8eaf; // 2 byte(s): offside line row per attacking side: +0x8eaf = side 1's rearmost active row + 1 (for side 0), +0x8eb0 = side 0's rearmost row - 1 (for side 1)
-    pub(crate) const SET_PIECE_KIND: usize = 0x8eb1; // 1 byte(s): set piece the current play came from (3 corner, 6 direct free kick, 7/-1 free kick far/near goal; 0 open play); goals are counted by it in SIDE_STATS
-    pub(crate) const SHOOTOUT_STATE: usize = 0x8eb3; // 1 byte(s): penalty shootout step (0 none; 1/4 set up, 2/5 take kicks, 3/6 finish; 1..3 with the summary, 4..6 without)
-    pub(crate) const NEXT_KICKOFF_SIDE: usize = 0x8eb6; // 1 byte(s): side that kicks off the next period (the one that did not kick off the first half)
-    pub(crate) const STOPPAGE_TIME: usize = 0x8eb7; // 1 byte(s): stoppage time added to the current period, in ticks (period ends when CLOCK passes PERIOD_END + this)
-    pub(crate) const PASS_TARGET_X: usize = 0x8eb9; // 1 byte(s): column the current pass is aimed at (0xff none)
-    pub(crate) const LIVE_MATCH: usize = 0x8ebb; // 1 byte(s): the match is watched live (narrated): enables crowd chants, extra commentary and per-tick team stats
-    pub(crate) const ARROW_TABLE: usize = 0x8ec4; // 8 byte(s): pointer per side to the position arrow table (table B: where each tactical position's arrow points)
-    pub(crate) const LAST_SUBSTITUTION_TICK: usize = 0x8ecc; // 4 byte(s): clock tick of each side's last substitution or forced change, i16 per side (+0x8ecc + 2 x side)
-    pub(crate) const SUB_TICK: usize = 0x8ed2; // 2 byte(s): step counter within the current clock tick; when it reaches 1 the clock advances and it is cleared [inference]
-    pub(crate) const SHOT_BLOCKER: usize = 0xf5ae; // 4 byte(s): player who blocked or intercepted the last shot or ball (0 none)
-    pub(crate) const ATTENDANCE: usize = 0xf634; // 4 byte(s): match attendance from the stadium (0 for reserve matches)
-    pub(crate) const POSSESSION_WINDOW_LOW: usize = 0xa; // 55 byte(s): ring of the last 55 possession ticks: 1 when the ball was in rows 0..3 at that tick (indexed by POSSESSION_WINDOW_INDEX)
-    pub(crate) const POSSESSION_WINDOW_MIDDLE: usize = 0x41; // 55 byte(s): ring of the last 55 possession ticks: 1 when the ball was in rows 4..7 at that tick
-    pub(crate) const POSSESSION_WINDOW_HIGH: usize = 0x78; // 55 byte(s): ring of the last 55 possession ticks: 1 when the ball was in rows 8..11 at that tick
-    pub(crate) const PENDING_INCIDENTS: usize = 0xb1; // ? byte(s): pending incident entries, 11 bytes each (count at PENDING_INCIDENT_COUNT); entry +0 is the offending match player
-    pub(crate) const PENDING_INCIDENT_VICTIM: usize = 0xb5; // 4 byte(s): first pending incident entry +4: the player who suffered it (passed to the referee's foul punishment)
-    pub(crate) const PENDING_INCIDENT_SEVERITY: usize = 0xb9; // 1 byte(s): first pending incident entry +8: severity passed to the referee's foul punishment
-    pub(crate) const PENDING_INCIDENT_PLAY: usize = 0xba; // 1 byte(s): first pending incident entry +9: play code of the incident (minus 0x25 selects the codes without commentary) [inference]
-    pub(crate) const PENDING_INCIDENT_REASON: usize = 0xbb; // 1 byte(s): first pending incident entry +0xa: reason byte passed to the referee's foul punishment
-    pub(crate) const SIDE_PLAYED_BALL: usize = 0x1a5; // 2 byte(s): per-side flag set when a player of that side deliberately plays or takes the ball (cleared for the other side and on interceptions); while clear the goalkeeper may pick it up [inference: back-pass rule]
+    pub(crate) const TEAM_STRENGTH: usize = 0x1da; // 28 byte(s): team strength in seven words per side (+0x1da + 4 x n + 2 x side, i16), summed over the 20 players by team_strength
+    pub(crate) const TEAM_STRENGTH_2: usize = 0x1de; // 4 byte(s): second team strength word per side (i16 + 2 x side), scaled by competition and side adjustments in team_strength
     pub(crate) const BALL_TIME_THIRD_1: usize = 0x1f6; // 10 byte(s): five i16 counters (indexed by side, 0..4) of ball time in the first pitch third; copied to the match record +0xc [inference]
     pub(crate) const ZONE_LOW_TICKS: usize = 0x1fc; // 2 byte(s): possession ticks with the ball in rows 0..3, whole match (i16)
     pub(crate) const ZONE_LOW_WINDOW_TICKS: usize = 0x1fe; // 2 byte(s): possession ticks with the ball in rows 0..3 over the last 55 ticks (i16)
@@ -723,59 +620,145 @@ pub(crate) mod engine {
     pub(crate) const ZONE_HIGH_WINDOW_TICKS: usize = 0x212; // 2 byte(s): possession ticks with the ball in rows 8..11 over the last 55 ticks (i16)
     pub(crate) const BALL_IN_PLAY_TIME: usize = 0x214; // 10 byte(s): five i16 counters of ticks with the ball in play (x 60 / 11 = seconds); copied to the match record +0x2a
     pub(crate) const TOTAL_TICKS: usize = 0x21a; // 2 byte(s): possession ticks counted in the whole match (i16)
+    pub(crate) const GRID: usize = 0x215e; // 9720 byte(s): pitch occupancy grid, 9 x 12 cells of 90 bytes (cell = +0x215e + 90 x (12 x x + y))
+    pub(crate) const ON_PITCH_PLAYERS: usize = 0x453a; // 88 byte(s): per-side list of the match players taken onto the pitch, 11 dwords per side (+0x453a + 4 x (n + 11 x side)); count at ON_PITCH_COUNT
+    pub(crate) const ON_PITCH_COUNT: usize = 0x4592; // 2 byte(s): per-side number of entries in ON_PITCH_PLAYERS (i8, +0x4592 + side); the player's order is stored in his CELL_SLOT by take_the_field
+    pub(crate) const WEATHER: usize = 0x4756; // ? byte(s): weather block of the match (filled at preparation; its factor scatters passes)
+    pub(crate) const PENDING_PLAY_KIND: usize = 0x475a; // 1 byte(s): kind of the pending incident (0 none; 3..6 foul/penalty kinds, 7 and 8 special restarts)
+    pub(crate) const PENDING_PLAY_X: usize = 0x475b; // 1 byte(s): column where the pending incident happened (0xff none)
+    pub(crate) const PENDING_PLAY_Y: usize = 0x475c; // 1 byte(s): row where the pending incident happened (0xff none)
+    pub(crate) const PENDING_PLAY_REASON: usize = 0x475d; // 1 byte(s): reason byte of the pending incident passed to the referee's punishment (0xff none)
+    pub(crate) const PENDING_PLAY_SEVERITY: usize = 0x475e; // 1 byte(s): severity of the pending incident passed to the referee's punishment (0xff none)
+    pub(crate) const PENDING_PLAY_CODE: usize = 0x475f; // 2 byte(s): commentary/play code of the pending incident (0xffff none)
+    pub(crate) const PENDING_PLAY_OFFENDER: usize = 0x4761; // 4 byte(s): player who committed the pending incident
+    pub(crate) const PENDING_PLAY_VICTIM: usize = 0x4765; // 4 byte(s): player who suffered the pending incident
+    pub(crate) const PENDING_PLAY_SERIOUS: usize = 0x4769; // 1 byte(s): serious-foul flag of the pending incident passed to the referee's punishment
+    pub(crate) const STANCE_FACTOR: usize = 0x476a; // 8 byte(s): stored stance factor per side (f32 per side; -1000.0 at start)
+    pub(crate) const ADJUSTED_PLAYER_ID: usize = 0x477a; // 4 byte(s): id (first dword of the record) of the last player adjusted by the disposition adjust [inference]
+    pub(crate) const BALL_RECEIVER: usize = 0x477e; // 4 byte(s): player due to receive the ball in transit
+    pub(crate) const MOMENTUM_A: usize = 0x4782; // 4 byte(s): signed momentum score changed by shots and goals (i32) [inference]
+    pub(crate) const MOMENTUM_B: usize = 0x4786; // 4 byte(s): second signed momentum score changed by shots and goals (i32) [inference]
+    pub(crate) const FOULED_PLAYER: usize = 0x478a; // 4 byte(s): player who suffered the last foul/tackle (0 none) [inference]
+    pub(crate) const EVENT_LIST: usize = 0x478e; // 4 byte(s): pointer to the list of match/pre-match events
+    pub(crate) const MATCH: usize = 0x4792; // 4 byte(s): pointer to the match (fixture) record being played
+    pub(crate) const PLAYERS: usize = 0x4796; // 17840 byte(s): the 40 match players, 20 per side, 0x1be bytes each (+0x4796 + 0x22d8 x side + 0x1be x k)
+    pub(crate) const PLAYERS_SIDE1: usize = 0x6a6e; // 8920 byte(s): side 1's 20 match players (+0x4796 + 0x22d8)
+    pub(crate) const POSSESSION_COUNTER: usize = 0x8d46; // 2 byte(s): possession counter byte per side (+1 for the side, -10 for the other)
+    pub(crate) const STOPPAGE_ANNOUNCED: usize = 0x8d48; // 2 byte(s): per half, the stoppage time has been narrated (0x21c1): +0x8d48 first half, +0x8d49 second half
+    pub(crate) const PASS_TYPE: usize = 0x8d4a; // 2 byte(s): type/action code of the last pass (0xffff at start)
+    pub(crate) const LAST_SHOT_MINUTE: usize = 0x8d4c; // 2 byte(s): minute of the last shot (0xffff at start)
+    pub(crate) const LAST_SHOT_SIDE: usize = 0x8d4e; // 1 byte(s): side that took the last shot
+    pub(crate) const SIDE_KIT: usize = 0x8d4f; // 2 byte(s): kit (1..3) each side wears, chosen against the opponent's colours (home +0x8d4f, away +0x8d50)
     pub(crate) const POSSESSION_WINDOW_INDEX: usize = 0x8e9b; // 1 byte(s): current index (0..54) in the 55-tick possession rings
+    pub(crate) const OWNS_COMMENTATOR: usize = 0x8e9d; // 1 byte(s): the commentator was created by the engine and must be freed with it
+    pub(crate) const SHOOTOUT_KICKING_SIDE: usize = 0x8e9e; // 1 byte(s): side taking the next shootout kick
+    pub(crate) const SHOOTOUT_KICKS_TAKEN: usize = 0x8e9f; // 2 byte(s): shootout kicks taken per side (+0x8e9f + side); indexes PENALTY_TAKER_ORDER modulo 11
+    pub(crate) const SHOOTOUT_KICKS_LEFT: usize = 0x8ea1; // 2 byte(s): shootout kicks left per side (+0x8ea1 + side; 5 at the start, 1 each in sudden death)
+    pub(crate) const SHOOTOUT_KICKS_LEFT_SIDE1: usize = 0x8ea2; // 1 byte(s): side 1 entry of SHOOTOUT_KICKS_LEFT: shootout kicks side 1 still has
+    pub(crate) const SHOOTOUT_SUDDEN_DEATH: usize = 0x8ea3; // 1 byte(s): the shootout is in sudden death (both sides ran out of their five kicks level)
+    pub(crate) const SAVED_COMMENTATOR_FLAG: usize = 0x8ea4; // 1 byte(s): commentator's first byte saved (and the commentator muted) during the shootout, restored at its end
+    pub(crate) const MATCH_RUNNING: usize = 0x8ea5; // 1 byte(s): set at the end of match preparation; while set, match managers rate players by their in-match scores
+    pub(crate) const PASS_TARGET_Y: usize = 0x8ea6; // 1 byte(s): row the current pass is aimed at (0xff none)
+    pub(crate) const BALL_X: usize = 0x8ea7; // 1 byte(s): ball column (0..8)
+    pub(crate) const BALL_Y: usize = 0x8ea8; // 1 byte(s): ball row (0..11)
+    pub(crate) const BALL_HEIGHT: usize = 0x8ea9; // 1 byte(s): ball height level (0 on the ground, 4 high in the air, -1 held by the goalkeeper; 5 forced temporarily)
+    pub(crate) const BALL_ROLL: usize = 0x8eaa; // 1 byte(s): cells the loose ball still rolls (its momentum); cleared at set pieces
+    pub(crate) const LAST_POSSESSION_SIDE: usize = 0x8eab; // 1 byte(s): side that last had the ball (-1 none); a ball going out is awarded against it, and possession ticks count for it at +0x8d46
     pub(crate) const GOALKEEPER_NEAREST: usize = 0x8eac; // 2 byte(s): per side: 1 when the side's goalkeeper is the team-mate closest to the ball (refreshed with NEAREST_TO_BALL)
+    pub(crate) const GOALKEEPER_NEAREST_SIDE1: usize = 0x8ead; // 1 byte(s): side 1 entry of GOALKEEPER_NEAREST: 1 when side 1's goalkeeper is the team-mate closest to the ball
+    pub(crate) const POSSESSION_SIDE: usize = 0x8eae; // 1 byte(s): side with the ball (0 or 1; -1 nobody)
+    pub(crate) const OFFSIDE_LINE: usize = 0x8eaf; // 2 byte(s): offside line row per attacking side: +0x8eaf = side 1's rearmost active row + 1 (for side 0), +0x8eb0 = side 0's rearmost row - 1 (for side 1)
+    pub(crate) const OFFSIDE_LINE_SIDE1: usize = 0x8eb0; // 1 byte(s): side 1 entry of OFFSIDE_LINE: offside line row used against side 1's attackers
+    pub(crate) const SET_PIECE_KIND: usize = 0x8eb1; // 1 byte(s): set piece the current play came from (3 corner, 6 direct free kick, 7/-1 free kick far/near goal; 0 open play); goals are counted by it in SIDE_STATS
+    pub(crate) const RESTART_TYPE: usize = 0x8eb2; // 1 byte(s): pending set piece/restart (2 throw-in, 3 corner, 4 goal kick, 5 penalty, 6 free kick, 8 kick-off; 0 open play)
+    pub(crate) const SHOOTOUT_STATE: usize = 0x8eb3; // 1 byte(s): penalty shootout step (0 none; 1/4 set up, 2/5 take kicks, 3/6 finish; 1..3 with the summary, 4..6 without)
+    pub(crate) const PUNISHMENT_STATE: usize = 0x8eb4; // 1 byte(s): pending punishments step (0 not prepared, 1 prepared, 2 done)
+    pub(crate) const SUBSTITUTION_PENDING: usize = 0x8eb5; // 1 byte(s): substitutions pending, cleared after they are applied
+    pub(crate) const NEXT_KICKOFF_SIDE: usize = 0x8eb6; // 1 byte(s): side that kicks off the next period (the one that did not kick off the first half)
+    pub(crate) const STOPPAGE_TIME: usize = 0x8eb7; // 1 byte(s): stoppage time added to the current period, in ticks (period ends when CLOCK passes PERIOD_END + this)
+    pub(crate) const ACTIVE_LIST_COUNT: usize = 0x8eb8; // 1 byte(s): count of the active-player action list at +0x8f7e
+    pub(crate) const PASS_TARGET_X: usize = 0x8eb9; // 1 byte(s): column the current pass is aimed at (0xff none)
+    pub(crate) const LIVE_MATCH: usize = 0x8ebb; // 1 byte(s): the match is watched live (narrated): enables crowd chants, extra commentary and per-tick team stats
+    pub(crate) const POSITION_TABLE: usize = 0x8ebc; // 8 byte(s): pointer per side to the position table (11 words by tactical position)
+    pub(crate) const POSITION_TABLE_SIDE1: usize = 0x8ec0; // 4 byte(s): side 1 entry of POSITION_TABLE: pointer to side 1's position table (set to POSITION_TABLE_DATA_SIDE1 at preparation)
+    pub(crate) const ARROW_TABLE: usize = 0x8ec4; // 8 byte(s): pointer per side to the position arrow table (table B: where each tactical position's arrow points)
+    pub(crate) const ARROW_TABLE_SIDE1: usize = 0x8ec8; // 4 byte(s): side 1 entry of ARROW_TABLE: pointer to side 1's position arrow table (set to ARROW_TABLE_DATA_SIDE1 at preparation)
+    pub(crate) const LAST_SUBSTITUTION_TICK: usize = 0x8ecc; // 4 byte(s): clock tick of each side's last substitution or forced change, i16 per side (+0x8ecc + 2 x side)
+    pub(crate) const CLOCK: usize = 0x8ed0; // 2 byte(s): match clock in ticks (minute x 11)
+    pub(crate) const SUB_TICK: usize = 0x8ed2; // 2 byte(s): step counter within the current clock tick; when it reaches 1 the clock advances and it is cleared [inference]
+    pub(crate) const PERIOD_END: usize = 0x8ed4; // 2 byte(s): end tick of the current period (0x1ef first half, 0x3de second half, then extra time)
+    pub(crate) const PASS_POWER: usize = 0x8ed6; // 2 byte(s): power of the pass/shot handed to the receiver
+    pub(crate) const BALL_DIRECTION: usize = 0x8ed8; // 2 byte(s): direction of the loose ball in degrees
+    pub(crate) const SHOOTOUT_TAKEN: usize = 0x8eda; // 40 byte(s): per-side marks of the shootout takers already chosen, 20 bytes per side
+    pub(crate) const COMMENTATOR: usize = 0x8f7a; // 4 byte(s): pointer to the match commentator
+    pub(crate) const ACTIVE_LIST: usize = 0x8f7e; // ? byte(s): list of active players in action order, count at +0x8eb8
+    pub(crate) const MATCH_MANAGERS: usize = 0x9032; // 416 byte(s): the two sides' match manager objects, 0xd0 bytes each (+0x9032 + 0xd0 x side)
     pub(crate) const SIDE0_MANAGER_HOME_REPUTATION: usize = 0x9034; // 2 byte(s): home reputation of side 0's match manager (MATCH_MANAGERS + 2; side stride 0xd0)
     pub(crate) const SIDE0_MANAGER_WORLD_REPUTATION: usize = 0x9036; // 2 byte(s): world reputation of side 0's match manager (MATCH_MANAGERS + 4; side stride 0xd0)
+    pub(crate) const SIDE0_MANAGER_SUBSTITUTIONS_LEFT: usize = 0x9049; // 1 byte(s): match manager +0x17 of side 0: substitutions still available (side 1 at +0xd0); nonzero lets the staff replace an injured goalkeeper
+    pub(crate) const SIDE0_MANAGER_TACTIC_SLOT: usize = 0x904b; // 1 byte(s): match manager +0x19 of side 0 (side 1 at +0xd0); zero skips the automatic changes for a human-managed side
+    pub(crate) const SIDE0_MANAGER: usize = 0x904d; // 4 byte(s): match manager +0x1b: the side's manager (person) pointer (side 1 at +0xd0)
+    pub(crate) const SIDE0_MANAGER_SHEET: usize = 0x9051; // 4 byte(s): match manager +0x1f of side 0: the manager's non-player sheet (side 1 at +0xd0)
+    pub(crate) const SIDE0_MANAGER_TACTICS: usize = 0x905d; // 4 byte(s): match manager +0x2b of side 0: the side's tactics object in the engine (side 1 at +0xd0)
+    pub(crate) const MATCH_MANAGERS_SIDE1: usize = 0x9102; // 208 byte(s): side 1's match manager object (MATCH_MANAGERS + 0xd0)
+    pub(crate) const PITCH_CONDITION: usize = 0x91d2; // 12 byte(s): pitch condition values (three dwords: 100, 90, 10 by default)
+    pub(crate) const ACTION_FIRST_PLAYER: usize = 0x91de; // 4 byte(s): player put first in the action order after the ball holder
+    pub(crate) const TACTICS: usize = 0x91e2; // 12742 byte(s): the two sides' tactics objects, 6371 bytes each (+0x91e2 + 0x18e3 x side)
+    pub(crate) const POSITION_TABLE_DATA: usize = 0x930f; // ? byte(s): side 0 position table inside its tactics object (TACTICS + 0x12d), pointed to by POSITION_TABLE
+    pub(crate) const ARROW_TABLE_DATA: usize = 0x9330; // ? byte(s): side 0 position arrow table inside its tactics object (TACTICS + 0x14e), pointed to by ARROW_TABLE
+    pub(crate) const TACTICS_FLAGS: usize = 0x9766; // 4 byte(s): side 0 tactics flag dword (tactics +0x584; side 1 at +0x18e3)
+    pub(crate) const FORMATION_TABLE_DATA: usize = 0x97cd; // ? byte(s): side 0 formation/set-piece position table (216 bytes per position), pointed to by FORMATION_TABLE at preparation
+    pub(crate) const POSITION_TABLE_DATA_SIDE1: usize = 0xabf2; // ? byte(s): side 1 position table inside its tactics object (TACTICS + 0x18e3 + 0x12d), pointed to by POSITION_TABLE_SIDE1
+    pub(crate) const ARROW_TABLE_DATA_SIDE1: usize = 0xac13; // ? byte(s): side 1 position arrow table inside its tactics object (TACTICS + 0x18e3 + 0x14e), pointed to by ARROW_TABLE_SIDE1
+    pub(crate) const TACTICS_FLAGS_SIDE1: usize = 0xb049; // 4 byte(s): side 1 tactics flag dword (tactics +0x584 of side 1; TACTICS_FLAGS + 0x18e3)
+    pub(crate) const FORMATION_TABLE_DATA_SIDE1: usize = 0xb9f8; // ? byte(s): side 1 formation/set-piece position table (216 bytes per position), pointed to by FORMATION_TABLE_SIDE1 at preparation
+    pub(crate) const TACTICS_BACKUP: usize = 0xc3a8; // 12742 byte(s): copy of both tactics objects taken at preparation
+    pub(crate) const FORMATION_TABLE: usize = 0xf56e; // 8 byte(s): pointer per side to the formation/set-piece position table (216 bytes per position)
+    pub(crate) const FORMATION_TABLE_SIDE1: usize = 0xf572; // 4 byte(s): side 1 entry of FORMATION_TABLE: pointer to side 1's formation/set-piece position table (set to FORMATION_TABLE_DATA_SIDE1 at preparation)
+    pub(crate) const PASSER: usize = 0xf576; // 4 byte(s): player who made the current pass/took the set piece
+    pub(crate) const SET_PIECE_TAKER: usize = 0xf57a; // 4 byte(s): set-piece taker
+    pub(crate) const BALL_HOLDER: usize = 0xf582; // 4 byte(s): player with the ball (0 loose)
+    pub(crate) const NEAREST_TO_BALL: usize = 0xf586; // 8 byte(s): each side's player nearest to the ball, pointer per side
+    pub(crate) const NEAREST_TO_BALL_SIDE1: usize = 0xf58a; // 4 byte(s): side 1 entry of NEAREST_TO_BALL: side 1's player nearest to the ball
+    pub(crate) const LOWEST_Y_PLAYER: usize = 0xf58e; // 8 byte(s): stored extreme player per side (side 0 smallest y at +0xf58e, side 1 largest y at +0xf592)
+    pub(crate) const LOWEST_Y_PLAYER_SIDE1: usize = 0xf592; // 4 byte(s): side 1 entry of LOWEST_Y_PLAYER (side 1 stores its largest-y player)
+    pub(crate) const FURTHEST_FORWARD: usize = 0xf596; // 8 byte(s): stored opposite-extreme player per side (side 0 largest y, side 1 smallest y at +0xf59a)
+    pub(crate) const FURTHEST_FORWARD_SIDE1: usize = 0xf59a; // 4 byte(s): side 1 entry of FURTHEST_FORWARD (side 1 stores its smallest-y player)
+    pub(crate) const GOALKEEPER: usize = 0xf59e; // 8 byte(s): each side's goalkeeper on the pitch, pointer per side
+    pub(crate) const GOALKEEPER_SIDE1: usize = 0xf5a2; // 4 byte(s): side 1 entry of GOALKEEPER: side 1's goalkeeper on the pitch
+    pub(crate) const ASSIST_CANDIDATE: usize = 0xf5a6; // 4 byte(s): previous passer, credited with the assist if the receiver scores
+    pub(crate) const PASS_RECEIVER: usize = 0xf5aa; // 4 byte(s): receiver of the last pass (cleared when someone else gets the ball)
+    pub(crate) const SHOT_BLOCKER: usize = 0xf5ae; // 4 byte(s): player who blocked or intercepted the last shot or ball (0 none)
+    pub(crate) const REFEREE: usize = 0xf5b2; // ? byte(s): embedded match referee object (decides fouls and cards)
+    pub(crate) const REFEREE_ID: usize = 0xf5b6; // 4 byte(s): match referee's id (-1 none); referee object +4
+    pub(crate) const REFEREE_RATING: usize = 0xf5ba; // 2 byte(s): referee base rating used for the post-match grade (/1000); referee object +8 [inference]
+    pub(crate) const SIDE_STATS: usize = 0xf5bc; // 108 byte(s): per-side match stats block, 0x36 bytes per side (+0xf5bc + 0x36 x side); +0 shootout goals
+    pub(crate) const SCORE: usize = 0xf5bd; // 1 byte(s): side 0 goals (side 1 at +0xf5f3); SIDE_STATS +1
+    pub(crate) const SIDE_SUMMARY: usize = 0xf5c0; // ? byte(s): side summary (player ratings) in SIDE_STATS +4
     pub(crate) const CORNER_GOALS: usize = 0xf5c3; // 1 byte(s): side 0 goals from corners (set piece kind 3); side 1 at +0x36
     pub(crate) const FREE_KICK_PLAY_GOALS: usize = 0xf5c4; // 1 byte(s): side 0 goals from free-kick plays (set piece kind 7 or -1); side 1 at +0x36 [inference]
     pub(crate) const DIRECT_FREE_KICK_GOALS: usize = 0xf5c5; // 1 byte(s): side 0 goals from direct free kicks (set piece kind 6); side 1 at +0x36
+    pub(crate) const SET_PIECES: usize = 0xf5c6; // 1 byte(s): side 0 set pieces lined up by line_up_set_piece (side 1 at +0x36); SIDE_STATS +0xa [inference: free kicks]
+    pub(crate) const CORNER_KICKS: usize = 0xf5c7; // 1 byte(s): side 0 corners taken (side 1 at +0x36); SIDE_STATS +0xb
+    pub(crate) const THROW_INS: usize = 0xf5c8; // 1 byte(s): side 0 throw-ins taken (side 1 at +0x36); SIDE_STATS +0xc
+    pub(crate) const SIDE_FOUL_TALLY: usize = 0xf5c9; // 1 byte(s): side 0 foul tally (side 1 at +0xf5ff; SIDE_STATS +0xd): incremented per foul and compared with the referee's +0x27 to raise strictness [inference]
+    pub(crate) const OFFSIDES: usize = 0xf5ca; // 1 byte(s): side 0 offsides (side 1 at +0xf600); SIDE_STATS +0xe
+    pub(crate) const CARDS: usize = 0xf5cb; // 1 byte(s): side 0 cards (side 1 at +0xf601); SIDE_STATS +0xf
+    pub(crate) const FOULS: usize = 0xf5cc; // 1 byte(s): side 0 fouls (side 1 at +0xf602); SIDE_STATS +0x10
+    pub(crate) const SCORE_SIDE1: usize = 0xf5f3; // 1 byte(s): side 1 goals (SIDE_STATS of side 1 +1)
+    pub(crate) const CARDS_SIDE1: usize = 0xf601; // 1 byte(s): side 1 cards (CARDS + 0x36)
+    pub(crate) const FOULS_SIDE1: usize = 0xf602; // 1 byte(s): side 1 fouls (FOULS + 0x36)
     pub(crate) const TEMPO_ROLL_A: usize = 0xf628; // 4 byte(s): f32 3..9 rolled by the match summary at kick-off and half time (6.0 at preparation) [inference: match tempo]
     pub(crate) const TEMPO_ROLL_B: usize = 0xf62c; // 4 byte(s): f32 3..9 rolled with TEMPO_ROLL_A (6.0 at preparation) [inference]
     pub(crate) const TEMPO_GOALS_ROLL: usize = 0xf630; // 4 byte(s): f32 from random(5) plus the goals so far, rerolled when not below 10 (5.0 at preparation) [inference]
+    pub(crate) const ATTENDANCE: usize = 0xf634; // 4 byte(s): match attendance from the stadium (0 for reserve matches)
+    pub(crate) const ABANDON_MINUTE: usize = 0xf638; // 1 byte(s): minute at which the match is abandoned (0xff never)
+    pub(crate) const INJURY_COUNT: usize = 0xf639; // 2 byte(s): number of injuries in the match
 }
 
 /// Fields of the match `match_player` object, named from how the engine uses them. [pt] Campos do objeto `match_player` do motor.
 #[allow(dead_code)]
 pub(crate) mod match_player {
-    pub(crate) const BALLS_CONTESTED: usize = 0x12; // 1 byte(s): count of loose balls contested by the player (incremented in respond) [inference]
-    pub(crate) const OFFSIDES: usize = 0x13; // 1 byte(s): times caught offside in the match
-    pub(crate) const SENT_OFF: usize = 0x16; // 1 byte(s): set to 1 when the player is sent off
-    pub(crate) const POSITION: usize = 0x19; // 1 byte(s): formation position 0..10 while on the pitch; negative off it (-1 bench, -2 off injured, -4 substituted, 0xfb empty)
-    pub(crate) const PREVIOUS_POSITION: usize = 0x1a; // 1 byte(s): position held before leaving the pitch / reserve position 0..10
-    pub(crate) const INJURY_PENDING: usize = 0x1d; // 1 byte(s): an injury waiting to be processed by the engine (cleared after)
-    pub(crate) const SUBSTITUTED_OFF: usize = 0x1e; // 1 byte(s): set to 1 when substituted off
-    pub(crate) const MINUTE_ON: usize = 0x1f; // 1 byte(s): minute he came on (-1 if not)
-    pub(crate) const MINUTE_OFF: usize = 0x20; // 1 byte(s): minute he was substituted off (-1 if not)
-    pub(crate) const INJURY_MINUTE: usize = 0x22; // 1 byte(s): minute he left injured
-    pub(crate) const SIDE: usize = 0x27; // 1 byte(s): side in the match (0 home, 1 away)
-    pub(crate) const BUSY: usize = 0x2b; // 1 byte(s): busy/down counter: >0 means occupied (on the ground, just played) and not available
-    pub(crate) const COMMENTARY_ID: usize = 0x2e; // 1 byte(s): player identifier passed to the commentary events (with SIDE)
-    pub(crate) const MATCH_RATING: usize = 0x35; // 2 byte(s): performance word (code calls it disposition): starts at 6100, rises with good play, drops with fouls and cards [inference]
-    pub(crate) const SHOT_QUALITY: usize = 0x39; // 2 byte(s): quality part of the last shot value
-    pub(crate) const EFFECTIVE_ABILITY: usize = 0x3b; // 2 byte(s): match ability word (current ability adjusted by morale, captain, contract) [inference]
-    pub(crate) const STAMINA: usize = 0x4d; // 4 byte(s): f32 stamina/fitness 0..10000
-    pub(crate) const STAFF: usize = 0x69; // 4 byte(s): pointer to the staff (person) record
-    pub(crate) const PLAYER: usize = 0x6d; // 4 byte(s): pointer to the player record (attributes)
-    pub(crate) const AGILITY: usize = 0x79; // 4 byte(s): f32 match agility (player +0x1d)
-    pub(crate) const ANTICIPATION: usize = 0x7d; // 4 byte(s): f32 match anticipation (player +0x1e)
-    pub(crate) const FINISHING: usize = 0x99; // 4 byte(s): f32 match finishing (player +0x27)
-    pub(crate) const FREE_KICKS: usize = 0xa1; // 4 byte(s): f32 match free kicks (player +0x29)
-    pub(crate) const HANDLING: usize = 0xa5; // 4 byte(s): f32 match handling (player +0x2a)
-    pub(crate) const JUMPING: usize = 0xad; // 4 byte(s): f32 match jumping (player +0x2e)
-    pub(crate) const LONG_SHOTS: usize = 0xb1; // 4 byte(s): f32 match long shots (player +0x31)
-    pub(crate) const TACKLING: usize = 0xdd; // 4 byte(s): f32 match tackling (player +0x3e)
-    pub(crate) const TEAMWORK: usize = 0xe1; // 4 byte(s): f32 match teamwork (player +0x3f)
-    pub(crate) const TECHNIQUE: usize = 0xe5; // 4 byte(s): f32 match technique (player +0x40)
-    pub(crate) const MARKER_COUNT: usize = 0x101; // 1 byte(s): number of entries in MARKERS
-    pub(crate) const MOVE_SKILL: usize = 0x11a; // 126 byte(s): i16 skill word per move code (+0x11a + 2 x move, 63 words)
-    pub(crate) const ACTION: usize = 0x198; // 2 byte(s): current action/move code
-    pub(crate) const FACING: usize = 0x19a; // 2 byte(s): facing direction in degrees
-    pub(crate) const BALL_CONTROL: usize = 0x19c; // 2 byte(s): control margin word, clamped to -200..200 [inference]
-    pub(crate) const ENGINE: usize = 0x19e; // 4 byte(s): pointer to the match engine
-    pub(crate) const CONFIDENCE: usize = 0x1a2; // 4 byte(s): f32 0..100 (docs: condition), floor 2 x (25 - temperament) [inference]
-    pub(crate) const MARKING_TARGET: usize = 0x1aa; // 4 byte(s): match player he man-marks (0 none)
-    pub(crate) const MARKERS: usize = 0x1ae; // 12 byte(s): match players marking him (up to 3 pointers, count in MARKER_COUNT)
     pub(crate) const SIDE_INDEX: usize = 0x0; // 1 byte(s): player's index within his side's block of 20 (-1 empty); marks shootout takers [inference]
     pub(crate) const PASSES: usize = 0x1; // 1 byte(s): passes made (incremented by each pass, taken back when the pass ends offside)
     pub(crate) const PASSES_COMPLETED: usize = 0x2; // 1 byte(s): passes that reached a team-mate (credited to the passer when the team-mate takes the ball)
@@ -793,29 +776,62 @@ pub(crate) mod match_player {
     pub(crate) const GOALS_CONCEDED: usize = 0xf; // 1 byte(s): goals conceded as goalkeeper
     pub(crate) const ASSISTS: usize = 0x10; // 1 byte(s): assists (also credited to the fouled player when the penalty is scored)
     pub(crate) const DRIBBLES: usize = 0x11; // 1 byte(s): times he beat an opponent with the ball [inference]
+    pub(crate) const BALLS_CONTESTED: usize = 0x12; // 1 byte(s): count of loose balls contested by the player (incremented in respond) [inference]
+    pub(crate) const OFFSIDES: usize = 0x13; // 1 byte(s): times caught offside in the match
     pub(crate) const FOULS: usize = 0x14; // 1 byte(s): fouls committed
     pub(crate) const FOULS_SUFFERED: usize = 0x15; // 1 byte(s): fouls suffered
+    pub(crate) const SENT_OFF: usize = 0x16; // 1 byte(s): set to 1 when the player is sent off
     pub(crate) const MATCH_FORM: usize = 0x17; // 1 byte(s): 1..20 in-match form byte, nudged up or down by events (adjust_17) and floored by the performance word [inference]
+    pub(crate) const ACTION_ORDER: usize = 0x18; // 1 byte(s): his index in the engine ACTIVE_LIST, refreshed each tick by the engine loop
+    pub(crate) const POSITION: usize = 0x19; // 1 byte(s): formation position 0..10 while on the pitch; negative off it (-1 bench, -2 off injured, -4 substituted, 0xfb empty)
+    pub(crate) const PREVIOUS_POSITION: usize = 0x1a; // 1 byte(s): position held before leaving the pitch / reserve position 0..10
     pub(crate) const MATCH_GRADE: usize = 0x1b; // 1 byte(s): 1..10 match rating, (MATCH_RATING + 500) / 1000; 6 at construction
+    pub(crate) const INJURY_FORCES_OFF: usize = 0x1c; // 1 byte(s): set when his pending injury forces him off: the substitution pass removes him from the pitch; stamina recovery skips the injury cap while set [inference]
+    pub(crate) const INJURY_PENDING: usize = 0x1d; // 1 byte(s): an injury waiting to be processed by the engine (cleared after)
+    pub(crate) const SUBSTITUTED_OFF: usize = 0x1e; // 1 byte(s): set to 1 when substituted off
+    pub(crate) const MINUTE_ON: usize = 0x1f; // 1 byte(s): minute he came on (-1 if not)
+    pub(crate) const MINUTE_OFF: usize = 0x20; // 1 byte(s): minute he was substituted off (-1 if not)
     pub(crate) const MINUTE_LEFT_PITCH: usize = 0x21; // 1 byte(s): minute he left the pitch (injury or sending-off), capped at the period's end
+    pub(crate) const INJURY_MINUTE: usize = 0x22; // 1 byte(s): minute he left injured
+    pub(crate) const RED_CARDS: usize = 0x23; // 1 byte(s): incremented when he leaves the pitch (player_left_pitch); added to YELLOW_CARDS for his card total and to the side summary cards [inference: sendings-off]
     pub(crate) const YELLOW_CARDS: usize = 0x24; // 1 byte(s): yellow cards received
     pub(crate) const FIRST_CARD_CODE: usize = 0x25; // 1 byte(s): code of his first card (reason; 9 for a straight red)
     pub(crate) const SECOND_CARD_CODE: usize = 0x26; // 1 byte(s): code of his second card (reason; 9 for a red)
+    pub(crate) const SIDE: usize = 0x27; // 1 byte(s): side in the match (0 home, 1 away)
     pub(crate) const CELL_SLOT: usize = 0x28; // 1 byte(s): his index in the occupancy list of the grid cell he stands on (-1 none)
+    pub(crate) const BUSY: usize = 0x2b; // 1 byte(s): busy/down counter: >0 means occupied (on the ground, just played) and not available
     pub(crate) const PREFERRED_FOOT: usize = 0x2c; // 1 byte(s): foot used when the angle needs no particular one (0 left, 1 right) [inference]
+    pub(crate) const COMMENTARY_ID: usize = 0x2e; // 1 byte(s): player identifier passed to the commentary events (with SIDE)
+    pub(crate) const MATCH_RATING: usize = 0x35; // 2 byte(s): performance word (code calls it disposition): starts at 6100, rises with good play, drops with fouls and cards [inference]
+    pub(crate) const SHOT_QUALITY: usize = 0x39; // 2 byte(s): quality part of the last shot value
+    pub(crate) const EFFECTIVE_ABILITY: usize = 0x3b; // 2 byte(s): match ability word (current ability adjusted by morale, captain, contract) [inference]
+    pub(crate) const GOAL_COUNTS: usize = 0x3d; // 10 byte(s): five i16 goal tallies (+0x3d..+0x45), incremented with each goal and undone when it is disallowed; read by the scorer milestone commentaries 0x200a..0x2012 [inference: career/season counts]
+    pub(crate) const NEW_CURRENT_REPUTATION: usize = 0x47; // 2 byte(s): current reputation after the match, written by develop_player instead of the person sheet
+    pub(crate) const NEW_HOME_REPUTATION: usize = 0x49; // 2 byte(s): home reputation after the match, written by develop_player
+    pub(crate) const NEW_WORLD_REPUTATION: usize = 0x4b; // 2 byte(s): world reputation after the match, written by develop_player
+    pub(crate) const STAMINA: usize = 0x4d; // 4 byte(s): f32 stamina/fitness 0..10000
     pub(crate) const STAMINA_CEILING: usize = 0x51; // 4 byte(s): f32 ceiling of the stamina recovery (set at period breaks, at most 10000)
     pub(crate) const INJURY_CULPRIT: usize = 0x55; // 4 byte(s): player who caused his injury (named in the injury commentary 0x20f6) [inference]
     pub(crate) const STAMINA_BOOST: usize = 0x59; // 4 byte(s): f32 extra stamina added at each moment, then halved (cleared when 1)
+    pub(crate) const STAFF: usize = 0x69; // 4 byte(s): pointer to the staff (person) record
+    pub(crate) const PLAYER: usize = 0x6d; // 4 byte(s): pointer to the player record (attributes)
     pub(crate) const ACCELERATION: usize = 0x71; // 4 byte(s): f32 match acceleration (player +0x1b)
     pub(crate) const AGGRESSION: usize = 0x75; // 4 byte(s): f32 match aggression (player +0x1c)
+    pub(crate) const AGILITY: usize = 0x79; // 4 byte(s): f32 match agility (player +0x1d)
+    pub(crate) const ANTICIPATION: usize = 0x7d; // 4 byte(s): f32 match anticipation (player +0x1e)
     pub(crate) const BALANCE: usize = 0x81; // 4 byte(s): f32 match balance (player +0x1f)
     pub(crate) const BRAVERY: usize = 0x85; // 4 byte(s): f32 match bravery (player +0x20)
     pub(crate) const CORNERS: usize = 0x89; // 4 byte(s): f32 match corners (player +0x22)
     pub(crate) const CROSSING: usize = 0x8d; // 4 byte(s): f32 match crossing (player +0x23)
     pub(crate) const DECISIONS: usize = 0x91; // 4 byte(s): f32 match decisions (player +0x24)
     pub(crate) const DRIBBLING: usize = 0x95; // 4 byte(s): f32 match dribbling (player +0x26)
+    pub(crate) const FINISHING: usize = 0x99; // 4 byte(s): f32 match finishing (player +0x27)
     pub(crate) const FLAIR: usize = 0x9d; // 4 byte(s): f32 match flair (player +0x28)
+    pub(crate) const FREE_KICKS: usize = 0xa1; // 4 byte(s): f32 match free kicks (player +0x29)
+    pub(crate) const HANDLING: usize = 0xa5; // 4 byte(s): f32 match handling (player +0x2a)
     pub(crate) const HEADING: usize = 0xa9; // 4 byte(s): f32 match heading (player +0x2b)
+    pub(crate) const JUMPING: usize = 0xad; // 4 byte(s): f32 match jumping (player +0x2e)
+    pub(crate) const LONG_SHOTS: usize = 0xb1; // 4 byte(s): f32 match long shots (player +0x31)
     pub(crate) const MARKING: usize = 0xb5; // 4 byte(s): f32 match marking (player +0x32)
     pub(crate) const MOVEMENT: usize = 0xb9; // 4 byte(s): f32 match movement (player +0x33)
     pub(crate) const ONE_ON_ONES: usize = 0xbd; // 4 byte(s): f32 match one on ones (player +0x35)
@@ -826,11 +842,18 @@ pub(crate) mod match_player {
     pub(crate) const REFLEXES: usize = 0xd1; // 4 byte(s): f32 match reflexes (player +0x3a)
     pub(crate) const STAMINA_ATTRIBUTE: usize = 0xd5; // 4 byte(s): f32 match stamina attribute (player +0x3c); not the fitness at STAMINA
     pub(crate) const STRENGTH: usize = 0xd9; // 4 byte(s): f32 match strength (player +0x3d)
+    pub(crate) const TACKLING: usize = 0xdd; // 4 byte(s): f32 match tackling (player +0x3e)
+    pub(crate) const TEAMWORK: usize = 0xe1; // 4 byte(s): f32 match teamwork (player +0x3f)
+    pub(crate) const TECHNIQUE: usize = 0xe5; // 4 byte(s): f32 match technique (player +0x40)
     pub(crate) const THROW_INS: usize = 0xe9; // 4 byte(s): f32 match throw ins (player +0x41)
     pub(crate) const VERSATILITY: usize = 0xed; // 4 byte(s): f32 match versatility (player +0x42)
     pub(crate) const VISION: usize = 0xf1; // 4 byte(s): f32 match vision (player +0x43)
     pub(crate) const WORK_RATE: usize = 0xf5; // 4 byte(s): f32 match work rate (player +0x44)
+    pub(crate) const CLUB: usize = 0xf9; // 4 byte(s): his club pointer (tested with is_national_team and is_human_club)
     pub(crate) const TACKLE_RATE_NARRATED: usize = 0xfd; // 1 byte(s): his tackle success-rate commentary (0x21cd/0x21ce) has been given, so it is not repeated
+    pub(crate) const ANGER: usize = 0xff; // 1 byte(s): anger byte: +1 when a foul against him passes his anger check, decays each moment toward a floor from FRUSTRATION and his dirtiness [inference]
+    pub(crate) const FRUSTRATION: usize = 0x100; // 1 byte(s): frustration byte: grows for a goalkeeper after conceding; raises his anger floor and lowers some commentary chances [inference]
+    pub(crate) const MARKER_COUNT: usize = 0x101; // 1 byte(s): number of entries in MARKERS
     pub(crate) const CELL_X: usize = 0x102; // 1 byte(s): grid column he stands on (0..8)
     pub(crate) const CELL_Y: usize = 0x103; // 1 byte(s): grid row he stands on (0..11)
     pub(crate) const MOMENT_PACE: usize = 0x104; // 1 byte(s): moment roll from BASE_PACE and stamina (best of two draws), redrawn each moment
@@ -853,14 +876,23 @@ pub(crate) mod match_player {
     pub(crate) const BASE_ANTICIPATION: usize = 0x115; // 1 byte(s): base for MOMENT_ANTICIPATION, from match anticipation (+0x7d)
     pub(crate) const BASE_WORK_RATE: usize = 0x116; // 1 byte(s): base for MOMENT_WORK_RATE, from match work rate (+0xf5)
     pub(crate) const BASE_AGILITY: usize = 0x117; // 1 byte(s): base for MOMENT_AGILITY, from match agility (+0x79)
-    pub(crate) const NEW_CURRENT_REPUTATION: usize = 0x47; // 2 byte(s): current reputation after the match, written by develop_player instead of the person sheet
-    pub(crate) const NEW_HOME_REPUTATION: usize = 0x49; // 2 byte(s): home reputation after the match, written by develop_player
-    pub(crate) const NEW_WORLD_REPUTATION: usize = 0x4b; // 2 byte(s): world reputation after the match, written by develop_player
+    pub(crate) const MOVE_SKILL: usize = 0x11a; // 126 byte(s): i16 skill word per move code (+0x11a + 2 x move, 63 words)
+    pub(crate) const ACTION: usize = 0x198; // 2 byte(s): current action/move code
+    pub(crate) const FACING: usize = 0x19a; // 2 byte(s): facing direction in degrees
+    pub(crate) const BALL_CONTROL: usize = 0x19c; // 2 byte(s): control margin word, clamped to -200..200 [inference]
+    pub(crate) const ENGINE: usize = 0x19e; // 4 byte(s): pointer to the match engine
+    pub(crate) const CONFIDENCE: usize = 0x1a2; // 4 byte(s): f32 0..100 (docs: condition), floor 2 x (25 - temperament) [inference]
+    pub(crate) const LAST_FOULED_BY: usize = 0x1a6; // 4 byte(s): match player who last fouled him (stored by the referee's foul decision); value_by_condition uses its own formula against him
+    pub(crate) const MARKING_TARGET: usize = 0x1aa; // 4 byte(s): match player he man-marks (0 none)
+    pub(crate) const MARKERS: usize = 0x1ae; // 12 byte(s): match players marking him (up to 3 pointers, count in MARKER_COUNT)
 }
 
 /// `TNonPlayer` record. [pt] Registro `TNonPlayer`.
 #[allow(dead_code)]
 pub(crate) mod non_player {
+    pub(crate) const CURRENT_ABILITY: usize = 0x4; // 2 byte(s), UInt16
+    pub(crate) const POTENTIAL_ABILITY: usize = 0x6; // 2 byte(s), UInt16
+    pub(crate) const HOME_REPUTATION: usize = 0x8; // 2 byte(s), UInt16
     pub(crate) const CURRENT_REPUTATION: usize = 0xa; // 2 byte(s), UInt16
     pub(crate) const WORLD_REPUTATION: usize = 0xc; // 2 byte(s), UInt16
     pub(crate) const ATTACKING: usize = 0xe; // 1 byte(s), sbyte
@@ -869,37 +901,34 @@ pub(crate) mod non_player {
     pub(crate) const COACHING_GKS: usize = 0x11; // 1 byte(s), sbyte
     pub(crate) const DIRECTNESS: usize = 0x13; // 1 byte(s), sbyte
     pub(crate) const DISCIPLINE: usize = 0x14; // 1 byte(s), sbyte
+    pub(crate) const FREE_ROLES: usize = 0x15; // 1 byte(s), sbyte
+    pub(crate) const INTERFERENCE: usize = 0x16; // 1 byte(s), sbyte
     pub(crate) const JUDGEMENT: usize = 0x17; // 1 byte(s), sbyte
     pub(crate) const JUDGING_POTENTIAL: usize = 0x18; // 1 byte(s), sbyte
     pub(crate) const MAN_HANDLING: usize = 0x19; // 1 byte(s), sbyte
+    pub(crate) const MARKING: usize = 0x1a; // 1 byte(s), sbyte
     pub(crate) const MOTIVATING: usize = 0x1b; // 1 byte(s), sbyte
+    pub(crate) const OFFSIDE: usize = 0x1c; // 1 byte(s), sbyte
     pub(crate) const PATIENCE: usize = 0x1d; // 1 byte(s), sbyte
     pub(crate) const PHYSIOTHERAPY: usize = 0x1e; // 1 byte(s), sbyte
     pub(crate) const PRESSING: usize = 0x1f; // 1 byte(s), sbyte
     pub(crate) const RESOURCES: usize = 0x20; // 1 byte(s), sbyte
     pub(crate) const TACTICS: usize = 0x21; // 1 byte(s), sbyte
+    pub(crate) const YOUNGSTERS: usize = 0x22; // 1 byte(s), sbyte
     pub(crate) const GOALKEEPER: usize = 0x23; // 4 byte(s), int
     pub(crate) const FORMATION: usize = 0x43; // 1 byte(s), sbyte
-    pub(crate) const CURRENT_ABILITY: usize = 0x4; // 2 byte(s), UInt16
-    pub(crate) const POTENTIAL_ABILITY: usize = 0x6; // 2 byte(s), UInt16
-    pub(crate) const HOME_REPUTATION: usize = 0x8; // 2 byte(s), UInt16
-    pub(crate) const INTERFERENCE: usize = 0x16; // 1 byte(s), sbyte
-    pub(crate) const YOUNGSTERS: usize = 0x22; // 1 byte(s), sbyte
-    pub(crate) const FREE_ROLES: usize = 0x15; // 1 byte(s), sbyte
-    pub(crate) const MARKING: usize = 0x1a; // 1 byte(s), sbyte
-    pub(crate) const OFFSIDE: usize = 0x1c; // 1 byte(s), sbyte
 }
 
 /// `TPreferences` record. [pt] Registro `TPreferences`.
 #[allow(dead_code)]
 pub(crate) mod preferences {
+    pub(crate) const STAFF_FAVOURITE_CLUBS1: usize = 0x4; // 4 byte(s), int
     pub(crate) const STAFF_DISLIKED_CLUBS1: usize = 0x10; // 4 byte(s), int
     pub(crate) const STAFF_DISLIKED_CLUBS2: usize = 0x14; // 4 byte(s), int
     pub(crate) const STAFF_DISLIKED_CLUBS3: usize = 0x18; // 4 byte(s), int
     pub(crate) const STAFF_FAVOURITE_STAFF1: usize = 0x1c; // 4 byte(s), int
     pub(crate) const STAFF_FAVOURITE_STAFF2: usize = 0x20; // 4 byte(s), int
     pub(crate) const STAFF_DISLIKED_STAFF1: usize = 0x28; // 4 byte(s), int
-    pub(crate) const STAFF_FAVOURITE_CLUBS1: usize = 0x4; // 4 byte(s), int
 }
 
 /// Fields of the scheduled match record (date, competition at +0x14, the two clubs, result), named from how the routines use them. [pt] Campos do registro da partida marcada.
@@ -984,6 +1013,7 @@ pub(crate) mod finance {
     pub(crate) const HIGHEST_WAGE: usize = 0x10; // 4 byte(s): highest wage in the wage bill
     pub(crate) const WAGE_CEILING: usize = 0x14; // 4 byte(s): wage ceiling (Finance::get_max_wage, adjust_max_wage)
     pub(crate) const SEASON_TICKETS_SOLD: usize = 0x18; // 4 byte(s): season tickets sold
+    pub(crate) const INSTALMENT_BALANCE: usize = 0x1c; // 4 byte(s): Running share of transfer instalments still owed (buyer negative, seller positive); cleared when the club has none left [inference]
     pub(crate) const MONTH_PLAYERS_BOUGHT: usize = 0x70; // 8 byte(s): month: transfer fees paid (i64)
     pub(crate) const MONTH_PLAYERS_SOLD: usize = 0x78; // 8 byte(s): month: transfer fees received (i64)
     pub(crate) const MONTH_OTHER_COSTS: usize = 0x80; // 4 byte(s): month: other costs
@@ -1019,7 +1049,6 @@ pub(crate) mod finance {
     pub(crate) const SEASON_TICKET_STEP: usize = 0x164; // 1 byte(s): season ticket sales step (up to 8)
     pub(crate) const CRISIS_STATE: usize = 0x165; // 1 byte(s): financial state: 0 normal, 1 crisis, 2 [inference: administration]
     pub(crate) const SQUEEZE_COUNTER: usize = 0x166; // 1 byte(s): board squeeze counter (reset to 5/0/10 by wealth band; above 10 charges the club)
-    pub(crate) const INSTALMENT_BALANCE: usize = 0x1c; // 4 byte(s): Running share of transfer instalments still owed (buyer negative, seller positive); cleared when the club has none left [inference]
 }
 
 /// Fields of the Stadium object (`this` in comp/stadium.rs), named from how the routines use them. [pt] Campos do objeto Stadium.
@@ -1800,6 +1829,7 @@ pub(crate) mod match_record_row {
     pub(crate) const POSITION: usize = 0x1d; // 1 byte(s): position (match_player POSITION); 0xfb = empty row
     pub(crate) const PREVIOUS_POSITION: usize = 0x1e; // 1 byte(s): previous position (match_player PREVIOUS_POSITION)
     pub(crate) const GOALS: usize = 0x21; // 1 byte(s): goals scored
+    pub(crate) const ASSISTS: usize = 0x27; // 1 byte(s): assists in the match (multiplied by the contract ASSIST_BONUS)
     pub(crate) const YELLOW_CARDS: usize = 0x2c; // 1 byte(s): yellow cards
     pub(crate) const RED_CARD: usize = 0x2d; // 1 byte(s): red card (drawn in red on the ratings) [inference]
     pub(crate) const MINUTE_OFF: usize = 0x30; // 1 byte(s): minute substituted off; negative = not
@@ -2158,6 +2188,9 @@ pub(crate) mod retirement_entry {
 /// Fields of the `ruling_body` object, named from how the routines use them. [pt] Campos do objeto `ruling_body`.
 #[allow(dead_code)]
 pub(crate) mod ruling_body {
+    pub(crate) const ENTRIES: usize = 0xb; // 4 byte(s): Pointer to the 14-byte ruling body entries (ruling_body_entry)
+    pub(crate) const ENTRY_CAPACITY: usize = 0xf; // 4 byte(s): Allocated entries in ENTRIES (count + 100 after compact_entries)
+    pub(crate) const ENTRY_COUNT: usize = 0x13; // 4 byte(s): Number of entries used in ENTRIES
     pub(crate) const NATION_ID: usize = 0x17; // 4 byte(s): Nation the ruling body covers (-1 none)
     pub(crate) const CONTINENT_ID: usize = 0x1b; // 4 byte(s): Continent the ruling body covers when it has no nation (-1 none)
 }
@@ -2255,6 +2288,8 @@ pub(crate) mod staff_records_fields {
 pub(crate) mod staff_state {
     pub(crate) const INJURY_COUNTER: usize = 0xa; // 1 byte(s): byte of the 79-byte general.dat record raised by injuries up to 100 [inference]
     pub(crate) const STATUS_FLAGS: usize = 0xb; // 1 byte(s): bit 0x40 regen mark, bits 0x30 retirement state (0x10 announced, 0x20 retired)
+    pub(crate) const FORMER_CLUB_ID: usize = 0xe; // 4 byte(s): club id of the first of five former-club slots (5-byte steps; -1 empty), paid a share of the fee on a sale
+    pub(crate) const FORMER_CLUB_WEIGHT: usize = 0x12; // 1 byte(s): signed weight of the first former-club slot (5-byte steps) in the fee-share split
 }
 
 /// Fields of the `story_log_entry` object, named from how the routines use them. [pt] Campos do objeto `story_log_entry`.
@@ -2271,10 +2306,9 @@ pub(crate) mod story_log_entry {
 /// Fields of the `tactics` object, named from how the routines use them. [pt] Campos do objeto `tactics`.
 #[allow(dead_code)]
 pub(crate) mod tactics_fields {
-    pub(crate) const FLAGS: usize = 0x584; // 4 byte(s): tactics flag dword (0x1000 marking by ball side, 0x4000, 0x400...); engine TACTICS_FLAGS for side 0
-    pub(crate) const FORMATION: usize = 0x187b; // 4 byte(s): formation (shape) object of the tactic, compared with the manager's favourite formation [inference]
     pub(crate) const TACTIC_STATS: usize = 0x0; // 4 byte(s): Pointer to the 0x28-byte per-tactic result statistics (read by the AI formation choice)
     pub(crate) const UNDO_SLOTS: usize = 0x30; // 1472 byte(s): 16 undo/stored-instruction slots of 0x5c bytes, one per human (staff count - id - 1)
+    pub(crate) const FLAGS: usize = 0x584; // 4 byte(s): tactics flag dword (0x1000 marking by ball side, 0x4000, 0x400...); engine TACTICS_FLAGS for side 0
     pub(crate) const UNDO_COUNT: usize = 0x5f0; // 1 byte(s): Number of UNDO_SLOTS in use
     pub(crate) const CUSTOM_TACTICS: usize = 0x5f1; // 4 byte(s): Pointer to the clubs' own tactic blocks (0x18e3 bytes each)
     pub(crate) const CUSTOM_TACTIC_COUNT: usize = 0x5f5; // 4 byte(s): Number of CUSTOM_TACTICS
@@ -2282,6 +2316,8 @@ pub(crate) mod tactics_fields {
     pub(crate) const PRESET_TACTIC_COUNT: usize = 0x5fd; // 4 byte(s): Number of PRESET_TACTICS; tactic indexes at or above it are CUSTOM_TACTICS
     pub(crate) const ROWS: usize = 0x601; // 4 byte(s): Pointer to the 0x91-byte per-club tactics rows (clubs, then human managers)
     pub(crate) const ROW_COUNT: usize = 0x605; // 4 byte(s): Number of tactics rows
+    pub(crate) const FORMATION: usize = 0x187b; // 4 byte(s): formation (shape) object of the tactic, compared with the manager's favourite formation [inference]
+    pub(crate) const POSITION_MARKS: usize = 0x188b; // 88 byte(s): per tactical position mark bits, one u64 per position (11), read by position_marks [inference: same block layout as the engine tactics]
 }
 
 /// Fields of the `tactics_row` object, named from how the routines use them. [pt] Campos do objeto `tactics_row`.
@@ -2369,6 +2405,134 @@ pub(crate) mod work_permit {
 /// `TCMDate` record. [pt] Registro `TCMDate`.
 #[allow(dead_code)]
 pub(crate) mod cm_date {
-    pub(crate) const LEAP_YEAR: usize = 0x4; // 4 byte(s), int
     pub(crate) const YEAR: usize = 0x2; // 2 byte(s), short
+    pub(crate) const LEAP_YEAR: usize = 0x4; // 4 byte(s), int
+}
+
+/// Fields of the `african_nations` object, named from how the routines use them. [pt] Campos do objeto `african_nations`.
+#[allow(dead_code)]
+pub(crate) mod african_nations {
+    pub(crate) const DRAWN_CLUBS: usize = 0xee; // 4 byte(s): Pointer to the nations drawn from 4 pots into 4 groups of 4; freed and zeroed once the group stages are built
+    pub(crate) const DRAWN_CLUB_COUNT: usize = 0xf2; // 2 byte(s): Number of entries in DRAWN_CLUBS, zeroed with the list
+}
+
+/// Fields of the `awol_fields` object, named from how the routines use them. [pt] Campos do objeto `awol_fields`.
+#[allow(dead_code)]
+pub(crate) mod awol_fields {
+    pub(crate) const PERSON_FLAGS: usize = 0xc; // 4 byte(s): Pointer to one absence flag byte per staff id (bit 1 absent without leave, bit 2 missed training; flipped by the mark routines) [inference]
+}
+
+/// Fields of the `comp_history_row` object, named from how the routines use them. [pt] Campos do objeto `comp_history_row`.
+#[allow(dead_code)]
+pub(crate) mod comp_history_row {
+    pub(crate) const CHAMPION: usize = 0xa; // 4 byte(s): Club pointer of the season's champion (team table status 1) in a competition history row (row +4 competition, +8 year)
+    pub(crate) const RUNNER_UP: usize = 0xe; // 4 byte(s): Club pointer of the runner-up (team table status 2)
+    pub(crate) const THIRD_PLACE: usize = 0x12; // 4 byte(s): Club pointer of the third-placed team (team table status 3)
+    pub(crate) const HOST: usize = 0x16; // 4 byte(s): Host of the competition, fourth value of season_honours [inference]
+}
+
+/// Fields of the `con_merc_cup` object, named from how the routines use them. [pt] Campos do objeto `con_merc_cup`.
+#[allow(dead_code)]
+pub(crate) mod con_merc_cup {
+    pub(crate) const DRAWN_CLUBS: usize = 0xee; // 4 byte(s): Pointer to the shuffled list of invited club pointers (Mexico, Colombia, Peru, Bolivia, MLS) that fills the group tables
+    pub(crate) const DRAWN_CLUB_COUNT: usize = 0xf2; // ? byte(s): Number of clubs in DRAWN_CLUBS (16 once selected)
+}
+
+/// Fields of the `conmebol_liber` object, named from how the routines use them. [pt] Campos do objeto `conmebol_liber`.
+#[allow(dead_code)]
+pub(crate) mod conmebol_liber {
+    pub(crate) const DRAWN_CLUBS: usize = 0xee; // 4 byte(s): Pointer to the drawn list of qualified club pointers that fills the first group tables; freed and zeroed once the groups are built
+    pub(crate) const DRAWN_CLUB_COUNT: usize = 0xf2; // ? byte(s): Number of clubs in DRAWN_CLUBS [inference]
+}
+
+/// Fields of the `conmebol_merc` object, named from how the routines use them. [pt] Campos do objeto `conmebol_merc`.
+#[allow(dead_code)]
+pub(crate) mod conmebol_merc {
+    pub(crate) const DRAWN_CLUBS: usize = 0xee; // 4 byte(s): Pointer to the drawn list of invited club pointers that fills the first group tables; freed and zeroed once the groups are built
+    pub(crate) const DRAWN_CLUB_COUNT: usize = 0xf2; // ? byte(s): Number of clubs in DRAWN_CLUBS [inference]
+}
+
+/// Fields of the `conmebol_seeding` object, named from how the routines use them. [pt] Campos do objeto `conmebol_seeding`.
+#[allow(dead_code)]
+pub(crate) mod conmebol_seeding {
+    pub(crate) const LAST_SEASON_YEAR: usize = 0x6f; // 2 byte(s): Game year of the last update_for_new_season; the club table and the Libertadores places are rebuilt only when the year changes
+    pub(crate) const BRA_CHAMP_CUP_WINNER_ID: usize = 0x71; // 4 byte(s): Club id of the Copa dos Campeoes winner (its Libertadores place from 2003 on), set by set_bra_champ_cup_winner
+}
+
+/// Fields of the `euro_champ_qual` object, named from how the routines use them. [pt] Campos do objeto `euro_champ_qual`.
+#[allow(dead_code)]
+pub(crate) mod euro_champ_qual {
+    pub(crate) const GROUP_FORMAT: usize = 0xf6; // 1 byte(s): Group format (1 or 2): decides whether group g has 6 or 5 teams (get_group_team_count)
+}
+
+/// Fields of the `formation` object, named from how the routines use them. [pt] Campos do objeto `formation`.
+#[allow(dead_code)]
+pub(crate) mod formation_fields {
+    pub(crate) const SLOT_CELLS: usize = 0x12d; // 22 byte(s): Tactical grid cell codes of the 11 formation slots (words; a second set follows at +0x14e)
+    pub(crate) const FLAGS: usize = 0x584; // 4 byte(s): Tactics flag dword (0x1000 marking by ball side, 0x4000, 0x400...), changed by set_formation_flag
+    pub(crate) const MARKING_TYPES: usize = 0x5b4; // 11 byte(s): Marking type byte of each of the 11 slots (4 and 8 become 2 in clear_assigned)
+    pub(crate) const DESIGNATED_PEOPLE: usize = 0x5bf; // 44 byte(s): Person record index designated for each of the 11 positions (-1 none)
+    pub(crate) const POSITION_LOOKUP: usize = 0x5eb; // 4752 byte(s): Position lookup tables built by build_position_lookup (up to FORMATION_MASK)
+    pub(crate) const FORMATION_MASK: usize = 0x187b; // 4 byte(s): OR of the position bits of the 11 slots (formation_mask)
+    pub(crate) const CHANGED_FLAG: usize = 0x187f; // 4 byte(s): Changed flag of the formation, cleared by set_square and written with the marking and formation flags
+    pub(crate) const PLAYER_INSTRUCTIONS: usize = 0x188b; // 88 byte(s): per position (0..10) 64-bit instruction mask (+0x188b + 8 x position); bits of a group are mutually exclusive
+}
+
+/// Fields of the `goldcup` object, named from how the routines use them. [pt] Campos do objeto `goldcup`.
+#[allow(dead_code)]
+pub(crate) mod goldcup {
+    pub(crate) const DRAWN_CLUBS: usize = 0xee; // 4 byte(s): Pointer to the list of team pointers (the continent's nations and the guests) built by set_up_team_list
+    pub(crate) const DRAWN_CLUB_COUNT: usize = 0xf2; // 4 byte(s): Number of teams in DRAWN_CLUBS (12 when full)
+}
+
+/// Fields of the `grid_cell` object, named from how the routines use them. [pt] Campos do objeto `grid_cell`.
+#[allow(dead_code)]
+pub(crate) mod grid_cell {
+    pub(crate) const OCCUPANTS: usize = 0x0; // 88 byte(s): per-side list of the match players standing on the cell, 11 pointers per side (side 1 at +0x2c)
+    pub(crate) const OCCUPANT_COUNT: usize = 0x58; // 2 byte(s): per-side number of OCCUPANTS (i8, +0x58 + side); engine GRID + 0x58 is the first cell's
+}
+
+/// Fields of the `match_incident` object, named from how the routines use them. [pt] Campos do objeto `match_incident`.
+#[allow(dead_code)]
+pub(crate) mod match_incident {
+    pub(crate) const CLUB_ID: usize = 0x4; // 4 byte(s): club id of the day incident (0x19-byte entries of the match-day player incident list; +0 the person id)
+    pub(crate) const OUTCOME: usize = 0xe; // 1 byte(s): outcome mark set at the match wrap-up (1 accepted by the other manager, 0 otherwise)
+    pub(crate) const RESPONDER_ID: usize = 0xf; // 4 byte(s): staff id of the manager who answered the incident (-1 none)
+    pub(crate) const KIND: usize = 0x13; // 2 byte(s): incident kind (0x82, 0x1e, 0x0b...) selecting the news and reactions
+    pub(crate) const OTHER_PERSON_ID: usize = 0x15; // 4 byte(s): second person of the incident (passed with +0 to the two-person news)
+}
+
+/// Fields of the `nation_club_bucket` object, named from how the routines use them. [pt] Campos do objeto `nation_club_bucket`.
+#[allow(dead_code)]
+pub(crate) mod nation_club_bucket {
+    pub(crate) const CLUB_COUNT: usize = 0xc8; // 4 byte(s): number of club ids kept in the bucket (0xd0-byte per-nation buckets of up to 50 ids at +0, database_trim_club_table)
+    pub(crate) const WEAKEST_SLOT: usize = 0xcc; // 4 byte(s): index of the kept club with the lowest reputation, replaced first
+}
+
+/// Fields of the `nation_name_index` object, named from how the routines use them. [pt] Campos do objeto `nation_name_index`.
+#[allow(dead_code)]
+pub(crate) mod nation_name_index {
+    pub(crate) const FIRST_NAME_START: usize = 0x0; // 4 byte(s): first row of the nation's first names in the first-name table (0x24-byte entries at [0xae2338]; -1 none)
+    pub(crate) const SECOND_NAME_START: usize = 0x4; // 4 byte(s): first row of the nation's second names (-1 none)
+    pub(crate) const COMMON_NAME_START: usize = 0x8; // 4 byte(s): first row of the nation's common names (-1 none)
+    pub(crate) const FIRST_NAME_WEIGHT_SUM: usize = 0xc; // 4 byte(s): sum of the weights (TNames Count) of the nation's first names
+    pub(crate) const SECOND_NAME_WEIGHT_SUM: usize = 0x10; // 4 byte(s): sum of the weights of the nation's second names
+    pub(crate) const COMMON_NAME_WEIGHT_SUM: usize = 0x14; // 4 byte(s): sum of the weights of the nation's common names
+    pub(crate) const FIRST_NAME_COUNT: usize = 0x18; // 4 byte(s): number of first names of the nation
+    pub(crate) const SECOND_NAME_COUNT: usize = 0x1c; // 4 byte(s): number of second names of the nation
+    pub(crate) const COMMON_NAME_COUNT: usize = 0x20; // 4 byte(s): number of common names of the nation
+}
+
+/// Fields of the `oceania_club_champ` object, named from how the routines use them. [pt] Campos do objeto `oceania_club_champ`.
+#[allow(dead_code)]
+pub(crate) mod oceania_club_champ {
+    pub(crate) const DRAWN_CLUBS: usize = 0xee; // 4 byte(s): Pointer to the 8 selected club pointers (group A slots 0..3, group B 4..7); freed and zeroed once the groups are built
+    pub(crate) const DRAWN_CLUB_COUNT: usize = 0xf2; // ? byte(s): Number of clubs in DRAWN_CLUBS, zeroed with the list [inference]
+}
+
+/// Fields of the `uefa_seeding` object, named from how the routines use them. [pt] Campos do objeto `uefa_seeding`.
+#[allow(dead_code)]
+pub(crate) mod uefa_seeding {
+    pub(crate) const INTERTOTO_VOLUNTEERS: usize = 0x43b; // 4 byte(s): Pointer to the list of up to 30 club ids volunteering for the Intertoto (0x78 bytes; count at +0x43f), freed after the places are given
+    pub(crate) const CUP_FINALS: usize = 0x440; // 600 byte(s): 50 records of 12 bytes (cup, winner, runner-up) of national cup finals, written by register_semi_final_losers_for_uefa and read when giving UEFA places
 }

@@ -1,0 +1,21 @@
+Leitor de fora, rodada 7 (08/11/2026, tarde). Veredito: claramente melhor que a rodada 6. Campos com nome ~20.200 contra
+~7.800 crus (~5.700 `+ 0x..` e ~2.100 deslocamentos em acessores), 2,6 por 1 (era 1,5). A lacuna agora está nos
+comentários: 19.862 referências `+0x..` nos docs.
+Português visível: nomes da infraestrutura (desviar, preservar_ecx, aplicar_resolucao, isolar, aleatorio, instalar, Modo,
+autoteste, nomes, sorteio, registro::linha); algumas centenas de locais (sem_renda, clima, mandante, visitante...); campos
+de struct em português (eng_prm.rs: vtabela, estadio, fases, regras...); ~180 linhas de comentário fora do [pt]; textos
+(os 2.092 rótulos motor_*, ~700 rótulos de branch, ~870 mensagens de comparador, as variáveis CM_*).
+Os 10 obstáculos: 1. 6.450 transmute(FN_...) repetindo a assinatura (wrappers tipados no exe_fns.rs); 2. docs cheios de
+hex; 3. floats lidos por endereço (consts + um teste contra o .rdata); 4. nomes que existem e não são usados
+(manager_manager.rs +0x57/+0x1f..., staff_state_byte(p, 0xb), 0xb6b7c4 com G_ já existente); 5. crus nos arquivos quentes
+(motor.rs 594, manager_manager 230, match_screens 192...); 6. globais sem nome (~5.000 endereços de dados); 7. tabelas
+paralelas no motor.rs; 8. auxiliares repetidos (match_pl_ftol 686 usos, ftol_f64 satura onde _ftol dá 0: risco latente;
+friendly_random x random; read_f32_at alinhado x mem.rs); 9. closures de acesso locais (225); 10. andaime de teste
+(1.052 marcas // cqx7:, a frase "(comparison mode: see the header of motor.rs)" 2.089 vezes, 67 comparadores só da
+original).
+Pior ou inconsistente: contract x staff_contract (o mesmo TContract, nomes discordantes); REQUIRED_SEATS/REQUIRED_CAPACITY
+trocados (fields.rs x eng_prm.rs); _fields em ~16 módulos; stadium x stadium_obj; city::CITY_*, stadium::STADIUM_*,
+competition::CLUB_COMP_*; LOYALITY; UNKNOWN18_*; constantes fora de ordem; o cabeçalho do motor.rs (endereco, ramo);
+NUL cru em detours.rs:513; docs em inglês truncados (distance_to_goal, detours.rs:240).
+Bom: o cabeçalho do motor.rs e o README.en; um arquivo por .cpp com compare/; 147 módulos de campos com tamanho e tipo;
+os 5.151 docs com o inglês na frente; comparison.rs e rng.rs; Prologue{address}, original_fn::<F>(IDX_..), mem.rs.

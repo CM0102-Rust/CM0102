@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
                 *m = 0;
                 continue;
             }
-            let limit = if *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: the referees who stay per nation
+            let limit = if *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: the referees who stay per nation
             if group <= limit {
                 ficam += 1;
                 *m = 1;
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         if friendly(read_u32_as_usize(G_FRIENDLY), comp) != 0 {
             continue;
         }
-        let nation = read_u32_as_usize(comp + competition::CLUB_COMP_NATION);
+        let nation = read_u32_as_usize(comp + competition::NATION);
         if nation == 0 {
             continue;
         }
@@ -424,8 +424,8 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                         let n = read_usize(club + club::NATION);
                         if n != 0 && read_usize(n + nation::CONTINENT) != 0 { Some(read_i32(read_usize(n + nation::CONTINENT))) } else { None }
                     };
-                    let continent = if read_usize(comp + competition::CLUB_COMP_CONTINENT) != 0 {
-                        read_i32(read_usize(comp + competition::CLUB_COMP_CONTINENT))
+                    let continent = if read_usize(comp + competition::CONTINENT) != 0 {
+                        read_i32(read_usize(comp + competition::CONTINENT))
                     } else if let Some(k) = continent_of(home) {
                         k
                     } else if let Some(k) = continent_of(away) {
@@ -457,8 +457,8 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     crate::comparison::branch("cpy_8 arbitro neutro");
                     (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(match_pl_ftol(count * -0.75)), match_pl_ftol(count * 0.25)) // cpy8: the top quarter
                 } else {
-                    let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 {
-                        read_i32(read_usize(comp + competition::CLUB_COMP_NATION))
+                    let nacao = if read_usize(comp + competition::NATION) != 0 {
+                        read_i32(read_usize(comp + competition::NATION))
                     } else if let Some(k) = officials_manager_club_nation_id(home) {
                         k
                     } else if let Some(k) = officials_manager_club_nation_id(away) {
@@ -567,7 +567,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     if count(read_i32(comp)) == 0 {
         return 0;
     }
-    let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 { read_i32(read_usize(comp + competition::CLUB_COMP_NATION)) } else { random(read_i32(G_NATION_COUNT)) };
+    let nacao = if read_usize(comp + competition::NATION) != 0 { read_i32(read_usize(comp + competition::NATION)) } else { random(read_i32(G_NATION_COUNT)) };
     let b = nation_officials_block(this, nacao);
     let mut band = None;
     for f in 0..read_i16(b + officials_nation_block::COMP_COUNT).max(0) as usize {

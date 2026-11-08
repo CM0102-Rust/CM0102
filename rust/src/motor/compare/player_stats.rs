@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../player_stats.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../player_stats.rs.
 // [pt] Os comparadores das rotinas de ../player_stats.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `player_statistic` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_statistic`.
 pub(crate) unsafe extern "stdcall" fn compare_player_statistic(r: *const u8, which: i8, weight: f32) -> f64 {
     let o = original_fn::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_PLAYER_STATISTIC)(r, which, weight);
     let n = player_statistic(r, which, weight);
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
     r
 }
 
-/// Comparer for `player_stats_years_since_at_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_stats_years_since_at_club`.
 ///
 /// [pt] Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p: usize, club: usize) -> i16 {
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p
     r
 }
 
-/// Comparer for `player_stats_compare_history_by_staff` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_stats_compare_history_by_staff`.
 ///
 /// [pt] Comparador: a devolução (só lê).
 pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_staff(a:
     r
 }
 
-/// Comparer for `get_stat` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_stat`.
 pub(crate) unsafe extern "thiscall" fn compare_get_stat(this: usize, player: usize, category: u32, which: u32, default: f32) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64>(IDX_GET_STAT);
     if player == 0 || (read_usize(player) as i32) >= read_usize(G_PLAYER_DATA_COUNT) as i32 {
@@ -139,7 +139,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_stat(this: usize, player: usi
     r
 }
 
-/// Comparer for `player_stats_compare_language_entries` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_stats_compare_language_entries`.
 pub(crate) unsafe extern "C" fn compare_player_stats_compare_language_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_LANGUAGE_ENTRIES)(a, b);
     let n = player_stats_compare_language_entries(a, b);
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "C" fn compare_player_stats_compare_language_entries(a:
     r
 }
 
-/// Comparer for `player_stats_compare_history_by_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_stats_compare_history_by_club`.
 pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_club(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_HISTORY_BY_CLUB)(a, b);
     let n = player_stats_compare_history_by_club(a, b);
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_club(a: 
     r
 }
 
-/// Comparer for `player_stats_get_career_goals` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_stats_get_career_goals`.
 ///
 /// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_career_goals(person: usize) -> u16 {
@@ -169,7 +169,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_career_goals(pers
     r
 }
 
-/// Comparer for `get_category_record` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_category_record`.
 ///
 /// [pt] Comparador: pelo valor (só lê); os casos de erro só na original.
 pub(crate) unsafe extern "thiscall" fn compare_get_category_record(this: usize, player: usize, category: u32) -> usize {
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_category_record(this: usize, 
     r
 }
 
-/// Comparer for `create_stats` (comparison mode: see the header of motor.rs).
+/// Comparer for `create_stats`.
 ///
 /// The original routine reallocates the vector, so only it runs; beforehand, the plan (the index the player will get,
 /// the count and the free ones afterwards); afterwards, the returned record, the index in the slot, the count, the free
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person:
         new, sort, count, n.wrapping_add(1), read_u32_as_usize(this + player_stats_fields::LANGUAGE_CAPACITY), cap));
 }
 
-/// Comparer for `improve_language` (comparison mode: see the header of motor.rs).
+/// Comparer for `improve_language`.
 ///
 /// [pt] Comparador: sem tabela ou sem o registro, só a original (o acréscimo 0x7c6a30 tem o comparador dele); com o
 /// registro, lado a lado nos 6 bytes dele.
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, per
     SCOREBOARD.record(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", read_u32_as_usize(person), language as u8, aumento as u8, mo, mr));
 }
 
-/// Comparer for `player_stats_reset_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_stats_reset_player`.
 ///
 /// [pt] Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
 /// categoria liberados (a 0x58f110 só grava +0x1c, dentro do registro). Pessoa nula ou não jogadora: só a original.
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: u
     a
 }
 
-/// Comparer for `get_language_fluency` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_language_fluency`.
 ///
 /// [pt] Comparador: pelo valor (a 0x4cf5f0 e a busca só leem).
 pub(crate) unsafe extern "thiscall" fn compare_get_language_fluency(this: usize, person: usize, club: usize, language: u32, by_contract: u32) -> u8 {
@@ -355,7 +355,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: u
     ro
 }
 
-/// Comparer for `end_season_for_key_nation` (comparison mode: see the header of motor.rs).
+/// Comparer for `end_season_for_key_nation`.
 ///
 /// [pt] Comparador: a 0x7c5fe0 move as estatísticas para o histórico (aloca): roda só a original e confere a devolução
 /// (1, ou 0 sem nação).
@@ -365,7 +365,7 @@ pub(crate) unsafe extern "thiscall" fn compare_end_season_for_key_nation(this: u
     r
 }
 
-/// Comparer for `remove_language` (comparison mode: see the header of motor.rs).
+/// Comparer for `remove_language`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_language(stats: usize, sheet: usize, language: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_REMOVE_LANGUAGE);
     let table = *((stats + player_stats_fields::LANGUAGES) as *const usize);
@@ -378,7 +378,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_language(stats: usize, she
     SCOREBOARD.record(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", language, mo.0[0].1, mr.0[0].1));
 }
 
-/// Comparer for `get_club_league_stat` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_club_league_stat`.
 pub(crate) unsafe extern "thiscall" fn compare_get_club_league_stat(stats: usize, player: usize, field: i8) -> f32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(IDX_GET_CLUB_LEAGUE_STAT)(stats, player, field);
     if player == 0 || !(1..=2).contains(&field) {
@@ -389,7 +389,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_club_league_stat(stats: usize
     r
 }
 
-/// Comparer for `get_last_match_rating` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_last_match_rating`.
 pub(crate) unsafe extern "thiscall" fn compare_get_last_match_rating(stats: usize, id: *const i32) -> f32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> f32>(IDX_GET_LAST_MATCH_RATING)(stats, id);
     if id.is_null() {
@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_last_match_rating(stats: usiz
     r
 }
 
-/// Comparer for `player_stats_get_goals_for_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_stats_get_goals_for_club`.
 ///
 /// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(person: usize, club: usize) -> u16 {
@@ -414,7 +414,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(pe
     r
 }
 
-/// Comparer for `competition_weight` (comparison mode: see the header of motor.rs).
+/// Comparer for `competition_weight`.
 pub(crate) unsafe extern "stdcall" fn compare_competition_weight(p: usize, code: i8) -> u16 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, i8) -> u16>(IDX_COMPETITION_WEIGHT)(p, code);
     let n = competition_weight(p, code);

@@ -1,7 +1,7 @@
 # Mutacoes da leva70 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva70.py --jogo 2001-08-15
 MUTACOES = [
     ('f_paciencia', "    *paciencia = (*paciencia).wrapping_add(0xaf);", "    *paciencia = (*paciencia).wrapping_add(0xae);"),
-    ('f_vantagem', "    let div = if *((other + 0x1a6) as *const usize) != j { 1.0 } else { 3.0 };", "    let div = if *((other + 0x1a6) as *const usize) != j { 1.0 } else { 2.0 };"),
+    ('f_vantagem', "    let div = if *((other + match_player::LAST_FOULED_BY) as *const usize) != j { 1.0 } else { 3.0 };", "    let div = if *((other + match_player::LAST_FOULED_BY) as *const usize) != j { 1.0 } else { 2.0 };"),
     ('f_sev', "        factor = if sev > 10 { sev as f64 * read_f64_at(0x967880) }", "        factor = if sev > 11 { sev as f64 * read_f64_at(0x967880) }"),
     ('f_modo', "        factor += mode / (byte(arb, 0x27) as f64 * read_f64_at(0x968968) + read_f64_at(0x968930));", "        factor += mode / (byte(arb, 0x27) as f64 * read_f64_at(0x968968) + read_f64_at(0x968940));"),
     ('f_rigor', "            5..=9 => -1,", "            5..=9 => 0,"),

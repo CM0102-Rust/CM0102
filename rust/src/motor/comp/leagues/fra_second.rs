@@ -95,7 +95,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     previstas(this);
     if p.baixo {
         let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
-        if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division
+        if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division
             crate::comparison::branch("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
             // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
@@ -171,7 +171,7 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: usize, year:
         if p.baixo {
             let nation = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
             let has = read_u32_as_usize(this + 0xee) != 0;
-            ok = ok && has == (*((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0);
+            ok = ok && has == (*((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0);
         }
     }
     SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + league::STAGE_COUNT), read_u32_as_usize(this + 8)));

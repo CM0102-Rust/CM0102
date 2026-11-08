@@ -53,7 +53,7 @@ pub(crate) unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
 /// Cheia, a lista é ordenada pela latitude da cidade do estádio (qsort 0x945333 com 0x53fd40) e cada metade (a do Norte e
 /// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
 pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
-    write_u32_from_usize(this + 0xb6, 0x38);
+    write_u32_from_usize(this + eng_auto_cup::SELECTED_COUNT, 0x38);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0xe0);
     write_u32_from_usize(this + eng_auto_cup::SELECTED_CLUBS, l);
@@ -63,7 +63,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     }
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
-    let cheia = |k: i32| k == read_u32_as_usize(this + 0xb6) as i32;
+    let cheia = |k: i32| k == read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32;
     let mut k = 0i32;
     // 1) the second and third divisions
     let mut i: i16 = 0;
@@ -106,15 +106,15 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
         }
     }
     let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
-    if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 {
+    if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 != 0 {
         // 3a) the Conference by category
         let mut cat: i8 = 6;
-        if k < read_u32_as_usize(this + 0xb6) as i32 {
+        if k < read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {
             loop {
                 let mut i: i16 = 0;
                 if n > 0 {
                     loop {
-                        if k >= read_u32_as_usize(this + 0xb6) as i32 {
+                        if k >= read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {
                             break;
                         }
                         let c = base + i as u16 as usize * club::SIZE;
@@ -132,7 +132,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
                     }
                 }
                 cat = cat.wrapping_add(1);
-                if k >= read_u32_as_usize(this + 0xb6) as i32 {
+                if k >= read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {
                     break;
                 }
             }
@@ -158,7 +158,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
                 }
             }
         }
-        if (m as i32) < read_u32_as_usize(this + 0xb6) as i32 - k {
+        if (m as i32) < read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 - k {
             let lim = n.wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
             let mut j: i16 = 0;
             if lim > 0 {
@@ -181,22 +181,22 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
         }
         let shuffle: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
         // simplification: the original pushes the two words in dwords with garbage in the high 16 bits; 0x4afbd0 reads the words
-        shuffle(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
+        shuffle(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + eng_auto_cup::SELECTED_COUNT).wrapping_sub(k as i16)) as u16 as u32);
         let mut a: i16 = 0;
-        while k < read_u32_as_usize(this + 0xb6) as i32 {
+        while k < read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {
             push_section_club(this, &mut k, local[a as u16 as usize]);
             a = a.wrapping_add(1);
         }
     }
-    if k != read_u32_as_usize(this + 0xb6) as i32 {
+    if k != read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {
         return 0;
     }
     crate::comparison::branch("cqs_5 chaves do trofeu da liga");
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS), read_u32_as_usize(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
-    let half = (read_u32_as_usize(this + 0xb6) as i32) / 2;
+    sort(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS), read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
+    let half = (read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32) / 2;
     sort(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS), half as u32, 4, 0x4b0810);
-    let half = (read_u32_as_usize(this + 0xb6) as i32) / 2;
+    let half = (read_u32_as_usize(this + eng_auto_cup::SELECTED_COUNT) as i32) / 2;
     sort(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS) + half as usize * 4, half as u32, 4, 0x4b0810);
     1
 }

@@ -1,18 +1,18 @@
 use super::*;
 
-// The comparers of the routines in ../comp/leagues/aus_nsl.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/leagues/aus_nsl.rs.
 // [pt] Os comparadores das rotinas de ../comp/leagues/aus_nsl.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `aus_nsl_advance_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `aus_nsl_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_advance_stage(this: usize) {
-    let before = read_usize(this + 0x30) as i32;
-    let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
+    let before = read_usize(this + league::CURRENT_STAGE) as i32;
+    let last = before >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AUS_NSL_ADVANCE_STAGE)(this);
-    let after = read_usize(this + 0x30) as i32;
+    let after = read_usize(this + league::CURRENT_STAGE) as i32;
     SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
-/// Comparer for `create_finals_series_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `create_finals_series_stage`.
 ///
 /// The finals series comparer: only the original routine runs (it allocates the round table and the stage and sends the
 /// news item), with the plan made beforehand: the top six of the table.
@@ -29,8 +29,8 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
         *c = aus_nsl_table_row_club(this, i);
     }
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FINALS_SERIES_STAGE)(this);
-    let stage = read_usize(read_usize(this + 0xc));
-    let same = r == 1 && stage != 0 && read_i16(stage + 0x3e) == 6 && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0 && {
+    let stage = read_usize(read_usize(this + league::STAGES));
+    let same = r == 1 && stage != 0 && read_i16(stage + league::CLUB_COUNT) == 6 && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + league::CURRENT_STAGE) == 0 && {
         let mut nela = [0usize; 6];
         for (i, c) in nela.iter_mut().enumerate() {
             *c = aus_nsl_table_row_club(stage, i);
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
     r
 }
 
-/// Comparer for `create_grand_final_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `create_grand_final_stage`.
 ///
 /// The grand final comparer: only the original routine runs (it allocates the list, the table and the stage and draws
 /// the round), with the plan made beforehand: the top two of the final series.
@@ -56,26 +56,26 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
 /// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
 pub(crate) unsafe extern "thiscall" fn compare_create_grand_final_stage(this: usize) {
-    let serie = read_usize(read_usize(this + 0xc));
+    let serie = read_usize(read_usize(this + league::STAGES));
     let (a, b) = (aus_nsl_table_row_club(serie, 0), aus_nsl_table_row_club(serie, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_GRAND_FINAL_STAGE)(this);
-    let stage = read_usize(read_usize(this + 0xc) + 4);
+    let stage = read_usize(read_usize(this + league::STAGES) + 4);
     let same = stage != 0 && {
-        let l = read_usize(stage + 0xa7);
+        let l = read_usize(stage + cup::TEAM_TABLE);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
+        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
     };
     SCOREBOARD.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, stage));
 }
 
-/// Comparer for `aus_nsl_set_up_rules` (comparison mode: see the header of motor.rs).
+/// Comparer for `aus_nsl_set_up_rules`.
 ///
 /// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto da liga
 /// (0xee) menos as saídas do calendário (+0x3a, +0xa9, +0xba; a 0x4111a0 não grava nada no objeto além delas); a
 /// devolução.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_set_up_rules(this: usize) -> u32 {
     let o = this;
-    let reg = [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)];
+    let reg = [(o, 0x3a), (o + league::LEGS, 0xa9 - 0x3c), (o + league::MATCH_RULES, 0xba - 0xab), (o + league::PROMOTED_COUNT, 0xee - 0xbe)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_SET_UP_RULES)(this), || {
         set_nsl_rules(this);
         1
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_set_up_rules(this: usize)
     r
 }
 
-/// Comparer for `aus_nsl_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `aus_nsl_update_staff_records_for_status`.
 ///
 /// [pt] Comparador: só a original (os registros alocam) com a devolução prevista pelo ensaio.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_update_staff_records_for_
     r
 }
 
-/// Comparer for `aus_nsl_create_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `aus_nsl_create_table`.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_CREATE_TABLE);
     compare_japanese_table("aus_nsl_create_table", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))

@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../game.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../game.rs.
 // [pt] Os comparadores das rotinas de ../game.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `game_update_nation_coefficients` (comparison mode: see the header of motor.rs).
+/// Comparer for `game_update_nation_coefficients`.
 ///
 /// [pt] Comparador: a original aloca e solta o vetor (e o ordena), então roda só ela, conferida contra o plano feito antes
 /// pelas mesmas contas da cópia: a história (+0xb0..+0xd8) e a marca (+0x121) de cada nação e [0x9cd218] zerado.
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
     SCOREBOARD.record(error.is_none(), || format!("game_update_nation_coefficients(dezembro {}): {}", dez, error.clone().unwrap_or_default()));
 }
 
-/// Comparer for `is_player_regen_day` (comparison mode: see the header of motor.rs).
+/// Comparer for `is_player_regen_day`.
 ///
 /// [pt] Comparador: pelo al (o único byte que os chamadores leem).
 pub(crate) unsafe extern "C" fn compare_is_player_regen_day(day: u32) -> u32 {
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "C" fn compare_is_player_regen_day(day: u32) -> u32 {
     r
 }
 
-/// Comparer for `clamp_char_sum` (comparison mode: see the header of motor.rs).
+/// Comparer for `clamp_char_sum`.
 ///
 /// [pt] Comparador: pelo ax (os 16 bits altos do eax da original são os do chamador).
 pub(crate) unsafe extern "C" fn compare_clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
@@ -66,32 +66,32 @@ pub(crate) unsafe extern "C" fn compare_clamp_char_sum(a: u32, b: u32, min: u32,
     r
 }
 
-/// Comparer for `game_update_squad_relationships` (comparison mode: see the header of motor.rs).
+/// Comparer for `game_update_squad_relationships`.
 pub(crate) unsafe extern "C" fn compare_game_update_squad_relationships() {
     original_fn::<unsafe extern "C" fn()>(IDX_GAME_UPDATE_SQUAD_RELATIONSHIPS)()
 }
 
-/// Comparer for `game_check_club_dressing_room_unrest` (comparison mode: see the header of motor.rs).
+/// Comparer for `game_check_club_dressing_room_unrest`.
 pub(crate) unsafe extern "C" fn compare_game_check_club_dressing_room_unrest(club: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(IDX_GAME_CHECK_CLUB_DRESSING_ROOM_UNREST)(club)
 }
 
-/// Comparer for `game_spread_squad_morale_by_leadership` (comparison mode: see the header of motor.rs).
+/// Comparer for `game_spread_squad_morale_by_leadership`.
 pub(crate) unsafe extern "C" fn compare_game_spread_squad_morale_by_leadership() {
     original_fn::<unsafe extern "C" fn()>(IDX_GAME_SPREAD_SQUAD_MORALE_BY_LEADERSHIP)()
 }
 
-/// Comparer for `game_check_players_missing_training` (comparison mode: see the header of motor.rs).
+/// Comparer for `game_check_players_missing_training`.
 pub(crate) unsafe extern "C" fn compare_game_check_players_missing_training() {
     original_fn::<unsafe extern "C" fn()>(IDX_GAME_CHECK_PLAYERS_MISSING_TRAINING)()
 }
 
-/// Comparer for `game_update_comps_for_date` (comparison mode: see the header of motor.rs).
+/// Comparer for `game_update_comps_for_date`.
 pub(crate) unsafe extern "C" fn compare_game_update_comps_for_date(mark: u32) {
     original_fn::<unsafe extern "C" fn(u32)>(IDX_GAME_UPDATE_COMPS_FOR_DATE)(mark)
 }
 
-/// Comparer for `manager_manager_adjust_board_confidence` (comparison mode: see the header of motor.rs).
+/// Comparer for `manager_manager_adjust_board_confidence`.
 ///
 /// [pt] Comparador: lado a lado pela confiança (2 bytes).
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_adjust_board_confidence(this: usize, club: usize, delta: u32) {
@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_adjust_board_conf
     SCOREBOARD.record(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", club, delta as i32, mo, mr));
 }
 
-/// Comparer for `transfer_manager_get_shortlist_manager` (comparison mode: see the header of motor.rs).
+/// Comparer for `transfer_manager_get_shortlist_manager`.
 pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_get_shortlist_manager(manager: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_MANAGER_GET_SHORTLIST_MANAGER)(manager);
     let n = transfer_manager_get_shortlist_manager(manager);
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_get_shortlist_ma
     r
 }
 
-/// Comparer for `training_manager_get_player_entry` (comparison mode: see the header of motor.rs).
+/// Comparer for `training_manager_get_player_entry`.
 pub(crate) unsafe extern "thiscall" fn compare_training_manager_get_player_entry(treino: usize, player: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRAINING_MANAGER_GET_PLAYER_ENTRY)(treino, player);
     let n = training_manager_get_player_entry(treino, player);
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn compare_training_manager_get_player_entry
     r
 }
 
-/// Comparer for `game_average` (comparison mode: see the header of motor.rs).
+/// Comparer for `game_average`.
 pub(crate) unsafe extern "thiscall" fn compare_game_average(t: usize, second: u8) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> f64>(IDX_GAME_AVERAGE)(t, second);
     let n = game_average(t, second);
@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn compare_game_average(t: usize, second: u8
     o
 }
 
-/// Comparer for `pow_double` (comparison mode: see the header of motor.rs).
+/// Comparer for `pow_double`.
 pub(crate) unsafe extern "C" fn compare_pow_double(base: f64, expoente: f64) -> f64 {
     let r = original_fn::<unsafe extern "C" fn(f64, f64) -> f64>(IDX_POW_DOUBLE)(base, expoente);
     let n = pow_double(base, expoente);
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "C" fn compare_pow_double(base: f64, expoente: f64) -> 
     r
 }
 
-/// Comparer for `compare_players_by_ability` (comparison mode: see the header of motor.rs).
+/// Comparer for `compare_players_by_ability`.
 ///
 /// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn compare_compare_players_by_ability(a: *const usize, b: *const usize) -> i32 {

@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../comp/worldcup/wc_south_american_league.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/worldcup/wc_south_american_league.rs.
 // [pt] Os comparadores das rotinas de ../comp/worldcup/wc_south_american_league.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `wc_south_american_league_set_up_rules` (comparison mode: see the header of motor.rs).
+/// Comparer for `wc_south_american_league_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_wc_south_american_league_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WC_SOUTH_AMERICAN_LEAGUE_SET_UP_RULES);
     let list = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn compare_wc_south_american_league_set_up_r
     }
     let slots = 4u8.wrapping_sub(ef).wrapping_sub(*((this + 0xee) as *const u8));
     let r = check_qualifier_rules("wc_south_american_league_set_up_rules", this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS, (0x19, 0, 5), 0, || o(this));
-    let (lido_ef, lido_be) = (*((this + 0xef) as *const u8), *((this + 0xbe) as *const u8));
+    let (lido_ef, lido_be) = (*((this + 0xef) as *const u8), *((this + league::PROMOTED_COUNT) as *const u8));
     SCOREBOARD.record(lido_ef == ef && lido_be == slots, || format!("wc_south_american_league_set_up_rules({:#x}) +0xef {} previsto {} vagas {} previstas {}", this, lido_ef, ef, lido_be, slots));
     r
 }

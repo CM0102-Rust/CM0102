@@ -1,9 +1,9 @@
 use super::*;
 
-// The comparers of the routines in ../comp/squad_manager.rs (comparison mode: see the header of motor.rs).
+// The comparers of the routines in ../comp/squad_manager.rs.
 // [pt] Os comparadores das rotinas de ../comp/squad_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `process_euro_registration` (comparison mode: see the header of motor.rs).
+/// Comparer for `process_euro_registration`.
 ///
 /// [pt] Lado a lado: o ano das inscrições (+0), a marca +0x6d de todas as pessoas com contrato (a tabela inteira) e o
 /// [0xae1080] da 0x85aae0. Com algum clube das três copas com técnico humano (a notícia não roda duas vezes), só a
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_euro_registration(this: u
     });
 }
 
-/// Comparer for `get_squad_number` (comparison mode: see the header of motor.rs).
+/// Comparer for `get_squad_number`.
 ///
 /// [pt] A devolução das duas (a rotina só lê; as chamadas de dentro são buscas).
 pub(crate) unsafe extern "thiscall" fn compare_get_squad_number(this: usize, p: usize, c: usize) -> i8 {
@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_squad_number(this: usize, p: 
     r
 }
 
-/// Comparer for `club_uses_squad_numbers` (comparison mode: see the header of motor.rs).
+/// Comparer for `club_uses_squad_numbers`.
 ///
 /// [pt] A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
 pub(crate) unsafe extern "thiscall" fn compare_club_uses_squad_numbers(this: usize, c: usize, other: usize) -> u32 {
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_club_uses_squad_numbers(this: usi
     r
 }
 
-/// Comparer for `set_squad_number` (comparison mode: see the header of motor.rs).
+/// Comparer for `set_squad_number`.
 ///
 /// [pt] Lado a lado: o +0x3a dos dois contratos da pessoa (achados antes; as buscas só leem). Número fora da faixa (a caixa),
 /// sem pessoa ou sem clube: só a original.
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn compare_allocate_squad_number(this: usize
     SCOREBOARD.record(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
 }
 
-/// Comparer for `assign_club_squad_numbers` (comparison mode: see the header of motor.rs).
+/// Comparer for `assign_club_squad_numbers`.
 ///
 /// [pt] Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
@@ -125,7 +125,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_club_squad_numbers(this: u
     });
 }
 
-/// Comparer for `init_new_game` (comparison mode: see the header of motor.rs).
+/// Comparer for `init_new_game`.
 ///
 /// [pt] Só a original (ela numera as ligas pela 0x859e20, que manda notícia ao técnico humano: não roda duas vezes); o plano
 /// da cópia (as ligas, achadas antes, sem numerar) tem de ser o que a original fez (gravado pelo comparador da
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_new_game(this: usize) {
     SCOREBOARD.record(done == plan && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plan, done, zerado));
 }
 
-/// Comparer for `assign_league_squad_numbers` (comparison mode: see the header of motor.rs).
+/// Comparer for `assign_league_squad_numbers`.
 ///
 /// Side by side: +0x3a of the contracts (the club one and the loan one) of everyone in the squad of each league club
 /// and of the linked club, and the error box mark. If some club has a human manager without `automatico` (the request
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this:
     });
 }
 
-/// Comparer for `select_euro_registered_players` (comparison mode: see the header of motor.rs).
+/// Comparer for `select_euro_registered_players`.
 ///
 /// [pt] Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_euro_registered_players(th
     r
 }
 
-/// Comparer for `squad_manager_save` (comparison mode: see the header of motor.rs).
+/// Comparer for `squad_manager_save`.
 ///
 /// [pt] Comparador da 0x859cc0: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_squad_manager_save(this: usize, save: usize) -> u32 {
