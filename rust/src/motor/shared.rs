@@ -37,8 +37,32 @@ pub(crate) unsafe fn ball_out_with(this: usize, side_b: u8, call: AddEventCall) 
     1
 }
 
-/// Port of 0x70dfd0 with external calls injected: player j contests a play against the opponent's strength; returns 1
-/// if resolved in his favour.
+/// Player `j` attempts the play against the opponent's `forca` (height `altura`, `estilo` which goes to the narration,
+/// `forte` in the air): `0x70dfd0` (ret 0x10, `match_pl.cpp`) with the calls that touch things outside the engine
+/// injected. Returns 1 if the play resolved on him, 0 if not.
+///
+/// Injected: `0x6d6f70` narrates, `0x716e10` tires, `0x6cd770` the ball breaks loose, `0x6f0630` control; and those
+/// inside the leaving-the-pitch path.
+///
+/// The side's goalkeeper, the taker (`+0xf582`) and, on the side without the ball, anyone with `+0x10d` zeroed do not
+/// play. The attack is a random draw by the engine's `+0x8ea9` (300, 400, 500, 1000, 1800), divided by height + 1. With
+/// the ball on his own side (`+0x8eab`) and random draw(attack + 100) == 0: 0x1f5e, −300 in `+0x4782` and the ball
+/// breaks loose.
+///
+/// Otherwise the move and the attribute as in `0x6f5c30`, but by `+0x8ea9` (4: control 1 with the goalkeeper's `+0x11c`
+/// or 0x15 with `+0x144`; for non-goalkeepers 0x24 with `+0x162`; 3 by random draw(4) control; otherwise 0x29 with
+/// `+0x16c`; the header 0x25 counts double `+0x164`). With `forte` the attribute counts 85%. The score is random
+/// draw(attribute) − `forca` / 3 − attack: below −100 he only gains random draw(2) in `+0x2b`; negative, nothing. Hard
+/// foul: `forca` > random draw(150) + 200.
+///
+/// The referee looks at the foul (`0x6cfca0`): 1 in 5, with no hard foul, records it (`0x6bb9a0`) and carries on
+/// without punishment; otherwise punishes (`0x6cfd10`, as in `0x6f5c30`, but the penalty only takes 500 from `+0x35`).
+///
+/// Without punishment: a score of 400 wins (`+0x1e` in `+0x35`, `+0x12`, `+0x2b`; 0x1ffe from the D, 0x21d6 in the air,
+/// 0x1f66/0x1f65 with the style; `0x6f0630`; marks the move); otherwise the side's goalkeeper narrates 0x1fe7; from the
+/// D with a score above 200, 0x1ffd and the ball breaks loose with no shooter; otherwise 0x21d8/0x1f85/0x1f84 and the
+/// ball breaks loose (random draw(3)). In those three: `+0x14` in `+0x35`, `+0x12`, marks the move and random draw(2) +
+/// 1 in `+0x2b`.
 ///
 /// [pt] { 0x70dfd0 } (ret 0x10, match_pl.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70
 /// narra, 0x716e10 cansa, 0x6cd770 a bola espirra, 0x6f0630 dominio; e as de dentro da saida de
@@ -61,7 +85,7 @@ pub(crate) unsafe fn ball_out_with(this: usize, side_b: u8, call: AddEventCall) 
 pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8, strong: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let table: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
     let goalkeeper_of: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_GOALKEEPER);
-    let decidir: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_FOUL);
+    let decide: unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_CHECK_FOUL);
     let register: unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8) = core::mem::transmute(FN_CM3_MATCH_ENGINE_SET_PENDING_FOUL);
     let punish: unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32) = core::mem::transmute(FN_CM3_MATCH_ENGINE_REFEREE_DECIDE_BOOKING);
     let pick_restart_taker: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_PICK_RESTART_TAKER);
@@ -120,7 +144,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     }
     // o lance e o atributo
     let em_area = in_the_box();
-    let escolher = || -> (i16, i16) {
+    let choose = || -> (i16, i16) {
         if byte(m, engine::BALL_HEIGHT) == 4 {
             if table(m, j) == 1 { (*w(j, 0x11c), 1) } else { (*w(j, 0x144), 0x15) }
         } else if table(m, j) != 1 {
@@ -132,11 +156,11 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         }
     };
     let (mut valor, lance) = if em_area && table(m, j) == 1 {
-        escolher()
+        choose()
     } else {
         let ficha5c = byte(*((j + match_player::STAFF) as *const usize), 0x5c) as i32;
         if sortear(em_area as i32 * 500 + 100 + ficha5c * 200) != 0 {
-            escolher()
+            choose()
         } else {
             crate::comparison::branch("play cabecada");
             ((*w(j, 0x164)).wrapping_shl(1), 0x25)
@@ -158,7 +182,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     }
     let foul_strong = strength as i32 > sortear(0x96) + 0xc8;
     let (mut cartao, mut grav) = (0u8, 0u8);
-    let mut t = decidir(m, j, lance as u16, &mut cartao, &mut grav);
+    let mut t = decide(m, j, lance as u16, &mut cartao, &mut grav);
     if t != 0 {
         if sortear(5) == 0 && !foul_strong {
             crate::comparison::branch("play falta registrada");
@@ -178,9 +202,9 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                     if grav as i8 as i32 > sortear(7) + 2 { 0x210a } else { -1 }
                 }
             };
-            let som: u32;
+            let sound: u32;
             if t == 7 {
-                som = 0x1f79;
+                sound = 0x1f79;
                 *b(m, engine::RESTART_TYPE) = 7;
             } else if in_the_box() {
                 if colour == -1 {
@@ -191,19 +215,19 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                     }
                 }
                 crate::comparison::branch("play penalty");
-                som = 0x1f7a;
+                sound = 0x1f7a;
                 *b(m, engine::RESTART_TYPE) = 5;
                 *((m + engine::FOULED_PLAYER) as *mut usize) = 0;
                 *w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_sub(500);
             } else {
-                som = 0x1f79;
+                sound = 0x1f79;
                 *b(m, engine::RESTART_TYPE) = 6;
             }
             *b(m, engine::BALL_X) = *b(j, match_player::CELL_X);
             *b(m, engine::BALL_Y) = *b(j, match_player::CELL_Y);
             *b(m, engine::POSSESSION_SIDE) = zero(j) as u8;
             *((m + engine::BALL_HOLDER) as *mut u32) = 0;
-            if som == 0x1f7a {
+            if sound == 0x1f7a {
                 narrate(call, 0x1f7a, u32::MAX, zero(j), u32::MAX);
             }
             let sent_off = matches!(t, 3..=6);
@@ -225,17 +249,17 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                     player_left_pitch_with(m, j, 0, call);
                 }
             }
-            if som != 0x1f7a {
+            if sound != 0x1f7a {
                 let c = pick_restart_taker(m, (byte(j, match_player::SIDE) == 0) as i8, byte(m, engine::RESTART_TYPE), 0);
                 if c == 0 {
-                    narrate(call, som, u32::MAX, zero(j), u32::MAX);
+                    narrate(call, sound, u32::MAX, zero(j), u32::MAX);
                 } else {
                     if t == 7 {
                         narrate(call, 0x21e2, ub(c, 0x2e), zero(j), u32::MAX);
                     } else {
-                        narrate(call, som, u32::MAX, zero(j), u32::MAX);
+                        narrate(call, sound, u32::MAX, zero(j), u32::MAX);
                     }
-                    if som == 0x1f79 {
+                    if sound == 0x1f79 {
                         let far = (byte(c, 0x27) == 1 && byte(c, 0x103) < 4) || (byte(c, 0x27) == 0 && byte(c, 0x103) > 7);
                         if t == 7 {
                             if far && !area_de(c, byte(j, match_player::SIDE) == 1) {
@@ -253,7 +277,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                     if sortear(3) == 0 {
                         narrate(call, 0x20e0, u32::MAX, ub(j, match_player::SIDE), u32::MAX);
                     }
-                    if (sent_off || som == 0x1f7a) && sortear(2) == 0 {
+                    if (sent_off || sound == 0x1f7a) && sortear(2) == 0 {
                         narrate(call, 0x20d9, u32::MAX, ub(j, match_player::SIDE), u32::MAX);
                     }
                 }
@@ -316,10 +340,28 @@ pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posic
 // validated by the career (Rust x original; the database and the histories pass through here all the time) and
 // by the filler save above 2 GB.
 
-
-
-/// Port of 0x6b6cc0 with calls injected: post-match updates for both sides' players (news, contract flags, manager
-/// ratings).
+/// Port of 0x6b6cc0 (cdecl, match_day.cpp) with calls injected: post-match updates for both sides' players (news,
+/// contract flags, manager ratings). For the two sides of the match record `t` (club at t+0 / t+4; side at t + side x
+/// 0x625): the 20 players (rows of 0x49 from +0x1c5; person at -0x35) with a player sheet (+0x61) and from the database
+/// (id < [0xae2364]).
+///
+/// With the match's competition ([[0xadadfc][+0]]+8), the competition's club (+0x57 = match+0x14) and without +0x4c in
+/// the record: by contract (0x4cf5f0) of type 0x10/0x20/0x30, the test 0x849ce0/0x600a50, rating +3 above 5000 and
+/// above 1.1 x +0x18e (or +7 above 0.9 x, or the player sheet's +5 above 0.024 x), +0 up to 6, the side's score not
+/// above the other's, random(10) + 5 < rating 1 (0x4a31a0) and random(10) above the player sheet's +0x45, and rating
+/// 0x11 within 0.2 of the competition's average ([0xb74350]+0x10 / +0x18, or 6.8): news item 0x72c1f0 type 0x11.
+///
+/// Also with 0x76d940, +0 from 9 upward, the side's score not below the other's, random(5) + 2 < rating 1 and still no
+/// news item 0x34 in the match: with rating 0x11 above random(9) x 0.1 + average + 0.5, 0x744240 (0x34). Then it copies
+/// into the player sheet +0x45, +0xb, +9, +0xd (from -4, +3, +5, +7).
+///
+/// Two clubs of the same nation (+0x53) and -8 in the row: with 0x7c1e30 non-zero, the previous club (+0x1a) of another
+/// nation (+0x76), the player sheet's +0xb above 5750, +0x57 above 10, +0x59 below 15, +0x5c or +0x5d below 10 and
+/// random(3) == 0 (of the club itself [0x9cf300]) or random(10) == 0: 0x20 in the contract (0x867560).
+///
+/// Finally the manager (person at +0x184): his player sheet (+0x69) gets +0x188/+0x18a/+0x18c in +0xa/+8/+0xc, and the
+/// assistant (+0xd3) and the 5 of +0x19f gain a quarter of the difference (between 1 and 10000); the club's +0x80 =
+/// +0x18e.
 ///
 /// [pt] { 0x6b6cc0 } (cdecl, match_day.cpp): depois da partida, para os dois lados do registro `t` da
 /// partida (clube em t+0 / t+4; lado em t + lado x 0x625): os 20 jogadores (linhas de 0x49 a partir
@@ -341,7 +383,7 @@ pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posic
 pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let special: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
     let rating: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(FN_COMP_STATS_GET_PLAYER_STAT);
-    let teste_849ce0: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
+    let test_849ce0: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
     let average_7c1e30: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let marks: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
     let ch = core::cell::RefCell::new(call);
@@ -351,7 +393,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
     let por_20 = |c: usize, f: u32| (ch.borrow_mut())(0x867560, c, [f, 0, 0, 0, 0]);
     // simplification: 0x7c1e30 (returns floating point) also reaches 0x68d0d0 in 3 levels, stays direct
     let contract = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
-    let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
+    let test_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
     let g = |a: usize| *(a as *const usize);
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
@@ -388,8 +430,8 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 let nota1 = rating(comp, g(p + staff::PLAYER), 1);
                 let nota11 = rating(comp, g(p + staff::PLAYER), 0x11);
                 if c != 0 && matches!(*((c + contract::SQUAD_STATUS) as *const u8) & 0xf0, 0x10 | 0x20 | 0x30) {
-                    let x = teste_849ce0(g(g(G_TRANSFER_MANAGER) + 0x856), club, p, 0, 0);
-                    let passa = teste_600a50(club, 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
+                    let x = test_849ce0(g(g(G_TRANSFER_MANAGER) + 0x856), club, p, 0, 0);
+                    let passa = test_600a50(club, 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
                     let d = w(ts + 0x18e) as f64;
                     if passa
                         && w(row + 3) > 0x1388
@@ -491,10 +533,6 @@ pub(crate) unsafe fn original_fn<F: Copy>(i: usize) -> F {
     core::mem::transmute_copy(&ORIGINAIS[i])
 }
 
-
-
-
-
 // --- gravar e reproduzir: 0x6f5c30 (3,9 KB, sorteia e altera jogadores) chamada por 0x6cd330 ---
 //
 // In comparison mode the original runs and each of its calls to 0x6f5c30 goes onto the tape (port below, only
@@ -507,7 +545,7 @@ pub(crate) static RECORD_6F5C30: std::sync::atomic::AtomicBool = std::sync::atom
 pub(crate) static SYNTHETIC: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 // 0x6f5c30: sub esp, 0x218
-pub(crate) const PROLOGUE_6F5C30: Prologo = Prologo { endereco: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
+pub(crate) const PROLOGUE_6F5C30: Prologue = Prologue { address: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
 
 /// Hook entry for 0x6f5c30: synthetic result in self-test, tape recording, or the comparer around the original.
 pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c: u32, d: u32) -> u8 {
@@ -539,14 +577,6 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
     comparar() as u8
 }
 
-
-
-
-
-
-
-
-
 comparar_leitor!(comparar_ler_8ea7, ler_8ea7, IDX_LER_8EA7);
 comparar_leitor!(comparar_ler_8ea8, ler_8ea8, IDX_LER_8EA8);
 comparar_leitor!(comparar_ler_8ea9, ler_8ea9, IDX_LER_8EA9);
@@ -557,7 +587,6 @@ comparar_gravador!(comparar_gravar_8ea7, gravar_8ea7, IDX_GRAVAR_8EA7, 0x8ea7, u
 comparar_gravador!(comparar_gravar_8ea8, gravar_8ea8, IDX_GRAVAR_8EA8, 0x8ea8, u8);
 comparar_gravador!(comparar_gravar_8eaa, gravar_8eaa, IDX_GRAVAR_8EAA, 0x8eaa, u8);
 comparar_gravador!(comparar_write_8ed8, write_8ed8, IDX_WRITE_8ED8, 0x8ed8, u16);
-
 
 comparar_repartir!(comparar_split_a, split_a, IDX_SPLIT_A);
 comparar_repartir!(comparar_split_b, split_b, IDX_SPLIT_B);

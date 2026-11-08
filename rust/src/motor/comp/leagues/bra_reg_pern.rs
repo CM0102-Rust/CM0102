@@ -1,10 +1,5 @@
 use super::*;
 
-
-
-
-
-
 /// The Pernambuco turnover: archives the season in the statistics, clears the previous table and stages, moves to the
 /// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
 /// then the predicted positions and the renewal of the state referees
@@ -26,20 +21,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage(this: usize) {
     state_league_advance_stage(this, 0x98afd8, 0x1f8, 0x439710);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /// Pernambuco: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
 /// seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
 /// Original: `BraRegPern::create_semi_final_stage` (0x439710, bra_reg_pern.cpp, thiscall, ret 0).
@@ -50,10 +31,14 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage(this
     create_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98afd8, 0x21b, 0x22f, "cqn_8 pernambucano"); // cqn8: 1º × 4º, 2º × 3º Pernambucano
 }
 
-
-
-/// Comparer: runs only the original and checks the new stage exists with n teams, the competition record and the
-/// planned clubs (as a set), and +0x30 = 0.
+/// Comparer of the three: runs only the original routine and then checks the new stage against the plan.
+///
+/// The original allocates the list, the round table and the stage and builds the round (only it runs). The plan, made
+/// beforehand: the clubs of the rows.
+///
+/// Afterwards, the stage in the first slot must exist, with +0x3e = n, +4 = the league's +4 and the first n clubs of
+/// its list (+0xa7, 6 bytes) equal to those of the plan (as a set: the round draw 0x51c800 may reorder the brackets),
+/// and +0x30 = 0.
 ///
 /// [pt] O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
 /// plano, feito antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = n, +4 = o +4 da
@@ -76,9 +61,6 @@ pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(name: &str, this: 
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + cup::TEAM_COUNT)));
 }
 
-
-
-
 /// The Pernambuco state league at career creation: the year and the database competition, disciplinary rule 7 and, with
 /// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
 /// with the state clubs, the fixtures, the order, the statistics and the predicted positions
@@ -89,7 +71,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_pern(this: usize, year:
     bra_reg_northeast_construct_state_league(this, year, record, &PERNAMBUCANO_STATE_CHAMPIONSHIP, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
 }
 
-
 /// the Pernambuco league has 10 clubs: those with it as their reserve division in the database (the field that holds
 /// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegPern::create_table` (0x439330, bra_reg_pern.cpp, thiscall, ret 0).
@@ -99,7 +80,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_pern(this: usize, year:
 pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_table(this: usize) -> u32 {
     fill_state_league_table(this, 0xa, 0x98afd8, 0x167, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, 0, "cqm_7 pernambucano cheio")
 }
-
 
 /// North and Pernambuco (the same routine in the two vtables): 4 top places (the final stage of 4); 2 relegated; double
 /// round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no league

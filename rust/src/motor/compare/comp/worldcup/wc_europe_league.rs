@@ -9,4 +9,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules(th
     check_qualifier_rules("wc_europe_league_set_up_rules", this, &EUROPE_RULE_FIELDS, (0x19, 2, 5), 0, || o(this))
 }
 
-

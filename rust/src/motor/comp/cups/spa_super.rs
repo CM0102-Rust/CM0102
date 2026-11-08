@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 /// Common start: +0x3e = 2 and allocates the two-entry list (0xc bytes) at +0xa7; None with the error box on out of
 /// memory.
 ///
@@ -41,7 +39,12 @@ pub(crate) unsafe fn set_team_slot(l: usize, v: usize, c: usize, file: usize, ro
     true
 }
 
-/// SpaSuper::select_teams (0x858aa0): Copa del Rey winner and league champion (cup runner-up if the same club).
+/// `SpaSuper::select_teams()` (`0x858aa0`, thiscall, ret 0, `spa_super.cpp`): picks the Copa del Rey winner and the
+/// league champion for the Spanish Super Cup.
+///
+/// Allocates the list (out of memory, the box of line `0xc2` and −1). The Copa del Rey winner ([`0x9cf740`]; without
+/// it, box `0xcb` and 0) and the league champion ([`0x9cf624`]; without it, `0xd4` and 0); if both are the same club,
+/// the first becomes the Copa del Rey runner-up (without it, `0xe0` and 0). Returns 1.
 ///
 /// [pt] { 0x858aa0 } (thiscall, ret 0, spa_super.cpp): `SpaSuper::select_teams()`: a lista (sem memória, a caixa da linha
 /// 0xc2 e −1). O campeão da Copa do Rei ([0x9cf740]; sem ele, a caixa 0xcb e 0) e o da Liga ([0x9cf624]; sem ele, 0xd4
@@ -114,9 +117,15 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce()
     a
 }
 
-
-/// JapSuper::select_teams (0x666160): J1 champion and Emperor's Cup winner (runners-up when the winner has no nation or
-/// both are the same club).
+/// `JapSuper::select_teams()` (0x666160, thiscall, ret 0, jap_super.cpp): the J1 champion and the Emperor's Cup winner.
+/// The list (out of memory, the box for line 0xc1 and −1).
+///
+/// The J1 champion ([0x9cf65c]; without it, 0xca and 0) — with no nation (+0x53 = 0), the runner-up (without it, 0xd6
+/// and 0); the Emperor's Cup winner ([0x9cf660]; without it, 0xe0 and 0) — with no nation, the runner-up (without it,
+/// 0xec and 0).
+///
+/// If they are the same club, the second becomes the Emperor's Cup runner-up (without it, 0xf9 and 0) and, if still the
+/// same, the first becomes the J1 runner-up (without it, 0x105 and 0). Returns 1.
 ///
 /// [pt] { 0x666160 } (thiscall, ret 0, jap_super.cpp): `JapSuper::select_teams()`: a lista (sem memória, a caixa da linha
 /// 0xc1 e −1). O campeão da J1 ([0x9cf65c]; sem ele, 0xca e 0) — sem nação (+0x53 = 0), o vice (sem ele, 0xd6 e 0); o da
@@ -155,9 +164,6 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
     crate::comparison::branch("cqm_12 clubes da supercopa do japao");
     finish_two_team_list(l)
 }
-
-
-
 
 /// Bytes the original writes in a round: +0..+0x10, +0x13..+0x22 and +0x5c..+0x67.
 ///

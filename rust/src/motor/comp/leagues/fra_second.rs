@@ -1,8 +1,8 @@
 use super::*;
 
-
-
-/// O que muda de uma divisão para outra no construtor.
+/// What changes from one division to another in the constructor.
+///
+/// [pt] O que muda de uma divisão para outra no construtor.
 pub(crate) struct LeagueDivision {
     pub(crate) vtabela: usize,
     /// a regra de disciplina (+0x50): 0xc a francesa, 0x1a a espanhola
@@ -16,9 +16,23 @@ pub(crate) struct LeagueDivision {
     pub(crate) baixo: bool,
 }
 
-/// Shared body of four league constructors: League::League, record, vtable, year, discipline; loads saved state or
-/// builds rules, table, fixtures, order, Comp_Stats, predicted positions; for Primera also the Spanish lower division
-/// at +0xee.
+/// The body of the four league constructors (thiscall(this, ano, registro), ret 8, SEH frame only for the operator new
+/// calls): loads the saved state or builds a new league; for the Primera also the Spanish lower division at `+0xee`.
+///
+/// The base (League::League `0x682200`: mov ecx -> thiscall, ret 0), the record (`+4`), the vtable, the year (`+0x40`)
+/// and the discipline (`+0x50`); tries to load the state (League::load_from_temp_file `0x687b10`: push 1; mov ecx ->
+/// thiscall, ret 4). Loaded: done.
+///
+/// Otherwise, the new league, the league only: stage 0xff (`+0x44`), current stage −1 (`+0x30`), `+0x2c` = 0, `+0xc` =
+/// 0; the rules, the table, the fixtures (League::create_fixtures `0x6835c0`), the order (League::sort_table
+/// `0x6827d0`: push 0 -> thiscall, ret 4), the statistics (operator new `0x944cf1` of 0x5ce: push; add esp, 4 -> cdecl;
+/// Comp_Stats `0x49ee70`: push league; mov ecx, new -> thiscall, ret 4) into `+8` and the predicted positions
+/// (`0x68a850`: mov ecx -> thiscall, ret 0); each step that fails shows the box of its line and ends.
+///
+/// In the Primera, finally: if the competition's nation ([`+4`]+`0x5d`) does not have bit 4 of `+0x11c` [inference: the
+/// playable lower division], the Spanish lower division (operator new of 0xee; SpaLower::SpaLower `0x851020`: push
+/// year; mov ecx, new -> thiscall, ret 4) goes into `+0xee` (0 when out of memory); with the bit, `+0xee` = 0. Returns
+/// this.
 ///
 /// [pt] O corpo dos quatro construtores (thiscall(this, ano, registro), ret 8, quadro SEH só para os operator new): a base
 /// (League::League 0x682200: mov ecx -> thiscall, ret 0), o registro (+4), a vtable, o ano (+0x40) e a disciplina
@@ -142,9 +156,6 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, year: u
     construct_division_league(this, year, record, &FRENCH_SECOND_DIVISION)
 }
 
-
-
-
 /// Comparer for the four constructors: only the original runs; checks return, vtable, year, record, discipline, stage
 /// fields and the lower division at +0xee.
 ///
@@ -167,7 +178,6 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: usize, year:
     r
 }
 
-
 /// Sets up the rules of the French second division: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as
 /// the top division.
 ///
@@ -183,7 +193,6 @@ pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u
     crate::comparison::branch("cqj_5 regras da segunda");
     fra_first_apply_league_rules(this, &fra_first_second_division_rules(this))
 }
-
 
 /// the second has 20 clubs; no prize fund; TV pays by the division the club came from: 2,000,000 to those relegated
 /// from the top flight and 1,500,000 to those who stayed and those promoted from the National
@@ -206,7 +215,6 @@ pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u
     eng_prm_pay_tv_rights(this, 0x16e360, comp_record_of(KEY_CLUB_COMP_FRENCH_NATIONAL));
     1
 }
-
 
 /// the second division schedule: 38 rounds, from 31 July to 20 May; in 18 rounds one match goes to a TV slot (day 5,
 /// slot 1) [inference: the televised match]

@@ -10,7 +10,7 @@ MUTACOES = [
     ('l_acrescimos', "let v = sortear(match_pl_ftol(r as f64 * read_f64_at(0x9689b0)));", "let v = sortear(match_pl_ftol(r as f64 * read_f64_at(0x9689b0) * 1.5));"),
     ('l_cansou', "if sortear(match_pl_ftol(read_f32_at(0x96d2c0) as f64 - v * read_f32_at(0x968960) as f64)) == 0 {", "if sortear(match_pl_ftol(read_f32_at(0x96d2c0) as f64 - v * read_f32_at(0x968960) as f64)) == 1 {"),
     ('l_104', "if !cansou || byte(q, match_player::MOMENT_PACE) as i32 > sortear(10) {", "if !cansou || byte(q, match_player::MOMENT_PACE) as i32 > sortear(11) {"),
-    ('l_lista', "if (acao == 0x104 || acao == 0x76) && i < 0x16 {", "if (acao == 0x104 || acao == 0x76) && i < 0x15 {", "laco entra na lista"),
+    ('l_lista', "if (action == 0x104 || action == 0x76) && i < 0x16 {", "if (action == 0x104 || action == 0x76) && i < 0x15 {", "laco entra na lista"),
     ('l_meio', "} else if byte(m, engine::POSSESSION_SIDE) == side && if side == 0 { by >= 3 } else { by <= 8 } {", "} else if byte(m, engine::POSSESSION_SIDE) == side && if side == 0 { by >= 4 } else { by <= 8 } {"),
     ('l_area', "let a1 = (2..=6).contains(&bx) && (10..=11).contains(&by);", "let a1 = (2..=6).contains(&bx) && (9..=11).contains(&by);"),
     ('l_guarda', "for (lado, campo) in [(0u32, 0x8eac), (1, 0x8ead)] {", "for (lado, campo) in [(0u32, 0x8ead), (1, 0x8eac)] {"),

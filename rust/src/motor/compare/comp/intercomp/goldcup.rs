@@ -3,7 +3,10 @@ use super::*;
 // The comparers of the routines in ../comp/intercomp/goldcup.rs (comparison mode: see the header of motor.rs).
 // [pt] Os comparadores das rotinas de ../comp/intercomp/goldcup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
+/// Side-by-side comparer: +0xf2 and [0xb67a34] from the same state (nothing is drawn at random); the original routine
+/// leaves its list in +0xee, the copy builds its own, compared over the 12 slots and freed.
+///
+/// [pt] Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
 /// cópia faz a sua, comparada nas 12 vagas e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SET_UP_TEAM_LIST);
@@ -64,12 +67,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: u
 /// Comparer for `goldcup_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_FOR_DATE);
-    let sorteia = read_u32_as_usize(this + 0x45) == 0
+    let draws = read_u32_as_usize(this + 0x45) == 0
         && full == 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
         && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(today as *const u16);
     let r = o(this, today, full);
-    if sorteia {
+    if draws {
         let stages = read_u32_as_usize(this + 0xc);
         let ok = read_u32_as_usize(this + 0x45) == 1
             && read_u32_as_usize(this + 0xee) == 0
@@ -132,13 +135,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule(this: us
         |r, e, l| goldcup_create_schedule(this, stage, r, e, l))
 }
 
-
 /// Comparer for `goldcup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES);
     check_set_up_rules("goldcup_set_up_rules", this, &COPA_AMERICA_RULE_FIELDS, (0x14, 2, 0, 5), 0, || o(this))
 }
-
 
 /// Comparer for `goldcup_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usize) {

@@ -1,0 +1,22 @@
+0x0	MANAGER_CURRENT_REPUTATION	2	copy of the manager sheet's current reputation
+0x2	MANAGER_HOME_REPUTATION	2	copy of the manager sheet's home reputation
+0x4	MANAGER_WORLD_REPUTATION	2	copy of the manager sheet's world reputation
+0x6	KEY_PLAYER_1	4	first of the three highest-reputation selected players (person pointer) [inference: key players]
+0xa	KEY_PLAYER_2	4	second key player (person pointer) [inference]
+0xe	KEY_PLAYER_3	4	third key player (person pointer) [inference]
+0x12	ENGINE	4	match engine pointer
+0x16	SELECTION_FLAG	1	byte flag that sets mask bit 0x800000 in automatic selection and changes the substitution mode [inference]
+0x17	SUBSTITUTIONS_LEFT	1	substitutions still available (min of allowed subs and spare players; decremented per change)
+0x18	SIDE	1	side in the match (0 home block, 1 away block)
+0x19	TACTIC_SLOT	1	1 when the fixture side mark is 0, else 0; tactic slot passed to the human manager and the tactics table; headers call it 'human' [inference]
+0x1a	SELECTION_MODE	1	selection mode: 0/1/2 rotation weight of today's match, 3 no rotation [inference]
+0x1b	MANAGER	4	manager (staff person pointer)
+0x1f	MANAGER_SHEET	4	manager's non-player sheet (staff +0x69)
+0x23	PLAYERS	4	first of the side's 20 match players (0x1be bytes each)
+0x27	SQUAD_ROWS	4	club squad rows (50 person pointers)
+0x2b	TACTICS	4	the side's tactics object in the engine (engine +0x91e2 + 0x18e3 x side)
+0x2f	CLUB	4	own club pointer
+0x33	OPPONENT	4	opposing club pointer
+0x37	FIXTURE	4	fixture (match record) pointer
+0x3b	BEST_PLAYER	4	best-rated selected player (best_in_list) [inference: captain candidate]
+0x3f	TACTICS_ROW	?	the club's tactics row read from the tactics table and stored back by store_tactic

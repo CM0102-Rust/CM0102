@@ -50,7 +50,7 @@ def destino(cpp):
 def main():
     s = open(os.path.join(SRC, 'motor.rs'), encoding='utf-8').read()
     nomes = re.findall(r'(\w+) as \*const', s[s.index('let rust: [usize; N] = ['):])
-    pro = re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', s[:s.index('const N')])
+    pro = re.findall(r'Prologue \{ address: (0x[0-9a-f]+)', s[:s.index('const N')])
     end_de = dict(zip(nomes[:len(pro)], (int(a, 16) for a in pro)))
     arquivo = mapa()
     cab_fim = SECAO.search(s).start()

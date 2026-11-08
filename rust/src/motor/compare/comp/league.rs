@@ -15,12 +15,20 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_club_season_expectations(thi
 /// [pt] Só a original (cláusulas de contrato e o técnico que sai não rodam duas vezes), conferindo o que ela grava: +0x57 =
 /// a divisão e +0x5b = a competição de antes.
 pub(crate) unsafe extern "thiscall" fn comparar_relegate_club_to_division(this: usize, club: usize, division: usize, x: u32) {
-    let antiga = read_u32_as_usize(club + club::DIVISION);
+    let old = read_u32_as_usize(club + club::DIVISION);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_RELEGATE_CLUB_TO_DIVISION)(this, club, division, x);
-    SCOREBOARD.record(read_u32_as_usize(club + club::DIVISION) == division && read_u32_as_usize(club + club::LAST_DIVISION) == antiga, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", read_u32_as_usize(club + club::DIVISION), read_u32_as_usize(club + club::LAST_DIVISION)));
+    SCOREBOARD.record(read_u32_as_usize(club + club::DIVISION) == division && read_u32_as_usize(club + club::LAST_DIVISION) == old, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", read_u32_as_usize(club + club::DIVISION), read_u32_as_usize(club + club::LAST_DIVISION)));
 }
 
 /// Comparer for `move_fixtures_for_tv` (comparison mode: see the header of motor.rs).
+///
+/// Comparer of 0x685640: only the original routine runs (the matches leave the calendar and come back through 0x5aa680,
+/// which allocates, the ratings draw at random and the news items go to the managers).
+///
+/// The plan, made beforehand: from the date's entry, the league's matches on its day and slice (0x5abd90 into a
+/// temporary list) and the valid slots (slice 0..2) before the first empty one; each valid slot takes one match while
+/// the list has any (every rating gets past the initial −1), and the slot becomes 0xff: the 0xff slots of the block
+/// after the original are min(valid slots, matches).
 ///
 /// [pt] Comparador da 0x685640: só a original (os jogos saem do calendário e voltam pela 0x5aa680, que aloca, as notas
 /// sorteiam e as notícias vão aos técnicos). O plano, feito antes: pela entrada da data, os jogos da liga no dia e fatia
@@ -73,6 +81,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_fixture_list_news(this: usi
 
 /// Comparer for `league_update_for_date` (comparison mode: see the header of motor.rs).
 ///
+/// The league-day comparer: only the original routine runs (simplification: it calls the methods of each stage and of
+/// the league, the news items, the records and the TV matches, which touch the calendar: it does not run twice).
+///
+/// It checks what the routine guarantees: 0 only with the league stopped or without clubs and, when complete, +0xd1
+/// with the date.
+///
 /// [pt] O comparador do dia da liga: só a original (simplification: chama os métodos de cada fase e da liga, as notícias, os
 /// recordes e os jogos para a TV, que mexem no calendário: não roda duas vezes). Confere o que a rotina garante: 0 só
 /// com a liga parada ou sem clubes e, completo, +0xd1 com a data.
@@ -87,6 +101,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_update_for_date(this: usi
 }
 
 /// Comparer for `create_fixtures` (comparison mode: see the header of motor.rs).
+///
+/// Only the original runs (simplification: it allocates the grid, draws the club order and puts the matches in the
+/// calendar, which allocates: it does not run twice). It checks what the routine guarantees: with the year's own list,
+/// that list is freed (+0xea = 0) when it returns 1.
 ///
 /// [pt] O comparador da criação dos jogos: só a original (simplification: aloca a grade, sorteia a ordem dos clubes e põe os
 /// jogos no calendário, que aloca: não roda duas vezes). Confere o que a rotina garante: com a lista própria do ano, ela
@@ -109,7 +127,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_promote_and_relegate(ecx:
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, acima, abaixo, contratos, aos_pairs, sobem, descem)
 }
 
-/// Comparer for `update_positions_and_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_positions_and_status` (comparison mode: see the header of motor.rs): the comparer of
+/// `0x684cd0`, as a dry run (model RARE_FINANCE_EVENT_DRY_RUN).
+///
+/// The original routine runs fully first, recording the tape of the announcements (STATUS_ANNOUNCE_TAPE); memory is
+/// restored and the copy runs without virtuals `+0x40` and `+0x68` and without the clauses (which send news, write
+/// records and make random morale draws), putting back from the tape what each announcement's `+0x44` wrote into the
+/// table.
+///
+/// Both start from the same state of the table, of `+0xa7` and of the European places of the table's clubs, which must
+/// come out equal; at the end the original's state is kept. Without rows or with `+0xdd`: only the original routine.
 ///
 /// [pt] Comparador da 0x684cd0, em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN): a original roda inteira primeiro, gravando a fita dos
 /// anúncios (STATUS_ANNOUNCE_TAPE); a memória volta e a cópia roda sem as virtuais +0x40 e +0x68 nem as cláusulas (que mandam
@@ -139,6 +166,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_positions_and_status(this
 }
 
 /// Comparer for `pay_prize_money` (comparison mode: see the header of motor.rs).
+///
+/// With +0xe1 = 3 (the competition's virtual pays on its own) or a zero divisor: only the original routine.
+///
+/// Otherwise, the dry run: the copy without the prize news item (0x48e3e0 allocates) and the original from the same
+/// state, on the finance records (0x167 bytes) of all the clubs in the table.
 ///
 /// [pt] Comparador: com +0xe1 = 3 (a virtual da competição paga por conta própria) ou o divisor zero: só a original. Nos
 /// outros casos, o ensaio: a cópia sem a notícia do prêmio (0x48e3e0 aloca) e a original a partir do mesmo estado, nos
@@ -194,6 +226,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_announce_team_status(league: usi
 
 /// Comparer for `league_add_result` (comparison mode: see the header of motor.rs).
 ///
+/// The null match and the stage match (the stage's virtual receives the match and compares on its own): only the
+/// original. In the other cases, a dry run: the copy without the stats (0x49f570 finds or creates records) and the
+/// original from the same state: the date at +0xc9, the table rows with the head-to-heads (the regions of 0x685f60),
+/// the match's +0x3d/+0x3e and the return value.
+///
 /// [pt] Comparador: a partida nula e a da fase (a virtual da fase recebe a partida e compara por conta própria): só a
 /// original. Nos outros casos, o ensaio: a cópia sem a estatística (0x49f570 acha ou cria registros) e a original a
 /// partir do mesmo estado: a data em +0xc9, as linhas da tabela com os confrontos (as regiões da 0x685f60), o +0x3d/+0x3e
@@ -219,6 +256,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_add_result(league: usize,
 }
 
 /// Comparer for `copy_table` (comparison mode: see the header of motor.rs).
+///
+/// It allocates (it cannot run twice), so only the original routine runs, with the full plan checked afterwards: the
+/// expected +0xa7 (computed beforehand) and the returned copy equal to the table, row by row (except the pointers of
+/// the new vectors), with the head-to-head and form vectors equal to the table's.
 ///
 /// [pt] Comparador: aloca (não roda duas vezes): só a original, com o plano completo conferido depois: o +0xa7 esperado
 /// (calculado antes) e a cópia devolvida igual à tabela, linha a linha (fora os ponteiros dos vetores novos), com os
@@ -267,6 +308,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_copy_table(league: usize) -> usi
 }
 
 /// Comparer for `league_set_predicted_positions` (comparison mode: see the header of motor.rs).
+///
+/// The routine writes and may create records in the stats (it does not run twice): the plan is made first, over a copy
+/// of the vector sorted by the core of 0x4c08f0 (keys in a Vec); afterwards, each club's record (the last time it
+/// appears) must have the planned position in +0x72.
 ///
 /// [pt] Comparador: grava e pode criar registros na estatística (não roda duas vezes): o plano sai antes, sobre uma cópia
 /// do vetor ordenada pelo núcleo da 0x4c08f0 (chaves num Vec); depois, o registro de cada clube (a última vez que ele
@@ -318,6 +363,12 @@ pub(crate) unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: us
 
 /// Comparer for `update_projected_positions` (comparison mode: see the header of motor.rs).
 ///
+/// The projection block is allocated and freed inside (nothing of it remains); the effect is virtual `+0x68`, which
+/// writes bytes `+0x73`..`+0x75` of the club's record in the league's Comp_Stats (`+8`, found via `0x4a4850`, which
+/// inside `0x4ae300` returns its temporary record): compared side by side on those 3 bytes and on the return value. The
+/// two versions that forward to the other competition (`0x48e380`, `0x7ef100`) write outside the region: there only the
+/// return value counts.
+///
 /// [pt] Comparador: o bloco da projeção é alocado e liberado dentro (não fica nada dele); o efeito é a virtual +0x68, que
 /// grava os bytes +0x73..+0x75 do registro do clube no Comp_Stats da liga (+8, achado pela 0x4a4850, que dentro da
 /// 0x4ae300 devolve o registro provisório dela): lado a lado nesses 3 bytes e na devolução. As duas versões que repassam
@@ -338,6 +389,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_projected_positions(this:
 }
 
 /// Comparer for `init_table_row` (comparison mode: see the header of motor.rs).
+///
+/// The original allocates (history and head-to-heads): only it runs, and the row is checked against the plan made
+/// beforehand (the total rounds, the club's status, the fields, the zeroed blocks, the arrays present and, on the last
+/// row, each row's opponents).
 ///
 /// [pt] Comparador: a original aloca (histórico e confrontos): roda só ela e confere a linha com o plano feito antes (o
 /// total de rodadas, a situação do clube, os campos, os blocos zerados, os vetores presentes e, na última linha, os
@@ -596,13 +651,13 @@ pub(crate) unsafe extern "C" fn comparar_store_round_match(base: usize, round: i
 }
 
 /// Comparer for `calc_prize_fund` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_calc_prize_fund(league: usize, cota: i32) -> i32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_CALC_PRIZE_FUND)(league, cota);
+pub(crate) unsafe extern "thiscall" fn comparar_calc_prize_fund(league: usize, quota: i32) -> i32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_CALC_PRIZE_FUND)(league, quota);
     if *((league + league::CLUB_COUNT) as *const i16) == 0 {
         return r;
     }
-    let n = calc_prize_fund(league, cota);
-    SCOREBOARD.record(r == n, || format!("calc_prize_fund({}) original={} rust={}", cota, r, n));
+    let n = calc_prize_fund(league, quota);
+    SCOREBOARD.record(r == n, || format!("calc_prize_fund({}) original={} rust={}", quota, r, n));
     r
 }
 

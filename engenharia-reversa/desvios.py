@@ -39,7 +39,7 @@ def alvos_rel32(d):
 
 
 def analisar(d, va, md, inicios, alvos):
-    """Prologo desviavel de `va`: (bytes, texto) ou levanta ValueError com o motivo."""
+    """Prologue desviavel de `va`: (bytes, texto) ou levanta ValueError com o motivo."""
     o = va - BASE
     prologo = []
     for ins in md.disasm(d[o:o + 32], va):
@@ -89,7 +89,7 @@ def main():
         except ValueError as e:
             falha(str(e))
         print('// %#x: %s' % (va, texto))
-        print('Prologo { endereco: %#x, bytes: &[%s] },' % (va, ', '.join('0x%02x' % b for b in bs)))
+        print('Prologue { address: %#x, bytes: &[%s] },' % (va, ', '.join('0x%02x' % b for b in bs)))
 
 
 if __name__ == '__main__':

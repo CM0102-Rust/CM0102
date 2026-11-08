@@ -40,7 +40,6 @@ pub(crate) unsafe extern "C" fn comparar_zextract_matching_files(path: usize, fo
     original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_ZEXTRACT_MATCHING_FILES)(path, folder, default)
 }
 
-
 /// Comparer for `zipdir_zread` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_zipdir_zread(buf: *mut u8, size: i32, how_many: i32, z: usize) -> i32 {
     original_fn::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(IDX_ZIPDIR_ZREAD)(buf, size, how_many, z)

@@ -1,11 +1,5 @@
 use super::*;
 
-
-
-
-
-
-
 /// Day/year is after the date at `data` (unsigned year +2, signed day +0).
 ///
 /// [pt] `a` depois de `b` (datas: ano sem sinal em +2, dia com sinal em +0), como as comparações da original.
@@ -14,11 +8,19 @@ pub(crate) unsafe fn scout_manager_date_after(day: i16, year: u16, data: usize) 
     year > a || (year == a && day > d)
 }
 
-/// O ensaio da 0x7f8750: a cópia só poda os pedidos (num vetor dela) e para antes dos relatórios.
+/// The dry run of `0x7f8750`: the copy only prunes the requests (in its own vector) and stops before the reports.
+///
+/// [pt] O ensaio da 0x7f8750: a cópia só poda os pedidos (num vetor dela) e para antes dos relatórios.
 pub(crate) static mut SCOUT_DAILY_DRY_RUN: bool = false;
 
-/// Prunes a scouting request (club, player, date, report count): returns (remove, process, ...) by human club, own
-/// player, request age, reports and injury/fixtures.
+/// Prunes a scouting request (0x11 bytes: +0 the club, +4 the player, +8 the date, +0x10 how many reports); returns
+/// (remove, process).
+///
+/// A request is removed if the club is not human, if the player belongs to the club itself (+0x39 or the contract's),
+/// if it is more than a year old, if it has 3 reports, or (after 30 days) if the player is injured (0x62c400 = 2).
+///
+/// Between 30 days and a year the request is processed (and removed), except for a player without a nation or from a
+/// club that plays in the next 14 days, which stays.
 ///
 /// [pt] A poda de um pedido (0x11 bytes: +0 o clube, +4 o jogador, +8 a data, +0x10 quantos relatórios): devolve
 /// (tirar, processar). Sai o pedido de clube que não é humano, de jogador do próprio clube (o +0x39 ou o do contrato),
@@ -202,8 +204,11 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
     1
 }
 
-
-/// O registro das notícias de relatório que a 0x7f9a60 recebe (jogador, clube, quantos), ligado só no comparador da
+/// The record of the report news that `0x7f9a60` receives (player, club, how many).
+///
+/// It is enabled only in the comparer of `0x7f9890`, to check the original routine's groups.
+///
+/// [pt] O registro das notícias de relatório que a 0x7f9a60 recebe (jogador, clube, quantos), ligado só no comparador da
 /// 0x7f9890 para conferir os grupos da original.
 pub(crate) static mut SCOUT_REPORT_GROUPS: Option<Vec<(u32, u32, u8)>> = None;
 
@@ -279,7 +284,6 @@ pub(crate) unsafe extern "thiscall" fn send_scout_reports(this: usize, list: usi
     free(v);
 }
 
-
 /// Sends the 0x138e news item with up to 3 records, the scout, the match and the player's strengths for the club, to
 /// the club's manager.
 ///
@@ -344,11 +348,6 @@ pub(crate) unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: us
     deliver(read_usize(G_NEWS), nt, friendly_club_by_id(read_usize(r + 0x50)));
 }
 
-
-
-
-
-
 /// Date r equals today's (year and day).
 ///
 /// [pt] A data `r` é a de hoje (o ano e o dia)?
@@ -377,8 +376,15 @@ pub(crate) unsafe fn mark_clubs_three_days(this: usize, d: usize) {
     copy(d, pu, minus(d, pt, 1));
 }
 
-/// For each fixture in the list: national team call-ups and per-club call-up records (including B teams per flags),
-/// outside finals tournaments.
+/// The fixtures of list `l` (of the day two weeks from now): for each one, the national team call-ups (0x76bab0) and,
+/// outside finals tournaments, the per-club call-up records.
+///
+/// Outside finals tournaments means the competition +0x14 is not one of the keys 0x9cf79c, 0x9cf7a0, 0x9cf7a4,
+/// 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0, 0x9cf78c, 0x9cf964; with a home side that is not the B team (0x5409b0) and
+/// mark +0x40: the players called up per club (0x7771c0) for both national teams.
+///
+/// With bit 0x200 of +0x4d, also those of the B teams (0x53b4f0 of each one's nation +0x53) and, without it and with
+/// 0x100, those of both with `b` = 1.
 ///
 /// [pt] Os jogos da lista `l` (do dia daqui a duas semanas): para cada um, as convocações (0x76bab0) e, fora das fases
 /// finais (a competição +0x14 numa das chaves 0x9cf79c, 0x9cf7a0, 0x9cf7a4, 0x9cf7a8, 0x9cf7ac, 0x9cf790, 0x9cf8a0,
@@ -420,7 +426,6 @@ pub(crate) unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
     }
 }
 
-
 /// Number of items in the list at [this] whose day (+0x10) equals `dia`, without moving the cursor.
 ///
 /// [pt] Quantos itens da lista em +0 são do dia `dia` (+0x10), percorrendo os nós sem mexer no cursor.
@@ -439,7 +444,6 @@ pub(crate) unsafe fn count_items_on_day(this: usize, day: i16) -> u32 {
     }
     n
 }
-
 
 /// Index (0..15) of the current human manager; Err without manager, Ok(None) when out of range.
 ///
@@ -486,7 +490,6 @@ pub(crate) unsafe extern "thiscall" fn current_search_has_no_club(this: usize) -
     (read_usize(search_record(s, *(s as *const i8) as i32) + 0x191) as i32 == -2) as u32
 }
 
-
 /// Tells whether one of the 10 searches of the current human manager session is for the club.
 ///
 /// Ret 4: `SCOUT_MANAGER::is_club_in_session_searches(club)`, from the screens (0x482aaf, 0x483040, 0x7b34e1). Any of
@@ -511,8 +514,6 @@ pub(crate) unsafe extern "thiscall" fn is_club_in_session_searches(this: usize, 
     // simplification: the original tests the counter against 0xff (never) to use the current search (+0); the counter stays
     (0..10).any(|k| read_usize(search_record(s, k) + 0x191) == id) as u32
 }
-
-
 
 /// The scouts at the match: for each human manager, the 10 scouts in a randomly drawn order; one for the playing club
 /// starts the assignment, and each watches the match; at the end the reports go out.
@@ -570,9 +571,9 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
             // simplification: the original pushes the dword with the observer byte and stack leftover above; 0x7f6cd0 reads the
             // byte
             let r = record(this, q as u8 as u32, person);
-            if read_usize(r + 0x19d) != 0 && *((p + 0x40) as *const u8) != 0 && *((p + 0x41) as *const u8) != 0 {
+            if read_usize(r + 0x19d) != 0 && *((p + fixture::HOME_SIDE_MARK) as *const u8) != 0 && *((p + fixture::AWAY_SIDE_MARK) as *const u8) != 0 {
                 let club = read_usize(person + staff::CLUB_JOB);
-                if read_usize(p + 0x1c) == club || read_usize(p + 0x20) == club {
+                if read_usize(p + fixture::HOME_CLUB) == club || read_usize(p + fixture::AWAY_CLUB) == club {
                     comecar(r, u32::MAX, u32::MAX, u32::MAX, 0, 1);
                 }
             }
@@ -584,7 +585,6 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
     soltar(list);
     1
 }
-
 
 /// Index (0..15) of the given manager (null: current human); None when missing or out of range.
 ///
@@ -620,7 +620,6 @@ pub(crate) unsafe extern "thiscall" fn get_edit_session(this: usize, manager: us
     read_usize(this + 0xc + i * 4)
 }
 
-
 /// Stores the human manager's searches edit session and returns 1.
 ///
 /// Ret 8: `SCOUT_MANAGER::set_edit_session(session, manager)`, from the search screens (0x8085bc, 0x812d88...). Writes
@@ -638,9 +637,6 @@ pub(crate) unsafe extern "thiscall" fn set_edit_session(this: usize, sessao: usi
     core::ptr::write_unaligned((this + 0xc + i * 4) as *mut usize, sessao);
     1
 }
-
-
-
 
 /// As datas estáticas da 0x54c770 (valor e guarda) e da 0x54c5b0, 0x54c8e0 e 0x54cdb0.
 pub(crate) const SCOUT_MANAGER_DATE_STATICS: [(usize, usize); 8] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_ADD_WEEKS_RESULT_DATE, 8), (0xae2430, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
@@ -745,8 +741,6 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option
     Some((first, how_many))
 }
 
-
-
 /// Index (id - G_STAFF_COUNT + 16) of the manager (null: current human) among the 16 humans; None on error.
 ///
 /// [pt] O técnico (nulo: o humano da vez, [0xb74c26 + 0x300 × [0xb77c7a]]) e o índice dele entre os 16 humanos (id −
@@ -783,7 +777,6 @@ pub(crate) unsafe extern "thiscall" fn get_selected_list(this: usize, manager: u
     *((this + 0x4c + i) as *const u8)
 }
 
-
 /// Stores the list selected by the human manager (null: the current one).
 ///
 /// Ret 8: `SCOUT_MANAGER::set_selected_list(list, manager)`, from the search screens (0x804460). Writes the chosen list
@@ -801,9 +794,6 @@ pub(crate) unsafe extern "thiscall" fn set_selected_list(this: usize, list: u32,
     *((this + 0x4c + i) as *mut u8) = list as u8;
     1
 }
-
-
-
 
 /// Tells whether the fixture has a watched club or an available player with a scout request (at the club or national
 /// side, not loaned out, injured, suspended or barred, and not yet played).
@@ -825,7 +815,7 @@ pub(crate) unsafe extern "thiscall" fn set_selected_list(this: usize, list: u32,
 /// nem lesionada (0x62c400 = 2), nem suspensa (0x55d270), nem impedida (0x7757d0), e que ainda não jogou (0x8cf5e0
 /// = 0), dá 1. Senão 0.
 pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
-    let (c1, c2) = (read_u32_as_usize(partida + 0x1c), read_u32_as_usize(partida + 0x20));
+    let (c1, c2) = (read_u32_as_usize(partida + fixture::HOME_CLUB), read_u32_as_usize(partida + fixture::AWAY_CLUB));
     if read_i32(partida) < 0 {
         crate::comparison::branch("cps_8 competicao negativa");
         return 0; // cps8: competição negativa
@@ -835,7 +825,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
     let mut e = next(G_SCOUT_CLUB_TABLE_LIST);
     while e != 0 {
         let v = read_u32_as_usize(e);
-        if read_u32_as_usize(partida + 0xc) == v || read_u32_as_usize(partida + 0x10) == v {
+        if read_u32_as_usize(partida + fixture::HOME_CLUB_ID) == v || read_u32_as_usize(partida + fixture::AWAY_CLUB_ID) == v {
             return 1;
         }
         e = next(G_SCOUT_CLUB_TABLE_LIST);
@@ -847,7 +837,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
     let national_team: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let cedido: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_PLAYER_NEEDS_WORK_PERMIT);
     let injury: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY_STATUS);
-    let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DISCIPLINE_IS_PLAYER_BANNED);
+    let suspended: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DISCIPLINE_IS_PLAYER_BANNED);
     let impedido: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_NATIONALTEAMS_GET_INTERNATIONAL_DUTY_CLUB);
     let ja_jogou: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_INELIGIBILITY_CODE);
     let mut k = 0i32;
@@ -872,7 +862,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
         if injury(read_u32_as_usize(G_INJURY), p) == 2 {
             continue;
         }
-        if suspenso(read_u32_as_usize(G_DISCIPLINE), p, read_u32_as_usize(partida + 0x14), 1, 0) != 0 {
+        if suspended(read_u32_as_usize(G_DISCIPLINE), p, read_u32_as_usize(partida + fixture::COMPETITION), 1, 0) != 0 {
             continue;
         }
         if impedido(read_u32_as_usize(G_NATIONAL_TEAMS), p, G_CURRENT_DATE, x, 0, 0) != 0 {
@@ -884,7 +874,6 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
     }
     0
 }
-
 
 /// The current human's manager record ([0xb74c26 + 0x300 x current screen slot]).
 ///
@@ -942,8 +931,6 @@ pub(crate) unsafe extern "thiscall" fn is_player_shortlisted(this: usize, person
     0
 }
 
-
-
 // simplification: the history goes to the file (does not run twice) and the copy writes nothing else: original only; the
 // copy takes the branch.
 
@@ -961,8 +948,8 @@ pub(crate) unsafe extern "thiscall" fn is_player_shortlisted(this: usize, person
 pub(crate) unsafe extern "thiscall" fn scout_record(t: usize, which: i8, manager: *const i32) -> usize {
     let mut p = manager;
     if (0..=9).contains(&which) && p.is_null() {
-        let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-        p = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const *const i32);
+        let time = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+        p = core::ptr::read_unaligned((0xb74c26 + time * 0x300) as usize as *const *const i32);
     }
     if !(0..=9).contains(&which) || p.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(IDX_SCOUT_RECORD)(t, which, manager);
@@ -974,9 +961,6 @@ pub(crate) unsafe extern "thiscall" fn scout_record(t: usize, which: i8, manager
     crate::comparison::branch("registro do observador");
     (*(t as *const usize)).wrapping_add(i as usize * 0x2b0)
 }
-
-
-
 
 /// Empties the list and adds the person of each scout request of the club; returns whether there is any.
 ///
@@ -1005,7 +989,6 @@ pub(crate) unsafe extern "thiscall" fn collect_club_scout_targets(this: usize, c
     }
     (!alvos.is_empty()) as u32
 }
-
 
 /// Removes a scout request: finds the request (club, person; 17 bytes), pulls the next ones up and sorts again
 /// (0x7fc270); null club = the current human manager's club.
@@ -1068,7 +1051,6 @@ pub(crate) unsafe extern "thiscall" fn remove_scout_request(this: usize, person:
     }
 }
 
-
 /// Tells whether the club can scout the nation: a poor (balance < 1,000,000) and small (reputation < 5000) club outside
 /// the nation's region: 0; else 1.
 ///
@@ -1097,7 +1079,6 @@ pub(crate) unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nation
     }
     1
 }
-
 
 /// Removes from the manager's scout lists the scouts no longer at the club and gives each club scout without a list the
 /// first free list; with the edit session open, it refreshes the scouts.
@@ -1183,7 +1164,6 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
     1
 }
 
-
 /// Returns the player's slot in the record of the human's search that scouts his club, or 0.
 ///
 /// Ret 4: `SCOUT_MANAGER::find_club_search_entry(person)`, from the person and search screens (0x808540, 0x813210,
@@ -1221,7 +1201,6 @@ pub(crate) unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: us
     0
 }
 
-
 /// Writes the translated scout list name: Short List, Player Search, Staff Search or Scout #n.
 ///
 /// `scout_manager_write_list_name(index, text, size)`, from the SCOUT_MANAGER constructor (0x7f6760) and from the
@@ -1249,7 +1228,6 @@ pub(crate) unsafe extern "C" fn scout_manager_write_list_name(index: u32, text: 
     };
     1
 }
-
 
 /// Tells whether the club (or the current human's) asked to scout the player, with fewer than 3 reports and, if asked,
 /// with the date already due.

@@ -23,6 +23,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize,
 
 /// Comparer for `spa_lower_create_table` (comparison mode: see the header of motor.rs).
 ///
+/// It allocates and draws: only the original runs. The plan, made beforehand: the B teams (of the Primera and the
+/// Segunda) in the first rows. Afterwards: +0x3e and the club of the first rows. +0x60 is not checked: the second pass
+/// (the one for the Segunda's B teams) zeroes +0x60 of every Spanish team that does not enter it, including the Primera
+/// ones the first pass has just put in the table (behaviour of the original, which the copy repeats; found by the
+/// 8-league comparison, 05/11/2026).
+///
 /// [pt] Aloca e sorteia: só a original. O plano, feito antes: os times B (da Primera e da Segunda) das primeiras linhas.
 /// Depois: +0x3e e o clube das primeiras linhas. O +0x60 não entra: a segunda passada (a dos times B da Segunda) zera o
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela

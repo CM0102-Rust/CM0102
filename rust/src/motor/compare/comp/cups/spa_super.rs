@@ -9,7 +9,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_super_select_teams(this: usi
     compare_team_list("spa_super_select_teams", this, || o(this), || select_spanish_super_cup_teams(this))
 }
 
-
 /// Comparer for `spa_super_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_super_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_SUPER_CREATE_ROUND_TABLE);

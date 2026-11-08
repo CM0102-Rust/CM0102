@@ -1,10 +1,9 @@
 use super::*;
 
-
-
-
-
-/// As datas de referência das decisões (Date::set 0x54a130: dia do mês, mês a partir de 0, ano 1997, sem dia da
+/// The reference dates of the host decisions (Date::set 0x54a130: day of the month, month from 0, year 1997, no
+/// weekday): their day of the year goes into +0x1f of the entries of the following loop.
+///
+/// [pt] As datas de referência das decisões (Date::set 0x54a130: dia do mês, mês a partir de 0, ano 1997, sem dia da
 /// semana): o dia do ano delas vai ao +0x1f das entradas do laço seguinte.
 pub(crate) const HOST_DECISION_DATES: [[u32; 4]; 7] = [
     [0xa, 0x6, 0x7cd, 0xffffffff], // cqo3: 10 de julho, a Copa do Mundo
@@ -16,7 +15,15 @@ pub(crate) const HOST_DECISION_DATES: [[u32; 4]; 7] = [
     [0x14, 0x8, 0x7cd, 0xffffffff],
 ];
 
-/// Os laços das entradas de uma competição: (início na tabela, entradas, a competição [global], primeiro ano, passo
+/// The entry loops of a competition: (start in the table, entries, the competition [global], first year, year step,
+/// interval `+0x21`).
+///
+/// In order: the World Cup ([`0x9cf79c`], 1998..2026 every 4), the European Championship ([`0x9cf7a4`], 2000..2028),
+/// the African Nations Cup ([`0x9cf7ac`], 2000..2014 every 2), the Olympics ([`0x9cf7a0`], 2000..2028), the Copa
+/// América ([`0x9cf7a8`], 1999..2009 every 2), [`0x9cf95c`] (1999..2004, year by year) and the Asian Cup ([`0x9cf790`],
+/// 2000..2016) [inference: the names from the community addresses, `docs/ENDERECOS_COMUNIDADE.md`].
+///
+/// [pt] Os laços das entradas de uma competição: (início na tabela, entradas, a competição [global], primeiro ano, passo
 /// dos anos, intervalo +0x21). Na ordem: a Copa do Mundo ([0x9cf79c], 1998..2026 de 4 em 4), a Eurocopa ([0x9cf7a4],
 /// 2000..2028), a Copa Africana ([0x9cf7ac], 2000..2014 de 2 em 2), as Olimpíadas ([0x9cf7a0], 2000..2028), a Copa
 /// América ([0x9cf7a8], 1999..2009 de 2 em 2), [0x9cf95c] (1999..2004, ano a ano) e a Copa da Ásia ([0x9cf790],
@@ -31,7 +38,15 @@ pub(crate) const HOST_COUNTRY_LOOPS: [(u16, u8, u32, u16, u16, u8); 7] = [
     (0x6c6, 5, KEY_CLUB_COMP_ASIAN_CUP as u32, 2000, 4, 0x14),
 ];
 
-/// As gravações da tabela padrão, na ordem da original (geradas da desmontagem de 0x5f999a..0x5fa640): (deslocamento,
+/// The writes of the default table, in the original routine's order (generated from the disassembly of
+/// 0x5f999a..0x5fa640): (offset, type, value).
+///
+/// Type 0 = dword of the global `valor` (a nation or competition), 1 = dword `valor` (−1 = no host), 2 = byte (the
+/// +0x1e of each entry: 0/1 the chosen bid, −1 voting open, −2 closed, −3 the fixed default host), 3 = word 0 (year 0
+/// and day 0 of the entries without an edition), 4 = the date `HOST_DECISION_DATES[valor]`, 5 = the loop
+/// `HOST_COUNTRY_LOOPS[valor]`.
+///
+/// [pt] As gravações da tabela padrão, na ordem da original (geradas da desmontagem de 0x5f999a..0x5fa640): (deslocamento,
 /// tipo, valor); tipo 0 = dword do global `valor` (uma nação ou competição), 1 = dword `valor` (−1 = sem sede), 2 =
 /// byte (o +0x1e de cada entrada: 0/1 a candidatura escolhida, −1 votação aberta, −2 fechada, −3 a sede padrão
 /// fixa), 3 = word 0 (ano 0 e dia 0 das entradas sem edição), 4 = a data `HOST_DECISION_DATES[valor]`, 5 = o laço
@@ -147,7 +162,6 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     }
 }
 
-
 /// `HostCountry::post_host_news(list)`: posts the news of changed hosts. Called by the hosts calendar 0x5fa850; SEH
 /// frame only for the local news, no destructor.
 ///
@@ -178,10 +192,10 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
     while it != 0 {
         let e = read_u32_as_usize(it);
         let k = *((e + 0x1e) as *const i8);
-        let pular = ((k > 0 || k == -3) && read_u16(G_CURRENT_DATE_YEAR) as u32 == (read_u16(e + 4) as u32).wrapping_sub(8))
+        let skip = ((k > 0 || k == -3) && read_u16(G_CURRENT_DATE_YEAR) as u32 == (read_u16(e + 4) as u32).wrapping_sub(8))
             || read_u32_as_usize(e) == read_u32_as_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES)
             || (read_u32_as_usize(e) == read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_u16(e + 4) == 0x7d6 && read_u32_as_usize(e + 6) == read_u32_as_usize(KEY_NATION_GERMANY));
-        if !pular {
+        if !skip {
             // the local news (0xe8 bytes, as in the other copies)
             let mut n = [0u8; 0xe8];
             let p = n.as_mut_ptr() as usize;
@@ -268,9 +282,12 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
 
 // simplification: opens the file and allocates; original only. The copy takes the branches.
 
-
-
-/// Writes the host and second host of entry e for bid k (default when k < 0); returns how many are valid (!= -1).
+/// Writes the host and second host of entry `e` for bid `k` (the default when `k` < 0); returns how many are valid (≠
+/// −1).
+///
+/// The entries are 0x22-byte records: +0 competition id, +4 year, +6 the default host and the second one (+0xa), +6 + 8
+/// × k the bids k = 0..2 (host and second host), +0x1e the chosen one (0..2; −3 the fixed default, −1 voting open, −2
+/// voting still closed), +0x1f the day of the year of the decisions, +0x21 the interval in years.
 ///
 /// [pt] As duas sedes da entrada `e` (registros de 0x22 bytes: +0 id da competição, +4 ano, +6 a sede padrão e a segunda
 /// (+0xa), +6 + 8 × k as candidaturas k = 0..2 (sede e segunda), +0x1e a escolhida (0..2; −3 a padrão fixa, −1 a
@@ -321,7 +338,6 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
     0
 }
 
-
 /// `HostCountry::find_next_hosts`: the hosts of the next already decided edition of competition `comp`.
 ///
 /// The first entry of it with the chosen bid (the two hosts) or with the fixed default (the default). Writes both and
@@ -351,7 +367,6 @@ pub(crate) unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a
     // simplification: the original returns al = 0 with the high bytes of eax (the entry pointer); the caller reads al
     0
 }
-
 
 /// Search key compare: year (+4) then day (+0x1f), unsigned.
 ///
@@ -468,7 +483,6 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
     news(this, l);
     destroy(l);
 }
-
 
 /// writes CM3_TEMP\HostCountry.tmp: the count (+4, u16) and 0x22 bytes per host from [+0], without checking the writes;
 /// on open error the "Error" box

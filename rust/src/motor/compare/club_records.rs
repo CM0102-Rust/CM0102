@@ -5,6 +5,13 @@ use super::*;
 
 /// Comparer for `update_league_position_records` (comparison mode: see the header of motor.rs).
 ///
+/// The original routine runs first (it sorts the tables, which 0x6827d0 checks on its own) and the copy afterwards, as
+/// a dry run (without sorting), from the same records: the first 14 bytes of each chain club's season and all-time
+/// records, the queue header (+0x24..+0x30) and the queue; and the return value.
+///
+/// A null league or one with +0x44 ≠ 0xff, a record to be created (0x4528d0/0x452710 allocate) or a queue that may
+/// grow: only the original.
+///
 /// [pt] Comparador: a original roda antes (ordena as tabelas, que a 0x6827d0 confere por conta própria) e a cópia depois,
 /// em ensaio (sem ordenar), a partir dos mesmos recordes: os 14 primeiros bytes dos registros da temporada e de sempre
 /// de cada clube da cadeia, o cabeçalho da fila (+0x24..+0x30) e a fila; e a devolução. Liga nula ou com +0x44 ≠ 0xff,
@@ -87,6 +94,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: u
 
 /// Comparer for `update_transfer_fee_records` (comparison mode: see the header of motor.rs).
 ///
+/// The original routine puts items in the news queue (it reallocates) and the liking draws at random, so: the plan
+/// first (the four records created in the same order as the original, and the expected paid and received records); the
+/// original runs; it fetches the records again (the vector may have been reallocated) and checks the values and the
+/// club of each record and [0xae1080].
+///
 /// [pt] Comparador: a original põe na fila de notícias (realoca) e o gostar sorteia: o plano antes (os quatro registros
 /// criados na mesma ordem da original, e os recordes pago e recebido esperados); a original roda; pega os registros
 /// de novo (o vetor pode ter sido realocado) e confere os valores e o clube de cada recorde e o [0xae1080].
@@ -143,6 +155,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this
 }
 
 /// Comparer for `add_transfer_totals` (comparison mode: see the header of motor.rs).
+///
+/// The records may be created (realloc) and the news item reallocates: the four records are requested beforehand, in
+/// the original's order (seller: season, all-time; buyer: season, all-time; the second time only finds them), and if
+/// the news queue has no room for two, only the original runs. Otherwise side by side over the four records (+0x365, 12
+/// bytes), the news count and the next two slots.
 ///
 /// [pt] Comparador: os registros podem ser criados (realloc) e a notícia realoca: os quatro registros são pedidos antes, na
 /// ordem da original (vendedor: temporada, sempre; comprador: temporada, sempre; a segunda vez só acha), e com a fila

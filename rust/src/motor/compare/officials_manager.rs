@@ -104,6 +104,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_renew_officials(this: usize, com
 
 /// Comparer for `officials_manager_add_random_officials` (comparison mode: see the header of motor.rs).
 ///
+/// The routine reallocates and sorts (it cannot run twice): only the original routine, after a dry run. The dry run
+/// generates the copy's `conta` sheets (generate_official, without counting the random draws) in its own area from the
+/// same random generator state, which is restored; then the original runs.
+///
+/// It checks the final random state, the new count ([0xae2390] + conta) and that each sheet from the dry run is in the
+/// sorted table (fields the original writes). Non-positive count or nation without a continent: only the original.
+///
 /// [pt] Comparador: realoca e ordena (não pode rodar duas vezes): só a original, depois de um ensaio. O ensaio gera as
 /// `conta` fichas da cópia (generate_official, sem contar os sorteios) numa área própria a partir do mesmo estado do sorteio,
 /// que é reposto; depois roda a original. Confere o estado final do sorteio, a conta nova ([0xae2390] + conta) e que
@@ -121,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_off
             generate_official(g.as_mut_ptr() as usize, nation);
         }
     }));
-    let estado_rust = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    let state_rust = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     state.write_back();
     let before = read_i32(G_OFFICIAL_COUNT);
     o(this, count, nation);
@@ -136,9 +143,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_off
             None => missing.push(k),
         }
     }
-    let same = estado_orig == estado_rust && total == before.wrapping_add(count) && missing.is_empty();
+    let same = estado_orig == state_rust && total == before.wrapping_add(count) && missing.is_empty();
     SCOREBOARD.record(same, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
-        count, nation, total, before, estado_orig == estado_rust, missing));
+        count, nation, total, before, estado_orig == state_rust, missing));
 }
 
 /// Comparer for `officials_manager_validate_officials` (comparison mode: see the header of motor.rs).

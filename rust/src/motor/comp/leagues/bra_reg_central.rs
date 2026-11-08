@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Writes the rule set common to the Brazilian state leagues (3 pts win, 1 draw, tiebreakers, no league above/below, 7
 /// subs, 3 substitutions), with rounds, top places (+0xbe) and relegated (+0xc1) as parameters.
 ///
@@ -53,8 +50,6 @@ pub(crate) unsafe fn catarinense_rules(o: usize) {
     bra_reg_central_set_state_league_rules(o, 2, 4, 1); // cqi8: o Catarinense
 }
 
-
-
 /// Centre-West: single round robin; 8 top places (the 8-club knockout [inference: the slot 11 stage]); 3 relegated; win
 /// 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no league above or below (the
 /// relegated go to the non-playable pool [inference]); rule word 8 (the top places lead to the next stage; no champion
@@ -70,16 +65,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize)
     create_main_schedule(this);
     1
 }
-
-
-
-
-
-
-
-
-
-
 
 /// League stage (-1) of the state leagues: qualified clubs (status 6) get the qualification record, relegated (3) the
 /// relegation record; `fazer` false is a dry run.
@@ -241,7 +226,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_
     centro_oeste_end_of_stage(this, club, status, stage, game, true).0
 }
 
-
 /// The Centre-West state league at career creation: the year and the database competition, disciplinary rule 7 and,
 /// with no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the
 /// table with the state clubs, the fixtures, the order, the statistics and the predicted positions
@@ -251,7 +235,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, year: u32, record: usize) -> usize {
     bra_reg_bahia_construct_state_league(this, year, record, &CENTRO_OESTE_STATE_CHAMPIONSHIP, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
 }
-
 
 /// The Centre-West turnover: archives the season in the statistics, clears the previous table and stages, moves to the
 /// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
@@ -264,7 +247,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_start_new_season(this: us
     state_league_new_season(this, 0x430ef0, 0x98ae10, [0x1cb, 0x1d2, 0x1d8, 0x1df], 1, "cqp_7 virada do centro_oeste") // cqp7: o ano seguinte do Centro-Oeste
 }
 
-
 /// The Centre-West next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 8 go to the
 /// quarter-finals (1st v 8th, 3rd v 6th, 7th v 2nd, 5th v 4th); past the last stage it is an error (the box)
 /// Original: `BraRegCentral::advance_stage` (0x431240, bra_reg_central.cpp, thiscall, ret 0).
@@ -275,7 +257,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_advance_stage(this: usize
     state_league_advance_stage(this, 0x98ae10, 0x1f9, 0x4312d0);
 }
 
-
 /// the Centre-West league has 15 clubs: those with it as their reserve division in the database (the field that holds
 /// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegCentral::load_region_clubs` (0x430ef0, bra_reg_central.cpp, thiscall, ret 0).
@@ -285,7 +266,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_advance_stage(this: usize
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_load_region_clubs(this: usize) -> u32 {
     fill_state_league_table(this, 0xf, 0x98ae10, 0x168, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, 0, "cql_8 centro_oeste cheio")
 }
-
 
 /// Centre-West: after the round robin, the top 8 go to the quarter-finals: 1st v 8th, 3rd v 6th, 7th v 2nd, 5th v 4th
 /// (the seeds are the positions [inference: two legs])

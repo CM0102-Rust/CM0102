@@ -88,5 +88,3 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, data: usiz
     }
 }
 
-
-

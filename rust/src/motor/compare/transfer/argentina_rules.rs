@@ -11,4 +11,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_wi
     compare_transfer_rules_ctor("argentina_rules_init_transfer_windows", this, || o(this), |s| argentina_rules_init_transfer_windows(s));
 }
 
-

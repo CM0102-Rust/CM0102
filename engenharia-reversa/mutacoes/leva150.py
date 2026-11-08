@@ -5,7 +5,7 @@ MUTACOES = [
     ('a_dias', "[Some(0x96d4c0usize), Some(0x96d4b8)", "[Some(0x96d4b8usize), Some(0x96d4b8)"),
     ('a_mascara', "(0x5c, 0x810)", "(0x5c, 0x804)"),
     ('a_ja_jogou', "                if ja_jogou(u(G_TRANSFER_MANAGER, 0), p, x) != 0 || impedido(", "                if impedido("),
-    ('c_estado', "        if state(u(G_INJURY, 0), p) == 2 || (byte(t, 0x19) != 0", "        if state(u(G_INJURY, 0), p) == 1 || (byte(t, 0x19) != 0"),
+    ('c_estado', "        if state(u(G_INJURY, 0), p) == 2 || (byte(t, match_manager::TACTIC_SLOT) != 0", "        if state(u(G_INJURY, 0), p) == 1 || (byte(t, match_manager::TACTIC_SLOT) != 0"),
     ('c_selecao', "    let mut mask: u32 = if national_team(club) != 0 { 0x208a09c } else { 0xca0ca };", "    let mut mask: u32 = if national_team(club) != 0 { 0x208a09c } else { 0xca0cb };"),
     ('c_sorteio', "            let lim = sorteio(3000) + 3000;", "            let lim = sorteio(3000) + 2000;"),
     ('r_referencia', "                        let v = h16(fi, player_sheet::WORLD_REPUTATION).wrapping_add(h16(fi, player_sheet::CURRENT_REPUTATION));", "                        let v = h16(fi, player_sheet::WORLD_REPUTATION);"),

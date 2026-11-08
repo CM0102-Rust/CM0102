@@ -5,6 +5,11 @@ use super::*;
 
 /// Comparer for `bra_reg_minas_gerais_advance_stage` (comparison mode: see the header of motor.rs).
 ///
+/// The next-stage comparer: only the original routine runs (simplification: on reaching 2 it builds the final, which
+/// allocates and draws at random; it cannot run twice), checking the plan: on the last stage, +0x30 unchanged;
+/// otherwise +0x30 + 1, or, on reaching 2, 2 (with a final) or 1 (the same champion in both halves, which the final
+/// writes).
+///
 /// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
@@ -18,6 +23,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_sta
 }
 
 /// Comparer for `bra_reg_minas_gerais_create_final_stage` (comparison mode: see the header of motor.rs).
+///
+/// The final's comparer: only the original routine runs (it allocates the list, the table and the stage and draws the
+/// round), checking the plan made beforehand: the champions of the two halves.
+///
+/// The same club in both: +0x30 = 1, +0x2c = 2 and status 5 in the first row of each half and in its row of the league
+/// table. Different: the stage in the third slot exists, with +0x3e = 2, +4 = the league's +4 and the two champions in
+/// its list (+0xa7, 6 bytes; as a set: the round's draw may reorder them), and +0x30 = 2.
 ///
 /// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
@@ -46,7 +58,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_fina
     SCOREBOARD.record(same, || format!("bra_reg_minas_gerais_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
-/// Comparer for `bra_reg_minas_gerais_record_season_honours` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_reg_minas_gerais_record_season_honours` (end of season; comparison mode: see the header of
+/// motor.rs).
+///
+/// Only the original runs (simplification: it writes the history, which allocates the record, pays the prizes and sends
+/// the news item, and may set up the Champions Cup; it cannot run twice). The copy runs in Rust mode (counters "cqo_7
+/// historico da final" and "cqo_7 premios") and is proved by the mutations and by the two Rust careers.
 ///
 /// [pt] Comparador do fim da temporada: só a original (simplification: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores

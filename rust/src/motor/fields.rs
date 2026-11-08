@@ -827,3 +827,146 @@ pub(crate) mod preferences {
     pub(crate) const STAFF_DISLIKED_STAFF1: usize = 0x28; // 4 byte(s), int
     pub(crate) const STAFF_FAVOURITE_CLUBS1: usize = 0x4; // 4 byte(s), int
 }
+
+/// Fields of the scheduled match record (date, competition at +0x14, the two clubs, result), named from how the routines use them. [pt] Campos do registro da partida marcada.
+#[allow(dead_code)]
+pub(crate) mod fixture {
+    pub(crate) const COMP_ID: usize = 0x0; // 4 byte(s): competition id (-1 none; -2 marks a removed or simulated fixture)
+    pub(crate) const STADIUM_ID: usize = 0x4; // 4 byte(s): stadium id (-1 none), set by Stadium::set_fixture_venue
+    pub(crate) const MATCH_STATS_SLOT: usize = 0x8; // 4 byte(s): slot of the match statistics record in match_stats_matches.tmp (-1 none, set at creation)
+    pub(crate) const HOME_CLUB_ID: usize = 0xc; // 4 byte(s): home club id (-1 none)
+    pub(crate) const AWAY_CLUB_ID: usize = 0x10; // 4 byte(s): away club id (-1 none)
+    pub(crate) const COMPETITION: usize = 0x14; // 4 byte(s): competition object pointer
+    pub(crate) const STADIUM: usize = 0x18; // 4 byte(s): stadium record pointer (0 none)
+    pub(crate) const HOME_CLUB: usize = 0x1c; // 4 byte(s): home club pointer
+    pub(crate) const AWAY_CLUB: usize = 0x20; // 4 byte(s): away club pointer
+    pub(crate) const NEXT_ROUND_YEAR: usize = 0x24; // 2 byte(s): year of the next round's date (cup; 0 in the last round)
+    pub(crate) const NEXT_ROUND_DAY: usize = 0x26; // 2 byte(s): day of year of the next round's date (cup; 0 in the last round)
+    pub(crate) const YEAR: usize = 0x28; // 2 byte(s): year of the fixture date
+    pub(crate) const DAY: usize = 0x2a; // 2 byte(s): day of year of the fixture date
+    pub(crate) const SEASON_YEAR: usize = 0x2c; // 2 byte(s): season year of the competition (the cup year)
+    pub(crate) const REFEREE: usize = 0x2e; // 2 byte(s): match official index (-1 none), set by OfficialsManager::choose_match_official
+    pub(crate) const ROUND_NAME: usize = 0x30; // 2 byte(s): round name code (comp_util name table; units digit = variant: 0 single match, 3 first leg, 4 second leg, 5 replay)
+    pub(crate) const ROUND_PREFIX: usize = 0x32; // 2 byte(s): round name prefix code (0x41f..0x426 groups A to H)
+    pub(crate) const ROUND_NUMBER: usize = 0x34; // 2 byte(s): round/matchday number (cup round +9; league round)
+    pub(crate) const ROUND_DRAW_RULES: usize = 0x36; // 2 byte(s): round rule word copied from the round (cup +0xb, league +0xdb) [inference: draw type]
+    pub(crate) const TIE_RULES: usize = 0x38; // 2 byte(s): tie-break rules (cup +0xd, league +0xab): 0x20 35-yard shoot-out, 0x10 draw counts, 0x800/0x1000, 0x4000
+    pub(crate) const CATEGORY: usize = 0x3a; // 1 byte(s): match category: 1 friendly, 2 league, 4 domestic cup, 5 league play-off, 6 cup final stage, 7/8 continental, 9 national-team friendly, 10 national teams, 23 club world cups
+    pub(crate) const STAGE: usize = 0x3b; // 1 byte(s): competition stage code (0xff none)
+    pub(crate) const NEUTRAL_VENUE: usize = 0x3c; // 1 byte(s): 1 when played on neutral ground
+    pub(crate) const HOME_RESULT_MARK: usize = 0x3d; // 1 byte(s): tie result mark of the home side (1/2 win, 3 extra time or shoot-out, minus 3 forfeit) written by the cup winner logic
+    pub(crate) const AWAY_RESULT_MARK: usize = 0x3e; // 1 byte(s): tie result mark of the away side (same coding as HOME_RESULT_MARK)
+    pub(crate) const TIME_SLICE: usize = 0x3f; // 1 byte(s): time slice of the day (1 weekend, 2 midweek); indexes the fixture manager day lists
+    pub(crate) const HOME_SIDE_MARK: usize = 0x40; // 1 byte(s): per-side byte of the home club (league 0, cup 1; find_fixtures side filter); 0 sets the match manager's +0x19 [inference]
+    pub(crate) const AWAY_SIDE_MARK: usize = 0x41; // 1 byte(s): per-side byte of the away club (same use as HOME_SIDE_MARK) [inference]
+    pub(crate) const STAGE_INDEX: usize = 0x42; // 1 byte(s): stage index/type of the competition the fixture belongs to (cup STAGE_INDEX; find_fixtures type filter)
+    pub(crate) const HOME_GOALS: usize = 0x43; // 1 byte(s): home goals at full time (0xff = not played)
+    pub(crate) const AWAY_GOALS: usize = 0x44; // 1 byte(s): away goals at full time
+    pub(crate) const HOME_GOALS_HALF_TIME: usize = 0x45; // 1 byte(s): home goals at half time (-1 none)
+    pub(crate) const AWAY_GOALS_HALF_TIME: usize = 0x46; // 1 byte(s): away goals at half time
+    pub(crate) const HOME_GOALS_EXTRA_TIME: usize = 0x47; // 1 byte(s): home goals after extra time (-1 none)
+    pub(crate) const AWAY_GOALS_EXTRA_TIME: usize = 0x48; // 1 byte(s): away goals after extra time
+    pub(crate) const HOME_PENALTIES: usize = 0x49; // 1 byte(s): home shoot-out goals (0xff none)
+    pub(crate) const AWAY_PENALTIES: usize = 0x4a; // 1 byte(s): away shoot-out goals
+    pub(crate) const HOME_AGGREGATE: usize = 0x4b; // 1 byte(s): two-legged tie: home side's first-leg/aggregate goals (0xff none) [inference]
+    pub(crate) const AWAY_AGGREGATE: usize = 0x4c; // 1 byte(s): two-legged tie: away side's first-leg/aggregate goals (0xff none) [inference]
+    pub(crate) const SQUAD_RULES: usize = 0x4d; // 2 byte(s): low nibble named reserves (squad = 11 + n), next nibble substitutions allowed; 0x400 single leg, 0x800 moved to the home club's preferred day, 0x100/0x200 national-team friendly side
+    pub(crate) const FLAGS: usize = 0x4e; // 1 byte(s): flags byte: bits 0-1 national-team call-up flags, bit 2 cup leg flag, bit 3 last league round [inference]
+}
+
+/// Fields of the match-day manager object (one per side in match_man), named from how the routines use them. [pt] Campos do objeto de técnico do dia de jogo.
+#[allow(dead_code)]
+pub(crate) mod match_manager {
+    pub(crate) const MANAGER_CURRENT_REPUTATION: usize = 0x0; // 2 byte(s): copy of the manager sheet's current reputation
+    pub(crate) const MANAGER_HOME_REPUTATION: usize = 0x2; // 2 byte(s): copy of the manager sheet's home reputation
+    pub(crate) const MANAGER_WORLD_REPUTATION: usize = 0x4; // 2 byte(s): copy of the manager sheet's world reputation
+    pub(crate) const KEY_PLAYER_1: usize = 0x6; // 4 byte(s): first of the three highest-reputation selected players (person pointer) [inference: key players]
+    pub(crate) const KEY_PLAYER_2: usize = 0xa; // 4 byte(s): second key player (person pointer) [inference]
+    pub(crate) const KEY_PLAYER_3: usize = 0xe; // 4 byte(s): third key player (person pointer) [inference]
+    pub(crate) const ENGINE: usize = 0x12; // 4 byte(s): match engine pointer
+    pub(crate) const SELECTION_FLAG: usize = 0x16; // 1 byte(s): byte flag that sets mask bit 0x800000 in automatic selection and changes the substitution mode [inference]
+    pub(crate) const SUBSTITUTIONS_LEFT: usize = 0x17; // 1 byte(s): substitutions still available (min of allowed subs and spare players; decremented per change)
+    pub(crate) const SIDE: usize = 0x18; // 1 byte(s): side in the match (0 home block, 1 away block)
+    pub(crate) const TACTIC_SLOT: usize = 0x19; // 1 byte(s): 1 when the fixture side mark is 0, else 0; tactic slot passed to the human manager and the tactics table; headers call it 'human' [inference]
+    pub(crate) const SELECTION_MODE: usize = 0x1a; // 1 byte(s): selection mode: 0/1/2 rotation weight of today's match, 3 no rotation [inference]
+    pub(crate) const MANAGER: usize = 0x1b; // 4 byte(s): manager (staff person pointer)
+    pub(crate) const MANAGER_SHEET: usize = 0x1f; // 4 byte(s): manager's non-player sheet (staff +0x69)
+    pub(crate) const PLAYERS: usize = 0x23; // 4 byte(s): first of the side's 20 match players (0x1be bytes each)
+    pub(crate) const SQUAD_ROWS: usize = 0x27; // 4 byte(s): club squad rows (50 person pointers)
+    pub(crate) const TACTICS: usize = 0x2b; // 4 byte(s): the side's tactics object in the engine (engine +0x91e2 + 0x18e3 x side)
+    pub(crate) const CLUB: usize = 0x2f; // 4 byte(s): own club pointer
+    pub(crate) const OPPONENT: usize = 0x33; // 4 byte(s): opposing club pointer
+    pub(crate) const FIXTURE: usize = 0x37; // 4 byte(s): fixture (match record) pointer
+    pub(crate) const BEST_PLAYER: usize = 0x3b; // 4 byte(s): best-rated selected player (best_in_list) [inference: captain candidate]
+    pub(crate) const TACTICS_ROW: usize = 0x3f; // ? byte(s): the club's tactics row read from the tactics table and stored back by store_tactic
+}
+
+/// Fields of the club Finance object, named from how the routines use them. [pt] Campos do objeto Finance do clube.
+#[allow(dead_code)]
+pub(crate) mod finance {
+    pub(crate) const BALANCE: usize = 0x0; // 8 byte(s): bank balance (i64)
+    pub(crate) const CLUB_ID: usize = 0x8; // 4 byte(s): club id (index into the club table)
+    pub(crate) const WAGE_BILL: usize = 0xc; // 4 byte(s): weekly wage bill (squad and staff)
+    pub(crate) const HIGHEST_WAGE: usize = 0x10; // 4 byte(s): highest wage in the wage bill
+    pub(crate) const WAGE_CEILING: usize = 0x14; // 4 byte(s): wage ceiling (Finance::get_max_wage, adjust_max_wage)
+    pub(crate) const SEASON_TICKETS_SOLD: usize = 0x18; // 4 byte(s): season tickets sold
+    pub(crate) const MONTH_PLAYERS_BOUGHT: usize = 0x70; // 8 byte(s): month: transfer fees paid (i64)
+    pub(crate) const MONTH_PLAYERS_SOLD: usize = 0x78; // 8 byte(s): month: transfer fees received (i64)
+    pub(crate) const MONTH_OTHER_COSTS: usize = 0x80; // 4 byte(s): month: other costs
+    pub(crate) const MONTH_FINES: usize = 0x88; // 4 byte(s): month: league fines
+    pub(crate) const MONTH_GROUND_COSTS: usize = 0x8c; // 4 byte(s): month: ground works and stadium maintenance
+    pub(crate) const MONTH_WAGES: usize = 0x90; // 4 byte(s): month: wages paid
+    pub(crate) const MONTH_DIVIDENDS: usize = 0x94; // 4 byte(s): month: dividends
+    pub(crate) const MONTH_BONUSES: usize = 0x98; // 4 byte(s): month: bonuses paid
+    pub(crate) const MONTH_SIGN_ON_FEES: usize = 0x9c; // 4 byte(s): month: signing-on fees
+    pub(crate) const MONTH_GATE_RECEIPTS: usize = 0xa0; // 4 byte(s): month: net gate receipts
+    pub(crate) const MONTH_PRIZE_MONEY: usize = 0xa8; // 4 byte(s): month: prize money
+    pub(crate) const MONTH_SEASON_TICKETS: usize = 0xac; // 4 byte(s): month: season ticket income
+    pub(crate) const MONTH_OTHER_INCOME: usize = 0xb4; // 4 byte(s): month: other income (cash injections, takeovers, boosts)
+    pub(crate) const MONTH_TV_REVENUE: usize = 0xb8; // 4 byte(s): month: TV revenue
+    pub(crate) const MONTH_MERCHANDISING: usize = 0xbc; // 4 byte(s): month: merchandising income
+    pub(crate) const LAST_SEASON_TOTALS: usize = 0xc0; // 80 byte(s): previous season's totals (copy of the 0x50-byte season block at season end)
+    pub(crate) const SEASON_PLAYERS_BOUGHT: usize = 0x110; // 8 byte(s): season: transfer fees paid (i64)
+    pub(crate) const SEASON_PLAYERS_SOLD: usize = 0x118; // 8 byte(s): season: transfer fees received (i64)
+    pub(crate) const SEASON_OTHER_COSTS: usize = 0x120; // 4 byte(s): season: other costs
+    pub(crate) const SEASON_FINES: usize = 0x128; // 4 byte(s): season: league fines
+    pub(crate) const SEASON_GROUND_COSTS: usize = 0x12c; // 4 byte(s): season: ground works and stadium maintenance
+    pub(crate) const SEASON_WAGES: usize = 0x130; // 4 byte(s): season: wages paid
+    pub(crate) const SEASON_DIVIDENDS: usize = 0x134; // 4 byte(s): season: dividends
+    pub(crate) const SEASON_BONUSES: usize = 0x138; // 4 byte(s): season: bonuses paid
+    pub(crate) const SEASON_SIGN_ON_FEES: usize = 0x13c; // 4 byte(s): season: signing-on fees
+    pub(crate) const SEASON_GATE_RECEIPTS: usize = 0x140; // 4 byte(s): season: net gate receipts
+    pub(crate) const SEASON_PRIZE_MONEY: usize = 0x148; // 4 byte(s): season: prize money
+    pub(crate) const SEASON_SEASON_TICKETS: usize = 0x14c; // 4 byte(s): season: season ticket income
+    pub(crate) const SEASON_OTHER_INCOME: usize = 0x154; // 4 byte(s): season: other income (cash injections, takeovers, boosts)
+    pub(crate) const SEASON_TV_REVENUE: usize = 0x158; // 4 byte(s): season: TV revenue
+    pub(crate) const SEASON_MERCHANDISING: usize = 0x15c; // 4 byte(s): season: merchandising income
+    pub(crate) const SEASON_TICKET_RATIO: usize = 0x160; // 4 byte(s): season tickets sold / places (f32, up to 0.875); also the gate-receipt discount
+    pub(crate) const SEASON_TICKET_STEP: usize = 0x164; // 1 byte(s): season ticket sales step (up to 8)
+    pub(crate) const CRISIS_STATE: usize = 0x165; // 1 byte(s): financial state: 0 normal, 1 crisis, 2 [inference: administration]
+    pub(crate) const SQUEEZE_COUNTER: usize = 0x166; // 1 byte(s): board squeeze counter (reset to 5/0/10 by wealth band; above 10 charges the club)
+}
+
+/// Fields of the Stadium object (`this` in comp/stadium.rs), named from how the routines use them. [pt] Campos do objeto Stadium.
+#[allow(dead_code)]
+pub(crate) mod stadium_obj {
+    pub(crate) const BOOKINGS: usize = 0x0; // 4 byte(s): stadium bookings array (12-byte entries: stadium id and date), sorted by date
+    pub(crate) const BOOKING_COUNT: usize = 0x4; // 4 byte(s): number of bookings
+    pub(crate) const BOOKING_CAPACITY: usize = 0x8; // 4 byte(s): allocated booking entries (grows by 30)
+    pub(crate) const VENUES: usize = 0xc; // 4 byte(s): neutral venue list (16-byte entries: nation id, continent id, national-stadium flag, stadium)
+    pub(crate) const VENUE_COUNT: usize = 0x10; // 4 byte(s): number of venues
+    pub(crate) const VENUE_CAPACITY: usize = 0x14; // 4 byte(s): allocated venue entries (grows by 30)
+    pub(crate) const VENUE_SORT: usize = 0x18; // 1 byte(s): current venue list order (1 by nation, 2 by continent, 3 by capacity)
+}
+
+/// Fields of the FIXTURE_MANAGER object (`this` in comp/fix_man.rs), named from how the routines use them. [pt] Campos do objeto FIXTURE_MANAGER.
+#[allow(dead_code)]
+pub(crate) mod fixture_manager {
+    pub(crate) const DAY_LISTS: usize = 0x0; // 4392 byte(s): 366 days x 3 time slices of pointers to per-key-nation fixture list arrays
+    pub(crate) const MOVED_NEWS_QUEUE: usize = 0x1128; // 4 byte(s): list of queued fixture-moved news (created on first use)
+    pub(crate) const OTHER_YEAR: usize = 0x112c; // 4 byte(s): fixture manager block of another year (chained, 0x1184 bytes each)
+    pub(crate) const YEAR: usize = 0x1130; // 2 byte(s): calendar year of this block
+    pub(crate) const LEAP_YEAR: usize = 0x1132; // 1 byte(s): 1 when the year is a leap year
+    pub(crate) const FILE_NAME: usize = 0x1133; // 80 byte(s): name of the year's fixtures file (fixtures_<year>.tmp)
+    pub(crate) const IS_PRIMARY: usize = 0x1183; // 1 byte(s): nonzero in the main block (owns and destroys the other-year block)
+}

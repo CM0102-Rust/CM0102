@@ -6,12 +6,12 @@ use super::*;
 /// Comparer for `conmebol_liber_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_LIBER_UPDATE_FOR_DATE);
-    let sorteia = read_u32_as_usize(this + 0x45) == 0
+    let draws = read_u32_as_usize(this + 0x45) == 0
         && full != 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
         && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(today as *const u16);
     let r = o(this, today, full);
-    if sorteia {
+    if draws {
         let stages = read_u32_as_usize(this + 0xc);
         let ok = read_u32_as_usize(this + 0x45) == 1
             && read_u32_as_usize(this + 0xee) == 0
@@ -72,7 +72,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_set_up_rules(this
     check_cup_rules("conmebol_liber_set_up_rules", this, &LIBERTADORES_RULES, || o(this))
 }
 
-/// Comparer for `conmebol_liber_select_qualified_clubs` (comparison mode: see the header of motor.rs).
+/// Comparer for `conmebol_liber_select_qualified_clubs` (comparison mode: see the header of motor.rs): the comparer of
+/// `0x4c3f40`, side by side with the two lists (the original routine allocates its own, the copy its own).
+///
+/// The original runs and its list is kept; the random-draw state is restored, the copy runs without counting and its
+/// list is compared with the original's and freed (`0x9452ca`: push; add esp, 4 -> cdecl). With fewer than 32 entrants
+/// (the boxes): only the original routine.
 ///
 /// [pt] Comparador da 0x4c3f40: lado a lado com as duas listas (a original aloca a dela, a cópia a sua): a original roda e a
 /// lista dela fica; o estado do sorteador volta, a cópia roda sem contar e a lista dela é comparada com a da original e

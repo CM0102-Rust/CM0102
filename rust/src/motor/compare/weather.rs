@@ -58,8 +58,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_city_weather(this: usize)
 }
 
 /// Comparer for `read_region` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_read_region(this: usize, f: usize, regiao: usize) -> u8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_READ_REGION)(this, f, regiao)
+pub(crate) unsafe extern "thiscall" fn comparar_read_region(this: usize, f: usize, region: usize) -> u8 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_READ_REGION)(this, f, region)
 }
 
 /// Comparer for `read_region_period` (comparison mode: see the header of motor.rs).

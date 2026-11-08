@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 /// Constructs a nation's transfer rules: base TRANSFER_RULES ctor, the nation vtable and the transfer windows.
 ///
 /// [pt] O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
@@ -12,7 +10,6 @@ pub(crate) unsafe fn construct_nation_rules(this: usize, a: [u32; 5], vtable: u3
     core::ptr::write_unaligned(this as *mut u32, vtable);
     set_transfer_windows(this, n, t, file, row);
 }
-
 
 /// As janelas da Noruega: uma janela, de 1º de setembro a 31 de agosto.
 pub(crate) const NORWAY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
@@ -34,20 +31,19 @@ pub(crate) unsafe extern "thiscall" fn construct_norway_rules(this: usize, a1: u
     this
 }
 
-
-/// As janelas da Irlanda do Norte: uma janela, de 6 de maio (andando para o sábado [inferência]) a 20 de março.
+/// Northern Ireland's transfer windows: one window, from 6 May (moved to the Saturday [inference]) to 20 March.
+///
+/// [pt] As janelas da Irlanda do Norte: uma janela, de 6 de maio (andando para o sábado [inferência]) a 20 de março.
 pub(crate) const NORTHERN_IRELAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x10, 0x00, 0x06, 0x06, 0x04, 0x01], // cqm2: a Irlanda do Norte
     [0x10, 0x00, 0xff, 0x14, 0x02, 0x00],
 ];
 
-
-
-/// As janelas do País de Gales: uma janela, de 7 de maio (andando para o domingo [inferência]) a 20 de março.
+/// The transfer windows of Wales: one window, from 7 May (moving to the Sunday [inference]) to 20 March.
+///
+/// [pt] As janelas do País de Gales: uma janela, de 7 de maio (andando para o domingo [inferência]) a 20 de março.
 pub(crate) const WALES_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x1a, 0x00, 0x00, 0x07, 0x04, 0x01], // cqm2: a País de Gales
     [0x1a, 0x00, 0xff, 0x14, 0x02, 0x00],
 ];
-
-
 

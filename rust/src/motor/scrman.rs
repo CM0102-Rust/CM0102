@@ -14,7 +14,6 @@ pub(crate) unsafe extern "thiscall" fn is_forward_unavailable(manager: usize) ->
     (*((block + 0x1f8) as *const usize) == 0) as u32
 }
 
-
 /// Copies C string origem (with terminator) to the work text 0xde1f64.
 ///
 /// [pt] Copia o texto C de `origem` (com o zero) para o texto de trabalho 0xde1f64.
@@ -48,8 +47,4 @@ pub(crate) unsafe fn panel_competition_name(c: usize, rounds: usize) {
         copy_to_work_text(c + competition::SHORT_NAME);
     }
 }
-
-
-
-
 

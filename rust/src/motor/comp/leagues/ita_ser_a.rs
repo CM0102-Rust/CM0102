@@ -1,12 +1,21 @@
 use super::*;
 
-/// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
+/// Describes one round of the 0x41-byte table.
+///
+/// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
+/// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
+/// list ends with −1).
+///
+/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
 pub(crate) type ItaSerALeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
-/// Writes rounds starting at `primeira` into round table t: each round's date (0x68a160) and match slots (0x68a1c0),
-/// from a static table.
+/// Writes rounds `primeira`.. into round table `t`, in the original routine's order.
+///
+/// For each round: the date (`0x68a160`: push 0; push year; push code; push week; push years; push month; push day;
+/// push i; push t; add esp -> cdecl: value 0) and the slots (`0x68a1c0`: push 0; push c; push b; push a; push j; push
+/// i; push t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
@@ -23,7 +32,6 @@ pub(crate) unsafe fn ita_ser_a_set_league_rounds(t: usize, year: u32, first: i32
     }
 }
 
-
 /// O que muda entre as ligas de fase única.
 pub(crate) struct ItaSerASingleStageLeague {
     pub(crate) rodadas: i16,
@@ -33,8 +41,11 @@ pub(crate) struct ItaSerASingleStageLeague {
     pub(crate) ramo: &'static str,
 }
 
-/// Common create_schedule body: only the main stage (-1) allocates the rounds x 0x41 table and fills dates and slots;
-/// sets is_league, rounds and extra; returns the table.
+/// The common create_schedule body (thiscall(league, stage, &rounds, &extra, &é_liga), ret 0x10; no saved state): only
+/// the main stage (−1; the others return 0 without writing anything).
+///
+/// é_liga (if requested) = 1, the rounds, extra = 0, the table of rounds × 0x41 bytes (malloc 0x944e46: push; add esp,
+/// 4 -> cdecl; out of memory: the box and 0) with the league's dates and slots. Returns the table.
 ///
 /// [pt] O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
@@ -60,8 +71,6 @@ pub(crate) unsafe fn build_league_schedule(this: usize, fase: u32, rodadas: *mut
     ita_ser_a_set_league_rounds(t, ano, 0, p.tabela);
     t
 }
-
-
 
 /// a Série A, 34 rodadas de 28/ago a 12/mai; quase todas com duas faixas de TV (dias 6 e 5, turno 2, 2 jogos cada)
 pub(crate) const SERIE_A_ROUNDS: [ItaSerALeagueRound; 34] = [
@@ -143,7 +152,10 @@ pub(crate) const SERIE_B_ROUNDS: [ItaSerALeagueRound; 38] = [
     (14, 4, 1, 6, 1, &[(-1, -1, -1)]), // 37: 14/mai (+1 ano)
 ];
 
-/// A primeira divisão francesa: as rodadas em ordem, cada uma marcada `true` se só entra com 38 rodadas (20 clubes; com
+/// The French first division: the rounds in order, each marked `true` if it is only used with 38 rounds (20 clubs; with
+/// 34, the `false` ones, in sequence). The index in the comment is the one of the 38-round season.
+///
+/// [pt] A primeira divisão francesa: as rodadas em ordem, cada uma marcada `true` se só entra com 38 rodadas (20 clubes; com
 /// 34, as de `false`, em sequência). O índice no comentário é o da temporada de 38.
 pub(crate) const FRENCH_FIRST_DIVISION_ROUNDS: [(bool, ItaSerALeagueRound); 38] = [
     (false, (31, 6, 0, 5, 2, &[(6, 1, 1), (6, 2, 1), (-1, -1, -1)])), // 0: 31/jul
@@ -189,7 +201,13 @@ pub(crate) const FRENCH_FIRST_DIVISION_ROUNDS: [(bool, ItaSerALeagueRound); 38] 
 pub(crate) const SERIE_A_LEAGUE: ItaSerASingleStageLeague = ItaSerASingleStageLeague { rodadas: 0x22, arquivo: 0x9ea2a8, linha: 0xb0, tabela: &SERIE_A_ROUNDS, ramo: "cqo_6 calendario da serie a" };
 pub(crate) const SERIE_B_LEAGUE: ItaSerASingleStageLeague = ItaSerASingleStageLeague { rodadas: 0x26, arquivo: 0x9ea384, linha: 0xa8, tabela: &SERIE_B_ROUNDS, ramo: "cqo_6 calendario da serie b" };
 
-/// Cup round record for the Italian playoff (stage 0): May draw and two-legged game, teams from league byte +0xee.
+/// The play-off match of the Italian leagues (stage 0, one 0x68-byte cup round, `eng_cc_cup_write_cup_round`; the year
+/// +0x40 signed).
+///
+/// The draw and the match in May of the following year (Serie A: draw on 13 May, match on 19 May; Serie B: 15 May and
+/// 21 May), name 0xa0, no draw (0x200), tie-break 3, category 5, two legs (+0x21 = 2) with 3 days between the matches,
+/// no prizes; the teams (2n teams, n matches, 2n new entrants) from the league's byte +0xee (n, signed; arithmetic in
+/// 16 bits as in the original) [inference: the requested play-off ties].
 ///
 /// [pt] O jogo-desempate das ligas italianas (fase 0, uma rodada de copa de 0x68 bytes, `eng_cc_cup_write_cup_round`; o ano +0x40 com
 /// sinal): o sorteio e o jogo em maio do ano seguinte (a Série A: sorteio em 13/mai, jogo em 19/mai; a Série B: 15/mai e
@@ -210,8 +228,12 @@ pub(crate) struct ItalianLeagueWithTiebreak {
     pub(crate) linha_desempate: u32,
 }
 
-/// Shared create_schedule of the two Italian leagues: stage -1 the league calendar, stage 0 the playoff round table
-/// (0x68 bytes); others return 0.
+/// The shared create_schedule body of the two Italian leagues (thiscall(league, stage, &rounds, &extra, &é_liga), ret
+/// 0x10; no saved state).
+///
+/// Stage −1 is the main one (`build_league_schedule`); stage 0, the play-off match: é_liga (if requested) = 0, 1 round,
+/// extra 0, the table of 0x68 bytes (malloc 0x944e46; out of memory: the box and 0); the others return 0 without
+/// writing anything. Returns the table.
 ///
 /// [pt] O corpo comum das duas (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): a fase −1 é a
 /// principal (`build_league_schedule`); a 0, o jogo-desempate: é_liga (se pedido) = 0, 1 rodada, extra 0, a tabela de 0x68
@@ -257,15 +279,6 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_schedule(this: usize, st
     italian_schedule(this, stage, rounds, extra, league, &SERIE_A_WITH_PLAYOFF)
 }
 
-
-
-
-
-
-
-
-
-
 /// Row i of the league table [+0xb1] (0x3b bytes each).
 ///
 /// [pt] A linha `i` da tabela [+0xb1] (0x3b bytes).
@@ -273,8 +286,16 @@ pub(crate) unsafe fn ita_ser_a_table_row(league: usize, i: usize) -> usize {
     read_u32_as_usize(league + league::TABLE) + i * 0x3b
 }
 
-/// Per-position zones of Serie A: 1 champion, 2 other Champions League places, 3 UEFA Cup places, 4 the next two
-/// [inference: Intertoto], 5 relegation (+0xc1), 0 the rest.
+/// The Serie A zones by position (0 = first): 1 champion, 2 the other Champions League places, 3 UEFA Cup places, 4 the
+/// next two [inference: Intertoto], 5 relegation (+0xc1), 0 the rest.
+///
+/// 2 covers the nation's `cl` places (UefaSeeding::get_nation_places 0x905c60: push &uefa; push &cl; push
+/// [[liga+4]+0x5d] (the competition's nation); mov ecx, [0xde1f58] -> thiscall, ret 0xc, which writes 1 to both before
+/// searching); 3 the `uefa` UEFA Cup places, right after; 4 the next two [inference: Intertoto]; 5 the last `+0xc1` of
+/// 18 (relegation); 0 the rest.
+///
+/// The original routine builds the 18 zones in a local record (16 + 2 bytes) and reads two beyond it with a table of
+/// more than 18 clubs; the copy uses 64 bytes with zeros after the 18 (Serie A has 18).
 ///
 /// [pt] As faixas da Série A, por posição (0 = o primeiro): 1 o campeão; 2 as outras vagas da Liga dos Campeões (as `cl`
 /// vagas da nação, UefaSeeding::get_nation_places 0x905c60: push &uefa; push &cl; push [[liga+4]+0x5d] (a nação da
@@ -420,9 +441,12 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
     r
 }
 
-
-/// Comparer: runs only the original and checks its guarantees: a created playoff stage implies a tie on a zone
-/// boundary; otherwise the season end is never left pending (+0xdd and +0xe6).
+/// The comparer of the two routines: the league day and the play-off stage cannot run twice, so only the original
+/// routine runs and its guarantees are checked.
+///
+/// In the main stage and with `completo`: if the play-off stage was created (`+0x2c` changed), there is a pair of
+/// neighbouring rows in the table tied across different zones; and the original routine never leaves the season end
+/// pending (`+0xdd` and `+0xe6` set and `+0x2c` = 0), because it either creates the stage or zeroes them.
 ///
 /// [pt] O comparador das duas: o dia de liga e a fase do desempate não rodam duas vezes: só a original, conferindo o que
 /// ela garante. Na fase principal e com `completo`: se a fase do desempate foi criada (+0x2c mudou), há na tabela um
@@ -441,10 +465,6 @@ pub(crate) unsafe fn compare_league_day(name: &str, this: usize, full: u32, faix
     }
     r
 }
-
-
-
-
 
 /// Updates the staff records by status in Serie A: in the league, the base records; in the tie-break match, the winner
 /// (status 1 [inference: the club won]) is placed above the other in the table (the rows swap if it was below) and,
@@ -542,10 +562,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
     0xffff_ffff
 }
 
-
-
-
-/// O que muda de uma divisão italiana para outra no construtor.
+/// What changes from one Italian division to another in the constructor.
+///
+/// [pt] O que muda de uma divisão italiana para outra no construtor.
 pub(crate) struct ItalianDivision {
     pub(crate) vtabela: usize,
     /// a Série A e a Série B gravam +0xee = 0 (o campo próprio da classe [inferência: o desempate em curso]) e +0x4c = 1
@@ -554,15 +573,28 @@ pub(crate) struct ItalianDivision {
     pub(crate) fases: u32,
     pub(crate) regras: usize,
     pub(crate) tabela: usize,
-    /// o calendário real de 2001/02 pelo nome dos clubes (set_up_fixed_fixtures; mov ecx, this -> thiscall, ret 0)
+    /// The real 2001/02 calendar by club names (set_up_fixed_fixtures; mov ecx, this -> thiscall, ret 0).
+    ///
+    /// [pt] o calendário real de 2001/02 pelo nome dos clubes (set_up_fixed_fixtures; mov ecx, this -> thiscall, ret 0)
     pub(crate) fixos: usize,
     pub(crate) arquivo: usize,
     /// as caixas: regras, tabela, jogos, ordem, estatísticas
     pub(crate) linhas: [u32; 5],
 }
 
-/// Body of the four Italian division constructors: League base, record, vtable, year, discipline rule 0x11; loads from
-/// the temp file or builds a new league (stages, rules, table, fixed calendar, fixtures, stats, predicted positions).
+/// The body of the four Italian division constructors (thiscall(this, year, record), ret 8, SEH frame only for the
+/// operator new); returns this.
+///
+/// The base (League::League 0x682200: mov ecx -> thiscall, ret 0), the record (+4), the vtable, the year (+0x40) and
+/// discipline rule 0x11 (+0x50, the Italian leagues' one); it tries to load the state (League::load_from_temp_file
+/// 0x687b10: push 1; mov ecx -> thiscall, ret 4). If it loaded: done.
+///
+/// Otherwise, the new league: in A and B, +0xee = 0 and +0x4c = 1; stage 0xff (+0x44), current stage −1 (+0x30), +0x2c
+/// stages and the array [+0xc] (malloc 0x944e46 of 4 × stages: push; add esp, 4 -> cdecl; 0 with no stages); the rules
+/// and the table (error box and stop if they fail); the real 2001/02 calendar (unchecked); the fixtures
+/// (League::create_fixtures 0x6835c0), the sort (League::sort_table 0x6827d0: push 0 -> thiscall, ret 4), the stats
+/// (operator new 0x944cf1 of 0x5ce: push; add esp, 4 -> cdecl; Comp_Stats::Comp_Stats 0x49ee70: push league; mov ecx,
+/// new -> thiscall, ret 4) at +8 and the predicted positions (0x68a850: mov ecx -> thiscall, ret 0).
 ///
 /// [pt] O corpo dos quatro construtores (thiscall(this, ano, registro), ret 8, quadro SEH só para o operator new): a base
 /// (League::League 0x682200: mov ecx -> thiscall, ret 0), o registro (+4), a vtable, o ano (+0x40) e a regra de
@@ -688,9 +720,6 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_a(this: usize, year: u3
     construct_italian_division(this, year, record, &SERIE_A)
 }
 
-
-
-
 /// Comparer of the four constructors: runs only the original and checks return value, vtable, year, record, discipline
 /// and, for a new league, stages and Serie A/B fields.
 ///
@@ -711,12 +740,6 @@ pub(crate) unsafe fn compare_italian_constructor(name: &str, this: usize, year: 
     r
 }
 
-
-
-
-
-
-
 /// Number of league matches: (clubs +0x3e / 2) x rounds +0xa9.
 ///
 /// [pt] Quantos jogos a liga tem: (clubes +0x3e / 2, com sinal, para zero) × rodadas +0xa9.
@@ -726,8 +749,23 @@ pub(crate) unsafe fn league_match_count(league: usize) -> i32 {
     (clubs / 2).wrapping_mul(rounds)
 }
 
-/// Body of set_up_fixed_fixtures: allocates the fixed-fixture vector (+0xea), fills each from the table by club names,
-/// and destroys it (+0xea = 0) if any club was not found.
+/// The body of set_up_fixed_fixtures for both leagues (thiscall, ret 0, SEH frame only for the vector constructor):
+/// allocates the fixed-fixture vector (+0xea), fills each fixture from the table by club names, and destroys it (+0xea
+/// = 0) if any club was not found.
+///
+/// The vector of fixed fixtures (operator new 0x944cf1 of n × 16 + 4: push; add esp, 4 -> cdecl; the count n in the
+/// first dword and each fixture through constructor 0x645800, with destructor 0x5a53c0 for the exception: `eh vector
+/// constructor iterator` 0x9463af, push 0x5a53c0; push 0x645800; push n; push 0x10; push vector -> stdcall, ret 0x14)
+/// in +0xea; out of memory, the box for line `linha` of source file `arquivo` and end.
+///
+/// Then each fixture of `tabela`, in order, in its place in the vector (fixed_fixture_set_by_club_names 0x68aff0: push
+/// the 6th (away, via the map); push the 5th (home); push year; push month (0 = January); push day; push league; mov
+/// ecx, [+0xea] + 16 × k -> thiscall, ret 0x18: the date and the clubs found by name, −1 in +8/+0xc if not found).
+///
+/// Finally, if any of the n fixtures was left with a club not found (+8 or +0xc = −1), the vector is destroyed (`eh
+/// vector destructor iterator` 0x9462bb: push 0x5a53c0; push count; push 0x10; push vector -> stdcall, ret 0x10;
+/// operator delete 0x944c94 of the block: push; add esp, 4 -> cdecl) and +0xea = 0: the league goes back to the
+/// randomly drawn calendar.
 ///
 /// [pt] O corpo das duas (set_up_fixed_fixtures; thiscall, ret 0, quadro SEH só para o construtor de vetor): o vetor dos
 /// jogos fixos (operator new 0x944cf1 de n × 16 + 4: push; add esp, 4 -> cdecl; a conta n no primeiro dword e cada jogo
@@ -793,11 +831,13 @@ pub(crate) unsafe extern "thiscall" fn create_fixed_fixtures(this: usize) {
     set_up_fixed_fixtures(this, &SERIE_A_FIXED_FIXTURES, 0x9ea2a8, 0x60f)
 }
 
-
-
-
-
-/// Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do
+/// The fixed matches (day, month with 0 = January, year, the 5th argument (home, by the map), the 6th (away)), with the
+/// names in the exe's `.rdata`.
+///
+/// In the original routine's order (extracted from the disassembly and checked: the vector positions go in steps of
+/// 16).
+///
+/// [pt] Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do
 /// exe; na ordem da original (extraídos da desmontagem e conferidos: os lugares do vetor vão de 16 em 16).
 pub(crate) const SERIE_A_FIXED_FIXTURES: [(u8, u8, u16, u32, u32); 306] = [
     (28, 7, 2001, 0x9ea370, 0x9ea378), // Bologna × Atalanta
@@ -1491,9 +1531,10 @@ pub(crate) const SERIE_B_FIXTURES: [(u8, u8, u16, u32, u32); 380] = [
     (2, 5, 2002, 0x9ea450, 0x9ea3c0), // Cagliari × Vicenza
 ];
 
-
-
-/// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
+/// In the rehearsal (the comparer) the copy writes the rules and does not call virtual +0x3c (the round table, which
+/// allocates).
+///
+/// [pt] No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
 pub(crate) static mut ITA_SER_A_RULES_DRY_RUN: bool = false;
 
 /// Writes the rule fields (offset, size, value) into the league and builds the main-stage round table via virtual +0x3c
@@ -1518,8 +1559,12 @@ pub(crate) unsafe fn ita_ser_a_apply_league_rules(this: usize, escritas: &[(usiz
     1
 }
 
-/// Rule writes common to the four Italian divisions (draw points, match category, tiebreakers, round order, 7 subs on
-/// bench, 3 substitutions).
+/// The rules common to the four Italian divisions.
+///
+/// 1 point for a draw (`+0xc3`), category 2 for the matches (`+0xc4`), `+0xab` and `+0xdb` = 0 (the words copied into
+/// the matches), national clubs (`+0x42` = 1), the 1st tie-breaker 1 (`+0xc5`) and the 2nd 2 (`+0xc6`), the fixed round
+/// order in the grid (bit 0x40 of `+0xd9`, with the low byte left as is), 7 substitutes on the bench (`+0x49`) and 3
+/// substitutions (`+0x4a`).
 ///
 /// [pt] As regras comuns às quatro: 1 ponto pelo empate (+0xc3), categoria 2 nas partidas (+0xc4), +0xab e +0xdb = 0 (as
 /// palavras copiadas nas partidas), clubes nacionais (+0x42 = 1), o 1º desempate 1 (+0xc5) e o 2º 2 (+0xc6), a ordem
@@ -1553,7 +1598,6 @@ pub(crate) unsafe fn serie_a_rules(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-
 /// Rule writes for Serie B (common rules plus rounds, promotion/relegation and links to Serie A and C1).
 pub(crate) unsafe fn serie_b_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = italian_common_rules(this);
@@ -1562,7 +1606,6 @@ pub(crate) unsafe fn serie_b_rules(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-
 /// Rule writes for Serie C1/A.
 pub(crate) unsafe fn serie_c1a_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = italian_common_rules(this);
@@ -1570,7 +1613,6 @@ pub(crate) unsafe fn serie_c1a_rules(this: usize) -> Vec<(usize, u8, u32)> {
     v.extend_from_slice(&[(0xc7, 1, 0), (0xbe, 1, 1), (0xbf, 1, 4), (0xc0, 1, 4), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_B) as u32), (0x20, 4, read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_B) as u32)]);
     v
 }
-
 
 /// Rule writes for Serie C1/B (lower division C2/A only when that league is selected).
 pub(crate) unsafe fn serie_c1b_rules(this: usize) -> Vec<(usize, u8, u32)> {
@@ -1612,14 +1654,15 @@ pub(crate) unsafe fn ita_ser_a_compare_league_rules(name: &str, this: usize, esc
     r
 }
 
-
-
-
-
-
-
-/// Common table body: sets club count, allocates the table and fills rows with the clubs of the division in database
-/// order (init_table_row); returns whether it filled.
+/// Shared table body: sets the club count, allocates the table and fills the rows with the division's clubs in database
+/// order; returns whether it filled up.
+///
+/// +0x3e = `n` clubs; the table (malloc 0x944e46 of n × 0x3b; when out of memory: the error box of source file
+/// `arquivo` at line `linha` and None); the clubs of [0xae23b4] (0x245 bytes, [0xae235c] of them) whose competition
+/// (+0x57, the id at +0) is that of global `g`, in database order, each in the next row (League::init_table_row
+/// 0x687430: thiscall(league, row, club, 0, 0), ret 0x10), until full.
+///
+/// Returns whether it filled up.
 ///
 /// [pt] O corpo comum: +0x3e = `n` clubes; a tabela (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do fonte
 /// `arquivo` na linha `linha` e None); os clubes de [0xae23b4] (0x245 bytes, [0xae235c] deles) cuja competição
@@ -1660,9 +1703,9 @@ pub(crate) unsafe fn ita_ser_a_fill_league_table(this: usize, n: i16, file: usiz
 ///
 /// [pt] O fundo de prêmios (+0x28 = League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4) e +0xe1 = 1 (o fundo
 /// é pago pela tabela no fim da liga, 0x682e10).
-pub(crate) unsafe fn set_prize_fund(this: usize, cota: i32) {
+pub(crate) unsafe fn set_prize_fund(this: usize, quota: i32) {
     let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    let f = prize(this, cota);
+    let f = prize(this, quota);
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
     *((this + league::PRIZE_MODE) as *mut u8) = 1;
 }
@@ -1690,16 +1733,17 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_table(this: usize) -> u3
     1
 }
 
-
-
-
-/// Comparer: plans the division's clubs beforehand, runs only the original and checks count, return value, rows and
-/// prize fund.
+/// The comparer of the four table routines: the original routine allocates the table (and Serie A's also pays the TV
+/// money, with news), so only it runs.
+///
+/// The plan, made beforehand: the division's clubs in database order (up to `n`). Afterwards it checks: `+0x3e` = `n`,
+/// the return value = 1 if the plan was full, the rows holding the plan's clubs in order and, with `cota` and a full
+/// table, `+0xe1` = 1 and `+0x28` = the fund for that share.
 ///
 /// [pt] O comparador das quatro: a original aloca a tabela (e a da A paga a TV, com notícia): só ela. O plano, feito
 /// antes: os clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu,
 /// as linhas com os clubes do plano na ordem e, com `cota`, cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
-pub(crate) unsafe fn ita_ser_a_compare_league_table(name: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn ita_ser_a_compare_league_table(name: &str, this: usize, n: i16, g: usize, quota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
@@ -1717,7 +1761,7 @@ pub(crate) unsafe fn ita_ser_a_compare_league_table(name: &str, this: usize, n: 
     if same {
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
-        if let (1, Some(c)) = (r, cota) {
+        if let (1, Some(c)) = (r, quota) {
             let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
             same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, c);
         }
@@ -1725,8 +1769,4 @@ pub(crate) unsafe fn ita_ser_a_compare_league_table(name: &str, this: usize, n: 
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
-
-
-
-
 

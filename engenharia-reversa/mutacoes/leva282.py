@@ -38,5 +38,5 @@ MUTACOES = [
     ('cqs2_previstas_invertidas', 'let lugares: [u32; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10]; // cqs2: as posições previstas das três divisões', 'let lugares: [u32; 12] = [10, 7, 4, 1, 1, 4, 7, 10, 1, 4, 7, 10]; // mutacao: a primeira divisao invertida', 'cqs_2 posicoes previstas'),
     ('cqs3_grupos_vitoria_vale_empate', 'bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos', 'bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc3) // mutacao: a vitoria vale o empate', 'cqs_3 grupo'),
     ('cqs3_segunda_fase_em_ordem', 'const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase', 'const SECOND_ROUND_SEEDS: [u8; 16] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]; // mutacao: as vagas em ordem', 'cqs_3 segunda fase'),
-    ('cqs3_terceira_embaralha_sete', 'embaralhar(v.as_mut_ptr(), 8); // cqs3: os oito vencedores embaralhados', 'embaralhar(v.as_mut_ptr(), 7); // mutacao: embaralha sete', 'cqs_3 terceira fase'),
+    ('cqs3_terceira_embaralha_sete', 'shuffle(v.as_mut_ptr(), 8); // cqs3: os oito vencedores embaralhados', 'shuffle(v.as_mut_ptr(), 7); // mutacao: embaralha sete', 'cqs_3 terceira fase'),
 ]

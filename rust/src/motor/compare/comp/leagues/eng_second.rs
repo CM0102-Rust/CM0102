@@ -9,14 +9,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_second_create_schedule(this:
     compare_league_round_table("eng_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_second_create_schedule(this, stage, r, e, l))
 }
 
-
-/// Comparer for `eng_second_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `eng_second_update_staff_records_for_status` (0x576c50; comparison mode: see the header of motor.rs).
+///
+/// The records write the history to the file, draw the morale and may renew contracts (they do not run twice): only the
+/// original runs. The plan, made beforehand, in the knockout: the club's first row decides what the routine writes
+/// (+0x37 = 0 and saiu = 1 with 1; +0x37 = 0xfe with 0xff or 2; nothing with 0, which keeps looking for another row of
+/// the same club); afterwards the row and `saiu` must be like that. In the league the routine writes nothing: only the
+/// return value is checked.
 ///
 /// [pt] Comparador da 0x576c50: os registros gravam o histórico no arquivo, sorteiam o moral e podem renovar contratos
 /// (não rodam duas vezes): só a original. O plano, feito antes, no mata-mata: a primeira linha do clube decide o que a
 /// rotina grava (+0x37 = 0 e saiu = 1 com 1; +0x37 = 0xfe com 0xff ou 2; nada com 0, que segue procurando outra linha
 /// do mesmo clube); depois a linha e `saiu` têm de estar assim. Na liga a rotina não grava nada: a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, saiu: usize, a: u32, b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, a: u32, b: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(IDX_ENG_SECOND_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let s = status as u8;
     let mut plan: Option<(usize, u8, bool)> = None;
@@ -42,16 +47,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_
             i += 1;
         }
     }
-    let r = o(this, club, status, stage, saiu, a, b);
+    let r = o(this, club, status, stage, left, a, b);
     let same = r == 0
         && match plan {
-            Some((row, v, marca)) => read_u8(row + 0x37) == v && (!marca || read_u8(saiu) == 1),
+            Some((row, v, marca)) => read_u8(row + 0x37) == v && (!marca || read_u8(left) == 1),
             None => true,
         };
     SCOREBOARD.record(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, club, s, stage as u8, r, plan));
     r
 }
-
 
 /// Comparer for `eng_second_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_second_advance_stage(this: usize) {

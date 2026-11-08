@@ -24,7 +24,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_highlight(p: usize, code:
     r
 }
 
-/// Comparer for `post_recovery_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `post_recovery_news` (comparison mode: see the header of motor.rs), as a dry run (model
+/// RARE_FINANCE_EVENT_DRY_RUN).
+///
+/// The copy runs first without delivering the news item and stopping before the absconding, then the original routine
+/// from the same state; compares the player record (0x6e), the player sheet (0x46), the contract (0x4f), the form
+/// record (31), byte +0xc of the 79-byte record, the club manager's record and the random generator state.
+///
+/// With the absconding in the copy (the original puts him on the list, draws at random and sends a news item): only the
+/// original.
 ///
 /// [pt] Comparador em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN): a cópia roda primeiro sem a entrega da notícia e parando antes da fuga,
 /// depois a original a partir do mesmo estado; compara o registro do jogador (0x6e), a ficha (0x46), o contrato (0x4f),
@@ -83,7 +91,14 @@ pub(crate) unsafe extern "stdcall" fn comparar_injury_get_category_name(category
     r
 }
 
-/// Comparer for `add_injury` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_injury` (0x62d250; comparison mode: see the header of motor.rs).
+///
+/// Only the original runs (it allocates, delivers the news item, schedules retirement and calls original routines that
+/// draw random numbers along the way, such as training 0x8b1750 and relapse 0x62e500, which may injure again: it cannot
+/// run twice). It checks what the injury guarantees afterwards: invalid arguments or recurrence only give −1; otherwise
+/// −1 only with the person still injured (+0xe ≠ −1) or with no array; a valid slot with the person still in it (+0xe =
+/// slot, with no relapse having changed it): the type in the slot and at +0x1d, +0x1c = 0, +0x2c = +0x28, +0x2e =
+/// +0x2a, and +0x2a = the return to training from duration +0x28 (the copy's x87).
 ///
 /// [pt] Comparador da 0x62d250: só a original (aloca, entrega a notícia, agenda aposentadoria e chama originais que sorteiam
 /// no meio, como o treino 0x8b1750 e a recaída 0x62e500, que pode lesionar de novo: não pode rodar duas vezes). Confere
@@ -131,7 +146,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_injury_post_injury_news(this: us
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_INJURY_POST_INJURY_NEWS)(this, p, l, arg)
 }
 
-/// Comparer for `injury_daily_update` (comparison mode: see the header of motor.rs).
+/// Comparer for `injury_daily_update` (comparison mode: see the header of motor.rs): side-by-side comparer of the
+/// training phase.
+///
+/// The copy runs as a dry run (without freeing the list, without the new injury and without the final routines) and the
+/// original routine from the same state (the Injury header, the injury table and the random draw); the original is
+/// checked when it reaches the return-from-injury news (`0x62e010`, detoured in the same item), before the final
+/// routines. With a new injury (it allocates and sends news) or with everyone's fitness (day 180 of the first season):
+/// only the original routine.
 ///
 /// [pt] Comparador lado a lado da fase do treino: a cópia em ensaio (sem soltar a lista, sem a lesão nova e sem as rotinas
 /// do fim) e a original a partir do mesmo estado (o cabeçalho do Injury, a tabela de lesões e o sorteio); a original é
@@ -172,6 +194,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usi
 }
 
 /// Comparer for `apply_match_effects` (comparison mode: see the header of motor.rs).
+///
+/// Side by side on the random generator's state, on the cursor of the knocks list and on the recovery (+0xa, 4 bytes,
+/// of the 31-byte record at [this]) of each person in the slots.
+///
+/// A match with a knock that reaches the injury type: only the original routine (the new injury allocates and sends the
+/// news item; the severity of the first knock may be stack residue).
 ///
 /// [pt] Comparador: lado a lado no estado do sorteio, no cursor da lista das batidas e na recuperação (+0xa, 4 bytes, do
 /// registro de 31 bytes em [this]) de cada pessoa das vagas. Partida com batida que chega ao tipo da lesão: só a original (a lesão nova aloca e manda a
@@ -272,13 +300,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_player_injury_status(this: u
 
 /// Comparer for `add_illness_outbreak` (comparison mode: see the header of motor.rs).
 ///
+/// The original routine draws at random, allocates and reorders: the plan first (the draws and the selection, with the
+/// random generator's state saved and restored); then the original runs.
+///
+/// It checks the same random generator state and, if the outbreak was added, the count +1 and the outbreak (date, type,
+/// club, match) in the vector; otherwise the count unchanged.
+///
 /// [pt] Comparador: a original sorteia, aloca e reordena: o plano antes (os sorteios e a seleção, com o estado do sorteio
 /// guardado e devolvido); a original roda. Confere o mesmo estado do sorteio e, se o surto entrou, a conta +1 e o surto
 /// (data, tipo, clube, partida) no vetor; senão a conta igual.
 pub(crate) unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usize, kind: u32, club_i: i32, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, usize)>(IDX_ADD_ILLNESS_OUTBREAK);
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
-    let entra = crate::rng::pause_trace(|| crate::rng::without_counting(|| outbreak_takes_hold(kind as u8, club_i)));
+    let enters = crate::rng::pause_trace(|| crate::rng::without_counting(|| outbreak_takes_hold(kind as u8, club_i)));
     let after_of_plan = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     state.write_back();
     let n0 = read_i32(this + injury_fields::OUTBREAK_COUNT);
@@ -292,17 +326,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize
     let n = read_i32(this + injury_fields::OUTBREAK_COUNT);
     let same_draw = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS) == after_of_plan;
     let v = read_usize(this + injury_fields::OUTBREAKS);
-    let ok = if entra && v != 0 {
+    let ok = if enters && v != 0 {
         n == n0 + 1 && (0..n.max(0) as usize).any(|k| *((v + k * OUTBREAK_SIZE) as *const [u8; OUTBREAK_SIZE]) == expected)
     } else {
         n == n0
     };
     SCOREBOARD.record(ok && same_draw, || {
-        format!("add_illness_outbreak(tipo {}, clube {}) plano entra={}, conta {} -> {}, mesmo sorteio={}", kind as u8, club_i, entra, n0, n, same_draw)
+        format!("add_illness_outbreak(tipo {}, clube {}) plano entra={}, conta {} -> {}, mesmo sorteio={}", kind as u8, club_i, enters, n0, n, same_draw)
     });
 }
 
 /// Comparer for `spread_illness_outbreaks` (comparison mode: see the header of motor.rs).
+///
+/// The original routine draws at random and makes people ill (0x62d250, which may add outbreaks): only it runs, and the
+/// plan made beforehand is checked: how many outbreaks were more than five days old (the ones that leave) and,
+/// afterwards, no outbreak older than five days and the count at least the previous one minus those that leave.
 ///
 /// [pt] Comparador: a original sorteia e adoece (0x62d250, que pode acrescentar surtos): roda só ela e confere o plano
 /// feito antes: quantos surtos tinham mais de cinco dias (os que saem) e, depois, nenhum surto com mais de cinco dias e
@@ -375,7 +413,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_records(this: usize) {
     SCOREBOARD.record(errado.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", errado));
 }
 
-/// Comparer for `roll_recurring_injury` (comparison mode: see the header of motor.rs).
+/// Comparer for `roll_recurring_injury` (comparison mode: see the header of motor.rs): `0x62d250` (treat) cannot run
+/// twice.
+///
+/// The plan first, with the random-draw state saved (without counting or tracing) and the record marks restored; then
+/// the original routine runs. It checks the marks of the record and of the chosen one and, outside the treat path, that
+/// the random-draw state equals the plan's (the same random draws).
 ///
 /// [pt] Comparador: a 0x62d250 (tratar) não pode rodar duas vezes: o plano antes, com o estado do sorteio guardado (sem
 /// contar nem rastrear) e as marcas do registro devolvidas; a original roda. Confere as marcas do registro e do
@@ -430,16 +473,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize,
     let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79)) + 0xc;
     let (byte, nivel, b1c) = (read_u8(g) & 0xfe, read_u8(r + 0x13), read_u8(r + 0x1c));
     let ret = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_INJURY_RESET_PLAYER)(this, id);
-    let itens = if l != 0 { list_items_capped(l) } else { Vec::new() };
+    let items = if l != 0 { list_items_capped(l) } else { Vec::new() };
     let w = |o: usize| core::ptr::read_unaligned((r + o) as *const i16);
     let dd = |o: usize| read_usize(r + o) as i32;
-    let ok = itens == expected && ret == g && read_u8(g) == byte
+    let ok = items == expected && ret == g && read_u8(g) == byte
         && read_usize(r) == read_usize(G_CURRENT_DATE) && read_usize(r + 4) == read_usize(G_CURRENT_DATE_LEAP)
         && w(8) == 10000 && w(0xa) == 10000 && w(0xc) == 0 && dd(0xe) == -1 && read_u8(r + 0x12) == 0xff
         && read_u8(r + 0x13) == nivel && dd(0x14) == -1 && dd(0x18) == -1 && read_u8(r + 0x1c) == b1c && read_u8(r + 0x1d) == 0xff;
     SCOREBOARD.record(ok, || {
         let v: Vec<u8> = (0..31).map(|o| read_u8(r + o)).collect();
-        format!("injury_reset_player({}) itens {} (esperava {}), byte {:#x} (esperava {:#x}), registro {:02x?}", id, itens.len(), expected.len(), read_u8(g), byte, v)
+        format!("injury_reset_player({}) itens {} (esperava {}), byte {:#x} (esperava {:#x}), registro {:02x?}", id, items.len(), expected.len(), read_u8(g), byte, v)
     });
     ret
 }
@@ -473,7 +516,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_training_load(injuries: usiz
     SCOREBOARD.record(igual, || format!("set_training_load({}, {}) {:x?} x {:x?}", *id, value, mo, mr));
 }
 
-/// Comparer for `update_player_fitness` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_player_fitness` (comparison mode: see the header of motor.rs), side by side.
+///
+/// Compared: the person's 31-byte record, byte +0xa of the 79-byte record, the statics and the club's saved data
+/// (0xb63d08..0xb63d34), and the random draw. The copy runs as a dry run, without the end of the injury (0x62e700):
+/// when it reaches that point, only the original stands (it already ran first). The first time (statics still to be
+/// created, with atexit) and with no record (null person, id outside the table, no player sheet): only the original
+/// runs.
 ///
 /// [pt] Comparador lado a lado: o registro de 31 bytes da pessoa, o byte +0xa do registro de 79 bytes, as estáticas e o
 /// guardado do clube (0xb63d08..0xb63d34) e o sorteio. A cópia roda em ensaio, sem o fim da lesão (0x62e700): quando
@@ -486,9 +535,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_player_fitness(this: usiz
     }
     let id = read_i32(person) as usize;
     let rec = read_usize(this).wrapping_add(id.wrapping_mul(31));
-    let geral = read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f));
+    let general = read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f));
     let e = crate::rng::STATE_REGIONS;
-    let reg = [(rec, 31), (geral + 0xa, 1), (G_FITNESS_UPDATE_CACHE_DATE, 0x2c), e[0], e[1]];
+    let reg = [(rec, 31), (general + 0xa, 1), (G_FITNESS_UPDATE_CACHE_DATE, 0x2c), e[0], e[1]];
     END_INJURY_REACHED = false;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person), || {
         END_INJURY_DRY_RUN = true;

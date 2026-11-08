@@ -245,13 +245,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_to(this: usize, x: i8, y: i
         return;
     }
     let engine = *((this + match_player::ENGINE) as *const usize);
-    let antiga = occupancy_grid_cell(engine, byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y)) as usize;
+    let old = occupancy_grid_cell(engine, byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y)) as usize;
     let new = occupancy_grid_cell(engine, x, y) as usize;
-    let mut reg = vec![(this + match_player::CELL_SLOT, 1), (this + match_player::CELL_X, 2), (antiga, 90), (new, 90), (engine + engine::BALL_X, 2)];
+    let mut reg = vec![(this + match_player::CELL_SLOT, 1), (this + match_player::CELL_X, 2), (old, 90), (new, 90), (engine + engine::BALL_X, 2)];
     let (l, v) = (lado(this), byte(this, match_player::CELL_SLOT));
-    let n = byte(antiga, 0x58 + l as usize);
+    let n = byte(old, 0x58 + l as usize);
     if v >= 0 && n > 0 {
-        let movido = *((antiga as isize + 4 * (11 * l as isize + n as isize - 1)) as *const usize);
+        let movido = *((old as isize + 4 * (11 * l as isize + n as isize - 1)) as *const usize);
         if movido != 0 {
             reg.push((movido + 0x28, 1));
         }

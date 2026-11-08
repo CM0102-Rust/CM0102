@@ -10,8 +10,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_league_champions_record(this
         return o(this, club, comp);
     }
     let t = read_usize(club + club::MANAGER);
-    let notas = if t != 0 && read_usize(t + staff::NON_PLAYER) != 0 { (read_usize(t + staff::NON_PLAYER) + 8, 6) } else { (club + club::REPUTATION, 2) };
-    compare_champion_update("add_league_champions_record", this, club, notas, true, || o(this, club, comp),
+    let notes = if t != 0 && read_usize(t + staff::NON_PLAYER) != 0 { (read_usize(t + staff::NON_PLAYER) + 8, 6) } else { (club + club::REPUTATION, 2) };
+    compare_champion_update("add_league_champions_record", this, club, notes, true, || o(this, club, comp),
         || add_league_champions_record(this, club, comp));
 }
 
@@ -21,8 +21,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_cup_winners_record(this: usi
     if club == 0 || game == 0 || partida == 0 {
         return o(this, club, game, partida);
     }
-    let notas = (partida + 0x188 + 0x625 * (read_usize(game + 0x20) == club) as usize, 6);
-    compare_champion_update("add_cup_winners_record", this, club, notas, false, || o(this, club, game, partida),
+    let notes = (partida + 0x188 + 0x625 * (read_usize(game + 0x20) == club) as usize, 6);
+    compare_champion_update("add_cup_winners_record", this, club, notes, false, || o(this, club, game, partida),
         || add_cup_winners_record(this, club, game, partida));
 }
 
@@ -112,6 +112,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_cup_third_place_record(this:
 }
 
 /// Comparer for `record_manager_job_change` (comparison mode: see the header of motor.rs).
+///
+/// A comparer in rehearsal mode: the manager's record created beforehand (0x86f5b0, as the original routine would do on
+/// the two paths that need it), the copy without the histories and the original from the same state (the record, 0xd2
+/// bytes, and the static date of 0x54cdb0).
+///
+/// Nulls: only the original.
 ///
 /// [pt] Comparador em ensaio: o registro do técnico criado antes (0x86f5b0, como a original faria nos dois caminhos que o
 /// pedem), a cópia sem os históricos e a original a partir do mesmo estado (o registro, 0xd2 bytes, e a data estática da
@@ -204,6 +210,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_qualified_for_round_record(t
 }
 
 /// Comparer for `add_transfer_records` (comparison mode: see the header of motor.rs).
+///
+/// Side by side over global [0xae1080], the random generator state (the offer value may ask for the valuation), the
+/// transfer list (the cursor) and the records of the two managers (created beforehand only when the original asks for
+/// them); the copy runs without the file histories, which the original has already written, and without counting the
+/// random draws.
 ///
 /// [pt] Comparador: lado a lado pela global [0xae1080], o estado do sorteador (o valor da oferta pode pedir a avaliação), a
 /// lista da troca (o cursor) e os registros dos dois técnicos (criados antes só quando a original os pede); a cópia
@@ -381,6 +392,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize
 
 /// Comparer for `add_year_award_record` (comparison mode: see the header of motor.rs).
 ///
+/// The manager side by side through his points record (created beforehand by 0x86f5b0, as the original routine would
+/// do; the copy without the history entry in the file).
+///
+/// The player draws at random, renews the contract and sends a news item (it cannot run twice): only the original.
+/// Without a person or without an award (the error box): only the original.
+///
 /// [pt] Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
@@ -409,6 +426,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_first_cap_record(this: usize
 }
 
 /// Comparer for `add_month_award_record` (comparison mode: see the header of motor.rs).
+///
+/// The manager side by side on his points record (created beforehand by 0x86f5b0, as the original would; the copy
+/// without the history entry in the file).
+///
+/// The player case draws at random, renews the contract and sends a news item (it cannot run twice): only the original
+/// routine. No person or no award (the box): only the original.
 ///
 /// [pt] Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar

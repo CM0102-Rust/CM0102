@@ -1,10 +1,5 @@
 use super::*;
 
-
-
-
-
-
 /// Picks a random pundit: type 1 on Sunday becomes 7; local types (2, 4): the club's pundits; the others: of the type
 /// and nation (−1 any); up to 20, random(n) and the id, or −1.
 ///
@@ -101,7 +96,6 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
     ids[r as usize] as i32
 }
 
-
 /// Default media outlet name by type: 2 local paper, 3 radio, 4 local radio, 5 magazine, else national paper.
 ///
 /// [pt] O nome padrão do veículo pelo tipo (as três tabelas da original são iguais): 2 jornal local, 3 rádio, 4 rádio
@@ -160,8 +154,6 @@ pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, kind: u32, i
     sprintf(name, 0x991944, default_media_name(t));
     *mark = 0;
 }
-
-
 
 // simplification: the news item goes to the managers’ inboxes (allocates): original only; the copy carries the branch. Without news both do not
 // fazem nada.

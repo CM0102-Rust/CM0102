@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Club k of the drawn list (+0xee pointers).
 ///
 /// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
@@ -203,7 +200,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
 // stage in [+0xc][g], +0x30 = g, the stage with the teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 
-/// As regras de um grupo continental (a virtual +0x8c, set_up_rules, numa liga de grupo): os campos de byte e palavra
+/// The rules of a continental group (virtual +0x8c, set_up_rules, on a group league): the byte and word fields written
+/// (offset, size 1 or 2, value), the start date (0x549f70: day, month, competition year +0x40, weekday; −1 = any) and
+/// the prize fund (+0x28), when there is one.
+///
+/// [pt] As regras de um grupo continental (a virtual +0x8c, set_up_rules, numa liga de grupo): os campos de byte e palavra
 /// gravados (deslocamento, tamanho 1 ou 2, valor), a data de começo (0x549f70: dia, mês, ano da competição +0x40, dia da
 /// semana; −1 = qualquer) e o fundo de prêmios (+0x28), quando há.
 pub(crate) struct ContinentalGroupRules {
@@ -214,8 +215,12 @@ pub(crate) struct ContinentalGroupRules {
     pub(crate) premio: Option<u32>,
 }
 
-/// Writes the rule fields (win points from `vitoria`), start date word at +0xb6, +0xb8 = 0, prize, and the round table
-/// at +0xba; returns 1.
+/// Writes the rule fields of `g` and the round table; returns 1.
+///
+/// The win points (`+0xc2`) come from `vitoria`. The start date goes into a local Date (`0x549f70`: push week; push
+/// year; push month; push day; lea ecx, local -> thiscall, ret 0x10) and its first word into `+0xb6`, `+0xb8` = 0; then
+/// the prize; then the round table from virtual `+0x3c` (push 0; push &`+0x3a`; push &`+0xa9`; push −1; mov ecx, this
+/// -> thiscall, ret 0x10) into `+0xba`. Returns 1.
 ///
 /// [pt] Grava os campos de `g` (os pontos da vitória, +0xc2, vêm de `vitoria`); a data de começo numa Date local (0x549f70: push semana; push ano; push mês; push dia; lea
 /// ecx, local -> thiscall, ret 0x10) e a primeira palavra dela em +0xb6, +0xb8 = 0; o prêmio; depois a tabela das
@@ -316,13 +321,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) 
 
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
-
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
-
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
-
-
 
 /// Clubs whose season continental competition (+0x1db) is this competition, in database order, up to max.
 ///
@@ -368,7 +369,7 @@ pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usi
 /// 32 trocas sorteadas) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
+    let shuffle: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
     let list = new(0x80);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, list as u32);
@@ -386,10 +387,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
         return 0;
     }
     crate::comparison::branch("cqk_11 classificados da libertadores");
-    embaralhar(list, read_i16(this + 0xf2) as u16 as u32); // cqk11: os 32 da Libertadores embaralhados
+    shuffle(list, read_i16(this + 0xf2) as u16 as u32); // cqk11: os 32 da Libertadores embaralhados
     1
 }
-
 
 /// rule: in the seven groups (stages 0 to 6), a club going through gets the qualification record (weight 40) and one
 /// going out the failed-to-qualify record (weight 40); in the knockout (stage 7), a club going through gets the
@@ -503,7 +503,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_schedule(this: usiz
     south_american_cup_schedule(this, stage, rounds, extra, league, 7, &LIBERTADORES_GROUP_ROUNDS, &LIBERTADORES_KNOCKOUT_ROUNDS, &[], 0x9a7de4, 0x9f, 0xc5,
         "cqo_13 grupos da libertadores", "cqo_13 mata-mata da libertadores")
 }
-
 
 /// rule: the Libertadores knockout has 16 clubs: the top 2 (+0xbe) of each of the 8 groups (group 1 in table order, the
 /// others by position in each stage's table), in a cup stage (stage 7) with the cup's round table and year; the first

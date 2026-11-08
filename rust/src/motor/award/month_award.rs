@@ -1,12 +1,5 @@
 use super::*;
 
-
-
-
-
-
-
-
 /// Club record with the given id (0x245 bytes each).
 ///
 /// [pt] O clube `id` ([0xae23b4], 0x245 bytes cada).
@@ -14,7 +7,10 @@ pub(crate) unsafe fn month_award_club_by_id(id: i32) -> usize {
     read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE))
 }
 
-/// O ensaio dos comparadores: a cópia roda sem a notícia (0x767330), sem o registro do prêmio (0x86c8c0) e sem as
+/// The comparers' rehearsal run. The copy runs without the news item (0x767330), without the award record (0x86c8c0)
+/// and without the club lists (0x842c00), because these allocate and cannot run twice.
+///
+/// [pt] O ensaio dos comparadores: a cópia roda sem a notícia (0x767330), sem o registro do prêmio (0x86c8c0) e sem as
 /// listas dos clubes (0x842c00), que alocam e não podem rodar duas vezes.
 pub(crate) static mut MONTH_AWARD_DRY_RUN: bool = false;
 
@@ -33,7 +29,7 @@ pub(crate) static mut MONTH_AWARD_DRY_RUN: bool = false;
 /// prêmio ([+9], ou −1) e com a idade pedida; achou: grava o vencedor (0x7671c0) com o clube da pessoa (+0x39, ou −1),
 /// o mês (+0xc) e o ano (+0xd) das notas. Os bytes altos do mês e do ano vão como a original os empurra (da tabela de
 /// pessoas no registrador).
-pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, notas: usize, age: u32) {
+pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, notes: usize, age: u32) {
     let league = {
         let l = read_usize(this + 9);
         if l != 0 {
@@ -43,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, nota
         }
     };
     let best: unsafe extern "thiscall" fn(usize, i32, u32) -> usize = core::mem::transmute(FN_MONTH_RATINGS_FIND_BEST_PLAYER);
-    let r = best(notas, league, age);
+    let r = best(notes, league, age);
     if r == 0 {
         return;
     }
@@ -51,8 +47,8 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, nota
     let id = read_i32(r);
     let table = read_usize(G_STAFF_TABLE) as u32;
     let club = read_usize(month_ratings_staff_by_id(id) + 0x39);
-    let year = (table & 0xffff0000) | read_i16(notas + 0xd) as u16 as u32;
-    let month = read_u8(notas + 0xc) as u32;
+    let year = (table & 0xffff0000) | read_i16(notes + 0xd) as u16 as u32;
+    let month = read_u8(notes + 0xc) as u32;
     let write: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) = core::mem::transmute(FN_MONTH_AWARD_SET_WINNER);
     if club != 0 {
         write(this, id, read_i32(club), (year & 0xffffff00) | month, year);
@@ -159,7 +155,6 @@ pub(crate) unsafe fn compare_month_award(name: &str, regions: &[(usize, usize)],
     SCOREBOARD.record(mo == mr, || format!("{} original={:x?} rust={:x?}", name, mo, mr));
 }
 
-
 /// Adds the low 16 bits of v to the 16-bit word at a.
 ///
 /// [pt] A palavra `a` mais o valor do _ftol (16 bits baixos, como o `add word` da original).
@@ -178,6 +173,4 @@ pub(crate) unsafe fn clamp_word(a: usize, floor: i16) {
         write_i16(a, floor);
     }
 }
-
-
 

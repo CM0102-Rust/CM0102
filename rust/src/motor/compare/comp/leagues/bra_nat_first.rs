@@ -15,8 +15,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_st
     compare_play_off_stage("bra_nat_first_create_play_off_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-
-
 /// Comparer for `bra_nat_first_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_START_NEW_SEASON);
@@ -31,13 +29,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_process_promotion_
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_BRA_NAT_FIRST_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, pairs)
 }
 
-
 /// Comparer for `bra_nat_first_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_CREATE_TABLE);
     compare_division_table("bra_nat_first_create_table", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, || o(this))
 }
-
 
 /// Comparer for `bra_nat_first_set_up_rules` (comparison mode: see the header of motor.rs).
 ///
@@ -52,7 +48,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules(this:
     SCOREBOARD.record(igual && r == n, || format!("bra_nat_first_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
-
 
 /// Comparer for `bra_nat_first_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///

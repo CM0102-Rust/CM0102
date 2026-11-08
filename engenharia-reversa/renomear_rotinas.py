@@ -65,7 +65,7 @@ def main():
     codigo = '\n'.join(open(p, encoding='utf-8').read() for p in fontes())
     codigo = re.sub(r'//[^\n]*|"(?:[^"\\\n]|\\.)*"', ' ', codigo)
     idents = set(re.findall(r'\b[A-Za-z_]\w*\b', codigo))
-    end_de = dict(zip(nomes, re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', s[:s.index('const N')])))
+    end_de = dict(zip(nomes, re.findall(r'Prologue \{ address: (0x[0-9a-f]+)', s[:s.index('const N')])))
     candidatos = {}
     for n in nomes:
         if n in feitos or n in ja or n not in modulo:  # só as definidas no motor/ (as do cm0102-base ficam)
@@ -121,7 +121,7 @@ def main():
                     open(p, 'w', encoding='utf-8').write(novo)
     import trocar_nas_mutacoes
     trocar_nas_mutacoes.aplicar(lambda l: rx.sub(lambda m: mapa[m.group(1)], l))
-    end = dict(zip(nomes, re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', s[:s.index('const N')])))
+    end = dict(zip(nomes, re.findall(r'Prologue \{ address: (0x[0-9a-f]+)', s[:s.index('const N')])))
     linhas = [{'pt': a, 'en': b, 'endereco': end.get(a, ''), 'original': orig.get(a, '')} for a, b in ja.items()]
     linhas += [{'pt': a, 'en': b, 'endereco': end.get(a, ''), 'original': orig.get(a, '')} for a, b in troca.items()]
     with open(NOMES, 'w', encoding='utf-8', newline='') as f:

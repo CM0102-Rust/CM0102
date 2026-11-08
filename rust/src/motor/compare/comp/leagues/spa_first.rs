@@ -17,6 +17,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_first_set_up_rules(this: usi
 
 /// Comparer for `spa_first_create_table` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x84fc70: the original routine allocates the table, changes the clubs' division and pays the TV money
+/// (with a news item), so only it runs. The plan, made beforehand: the clubs of the lower Spanish division (which move
+/// to the generic one) and those of the Primera in database order (up to 20).
+///
+/// Afterwards: the former with +0x57 = the record of [0x9cf764]; +0x3e = 20, the return value, the rows with the
+/// Primera clubs in order and, when full, +0xe1 = 1 and +0x28 = the quota fund.
+///
 /// [pt] Comparador da 0x84fc70: a original aloca a tabela, muda a divisão dos clubes e paga a TV (com notícia): só ela. O
 /// plano, feito antes: os clubes da divisão de baixo espanhola (que passam à genérica) e os da Primera na ordem do
 /// banco (até 20). Depois: os primeiros com +0x57 = o registro de [0x9cf764]; +0x3e = 20, a devolução, as linhas com
@@ -49,7 +56,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_first_create_table(this: usi
     SCOREBOARD.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, found));
     r
 }
-
 
 /// Comparer for `spa_first_set_club_progress` (comparison mode: see the header of motor.rs).
 ///

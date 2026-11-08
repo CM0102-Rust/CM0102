@@ -140,13 +140,13 @@ pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: u
         let id = read(ts + 0x184);
         if id > -1 {
             let manager = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
-            let mut fichas = vec![g(manager + staff::NON_PLAYER)];
+            let mut sheets = vec![g(manager + staff::NON_PLAYER)];
             for a in [g(club + club::ASSISTANT_MANAGER), g(club + club::COACHES), g(club + 0x1a3), g(club + 0x1a7), g(club + 0x1ab), g(club + 0x1af)] {
                 if a != 0 {
-                    fichas.push(g(a + 0x69));
+                    sheets.push(g(a + 0x69));
                 }
             }
-            for f in fichas.into_iter().filter(|&f| f != 0) {
+            for f in sheets.into_iter().filter(|&f| f != 0) {
                 reg.push((f + 8, 6));
             }
         }

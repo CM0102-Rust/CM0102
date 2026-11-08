@@ -43,7 +43,7 @@ def prologos():
     m = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
     i = m.index('const PROLOGOS:')
     return {int(a, 16): bytes(int(x, 16) for x in b.split(','))
-            for a, b in re.findall(r'endereco:\s*0x([0-9a-f]+), bytes: &\[([^\]]*)\]', m[i:m.index('\n];', i)])}
+            for a, b in re.findall(r'address:\s*0x([0-9a-f]+), bytes: &\[([^\]]*)\]', m[i:m.index('\n];', i)])}
 
 
 def chamadas_para(ler, alvo):
@@ -79,7 +79,7 @@ def tabela():
     # outros desvios da DLL dentro de uma faixa mudariam os bytes antes da conferencia
     outros = set()
     for f in glob.glob(os.path.join(R, 'rust', 'src', '*.rs')):
-        outros |= {int(x, 16) for x in re.findall(r'endereco:\s*0x([0-9a-f]+)', open(f, encoding='utf-8').read())}
+        outros |= {int(x, 16) for x in re.findall(r'address:\s*0x([0-9a-f]+)', open(f, encoding='utf-8').read())}
     for a, n in faixas:
         dentro = [hex(o) for o in outros if a < o < a + n and so_orig.get(a) != o]
         assert not dentro, 'desvio %s dentro da faixa de %#x (+%d)' % (dentro, a, n)

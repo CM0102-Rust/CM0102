@@ -8,7 +8,7 @@
 #   mutação.
 # As três têm quadro SEH só pela Date local (sem destrutor; a original grava o estado 0 do quadro): a cópia não monta o
 # quadro. O porte é um ajudante comum (cqj11_regras) com a tabela de campos de cada copa; cada endereço tem o seu
-# Prologo. Diferenças byte a byte conferidas: a Merconorte não grava +0x49/+0x4a e tem +0xbe = 1 e a data (1, 7); a da
+# Prologue. Diferenças byte a byte conferidas: a Merconorte não grava +0x49/+0x4a e tem +0xbe = 1 e a data (1, 7); a da
 # Oceania grava +0x43, +0xd9 = 0x28, +0xc4 = 8, +0xc7 = 4, turno único, a data (20, 7, dia da semana 5) e não grava
 # +0x1c, +0x20, +0x42 nem o prêmio.
 # Iguais no cm0102-1080.exe (as três inteiras).

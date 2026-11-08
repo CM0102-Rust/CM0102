@@ -9,7 +9,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_schedule(this: 
     compare_cfa_schedule("fra_third_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_third_create_schedule(this, stage, r, e, l))
 }
 
-
 /// Comparer for `fra_third_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_third_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_THIRD_SET_UP_RULES);

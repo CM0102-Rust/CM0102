@@ -9,14 +9,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_schedule(this: 
     compare_c1_schedule("ita_ser_a_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| ita_ser_a_create_schedule(this, stage, r, e, l))
 }
 
-
 /// Comparer for `ita_ser_a_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_FOR_DATE);
     compare_league_day("ita_ser_a_update_for_date", this, full, || serie_a_zones(this), || o(this, today, full))
 }
-
-
 
 /// Comparer for `ita_ser_a_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
@@ -37,14 +34,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_a(this: usize,
     compare_italian_constructor("construct_ita_ser_a", this, year, record, &SERIE_A, || o(this, year, record))
 }
 
-
-
 /// Comparer for `create_fixed_fixtures` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_create_fixed_fixtures(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_FIXED_FIXTURES);
     fra_first_compare_fixed_fixtures("create_fixed_fixtures", this, || o(this))
 }
-
 
 /// Comparer for `ita_ser_a_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules(this: usize) -> u32 {
@@ -52,12 +46,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules(this: usi
     ita_ser_a_compare_league_rules("ita_ser_a_set_up_rules", this, serie_a_rules(this), || o(this), || ita_ser_a_set_up_rules(this))
 }
 
-
-
 /// Comparer for `ita_ser_a_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_A_CREATE_TABLE);
     ita_ser_a_compare_league_table("ita_ser_a_create_table", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_A, Some(0x3d090), || o(this))
 }
-
 

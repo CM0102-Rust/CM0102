@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 /// Club (non-null and without a place, +0x1db = -1) enters the Copa Libertadores at stage `fase`; returns whether it
 /// entered.
 ///
@@ -82,8 +80,6 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
     }
 }
 
-
-
 /// Finds the nth club of a nation in the South American club table, optionally skipping clubs already qualified and
 /// clubs with a human manager.
 ///
@@ -151,7 +147,6 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
     0
 }
 
-
 /// Os 20 clubes convidados da Copa Mercosul (as chaves fixas: River Plate, Boca Juniors, Independiente, San Lorenzo,
 /// Vélez Sarsfield, Cruzeiro, São Paulo, Palmeiras, Corinthians, Flamengo, Rosario Central, Vasco, Colo-Colo,
 /// Universidad de Chile, Universidad Católica, Peñarol, Nacional, Olimpia, Cerro Porteño e Grêmio), na ordem da original.
@@ -180,8 +175,6 @@ pub(crate) unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, cl
     }
     0
 }
-
-
 
 /// Builds the CONMEBOL club table: South American and Mexican clubs (national teams excluded), each stripped of its
 /// continental place, sorted by nation.
@@ -222,8 +215,8 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
             let nation = read_u32(c + club::NATION) as usize;
             if nation != 0 && national_team(c) == 0 {
                 let mexico = read_u32(nation) == read_u32(KEY_NATION_MEXICO); // cqj2: o México entra
-                let cont = if mexico { 0 } else { read_u32(nation + nation::CONTINENT) as usize };
-                if mexico || (cont != 0 && read_u32(cont) == read_u32(KEY_CONTINENT_SOUTH_AMERICA)) {
+                let count = if mexico { 0 } else { read_u32(nation + nation::CONTINENT) as usize };
+                if mexico || (count != 0 && read_u32(count) == read_u32(KEY_CONTINENT_SOUTH_AMERICA)) {
                     if mexico {
                         crate::comparison::branch("cqj_2 clube mexicano");
                     }
@@ -262,7 +255,6 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
     k as u16 as u32
 }
 
-
 /// Regions compared: the whole club table, [0xb67a34] and the club competition history table.
 ///
 /// [pt] Os clubes do jogo, a marca da caixa e o histórico das competições (a 0x4afd80 o reordena: ver a cqj_1).
@@ -270,7 +262,6 @@ pub(crate) unsafe fn club_seeding_regions() -> Vec<(usize, usize)> {
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     vec![(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
 }
-
 
 /// The Libertadores calendar: every new game year it builds the CONMEBOL club table and gives out the places.
 ///
@@ -283,8 +274,8 @@ pub(crate) unsafe fn club_seeding_regions() -> Vec<(usize, usize)> {
 /// Libertadores e pela Mercosul; sem `pular` e com o ano do jogo ([0xae2c92]) outro que o +0x6f: grava o ano, monta a
 /// tabela dos clubes (0x4c6280; vazia, a caixa da linha 0x9b e volta sem soltar), dá as vagas da Libertadores (0x4c6430)
 /// e solta a tabela.
-pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, pular: u32) {
-    if pular != 0 {
+pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: u32) {
+    if skip != 0 {
         return;
     }
     let year = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
@@ -306,7 +297,6 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, pular:
     soltar(t);
 }
 
-
 /// stores the Copa dos Campeões winner: from 2003 on it gets a Libertadores place
 /// Original: `ConmebolSeeding::set_bra_champ_cup_winner` (0x4c6960, conmebol_seeding.cpp, thiscall, ret 4).
 ///
@@ -315,7 +305,6 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, pular:
 pub(crate) unsafe extern "thiscall" fn set_bra_champ_cup_winner(this: usize, club: usize) {
     core::ptr::write_unaligned((this + 0x71) as *mut u32, read_u32(club));
 }
-
 
 /// writes CM3_TEMP\conmebol_seeding.tmp: the country count (+0x6e), 0xa bytes per country from +0, +0x6f (u16) and
 /// +0x71 (u32); on error the "Error" box without closing the file

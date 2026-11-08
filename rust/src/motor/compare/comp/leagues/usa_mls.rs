@@ -15,6 +15,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_advance_stage(this: usiz
 
 /// Comparer for `usa_mls_create_playoff_stage` (comparison mode: see the header of motor.rs).
 ///
+/// The play-off comparer: only the original routine runs (it allocates the list, the table and the stage and draws the
+/// round), with the plan made beforehand by the copy of the selection (the same records and the same qsort): the stage
+/// in the third slot exists, with +0x3e = 8, +4 = the league's +4 and the eight in its list (+0xa7, 6 bytes; as a set).
+///
 /// [pt] O comparador do play-off: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes pela cópia da escolha (os mesmos registros e o mesmo qsort): a fase da terceira vaga existe, com +0x3e = 8, +4
 /// = o +4 da liga e os oito na lista dela (+0xa7, 6 bytes; como conjunto).
@@ -56,7 +60,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_create_playoff_stage(thi
     SCOREBOARD.record(same, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this, stage, plan));
 }
 
-/// Comparer for `usa_mls_create_final_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `usa_mls_create_final_stage` (comparison mode: see the header of motor.rs): the comparer of the final;
+/// only the original routine runs (it allocates the list, the table and the stage and draws the round), with the plan
+/// made beforehand.
+///
+/// The plan: the first two winners of the play-off. Afterwards: the stage in the fourth slot exists, with `+0x3e` = 2,
+/// `+4` = the league's `+4` and the two in its list (as a set).
 ///
 /// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
 /// os dois primeiros vencedores do play-off. Depois, a fase da quarta vaga existe, com +0x3e = 2, +4 = o +4 da liga e
@@ -123,6 +132,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_third_division_stage(this
 
 /// Comparer for `usa_mls_start_new_season` (comparison mode: see the header of motor.rs).
 ///
+/// The season rollover comparer: only the original routine runs (simplification: it frees tables and stages, allocates
+/// the new ones, draws the fixtures and the referees; it cannot run twice), checking what only it guarantees: the year
+/// + 1 and the three divisions built (+0x3e = 4 and slots 0 and 1 of the stages).
+///
 /// [pt] O comparador da virada: só a original (simplification: libera tabelas e fases, aloca as novas, sorteia os jogos e os
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1 e as três divisões montadas
 /// (+0x3e = 4 e as vagas 0 e 1 das fases).
@@ -136,6 +149,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: u
 }
 
 /// Comparer for `usa_mls_set_predicted_positions` (comparison mode: see the header of motor.rs).
+///
+/// The predicted positions comparer: only the original routine runs (simplification: 0x4a2540 adds the record of a club
+/// that has none; it cannot run twice), with the plan made beforehand: the twelve clubs of the three tables, each block
+/// sorted by the same qsort on a copy; afterwards, the position (+0x72 of the record found by 0x4a4850) of each one.
 ///
 /// [pt] O comparador das posições previstas: só a original (simplification: a 0x4a2540 acrescenta o registro de um clube que não
 /// tem; não pode rodar duas vezes), com o plano feito antes: os doze clubes das três tabelas, cada bloco ordenado pela

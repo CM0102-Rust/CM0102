@@ -38,5 +38,5 @@ MUTACOES = [
     ('cqb12_clube_de_fora_0', '    3 // cqb12: clube fora das nações-chave', '    0 // mutacao: clube de fora na primeira nacao-chave', 'cqb_12 clube sem nacao chave'),
     ('cqb13_alvo_mais_1', '    adjust(&mut a, target, &mut b); // cqb13: o dia da semana alvo', '    adjust(&mut a, target % 7 + 1, &mut b); // mutacao: um dia a frente', 'cqb_13 dia alvo'),
     ('cqb13_prioridade_invertida', '    let novo_vence = pn > pv // cqb13: a prioridade maior fica', '    let novo_vence = pn < pv // mutacao: a prioridade menor fica', 'cqb_13 dia alvo'),
-    ('cqb13_ja_jogado', '    let sai_old = novo_vence && *((v + 0x43) as *const u8) == 0xff; // cqb13: o da lista ainda não jogado', '    let sai_old = novo_vence && *((v + 0x43) as *const u8) != 0xff; // mutacao: so o ja jogado sai', 'cqb_13 novo vence'),
+    ('cqb13_ja_jogado', '    let sai_old = novo_vence && *((v + fixture::HOME_GOALS) as *const u8) == 0xff; // cqb13: o da lista ainda não jogado', '    let sai_old = novo_vence && *((v + fixture::HOME_GOALS) as *const u8) != 0xff; // mutacao: so o ja jogado sai', 'cqb_13 novo vence'),
 ]

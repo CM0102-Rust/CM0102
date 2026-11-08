@@ -6,12 +6,12 @@ use super::*;
 /// Comparer for `african_nations_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_FOR_DATE);
-    let sorteia = full != 0
+    let draws = full != 0
         && read_u32_as_usize(this + 0x45) == 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
         && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(today as *const u16);
     let r = o(this, today, full);
-    if sorteia {
+    if draws {
         let stages = read_u32_as_usize(this + 0xc);
         let ok = read_u32_as_usize(this + 0x45) == 1
             && read_u32_as_usize(this + 0xee) == 0
@@ -26,6 +26,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_for_date(
 }
 
 /// Comparer for `draw_finalists` (comparison mode: see the header of motor.rs).
+///
+/// Side by side: +0xf2, [0xb67a34] and the random generator state from the same state (the copy draws without
+/// counting); the original leaves its groups at +0xee, the copy builds its own, compared over the 16 slots and freed
+/// (without the 16, the lists of 50 are compared over the first 16 slots).
 ///
 /// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa os grupos dela em +0xee, a cópia faz os seus, comparados nas 16 vagas e liberados (sem os 16, as listas
@@ -125,7 +129,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_staff_rec
     SCOREBOARD.record(r == 0, || format!("african_nations_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", club, outcome as u8, stage as u8, r));
     r
 }
-
 
 /// Comparer for `african_nations_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {

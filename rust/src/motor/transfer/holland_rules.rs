@@ -1,10 +1,9 @@
 use super::*;
 
-
-
-
-
-/// As janelas da Holanda: uma janela, de 8 de junho (andando para o sábado [inferência]) a 4 de abril (andando para a sexta-feira [inferência]).
+/// The Netherlands' transfer windows: one window, from 8 June (moved to the Saturday [inference]) to 4 April (moved to
+/// the Friday [inference]).
+///
+/// [pt] As janelas da Holanda: uma janela, de 8 de junho (andando para o sábado [inferência]) a 4 de abril (andando para a sexta-feira [inferência]).
 pub(crate) const HOLLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x0c, 0x00, 0x06, 0x08, 0x05, 0x01], // cqm1: a Holanda
     [0x0c, 0x00, 0x05, 0x04, 0x03, 0x00],
@@ -23,20 +22,15 @@ pub(crate) unsafe extern "thiscall" fn construct_holland_rules(this: usize, a1: 
     this
 }
 
-
 /// As janelas da Croácia: uma janela, de 1º de junho a 30 de março.
 pub(crate) const CROATIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x05, 0x00, 0xff, 0x01, 0x05, 0x01], // cqm1: a Croácia
     [0x05, 0x00, 0xff, 0x1e, 0x02, 0x00],
 ];
 
-
-
 /// As janelas da Irlanda: uma janela, de 10 de maio a 31 de janeiro.
 pub(crate) const IRELAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x0d, 0x00, 0xff, 0x0a, 0x04, 0x01], // cqm1: a Irlanda
     [0x0d, 0x00, 0xff, 0x1f, 0x00, 0x00],
 ];
-
-
 

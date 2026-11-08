@@ -3,7 +3,7 @@ MUTACOES = [
     ('cqf1_sem_rivais', 'if rival != -1 { // cqf1: a rival liga as ofertas', 'if rival != -1 && false { // mutacao: sem ligar as rivais', 'cqf_1 ofertas rivais ligadas'),
     ('cqf1_prazo_mais_tres', 'schedule(this, read_u32_as_usize(slot(vaga)), dias as u32, fatias as u32); // cqf1: o prazo da oferta', 'schedule(this, read_u32_as_usize(slot(vaga)), dias as u32 + 3, fatias as u32); // mutacao: 3 dias a mais', 'cqf_1 agenda pelo prazo'),
     ('cqf1_sem_mesma_vaga', 'vaga = i; // cqf1: a vaga da oferta do mesmo comprador', '// mutacao: sem a vaga do mesmo comprador', 'cqf_1 mesma vaga'),
-    ('cqf2_sem_seguir', 'seguir(this, offer); // cqf2: a oferta segue', '// mutacao: a oferta nao segue', 'cqf_2 seguir a oferta'),
+    ('cqf2_sem_seguir', 'follow(this, offer); // cqf2: a oferta segue', '// mutacao: a oferta nao segue', 'cqf_2 seguir a oferta'),
     ('cqf2_emprestimo_em_9_dias', 'schedule(this, offer, 5, 0); // cqf2: o empréstimo concluído em 5 dias', 'schedule(this, offer, 9, 0); // mutacao: 9 dias', 'cqf_2 empréstimo na hora'),
     ('cqf2_sem_sorteio_do_dado_12', 'let s = sorteio(2); // cqf2: o sorteio do dado 12', 'let s = 0; // mutacao: sem o sorteio', 'cqf_2 notícia do listado'),
     ('cqf3_fim_em_dois_anos', 'write_u16(c + 0x2f, year.wrapping_add(1)); // cqf3: o fim no ano que vem', 'write_u16(c + 0x2f, year.wrapping_add(2)); // mutacao: 2 anos', 'cqf_3 fim no ano que vem'),

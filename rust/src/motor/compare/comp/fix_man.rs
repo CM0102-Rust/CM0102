@@ -5,6 +5,12 @@ use super::*;
 
 /// Comparer for `fix_man_daily_update` (comparison mode: see the header of motor.rs).
 ///
+/// The comparer of the calendar day: only the original routine runs (simplification: the news items go to the managers,
+/// the friendly and queue nodes are freed and the reserve matches enter the calendar: it does not run twice).
+///
+/// It checks what the routine guarantees: the news queue disappears ([+0x1128] = 0 if there was one) and the conference
+/// list ends up empty.
+///
 /// [pt] O comparador do dia do calendário: só a original (simplification: as notícias vão aos técnicos, os nós dos amistosos e
 /// das filas são liberados e os jogos de reservas entram no calendário: não roda duas vezes). Confere o que a rotina
 /// garante: a fila das notícias some ([+0x1128] = 0 se havia) e a lista das conferências fica vazia.
@@ -51,6 +57,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
 
 /// Comparer for `collect_day_clashes` (comparison mode: see the header of motor.rs).
 ///
+/// The copy as a dry run (it stores the matches instead of appending them, with its own severity) and the original from
+/// the same state; it checks the severity and the new nodes at the end of the list (the 0x4f bytes of each match, in
+/// order). The day lists (0x5abf10) have their cursor reset in both.
+///
 /// [pt] O comparador dos conflitos de um dia: a cópia em ensaio (guarda os jogos em vez de acrescentar, com uma gravidade
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
 /// cada jogo, na ordem). As listas dos dias (0x5abf10) têm o cursor refeito nas duas.
@@ -74,6 +84,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize,
 }
 
 /// Comparer for `find_fixture_clashes` (comparison mode: see the header of motor.rs).
+///
+/// The comparer of one match's conflicts: the original routine and the copy, each with its own new list, from the same
+/// state (the original does not change the match: it only creates the list and moves the cursors of the day lists,
+/// which both redo).
+///
+/// It checks the return value (list or 0), the output and the matches of the two lists (0x4f bytes each, in order), and
+/// destroys and frees the copy's list as the calendar does (0x68d040, 0x944c94).
 ///
 /// [pt] O comparador dos conflitos de um jogo: a original e a cópia, cada uma com a sua lista nova, a partir do mesmo estado
 /// (a original não muda o jogo: só cria a lista e mexe nos cursores das listas dos dias, que as duas refazem); confere a
@@ -129,8 +146,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_new_fixture_date(this: usiz
 /// [pt] O comparador da entrada no calendário: só a original (simplification: grava nas listas do calendário, aloca nós e o
 /// bloco do outro ano, remarca e entrega notícias; não pode rodar duas vezes). A cópia segue no modo Rust, com os
 /// contadores.
-pub(crate) unsafe extern "thiscall" fn comparar_add_fixture(this: usize, game: usize, zerar: u32) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ADD_FIXTURE)(this, game, zerar)
+pub(crate) unsafe extern "thiscall" fn comparar_add_fixture(this: usize, game: usize, clear: u32) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ADD_FIXTURE)(this, game, clear)
 }
 
 /// Comparer for `set_year` (comparison mode: see the header of motor.rs).
@@ -167,7 +184,14 @@ pub(crate) unsafe extern "C" fn comparar_fix_man_save_fixture_leg_checks() {
     original_fn::<unsafe extern "C" fn()>(IDX_FIX_MAN_SAVE_FIXTURE_LEG_CHECKS)()
 }
 
-/// Comparer for `resolve_same_day_clash` (comparison mode: see the header of motor.rs).
+/// Comparer for `resolve_same_day_clash` (comparison mode: see the header of motor.rs), as a dry run.
+///
+/// The routine only writes the list cursor (+0xa, read by 0x68d1b0) and the rest goes through the calendar calls
+/// (remove, merge, clashes that allocate the list, the news item), which cannot run twice.
+///
+/// The copy runs as a dry run (it stops at the decision, without the box) and the original routine afterwards, from the
+/// same state: side by side on the list header (+2 start, +0xa cursor). Without the match or the first in the list:
+/// only the original (the box).
 ///
 /// [pt] Comparador em ensaio: a rotina só grava o cursor da lista (+0xa, lido pela 0x68d1b0) e o resto vai pelas
 /// chamadas do calendário (tirar, juntar, conflitos que alocam a lista, a notícia), que não podem rodar duas vezes.
@@ -202,19 +226,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_reschedule_club_fixtures_near_da
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RESCHEDULE_CLUB_FIXTURES_NEAR_DATE)(this, club, data)
 }
 
-/// Comparer for `queue_fixture_moved_news` (comparison mode: see the header of motor.rs).
+/// Comparer for `queue_fixture_moved_news` (comparison mode: see the header of motor.rs), as a dry run.
+///
+/// Already in the queue: side by side on the queue header and the found news item (the new date). New: the copy builds
+/// the news item without queueing it and the original runs; the queue must grow by one and the last item (the tail, +6,
+/// node +0) must be the copy's news item over the 0xde bytes the constructor (0x77bbe0) writes; the last of the 0xdf
+/// copied bytes is stack leftover in the original (the copy puts zero).
 ///
 /// [pt] O comparador da notícia, em ensaio. Já na fila: lado a lado no cabeçalho da fila e na notícia achada (a data nova).
 /// Nova: a cópia monta a notícia sem pô-la na fila e a original roda; a fila tem de crescer um e o último item (a cauda,
 /// +6, nó +0) ser a notícia da cópia nos 0xde bytes que o construtor (0x77bbe0) grava; o último dos 0xdf copiados é
 /// sobra de pilha na original (a cópia leva zero).
-pub(crate) unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: usize, causa: usize, velha: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: usize, causa: usize, old: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_QUEUE_FIXTURE_MOVED_NEWS);
     let l = read_usize(this + 0x1128);
     let target = if l != 0 { find_queued_fixture_news(l, f) } else { 0 };
     if target != 0 {
         let regions = [(this + 0x1128, 4), (l, 0xe), (target, 0xdf)];
-        let (_, _, same, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, f, causa, velha), || queue_fixture_moved_news(this, f, causa, velha));
+        let (_, _, same, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, f, causa, old), || queue_fixture_moved_news(this, f, causa, old));
         SCOREBOARD.record(same, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
         return;
     }
@@ -226,10 +255,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: u
     let count = if l != 0 { read_i16_as_i32(l) } else { 0 };
     FIXTURE_MOVED_NEWS_DRY_RUN = true;
     FIXTURE_MOVED_NEWS_WAS_BUILT = false;
-    crate::rng::pause_trace(|| queue_fixture_moved_news(this, f, causa, velha));
+    crate::rng::pause_trace(|| queue_fixture_moved_news(this, f, causa, old));
     FIXTURE_MOVED_NEWS_DRY_RUN = false;
     before.write_back();
-    o(this, f, causa, velha);
+    o(this, f, causa, old);
     let l2 = read_usize(this + 0x1128);
     let montada = FIXTURE_MOVED_NEWS_WAS_BUILT;
     let same = montada

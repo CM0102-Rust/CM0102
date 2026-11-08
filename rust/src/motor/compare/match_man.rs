@@ -12,11 +12,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_automatically(t: usize, o
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn comparar_apply_squad_rule(
     club: usize, manager: usize, rule: usize, mode: u32, nt: u32, nb: u32, nr: u32, starters: usize, bench: usize, reserve: usize,
-    out: usize, codigos: usize, curtos: usize, marks: usize, bytes: usize, side: usize,
+    out: usize, codes: usize, curtos: usize, marks: usize, bytes: usize, side: usize,
 ) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(IDX_APPLY_SQUAD_RULE);
     if is_recording_top_level() {
-        return o(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side);
+        return o(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codes, curtos, marks, bytes, side);
     }
     let n = |v: u32| (v as u8 as i8).max(0) as usize;
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -29,8 +29,8 @@ pub(crate) unsafe extern "C" fn comparar_apply_squad_rule(
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
-        || o(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side),
-        || crate::rng::without_counting(|| apply_squad_rule(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side)),
+        || o(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codes, curtos, marks, bytes, side),
+        || crate::rng::without_counting(|| apply_squad_rule(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codes, curtos, marks, bytes, side)),
     );
     SCOREBOARD.record(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(rule as *const u8, 6), mo, mr));
 }
@@ -168,12 +168,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_stance(c: usize) -> u8 {
 }
 
 /// Comparer for `choose_formation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, fichas: usize, a2: u32, a3: u32, a4: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, sheets: usize, a2: u32, a3: u32, a4: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8>(IDX_CHOOSE_FORMATION);
     let n = (a2 as u8 as i8).max(0) as usize;
     if is_recording_top_level() {
         // inside a comparison with a tape: unit with vectors (the profiles are on the caller’s stack)
-        return call_recording_buffers(0x6e0230, c, [0, a2, a3, a4, 0], &[(fichas, 4 * n)], &[], || o(c, fichas, a2, a3, a4) as u32) as u8;
+        return call_recording_buffers(0x6e0230, c, [0, a2, a3, a4, 0], &[(sheets, 4 * n)], &[], || o(c, sheets, a2, a3, a4) as u32) as u8;
     }
     // the random roll, the engine, the tactic copy (+0x2b), the club’s rows in the tactics bank (the formation
     // written and what the instructions touch), the rating dates (0x6e2f20) and the search pointer in the league
@@ -189,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, ficha
             reg.push(((*((taticas + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
     }
-    let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c, fichas, a2, a3, a4), || choose_formation(c, fichas, a2, a3, a4));
+    let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c, sheets, a2, a3, a4), || choose_formation(c, sheets, a2, a3, a4));
     SCOREBOARD.record(igual && r == rr, || {
         // o primeiro byte diferente (as regioes sao grandes)
         let dif = mo.0.iter().zip(mr.0.iter()).find_map(|(a, b)| {

@@ -1,9 +1,5 @@
 use super::*;
 
-
-
-
-
 /// Contract squad status (high nibble of +0x4f).
 ///
 /// [pt] O tipo do contrato (+0x4f, nibble alto).
@@ -13,7 +9,6 @@ pub(crate) unsafe fn contract_squad_status(contract: usize) -> u8 {
 
 /// A notícia guardada: 0xdf bytes (+0xd6 id, +0xda lida).
 pub(crate) const STORED_NEWS_SIZE: usize = 0xdf;
-
 
 /// Marks read the first unread news item with the id in the human's ring, unless it needs a reply, takes it off the
 /// count and, when asked, repeats it for the humans on the same network machine.
@@ -68,8 +63,8 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
     if sincronizar != 0 {
         let maquina: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
         let mark: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWS_MARK_ITEM_READ);
-        let da_vez = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
-        let m = maquina(G_SCREEN_MANAGER, da_vez) as u16;
+        let of_time = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
+        let m = maquina(G_SCREEN_MANAGER, of_time) as u16;
         for j in 0..0x10i32 {
             let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul(0x6e) as usize);
             if *((p + staff::CLASSIFICATION) as *const u8) == 1 && p != manager && maquina(G_SCREEN_MANAGER, p) as u16 == m {
@@ -109,11 +104,11 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, manager: usi
             show_error_at(0xa693ec, 0x2268);
             return 0;
         }
-        let ini = read_i32(read_usize(this + 8) + idx as usize * 12);
-        if ini == -1 {
+        let start = read_i32(read_usize(this + 8) + idx as usize * 12);
+        if start == -1 {
             return 0;
         }
-        (ini as usize, 0x64)
+        (start as usize, 0x64)
     };
     for k in 0..n {
         let v = read_usize(this).wrapping_add(inicio.wrapping_add(k).wrapping_mul(STORED_NEWS_SIZE));
@@ -124,12 +119,6 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, manager: usi
     }
     0
 }
-
-
-
-
-
-
 
 /// A notícia guardada na caixa: 0xdf bytes (+4 importante, +0xd6 id, +0xda livre/lida, +0xde alcance).
 pub(crate) const NEWS_NEWS_RECORD_SIZE: usize = 0xdf;
@@ -309,11 +298,6 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
     1
 }
 
-
-
-
-
-
 /// A notícia guardada na caixa: 0xdf bytes (+4 importante, +5 os 50 campos de 4 bytes, +0xcc fim do texto, +0xd6 id,
 /// +0xda lida).
 pub(crate) const NEWS_NEWS_ITEM_SIZE: usize = 0xdf;
@@ -472,10 +456,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
     1
 }
 
-
-
-
-
 /// Sets the continent scope (+0xde = 3) and delivers the news to every active human manager whose club or nation is in
 /// the continent.
 ///
@@ -586,11 +566,6 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usi
     r as u8
 }
 
-
-
-
-
-
 /// Copies the text stored from the slot (+5 + 4 × slot) into the buffer (strncpy) and clears the last byte; returns 1.
 ///
 /// `NewsItem::get_slot_string(slot, dest, n)`: copies the text stored from slot `slot` (+5 + 4 × slot) into `dest` like
@@ -619,7 +594,6 @@ pub(crate) unsafe extern "thiscall" fn get_slot_string(news: usize, given: u32, 
     1
 }
 
-
 /// The given club, or the current human manager's club when null.
 ///
 /// [pt] O clube que a 0x7f9190 usa: o `clube`, ou o do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]] + 0x39).
@@ -629,11 +603,6 @@ pub(crate) unsafe fn club_or_current_human(club: usize) -> usize {
     }
     read_usize(read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize) + 0x39)
 }
-
-
-
-
-
 
 /// Human manager i (0..15, last 16 people of G_STAFF_TABLE) if active (+0x5f = 1).
 ///
@@ -717,10 +686,6 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, news
     0
 }
 
-
-
-
-
 /// Sets the nation scope (+0xde = 2) and delivers the news (0x785d40) to every active human manager with a club of the
 /// nation; the first refusal stops.
 ///
@@ -773,11 +738,6 @@ pub(crate) unsafe fn check_search_scout(this: usize) -> Option<usize> {
     }
     Some(p)
 }
-
-
-
-
-
 
 /// Human manager's 12-byte inbox entry: [news+8] + 12 × (id - staff count + 16); None when negative.
 ///
@@ -912,9 +872,6 @@ pub(crate) unsafe extern "stdcall" fn news_club_has_human_manager(club: usize) -
     1 // humano
 }
 
-
-
-
 /// Gives the default replies for the manager's club and national team (0x7874b0) and empties his inbox (the 100 news
 /// items with +0xd6 = 0 and +0xda = 1).
 ///
@@ -961,7 +918,6 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
     }
 }
 
-
 /// builds the news item: type (+0), important byte (+4), the 50 data slots cleared, today's date (+0xcd), byte
 /// [0xae2c88] at +0xd5, id and +0xda cleared; turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied: with the detour the career in Rust mode
 /// left the reference be54a138 (bisection of batch 251's 39 routines; with 0x77bbe0, the news constructor, the game
@@ -989,7 +945,6 @@ pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u3
     write_usize(this + 0xda, 0);
     this
 }
-
 
 /// Returns a new array with the human's inbox items, newest first, only those of one category when asked, and the
 /// count.
@@ -1052,7 +1007,6 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
     }
 }
 
-
 /// Returns the news category by the thousands range of its type.
 ///
 /// (thiscall) The news category by the thousands of the type (+0): 1..999 → 2, 1000.. → 7, 2000.. → 3, 3000.. → 4,
@@ -1078,7 +1032,6 @@ pub(crate) unsafe extern "thiscall" fn get_category(news: usize) -> u32 {
     (t as u32 & 0xffff_ff00) | c
 }
 
-
 /// the value of one of the 50 news item slots
 /// Original: `NewsItem::get_slot` (0x785830, news.cpp, thiscall).
 ///
@@ -1090,7 +1043,6 @@ pub(crate) unsafe extern "thiscall" fn get_slot(news: usize, slot: i8) -> u32 {
     }
     core::ptr::read_unaligned((news + 5 + slot as usize * 4) as *const u32)
 }
-
 
 /// stores news field 0..49
 /// Original: `set_news_field` (0x785790, news.cpp, thiscall).
@@ -1104,7 +1056,6 @@ pub(crate) unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, value: u3
     core::ptr::write_unaligned((t + 5 + 4 * k as usize) as *mut u32, value);
     1
 }
-
 
 /// Copies a news item (0xdf bytes): +0, +4, the 50 tokens (+5), the date (+0xcd), +0xd5, +0xd6, +0xda and +0xde.
 ///

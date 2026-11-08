@@ -157,7 +157,6 @@ pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, posi
     }
 }
 
-
 /// Formation: sets one instruction bit `mascara` in the 64-bit instruction mask of position `posicao` (+0x188b + 8 x
 /// position), first clearing the mutually exclusive bits of its group, and clears the changed flag (+0x187f). Returns
 /// 1; position outside 0..=10 or unknown bit: clears the mouse-button global and returns 0 (the original also shows an
@@ -452,11 +451,7 @@ pub(crate) unsafe extern "thiscall" fn slots_without_conflict(this: usize) -> u8
     1
 }
 
-
-
 comparar_valor!(comparar_slots_without_conflict, slots_without_conflict, IDX_SLOTS_WITHOUT_CONFLICT, () -> u8);
-
-
 
 /// Stores the slot coordinate for the phase and ball zone and picks the general and extra positions closest to the
 /// slot's 12 coordinates.
@@ -540,13 +535,13 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
         }
     }
     core::ptr::write_unaligned((this + 0x187f) as *mut u32, 0);
-    let geral = this + 0x12d + su * 2;
+    let general = this + 0x12d + su * 2;
     let mut sf: i8 = (best[0] > best[1]) as i8;
     let mut si: i8 = 0;
     for q in 0..2i8 {
         let mut a: i8 = 0;
         while a < count[q as usize] {
-            if cand[(a as i32 + q as i32 * 11) as usize] == read_i16(geral) as u16 {
+            if cand[(a as i32 + q as i32 * 11) as usize] == read_i16(general) as u16 {
                 sf = q;
                 si = a;
                 break;
@@ -555,8 +550,8 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
         }
     }
     let new = cand[(sf as i32 * 11 + si as i32) as usize];
-    if read_i16(geral) as u16 != new {
-        write_u16(geral, new);
+    if read_i16(general) as u16 != new {
+        write_u16(general, new);
         mask(this);
         *((this + 0x143 + su) as *mut u8) = 1;
         for k in 0..11i8 {
@@ -568,7 +563,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     let extra = this + 0x14e + su * 2;
     let o = (1 - sf as i32) * 11; // the start of the other stage’s list
     let no = count[(1 - sf) as usize];
-    let current = read_i16(geral) as u16;
+    let current = read_i16(general) as u16;
     for a in 0..no.max(0) as i32 {
         if cand[(o + a) as usize] == current {
             write_u16(extra, cand[(o + a) as usize]);
@@ -579,7 +574,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     let (mut setor, mut lado_c, mut lado_a) = (0u16, 0u16, 0u16);
     for b in 0..no.max(0) as i32 {
         split(cand[(o + b) as usize] as u32, &mut setor, &mut lado_c);
-        split(read_i16(geral) as u16 as u32, &mut setor, &mut lado_a);
+        split(read_i16(general) as u16 as u32, &mut setor, &mut lado_a);
         if lado_c == lado_a {
             write_u16(extra, cand[(o + b) as usize]);
             return 1;
@@ -689,9 +684,6 @@ pub(crate) fn formation_regions(this: usize) -> [(usize, usize); 3] {
     [(this + 0x12d, 0x584 - 0x12d), (this + 0x5b4, 11), (this + 0x187b, 8)]
 }
 
-
-
-
 /// Expands each formation slot's positions into the pitch cell tables and their mirrored copy.
 ///
 /// (thiscall) The formation's cell map. For each of the 22 lines k (11 cells × 2 phases) and 3 × 4 block (a18, a14)
@@ -730,7 +722,6 @@ pub(crate) unsafe extern "thiscall" fn build_position_lookup(this: usize) -> u32
     1
 }
 
-
 /// Record (42735 bytes in [this]) of the match the human manager (or the on-screen one) is watching: Ok(0) without
 /// human, Err when the index is out of range.
 ///
@@ -751,10 +742,6 @@ pub(crate) unsafe fn formation_watched_match_record(this: usize, human: usize) -
     }
     Ok((*(this as *const usize)).wrapping_add((i as usize).wrapping_mul(42735)))
 }
-
-
-
-
 
 /// Returns the stored cell of the slot by attack and band.
 ///
@@ -804,9 +791,6 @@ pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u
     core::ptr::write_unaligned(marks, v);
     1
 }
-
-
-
 
 /// Reads a formation from a .pct file, fixes the instructions of old versions, redoes the positions of the 11 slots
 /// from the coordinates and builds the coordinate map.
@@ -989,25 +973,24 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     if id < 0x98ec5d {
         write_u32(team, read_u32(team) | 0x20000);
     }
-    let guardada: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32 = core::mem::transmute(FN_FORMATION_GET_SLOT_COORDINATE);
+    let stored: unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32 = core::mem::transmute(FN_FORMATION_GET_SLOT_COORDINATE);
     let redo: unsafe extern "thiscall" fn(usize, i32, i32, u32, u32) -> u32 = core::mem::transmute(FN_FORMATION_SET_SLOT_COORDINATE);
     let mut c = 0u32;
     for vaga in 0..0xbi32 {
-        guardada(this, vaga as i8, 0, 0, &mut c); // cqg8: a casa guardada da fase 0
+        stored(this, vaga as i8, 0, 0, &mut c); // cqg8: a casa guardada da fase 0
         crate::comparison::branch("cqg_8 posicoes refeitas");
         redo(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa
     }
     let split: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_STRTOK);
     split(path, 0, 0, this, 0);
-    let mapa: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_BUILD_POSITION_LOOKUP);
-    mapa(this);
+    let map: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_BUILD_POSITION_LOOKUP);
+    map(this);
     write_u32(this + 0x187f, 1);
     write_u32(this + 0x1883, (*((this + 0x33) as *const u8) != 0) as u32);
     write_u32(this + 0x1887, 1);
     cash_crt_fclose(f);
     1
 }
-
 
 /// Checks the centre-backs for conflicts: 0 if any slot with an open side is a centre-back's or defensive midfielder's;
 /// returns only `al`.
@@ -1069,10 +1052,10 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     }
     let s = k as usize;
     let p = position as u16 as i16;
-    let geral = this + 0x12d + 2 * s;
+    let general = this + 0x12d + 2 * s;
     let extra_of_home = this + 0x14e + 2 * s;
-    if extra == 0 && read_i16(geral) != p {
-        core::ptr::write_unaligned(geral as *mut i16, p);
+    if extra == 0 && read_i16(general) != p {
+        core::ptr::write_unaligned(general as *mut i16, p);
         let mask: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FORMATION_UPDATE_SHAPE_CODE);
         mask(this);
         *((this + 0x143 + s) as *mut u8) = 1;
@@ -1089,7 +1072,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     // the outputs carry over from one iteration to the next, like the original’s locals (uninitialized only if 0x5b73a0 fails
     // right on the first one: zero here)
     let (mut setor_geral, mut setor_extra, mut lado, mut saida) = (0u16, 0u16, 0u16, 0u32);
-    if read_i16(geral) == read_i16(extra_of_home) {
+    if read_i16(general) == read_i16(extra_of_home) {
         crate::comparison::branch("cpk_7 formacao mesma posicao");
     } else {
         crate::comparison::branch("cpk_7 formacao posicao extra");
@@ -1099,7 +1082,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
             let arg = band as u32 | (altura as u32) << 16;
             let i = altura + 4 * (band + 6 * s);
             let (sem_bola, com_bola) = (this + 0x164 + 4 * i, this + 0x194 + 4 * i);
-            let (g, e) = (read_i16(geral) as u16 as u32, read_i16(extra_of_home) as u16 as u32);
+            let (g, e) = (read_i16(general) as u16 as u32, read_i16(extra_of_home) as u16 as u32);
             let (a, b) = if g == e {
                 (g, g) // the same position with and without the ball
             } else {
@@ -1121,7 +1104,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     1
 }
 
-
 /// Formation: returns byte `i` of the per-position table at +0x5b4 [inference: the role flags of position `i`; bit 1
 /// marks the goalkeeper].
 /// Original: `position_byte` (0x5b57c0, formation.cpp).
@@ -1130,10 +1112,4 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
 pub(crate) unsafe extern "thiscall" fn position_byte(this: usize, i: i8) -> u8 {
     *((this as isize + 0x5b4 + i as isize) as *const u8)
 }
-
-
-
-
-
-
 

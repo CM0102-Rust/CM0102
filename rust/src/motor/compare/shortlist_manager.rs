@@ -122,7 +122,11 @@ pub(crate) unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_loa
     r
 }
 
-/// Comparer for `update_staff_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_staff_status` (comparison mode: see the header of motor.rs): side by side.
+///
+/// Compares the two pair vectors and their counts, the byte of the person's list count, the 40 slots and `+8` of the
+/// club's entry, byte `+0x4f` of the contract and the static dates, and the return value. In the recursion of event 4
+/// and in event 1 that fills the slot, only the original routine (the copy covers those branches).
 ///
 /// [pt] Comparador: lado a lado pelos dois vetores de pares e suas contas, pelo byte da conta de listas da pessoa, pelas 40
 /// vagas e o +8 da entrada do clube, pelo byte +0x4f do contrato e pelas datas estáticas, e a devolução. Na recursão do
@@ -258,8 +262,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_player_to_club_shortlists(th
 /// contrato, o contrato fica à venda (+0x4e bit 1, +0x4f nibble alto 7).
 pub(crate) unsafe extern "thiscall" fn comparar_transfer_list_player(this: usize, player: usize, news: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_TRANSFER_LIST_PLAYER);
-    let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED);
-    let mark = listada(player, 0) == 0 && get_contract(player) != 0;
+    let listed: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED);
+    let mark = listed(player, 0) == 0 && get_contract(player) != 0;
     o(this, player, news);
     if mark {
         let c = get_contract(player);
@@ -311,9 +315,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_sort_position_lists(this: usize)
 /// Comparer for `collect_interested_clubs` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a original na lista de saída e a cópia numa lista nova (0x68d020, solta com 0x68d080); compara os pares.
-pub(crate) unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: usize, player: usize, out: usize, ignorar: u32, mode: u32, so_humanos: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: usize, player: usize, out: usize, ignore: u32, mode: u32, so_humanos: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_COLLECT_INTERESTED_CLUBS);
-    o(this, player, out, ignorar, mode, so_humanos);
+    o(this, player, out, ignore, mode, so_humanos);
     if out == 0 {
         return;
     }
@@ -322,7 +326,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: u
     let mut new = [0u8; 0x10];
     let l = new.as_mut_ptr() as usize;
     create(l);
-    collect_interested_clubs(this, player, l, ignorar, mode, so_humanos);
+    collect_interested_clubs(this, player, l, ignore, mode, so_humanos);
     let (a, b) = (llist_pairs(out), llist_pairs(l));
     clear(l);
     SCOREBOARD.record(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", player, a, b));
@@ -406,6 +410,12 @@ pub(crate) unsafe extern "stdcall" fn comparar_passes_work_permit_check(player: 
 }
 
 /// Comparer for `try_loan_offer_for_player` (comparison mode: see the header of motor.rs).
+///
+/// The copy as a dry run and the original routine from the same state ([0xae1080], the random generator and the statics
+/// of the date operations).
+///
+/// The copy refused (−1): the original too, with the same memory. The copy would update the list (−3): the original
+/// returns −1. The copy would make the offer (−2): the original does not return −1.
 ///
 /// [pt] O comparador: a cópia em ensaio e a original a partir do mesmo estado ([0xae1080], o sorteio e as estáticas das
 /// operações de data). A cópia recusou (−1): a original também, com a mesma memória. A cópia atualizaria a lista (−3):

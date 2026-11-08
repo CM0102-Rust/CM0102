@@ -1,9 +1,5 @@
 use super::*;
 
-
-
-
-
 /// As janelas da Espanha: de 17 de junho a 20 de agosto e de 15 de dezembro a 31 de janeiro.
 pub(crate) const SPAIN_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
     [0x16, 0x00, 0x03, 0x11, 0x05, 0x01],
@@ -23,8 +19,10 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows(this: u
     set_transfer_windows(this, 2, &SPAIN_TRANSFER_WINDOWS, 0xa82ac8, 0x54);
 }
 
-
-/// As janelas da Itália: de 1º de julho a 27 de setembro (andando para a quinta-feira [inferência]), de 2 a 31 de janeiro, e a terceira, de 1º de julho a 30 de abril [inferência: a dos jogadores sem contrato].
+/// Italy's transfer windows: from 1 July to 27 September (moved to the Thursday [inference]), from 2 to 31 January, and
+/// a third one from 1 July to 30 April [inference: the one for players without a contract].
+///
+/// [pt] As janelas da Itália: de 1º de julho a 27 de setembro (andando para a quinta-feira [inferência]), de 2 a 31 de janeiro, e a terceira, de 1º de julho a 30 de abril [inferência: a dos jogadores sem contrato].
 pub(crate) const ITALY_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
     [0x0e, 0x00, 0xff, 0x01, 0x06, 0x01],
     [0x0e, 0x00, 0x04, 0x1b, 0x09, 0x00], // cqk2: a Itália fecha em setembro
@@ -34,9 +32,10 @@ pub(crate) const ITALY_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
     [0x0e, 0x02, 0xff, 0x1e, 0x03, 0x00],
 ];
 
-
-
-/// As janelas da França: de 30 de maio a 31 de agosto, de 1º de setembro a 20 de dezembro e de 21 de dezembro a 10 de janeiro (com os dias da semana para os quais as datas andam [inferência]).
+/// France's transfer windows: from 30 May to 31 August, from 1 September to 20 December and from 21 December to 10
+/// January (with the weekdays the dates are moved to [inference]).
+///
+/// [pt] As janelas da França: de 30 de maio a 31 de agosto, de 1º de setembro a 20 de dezembro e de 21 de dezembro a 10 de janeiro (com os dias da semana para os quais as datas andam [inferência]).
 pub(crate) const FRANCE_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
     [0x09, 0x00, 0x06, 0x1e, 0x04, 0x01],
     [0x09, 0x00, 0x03, 0x1f, 0x07, 0x00], // cqk2: a França fecha em agosto
@@ -45,8 +44,6 @@ pub(crate) const FRANCE_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
     [0x09, 0x02, 0x05, 0x15, 0x0b, 0x01],
     [0x09, 0x02, 0x04, 0x0a, 0x00, 0x00],
 ];
-
-
 
 /// Decides whether a Spanish loan is allowed: refuses outside the window (9) and between clubs of the same division
 /// after five league games of the player (0x1f).

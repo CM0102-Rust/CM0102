@@ -3,7 +3,11 @@ use super::*;
 // The comparers of the routines in ../training_manager.rs (comparison mode: see the header of motor.rs).
 // [pt] Os comparadores das rotinas de ../training_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `update_coach_assignments` (comparison mode: see the header of motor.rs).
+/// Comparer for `update_coach_assignments` (comparison mode: see the header of motor.rs): side by side on the human's
+/// staff (54 bytes) and on the club's mark `+0x244` (`0x53cb80`/`0x53cc30` via `0x540a50` may zero it).
+///
+/// Without a human or with a national team's club: side by side only on the mark. A manager outside the 16 humans
+/// (`0x8b4cd0` shows the box and the original routine would write to null): only the original routine.
 ///
 /// [pt] Comparador: lado a lado na comissão do humano (54 bytes) e na marca +0x244 do clube (a 0x53cb80/0x53cc30 pela
 /// 0x540a50 podem zerá-la). Sem humano ou clube de seleção: lado a lado só na marca. Técnico fora dos 16 humanos
@@ -28,6 +32,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_coach_assignments(this: u
 }
 
 /// Comparer for `reassign_squad_schedules` (comparison mode: see the header of motor.rs).
+///
+/// Side by side over the training entry and fitness load of each player of the two squads, the manager's staff
+/// (0x8b2880 at the end) and the clubs' mark +0x244 (0x541f90 via 0x540a50). With an error box (a player with no player
+/// sheet in the old squad, or a manager outside the 16 humans with a new club): only the original runs.
 ///
 /// [pt] Comparador: lado a lado na entrada do treino e na carga de forma de cada jogador dos dois elencos, na comissão do
 /// técnico (a 0x8b2880 do fim) e na marca +0x244 dos clubes (a 0x541f90 pela 0x540a50). Com caixa (jogador sem
@@ -77,20 +85,27 @@ pub(crate) unsafe extern "thiscall" fn comparar_training_manager_cpp_0x8b2230(th
     SCOREBOARD.record(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));
 }
 
-/// Comparador: lado a lado no estado do sorteador, em [0xae1080], na entrada do treino (6 bytes), na ficha (+0xf..+0x41,
+/// Comparer: side by side on the random generator's state, on [0xae1080], on the training entry (6 bytes), on the
+/// player sheet (+0xf..+0x41, what 0x8b2be0 writes) and on the load of the fitness sheet (31 bytes per player at
+/// [[0xb63d28]], +0x1e), with the copy's draws not counted.
+///
+/// Only the original routine: the error cases and the player with position training (0x8b4b20 before running), because
+/// there 0x8b4450, the contract mark (0x867700) and 0x5885c0 write outside these regions.
+///
+/// [pt] Comparador: lado a lado no estado do sorteador, em [0xae1080], na entrada do treino (6 bytes), na ficha (+0xf..+0x41,
 /// o que a 0x8b2be0 grava) e na carga da ficha de forma (31 bytes por jogador em [[0xb63d28]], +0x1e), com os sorteios
 /// da cópia fora da contagem. Só a original: os casos de erro e o jogador com treino de posição (0x8b4b20 antes de
 /// rodar): ali a 0x8b4450, a marca do contrato (0x867700) e a 0x5885c0 mexem fora dessas regiões.
-pub(crate) unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usize, pular: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usize, skip: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_UPDATE_PLAYER_TRAINING);
     if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || read_u32_as_usize(p + staff::PLAYER) == 0 {
-        return o(this, p, pular);
+        return o(this, p, skip);
     }
     let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
     let find: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(FN_TRAINING_MANAGER_FIND_POSITION_TRAINING);
     let mut q = 0usize;
     if programa(this, p) == 0 || find(this, p, &mut q) > 0 {
-        return o(this, p, pular);
+        return o(this, p, skip);
     }
     let f = read_u32_as_usize(p + staff::PLAYER);
     let mut reg = Vec::from(crate::rng::STATE_REGIONS);
@@ -99,9 +114,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_player_training(this: usi
     if les != 0 {
         reg.push((read_u32_as_usize(les).wrapping_add((read_i32(p) as isize * 31 + 0x1e) as usize), 1));
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, pular),
-        || crate::rng::without_counting(|| update_player_training(this, p, pular)));
-    SCOREBOARD.record(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, pular as u16, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, skip),
+        || crate::rng::without_counting(|| update_player_training(this, p, skip)));
+    SCOREBOARD.record(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, skip as u16, mo.0, mr.0));
 }
 
 /// Comparer for `get_player_schedule` (comparison mode: see the header of motor.rs).

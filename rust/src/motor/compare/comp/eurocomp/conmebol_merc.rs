@@ -6,12 +6,12 @@ use super::*;
 /// Comparer for `conmebol_merc_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_MERC_UPDATE_FOR_DATE);
-    let sorteia = read_u32_as_usize(this + 0x45) == 0
+    let draws = read_u32_as_usize(this + 0x45) == 0
         && full != 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
         && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(today as *const u16) && !is_rollover_day(this, today);
     let r = o(this, today, full);
-    if sorteia {
+    if draws {
         let stages = read_u32_as_usize(this + 0xc);
         let ok = read_u32_as_usize(this + 0x45) == 1
             && read_u32_as_usize(this + 0xee) == 0

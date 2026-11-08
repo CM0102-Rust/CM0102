@@ -10,15 +10,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table(th
         |r, e, s| eng_cc_cup_create_round_table(this, stage, r, e, s))
 }
 
-
-
 /// Comparer for `eng_cc_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_CC_CUP_COLLECT_ENTRANTS);
     eng_cc_cup_compare_entrant_list("eng_cc_cup_collect_entrants", this, &[(this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)], || o(this),
         || collect_league_cup_entrants(this), |_, n| n.max(0) as usize * 6)
 }
-
 
 /// Comparer for `eng_cc_cup_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {

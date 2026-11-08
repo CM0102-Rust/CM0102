@@ -58,9 +58,13 @@ pub(crate) unsafe extern "C" fn zipdir_match_filename_pattern(default: *const u8
     }
 }
 
-
-/// Reads the container's 12-byte header and index (1000 items, or 250 for old types 1/2 converted to 3/4) into the copy
-/// h.
+/// Reads the header and index of the open container `f` into a copy `h` of 0x416ec bytes, as the zipdir.cpp queries do
+/// (each has its own copy of this stretch).
+///
+/// The header is 12 bytes (type, a4, how many) and the index 1000 items of 0x10c bytes (250 in the old types 1/2, which
+/// become 3/4).
+///
+/// If the header does not arrive, `h` stays as it was (allocated memory, not zeroed, as in the original routine).
 ///
 /// [pt] O cabeçalho (12 bytes: tipo, a4, quantos) e o índice (1000 itens de 0x10c; 250 nos tipos antigos
 /// 1/2, que viram 3/4) do contêiner aberto `f`, numa cópia `h` de 0x416ec bytes, como as consultas
@@ -168,7 +172,6 @@ pub(crate) unsafe extern "C" fn zget_matching_size(path: usize, default: usize) 
     free(h);
     sum
 }
-
 
 /// strcpy: copies C string origem (with terminator) to destino.
 ///
@@ -374,7 +377,6 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
 
 // simplification: creates files in the temporary folder and allocates; does not run twice. The load in the save proof
 // (--sav) goes through here; saving does not.
-
 
 // simplification: deletes files; does not run twice. Saving the .qst goes through here (create_game).
 

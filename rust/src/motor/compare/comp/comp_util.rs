@@ -60,15 +60,15 @@ pub(crate) unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usi
 /// Comparer for `comp_util_shuffle_pointer_array` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pelo vetor, a cópia em sem_contar.
-pub(crate) unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(itens: usize, n: u32) {
+pub(crate) unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(items: usize, n: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32)>(IDX_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let k = (n as u16 as i16).max(0) as usize;
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if k > 0 {
-        reg.push((itens, 4 * k));
+        reg.push((items, 4 * k));
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(itens, n),
-        || crate::rng::without_counting(|| comp_util_shuffle_pointer_array(itens, n)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(items, n),
+        || crate::rng::without_counting(|| comp_util_shuffle_pointer_array(items, n)));
     SCOREBOARD.record(igual, || format!("comp_util_shuffle_pointer_array({}) {:x?} x {:x?}", k, mo, mr));
 }
 

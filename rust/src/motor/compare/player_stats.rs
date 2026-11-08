@@ -11,7 +11,15 @@ pub(crate) unsafe extern "stdcall" fn comparar_player_statistic(r: *const u8, wh
     o
 }
 
-/// Comparer for `archive_player_stats` (comparison mode: see the header of motor.rs).
+/// Comparer for `archive_player_stats` (comparison mode: see the header of motor.rs), as a dry run (model
+/// RARE_FINANCE_EVENT_DRY_RUN).
+///
+/// The copy runs first without writing to the file (the nodes it would write go into the sum of matches and goals),
+/// then the original routine from the same state; compares the return value, the six 32-byte category records and the
+/// matches and goals for the club (+0x20/+0x22 of the player sheet's record).
+///
+/// The history positions (+0x18, +0x1c), which only the original's write moves, are left out. Null person or no player
+/// sheet: only the original.
 ///
 /// [pt] Comparador em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN): a cópia roda primeiro sem gravar no arquivo (os nós que gravaria entram na
 /// soma dos jogos e gols), depois a original a partir do mesmo estado; compara a devolução, os seis registros de 32 bytes
@@ -45,7 +53,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize
     r
 }
 
-/// Comparer for `build_career_history` (comparison mode: see the header of motor.rs).
+/// Comparer for `build_career_history` (comparison mode: see the header of motor.rs): both build the table (the
+/// original routine and the copy, from the same state; the history file is only read) and compare the count and the
+/// entries.
+///
+/// The copy's table is freed (`0x9452ca`) and the game carries on with the original's. The error cases (box): only the
+/// original routine.
 ///
 /// [pt] Comparador: as duas montam a tabela (a original e a cópia, a partir do mesmo estado; o arquivo de histórico só é
 /// lido) e comparam a conta e as entradas; a da cópia é liberada (0x9452ca) e o jogo segue com a da original. Os casos
@@ -171,6 +184,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_category_record(this: usize,
 
 /// Comparer for `create_stats` (comparison mode: see the header of motor.rs).
 ///
+/// The original routine reallocates the vector, so only it runs; beforehand, the plan (the index the player will get,
+/// the count and the free ones afterwards); afterwards, the returned record, the index in the slot, the count, the free
+/// ones and the record zeroed when it is new.
+///
+/// Simplification: the error cases and running out of memory only in the original, unchecked.
+///
 /// [pt] Comparador: a original realoca o vetor, então só ela roda; antes, o plano (o índice que o jogador vai ter, a
 /// conta e os soltos depois); depois, o registro devolvido, o índice na vaga, a conta, os soltos e o registro
 /// zerado quando é novo. simplification: os casos de erro e a falta de memória só na original, sem conferir.
@@ -204,7 +223,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_stats(this: usize, player
     r
 }
 
-/// Comparer for `add_language` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_language` (0x7c6a30; comparison mode: see the header of motor.rs).
+///
+/// It allocates and reallocates the table (it cannot run twice): the plan beforehand (the count and capacity
+/// afterwards, the fluency), then the original runs; it checks the count, the capacity and the new record (at the end
+/// when not sorting; with `ordenar`, somewhere in the table).
 ///
 /// [pt] Comparador: a 0x7c6a30 aloca e realoca a tabela (não pode rodar duas vezes): o plano antes (a conta e a
 /// capacidade depois, a fluência), a original roda; confere a conta, a capacidade e o registro novo (no fim sem ordenar;
@@ -276,7 +299,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize
     r
 }
 
-/// Comparer for `player_stats_record_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_stats_record_match` (comparison mode: see the header of motor.rs): side-by-side comparer.
+///
+/// Compares the double sums (`+0x10`..`+0x30`), the category records of each row that counts, the range
+/// `+0x20`..`+0x27` of the player's record and `+0x3b` of the contract; in the simulated match (competition −2), also
+/// the random-draw state (and the two possible categories), with the copy's random draw left out of the count. A null
+/// match or fixture, the box of a competition with no known type, or a category record still to be created (`0x7c5d80`
+/// grows the vector): only the original routine.
 ///
 /// [pt] Comparador lado a lado: as somas em double (+0x10..+0x30), os registros das categorias de cada linha que conta, o
 /// trecho +0x20..+0x27 do registro do jogador e o +0x3b do contrato; no jogo simulado (competição −2), também o estado
@@ -386,9 +415,9 @@ pub(crate) unsafe extern "stdcall" fn comparar_player_stats_get_goals_for_club(p
 }
 
 /// Comparer for `competition_weight` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_competition_weight(p: usize, cod: i8) -> u16 {
-    let r = original_fn::<unsafe extern "stdcall" fn(usize, i8) -> u16>(IDX_COMPETITION_WEIGHT)(p, cod);
-    let n = competition_weight(p, cod);
-    SCOREBOARD.record(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, cod, r, n));
+pub(crate) unsafe extern "stdcall" fn comparar_competition_weight(p: usize, code: i8) -> u16 {
+    let r = original_fn::<unsafe extern "stdcall" fn(usize, i8) -> u16>(IDX_COMPETITION_WEIGHT)(p, code);
+    let n = competition_weight(p, code);
+    SCOREBOARD.record(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, code, r, n));
     r
 }

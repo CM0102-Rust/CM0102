@@ -10,7 +10,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_champ_cup_create_schedule(th
         |r, e, l| bra_champ_cup_create_schedule(this, stage, r, e, l))
 }
 
-
 /// Comparer for `bra_champ_cup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_champ_cup_set_up_rules(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CHAMP_CUP_SET_UP_RULES)(this);

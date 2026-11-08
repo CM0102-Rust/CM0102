@@ -14,7 +14,7 @@ MUTACOES = [
     ('cpv4_boato_sem_sorteio', 'let s = sorteio(4) as i16 as i32; // cpv4: a variante do boato', 'let s = 0i32; // mutacao: sem o sorteio', 'cpv_4 boato do tecnico'),
     ('cpv5_merchandising_sem_sorteio', '    let r = friendly_random(0xb); // cpv5: o sorteio do merchandising', '    let r = 5i32; // mutacao: sem o sorteio', 'cpv_5 merchandising'),
     ('cpv5_loja_sem_sorteio', '    let r2 = friendly_random(rep); // cpv5: o segundo sorteio da loja', '    let r2 = rep / 2; // mutacao: sem o sorteio', 'cpv_5 ingressos vendidos'),
-    ('cpv5_receita_invertida', '    if aplicar != 0 { // cpv5: a receita dos ingressos', '    if aplicar == 0 { // mutacao: a receita invertida', 'cpv_5 ingressos vendidos'),
+    ('cpv5_receita_invertida', '    if apply != 0 { // cpv5: a receita dos ingressos', '    if apply == 0 { // mutacao: a receita invertida', 'cpv_5 ingressos vendidos'),
     ('cpv6_divida_sem_sorteio', '    let r = friendly_random(7000); // cpv6: o sorteio da dívida', '    let r = 3500i32; // mutacao: sem o sorteio', 'cpv_6 sorteio da divida'),
     ('cpv6_filtro_da_injecao', '    if read_i16(club + club::REPUTATION) < 0x128e { // cpv6: o filtro da injeção', '    if read_i16(club + 0x80) < 0x1d4c { // mutacao: o filtro em 7500', 'cpv_6 injecao avaliada'),
     ('cpv6_sem_impulso', '            let ok = run_weekly_event(0x59e050, this, club, fin) != 0; // cpv6: o impulso na faixa 0', '            let ok = false; // mutacao: sem o impulso', 'cpv_6 impulso na faixa 0'),

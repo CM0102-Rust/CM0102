@@ -1,9 +1,11 @@
 use super::*;
 
-
-
-/// Range (start, end) of the 8-byte items of the discipline nation index ([this+0xc]) for the team's nation, found by
-/// bsearch then widened.
+/// The range (start, end) of the items of the discipline nation index for the nation of `time`.
+///
+/// Items are 8 bytes (+0 person id, +4 nation id) in the discipline nation index ([this+0xc], count +0x12, signed), for
+/// the nation of `time` (+0x53), in index order: bsearch (0x946464 with 0x55e5f0, cdecl) by the key (−1, nation), which
+/// matches any person of the nation; then it walks back to the first equal item and forward to the last. 0 items if not
+/// found.
 ///
 /// [pt] Os itens (8 bytes: +0 id da pessoa, +4 id da nação) do índice das nações da disciplina ([this+0xc], conta +0x12
 /// com sinal) da nação do `time` (+0x53), na ordem do índice: bsearch (0x946464 com 0x55e5f0, cdecl) pela chave (−1,
@@ -71,7 +73,6 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tea
     }
     soltar(list);
 }
-
 
 /// O plano do recurso: a entrada da pessoa no órgão da `regra` (0x7e82e0 sem criar), a suspensão (20 bytes em
 /// [this+4]), os valores novos de +0 (jogos) ou +2 (dias) e se ela é solta.
@@ -163,7 +164,6 @@ pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32,
     }
 }
 
-
 /// Rule (ruling body byte, 0xff none) of ban slot `vaga` in the person's 29-byte discipline record ([this+0x14]).
 ///
 /// [pt] A vaga `vaga` (byte com sinal) da suspensão da pessoa no registro de 29 bytes ([this+0x14]: 5 bytes por vaga): o
@@ -200,18 +200,12 @@ pub(crate) unsafe extern "thiscall" fn get_slot_text(this: usize, person: usize,
     text(read_usize(read_usize(this).wrapping_add((rule as i8 as isize as usize).wrapping_mul(4))), person, out, size)
 }
 
-
-
-
-
-
 /// Ruling body of rule (signed byte): [[this] + 4 x rule].
 ///
 /// [pt] O órgão disciplinar da regra `regra` (byte com sinal): [[this] + 4 × regra].
 pub(crate) unsafe fn ruling_body_of_rule(this: usize, rule: u8) -> usize {
     read_u32_as_usize(read_u32_as_usize(this).wrapping_add((rule as i8 as isize as usize).wrapping_mul(4)))
 }
-
 
 /// Person id's 29-byte discipline record in [this+0x14] (4 slots of 5 bytes, history, stored ban count).
 ///
@@ -421,7 +415,11 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
     }
 }
 
-/// O que a 0x556570 vai fazer, lido antes (a lista das guardadas perde e libera os itens): o contrato e o clube, os
+/// What 0x556570 is going to do, read beforehand (the list of held bans loses and frees its items): the contract and
+/// the club, the person's held items (the slot and the 5 bytes) and, after them, the slots 0..2 not restored that the
+/// club does not cover.
+///
+/// [pt] O que a 0x556570 vai fazer, lido antes (a lista das guardadas perde e libera os itens): o contrato e o clube, os
 /// itens guardados da pessoa (a vaga e os 5 bytes) e, depois deles, as vagas 0..2 não devolvidas que o clube não cobre.
 pub(crate) struct ContractReturnPlan {
     pub(crate) contrato: usize,
@@ -585,11 +583,6 @@ pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Suspensio
     SuspensionPlan::Caixa
 }
 
-
-
-
-
-
 /// Person id's 29-byte discipline record in [this+0x14].
 ///
 /// [pt] O registro de 29 bytes da pessoa `id` em [this+0x14] (+0x14/+0x18: o começo e o último deslocamento do histórico).
@@ -642,8 +635,13 @@ pub(crate) struct SuspensionMatchUpdate {
     pub(crate) cumprida: bool,
 }
 
-/// Read-only plan of a match for a ban: by matches (count +1 when started) or by days (ends when today reaches start +
-/// days); reports completion.
+/// The read-only plan of a match for a ban (only reads; 0x7e82e0 without creating, and 0x54c5b0 only writes its scratch
+/// date): the person's suspension in the body of `regra`; reports completion.
+///
+/// By matches (+0 ≠ 0xff): from the start (day +4, year +6; today [0xae2c90]: day +0, year +2), with `conta`, +1 on the
+/// counter (+1), and it ends on reaching +0.
+///
+/// By days (+0 = 0xff): it ends when today reaches start + days (+2) (0x54c5b0).
 ///
 /// [pt] O plano do jogo (só lê; a 0x7e82e0 sem criar e a 0x54c5b0 só gravam a data de rascunho dela): a suspensão da
 /// pessoa no órgão da `regra`; por jogos (+0 ≠ 0xff): a partir do começo (dia +4, ano +6; hoje [0xae2c90]: dia +0,
@@ -780,9 +778,6 @@ pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: us
     without_last(read_usize(this + 0x18), r + 0x14, r + 0x18)
 }
 
-
-
-
 /// Copies a ban record (`0x14` bytes): the fields, the date (`+4`) and bits 0..2 of `+0x13`. Returns `this`.
 ///
 /// `BanRecord::operator=`: copies the ban record from `origem` (source): `+0` and `+1` (bytes), `+2` (word), the date
@@ -811,10 +806,6 @@ pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, source: 
     *m = (*m & !7) | (*((source + 0x13) as *const u8) & 7); // the three marks
     this
 }
-
-
-
-
 
 // the original runs first and updates the day’s fitness (0x62c680, with a random roll); the copy, afterwards, finds the day already done
 comparar_valor!(comparar_get_match_condition, get_match_condition, IDX_GET_MATCH_CONDITION, (jogador: usize, em_porcento: u32) -> u16);
@@ -869,8 +860,6 @@ pub(crate) unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32,
 
 // simplification: the first two only dispatch through the virtual table (effects outside): proven by the career
 
-
-
 /// Tells whether the player is suspended: by the general ruling body (`0x7e85b0` with 1) or by the competition's
 /// (`+0x50`, with 0); in the latter case, at a human-managed club, he leaves his slot among the 20 at `+0x1e0`.
 ///
@@ -924,7 +913,6 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     1
 }
 
-
 /// Removes the person's items from the held-ban list (`+0x1c`) while the `+0x1c` counter of the person's record is
 /// positive.
 ///
@@ -949,7 +937,6 @@ pub(crate) unsafe extern "thiscall" fn drop_held_bans(this: usize, person: *cons
         e = contract_manager_list_next(l);
     }
 }
-
 
 /// Holds bans for a loan: the bans (slots 0 to 2) that do not apply at the loan club go to the held list (`+0x1c`), the
 /// slot becomes −1 and the `+0x1c` counter goes up.
@@ -985,7 +972,6 @@ pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: u
     }
 }
 
-
 /// Tells whether the person is one booking away from a ban: with a valid id, it asks the competition's ruling body;
 /// otherwise 0.
 ///
@@ -1016,7 +1002,6 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
     let perguntar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_RULINGBODY_CHECK_ONE_BOOKING_FROM_BAN);
     perguntar(o, read_usize(person) as u32, 0, 0, read_usize(comp + 4) as u32)
 }
-
 
 /// the penalty at the table row and column, if the type matches
 /// Original: `table_penalty` (0x55cae0, discipline.cpp, thiscall).
@@ -1071,7 +1056,6 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize
     0
 }
 
-
 /// Removes a player from discipline: clears the ban history, releases the bans and frees the 4 slots, drops the held
 /// bans from the list and leaves the 29-byte record free (`0xff`, count 0).
 ///
@@ -1125,7 +1109,6 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
     core::ptr::write_bytes(r as *mut u8, 0xff, 29);
     *((r + 0x1c) as *mut u8) = 0;
 }
-
 
 /// Returns the player's held ban in a slot, or 0 if none.
 ///

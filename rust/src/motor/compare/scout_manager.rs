@@ -5,6 +5,12 @@ use super::*;
 
 /// Comparer for `scout_manager_daily_update` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x7f8750: the reports draw at random and allocate and the searches change the human players' lists, so
+/// only the original routine runs.
+///
+/// Beforehand, the copy in rehearsal mode prunes a copy of the requests (without the reports) and puts them in the
+/// original's order; the requests the original leaves (count and the 0x11 bytes of each) must be those.
+///
 /// [pt] Comparador da 0x7f8750: os relatórios sorteiam e alocam e as buscas mexem nas listas dos humanos: só a original
 /// roda. Antes, a cópia em ensaio poda uma cópia dos pedidos (sem os relatórios) e os põe na ordem da original; os
 /// pedidos que a original deixa (conta e os 0x11 bytes de cada) têm de ser esses.
@@ -41,6 +47,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this:
 }
 
 /// Comparer for `send_scout_reports` (comparison mode: see the header of motor.rs).
+///
+/// Comparer of 0x7f9890: the original routine delivers news items (allocating in the inboxes), so only it runs, with
+/// logging of the calls to 0x7f9a60 turned on; beforehand, the copy as a dry run (without 0x7f9a60) gives the groups
+/// (player, club, how many) in order, and the original's calls must be those.
 ///
 /// [pt] Comparador da 0x7f9890: a original entrega notícias (aloca nas caixas): só ela roda, com o registro das chamadas à
 /// 0x7f9a60 ligado; antes, a cópia em ensaio (sem a 0x7f9a60) diz os grupos (jogador, clube, quantos) em ordem, e as
@@ -99,6 +109,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_club_in_session_searches(this
 }
 
 /// Comparer for `scout_manager_scout_match` (comparison mode: see the header of motor.rs).
+///
+/// The scouting (0x7b5be0, original) writes what the scouts know and the reports, 0x7ae9c0 starts searches and 0x7f9890
+/// delivers the news: it cannot run twice. Only the original runs (simplification: the routine itself only writes the
+/// local array and list, which are discarded); it checks the return value (1).
 ///
 /// [pt] Comparador: a observação (0x7b5be0, original) grava o que os olheiros sabem e os relatórios, a 0x7ae9c0 começa
 /// buscas e a 0x7f9890 entrega as notícias: não pode rodar duas vezes. Só a original roda (simplification: ela mesma só grava
@@ -204,9 +218,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this:
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u32, usize) -> u32>(IDX_COLLECT_CLUB_SCOUT_TARGETS)(this, club, list);
     let mut same = r == (!alvos.is_empty()) as u32;
     if list != 0 {
-        let itens = list_items_capped(list);
-        same &= itens.len() == alvos.len()
-            && itens.iter().zip(&alvos).all(|(&i, &p)| core::slice::from_raw_parts(i as *const u8, 0x6e) == core::slice::from_raw_parts(p as *const u8, 0x6e));
+        let items = list_items_capped(list);
+        same &= items.len() == alvos.len()
+            && items.iter().zip(&alvos).all(|(&i, &p)| core::slice::from_raw_parts(i as *const u8, 0x6e) == core::slice::from_raw_parts(p as *const u8, 0x6e));
     }
     SCOREBOARD.record(same, || format!("collect_club_scout_targets original={} alvos {}", r, alvos.len()));
     r

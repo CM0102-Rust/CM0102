@@ -22,7 +22,7 @@ def main():
     s = open(m, encoding='utf-8').read()
     i = s.index('let rust: [usize; N] = [')
     nomes = re.findall(r'^\s+(\w+) as \*const \(\) as usize,$', s[i:s.index('];', i)], re.M)
-    pro = re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', s[:s.index('const N')])
+    pro = re.findall(r'Prologue \{ address: (0x[0-9a-f]+)', s[:s.index('const N')])
     end = {n: int(a, 16) for n, a in zip(nomes, pro)}
     mapa = partir_motor.mapa()
     onde = {}

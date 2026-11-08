@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// True if the club's division (+0x57) has the competition id in global g.
 ///
 /// [pt] O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
@@ -19,8 +16,26 @@ pub(crate) unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
     write_u32_from_usize(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS) + (*k as usize - 1) * 4, c);
 }
 
-/// EngAutoCup::select_section_clubs (0x56b730): 56 League Trophy clubs from the lower English divisions and Conference,
-/// then sorts by stadium latitude and each half by reputation; returns 1 if full.
+/// `EngAutoCup::select_section_clubs()` (0x56b730, thiscall, ret 0, eng_auto_cup.cpp; from the season rollover, n = 1
+/// up to 2002-06-01): puts the 56 League Trophy clubs (+0xb6 = 0x38) in a list (0x944e46 of 0xe0 at +0xb2; out of
+/// memory, the box for line 0x24c and 0), in four steps, each one until the list is full (count == +0xb6).
+///
+/// 1) In club table order ([0xae23b4], [0xae235c] clubs), those of divisions [0x9cf5c4] and [0x9cf5c8] (the English
+/// second and third divisions [inference]).
+///
+/// 2) The first club of division [0x9cf69c] (the Conference [inference]) that came from [0x9cf5c8] (+0x5b, the previous
+/// season's division [inference]): the relegated club; it is remembered (`achado`) so it does not enter again.
+///
+/// 3) If the cup's nation ([+4] +0x5d) has bit 4 in +0x11c, the clubs of [0x9cf69c] that were already in it (+0x5b), by
+/// category +0x5f (signed): first those of 6 or less, then 7, 8... until full; otherwise, up to 30 clubs of [0x9cf69c]
+/// (except the remembered one) and, if short, the English clubs (+0x53 = [0x9cf2e4]) outside the generic division
+/// [0x9cf764] (among the first [0xae235c] − 2 × [0xae2350]), up to 30, sorted by reputation with the first 3 × missing
+/// shuffled (comp_util_sort_and_shuffle_top_clubs 0x4afbd0: push missing; push how many; push list; add esp, 0xc ->
+/// cdecl; uses random draws), and of those the first ones still missing.
+///
+/// Once full, the list is sorted by the latitude of the stadium's city (qsort 0x945333 with 0x53fd40) and each half
+/// (the North and the South [inference]) by reputation, lowest to highest (qsort with 0x4b0810); returns 1. If it does
+/// not fill, 0.
 ///
 /// [pt] { 0x56b730 } (thiscall, ret 0, eng_auto_cup.cpp; da virada, n = 1 até 2002-06-01): `EngAutoCup::select_section_clubs()`:
 /// os 56 clubes do Troféu da Liga (+0xb6 = 0x38) numa lista (0x944e46 de 0xe0 em +0xb2; sem memória, a caixa da linha
@@ -164,9 +179,9 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
                 }
             }
         }
-        let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
+        let shuffle: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
         // simplification: the original pushes the two words in dwords with garbage in the high 16 bits; 0x4afbd0 reads the words
-        embaralhar(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
+        shuffle(local.as_mut_ptr() as usize, m as i16 as u16 as u32, (read_i16(this + 0xb6).wrapping_sub(k as i16)) as u16 as u32);
         let mut a: i16 = 0;
         while k < read_u32_as_usize(this + 0xb6) as i32 {
             push_section_club(this, &mut k, local[a as u16 as usize]);
@@ -201,7 +216,6 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 {
     eng_auto_cup_select_section_clubs(this)
 }
-
 
 /// Creates the Trophy section stage: a knockout (Cup_Stage) with the 56 clubs in list order (North, then South), using
 /// the rounds of stage 0 of the cup table, no seeding.
@@ -259,7 +273,6 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     write_u32_from_usize(this + cup::CURRENT_STAGE, 0);
 }
 
-
 /// Moves the Trophy on by one stage; when the sections end (stage 1) it builds the final between the North and South
 /// winners; at the last stage, the error box.
 ///
@@ -284,10 +297,6 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
         f(this);
     }
 }
-
-
-
-
 
 /// First club among the first n 6-byte entrants whose status (+5) is s, or None.
 ///
@@ -358,7 +367,6 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     sortear(f, 0); // cqs6: o sorteio da final
     soltar(l);
 }
-
 
 /// Writes the Trophy final ranking into the cup statistics: the highest-reputation club of each half takes 1st and 2nd;
 /// the others share one position per round, from the last round to the first.
@@ -457,7 +465,6 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_collect_entrants(this: usize) -> i32 {
     collect_auto_cup_entrants(this).0
 }
-
 
 /// rule: the LDV Vans Trophy has two sections (stages −1 and 0, North and South [inference], ids 0x41d and 0x41e) of
 /// five single-match rounds: 1st on 10/12 (24 teams), 2nd on 14/1 (16 teams, 4 new), quarter-finals on 4/2, semi-final

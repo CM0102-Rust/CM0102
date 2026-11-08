@@ -1,7 +1,10 @@
 use super::*;
 
-
-/// Sets transfer windows: count at +8 and an allocated table of 6-byte dates at +4 (error box on no memory).
+/// Sets the transfer windows: `+8` = the number of windows, and the table allocated into `+4`.
+///
+/// The table (`t`) holds 6-byte dates: `+0` the rule, `+1` the window number, `+2` the weekday the date moves to (0xff
+/// none) [inference], `+3` the day, `+4` the month (0 = January), `+5` 1 at the start of the window and 0 at the end;
+/// two dates per window. Allocated via `0x944e46`; out of memory, the box of line `linha` of source file `arquivo`.
 ///
 /// [pt] As janelas de transferência: +8 = o número de janelas; a tabela (`t`, datas de 6 bytes: +0 a regra, +1 o número da
 /// janela, +2 o dia da semana para o qual a data anda (0xff nenhum) [inferência], +3 o dia, +4 o mês (0 = janeiro), +5 1
@@ -20,7 +23,6 @@ pub(crate) unsafe fn set_transfer_windows(this: usize, n: u8, t: &[[u8; 6]], fil
         core::ptr::copy_nonoverlapping(r.as_ptr(), (j + k * 6) as *mut u8, 6);
     }
 }
-
 
 /// Side-by-side comparer for transfer rules constructors: original on the object, copy on a scratch copy; fields and
 /// windows must match.
@@ -49,7 +51,10 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
     SCOREBOARD.record(fields && windows, || format!("{}: campos {} janelas {}", name, fields, windows));
 }
 
-/// A janela da Inglaterra: de 2 de junho (andando para a segunda-feira [inferência]) a 26 de março (andando para a quinta-feira [inferência]).
+/// England's transfer window: from 2 June (moved to the Monday [inference]) to 26 March (moved to the Thursday
+/// [inference]).
+///
+/// [pt] A janela da Inglaterra: de 2 de junho (andando para a segunda-feira [inferência]) a 26 de março (andando para a quinta-feira [inferência]).
 pub(crate) const ENGLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x07, 0x00, 0x01, 0x02, 0x05, 0x01], // cqk1: a Inglaterra abre em junho
     [0x07, 0x00, 0x04, 0x1a, 0x02, 0x00],
@@ -68,14 +73,13 @@ pub(crate) unsafe extern "thiscall" fn construct_england_rules(this: usize, a1: 
     this
 }
 
-
-/// A janela dos EUA: de 7 de janeiro (andando para a quarta-feira [inferência]) a 15 de agosto.
+/// The USA's transfer window: from 7 January (moved to the Wednesday [inference]) to 15 August.
+///
+/// [pt] A janela dos EUA: de 7 de janeiro (andando para a quarta-feira [inferência]) a 15 de agosto.
 pub(crate) const USA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x19, 0x00, 0x03, 0x07, 0x00, 0x01],
     [0x19, 0x00, 0xff, 0x0f, 0x07, 0x00], // cqk1: os EUA fecham em agosto
 ];
-
-
 
 /// A janela da Austrália: de 11 de junho (andando para o sábado [inferência]) a 17 de abril.
 pub(crate) const AUSTRALIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
@@ -83,18 +87,12 @@ pub(crate) const AUSTRALIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x02, 0x00, 0xff, 0x11, 0x03, 0x00],
 ];
 
-
-
-
-
-
 /// Club of a contract: club table + 0x245 x contract +4.
 ///
 /// [pt] O clube de um contrato: +4 é o índice em [0xae23b4] (registros de 0x245 bytes), como as regras calculam.
 pub(crate) unsafe fn england_rules_club_of_contract(c: usize) -> usize {
     read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE))
 }
-
 
 /// The borrowing club's 16-byte entry in the season loans table ([[0xde1f54] + 0x91c] + id x 16; byte +0 is the count).
 ///
@@ -298,9 +296,6 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
     ro
 }
 
-
-
-
 /// Returns the loan period: after 19 June and with the player under 24, the base rule period; otherwise from next month
 /// to three months later.
 ///
@@ -313,7 +308,7 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
 /// início_ano, fim_mês, fim_ano, jogador)`, pelo período do empréstimo (0x8d0590). Depois de 19 de junho (só o dia do
 /// ano, 0x549f70 com 1998) e com o jogador abaixo de 24 anos (+0x18): o período da regra base (0x8e8bd0). Senão começa
 /// no mês seguinte e acaba três meses depois.
-pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, club: usize, a2: u32, ini_month: *mut i8, ini_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
+pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, club: usize, a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     // 0x549f70: push -1; push 0x7ce; push 5; push 0x13; lea ecx, local -> thiscall, ret 0x10
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
@@ -322,20 +317,20 @@ pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize
         crate::comparison::branch("cqe_6 inglaterra periodo da base");
         // 0x8e8bd0: the same 7 arguments pushed again; mov ecx, esi (this) -> thiscall, ret 0x1c
         let base: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize) = core::mem::transmute(FN_TRANSFER_RULES_GET_LOAN_PERIOD);
-        base(this, club, a2, ini_month, ini_year, end_month, end_year, player);
+        base(this, club, a2, start_month, start_year, end_month, end_year, player);
         return;
     }
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0 (today’s month)
     let month: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
-    *ini_month = (month(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)
-    *ini_year = read_i16(G_CURRENT_DATE_YEAR);
-    if *ini_month > 0xb {
-        *ini_month = (*ini_month).wrapping_sub(0xc);
-        *ini_year = (*ini_year).wrapping_add(1);
+    *start_month = (month(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)
+    *start_year = read_i16(G_CURRENT_DATE_YEAR);
+    if *start_month > 0xb {
+        *start_month = (*start_month).wrapping_sub(0xc);
+        *start_year = (*start_year).wrapping_add(1);
     }
     crate::comparison::branch("cqe_6 inglaterra tres meses");
-    *end_month = (*ini_month).wrapping_add(3); // cqe6: três meses
-    *end_year = *ini_year;
+    *end_month = (*start_month).wrapping_add(3); // cqe6: três meses
+    *end_year = *start_year;
     if *end_month > 0xb {
         *end_month = (*end_month).wrapping_sub(0xc);
         *end_year = (*end_year).wrapping_add(1);

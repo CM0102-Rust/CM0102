@@ -3,7 +3,11 @@ use super::*;
 // The comparers of the routines in ../comp/worldcup/world_cup.rs (comparison mode: see the header of motor.rs).
 // [pt] Os comparadores das rotinas de ../comp/worldcup/world_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `draw_groups` (comparison mode: see the header of motor.rs).
+/// Comparer for `draw_groups` (comparison mode: see the header of motor.rs): side by side.
+///
+/// The original routine and the copy (without counting the random draws) start from the same random-draw state, slots
+/// (`+0xee`, 0xa0 bytes), `+0x36`, [`0xb67a34`] and, in the 2002 World Cup, the nations table ([`+0x14`], 32 × 6); the
+/// two allocated lists must be equal byte by byte (the copy's is freed, `0x9452ca`).
 ///
 /// [pt] Lado a lado: a original e a cópia (sem contar os sorteios) a partir do mesmo estado do sorteador, das vagas
 /// (+0xee, 0xa0 bytes), de +0x36, de [0xb67a34] e, na Copa de 2002, da tabela das nações ([+0x14], 32 × 6); as duas
@@ -50,9 +54,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_WORLD_CUP_UPDATE_FOR_DATE);
     let year = core::ptr::read_unaligned((today + 2) as *const u16) as i32;
     let day = core::ptr::read_unaligned(today as *const u16);
-    let sorteia = read_i16(this + 0xb6) as u16 == day && read_i16(this + 0xb8) as i32 + read_i16(this + 0x40) as i32 == year && full != 0 && read_u32_as_usize(this + 0xb1) == 0;
+    let draws = read_i16(this + 0xb6) as u16 == day && read_i16(this + 0xb8) as i32 + read_i16(this + 0x40) as i32 == year && full != 0 && read_u32_as_usize(this + 0xb1) == 0;
     let r = o(this, today, full);
-    if sorteia {
+    if draws {
         SCOREBOARD.record(read_u32_as_usize(this + 0xb1) != 0 && read_u32_as_usize(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", read_u32_as_usize(this + 0xb1), read_u32_as_usize(this + 0x45)));
     }
     r
@@ -75,6 +79,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_table(thi
 }
 
 /// Comparer for `world_cup_create_group_stage` (comparison mode: see the header of motor.rs).
+///
+/// Only the original runs (it allocates the stage and sends the news item), checking the plan: it returns 1 with the
+/// stage in [+0xc][g], +0x30 = g, the stage with the World Cup's team count (+0x3e) and year and, in the stage table
+/// (+0xb1, rows of 0x3b bytes), the clubs of group g+2 of the list (in any order: in the 02/11 comparison the stage
+/// rows did not come out in list order [inference: the stage sorts or draws its own table]).
 ///
 /// [pt] Só a original (aloca a fase e manda a notícia), conferindo o plano: devolve 1 com a fase em [+0xc][g], +0x30 = g, a
 /// fase com os times (+0x3e) da Copa, o ano dela e, na tabela da fase (+0xb1, linhas de 0x3b bytes), os clubes do
@@ -105,6 +114,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(thi
 
 /// Comparer for `world_cup_set_predicted_positions` (comparison mode: see the header of motor.rs).
 ///
+/// Only the original routine runs (it adds records to the stats and notifies the manager handler), checking the plan
+/// made beforehand: the vector sorted as it sorts (the same qsort, on a copy) and, afterwards, the predicted position
+/// (+0x72 of the record found by 0x4a4850) of each of the first 32.
+///
 /// [pt] Só a original (acrescenta registros à estatística e avisa o gerenciador dos técnicos), conferindo o plano feito
 /// antes: o vetor ordenado como ela ordena (a mesma qsort, numa cópia) e, depois, a posição prevista (+0x72 do registro
 /// achado por 0x4a4850) de cada um dos 32 primeiros.
@@ -128,6 +141,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_set_predicted_position
 }
 
 /// Comparer for `world_cup_create_schedule` (comparison mode: see the header of motor.rs).
+///
+/// Side by side in the group stages: the original routine with the caller's outputs and the copy with its own outputs,
+/// from the same [0xb67a34]; the outputs and the bytes written to the two allocated tables must be equal (the copy's is
+/// freed).
+///
+/// The knockout: only the original.
 ///
 /// [pt] Lado a lado nas fases de grupos: a original com as saídas de quem chama e a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas alocadas têm de ser iguais (a da cópia é liberada).

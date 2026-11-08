@@ -1,10 +1,19 @@
 use super::*;
 
-
-
-
-/// Creates a knockout stage from table rows (semi-finals and state knockouts): list, round table, Cup_Stage with seeds,
-/// set_up_round, +0x30 = 0.
+/// Builds a knockout stage from table rows (the same template in the semi-finals and in the state leagues' knockouts;
+/// only the source file, the box lines and the arrangement change).
+///
+/// The list of the `linhas.len()` teams (malloc `0x944e46` of 4 × n; out of memory: the box `linha_sem_lista` and
+/// nothing else) with the clubs of the table's `linhas`, in this order (the ties: 0 × 1, 2 × 3...); virtual `+0x3c`
+/// (create_round_table: thiscall(this, stage 0, &rodadas, &extra, null), ret 0x10) builds the round table; the new
+/// stage (operator new `0x944cf1` of 0xb2 bytes; Cup_Stage::Cup_Stage `0x522e00`, thiscall with 15 arguments, ret 0x3c:
+/// the league, n, the list, the rounds, `+4`, the round table, the year `+0x40`, 0, 1, the virtual's extra, 0x14, 0, 1,
+/// 0 and the seeds, one byte per team, which the constructor writes into `+4` of the stage's list: in the original
+/// routine, each team's row) goes into the first stage slot ([`+0xc`]).
+///
+/// Without the stage: the box `linha_sem_fase` and return (without freeing). With it: Cup::set_up_round (`0x51c800`,
+/// thiscall(stage, 0), ret 4), the round table and the list are freed (free `0x9452ca`, in that order) and `+0x30` = 0.
+/// The original routine's SEH frame only covers the constructor (no destructor).
 ///
 /// [pt] O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
 /// linhas da caixa e o arranjo): a lista dos `linhas.len()` times (malloc 0x944e46 de 4 × n; sem memória: a caixa
@@ -17,11 +26,11 @@ use super::*;
 /// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
 /// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
 /// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], sementes: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
+pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], seeds: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
     let n = rows.len();
     // the seeds: the original writes the bytes on the stack before allocating (same as the rows, but separate constants)
     let mut s = [0u8; 8];
-    s[..sementes.len()].copy_from_slice(sementes);
+    s[..seeds.len()].copy_from_slice(seeds);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let list = alocar((n * 4) as u32);
     if list == 0 {
@@ -69,10 +78,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
     create_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98ae50, 0x217, 0x22b, "cqn_9 gaucho"); // cqn9: 1º × 4º, 2º × 3º Gaúcho
 }
 
-
-
-
-
 /// End of a state league: records the honours of the first stage (the table) and calls 0x42bba0, which, once the twelve
 /// state leagues are over, puts the champions into the Champions Cup.
 ///
@@ -93,7 +98,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this
     campeoes()
 }
 
-
 /// The Rio Grande do Sul state league at career creation: the year and the database competition, disciplinary rule 7
 /// and, with no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules,
 /// the table with the state clubs, the fixtures, the order, the statistics and the predicted positions
@@ -103,7 +107,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, year: u32, record: usize) -> usize {
     bra_reg_bahia_construct_state_league(this, year, record, &GAUCHO_STATE_LEAGUE, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
 }
-
 
 /// The Rio Grande do Sul turnover: archives the season in the statistics, clears the previous table and stages, moves
 /// to the next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table
@@ -116,7 +119,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_start_new_season(this: usi
     state_league_new_season(this, 0x4321d0, 0x98ae50, [0x1c6, 0x1cd, 0x1d3, 0x1da], 1, "cqp_7 virada do gaucho") // cqp7: o ano seguinte do Gaúcho
 }
 
-
 /// The Rio Grande do Sul next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to
 /// the semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
 /// Original: `BraRegGaucho::advance_stage` (0x432520, bra_reg_gaucho.cpp, thiscall, ret 0).
@@ -127,7 +129,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_advance_stage(this: usize)
     state_league_advance_stage(this, 0x98ae50, 0x1f4, 0x4325b0);
 }
 
-
 /// the Rio Grande do Sul league has 17 clubs: those with it as their reserve division in the database (the field that
 /// holds the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegGaucho::load_region_clubs` (0x4321d0, bra_reg_gaucho.cpp, thiscall, ret 0).
@@ -137,7 +138,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_advance_stage(this: usize)
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
     fill_state_league_table(this, 0x11, 0x98ae50, 0x163, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, 0, "cql_8 gaucho cheio")
 }
-
 
 /// Gaucho, Northeast Cup and Paulista (the same routine in the three vtables): single round robin; 4 top places (the
 /// 4-club knockout); 2 relegated; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the

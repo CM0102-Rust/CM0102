@@ -10,7 +10,7 @@ Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas
 - **Só o que a carreira de teste exercita, com efeito até 2002-06-01.** Rotina que não roda (contador 0), torneio passageiro (nada lido depois depende dos jogos dele) ou registro que ninguém lê até junho não tem mutação que acuse: o item fica de fora. Item a menos é melhor que item que não roda.
 - **Sem repetir:** nada do `motor.rs` nem de `levas/fila/*`. Reserve criando a pasta com um `rotinas.py` mínimo assim que escolher.
 - **Mapa da comunidade** (`referencias/cm0102-function-map`): entradas "fragment" ou "not a function" são pedaços de outra rotina, não rotinas. Não leia o código da NickDLL do  (licença); só [.md](.md).
-- **Mesmo slot em várias ligas:** juntar o mesmo slot de 3 ligas num item é bom; um ajudante comum com os parâmetros de cada uma serve, desde que cada endereço tenha o seu `Prologo` e seja fiel byte a byte.
+- **Mesmo slot em várias ligas:** juntar o mesmo slot de 3 ligas num item é bom; um ajudante comum com os parâmetros de cada uma serve, desde que cada endereço tenha o seu `Prologue` e seja fiel byte a byte.
 
 ## Portar
 

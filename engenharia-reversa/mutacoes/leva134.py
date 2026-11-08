@@ -5,7 +5,7 @@ MUTACOES = [
     ('i_comp_zera', "            pr(comp + 0xc, 0);\n            pr(comp + 0x10, 0);", "            pr(comp + 0xc, 1);\n            pr(comp + 0x10, 0);"),
     ('i_16', "for k in 0..16 {\n                    let pe", "for k in 0..15 {\n                    let pe", "interesse humano na competicao"),
     ('i_k', "(ler(0xae2364) + k - 16)", "(ler(0xae2364) + k - 15)", "interesse humano na competicao"),
-    ('i_outro', "|| (other != 0 && in_competition(objeto, other) != 0)", "|| false", "interesse humano na competicao"),
+    ('i_outro', "|| (other != 0 && in_competition(object, other) != 0)", "|| false", "interesse humano na competicao"),
     ('i_marca_comp', "crate::comparison::branch(\"interesse humano na competicao\");\n                        pr(comp + 0xc, 1);", "crate::comparison::branch(\"interesse humano na competicao\");\n                        pr(comp + 0xc, 0);", "interesse humano na competicao"),
     ('i_6b61e0', "crate::comparison::branch(\"interesse pela 6b61e0\");\n                    pr(comp + 0xc, 1);", "crate::comparison::branch(\"interesse pela 6b61e0\");\n                    pr(comp + 0xc, 0);", "interesse pela 6b61e0"),
     ('i_byte44', "human(g(m + 0x20), 0, *((m + 0x44) as *const u8) as u32, 0, 0)", "human(g(m + 0x20), 0, *((m + 0x45) as *const u8) as u32, 0, 0)"),

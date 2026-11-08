@@ -1,7 +1,13 @@
 use super::*;
 
-
-/// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
+/// Describes one state league.
+///
+/// It holds the vtable, the stages beyond the league (+0x2c: 1 in the round-robin ones with a knockout, 3 in the ones
+/// with two rounds and a final; the vector [+0xc] = malloc of 4 × stages), the rules (thiscall, ret 0), the table
+/// (thiscall, ret 0), the predicted positions (thiscall, ret 0), the source file and the error-box lines (rules, table,
+/// fixtures, order, statistics).
+///
+/// [pt] Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
 /// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
 /// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
 pub(crate) struct BraRegBahiaStateChampionship {
@@ -14,8 +20,22 @@ pub(crate) struct BraRegBahiaStateChampionship {
     pub(crate) linhas: [u32; 5],
 }
 
-/// Shared constructor of the Brazilian state leagues: League base, vtable, year, discipline; loads saved state or sets
-/// up rules, table, fixtures, sorting, stats and predicted positions.
+/// The constructor of a Brazilian state league: League base, vtable, year, discipline; then either loads the saved
+/// state or sets up rules, table, fixtures, order, statistics and predicted positions.
+///
+/// It is the same 544-byte template in all twelve, checked instruction by instruction: only the vtable, the stages, the
+/// three own routines, the source file and the lines change.
+///
+/// League::League (`0x682200`, thiscall, ret 0); `+4` = the competition record; the vtable; the year (`+0x40`, word) =
+/// `ano`; the discipline rule (`+0x50`) = 7. If the saved state loads (League::load_from_temp_file `0x687b10`,
+/// thiscall(this, 1), ret 4; returns ≠ 0), returns this.
+///
+/// Otherwise (a new career): `+0x51` = 0xf (the importance), `+0x44` = 0xff, `+0x30` = −1, `+0x2c` = the stages and
+/// their vector (malloc `0x944e46`, unchecked); then, each with its own box (and returning this) if it returns 0: the
+/// rules, the table, the fixtures (League::create_fixtures `0x6835c0`, thiscall, ret 0) and the order
+/// (League::sort_table `0x6827d0`, thiscall(this, 0), ret 4); the statistics (operator new `0x944cf1` of 0x5ce and
+/// Comp_Stats::Comp_Stats `0x49ee70`, thiscall(new, this), ret 4; the original routine's SEH frame covers only this
+/// `new`) into `+8` (without them: the box); finally the predicted positions.
 ///
 /// [pt] O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
 /// vtable, as fases, as três rotinas próprias, o fonte e as linhas). League::League (0x682200, thiscall, ret 0); +4 = o
@@ -139,14 +159,23 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, year
     bra_reg_bahia_construct_state_league(this, year, record, &BAHIA_CHAMPIONSHIP, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
 }
 
-
-
-
-
-
-
-/// Shared start_new_season of state leagues: frees table/lists/stages, archives stats, bumps year, rebuilds rules,
-/// table, fixtures and renews officials.
+/// Shared season turnover of the state leagues (`start_new_season`, slot 3, +0x08): frees the table, lists and stages,
+/// archives the statistics, advances the year, rebuilds rules, table and fixtures and renews the officials.
+///
+/// The same template is used in the nine round-robin state leagues with a knockout; only the source file, the error-box
+/// lines and the table routine change, checked instruction by instruction.
+///
+/// +0x4c = 0 and the table freed (League::free_table 0x687970, thiscall(this, 0), ret 4); the list at +0xba freed (free
+/// 0x9452ca) and zeroed; with statistics (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1), ret 4);
+/// with the current stage ≥ 0, the existing stages 0..=+0x30 destroyed (virtual 0, the destructor with 1: frees); the
+/// year (+0x40, word) goes up by one (`ano`; the counter `ramo`) and +0x30 = −1.
+///
+/// Then, each with its own error box if it returns 0: the season rules (virtual +0x8c, set_up_rules), the table with
+/// the state league's clubs (`tabela`, thiscall, ret 0), the fixtures (League::create_fixtures 0x6835c0, thiscall, ret
+/// 0) and the table order (League::sort_table 0x6827d0, thiscall(this, 0), ret 4).
+///
+/// Finally the predicted positions (virtual +0x5c) and the renewal of the state league's referees
+/// (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), whose eax it returns.
 ///
 /// [pt] A virada da temporada de um estadual (`start_new_season`, slot 3, +0x08; o mesmo molde nos nove estaduais de pontos
 /// corridos com mata-mata: só mudam o fonte, as linhas das caixas e a rotina da tabela, conferido instrução a instrução):
@@ -217,8 +246,11 @@ pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: us
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
-/// Shared advance_stage of state leagues: error box at last stage, else +0x30 + 1 and builds the knockout on reaching
-/// 0.
+/// The next stage of a state league (`advance_stage`, slot 11, +0x28).
+///
+/// At the last stage (+0x30 ≥ +0x2c − 1, signed), the error box and nothing else; otherwise +0x30 goes up by one and,
+/// on reaching 0 (the end of the round-robin phase), builds the knockout (`mata_mata`, direct call with the league's
+/// ecx -> thiscall, ret 0).
 ///
 /// [pt] A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o mata-mata
@@ -281,18 +313,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_advance_stage(this: usize) 
     state_league_advance_stage(this, 0x98acac, 0x1f8, 0x430050);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 /// Is the club in the state league of key g (reserve division +0x60, which in Brazil holds the state league)?
 ///
 /// [pt] O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
@@ -302,8 +322,15 @@ pub(crate) unsafe fn is_in_state_league(club: usize, g: usize) -> bool {
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
-/// Shared table setup of state leagues: allocates n rows and inits them with the state's clubs in database order;
-/// returns 1 when full.
+/// The common table setup of the state leagues (the same template in all twelve, only the constants change): fills the
+/// table with the state's clubs; returns 1 if it is full.
+///
+/// +0x3e = `n` clubs; the table (malloc 0x944e46 of n × 0x3b; out of memory: the error box of source `arquivo` at line
+/// `linha` and returns 0); the clubs of [0xae23b4] (0x245 bytes, [0xae235c] of them) in the state league of global `g`,
+/// in database order, each in the next row (League::init_table_row 0x687430: thiscall(league, row, club, 0, 0), ret
+/// 0x10), until full.
+///
+/// `girar` is 0 (the original: row k gets the k-th club); it exists only for each state league's mutations.
 ///
 /// [pt] O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
 /// (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do fonte `arquivo` na linha `linha` e devolve 0); os clubes de
@@ -354,21 +381,12 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_table(this: usize) -
     fill_state_league_table(this, 0xa, 0x98acac, 0x167, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, 0, "cql_8 baiano cheio")
 }
 
-
-
-
-
-
-
-
-
 /// Club of row l of the league table (+0xb1, 0x3b-byte rows).
 ///
 /// [pt] O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
 pub(crate) unsafe fn bra_reg_bahia_table_row_club(league: usize, l: usize) -> usize {
     read_usize(read_usize(league + league::TABLE) + l * 0x3b)
 }
-
 
 /// Bahia: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the seed;
 /// the ties follow the seeds [inference: two legs, the decider at the better placed club])
@@ -379,11 +397,6 @@ pub(crate) unsafe fn bra_reg_bahia_table_row_club(league: usize, l: usize) -> us
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage(this: usize) {
     create_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
 }
-
-
-
-
-
 
 /// Bahia, Gaucho, North, Northeast, Pernambuco, Santa Catarina and Paulista: at the end of the round robin, the clubs
 /// through to the final stage get the qualification record (round 0x82, weight 0x32) and the relegated the relegation

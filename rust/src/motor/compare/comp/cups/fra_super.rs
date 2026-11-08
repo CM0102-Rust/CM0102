@@ -13,7 +13,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_super_create_round_table(thi
         |r, e, s| fra_super_create_round_table(this, stage, r, e, s))
 }
 
-
 /// Comparer for `fra_super_select_teams` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_super_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_SUPER_SELECT_TEAMS);

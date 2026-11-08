@@ -22,7 +22,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize,
     r
 }
 
-
 /// Comparer for `stub_return_one_ret8` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Os dois tocos: compara a devolução.

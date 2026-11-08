@@ -148,10 +148,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: u
 }
 
 /// Comparer for `human_runs_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_human_runs_club(club: usize, qualquer: u32, force: i8) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(club, qualquer, force);
-    let n = human_runs_club(club, qualquer, force);
-    SCOREBOARD.record(r == n, || format!("human_runs_club({:#x}, {}, {}) original={} rust={}", club, qualquer, force, r, n));
+pub(crate) unsafe extern "C" fn comparar_human_runs_club(club: usize, any: u32, force: i8) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(club, any, force);
+    let n = human_runs_club(club, any, force);
+    SCOREBOARD.record(r == n, || format!("human_runs_club({:#x}, {}, {}) original={} rust={}", club, any, force, r, n));
     r
 }
 
@@ -160,8 +160,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_human_field(t: usize, value:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD);
     let mut p = manager;
     if p.is_null() {
-        let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-        p = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const *const i32);
+        let time = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+        p = core::ptr::read_unaligned((0xb74c26 + time * 0x300) as usize as *const *const i32);
     }
     let reg = if p.is_null() {
         vec![]

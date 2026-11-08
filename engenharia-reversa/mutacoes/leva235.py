@@ -10,7 +10,7 @@ MUTACOES = [
     ('dbq_contar_mascara', '        if p != 0 && read_usize(p + staff::PLAYER) != 0 && mask_of(p) == mask { // the equal ones', '        if p != 0 && read_usize(p + staff::PLAYER) != 0 && mask_of(p) != mask { // mutacao: os diferentes'),
     ('dbq_companheiro', '        rating += oid.wrapping_add(id) % 500; // o desempate pelos ids', '        rating += oid.wrapping_add(id) % 50; // mutacao: % 50 no lugar de % 500'),
     ('dbr_fora_da_argentina', '(id != *(KEY_NATION_ARGENTINA as *const u32)) as u32, // a Argentina', '(id == *(0x9cf218 as *const u32)) as u32, // mutacao: a resposta invertida'),
-    ('dbr_fora_de_arg_fra_cro', 'let chaves = [KEY_NATION_ARGENTINA, KEY_NATION_FRANCE, KEY_NATION_CROATIA]; // Argentina, France, Croatia', 'let chaves = [0x9cf218usize, 0x9cf218, 0x9cf2ac]; // mutacao: sem a Franca'),
+    ('dbr_fora_de_arg_fra_cro', 'let keys = [KEY_NATION_ARGENTINA, KEY_NATION_FRANCE, KEY_NATION_CROATIA]; // Argentina, France, Croatia', 'let keys = [0x9cf218usize, 0x9cf218, 0x9cf2ac]; // mutacao: sem a Franca'),
     ('dbr_melanesia', 'KEY_NATION_FIJI, KEY_NATION_VANUATU]) // Melanesian', '0x9cf2f8, 0x9cf2f8]) // mutacao: sem a ultima melanesia'),
     ('dbr_polinesia', 'KEY_NATION_COOK_ISLANDS, KEY_NATION_WESTERN_SAMOA]; // Polynesian', '0x9cf2a4, 0x9cf2a4]; // mutacao: sem a ultima polinesia'),
     ('dbr_nome_do_cargo', '        3 | 10 => (0x9b6448, 1),       // "Coach"', '        3 | 10 => (0x9b6440, 1),       // mutacao: "Manager" no lugar de "Coach"'),

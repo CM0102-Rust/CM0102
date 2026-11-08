@@ -5,6 +5,12 @@ use super::*;
 
 /// Comparer for `player_search_record_scouted_club_match` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x7bd310: side by side over the 50 slots (the whole record).
+///
+/// With the masks on and the club's manager human, 0x5b09d0 writes what is known about the player and draws at random:
+/// then only the original routine runs (simplification: the case of a human scouting their own club; the automatic
+/// career never reaches this routine).
+///
 /// [pt] Comparador da 0x7bd310: lado a lado nas 50 vagas (o registro inteiro). Com as máscaras ligadas e o técnico do clube
 /// humano, a 0x5b09d0 grava o que se sabe do jogador e sorteia: aí só a original roda (simplification: o caso de um humano
 /// observando o próprio clube; a carreira automática não chega a esta rotina).
@@ -21,7 +27,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_record_scouted_clu
     SCOREBOARD.record(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", read_usize(this), game, mo, mr));
 }
 
-/// Comparer for `player_search_scout_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `player_search_scout_match` (0x7b5be0; comparison mode: see the header of motor.rs).
+///
+/// The report draws random numbers (0x7b62a0, 0x5b09d0) and puts records in the output (allocates): only the original
+/// runs. Beforehand, the copy as a dry run decides up to the report without the side effects (no history and no report,
+/// with the random generator state saved and restored) and states the return value and whether the start of the list
+/// moves to tomorrow; the original must match.
 ///
 /// [pt] Comparador da 0x7b5be0: o relatório sorteia (0x7b62a0, 0x5b09d0) e põe registros na saída (aloca): só a original
 /// roda. Antes, a cópia em ensaio decide até o relatório sem os efeitos (sem o histórico e sem o relatório, com o estado
@@ -168,14 +179,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_manager(search: usize, perso
 /// Comparer for `get_scout_assignment` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelas seis saídas (a 0x53e990 só lê); com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, club: *mut u32, nation: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, opponent: *mut u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, club: *mut u32, nation: *mut u32, region: *mut u8, comp: *mut u32, base: *mut u32, opponent: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(IDX_GET_SCOUT_ASSIGNMENT);
     if check_search_scout(this).is_none() {
-        return o(this, club, nation, regiao, comp, base, opponent);
+        return o(this, club, nation, region, comp, base, opponent);
     }
-    let reg = [(club as usize, 4), (nation as usize, 4), (regiao as usize, 1), (comp as usize, 4), (base as usize, 4), (opponent as usize, 4)];
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, club, nation, regiao, comp, base, opponent),
-        || get_scout_assignment(this, club, nation, regiao, comp, base, opponent));
+    let reg = [(club as usize, 4), (nation as usize, 4), (region as usize, 1), (comp as usize, 4), (base as usize, 4), (opponent as usize, 4)];
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, club, nation, region, comp, base, opponent),
+        || get_scout_assignment(this, club, nation, region, comp, base, opponent));
     SCOREBOARD.record(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

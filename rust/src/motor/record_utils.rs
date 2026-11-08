@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Fills the match record as seen by the club: date, fixture id, competition, venue, club, opponent and goals for and
 /// against (the extra-time score, if any).
 ///
@@ -39,39 +36,38 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
     let side: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
     let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
-    let d = data_new(p0, read_u16(game + 0x2a) as u32, read_u16(game + 0x28) as u32);
+    let d = data_new(p0, read_u16(game + fixture::DAY) as u32, read_u16(game + fixture::YEAR) as u32);
     copy(out, p1, d);
     let s = |o: usize| (out + o) as *mut u8;
     core::ptr::write_unaligned(s(8) as *mut u32, read_u32(game));
-    core::ptr::write_unaligned(s(0xc) as *mut u16, read_u16(game + 0x32));
-    core::ptr::write_unaligned(s(0xe) as *mut u16, read_u16(game + 0x30));
+    core::ptr::write_unaligned(s(0xc) as *mut u16, read_u16(game + fixture::ROUND_PREFIX));
+    core::ptr::write_unaligned(s(0xe) as *mut u16, read_u16(game + fixture::ROUND_NAME));
     *s(0x10) = side(club, game);
     core::ptr::write_unaligned(s(0x11) as *mut u32, read_u32(club));
-    core::ptr::write_unaligned(s(0x1b) as *mut u32, read_u32(game + 8));
-    if club as u32 == read_u32(game + 0x1c) { // cpz7: o clube é o mandante
-        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(game + 0x10));
-        if read_u8(game + 0x47) as i8 > -1 {
-            *s(0x19) = read_u8(game + 0x47);
-            *s(0x1a) = read_u8(game + 0x48);
+    core::ptr::write_unaligned(s(0x1b) as *mut u32, read_u32(game + fixture::MATCH_STATS_SLOT));
+    if club as u32 == read_u32(game + fixture::HOME_CLUB) { // cpz7: o clube é o mandante
+        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(game + fixture::AWAY_CLUB_ID));
+        if read_u8(game + fixture::HOME_GOALS_EXTRA_TIME) as i8 > -1 {
+            *s(0x19) = read_u8(game + fixture::HOME_GOALS_EXTRA_TIME);
+            *s(0x1a) = read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME);
         } else {
             crate::comparison::branch("cpz_7 placar do mandante");
-            *s(0x19) = read_u8(game + 0x43); // cpz7: os gols do mandante
-            *s(0x1a) = read_u8(game + 0x44);
+            *s(0x19) = read_u8(game + fixture::HOME_GOALS); // cpz7: os gols do mandante
+            *s(0x1a) = read_u8(game + fixture::AWAY_GOALS);
         }
     } else {
-        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(game + 0xc));
-        if read_u8(game + 0x48) as i8 > -1 {
-            *s(0x19) = read_u8(game + 0x48);
-            *s(0x1a) = read_u8(game + 0x47);
+        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(game + fixture::HOME_CLUB_ID));
+        if read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME) as i8 > -1 {
+            *s(0x19) = read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME);
+            *s(0x1a) = read_u8(game + fixture::HOME_GOALS_EXTRA_TIME);
         } else {
             crate::comparison::branch("cpz_7 placar do visitante");
-            *s(0x19) = read_u8(game + 0x44);
-            *s(0x1a) = read_u8(game + 0x43); // cpz7: os gols sofridos pelo visitante
+            *s(0x19) = read_u8(game + fixture::AWAY_GOALS);
+            *s(0x1a) = read_u8(game + fixture::HOME_GOALS); // cpz7: os gols sofridos pelo visitante
         }
     }
     1
 }
-
 
 /// Name id (+0x33 of a name record), or -1 without name.
 ///
@@ -110,7 +106,6 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -
     1
 }
 
-
 /// Returns the result code of the record: 3 win, 2 score draw, 1 goalless draw, −3 defeat.
 ///
 /// `match_record_result_code(record)`, from the competition statistics (0x49f570, on each match). Null record: the box
@@ -137,9 +132,6 @@ pub(crate) unsafe extern "C" fn match_record_result_code(record: usize) -> u8 {
         (-3i8) as u8
     }
 }
-
-
-
 
 /// Body of Staff_Records::add_year_award_record (0x86c390); without gravar (the comparer's copy) skips the history file
 /// entry.
@@ -216,8 +208,6 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
     agradece(p, club, prize);
 }
 
-
-
 /// Tells whether the match record is a win by a larger margin than the other one, or the same margin with more goals
 /// scored.
 ///
@@ -241,7 +231,6 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -
     (da > db || (da == db && fa > fb)) as u32
 }
 
-
 /// Tells whether the match record is a defeat by a larger margin than the other one, or the same margin with more goals
 /// conceded.
 ///
@@ -264,5 +253,4 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize
     let (da, db) = (sa as i32 - fa as i32, signed_byte_at as i32 - fb as i32);
     (da > db || (da == db && sa > signed_byte_at)) as u32
 }
-
 

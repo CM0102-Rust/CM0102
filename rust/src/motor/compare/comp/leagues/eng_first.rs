@@ -15,7 +15,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_first_create_playoff_stage(t
     compare_playoff_stage("eng_first_create_playoff_stage", this, [5, 2, 4, 3], || o(this))
 }
 
-
 /// Comparer for `eng_first_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_FIRST_ADVANCE_STAGE);

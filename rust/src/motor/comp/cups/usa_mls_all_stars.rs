@@ -1,11 +1,20 @@
 use super::*;
 
-
-
-
-
-/// Knockout cup start_new_season: frees entrants, rounds and ties, archives stats, bumps the year, rebuilds entrants,
-/// rounds, tie tree and predictions.
+/// The season rollover of a cup (`start_new_season`, slot 3, `+0x08`): frees and rebuilds entrants, rounds and ties.
+///
+/// This is the template for knockout cups, checked instruction by instruction: only the source file of the boxes, the
+/// lines and the entrants routine change.
+///
+/// `+0x4c` = 0; the entrant list (`+0xa7`) and the round list (`+0xa3`) are freed (`0x9452ca`, cdecl) and zeroed; the
+/// ties per round (`+0xad`: one vector per round, `+0x3c` rounds, signed word) are freed and zeroed one by one and the
+/// vector itself freed and zeroed; with statistics (`+8`), Comp_Stats::archive_season_and_reset (`0x4a1c50`, push 1;
+/// mov ecx -> thiscall, ret 4); the year (`+0x40`, word) goes up by `ano` (1); `+0xab` = 0 and `+0xb1` = 0 (bytes).
+///
+/// Then, each with its own box if it returns negative: the entrants (`inscritos`, mov ecx, esi; direct call ->
+/// thiscall, ret 0), the rounds (virtual `+0x8c`) and the tie tree (virtual `+0x94`).
+///
+/// Finally, with `previstas`, the predicted positions (virtual `+0x5c`), whose eax it returns (the All-Star Game has
+/// none: it returns the eax of the tie tree).
 ///
 /// [pt] A virada da temporada de uma copa (`start_new_season`, slot 3, +0x08; o molde das copas de mata-mata, conferido
 /// instrução a instrução: só mudam o fonte das caixas, as linhas e a rotina dos inscritos): +0x4c = 0; a lista dos
@@ -16,7 +25,7 @@ use super::*;
 /// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c) e a árvore dos confrontos
 /// (virtual +0x94); por fim, com `previstas`, as posições previstas (virtual +0x5c), cujo eax ela devolve (o Jogo das
 /// Estrelas não as tem: devolve o eax da árvore).
-pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscritos: usize, file: usize, rows: [u32; 3], year: i16, predicted: bool, ramo: &'static str) -> u32 {
+pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, entrants: usize, file: usize, rows: [u32; 3], year: i16, predicted: bool, ramo: &'static str) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this + cup::SEASON_CLOSED, 0);
     for o in [0xa7usize, 0xa3] {
@@ -49,9 +58,9 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscrit
     crate::comparison::branch(ramo);
     *((this + cup::CURRENT_ROUND) as *mut u8) = 0;
     *((this + cup::RUN_BY_STAGES) as *mut u8) = 0;
-    let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
+    let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(entrants);
     // simplification: in the boxes the original exits with the box’s eax (0x5e8290); the caller of the turnover does not read the return
-    if inscritos(this) < 0 {
+    if entrants(this) < 0 {
         show_error_at(file, rows[0]);
         return 0;
     }
@@ -70,11 +79,6 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscrit
     call_cup_virtual(this, 0x5c) as u32
 }
 
-
-
-
-
-
 /// Rule: the MLS All-Star Game season turn: tables freed, history archived, year +1, the two all-star teams, the rounds
 /// and the tree (no predicted positions).
 ///
@@ -90,7 +94,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90a760
     usa_mls_all_stars_cup_start_new_season(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: o Jogo das Estrelas
 }
 
-
 /// Club record i of G_CLUB_TABLE (0x245 bytes each).
 ///
 /// [pt] O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
@@ -98,8 +101,20 @@ pub(crate) unsafe fn usa_mls_all_stars_club_by_index(i: usize) -> usize {
     read_u32_as_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(club::SIZE))
 }
 
-/// 0x90a540 UsaMlsAllStars::set_up_teams: the two All-Star clubs (home side by year parity), a random MLS stadium of
-/// that conference and the US nation; returns 1.
+/// `UsaMlsAllStars::set_up_teams()` (0x90a540, thiscall, ret 0, usa_mls_all_stars.cpp): the two teams of the All-Star
+/// Game; returns 1.
+///
+/// +0x3e = 2; the list (0x944e46 of 0xc, cdecl; out of memory, the error box for line 0xc6 and −1) with the two
+/// All-Star clubs ([0x9d00a4] and [0x9d00a8], indices into the club table): in an odd year (+0x40, signed) the one in
+/// [0x9d00a4] is first (home side) and the stadium conference is 0x413; in an even year the one in [0x9d00a8] is first
+/// and the conference is 0x414.
+///
+/// A random draw from 0 to 5 (0x90cfc0(6), cdecl) picks the k-th MLS club ([0x9cf590] as the club's division, +0x57) of
+/// that conference (usa_mls_get_club_division 0x909ec0, push club; add esp -> cdecl, signed word), in table order: the
+/// first All-Star team takes its stadium (+0x69) and +0x6d = 0 (if there is no k-th club, nothing changes).
+///
+/// Both get the nation [0xae23a8] + 0x122 × [0x9cf4f8] (+0x53, the USA [inference]) and the four list bytes (+4, +5,
+/// +0xa, +0xb) are zeroed.
 ///
 /// [pt] { 0x90a540 } (thiscall, ret 0, usa_mls_all_stars.cpp): `UsaMlsAllStars::set_up_teams()`, os dois times do Jogo das
 /// Estrelas: +0x3e = 2; a lista (0x944e46 de 0xc, cdecl; sem memória, a caixa da linha 0xc6 e −1) com os dois clubes das
@@ -172,7 +187,6 @@ pub(crate) unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
     set_up_all_star_teams(this)
 }
 
-
 /// rule: the two MLS All-Star selections are called up on the day of Date(26, 6, year, 6): 26 July moved to weekday 6
 /// [inference: the following Saturday]; the match is on 2 August (see cqm_12); then, every day, the cup update
 /// Original: `UsaMlsAllStars::update_for_date` (0x90a900, usa_mls_all_stars.cpp, thiscall, ret 8).
@@ -192,7 +206,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
     }
     eng_cc_cup_cup_update_for_date(this, today, stage)
 }
-
 
 /// Rule: the MLS All-Star game is a single match between the two conference selections, drawn on 15/6 and played on 2/8
 /// (moved to weekday 6) at the borrowed home ground [inference: venue 0], with no bracket draw (+0xd = 0x20

@@ -15,4 +15,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_norway_rules(this: usi
     r
 }
 
-

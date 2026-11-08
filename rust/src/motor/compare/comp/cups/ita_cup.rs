@@ -60,16 +60,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule(this: us
         |r, e, l| ita_cup_create_schedule(this, stage, r, e, l), 7)
 }
 
-
-
-
 /// Comparer for `ita_cup_select_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_select_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ITA_CUP_SELECT_ENTRANTS);
     compare_select_entrants("ita_cup_select_entrants", this, || o(this), || select_coppa_italia_entrants(this))
 }
-
-
 
 /// Comparer for `ita_cup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules(this: usize) -> u32 {

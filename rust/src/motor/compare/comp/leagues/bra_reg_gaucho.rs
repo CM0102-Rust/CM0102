@@ -9,7 +9,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_create_knockout_s
     bra_reg_pern_compare_knockout_from_table("bra_reg_gaucho_create_knockout_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-/// Comparer for `bra_reg_gaucho_record_season_honours` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_reg_gaucho_record_season_honours` (comparison mode: see the header of motor.rs): only the original
+/// routine runs (simplification: it writes the history, allocates its record and may build the Champions Cup; it cannot
+/// run twice).
+///
+/// The copy runs in Rust mode (counter "cqj_8 historico do estadual") and is proven by the mutations and by the two
+/// Rust careers.
 ///
 /// [pt] Comparador: só a original (simplification: grava o histórico, aloca o registro dele e pode montar a Copa dos Campeões; não
 /// pode rodar duas vezes). A cópia roda no modo Rust (contador "cqj_8 historico do estadual") e é provada pelas

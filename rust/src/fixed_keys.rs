@@ -150,10 +150,18 @@ const CORES_DAS_CHAVES: [(u32, u32); 34] = [
     (0x9d9478, 0x9cf1f0), (0x9d9470, 0x9cf1f4), (0x9d9468, 0x9cf1f8), (0x9d9460, 0x9cf1fc),
 ];
 
-/// A cadeia dos continentes: (texto, global que recebe a linha), na ordem do código (a mesma nos dois caminhos).
+/// The chain of continents: pairs of (text, global that receives the line), in the order of the code (the same in both
+/// paths).
+///
+/// [pt] A cadeia dos continentes: (texto, global que recebe a linha), na ordem do código (a mesma nos dois caminhos).
 const CONTINENTES_DAS_CHAVES: [(u32, u32); 6] = [(0x9d9458, 0x9cfa08), (0x9d9450, 0x9cfa0c), (0x9d9448, 0x9cfa10), (0x9d9438, 0x9cfa14), (0x9d9430, 0x9cfa18), (0x9d9420, 0x9cfa1c),];
 
-/// O relato das chaves sem valor: (global, texto do nome, tipo, chave de nação, linha). Tipo 0 = a 0x60d780(nome);
+/// The record of the keys that have no value: (global, name text, type, nation key, line).
+///
+/// Type 0 = `0x60d780(name)`; type 1 = the body of `0x60d780` inlined (the colours); type 2 = fatal if byte `+0x11c` of
+/// the nation [nation key] ≠ 0 (a box with the `index.cpp` line, then exit), otherwise `0x60d780(name)`.
+///
+/// [pt] O relato das chaves sem valor: (global, texto do nome, tipo, chave de nação, linha). Tipo 0 = a 0x60d780(nome);
 /// 1 = o corpo da 0x60d780 em linha (as cores); 2 = fatal se o byte +0x11c da nação [chave de nação] ≠ 0 (caixa com
 /// a linha do index.cpp e exit), senão a 0x60d780(nome).
 const RELATO_DAS_CHAVES: [(u32, u32, u8, u32, u16); 1264] = [

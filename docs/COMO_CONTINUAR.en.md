@@ -18,7 +18,7 @@ A batch gathers queue items (up to 13 items of 3 routines since 2026-10-29: `ITE
 2. **Read.** Disassemble the whole routine (`desmonta.py` or capstone) and translate it instruction by instruction: signed bytes, 8- and 16-bit overflows, x87 floating point in double precision with the roundings to `float` at the same `fstp`s, and values that stay on the x87 stack without rounding. The constants are read from the `.rdata` itself (`f32_em`, `f64_em`). For large routines (hundreds of instructions), start from Ghidra's pseudocode (`python descompilar.py 0x...`, about 10 s per routine): it gets the loops, branches and stack variables right, including those read with an argument still pushed. But it hides what goes into `__ftol` and the roundings to `float`, and 16-bit code comes out as `CONCAT22`: the exact arithmetic comes from the disassembly.
 3. **Write.** In `motor.rs`:
    - the routine, with the comment `/// { 0xENDERECO } (arquivo.cpp): o que faz`;
-   - the `Prologo` (initial bytes copied to the trampoline: whole instructions and no relative jump; `prologos.py` checks);
+   - the `Prologue` (initial bytes copied to the trampoline: whole instructions and no relative jump; `prologos.py` checks);
    - the comparator `comparar_*` (runs original and Rust from the same state and compares the memory regions the routine may touch, plus the random draw state);
    - the entries in the `rust`, `comp` and `nomes` arrays of `instalar` (same order as `PROLOGOS`; `N` = total);
    - the case in the `autoteste` (synthetic inputs, including limits and edge cases, without falling into the original's error paths, which open a message box).

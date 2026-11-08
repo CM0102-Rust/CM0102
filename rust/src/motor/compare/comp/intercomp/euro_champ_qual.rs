@@ -57,7 +57,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_qualification_status(this: u
     r
 }
 
-/// Comparer for `init_group_one_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `init_group_one_table` (comparison mode: see the header of motor.rs): only the original routine runs
+/// (`0x687430` allocates the form and the head-to-head of each row, and the news goes to the humans), checking the plan
+/// made beforehand.
+///
+/// It returns 1, `+0x3e` = the group size −1, `+0xa7` = (`+0x3e` − 1) × `+0x3c` and the national teams of `+0xf7` in
+/// the rows, in order.
 ///
 /// [pt] Só a original (a 0x687430 aloca a forma e o confronto direto de cada linha e a notícia vai aos humanos), conferindo o
 /// plano feito antes: devolve 1, +0x3e = o tamanho do grupo −1, +0xa7 = (+0x3e − 1) × +0x3c e as seleções de +0xf7 nas

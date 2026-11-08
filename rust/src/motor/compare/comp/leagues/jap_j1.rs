@@ -17,6 +17,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize
 
 /// Comparer for `create_championship_final_stage` (comparison mode: see the header of motor.rs).
 ///
+/// Only the original runs (it allocates the list, the table and the stage and draws the round), checked against the
+/// plan made beforehand: the champions of the two halves. Afterwards, the stage of the third slot exists, with +0x3e =
+/// 2, +4 = the league's +4 and the two champions in its list (+0xa7, 6 bytes; as a set), and +0x30 = 2.
+///
 /// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
 /// os campeões dos turnos. Depois, a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os dois campeões
 /// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
@@ -49,7 +53,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_create_table(this: usize)
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_CREATE_TABLE);
     compare_japanese_table("jap_j1_create_table", this, 0x10, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, true, 0x186a0, || o(this))
 }
-
 
 /// Comparador: como o do Goiano.
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_set_up_rules(this: usize) -> u32 {

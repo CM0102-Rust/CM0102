@@ -316,8 +316,8 @@ pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
 const FIXED_CLOCK: u32 = 1_000_000_000;
 
 // 0x946ebb: push ebp; mov ebp, esp; sub esp, 0xcc
-const PROLOGUE_TIME: crate::detours::Prologo =
-    crate::detours::Prologo { endereco: 0x946ebb, bytes: &[0x55, 0x8b, 0xec, 0x81, 0xec, 0xcc, 0x00, 0x00, 0x00] };
+const PROLOGUE_TIME: crate::detours::Prologue =
+    crate::detours::Prologue { address: 0x946ebb, bytes: &[0x55, 0x8b, 0xec, 0x81, 0xec, 0xcc, 0x00, 0x00, 0x00] };
 
 /// CRT time() { 0x946ebb } in the simulation: always the same instant. The game reseeds rand()
 /// with the clock (manager_manager.cpp, 0x696d4b), which would make the simulation irreproducible.
@@ -332,8 +332,8 @@ unsafe extern "C" fn fixed_time(out: *mut u32) -> u32 {
 }
 
 // 0x946a04: mov eax, dword ptr [0xad6c30]
-const PROLOGUE_RAND: crate::detours::Prologo =
-    crate::detours::Prologo { endereco: 0x946a04, bytes: &[0xa1, 0x30, 0x6c, 0xad, 0x00] };
+const PROLOGUE_RAND: crate::detours::Prologue =
+    crate::detours::Prologue { address: 0x946a04, bytes: &[0xa1, 0x30, 0x6c, 0xad, 0x00] };
 static mut RAND_ORIGINAL: usize = 0;
 
 /// CRT rand() observed in the simulation: only checks which thread it comes from and calls the original.
@@ -346,8 +346,8 @@ unsafe extern "C" fn observed_rand() -> i32 {
 }
 
 // 0x947299: push ebp; mov ebp, esp; push ecx; push ecx
-const PROLOGUE_CLOCK: crate::detours::Prologo =
-    crate::detours::Prologo { endereco: 0x947299, bytes: &[0x55, 0x8b, 0xec, 0x51, 0x51] };
+const PROLOGUE_CLOCK: crate::detours::Prologue =
+    crate::detours::Prologue { address: 0x947299, bytes: &[0x55, 0x8b, 0xec, 0x51, 0x51] };
 /// Game functions that call clock() (via 0x90c510; return addresses checked with refs.py).
 ///
 /// [pt] Funcoes do jogo que chamam clock() (via 0x90c510; enderecos de retorno conferidos com refs.py).
@@ -378,14 +378,14 @@ unsafe extern "C" fn fixed_clock() -> i32 {
 }
 
 // 0x7a16d0 (total RAM, MB) and 0x7a1710 (free memory, MB): sub esp, 0x20; mov eax, 0x20
-const PROLOGUE_RAM_TOTAL: crate::detours::Prologo =
-    crate::detours::Prologo { endereco: 0x7a16d0, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] };
-const PROLOGUE_RAM_FREE: crate::detours::Prologo =
-    crate::detours::Prologo { endereco: 0x7a1710, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] };
+const PROLOGUE_RAM_TOTAL: crate::detours::Prologue =
+    crate::detours::Prologue { address: 0x7a16d0, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] };
+const PROLOGUE_RAM_FREE: crate::detours::Prologue =
+    crate::detours::Prologue { address: 0x7a1710, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] };
 
 // 0x7a1820 (os.cpp, free disk space in MB, saturated at 4096; 136 calls): sub esp, 0x2bc
-const PROLOGUE_DISK: crate::detours::Prologo =
-    crate::detours::Prologo { endereco: 0x7a1820, bytes: &[0x81, 0xec, 0xbc, 0x02, 0x00, 0x00] };
+const PROLOGUE_DISK: crate::detours::Prologue =
+    crate::detours::Prologue { address: 0x7a1820, bytes: &[0x81, 0xec, 0xbc, 0x02, 0x00, 0x00] };
 
 unsafe extern "C" fn fixed_disk(_drive: usize) -> i32 {
     4096
@@ -412,8 +412,8 @@ unsafe extern "C" fn fixed_memory() -> i32 {
 
 // ---------- qsort in the trace ----------
 
-const PROLOGUE_QSORT: crate::detours::Prologo =
-    crate::detours::Prologo { endereco: 0x945333, bytes: &[0x55, 0x8b, 0xec, 0x81, 0xec, 0xf8, 0x00, 0x00, 0x00] };
+const PROLOGUE_QSORT: crate::detours::Prologue =
+    crate::detours::Prologue { address: 0x945333, bytes: &[0x55, 0x8b, 0xec, 0x81, 0xec, 0xf8, 0x00, 0x00, 0x00] };
 static mut QSORT_ORIGINAL: usize = 0;
 
 /// Hash of the array with pointers into the people table replaced by the index (the table's address varies).
@@ -466,7 +466,7 @@ unsafe fn install_coverage() {
         let (Some(end), Some(hex), file) = (c.next(), c.next(), c.next().unwrap_or("")) else { continue };
         let Ok(address) = usize::from_str_radix(end, 16) else { continue };
         let bytes: Vec<u8> = (0..hex.len() / 2).filter_map(|i| u8::from_str_radix(&hex[2 * i..2 * i + 2], 16).ok()).collect();
-        let p = crate::detours::Prologo { endereco: address, bytes: Box::leak(bytes.into_boxed_slice()) };
+        let p = crate::detours::Prologue { address: address, bytes: Box::leak(bytes.into_boxed_slice()) };
         let counter: &'static mut u32 = Box::leak(Box::new(0));
         if crate::detours::contar(&format!("cobertura {:#x}", address), &p, counter) {
             list.push((address, file.to_string(), counter));
@@ -485,14 +485,14 @@ fn dump_coverage() {
 
 /// The game's PeekMessageA in the simulation: really empties the queue (the window keeps answering
 /// Windows, including messages sent by other programs) and always answers "none".
-/// Runs on the private stack (installed through the IAT behind `desvios::isolar`): the Windows code
+/// Runs on the private stack (installed through the IAT behind `detours::isolar`): the Windows code
 /// that handles the messages left garbage on the game's stack at moments that depend on the clock, and the
 /// game reads uninitialized variables (26/12/2001, training: the career changed in 1 of every 4-6
 /// runs with the generator identical up to the point of divergence).
 ///
 /// [pt] PeekMessageA do jogo na simulacao: esvazia a fila de verdade (a janela segue respondendo ao
 /// Windows, inclusive a mensagens enviadas por outros programas) e responde sempre "nenhuma".
-/// Roda na pilha particular (instalada pela IAT atras de `desvios::isolar`): o codigo do Windows
+/// Roda na pilha particular (instalada pela IAT atras de `detours::isolar`): o codigo do Windows
 /// que trata as mensagens deixava lixo na pilha do jogo em momentos que dependem do relogio, e o
 /// jogo le variaveis nao inicializadas (26/12/2001, treino: carreira mudava em 1 de cada 4-6
 /// execucoes com o gerador identico ate o ponto da divergencia).
@@ -505,14 +505,14 @@ unsafe extern "system" fn isolated_peek(_msg: *mut [u32; 7], _hwnd: usize, _min:
     0
 }
 
-/// Every Windows function called by the game runs on the private stack (`desvios::isolar` on each
+/// Every Windows function called by the game runs on the private stack (`detours::isolar` on each
 /// IAT entry, including the ones already swapped above). The Windows code left on the game's stack
 /// values that change on each run (process heap addresses, handles) and the game reads uninitialized
 /// variables: the career with the engine on changed in half the runs (26/12/2001,
 /// training). This way the game's stack only sees what the game itself writes. Left out are the exception
 /// and shutdown functions, which need the real stack.
 ///
-/// [pt] Toda funcao do Windows chamada pelo jogo roda na pilha particular (`desvios::isolar` em cada
+/// [pt] Toda funcao do Windows chamada pelo jogo roda na pilha particular (`detours::isolar` em cada
 /// entrada da IAT, inclusive as ja trocadas acima). O codigo do Windows deixava na pilha do jogo
 /// valores que mudam a cada execucao (enderecos da heap do processo, alcas) e o jogo le variaveis
 /// nao inicializadas: a carreira com o motor ligado mudava em metade das execucoes (26/12/2001,
@@ -562,8 +562,8 @@ pub unsafe extern "system" fn registrar_excecao(info: *const [usize; 2]) -> i32 
     0 // EXCEPTION_CONTINUE_SEARCH
 }
 
-const PROLOGUE_RESTORE_HUMANS: crate::detours::Prologo =
-    crate::detours::Prologo { endereco: 0x8387e0, bytes: &[0x51, 0x53, 0x55, 0x33, 0xed] };
+const PROLOGUE_RESTORE_HUMANS: crate::detours::Prologue =
+    crate::detours::Prologue { address: 0x8387e0, bytes: &[0x51, 0x53, 0x55, 0x33, 0xed] };
 static mut RESTORE_ORIGINAL: usize = 0;
 
 /// CM_FERIAS=1 (save proof, load step): the game does not allow saving with the manager on holiday, and a save

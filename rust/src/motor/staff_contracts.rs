@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 /// Returns 1 when one of the three release clauses of the contract is active.
 ///
 /// `STAFF_CONTRACT::has_active_release_clause()`: 1 with clause +0x1c = 2, +0x1d = 1 or +0x1f = 2; otherwise 0. Called
@@ -19,7 +17,6 @@ pub(crate) unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u3
     }
     0
 }
-
 
 /// Checks whether the contract is still in the protected period of the new FIFA rules: 3 years under age 28 at signing,
 /// otherwise 2.
@@ -76,7 +73,6 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
     0
 }
 
-
 /// whether the bonus type applies to the player: type 2 only for goalkeepers, the others only for non-goalkeepers
 /// Original: `staff_contract_is_bonus_type_allowed` (0x867aa0, staff_contracts.cpp, cdecl).
 ///
@@ -94,13 +90,13 @@ pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(person: usi
     (kind as u8 != 2) as u32
 }
 
-
-
-
-
-
-/// Common part of 0x866ee0 and 0x85e590: clears the contract's happiness, grievances and morale state, the person's
-/// opinion links, and sets the nation language level in +0x4f.
+/// The common part of 0x866ee0 and 0x85e590 (inlined in the latter): clears the contract's happiness, grievances and
+/// morale state and the person's opinion links, and sets the nation language level in +0x4f.
+///
+/// Zeroes the happiness in the contract (+0x44), state +0x4e and the complaints (+0x45); clears the opinion links of
+/// the contract's person (0x549c90 with record [0xae23bc] + id × 0x6e); zeroes +0x40, sets +0x4e to 4, zeroes the
+/// happiness (+0x3f) and +0x3e; with the club and its nation (+0x53), the nation's language (+0x77) level for the
+/// person (0x7c6830 on [0xb74350], without the contract; at most 10) goes in the low 4 bits of +0x4f.
 ///
 /// [pt] A parte comum da 0x866ee0 e da 0x85e590 (inline nesta): zera a felicidade no contrato (+0x44), o estado +0x4e e as queixas (+0x45),
 /// limpa os vínculos de opinião da pessoa do contrato (0x549c90 com o registro [0xae23bc] + id × 0x6e), zera +0x40,
@@ -260,11 +256,6 @@ pub(crate) unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize,
     r
 }
 
-
-
-
-
-
 /// Person record (110 bytes in G_STAFF_TABLE) of the contract's id (+0).
 ///
 /// [pt] A pessoa do contrato: o id em +0 no vetor de pessoas [0xae23bc] (110 bytes cada).
@@ -305,8 +296,12 @@ pub(crate) unsafe extern "thiscall" fn clear_all_grievances(this: usize, check: 
     }
 }
 
-/// Decision of 0x867240: returns the person when their transfer request should be withdrawn (player at the contract's
-/// club, request bit set, no agreed move...), else None.
+/// The decision of 0x867240 (no effect besides the sheet [0xae1080], written with the person's contract): returns the
+/// person when their transfer request should be withdrawn, else None.
+///
+/// Conditions: the contract's club (outside type 5) exists, the person is a player (+0x61), the contract is with that
+/// club (+4 = id), they requested a transfer (bit 3 of +0x4e), not in +0x49, the staff criterion (0x866f60) gives 0,
+/// the high nibble of +0x4f is not 7, and there is no agreed contract with another club (0x8c5450 on [0xde1f54]).
 ///
 /// [pt] A decisão da 0x867240 (sem efeito além da ficha [0xae1080], gravada com o contrato da pessoa): o clube do contrato
 /// (fora do tipo 5) existe, a pessoa é jogador (+0x61), o contrato é desse clube (+4 = id), pediu transferência (bit 3
@@ -384,8 +379,6 @@ pub(crate) unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: u
 // 0x54cdb0 only reads: compare the value
 comparar_valor!(comparar_days_to_end_date, days_to_end_date, IDX_DAYS_TO_END_DATE, () -> u32);
 
-
-
 /// Sets the flags at +0x40 and, when the person now wants to leave and nothing prevents it, files the transfer request
 /// (0x4d8610).
 ///
@@ -443,7 +436,6 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
     let request: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_HANDLE_TRANSFER_REQUEST);
     request(read_usize(G_CONTRACT_MANAGER), c);
 }
-
 
 /// Returns 1 to 3 from 100 × the value of the current contract / that of the desired one (with the deserved squad
 /// status), with an allowance for recent signings; below 50: 1; below 80: 3; otherwise 2.
@@ -513,7 +505,6 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     }
 }
 
-
 /// Sets the wage (+0xc) to the default for the person at the club (0x862720), truncated, minimum 55.
 ///
 /// `STAFF_CONTRACT::set_default_wage(person)`: the wage (+0xc) is the person's default at their club (`[+0x39]`) from
@@ -530,7 +521,6 @@ pub(crate) unsafe extern "thiscall" fn set_default_wage(this: usize, person: usi
     *((this + staff_contract::WAGE) as *mut i32) = if v < 0x37 { 0x37 } else { v }; // the minimum of 55
     v as u32
 }
-
 
 /// +0x40 (a 4-byte routine; the hook covers the first alignment nop)
 /// Original: `contract_flags` (0x8676f0, staff_contracts.cpp, thiscall).
@@ -560,7 +550,6 @@ pub(crate) unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> 
     core::ptr::write_unaligned((this + contract::UNKNOWN) as *mut u32, 0);
     this
 }
-
 
 /// The staff criterion: an 8-bit score (id mod 7, ratings, age, reputation, number of roles) decides, by the roles,
 /// whether it returns 1.

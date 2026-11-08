@@ -1,7 +1,7 @@
 # Mutações da 254a leva (itens cpr_1, cpr_2, cpr_3, cpr_4, cpr_5, cpr_8, cpr_9, cpr_10, cpr_11, cpr_12, cpr_13). Uso: python mutacoes.py mutacoes\leva254.py --carreira 2002-06-01
 MUTACOES = [
     ('cpr1_limite_em_2', '*t.add(5) = v; // the non-EU player limit', '*t.add(2) = v; // mutacao: o limite vai para +2', 'cpr_1 limite de nao comunitarios'),
-    ('cpr1_conta_comunitarios', '1 => estrangeira(p, read_usize(club + club::NATION), 1) != 0 && comunitaria(p, read_usize(club + club::NATION)) == 0,', '1 => estrangeira(p, read_usize(club + club::NATION), 1) != 0, // mutacao: conta os da UE', 'cpr_1 conta nao comunitarios'),
+    ('cpr1_conta_comunitarios', '1 => foreign(p, read_usize(club + club::NATION), 1) != 0 && community(p, read_usize(club + club::NATION)) == 0,', '1 => foreign(p, read_usize(club + club::NATION), 1) != 0, // mutacao: conta os da UE', 'cpr_1 conta nao comunitarios'),
     ('cpr1_permissao_ignorada', 'return 0; // has the permission', 'return 1; // mutacao: a permissao nao vale', 'cpr_1 permissao achada'),
     ('cpr2_negociacao_livre', 'return (0x12, 0); // already in negotiation', 'return (0, 1); // mutacao: pode mesmo em negociacao', 'cpr_2 oferta em negociacao'),
     ('cpr2_acerto_livre', 'return (0x21, 0); // contrato acertado', 'let _ = 0x21; // mutacao: o acerto nao segura', 'cpr_2 contrato acertado'),
@@ -27,7 +27,7 @@ MUTACOES = [
     ('cpr11_reputacao_invertida', 'rb - ra // the club with the highest reputation first', 'ra - rb // mutacao: a menor primeiro', 'cpr_11 projecao pela reputacao'),
     ('cpr11_pontos_invertidos', 'read_i16(b + 0xa) as i32 - read_i16(a + 0xa) as i32 // most points first', 'read_i16(a + 0xa) as i32 - read_i16(b + 0xa) as i32 // mutacao: os menos primeiro'),
     ('cpr11_normal_acima', 'normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // the position in normal form', 'normal = (normal & !0xff) | (k as u8).wrapping_add(2) as u32; // mutacao: uma abaixo', 'cpr_11 projecao'),
-    ('cpr12_so_em_casa', 'if club != home && club != read_u32(f + 0x10) {', 'if club != home { // mutacao: so em casa'),
+    ('cpr12_so_em_casa', 'if club != home && club != read_u32(f + fixture::AWAY_CLUB_ID) {', 'if club != home { // mutacao: so em casa'),
     ('cpr12_janela_curta', '(ano as u16 == ano1 as u16 && dia as u16 > dia1 as u16)', '(ano as u16 == ano1 as u16 && dia as u16 >= dia1 as u16) /* mutacao: sem o ultimo dia */'),
     ('cpr12_qualquer_rodada', 'ok = false; // outra rodada', '// mutacao: a rodada nao filtra', 'cpr_12 jogo da rodada'),
     ('cpr13_um_jogo_livre', 'if n as u16 != 0 {', 'if n as u16 > 1 { // mutacao: um jogo nao ocupa', 'cpr_13 ocupado'),

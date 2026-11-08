@@ -1,7 +1,16 @@
 use super::*;
 
-
-/// Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
+/// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
+///
+/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through 0x521e60; the
+/// match (the same, plus the leg at +6 and the venue at +0x13) through 0x521eb0.
+///
+/// Then the fields: +7 the round name, +9 the index, +0xb the draw bits, +0xd and +0xf the tie-breakers (single match
+/// and two legs), +0x17 the category copied into each match, +0x18/+0x1a/+0x1c/+0x1e teams, matches, new teams and
+/// entrants already in, +0x20/+0x21/+0x22 replay, matches per tie and days between them, +0x5c/+0x60/+0x64 the prize
+/// money (reaching, winning, losing).
+///
+/// [pt] Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
 /// janeiro, anos a somar ao ano da copa +0x40, dia da semana ou −1) pela 0x521e60; o jogo (o mesmo, mais o turno em +6
 /// e o mando em +0x13) pela 0x521eb0; depois os campos: +7 o nome da rodada, +9 o índice, +0xb os bits do sorteio, +0xd
 /// e +0xf os desempates (jogo único e ida e volta), +0x17 a categoria copiada em cada jogo, +0x18/+0x1a/+0x1c/+0x1e
@@ -57,8 +66,14 @@ pub(crate) unsafe fn jap_j_cup_write_cup_round(t: usize, i: u32, r: &JapJCupCupR
     d(0x64, r.premios.2);
 }
 
-/// Common create_round_table body of single-stage cups: only stage -1 allocates the 0x68-byte round table and fills it;
-/// sets outputs; returns the table.
+/// Shared body of virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) of the
+/// single-stage cups: only stage −1 builds the round table.
+///
+/// Outside stage −1 (the byte), returns 0 without writing anything. In −1: saida (if requested) = 0, rodadas = the
+/// table size, extra = 0; the table (0x944e46 of 0x68 × rodadas; when out of memory, the error box `linha` of `arquivo`
+/// and returns 0) is filled with each round.
+///
+/// Returns the table.
 ///
 /// [pt] O corpo comum da virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) das copas
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
@@ -86,7 +101,6 @@ pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, stage: u32, roun
     }
     t
 }
-
 
 /// Side-by-side comparer of create_round_table: outputs and written round bytes must match; frees the port's table;
 /// other stages only run the original and expect 0.
@@ -137,7 +151,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table(this: usize,
     build_single_stage_cup_rounds(this, stage, rounds, extra, out, &J_LEAGUE_CUP_ROUNDS, 0x9eaf14, 0x9e, "cqn_11 tabela da copa da liga japonesa")
 }
 
-
 /// A Copa do Imperador: sete rodadas em jogo único de novembro ao começo de janeiro do ano seguinte, sorteio por sementes
 /// com grupos separados (+0xd = 0x83).
 pub(crate) const EMPERORS_CUP_ROUNDS: [JapJCupCupRound; 7] = [
@@ -150,9 +163,10 @@ pub(crate) const EMPERORS_CUP_ROUNDS: [JapJCupCupRound; 7] = [
     cqn11r((0x1c, 0xb, 0, 0), (2, 0, 1, 5, 1, 4), 0x96, (0, 0x83, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
 ];
 
-
-
-/// A Copa dos EUA (US Open Cup): cinco rodadas em jogo único de junho a outubro; na 1ª rodada o sorteio leva também o
+/// The US Open Cup: five single-match rounds from June to October; in the 1st round the draw also carries bit 0x400
+/// (+0xd = 0x483).
+///
+/// [pt] A Copa dos EUA (US Open Cup): cinco rodadas em jogo único de junho a outubro; na 1ª rodada o sorteio leva também o
 /// bit 0x400 (+0xd = 0x483).
 pub(crate) const US_OPEN_CUP_ROUNDS: [JapJCupCupRound; 5] = [
     cqn11r((1, 5, 0, 3), (0xe, 5, 0, 2, 2, 0), 0x14, (0, 0x483, 0), 4, (0x20, 0x10, 0x20, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
@@ -162,17 +176,12 @@ pub(crate) const US_OPEN_CUP_ROUNDS: [JapJCupCupRound; 5] = [
     cqn11r((0x18, 7, 0, 3), (0x16, 9, 0, 6, 1, 4), 0x96, (0, 0x83, 0), 6, (2, 1, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
 ];
 
-
-
-
 /// Club record i in the club table (0x245 bytes each).
 ///
 /// [pt] O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 pub(crate) unsafe fn jap_j_cup_club_by_index(i: i32) -> usize {
     read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize)
 }
-
-
 
 /// Random 0..n-1 (0x90cfc0).
 ///
@@ -201,8 +210,13 @@ pub(crate) unsafe fn sort_entrants(base: usize, n: u32) {
     sort(base, n, 6, 0x522190);
 }
 
-/// JapJCup::collect_entrants (0x665a00): 28 entrants, J2 clubs with class 0 then J1 clubs with a random class 0..19,
-/// sorting the last 16; returns (result, count).
+/// `JapJCup::collect_entrants()` (0x665a00, thiscall, ret 0, jap_j_cup.cpp): 28 entrants (+0x3e = 28); the list
+/// (0x944e46 of 0xa8 at +0xa7; out of memory, the box for line 0x11a and −1).
+///
+/// The J2 clubs ([0x9cf768]) while they fit, class 0; the J1 clubs ([0x9cf65c]) while they fit, each with a random
+/// class from 0 to 19 (0x90cfc0(20), after writing the club); qsort (0x522190) of the 16 entries from the 11th (+0x42).
+///
+/// Returns 1 with the list full, otherwise 0 (as the result and count pair).
 ///
 /// [pt] { 0x665a00 } (thiscall, ret 0, jap_j_cup.cpp): `JapJCup::collect_entrants()`: +0x3e = 28; a lista (0x944e46 de 0xa8 em
 /// +0xa7; sem memória, a caixa da linha 0x11a e −1). Os clubes da J2 ([0x9cf768]) enquanto cabem, classe 0; os da J1
@@ -301,9 +315,15 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: 
     a
 }
 
-
-/// UsaOpenCup::collect_entrants (0x90b530): 32 entrants, top 10 shuffled clubs from the A-League and USISL with class
-/// 2, then all MLS clubs with class 1.
+/// `UsaOpenCup::collect_entrants()` (0x90b530, thiscall, ret 0, usa_open_cup.cpp): 32 entrants.
+///
+/// +0x3e = 32. Clubs whose division (+0x57, the pointer) is the database competition of [0x9cf594] or that of
+/// [0x9cf598] go into two local arrays of up to 50 each (the pass stops when both are full); each array is sorted and
+/// shuffled (0x4afbd0, 10 picks).
+///
+/// The list (0x945501, the calloc of +0x3e × 6, at +0xa7; out of memory, the error box for line 0x138 and −1) gets the
+/// first 10 of each array with class 2 and then all the MLS clubs ([0x9cf590]) with class 1 (without checking the space
+/// left). Returns 1.
 ///
 /// [pt] { 0x90b530 } (thiscall, ret 0, usa_open_cup.cpp): `UsaOpenCup::collect_entrants()`: +0x3e = 32. Os clubes cuja
 /// divisão (+0x57, o ponteiro) é a competição do banco de [0x9cf594] ou a de [0x9cf598] vão para dois vetores locais de
@@ -362,10 +382,22 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
-
-
-/// JapEmpCup::collect_entrants (0x6624f0): 80 entrants from Japanese lower divisions (shuffled), then J2 and J1 clubs
-/// (class = last season position), sorting the last 16.
+/// `JapEmpCup::collect_entrants()` (0x6624f0, thiscall, ret 0, jap_emp_cup.cpp): the 80 entrants of the Emperor's Cup,
+/// from the Japanese lower divisions (shuffled), then the J2 and J1 clubs.
+///
+/// Sets +0x3e = 80 and allocates the list (0x944e46 of 0x1e0 at +0xa7; when out of memory, the error box for line 0x147
+/// and −1).
+///
+/// From the Japanese clubs (+0x53 = [0x9cf36c]) that have a division, into local vectors: those of [0x9cf678] (up to
+/// 100), those of [0x9cf674] (up to 30), those of [0x9cf670] (up to 30) and those of divisions other than J2
+/// ([0x9cf768]) and J1 ([0x9cf65c]) (up to 6); if there are none of the latter, the last club of [0x9cf678] is moved
+/// from there to here. With fewer than 47, 2, 3 or 1 in each of them, the error box for line 0x178 and 0.
+///
+/// Each vector is sorted and shuffled (0x4afbd0 with 47, 2, 3 and 1 picks); the list takes the first 47, 2 and 3 (the
+/// last vector is not used), class 0; then the J2 clubs while they fit (class 0) and the J1 clubs while they fit, with
+/// class = last season's position (+0x5f), until the list is full; then qsort (0x522190) of the last 16 entries.
+///
+/// Returns 1 with the list full, otherwise 0.
 ///
 /// [pt] { 0x6624f0 } (thiscall, ret 0, jap_emp_cup.cpp): `JapEmpCup::collect_entrants()`: +0x3e = 80; a lista (0x944e46 de
 /// 0x1e0 em +0xa7; sem memória, a caixa da linha 0x147 e −1). Dos clubes japoneses (+0x53 = [0x9cf36c]) com divisão, em
@@ -467,8 +499,6 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     sort_entrants(read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
-
-
 
 /// rule: the same turn in the Japanese League Cup (J-League Cup): tables freed, history archived, year +1, the 28
 /// entrants (JapJCup::collect_entrants), the rounds, the tree and the predicted positions

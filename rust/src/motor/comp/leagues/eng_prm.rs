@@ -1,12 +1,14 @@
 use super::*;
 
-
-
-/// O que muda de uma divisão inglesa para outra no construtor.
+/// What changes from one English division to another in the constructor.
+///
+/// [pt] O que muda de uma divisão inglesa para outra no construtor.
 pub(crate) struct EnglishDivision {
     /// a vtable da classe derivada
     pub(crate) vtabela: usize,
-    /// a capacidade mínima do estádio (+0xe2) e os lugares sentados mínimos (+0xe4), quando a divisão os grava
+    /// The minimum stadium capacity (`+0xe2`) and the minimum seated places (`+0xe4`), when the division writes them.
+    ///
+    /// [pt] a capacidade mínima do estádio (+0xe2) e os lugares sentados mínimos (+0xe4), quando a divisão os grava
     pub(crate) estadio: Option<(u16, u16)>,
     /// quantas fases além da liga (+0x2c): 1 = o play-off de acesso (o vetor [+0xc] de 1 fase, malloc de 4)
     pub(crate) fases: u32,
@@ -18,9 +20,20 @@ pub(crate) struct EnglishDivision {
     pub(crate) linhas: [u32; 5],
 }
 
-/// Body of the four English division constructors: League base, record, vtable, year, discipline rule 9, minimum
-/// stadium; loads from the temp file or builds a new league (stages, rules, table, fixtures, stats, predicted
-/// positions).
+/// The body of the four English division constructors (thiscall(this, year, record), ret 8, SEH frame only for the
+/// operator new).
+///
+/// The base (League::League 0x682200: mov ecx -> thiscall, ret 0), the year (+0x40, word), the competition record (+4),
+/// the vtable, discipline rule 9 (+0x50) and the minimum stadium; tries to load the state from the temp file
+/// (League::load_from_temp_file 0x687b10: push 1; mov ecx -> thiscall, ret 4). Loaded: done.
+///
+/// Otherwise, the new league: stage 0xff (+0x44), current stage −1 (+0x30), +0x2c stages (and the vector [+0xc]), the
+/// rules, the table, the fixtures (League::create_fixtures 0x6835c0: mov ecx -> thiscall, ret 0), the table order
+/// (League::sort_table 0x6827d0: push 0; mov ecx -> thiscall, ret 4), the stats (operator new 0x944cf1 of 0x5ce: push;
+/// add esp, 4 -> cdecl; Comp_Stats::Comp_Stats 0x49ee70: push league; mov ecx, new -> thiscall, ret 4) in +8 and the
+/// predicted positions (League::set_predicted_positions 0x68a850: mov ecx -> thiscall, ret 0).
+///
+/// Each step that fails shows its line's box and stops. Returns this.
 ///
 /// [pt] O corpo dos quatro construtores (thiscall(this, ano, registro), ret 8, quadro SEH só para o operator new): a base
 /// (League::League 0x682200: mov ecx -> thiscall, ret 0), o ano (+0x40, palavra), o registro da competição (+4), a vtable,
@@ -140,9 +153,6 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
     construct_english_division(this, year, record, &PREMIER_DIVISION)
 }
 
-
-
-
 /// Comparer of the four constructors: runs only the original and checks return value, vtable, year, record, discipline,
 /// stadium and, for a new league, stages and stats.
 ///
@@ -163,12 +173,10 @@ pub(crate) unsafe fn compare_english_constructor(name: &str, this: usize, year: 
     r
 }
 
-
-
-
-
-
-/// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
+/// In the rehearsal (the comparer) the copy writes the rules and does not call virtual +0x3c (the round table, which
+/// allocates).
+///
+/// [pt] No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
 pub(crate) static mut ENG_PRM_RULES_DRY_RUN: bool = false;
 
 /// Writes the rule fields (offset, size, value) into the league and builds the main-stage round table via virtual +0x3c
@@ -193,8 +201,11 @@ pub(crate) unsafe fn eng_prm_apply_league_rules(this: usize, escritas: &[(usize,
     1
 }
 
-/// Rule writes common to the four English divisions (draw points, match category, national clubs, tiebreakers 1-3,
-/// +0x52 = 2).
+/// The rules common to the four English divisions (the halves `+0x3c` and the win points `+0xc2` are set in each one).
+///
+/// 1 point for a draw (`+0xc3`), category 2 for the matches (`+0xc4`, league), national clubs (`+0x42` = 1),
+/// tie-breakers 1, 2 and 3 (`+0xc5`..`+0xc7`: goal difference, goals scored and position [inference from the English
+/// codes]) and `+0x52` = 2 [unnamed].
 ///
 /// [pt] As regras comuns às quatro divisões (os turnos +0x3c e os pontos da vitória +0xc2 vão em cada uma): 1 ponto pelo empate (+0xc3),
 /// categoria 2 nas partidas (+0xc4, liga), clubes nacionais (+0x42 = 1), os desempates 1, 2 e 3 (+0xc5..+0xc7: saldo,
@@ -226,7 +237,6 @@ pub(crate) unsafe fn premier_rules() -> Vec<(usize, u8, u32)> {
     v
 }
 
-
 /// Rule writes for the First Division.
 pub(crate) unsafe fn eng_prm_first_division_rules() -> Vec<(usize, u8, u32)> {
     let mut v = english_common_rules();
@@ -235,7 +245,6 @@ pub(crate) unsafe fn eng_prm_first_division_rules() -> Vec<(usize, u8, u32)> {
     v
 }
 
-
 /// Rule writes for the Second Division.
 pub(crate) unsafe fn eng_prm_second_division_rules() -> Vec<(usize, u8, u32)> {
     let mut v = english_common_rules();
@@ -243,7 +252,6 @@ pub(crate) unsafe fn eng_prm_second_division_rules() -> Vec<(usize, u8, u32)> {
     v.extend_from_slice(&[(0xbe, 1, 2), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 4), (0x1c, 4, read_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) as u32), (0x4a, 1, 3), (0x20, 4, read_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) as u32), (0x49, 1, 5)]);
     v
 }
-
 
 /// Rule writes for the Third Division (lower division Conference only when selected).
 pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> {
@@ -256,8 +264,12 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
     v
 }
 
-/// Dry-run comparer: runs the original, restores +0x1c..+0xec, runs the port without the virtual call and compares
-/// every written field and the return value; keeps the original's state.
+/// The comparer of the four rule routines, as a dry run: the original builds the round table (it allocates; it does not
+/// run twice).
+///
+/// The original runs in full; the range +0x1c..+0xec is restored to what it was and the copy writes the rules without
+/// virtual +0x3c; the fields the copy writes must come out equal to the original's, and the return value must be 1; at
+/// the end the original's range is kept (with its round table at +0xba, +0xa9 and +0x3a).
 ///
 /// [pt] O comparador das quatro: a original monta a tabela de rodadas (aloca; não roda duas vezes), então é ensaio. A
 /// original roda inteira; a faixa +0x1c..+0xec volta como estava e a cópia grava as regras sem a virtual +0x3c; os
@@ -287,12 +299,6 @@ pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, escri
     r
 }
 
-
-
-
-
-
-
 /// Club competition record (0x6b bytes in G_CLUB_COMP_TABLE) of the id stored in global g.
 ///
 /// [pt] O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
@@ -317,15 +323,23 @@ pub(crate) unsafe fn eng_prm_pay_tv_rights(this: usize, value: i32, filtro: usiz
     pay(this, value, filtro);
 }
 
-/// Common table body: allocates the table and fills it with the division's clubs; when full sets the prize fund, +0xe1
-/// and pays TV money; returns 1 if full.
+/// The common table body: allocates the table and fills it with the division's clubs; when full, sets the prize fund,
+/// `+0xe1` and pays the TV money; returns 1 if full.
+///
+/// `+0x3e` = `n` clubs; the table (malloc `0x944e46` of n × 0x3b; out of memory: the box of source file `arquivo` at
+/// line `linha` and returns 0); the clubs of [`0xae23b4`] (0x245 bytes, [`0xae235c`] of them) whose competition
+/// (`+0x57`, the id at `+0`) is that of global `g`, in database order, each in the next row (League::init_table_row
+/// `0x687430`: thiscall(league, row, club, 0, 0), ret 0x10), until it is full.
+///
+/// Not full: 0. Full: the prize fund `+0x28` (League::calc_prize_fund `0x682f70`: thiscall(league, share), ret 4),
+/// `+0xe1` = 1, the TV money (`pagar`) and 1.
 ///
 /// [pt] O corpo comum: +0x3e = `n` clubes; a tabela (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do fonte
 /// `arquivo` na linha `linha` e devolve 0); os clubes de [0xae23b4] (0x245 bytes, [0xae235c] deles) cuja competição
 /// (+0x57, o id no +0) é a do global `g`, na ordem do banco, cada um na linha seguinte (League::init_table_row
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Sem encher: 0. Cheia: o fundo de prêmios
 /// +0x28 (League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4), +0xe1 = 1, o dinheiro da TV (`pagar`) e 1.
-pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, cota: i32, pay: impl FnOnce()) -> u32 {
+pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, quota: i32, pay: impl FnOnce()) -> u32 {
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
@@ -358,7 +372,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
     }
     crate::comparison::branch("cqi_5 tabela cheia");
     let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    let f = prize(this, cota);
+    let f = prize(this, quota);
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
     *((this + league::PRIZE_MODE) as *mut u8) = 1;
     pay();
@@ -378,16 +392,19 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_table(this: usize) -> u32 
     })
 }
 
-
-
-
-/// Comparer: plans the division's clubs beforehand, runs only the original and checks count, return value, rows and
-/// prize fund.
+/// Comparer of the four: plans the division's clubs beforehand, runs only the original routine and checks the count,
+/// return value, rows and prize fund.
+///
+/// The original allocates the table and pays the clubs (it cannot run twice), so only it runs. The plan, made
+/// beforehand: the division's clubs in database order (up to `n`).
+///
+/// Afterwards: +0x3e = `n`, the return value = 1 if the plan filled up (otherwise 0) and the table rows hold the
+/// planned clubs, in order; when full, +0xe1 = 1 and +0x28 = the share fund.
 ///
 /// [pt] O comparador das quatro: a original aloca a tabela e paga os clubes (não roda duas vezes): só ela. O plano, feito
 /// antes: os clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu
 /// (senão 0) e as linhas da tabela com os clubes do plano, na ordem; cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
-pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i16, g: usize, cota: i32, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i16, g: usize, quota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
@@ -408,15 +425,12 @@ pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i1
         same = found == plan;
         if r == 1 {
             let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, cota);
+            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, quota);
         }
     }
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
-
-
-
 
 /// the Premiership schedule: 38 rounds (20 clubs), from 19 August to 20 May; Christmas (four fixed-date rounds) by the
 /// day the 16 December round falls on; no play-offs (main stage only)

@@ -6,7 +6,7 @@ MUTACOES = [
     ('f_codigo', "0x2d => 0x20fd,", "0x2d => 0x20fc,"),
     ('f_cartao', "6 if !sofreu => 0x1ff5,", "6 if !sofreu => 0x1ff6,"),
     ('f_area', "byte(u(engine::PENDING_PLAY_OFFENDER), 0x27) == 1 { (10..=11).contains(&y) }", "byte(u(engine::PENDING_PLAY_OFFENDER), 0x27) == 1 { (9..=11).contains(&y) }"),
-    ('f_penalti', "*d = (*d).wrapping_sub(500);\n            som = 0x1f7a;", "*d = (*d).wrapping_sub(499);\n            som = 0x1f7a;"),
+    ('f_penalti', "*d = (*d).wrapping_sub(500);\n            sound = 0x1f7a;", "*d = (*d).wrapping_sub(499);\n            sound = 0x1f7a;"),
     ('f_parada', "matches!(k, 0 | 5..=13 | 0x3b | 0x3c)", "matches!(k, 0 | 5..=12 | 0x3b | 0x3c)"),
     ('f_nove', "if sortear(9) == 0 {\n        narrate(call, 0x20df", "if sortear(8) == 0 {\n        narrate(call, 0x20df"),
     ('f_lado', "let side_of = |p: usize| if sofreu { zero(p) } else { ub(p, match_player::SIDE) };", "let side_of = |p: usize| if sofreu { ub(p, match_player::SIDE) } else { zero(p) };"),

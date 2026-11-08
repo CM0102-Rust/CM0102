@@ -1,6 +1,10 @@
 use super::*;
 
-/// EurSuperCup::select_teams (0x57a500): Champions League winner and Cup Winners' Cup (1999) or UEFA Cup winner.
+/// `EurSuperCup::select_teams()` (0x57a500, thiscall, ret 0, eur_super_cup.cpp): the two Super Cup teams; returns 1.
+///
+/// A two-entry list (out of memory, the error box for line 0xc1 and −1). The Champions League winner ([0x9cf6e8]; if
+/// missing, error box 0xca and 0) and, in the 1999 cup, the Cup Winners' Cup winner ([0x9cf6ec]); in the others, the
+/// UEFA Cup winner ([0x9cf6f0]); if missing, 0xd5 and 0.
 ///
 /// [pt] { 0x57a500 } (thiscall, ret 0, eur_super_cup.cpp): `EurSuperCup::select_teams()`: a lista de dois (sem memória, a
 /// caixa da linha 0xc1 e −1). O campeão da Liga dos Campeões ([0x9cf6e8]; sem ele, a caixa 0xca e 0) e o da Recopa
@@ -34,9 +38,13 @@ pub(crate) unsafe extern "thiscall" fn eur_super_cup_select_teams(this: usize) -
     select_european_super_cup_teams(this).0
 }
 
-
-/// AsiaSuperCup::select_teams (0x410a50): Asian Champions Cup and Cup Winners' Cup winners (Champions runner-up if the
-/// same club).
+/// `AsiaSuperCup::select_teams()` (`0x410a50`, thiscall, ret 0, `asia_super_cup.cpp`): picks the Asian Champions Cup
+/// and Asian Cup Winners' Cup winners.
+///
+/// Allocates the list of two (out of memory, the box of line `0xc0` and −1). The Asian Champions League winner
+/// ([`0x9cf64c`]; without it, `0xc9` and 0) and the Asian Cup Winners' Cup winner ([`0x9cf650`]; without it, `0xd1` and
+/// 0); if both are the same club, the first becomes the Champions League runner-up (without checking, like the original
+/// routine). Returns 1.
 ///
 /// [pt] { 0x410a50 } (thiscall, ret 0, asia_super_cup.cpp): `AsiaSuperCup::select_teams()`: a lista de dois (sem memória, a
 /// caixa da linha 0xc0 e −1). O campeão da Liga dos Campeões asiática ([0x9cf64c]; sem ele, 0xc9 e 0) e o da Recopa
@@ -64,9 +72,11 @@ pub(crate) unsafe fn select_asian_super_cup_teams(this: usize) -> (i32, i32) {
     finish_two_team_list(l)
 }
 
-
-
-/// ItaC1Super::init_team_list (0x63c9d0): two-entry list with both slots empty.
+/// `ItaC1Super::init_team_list()` (0x63c9d0, thiscall, ret 0, ita_c1_super.cpp): a two-entry list with both slots
+/// empty; returns 1.
+///
+/// Out of memory: the error box for line 0xc2 and −1. The clubs enter later, with the winners of the two C1 groups
+/// [inference]; class and status 0.
 ///
 /// [pt] { 0x63c9d0 } (thiscall, ret 0, ita_c1_super.cpp): `ItaC1Super::init_team_list()`: a lista de dois (sem memória, a
 /// caixa da linha 0xc2 e −1) com as duas vagas vazias (os clubes entram depois, com os campeões das duas chaves da C1
@@ -81,8 +91,6 @@ pub(crate) unsafe fn init_c1_super_cup_list(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((l + 6) as *mut u32, 0);
     finish_two_team_list(l)
 }
-
-
 
 /// rule: the European Super Cup is a single match on 24 August (drawn on 4 July) on neutral ground (venue 0x8000:
 /// Monaco [inference]), category 8, tie-break 0x83, no prizes

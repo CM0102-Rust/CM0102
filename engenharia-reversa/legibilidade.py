@@ -49,7 +49,7 @@ def arquivos():
 
 def portadas():
     s = open(os.path.join(SRC, 'motor.rs'), encoding='utf-8').read()
-    n = len(re.findall(r'Prologo \{ endereco:', s[:s.index('const N')]))
+    n = len(re.findall(r'Prologue \{ address:', s[:s.index('const N')]))
     return set(re.findall(r'(\w+) as \*const', s[s.index('let rust: [usize; N] = ['):])[:n])
 
 

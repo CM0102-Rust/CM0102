@@ -46,6 +46,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_contract_manager_offer_contract(
 
 /// Comparer for `update_after_match` (comparison mode: see the header of motor.rs).
 ///
+/// Morale (`0x4cb0a0`, `0x4cb250`: complaints, transfer request), development (`0x6d26b0`) and the squad change
+/// (`0x4cbd20`) make random draws and allocate (they cannot run twice), so only the original routine runs. It checks
+/// what the routine guarantees before any random draw: the bonuses each club pays (`+0x138` of the finances adds up to
+/// the total predicted by the same rules as the copy, computed beforehand). The copy is proven by the branches and by
+/// the mutations in the career.
+///
 /// [pt] Comparador: a moral (0x4cb0a0, 0x4cb250: queixas, pedido de transferência), a evolução (0x6d26b0) e a troca de
 /// elenco (0x4cbd20) sorteiam e alocam (não podem rodar duas vezes): só a original roda. Confere o que a rotina garante
 /// antes de qualquer sorteio: os bônus que cada clube paga (+0x138 das finanças soma o total previsto pelas mesmas
@@ -176,18 +182,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_bosman_departure_news(this:
 
 /// Comparer for `add_contract_offer` (comparison mode: see the header of motor.rs).
 ///
+/// Offer already in the list (found beforehand, without moving the cursor): the copy as a dry run and the original
+/// routine from the same state, comparing the offer (0x63 bytes), the counter and the list head (the cursor).
+///
+/// New offer (appended, which allocates): the copy as a dry run builds the record; the original appends it, and the new
+/// node (the player's last one for the club) must have the same first 0x63 bytes, with the counter + 1.
+///
 /// [pt] Comparador. Oferta já na lista (achada antes, sem mexer no cursor): a cópia em ensaio e a original a partir do mesmo
 /// estado, comparando a oferta (0x63 bytes), o contador e a cabeça da lista (o cursor). Oferta nova (acrescentada, aloca):
 /// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
 /// mesmos 0x63 primeiros bytes, com o contador + 1.
-pub(crate) unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decidir: u32, acertado: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decide: u32, acertado: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(IDX_ADD_CONTRACT_OFFER);
     let id = read_usize(terms);
     let club = read_usize(terms + 4);
-    let cont = contract_offer_counter(terms);
+    let count = contract_offer_counter(terms);
     let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
-    let item = if read_u8(cont) != 0 && l != 0 { find_contract_offer(l, id, club) } else { 0 };
-    let mut all = vec![(cont, 1usize)];
+    let item = if read_u8(count) != 0 && l != 0 { find_contract_offer(l, id, club) } else { 0 };
+    let mut all = vec![(count, 1usize)];
     if item != 0 {
         all.push((item, 0x63));
         all.push((l, 0xe));
@@ -197,12 +209,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, 
     all.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&all);
     CONTRACT_OFFER_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms, slot, value, mark, a5, decidir, acertado)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms, slot, value, mark, a5, decide, acertado)));
     CONTRACT_OFFER_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let record = DRY_RUN_CONTRACT_OFFER_RECORD;
     before.write_back();
-    o(this, terms, slot, value, mark, a5, decidir, acertado);
+    o(this, terms, slot, value, mark, a5, decide, acertado);
     let mo = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let same = if item != 0 {
         mo == mr
@@ -304,6 +316,11 @@ pub(crate) unsafe extern "C" fn comparar_compare_decision_dates(a: usize, b: usi
 
 /// Comparer for `process_due_decision_dates` (comparison mode: see the header of motor.rs).
 ///
+/// The offer decision (0x4ce4e0) changes the contracts, the offers and the array itself: the plan (the dates read
+/// beforehand, without running anything) tells whether any type-3 entry with a person falls due; if so, only the
+/// original runs. If not (the everyday case), side by side over index +0x18 and the entries that fall due (they become
+/// −1).
+///
 /// [pt] Comparador: a decisão das ofertas (0x4ce4e0) mexe nos contratos, nas ofertas e no próprio vetor: o plano (as datas
 /// lidas antes, sem rodar nada) diz se alguma entrada do tipo 3 com pessoa vence; com ela, só a original. Sem ela (o
 /// caso de todo dia), lado a lado pelo índice +0x18 e pelas entradas que vencem (ficam com −1).
@@ -311,17 +328,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_due_decision_dates(this:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_DUE_DECISION_DATES);
     let (i0, n) = (read_u32(this + contract_manager_fields::DECISION_NEXT_INDEX) as i32, read_u32(this + contract_manager_fields::DECISION_COUNT) as i32);
     let mut i = i0;
-    let mut decide = false;
+    let mut decides = false;
     while i < n {
         let e = (read_u32(this + contract_manager_fields::DECISION_DATES) as usize).wrapping_add((i as usize).wrapping_mul(14));
         if call_date_compare(0x456740, e + 4, data) != 0
             || (call_date_compare(0x4a7f20, e + 4, data) != 0 && read_u8(e + 0xc) as i8 > slice as u8 as i8) {
             break;
         }
-        decide |= read_u32(e) as i32 != -1 && read_u8(e + 0xd) == 3;
+        decides |= read_u32(e) as i32 != -1 && read_u8(e + 0xd) == 3;
         i += 1;
     }
-    if decide {
+    if decides {
         return o(this, data, slice);
     }
     let mut reg = vec![(this + contract_manager_fields::DECISION_NEXT_INDEX, 4)];
@@ -686,7 +703,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_agreed_contract_offer(manager: u
     SCOREBOARD.record(igual && r == n, || format!("agreed_contract_offer({}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
-
 
 /// Comparer for `schedule_offer_decision` (comparison mode: see the header of motor.rs).
 ///

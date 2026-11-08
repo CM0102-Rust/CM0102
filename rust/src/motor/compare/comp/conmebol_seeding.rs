@@ -69,12 +69,12 @@ pub(crate) unsafe extern "stdcall" fn comparar_collect_conmebol_clubs(out: *mut 
 /// Comparer for `update_for_new_season` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
-pub(crate) unsafe extern "thiscall" fn comparar_update_for_new_season(this: usize, pular: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_update_for_new_season(this: usize, skip: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_UPDATE_FOR_NEW_SEASON);
     let mut reg = club_seeding_regions();
     reg.push((this + 0x6f, 2));
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pular), || update_for_new_season(this, pular));
-    SCOREBOARD.record(igual, || format!("update_for_new_season({}): diferenças em {:x?}", pular, memory_diff_addresses(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, skip), || update_for_new_season(this, skip));
+    SCOREBOARD.record(igual, || format!("update_for_new_season({}): diferenças em {:x?}", skip, memory_diff_addresses(&mo, &mr)));
 }
 
 /// Lado a lado: o +0x71.

@@ -25,8 +25,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_season_expectations(this: us
 }
 
 /// Comparer for `add_job_vacancy` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_job_vacancy(this: usize, club: usize, saiu: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_JOB_VACANCY)(this, club, saiu)
+pub(crate) unsafe extern "thiscall" fn comparar_add_job_vacancy(this: usize, club: usize, left: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_JOB_VACANCY)(this, club, left)
 }
 
 /// Comparer for `post_job_offer_news` (comparison mode: see the header of motor.rs).
@@ -35,6 +35,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_job_offer_news(this: usize,
 }
 
 /// Comparer for `board_named_players_after_match` (comparison mode: see the header of motor.rs).
+///
+/// Side by side from the same state of the random generator, [0xae1080], the club's board record, the 3 ids and the 5
+/// outputs; the return value too (the manager's list, the league table and the match record are only read). The copy
+/// runs without counting the random draws.
 ///
 /// [pt] Comparador: lado a lado a partir do mesmo estado do sorteador, do [0xae1080], do registro da diretoria do clube, dos
 /// 3 ids e das 5 saídas; a devolução também (a lista do técnico, a tabela da liga e o registro da partida só leem). A
@@ -85,7 +89,17 @@ pub(crate) unsafe extern "stdcall" fn comparar_build_board_player_performance_te
         String::from_utf8_lossy(&mo.0[0].1[..0x40]), String::from_utf8_lossy(&mr.0[0].1[..0x40])));
 }
 
-/// Comparador: lado a lado a partir do mesmo estado do registro da diretoria do clube, do contrato guardado em
+/// Comparer: side by side from the same state of the club's board record, of the contract stored at [0xae1080] and of
+/// the random generator; the return value and all of these must match (the CRT rand, only without the clock seed).
+///
+/// When buying, the first thing both do is the injury (0x62ed70), which first brings the player's injury up to date
+/// (0x62c680: once a day, it may draw at random and writes the date to the record); the original routine, running
+/// first, brought it up to date and the copy then skipped a draw (one draw fewer).
+///
+/// The comparer performs that same update beforehand (the game's own, at the same point: nothing before it draws), and
+/// both start from the injury already up to date.
+///
+/// [pt] Comparador: lado a lado a partir do mesmo estado do registro da diretoria do clube, do contrato guardado em
 /// [0xae1080] e do sorteio; a devolução e tudo isso têm de bater (o rand da CRT, só sem a semente do relógio).
 /// Comprando, a primeira coisa das duas é a lesão (0x62ed70), que antes põe em dia a lesão do jogador (0x62c680: uma
 /// vez por dia, pode sortear e grava a data no registro); a original, rodando primeiro, deixava-a em dia e a cópia não
@@ -161,8 +175,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_board_confidence_update_new
 }
 
 /// Comparer for `post_board_expectations_news` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_post_board_expectations_news(this: usize, club: usize, expectativas: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_POST_BOARD_EXPECTATIONS_NEWS)(this, club, expectativas)
+pub(crate) unsafe extern "thiscall" fn comparar_post_board_expectations_news(this: usize, club: usize, expectations: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_POST_BOARD_EXPECTATIONS_NEWS)(this, club, expectations)
 }
 
 /// Comparer for `post_fa_expectations_news` (comparison mode: see the header of motor.rs).
@@ -373,7 +387,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_remove_player_fr
     r
 }
 
-/// Comparer for `remove_staff_from_club` (comparison mode: see the header of motor.rs).
+/// Comparer for `remove_staff_from_club` (comparison mode: see the header of motor.rs): the original routine removes
+/// the contract and removes the person from the media and from the human's lists (it cannot run twice).
+///
+/// Only it runs, and the plan made beforehand with the body (`detach_staff_from_club`) over copies of the person's
+/// fields and the club's slots is checked. A human person: only the original routine (the human's lists may touch the
+/// club).
 ///
 /// [pt] Comparador: a original tira o contrato e tira a pessoa da mídia e das listas do humano (não pode rodar duas vezes):
 /// roda só ela e confere o plano feito antes com o corpo (`detach_staff_from_club`) sobre cópias dos campos da pessoa e das vagas

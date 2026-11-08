@@ -49,7 +49,6 @@ pub(crate) unsafe extern "C" fn comparar_load_fifa_transfer_rules(save: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(IDX_LOAD_FIFA_TRANSFER_RULES)(save)
 }
 
-
 /// Comparer for `free_game_data` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_free_game_data(tela: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_FREE_GAME_DATA)(tela)

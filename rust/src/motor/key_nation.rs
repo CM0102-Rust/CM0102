@@ -1,6 +1,5 @@
 use super::*;
 
-
 /// Returns the first row of the 35-row key nation table holding the given nation, or 4.
 ///
 /// `key_nation_index_of_nation(nação)` (nation): the first row of the table of the 35 key nations (`0xb63d60`, 72
@@ -21,7 +20,6 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nation: usize) -> u8 
     }
     4
 }
-
 
 /// Returns the key nation row of the club: the row of its chosen nation; for a national team, 1; for a nation not
 /// chosen, the row of its continent, or 3.
@@ -77,7 +75,6 @@ pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation)
 }
 
-
 /// Returns the club's season year: the previous year when today is before the season start day of its row.
 ///
 /// `key_nation_get_club_season_year(clube)` (club): today's year (`[0xae2c92]`); for a club that is not a national
@@ -106,9 +103,6 @@ pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(club: usize) -> 
     }
     year
 }
-
-
-
 
 /// Writes to dst (if not null) the date built by 0x549ef0 from day and year (with leap flag).
 ///
@@ -196,7 +190,6 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: us
     1 // cpu2: entre o inicio e o fim do ano
 }
 
-
 /// the continent of the human's nation, or that of the first main nation of the table
 /// Original: `key_nation_get_main_continent` (0x6695c0, key_nation.cpp, cdecl).
 ///
@@ -215,7 +208,6 @@ pub(crate) unsafe extern "C" fn key_nation_get_main_continent() -> usize {
     }
     0
 }
-
 
 /// the human's nation, or the first main nation of the table
 /// Original: `key_nation_get_main_nation` (0x669600, key_nation.cpp, cdecl).
@@ -236,15 +228,18 @@ pub(crate) unsafe extern "C" fn key_nation_get_main_nation() -> usize {
     0
 }
 
-
-
-
-
-/// Os ids das competições da Copa do Mundo: a final e as seis eliminatórias (Europa [0x9cf780], África, Ásia,
+/// The World Cup competition ids: the finals and the six qualifying competitions (Europe [0x9cf780], Africa, Asia,
+/// CONCACAF, Oceania, South America).
+///
+/// [pt] Os ids das competições da Copa do Mundo: a final e as seis eliminatórias (Europa [0x9cf780], África, Ásia,
 /// CONCACAF, Oceania, América do Sul).
 pub(crate) const WORLD_CUP_COMPS: [usize; 7] = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT];
 
-/// Os ids dos torneios de seleções fora da Copa do Mundo: Olimpíada, Eurocopa, eliminatórias da Eurocopa, Copa
+/// The ids of the national-team tournaments outside the World Cup: Olympics, European Championship, European
+/// Championship qualifiers, African Cup of Nations [0x9cf7ac], Copa América, B team, under-21, Oceania Nations Cup,
+/// Confederations Cup and Asian Cup.
+///
+/// [pt] Os ids dos torneios de seleções fora da Copa do Mundo: Olimpíada, Eurocopa, eliminatórias da Eurocopa, Copa
 /// Africana [0x9cf7ac], Copa América, seleção B, sub-21, Copa da Oceania, Copa das Confederações e Copa da Ásia.
 pub(crate) const INTERNATIONAL_TOURNAMENTS: [usize; 10] = [KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_EUROPEAN_CHAMPIONSHIP_QUALIFYING, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_CONFEDERATIONS_CUP, KEY_CLUB_COMP_ASIAN_CUP];
 
@@ -262,7 +257,6 @@ pub(crate) unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32
     WORLD_CUP_COMPS.iter().any(|&g| read_usize(g) == id) as u32
 }
 
-
 /// 1 when the competition id is one of the ten national side tournaments outside the World Cup
 /// Original: `key_nation_is_international_comp` (0x669ae0, key_nation.cpp, cdecl).
 ///
@@ -276,7 +270,6 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
     let id = read_usize(comp);
     INTERNATIONAL_TOURNAMENTS.iter().any(|&g| read_usize(g) == id) as u32
 }
-
 
 /// Returns the competition's key nation row: the nation's row, 0 for the World Cup, 1 for national team tournaments, 2
 /// for the club world cups, the continent's row or 3.

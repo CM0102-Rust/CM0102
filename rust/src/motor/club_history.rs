@@ -1,6 +1,5 @@
 use super::*;
 
-
 /// Opens an item named nome in the save archive (FN_ZOPEN with 1, 0x16, 4).
 pub(crate) unsafe fn zip_open_item(save: usize, name: usize) -> usize {
     let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
@@ -47,7 +46,6 @@ pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usiz
     1
 }
 
-
 /// Shows the officials_manager.cpp error box at the line, closes the item and returns 0.
 ///
 /// [pt] A caixa de erro do officials_manager.cpp na linha `linha`, fechando o item; devolve 0.
@@ -56,8 +54,4 @@ pub(crate) unsafe fn officials_save_error(row: u32, z: &mut usize) -> u8 {
     zip_close(z);
     0
 }
-
-
-
-
 

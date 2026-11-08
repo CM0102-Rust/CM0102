@@ -1,6 +1,6 @@
 # Mutações da 261a leva (itens cpx_13, cpy_1, cpy_2, cpy_3, cpy_4, cpy_5, cpy_6, cpy_8, cpy_9, cpy_10, cpy_11, cpy_12, cpy_13). Uso: python mutacoes.py mutacoes\leva261.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpx13_sem_elenco', 'escolher(this, read_usize(club + club::NATION), kind, G_CURRENT_DATE, p, 0); // cpx13: o elenco', 'let _ = escolher; // mutacao: sem pedir elenco', 'cpx_13 elenco pedido'),
+    ('cpx13_sem_elenco', 'choose(this, read_usize(club + club::NATION), kind, G_CURRENT_DATE, p, 0); // cpx13: o elenco', 'let _ = choose; // mutacao: sem pedir elenco', 'cpx_13 elenco pedido'),
     ('cpx13_elenco_de_60_dias', 'if d <= 0xe && read_u8(base + 0x11) != 0 && extra() {', 'if d <= 60 && read_u8(base + 0x11) != 0 && extra() { // mutacao: o elenco vale 60 dias', 'cpx_13 elenco pedido'),
     ('cpx13_janela_de_uma_semana', 'let q = weeks_before(game.as_mut_ptr(), r.as_mut_ptr(), 2); // cpx13: a janela', 'let q = weeks_before(game.as_mut_ptr(), r.as_mut_ptr(), 1); // mutacao: a janela de uma semana', 'cpx_13 elenco pedido'),
     ('cpy1_conta_alvo_sem_lance', '            continue; // cpy1: alvo sem lance não conta', '            // mutacao: o alvo sem lance conta', 'cpy_1 alvo sem lance'),
@@ -19,7 +19,7 @@ MUTACOES = [
     ('cpy5_banda3_na_rodada_8', 'european_cup_write_entrant(t + 0xcc + o3, c, 0xd); // cpy5: a banda 3 entra na rodada 0xd', 'european_cup_write_entrant(t + 0xcc + o3, c, 8); // mutacao: a banda 3 entra com a 2', 'cpy_5 entrada da banda 3'),
     ('cpy5_banda4_na_rodada_0xd', 'european_cup_write_entrant(t + 0x13e + o4, c, 0); // cpy5: a banda 4 entra na rodada 0', 'european_cup_write_entrant(t + 0x13e + o4, c, 0xd); // mutacao: a banda 4 entra com a 3', 'cpy_5 entrada da banda 4'),
     ('cpy6_vitoria_pela_metade', 'european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x30d40); // cpy6: o prêmio da vitória', 'european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x186a0); // mutacao: a vitoria paga a metade', 'cpy_6 premio da vitoria'),
-    ('cpy6_empate_sem_premio_do_mandante', 'european_cup_add_prize_money(european_cup_club_finance(read_usize(game + 0x1c)), 0x186a0); // cpy6: o prêmio do empate do mandante', 'let _ = game; // mutacao: o mandante nao recebe no empate', 'cpy_6 premio do empate'),
+    ('cpy6_empate_sem_premio_do_mandante', 'european_cup_add_prize_money(european_cup_club_finance(read_usize(game + fixture::HOME_CLUB)), 0x186a0); // cpy6: o prêmio do empate do mandante', 'let _ = game; // mutacao: o mandante nao recebe no empate', 'cpy_6 premio do empate'),
     ('cpy6_premio_ao_perdedor', 'european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x30d40); // cpy6: o prêmio da vitória', 'european_cup_add_prize_money(european_cup_club_finance(perdedor), 0x30d40); // mutacao: o premio vai para o perdedor', 'cpy_6 premio da vitoria'),
     ('cpy8_sorteio_conta_inteira', '        ini.wrapping_add(sortear(n.wrapping_sub(1))) // cpy8: o sorteio na faixa', '        ini.wrapping_add(sortear(n)) // mutacao: a conta inteira', 'cpy_8 arbitro sorteado'),
     ('cpy8_sem_faixa_da_liga', '                            band // cpy8: a faixa da liga', '                            { let _ = faixa; (read_i32(b + 8), read_i32(b + 4)) } // mutacao: o bloco inteiro', 'cpy_8 faixa da liga'),

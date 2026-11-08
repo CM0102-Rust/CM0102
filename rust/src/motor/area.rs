@@ -81,8 +81,8 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     let mut width = read_i32_at(area, 8).wrapping_sub(2 * lado).wrapping_sub(read_i32_at(area, 0)).wrapping_add(1);
     let height = (-2 * cima).wrapping_sub(read_i32_at(area, 4)).wrapping_add(read_i32_at(area, 0xc)).wrapping_add(1);
     if read_i32_at(area, 0x14).wrapping_add(1) > rows as i32 {
-        let barra: unsafe extern "thiscall" fn(usize, i32, i32) = core::mem::transmute(FN_AREA_SETUP_SCROLLBAR);
-        barra(area, lado, cima);
+        let bar: unsafe extern "thiscall" fn(usize, i32, i32) = core::mem::transmute(FN_AREA_SETUP_SCROLLBAR);
+        bar(area, lado, cima);
         width = width.wrapping_sub(0x16);
     }
     // columns: +0x1c start and +0x10c end, by weights +0xbad
@@ -133,7 +133,6 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     }
 }
 
-
 /// Initialises the area: rectangle clamped to the screen, fields, cleared scrollbar and the column and row weights.
 ///
 /// An area that opens on top of a widget (`dono` ≠ -1): weight 1 in all 30 columns and rows, zero rectangle, 1 column
@@ -153,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
 /// ponteiro) ou enche de 1 (inclusive com 30 ou mais: aí a original passa do vetor de 30, como aqui).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn init(
-    area: usize, areas: usize, itens: usize, index: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
+    area: usize, areas: usize, items: usize, index: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
     pesos_colunas: usize, rows: u32, pesos_linhas: usize, marks: u32, colour: u32, owner: u32,
 ) {
     crate::comparison::branch("telas iniciar a area");
@@ -197,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn init(
     core::ptr::write_bytes((area + 0xb7a) as *mut u8, 0, 0x31);
     core::ptr::write_unaligned((area + 0x20e) as *mut u16, owner as u16);
     core::ptr::write_unaligned((area + 0x204) as *mut usize, areas);
-    core::ptr::write_unaligned((area + 0x208) as *mut usize, itens);
+    core::ptr::write_unaligned((area + 0x208) as *mut usize, items);
     core::ptr::write_unaligned((area + 0xb72) as *mut u16, index as u16);
     core::ptr::write_unaligned((area + 0x20c) as *mut u16, colour as u16);
     write_i32_at(area, 0xbed, 0);
@@ -222,7 +221,16 @@ pub(crate) unsafe extern "thiscall" fn init(
 
 /// A área e os 0xd9 bytes depois dela (os pesos de 30 ou mais linhas passam do fim) têm de sair iguais.
 #[allow(clippy::too_many_arguments)]
-/// A trava das 30 linhas: a grade da área tem no máximo 30 linhas (vetor fixo em +0xbcb; o Area::layout
+/// The 30-row cap: an area's grid has at most 30 rows (fixed array at +0xbcb; Area::layout shows the "Area.cpp 507" box
+/// above that, and Area::init already writes the weights outside the array).
+///
+/// At 1920 × 1080 the report of an old match asks for more; capped at 30, the rest goes to the scroll bar, as at 800 ×
+/// 600 (where it never exceeds 30 and the cap changes nothing).
+///
+/// It lives in Area::init because the start of Display::add_area (0x55fba0) is already a detour of the 1080 exe
+/// (coordinate scaling).
+///
+/// [pt] A trava das 30 linhas: a grade da área tem no máximo 30 linhas (vetor fixo em +0xbcb; o Area::layout
 /// mostra a caixa "Area.cpp 507" acima disso, e o Area::init já escreve os pesos fora do vetor). Em
 /// 1920 × 1080 o relatório de uma partida antiga pede mais; travadas em 30, o resto vai para a barra de
 /// rolagem, como em 800 × 600 (onde nunca passa de 30 e a trava não muda nada). Fica no Area::init porque
@@ -239,7 +247,6 @@ pub(crate) fn cap_area_rows(rows: u32) -> u32 {
         rows
     }
 }
-
 
 /// Draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar.
 ///
@@ -260,15 +267,15 @@ pub(crate) fn cap_area_rows(rows: u32) -> u32 {
 /// quando o item não tem retângulo próprio em +0x28/+0x30) e o desenha (0x5ee590) até passar da última
 /// linha; depois a barra (0x403c80). Sem o primeiro item à mostra (+0xb76 = -1): a original (caixa de
 /// erro Area.cpp 245 e a organização 0x403350).
-pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
+pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
     if core::ptr::read_unaligned((area + 0xb76) as *const i16) == -1 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redesenhar);
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redraw);
     }
     crate::comparison::branch("telas desenhar a area");
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GUI_FREE_IMAGE);
     let store: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(FN_GUI_SAVE_SCREEN_IMAGE);
     let imagem = (area + 0x200) as *mut usize;
-    if redesenhar != 0 && *imagem != 0 {
+    if redraw != 0 && *imagem != 0 {
         free(*imagem);
         *imagem = 0;
     }
@@ -277,9 +284,9 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
     }
     // simplification: the original pushes edx with the colour in dx and, on top, leftovers from earlier calls
     // (unpredictable); the color is u16 for the panel, here zero-extended
-    let painel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(FN_GUI_DRAW_PANEL);
+    let panel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(FN_GUI_DRAW_PANEL);
     let colour = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
-    painel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), *((area + 0x18) as *const u32), colour, 0);
+    panel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), *((area + 0x18) as *const u32), colour, 0);
     if *((area + 0x18) as *const u32) & 0x80000 != 0 {
         let row: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32) = core::mem::transmute(FN_GRAPHICS_DRAW_LINE);
         let mut k: i16 = 1;
@@ -315,13 +322,13 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
             parar = true;
         } else {
             position_area_item(area, item, d);
-            desenhar_item(area_list_item(area, i), redesenhar);
+            desenhar_item(area_list_item(area, i), redraw);
         }
         i = i.wrapping_add(1);
     }
     if read_i32_at(area, 0xbed) != 0 {
-        let barra: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AREA_DRAW_SCROLLBAR);
-        barra(area);
+        let bar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AREA_DRAW_SCROLLBAR);
+        bar(area);
     }
 }
 

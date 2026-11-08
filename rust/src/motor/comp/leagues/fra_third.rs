@@ -1,11 +1,21 @@
 use super::*;
 
-/// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
+/// Describes one round of the 0x41-byte table.
+///
+/// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
+/// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
+/// list ends with −1).
+///
+/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
 pub(crate) type FraThirdLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
-/// Writes league rounds from `first` in table t: date (0x68a160) and match slots (0x68a1c0) of each round.
+/// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
+///
+/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
@@ -53,8 +63,11 @@ pub(crate) struct FraThirdSingleStageLeague {
     pub(crate) ramo: &'static str,
 }
 
-/// Common create_schedule body: at stage −1 sets outputs, allocates rounds × 0x41 bytes and writes the league's dates
-/// and slots; returns the table (0 at other stages).
+/// The common create_schedule body (thiscall(league, stage, &rounds, &extra, &é_liga), ret 0x10; no saved state): only
+/// the main stage (−1; the others return 0 without writing anything).
+///
+/// é_liga (if requested) = 1, the rounds, extra = 0, the table of rounds × 0x41 bytes (malloc 0x944e46: push; add esp,
+/// 4 -> cdecl; out of memory: the box and 0) with the league's dates and slots. Returns the table.
 ///
 /// [pt] O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
@@ -80,7 +93,6 @@ pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mu
     fra_third_write_league_rounds(t, ano, 0, p.tabela);
     t
 }
-
 
 /// a terceira divisão (o National), 38 rodadas de 7/ago a 20/mai, sem faixas de TV
 pub(crate) const FRENCH_THIRD_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
@@ -124,7 +136,9 @@ pub(crate) const FRENCH_THIRD_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
     (20, 4, 1, 5, 2, &[(-1, -1, -1)]), // 37: 20/mai (+1 ano)
 ];
 
-/// a segunda divisão, 38 rodadas de 31/jul a 20/mai; 18 rodadas com uma faixa de TV (dia 5, turno 1, 1 jogo)
+/// The second division: 38 rounds from 31 July to 20 May; 18 rounds with one TV slot (day 5, half 1, 1 match).
+///
+/// [pt] a segunda divisão, 38 rodadas de 31/jul a 20/mai; 18 rodadas com uma faixa de TV (dia 5, turno 1, 1 jogo)
 pub(crate) const SECOND_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
     (31, 6, 0, 5, 2, &[(5, 1, 1), (-1, -1, -1)]), // 0: 31/jul
     (7, 7, 0, 5, 2, &[(-1, -1, -1)]), // 1: 7/ago
@@ -166,7 +180,9 @@ pub(crate) const SECOND_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
     (20, 4, 1, 5, 2, &[(-1, -1, -1)]), // 37: 20/mai (+1 ano)
 ];
 
-/// a divisão de baixo (de fundo), a mesma tabela da segunda, com a faixa também nas duas últimas rodadas
+/// The bottom division: the same table as the second one, with the TV slot also in the last two rounds.
+///
+/// [pt] a divisão de baixo (de fundo), a mesma tabela da segunda, com a faixa também nas duas últimas rodadas
 pub(crate) const LOWER_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
     (31, 6, 0, 5, 2, &[(5, 1, 1), (-1, -1, -1)]), // 0: 31/jul
     (7, 7, 0, 5, 2, &[(-1, -1, -1)]), // 1: 7/ago
@@ -222,11 +238,6 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, st
     create_league_schedule(this, stage, rounds, extra, league, &FRENCH_THIRD_LEAGUE)
 }
 
-
-
-
-
-
 /// Sets up the rules of the French National: 4 go up in 2001 and 3 afterwards, 4 go down (no league below in the game);
 /// 3 substitutes and 3 substitutions.
 ///
@@ -243,7 +254,6 @@ pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u3
     fra_first_apply_league_rules(this, &national_division_rules(this))
 }
 
-
 /// the National has 20 clubs; prize fund of 20,000 per place; TV pays 200,000 to each club
 /// Original: `FraThird::create_table` (0x5c05d0, fra_third.cpp, thiscall, ret 0).
 ///
@@ -258,7 +268,6 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u3
     eng_prm_pay_tv_rights(this, 0x30d40, 0);
     1
 }
-
 
 /// the French third division (the National): discipline 0xc, only the league
 /// Original: `FraThird::FraThird` (0x5bfb40, fra_third.cpp, thiscall, ret 8).

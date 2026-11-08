@@ -28,7 +28,7 @@ GRUPOS = {  # pasta → (pt, en)
 
 def main():
     import re
-    feitas = {int(x, 16) for x in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read())}
+    feitas = {int(x, 16) for x in re.findall(r'Prologue \{ address: (0x[0-9a-f]+)', open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read())}
     pasta = {}
     for r in csv.DictReader(open(os.path.join(R, 'docs', 'mapa_funcoes.csv'), encoding='utf-8')):
         a = r['arquivo']

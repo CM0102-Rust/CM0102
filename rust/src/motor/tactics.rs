@@ -147,10 +147,6 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
     1
 }
 
-
-
-
-
 /// copies the club's tactics row (0x91 bytes at +0x601, row from 0x8982b0) to the destination. Null club: the original
 /// (error box); row -1: 0. Compared side by side
 /// Original: `read_tactics_row` (0x8983f0, tactics.cpp, thiscall, ret 0xc).
@@ -206,10 +202,27 @@ pub(crate) unsafe fn tactics_row_regions(this: usize, club: usize, p: usize, hum
     reg
 }
 
-
-
-/// 0x6beeb0 with the out-of-engine calls injected (commentary, injuries, player exits): simulates a match without
-/// highlights, period by period, including extra time, penalties and ratings.
+/// `0x6beeb0` (match_eng.cpp, called by the engine step 0x6b98c0) with the calls that change things outside the engine
+/// injected (0x6d6f70 commentary, 0x6d0980 injures; and those of the player exit 0x6cda20): the match simulated without
+/// highlights, in periods of two rounds (counter +0x8ed0, period code +0x8ed4), including extra time, penalties and
+/// ratings.
+///
+/// Per period: the teams' strength (0x6c0c60) with four pairs limited between half and double side 1, and the side that
+/// starts (random(2)).
+///
+/// Per round, for the side in turn: three attacks (the third only if the side wins the strength draw) with a duel of
+/// one active player (+0xc5 + 20 against the other's strength); the second duel (0x6c2880, +0xdd + 15) and the third
+/// (+0xad + 15); the wear (0x6c2750, +0xb9 + 20); the other side's cards (sending-off 0x6c2310 mode 4, yellow mode 2,
+/// the second yellow sends off; more than 4 sent off and the match is abandoned, 3 × 0); the incident type; the score
+/// factor (difference, 1, 0.65 after 60 minutes or 0.75), the contest (0x6c06b0/0x6c07a0 or 0x6c0a70) and, with an
+/// advantage, the shot (0x6c23f0, 0x6c0890/0x6c0980) and the goal (0x6c2050; goalkeepers 0x717410; comments 0x1fcc or
+/// 0x1fcf, or 0x1fce on a missed penalty).
+///
+/// At minutes 45, 90, 105 and 120 it writes the scores (+0x45, +0x43, +0x47) and decides extra time, golden goal (+0x38
+/// & 0x80) and penalties (+0x49/+0x4a, random(5)); the aggregate (+0x4b/+0x4c).
+///
+/// Afterwards: the home goal (random(4) with the score level), the injuries of the last side in turn (0x6d0980), the
+/// ratings (friendly −2: adjustment by the club's reputation) and the counters +0xf5e2/+0xf618.
 ///
 /// [pt] { 0x6beeb0 } (match_eng.cpp, chamada pelo passo do motor 0x6b98c0) com as chamadas que mexem fora
 /// do motor injetadas (0x6d6f70 narra, 0x6d0980 lesiona; e as da saida do jogador 0x6cda20): a
@@ -255,7 +268,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         }
     };
     let mut end = false;
-    let mut decide = false;
+    let mut decides = false;
     let mut local_28 = 0u8;
     let mut side = 0usize;
     *w(0x8ed0) = 0;
@@ -497,7 +510,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                                 }
                             }
                         }
-                        if decide {
+                        if decides {
                             crate::comparison::branch("simulacao rapida gol de ouro");
                             *b(0x1a8) = 1;
                             break 'rodadas;
@@ -556,7 +569,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 }
                 if w38 & 0x80 != 0 {
                     crate::comparison::branch("simulacao rapida prorrogacao com gol de ouro");
-                    decide = true;
+                    decides = true;
                     continue 'periodo;
                 }
                 if w38 & 2 != 0 {
@@ -685,8 +698,6 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     }
 }
 
-
-
 /// Club's tactics row index (0x8982b0) and its start in the table at +0x601 (0x91 bytes per row), or None for row −1.
 ///
 /// [pt] Linha tatica do clube (0x8982b0) e o inicio dela na tabela em +0x601 (0x91 bytes por linha), ou
@@ -809,8 +820,6 @@ pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, club: usize, po
     *((table.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x86 + pos as usize) as *const u8)
 }
 
-
-
 /// Row of the tactic statistics table ([this], 0x28 bytes per tactic) used by the club: word +0 of the club's 0x91-byte
 /// tactics row.
 ///
@@ -910,7 +919,6 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
     1
 }
 
-
 /// Returns the captain stored (+0x52) in the club and team row of the tactics table; no row, 0.
 ///
 /// Ret 8: `Tactics::get_captain(club, team)`, from the tactic screens (0x8a7440). Null club: the box at line 0x527 and
@@ -933,7 +941,6 @@ pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, club: usize, tea
     }
     read_usize(read_usize(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52) as u32
 }
-
 
 /// Writes the captain (+0x52) in the club and team row of the tactics table and returns 1; no row, 0.
 ///
@@ -963,12 +970,6 @@ pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, club: usize, per
     core::ptr::write_unaligned(p as *mut u32, core::ptr::read_unaligned(person as *const u32));
     1
 }
-
-
-
-
-
-
 
 /// Club's row in the tactics table (FN_TACTICS_GET_CLUB_TACTICS_INDEX, stdcall(club, human)); −1 without one.
 ///
@@ -1077,7 +1078,6 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
     found
 }
 
-
 /// Swaps the ids of two selection slots (0..19) and drops the undo copies of the club and team.
 ///
 /// Ret 0x10: `Tactics::swap_selection_slots(club, a, b, team)`, from the squad screen (0x46835e). Slots `a` and `b`
@@ -1106,7 +1106,6 @@ pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, club: u
     1
 }
 
-
 /// Returns 1 when the current human holds the selection undo copy of this club and team.
 ///
 /// Ret 8: `Tactics::has_selection_undo(club, team)`, from the squad screen (0x458a58). With copies (+0x5f0) and the
@@ -1132,8 +1131,6 @@ pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, club: usi
     let e = this + 0x30 + k as usize * 0x5c;
     (read_usize(e + 8) != 0 && read_usize(e) == club && read_usize(e + 4) as u32 == team) as u32
 }
-
-
 
 /// Club's row in the tactics table (FN_TACTICS_GET_CLUB_TACTICS_INDEX); −1 without one (duplicate of club_tactics_index).
 ///
@@ -1186,7 +1183,6 @@ pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, club: u
     1
 }
 
-
 /// Stores the taker of a set piece (first or second choice); without a person, clears it and the second choice moves up
 /// to the first.
 ///
@@ -1234,7 +1230,6 @@ pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, club: us
     1
 }
 
-
 /// the formation record (0x18e3 bytes) in the two tables
 /// Original: `formation_record` (0x896570, tactics.cpp, thiscall).
 ///
@@ -1255,11 +1250,7 @@ pub(crate) unsafe extern "thiscall" fn formation_record(t: usize, f: i16, human:
     }
 }
 
-
-
 comparar_valor!(comparar_formation_record, formation_record, IDX_FORMATION_RECORD, (f: i16, humano: u32) -> usize);
-
-
 
 /// Sets the two extra slots (+0x56, +0x5a) of the club's row.
 ///
@@ -1298,9 +1289,6 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, 
     1
 }
 
-
-
-
 /// Returns the club's tactic: for a human club (without +0x9a01 or with holiday option 2), the slot for the team and
 /// the manager's active block; otherwise, by the index in the club row, the preset block (below the preset count) or
 /// the club's own.
@@ -1327,12 +1315,12 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
     if human(club, 1, 1, 0, 0) != 0 {
         let manager = read_usize(G_HUMAN_MANAGER);
         let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-        let opcao: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
-        if t9a01(manager, read_usize(club + club::MANAGER)) == 0 || opcao(manager, 2, read_usize(club + club::MANAGER)) != 0 {
-            let escolher: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
+        let option: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
+        if t9a01(manager, read_usize(club + club::MANAGER)) == 0 || option(manager, 2, read_usize(club + club::MANAGER)) != 0 {
+            let choose: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
             let active: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_ACTIVE_TACTIC);
             crate::comparison::branch("cpx_8 tatica do humano");
-            escolher(manager, team, club, read_usize(club + club::MANAGER)); // cpx8: a vaga pelo time
+            choose(manager, team, club, read_usize(club + club::MANAGER)); // cpx8: a vaga pelo time
             return active(manager, read_usize(club + club::MANAGER));
         }
     }
@@ -1347,7 +1335,6 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
         read_usize(this + 0x5f1).wrapping_add(index.wrapping_sub(prontas).wrapping_mul(0x18e3) as usize) // cpx8: o bloco próprio
     }
 }
-
 
 /// Returns the club's selection slot (0..19) holding the player, or 0xff.
 ///
@@ -1376,7 +1363,6 @@ pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, club: 
         None => 0xff,
     }
 }
-
 
 /// Stores the person in slot 0..19 of the club's row (0x8982b0) and clears the club's pending instructions.
 ///
@@ -1478,9 +1464,4 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_formation(t: usize, club: usiz
     core::ptr::write_unaligned(linha_da_tabela(t, l) as *mut i16, formation);
     1
 }
-
-
-
-
-
 

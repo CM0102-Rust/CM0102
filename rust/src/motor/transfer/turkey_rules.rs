@@ -1,9 +1,5 @@
 use super::*;
 
-
-
-
-
 /// As janelas da Turquia: uma janela, de 1º de junho a 31 de janeiro.
 pub(crate) const TURKEY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x18, 0x00, 0xff, 0x01, 0x05, 0x01], // cqm3: a Turquia
@@ -27,20 +23,15 @@ pub(crate) unsafe extern "thiscall" fn construct_turkey_rules(this: usize, a1: u
     this
 }
 
-
 /// As janelas da Polônia: uma janela, de 1º de julho a 20 de fevereiro.
 pub(crate) const POLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x12, 0x00, 0xff, 0x01, 0x06, 0x01], // cqm3: a Polônia
     [0x12, 0x00, 0xff, 0x14, 0x01, 0x00],
 ];
 
-
-
 /// As janelas da Finlândia: uma janela, de 16 de novembro a 15 de agosto.
 pub(crate) const FINLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x08, 0x00, 0xff, 0x10, 0x0a, 0x01],
     [0x08, 0x00, 0xff, 0x0f, 0x07, 0x00], // cqm3: a Finlândia
 ];
-
-
 

@@ -442,17 +442,17 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     }
     let minute = (*((m + engine::CLOCK) as *const i16) as i32 / 11) as i8;
     *paciencia = (*paciencia).wrapping_add(0xaf);
-    let faixa_l: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
+    let band_l: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
     let dura = |t: i8| t == 0x2a || t == 0xc || t == 0x15;
-    if arb != 0 && dura(kind) && faixa_l(j, 0) == 0 && faixa_l(j, 1) == 0 && sortear(50 - byte(arb, 0x24) as i32) == 0 {
+    if arb != 0 && dura(kind) && band_l(j, 0) == 0 && band_l(j, 1) == 0 && sortear(50 - byte(arb, 0x24) as i32) == 0 {
         *paciencia = (*paciencia).wrapping_add(0x19);
         return 0;
     }
-    if (faixa_l(j, 0) != 0 || faixa_l(j, 1) != 0) && (dura(kind) || kind == 0x2e) && sortear(3) != 0 {
+    if (band_l(j, 0) != 0 || band_l(j, 1) != 0) && (dura(kind) || kind == 0x2e) && sortear(3) != 0 {
         return 0;
     }
     // advantage: (20, or 5 in the band of its own side) x (+0x5c of `outro`’s profile)^1.5 / (1 or 3)
-    let a = if faixa_l(j, byte(j, match_player::SIDE)) != 0 { 5.0 } else { 20.0 };
+    let a = if band_l(j, byte(j, match_player::SIDE)) != 0 { 5.0 } else { 20.0 };
     let b = byte(*((other + match_player::STAFF) as *const usize), 0x5c) as f64;
     let div = if *((other + 0x1a6) as *const usize) != j { 1.0 } else { 3.0 };
     *advantage = (sortear(match_pl_ftol(a * game_pow(b, read_f64_at(0x968940)) / div)) == 0) as u8; // 0x968940 = 1.5
@@ -562,7 +562,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         0x2d => {
             word(j, -4);
             if sortear(match_pl_ftol(factor * read_f64_at(0x968ea8))) != 0 { // 0x968ea8 = 20
-                if faixa_l(j, byte(j, match_player::SIDE)) == 0 || sortear(0x12) == 0 {
+                if band_l(j, byte(j, match_player::SIDE)) == 0 || sortear(0x12) == 0 {
                     res = 1;
                     add(sortear(dureza) + rigor as i32 + 4);
                     *card = 7;
@@ -627,7 +627,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
         0x13 | 0x21 | 0x22 => {
             let segue = sortear(match_pl_ftol(read_f64_at(0x96d520) / factor)) == 0 // 0x96d520 = 75
                 || (who == 0x6c && sortear(if *advantage != 0 { 2 } else { 6 }) == 0);
-            if segue && (faixa_l(j, byte(j, match_player::SIDE)) == 0 || sortear(match_pl_ftol(read_f64_at(0x969550) / factor)) == 0) { // 0x969550 = 18
+            if segue && (band_l(j, byte(j, match_player::SIDE)) == 0 || sortear(match_pl_ftol(read_f64_at(0x969550) / factor)) == 0) { // 0x969550 = 18
                 res = 1;
                 let a = sortear(dureza);
                 let b = sortear(5);
@@ -676,11 +676,11 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     let aplica: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     if aplica(m, kind) != 0 {
         let multiplicar: unsafe extern "thiscall" fn(usize, f32) = core::mem::transmute(FN_MATCH_PLAYER_SCALE_ANGER);
-        let teste: unsafe extern "thiscall" fn(usize, i8, usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_PASSES_ANGER_CHECK);
+        let test: unsafe extern "thiscall" fn(usize, i8, usize) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_PASSES_ANGER_CHECK);
         multiplicar(other, (*grav as f64 * read_f64_at(0x968918) + read_f64_at(0x967890)) as f32); // 0x968918 = 0.2, 0x967890 = 1
-        if teste(other, 1, 0) != 0 {
+        if test(other, 1, 0) != 0 {
             *((other + 0xff) as *mut u8) = (*((other + 0xff) as *const u8)).wrapping_add(1);
-            if teste(other, 1, 0) != 0 {
+            if test(other, 1, 0) != 0 {
                 *((other + 0x1a6) as *mut usize) = j;
             }
         }
@@ -698,10 +698,4 @@ pub(crate) unsafe extern "thiscall" fn construct_referee(a: usize) -> usize {
     core::ptr::write_unaligned((a + 4) as *mut u32, 0);
     a
 }
-
-
-
-
-
-
 

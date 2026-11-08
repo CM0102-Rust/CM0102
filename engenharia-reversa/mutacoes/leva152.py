@@ -6,6 +6,6 @@ MUTACOES = [
     ('j_conta', "                *((day + 0x25) as *mut i32) += 1;\n            }\n        }\n    };", "                *((day + 0x25) as *mut i32) += 3;\n            }\n        }\n    };"),
     ('j_fechar', "                    close(day, p);\n", ""),
     ('j_linhas', "                            clear(guardadas(manager(), u(u(p, oc), 0xcf)));\n", ""),
-    ('j_andar', "        ajustar_relogio(hora);\n        andar(day, 1);\n", "        ajustar_relogio(hora);\n"),
+    ('j_andar', "        adjust_clock(hora);\n        andar(day, 1);\n", "        adjust_clock(hora);\n"),
     ('j_iniciar', "        iniciar(day);\n        let mut vistos", "        let mut vistos"),
 ]

@@ -5,13 +5,16 @@ use super::*;
 
 /// Comparer for `regenerate_as_youth_player` (comparison mode: see the header of motor.rs).
 ///
+/// Only the original runs (simplification: the routine takes the player sheet out of the database, clears lists and
+/// histories, allocates languages and the contract and sends a news item; it cannot run twice). The copy runs in Rust
+/// mode (counters "cqg_7 ...") and is proved by the mutations and by the two Rust careers.
+///
 /// [pt] Comparador: só a original (simplification: a rotina tira a ficha do banco, limpa listas e históricos, aloca idiomas e o
 /// contrato e manda notícia; não pode rodar duas vezes). A cópia roda no modo Rust (contadores "cqg_7 ...") e é provada
 /// pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_regenerate_as_youth_player(this: usize, p: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REGENERATE_AS_YOUTH_PLAYER)(this, p)
 }
-
 
 /// Comparer for `player_setup_find_staff` (comparison mode: see the header of motor.rs).
 ///
@@ -431,7 +434,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_nation_club_lists(this: us
     SCOREBOARD.record(errada.is_none(), || format!("build_nation_club_lists: a lista da nação {:?} difere do plano", errada));
 }
 
-/// Comparer for `process_regen_queue` (comparison mode: see the header of motor.rs).
+/// Comparer for `process_regen_queue` (comparison mode: see the header of motor.rs): `0x7abac0` (the young regen)
+/// allocates the contract and sends news, and the manager reserves recreate persons found along the way, so only the
+/// original routine runs, checking the queue plan.
+///
+/// With no expired entry and no reserves to recreate, both run side by side on the header (nothing changes). With
+/// expired entries (the regen may add new entries to the queue), reserves (more than 2) or an invalid id: only the
+/// original routine.
 ///
 /// [pt] O comparador: a 0x7abac0 (o regen jovem) aloca o contrato e manda notícia e as reservas de técnico refazem pessoas
 /// achadas pelo caminho: só a original, conferindo o plano da fila. Sem entrada vencida e sem reservas a refazer, os dois

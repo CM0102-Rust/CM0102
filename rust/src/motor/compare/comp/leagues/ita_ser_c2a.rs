@@ -5,6 +5,13 @@ use super::*;
 
 /// Comparer for `ita_ser_c2a_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x654180: the records go to the people's history and change reputations and morale (they cannot run
+/// twice), so only the original routine runs.
+///
+/// The plan, made beforehand, in stages 0 and 1: the club's first row with status 1, 2 or 0xff decides the +0x37 that
+/// the routine writes (stage 0: 0 with 1, 0xfe with 2/0xff; stage 1: 0xfe with 1, 3 with 2/0xff); afterwards the row
+/// must be like that. In the league it only records: return value 0.
+///
 /// [pt] Comparador da 0x654180: os registros vão ao histórico das pessoas e mexem nas reputações e no moral (não rodam duas
 /// vezes): só a original. O plano, feito antes, nas fases 0 e 1: a primeira linha do clube com situação 1, 2 ou 0xff
 /// decide o +0x37 que a rotina grava (fase 0: 0 com 1, 0xfe com 2/0xff; fase 1: 0xfe com 1, 3 com 2/0xff); depois a

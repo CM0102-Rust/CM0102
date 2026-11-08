@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Club in row i of the table (+0xb1, 0x3b-byte rows) of league or stage t.
 ///
 /// [pt] O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
@@ -161,12 +158,6 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     soltar(list);
 }
 
-
-
-
-
-
-
 /// Writes the NSL rule fields (3 rounds, points, tiebreaks, 6 finalists...) before the schedule.
 ///
 /// [pt] As regras da NSL (o que a 0x411ce0 grava antes do calendário).
@@ -235,9 +226,6 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 
     1
 }
 
-
-
-
 /// Calls record_season_honours (vtable +0x30) on the first stage [[this+0xc]].
 ///
 /// [pt] O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
@@ -248,10 +236,6 @@ pub(crate) unsafe fn record_first_stage_honours(this: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(*((vt + 0x30) as *const usize));
     f(e)
 }
-
-
-
-
 
 /// NSL: at the end of the regular season, the six clubs through to the finals series get the qualification record
 /// (stage 0x435, weight 0x28); in the finals, those who go through get the record (round 0x96) and those who fall the
@@ -266,7 +250,6 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(t
     let _ = (a4, a5, a6);
     nsl_end_of_stage(this, club, status, stage, true).0
 }
-
 
 /// `AusNsl::create_table()`: the Australian NSL has 13 clubs (+0x57 = [0x9cf89c]), those of the division in database
 /// order, until it is full (the counter in an int, compared as a word).

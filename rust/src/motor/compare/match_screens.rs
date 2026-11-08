@@ -39,7 +39,11 @@ pub(crate) unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8
     r
 }
 
-/// Comparer for `montagem_da_partida` (comparison mode: see the header of motor.rs).
+/// Comparer for `montagem_da_partida`, the match screen builds (comparison mode: see the header of motor.rs).
+///
+/// They are compared through the display list: the screen regions, the parameter block without 0x14 (the time that the
+/// redraw of the latest scores 0x724520 writes in tab 8), the marks 0xb6b7a8/ac/b0, the text 0xde1f64 and the network
+/// buffer position ([0xae290c]), plus `extra`.
 ///
 /// [pt] As montagens da tela da partida são comparadas pela lista de exibição: as regiões da tela, o bloco
 /// de parâmetros sem o 0x14 (a hora que o redesenho dos últimos placares 0x724520 grava na aba 8), as
@@ -64,6 +68,12 @@ pub(crate) unsafe fn comparar_montagem_da_partida(name: &str, extra: &[(usize, u
 }
 
 /// Comparer for `build_match_screen` (comparison mode: see the header of motor.rs).
+///
+/// The match screen is compared by its display list, plus what it writes outside the screen: the human's player sheet
+/// (+0 and +0xea), his mark among the spectators and the count, the speed focus in the human's `Display` (+0x12f4fe)
+/// and the commentator volume (+0x2db0). Only the original runs when there is something that cannot run twice: the
+/// photo of parameter 0x1d to be freed, the highlight of parameter 7 to be commentated (sound, 0x6d7b00), or tabs 1
+/// (the summary also commentates), 3 (the zones allocate the photo) and 10 (the live table).
 ///
 /// [pt] A tela da partida é comparada pela lista de exibição, com o que ela grava fora da tela: a ficha do
 /// humano (+0 e +0xea), a marca dele nos espectadores e a contagem, o foco das velocidades no `Display`
@@ -109,6 +119,11 @@ pub(crate) unsafe extern "C" fn comparar_handle_match_screen_input(item: u32) ->
 
 /// Comparer for `build_match_details_screen` (comparison mode: see the header of motor.rs).
 ///
+/// The details screen is compared through the display list when the match's record and picture already exist
+/// (parameters `0x1f` and `0x20`) and there is no picture `0x1d` to free. Only the original routine when they are
+/// created here (allocation) or on tabs 1 (the summary narrates with sound), 3 (the zones allocate the picture) and 4
+/// (the report is created).
+///
 /// [pt] A tela de detalhes é comparada pela lista de exibição quando o registro e a foto da partida já
 /// existem (parâmetros 0x1f e 0x20) e não há foto 0x1d a liberar. Só a original quando eles nascem aqui
 /// (alocação) ou nas abas 1 (o resumo narra com som), 3 (as zonas alocam a foto) e 4 (o relatório nasce).
@@ -148,6 +163,12 @@ pub(crate) unsafe extern "C" fn comparar_refresh_possession_bar() {
 
 /// Comparer for `draw_match_overview_panel` (comparison mode: see the header of motor.rs).
 ///
+/// The overview is truly compared through the display list, with `*topo`, `*base` and the possession bar at the end
+/// (the manager's `Display` and the state copy).
+///
+/// Only the original routine: with the error warning, with the commentator (parameter 7: writes the move and plays the
+/// sound), in a match without the state copy (the bar allocates it) and with the network update.
+///
 /// [pt] A visão geral é comparada de verdade pela lista de exibição, com `*topo`, `*base` e a barra da posse
 /// do fim (o `Display` do gerente e a cópia do estado). Só a original: com o aviso de erro, com o
 /// narrador (parâmetro 7: escreve o lance e toca o som), na partida sem a cópia do estado (a barra a
@@ -177,6 +198,11 @@ pub(crate) unsafe extern "C" fn comparar_draw_match_overview_panel(top: *mut i32
 }
 
 /// Comparer for `match_screens_draw_live_league_table` (comparison mode: see the header of motor.rs).
+///
+/// The live table is genuinely compared through the display list, together with the league (0xee bytes: [+0xad]) and
+/// its table ([+0xb1], 59 bytes per club), which the routine reorders. The local copies are born and die inside it.
+///
+/// Without a league or without parameter 0xe ("Error" box): only the original routine.
 ///
 /// [pt] A tabela ao vivo é comparada de verdade pela lista de exibição, com a liga (0xee bytes: [+0xad]) e a
 /// tabela dela ([+0xb1], 59 bytes por clube), que a rotina reordena. As cópias locais nascem e morrem
@@ -230,6 +256,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_write_match_record(stats: usize,
 }
 
 /// Comparer for `fill_team_stats_rows` (comparison mode: see the header of motor.rs).
+///
+/// The cells are really compared: building (`modo` ≠ 0) through the display list, local update through the manager's
+/// `Display`; the parameters (`0x1a`) and the text `0xde1f64` too. An update that goes over the network or parameter
+/// `0x1c` other than 1 and 2: only the original routine.
 ///
 /// [pt] As células são comparadas de verdade: montagem (`modo` ≠ 0) pela lista de exibição, atualização
 /// local pelo `Display` do gerente; os parâmetros (o 0x1a) e o texto 0xde1f64 também. Atualização que
@@ -298,6 +328,10 @@ pub(crate) unsafe fn comparar_pela_lista_com(name: &str, extra: &[(usize, usize)
 
 /// Comparer for `draw_action_zones_panel` (comparison mode: see the header of motor.rs).
 ///
+/// The action zones are compared for real, including `*topo` (+0x19), the fixed colour 0xb6b7a4, the guard 0xb6b7b4 and
+/// the match photo that the values routine (0x720320) compares and rewrites (parameter 0x1d, 0xd7a bytes). Without the
+/// photo yet (the first draw), the values routine allocates it: only the original runs.
+///
 /// [pt] As zonas de ação são comparadas de verdade, com o `*topo` (+0x19), a cor fixa 0xb6b7a4 e a guarda
 /// 0xb6b7b4 e a foto da partida que os valores (0x720320) comparam e regravam (parâmetro 0x1d, 0xd7a
 /// bytes). Sem a foto ainda (o primeiro desenho), os valores a alocam: só a original roda.
@@ -334,7 +368,14 @@ pub(crate) unsafe extern "C" fn comparar_build_day_fixtures_screen() {
     comparar_pela_lista_com("build_day_fixtures_screen", &[(mark, 4)], || o(), || build_day_fixtures_screen());
 }
 
-/// Comparer for `valores_da_partida` (comparison mode: see the header of motor.rs).
+/// Comparer for `valores_da_partida`, the match values (comparison mode: see the header of motor.rs).
+///
+/// The three routines are truly compared when the state copy (parameter 0x1d) already exists: both update from the same
+/// state, and the screen manager (with the message buffer position in +0x3802, which each item update zeroes and
+/// fills), the current screen's `Display`, the parameter block, the state copy (0xd7a bytes) and the text 0xde1f64 must
+/// come out equal.
+///
+/// The content of the message buffer ([manager + 0x37fe]) is not included (as in the lists batch).
 ///
 /// [pt] As três rotinas são comparadas de verdade quando já existe a cópia do estado (parâmetro 0x1d): as
 /// duas atualizam a partir do mesmo estado e o gerente de telas (com a posição do buffer de mensagens
@@ -381,6 +422,13 @@ pub(crate) unsafe extern "C" fn comparar_refresh_player_ratings_rows() {
 }
 
 /// Comparer for `painel_pela_lista` (comparison mode: see the header of motor.rs).
+///
+/// The three panels are genuinely compared: both draw from the same state, and the screen manager, the current screen's
+/// `Display`, the parameter block with the marks 0xb6b7a8/ac/b0 and the text 0xde1f64 must come out equal.
+///
+/// The list (0x55fba0) also writes into a network buffer ([0xae2908] at position [0xae290c]): the position is included
+/// in the regions (it is reset so the second run writes to the same place, and the size written is compared); the
+/// contents of that buffer are not.
 ///
 /// [pt] Os três painéis são comparados de verdade: as duas desenham a partir do mesmo estado e o gerente de
 /// telas, o `Display` da tela atual, o bloco de parâmetros com as marcas 0xb6b7a8/ac/b0 e o texto
@@ -520,6 +568,10 @@ pub(crate) unsafe extern "C" fn comparar_open_match_screen(slot: u32, partida: u
 }
 
 /// Comparer for `resposta` (comparison mode: see the header of motor.rs).
+///
+/// Both responses are really compared on clicks (the screen's parameter block and the marks `0xb6b7a8`/`ac`/`b0`, plus
+/// the return value); when there is a redraw (the 5-second switch of the scores, new statistics data) only the original
+/// routine runs, because the redraw writes the time into parameter `0x14` and touches the display list.
 ///
 /// [pt] As duas respostas são comparadas de verdade nos cliques (o bloco de parâmetros da tela e as marcas
 /// 0xb6b7a8/ac/b0, mais a devolução); quando há redesenho (a troca de 5 s dos placares, os dados novos

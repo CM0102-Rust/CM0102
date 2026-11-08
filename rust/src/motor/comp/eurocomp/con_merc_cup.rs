@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Qualifiers per group (+0xbe, signed byte).
 ///
 /// [pt] Os classificados por grupo (+0xbe, byte com sinal).
@@ -28,6 +25,22 @@ pub(crate) unsafe fn stage_club_at(this: usize, f: usize, j: i32) -> usize {
 }
 
 /// Builds the knockout stage after the groups (qualifier list, round table, Cup_Stage) and draws round 0.
+///
+/// The same template is used in the Libertadores and the Merconorte, checked instruction by instruction: only the list
+/// size, the group stages, the knockout stage, the source file and the error-box lines change.
+///
+/// The list (0x944e46(4 × times): push; add esp, 4 -> cdecl; when out of memory, the error box `linha_sem_lista` and
+/// return) gets the first +0xbe of group 1 (in row order) and, from each group stage 0..`fases` − 1, the first +0xbe
+/// (positions 0, 1...). The round table comes from virtual +0x3c (push 0; push &id; push &rodadas; push `mata`; mov
+/// ecx, this -> thiscall, ret 0x10). The stage (0x944cf1(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage
+/// 0x522e00, thiscall, ret 0x3c: the cup, `times`, the list, the rounds, +4, the table, the year +0x40, `mata`, 2, the
+/// id, 0x14, 0, 0, 0 and no seeds; the original routine pushes the rounds, the id and the year with garbage in the high
+/// 16 bits, which the constructor does not read) goes into [+0xc][`mata`]; the list and the table are freed (0x9452ca).
+///
+/// Without a stage: the error box `linha_sem_fase`. With one: the draw of round 0 (0x51c410 Cup::draw_round: push 0;
+/// mov ecx, stage -> thiscall, ret 4).
+///
+/// The original routine's SEH frame only covers the constructor (no destructor).
 ///
 /// [pt] O mata-mata depois dos grupos (o mesmo molde na Libertadores e na Merconorte, conferido instrução a instrução: mudam
 /// o tamanho da lista, as fases de grupo, a fase do mata-mata, o fonte e as linhas das caixas). A lista (0x944e46(4 ×
@@ -86,8 +99,12 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
     sortear(f, 0);
 }
 
-/// Comparer: runs only the original and checks the knockout stage's team count, cup and clubs (as a set) against the
-/// planned qualifiers.
+/// The knockout plan (the comparer runs only the original routine: the list, the table and the stage are allocated and
+/// the round is drawn).
+///
+/// The qualifiers are read first (group 1 in the rows, the stages through the rows of their table +0xb1, like
+/// 0x6826d0); then the stage in [+0xc][`mata`] is checked: +0x3e = `times`, the cup's +4, and the clubs of its list
+/// (+0xa7, 6 bytes) equal to the plan's as a set (the draw may reorder them).
 ///
 /// [pt] O plano do mata-mata (o comparador roda só a original: a lista, a tabela e a fase são alocadas e a rodada é
 /// sorteada): os classificados lidos antes (o grupo 1 nas linhas, as fases pelas linhas da tabela +0xb1 delas, como a
@@ -117,8 +134,6 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: usize
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
-
-
 /// rule: the Merconorte semi-finals have 4 clubs: the winner (+0xbe = 1) of each of the 4 groups, in a cup stage (stage
 /// 3); the first round is drawn at once
 /// Original: `ConMercCup::create_semi_final_stage` (0x4c2330, con_merc_cup.cpp, thiscall, ret 0).
@@ -129,7 +144,6 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: usize
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_semi_final_stage(this: usize) {
     build_knockout_stage(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
 }
-
 
 /// rule: the Merconorte moves on one stage when the current one ends; after the 3 group stages (on reaching 3) it
 /// builds the semi-finals; going past the last stage is an error
@@ -155,9 +169,9 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
 // simplification: the semi-finals (0x4c2330) allocate and roll: they do not run twice. Original only; the plan: +0x30 goes up one
 // (outside the last stage, which shows the box and changes nothing).
 
-
-
-/// Os clubes de uma nação para a Merconorte: até 30, na ordem da tabela de clubes.
+/// A nation's clubs for the Merconorte: up to 30, in club table order.
+///
+/// [pt] Os clubes de uma nação para a Merconorte: até 30, na ordem da tabela de clubes.
 pub(crate) struct NationClubList {
     pub(crate) clubes: [usize; 30],
     pub(crate) n: u8,
@@ -176,8 +190,31 @@ impl NationClubList {
     }
 }
 
-/// Port of ConMercCup::select_invited_clubs (0x4c2560): builds the 16 invited clubs from Mexico, Colombia, Peru,
-/// Bolivia and the MLS, shuffled.
+/// `ConMercCup::select_invited_clubs()` (0x4c2560, thiscall, ret 0, con_merc_cup.cpp): builds the 16 invited clubs from
+/// Mexico, Colombia, Peru, Bolivia and the MLS, shuffled. +0xf2 = 16 and the list +0xee (0x944e46(0x40): push; add esp,
+/// 4 -> cdecl; out of memory, the box for line 0x262 and returns 0).
+///
+/// The clubs of the table ([0xae23b4], 0x245 bytes, [0xae235c] of them; the first national team, 0x53b900
+/// database_is_national_team: push club; add esp, 4 -> cdecl, ends the search) with a nation (+0x53) go, by the
+/// nation's id (its +0), to the lists of Mexico ([0x9cf3d0]), Colombia ([0x9cf29c]), Peru ([0x9cf428]) and Bolivia
+/// ([0x9cf254]), up to 30 in each; those of another nation whose league (+0x57) is [0x9cf590] (the MLS) go to the
+/// American league list, up to 12.
+///
+/// Each list is sorted by reputation and has its top band shuffled (0x4afbd0 comp_util_sort_and_shuffle_top_clubs: push
+/// how many; push the count (word); push list; add esp, 0xc -> cdecl; uses random draws): Mexico 4, Colombia 5, Peru 3,
+/// Bolivia 2, the American league 2.
+///
+/// The list: in slots 2..5 the top 4 of Mexico, 6..10 the 5 of Colombia, 11..13 the 3 of Peru, 14..15 the 2 of Bolivia;
+/// in slots 0 and 1, without the American league competition ([[0xadadfc] + 4 × [0x9cf728]] = 0) the top 2 of its list;
+/// with it, the champion of the last record of competition [0x9cf590] (0xae23d0 + 0x6b × id) and that of its
+/// competition +4 (0x4afd80 comp_util_get_latest_placed_club: push place; push competition; add esp -> cdecl), and, if
+/// they are the same club, the runner-up of the first in slot 0.
+///
+/// The list is shuffled (0x4afb40(list, 16): push; push; add esp, 8 -> cdecl; 3 × 16 random swaps). Returns 1.
+///
+/// The original keeps the lists on the stack without zeroing them: with fewer clubs than slots, it reads leftovers; the
+/// copy reads zero [inference: in this career the four nations and the MLS have enough clubs; the comparer checks the
+/// list].
 ///
 /// [pt] { 0x4c2560 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::select_invited_clubs()`: +0xf2 = 16 e a lista +0xee
 /// (0x944e46(0x40): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x262 e devolve 0). Os clubes da tabela
@@ -200,7 +237,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let sort: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
-    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
+    let shuffle: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     write_u32_from_usize(this + 0xf2, 0x10);
     let americana = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP) * 4);
     let list = alloc(0x40);
@@ -272,7 +309,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
             slot(0, colocado(record, 1));
         }
     }
-    embaralhar(read_u32_as_usize(this + 0xee), 0x10);
+    shuffle(read_u32_as_usize(this + 0xee), 0x10);
     1
 }
 
@@ -290,9 +327,10 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: u
     select_invited_clubs(this)
 }
 
-
-/// advance_stage: on the last stage shows the box; otherwise increments +0x30 and runs the knockout routine on reaching
-/// `mata`.
+/// The next stage of a tournament with groups and a knockout (`advance_stage`, virtual `+0x28`).
+///
+/// At the last stage (`+0x30` ≥ `+0x2c` − 1, signed), the box of the line and return; otherwise `+0x30` is incremented
+/// and, on reaching `mata`, the knockout routine runs (direct call with the cup's ecx -> thiscall, ret 0).
 ///
 /// [pt] A fase seguinte de um torneio com grupos e mata-mata (`advance_stage`, a virtual +0x28): na última fase (+0x30 ≥
 /// +0x2c − 1, com sinal), a caixa da linha e volta; senão +0x30 sobe e, chegando a `mata`, o mata-mata (call direto com
@@ -321,13 +359,6 @@ pub(crate) unsafe fn con_merc_cup_compare_advance_stage(name: &str, this: usize,
     let after = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
     SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", name, this, f, after));
 }
-
-
-
-
-
-
-
 
 /// Club k of the drawn list (+0xee pointers).
 ///
@@ -544,7 +575,6 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     build_stage_schedule(this, merconorte_stage(stage), rounds, extra, league, 0x9a7d6c)
 }
-
 
 /// rule: the Copa Merconorte groups are home and away, 3/1 points, tiebreak 1, 2, 3, one qualifier per group, category
 /// 7, starts on day 1 of month 7 [inference: 1 August], prize fund of 2,000,000

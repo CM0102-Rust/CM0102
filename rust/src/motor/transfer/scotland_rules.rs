@@ -1,10 +1,5 @@
 use super::*;
 
-
-
-
-
-
 /// Common start of the Scottish/Irish/Spanish loan rules: None (allowed) without contract or contract club, else the
 /// owning club via a second contract lookup (0 if not found).
 ///
@@ -53,7 +48,6 @@ pub(crate) unsafe fn refuse_loan(msg: usize, reason: *mut u16, formato: usize, r
     0
 }
 
-
 /// refuses (0x1d) between two clubs of the same Scottish division
 /// Original: `SCOTLAND_RULES::can_loan_player` (0x7f6650, scotland_rules.cpp, thiscall, ret 0x10).
 ///
@@ -85,14 +79,14 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
 /// início_ano, fim_mês, fim_ano, jogador)`: começa no mês seguinte; o fim é o mês do fim de temporada da nação a1
 /// (0x4d45f0) para quem tem menos de 22 anos (+0x18), neste ano se o começo vem antes dele, senão no ano seguinte;
 /// para os outros, três meses depois do começo.
-pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usize, a1: usize, _a2: u32, ini_month: *mut i8, ini_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
+pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usize, a1: usize, _a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0
     let month: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
-    *ini_month = (month(G_CURRENT_DATE) as i8).wrapping_add(1);
-    *ini_year = read_i16(G_CURRENT_DATE_YEAR);
-    if *ini_month > 0xb {
-        *ini_month = (*ini_month).wrapping_sub(0xc);
-        *ini_year = (*ini_year).wrapping_add(1);
+    *start_month = (month(G_CURRENT_DATE) as i8).wrapping_add(1);
+    *start_year = read_i16(G_CURRENT_DATE_YEAR);
+    if *start_month > 0xb {
+        *start_month = (*start_month).wrapping_sub(0xc);
+        *start_year = (*start_year).wrapping_add(1);
     }
     // 0x4d45f0: push a1; mov ecx, [0xae1050] -> thiscall, ret 4 (the month the season ends)
     let month_of_end: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
@@ -100,30 +94,20 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
     *end_month = e;
     if (read_u8(player + staff::AGE) as i8) < 0x16 {
         crate::comparison::branch("cqe_6 escocia ate o fim da temporada");
-        if *ini_month < e {
-            *end_year = *ini_year;
+        if *start_month < e {
+            *end_year = *start_year;
         } else {
             *end_year = read_i16(G_CURRENT_DATE_YEAR).wrapping_add(1);
         }
         return;
     }
-    *end_month = (*ini_month).wrapping_add(3);
-    *end_year = *ini_year;
+    *end_month = (*start_month).wrapping_add(3);
+    *end_year = *start_year;
     if *end_month > 0xb {
         *end_month = (*end_month).wrapping_sub(0xc);
         *end_year = (*end_year).wrapping_add(1);
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 /// Constructs the Scottish transfer rules (rule 21): one window, from 30 May (moved to the Saturday [inference]) to 30
 /// March (moved to the Thursday [inference]); dword +0x15 = 1.

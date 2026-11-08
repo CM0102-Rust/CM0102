@@ -5,6 +5,12 @@ use super::*;
 
 /// Comparer for `serve_international_bans` (comparison mode: see the header of motor.rs).
 ///
+/// The count (0x556e90) writes the history to the file when the suspension ends and cannot run twice: the plan first
+/// (the nation's persons and, for each one, what 0x556e90 will do, serve_ban_match_plan), then the original routine
+/// runs.
+///
+/// It checks, person by person, the new counter or the released suspension (free: +0 = 0xff, +2 = −1).
+///
 /// [pt] Comparador: a contagem (0x556e90) grava o histórico no arquivo quando a suspensão termina e não pode rodar duas
 /// vezes: o plano antes (as pessoas da nação e, de cada uma, o que a 0x556e90 fará, serve_ban_match_plan), a original roda;
 /// confere, pessoa a pessoa, o contador novo ou a suspensão solta (livre: +0 = 0xff, +2 = −1).
@@ -68,7 +74,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_slot_text(this: usize, perso
     r
 }
 
-/// Comparer for `add_ban` (comparison mode: see the header of motor.rs).
+/// Comparer for `add_ban` (comparison mode: see the header of motor.rs): `0x556940` reallocates the vectors and links
+/// the bodies (it cannot run twice).
+///
+/// The plan first, then the original routine runs; it checks the old ban extended (matches, days, bit 0 of both), or
+/// the new one in the slot (matches, days, the 4 rules), the count, the rule entries pointing to the slot and, with the
+/// fourth rule, the nations index with one more.
 ///
 /// [pt] Comparador: a 0x556940 realoca os vetores e liga os órgãos (não pode rodar duas vezes): o plano antes, a original
 /// roda; confere a velha estendida (jogos, dias, bit 0 das duas), ou a nova na vaga (jogos, dias, as 4 regras), a
@@ -106,6 +117,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ba
 }
 
 /// Comparer for `clear_bans_invalid_for_club` (comparison mode: see the header of motor.rs).
+///
+/// 0x556270 releases bans (nation index, governing bodies): the plan beforehand (the slots the club does not cover and
+/// the entries), then the original runs; it checks the freed slots (0xff, −1, entry −1) and that the others are intact.
+/// An entry repeated in two slots is not checked for the second one.
 ///
 /// [pt] Comparador: a 0x556270 solta suspensões (índice das nações, órgãos): o plano antes (as vagas que o clube não cobre
 /// e as entradas), a original roda; confere as vagas liberadas (0xff, −1, a entrada −1) e as outras intactas. Uma
@@ -149,6 +164,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this
 }
 
 /// Comparer for `restore_held_bans` (comparison mode: see the header of motor.rs).
+///
+/// 0x556570 removes and frees items from the list (lesson 1: the expected result is built BEFORE; no item is read
+/// afterwards) and releases suspensions: the plan first, then the original routine runs.
+///
+/// It checks [0xae1080], the restored slots (the 5 stored bytes), the released ones (0xff, −1, entry −1), the count of
+/// held ones and that the other slots are intact.
 ///
 /// [pt] Comparador: a 0x556570 tira e libera itens da lista (lição 1: o esperado é montado ANTES; nenhum item é lido depois)
 /// e solta suspensões: o plano antes, a original roda; confere [0xae1080], as vagas devolvidas (os 5 bytes guardados), as

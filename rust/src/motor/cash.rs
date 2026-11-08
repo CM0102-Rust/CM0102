@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 /// CRT fread of one record of tam bytes; returns records read.
 ///
 /// [pt] fread (0x945bfe, cdecl): `n` registros de `tam` bytes; devolve quantos leu.
@@ -44,8 +42,6 @@ pub(crate) unsafe fn fail_read(quieto: u32, row: u32, f: usize) -> u32 {
     0
 }
 
-
-
 /// swaps the two bytes of each word of an array
 /// Original: `swap_bytes_16_array` (0x43f2d0, cash.cpp, cdecl).
 ///
@@ -57,7 +53,6 @@ pub(crate) unsafe extern "C" fn swap_bytes_16_array(p: usize, count: u32) {
     }
 }
 
-
 /// reverses the four bytes of each dword of an array
 /// Original: `swap_bytes_32_array` (0x43f300, cash.cpp, cdecl).
 ///
@@ -67,5 +62,4 @@ pub(crate) unsafe extern "C" fn swap_bytes_32_array(p: usize, count: u32) {
         write_u32(p + 4 * k, swap_bytes_u32(read_u32(p + 4 * k)));
     }
 }
-
 

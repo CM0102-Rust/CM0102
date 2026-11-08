@@ -1,10 +1,5 @@
 use super::*;
 
-
-
-
-
-
 /// The nation's coefficient history: five past years (+0xb0..+0xd0) and the current year (+0xd8).
 ///
 /// [pt] A história do coeficiente da nação: +0xb0, +0xb8, +0xc0, +0xc8, +0xd0 (cinco anos) e +0xd8 (o ano corrente).
@@ -117,7 +112,6 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
     free(array);
 }
 
-
 /// Returns 1 on days 0, 80, 173 and 250 of the year (the retirement scan days), otherwise 0.
 ///
 /// `is_player_regen_day(day)`: 1 on days 0, 80, 173 and 250 of the year (the retirement search), otherwise 0. Called
@@ -132,7 +126,6 @@ pub(crate) unsafe extern "C" fn is_player_regen_day(day: u32) -> u32 {
     let d = day as u16;
     (d == 0 || d == 0x50 || d == 0xad || d == 0xfa) as u32
 }
-
 
 /// Returns the sum of two signed bytes clamped between the given minimum and maximum.
 ///
@@ -156,12 +149,6 @@ pub(crate) unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u3
         ((hi as u16 & 0xff00) | (s as u16 & 0xff)) as u32
     }
 }
-
-
-
-
-
-
 
 /// get_contract for a person, stored in G_CONTRACT_LOOKUP_RESULT.
 ///
@@ -200,8 +187,13 @@ pub(crate) unsafe fn is_disliked_by(target: usize, person: usize) -> u32 {
     f(target, person)
 }
 
-/// Shared end of 0x5d6d10/0x5d7190: finds a squad mate the person dislikes and, on the rare date condition, posts
-/// dressing-room unrest and sets the contract event flag.
+/// The shared end of the friction routines (0x5d6d10 and 0x5d7190): finds a squad mate the person dislikes and, on the
+/// rare date condition, posts the complaint and sets the link mark.
+///
+/// The first squad mate (+0xd7, 50 slots) the person does not like; if found, and only when day % 14 + the person's id
+/// gives zero (in practice the person with id 0, every 14 days), the complaint (0x587c60) against the manager (+0xcf,
+/// type 0), the assistant (+0xd3, 1) or someone else (2) and the mark on link `k` (0x867700 with 0x2000, 0x1000 or
+/// 0x800).
 ///
 /// [pt] O fim comum do atrito (0x5d6d10 e 0x5d7190): o primeiro colega do elenco (+0xd7, 50 vagas) de quem a pessoa não
 /// gosta; achado, e só quando dia % 14 + id da pessoa dá zero (na prática a pessoa de id 0 a cada 14 dias), a queixa
@@ -490,13 +482,6 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
 
 // simplification: rolls random numbers and changes morale (0x544710, which also rolls): original only; the copy takes the branches.
 
-
-
-
-
-
-
-
 /// Club record of a contract (G_CLUB_TABLE by id at +4), or 0.
 ///
 /// [pt] O clube do contrato (registros de 0x245 bytes em [0xae23b4], pelo id em +4), ou 0 sem contrato.
@@ -698,7 +683,6 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(t
     }
 }
 
-
 /// the shortlist manager kept in the transfer manager
 /// Original: `transfer_manager_get_shortlist_manager` (0x5d5ab0, game.cpp, thiscall).
 ///
@@ -726,10 +710,6 @@ pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut
     (*(injuries as *const usize) as isize + *id as isize * 31 + 0x1e) as *mut u8
 }
 
-
-
-
-
 /// the f64 average +0x20/+0x28 or +0x10/+0x18 (zero divisor: 6.8)
 /// Original: `game_average` (0x5d5a60, game.cpp, thiscall).
 ///
@@ -744,9 +724,6 @@ pub(crate) unsafe extern "thiscall" fn game_average(t: usize, second: u8) -> f64
     n / q
 }
 
-
-
-
 comparar_valor!(comparar_contract_value, contract_value, IDX_CONTRACT_VALUE, (p: *const i32) -> u32);
 
 /// the game CRT pow (0x945ff0) of two doubles, result in st0
@@ -756,7 +733,6 @@ comparar_valor!(comparar_contract_value, contract_value, IDX_CONTRACT_VALUE, (p:
 pub(crate) unsafe extern "C" fn pow_double(base: f64, expoente: f64) -> f64 {
     game_pow(base, expoente)
 }
-
 
 /// player data qsort: current ability (+5), then potential (+7), ascending
 /// Original: `compare_players_by_ability` (0x5d6220, game.cpp, cdecl).

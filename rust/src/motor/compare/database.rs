@@ -21,6 +21,13 @@ pub(crate) unsafe extern "C" fn comparar_rejected_by(a: usize, b: usize) -> u32 
 
 /// Comparer for `database_player_initialisation` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x535a80: original routine and copy side by side over the database it writes (whole persons, players and
+/// non-players, the 79-byte-per-person table at [0xae2d0c]), [0x9b59b4], the flags 0x9b59b8/9 and the four global
+/// template vectors, the text at 0xde1f64, the stored date of 0x54cab0 and the random generator's state (the copy
+/// without counting draws).
+///
+/// Without persons (error box and end): only the original.
+///
 /// [pt] Comparador de 0x535a80: original e cópia lado a lado sobre o banco que ela escreve (pessoas, jogadores e não
 /// jogadores inteiros, a tabela de 79 bytes por pessoa em [0xae2d0c]), [0x9b59b4], as bandeiras 0x9b59b8/9 e os quatro
 /// vetores globais dos moldes, o texto de 0xde1f64, a data guardada da 0x54cab0 e o estado do sorteador (a cópia sem
@@ -802,7 +809,13 @@ pub(crate) unsafe extern "C" fn comparar_database_count_club_coaches(club: usize
     r
 }
 
-/// Comparer for `nome_em_ingles` (comparison mode: see the header of motor.rs).
+/// Comparer for `nome_em_ingles`, the English names (0x5454c0, 0x5455a0, 0x5456a0) (comparison mode: see the header of
+/// motor.rs).
+///
+/// With the names language ([0x9b5984]) ≠ 0 and ≠ 1 and the eng.lng table ([0xae2408]) still null, the first use
+/// allocates and loads under the SEH frame: only the original routine.
+///
+/// Otherwise both run, comparing the returned pointer (no effect on memory).
 ///
 /// [pt] Comparador dos nomes em inglês (0x5454c0, 0x5455a0, 0x5456a0): com o idioma dos nomes ([0x9b5984]) ≠ 0 e ≠ 1 e
 /// a tabela do eng.lng ([0xae2408]) ainda nula, o primeiro uso aloca e carrega sob o quadro SEH: só a original.
@@ -860,7 +873,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_lng_free_tables(t: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_LNG_FREE_TABLES)(t)
 }
 
-/// Comparer for `database_generate_extra_non_playing_staff` (comparison mode: see the header of motor.rs).
+/// Comparer for `database_generate_extra_non_playing_staff` (0x527240; comparison mode: see the header of motor.rs).
+///
+/// Original and copy side by side over the whole club and person tables, [0x9b59b4], the text at 0xde1f64 and the
+/// random generator state (the copy without counting draws). With a person of job 8 outside the slots (error box), only
+/// the original runs. Overflowing the 23,000 (error box) is not anticipated here: the factory database generates far
+/// fewer.
 ///
 /// [pt] Comparador de 0x527240: original e cópia lado a lado sobre as tabelas de clubes e de pessoas inteiras, [0x9b59b4], o
 /// texto de 0xde1f64 e o estado do sorteador (a cópia sem contar sorteios). Com a pessoa de cargo 8 fora das casas
@@ -982,7 +1000,12 @@ pub(crate) unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a:
     r
 }
 
-/// Comparer for `normalizacao_do_jogador` (comparison mode: see the header of motor.rs).
+/// Comparer for `normalizacao_do_jogador` (comparison mode: see the header of motor.rs): the comparer of `0x538bc0` and
+/// `0x538ec0`.
+///
+/// Compares the whole player (70 bytes) and byte `+0x58` of the person, with the training manager ([`0xde1f44`]) zeroed
+/// on both sides (taking away and giving back the progress touches the training tables, outside the regions); with a
+/// training manager, the original routine then runs for real from the same state.
 ///
 /// [pt] Comparador de 0x538bc0 e 0x538ec0: o jogador inteiro (70 bytes) e o byte +0x58 da pessoa, com o gerente
 /// do treino ([0xde1f44]) zerado nos dois lados (o tirar e devolver do progresso mexe nas tabelas do treino,
@@ -1085,6 +1108,11 @@ pub(crate) unsafe extern "C" fn comparar_database_merge_b_team_staff() {
 }
 
 /// Comparer for `database_build_nation_name_index` (comparison mode: see the header of motor.rs).
+///
+/// The original routine builds the index; the copy builds another (new malloc), the two are compared byte by byte, the
+/// copy's is freed (free 0x9452ca) and the original's goes back to [0xae2338].
+///
+/// It changes the heap in comparison mode (its fingerprint is not a criterion).
 ///
 /// [pt] Comparador: a original monta o índice; a cópia monta outro (novo malloc), os dois são comparados byte a byte, o
 /// da cópia é liberado (free 0x9452ca) e o da original volta a [0xae2338]. Muda a heap do modo de comparação (a
@@ -1190,14 +1218,14 @@ pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nati
 }
 
 /// Comparer for `database_get_comp_colours` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_comp_colours(competition: usize, frente: *mut u16, bottom: *mut u16) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_database_get_comp_colours(competition: usize, front: *mut u16, bottom: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_COMP_COLOURS);
     if competition == 0 {
-        return o(competition, frente, bottom); // message box: original only
+        return o(competition, front, bottom); // message box: original only
     }
-    let regions = [(frente as usize, 2), (bottom as usize, 2)];
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(competition, frente, bottom),
-        || database_get_comp_colours(competition, frente, bottom));
+    let regions = [(front as usize, 2), (bottom as usize, 2)];
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(competition, front, bottom),
+        || database_get_comp_colours(competition, front, bottom));
     SCOREBOARD.record(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competition, r, n, mo, mr));
     r
 }
@@ -1367,13 +1395,13 @@ pub(crate) unsafe extern "C" fn comparar_database_format_staff_name(person: usiz
 }
 
 /// Comparer for `database_get_club_kit_colours` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_kit_colours(club: usize, kit: u32, frente: *mut u16, bottom: *mut u16) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_database_get_club_kit_colours(club: usize, kit: u32, front: *mut u16, bottom: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS);
     if club == 0 {
-        return o(club, kit, frente, bottom); // message box: original only
+        return o(club, kit, front, bottom); // message box: original only
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(frente as usize, 2), (bottom as usize, 2)],
-        || o(club, kit, frente, bottom), || database_get_club_kit_colours(club, kit, frente, bottom));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(front as usize, 2), (bottom as usize, 2)],
+        || o(club, kit, front, bottom), || database_get_club_kit_colours(club, kit, front, bottom));
     SCOREBOARD.record(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", club, kit as u8, r, n, mo, mr));
     r
 }
@@ -1453,18 +1481,18 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: u
 }
 
 /// Comparer for `database_player_to_attribute_vector` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_player_to_attribute_vector(player: usize, person: usize, array: usize, fim_dos_lados: *mut u8,
+pub(crate) unsafe extern "C" fn comparar_database_player_to_attribute_vector(player: usize, person: usize, array: usize, end_of_sides: *mut u8,
                                                             end_of_positions: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(IDX_DATABASE_PLAYER_TO_ATTRIBUTE_VECTOR);
     let mut regions = vec![(array, 0x3f * 3)];
-    for p in [fim_dos_lados, end_of_positions, fim_dos_ponderados] {
+    for p in [end_of_sides, end_of_positions, fim_dos_ponderados] {
         if !p.is_null() {
             regions.push((p as usize, 1));
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions,
-        || o(player, person, array, fim_dos_lados, end_of_positions, fim_dos_ponderados),
-        || database_player_to_attribute_vector(player, person, array, fim_dos_lados, end_of_positions, fim_dos_ponderados));
+        || o(player, person, array, end_of_sides, end_of_positions, fim_dos_ponderados),
+        || database_player_to_attribute_vector(player, person, array, end_of_sides, end_of_positions, fim_dos_ponderados));
     SCOREBOARD.record(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", player, person, r, n, mo, mr));
     r
 }

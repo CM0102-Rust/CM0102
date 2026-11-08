@@ -17,7 +17,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules(thi
     r
 }
 
-
 /// Comparer for `bra_reg_central_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: só a original (simplification: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),

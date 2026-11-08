@@ -11,4 +11,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windo
     compare_transfer_rules_ctor("greece_rules_init_transfer_windows", this, || o(this), |s| greece_rules_init_transfer_windows(s));
 }
 
-

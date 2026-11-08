@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Club k of the drawn list (+0xee pointers).
 ///
 /// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
@@ -241,12 +238,27 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
 // stage in [+0xc][g], +0x30 = g, the stage with the teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 
-/// Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
+/// Writes one group round (a 0x41-byte record, like the league rounds).
+///
+/// The date goes through 0x68a160 (day, month with 0 = January, weekday, code), with no years to add and value 0; and
+/// match 0 is left empty (0x68a1c0 with −1, −1, −1 and value 0).
+///
+/// [pt] Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
 pub(crate) type ConmebolMercGroupRound = (u32, u32, u32, u32);
 
-/// Shared create_schedule (virtual +0x3c) of South American cups: group rounds below `limit`, knockout rounds at it,
-/// nothing above.
+/// Shared body of virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10; the stage read
+/// as a signed byte) of the South American cups: group rounds below `limite`, knockout rounds at it, nothing above.
+///
+/// Below `limite` (−1 included), the groups: é_liga (if requested) = 1, rodadas = the number of group rounds, extra =
+/// stage + 0x3e9 (16 bits); the table of 0x41 bytes per round (0x944e46; when out of memory, the error box `linha_g`
+/// and returns 0) with the dates of `grupos`.
+///
+/// At stage `limite`, the knockout: é_liga = 0, rodadas = the size of `mata`, extra = 0; the table of 0x68 bytes per
+/// round (when out of memory, the error box `linha_m`), the rounds written by `eng_cc_cup_write_cup_round` with the
+/// cup's year +0x40 (signed) and the words of `a_mais` (round, offset, value).
+///
+/// Above `limite`: returns 0 without writing anything.
 ///
 /// [pt] As duas fases da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10; a fase lida
 /// como byte com sinal) das copas sul-americanas. Abaixo de `limite` (−1 inclusive), os grupos: é_liga (se pedido) = 1,
@@ -306,9 +318,12 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
     t
 }
 
-
-/// Side-by-side comparer for South American cup schedules: outputs and written table bytes (plus a_mais words) must
-/// match.
+/// Side-by-side comparer for South American cup schedules.
+///
+/// The original runs with the caller's outputs, the copy with its own outputs that start with the same values, from the
+/// same [0xb67a34]; the outputs and the bytes written in the two tables (groups or knockout, the latter including the
+/// words of `a_mais`) must be equal; the copy's table is freed (0x9452ca). Above the knockout stage, only the original
+/// runs.
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas (grupos ou mata-mata, este com as
@@ -348,7 +363,11 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
 /// A Libertadores, grupos: seis rodadas às terças [inferência: dia da semana 2], de 25 de fevereiro a 1º de abril.
 pub(crate) const LIBERTADORES_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x19, 1, 2, 2), (4, 2, 2, 2), (0xb, 2, 2, 2), (0x12, 2, 2, 2), (0x19, 2, 2, 2), (1, 3, 2, 2)]; // cqo13: os grupos da Libertadores
 
-/// A Libertadores, mata-mata: quatro rodadas em ida e volta, de abril a junho (o jogo de volta 14 dias depois nas
+/// The Copa Libertadores knockout: four two-legged rounds from April to June.
+///
+/// The second leg is 14 days after the first in the round of 16 and 7 in the other rounds.
+///
+/// [pt] A Libertadores, mata-mata: quatro rodadas em ida e volta, de abril a junho (o jogo de volta 14 dias depois nas
 /// oitavas e 7 nas outras).
 pub(crate) const LIBERTADORES_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 4] = [
     cql10r((2, 3, 0, 3), (0xf, 3, 0, 2, 2, 0), 0x14, (0, 4, 1), 7, (0x10, 8, 0x10, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqo13: as oitavas da Libertadores
@@ -356,8 +375,6 @@ pub(crate) const LIBERTADORES_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 4] = [
     cql10r((0x1c, 4, 0, 3), (3, 5, 0, 2, 2, 0), 0x82, (0, 4, 1), 8, (4, 2, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cql10r((0xb, 5, 0, 3), (0x11, 5, 0, 2, 2, 0), 0x96, (0, 4, 1), 8, (2, 1, 0, 0), (0, 2, 7), (0, 0x1e8480, 0xc3500)),
 ];
-
-
 
 /// A Mercosul, grupos: seis rodadas às terças, de 29 de julho a 14 de outubro.
 pub(crate) const MERCOSUR_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x1d, 6, 2, 2), (0x13, 7, 2, 2), (2, 8, 2, 2), (0x10, 8, 2, 2), (0x1e, 8, 2, 2), (0xe, 9, 2, 2)]; // cqo13: os grupos da Mercosul
@@ -388,10 +405,13 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize
         "cqo_13 grupos da mercosul", "cqo_13 mata-mata da mercosul")
 }
 
-
-
-/// Port of ConmebolMerc::select_invited_clubs (0x4c5850): 20-slot list of clubs the seeding rules invite, shuffled;
-/// returns (1, count).
+/// `ConmebolMerc::select_invited_clubs()` (`0x4c5850`, thiscall, ret 0, `conmebol_merc.cpp`): builds the shuffled
+/// 20-slot list of clubs invited by the seeding rules.
+///
+/// Sets `+0xf2` = 20 and allocates the pointer list (`0x944e46` of 0x50 into `+0xee`; out of memory, the box of line
+/// `0x2c6` and 0). Each club of the table ([`0xae23b4`], [`0xae235c`] − 2 × [`0xae2350`]) that the rules ([`0xae1000`],
+/// `0x4c6890`: thiscall with the club) invite enters the list, without checking the space; the list is shuffled
+/// (`0x4afb40` with `+0xf2`). Returns 1.
 ///
 /// [pt] { 0x4c5850 } (thiscall, ret 0, conmebol_merc.cpp): `ConmebolMerc::select_invited_clubs()`: +0xf2 = 20 e a lista de
 /// ponteiros (0x944e46 de 0x50 em +0xee; sem memória, a caixa da linha 0x2c6 e 0); cada clube da tabela ([0xae23b4],
@@ -407,7 +427,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     let convidado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_CONMEBOLSEEDING_IS_MERCOSUR_INVITED_CLUB);
-    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
+    let shuffle: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let clubs = || (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let mut k = 0i16;
     let mut i = 0i32;
@@ -421,7 +441,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
     }
     crate::comparison::branch("cqo_13 convidados da mercosul");
     // simplification: the original pushes the word +0xf2 with garbage in the high 16 bits (the previous eax); 0x4afb40 reads the word
-    embaralhar(read_u32_as_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
+    shuffle(read_u32_as_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
     (1, k as i32)
 }
 
@@ -434,7 +454,6 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_select_invited_clubs(this: usize) -> i32 {
     mercosur_select_invited_clubs(this).0
 }
-
 
 /// rule: the Mercosur moves on one stage when the current one ends; after the 4 group stages (on reaching 4) it builds
 /// the quarter-finals; going past the last stage is an error

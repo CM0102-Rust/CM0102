@@ -1,10 +1,9 @@
 use super::*;
 
-
-
-
-
-/// A janela do Brasil: de 11 de dezembro (andando para a quarta-feira [inferência]) a 8 de novembro (andando para a sexta-feira [inferência]).
+/// The Brazilian transfer window: from 11 December (moving to the Wednesday [inference]) to 8 November (moving to the
+/// Friday [inference]).
+///
+/// [pt] A janela do Brasil: de 11 de dezembro (andando para a quarta-feira [inferência]) a 8 de novembro (andando para a sexta-feira [inferência]).
 pub(crate) const BRAZIL_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x04, 0x00, 0x03, 0x0b, 0x0b, 0x01], // cqk3: o Brasil abre em dezembro
     [0x04, 0x00, 0x05, 0x08, 0x0a, 0x00], // cqk3: o Brasil fecha em novembro
@@ -24,7 +23,6 @@ pub(crate) unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u
     this
 }
 
-
 /// As janelas da Alemanha: de 1º de julho a 15 de agosto e de 1º de julho a 15 de janeiro.
 pub(crate) const GERMANY_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
     [0x0a, 0x00, 0xff, 0x01, 0x06, 0x01],
@@ -33,13 +31,12 @@ pub(crate) const GERMANY_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
     [0x0a, 0x01, 0xff, 0x0f, 0x00, 0x00],
 ];
 
-
-
-/// A janela da Escócia: de 30 de maio (andando para o sábado [inferência]) a 30 de março (andando para a quinta-feira [inferência]).
+/// Scotland's transfer window: from 30 May (moved to the Saturday [inference]) to 30 March (moved to the Thursday
+/// [inference]).
+///
+/// [pt] A janela da Escócia: de 30 de maio (andando para o sábado [inferência]) a 30 de março (andando para a quinta-feira [inferência]).
 pub(crate) const SCOTLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x15, 0x00, 0x06, 0x1e, 0x04, 0x01],
     [0x15, 0x00, 0x04, 0x1e, 0x02, 0x00],
 ];
-
-
 

@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Competition record id in the database (G_CLUB_COMP_TABLE + 0x6b × id).
 ///
 /// [pt] O registro da competição `id` no banco ([0xae23d0] + 0x6b × id).
@@ -10,7 +7,12 @@ pub(crate) unsafe fn club_comp_record(id: usize) -> usize {
     read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b))
 }
 
-/// As quatro listas da 0x4c11a0, na ordem do banco de clubes ([0xae23b4], 0x245 bytes, [0xae235c] clubes; para no
+/// The four lists of 0x4c11a0 (Mexican, Central American, Caribbean and MLS clubs) with their counts.
+///
+/// Built in the order of the club database ([0xae23b4], 0x245 bytes, [0xae235c] clubs; it stops at the first one that
+/// is a national team, 0x53b900).
+///
+/// [pt] As quatro listas da 0x4c11a0, na ordem do banco de clubes ([0xae23b4], 0x245 bytes, [0xae235c] clubes; para no
 /// primeiro que é seleção, 0x53b900): (mexicanos, centro-americanos, caribenhos, da MLS) com as contagens.
 pub(crate) struct ConcacafClubLists {
     pub(crate) mex: [usize; 200],
@@ -122,7 +124,6 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
     }
     1
 }
-
 
 /// Daily update of the CONCACAF Champions' Cup. Rule: on the first day of the cup season (empty team table), picks the
 /// qualified clubs and the predicted positions; every day, the cup update (draws and matches).

@@ -29,7 +29,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_friendly_cancel_national_fixture
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FRIENDLY_CANCEL_NATIONAL_FIXTURE)(this, game);
 }
 
-/// Comparer for `cancel_tournament` (comparison mode: see the header of motor.rs).
+/// Comparer for `cancel_tournament` (comparison mode: see the header of motor.rs): the comparer of `0x5c8260`.
+///
+/// The original routine delivers news, removes matches from the calendar and destroys the competition, so only it runs,
+/// with the plan checked afterwards: the owner (`+0`) and the competition (`+0x65`) zeroed, the slot in the competition
+/// table zeroed and the tournament removed from the pending list.
 ///
 /// [pt] Comparador da 0x5c8260: a original entrega notícias, tira jogos do calendário e destrói a competição: só ela roda,
 /// com o plano conferido depois: o dono (+0) e a competição (+0x65) zerados, a vaga da tabela de competições zerada e
@@ -63,9 +67,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_cancel_tournament(this: usize, t
 
 /// Comparer for `arrange_international_friendlies` (comparison mode: see the header of motor.rs).
 ///
+/// The original routine creates friendlies (0x5c6f00, 0x5c5f40), adds to the lists (0x68d0d0) and draws at random, so
+/// only it runs, with the plan in rehearsal mode. The first part of the rehearsal runs before it (afterwards the
+/// calendar would already have the new friendlies); the second part, after it, uses the tape of the draws it made
+/// (rng::rastrear: n and the answer, including those inside the friendly's routines) and decides each friendly by what
+/// the original did.
+///
+/// It checks the draw sequence (the rehearsal's draws are the original's, except those inside the friendly's routines,
+/// and the tape ends at the same point) and, nation list by nation list, that the original's new items are the ones the
+/// rehearsal would add.
+///
+/// (Side by side by the random generator's state did not work: 0x5c6f00 and 0x5c5f40 draw internally in the original
+/// and the rehearsal does not call them.)
+///
 /// [pt] Comparador: a original cria amistosos (0x5c6f00, 0x5c5f40), acrescenta às listas (0x68d0d0) e sorteia: só ela roda,
 /// com o plano em ensaio. A primeira parte do ensaio roda antes dela (depois, o calendário já teria os amistosos
-/// novos); a segunda, depois dela, pela fita dos sorteios que ela fez (aleatorio::rastrear: n e resposta, os de dentro
+/// novos); a segunda, depois dela, pela fita dos sorteios que ela fez (rng::rastrear: n e resposta, os de dentro
 /// das rotinas do amistoso também), decide cada amistoso pelo que a original fez. Confere a sequência dos sorteios (os
 /// do ensaio são os da original, salvo os de dentro das rotinas do amistoso, e a fita acaba junto) e, lista a lista de
 /// nações, que os itens novos da original são os que o ensaio acrescentaria. (Lado a lado pelo estado do sorteador não
@@ -146,6 +163,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_friendly_check_tournament_invita
 
 /// Comparer for `build_international_date_table` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x5ca4f0: the copy first (it allocates its own table, which is copied out and freed: free 0x9452ca,
+/// cdecl), then the original routine from the same +0x34ec..+0x34f5; checks the count, the last day done and the 110
+/// dates.
+///
+/// Runs once, in the friendlies constructor.
+///
 /// [pt] Comparador da 0x5ca4f0: a cópia primeiro (aloca a tabela dela, que sai copiada e liberada: free 0x9452ca, cdecl),
 /// depois a original a partir dos mesmos +0x34ec..+0x34f5; confere a conta, o último dia feito e as 110 datas. Roda
 /// uma vez, no construtor dos amistosos.
@@ -182,7 +205,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_resolve_international_dates(this
     SCOREBOARD.record(igual, || format!("resolve_international_dates(conta {}) original={:x?} rust={:x?}", n, mo, mr));
 }
 
-/// Comparer for `plan_club_friendlies` (comparison mode: see the header of motor.rs).
+/// Comparer for `plan_club_friendlies` (0x5c4770; comparison mode: see the header of motor.rs).
+///
+/// Only the original runs (simplification: it frees and allocates the plan, and 0x5c4380 allocates the candidates' date
+/// and opponent lists; it does not run twice), checking the plan it leaves: the plan allocated, the capacity (+0x34e4)
+/// not lower than the count (+0x34e0), +0x34dc zeroed and the plan in date order (0x778e90 between neighbours).
 ///
 /// [pt] Comparador da 0x5c4770: só a original (simplification: ela libera e aloca o plano, e a 0x5c4380 aloca as listas de datas e
 /// de adversários dos candidatos; não roda duas vezes), conferindo o plano que ela deixa: o plano alocado, a capacidade
@@ -226,7 +253,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_human_club_open_invitation(
     r
 }
 
-/// Comparer for `process_friendly_reply` (comparison mode: see the header of motor.rs).
+/// Comparer for `process_friendly_reply` (comparison mode: see the header of motor.rs): the comparer of `0x5c5f40`;
+/// only the original routine runs (the match goes to the calendar and the news to the manager, which allocate, and the
+/// request is freed by `0x5c87b0`).
+///
+/// The plan, made beforehand: the decision (friendly_reply) and the friendly's slot (`0x5c6740`). With 3 or 4, the slot
+/// ends with `+0x18` = 3, or with `+0x10` = 0 and `+0x18` = 0; without a decision, the request keeps the same status
+/// and leaves the reply list (`+0x34d4`). Without a requester or without a nation for one of the two: only the original
+/// routine.
 ///
 /// [pt] Comparador da 0x5c5f40: só a original (a partida vai ao calendário e a notícia ao técnico, que alocam, e o pedido é
 /// liberado pela 0x5c87b0). O plano, feito antes: a decisão (friendly_reply) e a vaga do amistoso (0x5c6740). Com 3 ou 4,
@@ -254,6 +288,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usi
 }
 
 /// Comparer for `send_friendly_request` (comparison mode: see the header of motor.rs).
+///
+/// Comparer of 0x5c5570: only the original routine runs (the list node and the news item allocate). The plan, made
+/// beforehand: the reply list gets one more node and keeps the request; the status goes to 2 when the other club, in
+/// status 1, has a human manager; otherwise it does not change.
+///
+/// News item 6 to a human on holiday is answered on the spot by the assistant (0x784100: status 1 and 0x5c5f40 with
+/// `forcar`, checked by its own comparer): then the request has already left the list (the list keeps the earlier
+/// nodes) and may have been freed (the status is not read).
 ///
 /// [pt] Comparador da 0x5c5570: só a original (o nó da lista e a notícia alocam). O plano, feito antes: a lista das
 /// respostas fica com um nó a mais e guarda o pedido; a situação vai a 2 quando o outro clube, na situação 1, é de
@@ -385,6 +427,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_due_planned_friendlies(th
 
 /// Comparer for `add_friendly_match` (comparison mode: see the header of motor.rs).
 ///
+/// It allocates and appends to the list (it does not run twice): the original does it and the copy checks the result
+/// against the home side's stadium, looked up beforehand (0x5ae870, read-only): occupied → 0; otherwise the returned
+/// friendly has the date, +0xc the club, +8 = 0, +0x18 = 1 and home and away sides according to `em_casa`.
+///
 /// [pt] Comparador: aloca e acrescenta à lista (não roda duas vezes): a original faz e a cópia confere o resultado com o
 /// estádio de quem joga em casa visto antes (0x5ae870, só lê): ocupado → 0; senão o amistoso devolvido tem a data,
 /// +0xc o clube, +8 = 0, +0x18 = 1 e o mandante e o visitante pelo `em_casa`.
@@ -451,7 +497,12 @@ pub(crate) unsafe extern "C" fn comparar_compare_fixture_records_by_date(a: usiz
     r
 }
 
-/// Comparer for `remove_friendly_match` (comparison mode: see the header of motor.rs).
+/// Comparer for `remove_friendly_match` (comparison mode: see the header of motor.rs): `0x68d1f0` frees what it
+/// removes, so the plan is made first.
+///
+/// The plan beforehand (the items that remain in both lists and the friendly's slot); the original routine runs; then
+/// it checks the lists, the cursor of `+0x34d4` at the start and the slot zeroed. A null match or no list `+0x34c8`:
+/// only the original routine (the box).
 ///
 /// [pt] Comparador: a 0x68d1f0 libera o que tira: o plano antes (os itens que ficam nas duas listas e a vaga do amistoso);
 /// a original roda; confere as listas, o cursor da +0x34d4 no começo e a vaga zerada. Jogo nulo ou sem a lista
@@ -554,13 +605,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usi
 }
 
 /// Comparer for `find_tour_opponent` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, club: usize, ordenados: usize, n: u32, faixa_max: u32, nation: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, club: usize, ordenados: usize, n: u32, band_max: u32, nation: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(IDX_FIND_TOUR_OPPONENT);
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| read_usize(ordenados + 4 * i)));
-    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, ordenados, n, faixa_max, nation),
-        || crate::rng::without_counting(|| find_tour_opponent(this, club, ordenados, n, faixa_max, nation)));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, ordenados, n, band_max, nation),
+        || crate::rng::without_counting(|| find_tour_opponent(this, club, ordenados, n, band_max, nation)));
     SCOREBOARD.record(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, band {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
-        club, ordenados, n, faixa_max as i8, nation, r, m, mo, mr));
+        club, ordenados, n, band_max as i8, nation, r, m, mo, mr));
     r
 }
 
@@ -605,6 +656,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_register_comp_objects(friendly: 
 }
 
 /// Comparer for `update_international_friendlies` (comparison mode: see the header of motor.rs).
+///
+/// On the first day of the year (the lists are emptied, freeing memory) and when there are friendlies to arrange
+/// (0x5cbdf0 creates matches and draws at random), only the original routine runs, checking the plan: the day set at
+/// +0x34f4.
+///
+/// On the other days, side by side on the set day and the static dates.
 ///
 /// [pt] Comparador: no primeiro dia do ano (as listas se esvaziam, liberando) e quando há amistosos a marcar (a 0x5cbdf0
 /// cria jogos e sorteia), só a original, conferindo o plano: o dia marcado em +0x34f4. Nos outros dias, lado a lado

@@ -1,9 +1,9 @@
 use super::*;
 
-
-
-
-/// O grupo de onde sai cada vaga das quartas da Copa Africana (−1 = o grupo A, a tabela da própria copa; 0..2 = as fases
+/// The group each African Cup quarter-final slot comes from (−1 = group A, the cup's own table; 0..2 = the stages of
+/// groups B to D) and the position: the keys are the pairs of the list.
+///
+/// [pt] O grupo de onde sai cada vaga das quartas da Copa Africana (−1 = o grupo A, a tabela da própria copa; 0..2 = as fases
 /// dos grupos B a D) e a posição: as chaves são os pares da lista.
 pub(crate) const AFRICAN_NATIONS_QUARTER_FINAL_SLOTS: [(i32, i32); 8] = [
     (-1, 0), (0, 1), // cqt13: 1º A × 2º B
@@ -21,10 +21,22 @@ pub(crate) unsafe fn group_table_club(this: usize, g: i32, p: i32) -> usize {
     read_u32_as_usize(row(group, p))
 }
 
-/// AfricanNations::create_knockout_stage: builds the quarter-finals of the African Nations Cup (called by advance_stage
-/// on reaching stage 3): the 8 teams taken from the group tables by the fixed AFRICAN_NATIONS_QUARTER_FINAL_SLOTS pairings, the round dates
-/// from virtual +0x3c, a new Cup_Stage stored in stage slot 3 (+0xc), then sets up the first round and sets the current
-/// stage (+0x30) to 3. Out of memory or no stage: error box and return.
+/// `AfricanNations::create_knockout_stage()` (`0x402090`, thiscall, ret 0, `african_nations.cpp`): builds the
+/// quarter-finals of the African Nations Cup.
+///
+/// SEH frame only for the stage's `new`, with no destructor on the normal path; called by the next-stage routine
+/// `0x401e10` on reaching stage 3.
+///
+/// The list of the 8 (`0x944e46(0x20)`: push; add esp, 4 -> cdecl; out of memory, the box of line `0x311` and return)
+/// by the pairings of AFRICAN_NATIONS_QUARTER_FINAL_SLOTS, in call order; the round table via virtual `+0x3c` (push 0;
+/// push &id; push &rodadas; push 3; mov ecx, this -> thiscall, ret 0x10); the stage (`0x944cf1(0xb2)` push; add esp, 4
+/// -> cdecl; Cup_Stage::Cup_Stage `0x522e00`, thiscall, ret 0x3c: the cup, 8, the list, the rounds, `+4`, the table,
+/// the year `+0x40`, 3, 4, the id, 0x14, 0, 0, 0 and no seeds; the original routine pushes the rounds, the id and the
+/// year with garbage in the high 16 bits, which the constructor does not read) into [`+0xc`][3]; the list and the table
+/// are freed (`0x9452ca`).
+///
+/// Without the stage: the box of line `0x32c` and return. With it: the round is set up (`0x51c800` Cup::set_up_round:
+/// push 0; mov ecx, stage -> thiscall, ret 4) and `+0x30` = 3.
 ///
 /// [pt] { 0x402090 } (thiscall, ret 0, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `AfricanNations::create_knockout_stage()`, as quartas da Copa Africana (da fase seguinte 0x401e10, ao chegar
@@ -98,7 +110,14 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize
 // simplification: the finals allocate and draw: they do not run twice. Original only; the plan: +0x30 goes up one (outside the last
 // stage, which shows the box and changes nothing).
 
-/// The 4 Asian Cup Winners' Cup finalists: alive entrants of the two zones' knockouts, 2nd and 3rd swapped.
+/// The 4 finalists of the Asian Cup Winners' Cup: the surviving entrants of the two zones' knockouts, with the 2nd and
+/// 3rd swapped.
+///
+/// The survivors (+5 = 1 in the 6-byte table) of the first zone's knockout (the cup's table, +0xa7) and then those of
+/// the second (table +0xa7 of stage [+0xc][0]), up to 4 in total, both searches going up to the cup's +0x3e (signed
+/// word). The 2nd and 3rd swap places (the pairings: the brackets are the pairs of the list).
+///
+/// Slots left over stay 0 (the original routine leaves them with whatever malloc returned).
 ///
 /// [pt] Os 4 finalistas da Recopa asiática: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da
 /// copa, +0xa7) e depois os da segunda (a tabela +0xa7 da fase [+0xc][0]), até 4 ao todo, as duas buscas até o +0x3e da
@@ -123,9 +142,21 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: usize) -> [usize; 4] {
     v
 }
 
-/// AsiaCupWinner::create_finals_stage(): builds the 4-team finals stage of the Asian Cup Winners' Cup from its
-/// finalists, gets the round table from the cup's virtual +0x3c, constructs the Cup_Stage in stage slot 1 (cup +0xc)
-/// and draws its round 0. Out of memory or a failed stage shows the error box and returns.
+/// `AsiaCupWinner::create_finals_stage()` (0x40e030, thiscall, ret 0, asia_cup_winner.cpp): builds the 4-team finals
+/// stage of the Asian Cup Winners' Cup from its finalists, gets the round table from the cup's virtual +0x3c,
+/// constructs the Cup_Stage in stage slot 1 (cup +0xc) and draws its round 0.
+///
+/// The SEH frame is only for the stage's new: no destructor on the normal path.
+///
+/// The list of 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; out of memory, the error box for line 0x34b and return)
+/// from asian_cup_winners_finalists; the round table via virtual +0x3c (push 0; push &id; push &rodadas; push 1; mov
+/// ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage
+/// 0x522e00, thiscall, ret 0x3c: the cup, 4, the list, the rounds, +4, the table, the year +0x40, 1, 2, the id, 0x14,
+/// 0, 0, 0 and no seed; the original pushes the rounds, the id and the year with garbage in the high 16 bits, which the
+/// constructor does not read) stored in [+0xc][1]; the table is freed (0x9452ca).
+///
+/// No stage: the error box for line 0x375 and return (the list is not freed, as in the original). With it: the draw of
+/// round 0 (0x51c410 Cup::draw_round: push 0; mov ecx, stage -> thiscall, ret 4) and the list is freed.
 ///
 /// [pt] { 0x40e030 } (thiscall, ret 0, asia_cup_winner.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `AsiaCupWinner::create_finals_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem
@@ -186,7 +217,6 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     create_round_table(this, asian_cup_winners_stage(stage), rounds, extra, league, 0x987b60)
 }
-
 
 /// rule: the Asian Cup Winners' Cup has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
 /// class and status 0

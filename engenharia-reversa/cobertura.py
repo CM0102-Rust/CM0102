@@ -38,10 +38,10 @@ def main():
             chamados.add(int(ins[3], 16))
     md.skipdata = False
     ponteiros = {struct.unpack_from('<I', d, o)[0] for o in range(desvios.TEXTO[1], len(d) - 3, 4)}
-    # As rotinas ja desviadas (Prologo em motor.rs) nao levam contador: os dois desvios no mesmo
+    # As rotinas ja desviadas (Prologue em motor.rs) nao levam contador: os dois desvios no mesmo
     # inicio se atropelam (o trampolim fica vazio e o Rust chama o endereco 0; 17/10/2026).
     import re
-    feitas = {int(x, 16) for x in re.findall(r'endereco: (0x[0-9a-f]+)', open(os.path.join(AQUI, '..', 'rust', 'src', 'motor.rs'), encoding='utf-8').read())}
+    feitas = {int(x, 16) for x in re.findall(r'address: (0x[0-9a-f]+)', open(os.path.join(AQUI, '..', 'rust', 'src', 'motor.rs'), encoding='utf-8').read())}
     # Os pedacos que o mapa de maxevans60 marca como falsos (fragmento do meio de uma rotina, sem quadro proprio)
     # nao levam contador: um saltava para dentro dos 5 bytes do desvio (0x585e50, Liga dos Campeoes; 03/11/2026).
     import placar_arquivos

@@ -1,12 +1,21 @@
 use super::*;
 
-
-/// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
+/// Describes one round of the 0x41-byte table.
+///
+/// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
+/// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
+/// list ends with −1).
+///
+/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
 pub(crate) type EngFirstScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
-/// Sets dates and match slots of the rounds from `primeira` in table t (League round set_date / set_match_slot).
+/// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
+///
+/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
@@ -23,8 +32,15 @@ pub(crate) unsafe fn eng_first_set_league_rounds(t: usize, year: u32, first: i32
     }
 }
 
-
-/// A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
+/// The main stage with the Christmas rounds.
+///
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
+/// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
+/// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
+/// eighth); then the closing rounds.
+///
+/// [pt] A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
 /// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
@@ -47,17 +63,16 @@ pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, year: u32, n: &Eng
     construct(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
-    let caso = if k as u32 > 6 {
+    let case = if k as u32 > 6 {
         show_error_at(file, n.linha);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[caso];
+    let middle = n.casos[case];
     eng_first_set_league_rounds(t, year, n.comeco.len() as i32, middle);
     eng_first_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
-
 
 /// a primeira divisão inglesa: as rodadas antes do Natal
 pub(crate) const FIRST_DIVISION_START: [EngFirstScheduleRound; 23] = [
@@ -333,12 +348,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
     }
 }
 
-
-
-
-
-
-
 /// Club of row k of the league table (+0xb1, 0x3b bytes).
 ///
 /// [pt] O clube da linha `k` da tabela da liga (+0xb1, linhas de 0x3b bytes; o clube no +0).
@@ -346,8 +355,23 @@ pub(crate) unsafe fn eng_first_league_row_club(league: usize, k: usize) -> usize
     read_usize(read_usize(league + league::TABLE) + k * 0x3b)
 }
 
-/// Creates the play-off stage from 4 table rows: club list, round table, Cup_Stage in the first stage slot, then
-/// Cup::set_up_round.
+/// Creates the play-off stage of the three divisions from 4 table rows: club list, round table, Cup_Stage in the first
+/// stage slot, then Cup::set_up_round.
+///
+/// This is the body of 0x573080, 0x576a70 and 0x5783c0, which differ only in the lines, the source file and the stage's
+/// +0x3a.
+///
+/// The list of `+0xbf` clubs (malloc 0x944e46 of 4 × the signed byte; when out of memory: the error box
+/// `linha_sem_lista` and nothing else) takes the clubs of the 4 table `linhas`, in this order (the brackets: 0 × 1 and
+/// 2 × 3). Virtual +0x3c (create_round_table: thiscall(this, stage 0, &rodadas, &extra, null), ret 0x10) builds the
+/// round table; the new stage (operator new 0x944cf1 of 0xb2 bytes; Cup_Stage::Cup_Stage 0x522e00, thiscall with 15
+/// arguments, ret 0x3c: the league, the count, the list, the rounds, +4, the round table, the word +0x40, 0, 1, `a10`
+/// (or the virtual's extra), 0x14, 0, 0, 0, 0) goes into the first stage slot ([+0xc]); the list and the round table
+/// are freed (free 0x9452ca).
+///
+/// Without a stage: the error box `linha_sem_fase`; otherwise Cup::set_up_round (0x51c800, thiscall(stage, 0), ret 4).
+///
+/// The original routine's SEH frame only covers the constructor (no destructor).
 ///
 /// [pt] O mata-mata das três divisões (o corpo de 0x573080, 0x576a70 e 0x5783c0, que só mudam nas linhas, no fonte e no
 /// +0x3a da fase). A lista de `+0xbf` clubes (malloc 0x944e46 de 4 × o byte com sinal; sem memória: a caixa
@@ -408,9 +432,13 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_playoff_stage(this: usiz
     create_playoff_stage(this, [5, 2, 4, 3], 0x9c4374, 0x2f0, 0x306, Some(0xa0), "cpz_1 mata-mata da first"); // cpz1: 6º × 3º e 5º × 4º da First
 }
 
-
-
-/// Comparer of the play-off stage: runs only the original and checks the stage, count and the 4 clubs (as a set).
+/// The comparer of the three play-off stage routines: runs only the original and checks the stage, the count and the 4
+/// clubs (as a set).
+///
+/// The original allocates the list, the round table and the stage and builds the round (only it runs). The plan, made
+/// beforehand: the clubs of the 4 rows. Afterwards, the stage of the first slot must exist, with +0x3e = the count
+/// (+0xbf), +4 = the league's +4, and the first 4 clubs of its list (+0xa7, 6 bytes) equal to those of the plan (as a
+/// set: the round draw 0x51c800 may reorder the ties).
 ///
 /// [pt] O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
 /// plano, feito antes: os clubes das 4 linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = a conta
@@ -440,9 +468,6 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this, plan, stage, found, read_i16(stage + cup::TEAM_COUNT), n));
 }
 
-
-
-
 /// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the
 /// play-offs (0x573080)
 /// Original: `EngFirst::advance_stage` (0x572ff0, eng_first.cpp, thiscall, ret 0).
@@ -453,7 +478,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
     advance_league_stage(this, 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
 }
 
-
 /// the First Division: discipline 9, no minimum ground, the league and 1 stage (the promotion play-off)
 /// Original: `EngFirst::EngFirst` (0x571680, eng_first.cpp, thiscall, ret 8).
 ///
@@ -462,7 +486,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
 pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u32, record: usize) -> usize {
     construct_english_division(this, year, record, &FIRST_DIVISION)
 }
-
 
 /// Sets up the rules of the English First Division (24 clubs): the top 2 go up directly, 3rd to 6th go to the promotion
 /// play-offs, the bottom 3 go down to the Second; 5 substitutes and 3 substitutions; 2 rounds, 3 points.
@@ -480,7 +503,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u3
     crate::comparison::branch("cqi_4 regras da first");
     eng_prm_apply_league_rules(this, &eng_prm_first_division_rules())
 }
-
 
 /// the First has 24 clubs; prize fund of 70,000 per place; TV pays by the division the club came from: 5,877,777 to
 /// those relegated from the Premier and 4,099,999 to those already in the First and those promoted from the Second
@@ -502,7 +524,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u3
         }
     })
 }
-
 
 /// writes stage, best and worst in the club stats entry (+0x73..+0x75): in the league, best 3 to 6 becomes 3 and worst
 /// 3 to 6 becomes 6; in the play-offs (stage 0), 1, 2 and 3 become 3, 4 and 5

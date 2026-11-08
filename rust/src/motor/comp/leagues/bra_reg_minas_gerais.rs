@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 /// Champion of a half: club in row 0 of stage k's table.
 ///
 /// [pt] O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
@@ -65,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_advance_stage(this: 
 ///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
 ///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(this: usize) {
-    let sementes: [u8; 4] = [0, 1, 0, 0];
+    let seeds: [u8; 4] = [0, 1, 0, 0];
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let list = alloc(8);
     if list == 0 {
@@ -104,7 +102,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, sementes.as_ptr())
+        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, seeds.as_ptr())
     } else {
         0
     };
@@ -171,9 +169,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
     campeoes()
 }
 
-
-
-
 /// Comp_Stats::find_club_entry(club) on [this+8] (original routine).
 ///
 /// [pt] 0x4a4850 `Comp_Stats::find_club_entry(clube)` (thiscall, ret 4): a entrada do clube nas estatísticas da competição
@@ -217,7 +212,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(th
     e
 }
 
-
 /// MLS regular-season progress code: 1..3 -> ate_3, 4 -> 10, others unchanged.
 ///
 /// [pt] O código da MLS na temporada regular: 1..=3 viram `ate_3`, 4 vira 10, os outros ficam.
@@ -228,8 +222,6 @@ pub(crate) fn mls_progress_code(x: u8, ate_3: u8) -> u8 {
         _ => x,
     }
 }
-
-
 
 /// Serie C group progress code: 1,2 -> um_dois, 3..7 -> 0x11..0x31 in steps of 8, others unchanged.
 ///
@@ -260,7 +252,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_update_staff_records
     mineiro_end_of_stage(this, club, status, stage, game, true).0
 }
 
-
 /// The Minas Gerais state league at career creation: the year and the database competition, disciplinary rule 7 and,
 /// with no saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table
 /// with the state clubs, the fixtures, the order, the statistics and the predicted positions
@@ -271,7 +262,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_minas_gerais(this: usiz
     bra_reg_goias_construct_state_league(this, year, record, &MINEIRO_STATE_LEAGUE, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
 }
 
-
 /// the Minas Gerais league has 12 clubs: those with it as their reserve division in the database (the field that holds
 /// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegMinasGerais::create_table` (0x434810, bra_reg_minas_gerais.cpp, thiscall, ret 0).
@@ -281,7 +271,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_minas_gerais(this: usiz
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: usize) -> u32 {
     fill_state_league_table(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
 }
-
 
 /// One half of the Minas Gerais state league: when the first game of a half is processed, it builds that half's
 /// round-robin stage (a league with all the clubs of the table, the same points for a win and a draw and the same
@@ -294,7 +283,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: u
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_half_season_stage(this: usize, k: u32) {
     create_half_season_stage(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: os pontos por vitória no Mineiro
 }
-
 
 /// The Minas Gerais state league turnover: archives the season in the statistics, clears the table, the schedule and
 /// the stages (the two halves and the final) and prepares three new stage slots; moves to the next year and rebuilds

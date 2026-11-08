@@ -1,12 +1,21 @@
 use super::*;
 
-
-/// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
+/// Describes one round of the 0x41-byte table.
+///
+/// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
+/// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
+/// list ends with −1).
+///
+/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
 pub(crate) type EngSecondScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
-/// Sets dates and match slots of the rounds from `primeira` in table t (League round set_date / set_match_slot).
+/// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
+///
+/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
@@ -23,8 +32,15 @@ pub(crate) unsafe fn eng_second_set_league_rounds(t: usize, year: u32, first: i3
     }
 }
 
-
-/// A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
+/// The main stage with the Christmas rounds.
+///
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
+/// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
+/// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
+/// eighth); then the closing rounds.
+///
+/// [pt] A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
 /// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
@@ -47,17 +63,16 @@ pub(crate) unsafe fn eng_second_set_christmas_rounds(t: usize, year: u32, n: &En
     construct(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
-    let caso = if k as u32 > 6 {
+    let case = if k as u32 > 6 {
         show_error_at(file, n.linha);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[caso];
+    let middle = n.casos[case];
     eng_second_set_league_rounds(t, year, n.comeco.len() as i32, middle);
     eng_second_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
-
 
 /// a segunda e a terceira divisões inglesas (as mesmas datas): as rodadas antes do Natal
 pub(crate) const SECOND_DIVISION_START: [EngSecondScheduleRound; 23] = [
@@ -293,11 +308,6 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
     }
 }
 
-
-
-
-
-
 /// The Staff_Records object (G_STAFF_RECORDS).
 ///
 /// [pt] O registro de staff ([0xdd7f00]).
@@ -329,7 +339,7 @@ pub(crate) unsafe fn eng_second_staff_records() -> usize {
 /// rebaixamento (0x86a1c0, thiscall(registros, clube, comp), ret 8). No mata-mata (outra fase), na linha do clube da
 /// tabela (+0xb1, 0x3b bytes, +0x3e linhas): 1 (venceu a final), o acesso com peso 0x32, +0x37 = 0 e saiu = 1; 0
 /// (passou da rodada), a classificação (0xa0, 0x96, 0xf) e segue procurando; 0xff ou 2 (caiu), +0x37 = 0xfe.
-pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, saiu: usize, _a: u32, _b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, _a: u32, _b: u32) -> u32 {
     let s = status as u8;
     let comp = read_usize(this + 4);
     if stage as u8 == 0xff {
@@ -367,7 +377,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                     promotion(eng_second_staff_records(), club, comp, 0x32);
                     *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
-                    *(saiu as *mut u8) = 1;
+                    *(left as *mut u8) = 1;
                     return 0;
                 }
                 0 => {
@@ -386,7 +396,6 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
     0
 }
 
-
 /// Comp_Stats::find_club_entry (0x4a4850) for a club in this competition.
 ///
 /// [pt] A entrada do clube nas estatísticas da competição (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, clube), ret 4;
@@ -396,7 +405,12 @@ pub(crate) unsafe fn eng_second_comp_stats_club_entry(this: usize, club: usize) 
     find(read_usize(this + 8), club)
 }
 
-/// Writes the club's stage, best and worst (+0x73..+0x75) in the competition stats, remapping play-off positions.
+/// Writes the club's situation in the competition stats (+0x73 the stage, +0x74 the best, +0x75 the worst), common to
+/// the First and the Third, remapping play-off positions.
+///
+/// In the league (stage 0xff) the best and the worst from `baixo` to `alto` (the knockout slots) become `baixo`, and
+/// with the worst in that range the worst becomes `alto`; in the knockout (stage 0), 1, 2 and 3 become `baixo`, `baixo`
+/// + 1 and `baixo` + 2 (the best, the worst and the stage); in any other stage, as they came.
 ///
 /// [pt] A situação do clube nas estatísticas (+0x73 a fase, +0x74 a melhor, +0x75 a pior), comum à First e à Third: na liga
 /// (fase 0xff) a melhor e a pior de `baixo` a `alto` (as vagas do mata-mata) viram `baixo`, e com a pior nessa faixa a
@@ -413,22 +427,20 @@ pub(crate) unsafe fn set_club_stage_status(this: usize, club: usize, stage: u8, 
             p = high;
         }
     } else if stage == 0 {
-        let mapa = |v: u8| match v {
+        let map = |v: u8| match v {
             1 => low,
             2 => low + 1,
             3 => low + 2,
             _ => v,
         };
-        m = mapa(m);
-        p = mapa(p);
-        a = mapa(a);
+        m = map(m);
+        p = map(p);
+        a = map(a);
     }
     *((e + 0x73) as *mut u8) = a;
     *((e + 0x74) as *mut u8) = m;
     *((e + 0x75) as *mut u8) = p;
 }
-
-
 
 /// Comparer of the stage status: side by side on the entry's 3 bytes; only the original without an entry.
 ///
@@ -443,8 +455,6 @@ pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, club: us
     SCOREBOARD.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, club, mo, mr));
 }
 
-
-
 /// like the First one (line 0x294; the play-offs 0x576a70)
 /// Original: `EngSecond::advance_stage` (0x5769e0, eng_second.cpp, thiscall, ret 0).
 ///
@@ -453,7 +463,6 @@ pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, club: us
 pub(crate) unsafe extern "thiscall" fn eng_second_advance_stage(this: usize) {
     advance_league_stage(this, 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
 }
-
 
 /// like the First one (6th, 3rd, 5th and 4th), with +0x3a = the extra from virtual +0x3c (lines 0x2b6 and 0x2cc)
 /// Original: `EngSecond::create_play_off_stage` (0x576a70, eng_second.cpp, thiscall, ret 0).
@@ -464,7 +473,6 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_play_off_stage(this: us
     create_playoff_stage(this, [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
 }
 
-
 /// the Second Division: discipline 9, no minimum ground, the league and the play-off
 /// Original: `EngSecond::EngSecond` (0x5754a0, eng_second.cpp, thiscall, ret 8).
 ///
@@ -473,7 +481,6 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_play_off_stage(this: us
 pub(crate) unsafe extern "thiscall" fn construct_eng_second(this: usize, year: u32, record: usize) -> usize {
     construct_english_division(this, year, record, &ENG_SECOND_DIVISION)
 }
-
 
 /// the Second (24): 2 go up directly, 3rd to 6th to the play-offs, the bottom 4 go down to the Third
 /// Original: `EngSecond::set_up_rules` (0x576780, eng_second.cpp, thiscall, ret 0).
@@ -484,7 +491,6 @@ pub(crate) unsafe extern "thiscall" fn eng_second_set_up_rules(this: usize) -> u
     crate::comparison::branch("cqi_4 regras da second");
     eng_prm_apply_league_rules(this, &eng_prm_second_division_rules())
 }
-
 
 /// the Second has 24 clubs; prize fund of 20,000 per place; TV pays 2,500,000 to each club (300,000 up to 1999)
 /// Original: `EngSecond::create_table` (0x576630, eng_second.cpp, thiscall, ret 0).

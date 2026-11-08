@@ -5,7 +5,7 @@ MUTACOES = [
     ('r_tipo', "            3 => sortear(1000),\n            4 => sortear(0x708),", "            3 => sortear(1001),\n            4 => sortear(0x708),"),
     ('r_altura', "attack = match_pl_ftol(((byte(m, engine::BALL_ROLL) as i32 + 1) * attack as i16 as i32) as f64 / st);", "attack = match_pl_ftol(((byte(m, engine::BALL_ROLL) as i32 + 2) * attack as i16 as i32) as f64 / st);"),
     ('r_proprio', "        if sortear(attack as i16 as i32 + 100) != 0 {\n            return 0;\n        }\n        crate::comparison::branch(\"respond bola", "        if sortear(attack as i16 as i32 + 101) != 0 {\n            return 0;\n        }\n        crate::comparison::branch(\"respond bola", "respond bola do proprio lado"),
-    ('r_cabeca', "ficha5c * 200) != 0 { escolher(kind)", "ficha5c * 201) != 0 { escolher(kind)"),
+    ('r_cabeca', "ficha5c * 200) != 0 { choose(kind)", "ficha5c * 201) != 0 { choose(kind)"),
     ('r_nota', "    if rating < 0x96 {\n        return 0;", "    if rating < 0x95 {\n        return 0;"),
     ('r_registra', "register(m, code as u16, j as u32, 0, 0, t, *b(j, match_player::CELL_X), *b(j, match_player::CELL_Y), cartao, grav);", "register(m, code as u16, j as u32, 0, 0, t, *b(j, match_player::CELL_Y), *b(j, match_player::CELL_X), cartao, grav);", "respond falta registrada"),
     ('r_penalti', "                *((m + engine::FOULED_PLAYER) as *mut usize) = 0;\n                *w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_sub(500);\n                if sortear", "                *((m + engine::FOULED_PLAYER) as *mut usize) = 0;\n                *w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_sub(499);\n                if sortear", "respond penalty"),

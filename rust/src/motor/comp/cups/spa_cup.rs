@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// SpaCup::update_for_date(today, stage), the Copa del Rey's daily virtual: once per season (flag +0x45), when the UEFA
 /// seeding year matches the cup's year (+0x40) and the stage is not 0, it frees the old entrant, round and fixture
 /// lists and rebuilds the cup (entrants, rounds, bracket, predicted positions), returning 0 after an error box if a
@@ -36,9 +33,9 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
         }
         crate::comparison::branch("cqt_5 copa do rei refeita");
         core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
-        let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
+        let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
-        if inscritos(this) < 0 {
+        if entrants(this) < 0 {
             show_error_at(0xa82810, 0x161);
             return 0;
         }
@@ -104,9 +101,6 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours_63d770(this
 }
 
 // simplification: the history writes to the competition statistics (finds or appends entries: allocates); original only
-
-
-
 
 /// rule: the Copa del Rey has 7 rounds: preliminary (code 0xe6, 38 teams, 7 days between legs) drawn 18/8, played 30/8;
 /// 1st round 8/9 and 13/12 (64 teams, 45 new); 2nd 15/12 and 3/1; 3rd (last 16) 5/1 and 10/1, quarter-finals 19/1 and

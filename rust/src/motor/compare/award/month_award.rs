@@ -4,8 +4,8 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../award/month_award.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `award_best_rated_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_award_best_rated_player(this: usize, notas: usize, age: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_AWARD_BEST_RATED_PLAYER)(this, notas, age)
+pub(crate) unsafe extern "thiscall" fn comparar_award_best_rated_player(this: usize, notes: usize, age: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_AWARD_BEST_RATED_PLAYER)(this, notes, age)
 }
 
 /// Comparer for `set_winner` (comparison mode: see the header of motor.rs).

@@ -33,7 +33,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_
     bra_reg_pern_compare_knockout_from_table("bra_reg_bahia_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-
 /// Comparer for `bra_reg_bahia_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: como o da Série A.

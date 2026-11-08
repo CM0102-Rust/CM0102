@@ -13,7 +13,7 @@ ruins = 0
 # prologos que terminam numa instrucao relativa refeita pelo trampolim (RELATIVAS em detours.rs)
 des = open(r'D:\Sistemas\CM0102\rust\src\detours.rs', encoding='utf-8').read()
 relativas = {int(a, 16): int(k) for a, k in re.findall(r'\((0x[0-9a-f]+), (\d+)\)', des.split('pub const RELATIVAS')[1].split(';')[0])}
-for a, b in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+), bytes: &\[([^\]]*)\]', src):
+for a, b in re.findall(r'Prologue \{ address: (0x[0-9a-f]+), bytes: &\[([^\]]*)\]', src):
     a = int(a, 16); n = len(b.split(','))
     fim = a
     bs = bytes(int(x, 16) for x in b.split(','))
@@ -29,7 +29,7 @@ for a, b in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+), bytes: &\[([^\]]*)\
         print('RUIM corte: %#x' % a); ruins += 1
 # o mesmo endereco em dois prologos (motor.rs e date.rs): o segundo desvio e recusado e a rotina
 # nova nunca roda (aconteceu com 0x6d3de0/0x6d3610, ja portadas)
-todos = re.findall(r'endereco: (0x[0-9a-f]+)', src + open(r'D:\Sistemas\CM0102\rust\src\date.rs', encoding='utf-8').read())
+todos = re.findall(r'address: (0x[0-9a-f]+)', src + open(r'D:\Sistemas\CM0102\rust\src\date.rs', encoding='utf-8').read())
 for a in sorted({x for x in todos if todos.count(x) > 1}):
     print('RUIM repetido: %s ja tem prologo' % a); ruins += 1
 print('prologos com problema:', ruins)

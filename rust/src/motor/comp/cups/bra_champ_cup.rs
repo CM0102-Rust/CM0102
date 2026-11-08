@@ -1,10 +1,20 @@
 use super::*;
 
-/// Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
+/// Writes one group round (a 0x41-byte record, like the league rounds).
+///
+/// The date goes through 0x68a160 (day, month with 0 = January, weekday, code), with no years to add and value 0; and
+/// match 0 is left empty (0x68a1c0 with −1, −1, −1 and value 0).
+///
+/// [pt] Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
 pub(crate) type BraChampCupGroupRound = (u32, u32, u32, u32);
 
-/// O que a virtual +0x3c monta numa fase: nada (devolve 0 sem gravar), uma fase de grupos (as rodadas, o extra, a linha
+/// What virtual `+0x3c` builds for a stage.
+///
+/// Either nothing (returns 0 without writing), a group stage (the rounds, the extra value, the box line) or the
+/// knockout (the rounds, the extra words (round, offset, value), the box line).
+///
+/// [pt] O que a virtual +0x3c monta numa fase: nada (devolve 0 sem gravar), uma fase de grupos (as rodadas, o extra, a linha
 /// da caixa) ou o mata-mata (as rodadas, as palavras a mais (rodada, deslocamento, valor), a linha da caixa).
 #[derive(Clone, Copy)]
 pub(crate) enum BraChampCupStagePlan {
@@ -13,8 +23,14 @@ pub(crate) enum BraChampCupStagePlan {
     Mata(&'static [EngCcCupCupRound], &'static [(usize, usize, u16)], u32, &'static str),
 }
 
-/// create_schedule for the chosen stage: group stages fill a 0x41-byte league round table, knockouts a 0x68-byte cup
-/// round table with extra words; sets outputs; returns the table.
+/// The virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10) for the chosen stage `f`;
+/// sets the outputs and returns the table.
+///
+/// Group stages: é_liga (if requested) = 1, rounds, extra; the table of 0x41 bytes per round (0x944e46; out of memory,
+/// the box and 0) with the dates, the year +0x40 in 16 bits.
+///
+/// Knockout: é_liga = 0, rounds, extra = 0; the table of 0x68 bytes per round (out of memory, the box and 0), the
+/// rounds written by `eng_cc_cup_write_cup_round` with the year +0x40 signed and the extra words.
 ///
 /// [pt] A virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10) pela fase `f` escolhida. Nos
 /// grupos: é_liga (se pedido) = 1, rodadas, extra; a tabela de 0x41 bytes por rodada (0x944e46; sem memória, a caixa e
@@ -98,8 +114,13 @@ pub(crate) unsafe fn written_schedule_bytes(f: BraChampCupStagePlan, t: usize, n
     }
 }
 
-/// Side-by-side comparer of create_schedule: outputs and written table bytes must match; frees the port's table;
-/// tableless stages only run the original.
+/// Side-by-side comparer of create_schedule.
+///
+/// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
+/// both from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal; the copy's table
+/// is freed (0x9452ca).
+///
+/// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
@@ -166,7 +187,6 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize
     build_stage_schedule(this, champions_cup_stage(stage), rounds, extra, league, 0x98a1e8)
 }
 
-
 /// A Merconorte, grupos (fases abaixo de 3): seis rodadas às terças de 15 em 15 dias, de 9 de setembro a 18 de novembro.
 pub(crate) const MERCONORTE_GROUP_ROUNDS: [BraChampCupGroupRound; 6] = [(9, 8, 2, 2), (0x17, 8, 2, 2), (7, 9, 2, 2), (0x15, 9, 2, 2), (4, 0xa, 2, 2), (0x12, 0xa, 2, 2)]; // cqp10: os grupos da Merconorte
 
@@ -191,21 +211,15 @@ pub(crate) fn merconorte_stage(stage: u32) -> BraChampCupStagePlan {
     }
 }
 
-
-
 /// A Supercopa Europeia: jogo único em 24 de agosto (sorteio em 4 de julho) em campo neutro (mando 0x8000), sem prêmios.
 pub(crate) const EUROPEAN_SUPER_CUP_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((4, 6, 0, 5), (0x18, 7, 0, 4, 2, 0x8000), 0, (0, 0x83, 0), 8, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqp10: a Supercopa Europeia
 ];
 
-
-
 /// A Supercopa Asiática: ida e volta (14 dias entre os jogos) a partir de 4 de agosto, sorteio em 4 de julho, sem prêmios.
 pub(crate) const ASIAN_SUPER_CUP: [EngCcCupCupRound; 1] = [
     cql10r((4, 6, 0, 5), (4, 7, 0, 5, 2, 0), 0, (0, 0, 0x83), 6, (2, 1, 2, 0), (0, 2, 0xe), (0, 0, 0)), // cqp10: a Supercopa Asiática
 ];
-
-
 
 /// rule: the Brazilian Champions' Cup group is single round robin, 3 points a win and 1 a draw; tiebreak by codes 3, 1,
 /// 2 and 4 [inference: wins, goal difference, goals for, head-to-head]; two qualifiers; rule bits 8 (those who secure

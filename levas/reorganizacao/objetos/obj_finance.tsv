@@ -1,0 +1,41 @@
+0x0	BALANCE	8	bank balance (i64)
+0x8	CLUB_ID	4	club id (index into the club table)
+0xc	WAGE_BILL	4	weekly wage bill (squad and staff)
+0x10	HIGHEST_WAGE	4	highest wage in the wage bill
+0x14	WAGE_CEILING	4	wage ceiling (Finance::get_max_wage, adjust_max_wage)
+0x18	SEASON_TICKETS_SOLD	4	season tickets sold
+0x70	MONTH_PLAYERS_BOUGHT	8	month: transfer fees paid (i64)
+0x78	MONTH_PLAYERS_SOLD	8	month: transfer fees received (i64)
+0x80	MONTH_OTHER_COSTS	4	month: other costs
+0x88	MONTH_FINES	4	month: league fines
+0x8c	MONTH_GROUND_COSTS	4	month: ground works and stadium maintenance
+0x90	MONTH_WAGES	4	month: wages paid
+0x94	MONTH_DIVIDENDS	4	month: dividends
+0x98	MONTH_BONUSES	4	month: bonuses paid
+0x9c	MONTH_SIGN_ON_FEES	4	month: signing-on fees
+0xa0	MONTH_GATE_RECEIPTS	4	month: net gate receipts
+0xa8	MONTH_PRIZE_MONEY	4	month: prize money
+0xac	MONTH_SEASON_TICKETS	4	month: season ticket income
+0xb4	MONTH_OTHER_INCOME	4	month: other income (cash injections, takeovers, boosts)
+0xb8	MONTH_TV_REVENUE	4	month: TV revenue
+0xbc	MONTH_MERCHANDISING	4	month: merchandising income
+0xc0	LAST_SEASON_TOTALS	80	previous season's totals (copy of the 0x50-byte season block at season end)
+0x110	SEASON_PLAYERS_BOUGHT	8	season: transfer fees paid (i64)
+0x118	SEASON_PLAYERS_SOLD	8	season: transfer fees received (i64)
+0x120	SEASON_OTHER_COSTS	4	season: other costs
+0x128	SEASON_FINES	4	season: league fines
+0x12c	SEASON_GROUND_COSTS	4	season: ground works and stadium maintenance
+0x130	SEASON_WAGES	4	season: wages paid
+0x134	SEASON_DIVIDENDS	4	season: dividends
+0x138	SEASON_BONUSES	4	season: bonuses paid
+0x13c	SEASON_SIGN_ON_FEES	4	season: signing-on fees
+0x140	SEASON_GATE_RECEIPTS	4	season: net gate receipts
+0x148	SEASON_PRIZE_MONEY	4	season: prize money
+0x14c	SEASON_SEASON_TICKETS	4	season: season ticket income
+0x154	SEASON_OTHER_INCOME	4	season: other income (cash injections, takeovers, boosts)
+0x158	SEASON_TV_REVENUE	4	season: TV revenue
+0x15c	SEASON_MERCHANDISING	4	season: merchandising income
+0x160	SEASON_TICKET_RATIO	4	season tickets sold / places (f32, up to 0.875); also the gate-receipt discount
+0x164	SEASON_TICKET_STEP	1	season ticket sales step (up to 8)
+0x165	CRISIS_STATE	1	financial state: 0 normal, 1 crisis, 2 [inference: administration]
+0x166	SQUEEZE_COUNTER	1	board squeeze counter (reset to 5/0/10 by wealth band; above 10 charges the club)

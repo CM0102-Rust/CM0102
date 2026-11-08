@@ -1,0 +1,7 @@
+0x0	DAY_LISTS	4392	366 days x 3 time slices of pointers to per-key-nation fixture list arrays
+0x1128	MOVED_NEWS_QUEUE	4	list of queued fixture-moved news (created on first use)
+0x112c	OTHER_YEAR	4	fixture manager block of another year (chained, 0x1184 bytes each)
+0x1130	YEAR	2	calendar year of this block
+0x1132	LEAP_YEAR	1	1 when the year is a leap year
+0x1133	FILE_NAME	80	name of the year's fixtures file (fixtures_<year>.tmp)
+0x1183	IS_PRIMARY	1	nonzero in the main block (owns and destroys the other-year block)

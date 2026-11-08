@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// National team club of the nation with the given id (database_get_national_team).
 ///
 /// [pt] A seleção (o clube da seleção principal) da nação de id [`global`]: 0x53b3d0 database_get_national_team (push nação;
@@ -12,7 +9,10 @@ pub(crate) unsafe fn national_team_of_nation_id(id: usize) -> usize {
     national_team(read_u32_as_usize(G_NATION_TABLE) + id * nation::SIZE)
 }
 
-/// As 12 da Copa América de 2001, na ordem da lista (os grupos intercalados: A nas vagas 0, 3, 6 e 9; B nas 1, 4, 7 e
+/// The 12 nations of the 2001 Copa América, in list order (the groups interleaved: A in slots 0, 3, 6 and 9; B in 1, 4,
+/// 7 and 10; C in 2, 5, 8 and 11): the globals of the nations' ids.
+///
+/// [pt] As 12 da Copa América de 2001, na ordem da lista (os grupos intercalados: A nas vagas 0, 3, 6 e 9; B nas 1, 4, 7 e
 /// 10; C nas 2, 5, 8 e 11): os globais dos ids das nações.
 pub(crate) const COPA_AMERICA_2001_NATIONS: [usize; 12] = [
     KEY_NATION_COLOMBIA, KEY_NATION_BRAZIL, KEY_NATION_COSTA_RICA, KEY_NATION_CHILE, // cqs12: as vagas 0 a 3 (a Colômbia na 0)
@@ -20,8 +20,22 @@ pub(crate) const COPA_AMERICA_2001_NATIONS: [usize; 12] = [
     KEY_NATION_URUGUAY, KEY_NATION_VENEZUELA, KEY_NATION_PARAGUAY, KEY_NATION_BOLIVIA, // cqs12: as vagas 8 a 11 (a Bolívia na 11)
 ];
 
-/// 0x5e1cd0 GoldCup::set_up_team_list: the 12 teams (fixed in 2001; else Copa America hosts, continent nations and
-/// guests), sorted by reputation; returns 1, 0 on failure.
+/// `GoldCup::set_up_team_list()` (0x5e1cd0, thiscall, ret 0, goldcup.cpp): the 12 teams, sorted by reputation; returns
+/// 1, or 0 on failure.
+///
+/// +0xf2 = 12 and the list at +0xee (0x944e46(0x30): push; add esp, 4 -> cdecl; out of memory, the error box for line
+/// 0x37b and returns 0). In 2001 (+0x40 = 0x7d1): the 12 fixed ones (COPA_AMERICA_2001_NATIONS, each via 0x53b3d0) and
+/// returns 1, unsorted.
+///
+/// In other years: the Copa America hosts ([0x9cf7a8]) of the year (0x5fa730 HostCountry::find_hosts on [0xb5e134]:
+/// push 1; push &second; push &first; push year; push competition -> thiscall, ret 0x14; both start at −1; returns how
+/// many, signed byte) go first; then, in nation order ([0xae23a8], [0xae2350] of them, i as a word) and while the list
+/// is not full (+0xf2), the nations of continent [0x9cfa1c] (+0x71, its +0) and the guests: in 1999 (0x7cf) [0x9cf36c],
+/// in other years [0x9cf280]; and always Mexico ([0x9cf3d0]); each one enters if it is not the nation of a host (+0x53
+/// of the national team).
+///
+/// Without 12: the error box for line 0x3bc and returns 0; with 12, the list is sorted by reputation (qsort 0x945333
+/// with 0x4b07d0: 4 pushes; add esp -> cdecl) and returns 1.
 ///
 /// [pt] { 0x5e1cd0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::set_up_team_list()`: +0xf2 = 12 e a lista +0xee (0x944e46(0x30):
 /// push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x37b e devolve 0). Em 2001 (+0x40 = 0x7d1): as 12 fixas
@@ -67,11 +81,11 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     while (i as i32) < read_u32_as_usize(G_NATION_COUNT) as i32 && (k as i32) < read_u32_as_usize(this + 0xf2) as i32 {
         let continent = read_u32_as_usize(nation + nation::CONTINENT);
         let id = read_u32_as_usize(nation);
-        let entra = (continent != 0 && read_u32_as_usize(continent) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA))
+        let enters = (continent != 0 && read_u32_as_usize(continent) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA))
             || (year == 0x7cf && id == read_u32_as_usize(KEY_NATION_JAPAN))
             || (year != 0x7cf && id == read_u32_as_usize(KEY_NATION_CANADA))
             || id == read_u32_as_usize(KEY_NATION_MEXICO);
-        if entra {
+        if enters {
             let l = read_u32_as_usize(this + 0xee);
             let sede = (0..how_many.max(0) as usize).any(|j| read_u32_as_usize(read_u32_as_usize(l + j * 4) + 0x53) == nation);
             if !sede {
@@ -106,8 +120,9 @@ pub(crate) unsafe extern "thiscall" fn set_up_team_list(this: usize) -> u32 {
     build_gold_cup_team_list(this)
 }
 
-
-/// As posições previstas da Copa América, pela ordem de reputação das 12.
+/// The predicted positions of the Copa América, in order of reputation of the 12 teams.
+///
+/// [pt] As posições previstas da Copa América, pela ordem de reputação das 12.
 pub(crate) const COPA_AMERICA_PREDICTED_PLACES: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0xa, 0xa];
 
 /// Rule: the Copa América predicted positions by reputation: 1, 2, 3, 3, four 5ths, 9 and three 10ths.
@@ -208,9 +223,6 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
 // +0x30 = −1, +0xba = 0 and +0x4c = 0 (the rules write the round table again at +0xba: only checked that it exists
 // quando havia antes).
 
-
-
-
 /// Team k of the drawn list (+0xee).
 ///
 /// [pt] A seleção k da lista dos sorteados (+0xee, ponteiros: os 12 em grupos intercalados, o grupo j nas vagas j, j + 3,
@@ -251,7 +263,7 @@ pub(crate) unsafe fn drawn_team(this: usize, k: usize) -> usize {
 /// e +0x45 = 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja
 /// devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let selecoes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_GOLDCUP_SET_UP_TEAM_LIST);
+    let national_teams: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_GOLDCUP_SET_UP_TEAM_LIST);
     let first: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_GOLDCUP_CREATE_GROUP_TABLE);
     let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
@@ -269,7 +281,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
     }
     if year_of_today == year && day_of_today == day && read_u32_as_usize(this + league::ACTIVE) == 0 && full == 0 {
         crate::comparison::branch("cqr_13 sorteio da copa america");
-        selecoes(this);
+        national_teams(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
         predicted(this);
         if first(this) == 0 {
@@ -432,7 +444,15 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
 // stage at [+0xc][g], +0x30 = g, the stage with 4 teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
 
-/// Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
+/// One operation of building the round table, in the original routine's order.
+///
+/// `D` the date of a group round (0x68a160: round, day, month with 0 = January, years to add, weekday, code, value;
+/// records of 0x41 bytes), `L` a match of the group round (0x68a1c0: round, match, a, b, c, value), `S` the draw of a
+/// cup round (0x521e60: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
+/// (0x521eb0: round, day, month, years, weekday, time, home side), `E` a day of the tie (0x521f10: round, slot,
+/// weekday, time, code, home side) and `B`/`W`/`X` writing a byte/word/dword at the given offset of the table.
+///
+/// [pt] Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
 /// rodada, dia, mês com 0 = janeiro, anos a somar, dia da semana, código, valor; registros de 0x41 bytes), `L` um jogo
 /// da rodada de grupo (0x68a1c0: rodada, jogo, a, b, c, valor), `S` o sorteio de uma rodada de copa (0x521e60: rodada,
 /// dia, mês, anos, dia da semana; registros de 0x68 bytes), `J` o jogo da rodada de copa (0x521eb0: rodada, dia, mês,
@@ -451,7 +471,13 @@ pub(crate) enum GoldcupScheduleOp {
 }
 pub(crate) use GoldcupScheduleOp::{B as Cqp12B, D as Cqp12D, E as Cqp12E, J as Cqp12J, L as Cqp12L, S as Cqp12S, W as Cqp12W, X as Cqp12X};
 
-/// Uma fase da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`): o é_liga gravado (se pedido), as
+/// Describes one stage of virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`).
+///
+/// It holds the é_liga written (if requested), the rounds, the extra (only if the pointer is not null, when
+/// `extra_checa`), the table size, the error-box line when out of memory, the common operations and the stage's own
+/// operations (the matches of each group) and the counter name. `None`: the stage returns 0 without writing anything.
+///
+/// [pt] Uma fase da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`): o é_liga gravado (se pedido), as
 /// rodadas, o extra (só se o ponteiro não é nulo, quando `extra_checa`), o tamanho da tabela, a linha da caixa sem
 /// memória, as operações comuns e as da fase (os jogos de cada grupo) e o nome do contador. `None`: a fase devolve 0
 /// sem gravar nada.
@@ -468,8 +494,11 @@ pub(crate) struct GoldcupStagePlan {
     pub(crate) nome: &'static str,
 }
 
-/// Builds a tournament phase's round table: outputs, allocation and the date/match operations in order; 0 without the
-/// phase or memory.
+/// Builds the round table of tournament phase `f`, or returns 0 without it.
+///
+/// It writes the outputs, the table (0x944e46; when out of memory, the error box `linha` of source file `arquivo` and
+/// 0) and the operations in order. The cup year (+0x40) goes as clean 16 bits to 0x68a160 (the original routine pushes
+/// the register with garbage in the high 16 bits; 0x68a160 only uses the word) and signed to the cup routines.
 ///
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
@@ -550,7 +579,13 @@ pub(crate) unsafe fn phase_table_written_bytes(ops: &[GoldcupScheduleOp], ops2: 
     v
 }
 
-/// Side-by-side comparer for a phase table: outputs and written bytes must match; frees the copy's table.
+/// Side-by-side comparer for a phase table.
+///
+/// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
+/// both from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal; the copy's table
+/// is freed (0x9452ca).
+///
+/// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
@@ -661,22 +696,31 @@ pub(crate) const AFRICAN_NATIONS_KNOCKOUT_OPS: [GoldcupScheduleOp; 80] = [
     Cqp12B(0x14f, 0xa), Cqp12W(0x150, 2), Cqp12W(0x152, 1), Cqp12W(0x154, 0), Cqp12W(0x147, 0), Cqp12W(0x156, 0),
     Cqp12B(0x158, 0), Cqp12B(0x159, 1), Cqp12B(0x15a, 0), Cqp12X(0x194, 0), Cqp12X(0x198, 0), Cqp12X(0x19c, 0),
 ];
-/// A Copa das Confederações, as três rodadas de cada grupo (29 de julho, 1º e 4 de agosto) com o jogo 2 vazio.
+/// The Confederations Cup: the three rounds of each group (29 July, 1 and 4 August) with match 2 empty.
+///
+/// [pt] A Copa das Confederações, as três rodadas de cada grupo (29 de julho, 1º e 4 de agosto) com o jogo 2 vazio.
 pub(crate) const CONFED_CUP_GROUP_ROUNDS: [GoldcupScheduleOp; 6] = [
     Cqp12D(0, 0x1d, 6, 0, 5, 2, 1), Cqp12L(0, 2, -1, -1, -1, 0), Cqp12D(1, 1, 7, 0, 1, 1, 1),
     Cqp12L(1, 2, -1, -1, -1, 0), Cqp12D(2, 4, 7, 0, 4, 2, 1), Cqp12L(2, 2, -1, -1, -1, 0),
 ];
-/// A Copa das Confederações, os jogos do grupo da fase −1.
+/// The Confederations Cup: the group matches of stage −1.
+///
+/// [pt] A Copa das Confederações, os jogos do grupo da fase −1.
 pub(crate) const CONFED_CUP_GROUP_A_OPS: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 6, 1, 3, 4), Cqp12L(0, 1, 6, 2, 3, 0x40), Cqp12L(1, 0, 1, 1, 3, 4), Cqp12L(1, 1, 1, 2, 3, 0x40),
     Cqp12L(2, 0, 3, 1, 3, 4), Cqp12L(2, 1, 3, 2, 3, 0x40),
 ];
-/// A Copa das Confederações, os jogos do grupo da fase 0.
+/// The Confederations Cup: the group matches of stage 0.
+///
+/// [pt] A Copa das Confederações, os jogos do grupo da fase 0.
 pub(crate) const CONFED_CUP_GROUP_GAMES: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 5, 1, 3, 0x40), Cqp12L(0, 1, 5, 2, 3, 4), Cqp12L(1, 0, 2, 1, 3, 0x40), Cqp12L(1, 1, 2, 2, 3, 4),
     Cqp12L(2, 0, 4, 1, 3, 4), Cqp12L(2, 1, 4, 2, 3, 0x40),
 ];
-/// A Copa das Confederações, o mata-mata em jogo único: semifinal em 6/8, final em 9/8 e terceiro lugar em 8/8.
+/// The Confederations Cup: the single-match knockout, with the semi-final on 6 August, the final on 9 August and the
+/// third-place match on 8 August.
+///
+/// [pt] A Copa das Confederações, o mata-mata em jogo único: semifinal em 6/8, final em 9/8 e terceiro lugar em 8/8.
 pub(crate) const CONFED_CUP_KNOCKOUT: [GoldcupScheduleOp; 57] = [
     Cqp12S(0, 5, 7, 0, 5), Cqp12J(0, 6, 7, 0, 6, 1, 1), Cqp12E(0, 0, 6, 1, 3, 0x40), Cqp12E(0, 1, 6, 1, 3, 4),
     Cqp12E(0, 2, -1, -1, -1, 0), Cqp12W(0x7, 0x82), Cqp12W(0x9, 0), Cqp12W(0xb, 0), Cqp12W(0xd, 0x383),
@@ -727,7 +771,6 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_schedule(this: usize, stag
     build_phase_table(this, copa_america_phase(stage), rounds, extra, league, 0x9cd640)
 }
 
-
 /// African Nations Cup phase description (groups below 3, knockout at 3).
 ///
 /// [pt] A fase da Copa Africana: abaixo de 3 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1, 0, 1 e 2), 3 o
@@ -752,8 +795,6 @@ pub(crate) fn african_nations_phase(fase: u32) -> Option<GoldcupStagePlan> {
     }
 }
 
-
-
 /// Confederations Cup phase description (groups below 1, knockout at 1).
 ///
 /// [pt] A fase da Copa das Confederações: abaixo de 1 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1 e 0), 1 o
@@ -775,8 +816,6 @@ pub(crate) fn confed_cup_phase(fase: u32) -> Option<GoldcupStagePlan> {
         None
     }
 }
-
-
 
 /// Writes the byte/word rule fields of a national-team tournament league; the win points (+0xc2) come separately.
 ///
@@ -804,7 +843,6 @@ pub(crate) unsafe fn competition_date_word(this: usize, day: u32, month: u32, ye
     data(d.as_mut_ptr(), day, month, a, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
-
 
 /// Runs the original set_up_rules and checks the fields, +0xb6 date, +0xb8 and return value 1.
 ///
@@ -854,12 +892,10 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 
 pub(crate) const AFRICAN_NATIONS_RULE_FIELDS: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
     (0xc3, 1, 1), (0xc4, 1, 0xa), (0xc5, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
-
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 pub(crate) const OCEANIA_RULE_FIELDS: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x43, 1, 2), (0xc6, 1, 2), (0x3c, 2, 1), (0xc3, 1, 1),
     (0xc4, 1, 0xa), (0xc5, 1, 1), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
-
 
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
@@ -872,7 +908,6 @@ pub(crate) const OCEANIA_RULE_FIELDS: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0
 pub(crate) unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
     con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
-
 
 /// rule: the Copa America follows the African Nations Cup rule with two group stages (the knockout at stage 2)
 /// Original: `GoldCup::update_staff_records_for_status` (0x5e13b0, goldcup.cpp, thiscall, ret 0x18).

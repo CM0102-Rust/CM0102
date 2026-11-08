@@ -21,6 +21,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this:
 
 /// Comparer for `con_merc_cup_select_invited_clubs` (comparison mode: see the header of motor.rs).
 ///
+/// Side by side: +0xf2, [0xb67a34] and the random generator's state, starting from the same state (the copy draws
+/// without counting); the original routine leaves its list at +0xee, the copy builds its own, compared over the 16
+/// slots and freed.
+///
+/// The draws of the nations' lists stay on each one's stack: only the final list and the random generator count.
+///
 /// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
 /// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
@@ -57,12 +63,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_club
 /// Comparer for `con_merc_cup_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_MERC_CUP_UPDATE_FOR_DATE);
-    let sorteia = read_u32_as_usize(this + 0x45) == 0
+    let draws = read_u32_as_usize(this + 0x45) == 0
         && full != 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
         && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(today as *const u16);
     let r = o(this, today, full);
-    if sorteia {
+    if draws {
         let stages = read_u32_as_usize(this + 0xc);
         let ok = read_u32_as_usize(this + 0x45) == 1
             && read_u32_as_usize(this + 0xee) == 0

@@ -1,10 +1,19 @@
 use super::*;
 
-
-
-
-/// Brazilian Série A/B play-off: builds the 4-club list from table rows, creates the Cup_Stage in the first stage slot,
-/// sets up round 0, frees the list, sets +0x30 = 0.
+/// The play-off of a Brazilian Série (the same template in A and B, checked instruction by instruction: only the source
+/// file and the box lines change): builds the 4-club list, creates the Cup_Stage in the first stage slot, sets up round
+/// 0, frees the list and sets +0x30 = 0.
+///
+/// The list of 4 (malloc 0x944e46 of 0x10; out of memory: the box `linha_sem_lista` and return) with the clubs of the
+/// table's `linhas`, in this order (the ties: 0 × 1, 2 × 3); the virtual +0x3c (create_round_table: thiscall(this,
+/// stage 0, &rounds, &extra, 0), ret 0x10) builds the round table.
+///
+/// The new stage (operator new 0x944cf1 of 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the league, 4, the
+/// list, the rounds, +4, the table, the year +0x40, 0, 1, the extra, 0x14, 0, 0, 0 and no seed: the order is not by
+/// seeds) goes to the first stage slot ([+0xc]) and the round table is freed (free 0x9452ca).
+///
+/// No stage: the box `linha_sem_fase`, the list freed and return. With it: Cup::set_up_round (0x51c800, thiscall(stage,
+/// 0), ret 4), the list freed and +0x30 = 0. The original's SEH frame only covers the constructor (no destructor).
 ///
 /// [pt] O play-off de uma Série (o mesmo molde na A e na B, conferido instrução a instrução: só mudam o fonte e as linhas
 /// das caixas): a lista dos 4 (malloc 0x944e46 de 0x10; sem memória: a caixa `linha_sem_lista` e volta) com os clubes
@@ -55,8 +64,11 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
 }
 
-/// Série advance_stage: error box on the last stage; else increments +0x30 and builds the play-off when it reaches 0
-/// (end of league phase).
+/// The next stage of a Série (`advance_stage`, slot 11, +0x28).
+///
+/// At the last stage (+0x30 ≥ +0x2c − 1, signed), the error box and nothing else; otherwise +0x30 goes up by one and,
+/// on reaching 0 (the end of the round-robin phase), builds the play-off (`play_off`, direct call with the league's ecx
+/// -> thiscall, ret 0).
 ///
 /// [pt] A fase seguinte de uma Série (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o play-off
@@ -94,11 +106,13 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage(this:
     create_play_off_stage(this, &[0, 3, 1, 2], 0x98aa30, 0x286, 0x29d, "cqq_7 serie a"); // cqq7: 1º × 4º, 2º × 3º Série A
 }
 
-
-
-
-/// Comparer of the play-off creation: original only, then checks the stage exists with 4 teams, the league's +4, the
-/// planned clubs (as a set) and +0x30 = 0.
+/// Comparer of the play-off creation: runs only the original routine and then checks the new stage against the plan.
+///
+/// Only the original runs (it allocates the list, the table and the stage and draws the round), with the plan made
+/// beforehand: the clubs of the rows.
+///
+/// Afterwards, the stage in the first slot must exist, with +0x3e = 4, +4 = the league's +4 and the first 4 clubs of
+/// its list (+0xa7, 6 bytes) equal to those of the plan (as a set: the round draw may reorder them), and +0x30 = 0.
 ///
 /// [pt] O comparador do play-off: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = 4, +4 = o +4 da liga e os 4
@@ -121,11 +135,6 @@ pub(crate) unsafe fn compare_play_off_stage(name: &str, this: usize, rows: &[usi
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + cup::TEAM_COUNT)));
 }
 
-
-
-
-
-
 /// Competition object whose id is in global `global` (table G_COMP_OBJECT_TABLE).
 ///
 /// [pt] A competição de id [`global`] (a tabela das competições [0xadadfc]).
@@ -141,8 +150,17 @@ pub(crate) unsafe fn bra_nat_first_call_virtual_no_args(c: usize, deslocamento: 
     f(c)
 }
 
-/// Common Série season rollover: frees table and rounds, archives stats, destroys stages, advances the year, then
-/// re-creates rules, table, fixtures and sort, predicted positions; false after an error box.
+/// The common body of the season rollover of a Brazilian Série (the same as the state leagues' rollover, `cqp_7..9`):
+/// frees and rebuilds everything; returns false after an error box.
+///
+/// The table is freed (League::free_table `0x687970`, thiscall(this, 0), ret 4); the list at `+0xba` is freed (free
+/// `0x9452ca`) and zeroed; with statistics (`+8`), Comp_Stats::archive_season_and_reset (`0x4a1c50`, thiscall(`+8`, 1),
+/// ret 4); with the current stage ≥ 0, the existing stages 0..=`+0x30` are destroyed (virtual 0 with 1); the year
+/// (`+0x40`, word) goes up by `ano` and `+0x30` = −1.
+///
+/// Then, each with its own box if it returns 0: the rules (virtual `+0x8c`), the table (`tabela`, thiscall, ret 0), the
+/// fixtures (League::create_fixtures `0x6835c0`, thiscall, ret 0) and the table order (League::sort_table `0x6827d0`,
+/// thiscall(this, 0), ret 4); finally the predicted positions (virtual `+0x5c`). Returns false after a box.
 ///
 /// [pt] O corpo comum da virada de uma Série (o mesmo da virada dos estaduais, cqp_7..9): a tabela liberada
 /// (League::free_table 0x687970, thiscall(this, 0), ret 4); a lista de +0xba liberada (free 0x9452ca) e zerada; com
@@ -205,19 +223,27 @@ pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows
     true
 }
 
-/// Common rollover end: sets each club's board expectations and renews the officials; returns the latter's eax.
+/// The common end of the season rollover: sets each club's board expectations (League::set_club_season_expectations
+/// 0x68aa80, thiscall, ret 0) and renews the officials (OfficialsManager::renew_officials 0x79cee0,
+/// thiscall([0xb74340], +4), ret 4), whose eax the rollover returns.
 ///
 /// [pt] O fim comum: as expectativas da diretoria de cada clube (League::set_club_season_expectations 0x68aa80, thiscall,
 /// ret 0) e a renovação dos árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4),
 /// cujo eax a virada devolve.
 pub(crate) unsafe fn set_expectations_and_renew_officials(this: usize) -> u32 {
-    let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
-    expectativas(this);
+    let expectations: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
+    expectations(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqq8: os árbitros
 }
 
-/// As viradas das outras catorze competições do Brasil, na ordem da original: a Série B, a Série C e os doze estaduais
+/// The season turnovers of the other fourteen competitions in Brazil, in the original routine's order.
+///
+/// Série B, Série C and the twelve state leagues (Baiano, Centro-Oeste, Gaúcho, Goiano, Mineiro, Norte, Nordeste,
+/// Paranaense, Pernambucano, Carioca, Catarinense and Paulista: the id globals 0x9cf9e0, 0x9cf9ac, 0x9cf9c0, 0x9cf998,
+/// 0x9cf9c8, 0x9cf9b4, 0x9cf9d4, 0x9cf994, 0x9cf9a4, 0x9cf9d0, 0x9cf9bc, 0x9cf9dc, 0x9cf9b0, 0x9cf9e4).
+///
+/// [pt] As viradas das outras catorze competições do Brasil, na ordem da original: a Série B, a Série C e os doze estaduais
 /// (Baiano, Centro-Oeste, Gaúcho, Goiano, Mineiro, Norte, Nordeste, Paranaense, Pernambucano, Carioca, Catarinense e
 /// Paulista: os globais de id 0x9cf9e0, 0x9cf9ac, 0x9cf9c0, 0x9cf998, 0x9cf9c8, 0x9cf9b4, 0x9cf9d4, 0x9cf994, 0x9cf9a4,
 /// 0x9cf9d0, 0x9cf9bc, 0x9cf9dc, 0x9cf9b0, 0x9cf9e4).
@@ -291,13 +317,6 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegatio
     r
 }
 
-
-
-
-
-
-
-
 /// True when the club's competition pointer at campo (+0x57 national division) is set and its id equals global g's.
 ///
 /// [pt] O clube está na competição do global `g`: o ponteiro do clube em `campo` (+0x57 a divisão nacional) não é nulo e o
@@ -307,8 +326,15 @@ pub(crate) unsafe fn club_in_comp_global(club: usize, field: usize, g: usize) ->
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
-/// Common Série A/B create_table: n clubs (+0x3e), allocates the table and fills rows with the division's clubs in
-/// database order; 1 if full.
+/// The common body of the Série A and Série B table setup (the same template as the state leagues): fills the table
+/// with the division's clubs; returns 1 if it is full.
+///
+/// +0x3e = `n` clubs; the table (malloc 0x944e46 of n × 0x3b; out of memory: the error box of source `arquivo` at line
+/// `linha` and returns 0); the clubs of [0xae23b4] (0x245 bytes, [0xae235c] of them) in the competition of global `g`,
+/// in database order, each in the next row (League::init_table_row 0x687430: thiscall(league, row, club, 0, 0), ret
+/// 0x10), until full.
+///
+/// `girar` is 0 (the original: row k gets the k-th club); it exists only for each division's mutations.
 ///
 /// [pt] O corpo comum da Série A e da Série B (o mesmo molde dos estaduais): +0x3e = `n` clubes; a tabela (malloc 0x944e46
 /// de n × 0x3b; sem memória: a caixa do fonte `arquivo` na linha `linha` e devolve 0); os clubes de [0xae23b4] (0x245
@@ -370,8 +396,6 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_table(this: usize) -
     1
 }
 
-
-
 /// The clubs of global g's competition (pointer at campo) in database order, up to n.
 ///
 /// [pt] Os clubes da competição do global `g` (ponteiro em `campo`), na ordem do banco, até `n`.
@@ -388,8 +412,14 @@ pub(crate) unsafe fn division_clubs_plan(n: usize, field: usize, g: usize) -> Ve
     plan
 }
 
-/// Comparer of Série A/B create_table: original only, then checks +0x3e, the return and the table rows against the
-/// planned clubs.
+/// Comparer of the Série A and Série B table creation: runs only the original routine, then checks +0x3e, the return
+/// value and the table rows against the planned clubs.
+///
+/// The original allocates the table (and in Série A pays the TV money with a news item), so only it runs. The plan,
+/// made beforehand: the division's clubs in database order (up to `n`).
+///
+/// Afterwards: +0x3e = `n`, the return value = 1 if the plan filled up (otherwise 0) and the table rows (+0 the club,
+/// 0x3b bytes) hold the planned clubs, in order.
 ///
 /// [pt] O comparador da Série A e da Série B: a original aloca a tabela (e na A paga a TV com notícia): só ela. O plano,
 /// feito antes: os clubes da divisão na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano
@@ -408,12 +438,6 @@ pub(crate) unsafe fn compare_division_table(name: &str, this: usize, n: i16, g: 
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
-
-
-
-
-
-
 
 /// Creates the main stage schedule via vtable slot 16 (create_schedule, stage -1, outputs +0xa9/+0x3a) and stores the
 /// pointer in +0xba.
@@ -523,13 +547,6 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -
     create_main_schedule(this);
     1
 }
-
-
-
-
-
-
-
 
 /// Staff_Records add_qualified_for_round_record (club, comp, stage, round, weight).
 ///
@@ -756,9 +773,4 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_update_staff_records_for_st
     let _ = (a4, a5, a6);
     serie_a_staff_records(this, club, status, stage, true).0
 }
-
-
-
-
-
 

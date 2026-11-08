@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Club k of the 8 selected (+0xee: group A slots 0..3, B 4..7).
 ///
 /// [pt] O clube k dos 8 escolhidos (+0xee, ponteiros: o grupo A nas vagas 0..3, o B nas 4..7), a que as duas tabelas leem.
@@ -216,10 +213,9 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
 // stage in [+0xc][0], +0x30 = 0, the stage with 4 teams and the cup year and, in its table (+0xb1, rows of 0x3b bytes), the
 // escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
 
-
-
-
-/// Os clubes de uma origem para a Oceania: até 20, na ordem da tabela de clubes.
+/// The clubs of one source for the Oceania competition: up to 20, in the order of the club table.
+///
+/// [pt] Os clubes de uma origem para a Oceania: até 20, na ordem da tabela de clubes.
 pub(crate) struct SourceClubList {
     pub(crate) clubes: [usize; 20],
     pub(crate) n: i16,
@@ -230,7 +226,9 @@ impl SourceClubList {
         SourceClubList { clubes: [0; 20], n: 0 }
     }
 
-    /// Entra se cabe (a conta é palavra com sinal, < 20).
+    /// Adds the club if it fits (the count is a signed word, < 20).
+    ///
+    /// [pt] Entra se cabe (a conta é palavra com sinal, < 20).
     fn cabe(&self) -> bool {
         self.n < 0x14
     }
@@ -240,14 +238,23 @@ impl SourceClubList {
         self.n += 1;
     }
 
-    /// Ordena pela reputação e embaralha a faixa de cima (0x4afbd0 comp_util_sort_and_shuffle_top_clubs: push quantos;
+    /// Sorts by reputation and shuffles the top band.
+    ///
+    /// Uses 0x4afbd0 comp_util_sort_and_shuffle_top_clubs (push how many; push the count; push list; add esp -> cdecl;
+    /// draws at random).
+    ///
+    /// [pt] Ordena pela reputação e embaralha a faixa de cima (0x4afbd0 comp_util_sort_and_shuffle_top_clubs: push quantos;
     /// push a conta; push lista; add esp -> cdecl; sorteia).
     unsafe fn ordenar(&mut self, quantos: u32) {
         let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
         f(self.clubes.as_mut_ptr() as usize, self.n as u16 as u32, quantos);
     }
 
-    /// O primeiro da lista e o primeiro depois dele de outra nação (+0x53), como a original: percorre as `n` vagas; vaga
+    /// The first club of the list and the first one after it from another nation (+0x53), as in the original.
+    ///
+    /// It walks the `n` slots; an empty slot does not count as the first.
+    ///
+    /// [pt] O primeiro da lista e o primeiro depois dele de outra nação (+0x53), como a original: percorre as `n` vagas; vaga
     /// vazia não conta como primeiro.
     unsafe fn dois_de_nacoes_diferentes(&self) -> (usize, usize) {
         let (mut a, mut b) = (0usize, 0usize);
@@ -277,8 +284,28 @@ pub(crate) unsafe fn place_pot_pair(this: usize, k: usize, first: usize, second:
     }
 }
 
-/// Port of OceaniaClubChamp::select_qualified_clubs (0x798220): builds the 8-club list from the NSL champion and
-/// Oceania nations' clubs by drawn pairs.
+/// `OceaniaClubChamp::select_qualified_clubs()` (`0x798220`, thiscall, ret 0, `oceania_club_champ.cpp`): builds the
+/// 8-club list of the Oceania Club Championship from the Australian champion and the clubs of the Oceania nations, by
+/// drawn pairs.
+///
+/// Sets `+0xf2` = 8 and allocates list `+0xee` (`0x944e46(0x20)`: push; add esp, 4 -> cdecl; out of memory, the box of
+/// line `0x307` and returns 0). The champion of the last record of the Australian league (`0x4afd80`
+/// comp_util_get_latest_placed_club: push 0; push competition `0xae23d0` + 0x6b × [`0x9cf89c`]; add esp, 8 -> cdecl).
+///
+/// The clubs ([`0xae23b4`], 0x245 bytes, [`0xae235c`] − 2 × [`0xae2350`] of them) from an Oceania nation ([`0x9cfa18`]:
+/// `+0x71` of the nation, its `+0`) go, by nation id, to the lists of New Zealand ([`0x9cf3f4`]), Australia
+/// ([`0x9cf224`]), Tahiti ([`0x9cf4b4`]) and Fiji ([`0x9cf2f8`]), up to 20 in each (the count is a signed word); the
+/// others (or when the list is full) go to the Melanesian list (`0x53d900` database_is_melanesian_nation: push nation;
+/// add esp -> cdecl; when full, the club is left out) or, otherwise, the Polynesian list (`0x53d940` with the nation
+/// again), up to 20. Without a champion, the best Australian (the list with a drawn range of 1) takes its place.
+///
+/// The pairs, each drawn between groups A (slots 0..3) and B (4..7) by `0x90cfc0(2)`: the champion and the best New
+/// Zealander (slots 0/4); the best from Fiji and from Tahiti (1/5); the first two Melanesians from different nations
+/// (2/6, the range of 2); the two Polynesians (3/7). Returns 1.
+///
+/// The original routine keeps the lists on the stack without zeroing them; with fewer clubs than it reads, it reads
+/// leftovers; the copy reads zero [inference: in this career the lists have enough clubs; the comparer checks the
+/// list].
 ///
 /// [pt] { 0x798220 } (thiscall, ret 0, oceania_club_champ.cpp): `OceaniaClubChamp::select_qualified_clubs()`: +0xf2 = 8 e a
 /// lista +0xee (0x944e46(0x20): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x307 e devolve 0). O campeão
@@ -367,7 +394,6 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
     select_qualified_clubs(this)
 }
-
 
 /// rule: the Oceania Club Championship moves on one stage when the current one ends; after the groups (on reaching 1)
 /// it builds the semi-finals; going past the last stage is an error
@@ -464,7 +490,15 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
 // simplification: allocates the stage and builds the round: does not run twice. Original only; the plan: the stage at [+0xc][1] with 4 teams,
 // the cup’s +4 and the 4 crossed ones (read earlier) in its list (+0xa7, 6 bytes; as a set: the round may reorder).
 
-/// Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
+/// One operation of building the round table, in the original routine's order.
+///
+/// `D` the date of a group round (0x68a160: round, day, month with 0 = January, years to add, weekday, code, value;
+/// records of 0x41 bytes), `L` a match of the group round (0x68a1c0: round, match, a, b, c, value), `S` the draw of a
+/// cup round (0x521e60: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
+/// (0x521eb0: round, day, month, years, weekday, time, home side), `E` a day of the tie (0x521f10: round, slot,
+/// weekday, time, code, home side) and `B`/`W`/`X` writing a byte/word/dword at the given offset of the table.
+///
+/// [pt] Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
 /// rodada, dia, mês com 0 = janeiro, anos a somar, dia da semana, código, valor; registros de 0x41 bytes), `L` um jogo
 /// da rodada de grupo (0x68a1c0: rodada, jogo, a, b, c, valor), `S` o sorteio de uma rodada de copa (0x521e60: rodada,
 /// dia, mês, anos, dia da semana; registros de 0x68 bytes), `J` o jogo da rodada de copa (0x521eb0: rodada, dia, mês,
@@ -483,7 +517,13 @@ pub(crate) enum OceaniaClubChampScheduleOp {
 }
 pub(crate) use OceaniaClubChampScheduleOp::{B as Cqq12B, D as Cqq12D, E as Cqq12E, J as Cqq12J, L as Cqq12L, S as Cqq12S, W as Cqq12W, X as Cqq12X};
 
-/// Uma fase da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`): o é_liga gravado (se pedido), as
+/// Describes one stage of virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`).
+///
+/// It holds the é_liga written (if requested), the rounds, the extra (only if the pointer is not null, when
+/// `extra_checa`), the table size, the error-box line when out of memory, the common operations and the stage's own
+/// operations (the matches of each group) and the counter name. `None`: the stage returns 0 without writing anything.
+///
+/// [pt] Uma fase da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`): o é_liga gravado (se pedido), as
 /// rodadas, o extra (só se o ponteiro não é nulo, quando `extra_checa`), o tamanho da tabela, a linha da caixa sem
 /// memória, as operações comuns e as da fase (os jogos de cada grupo) e o nome do contador. `None`: a fase devolve 0
 /// sem gravar nada.
@@ -500,8 +540,11 @@ pub(crate) struct OceaniaStage {
     pub(crate) nome: &'static str,
 }
 
-/// Runs a stage spec: writes outputs, allocates the table and applies its date/match operations; 0 without stage or
-/// memory.
+/// Runs stage `f` (or returns 0 without it): the outputs, the table (0x944e46; out of memory, the box `linha` of source
+/// file `arquivo` and 0) and the date/match operations in order.
+///
+/// The cup's year (+0x40) goes as clean 16 bits to 0x68a160 (the original pushes the register with garbage in the high
+/// 16 bits; 0x68a160 only uses the word) and signed to the cup ones.
 ///
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
@@ -582,7 +625,13 @@ pub(crate) unsafe fn oceania_club_champ_written_table_bytes(ops: &[OceaniaClubCh
     v
 }
 
-/// Side-by-side comparer of the stage table builder: outputs and written bytes must match; frees the copy's table.
+/// Side-by-side comparer of the stage table builder.
+///
+/// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
+/// both from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal; the copy's table
+/// is freed (0x9452ca).
+///
+/// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
@@ -675,10 +724,11 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: 
     build_stage_table(this, oceania_stage_spec(stage), rounds, extra, league, 0xa6a068)
 }
 
-
-
-/// Builds the 16-team table of the Asian cups (+0x3e = 16, table at +0xa7 from the qualified list +0xb2); returns 1, -1
-/// without memory.
+/// The 16-team table of the Asian cups (AsiaClubChamp::build_team_table 0x40b620 and AsiaCupWinner::create_team_entries
+/// 0x40d4d0, the same body).
+///
+/// +0x3e = 16 and the table (0x944e46 of 0x60 at +0xa7; out of memory, the box `linha` of `arquivo` and −1); slot i
+/// gets club i of the qualified list (+0xb2, pointers; `ordem` gives the index) with class and status 0. Returns 1.
 ///
 /// [pt] A tabela dos 16 times das copas asiáticas (AsiaClubChamp::build_team_table 0x40b620 e AsiaCupWinner::
 /// create_team_entries 0x40d4d0, o mesmo corpo): +0x3e = 16 e a tabela (0x944e46 de 0x60 em +0xa7; sem memória, a caixa

@@ -1,9 +1,5 @@
 use super::*;
 
-
-
-
-
 /// Writes value v into news item slot k (NEWSITEM set_slot).
 pub(crate) unsafe fn set_news_slot(n: usize, k: i8, v: u32) {
     let f: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
@@ -20,12 +16,12 @@ pub(crate) unsafe fn set_news_person_slots(n: usize, k: i8, p: usize) {
     set_news_slot(n, k + 3, read_u32(read_usize(p + staff::COMMON_NAME) + 0x33));
 }
 
-
-/// O ensaio das notícias: a cópia para no ponto em que montaria a notícia (que sorteia e vai às caixas dos técnicos).
+/// The rehearsal of the news items: the copy stops at the point where it would build the news item (which draws at
+/// random and goes to the managers' inboxes).
+///
+/// [pt] O ensaio das notícias: a cópia para no ponto em que montaria a notícia (que sorteia e vai às caixas dos técnicos).
 pub(crate) static mut FINE_NEWS_DRY_RUN: bool = false;
 pub(crate) static mut FINE_NEWS_WOULD_BUILD: bool = false;
-
-
 
 /// Posts the news of a fined player's reaction: for a player under contract at a human club, news 0xbc6 with reason,
 /// reaction, random(2), personality, period, contract type, future transfer and effects.
@@ -45,7 +41,7 @@ pub(crate) static mut FINE_NEWS_WOULD_BUILD: bool = false;
 /// personalidade (+0x5d + +0x5b abaixo de 12, +0x59 abaixo de 6 e reputação +0xb acima de 5250), prazo 1, o contrato
 /// de tipo 7 (+0x4f), a transferência futura (0x8cca10), os efeitos e o jogo pelo tipo (+0x4f 1 com mais de 23 anos,
 /// ou 2).
-pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, reason: u32, reacao: u32, prazo: u32, efeitos: u32) {
+pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, reason: u32, reacao: u32, deadline: u32, efeitos: u32) {
     if player == 0 {
         return;
     }
@@ -88,7 +84,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
         && read_i8_as_i32(player + staff::LOYALITY) < 6
         && core::ptr::read_unaligned((read_usize(player + staff::PLAYER) + 0xb) as *const i16) > 0x1482;
     set_news_slot(nt, 7, p as u32);
-    set_news_slot(nt, 8, (prazo as u8 == 1) as u32);
+    set_news_slot(nt, 8, (deadline as u8 == 1) as u32);
     let kind = *((c + contract::SQUAD_STATUS) as *const u8) & 0xf0;
     set_news_slot(nt, 9, (kind == 0x70) as u32);
     set_news_slot(nt, 0xa, (future(read_usize(G_TRANSFER_MANAGER), player, 0) != 0) as u32);
@@ -97,7 +93,6 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 0xc, game as u32);
     deliver(read_usize(G_NEWS), nt, club);
 }
-
 
 /// Posts the coach's feedback on a fine: with player and coach both having a record and a nation, and the player having
 /// a club, news 0x1394 with the outcome and random(5).

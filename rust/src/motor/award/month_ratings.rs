@@ -1,9 +1,5 @@
 use super::*;
 
-
-
-
-
 /// Staff record of id (G_STAFF_TABLE, 0x6e bytes).
 ///
 /// [pt] A pessoa `id` da tabela de pessoas ([0xae23bc], 0x6e bytes cada).
@@ -48,7 +44,6 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
         side += 0x625;
     }
 }
-
 
 /// Adds a slot's match rating (+0x35) to word +8 of a 12-byte record and counts one more game at +0xa.
 ///
@@ -121,7 +116,6 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     add_match_rating(r, e);
 }
 
-
 /// Sorts the month ratings by average and returns the best player of a league, with an optional age filter.
 ///
 /// `MONTH_RATINGS::find_best_player(league, age)`, used by the monthly award (0x767150). It sorts the table by average
@@ -180,5 +174,4 @@ pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32
         }
     }
 }
-
 

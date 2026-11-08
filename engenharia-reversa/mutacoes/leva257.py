@@ -13,7 +13,7 @@ MUTACOES = [
     ('cpu4_sem_regras_livre', 'return 1; // cpu4: sem as regras novas', 'return 0; // mutacao: sem as regras novas, livre'),
     ('cpu4_periodo_de_dois_anos', 'let limit: u8 = if (age(person, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade', 'let limite: u8 = { age(person, d); 2 }; // mutacao: sempre 2 anos'),
     ('cpu5_sem_rolagem_das_financas', '            if friendly_random(n) == 0 { // cpu5: a rolagem das finanças', '            if n < 0 { // mutacao: sem o sorteio', 'cpu_5 rolagem das financas'),
-    ('cpu5_fatia_errada', '    if read_u8(game + 0x3f) == 2 { // cpu5: a fatia da noite', '    if read_u8(game + 0x3f) != 2 { // mutacao: a fatia errada', 'cpu_5 rolagem das financas'),
+    ('cpu5_fatia_errada', '    if read_u8(game + fixture::TIME_SLICE) == 2 { // cpu5: a fatia da noite', '    if read_u8(game + fixture::TIME_SLICE) != 2 { // mutacao: a fatia errada', 'cpu_5 rolagem das financas'),
     ('cpu5_chuva_sem_sorteio', '            if friendly_random(n) != 0 { // cpu5: o sorteio da chuva forte', '            if n != 0 { // mutacao: sem o sorteio', 'cpu_5 chuva forte'),
     ('cpu6_vento_fraco_moderado', '            1 // cpu6: o vento fraco', '            2 // mutacao: moderado', 'cpu_6 vento fraco'),
     ('cpu6_vento_moderado_forte', '            2 // cpu6: o vento moderado', '            3 // mutacao: forte', 'cpu_6 vento moderado'),

@@ -138,7 +138,6 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
     0
 }
 
-
 // simplification: the recorded events touch files and the network step only runs in a network game; without
 // own comparison, validated by the career (Rust x original).
 
@@ -740,7 +739,6 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
     BUF
 }
 
-
 // simplification: only runs in network games (creates and frees engine and summary); no comparison of its own.
 
 /// The commentator writes the event on the panel and plays its sound: restores the crowd sound, builds the event's `G`
@@ -774,7 +772,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 /// evento (0x8025e0 no canal pela opcao 6, lado pela opcao 5), e marca a hora e a duracao do som
 /// (+0x2d6c, +0x2dac = peso x volume / 100).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, panel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
     let tocando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_SOUND_PLAYING);
     let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
     let tocar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_PLAY_SOUND);
@@ -793,16 +791,16 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     let criterio: unsafe extern "C" fn(u32, u32, u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LABEL_GENDER);
     let quebrar_linha: unsafe extern "C" fn(*mut u8, u32, u32) = core::mem::transmute(FN_UTILS_BREAK_LINE_NEAR_MIDDLE);
     let colour_of_bottom: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_COLOUR);
-    let fonte_do_painel: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FONT);
+    let font_of_panel: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FONT);
     let colour_of_text: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT_COLOUR);
-    let texto_do_painel: unsafe extern "thiscall" fn(usize, u32, *const u8) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
-    let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
+    let text_of_panel: unsafe extern "thiscall" fn(usize, u32, *const u8) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
+    let margin: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
     let mostrar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FLAGS);
-    let relogio: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
+    let clock: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
     const SOM: usize = G_SCREEN_MANAGER;
     const TABELA: isize = 0xb68788;
 
-    if ev == 0 || ctx == 0 || painel as u16 == 0xffff {
+    if ev == 0 || ctx == 0 || panel as u16 == 0xffff {
         return 0;
     }
     let eu = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
@@ -1143,19 +1141,19 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                 }
             }
         }
-        colour_of_bottom(SOM, painel, core::ptr::read_unaligned(cor2.as_ptr() as *const u32));
-        fonte_do_painel(SOM, painel, font);
-        colour_of_text(SOM, painel, core::ptr::read_unaligned(cor1.as_ptr() as *const u32));
-        texto_do_painel(SOM, painel, row.as_ptr());
-        margem(SOM, painel, 0x30);
-        mostrar(SOM, painel, if *((e + 3) as *const u8) != 0 { 0x1001 } else { 1 });
+        colour_of_bottom(SOM, panel, core::ptr::read_unaligned(cor2.as_ptr() as *const u32));
+        font_of_panel(SOM, panel, font);
+        colour_of_text(SOM, panel, core::ptr::read_unaligned(cor1.as_ptr() as *const u32));
+        text_of_panel(SOM, panel, row.as_ptr());
+        margin(SOM, panel, 0x30);
+        mostrar(SOM, panel, if *((e + 3) as *const u8) != 0 { 0x1001 } else { 1 });
     }
 
     // the event sound
     *(((nar as isize) + eu() + 0x10) as *mut u8) = 0xff;
     if b(0xd) as i8 <= 0 && *((nar + 0x2db0) as *const u8) >= 0x65 {
-        let som = (sons() as isize + which() * 0x110) as usize;
-        if *((som + 4) as *const u8) != 0 {
+        let sound = (sons() as isize + which() * 0x110) as usize;
+        if *((sound + 4) as *const u8) != 0 {
             let canal = if *((e + 6) as *const u8) == 0 { 0xb6b722usize } else { ((nar as isize) + eu() + 0x10) as usize };
             *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *mut usize) = canal;
             if canal != 0 {
@@ -1165,12 +1163,12 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                     2 => (b(6) == 0) as u32,
                     _ => 2,
                 };
-                let p = path(0x9c382c, som + 4);
+                let p = path(0x9c382c, sound + 4);
                 tocar(SOM, *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *const usize), side, p, 0);
             }
         }
     }
-    let now = relogio();
+    let now = clock();
     core::ptr::write_unaligned(((nar as isize) + eu() * 4 + 0x2d6c) as *mut u32, now);
     let weight = *((sons() as isize + which() * 0x110 + 2) as *const i16) as i32;
     let volume = *((nar + 0x2db0) as *const u8) as i32;
@@ -1245,13 +1243,13 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
         }
         k as i16
     };
-    let parte = (p + 0xd) as *mut i8;
-    let mut c = *parte;
+    let part = (p + 0xd) as *mut i8;
+    let mut c = *part;
     let mut s = 0i16;
     while s < n {
         if *text.offset(s as isize) == b'|' {
             if c == -1 {
-                *parte = 0;
+                *part = 0;
                 break;
             }
             c = c.wrapping_sub(1);
@@ -1259,13 +1257,13 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
                 s += 1;
                 crate::comparison::branch("narracao texto em partes");
                 *(p as *mut u16) |= 0x8000;
-                *parte = (*parte).wrapping_add(1);
+                *part = (*part).wrapping_add(1);
                 break;
             }
         }
         s += 1;
     }
-    if *parte != -1 {
+    if *part != -1 {
         while s < n && *text.offset(s as isize) != b'|' {
             s += 1;
         }
@@ -1326,12 +1324,11 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
     }
 }
 
-
-
-
 // simplification: writes into `buf` and calls 0x53e140 and 0x541f90 (effects outside); comparison by the text
 
-/// Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
+/// The jump labels of 0x6d60b0 (the end of each one returns or continues to another).
+///
+/// [pt] Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
 pub(crate) enum BranchLabel {
     R6cde,
@@ -1685,11 +1682,16 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
     }
 }
 
-
-
-
-/// Neighbourhood probe of the context commentary: compares all 13 comments both sides with ratings at each threshold
-/// and fake news, restoring random state and ratings.
+/// Neighbourhood probe of the context commentary.
+///
+/// The game only asks for the goal event, so each real call also compares the 13 comments (0x21a3..=0x21af) for both
+/// sides and, with the ratings of the side's 20 players (+0x47cb) set exactly at each average threshold (7501, 7001,
+/// 8000, 7750, 6699), the `>=`/`>` boundaries; and, with fake media (one news item from today of each type for both
+/// clubs) and minute 31, the paths that depend on the news.
+///
+/// The random generator state and the ratings are restored, and the random draws are neither counted nor recorded in
+/// the trace of an ongoing tape comparison (the shot, 0x702050, calls this routine from inside): the trajectory of the
+/// game while comparing does not change.
 ///
 /// [pt] Sonda de vizinhança do comentário de contexto: o jogo só pergunta pelo evento do gol, então cada
 /// chamada real compara também os 13 comentários (0x21a3..=0x21af) nos dois lados e, com as notas
@@ -1726,19 +1728,19 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
     records.sort_by_key(key);
     records.dedup_by_key(|r| key(r));
     let falsa: [usize; 3] = [records.as_ptr() as usize, 0, records.len()];
-    let media = *(G_MEDIA as *const usize);
+    let average = *(G_MEDIA as *const usize);
     let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| {
         // 0: the real state; 1: with the news; 2: with the news at minute 31
         for cenario in 0..3 {
-            *(G_MEDIA as *mut usize) = if cenario == 0 { media } else { falsa.as_ptr() as usize };
+            *(G_MEDIA as *mut usize) = if cenario == 0 { average } else { falsa.as_ptr() as usize };
             core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, if cenario == 2 { 31 * 11 } else { minute });
             for lado in 0..2u32 {
-                let notas: Vec<(usize, usize)> = (0..20).map(|k| (m + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
-                let guardadas = crate::comparison::MemorySnapshot::read(&notas);
+                let notes: Vec<(usize, usize)> = (0..20).map(|k| (m + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
+                let guardadas = crate::comparison::MemorySnapshot::read(&notes);
                 for limit in [None, Some(0x1d4di16), Some(0x1b59), Some(8000), Some(0x1e46), Some(0x1a2b)] {
                     if let Some(v) = limit {
-                        for &(a, _) in &notas {
+                        for &(a, _) in &notes {
                             core::ptr::write_unaligned(a as *mut i16, v);
                         }
                     }
@@ -1754,13 +1756,11 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
                 guardadas.write_back();
             }
         }
-        *(G_MEDIA as *mut usize) = media;
+        *(G_MEDIA as *mut usize) = average;
         core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, minute);
     }));
     state.write_back();
 }
-
-
 
 /// Puts an event at the front of the commentary queue (steps the 12-slot ring back, drops the repeat) and queues it via
 /// 0x6d6f70.
@@ -1877,8 +1877,6 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 // simplification: all three queue commentary, play sound or free memory (do not run twice): without
 // own comparison, proven by the career (queue of 19414 matches, 285 thousand events ahead).
 
-
-
 /// Tells whether the sounds of the 16 marked events have played and passed their window (clock 0x90c510; stops the
 /// finished channels, 0x802a50).
 ///
@@ -1893,24 +1891,24 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 /// 0xb74450) segura; o que acabou e parado (0x802a50) e liberado. Devolve 1 so se todos os marcados
 /// ja passaram da janela (+0x2d6c + 4k ate + [+0x2dac], pelo relogio 0x90c510).
 pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const u32) -> u8 {
-    let relogio: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
+    let clock: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
     let tocando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_SOUND_PLAYING);
     let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
-    let now = relogio();
+    let now = clock();
     crate::comparison::branch("sons dos eventos");
     for k in 0..16usize {
         if *ativos.add(k) == 0 {
             continue;
         }
-        let ini = *((e + 0x2d6c + 4 * k) as *const u32);
-        let end = (*((e + 0x2dac) as *const u32)).wrapping_add(ini);
-        let passou = now > end || now < ini;
+        let start = *((e + 0x2d6c + 4 * k) as *const u32);
+        let end = (*((e + 0x2dac) as *const u32)).wrapping_add(start);
+        let passou = now > end || now < start;
         let canal = (e + 0x10 + k) as *mut u8;
         if *canal != 0xff {
             if *canal == 0xfe {
                 return 0;
             }
-            if tocando(G_SCREEN_MANAGER, (ini & !0xff) | *canal as u32) != 0 {
+            if tocando(G_SCREEN_MANAGER, (start & !0xff) | *canal as u32) != 0 {
                 return 0;
             }
             parar(G_SCREEN_MANAGER, *canal as u32);
@@ -1923,7 +1921,6 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
     1
 }
 
-
 /// Swaps the commentary event for a variant, by a random draw and by the play type.
 ///
 /// Stdcall, ret 0xc: with random(3) ≠ 0 it stays the same; otherwise, by the play type `type` (1, 2, 8, 0x10, 0x20, the
@@ -1935,7 +1932,7 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
 /// com sorteio(3) ≠ 0 fica o mesmo; senão, pelo tipo do lance `tipo` (1, 2, 8, 0x10, 0x20 — este com
 /// outro sorteio(3)) há tabelas de troca; os lances 2..4 (byte baixo de `lados`) têm as suas, e o
 /// byte de cima 3..5 troca 0x1f4b por 0x217e.
-pub(crate) unsafe extern "system" fn event_variant(e: *const i16, lados: u32, kind: u8) -> i16 {
+pub(crate) unsafe extern "system" fn event_variant(e: *const i16, sides: u32, kind: u8) -> i16 {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     if sorteio(3) != 0 {
         return *e;
@@ -1952,13 +1949,13 @@ pub(crate) unsafe extern "system" fn event_variant(e: *const i16, lados: u32, ki
     if let Some(&(_, n)) = table.iter().find(|&&(de, _)| de == v) {
         return n;
     }
-    if matches!(lados as u8, 2..=4) {
+    if matches!(sides as u8, 2..=4) {
         let lance: &[(i16, i16)] = &[(0x2112, 0x2196), (0x1fa6, 0x2194), (0x1f8b, 0x218b), (0x1fbf, 0x218c), (0x211f, 0x217f)];
         if let Some(&(_, n)) = lance.iter().find(|&&(de, _)| de == v) {
             return n;
         }
     }
-    if matches!((lados >> 8) as u8, 3..=5) && v == 0x1f4b {
+    if matches!((sides >> 8) as u8, 3..=5) && v == 0x1f4b {
         return 0x217e;
     }
     v

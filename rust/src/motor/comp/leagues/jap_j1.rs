@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// The J1 has two stages (0 and 1, each a round-robin league) and the final (stage 2): the next stage moves the current
 /// stage on and, at the end of the second stage, builds the final; past the last stage it is an error (the box)
 /// Original: `JapJ1::advance_stage` (0x6639c0, jap_j1.cpp, thiscall, ret 0).
@@ -182,16 +179,11 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     }
     virtual_(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)), 8);
     virtual_(this, 0x5c);
-    let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
-    expectativas(this);
+    let expectations: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
+    expectations(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
-
-
-
-
-
 
 /// True if the club's division (+0x57) is non-null and its id equals the competition id in global g.
 ///
@@ -216,7 +208,11 @@ pub(crate) unsafe fn alloc_league_table(this: usize, n: i16, file: usize, row: u
     t
 }
 
-/// League init_table_row (0x687430) for row (k + girar) % n with the club; girar is 0 except in mutations.
+/// League::init_table_row (0x687430: thiscall(league, row, club, 0, 0), ret 0x10) for row (k + `girar`) % n with the
+/// club.
+///
+/// `girar` is 0 (the original: row k); it exists only for each league's mutations. Simplification: the original routine
+/// pushes the row in eax with spare upper bits; 0x687430 only reads the byte.
 ///
 /// [pt] League::init_table_row (0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10). `girar` é 0 (o original: a linha
 /// k); existe só para as mutações de cada liga. simplification: a original empurra a linha no eax com bits de cima de sobra;
@@ -285,16 +281,19 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_create_table(this: usize) -> u32 {
     1
 }
 
-
-
-/// Comparer: plans the division's clubs, runs only the original and checks count, return value, rows, cleared divisions
-/// (Japan) and prize fund (J1).
+/// The comparer of the three: the original routine allocates the table (and the J1 pays the TV money with a news item),
+/// so only it runs.
+///
+/// The plan, made beforehand: the division's clubs in database order (all of them). Afterwards it checks: +0x3e = `n`,
+/// the return value = 1 if the plan filled (otherwise 0), the table rows (+0 the club, 0x3b bytes) with the first `n`
+/// of the plan, in order; in Japan (`limpar`), the leftovers of the plan with their division zeroed; in a full J1,
+/// +0xe1 = 1 and +0x28 = the quota fund (prize fund).
 ///
 /// [pt] O comparador dos três: a original aloca a tabela (e a J1 paga a TV com notícia): só ela. O plano, feito antes: os
 /// clubes da divisão na ordem do banco (todos). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0), as
 /// linhas da tabela (+0 o clube, 0x3b bytes) com os primeiros `n` do plano, na ordem; no Japão (`limpar`), os que
 /// sobram do plano com a divisão zerada; na J1 cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
-pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: usize, clear: bool, cota: i32, original: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: usize, clear: bool, quota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 {
@@ -316,16 +315,14 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: 
         if clear {
             same = same && plan[cabem..].iter().all(|&c| read_usize(c + club::DIVISION) == 0);
         }
-        if r == 1 && cota != 0 {
+        if r == 1 && quota != 0 {
             let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, cota);
+            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, quota);
         }
     }
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
-
-
 
 /// J1: double round robin (the two stages of the year, created by add_result 0x663940 [inference]); win 3, draw 1;
 /// tie-break by goal difference, goals scored and away goals; no top places in the overall table (rule word 8, no
@@ -341,7 +338,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_set_up_rules(this: usize) -> u32 {
     create_main_schedule(this);
     1
 }
-
 
 /// One half of the J1: when the first game of a half is processed, it builds that half's round-robin stage (a league
 /// with all the clubs of the table, the same points for a win and a draw and the same tie-breakers as the league, and

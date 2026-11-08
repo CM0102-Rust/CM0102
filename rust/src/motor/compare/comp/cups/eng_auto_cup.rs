@@ -5,6 +5,12 @@ use super::*;
 
 /// Comparer for `select_section_clubs` (comparison mode: see the header of motor.rs).
 ///
+/// Side by side from the same state (the random generator, +0xb6, [0xb67a34]); the original routine leaves its list in
+/// +0xb2, the copy builds its own (without counting the random draws), compared over the +0xb6 slots and freed.
+///
+/// When the original does not find the relegated club (the case where it reads the valueless dword from the stack),
+/// only the original.
+///
 /// [pt] Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
 /// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
 /// caso em que ela lê a dword sem valor da pilha), só a original.

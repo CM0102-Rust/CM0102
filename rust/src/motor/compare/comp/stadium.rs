@@ -6,16 +6,16 @@ use super::*;
 /// Comparer for `find_available_venue` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Lado a lado (a cópia sem contar os sorteios) pelas regiões de `stadium_choice_regions` e pela devolução; com reserva que pode alocar, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marks: u32, cont: usize, nation: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marks: u32, count: usize, nation: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_FIND_AVAILABLE_VENUE);
     let Some((r, m)) = stadium_choice_regions(this, None) else {
         // simplification: the reserve may allocate the list; original only
-        return o(this, marks, cont, nation, data, home, away, partida);
+        return o(this, marks, count, nation, data, home, away, partida);
     };
-    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, cont, nation, data, home, away, partida), || {
-        crate::rng::without_counting(|| find_available_venue(this, marks, cont, nation, data, home, away, partida))
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, count, nation, data, home, away, partida), || {
+        crate::rng::without_counting(|| find_available_venue(this, marks, count, nation, data, home, away, partida))
     });
-    SCOREBOARD.record(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marks, nation, cont, ro, rr, mo, mr));
+    SCOREBOARD.record(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marks, nation, count, ro, rr, mo, mr));
     ro
 }
 
@@ -73,6 +73,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this:
 }
 
 /// Comparer for `stadium_daily_update` (comparison mode: see the header of motor.rs).
+///
+/// On day 0 of the year (it rebuilds the stadium list, which allocates) only the original routine runs.
+///
+/// On the other days, side by side on the header (0x1c bytes), the reservations, [0xa835a4], England's national
+/// stadium, the national team's home and the seats of the closed stadium.
 ///
 /// [pt] Comparador: no dia 0 do ano (refaz a lista dos estádios, aloca) só a original. Nos outros, lado a lado pelo cabeçalho
 /// (0x1c bytes), pelas reservas, por [0xa835a4], pelo estádio nacional da Inglaterra, pela casa da seleção e pelos
@@ -145,6 +150,12 @@ pub(crate) unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: u
 }
 
 /// Comparer for `build_venue_list` (comparison mode: see the header of motor.rs).
+///
+/// Side by side by hand: the original routine on the caller's object, the copy on a scratch object with the same 0x20
+/// bytes as before and the old list zeroed (the original has already released it); the fields (except the pointer +0xc)
+/// and the lists must be equal (the scratch object's list is released).
+///
+/// Without the HostCountry (the error box): only the original.
 ///
 /// [pt] Lado a lado à mão: a original no objeto de quem chama, a cópia num rascunho com os mesmos 0x20 bytes de antes e a
 /// lista velha zerada (a original já a soltou); iguais os campos (fora o ponteiro +0xc) e as listas (a do rascunho é

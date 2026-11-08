@@ -1,12 +1,21 @@
 use super::*;
 
-
-/// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
+/// Describes one round of the 0x41-byte table.
+///
+/// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
+/// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
+/// list ends with −1).
+///
+/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
 pub(crate) type SpaLowerLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
-/// Writes league rounds from `primeira` in table t: date (0x68a160) and match slots (0x68a1c0) for each.
+/// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
+///
+/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
@@ -23,8 +32,15 @@ pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, year: u32, first: i32
     }
 }
 
-
-/// A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
+/// The main stage with the Christmas rounds.
+///
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
+/// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
+/// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
+/// eighth); then the closing rounds.
+///
+/// [pt] A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
 /// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
@@ -47,17 +63,16 @@ pub(crate) unsafe fn set_rounds_around_christmas(t: usize, year: u32, n: &SpaLow
     construct(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
-    let caso = if k as u32 > 6 {
+    let case = if k as u32 > 6 {
         show_error_at(file, n.linha);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[caso];
+    let middle = n.casos[case];
     spa_lower_set_league_rounds(t, year, n.comeco.len() as i32, middle);
     spa_lower_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
-
 
 /// a divisão de baixo espanhola: as rodadas antes do Natal (ano par)
 pub(crate) const LOWER_EVEN_YEAR_START: [SpaLowerLeagueRound; 17] = [
@@ -275,10 +290,6 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
     }
 }
 
-
-
-
-
 /// Competition record (0x6b bytes in [0xae23d0]) of key id [g].
 ///
 /// [pt] O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
@@ -344,7 +355,6 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
     this
 }
 
-
 /// Is club c the B team of a parent club (club_get_linked_b_team) that plays in competition [g]?
 ///
 /// [pt] O clube de cima do clube `c` (club_get_linked_b_team 0x540a50: push 1; push &eh_a; push c; add esp, 0xc -> cdecl),
@@ -356,10 +366,12 @@ pub(crate) unsafe fn is_b_team_of_comp_club(c: usize, g: usize) -> bool {
     p != 0 && eh_a == 0 && spa_lower_is_in_comp(p, g)
 }
 
-
-
-/// Candidates of the Spanish lower division: clubs (up to 100) of Segunda B groups or Spanish generic lower division
-/// that are neither B nor A teams.
+/// The candidates of the Spanish lower division, from the original routine's local record of 100.
+///
+/// The clubs (all of them, in database order, up to 100) of the competitions with id [`0x9cf62c`], [`0x9cf630`],
+/// [`0x9cf634`], [`0x9cf638`] [inference: the 4 Segunda B groups] or, if Spanish, of the one with id [`0x9cf764`]
+/// [inference: the generic lower division], that are neither a B team nor anyone's A team (club_get_linked_b_team
+/// returns 0).
 ///
 /// [pt] Os candidatos da divisão de baixo espanhola, do registro local de 100 da original: os clubes (todos, na ordem do
 /// banco, até 100) das competições de id [0x9cf62c], [0x9cf630], [0x9cf634], [0x9cf638] [inferência: os 4 grupos da
@@ -408,11 +420,11 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
             let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
             let mut eh_a: u32 = 0;
             let p = partner(c, &mut eh_a, 1);
-            let entra = p != 0 && eh_a == 0 && read_u32_as_usize(p + club::DIVISION) != 0 && (*k as i8 as i16) < rows && read_u32_as_usize(read_u32_as_usize(p + club::DIVISION)) == read_u32_as_usize(g);
-            if entra {
+            let enters = p != 0 && eh_a == 0 && read_u32_as_usize(p + club::DIVISION) != 0 && (*k as i8 as i16) < rows && read_u32_as_usize(read_u32_as_usize(p + club::DIVISION)) == read_u32_as_usize(g);
+            if enters {
                 *k = k.wrapping_add(1);
             }
-            por(c, entra);
+            por(c, enters);
         }
         i = i.wrapping_add(1);
     }
@@ -438,7 +450,7 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
+    let shuffle: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
     let t = alloc(0x512);
     write_u32_from_usize(this + league::TABLE, t);
@@ -477,7 +489,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     let how_many = list.len() as u16 as u32;
     let missing = (read_i16(this + league::CLUB_COUNT) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
     list.resize(100, 0);
-    embaralhar(list.as_mut_ptr() as usize, how_many, missing);
+    shuffle(list.as_mut_ptr() as usize, how_many, missing);
     let mut j: i16 = 0;
     while j < how_many as u16 as i16 && (k as i8 as i16) < read_i16(this + league::CLUB_COUNT) {
         let c = list[j as usize];
@@ -488,7 +500,6 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     }
     (k as i8 as i16 == read_i16(this + league::CLUB_COUNT)) as u32
 }
-
 
 /// the lower division (22: B teams and the best minor clubs by reputation): 2 go up directly and 2 go to the promotion
 /// play-off, 4 go down; the league above stored is La Primera (as in the original)

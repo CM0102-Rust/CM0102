@@ -89,14 +89,14 @@ pub(crate) unsafe extern "thiscall" fn ratings_average(this: usize, index: *cons
     sum as i16 as i32 / 4
 }
 
-
-
 comparar_valor!(comparar_ratings_average, ratings_average, IDX_RATINGS_AVERAGE, (indice: *const i32) -> i32);
 comparar_valor!(comparar_centre_backs_without_conflict, centre_backs_without_conflict, IDX_CENTRE_BACKS_WITHOUT_CONFLICT, () -> u8);
 
-
-
-/// O ensaio do comparador: a cópia roda sem gravar no arquivo de histórico (FILE_LLIST::add_node 0x58e340, que escreve
+/// The comparer's rehearsal: the copy runs without writing to the history file (FILE_LLIST::add_node 0x58e340, which
+/// writes to the file and moves the player sheet's positions); the nodes it would write go straight into the sum of
+/// matches and goals per club.
+///
+/// [pt] O ensaio do comparador: a cópia roda sem gravar no arquivo de histórico (FILE_LLIST::add_node 0x58e340, que escreve
 /// no arquivo e move as posições da ficha); os nós que ela gravaria entram direto na soma dos jogos e gols pelo clube.
 pub(crate) static mut ARCHIVE_STATS_DRY_RUN: bool = false;
 pub(crate) static mut ARCHIVE_STATS_PENDING_TOTALS: (u16, u16) = (0, 0);
@@ -265,19 +265,20 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
     1
 }
 
-
-
-
-
-
-
-
-/// O tamanho de uma entrada da tabela (uma categoria de uma temporada num clube): +0 o ano, +2 o id do clube (−1
+/// The size of one table entry (one category of one season at one club).
+///
+/// +0 the year, +2 the club id (−1 none), +6..+0x26 the 32 bytes of the category (+6 matches, +7 ..., +0x14 the word),
+/// +0x26 the transfer fee (−1 none), +0x2a category × 8 with the type in the low 3 bits. Six entries (categories 1..6)
+/// per season.
+///
+/// [pt] O tamanho de uma entrada da tabela (uma categoria de uma temporada num clube): +0 o ano, +2 o id do clube (−1
 /// nenhum), +6..+0x26 os 32 bytes da categoria (+6 jogos, +7 ..., +0x14 a palavra), +0x26 o valor da transferência
 /// (−1 nenhum), +0x2a categoria × 8 e o tipo nos 3 bits de baixo. Seis entradas (categorias 1..6) por temporada.
 pub(crate) const HISTORY_ENTRY_SIZE: usize = 0x2b;
 
-/// A entrada montada na pilha pela original (0x2b bytes, zerada antes de cada uma).
+/// The entry built on the stack by the original routine (0x2b bytes, zeroed before each one).
+///
+/// [pt] A entrada montada na pilha pela original (0x2b bytes, zerada antes de cada uma).
 pub(crate) struct PlayerStatsEntry(pub(crate) [u8; HISTORY_ENTRY_SIZE]);
 
 impl PlayerStatsEntry {
@@ -515,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     let mut g = 0i32;
     while g < *count {
         let e = buf + g as usize * HISTORY_ENTRY_SIZE;
-        let zerar = if read_u8(e + 6) == 0
+        let clear = if read_u8(e + 6) == 0
             && read_u8(e + 7) == 0
             && read_u8(e + 0xdd) == 0
             && read_u8(e + 0xde) == 0
@@ -544,7 +545,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         } else {
             read_i32(e + 0xd9) == -1
         };
-        if zerar {
+        if clear {
             for t in 0..6 {
                 write_u16(e + t * HISTORY_ENTRY_SIZE, 0); // cqf8: o grupo some
             }
@@ -570,7 +571,6 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     }
     buf
 }
-
 
 /// Returns how many years since the person played for the club: 0 when they are there, −1 when never.
 ///
@@ -631,7 +631,6 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
     read_u16(G_CURRENT_DATE_YEAR).wrapping_sub(greater as u16) as i16
 }
 
-
 /// The qsort order of the history records: by person, by year and by the first field.
 ///
 /// `player_stats_compare_history_by_staff(a, b)`, the qsort order of the staff_history.dat records when the statistics
@@ -665,9 +664,6 @@ pub(crate) unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, 
     }
     read_i32(a).wrapping_sub(read_i32(b))
 }
-
-
-
 
 /// Returns the requested statistic of the category record (without a record, the default for the rating and the
 /// average), or the combined ratings of categories 2 to 5.
@@ -754,7 +750,6 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
     }
 }
 
-
 /// The order of the language records: by person id and by language, with 0xff matching any language.
 ///
 /// `player_stats_compare_language_entries(a, b)` (the qsort and bsearch of the languages, 6-byte records {id, language,
@@ -785,7 +780,6 @@ pub(crate) unsafe extern "C" fn player_stats_compare_language_entries(a: usize, 
     la as i8 as i32 - lb as i8 as i32
 }
 
-
 /// the order of the player history by the dword +0xa and then by +4
 /// Original: `player_stats_compare_history_by_club` (0x7c6d90, player_stats.cpp, cdecl).
 ///
@@ -812,9 +806,6 @@ pub(crate) unsafe extern "C" fn player_stats_compare_history_by_club(a: usize, b
         0
     }
 }
-
-
-
 
 /// Sums the goals of every season and club of the player's career table (0x7c3e40), in 16 bits.
 ///
@@ -860,14 +851,8 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(person: usiz
     s // cps9: os gols na carreira
 }
 
-
-
 // simplification: the history goes to the file (does not run twice) and the copy writes nothing else: original only; the
 // copy takes the branch.
-
-
-
-
 
 /// Address of the category (1..6) slot in the player's 39-byte stats index record in [this+0x30]; None without player
 /// or out of range.
@@ -882,7 +867,10 @@ pub(crate) unsafe fn category_slot(this: usize, player: usize, category: u32) ->
     Some(read_usize(this + 0x30).wrapping_add(read_usize(player).wrapping_mul(39)) + 4 * k as usize)
 }
 
-/// Shows player_stats.cpp's "Memory Allocation Error" box for a line and text; the game continues.
+/// Shows player_stats.cpp's (0xa78310) "Memory Allocation Error" box for a line and text; the game continues.
+///
+/// Text "v%s %s.%s %d (%s)" (version 0x90d130, name and extension, `linha`, `texto`) at 0xae24d0, the translated title
+/// (0x66f4e0) at 0xae28bc, the body (0x9a7ff8 with 0xae24d0) at 0xae26c4, and the box 0x5e8290.
 ///
 /// [pt] A caixa "Memory Allocation Error" de player_stats.cpp (0xa78310): "v%s %s.%s %d (%s)" (versão 0x90d130, nome e
 /// extensão, `linha`, `texto`) em 0xae24d0, o título traduzido (0x66f4e0) em 0xae28bc, o corpo (0x9a7ff8 com
@@ -985,12 +973,7 @@ pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, player: usize, 
     r
 }
 
-
-
-
 comparar_valor!(comparar_is_retirement_pending, is_retirement_pending, IDX_IS_RETIREMENT_PENDING, (pessoa: usize) -> u8);
-
-
 
 /// The person's 6-byte language record (id, language, fluency) via bsearch in [this+0x3c]; 0 if not found.
 ///
@@ -1115,12 +1098,6 @@ pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pe
     esvaziar(read_u32_as_usize(this), r + 0x18, r + 0x1c)
 }
 
-
-
-
-
-
-
 /// Returns from 0 to 10 how well the person speaks the language: the contract level, 10 for a nation (or the second
 /// one) speaking the language, or the learned language (binary search).
 ///
@@ -1185,9 +1162,6 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
     }
     read_u8(e + 5)
 }
-
-
-
 
 /// Records a match in the statistics: by each side's category (friendly, reserves, competition type; a random draw in a
 /// simulated match), adds the rating and the match to the double sums and each player who played to the category
@@ -1286,7 +1260,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
                 add_u16_at(r + 0x16, read_u8(e + 0x28) as u16);
                 add_u16_at(r + 0x18, read_u8(e + 0x25) as u16);
                 add_u16_at(r + 0x1a, read_u8(e + 0x26) as u16);
-                let saiu = |e: usize| {
+                let left = |e: usize| {
                     let (s34, s30) = (read_u8(e + 0x34) as i8, read_u8(e + 0x30) as i8);
                     if s34 > -1 {
                         s34 as i32
@@ -1298,9 +1272,9 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
                 };
                 let min = r + 0x1c;
                 if k < 11 {
-                    core::ptr::write_unaligned(min as *mut i32, (read_usize(min) as i32).wrapping_add(saiu(e)));
+                    core::ptr::write_unaligned(min as *mut i32, (read_usize(min) as i32).wrapping_add(left(e)));
                 } else if read_u8(e + 0x32) != 0xff {
-                    let v = saiu(e).wrapping_sub(read_u8(e + 0x32) as i8 as i32);
+                    let v = left(e).wrapping_sub(read_u8(e + 0x32) as i8 as i32);
                     core::ptr::write_unaligned(min as *mut i32, (read_usize(min) as i32).wrapping_add(v));
                 }
             }
@@ -1320,7 +1294,6 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
     }
     1
 }
-
 
 /// For the nation's clubs (up to the first national team), archives (0x7c5fe0) the statistics of every squad player not
 /// on loan elsewhere; 1 (0 and the "Error" box without a nation).
@@ -1369,7 +1342,6 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
     1
 }
 
-
 /// Removes a language from the player's language table (binary search) and shifts the later entries down.
 ///
 /// Removes language `idioma` of player `ficha` from the language table (`[this+0x3c]`, `[this+0x44]` entries of 6
@@ -1410,7 +1382,6 @@ pub(crate) unsafe extern "thiscall" fn remove_language(stats: usize, sheet: usiz
     *contagem -= 1;
 }
 
-
 /// Returns the player's league appearances (field 1) or league goals (field 2) at the club, as a float.
 ///
 /// The player's league statistic at the club, as a float (fild): field 1 the matches (word +0x20) and field 2 the goals
@@ -1430,7 +1401,6 @@ pub(crate) unsafe extern "thiscall" fn get_club_league_stat(stats: usize, player
     core::ptr::read_unaligned((record + deslocamento) as *const i16) as f32
 }
 
-
 /// Returns the player's last match rating (6.5 with none).
 ///
 /// The last match rating of player `*id` (the low 4 bits of byte +0x26 of the 39-byte record at `[estatisticas+0x30]`,
@@ -1448,7 +1418,6 @@ pub(crate) unsafe extern "thiscall" fn get_last_match_rating(stats: usize, id: *
     let rating = *((record + 0x26) as *const u8) & 0xf;
     if rating != 0 { rating as f32 } else { *(0x96e2b8 as *const f32) }
 }
-
 
 /// Sums the goals of the player's seasons for the club in the career table (0x7c3e40), in 16 bits.
 ///
@@ -1504,7 +1473,6 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
     s // cps10: os gols pelo clube
 }
 
-
 /// Returns the competition weight by the club's two competitions (500/1000/300/100).
 ///
 /// The weight of competition `cod` for player `p` by the club's two competitions (+0x1a and +0x1e): in the four special
@@ -1518,17 +1486,17 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
 /// com 0x16/0x20, [0x9cf408] com 0x1e/0x20, [0x9cf2c0] com 0x16/0x1e, [0x9cf244] com 7) e nos códigos
 /// +0x78/+0x79 da competição: 500/1000/500/300 pela primeira, 300/500/300/100 pela segunda; sem
 /// competição, 0. Devolve só `ax`.
-pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, cod: i8) -> u16 {
+pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> u16 {
     let k = |a: usize| *(a as *const i32);
     // as in the original: the first constant equal to the id decides (without the right code, goes to the codes)
     let special = |id: i32| -> u8 {
         if id == k(KEY_NATION_SWEDEN) {
-            (cod == 0x16 || cod == 0x20) as u8
+            (code == 0x16 || code == 0x20) as u8
         } else if id == k(KEY_NATION_NORWAY) {
-            (cod == 0x1e || cod == 0x20) as u8
+            (code == 0x1e || code == 0x20) as u8
         } else if id == k(KEY_NATION_DENMARK) {
-            (cod == 0x16 || cod == 0x1e) as u8
-        } else if id == k(KEY_NATION_BELGIUM) && cod == 7 {
+            (code == 0x16 || code == 0x1e) as u8
+        } else if id == k(KEY_NATION_BELGIUM) && code == 7 {
             2
         } else {
             0
@@ -1543,10 +1511,10 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, cod: i8) -> u
         2 => return 1000,
         _ => {}
     }
-    if *((c1 + 0x78) as *const i8) == cod {
+    if *((c1 + 0x78) as *const i8) == code {
         return 500;
     }
-    if *((c1 + 0x79) as *const i8) == cod {
+    if *((c1 + 0x79) as *const i8) == code {
         return 300;
     }
     let c2 = core::ptr::read_unaligned((p + staff::SECOND_NATION) as *const usize);
@@ -1558,9 +1526,9 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, cod: i8) -> u
         2 => return 500,
         _ => {}
     }
-    if *((c2 + 0x78) as *const i8) == cod {
+    if *((c2 + 0x78) as *const i8) == code {
         return 300;
     }
-    if *((c2 + 0x79) as *const i8) == cod { 100 } else { 0 }
+    if *((c2 + 0x79) as *const i8) == code { 100 } else { 0 }
 }
 

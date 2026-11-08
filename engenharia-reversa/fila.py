@@ -47,7 +47,7 @@ ROTINAS = {rotinas!r}
 BASE = {base}
 m = re.search(r'\];\nconst N: usize = (\d+);', s)
 assert m and int(m.group(1)) == BASE, ('o motor.rs mudou desde a materialização', m and m.group(1), BASE)
-pro = ''.join('    Prologo {{ endereco: %#x, bytes: &[%s] }},\n' % (e, ', '.join('0x%02x' % b for b in bs)) for _, e, bs in ROTINAS)
+pro = ''.join('    Prologue {{ address: %#x, bytes: &[%s] }},\n' % (e, ', '.join('0x%02x' % b for b in bs)) for _, e, bs in ROTINAS)
 s = s[:m.start()] + pro + '];\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
 fins = [x.start() for x in re.finditer(r' as \*const \(\) as usize,\n    \];', s)]
 assert len(fins) == 2, fins
@@ -170,7 +170,7 @@ def main():
             if os.path.exists(p):
                 rot = re.findall(r"\('\w+', (\d+), \[", open(p, encoding='utf-8').read())
                 total += len(rot)
-                if rot and ('endereco: %#x,' % int(rot[0])) not in s:
+                if rot and ('address: %#x,' % int(rot[0])) not in s:
                     base += len(rot)
         ordem_ = ordem()
         assert ordem_, 'fila vazia'
@@ -190,9 +190,9 @@ def main():
         inicios = sorted(int(r[0], 16) for r in csv.reader(open(os.path.join(R, 'docs', 'mapa_funcoes.csv'), encoding='utf-8')) if r and r[0].startswith('0x'))
         alteradas = [i + 0x400000 for i in range(0x1000, 0x567000) if exes[0][i] != exes[1][i]]
         # a mesma rotina não pode ser desviada duas vezes (já no motor.rs ou em dois itens da fila)
-        # as ZERADAS tambem tem Prologo, mas zerar e portar a mesma rotina e previsto (o desvio da copia zera)
+        # as ZERADAS tambem tem Prologue, mas zerar e portar a mesma rotina e previsto (o desvio da copia zera)
         sem_zeradas = re.sub(r'const ZERADAS:.*?\n\];', '', m, flags=re.S)
-        desviadas = {int(x, 16): 'motor.rs' for x in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', sem_zeradas)}
+        desviadas = {int(x, 16): 'motor.rs' for x in re.findall(r'Prologue \{ address: (0x[0-9a-f]+)', sem_zeradas)}
         for nome in ordem():
             rot = runpy.run_path(os.path.join(FILA, nome, 'rotinas.py'))
             for a, e, bs in rot['ROTINAS']:

@@ -48,7 +48,6 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nation: usize, 
     1
 }
 
-
 // The set_key_ids lists, generated from the exe by `python engenharia-reversa/chaves_fixas.py` (rust/src/chaves_fixas.rs).
 include!("../fixed_keys.rs");
 
@@ -103,8 +102,25 @@ pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
     exit(mark)
 }
 
-/// Core of set_key_ids: resolves the fixed key ids (colours, clubs, continents, competitions, nations, awards) from
-/// eng.lng or the database and reports missing ones; returns 1.
+/// The core of set_key_ids after the -1 (the -1 belongs to each entry): resolves the fixed key ids (colours, clubs,
+/// continents, competitions, nations, awards) from eng.lng or the database and reports the missing ones. Returns 1.
+///
+/// `marca` = edi at entry (-1 in the original; MARCA_DAS_CHAVES_1080 in the 1080 exe, which only holds if no loop
+/// runs); `relatar` = the report of keys without a value (in comparison mode the copy runs without it, so the box does
+/// not appear twice).
+///
+/// 1) The colours ([0xae2394] of [0xae23ec] + 4, step 0x3a): CORES_DAS_CHAVES.
+///
+/// 2) With [0x9b5984] ≠ 0 and CM3_TEMP\eng.lng open: 8 counts (bytes swapped if 0x90c140(f) = 0xf1fffff1) and the
+/// tables in file order: clubs c0 × 0x4f (0x6146b0; through list [0xae23fc] up to [0xae235c], if present), continents
+/// c1 × 0xba, competitions c2 × 0x53 (0x60efd0 with row c5 + i), nations c3 × 0x6d (0x60d810), skips c6 × 0x34 and c4 ×
+/// 0x34, awards c7 × 0x4f (0x6115e0), competitions c5 × 0x53 (0x60efd0); a table out of memory: fseek past it.
+///
+/// 3) Otherwise, from the database: nations (0x60d810), club competitions up to [0xae2378] − 0x7f (0x60efd0),
+/// continents, awards (0x6115e0) and clubs (0x6146b0).
+///
+/// 4) The report (RELATO_DAS_CHAVES): 0x60d780 (the box "Unable to find the %s index"); the 7 fatal ones quit the game
+/// if the key's nation has byte +0x11c.
 ///
 /// [pt] O miolo da set_key_ids depois do -1 (o -1 é de cada entrada). `marca` = o edi na entrada (-1 na original;
 /// MARCA_DAS_CHAVES_1080 no 1080, que só vale se nenhum laço rodar); `relatar` = o relato das chaves sem valor (no
@@ -137,7 +153,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
         let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
         let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        let pular: unsafe extern "C" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
+        let skip: unsafe extern "C" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
         let close: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
         let inverter = version(f) == 0xf1fffff1;
         let mut c = [0i32; 8];
@@ -155,7 +171,7 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
                 f_(b as u32);
                 free(b);
             } else {
-                pular(f, (n as u32).wrapping_mul(step_towards), 1);
+                skip(f, (n as u32).wrapping_mul(step_towards), 1);
             }
         };
         table(c[0], 0x4f, &mut |b| {
@@ -181,14 +197,14 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
         });
         // the prizes: the memory before skipping the two 0x34 tables
         let b = alloc((c[7] as u32).wrapping_mul(0x4f));
-        pular(f, (c[6] as u32).wrapping_mul(0x34), 1);
-        pular(f, (c[4] as u32).wrapping_mul(0x34), 1);
+        skip(f, (c[6] as u32).wrapping_mul(0x34), 1);
+        skip(f, (c[4] as u32).wrapping_mul(0x34), 1);
         if b != 0 {
             read(b, 0x4f, c[7] as u32, f);
             key_ids_loop(|| c[7], |i| { prize(em(b as u32, i, 0x4f), i as u32); }); // eng.lng awards
             free(b);
         } else {
-            pular(f, (c[7] as u32).wrapping_mul(0x4f), 1);
+            skip(f, (c[7] as u32).wrapping_mul(0x4f), 1);
         }
         table(c[5], 0x53, &mut |b| {
             key_ids_loop(|| c[5], |i| { competition(em(b, i, 0x53), i as u32); }); // eng.lng competitions
@@ -269,12 +285,10 @@ pub(crate) unsafe extern "C" fn set_key_ids_1080() -> u32 {
     set_fixed_key_ids(MARCA_DAS_CHAVES_1080, true)
 }
 
-/// As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
+/// The regions of the fixed keys: the key globals, the high club keys and 0xde279c.
+///
+/// [pt] As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 pub(crate) const FIXED_KEY_REGIONS: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
-
-
-
-
 
 /// Os nomes das regiões 1..14 da 0x616f20 (imediatos do código, pelos endereços no exe): (adjetivo, substantivo). A
 /// 3 (Caribe) tem textos próprios.
@@ -318,10 +332,10 @@ pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
 /// 0xff) ou de regionalidade, com o vazio 0xad9c64. Devolve 1. Texto nulo, região fora da faixa ou tamanho (curto
 /// com sinal) < 100: a original (caixa). Na ordem das regiões (0x545dc0, em Rust), na busca de jogadores
 /// (player_search, search_screens) e em telas sem módulo (0x7db360, 0x7e13d0, 0x7e29e0).
-pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, text: usize, size: u32, form: u32) -> u32 {
-    let r = regiao as u8 as i8;
+pub(crate) unsafe extern "C" fn get_region_name(region: u32, text: usize, size: u32, form: u32) -> u32 {
+    let r = region as u8 as i8;
     if text == 0 || !(1..=14).contains(&r) || (size as u16 as i16) < 100 {
-        return original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME)(regiao, text, size, form);
+        return original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME)(region, text, size, form);
     }
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
@@ -362,7 +376,6 @@ pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, text: usize, size: 
     }
     1
 }
-
 
 /// Os adjetivos dos continentes da 0x6177f0 por idioma (imediatos do código, pelos endereços no exe; levantados
 /// seguindo os desvios da original): linhas África [0x9cfa08], Ásia [0x9cfa0c], Europa [0x9cfa10], América do Norte
@@ -439,7 +452,6 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: 
     copy_c_string(text, s);
     1
 }
-
 
 /// As chaves de clube do index.cpp (0x6146b0), na ordem do código: (texto do nome, global que recebe a linha), em 4 cadeias. Vários nomes podem dar na mesma global (grafias).
 pub(crate) static CLUB_KEYS: &[&[(u32, u32)]] = &[
@@ -1463,10 +1475,10 @@ pub(crate) fn describe_key_diffs(mo: &crate::comparison::MemorySnapshot, mr: &cr
     s
 }
 
-
-
-
-/// As chaves de competição de clube do index.cpp (0x60efd0), na ordem do código: (texto do nome longo, global que recebe a linha), em 3 cadeias; (0, global) = mais uma global gravada no mesmo acerto.
+/// The club competition keys of index.cpp (0x60efd0), in code order: (long name text, global that receives the row), in
+/// 3 chains; (0, global) = one more global written in the same assignment.
+///
+/// [pt] As chaves de competição de clube do index.cpp (0x60efd0), na ordem do código: (texto do nome longo, global que recebe a linha), em 3 cadeias; (0, global) = mais uma global gravada no mesmo acerto.
 pub(crate) static CLUB_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
@@ -2398,15 +2410,15 @@ pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
 }
 
 /// Comparer for `get_region_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, text: usize, size: u32, form: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_get_region_name(region: u32, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
-    let r = regiao as u8 as i8;
+    let r = region as u8 as i8;
     if text == 0 || !(1..=14).contains(&r) || (size as u16 as i16) < 100 {
-        return o(regiao, text, size, form); // message box: original only
+        return o(region, text, size, form); // message box: original only
     }
     // the first 100 bytes (the minimum size accepted)
-    let (x, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 100)], || o(regiao, text, size, form),
-        || get_region_name(regiao, text, size, form));
+    let (x, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 100)], || o(region, text, size, form),
+        || get_region_name(region, text, size, form));
     SCOREBOARD.record(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, form as u8, x, n, mo, mr));
     x
 }

@@ -5,21 +5,28 @@ use super::*;
 
 /// Comparer for `send_club_international_report_news` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x7706c0: the original routine delivers the news items (it allocates in the inboxes), so only it runs,
+/// with the random draws traced and the squad saved beforehand.
+///
+/// Then the squad is put back as it was, the copy redoes the work in rehearsal mode (draws from the tape, without
+/// delivering) and the squad must come out equal to the original's, with the rehearsal's draws equal to the tape's
+/// (same n, all used).
+///
 /// [pt] Comparador da 0x7706c0: a original entrega as notícias (aloca nas caixas): só ela roda, com os sorteios rastreados e o
 /// elenco guardado antes. Depois o elenco volta ao de antes, a cópia refaz em ensaio (sorteios da fita, sem entregar) e o
 /// elenco tem de sair igual ao da original, com os sorteios do ensaio iguais aos da fita (mesmos n, todos usados).
-pub(crate) unsafe extern "thiscall" fn comparar_send_club_international_report_news(this: usize, club: usize, game: usize, result: usize, destaque: usize, squad: *mut usize, count: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_send_club_international_report_news(this: usize, club: usize, game: usize, result: usize, highlight: usize, squad: *mut usize, count: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, *mut usize, u32)>(IDX_SEND_CLUB_INTERNATIONAL_REPORT_NEWS);
     let q = (count as u8 as i8).max(0) as usize;
     let before: Vec<usize> = (0..q).map(|k| *squad.add(k)).collect();
-    let ((), tape_lock) = crate::rng::trace(|| o(this, club, game, result, destaque, squad, count));
+    let ((), tape_lock) = crate::rng::trace(|| o(this, club, game, result, highlight, squad, count));
     let after: Vec<usize> = (0..q).map(|k| *squad.add(k)).collect();
     let n = tape_lock.len();
     for k in 0..q {
         *squad.add(k) = before[k];
     }
     *core::ptr::addr_of_mut!(INTERNATIONAL_REPORT_TAPE) = Some((tape_lock, 0, false));
-    crate::rng::without_counting(|| send_club_international_report_news(this, club, game, result, destaque, squad, count));
+    crate::rng::without_counting(|| send_club_international_report_news(this, club, game, result, highlight, squad, count));
     let (k, falhou) = match &*core::ptr::addr_of!(INTERNATIONAL_REPORT_TAPE) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
@@ -34,6 +41,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_club_international_report_n
 }
 
 /// Comparer for `national_teams_post_call_up_news` (comparison mode: see the header of motor.rs).
+///
+/// Comparer of 0x76e0b0: it only builds and delivers news items (allocating in the humans' inboxes) and builds and
+/// frees the opponents list: it cannot run twice and writes nothing of the game besides the inboxes.
+///
+/// Only the original routine runs (simplification: the effect is the human's inbox; the opponents list is checked
+/// through 0x76d560).
 ///
 /// [pt] Comparador da 0x76e0b0: ela só monta e entrega notícias (aloca nas caixas dos humanos) e monta e libera a lista dos
 /// adversários: não pode rodar duas vezes e não grava nada do jogo além das caixas. Só a original roda (simplification: o
@@ -58,6 +71,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_o
 }
 
 /// Comparer for `select_squad` (comparison mode: see the header of motor.rs).
+///
+/// The original allocates (0x68d020/0x68d0d0), changes the squads and the tactic slots and sends news (0x76e0b0,
+/// 0x76f1a0): it cannot run twice. Only it runs, with a tape recording open on the squad_selection_regions: the lineup
+/// picker (0x6e2000) enters it as a unit, with the input arrays (the list and the codes) and the state of the regions
+/// just before. Afterwards, with that state restored, the Rust copy builds the list (collect_squad_candidates) and the
+/// codes (squad_position_codes), which must match the original's, together with the count, the mode and the team; the
+/// original's after-state is restored at the end.
+///
+/// In the squads of 23 and 25 the original passes stack leftover in the slots from the 22nd on: those are left out
+/// (known fix, the branch); the first 22 and the rest are checked. With no lineup pick (human manager), nothing to
+/// compare. Inside an outer recording, only the original runs.
 ///
 /// [pt] Comparador: a original aloca (0x68d020/0x68d0d0), mexe nos elencos, nas vagas da tática e manda notícias (0x76e0b0,
 /// 0x76f1a0): não pode rodar duas vezes. Só ela roda, com uma gravação da fita aberta nas regiões de squad_selection_regions:
@@ -104,14 +128,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_squad(this: usize, nation
     let n1 = (a[1] as u8 as i8).max(0) as usize;
     let dw = |k: usize| u32::from_le_bytes([ent[k], ent[k + 1], ent[k + 2], ent[k + 3]]) as usize;
     let list: Vec<usize> = (0..n1.min(ent.len() / 4)).map(|k| dw(4 * k)).collect();
-    let cod_o: Vec<u16> = ent.get(4 * n1..).unwrap_or(&[]).chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+    let code: Vec<u16> = ent.get(4 * n1..).unwrap_or(&[]).chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
     let corrigido = size == 23 || size == 25;
-    let lim = if corrigido { 22.min(cod_o.len()) } else { cod_o.len() };
-    let same = a[1] as u8 == n && a[2] == mode && a[3] as usize == elenco && cod_o.len() == size as usize
-        && list[..] == cand[..n1.min(200)] && cod_o[..lim] == codigos[..lim];
+    let lim = if corrigido { 22.min(code.len()) } else { code.len() };
+    let same = a[1] as u8 == n && a[2] == mode && a[3] as usize == elenco && code.len() == size as usize
+        && list[..] == cand[..n1.min(200)] && code[..lim] == codigos[..lim];
     SCOREBOARD.record(same, || format!(
         "select_squad(nação {:x}, tipo {}, tam {}) original: n {} modo {:#x} time {:x} lista {:x?} códigos {:x?}; rust: n {} modo {:#x} time {:x} lista {:x?} códigos {:x?}",
-        nation, t, size, a[1] as u8, a[2], a[3], list, cod_o, n, mode, elenco, &cand[..(n as i8).max(0) as usize], &codigos[..size as usize]));
+        nation, t, size, a[1] as u8, a[2], a[3], list, code, n, mode, elenco, &cand[..(n as i8).max(0) as usize], &codigos[..size as usize]));
 }
 
 /// Comparer for `get_international_duty_club` (comparison mode: see the header of motor.rs).
@@ -166,6 +190,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: 
 
 /// Comparer for `select_squads_for_fixture` (comparison mode: see the header of motor.rs).
 ///
+/// The original routine runs first; the copy afterwards, as a dry run, from the same records of the two nations (+0x32
+/// to +0x6c: today's marks, squad dates and call-up marks).
+///
+/// If the copy requested any squad (0x76c120 allocates and touches the squads), the comparison does not count and the
+/// original stands; otherwise the records must match.
+///
 /// [pt] Comparador: a original roda antes; a cópia depois, em ensaio, a partir dos mesmos registros das duas nações (+0x32
 /// a +0x6c: marcas de hoje, datas dos elencos e marcas de convocado). Se a cópia pediu algum elenco (0x76c120 aloca e
 /// mexe nos elencos), a comparação não vale e fica a original; senão os registros têm de bater.
@@ -207,6 +237,12 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_teams_post_player_called
 
 /// Comparer for `record_international_result` (comparison mode: see the header of motor.rs).
 ///
+/// The rehearsal (the copy without the ranking, the first call-up, the transfer record and the news item, which
+/// allocate, go to the file or write elsewhere) and the original routine from the same state, checked over the regions
+/// the routine writes on its own (caps_update_regions).
+///
+/// Outside a match between national teams: only the original.
+///
 /// [pt] Comparador: o ensaio (a cópia sem o ranking, a primeira convocação, o registro de transferências e a notícia, que
 /// alocam, vão para o arquivo ou gravam fora) e a original a partir do mesmo estado, conferidos nas regiões que a
 /// rotina grava por conta própria (caps_update_regions). Fora de jogo entre seleções: só a original.
@@ -243,7 +279,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_format_squad_label(this: usize, 
     ro
 }
 
-/// Comparer for `withdraw_injured_player` (comparison mode: see the header of motor.rs).
+/// Comparer for `withdraw_injured_player` (comparison mode: see the header of motor.rs): the withdrawal calls the news
+/// (allocates), the removal from the tactics and the replacement (original routines with side effects), so only the
+/// original routine runs.
+///
+/// The path is decided beforehand, read-only (release_plan), and checked afterwards: without withdrawal, the national
+/// team's club (`+0x24`) and the call-up mark (`+0x28`) remain; with withdrawal, the player who was in one of the
+/// team's 50 slots leaves them (`+0x24` zeroed by `0x7762f0`). Without a club (the box): only the original routine.
 ///
 /// [pt] Comparador: a retirada chama a notícia (aloca), a saída da tática e o substituto (originais com efeitos): só a
 /// original roda. O caminho é decidido antes, só lendo (release_plan), e conferido depois: sem retirada, o clube da
@@ -286,6 +328,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_post_replacement_
 
 /// Comparer for `national_teams_can_change_squad` (comparison mode: see the header of motor.rs).
 ///
+/// Side by side on the return value and the reason (the original routine in the destination, the copy in its own
+/// destination of the same size). Both move the cursor of list [this] the same way; the search for the day's matches
+/// builds and frees a local list (no lasting state).
+///
+/// No nation or a short destination (the box): only the original.
+///
 /// [pt] Comparador: lado a lado pela devolução e pelo motivo (a original no destino, a cópia num destino próprio do mesmo
 /// tamanho). As duas andam o cursor da lista [this] do mesmo jeito; a busca de jogos do dia monta e libera uma lista
 /// local (sem estado que fique). Sem nação ou destino curto (a caixa): só a original.
@@ -295,10 +343,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(
         return o(this, nation, kind, p, entrando, msg, size);
     }
     let r = o(this, nation, kind, p, entrando, msg, size);
-    let mut meu: Vec<u8> = if msg != 0 { vec![0u8; size as usize] } else { Vec::new() };
-    let n = national_teams_can_change_squad(this, nation, kind, p, entrando, if msg != 0 { meu.as_mut_ptr() as usize } else { 0 }, size);
+    let mut my: Vec<u8> = if msg != 0 { vec![0u8; size as usize] } else { Vec::new() };
+    let n = national_teams_can_change_squad(this, nation, kind, p, entrando, if msg != 0 { my.as_mut_ptr() as usize } else { 0 }, size);
     let text = |a: *const u8, m: usize| -> Vec<u8> { (0..m).map(|i| *a.add(i)).take_while(|&c| c != 0).collect() };
-    let (to, tr) = if msg != 0 { (text(msg as *const u8, size as usize), text(meu.as_ptr(), size as usize)) } else { (Vec::new(), Vec::new()) };
+    let (to, tr) = if msg != 0 { (text(msg as *const u8, size as usize), text(my.as_ptr(), size as usize)) } else { (Vec::new(), Vec::new()) };
     SCOREBOARD.record(r == n && to == tr, || format!("national_teams_can_change_squad({:x}, {}, {:x}, {}) {}/{} {:?} x {:?}", nation, kind as u8, p, entrando, r, n,
         String::from_utf8_lossy(&to), String::from_utf8_lossy(&tr)));
     r
@@ -445,7 +493,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_remove_player_fro
     SCOREBOARD.record(igual, || format!("national_teams_remove_player_from_squad({:x}, {}, {:x}) {:x?} x {:x?}", nation, kind as u8, p, mo, mr));
 }
 
-/// Comparador: o byte +0x6b do registro, as vagas do sub-21 e as pessoas delas (+0x24 a +0x5e). A 0x896c60 da
+/// Comparer: byte +0x6b of the record, the under-21 slots and their persons (+0x24 to +0x5e).
+///
+/// The copy's 0x896c60 no longer finds the persons that the original routine has already removed (it stays outside the
+/// regions, as in 0x7762f0).
+///
+/// Null under-21 team: only the original.
+///
+/// [pt] Comparador: o byte +0x6b do registro, as vagas do sub-21 e as pessoas delas (+0x24 a +0x5e). A 0x896c60 da
 /// cópia não acha mais as pessoas que a original já tirou (fica fora das regiões, como na 0x7762f0). Sub-21 nulo:
 /// só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_release_overage_u21_players(this: usize, nation: usize) {
@@ -573,7 +628,11 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_team_level(j: usize, rep
     r
 }
 
-/// Comparer for `national_teams_daily_update` (comparison mode: see the header of motor.rs).
+/// Comparer for `national_teams_daily_update` (comparison mode: see the header of motor.rs): the original routine calls
+/// up players (`0x76bab0`: news, squads), reschedules matches (`0x7777e0`), allocates the table (`0x7775c0`) and frees
+/// items (`0x68d1f0`), so it cannot run twice.
+///
+/// Only it runs, checking the plan of what the routine itself writes: no item for today is left in the list at `+0`.
 ///
 /// [pt] Comparador: a original convoca (0x76bab0: notícias, elencos), remarca jogos (0x7777e0), aloca a tabela (0x7775c0)
 /// e libera itens (0x68d1f0): não pode rodar duas vezes. Só ela roda, conferindo o plano do que a própria rotina grava:
@@ -596,6 +655,12 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_team_ages(comp: usize, k
 }
 
 /// Comparer for `record_club_call_ups` (comparison mode: see the header of motor.rs).
+///
+/// Side by side on the team's squad (50 slots) and, for each club of the squad that counts, on the record (6 bytes) and
+/// on the whole entries vector (capacity × 9).
+///
+/// When some vector may grow (0x945667 releases the old one; it cannot run twice): only the original routine, then
+/// checking the squad sorted by club (the same qsort on a copy, done beforehand).
 ///
 /// [pt] Comparador: lado a lado no elenco do time (50 vagas) e, de cada clube do elenco que conta, no registro (6 bytes) e
 /// no vetor de entradas inteiro (capacidade × 9). Quando algum vetor pode crescer (0x945667 solta o velho; não roda

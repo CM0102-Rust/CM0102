@@ -1,7 +1,13 @@
 use super::*;
 
-
-/// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
+/// Describes one state league.
+///
+/// It holds the vtable, the stages beyond the league (+0x2c: 1 in the round-robin ones with a knockout, 3 in the ones
+/// with two rounds and a final; the vector [+0xc] = malloc of 4 × stages), the rules (thiscall, ret 0), the table
+/// (thiscall, ret 0), the predicted positions (thiscall, ret 0), the source file and the error-box lines (rules, table,
+/// fixtures, order, statistics).
+///
+/// [pt] Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
 /// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
 /// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
 pub(crate) struct BraRegGoiasStateChampionship {
@@ -14,8 +20,19 @@ pub(crate) struct BraRegGoiasStateChampionship {
     pub(crate) linhas: [u32; 5],
 }
 
-/// Shared constructor of the Brazilian state leagues: League::League, vtable, year, discipline; loads saved state or
-/// sets up a new league (rules, table, fixtures, sort, Comp_Stats, predicted positions).
+/// The constructor of a Brazilian state league (the same 544-byte template in all twelve, checked instruction by
+/// instruction: only the vtable, the stages, the three own routines, the source file and the line numbers change).
+///
+/// League::League (0x682200, thiscall, ret 0); +4 = the competition record; the vtable; the year (+0x40, word) = `ano`;
+/// the discipline rule (+0x50) = 7. If the saved state loads (League::load_from_temp_file 0x687b10, thiscall(this, 1),
+/// ret 4; returns ≠ 0), returns this.
+///
+/// Otherwise (new career): +0x51 = 0xf (the importance), +0x44 = 0xff, +0x30 = −1, +0x2c = the stages and their array
+/// (malloc 0x944e46, unchecked); then, each with its own error box (returning this) if it returns 0: the rules, the
+/// table, the fixtures (League::create_fixtures 0x6835c0, thiscall, ret 0) and the sort (League::sort_table 0x6827d0,
+/// thiscall(this, 0), ret 4); the stats (operator new 0x944cf1 of 0x5ce and Comp_Stats::Comp_Stats 0x49ee70,
+/// thiscall(new, this), ret 4; the original's SEH frame covers only that new) at +8 (without them: the error box);
+/// finally the predicted positions.
 ///
 /// [pt] O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
 /// vtable, as fases, as três rotinas próprias, o fonte e as linhas). League::League (0x682200, thiscall, ret 0); +4 = o
@@ -139,16 +156,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, year
     bra_reg_goias_construct_state_league(this, year, record, &GOIANO_STATE_CHAMPIONSHIP, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
 }
 
-
-
-
-
-
-
-
-
-
-
 /// The Goias turnover: archives the season in the statistics, clears the previous table and stages, moves to the next
 /// year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order; then
 /// the predicted positions and the renewal of the state referees
@@ -170,20 +177,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_advance_stage(this: usize) 
     state_league_advance_stage(this, 0x98ae90, 0x1f1, 0x433930);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /// the Goias league has 14 clubs: those with it as their reserve division in the database (the field that holds the
 /// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegGoias::create_table` (0x433540, bra_reg_goias.cpp, thiscall, ret 0).
@@ -193,17 +186,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_advance_stage(this: usize) 
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_table(this: usize) -> u32 {
     fill_state_league_table(this, 0xe, 0x98ae90, 0x160, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, 0, "cql_9 goiano cheio")
 }
-
-
-
-
-
-
-
-
-
-
-
 
 /// Writes the Goiano league rules (what 0x433640 writes before the calendar): points, tiebreaks, 8 qualifiers,
 /// substitutions.
@@ -297,11 +279,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules(this: usize) -
     create_main_schedule(this);
     1
 }
-
-
-
-
-
 
 /// Goias: after the round robin, the top 8 go to the quarter-finals: 1st v 8th, 3rd v 6th, 7th v 2nd, 5th v 4th (the
 /// seeds are the positions [inference: two legs])

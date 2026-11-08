@@ -1,7 +1,7 @@
 # Mutacoes da leva124 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva124.py --jogo 2001-10-01
 MUTACOES = [
     ('n_cinco', "            *b(0x8ea2) = 5;\n            *b(engine::SHOOTOUT_KICKS_LEFT) = 5;", "            *b(0x8ea2) = 5;\n            *b(engine::SHOOTOUT_KICKS_LEFT) = 4;"),
-    ('n_vez', "            let vez = byte(m, (0x8e9f + lu) as usize) as i32 % 11;", "            let vez = byte(m, (0x8e9f + lu) as usize) as i32 % 10;"),
+    ('n_vez', "            let time = byte(m, (0x8e9f + lu) as usize) as i32 % 11;", "            let time = byte(m, (0x8e9f + lu) as usize) as i32 % 10;"),
     ('n_forca', "            let mut strength = (0xc8 - r.wrapping_mul(restam + 4)) << 1;", "            let mut strength = (0xc8 - r.wrapping_mul(restam + 3)) << 1;"),
     ('n_precisa', "                Some(2.25)", "                Some(2.5)"),
     ('n_direcao', "                *((j + match_player::BALL_CONTROL) as *mut i16) = c.clamp(-0xc8, 0xc8);", "                *((j + match_player::BALL_CONTROL) as *mut i16) = c.clamp(-0xc7, 0xc8);"),

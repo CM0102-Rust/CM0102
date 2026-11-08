@@ -10,15 +10,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table(thi
         |r, e, s| jap_j_cup_create_round_table(this, stage, r, e, s))
 }
 
-
-
 /// Comparer for `jap_j_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_J_CUP_COLLECT_ENTRANTS);
     jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants", this, || o(this), || collect_j_cup_entrants(this))
 }
-
-
 
 /// Comparer for `jap_j_cup_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_start_new_season(this: usize) -> u32 {

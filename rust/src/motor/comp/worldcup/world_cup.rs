@@ -1,12 +1,10 @@
 use super::*;
 
-
-
-
-
-
-
-/// As chaves das 32 nações do sorteio real de 2002 (os globais g_key_nation_*, índice na tabela de nações [0xae23a8],
+/// The keys of the 32 nations of the real 2002 draw (the g_key_nation_* globals, index into the nation table
+/// [0xae23a8], 0x122 bytes each), in the order in which the original routine writes them to the list: groups A to H,
+/// four per group.
+///
+/// [pt] As chaves das 32 nações do sorteio real de 2002 (os globais g_key_nation_*, índice na tabela de nações [0xae23a8],
 /// 0x122 bytes cada), na ordem em que a original as grava na lista: grupos A a H, quatro por grupo.
 pub(crate) const WORLD_CUP_2002_DRAW: [usize; 32] = [
     KEY_NATION_FRANCE, KEY_NATION_SENEGAL, KEY_NATION_URUGUAY, KEY_NATION_DENMARK, // A: France, Senegal, Uruguay, Denmark
@@ -135,7 +133,6 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     list
 }
 
-
 /// The World Cup draw day: the draw list, group 1 in the World Cup itself with its fixtures and sorted table, the group
 /// 2..8 stages, the predicted positions and the bookings reset.
 ///
@@ -188,7 +185,6 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
     cards(body, 0);
 }
 
-
 /// The World Cup day: the seeding on the seeding date, the draw on its date (no table yet) and the league day.
 ///
 /// `WorldCup::update_for_date(today, full)`, method +0x14 of the World Cup, the World Cup's day from the competitions'
@@ -221,12 +217,6 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
     }
     league(this, today, full)
 }
-
-
-
-
-
-
 
 /// Club of entry i (5 bytes, id at +0) of the draw list: [G_CLUB_TABLE] + id × 0x245.
 ///
@@ -289,7 +279,6 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_table(this: usize,
 pub(crate) unsafe fn group_clubs(list: usize, g: i32) -> Vec<usize> {
     (0..32usize).filter(|&i| read_u8(list + i * 5 + 4) as i8 as i32 == g).map(|i| draw_list_club(list, i)).take(4).collect()
 }
-
 
 /// Creates the stage of one of groups 2 to 8: its teams, the round schedule, the stage constructor, the current stage
 /// and the group news.
@@ -390,7 +379,6 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
     1
 }
 
-
 /// Sorts the 32 nations by reputation, sets each one's predicted position (1, 2, 3, 4, 5, 9, 17, 25 by the stage bands)
 /// and makes the World Cup the nation's current competition.
 ///
@@ -450,14 +438,10 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
     soltar(v);
 }
 
-
-
-
-
-
-
-
-/// Os jogos de cada fase de grupos na tabela das rodadas (0x68a1c0: rodada, jogo, a, b, c, valor), na ordem da
+/// The matches of each group stage in the round table (0x68a1c0: round, match, a, b, c, value), in the original's
+/// order, by stage + 1 (jump table 0x92ccd0: −1 is the Cup itself, group 1; 0..6 groups 2..8).
+///
+/// [pt] Os jogos de cada fase de grupos na tabela das rodadas (0x68a1c0: rodada, jogo, a, b, c, valor), na ordem da
 /// original, pela fase + 1 (a tabela de saltos 0x92ccd0: −1 é a própria Copa, o grupo 1; 0..6 os grupos 2..8).
 pub(crate) const WORLD_CUP_GROUP_GAMES: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
     [(0, 0, 2, 1, 3, 4), (0, 1, 2, 2, 3, 0x4000), (1, 0, 1, 1, 3, 0x1000), (1, 1, 1, 2, 3, 0x400), (2, 0, 1, 2, 3, 0x40), (2, 1, 1, 2, 3, 0x2000)],
@@ -544,7 +528,6 @@ pub(crate) unsafe fn written_group_round_bytes(t: usize) -> Vec<u8> {
     v
 }
 
-
 /// Adds a qualified nation to the World Cup nation table (status 6), or shows the box when the list is full.
 ///
 /// `WorldCup::add_qualified_team(club)`, from the qualifiers (0x90f4f0, 0x911e10, 0x91538e, 0x9184c0, 0x91e200,
@@ -568,7 +551,6 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, club: usi
     write_u32_from_usize(read_u32_as_usize(this + 0x14).wrapping_add((read_i16(this + 0x36) as i32 * 6) as usize), club);
     write_u16(this + 0x36, (read_i16(this + 0x36) as u16).wrapping_add(1));
 }
-
 
 /// Sets the World Cup seeds (holder, hosts, reputation) and the pots by continent; does nothing for the 2002 World Cup.
 ///
@@ -683,12 +665,12 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
             continue;
         }
         let nation = read_u32_as_usize(club + club::NATION);
-        let cont = if nation != 0 { read_u32_as_usize(nation + nation::CONTINENT) } else { 0 };
-        if cont == 0 {
+        let count = if nation != 0 { read_u32_as_usize(nation + nation::CONTINENT) } else { 0 };
+        if count == 0 {
             show_error_at(0xad5888, 0x61e);
             continue;
         }
-        let c = read_u32_as_usize(cont);
+        let c = read_u32_as_usize(count);
         let (p, s) = if c == read_u32_as_usize(KEY_CONTINENT_EUROPE) {
             (1, 0xa)
         } else if c == read_u32_as_usize(KEY_CONTINENT_OCEANIA) || c == read_u32_as_usize(KEY_CONTINENT_ASIA) || c == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) {
@@ -704,5 +686,4 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     sort(read_u32_as_usize(this + 0x14) + 0x30, 0x18, 6, 0x92f660);
     sort(this + 0x116, 0x18, 5, 0x92f660);
 }
-
 

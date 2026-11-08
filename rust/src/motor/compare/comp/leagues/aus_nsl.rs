@@ -14,6 +14,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usiz
 
 /// Comparer for `create_finals_series_stage` (comparison mode: see the header of motor.rs).
 ///
+/// The finals series comparer: only the original routine runs (it allocates the round table and the stage and sends the
+/// news item), with the plan made beforehand: the top six of the table.
+///
+/// Afterwards, return value 1, the stage in slot 0 with +0x3e = 6, +4 = the league's +4 and the six in its table
+/// (+0xb1, as a set), and +0x30 = 0.
+///
 /// [pt] O comparador da série final: só a original (aloca a tabela das rodadas e a fase e manda a notícia), com o plano feito
 /// antes: os seis primeiros da tabela. Depois, a devolução 1, a fase na vaga 0 com +0x3e = 6, +4 = o +4 da liga e os
 /// seis na tabela dela (+0xb1, como conjunto), e +0x30 = 0.
@@ -39,6 +45,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_finals_series_stage(this:
 }
 
 /// Comparer for `create_grand_final_stage` (comparison mode: see the header of motor.rs).
+///
+/// The grand final comparer: only the original routine runs (it allocates the list, the table and the stage and draws
+/// the round), with the plan made beforehand: the top two of the final series.
+///
+/// Afterwards, the stage in the second slot exists, with +0x3e = 2, +4 = the league's +4 and the two in its list
+/// (+0xa7, 6 bytes; as a set).
 ///
 /// [pt] O comparador da grande final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
@@ -71,7 +83,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_set_up_rules(this: usize
     SCOREBOARD.record(igual && r == n, || format!("aus_nsl_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
-
 
 /// Comparer for `aus_nsl_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///

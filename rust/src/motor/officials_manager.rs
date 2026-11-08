@@ -31,7 +31,6 @@ pub(crate) unsafe extern "thiscall" fn record_referee_grade(this: usize, r: *con
     }
 }
 
-
 /// Region of the official's 17-byte record that 0x79ce10 touches (empty if id invalid).
 ///
 /// [pt] A ficha do arbitro que a 0x79ce10 mexe (vazia se o id nao vale).
@@ -42,14 +41,6 @@ pub(crate) unsafe fn official_record_region(manager: usize, id: i32) -> Vec<(usi
     }
     vec![(base + id as usize * 17, 17)]
 }
-
-
-
-
-
-
-
-
 
 /// Record of official i (0x2b bytes in [0xae23e8]).
 ///
@@ -275,9 +266,6 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     crt_free(marks);
 }
 
-
-
-
 /// Orders a nation's referee slots by competition level (the invalid ones last or first), tie by id.
 ///
 /// `officials_manager_compare_comp_level(a, b)` (cdecl), the order of a nation's competition slots (qsort of 0x79bf60,
@@ -306,9 +294,6 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b
     }
     sa as i32 - signed_byte_at as i32
 }
-
-
-
 
 /// Official's sorting quality: byte +0x28 x 50 + word +0x22, in 16 bits.
 ///
@@ -347,7 +332,6 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_de
     kb as i32 - ka as i32
 }
 
-
 /// Orders the referees by nation and by quality from lowest to highest; tie by index, ascending.
 ///
 /// `officials_manager_compare_nation_then_quality_asc(a, b)` (cdecl), the qsort order of 0x79c5c0 (after the new
@@ -369,11 +353,6 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_as
     }
     ka as i32 - kb as i32 // cqh7: a ordem crescente
 }
-
-
-
-
-
 
 /// The nation's officials block in the manager (0x102 bytes in [this+0xc]: counts, first index, league bands).
 ///
@@ -421,23 +400,23 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         return 0xffff_ff00;
     }
     let nations = read_i32(G_NATION_COUNT);
-    let home = read_usize(game + 0x1c);
-    let away = read_usize(game + 0x20);
-    let comp = read_usize(game + 0x14);
-    let faixa_da_nacao = |nacao: i32| {
+    let home = read_usize(game + fixture::HOME_CLUB);
+    let away = read_usize(game + fixture::AWAY_CLUB);
+    let comp = read_usize(game + fixture::COMPETITION);
+    let band_of_nation = |nacao: i32| {
         let b = nation_officials_block(this, nacao);
         (read_i32(b + 8), read_i32(b + 4))
     };
     let (ini, n) = if comp == 0 {
-        faixa_da_nacao(officials_manager_club_nation_id(home).unwrap_or_else(|| sortear(nations)))
+        band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| sortear(nations)))
     } else {
         let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
         if friendly(read_usize(G_FRIENDLY), comp) != 0 {
-            faixa_da_nacao(read_i32(read_usize(home + club::NATION))) // like the original, without checking the nation
+            band_of_nation(read_i32(read_usize(home + club::NATION))) // like the original, without checking the nation
         } else {
             let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp).wrapping_mul(4) as usize));
             if c == 0 {
-                faixa_da_nacao(officials_manager_club_nation_id(home).unwrap_or_else(|| sortear(nations)))
+                band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| sortear(nations)))
             } else {
                 let kind = read_u8(c + cup::CLUB_SIDES) as i8;
                 if kind == 2 || kind == 4 {
@@ -534,7 +513,6 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
     (k as u32 & 0xffff_ff00) | 1
 }
 
-
 /// Clears the daily referee busy bytes.
 ///
 /// `OfficialsManager::clear_busy_flags`, in the day loop (0x5cccd0) and in the run up to the start date (0x5cc850):
@@ -553,7 +531,6 @@ pub(crate) unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
     }
     i as u32
 }
-
 
 /// At each league's season start, replaces the referees of its range over 45 (or over 40, one in three) with new random
 /// ones and clears the range's statistics rows.
@@ -642,14 +619,6 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     1
 }
 
-
-
-
-
-
-
-
-
 /// Random byte: random(n) + k.
 ///
 /// [pt] Um byte sorteado: sorteio(n) + k no al.
@@ -657,8 +626,14 @@ pub(crate) unsafe fn random_byte_plus(n: i32, k: u8) -> u8 {
     (sortear(n) as u8).wrapping_add(k)
 }
 
-/// Generates a new 0x2b-byte official record for nation in the order of 0x79c6aa: names by weight, nation, random
-/// attributes, birth year and day.
+/// A new referee record in `r` (0x2b bytes) for nation `nacao`, in the order of `0x79c6aa`.
+///
+/// First and second name by weight (`0x539b90`, `0x53a0e0`), the nation (`+0x16`), the words `+0x22` random draw(80) +
+/// 1, `+0x1e` and `+0x20` random draw(80) + 40 (the byte extended), bytes `+0x24`..`+0x26` random draw(10) + 5 and
+/// `+0x27`..`+0x2a` random draw(10) + 7, `+0x1a` zero, the year (`+0xe`) 1960 + random draw(10) and the day (`+0xc`)
+/// random draw(300) + 1.
+///
+/// It does not write `+0` and `+0x10`..`+0x15` (the original routine leaves whatever the realloc brought).
 ///
 /// [pt] Uma ficha de árbitro nova em `r` (0x2b bytes) da nação `nacao`, na ordem da 0x79c6aa: primeiro e segundo nome pelo
 /// peso (0x539b90, 0x53a0e0), a nação (+0x16), as palavras +0x22 sorteio(80) + 1, +0x1e e +0x20 sorteio(80) + 40 (o
@@ -733,7 +708,6 @@ pub(crate) unsafe fn same_official_record(g: &[u8; 0x2b], f: usize) -> bool {
     let t = core::slice::from_raw_parts(f as *const u8, 0x2b);
     g[4..0x10] == t[4..0x10] && g[0x16..] == t[0x16..]
 }
-
 
 /// If an attribute byte is outside 1..20, replaces it with the value from f.
 ///
@@ -835,7 +809,6 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
     }
 }
 
-
 /// Copies a 0x2b-byte referee record field by field, the date through the date copy.
 ///
 /// `Official::operator=(src)`, from setting up the referees of a new game (0x79bf60, the records that are kept). Copies
@@ -864,7 +837,6 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_operator(this: usize, s
     }
     this
 }
-
 
 /// Writes the referees and their statistics into the off.dat item of the save.
 ///

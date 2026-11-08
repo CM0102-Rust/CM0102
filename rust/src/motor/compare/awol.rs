@@ -15,6 +15,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_missed_training(this: usiz
 
 /// Comparer for `awol_post_missed_training_news` (comparison mode: see the header of motor.rs).
 ///
+/// The original routine builds the news item and delivers it (it allocates in the inbox), so only it runs, with the
+/// random draws traced; then the copy in rehearsal mode redoes the path with the draws from the tape, without
+/// delivering.
+///
+/// It checks that the rehearsal's draws are the start of the original's tape (the rest belongs to the delivery) with
+/// the same n, and records the destination (the original does not expose it).
+///
 /// [pt] Comparador: a original monta a notícia e a entrega (aloca na caixa): só ela roda, com os sorteios rastreados; depois
 /// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
@@ -71,7 +78,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize
     r
 }
 
-/// Comparer for `miss_training` (comparison mode: see the header of motor.rs).
+/// Comparer for `miss_training` (comparison mode: see the header of motor.rs): the comparer of the marked absence, as a
+/// dry run.
+///
+/// The copy stops at the decision (0 nothing, 1 goes missing, 2 marks the absence) and the original routine runs from
+/// the same state (random draw, the person's mark, [`0xae1080`]); the original's decision is read from the mark (new
+/// bit 1: went missing; new bit 2: missed training). Without a decision, the whole state must match (the same random
+/// draws). The case byte (`+0xc` of the record) is not compared: in the original routine it is stack residue.
 ///
 /// [pt] O comparador da falta marcada, em ensaio: a cópia para na decisão (0 nada, 1 some, 2 marca a falta) e a original roda
 /// a partir do mesmo estado (sorteio, marca da pessoa, [0xae1080]); a decisão da original sai da marca (bit 1 novo:
@@ -128,6 +141,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usiz
 }
 
 /// Comparer for `report_poor_fitness` (comparison mode: see the header of motor.rs).
+///
+/// The original runs alone (it puts the record in the list, gives the news item and fines) and the plan is checked:
+/// with non-null player and club, the record with the player, the club and today's date (16 bytes; byte +0x10 is stack
+/// leftover) is placed right after the previous tail (or at the head, if the list was empty).
 ///
 /// [pt] O comparador do incidente: a original roda sozinha (põe o registro na lista, dá a notícia e multa) e confere o
 /// plano: jogador e clube não nulos põem logo depois da cauda de antes (ou na cabeça, lista vazia) o registro com o

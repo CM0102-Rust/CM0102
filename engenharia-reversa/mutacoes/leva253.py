@@ -18,7 +18,7 @@ MUTACOES = [
     ('cpq6_britanica', 'value(manager(), person, seller, 1, 0xffff_ffff, 0) / 2 // under 24 between British clubs', 'value(manager(), person, seller, 1, 0xffff_ffff, 0) / 4 // mutacao: um quarto', 'cpq_6 compensacao britanica'),
     ('cpq6_vendedor_recebe', 'receber(fin_v, first); // o vendedor recebe', 'let _ = receber; // mutacao: o vendedor nao recebe', 'cpq_6 pagar transferencia'),
     ('cpq6_multa', 'if active(c) != 0 && read_usize(offer + 4) == 0', 'if (active(c) | 1) != 0 && read_usize(offer + 4) == 0', 'cpq_6 clube deve aceitar'),
-    ('cpq7_sem_permissao', 'dar(this, person, read_usize(club + club::NATION), year, 0, 1); // the new permission', 'let _ = (dar, year); // mutacao: sem a permissao nova', 'cpq_7 permissao nova'),
+    ('cpq7_sem_permissao', 'give(this, person, read_usize(club + club::NATION), year, 0, 1); // the new permission', 'let _ = (give, year); // mutacao: sem a permissao nova', 'cpq_7 permissao nova'),
     ('cpq7_sem_luvas', 'luvas(fin, value); // the signing-on fee', 'let _ = (luvas, fin, value); // mutacao: sem luvas', 'cpq_7 luvas'),
     ('cpq7_fator', 'read_usize(offer + offer::SLOT_INDEX), 1.0f64, 2) != 0 {', 'read_usize(offer + offer::SLOT_INDEX), 1.1f64, 2) != 0 { // mutacao: fator 1,1', 'cpq_7 contrato da oferta'),
     ('cpq8_contrato_fica', 'tirar_contrato(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), friendly_club_by_id(read_usize(offer + 8))); // the contract offer goes out', 'let _ = tirar_contrato; // mutacao: a oferta de contrato fica', 'cpq_8 desfazer oferta'),

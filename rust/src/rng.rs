@@ -27,7 +27,7 @@
 use core::cell::Cell;
 
 use crate::comparison::{Scoreboard, TestRng};
-use crate::detours::{self, Prologo};
+use crate::detours::{self, Prologue};
 use crate::registro::linha;
 use crate::simulation;
 
@@ -45,7 +45,7 @@ const RAND_STATE: *mut u32 = 0xad6c30 as *mut u32;
 const ONE_OVER_65535: f64 = 1.0 / 65535.0;
 
 // 0x90cfc0: push ecx; push esi; mov esi, dword ptr [esp + 0xc]
-const PROLOGUE: Prologo = Prologo { endereco: 0x90cfc0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] };
+const PROLOGUE: Prologue = Prologue { address: 0x90cfc0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] };
 
 static mut ORIGINAL: usize = 0;
 

@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Staff id -> person record (0x6e bytes in G_STAFF_TABLE).
 ///
 /// [pt] O registro da pessoa `id` (tabela [0xae23bc], 0x6e bytes).
@@ -19,7 +16,10 @@ pub(crate) unsafe fn clear_coach_slot(e: usize) {
     *((e + 8) as *mut u8) = 0;
 }
 
-/// Os divisores da nota pela quantidade de categorias do treinador (1 a 5), floats montados na pilha pela original:
+/// The rating divisors by the coach's number of categories (1 to 5), floats built on the stack by the original: 1.0;
+/// 1.2; 1.4; 1.6; 2.0.
+///
+/// [pt] Os divisores da nota pela quantidade de categorias do treinador (1 a 5), floats montados na pilha pela original:
 /// 1,0; 1,2; 1,4; 1,6; 2,0.
 pub(crate) const RATING_DIVISORS: [u32; 5] = [0x3f80_0000, 0x3f99_999a, 0x3fb3_3333, 0x3fcc_cccd, 0x4000_0000];
 
@@ -67,10 +67,10 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
         return;
     }
     let manager = if tecnico == 0 { read_u32_as_usize(club + club::MANAGER) } else { tecnico };
-    let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
+    let staff: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
     let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_ASSISTANT);
     let treinadores: unsafe extern "C" fn(usize, *mut usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CLUB_COACHES);
-    let t = comissao(this, manager);
+    let t = staff(this, manager);
     let aux = auxiliar(club);
     let mut tr = [0usize; 5];
     treinadores(club, tr.as_mut_ptr());
@@ -141,7 +141,6 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
         }
     }
 }
-
 
 /// Training schedule `vaga` (0..9, else 1) of human manager `tec`; outside the 16 humans shows the error box and
 /// returns 0.
@@ -237,10 +236,9 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
         let c = carga(human_training_schedule(this, manager, *e));
         gravar_carga(read_u32_as_usize(G_INJURY), p, c as u32);
     }
-    let comissao: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_TRAINING_MANAGER_UPDATE_COACH_ASSIGNMENTS);
-    comissao(this, new, manager);
+    let staff: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_TRAINING_MANAGER_UPDATE_COACH_ASSIGNMENTS);
+    staff(this, new, manager);
 }
-
 
 /// the default names of the 167 training schedules
 /// Original: `(training_manager.cpp, 0x8b2230)` (0x8b2230, training_manager.cpp, thiscall).
@@ -253,12 +251,6 @@ pub(crate) unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize
         name(this + k * 0x9b);
     }
 }
-
-
-
-
-
-
 
 /// 6-byte training entry of a person ([this+0x651d] + 6 x id of player data +0x61).
 ///
@@ -295,8 +287,6 @@ pub(crate) unsafe fn training_manager_club_of_contract(c: usize) -> usize {
 pub(crate) unsafe fn is_human_manager_id(manager: usize) -> bool {
     read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10)
 }
-
-
 
 /// `TRAINING_MANAGER::update_player_training(person, skip)`, called by the player initialisation for the match
 /// (0x6eaea0, match_man.cpp, with 0: every player of every match), by a new injury (0x62d250) and by the screens:
@@ -342,7 +332,7 @@ pub(crate) unsafe fn is_human_manager_id(manager: usize) -> bool {
 /// e sem lesão 0x62c400: a marca 0x8000 (0x867700), −5 em +0x44 (−100..100) e 0x5885c0); taxa negativa, sorteio(−taxa)
 /// < 5 dá nota − 2 e, abaixo de 1, o item acaba (taxa 0, nota 1). Aplica o progresso (0x8b2be0) e, com itens acabados,
 /// tira-os da lista (o último no lugar) e reordena (qsort 0x945333 com 0x8b4e00).
-pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular: u32) {
+pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, skip: u32) {
     if p == 0 {
         show_error_at(0xa8ccd0, 0x18a);
         return;
@@ -394,8 +384,8 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         }
     }
     let mut weeks = read_u16(this + 0x688d).wrapping_sub(read_u16(e + 1));
-    let pular = pular as u16;
-    if weeks == 0 && pular == 0 {
+    let skip = skip as u16;
+    if weeks == 0 && skip == 0 {
         return;
     }
     if *mark & 0x20 != 0 {
@@ -477,8 +467,8 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     }
     let mut voltas = weeks;
     let mut contract_of_club = 0usize;
-    if pular != 0 || voltas != 0 {
-        if pular != 0 {
+    if skip != 0 || voltas != 0 {
+        if skip != 0 {
             voltas = 1;
         }
         let sheet: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
@@ -495,7 +485,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         loop {
             for _ in 0..voltas {
                 let taxa = read_i8(it);
-                if (pular != 0 && read_u16(it - 3) == pular) || taxa > 0 {
+                if (skip != 0 && read_u16(it - 3) == skip) || taxa > 0 {
                     if friendly_random(read_i8(it) as i32) < 5 {
                         let n = read_i8(it - 1).wrapping_add(2);
                         *((it - 1) as *mut i8) = if n > 0x14 { 0x14 } else { n };
@@ -536,8 +526,8 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             }
         }
     }
-    let aplicar: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(FN_TRAINING_MANAGER_APPLY_TRAINING_PROGRESS);
-    aplicar(this, p, d.as_ptr());
+    let apply: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(FN_TRAINING_MANAGER_APPLY_TRAINING_PROGRESS);
+    apply(this, p, d.as_ptr());
     if acabou {
         crate::comparison::branch("cqd_8 treino de posicao acabou");
         let n0 = read_i32(this + 0x6525);
@@ -565,7 +555,6 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         }
     }
 }
-
 
 /// `TRAINING_MANAGER::get_player_schedule(person)`, called by the people's daily update (game_daily_staff_update
 /// 0x5ce2d0), by 0x5d6aa0 and by update_player_training (0x8b1750): returns the player's training schedule.
@@ -610,7 +599,6 @@ pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize
     this.wrapping_add((*(training_entry_of_staff(this, p) as *const i8) as isize * 0x9b) as usize)
 }
 
-
 /// `TRAINING_SCHEDULE::get_category_level(category)`: returns the level of the schedule's category (+4 + category,
 /// signed), in al; the upper bytes of eax keep the sign-extended category (movsx), as in the original. Called by
 /// update_player_training (0x8b1750, the five categories of each update).
@@ -624,9 +612,6 @@ pub(crate) unsafe extern "thiscall" fn get_category_level(this: usize, category:
     let v = *((this as isize + k as isize + 4) as *const u8);
     (k as u32 & 0xffff_ff00) | v as u32
 }
-
-
-
 
 /// 6-byte training entry of a person ([this+0x651d] + 6 x id of player data +0x61).
 ///
@@ -699,7 +684,6 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
     training_manager_apply_training_progress(this, p, &d);
 }
 
-
 /// `TRAINING_MANAGER::get_training_attribute_change(person, attribute)`, called by the training screen (0x8b8184): how
 /// much the training progress adds to an attribute: the attribute (0x5431e0) minus the same attribute without the
 /// training progress (it applies the negated progress, reads, and reapplies the progress), in al. A null person or one
@@ -731,7 +715,6 @@ pub(crate) unsafe extern "thiscall" fn get_training_attribute_change(this: usize
     training_manager_apply_training_progress(this, p, &v);
     before.wrapping_sub(sem)
 }
-
 
 /// Position masks accepted by 0x8b4770 (others show the error box).
 ///
@@ -801,8 +784,6 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
     r as u32
 }
 
-
-
 /// Writes the five levels (+4..+8) of a training schedule.
 ///
 /// [pt] Os cinco níveis (+4..+8) de um programa de treino.
@@ -847,7 +828,6 @@ pub(crate) unsafe extern "thiscall" fn set_type(this: usize, slot: i8, kind: i8)
         _ => {}
     }
 }
-
 
 /// Training schedule slot of human manager `pessoa` as 0x8b3d40 computes it; outside the 16 humans shows the box and
 /// returns 0.
@@ -904,7 +884,6 @@ pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
     nomes(this);
 }
 
-
 /// `TRAINING_MANAGER::get_manager_schedule(manager, slot)`: returns the human manager's schedule for the slot (0..=9;
 /// outside that, 1): this + 0x9b × (slot + 10 × human + 7), human = [0xae2364] − id − 1. Outside the 16 human managers:
 /// the box (line 0x68f) and 0. Called by 0x8b3d40 (slots 6 to 9) and by the screens.
@@ -922,9 +901,6 @@ pub(crate) unsafe extern "thiscall" fn get_manager_schedule(this: usize, manager
     let slot = if (0..0xa).contains(&slot) { slot } else { 1 };
     this.wrapping_add(0x9b * (slot as i32 + 10 * v + 7) as usize)
 }
-
-
-
 
 /// Divisor of the coaches' average by number of coaches (1..6): 1, 1.45, 1.7, 1.9, 2.05, 2.2.
 ///
@@ -966,8 +942,8 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
     if read_i32(t) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         return (t as u32 & 0xffff_0000) | 100; // cpt8: técnico do computador
     }
-    let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
-    let s = comissao(this, t);
+    let staff: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
+    let s = staff(this, t);
     let (mut n, mut soma) = (0i8, 0i16);
     for k in 0..6usize {
         let e = s + 9 * k;
@@ -991,7 +967,6 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
     r as u32
 }
 
-
 /// `TRAINING_MANAGER::get_coach_assignments(manager)`: returns the training staff table (six 9-byte slots) of one of
 /// the 16 human managers, at this + 0x652d + 54 × ([0xae2364] − id − 1).
 ///
@@ -1013,7 +988,6 @@ pub(crate) unsafe extern "thiscall" fn get_coach_assignments(this: usize, manage
     }
     this + 0x652d + 54 * v as usize
 }
-
 
 /// `TRAINING_SCHEDULE::get_training_load()`: the schedule's load from its five category levels (+4..+8, signed) with
 /// fixed weights, up to 100.
@@ -1042,10 +1016,6 @@ pub(crate) unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
     }
     s as i32
 }
-
-
-
-
 
 /// Adds v to the 1..20 attribute byte at a, clamped to 1..20.
 ///
@@ -1203,7 +1173,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     }
     let de15 = |o: usize| (read_i8(f + o) >= 0xf) as i8;
     let mut positions = de15(player_sheet::GOALKEEPER) + de15(player_sheet::SWEEPER) + de15(player_sheet::DEFENDER) + de15(player_sheet::DEFENSIVE_MIDFIELDER) + de15(player_sheet::MIDFIELDER) + de15(player_sheet::ATTACKING_MIDFIELDER) + de15(player_sheet::ATTACKER);
-    let mut lados = de15(player_sheet::LEFT_SIDE) + de15(player_sheet::CENTRAL) + de15(player_sheet::RIGHT_SIDE);
+    let mut sides = de15(player_sheet::LEFT_SIDE) + de15(player_sheet::CENTRAL) + de15(player_sheet::RIGHT_SIDE);
     for j in 0..n as usize {
         let item = p + 8 * j;
         let field = match *((item + 4) as *const i16) as i32 {
@@ -1222,9 +1192,9 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         if read_i8(item + 6) >= 0xf {
             *((f + field) as *mut u8) = 0x14;
         } else if field == 0x18 || field == 0x19 || field == 0x17 {
-            if lados > 1 {
+            if sides > 1 {
                 *((f + field) as *mut u8) = 1;
-                lados -= 1;
+                sides -= 1;
             }
         } else if positions > 1 {
             *((f + field) as *mut u8) = 1;
@@ -1232,7 +1202,6 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         }
     }
 }
-
 
 /// `TRAINING_MANAGER::find_position_training(person, &first)`: finds the player's first entry in the sorted position
 /// training list and returns how many are his.
@@ -1290,7 +1259,6 @@ pub(crate) unsafe extern "thiscall" fn find_position_training(this: usize, perso
     n
 }
 
-
 /// `TRAINING_MANAGER::has_fast_position_training(person)`, called by the people's daily update (game_daily_staff_update
 /// 0x5ce2d0): returns 1 if some item of the person's position training (0x8b4b20) has a learning rate (+7) above 50;
 /// otherwise 0.
@@ -1310,8 +1278,6 @@ pub(crate) unsafe extern "thiscall" fn has_fast_position_training(this: usize, p
     }
     0
 }
-
-
 
 /// `TRAINING_MANAGER::advance_week_counter(&day)`, every day from the day loop (game_main_day_loop 0x5cccd0, with the
 /// day of the year of the game date 0xae2c90): on a day that is a multiple of 7 (signed remainder), the training week
@@ -1333,8 +1299,6 @@ pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *c
     }
     v / 7
 }
-
-
 
 // simplification: the reserve loses the item (does not run twice): original only; the copy takes the branch.
 

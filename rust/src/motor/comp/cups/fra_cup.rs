@@ -1,7 +1,16 @@
 use super::*;
 
-
-/// Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
+/// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
+///
+/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through 0x521e60; the
+/// match (the same, plus the leg at +6 and the venue at +0x13) through 0x521eb0.
+///
+/// Then the fields: +7 the round name, +9 the index, +0xb the draw bits, +0xd and +0xf the tie-breakers (single match
+/// and two legs), +0x17 the category copied into each match, +0x18/+0x1a/+0x1c/+0x1e teams, matches, new teams and
+/// entrants already in, +0x20/+0x21/+0x22 replay, matches per tie and days between them, +0x5c/+0x60/+0x64 the prize
+/// money (reaching, winning, losing).
+///
+/// [pt] Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
 /// janeiro, anos a somar ao ano da copa +0x40, dia da semana ou −1) pela 0x521e60; o jogo (o mesmo, mais o turno em +6
 /// e o mando em +0x13) pela 0x521eb0; depois os campos: +7 o nome da rodada, +9 o índice, +0xb os bits do sorteio, +0xd
 /// e +0xf os desempates (jogo único e ida e volta), +0x17 a categoria copiada em cada jogo, +0x18/+0x1a/+0x1c/+0x1e
@@ -56,8 +65,14 @@ pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRoun
     d(0x64, r.premios.2);
 }
 
-/// Shared create_round_table (virtual +0x3c) of single-stage cups: only at stage -1 sets outputs, allocates and fills
-/// the round table.
+/// Shared body of virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) of the
+/// single-stage cups: only stage −1 builds the round table.
+///
+/// Outside stage −1 (the byte), returns 0 without writing anything. In −1: saida (if requested) = 0, rodadas = the
+/// table size, extra = 0; the table (0x944e46 of 0x68 × rodadas; when out of memory, the error box `linha` of `arquivo`
+/// and returns 0) is filled with each round.
+///
+/// Returns the table.
 ///
 /// [pt] O corpo comum da virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) das copas
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
@@ -85,8 +100,6 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *
     }
     t
 }
-
-
 
 /// A Copa da França (FraCup): nove rodadas de outubro a maio do ano seguinte, a partir da 6ª rodada nacional (código
 /// 0x3c); o clube da divisão mais baixa joga em casa (+0xb = 1) da 7ª rodada à semifinal.
@@ -117,7 +130,6 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, s
     single_stage_round_table(this, stage, rounds, extra, out, &FRENCH_CUP_ROUNDS, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
 }
 
-
 /// A Copa da Liga francesa (FraLgeCup): sete rodadas de setembro a abril do ano seguinte.
 pub(crate) const FRENCH_LEAGUE_CUP_ROUNDS: [FraCupCupRound; 7] = [
     cql11r((1, 8, 0, 3), (5, 9, 0, 1, 2, 0), 0xe6, (0, 3, 0), 4, (0x10, 8, 0x10, 0), (0, 1, 0), (0, 0x493e0, 0)),
@@ -129,9 +141,12 @@ pub(crate) const FRENCH_LEAGUE_CUP_ROUNDS: [FraCupCupRound; 7] = [
     cql11r((2, 3, 1, 6), (0x16, 3, 1, 5, 2, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0x16e360, 0)),
 ];
 
-
-
-/// A Copa do Rei (SpaCup): sete rodadas de agosto a maio do ano seguinte; o clube da divisão mais baixa joga em casa e
+/// The Copa del Rey (SpaCup): seven rounds from August to May of the following year.
+///
+/// The club from the lower division plays at home and clubs from the same nation are kept apart (`+0xb` = 3) up to the
+/// semi-final; from the 3rd round to the semi-final, ties are two-legged.
+///
+/// [pt] A Copa do Rei (SpaCup): sete rodadas de agosto a maio do ano seguinte; o clube da divisão mais baixa joga em casa e
 /// os clubes da mesma nação se separam (+0xb = 3) até a semifinal; da 3ª rodada à semifinal, ida e volta.
 pub(crate) const COPA_DEL_REY_ROUNDS: [FraCupCupRound; 7] = [
     cql11r((0x12, 7, 0, 4), (0x1e, 7, 0, 2, 2, 0), 0xe6, (3, 3, 0), 4, (0x26, 0x13, 0x26, 0), (0, 1, 7), (0, 0xffff_ffff, 0)),
@@ -142,10 +157,6 @@ pub(crate) const COPA_DEL_REY_ROUNDS: [FraCupCupRound; 7] = [
     cql11r((0x17, 1, 1, 4), (0xb, 3, 1, 2, 2, 0), 0x82, (3, 0, 3), 6, (4, 2, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
     cql11r((0x1a, 3, 1, 3), (0x1a, 4, 1, 5, 1, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
 ];
-
-
-
-
 
 /// Id of the competition pointed to by c + o, or None.
 ///
@@ -170,11 +181,11 @@ pub(crate) unsafe fn add_entrant(this: usize, n: &mut i32, club: usize) {
 ///
 /// [pt] Uma passada pelos clubes (os `ate` primeiros, índice em 16 bits) que passam em `entra(clube, n)`; com `para`, a
 /// passada acaba quando a lista enche (+0x3e).
-pub(crate) unsafe fn enter_clubs_pass(this: usize, n: &mut i32, ate: impl Fn() -> i32, para: bool, entra: impl Fn(usize, i32) -> bool) {
+pub(crate) unsafe fn enter_clubs_pass(this: usize, n: &mut i32, ate: impl Fn() -> i32, para: bool, enters: impl Fn(usize, i32) -> bool) {
     let mut i: i16 = 0;
     while (i as i32) < ate() {
         let c = eng_cc_cup_club_by_index(i);
-        if entra(c, *n) {
+        if enters(c, *n) {
             add_entrant(this, n, c);
             if para && *n == read_i16(this + cup::TEAM_COUNT) as i32 {
                 return;
@@ -198,8 +209,19 @@ pub(crate) unsafe fn french_cup_amateur_limit(this: usize) -> i32 {
     if read_i16(this + cup::YEAR) == 0x7d1 { 0xb8 } else { 0xb6 }
 }
 
-/// Port of FraCup::collect_entrants (0x5baa50): 222 entrants from National, CFA-linked, French amateurs, then Second
-/// and First divisions; returns (full flag, count).
+/// `FraCup::collect_entrants()` (0x5baa50, thiscall, ret 0, fra_cup.cpp): builds the 222-entrant French Cup list;
+/// returns (full flag, count).
+///
+/// +0x3e = 222; the list is allocated (0x944e46 of 0x534 bytes at +0xa7; out of memory, the error box for line 0x16f
+/// and −1).
+///
+/// In this order: all clubs of division [0x9cf5d4] (without checking the space left); the clubs of division [0x9cf764]
+/// linked (+0x60) to [0x9cf5d8]; the French clubs (+0x53 = [0x9cf300]) of [0x9cf764] with no link; the French clubs
+/// with no division that are not national teams (0x53b900), among the clubs before the 2 × [0xae2350] national teams at
+/// the end — these last three groups up to `french_cup_amateur_limit`; then the Second ([0x9cf5d0]) and the First
+/// ([0x9cf5cc]) while they fit.
+///
+/// Returns 1 if the list is full, otherwise 0 (and how many entered, for the comparer).
 ///
 /// [pt] { 0x5baa50 } (thiscall, ret 0, fra_cup.cpp): `FraCup::collect_entrants()`: +0x3e = 222; a lista (0x944e46 de 0x534 em
 /// +0xa7; sem memória, a caixa da linha 0x16f e −1). Na ordem: todos os da divisão [0x9cf5d4] (sem conferir o espaço); os
@@ -254,10 +276,16 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> 
     french_cup_collect_entrants(this).0
 }
 
-
-
-/// Port of FraLgeCup::collect_entrants (0x5bd160): 54 entrants from National (by origin) then Second and First
-/// divisions; returns (full flag, count).
+/// `FraLgeCup::collect_entrants()` (`0x5bd160`, thiscall, ret 0, `fra_lge_cup.cpp`): builds the list of 54 French
+/// League Cup entrants.
+///
+/// Sets `+0x3e` = 54; allocates the list (`0x944e46` of 0x144 into `+0xa7`; out of memory, the box of line `0x146` and
+/// −1). In order: the clubs of division [`0x9cf5d4`] that did not come (`+0x5b`, with competition) from [`0x9cf5d8`],
+/// up to 16 in 2001 (`+0x40` = 0x7d1) and 14 in other years; the clubs of [`0x9cf5d4`] that came from [`0x9cf5d8`]
+/// while the list has fewer than 16; then the Second division ([`0x9cf5d0`]) and the First ([`0x9cf5cc`]) while they
+/// fit.
+///
+/// Returns 1 with the list full, otherwise 0.
 ///
 /// [pt] { 0x5bd160 } (thiscall, ret 0, fra_lge_cup.cpp): `FraLgeCup::collect_entrants()`: +0x3e = 54; a lista (0x944e46 de
 /// 0x144 em +0xa7; sem memória, a caixa da linha 0x146 e −1). Na ordem: os da divisão [0x9cf5d4] que não vieram (+0x5b,
@@ -297,11 +325,15 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
 
-
-
-
-/// Port of FraSuper::select_teams (0x5bf770): First division champion and French Cup winner (runner-up if same club);
-/// returns (1, 2) or errors.
+/// `FraSuper::select_teams()` (0x5bf770, thiscall, ret 0, fra_super.cpp): picks the First Division champion and the
+/// French Cup winner, or the First Division runner-up when they are the same club.
+///
+/// Sets +0x3e = 2 and allocates the list (0x944e46 of 0xc at +0xa7; when out of memory, the error box for line 0xc4 and
+/// −1). The First Division champion ([0x9cf5cc]; if missing, error box 0xcd and 0) and the French Cup winner
+/// ([0x9cf70c]; if missing, 0xd6 and 0); if they are the same club, the second one becomes the First Division runner-up
+/// (if missing, 0xe2 and 0).
+///
+/// Class and status 0 for both; returns 1.
 ///
 /// [pt] { 0x5bf770 } (thiscall, ret 0, fra_super.cpp): `FraSuper::select_teams()`: +0x3e = 2; a lista (0x944e46 de 0xc em
 /// +0xa7; sem memória, a caixa da linha 0xc4 e −1). O campeão da Primeira ([0x9cf5cc]; sem ele, a caixa 0xcd e 0) e o
@@ -344,6 +376,4 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: usize) -> (i32, i32) {
     *((l + 0xb) as *mut u8) = 0;
     (1, 2)
 }
-
-
 

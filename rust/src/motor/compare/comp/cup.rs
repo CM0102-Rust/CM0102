@@ -3,7 +3,13 @@ use super::*;
 // The comparers of the routines in ../comp/cup.rs (comparison mode: see the header of motor.rs).
 // [pt] Os comparadores das rotinas de ../comp/cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer for `create_tie_fixtures` (comparison mode: see the header of motor.rs).
+/// Comparer for `create_tie_fixtures` (comparison mode: see the header of motor.rs): the comparer of `0x51cb90`; only
+/// the original routine runs (the match goes to the calendar via `0x5aa680`, which allocates, and the news goes to the
+/// managers).
+///
+/// The plan, made beforehand: the chosen tie (−1 searches for mark 1 or 2), the return value, the mark (2 when
+/// postponing, 3 when creating) and, when creating with both teams, the home side's matches in the competition go up by
+/// 1 (2 in a two-legged one with the cup still active).
 ///
 /// [pt] Comparador da 0x51cb90: só a original (a partida vai ao calendário pela 0x5aa680, que aloca, e as notícias aos
 /// técnicos). O plano, feito antes: o confronto escolhido (o −1 procura a marca 1 ou 2), a devolução, a marca (2 ao
@@ -117,6 +123,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_cup_start_new_season(cup: usize)
 
 /// Comparer for `pay_round_prize_money` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x522240, as a dry run: the copy without the news item and the whole original routine, from the same
+/// state (the fund and the finance records of both clubs, restored after the dry run); checks the fund and the
+/// finances.
+///
+/// No club, no finances, or with the division that drops: only the original.
+///
 /// [pt] Comparador da 0x522240, em ensaio: a cópia sem a notícia e a original inteira, a partir do mesmo estado (o fundo e
 /// os registros de finanças dos dois clubes, restaurados depois do ensaio); confere o fundo e as finanças. Sem clube,
 /// sem finanças ou com a divisão que cai: só a original.
@@ -158,6 +170,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_home_teams_for_round(cup: us
 
 /// Comparer for `record_team_progress` (comparison mode: see the header of motor.rs).
 ///
+/// Comparer of 0x521b30: side by side on the 3 progress bytes (+0x73..+0x75) of the club's record in the cup's
+/// Comp_Stats (+8, found by 0x4a4850: push club; ecx = the statistics; thiscall, ret 4), which +0x68 writes. The
+/// versions that pass it on to another competition write outside that region (then the comparison only checks that
+/// nothing changed in it).
+///
+/// Without statistics, without a club or without a record: only the original.
+///
 /// [pt] Comparador da 0x521b30: lado a lado nos 3 bytes de progresso (+0x73..+0x75) do registro do clube no Comp_Stats da
 /// copa (+8, achado pela 0x4a4850: push clube; ecx = as estatísticas; thiscall, ret 4), que a +0x68 grava; as versões
 /// que repassam a outra competição gravam fora da região (aí a comparação só confere que nada mudou nela). Sem
@@ -175,7 +194,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_team_progress(cup: usize,
     SCOREBOARD.record(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", team as i16, round as i16, mo, mr));
 }
 
-/// Comparer for `draw_round` (comparison mode: see the header of motor.rs).
+/// Comparer for `draw_round` (0x51c410; comparison mode: see the header of motor.rs).
+///
+/// Only the original runs (the random draws draw, the news item allocates). The plan, made beforehand: with no draw (no
+/// +0x45 or already drawn), nothing changes in the ties or the dates; with a team still open, the predicted dates of
+/// the rounds (this one plus 1 day, the following ones at least that); once drawn, all ties with +0x34 = 1 and +0xac
+/// with the predicted sum (the news item's queries do not change with the draw).
 ///
 /// [pt] Comparador da 0x51c410: só a original (os sorteios sorteiam, a notícia aloca). O plano, feito antes: sem sorteio
 /// (sem +0x45 ou já sorteada), nada muda nos confrontos nem nas datas; com time em aberto, as datas previstas das
@@ -191,7 +215,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_round(cup: usize, round: u3
         // the date plan: (record, day word, year byte) of each round from here on
         let mut a = [0u8; 8];
         let (mut dia, mut ano) = (read_i16(round_record_by_dword(cup, round)), (read_u8(round_record_by_dword(cup, round) + 2) as i8 as i16).wrapping_add(read_i16(cup + cup::YEAR)) as u16);
-        // 0x54c5b0 (plus 1): normalize forward, 365 days in the leap year (crate::data::bissexto)
+        // 0x54c5b0 (plus 1): normalize forward, 365 days in the leap year (crate::date::bissexto)
         dia = dia.wrapping_add(1);
         let size = |y: u16| if crate::date::bissexto(y) == 1 { 365i16 } else { 364 };
         while dia > size(ano) {
@@ -239,7 +263,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_club_in_higher_division(this: us
     r
 }
 
-/// Comparer for `cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
+/// Comparer for `cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs): the comparer of
+/// `0x519890`; only the original routine runs (the records go to the people's history and change reputations and
+/// morale, so they cannot run twice).
+///
+/// The plan, made beforehand: the club's status (`+0` of the 6-byte record) changes to UEFA Cup when the winner earns
+/// the place; otherwise it does not change. Without a club: only the original routine.
 ///
 /// [pt] Comparador da 0x519890: só a original (os registros vão ao histórico das pessoas e mexem nas reputações e no moral,
 /// não podem rodar duas vezes). O plano, feito antes: o estado do clube (+0 do registro de 6 bytes) passa à Copa da
@@ -260,6 +289,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_cup_update_staff_records_for_sta
 }
 
 /// Comparer for `cup_record_season_honours` (comparison mode: see the header of motor.rs).
+///
+/// Comparer of 0x519a90: only the original routine runs (0x4afce0 may grow the history and 0x519fc0 has its own
+/// comparer). The plan, made beforehand: the free history row (free_comp_history_row) gets the competition (+4), the
+/// year [0xae2c92] and the four of season_honours.
+///
+/// No free row (the history grows) or no competition: only the original.
 ///
 /// [pt] Comparador da 0x519a90: só a original (a 0x4afce0 pode crescer o histórico e a 0x519fc0 tem o seu comparador). O
 /// plano, feito antes: a linha livre do histórico (free_comp_history_row) recebe a competição (+4), o ano [0xae2c92] e os
@@ -484,9 +519,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_tree_slot_for_fixture(cup: 
 }
 
 /// Comparer for `cup_match_importance` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_cup_match_importance(cup: usize, partida: usize, second: u8, margem: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn comparar_cup_match_importance(cup: usize, partida: usize, second: u8, margin: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(IDX_CUP_MATCH_IMPORTANCE);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(margem as usize, 1)], || o(cup, partida, second, margem), || cup_match_importance(cup, partida, second, margem));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(margin as usize, 1)], || o(cup, partida, second, margin), || cup_match_importance(cup, partida, second, margin));
     SCOREBOARD.record(igual && r == n, || format!("cup_match_importance(lado {}) original={} rust={} {:x?} x {:x?}", second, r, n, mo, mr));
     r
 }
@@ -507,6 +542,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_cup_check_complete(this: usize, 
 }
 
 /// Comparer for `move_round_fixtures_to_set_dates` (comparison mode: see the header of motor.rs).
+///
+/// Comparer of 0x51ebe0: only the original routine runs (the matches leave the calendar and come back through 0x5aa680,
+/// which allocates, and the news items go to the managers).
+///
+/// The plan, made beforehand: the cup's matches on the date and slice (0x5abd90 into a temporary list), in list order;
+/// each one of the league's type takes the next slot (every 7 bytes, up to 0x38 and up to the first 0xff), and the slot
+/// of the one on the round's date becomes 0xff; the other slots do not change.
+///
+/// Without the cup in [0xadadfc] afterwards: nothing to check.
 ///
 /// [pt] Comparador da 0x51ebe0: só a original (os jogos saem do calendário e voltam pela 0x5aa680, que aloca, e as notícias
 /// vão aos técnicos). O plano, feito antes: os jogos da copa na data e fatia (0x5abd90 numa lista provisória), na
@@ -555,7 +599,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates
         round, after, expected));
 }
 
-/// Comparer for `map_fixture_tree` (comparison mode: see the header of motor.rs).
+/// Comparer for `map_fixture_tree` (comparison mode: see the header of motor.rs): the comparer of the tie tree; only
+/// the original routine runs (simplification: it allocates the tie vectors and makes random draws; it cannot run
+/// twice).
+///
+/// It checks what the original guarantees when it returns 1 with clubs: each tie of the mapped rounds points (`+6`
+/// slot, `+8` side, `+0x12` round one or two ahead) to a slot that points back to it (`+0xa`/`+0xe` home,
+/// `+0xc`/`+0x10` away).
 ///
 /// [pt] O comparador da árvore dos confrontos: só a original (simplification: aloca os vetores dos confrontos e sorteia; não
 /// roda duas vezes). Confere o que ela garante quando devolve 1 com clubes: cada confronto das rodadas mapeadas aponta
@@ -590,6 +640,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) ->
 }
 
 /// Comparer for `cup_rank_teams` (comparison mode: see the header of motor.rs).
+///
+/// It writes and may reallocate the stats (it does not run twice): before the original, the positions are planned on a
+/// sorted copy of the array (the keys in a Vec); afterwards, each planned club's record must have its last position at
+/// +0x72.
 ///
 /// [pt] Comparador: grava e pode realocar a estatística (não roda duas vezes): antes da original, as posições são
 /// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem

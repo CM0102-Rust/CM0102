@@ -3,8 +3,6 @@ use super::*;
 // The comparers of the routines in ../comp/cups/usa_mls_all_stars.rs (comparison mode: see the header of motor.rs).
 // [pt] Os comparadores das rotinas de ../comp/cups/usa_mls_all_stars.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-
-
 /// Comparer for `usa_mls_all_stars_start_new_season_90a760` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON_90A760);
@@ -12,6 +10,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_seas
 }
 
 /// Comparer for `set_up_teams` (comparison mode: see the header of motor.rs).
+///
+/// Side by side from the same state (the random generator, +0x3e, the two All-Star clubs and [0xb67a34]); the original
+/// leaves its list at +0xa7, the copy builds its own (without counting the random draw), which is compared over the 12
+/// bytes and freed. The old list (+0xa7 on entry) is freed by neither of them (the season rollover has already freed
+/// it).
 ///
 /// [pt] Lado a lado a partir do mesmo estado (o sorteador, +0x3e, os dois clubes das estrelas e [0xb67a34]); a original deixa
 /// a lista dela em +0xa7, a cópia faz a sua (sem contar o sorteio), comparada nos 12 bytes e liberada. A lista antiga
@@ -53,7 +56,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_update_for_dat
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ALL_STARS_UPDATE_FOR_DATE)(this, today, stage)
 }
 
-/// Comparer for `usa_mls_all_stars_create_round_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `usa_mls_all_stars_create_round_table` (comparison mode: see the header of motor.rs): side by side.
+///
+/// The original routine runs with the caller's outputs, the copy with its own outputs that start equal, from the same
+/// [`0xb67a34`]; the outputs and the written bytes of both tables must be equal (the copy's is freed). Outside stage
+/// −1, only the original routine (neither writes anything).
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da

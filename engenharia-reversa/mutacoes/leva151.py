@@ -12,6 +12,6 @@ MUTACOES = [
     ('f_suspensoes', "    two(u(G_DISCIPLINE, 0), 0x55ca00);\n", ""),
     ('f_estados', "    two(u(G_INJURY, 0), 0x62c080);\n", ""),
     ('f_historia', "        two(h, u(u(h, 0), 4));\n", ""),
-    ('f_lados', "    club(u(game, 0x20), u(game, 0x1c), game, round[1] as u32, summary);", "    club(u(game, 0x20), u(game, 0x1c), game, round[0] as u32, summary);"),
+    ('f_lados', "    club(u(game, fixture::AWAY_CLUB), u(game, fixture::HOME_CLUB), game, round[1] as u32, summary);", "    club(u(game, fixture::AWAY_CLUB), u(game, fixture::HOME_CLUB), game, round[0] as u32, summary);"),
     ('f_metodo', "            metodo(c, game, summary);", "            let _ = (metodo, c);"),
 ]

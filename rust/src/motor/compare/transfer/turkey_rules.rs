@@ -15,4 +15,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_turkey_rules(this: usi
     r
 }
 
-

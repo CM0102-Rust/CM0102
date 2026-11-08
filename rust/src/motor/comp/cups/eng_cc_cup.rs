@@ -1,6 +1,16 @@
 use super::*;
 
-/// Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
+/// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
+///
+/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through 0x521e60; the
+/// match (the same, plus the leg at +6 and the venue at +0x13) through 0x521eb0.
+///
+/// Then the fields: +7 the round name, +9 the index, +0xb the draw bits, +0xd and +0xf the tie-breakers (single match
+/// and two legs), +0x17 the category copied into each match, +0x18/+0x1a/+0x1c/+0x1e teams, matches, new teams and
+/// entrants already in, +0x20/+0x21/+0x22 replay, matches per tie and days between them, +0x5c/+0x60/+0x64 the prize
+/// money (reaching, winning, losing).
+///
+/// [pt] Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
 /// janeiro, anos a somar ao ano da copa +0x40, dia da semana ou −1) pela 0x521e60; o jogo (o mesmo, mais o turno em +6
 /// e o mando em +0x13) pela 0x521eb0; depois os campos: +7 o nome da rodada, +9 o índice, +0xb os bits do sorteio, +0xd
 /// e +0xf os desempates (jogo único e ida e volta), +0x17 a categoria copiada em cada jogo, +0x18/+0x1a/+0x1c/+0x1e
@@ -56,8 +66,12 @@ pub(crate) unsafe fn eng_cc_cup_write_cup_round(t: usize, i: u32, r: &EngCcCupCu
     d(0x64, r.premios.2);
 }
 
-/// Common body of virtual +0x3c (create_round_table) for single-stage cups: at stage −1 allocates and fills the round
-/// table from the given rounds; otherwise returns 0.
+/// Common body of virtual `+0x3c` (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) for
+/// single-stage cups.
+///
+/// Outside stage −1 (the byte), returns 0 without writing anything. At −1: `saida` (if requested) = 0, `rodadas` = the
+/// table size, `extra` = 0; allocates the table (`0x944e46` of 0x68 × rounds; out of memory, the box `linha` of
+/// `arquivo` and returns 0) and fills each round; returns the table.
 ///
 /// [pt] O corpo comum da virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) das copas
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
@@ -101,7 +115,6 @@ pub(crate) unsafe fn eng_cc_cup_written_round_bytes(t: usize, n: i16) -> Vec<u8>
     v
 }
 
-
 /// A Copa da Liga inglesa (EngCcCup): sete rodadas de agosto a março do ano seguinte; as três primeiras dependem de
 /// +0xb2 (os clubes nas copas europeias, que entram mais tarde) e vêm à parte (`league_cup_rounds`).
 pub(crate) const LEAGUE_CUP_ROUNDS: [EngCcCupCupRound; 7] = [
@@ -114,7 +127,12 @@ pub(crate) const LEAGUE_CUP_ROUNDS: [EngCcCupCupRound; 7] = [
     cql10r((0x12, 1, 1, 3), (1, 3, 1, 6, 1, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
 ];
 
-/// Builds the English League Cup round table, adjusting team, match and entrant counts by b (+0xb2, European entrants).
+/// Builds the English League Cup round table, with team, match and entrant counts adjusted by `b` = +0xb2 (signed byte;
+/// the number of European entrants; arithmetic done in 16 bits as in the original).
+///
+/// 1st round: 2b + 0x38 teams, b + 0x1c matches, 2b + 0x38 new entrants. 2nd round: (0x20 − b) × 2 teams, 0x20 − b
+/// matches, (0xc − b) × 3 new entrants and 2b + 0x38 entrants carried over. 3rd round: b new entrants and 0x5c − b
+/// entrants carried over.
 ///
 /// [pt] A tabela da Copa da Liga com `b` = +0xb2 (byte com sinal; as contas em 16 bits como a original): 1ª rodada 2b + 0x38
 /// times, b + 0x1c jogos, 2b + 0x38 novos; 2ª rodada (0x20 − b) × 2 times, 0x20 − b jogos, (0xc − b) × 3 novos e 2b +
@@ -145,8 +163,16 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table(this: usize
     eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &t, 0x9c4224, 0xa2, "cql_10 tabela da copa da liga")
 }
 
-
-/// A Copa da Inglaterra (EngFaCup): nove rodadas de outubro a maio do ano seguinte, com replay (+0x20 = 1) até as
+/// The English FA Cup (EngFaCup): nine rounds from October to May of the following year, with replays (`+0x20` = 1) up
+/// to the quarter-finals.
+///
+/// Rounds 2 to 5 depend on `+0xb3` (exemptions), `+0xb4` (the choice of entry in the 5th round) and `+0x3e` (the
+/// entrants), and are built separately (`fa_cup_rounds`).
+///
+/// The original routine also writes `+0x13` = 0 in rounds 0 to 6, which the fixture date had already left with home
+/// advantage 0.
+///
+/// [pt] A Copa da Inglaterra (EngFaCup): nove rodadas de outubro a maio do ano seguinte, com replay (+0x20 = 1) até as
 /// quartas; as rodadas 2 a 5 dependem de +0xb3 (isenções) e +0xb4 (a escolha da entrada na 5ª rodada) e do +0x3e (os
 /// inscritos) e vêm à parte (`fa_cup_rounds`). A original grava ainda +0x13 = 0 nas rodadas 0 a 6,
 /// que a data do jogo já deixou com o mando 0.
@@ -162,15 +188,23 @@ pub(crate) const FA_CUP_ROUNDS: [EngCcCupCupRound; 9] = [
     cql10r((9, 3, 1, 0), (0xc, 4, 1, 5, 1, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0x1e8480, 0xf4240)),
 ];
 
-/// Builds the FA Cup round table, adjusting team, match and entrant counts by b (+0xb3), entry mode (+0xb4) and
-/// entrants (+0x3e).
+/// Builds the FA Cup round table, adjusting team, match and entrant counts by `b`, the entry mode and the entrants.
+///
+/// Here `b` = +0xb3 (signed byte), `entrada` = +0xb4 and `inscritos` = +0x3e (16-bit counts).
+///
+/// With +0xb4 = 1, the 1st round proper has 0x28 teams, 0x13 matches and no new teams, and the 2nd has 0x40 teams, 0x20
+/// matches, 0x2b new teams and 0x6c entrants. Otherwise, the first has 6b + 0x28 teams, 3b + 0x14 matches, 6b new teams
+/// and 0x6c entrants, and the second (0x10 − b) × 4 teams, (0x10 − b) × 2 matches, 0x2c − 7b new teams and (b + 0x12) ×
+/// 6 entrants.
+///
+/// The 3rd has (0x10 − b) × 2 teams and 0x10 − b matches; the 4th, b new teams and +0x3e − b entrants.
 ///
 /// [pt] A tabela da Copa da Inglaterra com `b` = +0xb3 (byte com sinal), `entrada` = +0xb4 e `inscritos` = +0x3e (contas
 /// em 16 bits): com +0xb4 = 1, a 1ª rodada propriamente dita tem 0x28 times, 0x13 jogos e nenhum novo, e a 2ª 0x40
 /// times, 0x20 jogos, 0x2b novos e 0x6c inscritos; senão, 6b + 0x28 times, 3b + 0x14 jogos, 6b novos e 0x6c inscritos
 /// na primeira, (0x10 − b) × 4 times, (0x10 − b) × 2 jogos, 0x2c − 7b novos e (b + 0x12) × 6 inscritos na segunda. A 3ª
 /// tem (0x10 − b) × 2 times e 0x10 − b jogos; a 4ª, b novos e +0x3e − b inscritos.
-pub(crate) fn fa_cup_rounds(b: i16, entry: u8, inscritos: i16) -> [EngCcCupCupRound; 9] {
+pub(crate) fn fa_cup_rounds(b: i16, entry: u8, entrants: i16) -> [EngCcCupCupRound; 9] {
     let mut t = FA_CUP_ROUNDS;
     let x = |v: i16| v as u16;
     if entry == 1 {
@@ -184,20 +218,14 @@ pub(crate) fn fa_cup_rounds(b: i16, entry: u8, inscritos: i16) -> [EngCcCupCupRo
     t[4].times.0 = x(0x10i16.wrapping_sub(b).wrapping_mul(2));
     t[4].times.1 = x(0x10i16.wrapping_sub(b));
     t[5].times.2 = x(b);
-    t[5].times.3 = x(inscritos.wrapping_sub(b));
+    t[5].times.3 = x(entrants.wrapping_sub(b));
     t
 }
-
-
 
 /// A Supercopa inglesa (Charity Shield): uma rodada, um jogo em agosto.
 pub(crate) const CHARITY_SHIELD_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((5, 6, 0, 5), (0xd, 7, 0, 6, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cql10: o jogo da Supercopa inglesa
 ];
-
-
-
-
 
 /// Returns club i of the club table ([G_CLUB_TABLE] + i × 0x245).
 ///
@@ -217,10 +245,10 @@ pub(crate) unsafe fn division_comp_id(c: usize) -> Option<usize> {
 /// Writes entrant k of the cup entrant list (+0xa7, 6 bytes: club, class +4, status +5 = 0).
 ///
 /// [pt] Grava a inscrição `k` da lista (+0xa7, 6 bytes: o clube, +4 a classe, +5 a situação).
-pub(crate) unsafe fn eng_cc_cup_write_entrant(this: usize, k: i32, club: usize, classe: u8) {
+pub(crate) unsafe fn eng_cc_cup_write_entrant(this: usize, k: i32, club: usize, class: u8) {
     let e = read_u32_as_usize(this + cup::TEAM_TABLE) + k as usize * 6;
     core::ptr::write_unaligned(e as *mut u32, club as u32);
-    *((e + 4) as *mut u8) = classe;
+    *((e + 4) as *mut u8) = class;
     *((e + 5) as *mut u8) = 0;
 }
 
@@ -229,13 +257,13 @@ pub(crate) unsafe fn eng_cc_cup_write_entrant(this: usize, k: i32, club: usize, 
 ///
 /// [pt] Uma passada pelos clubes da divisão `id` ([id], o id da competição) fora das copas europeias (+0x1db = −1), até a
 /// lista encher (+0x3e); a classe de cada um vem de `classe(clube)`.
-pub(crate) unsafe fn eng_cc_cup_enter_division_clubs(this: usize, n: &mut i32, id: usize, classe: impl Fn(usize) -> u8) {
+pub(crate) unsafe fn eng_cc_cup_enter_division_clubs(this: usize, n: &mut i32, id: usize, class: impl Fn(usize) -> u8) {
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = eng_cc_cup_club_by_index(i);
         if let Some(d) = division_comp_id(c) {
             if *n != read_i16(this + cup::TEAM_COUNT) as i32 && d == read_u32_as_usize(id) && read_u32_as_usize(c + 0x1db) as i32 == -1 {
-                eng_cc_cup_write_entrant(this, *n, c, classe(c));
+                eng_cc_cup_write_entrant(this, *n, c, class(c));
                 *n += 1;
                 if *n == read_i16(this + cup::TEAM_COUNT) as i32 {
                     return;
@@ -255,8 +283,21 @@ pub(crate) unsafe fn came_from_division(c: usize, de: usize) -> bool {
     p != 0 && read_u32_as_usize(p) == read_u32_as_usize(de)
 }
 
-/// EngCcCup::collect_entrants (0x56ccc0): fills the League Cup entrant list from the four English divisions with
-/// seeding classes, sorts it and sets +0xb2; returns result and count.
+/// `EngCcCup::collect_entrants()` (0x56ccc0, thiscall, ret 0, eng_cc_cup.cpp): fills the League Cup entrant list from
+/// the four English divisions with seeding classes, sorts it and sets +0xb2; returns the result and the count.
+///
+/// +0x3e = 92 and +0xb2 = 0; the list is allocated (0x944e46 of 0x228 bytes at +0xa7; out of memory, the error box for
+/// line 0x18f and −1).
+///
+/// Clubs not in the European cups, in this order: the Third ([0x9cf5c8]) and the Second ([0x9cf5c4]) with class 0; the
+/// First ([0x9cf5c0]) with 0x46 − position if the club came down from the Premier ([0x9cf5bc]), 0x28 − position if it
+/// was already in the First, 0 otherwise; the Premier with 0x78 − position if it was already in the Premier, 0x64 −
+/// position if it came up from the First, 0 otherwise. Then the clubs of the four divisions that are in the European
+/// cups (+0x1db ≠ −1), with class 0x78, each adding 1 to +0xb2.
+///
+/// The list goes to qsort (0x945333 with 0x5221c0: lower class first, ties broken by reputation) and the class then
+/// becomes 1 (Premier), 2 (First) or 3 (the others). With the list full: +0xb2 capped at 12 (signed byte) and result 1;
+/// otherwise 0. Also returns how many entered (for the comparer).
 ///
 /// [pt] { 0x56ccc0 } (thiscall, ret 0, eng_cc_cup.cpp): `EngCcCup::collect_entrants()`: +0x3e = 92 e +0xb2 = 0; a lista
 /// (0x944e46 de 0x228 em +0xa7; sem memória, a caixa da linha 0x18f e −1). Fora das copas europeias, na ordem: a Third
@@ -398,9 +439,12 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
     a
 }
 
-
-/// EngAutoCup::collect_entrants (0x56b3c0): +0x3e = 28 and an entrant list with the second half of the 56 chosen clubs
-/// (+0xb2 + 0x70).
+/// `EngAutoCup::collect_entrants()` (`0x56b3c0`, thiscall, ret 0, `eng_auto_cup.cpp`): builds the entrant list with the
+/// second half of the 56 chosen clubs.
+///
+/// Sets `+0x3e` = 28; allocates the list (`0x944e46` of 0xa8 into `+0xa7`; out of memory, the box of line `0x19f` and
+/// −1) with the second half of the 56 chosen clubs (the pointer vector at `+0xb2`, from the 28th on: `+0x70`), class
+/// and status 0. Returns 1.
 ///
 /// [pt] { 0x56b3c0 } (thiscall, ret 0, eng_auto_cup.cpp): `EngAutoCup::collect_entrants()`: +0x3e = 28; a lista (0x944e46 de
 /// 0xa8 em +0xa7; sem memória, a caixa da linha 0x19f e −1) com a segunda metade dos 56 clubes escolhidos (o vetor de
@@ -429,8 +473,6 @@ pub(crate) unsafe fn collect_auto_cup_entrants(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
-
-
 /// Club that finished at place (0 champion, 1 runner-up) last season in competition id (0x4afd80).
 ///
 /// [pt] O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (a competição do
@@ -440,8 +482,13 @@ pub(crate) unsafe fn latest_placed_club(id: usize, place: u32) -> usize {
     colocado(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), place)
 }
 
-/// EngCharity::select_teams (0x56d780): Premier champion and FA Cup winner, or the Premier runner-up if both are the
-/// same club.
+/// `EngCharity::select_teams()` (`0x56d780`, thiscall, ret 0, `eng_charity.cpp`): picks the Premier League champion and
+/// the FA Cup winner.
+///
+/// Sets `+0x3e` = 2; allocates the list (`0x944e46` of 0xc into `+0xa7`; out of memory, the box of line `0xc5` and −1).
+/// The Premier champion ([`0x9cf5bc`]; without it, box `0xce` and 0) and the FA Cup winner ([`0x9cf74c`]; without it,
+/// `0xd7` and 0); if both are the same club, the second becomes the Premier runner-up (without it, `0xe3` and 0). Class
+/// and status 0 for both; returns 1.
 ///
 /// [pt] { 0x56d780 } (thiscall, ret 0, eng_charity.cpp): `EngCharity::select_teams()`: +0x3e = 2; a lista (0x944e46 de 0xc em
 /// +0xa7; sem memória, a caixa da linha 0xc5 e −1). O campeão da Premier ([0x9cf5bc]; sem ele, a caixa 0xce e 0) e o da
@@ -485,10 +532,6 @@ pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
     (1, 2)
 }
 
-
-
-
-
 /// First dword of Date(day, month, year, weekday) (0x549f70): low word day of year, high word year.
 ///
 /// [pt] A primeira dword de Date(dia, mês, ano, dia da semana) (0x549f70: push semana; push ano; push mês; push dia; lea ecx,
@@ -508,8 +551,11 @@ pub(crate) unsafe fn is_date_today(d: u32, today: usize) -> bool {
     (d >> 16) as u16 == read_i16(today + 2) as u16 && d as u16 == read_i16(today) as u16
 }
 
-/// Frees the season tables before rebuilding: entrant list (+0xa7), rounds (+0xa3) and per-round ties (+0xad); pointers
-/// left as they are.
+/// Frees the season tables before rebuilding them.
+///
+/// It frees the entrant list (+0xa7), the rounds table (+0xa3) and the per-round ties (+0xad, one vector per round,
+/// +0x3c rounds), each one only if it exists (0x9452ca, cdecl). The pointers are left as they are (the following
+/// routines rebuild them).
 ///
 /// [pt] Libera as tabelas da temporada antes de refazer: a lista dos inscritos (+0xa7), a das rodadas (+0xa3) e os confrontos
 /// por rodada (+0xad, um vetor por rodada, +0x3c rodadas), cada um se existe (0x9452ca, cdecl). Os ponteiros ficam como
@@ -535,7 +581,6 @@ pub(crate) unsafe fn free_season_tables(this: usize) {
     }
 }
 
-
 /// Calls the base cup update (FN_CUP_UPDATE_FOR_DATE, 0x51f890) with today and the stage, returning its result.
 ///
 /// [pt] A atualização da copa (0x51f890: push fase; push hoje; mov ecx, copa -> thiscall, ret 8), cuja devolução sai.
@@ -559,9 +604,9 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
         free_season_tables(this);
         crate::comparison::branch("cqn_10 virada da copa da liga");
         core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqn10: a Copa da Liga refeita uma vez
-        let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCCCUP_COLLECT_ENTRANTS);
+        let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCCCUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
-        if inscritos(this) < 0 {
+        if entrants(this) < 0 {
             show_error_at(0x9c4224, 0x161);
             return 0;
         }
@@ -581,10 +626,8 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
 // simplification: the season turn frees and rebuilds the tables and the cup update plays and draws: they do not run twice. Only the
 // original; the plan: +0x45 goes to 1 when the condition holds, otherwise it stays.
 
-
 // simplification: like the League Cup one, original only; the plan: +0x45 goes to 1 on 3 October (with +0x45 = 0 and the stage), outside
 // of the 1999 path.
-
 
 // simplification: the call-up touches the squads and the cup update plays: they do not run twice. Only the original runs.
 

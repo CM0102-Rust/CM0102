@@ -1,8 +1,10 @@
 use super::*;
 
-
-
-/// List node (14 bytes: item, size, next, prev) whose item has the same bytes as dado, from the head (+2); 0 if none.
+/// The list node (14 bytes: +0 the item, +4 the size as a signed word, +6 the next, +0xa the previous) whose item has
+/// the same bytes as `dado`, starting from the head (+2); 0 if none.
+///
+/// The size is used as in the original routine (movsx into the ecx of repe cmpsb): 0 counts as equal (the repe does not
+/// run and ZF comes from the earlier xor).
 ///
 /// [pt] O nó da lista (14 bytes: +0 o item, +4 o tamanho em palavra com sinal, +6 o próximo, +0xa o anterior) cujo item tem
 /// os mesmos bytes que `dado`, a partir da cabeça (+2). O tamanho vai como na original (movsx para o ecx do repe
@@ -23,10 +25,4 @@ pub(crate) unsafe fn find_list_node_by_bytes(this: usize, given: usize) -> usize
     }
     0
 }
-
-
-
-
-
-
 

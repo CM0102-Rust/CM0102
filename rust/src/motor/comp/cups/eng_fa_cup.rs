@@ -49,8 +49,8 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_update_for_date(this: usize, t
             free_season_tables(this);
             crate::comparison::branch("cqn_10 inscricoes da copa da inglaterra");
             core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1);
-            let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGFACUP_COLLECT_ENTRANTS);
-            if inscritos(this) < 0 {
+            let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGFACUP_COLLECT_ENTRANTS);
+            if entrants(this) < 0 {
                 show_error_at(0x9c42cc, 0x3d6);
                 return 1;
             }

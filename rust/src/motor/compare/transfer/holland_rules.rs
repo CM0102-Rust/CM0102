@@ -15,4 +15,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_holland_rules(this: us
     r
 }
 
-

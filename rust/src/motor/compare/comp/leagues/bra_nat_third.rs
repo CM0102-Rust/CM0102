@@ -22,6 +22,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage
 
 /// Comparer for `bra_nat_third_start_new_season` (comparison mode: see the header of motor.rs).
 ///
+/// Only the original runs (simplification: it frees tables and stages, allocates the new ones, draws fixtures,
+/// officials and groups; it cannot run twice), checking what only it guarantees: the year + 1, the seven groups in
+/// slots 0 to 6 and the list of 56 zeroed.
+///
 /// [pt] O comparador da virada: só a original (simplification: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
 /// grupos; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, os sete grupos nas vagas 0 a 6 e a
 /// lista dos 56 zerada.
@@ -35,6 +39,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(t
 }
 
 /// Comparer for `bra_nat_third_set_predicted_positions` (comparison mode: see the header of motor.rs).
+///
+/// The predicted positions comparer: only the original routine runs (0x4a2540 adds the record of a club that has none;
+/// it cannot run twice), with the plan made beforehand: the list of the 56 sorted by the same qsort on a copy.
+///
+/// Afterwards, the league's list in the same order and the position (+0x72 of the record found by 0x4a4850) of each
+/// club.
 ///
 /// [pt] O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não
 /// pode rodar duas vezes), com o plano feito antes: a lista dos 56 ordenada pela mesma qsort numa cópia; depois, a
@@ -59,7 +69,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_posi
     SCOREBOARD.record(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));
 }
 
-/// Comparer for `bra_nat_third_create_group_stage` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_nat_third_create_group_stage` (comparison mode: see the header of motor.rs): the comparer of one
+/// group; only the original routine runs (it allocates the vector, the round table and the stage), with the plan made
+/// beforehand.
+///
+/// The plan: the seven clubs of slots 7(g + 1).. of the list of 56. Afterwards: the stage in slot g with `+0x3e` = 7,
+/// the seven in its table (as a set) and `+0x30` = g.
 ///
 /// [pt] O comparador de um grupo: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes: os
 /// sete clubes das vagas 7(g + 1).. da lista dos 56. Depois, a fase na vaga g com +0x3e = 7, os sete na tabela dela
@@ -86,6 +101,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage
 }
 
 /// Comparer for `create_second_round_stage` (comparison mode: see the header of motor.rs).
+///
+/// The second-round comparer: only the original routine runs (it allocates the list, the table and the stage and draws
+/// the round), with the plan made beforehand by the same selection on a copy of the records.
+///
+/// The stage in slot 7 exists, with +0x3e = 16 and the sixteen in slot order in its list (+0xa7, 6 bytes), and +0x30 =
+/// 7.
 ///
 /// [pt] O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes pela mesma escolha numa cópia dos registros: a fase da vaga 7 existe, com +0x3e = 16 e os dezesseis na ordem
@@ -158,7 +179,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_third_round_groups(this: 
     SCOREBOARD.record(same, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plan));
 }
 
-/// Comparer for `bra_nat_third_create_table` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_nat_third_create_table` (the Série C; comparison mode: see the header of motor.rs).
+///
+/// The original frees, allocates and draws: only it runs. The plan, made beforehand: the clubs whose division is
+/// [this+4], in database order, up to 56. Afterwards: return value 1, +0x3e = 7, the list (+0xee) with the plan's clubs
+/// in some order (the random draw) and table rows 0..6 with the first 7 of the list.
 ///
 /// [pt] O comparador da Série C: a original libera e aloca e sorteia: só ela. O plano, feito antes: os clubes cuja divisão é
 /// [this+4], na ordem do banco, até 56. Depois: a devolução 1, +0x3e = 7, a lista (+0xee) com os clubes do plano em

@@ -36,7 +36,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     let name_of: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let copy_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
-    let relogio: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(FN_946EBB);
+    let clock: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(FN_946EBB);
     let mut nation = [0u8; 100];
     *summary = 0;
     *summary.add(0x3e8) = 0;
@@ -85,11 +85,11 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     copy_data(summary as usize + 0xf64, copy.as_mut_ptr(), G_CURRENT_DATE);
     copy_text(summary.add(0x7d0), version());
     let mut now = 0i32;
-    let t = relogio(&mut now);
+    let t = clock(&mut now);
     let total = (*(G_GAME_PLAY_TIME_TOTAL as *const i32)).wrapping_add(t.wrapping_sub(*(G_GAME_PLAY_TIME_LAST_STAMP as *const i32)));
     *(G_GAME_PLAY_TIME_TOTAL as *mut i32) = total;
     core::ptr::write_unaligned(summary.add(0xf6c) as *mut i32, total);
     *(G_GAME_PLAY_TIME_LAST_STAMP as *mut i32) = t;
-    let t2 = relogio(core::ptr::null_mut());
+    let t2 = clock(core::ptr::null_mut());
     core::ptr::write_unaligned(summary.add(0xf70) as *mut i32, t2);
 }

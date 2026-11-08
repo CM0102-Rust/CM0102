@@ -89,13 +89,11 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize
 pub(crate) const SOUTH_AMERICA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
     (0xdb, 2, 0), (0xc5, 1, 1), (0xc7, 1, 3), (0xbf, 1, 1), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7), (0x4a, 1, 3), (0xa7, 2, 0xffff)];
 
-
 // simplification: virtual +0x3c allocates the round table: does not run twice. Original only; the plan checks the rules and
 // the direct places (4 − +0xef − +0xee, with the +0xef the routine itself copies, computed before).
 
 pub(crate) const ASIA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
     (0xc6, 1, 2), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0)];
-
 
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 

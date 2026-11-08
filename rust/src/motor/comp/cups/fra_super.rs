@@ -1,7 +1,16 @@
 use super::*;
 
-
-/// Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
+/// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
+///
+/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through 0x521e60; the
+/// match (the same, plus the leg at +6 and the venue at +0x13) through 0x521eb0.
+///
+/// Then the fields: +7 the round name, +9 the index, +0xb the draw bits, +0xd and +0xf the tie-breakers (single match
+/// and two legs), +0x17 the category copied into each match, +0x18/+0x1a/+0x1c/+0x1e teams, matches, new teams and
+/// entrants already in, +0x20/+0x21/+0x22 replay, matches per tie and days between them, +0x5c/+0x60/+0x64 the prize
+/// money (reaching, winning, losing).
+///
+/// [pt] Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
 /// janeiro, anos a somar ao ano da copa +0x40, dia da semana ou −1) pela 0x521e60; o jogo (o mesmo, mais o turno em +6
 /// e o mando em +0x13) pela 0x521eb0; depois os campos: +7 o nome da rodada, +9 o índice, +0xb os bits do sorteio, +0xd
 /// e +0xf os desempates (jogo único e ida e volta), +0x17 a categoria copiada em cada jogo, +0x18/+0x1a/+0x1c/+0x1e
@@ -56,8 +65,14 @@ pub(crate) unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &FraSuperCup
     d(0x64, r.premios.2);
 }
 
-/// Common body of create_round_table for single-stage cups at stage −1, with an adjustment applied to the first round
-/// (the French Super Cup venue draw); 0 at other stages.
+/// Shared body of virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) for
+/// single-stage cups.
+///
+/// Outside stage −1 (the byte), returns 0 without writing anything. At −1: saida (if requested) = 0, rodadas = the
+/// table size, extra = 0; the table is allocated (0x944e46 of 0x68 × rodadas; out of memory, the error box `linha` of
+/// `arquivo` and returns 0) and filled with each round; returns the table.
+///
+/// `ajuste` modifies the first round after allocation (the drawn venue of the French Super Cup).
 ///
 /// [pt] O corpo comum da virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) das copas
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
@@ -89,8 +104,6 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
     }
     t
 }
-
-
 
 /// A Supercopa da França: um jogo em julho; o prêmio de 60 mil por chegar. O mando vem à parte (`french_super_cup_venue`).
 pub(crate) const FRENCH_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
@@ -133,14 +146,10 @@ pub(crate) const SPANISH_SUPER_CUP: [FraSuperCupRound; 1] = [
     cql12r((5, 6, 0, 5), (0x14, 7, 0, 6, 1, 0), 0, (0, 0x200, 1), 6, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)), // cql12: a ida da Supercopa da Espanha
 ];
 
-
-
 /// A Supercopa do Japão: um jogo em março no estádio neutro, 150 mil por vencer.
 pub(crate) const JAPAN_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
     cql12r((1, 1, 0, 5), (4, 2, 0, 5, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0x249f0, 0)), // cql12: o jogo da Supercopa do Japão
 ];
-
-
 
 /// rule: the French Super Cup is between the First Division champion and the Coupe de France winner; if the same club
 /// won both, the First Division runner-up takes its place; if one is missing, the error box

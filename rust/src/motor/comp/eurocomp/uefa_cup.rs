@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Entrants k minus half (truncated) the preliminary-round count (+0xb2).
 ///
 /// [pt] Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
@@ -10,7 +7,27 @@ pub(crate) unsafe fn entrants_minus_half_prelim(this: usize, k: i16) -> i32 {
     k as i32 - (*((this + 0xb2) as *const i8) as i32) / 2
 }
 
-/// UefaCup::build_entrants (0x902b90): builds and sorts the 118 entrants list and the Intertoto list; 1, 0 or -1.
+/// `UefaCup::build_entrants()` (0x902b90, thiscall, ret 0, uefa_cup.cpp; called from the constructor, 2001-000): builds
+/// and sorts the 118-entrant list and the Intertoto list; returns 1, 0 or −1.
+///
+/// +0x3e = 145; the list (calloc 0x945501(161, 6) at +0xa7; out of memory, the error box for line 0x1bf and −1); +0xb2
+/// = 0.
+///
+/// 1) In club table order, the clubs the European rules put in the UEFA Cup (+0x1db = [0x9cf6f0]), each with class =
+/// its coefficient (+0x1df) and status 0; those with coefficient 10 or more (signed) are counted in +0xb2 (the
+/// preliminary-round ones [inference]).
+///
+/// 2) If the entrants minus half of +0xb2 do not reach 118, it fills up (among the first [0xae235c] − 2 × [0xae2350]
+/// clubs, until reaching 118) with clubs with no European cup (+0x1db = −1) from a nation (+0x53) without the +0x11c
+/// mark and with a nation coefficient (+0x8e, signed word) below 2000: each with class 3, status 0 and +0x1db = the cup
+/// id ([+4] +0).
+///
+/// 3) If over 118, removes the last ones (the slot is zeroed) down to 118.
+///
+/// The list goes to qsort (0x945333, 6 bytes, 0x522190: by class). With +0xb2 even (and not negative): +0x36 = 0, +0x38
+/// = the entrants + 27, the list of those coming from the Intertoto [inference] (0x944e46 of +0x38 × 6 at +0x14; out of
+/// memory, the error box for line 0x21a and 0) with the class-1 entrants, each set to class 3 and counted in +0x36;
+/// +0x3e = +0x38; returns 1. With +0xb2 odd or negative, 0.
 ///
 /// [pt] { 0x902b90 } (thiscall, ret 0, uefa_cup.cpp; do construtor, 2001-000): `UefaCup::build_entrants()`: +0x3e = 145; a
 /// lista (calloc 0x945501(161, 6) em +0xa7; sem memória, a caixa da linha 0x1bf e −1); +0xb2 = 0.
@@ -128,7 +145,6 @@ pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
     uefa_cup_build_entrants(this)
 }
 
-
 /// rule: the UEFA Cup has, only when there are preliminary clubs (+0xb2, those with coefficient 10 or more
 /// [inference]), a preliminary round drawn on 28/6 and played on 6/7 (b teams); then: 1st qualifying round drawn on
 /// 28/7 and played on 10/8 (82 teams, 0x52 − b/2 new), 2nd on 14/9 (96 teams, 55 new), 1st round on 19/10 (48 teams),
@@ -165,7 +181,6 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
     *rounds = n as i16;
     t
 }
-
 
 /// rule: in the UEFA Cup, the winner, the runner-up and every knocked-out club leave European competition (the club
 /// mark goes back to −1); the career records are the base cup ones (winner, runner-up, qualification and knock-out by

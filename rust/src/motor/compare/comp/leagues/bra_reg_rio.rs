@@ -9,9 +9,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_rio(this: usiz
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_rio", this, year, record, &CARIOCA_CHAMPIONSHIP, || o(this, year, record))
 }
 
-
-
-/// Comparer for `cqt4_atualizar_media_de_publico` (comparison mode: see the header of motor.rs).
+/// Comparer for `cqt4_atualizar_media_de_publico` (comparison mode: see the header of motor.rs): the comparer of the
+/// average attendance, side by side.
+///
+/// The copy runs without counting the random draws, with the random-draw state restored between the two, over the whole
+/// club table (where `+0x73`, `+0x77` and `+0x7b` live) and the random-draw state; the final table (`0x4a4b20`) is
+/// allocated and freed in both.
 ///
 /// [pt] O comparador da média de público: lado a lado (a cópia sem contar os sorteios, com o estado do sorteador
 /// restaurado entre as duas) sobre a tabela dos clubes inteira (onde ficam +0x73, +0x77 e +0x7b) e o estado do
@@ -38,6 +41,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_start_new_season(thi
 
 /// Comparer for `bra_reg_rio_advance_stage` (comparison mode: see the header of motor.rs).
 ///
+/// The next-stage comparer: only the original routine runs (simplification: on reaching 2 it builds the final, which
+/// allocates and draws; it cannot run twice), checking the plan.
+///
+/// In the last stage, +0x30 unchanged; otherwise +0x30 + 1, or, on reaching 2, 2 (with a final) or 1 (the same champion
+/// in both halves, which the final writes).
+///
 /// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
@@ -51,6 +60,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_advance_stage(this: 
 }
 
 /// Comparer for `bra_reg_rio_create_final_stage` (comparison mode: see the header of motor.rs).
+///
+/// The final's comparer: only the original routine runs (it allocates the list, the table and the stage and draws the
+/// round), checking the plan made beforehand: the champions of the two halves.
+///
+/// Same club in both: +0x30 = 1, +0x2c = 2 and status 5 on the first row of each half and on its row of the league
+/// table. Different: the stage in the third slot exists, with +0x3e = 2, +4 = the league's +4 and the two champions in
+/// its list (+0xa7, 6 bytes; as a set: the round draw may reorder them), and +0x30 = 2.
 ///
 /// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
@@ -79,7 +95,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_final_stage(t
     SCOREBOARD.record(same, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
-/// Comparer for `bra_reg_rio_record_season_honours` (comparison mode: see the header of motor.rs).
+/// Comparer for `bra_reg_rio_record_season_honours` (comparison mode: see the header of motor.rs): the comparer of the
+/// season end; only the original routine runs (simplification: it writes the history, which allocates the record, pays
+/// the prizes and sends the news, and may build the Champions Cup; it cannot run twice).
+///
+/// The copy runs in Rust mode (counters "cqo_9 historico da final" and "cqo_9 premios") and is proven by the mutations
+/// and by the two Rust careers.
 ///
 /// [pt] Comparador do fim da temporada: só a original (simplification: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
@@ -93,8 +114,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table(this: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_CREATE_TABLE);
     bra_reg_rio_compare_state_league_table("bra_reg_rio_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, || o(this))
 }
-
-
 
 /// Comparador: como o do Paranaense.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_set_up_rules(this: usize) -> u32 {

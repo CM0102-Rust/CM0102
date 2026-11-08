@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// The Parana state league has two halves (stages 0 and 1, each a round-robin league) and, if needed, a final (stage
 /// 2): the next stage moves the current stage on and, at the end of the second half, builds the final; past the last
 /// stage it is an error (the box)
@@ -60,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize)
 ///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
 ///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
-    let sementes: [u8; 4] = [0, 1, 0, 0];
+    let seeds: [u8; 4] = [0, 1, 0, 0];
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let list = alloc(8);
     if list == 0 {
@@ -99,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, sementes.as_ptr())
+        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, seeds.as_ptr())
     } else {
         0
     };
@@ -167,14 +164,15 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
     campeoes()
 }
 
-
-
-
-
-
-
-/// Writes the rule set common to these Brazilian state leagues (two rounds, 3 pts win, 1 draw, tiebreakers, 7 subs, 3
-/// substitutions), with top places (+0xbe) and relegated (+0xc1) as parameters.
+/// Writes the rule set common to these Brazilian state leagues, with the top places (+0xbe) and the relegated (+0xc1)
+/// as parameters.
+///
+/// The three routines write the same set; only the top places +0xbe and the relegated +0xc1 change; all three have two
+/// rounds.
+///
+/// Win 3, draw 1, category 2 (league), national club, tie-breakers head-to-head and goal difference, no play-offs in
+/// the table, no league above or below, rules word 8, 7 substitutes and 3 substitutions, and the words +0xab and +0xdb
+/// at 0.
 ///
 /// [pt] As regras comuns destes estaduais (as três rotinas gravam o mesmo conjunto; mudam as vagas de cima +0xbe e os
 /// rebaixados +0xc1; os três têm dois turnos): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates
@@ -223,8 +221,6 @@ pub(crate) unsafe fn carioca_rules(o: usize) {
     bra_reg_parana_set_state_league_rules(o, 0, 2); // cqi9: o Carioca
 }
 
-
-
 /// Parana: no top places in the overall table (each half is a league stage of its own, created by add_result 0x4386e0,
 /// and decides the title [inference]); 4 relegated; double round robin; win 3, draw 1; tie-break by head-to-head, then
 /// goal difference; no play-offs in the table; no league above or below (the relegated go to the non-playable pool
@@ -241,7 +237,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) 
     1
 }
 
-
 /// The Parana state league at career creation: the year and the database competition, disciplinary rule 7 and, with no
 /// saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table with
 /// the state clubs, the fixtures, the order, the statistics and the predicted positions
@@ -252,7 +247,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, yea
     bra_reg_northeast_construct_state_league(this, year, record, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
 }
 
-
 /// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the
 /// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegParana::create_table` (0x437ec0, bra_reg_parana.cpp, thiscall, ret 0).
@@ -262,7 +256,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, yea
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) -> u32 {
     fill_state_league_table(this, 0xc, 0x98af98, 0x169, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, 0, "cqm_7 paranaense cheio")
 }
-
 
 /// One half of the Parana state league: when the first game of a half is processed, it builds that half's round-robin
 /// stage (a league with all the clubs of the table, the same points for a win and a draw and the same tie-breakers as
@@ -275,7 +268,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) 
 pub(crate) unsafe extern "thiscall" fn create_half_stage(this: usize, k: u32) {
     create_half_season_stage(this, k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: os pontos por vitória no Paranaense
 }
-
 
 /// The Parana state league turnover: archives the season in the statistics, clears the table, the schedule and the
 /// stages (the two halves and the final) and prepares three new stage slots; moves to the next year and rebuilds the

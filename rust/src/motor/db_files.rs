@@ -1,7 +1,14 @@
 use super::*;
 
-/// Version-1 database converter: reads each of the n records field by field (zread or fread), turning byte reputations
-/// into u16; returns 0 on the first short read, else 1.
+/// A version-1 database converter (Db_files.cpp): for each of the `n` records of `tamanho` bytes, the fields in file
+/// order, `(deslocamento, tamanho, quantos)`, each read on its own (`tamanho`, 1) by `zread` 0x932c30 (use_zip ≠ 0) or
+/// `fread` 0x945bfe.
+///
+/// Size 0 = one byte from the file that becomes a u16 (`reputacao`) at offset + 2k (the original reads the byte into an
+/// argument on its own stack, already used, and writes the u16 before the next read).
+///
+/// The first read that does not come back gives 0 (what has already been read stays in the record); all of them, 1. The
+/// bytes the file does not provide (holes in the record) stay as they were.
 ///
 /// [pt] Um conversor da versão 1 (Db_files.cpp): para cada um dos `n` registros de `tamanho` bytes, os campos na
 /// ordem do arquivo, `(deslocamento, tamanho, quantos)`, cada um lido sozinho (`tamanho`, 1) por `zread`
@@ -90,15 +97,26 @@ pub(crate) unsafe extern "C" fn db_files_read_non_players_v1(stream: usize, use_
 
 pub(crate) type V1Converter = unsafe extern "C" fn(usize, i32, usize, u32) -> i32;
 
-/// Comparador de um conversor: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à
+/// Comparer of a converter.
+///
+/// With `fread` (use_zip = 0), the original reads, the file is rewound (`fseek` 0x946a22 to the position from `ftell`
+/// 0x946aae) and the Rust one reads again; it compares the records, the answer and where the file stopped. The Rust
+/// one's position is kept (the same, if equal).
+///
+/// [pt] Comparador de um conversor: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à
 /// posição do `ftell` 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo
 /// parou. Fica a posição da Rust (a mesma, se iguais).
 // simplification: with zread (the container) original only; the save is version 2 and does not get here.
 
-
-
-
-/// Autoteste dos conversores da versão 1 (CM_AUTOTESTE=1, modo comparação: a base de fábrica e o save são
+/// Self-test of the version 1 converters (`CM_AUTOTESTE=1`, comparison mode: the factory database and the save are
+/// version 2 and the career does not go through them).
+///
+/// For each converter, 64 cases with fixed seeds: from 1 to 6 records, a temporary file (`autoteste_banco_v1.tmp` in
+/// the game folder, deleted at the end) with random bytes (1 case in 4 all zeros: the club's reputation 0), whole (1 in
+/// 3) or cut at a random point (the read fails in the middle of a field), opened by the game's `fopen` `0x945b00`; the
+/// buffer starts random (the record's holes are included in the comparison).
+///
+/// [pt] Autoteste dos conversores da versão 1 (CM_AUTOTESTE=1, modo comparação: a base de fábrica e o save são
 /// versão 2 e a carreira não passa por eles). Para cada conversor, 64 casos de sementes fixas: de 1 a 6
 /// registros, um arquivo temporário (`autoteste_banco_v1.tmp` na pasta do jogo, apagado no fim) com bytes
 /// sorteados (1 caso em 4 só zeros: a reputação 0 do clube), inteiro (1 em 3) ou cortado num ponto sorteado
@@ -349,7 +367,6 @@ pub(crate) unsafe extern "C" fn db_files_open_for_read(folder: usize, name: usiz
     fopen(0xde1f64, 0x98f928)
 }
 
-
 /// builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "wb"); only when writing the database to the
 /// folder; the comparator checks the path
 /// Original: `db_files_open_for_write` (0x54d5b0, Db_files.cpp, cdecl).
@@ -363,7 +380,6 @@ pub(crate) unsafe extern "C" fn db_files_open_for_write(folder: usize, name: usi
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     fopen(0xde1f64, 0x9a7f28) // criar (wb)
 }
-
 
 /// Writes the continent.dat table (id 3) of 198-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
 /// everything was written.
@@ -380,14 +396,14 @@ pub(crate) unsafe extern "C" fn db_files_open_for_write(folder: usize, name: usi
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar continentes");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 198, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 198, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
@@ -408,14 +424,14 @@ pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar nações");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 290, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 290, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
@@ -436,14 +452,14 @@ pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar cidades");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 56, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 56, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
@@ -464,14 +480,14 @@ pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i3
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar estádios");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 78, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 78, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
@@ -492,14 +508,14 @@ pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: 
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar clubes");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 581, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 581, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
@@ -520,14 +536,14 @@ pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar pessoas 110");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 110, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 110, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
@@ -548,14 +564,14 @@ pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar não jogadores");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 68, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 68, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
@@ -576,14 +592,14 @@ pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar jogadores");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 70, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 70, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
@@ -604,14 +620,14 @@ pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zi
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("banco gravar preferências");
-    let gravados = if use_zip != 0 {
+    let written = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 52, n, stream)
     } else {
         let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
         fwrite(records, 52, n, stream)
     };
-    (gravados == n) as i32
+    (written == n) as i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.

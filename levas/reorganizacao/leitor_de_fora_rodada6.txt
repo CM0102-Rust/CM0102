@@ -1,0 +1,24 @@
+Leitor de fora, rodada 6 (08/11/2026). Veredito: um passo real desde a rodada 5. Só no código: ~8.400 deslocamentos
+`+ 0x..` e ~770 deslocamentos crus em closures de acesso, ~9.200 crus contra ~13.500 usos de campos com nome (na
+rodada 5: 10.900 x 7.800; a razão foi de 0,7 para 1,5 com nome por cru). match_pl.rs: 1.440 usos de match_player::
+(83 na rodada 5) contra 166 crus; as closures do motor deixam o motor legível como lógica pela primeira vez. Ainda
+lê como desmontagem transliterada em 4 pontos: aritmética de ponteiro sem tipo (~6.800 transmute), ~1.400 floats lidos
+do .rdata, docs que são listas de endereços (~22.700 hex nos /// em inglês) e as condições aninhadas do motor.
+Restos crus concentrados: match_screens 479, manager_manager 336, transfer_manager 324, comp/cup 285, comp/league 240,
+compare/ ~1.350.
+Português visível: identificadores ~16.000 ocorrências (~2.500 distintos: Prologo{endereco}, sortear, sorteio, lado,
+linha, rodadas, rotina, vaga, tabela, caixa, ramo, nomes, instalar, comparar_*, RETORNO/ISOLAR/VENENO); comentários fora
+do [pt] ~1.000-1.400 linhas (area.rs:223, injury.rs:3 só em português); textos ~2.900 (rótulos de branch, mensagens do
+placar, a tabela de rótulos motor_* no motor.rs).
+Os 10 obstáculos: 1. inglês mais curto que o [pt] (bra_nat_first.rs:18); 2. deslocamentos sem tipo (Field<T> ou structs
+com get/set/add); 3. floats por endereço (consts com teste contra o .rdata); 4. docs cheios de endereços (citar a rotina
+pelo nome em Rust); 5. deslocamentos crus nos arquivos quentes; 6. tabelas paralelas no motor.rs (uma tabela ROUTINES
+ou uma macro ao lado de cada função); 7. português na API da infraestrutura (Prologo{endereco}, RETORNO, ISOLAR,
+VENENO, registro::linha, comparar_*, sortear); 8. referências velhas (o cabeçalho do motor.rs ainda diz desvios.rs;
+detours.rs:64 diz simulacao::instalar); 9. corpos repetidos e auxiliares com nome de outro arquivo (in_the_box x
+area_de; bra_nat_first chamando bra_reg_bahia_table_row_club; ~300 closures por função); 10. andaime de teste no meio
+(1.758 branch("...") em português, 726 marcas // cqg7:); 493 sequências de 4+ linhas em branco em 116 arquivos;
+#[allow] entre linhas de doc.
+Bom e a manter: o vocabulário no cabeçalho do motor.rs; um módulo por .cpp com compare/ espelhado; os comentários do
+fields.rs; nomes em inglês com a linha Original:; o mem.rs; os comparadores com plano e detalhe; os docs de rng.rs e
+detours.rs; os comentários "simplification:" honestos.

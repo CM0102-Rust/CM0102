@@ -5,6 +5,16 @@ use super::*;
 
 /// Comparer for `fin_prm_end_season_for_nation` (comparison mode: see the header of motor.rs).
 ///
+/// The nation's end-of-season comparer: only the original routine runs, because it calls each club's end of season
+/// (0x59cfa0), which draws at random and delivers news items to the human manager (the copy carries on in Rust mode,
+/// with the counter).
+///
+/// It checks what the routine guarantees and no call undoes: the last club of the entry (the club order) ends up with
+/// the year's totals (+0x110, 0x50 bytes) zeroed.
+///
+/// Ponytail: the earlier ones may gain values through the 0x59cfa0 of a later club (the B team that uses the A team's
+/// record, the shared stadium); checking all of them requires planning those exceptions.
+///
 /// [pt] O comparador do fim de temporada da nação: só a original, porque ela chama o fim de temporada de cada clube
 /// (0x59cfa0), que sorteia e entrega notícias ao técnico humano (a cópia segue no modo Rust, com o contador). Confere o
 /// que a rotina garante e nenhuma chamada desfaz: o último clube da entrada (a ordem dos clubes) fica com os totais do
@@ -38,7 +48,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_fin_prm_end_season_for_nation(th
     }
 }
 
-/// Comparer for `season_end_club_update` (comparison mode: see the header of motor.rs).
+/// Comparer for `season_end_club_update` (comparison mode: see the header of motor.rs): the comparer of the club's
+/// season end, side by side (the copy without counting the random draws).
+///
+/// Compared: the finances of the partner and of the club itself, the club, the stadium (78 bytes), the requests row
+/// (0x49 bytes) and the random-draw state. The news (`0x59ffb0`, `0x59fae0`, `0x59fe10`) is built on the stack and only
+/// delivered to the human manager (`0x7861e0`): with a computer manager it leaves nothing besides the random draw(2) of
+/// the refusal, which both runs make.
+///
+/// Only the original routine: the human manager (the news goes into his inbox) and the shared stadium (it touches
+/// another club and its finances).
 ///
 /// [pt] O comparador do fim de temporada do clube: lado a lado (a cópia sem contar os sorteios) nas finanças do parceiro e do
 /// próprio clube, no clube, no estádio (78 bytes), na linha dos pedidos (0x49 bytes) e no estado do sorteio. As notícias
@@ -170,8 +189,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_league_fine(this: usize, val
 /// Comparer for `try_finance_boost_event` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: usize, club: usize, fin: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_FINANCE_BOOST_EVENT);
-    let pres = if club != 0 { read_usize(club + club::CHAIRMAN) } else { 0 };
-    let sheet = if pres != 0 { read_usize(pres + 0x69) } else { 0 };
+    let presence = if club != 0 { read_usize(club + club::CHAIRMAN) } else { 0 };
+    let sheet = if presence != 0 { read_usize(presence + 0x69) } else { 0 };
     if club == 0 || fin == 0 {
         return o(this, club, fin); // simplification: without a club or without finances, original only
     }
@@ -306,11 +325,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_weekly_merchandising_income(
 ///
 /// [pt] Comparador: lado a lado no registro de finanças (this), nos lugares do estádio (+0x3c) e no estado do sorteio
 /// (clube nulo: só a original).
-pub(crate) unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize, aplicar: i32) {
+pub(crate) unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize, apply: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_SELL_SEASON_TICKETS);
     let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(this + 8).wrapping_mul(club::SIZE));
     if club == 0 {
-        return o(this, aplicar);
+        return o(this, apply);
     }
     let mut regions = vec![(this, 0x167)];
     let est = read_usize(club + club::STADIUM);
@@ -318,8 +337,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize,
         regions.push((est + 0x3c, 4));
     }
     regions.extend(crate::rng::STATE_REGIONS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, aplicar), || crate::rng::without_counting(|| sell_season_tickets(this, aplicar)));
-    SCOREBOARD.record(igual, || format!("sell_season_tickets(fin {:#x}, {}) original={:x?} rust={:x?}", this, aplicar, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, apply), || crate::rng::without_counting(|| sell_season_tickets(this, apply)));
+    SCOREBOARD.record(igual, || format!("sell_season_tickets(fin {:#x}, {}) original={:x?} rust={:x?}", this, apply, mo, mr));
 }
 
 /// Comparer for `upgrade_training_facilities` (comparison mode: see the header of motor.rs).

@@ -21,20 +21,15 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table(this: us
     eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &INTERTOTO_ROUNDS, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
 }
 
-
 /// A Copa Intercontinental: jogo único em 1º de dezembro (sorteio em 10 de outubro), mando 4 (Tóquio [inferência]).
 pub(crate) const INTERCONTINENTAL_CUP_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((0xa, 9, 0, 5), (1, 0xb, 0, 1, 2, 4), 0, (0, 3, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqp13: a Copa Intercontinental
 ];
 
-
-
 /// A Copa Interamericana: ida e volta a partir de 26 de janeiro do ano seguinte (sorteio em 10 de outubro), 7 dias.
 pub(crate) const INTERAMERICAN_CUP: [EngCcCupCupRound; 1] = [
     cql10r((0xa, 9, 0, 5), (0x1a, 0, 1, 2, 2, 0), 0, (0, 0, 3), 8, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)),
 ];
-
-
 
 /// A Copa dos Campeões da CONCACAF: quartas (28/8), semifinal (1/9) e final (4/9) em jogo único, 8 times.
 pub(crate) const CONCACAF_CHAMPIONS_CUP_ROUNDS: [EngCcCupCupRound; 3] = [
@@ -42,8 +37,6 @@ pub(crate) const CONCACAF_CHAMPIONS_CUP_ROUNDS: [EngCcCupCupRound; 3] = [
     cql10r((0x1d, 8, 0, 4), (1, 9, 0, 6, 2, 0), 0x82, (0, 3, 0), 8, (4, 2, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
     cql10r((2, 9, 0, 0), (4, 9, 0, 2, 2, 0), 0x96, (0, 3, 0), 8, (2, 1, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
 ];
-
-
 
 /// As rodadas fixas da Copa da UEFA (a preliminar e os campos que dependem de +0xb2 vêm à parte, em
 /// `uefa_cup_rounds`): a 1ª rodada de qualificação em agosto, a 2ª no fim de agosto, a 1ª rodada em setembro, a 2ª
@@ -91,12 +84,16 @@ pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
     (t, n)
 }
 
-
-
-
-
-/// IntertotoCup::collect_entrants: the 60 clubs whose European cup (+0x1db) is the Intertoto, put in the team list
-/// (+0xa7) with their coefficient as class and sorted; returns the result pair.
+/// `IntertotoCup::collect_entrants()` (0x6336c0, thiscall, ret 0, intertoto_cup.cpp): the 60 clubs whose European cup
+/// (+0x1db) is the Intertoto, put in the team list (+0xa7) with their coefficient as class and sorted.
+///
+/// +0x3e = 60; a local vector of 60 pointers (0x944e46 of 0xf0; out of memory, the box for line 0x161 and 0) with the
+/// clubs of the table ([0xae23b4], up to [0xae235c]) whose European cup (+0x1db) is the Intertoto ([0x9cf6f8]), up to
+/// 60; if short, the box for line 0x172 and 0 (the vector stays allocated, as in the original).
+///
+/// The list (0x944e46 of 6 × 60 at +0xa7; out of memory, the box 0x17c and −1) takes each club with class = its
+/// coefficient (+0x1df) and status 0, goes to qsort (0x522190) and the vector is freed. Returns 1 with the 60 (as the
+/// result pair).
 ///
 /// [pt] { 0x6336c0 } (thiscall, ret 0, intertoto_cup.cpp): `IntertotoCup::collect_entrants()`: +0x3e = 60; um vetor local de
 /// 60 ponteiros (0x944e46 de 0xf0; sem memória, a caixa da linha 0x161 e 0) com os clubes da tabela ([0xae23b4], até
@@ -166,9 +163,12 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usiz
     collect_intertoto_entrants(this).0
 }
 
-
-/// IntertotoCup::collect_club_list: allocates a pointer list of the clubs in +0xa7 (only status 0/1 when ativos),
-/// stores it in saida and returns the count.
+/// `IntertotoCup::collect_club_list(&saida, ativos)` (`0x633f70`, thiscall, ret 8, `intertoto_cup.cpp`; a virtual):
+/// builds a pointer list of the clubs in list `+0xa7`.
+///
+/// Allocates the list (`0x944e46` of 4 × `+0x3e`; out of memory, the box of line `0x2fb`, `saida` = 0 and returns 0)
+/// with the clubs of list `+0xa7` (non-null, up to `+0x3e`); with `ativos`, only those whose status (`+5`) is 0 or 1.
+/// Stores the list in `saida` and returns the count (word).
 ///
 /// [pt] { 0x633f70 } (thiscall, ret 8, intertoto_cup.cpp; uma virtual): `IntertotoCup::collect_club_list(&saida, ativos)`:
 /// uma lista de ponteiros (0x944e46 de 4 × +0x3e; sem memória, a caixa da linha 0x2fb, saida = 0 e 0) com os clubes da
@@ -208,10 +208,6 @@ pub(crate) unsafe fn collect_club_list(this: usize, out: *mut usize, ativos: u32
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_club_list(this: usize, out: *mut usize, ativos: u32) -> u16 {
     collect_club_list(this, out, ativos)
 }
-
-
-
-
 
 /// The UEFA Cup competition object ([G_COMP_OBJECT_TABLE + 4 × KEY_CLUB_COMP_UEFA_CUP]), or 0.
 ///
@@ -394,7 +390,6 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
 
 // simplification: the records go to the people’s history (reputation, morale): they do not run twice. Only the original runs;
 // the plan checks the club’s +0x1db: [0x9cf6f0] for the winner, −1 for those knocked out, untouched for the others.
-
 
 // simplification: the base writes the records (history, reputation, morale) and may give the UEFA place to the champion: does not run
 // times. Only the original runs; the plan checks the club’s +0x1db (−1 on outcomes 1, 2 and 0xff, untouched on the others).

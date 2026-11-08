@@ -49,10 +49,10 @@ def calcular():
             def do_original(m):
                 a, bs = int(m.group(1), 16) - 0x400000, bytes(int(x, 16) for x in m.group(2).split(','))
                 return m.group(0) if d[a:a + len(bs)] == bs else ''
-            t = re.sub(r'Prologo \{ endereco: 0x([0-9a-f]+), bytes: &\[([^\]]*)\] \},', do_original, t)
+            t = re.sub(r'Prologue \{ address: 0x([0-9a-f]+), bytes: &\[([^\]]*)\] \},', do_original, t)
         else:
-            t = re.sub(r'const PROLOGO_[0-9A-F]+: Prologo = Prologo [^;]*;', '', t)
-        port |= set(int(x, 16) for x in re.findall(r'endereco:\s*0x([0-9a-f]+)', t))
+            t = re.sub(r'const PROLOGO_[0-9A-F]+: Prologue = Prologue [^;]*;', '', t)
+        port |= set(int(x, 16) for x in re.findall(r'address:\s*0x([0-9a-f]+)', t))
     rows = [r for r in csv.reader(open(os.path.join(R, 'docs', 'mapa_funcoes.csv'), encoding='utf-8')) if r and r[0].startswith('0x')]
     mapa = {int(r[0], 16): (int(r[1]), r[2].split('/')[-1] if r[2] else '(sem)') for r in rows}
     alvos -= set(FALSAS)

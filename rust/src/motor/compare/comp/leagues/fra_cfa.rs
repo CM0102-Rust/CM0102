@@ -9,7 +9,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule(this: us
     compare_cfa_schedule("fra_cfa_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_cfa_create_schedule(this, stage, r, e, l))
 }
 
-
 /// Comparer for `fra_cfa_set_up_rules` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] O calendário (a virtual +0x3c) aloca: só a original, conferindo os campos e a devolução 1.
@@ -31,7 +30,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, y
     compare_construct_group_league("construct_fra_cfa", this, year, &FRA_CFA_CFA_LEAGUE, || o(this, year))
 }
 
-
 /// Comparer for `destroy_fra_cfa` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Soltam memória: só a original.
@@ -39,11 +37,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_destroy_fra_cfa(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_FRA_CFA)(this)
 }
 
-
 /// Comparer for `fra_cfa_create_group_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_group_table(this: usize, clubs: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_GROUP_TABLE);
     compare_french_table("fra_cfa_create_group_table", this, clubs, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubs))
 }
-
 

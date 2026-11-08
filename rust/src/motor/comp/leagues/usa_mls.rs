@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 /// Row i of a league/stage table (+0xb1, 0x3b bytes): club and points (+0x19).
 ///
 /// [pt] A linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`: o clube (+0) e os pontos (+0x19, word).
@@ -216,12 +214,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     soltar(list);
 }
 
-
-
-
-
-
-
 /// True if club c is in this league's competition and its MLS division code matches.
 ///
 /// [pt] O código de divisão do clube `c` na MLS (usa_mls_get_club_division 0x909ec0: push c; call; add esp, 4 -> cdecl; a
@@ -272,7 +264,26 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
     (n == read_i16(this + league::CLUB_COUNT)) as u32
 }
 
-/// Creates an MLS second/third division stage: club vector, round table, League_Stage, stored in slot k with the
+/// Creates the stage of one of the other MLS divisions (`create_second_division_stage` and
+/// `create_third_division_stage`): club vector, round table, League_Stage, stored in slot k with the division code.
+///
+/// Same template in both, checked instruction by instruction: only the division code, slot k, the error boxes' source
+/// file and the lines change.
+///
+/// 1) A vector of +0x3e clubs (malloc 0x944e46 of 4 × +0x3e; when out of memory: the error box for line `linhas[0]` and
+/// return) with the clubs of the competition with `codigo`, in database order (i32 counter), while there are slots
+/// left.
+///
+/// 2) The round table from virtual +0x3c (create_round_table: thiscall(this, −3, &rodadas, &extra, 0), ret 0x10).
+///
+/// 3) The stage: operator new 0x944cf1(0xee) and the League_Stage constructor 0x68b100 (thiscall, ret 0x58, 22
+/// arguments, in the original routine's order: the league, +0x3e (word), the vector, +0x3c (word, the rounds), +4, the
+/// round table, the rounds (word), the points +0xc2 (`pv`) and +0xc3, the category +0xc4, &+0xc5, &+0xbe (the league's
+/// places), the year +0x40 (word), k, the extra (word), +0x51, 1, +0xab (word), +0xd9 (word), +0xa7 (word), 0, 2; the
+/// copy passes clean values). When out of memory: 0.
+///
+/// 4) [+0xc][k] = the stage; the vector and the round table freed (free 0x9452ca, in that order). Without a stage: the
+/// error box for line `linhas[1]`. With one: +0x30 = `atual` (the original writes k) and the stage's +0x3a = the
 /// division code.
 ///
 /// [pt] A fase de uma das outras divisões da MLS (`create_second_division_stage` e `create_third_division_stage`; o mesmo
@@ -354,9 +365,11 @@ pub(crate) unsafe extern "thiscall" fn create_third_division_stage(this: usize) 
     create_division_stage(this, 0x414, 1, 1, 0xc2, [0x524, 0x544], "cqs_1 terceira divisao") // cqs1: a fase atual depois da terceira
 }
 
-
-/// Comparer for an MLS division stage: runs only the original and checks slot k, code, count and clubs (as a set)
-/// against the plan.
+/// The comparer of an MLS division stage: runs only the original (it allocates the array, the round table and the
+/// stage), checked against the plan made beforehand.
+///
+/// The plan: the clubs with the code, in database order. Afterwards, the stage in slot k with the league's +0x3e, the
+/// clubs in its table (as a set), +0x3a = the code and +0x30 = k.
 ///
 /// [pt] O comparador de uma divisão: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes:
 /// os clubes do código, na ordem do banco. Depois, a fase na vaga k com +0x3e da liga, os clubes na tabela dela (como
@@ -389,13 +402,22 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, 
     SCOREBOARD.record(same, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", name, this, stage, n, plan));
 }
 
-
-
-
-
-
-/// 0x908e00 UsaMls::start_new_season: frees table, calendar and stages, archives stats, bumps the year, rebuilds rules,
-/// table, fixtures, order, predictions, expectations and renews officials.
+/// `UsaMls::start_new_season()` (`0x908e00`, thiscall, ret 0, `usa_mls.cpp`): the MLS season rollover.
+///
+/// `+0x4c` = 0 and the table freed (League::free_table `0x687970`, thiscall(this, 0), ret 4); the schedule (`+0xba`)
+/// freed (free `0x9452ca`) and zeroed; with the current stage ≥ 0, the existing stages 0..=`+0x30` destroyed (virtual
+/// 0, the destructor with 1); `+0x30` = −1; with statistics (`+8`), Comp_Stats::archive_season_and_reset (`0x4a1c50`,
+/// thiscall(`+8`, 1), ret 4); the year (`+0x40`, word) goes up by `ano` (the counter "cqs_2 virada da mls").
+///
+/// Then, each with its own box (lines `0x4af`, `0x4b6`, `0x4bc` and `0x4c3`) if it returns 0: the rules (virtual
+/// `+0x8c`), the first division's table (`0x908560`), the season's fixtures (UsaMls::create_season_fixtures `0x9086e0`,
+/// which also builds the stages of the other two divisions) and the table order (League::sort_table `0x6827d0`,
+/// thiscall(this, 0), ret 4); finally the predicted positions (virtual `+0x5c`), the boards' expectations
+/// (League::set_club_season_expectations `0x68aa80`, thiscall, ret 0) and the renewal of the referees
+/// (OfficialsManager::renew_officials `0x79cee0`, thiscall([`0xb74340`], `+4`), ret 4), whose eax it returns.
+///
+/// After a box, the copy returns 0 (the original routine returns the box's eax; the rollover is called by the rollover
+/// loop, which does not read it). The stage vector (`+0xc`) stays: the divisions and the play-off rewrite the slots.
 ///
 /// [pt] { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::start_new_season()`, a virada da MLS: +0x4c = 0 e a tabela
 /// liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); o calendário (+0xba) liberado (free 0x9452ca) e
@@ -464,8 +486,8 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
-    let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
-    expectativas(this);
+    let expectations: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
+    expectations(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqs2: a renovação dos árbitros da MLS
 }
@@ -574,12 +596,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list:
     crate::comparison::branch("cqs_2 clubes da mls");
 }
 
-
-
-
-
-
-
 /// Staff_Records::add_failed_to_qualify_record (0x86c1d0) for a club.
 ///
 /// [pt] 0x86c1d0 Staff_Records::add_failed_to_qualify_record (thiscall em [0xdd7f00], ret 0x10; já em Rust).
@@ -665,7 +681,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(t
     mls_stage_outcome(this, club, status, stage, game, true)
 }
 
-
 /// MLS result: each game goes to the overall table and, in the regular season, also to the two conference tables (East
 /// and West [inference]), without counting the statistics twice.
 ///
@@ -683,8 +698,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     if (*((game + 0x42) as *const i8)) < 2 {
         *((game + 0x42) as *mut u8) = 0xff;
     }
-    let geral: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_ADD_RESULT);
-    geral(this, game, stats);
+    let general: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_ADD_RESULT);
+    general(this, game, stats);
     if read_u32_as_usize(this + league::CURRENT_STAGE) != 1 {
         return 1;
     }
@@ -704,7 +719,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     *((this + 8) as *mut u32) = stored as u32;
     1
 }
-
 
 /// Returns the club's conference in the MLS All-Star game: East (0x413) or West (0x414); clubs outside the MLS, none.
 ///
@@ -738,7 +752,6 @@ pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(club: usize
     original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_USA_MLS_GET_CLUB_ALL_STAR_CONFERENCE)(club)
 }
 
-
 /// MLS: 32 games per team (+0xa7; four round robins in +0x3c); win 3, draw 1; tie-break by goal difference, goals
 /// scored and head-to-head; 1 top place in the overall table (rule word 0x48: 0x8 next stage, the play-offs; 0x40 fixed
 /// round order); nobody goes up or down; the word +0xab = 0xc2 copied to each match. No schedule here: the games are
@@ -752,7 +765,6 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_up_rules(this: usize) -> u32 
     crate::comparison::branch("cqj_8 regras da mls");
     1
 }
-
 
 /// MLS: in the regular season and play-off stages 0 and 1, the current position 1, 2, 3, 4 becomes 1, 3, 7, 10, the
 /// lowest 1 to 3 becomes 1 and 4 becomes 10, the highest 1 to 3 becomes 7 and 4 becomes 10 (positions on the

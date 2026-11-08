@@ -85,7 +85,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p:
     SCOREBOARD.record(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
 }
 
-/// Comparer for `allocate_squad_number` (comparison mode: see the header of motor.rs).
+/// Comparer for `allocate_squad_number` (comparison mode: see the header of motor.rs): side by side on `+0x3a` of the
+/// person's two contracts (the only one the routine numbers) and on the box mark.
+///
+/// When no position on the player sheet is good, the original routine reads the 4-byte list of preferred numbers with
+/// no value on the stack (left over from the caller): the copy uses the empty list (a value the game produces when the
+/// leftover is 0xff) and the comparer leaves only the original routine.
 ///
 /// [pt] Lado a lado: o +0x3a dos dois contratos da pessoa (a única que a rotina numera) e a marca da caixa. Quando nenhuma
 /// posição da ficha é boa, a original lê a lista de preferidos de 4 bytes sem valor na pilha (sobra de quem chamou):
@@ -138,10 +143,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
 
 /// Comparer for `assign_league_squad_numbers` (comparison mode: see the header of motor.rs).
 ///
+/// Side by side: +0x3a of the contracts (the club one and the loan one) of everyone in the squad of each league club
+/// and of the linked club, and the error box mark. If some club has a human manager without `automatico` (the request
+/// news item cannot run twice), only the original runs. The club list comes from the same method +0x58 (freed
+/// afterwards).
+///
 /// [pt] Lado a lado: o +0x3a dos contratos (o do clube e o de empréstimo) de quem está no elenco de cada clube da liga e
 /// no do clube ligado, e a marca da caixa. Com algum clube de técnico humano sem `automatico` (a notícia do pedido não
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
-pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, league: usize, inicial: u32, automatico: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, league: usize, initial: u32, automatico: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_ASSIGN_LEAGUE_SQUAD_NUMBERS);
     if let Some(v) = (*core::ptr::addr_of_mut!(SQUAD_NUMBERS_PLAN)).as_mut() {
         v.push(league);
@@ -159,7 +169,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
         soltar(list);
     }
     if automatico == 0 && cs.iter().any(|&c| human(read_u32(G_NEWS) as usize, c) != 0) {
-        return o(this, league, inicial, automatico);
+        return o(this, league, initial, automatico);
     }
     let mut reg = vec![(0xb67a34usize, 4usize)];
     for &c in &cs {
@@ -181,10 +191,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, league, inicial, automatico), || assign_league_squad_numbers(this, league, inicial, automatico));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, league, initial, automatico), || assign_league_squad_numbers(this, league, initial, automatico));
     SCOREBOARD.record(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
-        format!("assign_league_squad_numbers(liga {:x}, {} {}): {}", league, inicial, automatico, d.join(", "))
+        format!("assign_league_squad_numbers(liga {:x}, {} {}): {}", league, initial, automatico, d.join(", "))
     });
 }
 

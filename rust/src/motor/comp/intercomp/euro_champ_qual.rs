@@ -1,10 +1,18 @@
 use super::*;
 
-
-
-
-/// EuroChampQual::set_up_rules (0x57e8f0): points, rounds, tiebreaks, qualification places, draw date; builds the round
-/// table; returns 1.
+/// `EuroChampQual::set_up_rules()` (0x57e8f0, thiscall, ret 0, euro_champ_qual.cpp; virtual +0x8c, from the constructor
+/// in 2001-000; SEH frame for the local Date, no destructor): sets points, rounds, tie-breakers, qualification places
+/// and the draw date, and builds the round table; returns 1.
+///
+/// 3 points for a win (+0xc2) and 1 for a draw (+0xc3), +0x4a = 3, two rounds (+0x3c = 2, word), match category 0xa
+/// (+0xc4), +0x43 = 2, tie-breakers 1, 2, 4, 5 (+0xc5..+0xc8), one direct place (+0xbe = 1) and one play-off place
+/// (+0xbf = 1), no relegation (+0xc0 = +0xc1 = 0), +0x49 = 7, +0xa7 = 0xffff (word).
+///
+/// The draw date (+0xb6, the day of the year) = Date(10, 2, year +0x40, 5) (0x549f70: push 5; push year; push 2; push
+/// 0xa; lea ecx, local -> thiscall, ret 0x10: 10 March moved to the Friday [inference]); +0xb8 = 0 (word); the round
+/// table from virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) at +0xba.
+///
+/// Returns 1.
 ///
 /// [pt] { 0x57e8f0 } (thiscall, ret 0, euro_champ_qual.cpp; a virtual +0x8c, do construtor em 2001-000; quadro SEH pela Date
 /// local, sem destrutor): `EuroChampQual::set_up_rules()`: 3 pontos pela vitória (+0xc2) e 1 pelo empate (+0xc3), +0x4a =
@@ -49,8 +57,12 @@ pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize)
     set_up_rules(this)
 }
 
-
-/// EuroChampQual::get_group_team_count(g): 6 or 5 teams by format (+0xf6); other format shows the box and returns 5.
+/// `EuroChampQual::get_group_team_count(g)` (0x57d9d0, thiscall, ret 4, euro_champ_qual.cpp): the number of teams in
+/// group `g`, 6 or 5 depending on the format (+0xf6).
+///
+/// With format 1 (9 groups [inference]), groups 0, 2 and 5 have 6 national teams and the others 5; with format 2 (10
+/// groups [inference]), groups 0, 2, 5 and 7 have 6 and the others 5; any other format shows the error box for line
+/// 0x245 and returns 5. `g` is the argument's byte.
 ///
 /// [pt] { 0x57d9d0 } (thiscall, ret 4, euro_champ_qual.cpp): `EuroChampQual::get_group_team_count(g)`: com o formato +0xf6 = 1
 /// (9 grupos [inferência]), os grupos 0, 2 e 5 têm 6 seleções e os outros 5; com o formato 2 (10 grupos [inferência]), os
@@ -73,8 +85,12 @@ pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32)
     group_team_count(this, g)
 }
 
-
-/// EuroChampQual::get_qualification_status(club): -2 if club stat 0x12 (low byte) < 14, else -3.
+/// `EuroChampQual::get_qualification_status(clube)` (`0x580b50`, thiscall, ret 4, `euro_champ_qual.cpp`; the virtual
+/// giving a club's status): −2 if the low byte of the club's stat `0x12` is below 14, otherwise −3.
+///
+/// Reads the club's stat `0x12` from the cup statistics (Comp_Stats::get_club_stat `0x4a2e10`: push 0x12; push club;
+/// mov ecx, [this+8] -> thiscall, ret 8, returns a float), truncated (_ftol `0x945640`): with the low byte below 14
+/// (signed), −2; otherwise −3 (word).
 ///
 /// [pt] { 0x580b50 } (thiscall, ret 4, euro_champ_qual.cpp; a virtual da situação de um clube): `EuroChampQual::
 /// get_qualification_status(clube)`: a estatística 0x12 do clube nas estatísticas da copa (Comp_Stats::get_club_stat
@@ -91,7 +107,6 @@ pub(crate) unsafe fn qualification_status(this: usize, club: usize) -> i16 {
 pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, club: usize) -> i16 {
     qualification_status(this, club)
 }
-
 
 /// EuroChampQual::init_group_one_table(): sets up group 1 of the European Championship qualifiers (the cup itself):
 /// stores the group size (+0x3e), allocates the league table (one 0x3b-byte row per team at +0xb1), sets the cached
@@ -134,5 +149,4 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
     news(this);
     1
 }
-
 

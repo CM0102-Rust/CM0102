@@ -33,7 +33,7 @@
 //!                0xae2470, que fica com a data de this e o ano de outra)
 
 use crate::comparison::{side_by_side_light as side_by_side, Scoreboard, TestRng};
-use crate::detours::{self, Prologo};
+use crate::detours::{self, Prologue};
 use crate::crt;
 use crate::registro::linha;
 
@@ -74,27 +74,27 @@ const ST_DAYS: LocalStatic = LocalStatic { value: 0xae2470, guard: 0xae2418, des
 /// [pt] Memoria que os operadores tocam alem dos argumentos (para o modo comparacao).
 const STATICS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1)];
 
-const PROLOGUES: [Prologo; 10] = [
+const PROLOGUES: [Prologue; 10] = [
     // 0x54a110: mov eax, ecx; mov word ptr [eax], 0x28
-    Prologo { endereco: 0x54a110, bytes: &[0x8b, 0xc1, 0x66, 0xc7, 0x00, 0x28, 0x00] },
+    Prologue { address: 0x54a110, bytes: &[0x8b, 0xc1, 0x66, 0xc7, 0x00, 0x28, 0x00] },
     // 0x549ef0: mov ax, word ptr [esp + 4]
-    Prologo { endereco: 0x549ef0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] },
+    Prologue { address: 0x549ef0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] },
     // 0x54a3f0: push esi; push edi; xor edi, edi; mov eax, 0x51eb851f
-    Prologo { endereco: 0x54a3f0, bytes: &[0x56, 0x57, 0x33, 0xff, 0xb8, 0x1f, 0x85, 0xeb, 0x51] },
+    Prologue { address: 0x54a3f0, bytes: &[0x56, 0x57, 0x33, 0xff, 0xb8, 0x1f, 0x85, 0xeb, 0x51] },
     // 0x417c10: push ecx; mov eax, dword ptr [esp + 0xc]
-    Prologo { endereco: 0x417c10, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] },
+    Prologue { address: 0x417c10, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] },
     // 0x54c5b0: sub esp, 0x10; mov al, byte ptr [0xae2469]
-    Prologo { endereco: 0x54c5b0, bytes: &[0x83, 0xec, 0x10, 0xa0, 0x69, 0x24, 0xae, 0x00] },
+    Prologue { address: 0x54c5b0, bytes: &[0x83, 0xec, 0x10, 0xa0, 0x69, 0x24, 0xae, 0x00] },
     // 0x54c8e0: sub esp, 0x10; push esi; push edi
-    Prologo { endereco: 0x54c8e0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] },
+    Prologue { address: 0x54c8e0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] },
     // 0x54c770: push ecx; mov al, byte ptr [0xae2430]
-    Prologo { endereco: 0x54c770, bytes: &[0x51, 0xa0, 0x30, 0x24, 0xae, 0x00] },
+    Prologue { address: 0x54c770, bytes: &[0x51, 0xa0, 0x30, 0x24, 0xae, 0x00] },
     // 0x54a2d0: mov eax, dword ptr fs:[0]
-    Prologo { endereco: 0x54a2d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
+    Prologue { address: 0x54a2d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
     // 0x549f70: sub esp, 0x200
-    Prologo { endereco: 0x549f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x549f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     // 0x54cdb0: sub esp, 0xc; mov al, byte ptr [0xae2418]
-    Prologo { endereco: 0x54cdb0, bytes: &[0x83, 0xec, 0x0c, 0xa0, 0x18, 0x24, 0xae, 0x00] },
+    Prologue { address: 0x54cdb0, bytes: &[0x83, 0xec, 0x0c, 0xa0, 0x18, 0x24, 0xae, 0x00] },
 ];
 
 /// Rule of { 0x549ef0 }: odd or not divisible by 4 -> no; not divisible by 100 -> yes;
@@ -572,10 +572,10 @@ pub unsafe fn instalar(comparing: bool) {
 }
 
 /// Simulation in original mode: the same routines detoured to the original itself, which then runs
-/// on the private stack like the Rust version (see `desvios::isolar`).
+/// on the private stack like the Rust version (see `detours::isolar`).
 ///
 /// [pt] Simulacao no modo original: as mesmas rotinas desviadas para a propria original, que assim roda
-/// na pilha particular como a versao Rust (ver `desvios::isolar`).
+/// na pilha particular como a versao Rust (ver `detours::isolar`).
 pub unsafe fn instalar_passagem() {
     for (i, p) in PROLOGUES.iter().enumerate() {
         detours::desviar(&format!("data {} (original isolada)", i), p, detours::PASSAGEM);

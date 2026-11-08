@@ -1,0 +1,41 @@
+0x0	COMP_ID	4	competition id (-1 none; -2 marks a removed or simulated fixture)
+0x4	STADIUM_ID	4	stadium id (-1 none), set by Stadium::set_fixture_venue
+0x8	MATCH_STATS_SLOT	4	slot of the match statistics record in match_stats_matches.tmp (-1 none, set at creation)
+0xc	HOME_CLUB_ID	4	home club id (-1 none)
+0x10	AWAY_CLUB_ID	4	away club id (-1 none)
+0x14	COMPETITION	4	competition object pointer
+0x18	STADIUM	4	stadium record pointer (0 none)
+0x1c	HOME_CLUB	4	home club pointer
+0x20	AWAY_CLUB	4	away club pointer
+0x24	NEXT_ROUND_YEAR	2	year of the next round's date (cup; 0 in the last round)
+0x26	NEXT_ROUND_DAY	2	day of year of the next round's date (cup; 0 in the last round)
+0x28	YEAR	2	year of the fixture date
+0x2a	DAY	2	day of year of the fixture date
+0x2c	SEASON_YEAR	2	season year of the competition (the cup year)
+0x2e	REFEREE	2	match official index (-1 none), set by OfficialsManager::choose_match_official
+0x30	ROUND_NAME	2	round name code (comp_util name table; units digit = variant: 0 single match, 3 first leg, 4 second leg, 5 replay)
+0x32	ROUND_PREFIX	2	round name prefix code (0x41f..0x426 groups A to H)
+0x34	ROUND_NUMBER	2	round/matchday number (cup round +9; league round)
+0x36	ROUND_DRAW_RULES	2	round rule word copied from the round (cup +0xb, league +0xdb) [inference: draw type]
+0x38	TIE_RULES	2	tie-break rules (cup +0xd, league +0xab): 0x20 35-yard shoot-out, 0x10 draw counts, 0x800/0x1000, 0x4000
+0x3a	CATEGORY	1	match category: 1 friendly, 2 league, 4 domestic cup, 5 league play-off, 6 cup final stage, 7/8 continental, 9 national-team friendly, 10 national teams, 23 club world cups
+0x3b	STAGE	1	competition stage code (0xff none)
+0x3c	NEUTRAL_VENUE	1	1 when played on neutral ground
+0x3d	HOME_RESULT_MARK	1	tie result mark of the home side (1/2 win, 3 extra time or shoot-out, minus 3 forfeit) written by the cup winner logic
+0x3e	AWAY_RESULT_MARK	1	tie result mark of the away side (same coding as HOME_RESULT_MARK)
+0x3f	TIME_SLICE	1	time slice of the day (1 weekend, 2 midweek); indexes the fixture manager day lists
+0x40	HOME_SIDE_MARK	1	per-side byte of the home club (league 0, cup 1; find_fixtures side filter); 0 sets the match manager's +0x19 [inference]
+0x41	AWAY_SIDE_MARK	1	per-side byte of the away club (same use as HOME_SIDE_MARK) [inference]
+0x42	STAGE_INDEX	1	stage index/type of the competition the fixture belongs to (cup STAGE_INDEX; find_fixtures type filter)
+0x43	HOME_GOALS	1	home goals at full time (0xff = not played)
+0x44	AWAY_GOALS	1	away goals at full time
+0x45	HOME_GOALS_HALF_TIME	1	home goals at half time (-1 none)
+0x46	AWAY_GOALS_HALF_TIME	1	away goals at half time
+0x47	HOME_GOALS_EXTRA_TIME	1	home goals after extra time (-1 none)
+0x48	AWAY_GOALS_EXTRA_TIME	1	away goals after extra time
+0x49	HOME_PENALTIES	1	home shoot-out goals (0xff none)
+0x4a	AWAY_PENALTIES	1	away shoot-out goals
+0x4b	HOME_AGGREGATE	1	two-legged tie: home side's first-leg/aggregate goals (0xff none) [inference]
+0x4c	AWAY_AGGREGATE	1	two-legged tie: away side's first-leg/aggregate goals (0xff none) [inference]
+0x4d	SQUAD_RULES	2	low nibble named reserves (squad = 11 + n), next nibble substitutions allowed; 0x400 single leg, 0x800 moved to the home club's preferred day, 0x100/0x200 national-team friendly side
+0x4e	FLAGS	1	flags byte: bits 0-1 national-team call-up flags, bit 2 cup leg flag, bit 3 last league round [inference]

@@ -3,7 +3,10 @@
 // (grafo × tabelas); regenerar se o gerador mudar. Os textos são endereços no exe (não copiados). Entra no
 // motor.rs pelo `include!("nation_adjectives.rs")` do código da leva.
 
-/// Uma nação de uma cadeia: a global da chave e a fonte para a forma 0, 1, 2, 3, 4 e as outras (0: nada,
+/// A nation in a chain: the key's global and the source for form 0, 1, 2, 3, 4 and the others (0: nothing, 1: the
+/// nation's name at +0x57, otherwise the address of the text).
+///
+/// [pt] Uma nação de uma cadeia: a global da chave e a fonte para a forma 0, 1, 2, 3, 4 e as outras (0: nada,
 /// 1: o nome da nação em +0x57, senão o endereço do texto).
 type EntradaDbx = (u32, [u32; 6]);
 
@@ -975,7 +978,12 @@ const ADJETIVOS_6_5: [EntradaDbx; 39] = [
     (0x9cf424, [1, 0x9e2128, 0x9e2128, 0x9e2128, 0x9e2128, 0x9e2128]),
 ];
 
-/// Os idiomas (0x66f4d0) na ordem da original: (idioma, o nome da nação se o texto ficar vazio, as cadeias).
+/// The languages (0x66f4d0) in the original's order: (language, the nation name to use if the text comes out empty, the
+/// chains).
+///
+/// In each chain the first key equal to the id wins; otherwise it moves on to the next chain.
+///
+/// [pt] Os idiomas (0x66f4d0) na ordem da original: (idioma, o nome da nação se o texto ficar vazio, as cadeias).
 /// Em cada cadeia vale a primeira chave igual ao id; depois segue para a cadeia seguinte.
 const ADJETIVOS_DA_NACAO: [(i32, bool, &[&[EntradaDbx]]); 5] = [
     (9, true, &[&ADJETIVOS_9_0, &ADJETIVOS_9_1]),

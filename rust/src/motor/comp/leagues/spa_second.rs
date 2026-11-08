@@ -1,13 +1,21 @@
 use super::*;
 
-
-/// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
+/// Describes one round of the 0x41-byte table.
+///
+/// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
+/// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
+/// list ends with −1).
+///
+/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
 pub(crate) type SpaSecondScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
-/// Writes rounds starting at `primeira` into round table t: each round's date (0x68a160) and match slots (0x68a1c0),
-/// from a static table.
+/// Writes rounds `primeira`.. into round table `t`, in the original routine's order.
+///
+/// For each round: the date (`0x68a160`: push 0; push year; push code; push week; push years; push month; push day;
+/// push i; push t; add esp -> cdecl: value 0) and the slots (`0x68a1c0`: push 0; push c; push b; push a; push j; push
+/// i; push t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
@@ -24,8 +32,15 @@ pub(crate) unsafe fn spa_second_set_league_rounds(t: usize, year: u32, first: i3
     }
 }
 
-
-/// A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
+/// The main stage with the Christmas rounds.
+///
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
+/// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
+/// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
+/// eighth); then the closing rounds.
+///
+/// [pt] A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
 /// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
@@ -48,17 +63,16 @@ pub(crate) unsafe fn set_rounds_with_christmas(t: usize, year: u32, n: &SpaSecon
     construct(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
-    let caso = if k as u32 > 6 {
+    let case = if k as u32 > 6 {
         show_error_at(file, n.linha);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[caso];
+    let middle = n.casos[case];
     spa_second_set_league_rounds(t, year, n.comeco.len() as i32, middle);
     spa_second_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
-
 
 /// a Segunda espanhola: as rodadas antes do Natal (ano par)
 pub(crate) const SEGUNDA_EVEN_YEAR_EARLY_ROUNDS: [SpaSecondScheduleRound; 17] = [
@@ -232,7 +246,6 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
     }
 }
 
-
 /// the Spanish Segunda: discipline rule 0x1a (the Spanish one), only the league
 /// Original: `SpaSecond::SpaSecond` (0x8539a0, spa_second.cpp, thiscall, ret 8).
 ///
@@ -241,7 +254,6 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
 pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u32, record: usize) -> usize {
     construct_division_league(this, year, record, &SPANISH_SEGUNDA)
 }
-
 
 /// `SpaSecond::set_up_rules()`: La Segunda (22 clubs).
 ///
@@ -259,7 +271,6 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
     crate::comparison::branch("cqk_4 regras da segunda");
     spa_first_apply_league_rules(this, &segunda_rules(this))
 }
-
 
 /// `SpaSecond::create_table()`: the Segunda has 22 clubs (+0x3e), those of the competition in database order.
 ///

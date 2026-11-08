@@ -45,8 +45,8 @@ pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize,
 
 /// Comparer for `commentate_on_panel` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, width, quebrar, font, mode)
+pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, panel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, panel, width, quebrar, font, mode)
 }
 
 /// Comparer for `next_event` (comparison mode: see the header of motor.rs).
@@ -105,13 +105,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_sounds_finished(e: usize, ativos
 }
 
 /// Comparer for `event_variant` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, kind: u8) -> i16 {
+pub(crate) unsafe extern "system" fn comparar_event_variant(e: *const i16, sides: u32, kind: u8) -> i16 {
     let o = original_fn::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(IDX_EVENT_VARIANT);
     if is_recording_top_level() {
-        return o(e, lados, kind);
+        return o(e, sides, kind);
     }
     let reg = crate::rng::STATE_REGIONS.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(e, lados, kind), || crate::rng::without_counting(|| event_variant(e, lados, kind)));
-    SCOREBOARD.record(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, kind, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(e, sides, kind), || crate::rng::without_counting(|| event_variant(e, sides, kind)));
+    SCOREBOARD.record(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, sides, kind, r, n, mo, mr));
     r
 }

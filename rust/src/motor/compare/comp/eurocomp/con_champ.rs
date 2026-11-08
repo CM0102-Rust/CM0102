@@ -3,7 +3,13 @@ use super::*;
 // The comparers of the routines in ../comp/eurocomp/con_champ.rs (comparison mode: see the header of motor.rs).
 // [pt] Os comparadores das rotinas de ../comp/eurocomp/con_champ.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparador da 0x4c11a0: lado a lado nos oito times (+0xa7, 48 bytes), em +0x3e e no estado do sorteador (a 0x4afbd0
+/// Comparer of 0x4c11a0: side by side on the eight teams (+0xa7, 48 bytes), on +0x3e and on the random generator's
+/// state (0x4afbd0 shuffles; the copy without counting).
+///
+/// When a list is short of clubs (fewer than 2 Mexican, 3 Central American, 1 Caribbean, or 2 MLS without the object
+/// [0x9cf728]) the original reads stack leftovers: only the original.
+///
+/// [pt] Comparador da 0x4c11a0: lado a lado nos oito times (+0xa7, 48 bytes), em +0x3e e no estado do sorteador (a 0x4afbd0
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usize) -> u32 {

@@ -25,8 +25,8 @@ use core::ffi::c_void;
 use crate::registro::linha;
 use crate::{rng, date, win};
 
-pub struct Prologo {
-    pub endereco: usize,
+pub struct Prologue {
+    pub address: usize,
     pub bytes: &'static [u8],
 }
 
@@ -61,13 +61,13 @@ const ARG_DWORDS: u32 = 16; // dwords copied from the game's stack (enough for a
 pub static ISOLAR: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Garbage detector (diagnosis only, the chain's third Rust career; `jogo\veneno.txt`, read by
-/// `simulacao::instalar`): when nonzero, every entry from outside into a detoured routine fills the POISON_SPAN bytes
+/// `simulation::instalar`): when nonzero, every entry from outside into a detoured routine fills the POISON_SPAN bytes
 /// at the top of the private stack with that value before calling the routine. An original that reads a local variable
 /// without a value then reads the poison, and the career comes out different from the two normal ones. It is not part of
 /// the product and decides nothing: it only flags (see docs/COMO_CONTINUAR.md).
 ///
 /// [pt] Detector de lixo (so diagnostico, a terceira carreira Rust da cadeia; `jogo\veneno.txt`, lido por
-/// `simulacao::instalar`): diferente de 0, toda entrada vinda de fora numa rotina desviada enche os VENENO_FAIXA bytes
+/// `simulation::instalar`): diferente de 0, toda entrada vinda de fora numa rotina desviada enche os VENENO_FAIXA bytes
 /// do alto da pilha particular com esse valor antes de chamar a rotina. Uma original que le variavel local sem valor
 /// passa a ler o veneno, e a carreira sai diferente das duas normais. Nao entra no produto nem decide nada: so acusa
 /// (ver docs/COMO_CONTINUAR.md).
@@ -308,16 +308,16 @@ pub unsafe fn preservar_ecx_cdecl(target: usize, n: u8) -> usize {
 /// original rodar isolada como as reescritas e os modos da simulacao serem comparaveis).
 pub const PASSAGEM: usize = 0;
 
-/// Detours `p.endereco` to `target`. Returns the trampoline (the original routine), or None if refused.
+/// Detours `p.address` to `target`. Returns the trampoline (the original routine), or None if refused.
 ///
-/// [pt] Desvia `p.endereco` para `destino`. Devolve o trampolim (a rotina original), ou None se recusou.
-pub unsafe fn desviar(name: &str, p: &Prologo, target: usize) -> Option<usize> {
+/// [pt] Desvia `p.address` para `destino`. Devolve o trampolim (a rotina original), ou None se recusou.
+pub unsafe fn desviar(name: &str, p: &Prologue, target: usize) -> Option<usize> {
     hook_with(name, p, |tramp| {
         let target = if target == PASSAGEM { tramp } else { target };
         // only in the patched exe (third-party code relies on ECX; the game's does not, and the generic stub doubles the
         // career's time); the draw (1 argument, cdecl, the most called) gets the cheap stub
         let target = if !exe_com_patch() { target }
-            else if p.endereco == 0x90cfc0 { preservar_ecx_cdecl(target, 1) } else { preservar_ecx(target) };
+            else if p.address == 0x90cfc0 { preservar_ecx_cdecl(target, 1) } else { preservar_ecx(target) };
         if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) { isolar(target) } else { target }
     })
 }
@@ -325,7 +325,7 @@ pub unsafe fn desviar(name: &str, p: &Prologo, target: usize) -> Option<usize> {
 /// Stack probe detour (`CM_SONDA_PILHA`, diagnosis): the original runs on the game's stack between the probe stubs.
 ///
 /// [pt] Desvio da sonda de pilha (`CM_SONDA_PILHA`, diagnóstico): a original roda na pilha do jogo entre os trechos da sonda.
-pub unsafe fn desviar_sonda(name: &str, p: &Prologo, inside: bool) -> Option<usize> {
+pub unsafe fn desviar_sonda(name: &str, p: &Prologue, inside: bool) -> Option<usize> {
     hook_with(name, p, |tramp| crate::stack_probe::montar(tramp, inside))
 }
 
@@ -334,7 +334,7 @@ pub unsafe fn desviar_sonda(name: &str, p: &Prologo, inside: bool) -> Option<usi
 ///
 /// [pt] Contador de chamadas (cobertura): `inc dword [contador]; jmp original`. Nao toca pilha nem
 /// registradores (so os flags, que nao sobrevivem a um call), entao a carreira nao muda.
-pub unsafe fn contar(name: &str, p: &Prologo, counter: *mut u32) -> bool {
+pub unsafe fn contar(name: &str, p: &Prologue, counter: *mut u32) -> bool {
     hook_with(name, p, |tramp| {
         let c = executable(16) as *mut u8;
         *c = 0xff;
@@ -411,14 +411,14 @@ pub fn resumo_assinaturas() {
 /// Core of the detours: checks the routine and the bytes, builds the trampoline and jumps to `target(trampoline)`.
 ///
 /// [pt] Miolo dos desvios: confere a rotina e os bytes, monta o trampolim e salta para `destino(trampolim)`.
-unsafe fn hook_with(name: &str, p: &Prologo, target: impl FnOnce(usize) -> usize) -> Option<usize> {
-    if !signature_matches(p.endereco) {
-        linha(&format!("rotina {:#x} fica com o exe (alterada)", p.endereco));
+unsafe fn hook_with(name: &str, p: &Prologue, target: impl FnOnce(usize) -> usize) -> Option<usize> {
+    if !signature_matches(p.address) {
+        linha(&format!("rotina {:#x} fica com o exe (alterada)", p.address));
         return None;
     }
-    let current = core::slice::from_raw_parts(p.endereco as *const u8, p.bytes.len());
+    let current = core::slice::from_raw_parts(p.address as *const u8, p.bytes.len());
     if current != p.bytes {
-        linha(&format!("desvio {} recusado: bytes em {:#x} sao {:02x?}, esperava {:02x?}", name, p.endereco, current, p.bytes));
+        linha(&format!("desvio {} recusado: bytes em {:#x} sao {:02x?}, esperava {:02x?}", name, p.address, current, p.bytes));
         return None;
     }
     let n = p.bytes.len();
@@ -428,18 +428,18 @@ unsafe fn hook_with(name: &str, p: &Prologo, target: impl FnOnce(usize) -> usize
         return None;
     }
     let m = build_trampoline(p, tramp);
-    write_jmp(tramp.add(m), p.endereco + n);
+    write_jmp(tramp.add(m), p.address + n);
     let target = target(tramp as usize);
 
     let mut old_protect = 0u32;
-    win::VirtualProtect(p.endereco as *mut c_void, n, win::PAGE_EXECUTE_READWRITE, &mut old_protect);
-    write_jmp(p.endereco as *mut u8, target);
+    win::VirtualProtect(p.address as *mut c_void, n, win::PAGE_EXECUTE_READWRITE, &mut old_protect);
+    write_jmp(p.address as *mut u8, target);
     for i in 5..n {
-        *(p.endereco as *mut u8).add(i) = 0xcc; // never executed (the jmp leaves before)
+        *(p.address as *mut u8).add(i) = 0xcc; // never executed (the jmp leaves before)
     }
-    win::VirtualProtect(p.endereco as *mut c_void, n, old_protect, &mut old_protect);
-    win::FlushInstructionCache(win::GetCurrentProcess(), p.endereco as *const c_void, n);
-    linha(&format!("desvio {}: {:#x} -> {:#x} (original em {:#x})", name, p.endereco, target, tramp as usize));
+    win::VirtualProtect(p.address as *mut c_void, n, old_protect, &mut old_protect);
+    win::FlushInstructionCache(win::GetCurrentProcess(), p.address as *const c_void, n);
+    linha(&format!("desvio {}: {:#x} -> {:#x} (original em {:#x})", name, p.address, target, tramp as usize));
     record_installed(p);
     Some(tramp as usize)
 }
@@ -458,9 +458,9 @@ pub const RELATIVAS: &[(usize, usize)] = &[(0x714d00, 4), (0x6f55c0, 4)];
 ///
 /// [pt] Copia o prologo para o trampolim, refazendo a instrucao relativa de RELATIVAS. Devolve o tamanho
 /// escrito (o `jmp` de volta vem depois).
-unsafe fn build_trampoline(p: &Prologo, tramp: *mut u8) -> usize {
+unsafe fn build_trampoline(p: &Prologue, tramp: *mut u8) -> usize {
     let n = p.bytes.len();
-    let Some(&(_, k)) = RELATIVAS.iter().find(|&&(a, _)| a == p.endereco) else {
+    let Some(&(_, k)) = RELATIVAS.iter().find(|&&(a, _)| a == p.address) else {
         core::ptr::copy_nonoverlapping(p.bytes.as_ptr(), tramp, n);
         return n;
     };
@@ -468,7 +468,7 @@ unsafe fn build_trampoline(p: &Prologo, tramp: *mut u8) -> usize {
     let op = p.bytes[k];
     if op == 0xe8 {
         let rel = i32::from_le_bytes([p.bytes[k + 1], p.bytes[k + 2], p.bytes[k + 3], p.bytes[k + 4]]);
-        let target = (p.endereco as isize + k as isize + 5 + rel as isize) as usize;
+        let target = (p.address as isize + k as isize + 5 + rel as isize) as usize;
         *tramp.add(k) = 0xe8;
         core::ptr::write_unaligned(tramp.add(k + 1) as *mut i32, (target as isize - (tramp as isize + k as isize + 5)) as i32);
         core::ptr::copy_nonoverlapping(p.bytes.as_ptr().add(k + 5), tramp.add(k + 5), n - k - 5);
@@ -476,7 +476,7 @@ unsafe fn build_trampoline(p: &Prologo, tramp: *mut u8) -> usize {
     } else {
         // jcc rel8 becomes jcc rel32 (0f 8x): 4 more bytes
         assert!((0x70..0x80).contains(&op));
-        let target = (p.endereco as isize + k as isize + 2 + p.bytes[k + 1] as i8 as isize) as usize;
+        let target = (p.address as isize + k as isize + 2 + p.bytes[k + 1] as i8 as isize) as usize;
         *tramp.add(k) = 0x0f;
         *tramp.add(k + 1) = 0x80 + (op - 0x70);
         core::ptr::write_unaligned(tramp.add(k + 2) as *mut i32, (target as isize - (tramp as isize + k as isize + 6)) as i32);
@@ -493,13 +493,13 @@ unsafe fn write_jmp(at: *mut u8, to: usize) {
 
 // ---------- resolution in memory (experiment, CM_RESOLUCAO=1080) ----------
 
-/// With `CM_RESOLUCAO=1080`, applies in memory the swaps of `resolucao.rs` (generated by `resolucao.py --rust`:
+/// With `CM_RESOLUCAO=1080`, applies in memory the swaps of `resolution.rs` (generated by `resolucao.py --rust`:
 /// patch_portatil.py + resolucao.py 1920x1080), and the original cm0102.exe becomes equal to cm0102-1080.exe.
 /// Runs in DllMain before everything (before WinMain and the exe's CRT, so the swaps in .data hold from the
 /// start, and before the detours, which then see the same as in cm0102-1080.exe). A swap whose bytes are not the
 /// "before" ones (nor already the "after" ones) is left out and goes to the log (exe with a third-party patch).
 ///
-/// [pt] Com `CM_RESOLUCAO=1080`, aplica em memoria as trocas de `resolucao.rs` (geradas por `resolucao.py --rust`:
+/// [pt] Com `CM_RESOLUCAO=1080`, aplica em memoria as trocas de `resolution.rs` (geradas por `resolucao.py --rust`:
 /// patch_portatil.py + resolucao.py 1920x1080), e o cm0102.exe original fica igual ao cm0102-1080.exe.
 /// Roda no DllMain antes de tudo (antes do WinMain e da CRT do exe, entao as trocas em .data valem desde o
 /// inicio, e antes dos desvios, que entao veem o mesmo que no cm0102-1080.exe). Troca cujos bytes nao sao os
@@ -775,10 +775,10 @@ unsafe fn install_engine() {
 static mut INSTALLED: Vec<(usize, &'static [u8], usize, u64, [u8; 5])> = Vec::new();
 static mut CHECKED_DAY: [u16; 2] = [0; 2];
 
-unsafe fn record_installed(p: &Prologo) {
+unsafe fn record_installed(p: &Prologue) {
     use crate::signatures::ASSINATURAS;
-    if let Ok(k) = ASSINATURAS.binary_search_by_key(&p.endereco, |a| a.0) {
-        (*core::ptr::addr_of_mut!(INSTALLED)).push((p.endereco, p.bytes, p.endereco + ASSINATURAS[k].1, 0, *(p.endereco as *const [u8; 5])));
+    if let Ok(k) = ASSINATURAS.binary_search_by_key(&p.address, |a| a.0) {
+        (*core::ptr::addr_of_mut!(INSTALLED)).push((p.address, p.bytes, p.address + ASSINATURAS[k].1, 0, *(p.address as *const [u8; 5])));
     }
 }
 

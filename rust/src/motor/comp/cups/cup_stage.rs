@@ -1,10 +1,5 @@
 use super::*;
 
-
-
-
-
-
 /// Constructs a cup knockout stage: the round table copied from the cup's template (dates, draws), the year, the stage,
 /// the id and the parent's rules (+0x49, +0x4a), the team list with pot seeds, and the fixture tree.
 ///
@@ -32,8 +27,8 @@ use super::*;
 /// senão Cup::map_fixture_tree (0x518790), as duas thiscall, ret 0 (sorteiam); negativa, a caixa da linha 0x62 ou 0x6a.
 /// Devolve this.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, modelo: usize, year: u32, stage: u32, b2: u32,
-    id: u32, b3: u32, arvore: u32, by_order: u32, a14: u32, sementes: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, template: usize, year: u32, stage: u32, b2: u32,
+    id: u32, b3: u32, arvore: u32, by_order: u32, a14: u32, seeds: usize) -> usize {
     const F: usize = 0x9b5944;
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_CUP);
     base(this);
@@ -62,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         show_error_at(F, 0x48);
         return this;
     }
-    core::ptr::copy_nonoverlapping(modelo as *const u8, t as *mut u8, size as usize);
+    core::ptr::copy_nonoverlapping(template as *const u8, t as *mut u8, size as usize);
     write_u16(this + cup::TEAM_COUNT, n as u16);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let l = zerada(n as u16 as i16 as i32 as u32, 6);
@@ -78,8 +73,8 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         let e = i as usize * 6;
         write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + e, read_u32_as_usize(teams + i as usize * 4)); // cqs7: o time i
         write_u8(read_u32_as_usize(this + cup::TEAM_TABLE) + e + 5, 0);
-        let s = if sementes != 0 {
-            *((sementes + i as usize) as *const u8) // cqs7: a semente do vetor
+        let s = if seeds != 0 {
+            *((seeds + i as usize) as *const u8) // cqs7: a semente do vetor
         } else if by_order != 0 {
             i as u8
         } else {
@@ -88,14 +83,13 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         write_u8(read_u32_as_usize(this + cup::TEAM_TABLE) + e + 4, s);
         i += 1;
     }
-    let (mapa, linha) = if arvore != 0 { (0x5241e0usize, 0x62) } else { (0x518790usize, 0x6a) };
-    let mapa: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(mapa);
-    if mapa(this) < 0 {
+    let (map, linha) = if arvore != 0 { (0x5241e0usize, 0x62) } else { (0x518790usize, 0x6a) };
+    let map: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(map);
+    if map(this) < 0 {
         show_error_at(F, linha);
     }
     this
 }
-
 
 /// Destroys a knockout stage: frees the team list, the round table and each round's fixtures, then destroys the base.
 ///

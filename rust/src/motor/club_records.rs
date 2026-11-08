@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Adds v to the byte at address a (wrapping).
 pub(crate) unsafe fn add_u8_at(a: usize, v: u8) {
     *(a as *mut u8) = (*(a as *const u8)).wrapping_add(v);
@@ -24,9 +21,17 @@ pub(crate) unsafe fn player_category_record(this: usize, player: usize, cat: u8)
     f(this, player, cat as u32)
 }
 
-
-/// Stats category of a match side: friendly 1/5, reserve/U21/B 1, by competition type 4->5, 2->4, 1->2 or 3; missing
-/// competition shows the box, sets `erro` and returns 2.
+/// The statistics category of side `lado` of a match (the `bl` of `0x7c0d70`, a match whose competition ≠ −2).
+///
+/// Friendly (`0x5c6710` of [`0xae2c74`]): 5 if the home side is a national team (`0x53b900`), otherwise 1. Reserves,
+/// under-21 and B ([`0x9cf684`], [`0x9cf798`], [`0x9cf794`]), or the side's club without the mark `+0x40` (home) /
+/// `+0x41` (away): 1.
+///
+/// By the type (`+0x42`) of the competition ([`0xadadfc`] by id `+0`): 4 → 5, 2 → 4, 1 → 2 if it counts (`0x4b0700`),
+/// otherwise 3.
+///
+/// With no competition or any other type: the box (lines `0x103a`, `0x105d`; only with `avisar`), sets `erro` and
+/// returns 2.
 ///
 /// [pt] A categoria das estatísticas do lado `lado` da partida (o bl da 0x7c0d70, partida com competição ≠ −2): amistoso
 /// (0x5c6710 de [0xae2c74]), 5 se o mandante é seleção (0x53b900), senão 1; reservas, sub-21 e B
@@ -78,8 +83,11 @@ pub(crate) unsafe fn match_stats_category(p: usize, side: i32, warn: bool, error
     }
 }
 
-/// Lineup row k of a match side if it counts (used sub, valid ids, person in table); returns (row, person, player
-/// data).
+/// Tells whether lineup row `k` of side `lado` of the match counts, and returns it.
+///
+/// Rows are `k` = 0..20, 0x49 bytes each; 11 and up are substitutes. A row counts when: a substitute actually came on
+/// (+0x32 ≠ 0xff), the person (+0) and the player (+4) are ≠ −1, and the person is in the table ([0xae23bc], 0x6e
+/// bytes; id below [0xae2364]). Returns (row, person, player data in [0xae23c4], 0x46 bytes).
 ///
 /// [pt] A linha `k` (0..20, 0x49 bytes; 11.. reservas) do lado `lado` do jogo conta: reserva que entrou (+0x32 ≠ 0xff),
 /// pessoa (+0) e jogador (+4) ≠ −1 e a pessoa na tabela ([0xae23bc], 0x6e; id abaixo de [0xae2364]). Devolve
@@ -108,9 +116,10 @@ pub(crate) fn stats_categories_for(cat: u8) -> [Option<u8>; 2] {
     [Some(cat), if cat == 5 || cat == 1 { None } else { Some(6) }] // cpx12: a categoria geral
 }
 
-
-
-/// O ensaio do comparador da 0x447430: a cópia roda sem ordenar as tabelas (a original, que roda antes, já ordenou).
+/// The comparer's dry run of 0x447430: the copy runs without sorting the tables (the original routine, which runs
+/// first, has already sorted them).
+///
+/// [pt] O ensaio do comparador da 0x447430: a cópia roda sem ordenar as tabelas (a original, que roda antes, já ordenou).
 pub(crate) static mut POSITION_RECORDS_DRY_RUN: bool = false;
 
 /// CLUB_RECORDS get_season_record(club, create).
@@ -263,7 +272,6 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
     1
 }
 
-
 /// O ensaio do comparador da 0x448e30: a cópia roda sem preencher nem entregar as notícias e sem soltar a fila.
 pub(crate) static mut RECORD_NEWS_DRY_RUN: bool = false;
 
@@ -331,29 +339,24 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
     1
 }
 
-
-
-
-
-
-
-
-
-/// Fans' rating of player p at the club from stats `st` (average + 0.025 x +2 + 1/60 x +6) adjusted by club/player
-/// likes and dislikes.
+/// The fans' rating of player `p` at the club from stats `st` (0x452da0).
+///
+/// Average (+0xe signed / games +0) + 0.025 × +2 + 1/60 × +6. The club likes him (0x547790): +0.2; does not like him
+/// (0x5477d0): −2 (stored); he likes the club (0x547d60): +0.2; does not like it (0x547d30): −1.5 (only in the
+/// comparison).
 ///
 /// [pt] A nota da torcida para o jogador `p` do clube pela estatística `st` (0x452da0): média (+0xe com sinal / jogos +0)
 /// + 0,025 × +2 + 1/60 × +6; o clube gosta dele (0x547790) +0,2, não gosta (0x5477d0) −2 (guardada); ele gosta do
 /// clube (0x547d60) +0,2, não gosta (0x547d30) −1,5 (só na comparação).
 pub(crate) unsafe fn fan_rating(p: usize, club: usize, st: usize) -> f64 {
-    let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
+    let favourite: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
     let desafeto: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_DISLIKES_STAFF);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
     let not_likes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
     let average = read_i16(st + 0xe) as i32 as f64 / read_u8(st) as i32 as f64;
     let mut rating = average + read_u8(st + 2) as i32 as f64 * read_f64(0x967878);
     rating = rating + read_u8(st + 6) as i32 as f64 * read_f64(0x968958);
-    if favorito(p, club) != 0 {
+    if favourite(p, club) != 0 {
         crate::comparison::branch("cpp_10 favorito do clube");
         rating = rating + read_f64(0x968918); // o clube gosta dele
     } else if desafeto(p, club) != 0 {
@@ -432,7 +435,6 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
     reference(chosen, record + 0x371);
     1
 }
-
 
 /// Transfer record (club id, type) is already in the news queue at [this+0x24] (count +0x2c).
 ///
@@ -540,13 +542,6 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     }
     1
 }
-
-
-
-
-
-
-
 
 /// Record news (club id, type) is already in the 6-byte vector [this+0x24] (count +0x2c).
 ///
@@ -736,11 +731,6 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
     found
 }
 
-
-
-
-
-
 /// Club's 0x6a-byte entry in [this+0x1c] (+0 all-time index, +4 season index, -1 none).
 ///
 /// [pt] A entrada do clube (0x6a bytes, pelo id +0 do clube) na tabela [this+0x1c]: +0 o índice dos recordes de sempre,
@@ -895,10 +885,6 @@ pub(crate) unsafe fn check_record_plan(name: &str, club: usize, e: usize, count:
     });
 }
 
-
-
-
-
 /// `Club_Records::offer_breaks_fee_record(offer, require)`: tells whether the offer fee (+0x1b) beats the fee-paid
 /// record of the buying club (+8; the all-time records through 0x452710, creating them if needed).
 ///
@@ -930,11 +916,6 @@ pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offe
     }
     (value != 0 && value > read_usize(rec + 0x313) as i32) as u8
 }
-
-
-
-
-
 
 /// `transfer_fee_record_construct`: constructs the highest transfer fee paid record: the dates at +0x14 and +0x20
 /// (0x54a110).
@@ -973,9 +954,6 @@ pub(crate) unsafe extern "thiscall" fn run_record_construct(this: usize) -> usiz
     this
 }
 
-
-
-
 /// constructs the won run record: the start (+4) and end (+0xc) dates (0x54a110)
 /// Original: `won_run_record_construct` (0x450ad0, club_records.cpp, thiscall).
 ///
@@ -1009,9 +987,6 @@ pub(crate) unsafe extern "thiscall" fn unbeaten_run_record_construct(this: usize
     init_default_date(this + 0xc);
     this
 }
-
-
-
 
 /// constructs the winless run record: the start (+4) and end (+0xc) dates (0x54a110)
 /// Original: `winless_run_record_construct` (0x450bc0, club_records.cpp, thiscall).
@@ -1048,10 +1023,6 @@ pub(crate) unsafe extern "thiscall" fn youngest_player_record_construct(this: us
     this
 }
 
-
-
-
-
 /// `oldest_player_record_construct`: constructs the oldest player record: the age (+0), the record holder's date
 /// (+0x18) and the match date (+0x20) (0x54a110).
 ///
@@ -1067,11 +1038,6 @@ pub(crate) unsafe extern "thiscall" fn oldest_player_record_construct(this: usiz
     init_default_date(this + 0x20);
     this
 }
-
-
-
-
-
 
 /// Copies the 0x18-byte record holder from `origem` to `destino` (record_holder_assign 0x448490).
 ///
@@ -1118,9 +1084,6 @@ pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, sou
     core::ptr::write_unaligned((this + 0x1a) as *mut u16, core::ptr::read_unaligned((source + 0x1a) as *const u16));
     this
 }
-
-
-
 
 /// copies the count record (0x1a bytes): the count (+0, word) and the holder (+2, through 0x448490)
 /// Original: `count_record_assign` (0x448530, club_records.cpp, thiscall, ret 4).
@@ -1174,11 +1137,6 @@ pub(crate) unsafe extern "thiscall" fn count_record_construct(this: usize) -> us
     this
 }
 
-
-
-
-
-
 /// `transfer_fee_record_assign`: copies the transfer fee record (0x29 bytes) from `source`: five dwords (+0..+0x10: the
 /// fee, the player, the other club...), the date at +0x14, the dword +0x1c, the date at +0x20 and the part-exchange
 /// flag (+0x28). Returns `this`.
@@ -1214,8 +1172,6 @@ pub(crate) unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize,
     partida(this + 0x19, source + 0x19);
     this
 }
-
-
 
 /// Copies a date from `origem` to `destino` (Date::operator=).
 ///
@@ -1279,9 +1235,6 @@ pub(crate) unsafe extern "thiscall" fn run_record_assign(this: usize, source: us
     this
 }
 
-
-
-
 /// −1.0f and −1 in the club record fields
 /// Original: `reset_records` (0x452fe0, club_records.cpp, cdecl).
 ///
@@ -1310,7 +1263,6 @@ pub(crate) unsafe extern "C" fn reset_records(r: usize) -> u32 {
     }
     1
 }
-
 
 /// builds the record holder: only the date at +0x10 (0x54a110)
 /// Original: `record_holder_construct` (0x450d40, club_records.cpp, thiscall).

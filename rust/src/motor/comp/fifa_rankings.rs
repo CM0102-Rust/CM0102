@@ -1,8 +1,5 @@
 use super::*;
 
-
-
-
 /// Counts the results in the national side's history between two months (year × 12 + month), from the end, for the work
 /// permit.
 ///
@@ -39,7 +36,6 @@ pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nati
     n // cpt1: os jogos no periodo
 }
 
-
 /// Updates the FIFA rankings on the 18th: drops the results older than a year, sorts the histories, rolls the yearly
 /// totals and redoes scores and positions.
 ///
@@ -72,8 +68,8 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
         return;
     }
     let month = month_of(data);
-    let mut guardada = [0u8; 8];
-    copiar(this + 5, guardada.as_mut_ptr() as usize, data);
+    let mut stored = [0u8; 8];
+    copiar(this + 5, stored.as_mut_ptr() as usize, data);
     let year = read_u16(data + 2) as i32;
     let mut i = 0i32;
     while i < read_usize(G_NATION_COUNT) as i32 {
@@ -118,7 +114,6 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
     free(v);
 }
 
-
 /// qsort order of the histories: the points of b minus those of a (highest first)
 /// Original: `compare_result_points_desc` (0x58e220, fifa_rankings.cpp, cdecl).
 ///
@@ -127,10 +122,6 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
 pub(crate) unsafe extern "C" fn compare_result_points_desc(a: usize, b: usize) -> i32 {
     read_i16(b) as i32 - read_i16(a) as i32
 }
-
-
-
-
 
 /// Nation's entry in the FIFA ranking table [this] (0x2c bytes each).
 ///
@@ -146,8 +137,8 @@ pub(crate) unsafe fn match_month_year(partida: usize) -> (u8, u16) {
     let data_new: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let month_of: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     let mut d = [0u8; 8];
-    let p = data_new(d.as_mut_ptr(), read_u16(partida + 0x2a) as u32, read_u16(partida + 0x28) as u32);
-    (month_of(p), read_u16(partida + 0x28))
+    let p = data_new(d.as_mut_ptr(), read_u16(partida + fixture::DAY) as u32, read_u16(partida + fixture::YEAR) as u32);
+    (month_of(p), read_u16(partida + fixture::YEAR))
 }
 
 /// Appends the points, month and year of the match to the national side's history, growing the array by 5 entries when
@@ -224,7 +215,6 @@ pub(crate) unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nat
     }
 }
 
-
 /// Recalculates the scores: the year total from the best eight results and the score from the totals of this year and
 /// the five before.
 ///
@@ -299,10 +289,6 @@ pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
     }
 }
 
-
-
-
-
 /// Returns a new array with the ranking entries of the nations that have a national side, sorted by score, and the
 /// count.
 ///
@@ -358,7 +344,6 @@ pub(crate) unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -
         -1
     }
 }
-
 
 /// Creates the initial FIFA ranking table. Rule: each nation's points are its database strength ÷ 35, repeated as the
 /// points of each of the 6 years [inference] (× 1000); the position comes from the points order.

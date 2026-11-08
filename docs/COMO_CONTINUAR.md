@@ -16,7 +16,7 @@ Uma leva junta itens da fila (até 13 itens de 3 rotinas desde 29/10/2026: `ITEN
 2. **Ler.** Desmontar a rotina inteira (`desmonta.py` ou capstone) e traduzir instrução por instrução: bytes com sinal, estouros de 8 e 16 bits, ponto flutuante x87 em precisão dupla com os arredondamentos para `float` nos mesmos `fstp`, e valores que ficam na pilha do x87 sem arredondar. As constantes são lidas do próprio `.rdata` (`f32_em`, `f64_em`). Nas rotinas grandes (centenas de instruções), começar pelo pseudocódigo do Ghidra (`python descompilar.py 0x...`, uns 10 s por rotina): dá os laços, os desvios e as variáveis da pilha certos, inclusive as lidas com argumento ainda empilhado. Mas esconde o que entra no `__ftol` e os arredondamentos para `float`, e o texto em 16 bits sai como `CONCAT22`: as contas exatas saem da desmontagem.
 3. **Escrever.** Em `motor.rs`:
    - a rotina, com comentário `/// { 0xENDERECO } (arquivo.cpp): o que faz`;
-   - o `Prologo` (bytes iniciais copiados para o trampolim: instruções inteiras e sem salto relativo; `prologos.py` confere);
+   - o `Prologue` (bytes iniciais copiados para o trampolim: instruções inteiras e sem salto relativo; `prologos.py` confere);
    - o comparador `comparar_*` (roda original e Rust a partir do mesmo estado e compara as regiões de memória que a rotina pode tocar, mais o estado do sorteio);
    - as entradas nos vetores `rust`, `comp` e `nomes` de `instalar` (mesma ordem do `PROLOGOS`; `N` = total);
    - o caso no `autoteste` (entradas sintéticas, inclusive limites e casos extremos, sem cair nos caminhos de erro do original, que abrem caixa de mensagem).

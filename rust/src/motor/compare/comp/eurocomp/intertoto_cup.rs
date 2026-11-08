@@ -10,8 +10,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table
         |r, e, s| intertoto_cup_create_round_table(this, stage, r, e, s))
 }
 
-
-
 /// Comparer for `intertoto_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a

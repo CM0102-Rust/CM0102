@@ -61,7 +61,7 @@ def cadeia(k, n, data=None):
             continue
         src = open(os.path.join(b, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
         primeira = re.search(r"\('\w+', (\d+), \[", open(p, encoding='utf-8').read())
-        if primeira and ('endereco: %#x,' % int(primeira.group(1))) not in src:
+        if primeira and ('address: %#x,' % int(primeira.group(1))) not in src:
             print('integrando a %d' % lv, flush=True)
             subprocess.run([sys.executable, p], check=True)
     r = subprocess.run(['cargo', 'build', '--release'], cwd=os.path.join(b, 'rust'), capture_output=True, text=True)

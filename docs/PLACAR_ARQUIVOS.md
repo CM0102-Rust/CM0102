@@ -1,6 +1,6 @@
 # Placar por arquivo (exe inteiro)
 
-Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologo` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
+Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
 **Exe inteiro:** 2084 de 6709 funções, 1644.2 de 5528.0 KB (**29.74%**) · 173 de 393 arquivos com rotinas em Rust
 

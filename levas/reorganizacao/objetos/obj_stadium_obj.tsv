@@ -1,0 +1,7 @@
+0x0	BOOKINGS	4	stadium bookings array (12-byte entries: stadium id and date), sorted by date
+0x4	BOOKING_COUNT	4	number of bookings
+0x8	BOOKING_CAPACITY	4	allocated booking entries (grows by 30)
+0xc	VENUES	4	neutral venue list (16-byte entries: nation id, continent id, national-stadium flag, stadium)
+0x10	VENUE_COUNT	4	number of venues
+0x14	VENUE_CAPACITY	4	allocated venue entries (grows by 30)
+0x18	VENUE_SORT	1	current venue list order (1 by nation, 2 by continent, 3 by capacity)

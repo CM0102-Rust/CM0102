@@ -5,6 +5,10 @@ use super::*;
 
 /// Comparer for `draw_phase1_groups` (comparison mode: see the header of motor.rs).
 ///
+/// Only the original runs (it draws, pays prizes, allocates the stages and sends news), checked against the plan made
+/// beforehand: with 32 clubs, the 8 stages in [+0xc], +0x30 = 7, and the clubs of the stage tables (+0xb1, rows of 0x3b
+/// bytes, 4 per stage) are exactly the 32 of the plan.
+///
 /// [pt] Só a original (sorteia, paga prêmios, aloca as fases e manda notícias), conferindo o plano feito antes: com 32
 /// clubes, as 8 fases em [+0xc], +0x30 = 7 e os clubes das tabelas das fases (+0xb1, linhas de 0x3b bytes, 4 por
 /// fase) são exatamente os 32 do plano.
@@ -78,6 +82,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: us
 }
 
 /// Comparer for `draw_phase2_groups` (comparison mode: see the header of motor.rs).
+///
+/// Only the original routine runs (it draws, pays prize money, allocates the stages and sends news; and it calls itself
+/// again), checking the plan: on the outer call (attempt 0), stages 8..11 exist, +0x30 = 11 and the clubs of their
+/// tables (+0xb1, 0x3b-byte rows) are the 16 qualified clubs.
 ///
 /// [pt] Só a original (sorteia, paga prêmios, aloca as fases e manda notícias; e se chama de novo), conferindo o plano: na
 /// chamada de fora (tentativa 0), as fases 8..11 existem, +0x30 = 11 e os clubes das tabelas delas (+0xb1, linhas de
@@ -160,12 +168,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize)
     let mut expected = vivos.clone();
     found.sort_unstable();
     expected.sort_unstable();
-    let saiu = away.iter().all(|&c| core::ptr::read_unaligned((c + 0x1db) as *const i32) == -1);
-    let same = found == expected && saiu && read_i16(stage + 0x3e) == 8 && core::ptr::read_unaligned((this + 0x30) as *const i32) == 0xc;
-    SCOREBOARD.record(same, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, expected, found, saiu, core::ptr::read_unaligned((this + 0x30) as *const i32)));
+    let left = away.iter().all(|&c| core::ptr::read_unaligned((c + 0x1db) as *const i32) == -1);
+    let same = found == expected && left && read_i16(stage + 0x3e) == 8 && core::ptr::read_unaligned((this + 0x30) as *const i32) == 0xc;
+    SCOREBOARD.record(same, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, expected, found, left, core::ptr::read_unaligned((this + 0x30) as *const i32)));
 }
 
 /// Comparer for `european_cup_collect_club_list` (comparison mode: see the header of motor.rs).
+///
+/// Comparer of 0x586660: the original routine allocates the list (only it runs; the caller frees). The plan, made
+/// beforehand in a local list from the same entrants: the count (low word of the return value) and the clubs of its
+/// list must be equal.
+///
+/// For the types that go to 0x48e1c0 and without a list: the return value and the output as the original left them.
 ///
 /// [pt] Comparador da 0x586660: a original aloca a lista (só ela roda; quem chama libera). O plano, feito antes numa lista
 /// local pelos mesmos inscritos: a conta (palavra de baixo da devolução) e os clubes da lista dela iguais. Nos tipos
@@ -196,7 +210,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(t
     r
 }
 
-/// Comparer for `european_cup_collect_entrants` (comparison mode: see the header of motor.rs).
+/// Comparer for `european_cup_collect_entrants` (0x584fa0; comparison mode: see the header of motor.rs).
+///
+/// The original allocates (only it runs); the plan then checks everything it wrote: the new list, copied and refilled
+/// by the copy (fill_champions_league_entrants only reads the clubs, which the original does not change), must come out
+/// equal, as must +0x36, +0x38 and the return value.
 ///
 /// [pt] Comparador da 0x584fa0: a original aloca (só ela roda); o plano confere depois tudo o que ela gravou: a lista nova
 /// copiada e repreenchida pela cópia (fill_champions_league_entrants só lê os clubes, que a original não muda) tem de sair igual,
@@ -242,7 +260,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_advance_stage(this:
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EUROPEAN_CUP_ADVANCE_STAGE)(this)
 }
 
-/// Comparer for `process_fixture` (comparison mode: see the header of motor.rs).
+/// Comparer for `process_fixture` (comparison mode: see the header of motor.rs): the comparer of `0x583b10`, as a dry
+/// run.
+///
+/// The copy runs without the news and without the base, and the original routine runs fully, from the same state (the
+/// coefficient words of the two nations and the finance records of the two clubs, restored after the dry run).
+///
+/// It checks the coefficient words, which the base does not touch, except through the stage draws (`0x585290`,
+/// `0x585ab0`: the coefficient of the qualified clubs), which only run when the stage (`+0x30`) advances: then, no
+/// comparison. The finances are not compared (the base pays the cup round prize into the same fields, `0x51a2fe`); the
+/// prize follows the score branch that the coefficient points already check. Without a club, nation, national team or
+/// finances: only the original routine.
 ///
 /// [pt] Comparador da 0x583b10, em ensaio: a cópia sem a notícia e sem a base, e a original inteira, a partir do mesmo
 /// estado (as palavras do coeficiente das duas nações e os registros de finanças dos dois clubes, restaurados depois
@@ -297,6 +325,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(t
 }
 
 /// Comparer for `european_cup_create_round_table` (comparison mode: see the header of motor.rs).
+///
+/// Side by side in the group stages: the original routine with the caller's outputs, the copy with its own outputs,
+/// from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal (the copy's is freed).
+///
+/// The preliminaries and the knockout: only the original.
 ///
 /// [pt] Lado a lado nas fases de grupos: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). As

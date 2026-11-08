@@ -1,7 +1,5 @@
 use super::*;
 
-
-
 /// Club in the first table row of stage k of the league (k = -1: the league itself).
 ///
 /// [pt] O clube da primeira linha da tabela (+0xb1) da fase `k` da liga (k = −1: a própria liga).
@@ -151,8 +149,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
         show_error_at(0x98aba4, 0x216);
         return 0;
     }
-    let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
-    expectativas(this);
+    let expectations: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
+    expectations(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)); // cqs4: a renovação dos árbitros da Série C
     let group: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_BRANATTHIRD_CREATE_GROUP_STAGE);
@@ -169,7 +167,12 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     0
 }
 
-/// As posições previstas da Série C, na ordem da lista dos 56 depois de ordenada: 1, 2, 3, 3, 5, 5, 7, 7, oito vezes 9
+/// The predicted positions of the Série C, in the order of the list of 56 after sorting.
+///
+/// 1, 2, 3, 3, 5, 5, 7, 7, eight times 9 (the knockout ranges) and, for the other forty, the range in steps of eight:
+/// 16, 24, 32, 40 and 48.
+///
+/// [pt] As posições previstas da Série C, na ordem da lista dos 56 depois de ordenada: 1, 2, 3, 3, 5, 5, 7, 7, oito vezes 9
 /// (as faixas do mata-mata) e, para os outros quarenta, a faixa de oito em oito: 16, 24, 32, 40 e 48.
 pub(crate) const SERIE_C_PREDICTED_PLACES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: as posições previstas do mata-mata
 
@@ -209,16 +212,28 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(thi
     crate::comparison::branch("cqs_4 posicoes previstas");
 }
 
-
-
-
-
-
-
 #[allow(clippy::type_complexity)]
 pub(crate) type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
 
-/// 0x42ee80 BraNatThird::create_group_stage(g): round table, the 7 clubs of group g, League_Stage in slot g, +0x30 = g.
+/// `BraNatThird::create_group_stage(g)` (0x42ee80, thiscall, ret 4, bra_nat_third.cpp; SEH frame only for the new):
+/// group g (0 to 6) of the first stage of Série C, from the season rollover and the constructor (g from 0 to 6; the
+/// league is the top group, and the seven groups are stages 0 to 6). Round table, the 7 clubs of group g, League_Stage
+/// in slot g, +0x30 = g.
+///
+/// 1) The round table via the virtual +0x3c (create_round_table: thiscall(this, g as int, &rounds, &extra, 0), ret
+/// 0x10).
+///
+/// 2) A vector of 4 × +0x3e (malloc 0x944e46; out of memory: the box for line 0x475 and return) with the seven clubs of
+/// the group: slots 7(g + 1) to 7(g + 1) + 6 of the list of 56 (+0xee; the first seven belong to the league).
+///
+/// 3) The stage: operator new 0x944cf1(0xee) and the League_Stage constructor 0x68b100 (thiscall, ret 0x58, 22
+/// arguments, in the original's order: the league, 7, the vector, 2 (legs: home and away), +4, the round table, the
+/// rounds (word), the points +0xc2 (`pv`) and +0xc3, the category +0xc4, &+0xc5, &+0xbe (the league's slots), the year
+/// +0x40 (word), g (the whole dword), the extra (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; words and bytes clean).
+/// Out of memory: 0.
+///
+/// 4) [+0xc][g] = the stage. No stage: the box for line 0x487 and return (without freeing the vector or the table).
+/// With it: the vector and the table freed (free 0x9452ca) and +0x30 = g (the signed byte).
 ///
 /// [pt] { 0x42ee80 } (thiscall, ret 4, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_group_stage(g)`, o
 /// grupo g (0 a 6) da primeira fase da Série C, da virada e do construtor (g de 0 a 6; a liga é o grupo de cima, e os
@@ -398,7 +413,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
 /// sem fase: a caixa da linha 0x353 ou 0x363 e volta; com ela, a tabela liberada (free 0x9452ca). Depois do segundo,
 /// +0x30 = 9. [inferência] Os dois primeiros de cada grupo sobem à Série B; os campeões dos grupos fazem a final.
 pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
-    let embaralhar: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
+    let shuffle: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     #[allow(clippy::type_complexity)]
@@ -419,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         }
         i += 1;
     }
-    embaralhar(v.as_mut_ptr(), 8); // cqs3: os oito vencedores embaralhados
+    shuffle(v.as_mut_ptr(), 8); // cqs3: os oito vencedores embaralhados
     for (k, f) in [(8u32, 0x353u32), (9, 0x363)] {
         let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
         let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -440,9 +455,6 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     crate::comparison::branch("cqs_3 terceira fase");
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 9);
 }
-
-
-
 
 /// Builds the Series C table: up to 56 clubs (those of the division, in database order), which are drawn (3 swaps per
 /// club); the first 7 of the draw make the first table, of 7 clubs, and the drawn list is kept for the other groups
@@ -467,12 +479,12 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -> u32 {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let embaralhar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
+    let shuffle: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 7);
-    let velha = read_usize(this + bra_nat_third::CLUB_LIST);
-    if velha != 0 {
-        soltar(velha);
+    let old = read_usize(this + bra_nat_third::CLUB_LIST);
+    if old != 0 {
+        soltar(old);
     }
     let list = alloc(0xe0);
     core::ptr::write_unaligned((this + bra_nat_third::CLUB_LIST) as *mut usize, list);
@@ -501,13 +513,12 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
         club = club.wrapping_add(0x245);
     }
     crate::comparison::branch("cql_7 serie c sorteio");
-    embaralhar(read_usize(this + bra_nat_third::CLUB_LIST), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
+    shuffle(read_usize(this + bra_nat_third::CLUB_LIST), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
     for j in 0..7usize {
         iniciar(this, j as u32, read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + j * 4), 0, 0);
     }
     1
 }
-
 
 /// Series C: double round robin (home-and-away groups [inference: the groups of 7 of the 0x42d620 schedule]); win 3,
 /// draw 1; tie-break by goal difference, goals scored and away goals; promotes to Series B, no league below; 2 top
@@ -523,7 +534,6 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_up_rules(this: usize) -
     1
 }
 
-
 /// Series C: in the groups, the qualified get the qualification record; in stage 7, those who go through; in the final
 /// group (stages 8 and 9), the two promoted get the promotion (weight 0x32) and qualification records and fate 0
 /// (promotion) in the first table that has them; in the final (stage 10), the champion gets the champion record
@@ -538,7 +548,6 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_st
     let _ = (a4, a5, a6);
     serie_c_staff_records(this, club, status, stage, true).0
 }
-
 
 /// Series C: in the groups (stages up to 6), the group position becomes the position on the 49-place Series C scale
 /// [inference]: 1 and 2 → 1 (the highest → 9), 3 → 17, 4 → 25, 5 → 33, 6 → 41, 7 → 49; in later stages, the codes as

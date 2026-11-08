@@ -6,7 +6,7 @@ Uso: python candidatos.py                lista por dependencias pendentes e tama
      python candidatos.py --fora         chamadas pelo motor, fora da lista de cobertura
      python candidatos.py 0x6c51e0 ...   extensao real de cada uma e o que ela chama ainda em C
 
-"Feitas" = enderecos com Prologo em rust/src/motor.rs. "Falta" = chamadas a rotinas ainda nao
+"Feitas" = enderecos com Prologue em rust/src/motor.rs. "Falta" = chamadas a rotinas ainda nao
 reescritas; com falta 0, a rotina so depende do que ja esta provado (melhor candidata).
 Neutras: o sorteio (0x90cfc0), _ftol (0x945640) e os tratadores de erro, chamados por endereco.
 A lista de cobertura (docs/cobertura_motor.txt) vem de cobertura.py + simular.py --cobertura
@@ -29,7 +29,7 @@ starts = [r[0] for r in rows]
 tam = {r[0]: r[1] for r in rows}
 arq = {r[0]: r[2].split('/')[-1] for r in rows}
 src = open(os.path.join(RAIZ, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
-feitas = {int(x, 16) for x in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+)', src)}
+feitas = {int(x, 16) for x in re.findall(r'Prologue \{ address: (0x[0-9a-f]+)', src)}
 neutras = {0x90cfc0, 0x945640, 0x5e8290, 0x90d130, 0x944c9f, 0x944cff, 0x5a8f60, 0x5cc7d0, 0x945934}
 # --simulacao: os modulos da simulacao fora do motor e das telas (docs/cobertura_simulacao.txt, 17/10/2026)
 # --competicoes: as rotinas de competicao que rodam com 8 ligas (docs/cobertura_competicoes.txt, competicoes.py, 03/11/2026)

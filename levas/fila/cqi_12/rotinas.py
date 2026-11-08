@@ -7,7 +7,7 @@
 # - 0x63d6e0 (ItaCCup::set_up_rules, 135 bytes; 1 chamada): as mesmas regras, prêmios 300.000. Uma mutação.
 # - 0x426230 (BraChampCup::set_up_rules, 139 bytes; 2 chamadas): turno único, 3/1, categoria 0x17, desempate (3, 1, 2,
 #   4), dois classificados, os bits de regra 8, sem prêmio.
-# A cópia é um ajudante comum (cqi12_regras) com as regras de cada copa; cada endereço tem o seu Prologo. Diferenças
+# A cópia é um ajudante comum (cqi12_regras) com as regras de cada copa; cada endereço tem o seu Prologue. Diferenças
 # byte a byte conferidas: a 0x63d6e0 só muda o imediato do prêmio (0x493e0 × 0xc3500); a 0x426230 grava +0xc4 = 0x17,
 # +0xc8 = 4, +0xc5 = 3, +0xbe = 2, +0xd9 = 8 e não grava +0x28.
 # Iguais no cm0102-1080.exe (as três inteiras).

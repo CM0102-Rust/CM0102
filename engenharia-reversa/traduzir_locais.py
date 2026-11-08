@@ -83,6 +83,19 @@ value count size index len ptr addr flag flags mask bit bits byte bytes word cod
 next prev first last left right top bottom high low start end begin open close read write load save find get set put add
 sub mul div mod copy move swap sort list table row rows col cols cell grid map key keys val vals tmp temp aux src dst buf
 str msg err res ret arg args opt cfg ctx env obj ref ptr box vec hash lock time date day days year years month week'''.split())
+# rodada 9 (08/11/2026): as palavras que mais bloqueavam a tradução do resto do nome
+D.update(dict(x.split(':') for x in '''sorteia:draws topico:topic fazer:do inscritos:entrants redesenhar:redraw prazo:deadline
+teste:test comunitaria:community decidir:decide guardada:stored faixa:band acertar:fix lados:sides chaves:keys pular:skip
+corte:cut estrangeira:foreign gravados:written relogio:clock qualquer:any escolher:choose caso:case expectativas:expectations
+aplicar:apply dar:give velha:old codigos:codes decide:decides notas:notes barra:bar itens:items painel:panel favorito:favourite
+zerar:clear suspenso:suspended geral:general objeto:object voltar:go_back comparar:compare inicial:initial entra:enters
+selecoes:national_teams mapa:map frente:front interesse:interest regiao:region seguir:follow antiga:old listada:listed
+classe:class saiu:left laco:loop ignorar:ignore comissao:staff acao:action marcado:marked meu:my avancar:advance margem:margin
+parte:part fichas:sheets opcao:option destaque:highlight modelo:template cota:quota sementes:seeds embaralhar:shuffle
+som:sound vez:time usa:uses cod:code lin:row pres:presence ini:start cont:count'''.split()))
+INGLES |= set('''original qsort without with area bsearch delta fread until zread ops ids fwrite zwrite and calloc dir rust
+malloc uefa mem one the regen conf bond respond penalty restart taker edi percent pair cid pref reg comp lado1'''.split())
+INGLES |= set(w for v in D.values() for w in v.split('_'))
 INGLES |= INGLES_DO_DIC
 CURTO = re.compile(r'^[a-z]{1,3}\d*$|^[a-z]\d+$|^\d')
 NOME = re.compile(r'\blet (?:mut )?([a-z_][a-z0-9_]*)\b|[(,|]\s*(?:mut )?([a-z_][a-z0-9_]*): ')

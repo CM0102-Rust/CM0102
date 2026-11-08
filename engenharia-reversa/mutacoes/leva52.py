@@ -2,7 +2,7 @@
 MUTACOES = [
     ('t_ultimo', "*list(byte(j, match_player::CELL_SLOT) as isize) = *list(*n as isize - 1);", "*list(byte(j, match_player::CELL_SLOT) as isize) = *list(*n as isize - 2);"),
     ('t_movido', "        *((movido + 0x28) as *mut i8) = idx;", "        *((movido + 0x28) as *mut i8) = idx + 1;"),
-    ('t_na', "        if na(*marcado, j) != 0 {", "        if na(*marcado, j) == 0 {"),
+    ('t_na', "        if na(*marked, j) != 0 {", "        if na(*marked, j) == 0 {"),
     ('t_lista', "            if *((q + match_player::MARKING_TARGET) as *const usize) == j {\n                *((q + match_player::MARKING_TARGET) as *mut usize) = 0;", "            if *((q + match_player::MARKING_TARGET) as *const usize) != 0 {\n                *((q + match_player::MARKING_TARGET) as *mut usize) = 0;"),
     ('t_modo', "    if mode != -3 && j != *((this + 0xf5a2)", "    if mode != -2 && j != *((this + 0xf5a2)"),
     ('t_atac', "    if match_player_position(j) & 0x40 != 0 || match_player_position(j) & 0x20 != 0 {", "    if match_player_position(j) & 0x40 != 0 {"),
