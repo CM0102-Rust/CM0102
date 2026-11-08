@@ -7,5 +7,5 @@ MUTACOES = [
     ('e_extras', "marks, bytes, a14, curtos + 2 * m as usize,\n        );", "marks, bytes, a14, curtos,\n        );"),
     ('e_troca', "                            b_j.wrapping_add(a_i) < a_j.wrapping_add(b_i)", "                            b_j.wrapping_add(a_i) <= a_j.wrapping_add(b_i)"),
     ('e_voltas', "        if !mudou || voltas >= 100 {", "        if !mudou || voltas >= 1 {"),
-    ('e_tecnico', "        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) != 0 {", "        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, 0x5f) == 0 {"),
+    ('e_tecnico', "        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, staff::CLASSIFICATION) != 0 {", "        if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && byte(p, staff::CLASSIFICATION) == 0 {"),
 ]

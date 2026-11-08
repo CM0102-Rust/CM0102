@@ -1,6 +1,6 @@
 # Mutacoes da leva92 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva92.py --jogo 2001-08-20
 MUTACOES = [
-    ('a_sobe', "    let sobe = byte(this, 0x27) == 1;\n    if sobe {\n        if y < 11 {", "    let sobe = byte(this, 0x27) != 1;\n    if sobe {\n        if y < 11 {"),
+    ('a_sobe', "    let sobe = byte(this, match_player::SIDE) == 1;\n    if sobe {\n        if y < 11 {", "    let sobe = byte(this, match_player::SIDE) != 1;\n    if sobe {\n        if y < 11 {"),
     ('a_11', "    if sobe {\n        if y < 11 {", "    if sobe {\n        if y < 10 {"),
     ('a_0', "    } else if y > 0 {\n        y -= 1;", "    } else if y > 1 {\n        y -= 1;"),
     ('a_linha', "byte(engine, 0x8eb0).wrapping_add(1)", "byte(engine, 0x8eb0)"),

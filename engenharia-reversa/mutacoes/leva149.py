@@ -5,7 +5,7 @@ MUTACOES = [
     ('e_banco', "    let bench = (*((game + 0x4d) as *const u8) >> 4) & 0xf;", "    let bench = ((*((game + 0x4d) as *const u8) >> 4) & 0xf).saturating_sub(1);"),
     ('e_modo', "        n = automatica(t, other, 2);", "        n = automatica(t, other, 1);"),
     ('e_linhas', "    *d(0x2b) = m + engine::TACTICS + (side as u8 as i8 as isize * 0x18e3) as usize;", "    *d(0x2b) = m + engine::TACTICS + ((1 - side as u8 as i8) as isize * 0x18e3) as usize;"),
-    ('e_ficha', "        *((t + 2) as *mut u16) = *((sheet + 8) as *const u16);", "        *((t + 2) as *mut u16) = *((sheet + 0xa) as *const u16);"),
+    ('e_ficha', "        *((t + 2) as *mut u16) = *((sheet + non_player::HOME_REPUTATION) as *const u16);", "        *((t + 2) as *mut u16) = *((sheet + non_player::CURRENT_REPUTATION) as *const u16);"),
     ('e_tecnico', "            if id >= base - 0x10 && id < base && byte(x, 0x5f) != 0 {", "            if id >= base - 0x10 && id < base && byte(x, 0x5f) == 0 {"),
     ('e_casa', "        *slots = 0;\n        let total", "        *slots = 1;\n        let total"),
 ]

@@ -27,7 +27,7 @@
 mod allocator;
 // the shared base (cm0102-base): same paths as before (crate::video, crate::registro...)
 use cm0102_base::{apresentacao, conteiner, registro, video, win};
-mod assinaturas;
+mod signatures;
 
 #[global_allocator]
 static GLOBAL: allocator::Global = allocator::Global;

@@ -1,6 +1,6 @@
 # Test backlog (branches the automatic tests do not reach)
 
-Branches marked in the Rust copy (`crate::comparacao::ramo("...")`, since batch 127) that **never ran** in the automatic careers (to 2002-06-01 with seed 12345 and, for the post-match ones, to 2003-06-01 with seed 777). Each needs a match/career that goes through it. After a session by Lucas, `python engenharia-reversa/pendencias.py` reads `jogo/ddraw.log` and says which of these ran.
+Branches marked in the Rust copy (`crate::comparison::branch("...")`, since batch 127) that **never ran** in the automatic careers (to 2002-06-01 with seed 12345 and, for the post-match ones, to 2003-06-01 with seed 777). Each needs a match/career that goes through it. After a session by Lucas, `python engenharia-reversa/pendencias.py` reads `jogo/ddraw.log` and says which of these ran.
 
 Lucas's session in compare mode checks every routine listed: since 2026-10-14 the post-match ones (0x6b74a0, 0x6b6cc0, 0x6b79a0) also have a side-by-side comparison (through the tape).
 
@@ -99,10 +99,10 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 | `league` | `margem_do_ultimo_dia` 0x68a4d0 (batch 214) | — | the "no margin" byte (0xff) stored by the match importance decides nothing up to 2002-06 and the routine does not run before 2002-01: `lt_ultimo_dia` escapes even comparing. Test: broad career (season end) |
 | `regens` | `copiar_aposentadoria_pendente` 0x7a8780 (batch 216) | — | the pending retirement reason only matters at season end: `ha_motivo` escapes even comparing. Test: broad career to season end. **Broad career (2026-10-29, to 2003-01-31, batch 5c): caught.** |
 | `save` | `casar_nome_com_padrao` 0x933a00 (batch 218) | — | the pattern only runs when loading: `sv_padrao_letra`, `sv_padrao_ponto`, `sv_padrao_fim` escape the write proof. Test: the load step of the save proof (the save with a manager on holiday is missing) |
-| `save` | `gravar_banco_no_save` 0x524d30 (batch 219) | — | switched off (DESLIGADAS): the stack residue save_database writes into index.dat changes if it runs through the copy; `sv2_banco_a4` does not run. Comes back when the copy reproduces the residue |
-| `save` | `criar_jogo_pela_configuracao` 0x827110 (batch 220) | — | switched off (DESLIGADAS): create_game 0x828110 reads the stack residue the copy changes; `sv3_criar_id` and `sv3_criar_frente` do not run. Comes back when the copy reproduces the residue (or with create_game in Rust) |
+| `save` | `gravar_banco_no_save` 0x524d30 (batch 219) | — | switched off (DESLIGADAS) until 2026-10-31, active since then under the new criterion: the stack residue save_database writes into index.dat changes if it runs through the copy; `sv2_banco_a4` does not run. Comes back when the copy reproduces the residue |
+| `save` | `criar_jogo_pela_configuracao` 0x827110 (batch 220) | — | switched off (DESLIGADAS) until 2026-10-31, active since then under the new criterion: create_game 0x828110 reads the stack residue the copy changes; `sv3_criar_id` and `sv3_criar_frente` do not run. Comes back when the copy reproduces the residue (or with create_game in Rust) |
 | `database` | `nome_ingles_do_clube` 0x545880 (batch 224) | — | the eng.lng path only runs with the game in another language: `dq8_ingles` escapes even comparing. Test: a session of Lucas with the game in Portuguese or another language |
-| `database` | `reunir_elenco_do_clube` 0x541f90 (batch 225) | — | switched off (DESLIGADAS): the hook changes the 0x540a50 stack residue and the career changes in both modes; `dq10_reunir` does not run. Comes back when the copy reproduces the residue |
+| `database` | `reunir_elenco_do_clube` 0x541f90 (batch 225) | — | switched off (DESLIGADAS) until 2026-10-31, active since then under the new criterion: the hook changes the 0x540a50 stack residue and the career changes in both modes; `dq10_reunir` does not run. Comes back when the copy reproduces the residue |
 | `database` | `nota_relativa_com_habilidade_reduzida` 0x5442f0 (batch 226) | — | the reduced ability only matters outside the range clamped to 1..20 and decides nothing in the career: `dq13_reduzida` escapes even comparing. Test: broad career |
 | `database` | `casar_chave_de_competicao_de_pessoa` 0x6115e0, `casar_chave_de_competicao_de_clube` 0x60efd0 (batch 227) | — | the person competition keys do not go into the .qst and the return value is ignored: `ix2_comp_pessoa` and `ix2_devolucao` escape the save proof. Test: career (the keys are read during play) |
 | `database` | `ler_historico_de_competicoes_de_pessoal` 0x5504d0 (batch 228) | — | the table does not go into the .qst: `dbf_historico_de_competicoes_de_pessoal` escapes the save proof. Test: the staff competition history (awards) screen in a game |
@@ -122,7 +122,9 @@ Lucas's session in compare mode checks every routine listed: since 2026-10-14 th
 
 Batches before 127 had no marked branches: their gaps are described in each batch's text in `ROTINAS.md` (search for "lacuna", "não roda").
 
-## Disabled routines (DESLIGADAS)
+## Disabled routines (DESLIGADAS), history
+
+The list became empty on 2026-10-31 (criterion "the result the game produces") and left the code on 2026-11-08: all routines below have run in Rust since then. The table stays as a record of where the stack residue was.
 
 The copies that stay in the code but do not run (`DESLIGADAS` in `rust/src/motor.rs`, detour off in every mode), to check at the end of the migration. Groups: **detour** = the detour alone (the original passing through, on the private stack) already changes the career, because it changes the residue the routine leaves on the game stack and a later original decides with it; **Rust only** = the career changes only in Rust mode and the cause (residue or a difference in the copy) is not isolated; **unset local** = the original writes into game memory bytes of a local nobody filled. Each one comes back when the copy reproduces the residue, when the routine that reads it is also in Rust, or with a proven zeroing (ZERADAS, with Lucas); the proof is the broad career (8 leagues, Rust = original). 0x524d30 (batch 219) is already back, through the zeroing of 0x52dad0.
 

@@ -2,7 +2,7 @@
 
 // As tabelas da nation_get_nationality_adjective, geradas do exe por `python engenharia-reversa/adjetivos_nacao.py`
 // (rust/src/adjetivos_nacao.rs).
-include!("adjetivos_nacao.rs");
+include!("nation_adjectives.rs");
 
 /// { 0x6181d0 } (cdecl, index.cpp; 0x6181d0..0x62a67a, o mapa de funções corta em 26.014 bytes):
 /// `nation_get_nationality_adjective(nacao, texto, tamanho, genero)`: o adjetivo da nação em `texto`. Zera o texto

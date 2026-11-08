@@ -1,4 +1,4 @@
-"""Gera rust/src/chaves_fixas.rs: as listas da set_key_ids (0x601a40, index.cpp) lidas do cm0102.exe com o capstone.
+"""Gera rust/src/fixed_keys.rs: as listas da set_key_ids (0x601a40, index.cpp) lidas do cm0102.exe com o capstone.
 
 Uso: python chaves_fixas.py
 
@@ -7,7 +7,7 @@ o relato de 1.264 chaves sem valor. O gerador anda pela rotina inteira conferind
 (assert); os textos dos nomes não são copiados: vai o endereço deles no exe, e a cópia Rust passa o endereço às rotinas
 do jogo. Confere também a entrada do cm0102-1080.exe (0x603834: o mesmo -1 com rep stosd nas faixas inteiras, a
 chamada de 0x52d8fa desviada para ela e o resto da rotina igual ao original a partir de 0x603864).
-O arquivo gerado entra no motor.rs pelo `include!("chaves_fixas.rs")` do código da leva."""
+O arquivo gerado entra no motor.rs pelo `include!("fixed_keys.rs")` do código da leva."""
 import os
 from capstone import Cs, CS_ARCH_X86, CS_MODE_32
 
@@ -184,7 +184,7 @@ def gravar():
     h = lambda x: '%#x' % x
     L = ['// GERADO por `python engenharia-reversa/chaves_fixas.py` (não editar): as listas da set_key_ids (0x601a40, index.cpp)',
          '// lidas do cm0102.exe e conferidas padrão por padrão; regenerar se o gerador mudar. Os nomes são endereços de',
-         '// texto no exe (não copiados). Entra no motor.rs pelo `include!("chaves_fixas.rs")` do código da leva.',
+         '// texto no exe (não copiados). Entra no motor.rs pelo `include!("fixed_keys.rs")` do código da leva.',
          '',
          '/// As globais que a original põe em -1 (`mov [g], edi`), na ordem do código.',
          'const MENOS_UM_DAS_CHAVES: [u32; %d] = [' % len(menos_um)]
@@ -207,8 +207,8 @@ def gravar():
     L += ['    ' + ' '.join('(%s, %s, %d, %s, %s),' % (h(g), h(t), tp, h(n), h(ln)) for g, t, tp, n, ln in relato[i:i + 4])
           for i in range(0, len(relato), 4)]
     L += ['];', '']
-    open(os.path.join(R, 'rust', 'src', 'chaves_fixas.rs'), 'w', encoding='utf-8', newline='\n').write('\n'.join(L))
-    print('rust/src/chaves_fixas.rs: %d de -1 (1080: %s, +%d), %d cores, %d continentes, relato %d' % (
+    open(os.path.join(R, 'rust', 'src', 'fixed_keys.rs'), 'w', encoding='utf-8', newline='\n').write('\n'.join(L))
+    print('rust/src/fixed_keys.rs: %d de -1 (1080: %s, +%d), %d cores, %d continentes, relato %d' % (
         len(menos_um), faixas, len(a_mais), len(cores), len(conts), len(relato)))
 
 

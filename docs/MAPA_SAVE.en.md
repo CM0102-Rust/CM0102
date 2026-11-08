@@ -137,7 +137,7 @@ New item type (**save**), next to screens and simulation. 21 routines in 7 items
 | Heap garbage in the file | `zopen` creating writes 0x416ec bytes of header + index from a non-zeroed allocation (the entries past the count); `zclose` rewrites them | today it comes out zero (large heap block); the comparator checks the whole header |
 | `FindFirstFile` order | `zadd`, clear temp | Rust uses the same 0x4c0aa0/0x4c0b50 |
 | Signed `int` | `zget_matching_size` above 2 GB goes negative and the space check always passes | keep it identical; a fix is a separate decision (like the 2 GB one) |
-| Stack garbage | `save_game_data` (0x175c frame), `load_game_data`, `valid_saved_game_version` (SEH) | zeroing probe (`ZERADAS`) before comparing |
+| Stack garbage | `save_game_data` (0x175c frame), `load_game_data`, `valid_saved_game_version` (SEH) | the routine-by-routine comparison by outcome (no zeroing since 2026-10-31: stack garbage is not compared) |
 | Non-determinism | summary (play time), date and time in `general.dat`, disk space, CD | check on the first proof; mask if wall clock |
 | Save DLL | `save/` uses the three routines in `conteiner.rs` and the signature of 0x9326e0–0x933860 | the new routines stay out of `save/`; the public repository only changes on releases |
 | Large allocation | each `zopen` allocates ~650 KB, `zextract` another ~530 KB | changes the heap and the print: compare only in the save step |

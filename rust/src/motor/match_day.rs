@@ -776,7 +776,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                             let n = read(0x21);
                             let pct = if n != 0 { read(0x25).wrapping_mul(100) / n } else { 0 } as i8 as i32;
                             let (c, casa, fora) = (u(p, 0x18), u(p, 0x20), u(p, 0x24));
-                            let (a52, b52) = (byte(casa, 0x52) as i32, byte(fora, 0x52) as i32);
+                            let (a52, b52) = (byte(casa, club::SHORT_GENDER_NAME) as i32, byte(fora, club::SHORT_GENDER_NAME) as i32);
                             let (g1, g2) = if byte(p, 0x4b) > -1 { (byte(p, 0x4b), byte(p, 0x4c)) } else { (byte(p, 0x47), byte(p, 0x48)) };
                             if c != 0 {
                                 crate::comparison::branch("placar com competicao");
@@ -1323,9 +1323,9 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
             if free
                 && g(s + staff::PLAYER) != 0
                 && w(g(s + staff::PLAYER) + 0xb) > 0x109a
-                && byte(s, 0x59) > 5
-                && byte(s, 0x57) > 0xf
-                && byte(s, 0x58) > 0xa
+                && byte(s, staff::LOYALITY) > 5
+                && byte(s, staff::AMBITION) > 0xf
+                && byte(s, staff::DETERMINATION) > 0xa
                 && n > 2
                 && sortear(n as i32) != 0
             {
@@ -1343,19 +1343,19 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
             continue;
         }
         let p = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
-        if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(0xae2364)) || byte(p, 0x18) > 0x14 {
+        if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(0xae2364)) || byte(p, staff::YEAR_OF_BIRTH) > 0x14 {
             continue;
         }
         let c = contract(g(G_CONTRACT_MANAGER), p);
         if c == 0 || read(c + 0x45) != 0 || ub(partida + 0x40) == 0 || ub(partida + 0x41) == 0 {
             continue;
         }
-        if read(partida + 0x14) == 0 || read(partida + 0x14) != read(club + club::DIVISION) || away(club) != 0 || byte(p, 0x59) <= 0xf {
+        if read(partida + 0x14) == 0 || read(partida + 0x14) != read(club + club::DIVISION) || away(club) != 0 || byte(p, staff::LOYALITY) <= 0xf {
             continue;
         }
         crate::comparison::branch("clube jovem");
         let r = sortear(5);
-        if byte(p, 0x57) <= (r as u8).wrapping_add(10) as i8 || g(p + staff::PLAYER) == 0 || w(g(p + staff::PLAYER) + 0xb) >= 0x109a {
+        if byte(p, staff::AMBITION) <= (r as u8).wrapping_add(10) as i8 || g(p + staff::PLAYER) == 0 || w(g(p + staff::PLAYER) + 0xb) >= 0x109a {
             continue;
         }
         if teste_7c3a40(g(G_PLAYER_STATS), p, club) == 0 {
@@ -1796,7 +1796,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
         *((pl + 0x107) as *mut u8) = 1;
     };
     let mostrar_evento = |ev: usize| {
-        if table(u(engine, 0x8f7a), *(ev as *const u16) as u32) == 2 {
+        if table(u(engine, engine::COMMENTATOR), *(ev as *const u16) as u32) == 2 {
             por(pl, 0x115, 1);
         }
         por(pl, 1, ev as u32);
@@ -1816,15 +1816,15 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if *((pl + 0x108) as *const u8) != 0 {
         return seguir();
     }
-    if *state & 8 != 0 && sons(u(engine, 0x8f7a), pl + 5) == 0 {
+    if *state & 8 != 0 && sons(u(engine, engine::COMMENTATOR), pl + 5) == 0 {
         return seguir();
     }
-    let espera = if *((u(engine, 0x8f7a) + 0x2db0) as *const u8) == 0x14 { 0 } else { u(pl, 0x109) as u32 };
+    let espera = if *((u(engine, engine::COMMENTATOR) + 0x2db0) as *const u8) == 0x14 { 0 } else { u(pl, 0x109) as u32 };
     if relogio() < (u(pl, 0x10d) as u32).wrapping_add(espera) {
         return seguir();
     }
     if *state & 8 != 0 {
-        let ev = next_event(u(engine, 0x8f7a), 0);
+        let ev = next_event(u(engine, engine::COMMENTATOR), 0);
         if ev != 0 {
             mostrar_evento(ev);
             por(pl, 0x10d, relogio());
@@ -1838,8 +1838,8 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
         if r == 2 || r == 8 {
             *((day + 0x25) as *mut i32) += 1;
         }
-        if *((u(engine, 0x8f7a) + 5) as *const u8) != 0 {
-            let ev = next_event(u(engine, 0x8f7a), 0);
+        if *((u(engine, engine::COMMENTATOR) + 5) as *const u8) != 0 {
+            let ev = next_event(u(engine, engine::COMMENTATOR), 0);
             if ev != 0 {
                 mostrar_evento(ev);
                 por(pl, 0x10d, relogio());
@@ -1865,10 +1865,10 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if *((p + 0x67) as *const u8) == 4 {
         mark(0x20);
     }
-    if byte(engine, 0xf5bd) as i32 > *((summary + 0x11f) as *const u8) as i32 {
+    if byte(engine, engine::SCORE) as i32 > *((summary + 0x11f) as *const u8) as i32 {
         mark(1);
     }
-    if byte(engine, 0xf5f3) as i32 > *((u(p, 0x5f) + 0x744) as *const u8) as i32 {
+    if byte(engine, engine::SCORE_SIDE1) as i32 > *((u(p, 0x5f) + 0x744) as *const u8) as i32 {
         mark(2);
     }
     if u(pl, 0x115) != 0 {

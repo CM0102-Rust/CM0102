@@ -1,0 +1,118 @@
+0x0	SLOT_INDEX	1	index of the player's slot in his side block (0..19; 0xff when empty) [inference]
+0x12	BALLS_CONTESTED	1	count of loose balls contested by the player (incremented in respond) [inference]
+0x13	OFFSIDES	1	times caught offside in the match
+0x14	FOULS	1	fouls committed in the match (the referee draws against it)
+0x16	SENT_OFF	1	set to 1 when the player is sent off
+0x17	MORALE	1	match morale 1..20 (adjusted by events, midpoint 10)
+0x19	POSITION	1	formation position 0..10 while on the pitch; negative off it (-1 bench, -2 off injured, -4 substituted, 0xfb empty)
+0x1a	PREVIOUS_POSITION	1	position held before leaving the pitch / reserve position 0..10
+0x1c	INJURY_FORCES_OFF	1	the pending injury forces him off the pitch [inference]
+0x1d	INJURY_PENDING	1	an injury waiting to be processed by the engine (cleared after)
+0x1e	SUBSTITUTED_OFF	1	set to 1 when substituted off
+0x1f	MINUTE_ON	1	minute he came on (-1 if not)
+0x20	MINUTE_OFF	1	minute he was substituted off (-1 if not)
+0x22	INJURY_MINUTE	1	minute he left injured
+0x24	YELLOW_CARDS	1	yellow cards shown in the match
+0x25	FIRST_CARD_CODE	1	code/x of the first card
+0x26	SECOND_CARD_CODE	1	code/x of the second card
+0x27	SIDE	1	side in the match (0 home, 1 away)
+0x28	CELL_LIST_INDEX	1	index of the player in his grid cell's player list (0xff none)
+0x2b	BUSY	1	busy/down counter: >0 means occupied (on the ground, just played) and not available
+0x2c	PREFERRED_FLANK	1	preferred flank/foot side (0 or 1, other = none) [inference]
+0x2d	PREFERRED_FLANK_STRENGTH	1	strength of the flank preference [inference]
+0x2e	COMMENTARY_ID	1	player identifier passed to the commentary events (with SIDE)
+0x35	MATCH_RATING	2	performance word (code calls it disposition): starts at 6100, rises with good play, drops with fouls and cards [inference]
+0x37	POSITION_PENALTY	2	penalty word for playing out of position (tactical tables vs position ratings)
+0x39	SHOT_QUALITY	2	quality part of the last shot value
+0x3b	EFFECTIVE_ABILITY	2	match ability word (current ability adjusted by morale, captain, contract) [inference]
+0x4d	STAMINA	4	f32 stamina/fitness 0..10000
+0x51	STAMINA_CEILING	4	f32 stamina ceiling
+0x55	INJURED_BY	4	match player who caused his injury (0 none)
+0x69	STAFF	4	pointer to the staff (person) record
+0x6d	PLAYER	4	pointer to the player record (attributes)
+0x71	ACCELERATION	4	f32 match acceleration (player +0x1b)
+0x75	AGGRESSION	4	f32 match aggression (player +0x1c)
+0x79	AGILITY	4	f32 match agility (player +0x1d)
+0x7d	ANTICIPATION	4	f32 match anticipation (player +0x1e)
+0x81	BALANCE	4	f32 match balance (player +0x1f)
+0x85	BRAVERY	4	f32 match bravery (player +0x20)
+0x89	CORNERS	4	f32 match corners (player +0x22)
+0x8d	CROSSING	4	f32 match crossing (player +0x23)
+0x91	DECISIONS	4	f32 match decisions (player +0x24)
+0x95	DRIBBLING	4	f32 match dribbling (player +0x26)
+0x99	FINISHING	4	f32 match finishing (player +0x27)
+0x9d	FLAIR	4	f32 match flair (player +0x28)
+0xa1	FREE_KICKS	4	f32 match free kicks (player +0x29)
+0xa5	HANDLING	4	f32 match handling (player +0x2a)
+0xa9	HEADING	4	f32 match heading (player +0x2b)
+0xad	JUMPING	4	f32 match jumping (player +0x2e)
+0xb1	LONG_SHOTS	4	f32 match long shots (player +0x31)
+0xb5	MARKING	4	f32 match marking (player +0x32)
+0xb9	OFF_THE_BALL	4	f32 match off the ball (player +0x33)
+0xbd	ONE_ON_ONES	4	f32 match one on ones (player +0x35)
+0xc1	PACE	4	f32 match pace (player +0x36)
+0xc5	PASSING	4	f32 match passing (player +0x37)
+0xc9	PENALTIES	4	f32 match penalties (player +0x38)
+0xcd	POSITIONING	4	f32 match positioning (player +0x39)
+0xd1	REFLEXES	4	f32 match reflexes (player +0x3a)
+0xd5	STAMINA_ATTR	4	f32 match stamina attribute (player +0x3c)
+0xd9	STRENGTH	4	f32 match strength (player +0x3d)
+0xdd	TACKLING	4	f32 match tackling (player +0x3e)
+0xe1	TEAMWORK	4	f32 match teamwork (player +0x3f)
+0xe5	TECHNIQUE	4	f32 match technique (player +0x40)
+0xe9	THROW_INS	4	f32 match throw ins (player +0x41)
+0xed	VERSATILITY	4	f32 match versatility (player +0x42)
+0xf1	CREATIVITY	4	f32 match creativity/vision (player +0x43)
+0xf5	WORK_RATE	4	f32 match work rate (player +0x44)
+0xf9	CLUB	4	pointer to the club he plays for (national team check)
+0xfd	ACCURACY_NARRATED	1	set once the pass/control accuracy commentary was given
+0x100	MOTIVATION	1	motivation modifier added to work rate and ability [inference]
+0x101	MARKER_COUNT	1	number of entries in MARKERS
+0x102	X	1	grid column
+0x103	Y	1	grid row
+0x104	MOMENT_PACE	1	moment roll of pace with stamina (from +0x10e)
+0x105	MOMENT_ANTICIPATION	1	moment roll of anticipation (from +0x115)
+0x106	MOMENT_DECISIONS	1	moment roll of decisions (from +0x10f)
+0x107	MOMENT_OFF_THE_BALL	1	moment roll of off the ball (from +0x111)
+0x108	MOMENT_MARKING	1	moment roll of marking (from +0x112)
+0x109	MOMENT_FLAIR	1	moment roll of flair with morale (from +0x113)
+0x10a	MOMENT_POSITIONING	1	moment roll of positioning (from +0x110)
+0x10b	MOMENT_CREATIVITY	1	moment roll of creativity (from +0x114)
+0x10c	MOMENT_AGILITY	1	moment roll of agility (from +0x117)
+0x10d	MOMENT_WORK_RATE	1	moment roll of work rate (from +0x116)
+0x10e	MOMENT_BASE	10	bases (bytes +0x10e..+0x117) the moment attributes are rolled from
+0x11a	MOVE_SKILL	126	i16 skill word per move code (+0x11a + 2 x move, 63 words)
+0x11c	MOVE_SKILL_CONTROL	2	skill word for move 0x01 (ball control)
+0x132	MOVE_SKILL_0C	2	skill word for move 0x0c (long-range shot)
+0x134	MOVE_SKILL_0D	2	skill word for move 0x0d (shot)
+0x13a	MOVE_SKILL_10	2	skill word for move 0x10
+0x144	MOVE_SKILL_15	2	skill word for move 0x15
+0x162	MOVE_SKILL_24	2	skill word for move 0x24
+0x164	MOVE_SKILL_HEADER	2	skill word for move 0x25 (header)
+0x16c	MOVE_SKILL_29	2	skill word for move 0x29
+0x176	MOVE_SKILL_2E	2	skill word for move 0x2e
+0x190	MOVE_SKILL_3B	2	skill word for move 0x3b (close-range shot)
+0x198	ACTION	2	current action/move code
+0x19a	FACING	2	facing direction in degrees
+0x19c	BALL_CONTROL	2	control margin word, clamped to -200..200 [inference]
+0x19e	ENGINE	4	pointer to the match engine
+0x1a2	CONFIDENCE	4	f32 0..100 (docs: condition), floor 2 x (25 - temperament) [inference]
+0x1aa	MARKING_TARGET	4	match player he man-marks (0 none)
+0x1ae	MARKERS	12	match players marking him (up to 3 pointers, count in MARKER_COUNT)
+EXCLUDE	cell_angle_degrees
+EXCLUDE	prepare_match_with
+EXCLUDE	read_events_cfg
+EXCLUDE	event_text
+EXCLUDE	commentate_on_panel
+EXCLUDE	select_automatically
+EXCLUDE	apply_squad_rule
+EXCLUDE	draw_match_overview_panel
+EXCLUDE	match_screens_draw_live_league_table
+EXCLUDE	write_match_record
+EXCLUDE	fill_team_stats_rows
+EXCLUDE	refresh_latest_scores_rows
+EXCLUDE	draw_match_report_panel
+EXCLUDE	build_day_fixtures_screen
+EXCLUDE	save_match_snapshot
+EXCLUDE	refresh_player_ratings_rows
+EXCLUDE	draw_player_ratings_panel

@@ -6,5 +6,5 @@ MUTACOES = [
     ('c_erro', "            if erro >= dx {\n                erro = erro.wrapping_sub(dx);\n                cy = cy.wrapping_add(step_towards);", "            if erro > dx {\n                erro = erro.wrapping_sub(dx);\n                cy = cy.wrapping_add(step_towards);"),
     ('c_ponta', "            if (sobe && cx > 4) || (!sobe && cx < 4) {", "            if (sobe && cx >= 4) || (!sobe && cx < 4) {"),
     ('c_ingreme', "        if (sobe && cy > target) || (!sobe && cy < target) {", "        if (sobe && cy > target) || (!sobe && cy <= target) {"),
-    ('c_f5ae', "    *((this + 0xf5ae) as *mut usize) = 0;\n    let target", "    let target"),
+    ('c_f5ae', "    *((this + engine::SHOT_BLOCKER) as *mut usize) = 0;\n    let target", "    let target"),
 ]

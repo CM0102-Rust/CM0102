@@ -193,12 +193,12 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
         data(G_MATCH_STATS_FILL_RECORD_STATIC_DATE, 0x29, 0x7b4);
         atexit(0x72aa70);
     }
-    let game = || d(m + 0x4792) as usize;
+    let game = || d(m + engine::MATCH) as usize;
     pd(reg, d(game() + 0xc));
     pd(reg + 4, d(game() + 0x10));
     pw(reg + 8, w(game() + 0x2a));
     pw(reg + 0xa, w(game() + 0x28));
-    pd(reg + 0x34, d(m + 0xf634));
+    pd(reg + 0x34, d(m + engine::ATTENDANCE));
     for k in 0..5 {
         pw(reg + 0xc + 2 * k, w(m + 0x1f6 + 2 * k));
         pw(reg + 0x16 + 2 * k, w(m + 0x200 + 2 * k));
@@ -206,22 +206,22 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
         pw(reg + 0x2a + 2 * k, w(m + 0x214 + 2 * k));
     }
     pd(reg + 0x38, 0);
-    let stadium = d(m + 0x477a) as i32;
+    let stadium = d(m + engine::ADJUSTED_PLAYER_ID) as i32;
     let p = if stadium > -1 { d((d(G_STAFF_TABLE) as i32 + stadium * 0x6e + 0x61) as usize) as usize } else { 0 };
     pd(reg + 0x3c, if p != 0 { d(p) } else { u32::MAX });
-    let q = d(m + 0xf5b6) as usize;
+    let q = d(m + engine::REFEREE_ID) as usize;
     pd(reg + 0x40, if q != 0 && d(q) as i32 > -1 { d(q) } else { u32::MAX });
-    pw(reg + 0x4d, (w(m + 0x8ed0) as i16 as i32 / 11) as u16);
-    pw(reg + 0x4f, w(m + 0x8ed4));
-    pw(reg + 0x51, w(m + 0x8ed2));
+    pw(reg + 0x4d, (w(m + engine::CLOCK) as i16 as i32 / 11) as u16);
+    pw(reg + 0x4f, w(m + engine::PERIOD_END));
+    pw(reg + 0x51, w(m + engine::SUB_TICK));
     pb(reg + 0x4c, b(m));
-    pd(reg + 0x53, matches!(b(m + 0x8eb3), 1 | 4) as u32);
+    pd(reg + 0x53, matches!(b(m + engine::SHOOTOUT_STATE), 1 | 4) as u32);
     clima(d(G_WEATHER) as usize, reg + 0xd76, game());
     if sem_renda == 0 {
         pd(reg + 0x38, renda(d(G_FINANCE_TABLE) as usize, game(), d(reg + 0x34)));
     }
     // the events: move code → type (1..8); 7 and 8 mark +0x53 and store the order in place of the minute
-    let ev = d(m + 0x8f7a) as usize;
+    let ev = d(m + engine::COMMENTATOR) as usize;
     let mut n: u32 = 0;
     if ev != 0 && (w(ev + 6) as i16) > 0 {
         let mut i: i32 = 0;
@@ -282,7 +282,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
             pb(tm + 0x29 + k, b(s + 0x1c + k));
             pb(tm + 0x2e + k, b(s + 0x17 + k));
         }
-        pb(tm + 0x33, b(m + 0x8d4f + t));
+        pb(tm + 0x33, b(m + engine::SIDE_KIT + t));
         if sem_renda != 0 {
             let away = (b(game() + 0x40 + t) == 0) as i32;
             let c = capitao(d(G_TACTICS) as usize, d(game() + 0x1c + 4 * t) as usize, away, 0) as i32;
@@ -802,10 +802,10 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
         let city = rd(stadium + stadium::STADIUM_CITY);
         if city != 0 {
             let (a, b) = (sx(stadium + stadium::STADIUM_GENDER_NAME), sx(city + city::CITY_GENDER_NAME));
-            text(BUF, 0x9902a4, a, a, b, b, stadium + 4, city + 4) as usize
+            text(BUF, 0x9902a4, a, a, b, b, stadium + stadium::NAME, city + 4) as usize
         } else {
             // the original’s strcpy leaves eax and ecx at 0
-            copy_to_work_text(stadium + 4);
+            copy_to_work_text(stadium + stadium::NAME);
             0
         }
     } else {
@@ -1050,7 +1050,7 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
             set_screen_param(0x24, esperando as usize);
         }
         if p15 == 0 {
-            let stage = rb(pm + 0x8eb3);
+            let stage = rb(pm + engine::SHOOTOUT_STATE);
             if stage == 1 || stage == 4 {
                 let t = t_do_menu(0x1c);
                 if rd(pm + engine::MATCH) != 0 && t != 0 && get_screen_param(0x2f) == 0 {
@@ -1089,7 +1089,7 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
             assistir();
             *((sheet(0) + 0xea) as *mut u32) = 0;
             let tactic: unsafe extern "C" fn(usize, u32, usize, u32, i32, u32) = core::mem::transmute(FN_TACTICS_SCREEN_OPEN);
-            let stage = rb(pm + 0x8eb3);
+            let stage = rb(pm + engine::SHOOTOUT_STATE);
             if (stage == 1 || stage == 4) && human_in_team(target, 0, 1, 0, 0) != 0 && index(sm, usa(target)) == h() as u16 {
                 let k = if target == t_do_menu(0x1c) { 0x2f } else { 0x30 };
                 set_screen_param(k, 1);
@@ -1620,7 +1620,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
                 let rel = u(u(p0 + 0x57) + 0x8f7a);
                 let r = txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 1, 0, 0x10c, 5, 0, 0, 1);
                 let m = u(p0 + 0x57);
-                narrate(rel, u(u(p0 + 0x5b) + 1), e, u(u(m + 0x4792)), r, 0x262, 1, 5, 0);
+                narrate(rel, u(u(p0 + 0x5b) + 1), e, u(u(m + engine::MATCH)), r, 0x262, 1, 5, 0);
                 set_screen_param(8, item16(r));
             } else {
                 let r = txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 1, 0, 0x10c, 5, 0, 0, 1);
@@ -1990,7 +1990,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
 
     // the group’s matches of the day in the local copy
     let m = u(p0 + 0x57);
-    if m != 0 && w16(m + 0x8ed0) != 0 {
+    if m != 0 && w16(m + engine::CLOCK) != 0 {
         let mut k = core::ptr::read_unaligned((pe + 4) as *const i32);
         while k <= core::ptr::read_unaligned((pe + 8) as *const i32) {
             let game = u(*(G_MATCH_DAY as *const usize) + 0x19).wrapping_add((k as usize).wrapping_mul(0x69)) + 4;
@@ -2789,9 +2789,9 @@ pub(crate) unsafe extern "thiscall" fn match_screens_record_match(stats: usize, 
     let fill: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
     let write: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_MATCH_STATS_WRITE_MATCH_RECORD);
     fill(stats, m, r, 0);
-    let game = core::ptr::read_unaligned((m + 0x4792) as *const usize);
+    let game = core::ptr::read_unaligned((m + engine::MATCH) as *const usize);
     if *(game as *const i32) != *(KEY_CLUB_COMP_RESERVE as *const i32) || *((r + 0x4c) as *const u8) == 0 {
-        write(stats, game, r, core::ptr::read_unaligned((m + 0x8f7a) as *const usize));
+        write(stats, game, r, core::ptr::read_unaligned((m + engine::COMMENTATOR) as *const usize));
     }
     1
 }

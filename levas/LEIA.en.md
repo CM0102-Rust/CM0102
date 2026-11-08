@@ -8,7 +8,7 @@ Each batch ports match-engine routines to Rust (`rust/src/motor.rs`) and only go
 |---|---|
 | `LEIA.md` / `LEIA.en.md` | the batch on one page: routines, decisions, what went wrong along the way and the result |
 | `codigo.rs` | the Rust code the batch added to `motor.rs` (copies, Rust-mode dispatch and comparators) |
-| `integrar.py` | how `codigo.rs` went into `motor.rs`: the `PROLOGOS` table, function lists, recording ports removed, `ZERADAS` |
+| `integrar.py` | how `codigo.rs` went into `motor.rs`: the `PROLOGOS` table, function lists, recording ports removed (and, until 2026-10-31, `ZERADAS`) |
 | `docs.py` | generates the batch's documentation (`docs/ROTINAS`, `PROJETO`, `wiki`, glossary) with `engenharia-reversa/gen_docs.py` |
 | `cadeia.txt` | the full output of the test chain (below) |
 

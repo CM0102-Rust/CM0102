@@ -2,5 +2,5 @@
 # Uso: python mutacoes.py mutacoes\leva129b.py --jogo 2001-10-01
 MUTACOES = [
     ('j_falta_forte2', "let foul_strong = strength as i32 > sortear(0x96) + 0xc8;", "let foul_strong = strength as i32 > sortear(0x96) + 0x64;", "play falta punida"),
-    ('j_estilo2', "narrar7(call, 0x1f66, ub(j, 0x2e), ub(j, 0x27), u32::MAX, 5);", "narrar7(call, 0x1f66, ub(j, 0x2e), ub(j, 0x27), u32::MAX, 6);", "play venceu"),
+    ('j_estilo2', "narrar7(call, 0x1f66, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, 5);", "narrar7(call, 0x1f66, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, 6);", "play venceu"),
 ]

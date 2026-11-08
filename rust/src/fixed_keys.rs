@@ -1,6 +1,6 @@
 // GERADO por `python engenharia-reversa/chaves_fixas.py` (não editar): as listas da set_key_ids (0x601a40, index.cpp)
 // lidas do cm0102.exe e conferidas padrão por padrão; regenerar se o gerador mudar. Os nomes são endereços de
-// texto no exe (não copiados). Entra no motor.rs pelo `include!("chaves_fixas.rs")` do código da leva.
+// texto no exe (não copiados). Entra no motor.rs pelo `include!("fixed_keys.rs")` do código da leva.
 
 /// As globais que a original põe em -1 (`mov [g], edi`), na ordem do código.
 const MENOS_UM_DAS_CHAVES: [u32; 1282] = [

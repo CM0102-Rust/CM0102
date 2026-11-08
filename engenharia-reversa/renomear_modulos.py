@@ -16,7 +16,9 @@ import traduzir_locais  # noqa: E402
 
 MODULOS = {'desvios': 'detours', 'simulacao': 'simulation', 'alocador': 'allocator', 'data': 'date', 'jogo': 'crt',
            'espiao': 'spy', 'extensao': 'extension', 'sonda_pilha': 'stack_probe', 'ganchos': 'iat_hooks',
-           'resolucao': 'resolution'}
+           'resolucao': 'resolution',
+           # os gerados (08/11/2026, rodada 9)
+           'assinaturas': 'signatures', 'chaves_fixas': 'fixed_keys', 'adjetivos_nacao': 'nation_adjectives'}
 SRC = os.path.join(R, 'rust', 'src')
 
 
@@ -24,7 +26,7 @@ def no_codigo(t):
     def f(s):
         for a, b in MODULOS.items():
             s = re.sub(r'\bmod %s;' % a, 'mod %s;' % b, s)
-            s = re.sub(r'\b%s::' % a, '%s::' % b, s)
+            s = re.sub(r'(?<!cm0102_base::)\b%s::' % a, '%s::' % b, s)  # cm0102_base::ganchos is another module
             # `use crate::{rng, data, win};`
             s = re.sub(r'(use crate::\{[^}]*)\b%s\b' % a, r'\g<1>%s' % b, s)
         return s
@@ -33,6 +35,8 @@ def no_codigo(t):
 
 def nos_textos(t):
     for a, b in MODULOS.items():
+        if a == 'ganchos':  # cm0102-base/src/ganchos.rs keeps its name (the rust/src one was renamed once, 08/11/2026)
+            continue
         t = re.sub(r'(?<![\w/])(rust/src/)?%s\.rs\b' % a, lambda m: (m.group(1) or '') + b + '.rs', t)
     return t
 
@@ -42,6 +46,8 @@ def main():
     for p in glob.glob(os.path.join(SRC, '**', '*.rs'), recursive=True):
         t = open(p, encoding='utf-8', newline='').read()
         novo = no_codigo(t)
+        for a_, b_ in MODULOS.items():  # include!("../chaves_fixas.rs"): o caminho fica num texto entre aspas
+            novo = re.sub(r'include!\("((?:\.\./)*)%s\.rs"\)' % a_, lambda m, b_=b_: 'include!("%s%s.rs")' % (m.group(1), b_), novo)
         if novo != t:
             n += 1
             if '--gravar' in sys.argv:

@@ -1366,7 +1366,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
     let b = |p: usize, o: usize| *((p + o) as *const i8);
     let w = |p: usize| core::ptr::read_unaligned(p as *const i16);
     let s2 = w(e);
-    let (posse, area) = if m == 0 { (0, 0) } else { (b(m, 0x8eab), ball_goal_end(m)) };
+    let (posse, area) = if m == 0 { (0, 0) } else { (b(m, engine::LAST_POSSESSION_SIDE), ball_goal_end(m)) };
     if w(t + 8) == w(t + 6) {
         return 0;
     }

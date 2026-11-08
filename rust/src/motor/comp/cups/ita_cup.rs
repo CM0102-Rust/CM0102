@@ -1060,7 +1060,7 @@ pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &GroupStageRules, turn
 /// [pt] O plano: os campos que `set_cup_league_rules` grava, lidos depois da original.
 pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &GroupStageRules, r: u32) {
     let b = |o: usize| *((this + o) as *const u8);
-    let lido = (b(0xc2), b(0xc3), b(0xc4), [b(0xc5), b(0xc6), b(0xc7), b(0xc8)], b(0xbe), [b(0xbf), b(0xc0), b(0xc1)], b(0x42),
+    let lido = (b(league::WIN_POINTS), b(league::DRAW_POINTS), b(league::MATCH_CATEGORY), [b(league::TIEBREAKS), b(0xc6), b(0xc7), b(0xc8)], b(league::PROMOTED_COUNT), [b(league::PROMOTION_PLAYOFF_COUNT), b(league::RELEGATION_PLAYOFF_COUNT), b(league::RELEGATED_COUNT)], b(league::CLUB_SIDES),
         core::ptr::read_unaligned((this + league::UPPER_DIVISION_ID) as *const i32), core::ptr::read_unaligned((this + league::LOWER_DIVISION_ID) as *const i32),
         core::ptr::read_unaligned((this + league::LEGS) as *const i16));
     let previsto = (g.vitoria, g.empate, g.categoria, g.desempate, g.vagas, [0u8; 3], 1u8, -1i32, -1i32, 1i16);

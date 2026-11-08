@@ -96,7 +96,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
     if t as i8 > -1 {
         register_injury_with(*(G_INJURY as *const usize), *((p + match_player::STAFF) as *const usize), &mut t, &mut g, call);
     }
-    *((p + 0x55) as *mut usize) = o;
+    *((p + match_player::INJURY_CULPRIT) as *mut usize) = o;
     if o != 0 {
         let q = (o + 0x31) as *mut i16;
         *q = (*q).wrapping_sub(10);
@@ -112,14 +112,14 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
         local = sortear(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32; // 0x968968 = 0.5
         *folego = (*folego as f64 - local as f64) as f32;
         let r = sortear(match_pl_ftol(local as f64 * read_f32_at(0x968f18) as f64)); // 0x968f18 = 0.5
-        *((p + 0x59) as *mut f32) = r as f32;
-        let d5 = (p + 0xd5) as *mut f32;
+        *((p + match_player::STAMINA_BOOST) as *mut f32) = r as f32;
+        let d5 = (p + match_player::STAMINA_ATTRIBUTE) as *mut f32;
         *d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64) as f32; // 0x968f18 = 0.5
     }
     if !(*folego as f64 >= read_f64_at(0x9688e8)) { // 0x9688e8 = 5000
         crate::comparison::branch("lesao sem folego");
         *b(m, 0x8eb5) = 1;
-        *b(p, 0x1d) = 1;
+        *b(p, match_player::INJURY_PENDING) = 1;
         *b(p, 0x1c) = 1;
     } else {
         let person = *((p + match_player::PLAYER) as *const usize);
@@ -128,13 +128,13 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
             crate::comparison::branch("lesao para 5");
             write_2b(p, 5);
             *b(m, 0x8eb5) = 1;
-            *b(p, 0x1d) = 1;
+            *b(p, match_player::INJURY_PENDING) = 1;
         } else {
             write_2b(p, 3);
             if local >= read_f32_at(0x96d1a8) && *b(p, 0x1c) != 0 { // 0x96d1a8 = 500
                 crate::comparison::branch("lesao para 3 e sai");
                 *b(m, 0x8eb5) = 1;
-                *b(p, 0x1d) = 1;
+                *b(p, match_player::INJURY_PENDING) = 1;
             }
         }
     }
@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     if !(0x1f40..=0x21e4).contains(&c) {
         return 0;
     }
-    let side = byte(p, 0x27) as i32;
+    let side = byte(p, match_player::SIDE) as i32;
     if *((m as isize + ((c + side * 1000) * 4) as isize - 0x7ae2) as *const u32) != 0 {
         return 0;
     }

@@ -92,7 +92,7 @@ def main():
     for alvo, lst in sorted(plano.items()):
         p = os.path.join(base, alvo)
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        # include! é relativo ao arquivo que o contém: os gerados (chaves_fixas.rs...) ficam em src/
+        # include! é relativo ao arquivo que o contém: os gerados (fixed_keys.rs...) ficam em src/
         sobe = '../' * (alvo.count('/') + 1)
         texto = re.sub(r'include!\("(\w+\.rs)"\)', lambda m: 'include!("%s%s")' % (sobe, m.group(1)), ''.join(t for _, t in lst))
         with open(p, 'a', encoding='utf-8') as f:

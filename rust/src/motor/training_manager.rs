@@ -1202,8 +1202,8 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         return;
     }
     let de15 = |o: usize| (read_i8(f + o) >= 0xf) as i8;
-    let mut positions = de15(0xf) + de15(0x10) + de15(0x11) + de15(0x12) + de15(0x13) + de15(0x14) + de15(0x15);
-    let mut lados = de15(0x18) + de15(0x19) + de15(0x17);
+    let mut positions = de15(player_sheet::GOALKEEPER) + de15(player_sheet::SWEEPER) + de15(player_sheet::DEFENDER) + de15(player_sheet::DEFENSIVE_MIDFIELDER) + de15(player_sheet::MIDFIELDER) + de15(player_sheet::ATTACKING_MIDFIELDER) + de15(player_sheet::ATTACKER);
+    let mut lados = de15(player_sheet::LEFT_SIDE) + de15(player_sheet::CENTRAL) + de15(player_sheet::RIGHT_SIDE);
     for j in 0..n as usize {
         let item = p + 8 * j;
         let field = match *((item + 4) as *const i16) as i32 {

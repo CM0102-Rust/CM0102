@@ -3,7 +3,7 @@ exe original ou a do cm0102-1080.exe (a versão de trabalho). Numa rotina altera
 (NickPatcher, CLZ...) o código do exe fica rodando ("preferência ao patch").
 
 Uso:
-  python assinaturas.py                 regrava rust/src/assinaturas.rs (rodar a cada leva, depois do motor.rs)
+  python assinaturas.py                 regrava rust/src/signatures.rs (rodar a cada leva, depois do motor.rs)
   python assinaturas.py --conferir EXE  confere a tabela atual contra outro exe, sem rodar o jogo
 
 Faixa = do início da rotina (tabela PROLOGOS do motor.rs) até a próxima fronteira real (fronteiras.py).
@@ -99,13 +99,13 @@ def gravar():
               'pub const ASSINATURAS: [(usize, usize, u64, u64); %d] = [' % len(t)]
     linhas += ['    (%#x, %d, %#018x, %#018x),' % x for x in t]
     linhas += ['];', '']
-    open(os.path.join(R, 'rust', 'src', 'assinaturas.rs'), 'w', encoding='utf-8', newline='\n').write('\n'.join(linhas))
-    print('rust/src/assinaturas.rs: %d rotinas, %d bytes, %d diferentes no 1080' % (
+    open(os.path.join(R, 'rust', 'src', 'signatures.rs'), 'w', encoding='utf-8', newline='\n').write('\n'.join(linhas))
+    print('rust/src/signatures.rs: %d rotinas, %d bytes, %d diferentes no 1080' % (
         len(t), sum(x[1] for x in t), sum(x[2] != x[3] for x in t)))
 
 
 def conferir(exe):
-    m = open(os.path.join(R, 'rust', 'src', 'assinaturas.rs'), encoding='utf-8').read()
+    m = open(os.path.join(R, 'rust', 'src', 'signatures.rs'), encoding='utf-8').read()
     t = [(int(a, 16), int(n), int(h0, 16), int(h1, 16)) for a, n, h0, h1 in
          re.findall(r'\((0x[0-9a-f]+), (\d+), (0x[0-9a-f]+), (0x[0-9a-f]+)\)', m)]
     ler = leitor(exe)

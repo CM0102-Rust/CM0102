@@ -1,6 +1,6 @@
 r"""Troca as chaves fixas cruas (0x9cf2e4...) do motor por constantes com nome (KEY_NATION_ENGLAND...), em
 rust/src/motor/keys.rs (etapa 4 da reorganização, 07/11/2026). Os nomes vêm de docs/chaves_uso.csv (os da set_key_ids,
-pelo mapa de maxevans60). Os arquivos gerados (chaves_fixas.rs, adjetivos_nacao.rs) ficam como estão: são tabelas.
+pelo mapa de maxevans60). Os arquivos gerados (fixed_keys.rs, nation_adjectives.rs) ficam como estão: são tabelas.
 
 As constantes são usize; onde o código pedia outro tipo, a troca leva `as <tipo>` (o compilador diz onde: rode
 `--tipos` depois de compilar com erro, e ele acrescenta a conversão nas linhas acusadas).

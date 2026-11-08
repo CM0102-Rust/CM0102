@@ -1,0 +1,77 @@
+0x0	SIDE_INDEX	1	player's index within his side's block of 20 (-1 empty); marks shootout takers [inference]
+0x1	PASSES	1	passes made (incremented by each pass, taken back when the pass ends offside)
+0x2	PASSES_COMPLETED	1	passes that reached a team-mate (credited to the passer when the team-mate takes the ball)
+0x4	TACKLES	1	tackles attempted [inference]
+0x5	TACKLES_WON	1	tackles/challenges won [inference]
+0x6	KEY_TACKLES	1	tackles won near his own goal or behind the defensive line (+300 rating) [inference]
+0x7	CHALLENGES	1	contested balls taken part in (both players counted) [inference]
+0x8	CHALLENGES_WON	1	contested balls won [inference]
+0x9	KEY_CHALLENGES_WON	1	contested balls won in a dangerous situation (+300 rating) [inference]
+0xa	SHOTS	1	shots taken (blocked shots not counted)
+0xb	SHOTS_ON_TARGET	1	shots on target
+0xc	GOALS	1	goals scored
+0xd	PENALTIES_TAKEN	1	penalties taken in open play
+0xe	PENALTIES_SCORED	1	penalties scored in open play
+0xf	GOALS_CONCEDED	1	goals conceded as goalkeeper
+0x10	ASSISTS	1	assists (also credited to the fouled player when the penalty is scored)
+0x11	DRIBBLES	1	times he beat an opponent with the ball [inference]
+0x14	FOULS	1	fouls committed
+0x15	FOULS_SUFFERED	1	fouls suffered
+0x17	MATCH_FORM	1	1..20 in-match form byte, nudged up or down by events (adjust_17) and floored by the performance word [inference]
+0x1b	MATCH_GRADE	1	1..10 match rating, (MATCH_RATING + 500) / 1000; 6 at construction
+0x21	MINUTE_LEFT_PITCH	1	minute he left the pitch (injury or sending-off), capped at the period's end
+0x24	YELLOW_CARDS	1	yellow cards received
+0x25	FIRST_CARD_CODE	1	code of his first card (reason; 9 for a straight red)
+0x26	SECOND_CARD_CODE	1	code of his second card (reason; 9 for a red)
+0x28	CELL_SLOT	1	his index in the occupancy list of the grid cell he stands on (-1 none)
+0x2c	PREFERRED_FOOT	1	foot used when the angle needs no particular one (0 left, 1 right) [inference]
+0x51	STAMINA_CEILING	4	f32 ceiling of the stamina recovery (set at period breaks, at most 10000)
+0x55	INJURY_CULPRIT	4	player who caused his injury (named in the injury commentary 0x20f6) [inference]
+0x59	STAMINA_BOOST	4	f32 extra stamina added at each moment, then halved (cleared when 1)
+0x71	ACCELERATION	4	f32 match acceleration (player +0x1b)
+0x75	AGGRESSION	4	f32 match aggression (player +0x1c)
+0x81	BALANCE	4	f32 match balance (player +0x1f)
+0x85	BRAVERY	4	f32 match bravery (player +0x20)
+0x89	CORNERS	4	f32 match corners (player +0x22)
+0x8d	CROSSING	4	f32 match crossing (player +0x23)
+0x91	DECISIONS	4	f32 match decisions (player +0x24)
+0x95	DRIBBLING	4	f32 match dribbling (player +0x26)
+0x9d	FLAIR	4	f32 match flair (player +0x28)
+0xa9	HEADING	4	f32 match heading (player +0x2b)
+0xb5	MARKING	4	f32 match marking (player +0x32)
+0xb9	MOVEMENT	4	f32 match movement (player +0x33)
+0xbd	ONE_ON_ONES	4	f32 match one on ones (player +0x35)
+0xc1	PACE	4	f32 match pace (player +0x36)
+0xc5	PASSING	4	f32 match passing (player +0x37)
+0xc9	PENALTIES	4	f32 match penalties (player +0x38)
+0xcd	POSITIONING	4	f32 match positioning (player +0x39)
+0xd1	REFLEXES	4	f32 match reflexes (player +0x3a)
+0xd5	STAMINA_ATTRIBUTE	4	f32 match stamina attribute (player +0x3c); not the fitness at STAMINA
+0xd9	STRENGTH	4	f32 match strength (player +0x3d)
+0xe9	THROW_INS	4	f32 match throw ins (player +0x41)
+0xed	VERSATILITY	4	f32 match versatility (player +0x42)
+0xf1	VISION	4	f32 match vision (player +0x43)
+0xf5	WORK_RATE	4	f32 match work rate (player +0x44)
+0xfd	TACKLE_RATE_NARRATED	1	his tackle success-rate commentary (0x21cd/0x21ce) has been given, so it is not repeated
+0x102	CELL_X	1	grid column he stands on (0..8)
+0x103	CELL_Y	1	grid row he stands on (0..11)
+0x104	MOMENT_PACE	1	moment roll from BASE_PACE and stamina (best of two draws), redrawn each moment
+0x105	MOMENT_ANTICIPATION	1	moment roll from BASE_ANTICIPATION
+0x106	MOMENT_DECISIONS	1	moment roll from BASE_DECISIONS (best of two draws)
+0x107	MOMENT_MOVEMENT	1	moment roll from BASE_MOVEMENT
+0x108	MOMENT_MARKING	1	moment roll from BASE_MARKING
+0x109	MOMENT_FLAIR	1	moment roll from BASE_FLAIR
+0x10a	MOMENT_POSITIONING	1	moment roll from BASE_POSITIONING (best of two draws)
+0x10b	MOMENT_VISION	1	moment roll from BASE_VISION (best of two draws)
+0x10c	MOMENT_AGILITY	1	moment roll from BASE_AGILITY
+0x10d	MOMENT_WORK_RATE	1	moment roll from BASE_WORK_RATE
+0x10e	BASE_PACE	1	base for MOMENT_PACE, from match pace (+0xc1), at least 2
+0x10f	BASE_DECISIONS	1	base for MOMENT_DECISIONS, from match decisions (+0x91)
+0x110	BASE_POSITIONING	1	base for MOMENT_POSITIONING, from match positioning (+0xcd)
+0x111	BASE_MOVEMENT	1	base for MOMENT_MOVEMENT, from match movement (+0xb9)
+0x112	BASE_MARKING	1	base for MOMENT_MARKING, from match marking (+0xb5)
+0x113	BASE_FLAIR	1	base for MOMENT_FLAIR, from match flair (+0x9d) and MATCH_FORM
+0x114	BASE_VISION	1	base for MOMENT_VISION, from match vision (+0xf1)
+0x115	BASE_ANTICIPATION	1	base for MOMENT_ANTICIPATION, from match anticipation (+0x7d)
+0x116	BASE_WORK_RATE	1	base for MOMENT_WORK_RATE, from match work rate (+0xf5)
+0x117	BASE_AGILITY	1	base for MOMENT_AGILITY, from match agility (+0x79)

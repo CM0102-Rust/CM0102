@@ -595,7 +595,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
         return 0;
     }
     let b = |o: usize| *((p + o) as *const i8);
-    let (b59, b5a, b5b, b5d) = (b(0x59), b(0x5a), b(0x5b), b(0x5d));
+    let (b59, b5a, b5b, b5d) = (b(staff::LOYALITY), b(staff::PRESSURE), b(staff::PROFESSIONALISM), b(staff::TEMPERAMENT));
     let b44 = *((t + 0x44) as *const i8);
     let mut rating = ((*(p as *const i32) % 7) as u8).wrapping_add(b59 as u8).wrapping_add(b5a as u8).wrapping_add(b5b as u8);
     if b5a == 1 {
@@ -663,7 +663,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
         || (m1 != 0 && b59 < 10 && rating < 25)
         || (funcoes & 0x20020 != 0 && rating < 25)
         || (funcoes & 0x200 != 0 && rating < 18)
-        || (funcoes & 4 != 0 && b(0x57) > 15 && b5b < 10)
+        || (funcoes & 4 != 0 && b(staff::AMBITION) > 15 && b5b < 10)
         || (funcoes & 0x2808 != 0 && b59 < 10 && b5a < 6 && rating < 30)
         || ((funcoes & 0x82200 != 0 || tecnica) && b5b < 10 && rating < 20)
         || funcoes & 0x111 != 0

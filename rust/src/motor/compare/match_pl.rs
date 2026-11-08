@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_write_19c(this: usize, v: i16) {
 /// Comparer for `clear_move` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_move(this: usize) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CLEAR_MOVE);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x475a, 16)], || f(this), || clear_move(this));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::PENDING_PLAY_KIND, 16)], || f(this), || clear_move(this));
     SCOREBOARD.record(igual, || format!("clear_move original={:x?} rust={:x?}", mo, mr));
 }
 
@@ -192,7 +192,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_adjusted_rating(this: usize, bas
 /// Comparer for `adjust_17` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_adjust_17(this: usize, delta: i8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u8>(IDX_ADJUST_17);
-    let mut reg = vec![(this + 0x17, 1)];
+    let mut reg = vec![(this + match_player::MATCH_FORM, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, delta), || crate::rng::without_counting(|| adjust_17(this, delta)));
     SCOREBOARD.record(igual && r == n, || format!("adjust_17({}) original={} {:x?} rust={} {:x?}", delta, r, mo, n, mr));
@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_take_ball(this: usize) {
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || take_ball(this));
-    SCOREBOARD.record(igual, || format!("take_ball(lado {}, {} {}) original={:x?} rust={:x?}", lado(this), byte(this, 0x102), byte(this, 0x103), mo, mr));
+    SCOREBOARD.record(igual, || format!("take_ball(lado {}, {} {}) original={:x?} rust={:x?}", lado(this), byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y), mo, mr));
 }
 
 /// Comparer for `move_to` (comparison mode: see the header of motor.rs).
@@ -245,10 +245,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_to(this: usize, x: i8, y: i
         return;
     }
     let engine = *((this + match_player::ENGINE) as *const usize);
-    let antiga = occupancy_grid_cell(engine, byte(this, 0x102), byte(this, 0x103)) as usize;
+    let antiga = occupancy_grid_cell(engine, byte(this, match_player::CELL_X), byte(this, match_player::CELL_Y)) as usize;
     let new = occupancy_grid_cell(engine, x, y) as usize;
-    let mut reg = vec![(this + 0x28, 1), (this + 0x102, 2), (antiga, 90), (new, 90), (engine + engine::BALL_X, 2)];
-    let (l, v) = (lado(this), byte(this, 0x28));
+    let mut reg = vec![(this + match_player::CELL_SLOT, 1), (this + match_player::CELL_X, 2), (antiga, 90), (new, 90), (engine + engine::BALL_X, 2)];
+    let (l, v) = (lado(this), byte(this, match_player::CELL_SLOT));
     let n = byte(antiga, 0x58 + l as usize);
     if v >= 0 && n > 0 {
         let movido = *((antiga as isize + 4 * (11 * l as isize + n as isize - 1)) as *const usize);
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_attributes(this: usize) {
     // only the player’s record changes: word +0x3b and the fields from +0x71 to +0xf8
     let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
     reg.push((this + match_player::EFFECTIVE_ABILITY, 2));
-    reg.push((this + 0x71, 0x88));
+    reg.push((this + match_player::ACCELERATION, 0x88));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| update_attributes(this)));
     SCOREBOARD.record(igual, || format!("update_attributes original={:x?} rust={:x?}", mo, mr));
 }
@@ -303,7 +303,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_match_performance(this: usize, m
     reg.push((this, 0x1be));
     let engine = *((this + match_player::ENGINE) as *const usize);
     if engine != 0 {
-        reg.push(((engine as isize + 0xaf + byte(this, 0x27) as isize) as usize, 1));
+        reg.push(((engine as isize + 0xaf + byte(this, match_player::SIDE) as isize) as usize, 1));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, mark), || crate::rng::without_counting(|| match_performance(this, mark)));
     SCOREBOARD.record(igual, || format!("match_performance({}) original={:x?} rust={:x?}", mark, mo, mr));
@@ -521,7 +521,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_advance_row(this: usize, direct:
         return call_recording(FN_MATCH_PLAYER_DROP_BACK_ONE_ROW, this, [direct as u32, 0, 0, 0, 0], || o(this, direct));
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((this + 0x102, 2));
+    reg.push((this + match_player::CELL_X, 2));
     let (r, _, igual, sequencia, k) = comparar_com_fita(reg, || o(this, direct), |chamar| {
         advance_row_injected(this, direct, &mut |rotina, a| chamar(rotina, this, a, XY_ARG_MASK))
     });

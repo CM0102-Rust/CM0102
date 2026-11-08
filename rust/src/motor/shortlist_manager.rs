@@ -4373,7 +4373,7 @@ pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize
     }
     let p = u(club + club::CHAIRMAN);
     if p != 0 && u(p + staff::NON_PLAYER) != 0 {
-        let dif = byte(p, 0x57) as i32 - byte(u(p + staff::NON_PLAYER), 0x1d) as i32;
+        let dif = byte(p, staff::AMBITION) as i32 - byte(u(p + staff::NON_PLAYER), 0x1d) as i32;
         let v = por(dif, 0x968958, w()) as i16;
         core::ptr::write_unaligned(target, v);
         let sheet = u(u(club + club::CHAIRMAN) + 0x69);

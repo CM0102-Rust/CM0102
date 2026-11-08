@@ -137,7 +137,7 @@ Tipo novo de item (**save**), ao lado de telas e simulação. 21 rotinas em 7 it
 | Lixo de heap no arquivo | `zopen` criando grava 0x416ec bytes de cabeçalho + índice de uma alocação não zerada (as entradas além da contagem); `zclose` regrava | hoje sai zero (bloco grande da heap); o comparador confere o cabeçalho inteiro |
 | Ordem do `FindFirstFile` | `zadd`, limpar temporários | a Rust usa as mesmas 0x4c0aa0/0x4c0b50 |
 | `int` com sinal | `zget_matching_size` acima de 2 GB dá negativo e a conferência de espaço passa sempre | manter igual; correção é outra decisão (como o 2 GB) |
-| Lixo de pilha | `save_game_data` (quadro de 0x175c), `load_game_data`, `valid_saved_game_version` (SEH) | sonda de zeragem (`ZERADAS`) antes de comparar |
+| Lixo de pilha | `save_game_data` (quadro de 0x175c), `load_game_data`, `valid_saved_game_version` (SEH) | a comparação rotina a rotina pelo resultado (sem zeragem desde 31/10/2026: o lixo de pilha não se compara) |
 | Não determinismo | resumo (tempo de jogo), data e hora no `general.dat`, espaço em disco, CD | conferir na 1ª prova; máscara se for relógio |
 | DLL do save | `save/` usa as três rotinas de `conteiner.rs` e a assinatura de 0x9326e0–0x933860 | as novas rotinas não entram em `save/`; o repositório público só muda nas releases |
 | Alocação grande | cada `zopen` aloca ~650 KB, `zextract` mais ~530 KB | muda a heap e a impressão: comparar só no passo do save |

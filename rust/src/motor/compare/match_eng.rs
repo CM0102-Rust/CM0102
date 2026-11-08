@@ -310,14 +310,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_quick_simulation(m: usize) {
 /// Comparer for `record_move` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_record_move(this: usize, a: u16, b: u32, c: u32, d: u8, e: u8, f2: u8, g: u8, h: u8, i: u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u16, u32, u32, u8, u8, u8, u8, u8, u8)>(IDX_RECORD_MOVE);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x475a, 16)], || f(this, a, b, c, d, e, f2, g, h, i), || record_move(this, a, b, c, d, e, f2, g, h, i));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + engine::PENDING_PLAY_KIND, 16)], || f(this, a, b, c, d, e, f2, g, h, i), || record_move(this, a, b, c, d, e, f2, g, h, i));
     SCOREBOARD.record(igual, || format!("record_move original={:x?} rust={:x?}", mo, mr));
 }
 
 /// Comparer for `check_move` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_check_move(this: usize) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_CHECK_MOVE);
-    let mut reg = vec![(this + 0x475a, 16)];
+    let mut reg = vec![(this + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this), || crate::rng::without_counting(|| check_move(this)));
     SCOREBOARD.record(igual && r == n, || format!("check_move original={} {:x?} rust={} {:x?}", r, mo, n, mr));
@@ -551,7 +551,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_penalties(m: usize, mode: u32) {
             chamar(rotina, this, args, mask)
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("penalties(estado {}) {} chamadas: {}", byte(m, 0x8eb3), k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("penalties(estado {}) {} chamadas: {}", byte(m, engine::SHOOTOUT_STATE), k, tape_detail()));
 }
 
 /// Comparer for `apply_foul` (comparison mode: see the header of motor.rs).
@@ -568,7 +568,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_foul(m: usize) -> u8 {
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let kind = byte(m, 0x475a);
+    let kind = byte(m, engine::PENDING_PLAY_KIND);
     RECORD_716.store(true, std::sync::atomic::Ordering::Relaxed);
     let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || o(m), |chamar| {
         apply_pending_foul_with(m, &mut |rotina, this, args| {
@@ -825,7 +825,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_line_up_set_piece(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LINE_UP_SET_PIECE);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this + 0x1a0, 0x30), (this + engine::GRID, 0x8f00 - 0x215e), (this + engine::FORMATION_TABLE, 0x90)]);
-    let side_b = byte(this, 0x8eae);
+    let side_b = byte(this, engine::POSSESSION_SIDE);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| line_up_set_piece(this)));
     SCOREBOARD.record(igual, || format!("line_up_set_piece(lado {})", side_b));
 }
@@ -847,7 +847,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_line_up_kickoff(this: usize) {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this + 0x1a0, 0x30), (this + engine::GRID, 0x8f00 - 0x215e), (this + engine::FORMATION_TABLE, 0x48)]);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| line_up_kickoff(this)));
-    SCOREBOARD.record(igual, || format!("line_up_kickoff(lado {})", byte(this, 0x8eae)));
+    SCOREBOARD.record(igual, || format!("line_up_kickoff(lado {})", byte(this, engine::POSSESSION_SIDE)));
 }
 
 /// Comparer for `look_for_play` (comparison mode: see the header of motor.rs).
@@ -862,7 +862,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_look_for_play(this: usize, side:
     let base = (group as isize + side as isize) as usize;
     let list = (group as isize + side as isize * 44) as usize;
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(this + 0xf5ae, 4), (base + 0x58, 1), (list, 44)]);
+    reg.extend([(this + engine::SHOT_BLOCKER, 4), (base + 0x58, 1), (list, 44)]);
     for k in 0..byte(base, 0x58).clamp(0, 11) as usize {
         let j = *((list + 4 * k) as *const usize);
         reg.extend([(j + match_player::BALLS_CONTESTED, 1), (j + match_player::POSITION, 1), (j + match_player::BUSY, 1)]);

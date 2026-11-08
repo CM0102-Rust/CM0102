@@ -8,8 +8,8 @@ MUTACOES = [
     ('f_media', "average = if d(pt, 0x18) == d(meu, 0x69) { q - read_f64_at(0x967880) } else { q + read_f64_at(0x968918) };", "average = if d(pt, 0x18) == d(meu, 0x69) { q - read_f64_at(0x967880) * 1.01 } else { q + read_f64_at(0x968918) };", "match_wrap_up media do lado"),
     ('f_noventa', "    } else if *(m as *const u8) != 0 {\n                0x5a", "    } else if *(m as *const u8) != 0 {\n                0x59", "match_wrap_up media do lado"),
     ('f_minuto_reserva', "                end.wrapping_sub(c)", "                end.wrapping_sub(c).wrapping_add(1)", "match_wrap_up media do lado"),
-    ('f_tipo6', "byte(p, 0x24) == 2 || byte(p, 0x23) != 0", "byte(p, 0x24) == 2 || byte(p, 0x23) == 0", "match_wrap_up evento tipo 6"),
-    ('f_evento_jogador', "byte(p, 0x1b) < 7 && sortear(byte(p, 0x17) as i32) == 0", "byte(p, 0x1b) < 8 && sortear(byte(p, 0x17) as i32) == 0", "match_wrap_up evento do dia"),
+    ('f_tipo6', "byte(p, match_player::YELLOW_CARDS) == 2 || byte(p, 0x23) != 0", "byte(p, match_player::YELLOW_CARDS) == 2 || byte(p, 0x23) == 0", "match_wrap_up evento tipo 6"),
+    ('f_evento_jogador', "byte(p, match_player::MATCH_GRADE) < 7 && sortear(byte(p, match_player::MATCH_FORM) as i32) == 0", "byte(p, match_player::MATCH_GRADE) < 8 && sortear(byte(p, match_player::MATCH_FORM) as i32) == 0", "match_wrap_up evento do dia"),
     ('f_proposta', "if r1 > sortear(0x14) && byte(x, 0x14) > 5 {", "if r1 > sortear(0x15) && byte(x, 0x14) > 5 {", "match_wrap_up evento do dia"),
     ('f_lixo_evento', "            ev[0xd] = side as u8;\n                            ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());\n                            ev[0x13..0x15].copy_from_slice(&11u16.to_le_bytes());", "            ev[0xd] = side as u8;\n                            ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());\n                            ev[0x13..0x15].copy_from_slice(&11u16.to_le_bytes());\n                            ev[0x16] = 1;", "match_wrap_up insatisfeito"),
 ]

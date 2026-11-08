@@ -1,7 +1,7 @@
 // GERADO por `python engenharia-reversa/adjetivos_nacao.py` (não editar): as tabelas da
 // nation_get_nationality_adjective (0x6181d0, index.cpp) lidas do cm0102.exe por todos os caminhos e conferidas
 // (grafo × tabelas); regenerar se o gerador mudar. Os textos são endereços no exe (não copiados). Entra no
-// motor.rs pelo `include!("adjetivos_nacao.rs")` do código da leva.
+// motor.rs pelo `include!("nation_adjectives.rs")` do código da leva.
 
 /// Uma nação de uma cadeia: a global da chave e a fonte para a forma 0, 1, 2, 3, 4 e as outras (0: nada,
 /// 1: o nome da nação em +0x57, senão o endereço do texto).

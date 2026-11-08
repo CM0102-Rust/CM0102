@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: as chaves fixas do jogo: os ids pela base, as cores e os continentes, e o relato das que faltam (index.cpp) ----------
 
 // As listas da set_key_ids, geradas do exe por `python engenharia-reversa/chaves_fixas.py` (rust/src/chaves_fixas.rs).
-include!("chaves_fixas.rs");
+include!("fixed_keys.rs");
 
 /// Uma cadeia de _stricmp (0x951c50) em linha (cores, continentes): o primeiro texto igual ao `nome` grava `linha` na
 /// global dele e a cadeia acaba.

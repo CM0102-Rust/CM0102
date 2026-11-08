@@ -1,4 +1,4 @@
-"""Gera rust/src/adjetivos_nacao.rs: as tabelas da nation_get_nationality_adjective (0x6181d0, index.cpp) lidas do
+"""Gera rust/src/nation_adjectives.rs: as tabelas da nation_get_nationality_adjective (0x6181d0, index.cpp) lidas do
 cm0102.exe com o capstone.
 
 Uso: python adjetivos_nacao.py
@@ -11,7 +11,7 @@ profundidade), e falha no imprevisto (instrução fora do conjunto conhecido, co
 fora do padrão `repne scasb`/`rep movsd`/`rep movsb`, laço, instrução nunca alcançada). O grafo resultante é reduzido
 (nós iguais fundidos) e lido como cadeias; uma conferência exaustiva compara o grafo com as tabelas geradas. Os
 textos não são copiados: vai o endereço deles no exe. Confere também que o cm0102-1080.exe tem a rotina igual.
-O arquivo gerado entra no motor.rs pelo `include!("adjetivos_nacao.rs")` do código da leva."""
+O arquivo gerado entra no motor.rs pelo `include!("nation_adjectives.rs")` do código da leva."""
 import os
 import sys
 import threading
@@ -318,7 +318,7 @@ def main():
     L = ['// GERADO por `python engenharia-reversa/adjetivos_nacao.py` (não editar): as tabelas da',
          '// nation_get_nationality_adjective (0x6181d0, index.cpp) lidas do cm0102.exe por todos os caminhos e conferidas',
          '// (grafo × tabelas); regenerar se o gerador mudar. Os textos são endereços no exe (não copiados). Entra no',
-         '// motor.rs pelo `include!("adjetivos_nacao.rs")` do código da leva.',
+         '// motor.rs pelo `include!("nation_adjectives.rs")` do código da leva.',
          '',
          '/// Uma nação de uma cadeia: a global da chave e a fonte para a forma 0, 1, 2, 3, 4 e as outras (0: nada,',
          '/// 1: o nome da nação em +0x57, senão o endereço do texto).',
@@ -339,7 +339,7 @@ def main():
     for Lg, vazio, cs in tabela:
         L.append('    (%d, %s, &[%s]),' % (Lg, 'true' if vazio else 'false', ', '.join('&ADJETIVOS_%d_%d' % (Lg, k) for k in range(len(cs)))))
     L.append('];')
-    open(os.path.join(R, 'rust', 'src', 'adjetivos_nacao.rs'), 'w', encoding='utf-8', newline='\n').write('\n'.join(L) + '\n')
+    open(os.path.join(R, 'rust', 'src', 'nation_adjectives.rs'), 'w', encoding='utf-8', newline='\n').write('\n'.join(L) + '\n')
     print('ok: %d idiomas, %d nações nas cadeias, %d nós (%d reduzidos)' % (len(tabela), total, len(grafo), len(N)),
           [(Lg, vazio, [len(c) for c in cs]) for Lg, vazio, cs in tabela])
 

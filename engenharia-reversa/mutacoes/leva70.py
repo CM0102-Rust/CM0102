@@ -7,7 +7,7 @@ MUTACOES = [
     ('f_rigor', "            5..=9 => -1,", "            5..=9 => 0,"),
     ('f_teto', "    } else if read_f64_at(0x9688b0) < factor || factor.is_nan() { // 0x9688b0 = 10\n        factor = 10.0;", "    } else if read_f64_at(0x9688b0) < factor || factor.is_nan() {\n        factor = 9.0;"),
     ('f_2a', "            if sortear(match_pl_ftol(factor * read_f64_at(0x969000))) != 0 { // 0x969000 = 6\n                res = 1;\n                add(sortear(dureza) + 4);", "            if sortear(match_pl_ftol(factor * read_f64_at(0x969000))) != 0 {\n                res = 1;\n                add(sortear(dureza) + 5);"),
-    ('f_minuto', "    let minute = (*((m + 0x8ed0) as *const i16) as i32 / 11) as i8;", "    let minute = (*((m + 0x8ed0) as *const i16) as i32 / 12) as i8;"),
+    ('f_minuto', "    let minute = (*((m + engine::CLOCK) as *const i16) as i32 / 11) as i8;", "    let minute = (*((m + engine::CLOCK) as *const i16) as i32 / 12) as i8;"),
     ('f_aplica', "        multiplicar(other, (*grav as f64 * read_f64_at(0x968918) + read_f64_at(0x967890)) as f32);", "        multiplicar(other, (*grav as f64 * read_f64_at(0x968918) + read_f64_at(0x968940)) as f32);"),
     ('f_ficha', "            if c == 1 {\n                *grav = (*grav).wrapping_add(um as i8);", "            if c == 2 {\n                *grav = (*grav).wrapping_add(um as i8);"),
 ]

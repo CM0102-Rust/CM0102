@@ -1,0 +1,145 @@
+0x1	WEATHER_SKY	1	sky/weather state chosen at match preparation from the weather block [inference]
+0x4	ACTIVE_PLAYER_COUNT	2	count of active players on the pitch, one byte per side (+4 + side)
+0xaf	SIDE_MARKING_STATE	2	per-side byte cleared when the side strength is computed; above 1 closes marking [inference]
+0xb1	PENDING_INCIDENTS	?	pending incident entries, 11 bytes each (player, type...), count at +0x1a3
+0x1a3	PENDING_INCIDENT_COUNT	1	number of pending incident entries at +0xb1
+0x1a4	KEEPER_WON_CHALLENGE	1	set when the goalkeeper wins a challenge in the move; read by goal narration [inference]
+0x1a5	SIDE_HAD_POSSESSION	2	per-side flag (+0x1a5 + side): that side took the ball; cleared after an interception
+0x1a7	SHOT_PENDING	1	set when a shot is taken, cleared when the ball is released [inference]
+0x1a8	MATCH_DECIDED	1	set by a goal at a marked moment (decisive goal); stops further play in the period [inference]
+0x1ab	SIDE_POSTURE	2	each side's posture/mode (1..5), one byte per side; 0xff before the first decision
+0x1ad	SIDE_PITCH_HANDICAP	2	per-side pitch-condition handicap byte (0..10) set from the pitch at preparation [inference]
+0x1af	PENALTY_TAKER_ORDER	22	shootout taker order, 11 signed bytes per side (-1 empty)
+0x1c5	BALL_TRANSIT_TICKS	1	ticks left while the ball is in transit; at 0 the transit resolves
+0x1c6	TRANSIT_TARGET_X	1	column of the in-transit ball's target cell
+0x1c7	TRANSIT_TARGET_Y	1	row of the in-transit ball's target cell
+0x1c8	PASS_TARGET_X	1	column of the pass/shot target given to the receiver
+0x1c9	PASS_TARGET_Y	1	row of the pass/shot target given to the receiver
+0x1ca	KICKOFF_NARRATED	1	kick-off narration already done for the current restart
+0x1cb	SIDE_SENT_OFF	2	per-side flag set when a player of that side is sent off (goalkeeper: table 1)
+0x1cd	SHOT_IN_PLAY	1	a shot happened in the current play (players near goal react); cleared on restart [inference]
+0x1ce	SIDE_STRENGTH	4	each side's strength, one word per side (+0x1ce + 2 x side)
+0x1d2	MINUTES_SINCE_CHANGE	4	minutes since each side's last tactical change, one word per side (10000 at start)
+0x1d6	CLUB_REPUTATION	4	each side's club reputation, one word per side (copied from club +0x80, updated after the match)
+0x1f6	ZONE_POSSESSION_TICKS	40	possession tick words per ball zone (defence, midfield, attack): per period, total and window total
+0x21e	COMMENTARY_USED	8000	per-side table of commentary items already used in the match
+0x215e	GRID	9720	pitch occupancy grid, 9 x 12 cells of 90 bytes (cell = +0x215e + 90 x (12 x x + y))
+0x21b6	GRID_SIDE_COUNT	?	per-cell per-side byte within the grid cell (cell +0x58 + side) [inference]
+0x4756	WEATHER	?	weather block of the match (filled at preparation; its factor scatters passes)
+0x475a	PENDING_PLAY_TYPE	1	type of the pending incident/play (foul, penalty...); 0 none
+0x475b	PENDING_PLAY_X	1	column where the pending incident happened
+0x475c	PENDING_PLAY_Y	1	row where the pending incident happened
+0x475d	PENDING_PLAY_PUNISH_A	1	first punishment byte of the pending incident
+0x475e	PENDING_PLAY_PUNISH_B	1	second punishment byte of the pending incident
+0x475f	PENDING_PLAY_CODE	2	commentary/play code of the pending incident (0xffff none)
+0x4761	PENDING_PLAY_OFFENDER	4	player who committed the pending incident
+0x4765	PENDING_PLAY_VICTIM	4	player who suffered the pending incident
+0x4769	PENDING_PLAY_PUNISH_C	1	third punishment byte of the pending incident
+0x476a	STANCE_FACTOR	8	stored stance factor per side (f32 per side; -1000.0 at start)
+0x477a	ADJUSTED_PLAYER_ID	4	id (first dword of the record) of the last player adjusted by the disposition adjust [inference]
+0x477e	BALL_RECEIVER	4	player due to receive the ball in transit
+0x4782	MOMENTUM_A	4	signed momentum score changed by shots and goals (i32) [inference]
+0x4786	MOMENTUM_B	4	second signed momentum score changed by shots and goals (i32) [inference]
+0x478a	FOULED_PLAYER	4	player who suffered the last foul/tackle (0 none) [inference]
+0x478e	EVENT_LIST	4	pointer to the list of match/pre-match events
+0x4792	MATCH	4	pointer to the match (fixture) record being played
+0x4796	PLAYERS	17840	the 40 match players, 20 per side, 0x1be bytes each (+0x4796 + 0x22d8 x side + 0x1be x k)
+0x6a6e	PLAYERS_SIDE1	8920	side 1's 20 match players (+0x4796 + 0x22d8)
+0x8d46	POSSESSION_COUNTER	2	possession counter byte per side (+1 for the side, -10 for the other)
+0x8d4a	LAST_PASS_TYPE	2	type code of the last pass (0xffff none)
+0x8d4c	LAST_SHOT_MINUTE	2	minute of the last shot (0xffff none)
+0x8d4e	LAST_SHOT_SIDE	1	side of the last shot
+0x8d4f	KIT	2	kit chosen for each side, one byte per side
+0x8d51	POSSESSION_WINDOW	330	rolling window bytes of possession ticks per zone and side
+0x8e9b	POSSESSION_WINDOW_INDEX	1	circular index of the 55-tick possession window
+0x8e9d	OWNS_COMMENTATOR	1	the commentator was created by the engine and must be freed with it
+0x8e9e	SHOOTOUT_SIDE	1	side due to take the next shootout kick
+0x8e9f	SHOOTOUT_KICK_COUNT	1	count of shootout kicks taken
+0x8ea1	SHOOTOUT_KICKS_LEFT	2	shootout kicks remaining, one byte per side
+0x8ea3	SHOOTOUT_SUDDEN_DEATH	1	shootout in sudden death
+0x8ea4	SAVED_COMMENTATOR_FLAG	1	commentator's first byte saved while the shootout mutes it
+0x8ea5	ENGINE_RUNNING	1	the engine has been prepared and is running
+0x8ea6	PASS_TO_Y	1	row of the last pass destination (0xff none)
+0x8ea7	BALL_X	1	ball column (0..8)
+0x8ea8	BALL_Y	1	ball row (0..11)
+0x8ea9	BALL_HEIGHT	1	ball height/flight state (0 on the ground, 4 in the air, 5 after a shot) [inference]
+0x8eaa	BALL_MOMENTUM	1	loose ball's remaining impulse in cells
+0x8eab	LAST_POSSESSION_SIDE	1	side that last had possession (decides who restarts when the ball goes out); 0xff none
+0x8eae	POSSESSION_SIDE	1	side with the ball (0 or 1; -1 nobody)
+0x8eaf	DEFENSIVE_LINE_SIDE0	1	row of side 0's defensive (offside) line
+0x8eb0	DEFENSIVE_LINE_SIDE1	1	row of side 1's defensive (offside) line
+0x8eb1	SET_PIECE_SPOT	1	set-piece spot kind (7 far from goal, -1 near, 3 corner, 6...)
+0x8eb2	RESTART_TYPE	1	pending set piece/restart (2 throw-in, 3 corner, 4 goal kick, 5 penalty, 6 free kick, 8 kick-off; 0 open play)
+0x8eb3	SHOOTOUT_STATE	1	penalty shootout state machine step
+0x8eb4	PUNISHMENT_STATE	1	pending punishments step (0 not prepared, 1 prepared, 2 done)
+0x8eb5	SUBSTITUTION_PENDING	1	substitutions pending, cleared after they are applied
+0x8eb6	KICKOFF_SIDE	1	side that kicks off (alternates each period)
+0x8eb7	STOPPAGE_TIME	1	stoppage time added to the current period
+0x8eb8	ACTIVE_LIST_COUNT	1	count of the active-player action list at +0x8f7e
+0x8eb9	PASS_TO_X	1	column of the last pass destination (0xff none)
+0x8eba	MATCH_ALREADY_OVER	1	the match ended before being played (preparation returns 0)
+0x8ebb	LIVE	1	the match is narrated/shown live
+0x8ebc	POSITION_TABLE	8	pointer per side to the position table (11 words by tactical position)
+0x8ec4	POSITION_TABLE_B	8	pointer per side to tactical table B (11 words by position)
+0x8ecc	SUBSTITUTION_MINUTE	4	minute of each side's last substitution, one word per side
+0x8ed0	CLOCK	2	match clock in ticks (minute x 11)
+0x8ed2	TICK_SUBCOUNTER	2	sub-tick counter of the engine loop
+0x8ed4	PERIOD_END	2	end tick of the current period (0x1ef first half, 0x3de second half, then extra time)
+0x8ed6	PASS_POWER	2	power of the pass/shot handed to the receiver
+0x8ed8	BALL_DIRECTION	2	direction of the loose ball in degrees
+0x8eda	SHOOTOUT_TAKEN	40	per-side marks of the shootout takers already chosen, 20 bytes per side
+0x8f02	POSSESSION_STATS	120	possession counters by zone and side (per period, total, window)
+0x8f7a	COMMENTATOR	4	pointer to the match commentator
+0x8f7e	ACTIVE_LIST	?	list of active players in action order, count at +0x8eb8
+0x9032	MATCH_MANAGERS	416	the two sides' match manager objects, 0xd0 bytes each (+0x9032 + 0xd0 x side)
+0x9049	SIDE0_STAFF_SUBSTITUTE	1	match manager +0x17: the staff make the substitutions (side 1 at +0xd0)
+0x904d	SIDE0_MANAGER	4	match manager +0x1b: the side's manager (person) pointer (side 1 at +0xd0)
+0x91d2	PITCH_CONDITION	12	pitch condition values (three dwords: 100, 90, 10 by default)
+0x91de	ACTION_FIRST_PLAYER	4	player put first in the action order after the ball holder
+0x91e2	TACTICS	12742	the two sides' tactics objects, 6371 bytes each (+0x91e2 + 0x18e3 x side)
+0x9766	TACTICS_FLAGS	4	side 0 tactics flag dword (tactics +0x584; side 1 at +0x18e3)
+0xc3a8	TACTICS_BACKUP	12742	copy of both tactics objects taken at preparation
+0xf56e	FORMATION_TABLE	8	pointer per side to the formation/set-piece position table (216 bytes per position)
+0xf576	PASSER	4	player who made the current pass/took the set piece
+0xf57a	SET_PIECE_TAKER	4	set-piece taker
+0xf582	BALL_HOLDER	4	player with the ball (0 loose)
+0xf586	NEAREST_TO_BALL	8	each side's player nearest to the ball, pointer per side
+0xf58e	LOWEST_Y_PLAYER	8	stored extreme player per side (side 0 smallest y at +0xf58e, side 1 largest y at +0xf592)
+0xf596	FURTHEST_FORWARD	8	stored opposite-extreme player per side (side 0 largest y, side 1 smallest y at +0xf59a)
+0xf59e	GOALKEEPER	8	each side's goalkeeper on the pitch, pointer per side
+0xf5a6	ASSIST_CANDIDATE	4	previous passer, credited with the assist if the receiver scores
+0xf5aa	PASS_RECEIVER	4	receiver of the last pass (cleared when someone else gets the ball)
+0xf5ae	SHOT_BLOCKER	4	player stored by the shot-block/save search (codes 1 and 2) [inference]
+0xf5b2	REFEREE	?	embedded match referee object (decides fouls and cards)
+0xf5b6	REFEREE_ID	4	match referee's id (-1 none); referee object +4
+0xf5ba	REFEREE_RATING	2	referee base rating used for the post-match grade (/1000); referee object +8 [inference]
+0xf5bc	SIDE_STATS	108	per-side match stats block, 0x36 bytes per side (+0xf5bc + 0x36 x side); +0 shootout goals
+0xf5bd	SCORE	1	side 0 goals (side 1 at +0xf5f3); SIDE_STATS +1
+0xf5c0	SIDE_SUMMARY	?	side summary (player ratings) in SIDE_STATS +4
+0xf5ca	OFFSIDES	1	side 0 offsides (side 1 at +0xf600); SIDE_STATS +0xe
+0xf5cb	CARDS	1	side 0 cards (side 1 at +0xf601); SIDE_STATS +0xf
+0xf5cc	FOULS	1	side 0 fouls (side 1 at +0xf602); SIDE_STATS +0x10
+0xf5f2	SHOOTOUT_GOALS_SIDE1	1	side 1 shootout goals (SIDE_STATS of side 1 +0)
+0xf5f3	SCORE_SIDE1	1	side 1 goals (SIDE_STATS of side 1 +1)
+0xf628	TEMPO	12	tempo values rolled at kick-off and half-time (three f32)
+0xf634	PITCH_RESULT	4	pitch condition result computed from the stadium
+0xf638	ABANDON_MINUTE	1	minute at which the match is abandoned (0xff never)
+0xf639	INJURY_COUNT	2	number of injuries in the match
+EXCLUDE	match_day_interest
+EXCLUDE	match_performance
+EXCLUDE	position_rating
+EXCLUDE	position_attribute_adjust
+EXCLUDE	pick
+EXCLUDE	best_in_list
+EXCLUDE	age_and_foreigner_adjust
+EXCLUDE	scout_knowledge_bonus
+EXCLUDE	own_club_bonus
+EXCLUDE	off_match_score
+EXCLUDE	develop_player
+EXCLUDE	defending_role
+EXCLUDE	position_place_players
+EXCLUDE	marked_moment
+EXCLUDE	score_cell_for_player
+EXCLUDE	update_attributes
+EXCLUDE	shot_value
+EXCLUDE	comparar_take_ball

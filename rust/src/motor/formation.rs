@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn set_square(this: usize, position: i8, mas
 pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
     for k in 0..20 {
         let j = side_player_slot(this, side, k);
-        if byte(j, 0x19) < 0 {
+        if byte(j, match_player::POSITION) < 0 {
             continue;
         }
         let pd = *((j + match_player::PLAYER) as *const usize);
@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
         }
         if v as i16 > 8500 {
             let write: unsafe extern "thiscall" fn(usize, i8, u64) -> u32 = core::mem::transmute(FN_FORMATION_SET_PLAYER_INSTRUCTION);
-            write((this as isize + 0x91e2 + 0x18e3 * side as isize) as usize, byte(j, 0x19), 0x80_0000);
+            write((this as isize + 0x91e2 + 0x18e3 * side as isize) as usize, byte(j, match_player::POSITION), 0x80_0000);
         }
     }
 }

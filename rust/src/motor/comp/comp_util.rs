@@ -17,7 +17,7 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
         return 0;
     }
     let c = *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(4)) as *const usize);
-    if c == 0 || byte(c, 0x43) != 2 || *((c + league::CLUB_COUNT) as *const u16) == 0 {
+    if c == 0 || byte(c, league::COMP_TYPE) != 2 || *((c + league::CLUB_COUNT) as *const u16) == 0 {
         return 0;
     }
     let r = *((c + league::TABLE) as *const usize);

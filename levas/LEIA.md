@@ -8,7 +8,7 @@ Cada leva porta rotinas do motor de partidas para Rust (`rust/src/motor.rs`) e s
 |---|---|
 | `LEIA.md` / `LEIA.en.md` | a leva em uma página: rotinas, decisões, o que deu errado no caminho e o resultado |
 | `codigo.rs` | o código Rust que a leva acrescentou ao `motor.rs` (cópias, despacho do modo Rust e comparadores) |
-| `integrar.py` | como o `codigo.rs` entrou no `motor.rs`: tabela `PROLOGOS`, listas de funções, portas de gravação que saíram, `ZERADAS` |
+| `integrar.py` | como o `codigo.rs` entrou no `motor.rs`: tabela `PROLOGOS`, listas de funções, portas de gravação que saíram (e, até 31/10/2026, `ZERADAS`) |
 | `docs.py` | gera a documentação da leva (`docs/ROTINAS`, `PROJETO`, `wiki`, glossário) com `engenharia-reversa/gen_docs.py` |
 | `cadeia.txt` | a saída completa da cadeia de testes (abaixo) |
 

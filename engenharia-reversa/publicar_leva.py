@@ -41,7 +41,7 @@ def main():
           os.path.join('engenharia-reversa', 'glossario.py'), os.path.join('engenharia-reversa', 'mutacoes', f'leva{n}.py'),
           'CLAUDE.md', 'CLAUDE.en.md', os.path.join('engenharia-reversa', 'gen_docs.py'), os.path.join('engenharia-reversa', 'publicar_leva.py'),
           os.path.join('engenharia-reversa', 'fila.py'), os.path.join('engenharia-reversa', 'molde_docs.py'), os.path.join('levas', 'fila'),
-          os.path.join('rust', 'src', 'motor.rs'), os.path.join('rust', 'src', 'assinaturas.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'), os.path.join('engenharia-reversa', 'fila_continua.sh'))
+          os.path.join('rust', 'src', 'motor.rs'), os.path.join('rust', 'src', 'signatures.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'), os.path.join('engenharia-reversa', 'fila_continua.sh'))
     prefixo = 'Motor' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulacao'
     adiado = '=== JOGO REAL ADIADO' in open(os.path.join(RAIZ, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
     real = 'jogo real adiado para a comparacao acumulada da auditoria (05/11/2026)' if adiado else 'jogo real 0 divergencias'

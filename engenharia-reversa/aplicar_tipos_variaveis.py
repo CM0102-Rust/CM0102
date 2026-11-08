@@ -56,32 +56,82 @@ def main():
             except Exception:
                 pass
     trocas_mut, total = {}, 0
-    for rel, funcs in sorted(tipos.items()):
+    # nos arquivos do motor de partidas, `m`/`engine` é o motor e `j` o jogador da partida em toda função
+    PADRAO_MOTOR = {'m': 'engine', 'engine': 'engine', 'j': 'match_player'}
+    # as funções onde essas letras são outra coisa (as linhas EXCLUDE das tabelas de campos do motor, 08/11/2026)
+    EXCLUIR = collections.defaultdict(set)
+    for o in ('engine', 'match_player'):
+        tab = os.path.join(R, 'levas', 'reorganizacao', 'campos_motor', 'campos_%s.tsv' % o)
+        for l in open(tab, encoding='utf-8'):
+            x = l.rstrip('\n').split('\t')
+            if len(x) >= 2 and x[0] == 'EXCLUDE':
+                EXCLUIR[o].add(x[1].strip().replace('comparar_', ''))
+    rels = set(tipos)
+    for d_, _, fs in os.walk(BASE):
+        for f in fs:
+            rel_ = os.path.relpath(os.path.join(d_, f), BASE).replace(os.sep, '/')
+            if re.match(r'(compare/)?match_\w+\.rs$', rel_):
+                rels.add(rel_)
+    for rel in sorted(rels):
+        funcs = tipos.get(rel, {})
         p = os.path.join(BASE, rel)
         if not os.path.exists(p):
             print('falta', rel)
             continue
         t = open(p, encoding='utf-8').read()
         partes, pos = [], 0
+        motor = bool(re.match(r'(compare/)?match_\w+\.rs$', rel))
         for nome, a, b in mover_rotinas.blocos(t):
-            vs = funcs.get(nome)
+            vs = {v: o for v, o in PADRAO_MOTOR.items() if nome.replace('comparar_', '') not in EXCLUIR[o]} if motor else {}
+            vs.update(funcs.get(nome, {}))
             if not vs:
                 continue
-
-            def f_(s, vs=vs):
-                def r(mm):
-                    reg = vs[mm.group(1)]
-                    off = int(mm.group(2), 0)
-                    if reg in mods and reg not in MODULO:  # um módulo do fields.rs: só as constantes que já existem
-                        n_ = mods[reg].get(off)
-                        return '%s + %s::%s' % (mm.group(1), reg, n_) if n_ else mm.group(0)
-                    campo = lei.get(reg, {}).get(off)
-                    if not campo:
-                        return mm.group(0)
-                    usados[MODULO[reg]][campo[0]] = (off, campo[1], campo[2], reg)
-                    return '%s + %s::%s' % (mm.group(1), MODULO[reg], campo[0])
-                return re.sub(r'\b(%s) \+ (0x[0-9a-f]+|[1-9][0-9]*)\b(?![.\w])' % '|'.join(map(re.escape, vs)), r, s)
             bloco = t[a:b]
+            cod = re.sub(r'//[^\n]*|"(?:[^"\\\n]|\\.)*"', ' ', bloco)
+            # closures de acesso: de um argumento presas a uma base (`let u = |o: usize| *((this + o) ...`) e de dois
+            # (`let w = |p: usize, o: usize| (p + o) ...`); a mesma closure definida com bases diferentes não vale
+            c1, c2, ruins = {}, set(), set()
+            for m_ in re.finditer(r'let (\w+) = \|(\w+): usize\|[^;\n]*?\((\w+)(\(\))? \+ \2\)', cod):
+                if c1.get(m_.group(1), m_.group(3)) != m_.group(3):
+                    ruins.add(m_.group(1))
+                c1[m_.group(1)] = m_.group(3)
+            for m_ in re.finditer(r'let (\w+) = \|(\w+): usize, (\w+): usize\|[^;\n]*?\(\2 \+ \3\)', cod):
+                c2.add(m_.group(1))
+            for x in ruins:
+                c1.pop(x, None)
+            c2 = (c2 | {'byte'}) - set(c1) - ruins
+
+            def nome_campo(obj, off):
+                if obj in mods and obj not in MODULO:  # um módulo do fields.rs: só as constantes que já existem
+                    n_ = mods[obj].get(off)
+                    return '%s::%s' % (obj, n_) if n_ else None
+                campo = lei.get(obj, {}).get(off)
+                if not campo:
+                    return None
+                usados[MODULO[obj]][campo[0]] = (off, campo[1], campo[2], obj)
+                return '%s::%s' % (MODULO[obj], campo[0])
+
+            def f_(s, vs=vs, c1=c1, c2=c2):
+                def r(mm):
+                    n_ = nome_campo(vs[mm.group(1)], int(mm.group(2), 0))
+                    return '%s + %s' % (mm.group(1), n_) if n_ else mm.group(0)
+                s = re.sub(r'\b(%s) \+ (0x[0-9a-f]+|[1-9][0-9]*)\b(?![.\w])' % '|'.join(map(re.escape, vs)), r, s)
+
+                def r2(mm):
+                    n_ = nome_campo(vs[mm.group(2)], int(mm.group(3), 16))
+                    return '%s(%s, %s)' % (mm.group(1), mm.group(2), n_) if n_ else mm.group(0)
+                if c2:
+                    s = re.sub(r'\b(%s)\((%s), (0x[0-9a-f]+)\)' % ('|'.join(map(re.escape, sorted(c2))), '|'.join(map(re.escape, vs))), r2, s)
+
+                def r1(mm):
+                    base = c1[mm.group(1)]
+                    if base not in vs:
+                        return mm.group(0)
+                    n_ = nome_campo(vs[base], int(mm.group(2), 16))
+                    return '%s(%s)' % (mm.group(1), n_) if n_ else mm.group(0)
+                if c1:
+                    s = re.sub(r'\b(%s)\((0x[0-9a-f]+)\)' % '|'.join(map(re.escape, sorted(c1))), r1, s)
+                return s
             novo = traduzir_locais.so_codigo(bloco, f_)
             if novo == bloco:
                 continue

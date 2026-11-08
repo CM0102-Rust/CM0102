@@ -1,6 +1,6 @@
 # Pendências de teste (ramos que os testes automáticos não alcançam)
 
-Ramos marcados na cópia Rust (`crate::comparacao::ramo("...")`, desde a 127ª leva) que **nunca rodaram** nas carreiras automáticas (até 2002-06-01 com a semente 12345 e, nas do pós-jogo, até 2003-06-01 com a 777). Cada um precisa de uma partida/carreira que passe por ele. Depois de uma sessão do Lucas, `python engenharia-reversa/pendencias.py` lê o `jogo/ddraw.log` e diz quais destes rodaram.
+Ramos marcados na cópia Rust (`crate::comparison::branch("...")`, desde a 127ª leva) que **nunca rodaram** nas carreiras automáticas (até 2002-06-01 com a semente 12345 e, nas do pós-jogo, até 2003-06-01 com a 777). Cada um precisa de uma partida/carreira que passe por ele. Depois de uma sessão do Lucas, `python engenharia-reversa/pendencias.py` lê o `jogo/ddraw.log` e diz quais destes rodaram.
 
 A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde 14/10/2026 as do pós-jogo (0x6b74a0, 0x6b6cc0, 0x6b79a0) também têm comparação lado a lado (pela fita).
 
@@ -99,10 +99,10 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `liga` | `margem_do_ultimo_dia` 0x68a4d0 (214ª) | — | o byte "sem margem" (0xff) gravado pela importância do jogo não decide nada até 2002-06 e a rotina não roda antes de 2002-01: `lt_ultimo_dia` escapa até comparando. Teste: carreira ampla (fim de temporada) |
 | `regens` | `copiar_aposentadoria_pendente` 0x7a8780 (216ª) | — | o motivo da aposentadoria pendente só pesa no fim da temporada: `ha_motivo` escapa até comparando. Teste: carreira ampla até o fim da temporada. **Carreira ampla (29/10, até 2003-01-31, lote 5c): acusada.** |
 | `save` | `casar_nome_com_padrao` 0x933a00 (218ª) | — | o padrão só roda ao carregar: `sv_padrao_letra`, `sv_padrao_ponto`, `sv_padrao_fim` escapam da prova de gravar. Teste: a etapa de carregar da prova do save (falta o save com técnico de férias) |
-| `save` | `gravar_banco_no_save` 0x524d30 (219ª) | — | desligada (DESLIGADAS): o resíduo de pilha que o save_database grava no index.dat muda se ela roda pela cópia; `sv2_banco_a4` não roda. Volta quando a cópia reproduzir o resíduo |
-| `save` | `criar_jogo_pela_configuracao` 0x827110 (220ª) | — | desligada (DESLIGADAS): a create_game 0x828110 lê o resíduo de pilha que a cópia muda; `sv3_criar_id` e `sv3_criar_frente` não rodam. Volta quando a cópia reproduzir o resíduo (ou com a create_game em Rust) |
+| `save` | `gravar_banco_no_save` 0x524d30 (219ª) | — | desligada (DESLIGADAS) até 31/10/2026, ativa desde então pelo critério novo: o resíduo de pilha que o save_database grava no index.dat muda se ela roda pela cópia; `sv2_banco_a4` não roda. Volta quando a cópia reproduzir o resíduo |
+| `save` | `criar_jogo_pela_configuracao` 0x827110 (220ª) | — | desligada (DESLIGADAS) até 31/10/2026, ativa desde então pelo critério novo: a create_game 0x828110 lê o resíduo de pilha que a cópia muda; `sv3_criar_id` e `sv3_criar_frente` não rodam. Volta quando a cópia reproduzir o resíduo (ou com a create_game em Rust) |
 | `banco` | `nome_ingles_do_clube` 0x545880 (224ª) | — | o caminho do eng.lng só roda com o jogo em outro idioma: `dq8_ingles` escapa até comparando. Teste: uma sessão do Lucas com o jogo em português ou outro idioma |
-| `banco` | `reunir_elenco_do_clube` 0x541f90 (225ª) | — | desligada (DESLIGADAS): o desvio muda o resíduo de pilha da 0x540a50 e a carreira muda nos dois modos; `dq10_reunir` não roda. Volta quando a cópia reproduzir o resíduo |
+| `banco` | `reunir_elenco_do_clube` 0x541f90 (225ª) | — | desligada (DESLIGADAS) até 31/10/2026, ativa desde então pelo critério novo: o desvio muda o resíduo de pilha da 0x540a50 e a carreira muda nos dois modos; `dq10_reunir` não roda. Volta quando a cópia reproduzir o resíduo |
 | `banco` | `nota_relativa_com_habilidade_reduzida` 0x5442f0 (226ª) | — | a habilidade reduzida só pesa fora da faixa presa em 1..20 e não decide na carreira: `dq13_reduzida` escapa até comparando. Teste: carreira ampla |
 | `banco` | `casar_chave_de_competicao_de_pessoa` 0x6115e0, `casar_chave_de_competicao_de_clube` 0x60efd0 (227ª) | — | as chaves de competição de pessoa não vão para o .qst e a devolução é ignorada: `ix2_comp_pessoa` e `ix2_devolucao` escapam da prova do save. Teste: carreira (as chaves são lidas durante o jogo) |
 | `banco` | `ler_historico_de_competicoes_de_pessoal` 0x5504d0 (228ª) | — | a tabela não vai para o .qst: `dbf_historico_de_competicoes_de_pessoal` escapa da prova do save. Teste: a tela do histórico das competições de pessoal (prêmios) num jogo |
@@ -122,7 +122,9 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 
 Levas anteriores à 127ª não tinham ramos marcados: as lacunas delas estão descritas no texto de cada leva em `ROTINAS.md` (procure "lacuna", "não roda").
 
-## Rotinas desligadas (DESLIGADAS)
+## Rotinas desligadas (DESLIGADAS), histórico
+
+A lista ficou vazia em 31/10/2026 (critério "resultado que o jogo produz") e saiu do código em 08/11/2026: todas as rotinas abaixo rodam em Rust desde então. A tabela fica como registro de onde estava o resíduo de pilha.
 
 As cópias que ficam no código mas não rodam (`DESLIGADAS` em `rust/src/motor.rs`, desvio desligado em todos os modos), para conferir no fim da migração. Grupos: **desvio** = o desvio sozinho (a original de passagem, pela pilha particular) já muda a carreira, porque muda o resíduo que a rotina deixa na pilha do jogo e uma original lida depois decide com ele; **só Rust** = a carreira muda só no modo Rust e a causa (resíduo ou diferença da cópia) não foi isolada; **local sem valor** = a original grava na memória do jogo bytes de uma variável local que ninguém preencheu. Cada uma volta quando a cópia reproduzir o resíduo, quando a rotina que o lê também estiver em Rust ou com uma zeragem provada (ZERADAS, com o Lucas); a prova é a carreira ampla (8 ligas, Rust = original). A 0x524d30 (219ª) já voltou, pela zeragem da 0x52dad0.
 

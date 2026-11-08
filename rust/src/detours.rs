@@ -365,7 +365,7 @@ static mut VERDICTS: Vec<bool> = Vec::new();
 ///
 /// [pt] A foto: o veredicto de cada linha de ASSINATURAS com os bytes de agora (chamar antes de desviar qualquer coisa).
 pub unsafe fn conferir_assinaturas() {
-    use crate::assinaturas::ASSINATURAS;
+    use crate::signatures::ASSINATURAS;
     let v: Vec<bool> = ASSINATURAS.iter().map(|a| check_range(a.0)).collect();
     VERDICTS = v;
 }
@@ -374,14 +374,14 @@ pub unsafe fn conferir_assinaturas() {
 ///
 /// [pt] false = a rotina esta na tabela e os bytes nao batem com nenhuma das duas versoes.
 unsafe fn signature_matches(address: usize) -> bool {
-    use crate::assinaturas::ASSINATURAS;
+    use crate::signatures::ASSINATURAS;
     let Ok(k) = ASSINATURAS.binary_search_by_key(&address, |a| a.0) else { return true };
     let v = &*core::ptr::addr_of!(VERDICTS);
     if k < v.len() { v[k] } else { check_range(address) }
 }
 
 unsafe fn check_range(address: usize) -> bool {
-    use crate::assinaturas::ASSINATURAS;
+    use crate::signatures::ASSINATURAS;
     use std::sync::atomic::Ordering::Relaxed;
     let Ok(k) = ASSINATURAS.binary_search_by_key(&address, |a| a.0) else { return true };
     let t = std::time::Instant::now();
@@ -776,7 +776,7 @@ static mut INSTALLED: Vec<(usize, &'static [u8], usize, u64, [u8; 5])> = Vec::ne
 static mut CHECKED_DAY: [u16; 2] = [0; 2];
 
 unsafe fn record_installed(p: &Prologo) {
-    use crate::assinaturas::ASSINATURAS;
+    use crate::signatures::ASSINATURAS;
     if let Ok(k) = ASSINATURAS.binary_search_by_key(&p.endereco, |a| a.0) {
         (*core::ptr::addr_of_mut!(INSTALLED)).push((p.endereco, p.bytes, p.endereco + ASSINATURAS[k].1, 0, *(p.endereco as *const [u8; 5])));
     }

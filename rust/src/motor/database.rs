@@ -73,9 +73,9 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
         request_buffers(&[(p, 0x19)], &[]);
         call(FN_LLIST_ADD_TAIL, lista_global(), [0, 0x19, 0, 0, 0]);
     };
-    let partida = || d(m, 0x4792);
+    let partida = || d(m, engine::MATCH);
     let person_of = |id: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * staff::SIZE);
-    let list = d(m, 0x478e);
+    let list = d(m, engine::EVENT_LIST);
     if list != 0 && lista_global() != 0 && partida() != 0 && byte(partida(), 0x40) != 0 {
         *((list + 0xa) as *mut u32) = core::ptr::read_unaligned((list + 2) as *const u32);
         let mut i: i8 = 0;
@@ -142,16 +142,16 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     // the event’s player on one of the two sides
                     let achar = |side: usize| (0..20usize).find(|&k| {
                         let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
-                        d(p, 0x69) == person && byte(p, 0x19) >= 0
+                        d(p, match_player::STAFF) == person && byte(p, match_player::POSITION) >= 0
                     });
                     let found = achar(0).map(|k| (k, 0)).or_else(|| achar(1).map(|k| (k, 1)));
                     if let Some((k, side)) = found {
                         let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
                         let vale = if kind == 6 {
                             crate::comparison::branch("match_wrap_up evento tipo 6");
-                            byte(p, 0x24) == 2 || byte(p, 0x23) != 0
+                            byte(p, match_player::YELLOW_CARDS) == 2 || byte(p, 0x23) != 0
                         } else {
-                            byte(p, 0x1b) < 7 && sortear(byte(p, 0x17) as i32) == 0
+                            byte(p, match_player::MATCH_GRADE) < 7 && sortear(byte(p, match_player::MATCH_FORM) as i32) == 0
                         };
                         if vale {
                             crate::comparison::branch("match_wrap_up evento do jogador");
@@ -171,12 +171,12 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
         let (meu, outro) = if side == 0 { (d(pt, 0x1c), d(pt, 0x20)) } else { (d(pt, 0x20), d(pt, 0x1c)) };
         for k in 0..20usize {
             let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
-            if k > 10 && byte(p, 0x1f) == -1 {
+            if k > 10 && byte(p, match_player::MINUTE_ON) == -1 {
                 continue;
             }
-            let person = d(p, 0x69);
-            if person != 0 && d(p, 0x6d) != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
-                call(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, p, [person as u32, meu as u32, outro as u32, (byte(p, 0x1b) as f32).to_bits(), *(m as *const u8) as u32 | 1 << 8]);
+            let person = d(p, match_player::STAFF);
+            if person != 0 && d(p, match_player::PLAYER) != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
+                call(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, p, [person as u32, meu as u32, outro as u32, (byte(p, match_player::MATCH_GRADE) as f32).to_bits(), *(m as *const u8) as u32 | 1 << 8]);
                 if lista_global() != 0 && national_team(meu) == 0 && byte(pt, 0x40) != 0 {
                     let ct = contract(*(G_CONTRACT_MANAGER as *const usize), person, meu);
                     if ct != 0
@@ -184,10 +184,10 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                         && person != d(meu, 0xcf)
                         && d(pt, 0x14) != 0
                         && friendly(*(G_FRIENDLY as *const usize), d(pt, 0x14)) == 0
-                        && byte(p, 0x20) != -1
-                        && byte(p, 0x22) == -1
+                        && byte(p, match_player::MINUTE_OFF) != -1
+                        && byte(p, match_player::INJURY_MINUTE) == -1
                         && byte(ct, 0x3d) > 0
-                        && w(d(p, 0x6d), 0xb) > 0x109a
+                        && w(d(p, match_player::PLAYER), 0xb) > 0x109a
                         && partida() != 0
                         && byte(partida(), 0x40) != 0
                     {
@@ -248,20 +248,20 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                 }
             }
             // the minutes played
-            let minute = (w(m, 0x8ed0) as i32 / 11) as i8;
+            let minute = (w(m, engine::CLOCK) as i32 / 11) as i8;
             let v: i8 = if k >= 11 {
-                let c = byte(p, 0x1f);
+                let c = byte(p, match_player::MINUTE_ON);
                 if c == -1 {
                     continue;
                 }
-                let end = if byte(p, 0x21) > -1 { byte(p, 0x21) } else if byte(p, 0x20) > -1 { byte(p, 0x20) } else { minute };
+                let end = if byte(p, match_player::MINUTE_LEFT_PITCH) > -1 { byte(p, match_player::MINUTE_LEFT_PITCH) } else if byte(p, match_player::MINUTE_OFF) > -1 { byte(p, match_player::MINUTE_OFF) } else { minute };
                 end.wrapping_sub(c)
             } else if *(m as *const u8) != 0 {
                 0x5a
-            } else if byte(p, 0x21) > -1 {
-                byte(p, 0x21)
-            } else if byte(p, 0x20) > -1 {
-                byte(p, 0x20)
+            } else if byte(p, match_player::MINUTE_LEFT_PITCH) > -1 {
+                byte(p, match_player::MINUTE_LEFT_PITCH)
+            } else if byte(p, match_player::MINUTE_OFF) > -1 {
+                byte(p, match_player::MINUTE_OFF)
             } else {
                 minute
             };
@@ -269,7 +269,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                 continue;
             }
             soma += v as i32;
-            somap += byte(p, 0x1b) as i32 * v as i32;
+            somap += byte(p, match_player::MATCH_GRADE) as i32 * v as i32;
         }
         if soma != 0 {
             let q = somap as f64 / soma as f64;
@@ -636,8 +636,8 @@ pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, 
         (false, true) => (0, 1),
         _ => (0, 0),
     };
-    *este = byte(this, 0xf5bd);
-    *outro = byte(this, 0xf5f3);
+    *este = byte(this, engine::SCORE);
+    *outro = byte(this, engine::SCORE_SIDE1);
     let partida = *((this + engine::MATCH) as *const usize);
     let units: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
     if units(*((partida + 0x30) as *const i16) as i32) == 3 {
@@ -1676,10 +1676,10 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     // the big club’s coach
                     let e_360 = || rd(p + staff::NATION) != 0 && gi(rd(p + staff::NATION)) == gi(KEY_NATION_ITALY);
                     let fora20 = |o: usize| signed_byte_at(nj + o) < 1 || signed_byte_at(nj + o) > 20;
-                    if fora20(0x13) {
+                    if fora20(non_player::DIRECTNESS) {
                         wb(nj + non_player::DIRECTNESS, (if e_360() { s8(0x10).wrapping_add(1) } else { s8(0xe).wrapping_add(7) }) as u8);
                     }
-                    if fora20(0xe) {
+                    if fora20(non_player::ATTACKING) {
                         let c = rd(p + staff::CLUB_JOB);
                         wb(nj + non_player::ATTACKING, (if rep(c) > 0x1e46 {
                             if e_360() { s8(4).wrapping_add(0xd) } else { s8(8).wrapping_add(0xd) }
@@ -1687,13 +1687,13 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                             s8(9).wrapping_add(0xc)
                         }) as u8);
                     }
-                    if fora20(0x1b) {
+                    if fora20(non_player::MOTIVATING) {
                         wb(nj + non_player::MOTIVATING, s8(0xd).wrapping_add(8) as u8);
                     }
-                    if fora20(0x1f) {
+                    if fora20(non_player::PRESSING) {
                         wb(nj + non_player::PRESSING, s8(0xd).wrapping_add(8) as u8);
                     }
-                    if fora20(0x21) {
+                    if fora20(non_player::TACTICS) {
                         let c = rd(p + staff::CLUB_JOB);
                         wb(nj + non_player::TACTICS, (if rep(c) > 0x1e46 {
                             if e_360() { s8(7).wrapping_add(0xe) } else { s8(9).wrapping_add(0xc) }
@@ -2374,30 +2374,30 @@ pub(crate) unsafe extern "C" fn database_format_player_positions(player: usize, 
     loop {
         *(buf as *mut u8) = 0;
         let t = minimum as i32;
-        if rating(0xf) >= t {
+        if rating(player_sheet::GOALKEEPER) >= t {
             pos(POSITION_GOALKEEPER);
         }
-        if rating(0x10) >= t {
+        if rating(player_sheet::SWEEPER) >= t {
             pos(POSITION_SWEEPER);
         }
-        if rating(0x11) >= t {
+        if rating(player_sheet::DEFENDER) >= t {
             pos(POSITION_DEFENDER);
         }
-        if rating(0x12) >= t {
+        if rating(player_sheet::DEFENSIVE_MIDFIELDER) >= t {
             pos(POSITION_DEFENSIVE_MIDFIELDER);
-        } else if rating(0x14) >= t && rating(0x13) >= t {
+        } else if rating(player_sheet::ATTACKING_MIDFIELDER) >= t && rating(player_sheet::MIDFIELDER) >= t {
             pos(POSITION_ATTACKING_MIDFIELDER);
-        } else if rating(0x13) >= t {
+        } else if rating(player_sheet::MIDFIELDER) >= t {
             pos(POSITION_MIDFIELDER);
         }
-        if rating(0x15) >= t {
-            if rating(0x14) >= t || rating(0x17) >= t || rating(0x18) >= t || rating(0x1a) >= t {
+        if rating(player_sheet::ATTACKER) >= t {
+            if rating(player_sheet::ATTACKING_MIDFIELDER) >= t || rating(player_sheet::RIGHT_SIDE) >= t || rating(player_sheet::LEFT_SIDE) >= t || rating(player_sheet::FREE_ROLE) >= t {
                 pos(POSITION_FORWARD);
             } else {
                 pos(POSITION_STRIKER);
             }
         }
-        if rating(0xf) >= t {
+        if rating(player_sheet::GOALKEEPER) >= t {
             // goalkeeper: only the row (strcpy in the original; the text may be [0xde1f64] itself)
             *(text as *mut u8) = 0;
             append_c_string(text, buf);
@@ -2409,7 +2409,7 @@ pub(crate) unsafe extern "C" fn database_format_player_positions(player: usize, 
         }
     }
     if is_empty_text(buf) {
-        if rating(0x14) >= 0xf {
+        if rating(player_sheet::ATTACKING_MIDFIELDER) >= 0xf {
             *((player + player_sheet::MIDFIELDER) as *mut u8) = 0xf; // the original writes to the player
         }
         if f == 2 || f == 3 {
@@ -6863,9 +6863,9 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
     remove_or_restore_training(person, 0);
     let b = |d: usize| *((player + d) as *const i8) as i32;
     let f = |x: i32, k: usize| match_pl_ftol(x as f64 * read_f64_at(k));
-    let smaller = b(0x3b).min(b(0x30));
-    let t = f(b(0x36), 0x968940) - f(b(0x2f), 0x969548) - f(b(0x2e), 0x969540) - f(b(0x1b), 0x969538)
-        + (f(b(0x3f), 0x9689b0) - f(b(0x40), 0x969548) - f(smaller, 0x969530)) + b(0x44);
+    let smaller = b(player_sheet::RIGHT_FOOT).min(b(player_sheet::LEFT_FOOT));
+    let t = f(b(player_sheet::PLAYER_PACE), 0x968940) - f(b(player_sheet::LEADERSHIP), 0x969548) - f(b(player_sheet::JUMPING), 0x969540) - f(b(player_sheet::ACCELERATION), 0x969538)
+        + (f(b(player_sheet::TEAMWORK), 0x9689b0) - f(b(player_sheet::TECHNIQUE), 0x969548) - f(smaller, 0x969530)) + b(player_sheet::WORK_RATE);
     let ability = core::ptr::read_unaligned((player + player_sheet::CURRENT_ABILITY) as *const i16);
     let corte = (ability as i32 / 2 - f(t, 0x969528) + 0x37) / 2;
     if corte < -14 {
@@ -6876,7 +6876,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
         }
     }
     let mut s = corte - 0x14;
-    let produto = ((b(0x36) * b(0x1b)) / 2) as i16;
+    let produto = ((b(player_sheet::PLAYER_PACE) * b(player_sheet::ACCELERATION)) / 2) as i16;
     if produto > ability {
         s -= (produto as i32 - ability as i32).min(0x19);
     }
@@ -6893,7 +6893,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
     devolver(player, person, v as usize);
     if *((player + player_sheet::GOALKEEPER) as *const i8) == 0x14 {
         subtract_mean_2a_3a(player);
-        let terco = ((b(0x1e) + b(0x24) + b(0x39)) / 3) as u8;
+        let terco = ((b(player_sheet::ANTICIPATION) + b(player_sheet::DECISIONS) + b(player_sheet::POSITIONING)) / 3) as u8;
         for off in [0x1e, 0x39, 0x24] {
             *((player + off) as *mut u8) = (*((player + off) as *const u8)).wrapping_sub(terco);
         }
@@ -9286,7 +9286,7 @@ pub(crate) unsafe extern "C" fn database_is_staff_eu_national(person: usize, nat
     let c = g(nation_of_club);
     if c == g(KEY_NATION_GERMANY) {
         let europa = (*(G_CONTINENT_TABLE as *const usize)).wrapping_add((g(KEY_CONTINENT_EUROPE) as usize).wrapping_mul(0xc6));
-        if read(n, 0x71) == europa {
+        if read(n, nation::CONTINENT) == europa {
             return 1;
         }
     }

@@ -2,7 +2,7 @@ use super::*;
 
 // The nation_get_nationality_adjective tables, generated from the exe by `python engenharia-reversa/adjetivos_nacao.py`
 // (rust/src/adjetivos_nacao.rs).
-include!("../adjetivos_nacao.rs");
+include!("../nation_adjectives.rs");
 
 /// the nation's adjective into the text (size >= 50): with gender 0 or outside languages 9, 4, 5, 10 and 6 the nation's
 /// name; in those, the form from 0x545a60 and the chains of 937 nations (generated from the exe by adjetivos_nacao.py,
@@ -50,7 +50,7 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nation: usize, 
 
 
 // The set_key_ids lists, generated from the exe by `python engenharia-reversa/chaves_fixas.py` (rust/src/chaves_fixas.rs).
-include!("../chaves_fixas.rs");
+include!("../fixed_keys.rs");
 
 /// A chain of _stricmp: the first text equal to the name writes the row index into its global.
 ///

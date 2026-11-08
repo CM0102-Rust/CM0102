@@ -8,7 +8,7 @@ MUTACOES = [
     ('c_estado', "        if state(u(G_INJURY, 0), p) == 2 || (byte(t, 0x19) != 0", "        if state(u(G_INJURY, 0), p) == 1 || (byte(t, 0x19) != 0"),
     ('c_selecao', "    let mut mask: u32 = if national_team(club) != 0 { 0x208a09c } else { 0xca0ca };", "    let mut mask: u32 = if national_team(club) != 0 { 0x208a09c } else { 0xca0cb };"),
     ('c_sorteio', "            let lim = sorteio(3000) + 3000;", "            let lim = sorteio(3000) + 2000;"),
-    ('r_referencia', "                        let v = h16(fi, 0xd).wrapping_add(h16(fi, 0xb));", "                        let v = h16(fi, 0xd);"),
+    ('r_referencia', "                        let v = h16(fi, player_sheet::WORLD_REPUTATION).wrapping_add(h16(fi, player_sheet::CURRENT_REPUTATION));", "                        let v = h16(fi, player_sheet::WORLD_REPUTATION);"),
     ('v_extra', "            ww(o, if v < 3 { 4 } else if v >= 6 { 0x40 } else { 0x10 });", "            ww(o, if v < 3 { 4 } else if v >= 5 { 0x40 } else { 0x10 });"),
     ('v_casa', "            ww(0xe8 + 2 * k, home(tat(), k as u32, 0) as i16);", "            ww(0xe8 + 2 * k, home(tat(), k as u32, 1) as i16);"),
     ('v_curto', "            ww(0x214 + 2 * (*b(0x12) as i8 as usize), 0);", "            ww(0x214 + 2 * k, 7);"),
