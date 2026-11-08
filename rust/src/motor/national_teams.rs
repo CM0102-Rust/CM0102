@@ -2600,7 +2600,7 @@ pub(crate) unsafe fn has_too_many_called_up(this: usize, clube: usize, a: usize,
     if clube == 0 {
         return false;
     }
-    let limit = read_i32(0xae235c).wrapping_sub(read_i32(0xae2350).wrapping_mul(2));
+    let limit = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT).wrapping_mul(2));
     let id = read_i32(clube);
     if id >= limit {
         return false;

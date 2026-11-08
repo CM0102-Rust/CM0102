@@ -68,7 +68,7 @@ pub(crate) unsafe fn board_requests_row(clube: usize) -> usize {
 /// [pt] O técnico do clube (+0xcf) é humano (entre as 16 últimas pessoas): a notícia vai para ele (0x7861e0).
 pub(crate) unsafe fn fin_prm_has_human_manager(clube: usize) -> bool {
     let t = read_usize(clube + club::MANAGER);
-    t != 0 && read_i32(t) >= read_i32(0xae2364).wrapping_sub(0x10)
+    t != 0 && read_i32(t) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10)
 }
 
 /// after the game start date, for each club with a league and an active nation or reputation 5000 whose row is the
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
     let mut clube = read_usize(G_CLUB_TABLE);
     let mut k = 0i32;
     let mut desloc = 0usize;
-    while k < read_i32(0xae235c) {
+    while k < read_i32(G_CLUB_COUNT) {
         if selecao(clube) != 0 {
             return;
         }
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fin_prm_end_season_for_nation(th
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let mut ultimo = None;
     let mut clube = read_usize(G_CLUB_TABLE);
-    for k in 0..read_i32(0xae235c).max(0) as usize {
+    for k in 0..read_i32(G_CLUB_COUNT).max(0) as usize {
         if selecao(clube) != 0 {
             break;
         }
@@ -212,7 +212,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, clube
             let mut dono = 0usize;
             let mut outro = read_usize(G_CLUB_TABLE);
             let mut k = 0i32;
-            while k < read_i32(0xae235c) {
+            while k < read_i32(G_CLUB_COUNT) {
                 if outro != clube && read_usize(outro + 0x69) == estadio && read_u8(outro + 0x6d) != 0 {
                     dono = outro;
                     break;
@@ -1533,15 +1533,15 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida
         Some(0x968928)
     } else {
         let id = read_i32(casa);
-        if id == read_i32(0x9d0250) {
+        if id == read_i32(G_KEY_CLUB_CHELSEA) {
             Some(0x968940)
-        } else if id == read_i32(0x9d0110) {
+        } else if id == read_i32(G_KEY_CLUB_ARSENAL) {
             Some(0x968de8)
-        } else if id == read_i32(0x9d0248) {
+        } else if id == read_i32(G_KEY_CLUB_EVERTON) {
             Some(0x969040)
-        } else if id == read_i32(0x9d0244) {
+        } else if id == read_i32(G_KEY_CLUB_LIVERPOOL) {
             Some(0x9689d8)
-        } else if id == read_i32(0x9d024c) {
+        } else if id == read_i32(G_KEY_CLUB_TOTTENHAM_HOTSPUR) {
             Some(0x968de8)
         } else {
             None
@@ -1884,7 +1884,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: us
         let nova = if nac != 0 && friendly_random(0x3e8) != 0 {
             nac
         } else {
-            let k = friendly_random(read_i32(0xae2350));
+            let k = friendly_random(read_i32(G_NATION_COUNT));
             read_usize(G_NATION_TABLE).wrapping_add((k as usize).wrapping_mul(nation::SIZE))
         };
         core::ptr::write_unaligned((pres + 0x1a) as *mut usize, nova);
@@ -2084,7 +2084,7 @@ pub(crate) unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
     let folha: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FINANCE_UPDATE_WAGE_BILL);
     let mut fin = read_usize(this);
     let mut i = 0i32;
-    while i < read_i32(0xae235c) {
+    while i < read_i32(G_CLUB_COUNT) {
         let clube = read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE));
         if selecao(clube) != 0 {
             break;
@@ -2100,7 +2100,7 @@ pub(crate) unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
 /// [pt] Comparador: lado a lado na tabela de finanças inteira ([this], [0xae235c] × 0x167 bytes) e em [0xae1080].
 pub(crate) unsafe extern "thiscall" fn comparar_refresh_all_wage_bills(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REFRESH_ALL_WAGE_BILLS);
-    let n = (read_i32(0xae235c).max(0) as usize).wrapping_mul(0x167);
+    let n = (read_i32(G_CLUB_COUNT).max(0) as usize).wrapping_mul(0x167);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(read_usize(this), n), (G_CONTRACT_LOOKUP_RESULT, 4)], || o(this), || refresh_all_wage_bills(this));
     PLACAR.registrar(igual, || format!("refresh_all_wage_bills({:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
@@ -2515,15 +2515,15 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar:
     let cid = read_i32(clube);
     let fator = if liga != 0 && read_i32(liga) == read_i32(KEY_CLUB_COMP_ITALIAN_SERIE_A) {
         0x968928
-    } else if cid == read_i32(0x9d0250) {
+    } else if cid == read_i32(G_KEY_CLUB_CHELSEA) {
         0x968940
-    } else if cid == read_i32(0x9d0110) {
+    } else if cid == read_i32(G_KEY_CLUB_ARSENAL) {
         0x968de8
-    } else if cid == read_i32(0x9d0248) {
+    } else if cid == read_i32(G_KEY_CLUB_EVERTON) {
         0x969040
-    } else if cid == read_i32(0x9d0244) {
+    } else if cid == read_i32(G_KEY_CLUB_LIVERPOOL) {
         0x9689d8
-    } else if cid == read_i32(0x9d024c) {
+    } else if cid == read_i32(G_KEY_CLUB_TOTTENHAM_HOTSPUR) {
         0x968de8
     } else if nac != 0 && read_i32(nac) == read_i32(KEY_NATION_GERMANY) {
         0x968978

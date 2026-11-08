@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usiz
         show_error_at(0xa693ec, 0x2360);
         return 0;
     }
-    let idx = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    let idx = read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if idx < 0 {
         show_error_at(0xa693ec, 0x236b);
         return 0;
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usiz
         let da_vez = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
         let m = maquina(G_SCREEN_MANAGER, da_vez) as u16;
         for j in 0..0x10i32 {
-            let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(0xae2364) - j - 1).wrapping_mul(0x6e) as usize);
+            let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul(0x6e) as usize);
             if *((p + 0x5f) as *const u8) == 1 && p != tecnico && maquina(G_SCREEN_MANAGER, p) as u16 == m {
                 marcar(this, p, id, 0);
             }
@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usi
     let (inicio, n) = if tecnico == 0 {
         (0usize, read_i32(this + 4).max(0) as usize)
     } else {
-        let idx = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+        let idx = read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
         if idx < 0 {
             show_error_at(0xa693ec, 0x2268);
             return 0;
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usi
 /// do botão (0xde1f64; a 0x782b70 só consulta). Caixa "Error": só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize, id: u32, sincronizar: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_MARK_ITEM_READ);
-    if tecnico == 0 || id == 0 || read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 || read_usize(this) == 0 {
+    if tecnico == 0 || id == 0 || read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) < 0 || read_usize(this) == 0 {
         return o(this, tecnico, id, sincronizar);
     }
     let regioes = [
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecn
 /// [pt] Comparador: pela notícia copiada em `saida` (0xdf bytes) e pela devolução. Caixa "Error": só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(IDX_FIND_ITEM_BY_ID);
-    if id == 0 || saida == 0 || (tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0) {
+    if id == 0 || saida == 0 || (tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) < 0) {
         return o(this, tecnico, id, saida);
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, STORED_NEWS_SIZE)], || o(this, tecnico, id, saida), || find_item_by_id(this, tecnico, id, saida));
@@ -159,7 +159,7 @@ pub(crate) const NEWS_NEWS_RECORD_SIZE: usize = 0xdf;
 /// [pt] A entrada do técnico humano na tabela das caixas (News +8, 12 bytes: início do anel, a próxima vaga, a conta):
 /// índice = id da pessoa − [0xae2364] + 16 (os humanos são as 16 últimas pessoas). Negativo: não é humano.
 pub(crate) unsafe fn news_human_manager_index(tecnico: usize) -> i32 {
-    read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10)
+    read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10)
 }
 
 /// delivers the news item by scope: 0 the club manager, 1 the division's managers, 2 the country's, 3 the continent's,
@@ -228,7 +228,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, noticia
     if tecnico == 0 {
         return 0;
     }
-    if read_i32(tecnico) < read_i32(0xae2364).wrapping_sub(0x10) { // a máquina
+    if read_i32(tecnico) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) { // a máquina
         return 0;
     }
     crate::comparacao::ramo("cpn_1 noticia ao tecnico humano");
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize
         return o(this, noticia, clube);
     }
     let tecnico = read_usize(clube + club::MANAGER);
-    let humano = tecnico != 0 && read_i32(tecnico) >= read_i32(0xae2364).wrapping_sub(0x10);
+    let humano = tecnico != 0 && read_i32(tecnico) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10);
     let r = o(this, noticia, clube);
     let ok = *((noticia + 0xde) as *const u8) == 0 && (humano || r == 0) && r <= 1;
     PLACAR.registrar(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", clube, tecnico, humano, r));
@@ -417,7 +417,7 @@ pub(crate) const NEWS_NEWS_ITEM_SIZE: usize = 0xdf;
 /// [pt] A entrada do humano na tabela das caixas (News +8, 12 bytes: início do anel, próxima vaga, conta), ou None (com a
 /// caixa "Error" da `linha`) se a pessoa não está entre as 16 últimas.
 pub(crate) unsafe fn human_inbox_entry(this: usize, tecnico: usize, linha: u32) -> Option<usize> {
-    let idx = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    let idx = read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if idx < 0 {
         show_error_at(0xa693ec, linha);
         return None;
@@ -554,7 +554,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, campo: u32, 
 /// [pt] Comparador: a original responde (convites, propostas, emprego): roda só ela e confere a devolução (0 só sem técnico
 /// ou com técnico da máquina; senão 1).
 pub(crate) unsafe extern "thiscall" fn comparar_auto_respond_all(this: usize, tecnico: usize, clube: usize) -> u32 {
-    let humano = tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) >= 0;
+    let humano = tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) >= 0;
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_AUTO_RESPOND_ALL)(this, tecnico, clube);
     PLACAR.registrar(r == humano as u32, || format!("auto_respond_all(técnico {:x}, humano {}) devolveu {}", tecnico, humano, r));
     r
@@ -565,7 +565,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_auto_respond_all(this: usize, te
 /// [pt] Comparador: lado a lado pela devolução e pelo texto montado em 0xde1f64 (a 0x782b70 não sorteia; a caixa não muda).
 pub(crate) unsafe extern "thiscall" fn comparar_has_urgent_items(this: usize, tecnico: usize, so_urgentes: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_HAS_URGENT_ITEMS);
-    if so_urgentes != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 {
+    if so_urgentes != 0 && read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, so_urgentes); // a caixa "Error"
     }
     let reg = [(0xde1f64usize, 0x7d0usize)];
@@ -1209,7 +1209,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usi
         show_error_at(0xa693ec, 0x21fa);
         return 0;
     }
-    let idx = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    let idx = read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if idx < 0 {
         show_error_at(0xa693ec, 0x2205);
         return 0;
@@ -1256,10 +1256,10 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usi
 /// [pt] Comparador: a original aloca o vetor: roda só ela e confere o plano feito antes (a conta e os ids, na ordem).
 pub(crate) unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(IDX_GET_INBOX_ITEMS);
-    if tecnico == 0 || read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 {
+    if tecnico == 0 || read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, conta, categoria);
     }
-    let e = read_usize(this + 8) + (read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10)) as usize * 12;
+    let e = read_usize(this + 8) + (read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10)) as usize * 12;
     let mut ids = Vec::new();
     if read_i32(e) != -1 {
         let tipo: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);

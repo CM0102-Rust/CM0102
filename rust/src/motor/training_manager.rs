@@ -147,10 +147,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_coach_assignments(this: u
     let mut reg = vec![(clube + club::HAS_LINKED_CLUB, 1)];
     if (tecnico != 0 || humano(clube, 1, 1, 0, 0) != 0) && selecao(clube) == 0 {
         let tec = if tecnico == 0 { read_u32_as_usize(clube + club::MANAGER) } else { tecnico };
-        if tec == 0 || !(0..0x10).contains(&read_i32(0xae2364).wrapping_sub(read_i32(tec)).wrapping_sub(1)) {
+        if tec == 0 || !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tec)).wrapping_sub(1)) {
             return o(this, clube, tecnico);
         }
-        reg.push((this + 0x652d + 54 * read_i32(0xae2364).wrapping_sub(read_i32(tec)).wrapping_sub(1) as usize, 54));
+        reg.push((this + 0x652d + 54 * read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tec)).wrapping_sub(1) as usize, 54));
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, tecnico), || update_coach_assignments(this, clube, tecnico));
     PLACAR.registrar(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", clube, tecnico, mo.0, mr.0));
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_coach_assignments(this: u
 /// [pt] O programa `vaga` (0..9; fora disso o 1) do técnico humano `tec`: this + (vaga + 7 + 10 × ([0xae2364] − id − 1)) ×
 /// 0x9b; fora dos 16 humanos, a caixa "Error" (linha 0x68f) e 0 (a original lê então o byte +0x15 do nulo).
 pub(crate) unsafe fn human_training_schedule(this: usize, tec: usize, vaga: i8) -> usize {
-    let k = read_i32(0xae2364).wrapping_sub(read_i32(tec)).wrapping_sub(1);
+    let k = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tec)).wrapping_sub(1);
     if !(0..0x10).contains(&k) {
         show_error_at(0xa8ccd0, 0x68f);
         return 0;
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec
         let mut v = [0usize; 50];
         elenco(antigo, v.as_mut_ptr(), 0);
         for &p in &v {
-            if p == 0 || read_i32(p) >= read_i32(0xae2364) {
+            if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
             gravar_carga(read_u32_as_usize(G_INJURY), p, 0x32);
@@ -229,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec
             continue;
         }
         let f = read_u32_as_usize(p + 0x61);
-        if f == 0 || read_i32(p) >= read_i32(0xae2364) {
+        if f == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
         let e = training_entry_of_player_data(this, f) as *mut i8;
@@ -255,7 +255,7 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec
 /// ficha no elenco antigo ou técnico fora dos 16 humanos com clube novo): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: usize, tec: usize, antigo: usize, novo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_REASSIGN_SQUAD_SCHEDULES);
-    let k = if tec == 0 { -1 } else { read_i32(0xae2364).wrapping_sub(read_i32(tec)).wrapping_sub(1) };
+    let k = if tec == 0 { -1 } else { read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tec)).wrapping_sub(1) };
     if novo != 0 && !(0..0x10).contains(&k) {
         return o(this, tec, antigo, novo);
     }
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: u
         let mut v = [0usize; 50];
         elenco(clube, v.as_mut_ptr(), 0);
         for &p in &v {
-            if p == 0 || read_i32(p) >= read_i32(0xae2364) {
+            if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
             let f = read_u32_as_usize(p + 0x61);
@@ -348,7 +348,7 @@ pub(crate) unsafe fn training_manager_club_of_contract(c: usize) -> usize {
 ///
 /// [pt] O técnico humano é um dos 16 últimos ids de pessoa ([0xae2364] − 16 para cima).
 pub(crate) unsafe fn is_human_manager_id(tec: usize) -> bool {
-    read_i32(tec) >= read_i32(0xae2364).wrapping_sub(0x10)
+    read_i32(tec) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10)
 }
 
 
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         show_error_at(0xa8ccd0, 0x18a);
         return;
     }
-    if read_i32(p) >= read_i32(0xae2364) {
+    if read_i32(p) >= read_i32(G_STAFF_COUNT) {
         return;
     }
     if read_u32_as_usize(p + 0x61) == 0 {
@@ -606,7 +606,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
 /// rodar): ali a 0x8b4450, a marca do contrato (0x867700) e a 0x5885c0 mexem fora dessas regiões.
 pub(crate) unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usize, pular: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_UPDATE_PLAYER_TRAINING);
-    if p == 0 || read_i32(p) >= read_i32(0xae2364) || read_u32_as_usize(p + 0x61) == 0 {
+    if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || read_u32_as_usize(p + 0x61) == 0 {
         return o(this, p, pular);
     }
     let programa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_PLAYER_SCHEDULE);
@@ -648,7 +648,7 @@ pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize
         let tec = read_u32_as_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf);
         if tec != 0 && is_human_manager_id(tec) {
             if estado(read_u32_as_usize(G_INJURY), p) == 2 {
-                let k = read_i32(0xae2364).wrapping_sub(read_i32(tec)).wrapping_sub(1);
+                let k = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tec)).wrapping_sub(1);
                 if !(0..0x10).contains(&k) {
                     show_error_at(0xa8ccd0, 0x68f);
                     return 0;
@@ -954,7 +954,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_type(this: usize, vaga: i8, 
 /// [pt] O programa `vaga` (0..=9) do técnico humano `pessoa` como a 0x8b3d40 o calcula sem chamar a 0x8b3930 (vagas 0 a
 /// 5): this + 0x43d + 0x9b × vaga + 0x60e × humano; fora dos 16 humanos, a caixa (linha 0x68f) e 0.
 pub(crate) unsafe fn human_schedule_slot(this: usize, pessoa: usize, vaga: usize) -> usize {
-    let v = read_i32(0xae2364).wrapping_sub(read_i32(pessoa)).wrapping_sub(1);
+    let v = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(pessoa)).wrapping_sub(1);
     if !(0..0x10).contains(&v) {
         show_error_at(0xa8ccd0, 0x68f);
         return 0;
@@ -982,7 +982,7 @@ pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
         tipo(this + 0x9b * k as usize, k, k);
     }
     for h in 0..0x10i32 {
-        let id = read_i32(0xae2364).wrapping_sub(h).wrapping_sub(1);
+        let id = read_i32(G_STAFF_COUNT).wrapping_sub(h).wrapping_sub(1);
         let pessoa = (*(G_STAFF_TABLE as *const usize)).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
         for (vaga, t) in [(0usize, -1i8), (1, 0), (2, 1), (3, 2), (4, 3), (5, 4)] {
             tipo(human_schedule_slot(this, pessoa, vaga), vaga as i8, t);
@@ -1017,7 +1017,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_default_schedules(this: usiz
 /// programa da vaga (0..=9; fora disso, 1) do técnico humano: this + 0x9b × (vaga + 10 × humano + 7), humano =
 /// [0xae2364] − id − 1. Fora dos 16 humanos: a caixa (linha 0x68f) e 0. Pela 0x8b3d40 (vagas 6 a 9) e pelas telas.
 pub(crate) unsafe extern "thiscall" fn get_manager_schedule(this: usize, tecnico: usize, vaga: i8) -> usize {
-    let v = read_i32(0xae2364).wrapping_sub(read_i32(tecnico)).wrapping_sub(1);
+    let v = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tecnico)).wrapping_sub(1);
     if !(0..0x10).contains(&v) {
         show_error_at(0xa8ccd0, 0x68f);
         return 0;
@@ -1031,7 +1031,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_schedule(this: usize, tecnico
 /// [pt] Comparador: a devolução, sem os casos de erro (só a original).
 pub(crate) unsafe extern "thiscall" fn comparar_get_manager_schedule(this: usize, tecnico: usize, vaga: i8) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> usize>(IDX_GET_MANAGER_SCHEDULE);
-    if !(0..0x10).contains(&read_i32(0xae2364).wrapping_sub(read_i32(tecnico)).wrapping_sub(1)) {
+    if !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tecnico)).wrapping_sub(1)) {
         return o(this, tecnico, vaga);
     }
     let r = o(this, tecnico, vaga);
@@ -1072,7 +1072,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: u
         crate::comparacao::ramo("cpt_8 sem tecnico");
         return 100; // cpt8: sem técnico
     }
-    if read_i32(t) < read_i32(0xae2364).wrapping_sub(0x10) {
+    if read_i32(t) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         return (t as u32 & 0xffff_0000) | 100; // cpt8: técnico do computador
     }
     let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
@@ -1121,7 +1121,7 @@ pub(crate) unsafe extern "thiscall" fn get_coach_assignments(this: usize, tecnic
         show_error_at(0xa8ccd0, 0xa20);
         return 0;
     }
-    let v = read_i32(0xae2364).wrapping_sub(read_i32(tecnico)).wrapping_sub(1);
+    let v = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tecnico)).wrapping_sub(1);
     if !(0..0x10).contains(&v) {
         show_error_at(0xa8ccd0, 0xa2a);
         return 0;
@@ -1134,7 +1134,7 @@ pub(crate) unsafe extern "thiscall" fn get_coach_assignments(this: usize, tecnic
 /// [pt] Comparador: a devolução, sem os casos de erro (só a original).
 pub(crate) unsafe extern "thiscall" fn comparar_get_coach_assignments(this: usize, tecnico: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_COACH_ASSIGNMENTS);
-    if tecnico == 0 || !(0..0x10).contains(&read_i32(0xae2364).wrapping_sub(read_i32(tecnico)).wrapping_sub(1)) {
+    if tecnico == 0 || !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(tecnico)).wrapping_sub(1)) {
         return o(this, tecnico);
     }
     let r = o(this, tecnico);
@@ -1240,7 +1240,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pess
         show_error_at(0xa8ccd0, 0x4ba);
         return;
     }
-    if read_i32(pessoa) >= read_i32(0xae2364) {
+    if read_i32(pessoa) >= read_i32(G_STAFF_COUNT) {
         return;
     }
     let e = read_u32_as_usize(this + 0x651d) + 6 * read_i32(f) as usize;
@@ -1360,7 +1360,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pess
 /// sem as pessoas que não são jogadores (só a original).
 pub(crate) unsafe extern "thiscall" fn comparar_apply_training_progress(this: usize, pessoa: usize, d: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_APPLY_TRAINING_PROGRESS);
-    if pessoa == 0 || read_u32_as_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(0xae2364) {
+    if pessoa == 0 || read_u32_as_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(G_STAFF_COUNT) {
         return o(this, pessoa, d);
     }
     let f = read_u32_as_usize(pessoa + staff::PLAYER);
@@ -1521,7 +1521,7 @@ pub(crate) unsafe extern "thiscall" fn init_player_entries(this: usize) {
     }
     let mut f = read_u32_as_usize(G_PLAYER_DATA_TABLE);
     let mut i = 0i32;
-    while i < read_i32(0xae236c) {
+    while i < read_i32(G_PLAYER_DATA_COUNT) {
         let ficha = || read_u32_as_usize(this + 0x651d).wrapping_add((read_i32(f) as usize).wrapping_mul(6));
         *((ficha() + 5) as *mut u8) &= 0xdf;
         let gol = *((f + 0xf) as *const i8);
@@ -1549,7 +1549,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_player_entries(this: usize)
     }
     let mut erradas = 0usize;
     let mut primeira = None;
-    for k in 0..read_i32(0xae236c).max(0) as usize {
+    for k in 0..read_i32(G_PLAYER_DATA_COUNT).max(0) as usize {
         let f = read_u32_as_usize(G_PLAYER_DATA_TABLE) + 0x46 * k;
         let e = base.wrapping_add((read_i32(f) as usize).wrapping_mul(6));
         let vaga = if *((f + 0xf) as *const i8) >= 0xf { 6 } else { 1 };

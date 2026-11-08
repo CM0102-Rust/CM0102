@@ -9191,7 +9191,7 @@ pub(crate) unsafe extern "thiscall" fn pay_transfer_instalments(this: usize) {
         }
     }
     let mut i = 0usize;
-    while (i as i32) < read_i32(0xae235c) {
+    while (i as i32) < read_i32(G_CLUB_COUNT) {
         let f = financas(read_usize(G_FINANCE_TABLE), read_usize(G_CLUB_TABLE).wrapping_add(i * club::SIZE));
         if f != 0 {
             let (r, p) = (read_u8(recebe + i) != 0, read_u8(paga + i) != 0);
@@ -11702,11 +11702,11 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: us
     let dia = dia_do_mes(G_CURRENT_DATE);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contract_of(read_usize(G_CONTRACT_MANAGER), jogador);
-    if c == 0 || read_u8(c + 0x35) & 0x3f != 2 || is_after_contract_end(read_i16(G_CURRENT_DATE), read_i16(0xae2c92) as u16, c) {
+    if c == 0 || read_u8(c + 0x35) & 0x3f != 2 || is_after_contract_end(read_i16(G_CURRENT_DATE), read_i16(G_CURRENT_DATE_YEAR) as u16, c) {
         *ano = default_date_year();
         return;
     }
-    if *ano as i32 > read_i16(0xae2c92) as u16 as i32 + 5 {
+    if *ano as i32 > read_i16(G_CURRENT_DATE_YEAR) as u16 as i32 + 5 {
         *ano = default_date_year();
         return;
     }
@@ -11729,7 +11729,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: us
             *ini_mes = *mes;
             *ini_ano = *ano;
         }
-        if *ano < read_i16(0xae2c92) as u16 {
+        if *ano < read_i16(G_CURRENT_DATE_YEAR) as u16 {
             *ano = default_date_year();
             return;
         }

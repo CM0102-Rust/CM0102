@@ -360,7 +360,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         show_player_stats_error(0xb98);
         return 0;
     }
-    if read_i32(p) >= read_i32(0xae2364) {
+    if read_i32(p) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
     let f = read_u32_as_usize(p + 0x61);
@@ -578,7 +578,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
 /// de erro (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize, conta: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(IDX_BUILD_CAREER_HISTORY);
-    if p == 0 || (read_i32(p) < read_i32(0xae2364) && read_u32_as_usize(p + 0x61) == 0) {
+    if p == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(p + 0x61) == 0) {
         return o(this, p, conta);
     }
     let r = o(this, p, conta);
@@ -623,7 +623,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
         show_player_stats_error(0x1347);
         return -1;
     }
-    if read_i32(p) >= read_i32(0xae2364) {
+    if read_i32(p) >= read_i32(G_STAFF_COUNT) {
         return -1;
     }
     if read_u32_as_usize(p + 0x39) == clube {
@@ -662,7 +662,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
 /// [pt] Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
 pub(crate) unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_PLAYER_STATS_YEARS_SINCE_AT_CLUB);
-    if p == 0 || clube == 0 || (read_i32(p) < read_i32(0xae2364) && read_u32_as_usize(p + 0x39) != clube && read_u32_as_usize(p + 0x61) == 0) {
+    if p == 0 || clube == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(p + 0x39) != clube && read_u32_as_usize(p + 0x61) == 0) {
         return o(p, clube);
     }
     let r = o(p, clube);
@@ -894,7 +894,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(pessoa: usiz
         show_error_at(0xa78310, 0xb4b);
         return 0;
     }
-    if read_i32(pessoa) >= read_i32(0xae2364) {
+    if read_i32(pessoa) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
     if read_u32_as_usize(pessoa + staff::PLAYER) == 0 {
@@ -922,7 +922,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(pessoa: usiz
 /// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(IDX_PLAYER_STATS_GET_CAREER_GOALS);
-    if pessoa == 0 || (read_i32(pessoa) < read_i32(0xae2364) && read_u32_as_usize(pessoa + staff::PLAYER) == 0) {
+    if pessoa == 0 || (read_i32(pessoa) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(pessoa + staff::PLAYER) == 0) {
         return o(pessoa);
     }
     let r = o(pessoa);
@@ -1537,7 +1537,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let arquivar: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, i32, u32) = core::mem::transmute(FN_PLAYERSTATS_ARCHIVE_PLAYER_STATS);
     let mut i = 0i32;
-    while i < read_i32(0xae235c) {
+    while i < read_i32(G_CLUB_COUNT) {
         let clube = injury_club_by_index(i);
         if injury_is_national_team(clube) {
             break; // a primeira seleção encerra
@@ -1546,7 +1546,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nacao {
             for s in 0..50usize {
                 let p = read_usize(clube + club::SQUAD + 4 * s);
-                if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(0xae2364) {
+                if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                     continue;
                 }
                 if emprestimo(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + 0x39) == clube {
@@ -1689,7 +1689,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(pessoa: us
         show_error_at(0xa78310, 0xb0c);
         return 0;
     }
-    if read_i32(pessoa) >= read_i32(0xae2364) {
+    if read_i32(pessoa) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
     if read_u32_as_usize(pessoa + staff::PLAYER) == 0 {
@@ -1721,7 +1721,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(pessoa: us
 /// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn comparar_player_stats_get_goals_for_club(pessoa: usize, clube: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u16>(IDX_PLAYER_STATS_GET_GOALS_FOR_CLUB);
-    if pessoa == 0 || clube == 0 || (read_i32(pessoa) < read_i32(0xae2364) && read_u32_as_usize(pessoa + staff::PLAYER) == 0) {
+    if pessoa == 0 || clube == 0 || (read_i32(pessoa) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(pessoa + staff::PLAYER) == 0) {
         return o(pessoa, clube);
     }
     let r = o(pessoa, clube);

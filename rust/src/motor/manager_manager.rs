@@ -1090,7 +1090,7 @@ pub(crate) unsafe fn finish_board_update(this: usize, clube: usize) {
         }
     }
     let tec = read_usize(clube + club::MANAGER);
-    if tec != 0 && read_i32(tec) >= read_i32(0xae2364).wrapping_sub(0x10) && read_i8(tec + 0x59) < 0x14 {
+    if tec != 0 && read_i32(tec) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) && read_i8(tec + 0x59) < 0x14 {
         write_u8(tec + 0x59, read_u8(tec + 0x59).wrapping_add(1));
     }
     write_u8(ln() + 2, read_u8(ln() + 2) & 0xfe);
@@ -1256,9 +1256,9 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let dirigivel: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_CLUB_CAN_BE_MANAGED);
     let mut k = 0i32;
-    while k < read_i32(0xae2364) {
+    while k < read_i32(G_STAFF_COUNT) {
         let p = manager_manager_staff_by_index(k);
-        let ultimos = read_i32(0xae2364) - 0x10;
+        let ultimos = read_i32(G_STAFF_COUNT) - 0x10;
         let ok = 'c: {
             if read_usize(p + 0x69) == 0 || (k >= ultimos && read_u8(p + 0x5f) == 0) || saiu == p {
                 break 'c false;
@@ -1268,7 +1268,7 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize
             {
                 break 'c false;
             }
-            if k >= read_i32(0xae2364) - 0x10 && dirigivel(clube) == 0 {
+            if k >= read_i32(G_STAFF_COUNT) - 0x10 && dirigivel(clube) == 0 {
                 break 'c false;
             }
             if staff_state_byte_b(k) & 0x30 != 0 || loan_contract_of(p) != 0 || is_vacancy_candidate(this, p) != 0 {
@@ -1323,12 +1323,12 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize
             loop {
                 if primeira {
                     primeira = false;
-                    i = read_i32(0xae2364) - 0x11;
+                    i = read_i32(G_STAFF_COUNT) - 0x11;
                     inicio = i;
                 } else {
                     i -= 1;
                     if i < 0 {
-                        i = read_i32(0xae2364) - 0x10;
+                        i = read_i32(G_STAFF_COUNT) - 0x10;
                     }
                     if i == inicio {
                         let fmt: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -1337,7 +1337,7 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize
                     }
                 }
                 v.d(6, i);
-                if staff_state_byte_b(i) & 0x30 != 0 || i >= read_i32(0xae2364) - 0x10 {
+                if staff_state_byte_b(i) & 0x30 != 0 || i >= read_i32(G_STAFF_COUNT) - 0x10 {
                     v.d(6, -1);
                     continue;
                 }
@@ -1387,13 +1387,13 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize
     if grande {
         let mut melhor: i32 = -1_000_000;
         let mut k = 0i32;
-        while k < read_i32(0xae2364) {
-            let r = friendly_random(read_i32(0xae2364));
+        while k < read_i32(G_STAFF_COUNT) {
+            let r = friendly_random(read_i32(G_STAFF_COUNT));
             let p = manager_manager_staff_by_index(r);
             // ponytail: o estado lido é o do contador `k`, não o da pessoa sorteada, como na original
             if read_usize(p + 0x69) != 0 && saiu != p && staff_state_byte_b(k) & 0x30 == 0
                 && is_staff_suitable(this, p, clube, f64::from_bits(0x4009_3333_3333_3333)) != 0
-                && (read_i32(p) < read_i32(0xae2364) - 0x10 || read_u8(p + 0x5f) != 0)
+                && (read_i32(p) < read_i32(G_STAFF_COUNT) - 0x10 || read_u8(p + 0x5f) != 0)
             {
                 let ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
                 if ate(G_CURRENT_DATE, read_usize(p + 0x3e) as u32, read_usize(p + 0x42) as u32) >= 0x96 && is_vacancy_candidate(this, p) == 0 {
@@ -1408,7 +1408,7 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize
             k += 1;
         }
     }
-    let ultimos = read_i32(0xae2364) - 0x10;
+    let ultimos = read_i32(G_STAFF_COUNT) - 0x10;
     if read_i32(manager_manager_staff_by_index(v.rd(6))) >= ultimos && saiu != 0 && read_i32(saiu) < ultimos {
         let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_DISLIKED_CLUB);
         rejeitar(saiu, clube, 1);
@@ -1453,7 +1453,7 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize
             v.w(0x16, (r as u16).wrapping_add(v.rw(0x1e)).wrapping_add(10));
         }
         let r = friendly_random(5);
-        let mais = if saiu != 0 && read_i32(saiu) >= read_i32(0xae2364) - 0x10 { 7 } else { 4 };
+        let mais = if saiu != 0 && read_i32(saiu) >= read_i32(G_STAFF_COUNT) - 0x10 { 7 } else { 4 };
         v.w(0x16, (r as u16).wrapping_add(v.rw(0x1e)).wrapping_add(mais)); // cqc9: a chegada do técnico
         if friendly_random(500) == 0 {
             let r = friendly_random(0x14);
@@ -1475,8 +1475,8 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize
         let ativo: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
         let quer: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
         let candidatar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_MANAGER_MANAGER_APPLY_FOR_JOB);
-        let mut i = read_i32(0xae2364) - 0x10;
-        while i < read_i32(0xae2364) {
+        let mut i = read_i32(G_STAFF_COUNT) - 0x10;
+        while i < read_i32(G_STAFF_COUNT) {
             let p = manager_manager_staff_by_index(i);
             if read_u8(p + 0x5f) != 0 && ativo(read_usize(G_HUMAN_MANAGER), p) != 0 && quer(read_usize(G_HUMAN_MANAGER), 1, p) != 0 {
                 let c = read_usize(p + 0x39);
@@ -2187,7 +2187,7 @@ pub(crate) unsafe fn news_set_person(n: usize, k: u32, p: usize) {
 ///
 /// [pt] O técnico humano (uma das 16 últimas pessoas: id ≥ [0xae2364] − 16)?
 pub(crate) unsafe fn is_human_manager(p: usize) -> bool {
-    read_i32(p) >= read_i32(0xae2364).wrapping_sub(0x10)
+    read_i32(p) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10)
 }
 
 /// Writes the human manager's two name strings (+4, +8) into a news item from slot `first` (0x7858c0) and stores the
@@ -4807,7 +4807,7 @@ pub(crate) unsafe extern "thiscall" fn remove_staff_from_club(_this: usize, pess
     detach_staff_from_club(pessoa, pessoa, clube, clube);
     let midia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_UPDATE_STAFF_STATUS);
     let mut r = midia(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), pessoa, clube, 4, 2);
-    if read_i32(pessoa) >= read_i32(0xae2364).wrapping_sub(0x10) {
+    if read_i32(pessoa) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         let humano: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_SCOUT_MANAGER_SYNC_SCOUT_LISTS);
         humano(read_usize(G_SCOUT_MANAGER), pessoa);
         let lista: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_REASSIGN_SQUAD_SCHEDULES);
@@ -4877,7 +4877,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_remove_player_fr
 /// do clube. Pessoa humana: só a original (as listas do humano podem mexer no clube).
 pub(crate) unsafe extern "thiscall" fn comparar_remove_staff_from_club(this: usize, pessoa: usize, clube: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_REMOVE_STAFF_FROM_CLUB);
-    if pessoa == 0 || clube == 0 || read_i32(pessoa) >= read_i32(0xae2364).wrapping_sub(0x10) {
+    if pessoa == 0 || clube == 0 || read_i32(pessoa) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         return o(this, pessoa, clube);
     }
     // o plano: os campos em cópias com os mesmos deslocamentos

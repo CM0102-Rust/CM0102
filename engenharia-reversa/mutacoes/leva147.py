@@ -25,5 +25,5 @@ MUTACOES = [
     ('k_segura', "        *w(g, 0x35) = (*w(g, 0x35)).wrapping_add(if c.tipo != 0x33 { 200 } else { 1300 });", "        *w(g, 0x35) = (*w(g, 0x35)).wrapping_add(if c.tipo != 0x33 { 201 } else { 1300 });", "shot defesa segura"),
     ('k_rebatida', "        *b(g, 0x2b) = (*b(g, 0x2b)).wrapping_add((sortear(3) + 1) as u8);", "        *b(g, 0x2b) = (*b(g, 0x2b)).wrapping_add((sortear(3) + 2) as u8);", "shot defesa rebatida"),
     ('k_escanteio', "            *w(g, 0x35) = (*w(g, 0x35)).wrapping_add(if c.tipo != 0x33 { 120 } else { 1000 });", "            *w(g, 0x35) = (*w(g, 0x35)).wrapping_add(if c.tipo != 0x33 { 121 } else { 1000 });", "shot defesa corner"),
-    ('k_trave', "            chamar(0x6cd770, m, [ub(m, 0x8ea7), ub(m, 0x8ea8), 2 | l << 8,", "            chamar(0x6cd770, m, [ub(m, 0x8ea7), ub(m, 0x8ea8), 3 | l << 8,", "shot na trave"),
+    ('k_trave', "            chamar(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [ub(m, 0x8ea7), ub(m, 0x8ea8), 2 | l << 8,", "            chamar(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [ub(m, 0x8ea7), ub(m, 0x8ea8), 3 | l << 8,", "shot na trave"),
 ]

@@ -7,5 +7,5 @@ MUTACOES = [
     ('v_saida', "                *((j + 0x19) as *mut i8) = -4;", "                *((j + 0x19) as *mut i8) = -3;"),
     ('v_codigo', "        2 => 0x1f5c,", "        2 => 0x1f59,"),
     ('v_cansaco', "        let cansado = if comentarios && sortear(w(sai, 0x31) as i32) < -10 {", "        let cansado = if comentarios && sortear(w(sai, 0x31) as i32) < -9 {"),
-    ('v_capitao', "            if melhor == -1 || v > nota {\n                nota = v;\n                melhor = k;\n            }\n        }\n        j += 0x1be;\n    }\n    chamar(0x897760", "            if melhor == -1 || v >= nota {\n                nota = v;\n                melhor = k;\n            }\n        }\n        j += 0x1be;\n    }\n    chamar(0x897760"),
+    ('v_capitao', "            if melhor == -1 || v > nota {\n                nota = v;\n                melhor = k;\n            }\n        }\n        j += 0x1be;\n    }\n    chamar(FN_TACTICS_SET_CAPTAIN_FROM_SLOT", "            if melhor == -1 || v >= nota {\n                nota = v;\n                melhor = k;\n            }\n        }\n        j += 0x1be;\n    }\n    chamar(FN_TACTICS_SET_CAPTAIN_FROM_SLOT"),
 ]

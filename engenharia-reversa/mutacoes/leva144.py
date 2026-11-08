@@ -21,7 +21,7 @@ MUTACOES = [
     ('c_acao', "acao = if sortear(if *w(p, 0x198) != 0x10 { 2 } else { 10 }) != 0 { 4 } else { 2 };", "acao = if sortear(if *w(p, 0x198) != 0x10 { 3 } else { 10 }) != 0 { 4 } else { 2 };"),
     ('c_vira', "if y0() < 9 { y0() + 3 } else { 0xb }", "if y0() < 9 { y0() + 2 } else { 0xb }", "conducao vira para o gol"),
     ('c_tabela', "(*w(p, 0x29) as i32 / 3 + 0x113) as i16);", "(*w(p, 0x29) as i32 / 3 + 0x114) as i16);", "conducao tabela devolvida"),
-    ('c_narra', "chamar(0x6d6f70, u(m, 0x8f7a), [0x1f44,", "chamar(0x6d6f70, u(m, 0x8f7a), [0x1f45,"),
+    ('c_narra', "chamar(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [0x1f44,", "chamar(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [0x1f45,"),
     ('c_media', "v / 2 + la4 / 2", "v / 2 + la4 / 3"),
     ('c_ponta', "nc += 500;", "nc += 600;"),
 ]

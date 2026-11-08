@@ -8,7 +8,7 @@
 //!
 //! The four tables in `instalar` are aligned by position: entry `i` of `PROLOGOS` is the original address, entry `i`
 //! of the `rust` list is our copy, entry `i` of the `comparar` list is its comparer, entry `i` of the names is its
-//! label. `orig::<F>(IDX_<NAME>)` calls the original routine (through the bytes saved before the jump); the
+//! label. `original_fn::<F>(IDX_<NAME>)` calls the original routine (through the bytes saved before the jump); the
 //! `IDX_` constants are generated from the table by build.rs.
 //!
 //! # How to read a routine file
@@ -33,7 +33,7 @@
 //!
 //! [pt] As rotinas do jogo reescritas em Rust e como elas substituem as originais. A DLL desvia o começo de cada rotina
 //! original para a cópia em Rust (`desvios.rs`), depois de conferir os primeiros bytes (`PROLOGOS`) e o hash da rotina
-//! inteira (`assinaturas.rs`). As quatro tabelas de `instalar` andam juntas pela posição; `orig::<F>(IDX_<NOME>)` chama a original
+//! inteira (`assinaturas.rs`). As quatro tabelas de `instalar` andam juntas pela posição; `original_fn::<F>(IDX_<NOME>)` chama a original
 //! `i`. Cada arquivo de `motor/` tem as rotinas do arquivo de origem do jogo de mesmo nome; o vocabulário está acima.
 
 use crate::comparacao::{Placar, Sorteio};

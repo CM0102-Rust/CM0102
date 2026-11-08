@@ -85,7 +85,7 @@ pub(crate) unsafe fn add_lineup_histories(this: usize, clube: usize, escalacao: 
             continue;
         }
         let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
-        if p != 0 && read_i32(p) >= read_i32(0xae2364) {
+        if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
         if p == read_usize(clube + club::MANAGER) {
@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     // pushes; add esp, 0xc -> cdecl; 0x4cf5f0: push clube; push p; mov ecx, [0xae1050] -> thiscall (ret 8)
     for j in 0..50usize {
         let p = read_usize(clube + club::SQUAD + 4 * j);
-        if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(0xae2364) || read_usize(p + 0x39) != clube
+        if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || read_usize(p + 0x39) != clube
             || p == read_usize(clube + club::MANAGER)
         {
             continue;
@@ -322,7 +322,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
             break;
         }
         let p = read_usize(clube + club::SQUAD + 4 * j);
-        if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(0xae2364) || p == read_usize(clube + club::MANAGER) {
+        if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || p == read_usize(clube + club::MANAGER) {
             continue;
         }
         crate::comparacao::ramo("cqd_13 elenco do campeao da copa");
@@ -390,7 +390,7 @@ pub(crate) unsafe fn compare_champion_update(nome: &str, this: usize, clube: usi
     let mut fichas = Vec::new(); // (moral da ficha, contrato ou 0, moral de antes), na ordem do elenco
     for j in 0..50usize {
         let p = read_usize(clube + club::SQUAD + 4 * j);
-        if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(0xae2364) {
+        if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
         let k = contrato(read_usize(G_CONTRACT_MANAGER), p, clube);
@@ -467,9 +467,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_cup_winners_record(this: usi
 /// original, a própria pessoa. Zera os 0xd2 bytes e põe −1 em +0x86, +0xc2, +0xc6, +0x4a, +0x5e e +0x72.
 pub(crate) unsafe extern "thiscall" fn clear_human_manager_record(this: usize, pessoa: usize) {
     let id = read_i32(pessoa);
-    let lim = read_i32(0xae2364);
+    let lim = read_i32(G_STAFF_COUNT);
     let r = if id >= lim.wrapping_sub(0x10) && id < lim {
-        let vaga = id.wrapping_sub(lim).wrapping_add(read_i32(0xae2368)).wrapping_add(0x10);
+        let vaga = id.wrapping_sub(lim).wrapping_add(read_i32(G_NON_PLAYER_COUNT)).wrapping_add(0x10);
         read_usize(this + 8).wrapping_add((vaga as usize).wrapping_mul(0xd2))
     } else {
         pessoa
@@ -486,9 +486,9 @@ pub(crate) unsafe extern "thiscall" fn clear_human_manager_record(this: usize, p
 pub(crate) unsafe extern "thiscall" fn comparar_clear_human_manager_record(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_HUMAN_MANAGER_RECORD);
     let id = read_i32(pessoa);
-    let lim = read_i32(0xae2364);
+    let lim = read_i32(G_STAFF_COUNT);
     let r = if id >= lim.wrapping_sub(0x10) && id < lim {
-        let vaga = id.wrapping_sub(lim).wrapping_add(read_i32(0xae2368)).wrapping_add(0x10);
+        let vaga = id.wrapping_sub(lim).wrapping_add(read_i32(G_NON_PLAYER_COUNT)).wrapping_add(0x10);
         read_usize(this + 8).wrapping_add((vaga as usize).wrapping_mul(0xd2))
     } else {
         pessoa
@@ -861,7 +861,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, clube: usize, jogo: usi
             continue;
         }
         let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
-        if p != 0 && read_i32(p) >= read_i32(0xae2364) {
+        if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
         if p == read_usize(clube + club::MANAGER) {
@@ -1253,7 +1253,7 @@ pub(crate) unsafe fn person_history_entry(clube: usize, tipo: u8, comp: u32) -> 
 pub(crate) unsafe fn counted_squad_players(clube: usize) -> impl Iterator<Item = usize> {
     (0..50usize).filter_map(move |k| {
         let p = read_usize(clube + club::SQUAD + 4 * k);
-        if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(0xae2364) || p == read_usize(clube + club::MANAGER) {
+        if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || p == read_usize(clube + club::MANAGER) {
             None
         } else {
             Some(p)
@@ -2013,7 +2013,7 @@ pub(crate) const MANAGER_RECORD_SIZE: usize = 0xd2;
 
 /// Number of manager records: [0xae2368] (non-player count) + 16 human slots.
 pub(crate) unsafe fn manager_record_count() -> i32 {
-    read_i32(0xae2368).wrapping_add(0x10)
+    read_i32(G_NON_PLAYER_COUNT).wrapping_add(0x10)
 }
 
 /// Returns manager record k in the records array [this+8] (MANAGER_RECORD_SIZE bytes each).
@@ -2322,7 +2322,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: u
         let v = versao(nome.as_mut_ptr(), ext.as_mut_ptr(), 0xf6e);
         formatar(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), 0xf6eu32);
         caixa(0x9870e0, 0xae24d0, 0);
-        write_u32(0xb67a34, 0);
+        write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
         return 0;
     }
     let r = loop {

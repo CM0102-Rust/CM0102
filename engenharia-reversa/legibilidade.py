@@ -23,6 +23,22 @@ MEDIDAS = [
 ]
 
 
+# nomes locais em português (let e parâmetros): palavras comuns e terminações portuguesas (indicador, não exato)
+PT_PALAVRAS = set('''clube pessoa nacao jogador contrato vaga vagas lista oferta ano dia mes valor total primeiro ultimo novo velha
+velho achou acha conta lado bola casa grade papel lance chute time jogo partida rodada fase grupo liga copa tabela linha
+regra regras vencedor perdedor gols pontos posicao nivel idade data tipo codigo registro ficha bloco motor sorteio peso
+resto limite faixa campo origem destino proximo anterior quantos quantas maior menor melhor pior soma media dono humano
+vendedor comprador alvo troca empréstimo emprestimo salario premio verba orcamento torneio campeao vice estadio cidade
+tecnico treinador arbitro olheiro diretor clubes pessoas jogadores nacoes ofertas contratos dias anos meses semana
+escolhido escolha atual antigo achado feito saida entrada inicio fim meio volta ida casa fora mandante visitante
+'''.split())
+PT_FIM = re.compile(r'(cao|coes|oes|dade|mento|agem|eiro|eira|ado|ada|ido|ida)$')
+
+
+def portugues(nome):
+    return any(t in PT_PALAVRAS or (len(t) > 4 and PT_FIM.search(t)) for t in nome.lower().split('_'))
+
+
 def arquivos():
     yield os.path.join(SRC, 'motor.rs')
     for d, _, fs in sorted(os.walk(os.path.join(SRC, 'motor'))):
@@ -49,14 +65,18 @@ def medir():
                 antes = t[:x.start()].rstrip('\n').rsplit('\n', 1)[-1]
                 sem += not antes.lstrip().startswith(('///', '#['))
         m['sem_cabecalho'] = sem
+        locais = re.findall(r'\blet (?:mut )?([a-z_][a-z0-9_]*)\b', t) + re.findall(r'[(,]\s*(?:mut )?([a-z_][a-z0-9_]*): (?:usize|u8|u16|u32|i8|i16|i32|f64|f32|bool|&|\*)', t)
+        m['locais_pt'] = sum(1 for n in locais if portugues(n))
+        m['locais'] = len(locais)
         m['linhas'] = t.count('\n')
         linhas.append((os.path.relpath(f, SRC).replace('\\', '/'), m))
     return linhas
 
 
 def gerar(linhas, en):
-    chaves = [k for k, *_ in MEDIDAS] + ['sem_cabecalho']
-    tit = [(e if en else p) for _, _, p, e in MEDIDAS] + ['routines without header' if en else 'rotinas sem cabeçalho']
+    chaves = [k for k, *_ in MEDIDAS] + ['sem_cabecalho', 'locais_pt']
+    tit = [(e if en else p) for _, _, p, e in MEDIDAS] + ['routines without header' if en else 'rotinas sem cabeçalho',
+                                                         'Portuguese locals/params' if en else 'locais/parâmetros em português']
     tot = {k: sum(m[k] for _, m in linhas) for k in chaves + ['linhas']}
     L = ['*English version of [LEGIBILIDADE.md](LEGIBILIDADE.md). Both are kept in sync; the Portuguese file is the original.*' if en
          else '*[English version](LEGIBILIDADE.en.md).*', '',
@@ -81,5 +101,5 @@ if __name__ == '__main__':
     ls = medir()
     for en, nome in ((False, 'LEGIBILIDADE.md'), (True, 'LEGIBILIDADE.en.md')):
         open(os.path.join(R, 'docs', nome), 'w', encoding='utf-8').write(gerar(ls, en))
-    tot = {k: sum(m[k] for _, m in ls) for k in ('desloc', 'chaves', 'enderecos', 'copias', 'sem_cabecalho')}
+    tot = {k: sum(m[k] for _, m in ls) for k in ('desloc', 'chaves', 'enderecos', 'copias', 'sem_cabecalho', 'locais_pt', 'locais')}
     print(' '.join('%s=%d' % x for x in tot.items()))

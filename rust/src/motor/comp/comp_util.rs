@@ -1072,7 +1072,7 @@ pub(crate) unsafe extern "C" fn comparar_units_digit(n: i32) -> u8 {
 /// Comparer for `is_national_team` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_is_national_team(clube: usize) -> u32 {
     if is_recording_post_match() {
-        return call_recording(0x53b900, 0, [clube as u32, 0, 0, 0, 0], || original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_NATIONAL_TEAM)(clube));
+        return call_recording(FN_DATABASE_IS_NATIONAL_TEAM, 0, [clube as u32, 0, 0, 0, 0], || original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_NATIONAL_TEAM)(clube));
     }
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_NATIONAL_TEAM)(clube);
     let v = is_national_team(clube);

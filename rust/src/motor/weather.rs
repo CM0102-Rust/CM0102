@@ -712,7 +712,7 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
         i += 1;
     }
     let mut k = 0usize;
-    while (k as i32) < read_i32(0xae2354) {
+    while (k as i32) < read_i32(G_CITY_COUNT) {
         crate::comparacao::ramo("cpt_7 clima inicial");
         for j in 0..3usize {
             let a = friendly_random(100);

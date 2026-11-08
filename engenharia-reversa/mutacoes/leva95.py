@@ -1,6 +1,6 @@
 # Mutacoes da leva95 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva95.py --jogo 2001-08-20
 MUTACOES = [
-    ('s_formacao', "        *w(0x198) = 0x68;\n        chamar(0x6f46b0", "        *w(0x198) = 0x69;\n        chamar(0x6f46b0"),
+    ('s_formacao', "        *w(0x198) = 0x68;\n        chamar(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL", "        *w(0x198) = 0x69;\n        chamar(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL"),
     ('s_marca', "            sortear(0x14).wrapping_add(byte(j, 0x107) as i32) != 0", "            sortear(0x14).wrapping_add(byte(j, 0x107) as i32) == 0"),
     ('s_chance', "        let n = if ta() & 0x40 != 0 { 20 } else { 50 };", "        let n = if ta() & 0x40 != 0 { 20 } else { 51 };"),
     ('s_ataque', "    let no_ataque = (dir == 1 && y < 3) || (dir == 0 && y > 8);", "    let no_ataque = (dir == 1 && y < 4) || (dir == 0 && y > 8);"),

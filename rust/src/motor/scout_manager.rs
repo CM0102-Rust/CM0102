@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
     relatorios(this, l);
     ordenar(read_usize(this + 0x5c), read_i32(this + 0x64), 0x11, 0x7fc270);
     for k in 0..0x10i32 {
-        let p = staff_records_staff_by_id((read_i32(0xae2364) - k - 1) as usize);
+        let p = staff_records_staff_by_id((read_i32(G_STAFF_COUNT) - k - 1) as usize);
         if read_u8(p + 0x5f) == 1 {
             crate::comparacao::ramo("cqf_12 busca do humano");
             for j in 0..10u32 {

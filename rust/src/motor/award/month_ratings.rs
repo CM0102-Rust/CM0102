@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: u
                 continue;
             }
             let p = month_ratings_staff_by_id(read_i32(e));
-            if p != 0 && read_i32(p) >= read_i32(0xae2364) {
+            if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
             if l == 1 {

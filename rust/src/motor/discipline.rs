@@ -1232,7 +1232,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_hold_bans_for_loan(this: usize, 
 /// válido, a competição ([[0xadadfc] + 4 × id]) e o órgão dela (+0x50, 0xff sem; [this] + 4 × órgão), a pergunta ao órgão
 /// (0x7e8d60 com o id, 0, 0 e o +4 da competição); senão 0. Pela tela do clube (0x4849f0).
 pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
-    if pessoa != 0 && read_i32(pessoa) >= read_i32(0xae2364) {
+    if pessoa != 0 && read_i32(pessoa) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(competicao) as u32).wrapping_mul(4) as usize));

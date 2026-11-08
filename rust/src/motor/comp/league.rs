@@ -4562,7 +4562,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_limit_club_division_tier(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_narrate_qualification(this: usize, lado: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_NARRATE_QUALIFICATION);
     if is_recording_top_level() {
-        call_recording(0x6be120, this, [lado, 0, 0, 0, 0], || {
+        call_recording(FN_CM3_MATCH_ENGINE_POST_PERIOD_END_EVENTS, this, [lado, 0, 0, 0, 0], || {
             o(this, lado);
             0
         });

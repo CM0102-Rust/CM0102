@@ -568,7 +568,7 @@ pub(crate) unsafe extern "thiscall" fn has_missed_training(this: usize, pessoa: 
         return 0;
     }
     let id = read_i32(pessoa);
-    if id >= read_i32(0xae2364) {
+    if id >= read_i32(G_STAFF_COUNT) {
         return id as u32 & 0xffffff00;
     }
     if read_u8(read_usize(this + 0xc).wrapping_add(id as usize)) & 2 != 0 {
@@ -589,7 +589,7 @@ pub(crate) unsafe extern "thiscall" fn has_missed_training(this: usize, pessoa: 
 /// só a original (a 0x4197c0 tira e libera o nó da lista).
 pub(crate) unsafe extern "thiscall" fn comparar_has_missed_training(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_MISSED_TRAINING);
-    if pessoa != 0 && read_i32(pessoa) < read_i32(0xae2364) && read_u8(read_usize(this + 0xc).wrapping_add(read_i32(pessoa) as usize)) & 2 != 0 {
+    if pessoa != 0 && read_i32(pessoa) < read_i32(G_STAFF_COUNT) && read_u8(read_usize(this + 0xc).wrapping_add(read_i32(pessoa) as usize)) & 2 != 0 {
         let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
         let k = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
         if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE)) == 0 {
@@ -613,7 +613,7 @@ pub(crate) unsafe extern "thiscall" fn has_fitness_incident(this: usize, pessoa:
         return 0;
     }
     let id = read_i32(pessoa);
-    if id >= read_i32(0xae2364) {
+    if id >= read_i32(G_STAFF_COUNT) {
         return id as u32 & 0xffffff00;
     }
     let l = read_usize(this + 8);
@@ -691,7 +691,7 @@ pub(crate) const AWOL_RESIDUE_BYTE: u8 = 0x90;
 /// e sorteio(+0x14 dele) não zero: a multa (0x5a5980, prazo 1 se sorteio(nota do técnico 0x544410 com o +0x19) passar
 /// de sorteio(5), senão 2; motivo 1).
 pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
-    if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(0xae2364) {
+    if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(G_STAFF_COUNT) {
         return;
     }
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
@@ -780,7 +780,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize)
 /// registro) não entra: na original é resíduo da pilha.
 pub(crate) unsafe extern "thiscall" fn comparar_miss_training(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MISS_TRAINING);
-    if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(0xae2364) {
+    if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(G_STAFF_COUNT) {
         return o(this, pessoa);
     }
     let m = read_usize(this + 0xc).wrapping_add(read_i32(pessoa) as usize);

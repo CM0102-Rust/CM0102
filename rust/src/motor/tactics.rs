@@ -291,7 +291,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
     let pb = |o: usize| (u(m, 0x4792) + o) as *mut i8;
     let gols = |lado: usize| *b(0xf5bd + lado * 0x36) as i32;
     let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, c: u8, lado: usize| {
-        chamar(0x6d6f70, u(m, 0x8f7a), [codigo, m as u32, c as u32, lado as u32, u32::MAX]);
+        chamar(FN_MATCH_EVENTS_ADD_EVENT, u(m, 0x8f7a), [codigo, m as u32, c as u32, lado as u32, u32::MAX]);
     };
     // goleiros (tabela 1) ativos do lado sofrem o gol
     let goleiros = |lado: usize| {
@@ -698,7 +698,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
                     _ => continue,
                 };
                 crate::comparacao::ramo("simulacao rapida lesao");
-                chamar(0x6d0980, m, [tipo, g as u32, p as u32, 0, 0]);
+                chamar(FN_CM3_MATCH_ENGINE_INJURE_PLAYER, m, [tipo, g as u32, p as u32, 0, 0]);
             }
         }
     }
@@ -1212,7 +1212,7 @@ pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: us
     if t == 0 {
         return 0;
     }
-    let k = read_i32(0xae2364).wrapping_sub(read_i32(t)).wrapping_sub(1);
+    let k = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(t)).wrapping_sub(1);
     if !(0..0x10).contains(&k) {
         return 0;
     }
@@ -1652,7 +1652,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_marked_slot(this: usize, clube: 
 pub(crate) unsafe extern "thiscall" fn comparar_mark_slot(this: usize, clube: usize, vaga: i8, humano: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(IDX_MARK_SLOT);
     if is_recording_top_level() {
-        return call_recording(0x897760, this, [clube as u32, vaga as u8 as u32, humano, 0, 0], || o(this, clube, vaga, humano));
+        return call_recording(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, this, [clube as u32, vaga as u8 as u32, humano, 0, 0], || o(this, clube, vaga, humano));
     }
     let tabela = *((this + 0x601) as *const usize);
     // a linha pode ser qualquer uma da tabela: compara as 0x52..0x56 de todas as linhas possiveis

@@ -8,6 +8,6 @@ MUTACOES = [
     ('d_linha', "        0x20 => 4,\n        0x40 => 5,\n        _ => lado_b,", "        0x20 => 4,\n        0x40 => 6,\n        _ => lado_b,"),
     ('d_coluna_q', "            0x800 => 1,\n            0x400 => 3,", "            0x800 => 2,\n            0x400 => 3,"),
     ('d_menor', "        if escolhido == -1 || dist < melhor {", "        if escolhido == -1 || dist <= melhor {"),
-    ('d_tabela', "read_f32_at(0xa15e44 + 4 * (dr as usize * 9 + dc as usize))", "read_f32_at(0xa15e44 + 4 * (dr as usize * 8 + dc as usize))"),
+    ('d_tabela', "read_f32_at(G_CELL_DISTANCE_TABLE + 4 * (dr as usize * 9 + dc as usize))", "read_f32_at(G_CELL_DISTANCE_TABLE + 4 * (dr as usize * 8 + dc as usize))"),
     ('d_goleiro_q', "        if byte(q, 0x19) < 0 || match_player_position(q) & 1 != 0 {\n            continue;\n        }\n        separar(", "        if byte(q, 0x19) < 0 {\n            continue;\n        }\n        separar("),
 ]

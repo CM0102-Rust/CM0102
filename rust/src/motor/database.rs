@@ -71,7 +71,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, chamar: &mut dyn FnMut(usize, 
     // poe uma copia do bloco (0x19 bytes) na lista de eventos (o conteudo e conferido na fita)
     let mut evento = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, p: usize| {
         request_buffers(&[(p, 0x19)], &[]);
-        chamar(0x68d0d0, lista_global(), [0, 0x19, 0, 0, 0]);
+        chamar(FN_LLIST_ADD_TAIL, lista_global(), [0, 0x19, 0, 0, 0]);
     };
     let partida = || d(m, 0x4792);
     let pessoa_de = |id: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * staff::SIZE);
@@ -176,7 +176,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, chamar: &mut dyn FnMut(usize, 
             }
             let pessoa = d(p, 0x69);
             if pessoa != 0 && d(p, 0x6d) != 0 && *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) {
-                chamar(0x6d26b0, p, [pessoa as u32, meu as u32, outro as u32, (byte(p, 0x1b) as f32).to_bits(), *(m as *const u8) as u32 | 1 << 8]);
+                chamar(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, p, [pessoa as u32, meu as u32, outro as u32, (byte(p, 0x1b) as f32).to_bits(), *(m as *const u8) as u32 | 1 << 8]);
                 if lista_global() != 0 && selecao(meu) == 0 && byte(pt, 0x40) != 0 {
                     let ct = contrato(*(G_CONTRACT_MANAGER as *const usize), pessoa, meu);
                     if ct != 0
@@ -278,9 +278,9 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, chamar: &mut dyn FnMut(usize, 
         crate::comparacao::ramo(if soma != 0 { "match_wrap_up media do lado" } else { "match_wrap_up lado sem minutos" });
         let valor = (media as f32).to_bits();
         let alt = *(m as *const u8) as u32;
-        chamar(0x6d3610, m + 0x9032 + lado * 0xd0, [meu as u32, outro as u32, pt as u32, valor, alt | 1 << 8]);
+        chamar(FN_UPDATE_MANAGER_REPUTATION_AFTER_MATCH, m + 0x9032 + lado * 0xd0, [meu as u32, outro as u32, pt as u32, valor, alt | 1 << 8]);
         if selecao(meu) == 0 {
-            chamar(0x6d3de0, m, [lado as u32, valor, alt | 1 << 8, 0, 0]);
+            chamar(FN_MATCH_ENG_COMPUTE_CLUB_REPUTATION, m, [lado as u32, valor, alt | 1 << 8, 0, 0]);
         }
     }
 }
@@ -2198,8 +2198,8 @@ pub(crate) unsafe extern "C" fn club_get_national_team_name(clube: usize, varian
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let id = read_usize(clube) as i32;
-    let nacoes = read_usize(0xae2350) as i32;
-    let clubes = read_usize(0xae235c) as i32;
+    let nacoes = read_usize(G_NATION_COUNT) as i32;
+    let clubes = read_usize(G_CLUB_COUNT) as i32;
     let (nome, g) = if f == 3 { (clube + 4, *((clube + club::GENDER_NAME) as *const i8) as i32) } else { (clube + club::SHORT_NAME, *((clube + club::SHORT_GENDER_NAME) as *const i8) as i32) };
     let formato = if id < clubes.wrapping_sub(nacoes.wrapping_mul(2)) {
         if variante == 0 {
@@ -2961,7 +2961,7 @@ pub(crate) unsafe fn favourite_colleague_score(pessoa: usize, clube: usize, o: u
     }
     let id = read_usize(pessoa) as i32;
     let oid = read_usize(o) as i32;
-    if oid >= read_usize(0xae2364) as i32 || o == pessoa || oid.wrapping_add(id) % 3 == 0 {
+    if oid >= read_usize(G_STAFF_COUNT) as i32 || o == pessoa || oid.wrapping_add(id) % 3 == 0 {
         return None;
     }
     let pref = read_usize(pessoa + staff::STAFF_PREFERENCES);
@@ -4244,7 +4244,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(pessoa: usize, clu
             continue;
         }
         let oid = read_usize(o) as i32;
-        if oid >= read_usize(0xae2364) as i32 || o == pessoa || oid.wrapping_add(id) % 3 == 0 {
+        if oid >= read_usize(G_STAFF_COUNT) as i32 || o == pessoa || oid.wrapping_add(id) % 3 == 0 {
             continue;
         }
         let pref = read_usize(pessoa + staff::STAFF_PREFERENCES);
@@ -6228,7 +6228,7 @@ pub(crate) unsafe fn is_weak_english_club(c: usize) -> bool {
 /// [pt] A conferência inicial da 0x527240: alguma pessoa de cargo 8 (+0x3d) com clube (+0x39) que não a tem nas 5 casas +0x19f.
 pub(crate) unsafe fn any_coach_missing_from_club() -> bool {
     let mut i = 0i32;
-    while i < read_i32(0xae2364) {
+    while i < read_i32(G_STAFF_COUNT) {
         let s = read_usize(G_STAFF_TABLE) + i as usize * 110;
         let c = read_usize(s + 0x39);
         if *((s + 0x3d) as *const u8) == 8 && c != 0 && !(0..5).any(|j| read_usize(c + 0x19f + 4 * j) == s) {
@@ -6249,15 +6249,15 @@ pub(crate) unsafe fn make_extra_staff(nacao: usize, gerados: i32) -> usize {
     let primeiro: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_PICK_FIRST_NAME_FOR_NATION);
     let segundo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_PICK_SECOND_NAME_FOR_NATION);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let s = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(0xae2364) - gerados - 0x11) as usize * 110);
+    let s = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - gerados - 0x11) as usize * 110);
     core::ptr::write_unaligned((s + 4) as *mut usize, primeiro(nacao));
     core::ptr::write_unaligned((s + 8) as *mut usize, segundo(nacao));
     let comum = |k: i32| read_usize(G_COMMON_NAME_TABLE).wrapping_add((k as usize).wrapping_mul(0x3c));
-    let guardada = read_i32(0x9b59b4);
+    let guardada = read_i32(G_EMPTY_COMMON_NAME_INDEX);
     let nome = if guardada != -1 {
         comum(guardada)
     } else {
-        let n = read_i32(0xae23a0);
+        let n = read_i32(G_COMMON_NAME_COUNT);
         match (0..n).find(|&j| *(comum(j) as *const u8) == 0) {
             Some(j) => {
                 *(G_EMPTY_COMMON_NAME_INDEX as *mut i32) = j;
@@ -6600,7 +6600,7 @@ pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
     crate::comparacao::ramo("criação podar o histórico de competições");
     let mut k = 0usize;
     let mut i = 0i32;
-    while i < read_i32(0xae237c) {
+    while i < read_i32(G_CLUB_COMP_HISTORY_COUNT) {
         let l = read_usize(G_CLUB_COMP_HISTORY_TABLE) + i as usize * 0x1a;
         let comp = read_usize(l + 4);
         if comp != 0 {
@@ -6613,7 +6613,7 @@ pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
         i += 1;
     }
     let t = realocar(read_usize(G_CLUB_COMP_HISTORY_TABLE), (k * 0x1a) as u32);
-    let selecoes = (k as i32).wrapping_sub(read_i32(0xae2384));
+    let selecoes = (k as i32).wrapping_sub(read_i32(G_NATION_COMP_HISTORY_COUNT));
     *(G_CLUB_COMP_HISTORY_TABLE as *mut usize) = t;
     *(G_CLUB_COMP_HISTORY_COUNT as *mut i32) = k as i32;
     *(G_NATION_COMP_HISTORY_TABLE as *mut usize) = t.wrapping_add((selecoes as usize).wrapping_mul(0x1a));
@@ -6640,8 +6640,8 @@ pub(crate) unsafe extern "C" fn comparar_database_generate_extra_non_playing_sta
     let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     regioes.push((0x9b59b4, 4));
     regioes.push((0xde1f64, 0x40));
-    regioes.push((read_usize(G_CLUB_TABLE), read_i32(0xae235c).max(0) as usize * 581));
-    regioes.push((read_usize(G_STAFF_TABLE), read_i32(0xae2364).max(0) as usize * 110));
+    regioes.push((read_usize(G_CLUB_TABLE), read_i32(G_CLUB_COUNT).max(0) as usize * 581));
+    regioes.push((read_usize(G_STAFF_TABLE), read_i32(G_STAFF_COUNT).max(0) as usize * 110));
     let (r, m, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(),
         || crate::aleatorio::sem_contar(|| database_generate_extra_non_playing_staff()));
     let onde = first_memory_difference(&mo, &mr);
@@ -10321,7 +10321,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ball_out(this: usize, l: u8) -> 
         return o(this, l);
     }
     if is_recording() {
-        return call_recording(0x6cd490, this, [l as u32, 0, 0, 0, 0], || o(this, l) as u32) as u8;
+        return call_recording(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, this, [l as u32, 0, 0, 0, 0], || o(this, l) as u32) as u8;
     }
     let mut extra = vec![(this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x20), (this + 0x1a0, 0x10)];
     let dono = *((this + 0xf582) as *const usize);

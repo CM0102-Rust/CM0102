@@ -607,7 +607,7 @@ pub(crate) unsafe fn apply_side_factor_floor(jogo: usize, lado: u8, f: &mut [f64
 /// total, o mandante e o visitante e devolve o total.
 pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     if jogo == 0 {
-        return read_i32(0xa835ac);
+        return read_i32(G_STADIUM_DEFAULT_ATTENDANCE);
     }
     let casa = read_u32_as_usize(jogo + 0x1c);
     let fora = read_u32_as_usize(jogo + 0x20);

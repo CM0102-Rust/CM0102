@@ -123,8 +123,8 @@ pub(crate) unsafe fn crt_free(p: usize) {
 pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     let rever: unsafe extern "C" fn() = core::mem::transmute(FN_OFFICIALS_MANAGER_VALIDATE_OFFICIALS);
     rever();
-    officials_manager_crt_qsort(read_u32_as_usize(G_OFFICIAL_TABLE), read_i32(0xae2390) as u32, 0x2b, 0x79d4e0);
-    let n = read_i32(0xae2390);
+    officials_manager_crt_qsort(read_u32_as_usize(G_OFFICIAL_TABLE), read_i32(G_OFFICIAL_COUNT) as u32, 0x2b, 0x79d4e0);
+    let n = read_i32(G_OFFICIAL_COUNT);
     let marcas = crt_calloc(n as u32, 1);
     let mut ficam = 0i32;
     if n > 0 {
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     let mut dst = nova;
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_OFFICIAL_OPERATOR_3D);
     let mut i = 0i32;
-    while i < read_i32(0xae2390) {
+    while i < read_i32(G_OFFICIAL_COUNT) {
         if *((marcas + i as usize) as *const u8) != 0 {
             copiar(dst, official_record(i));
             dst += 0x2b;
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     write_u32(G_OFFICIAL_TABLE, nova as u32);
     write_u32(G_OFFICIAL_COUNT, ficam as u32);
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let nacoes = read_i32(0xae2350);
+    let nacoes = read_i32(G_NATION_COUNT);
     let blocos = malloc((nacoes as u32).wrapping_mul(0x102));
     write_u32(this + 0xc, blocos as u32);
     if blocos == 0 {
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     }
     let ativa: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    for k in 0..read_i32(0xadadf8).max(0) {
+    for k in 0..read_i32(G_COMP_OBJECT_COUNT).max(0) {
         if read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) == 0 || ativa(k) == 0 {
             continue;
         }
@@ -214,12 +214,12 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         }
         write_i16(b + 0x10, read_i16(b + 0x10).wrapping_add(1));
     }
-    for i in 0..read_i32(0xae2390).max(0) {
+    for i in 0..read_i32(G_OFFICIAL_COUNT).max(0) {
         let b = blocos.wrapping_add((read_i32(read_u32_as_usize(official_record(i) + 0x16)) as isize * 0x102) as usize);
         write_u32(b + 4, read_u32_as_usize(b + 4).wrapping_add(1) as u32);
     }
     let novos: unsafe extern "stdcall" fn(i32, usize) = core::mem::transmute(FN_OFFICIALS_MANAGER_ADD_RANDOM_OFFICIALS);
-    for k in 0..read_i32(0xae2350).max(0) {
+    for k in 0..read_i32(G_NATION_COUNT).max(0) {
         let b = blocos + k as usize * 0x102;
         let nac = read_u32_as_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE);
         let c = read_i16(b + 0x10);
@@ -237,17 +237,17 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
             write_u32(b + 4, (read_i16(read_u32_as_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE) + 0x8e) as i32).min(5) as u32);
         }
     }
-    for i in 0..read_i32(0xae2390).max(0) {
+    for i in 0..read_i32(G_OFFICIAL_COUNT).max(0) {
         write_u32(official_record(i), i as u32);
     }
-    for i in 0..read_i32(0xae2390).max(0) {
+    for i in 0..read_i32(G_OFFICIAL_COUNT).max(0) {
         let r = official_record(i);
         let b = blocos.wrapping_add((read_i32(read_u32_as_usize(r + 0x16)) as isize * 0x102) as usize);
         if read_i32(r) < read_i32(b + 8) {
             write_u32(b + 8, read_u32_as_usize(r) as u32);
         }
     }
-    for k in 0..read_i32(0xae2350).max(0) {
+    for k in 0..read_i32(G_NATION_COUNT).max(0) {
         let b = read_u32_as_usize(this + 0xc) + k as usize * 0x102;
         let c = read_i16(b + 0x10);
         if c == 0 {
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
             j += 1;
         }
     }
-    let total = read_i32(0xae2390);
+    let total = read_i32(G_OFFICIAL_COUNT);
     write_u32(this + 4, total as u32);
     let m = crt_calloc(total as u32, 1);
     write_u32(this + 8, m as u32);
@@ -280,8 +280,8 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
 pub(crate) unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_UP_OFFICIALS)(this);
-    PLACAR.registrar(read_u32_as_usize(this + 0xc) != 0 && read_i32(this + 4) == read_i32(0xae2390) && read_u32_as_usize(this + 8) != 0,
-        || format!("set_up_officials: blocos {:x}, conta {} x {}", read_u32_as_usize(this + 0xc), read_i32(this + 4), read_i32(0xae2390)));
+    PLACAR.registrar(read_u32_as_usize(this + 0xc) != 0 && read_i32(this + 4) == read_i32(G_OFFICIAL_COUNT) && read_u32_as_usize(this + 8) != 0,
+        || format!("set_up_officials: blocos {:x}, conta {} x {}", read_u32_as_usize(this + 0xc), read_i32(this + 4), read_i32(G_OFFICIAL_COUNT)));
 }
 
 
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
 /// nível: a diferença dos ids.
 pub(crate) unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let (ca, cb) = (read_i32(a + 0xc), read_i32(b + 0xc));
-    let max = read_i32(0xae2378);
+    let max = read_i32(G_CLUB_COMP_COUNT);
     if ca < 0 || ca > max {
         return 1;
     }
@@ -435,7 +435,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
     if read_i32(jogo) == -2 {
         return 0xffff_ff00;
     }
-    let nacoes = read_i32(0xae2350);
+    let nacoes = read_i32(G_NATION_COUNT);
     let mandante = read_usize(jogo + 0x1c);
     let visitante = read_usize(jogo + 0x20);
     let comp = read_usize(jogo + 0x14);
@@ -467,7 +467,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
                     } else if let Some(k) = continente_do(visitante) {
                         k
                     } else {
-                        sortear(read_i32(0xae234c))
+                        sortear(read_i32(G_CONTINENT_COUNT))
                     };
                     let inicio = sortear(nacoes);
                     let mut k = inicio;
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
                             break;
                         }
                         k += 1;
-                        if k >= read_i32(0xae2350) {
+                        if k >= read_i32(G_NATION_COUNT) {
                             k = 0;
                         }
                         if k == inicio {
@@ -614,7 +614,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     if conta(read_i32(comp)) == 0 {
         return 0;
     }
-    let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 { read_i32(read_usize(comp + competition::CLUB_COMP_NATION)) } else { sortear(read_i32(0xae2350)) };
+    let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 { read_i32(read_usize(comp + competition::CLUB_COMP_NATION)) } else { sortear(read_i32(G_NATION_COUNT)) };
     let b = nation_officials_block(this, nacao);
     let mut band = None;
     for f in 0..read_i16(b + 0x10).max(0) as usize {
@@ -673,7 +673,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
 /// ficha): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_renew_officials(this: usize, comp: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_RENEW_OFFICIALS);
-    let total = read_i32(0xae2390).max(0) as usize;
+    let total = read_i32(G_OFFICIAL_COUNT).max(0) as usize;
     if read_usize(G_OFFICIAL_TABLE) == 0 || read_usize(this) == 0 {
         return o(this, comp);
     }
@@ -746,7 +746,7 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_t
         return;
     }
     let realocar: unsafe extern "C" fn(usize, i32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let antes = read_i32(0xae2390);
+    let antes = read_i32(G_OFFICIAL_COUNT);
     let t = realocar(read_usize(G_OFFICIAL_TABLE), antes.wrapping_add(conta).wrapping_mul(0x2b));
     *(G_OFFICIAL_TABLE as *mut usize) = t;
     if t == 0 {
@@ -758,7 +758,7 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_t
         generate_official(r, nacao);
         r += 0x2b;
     }
-    let n = read_i32(0xae2390).wrapping_add(conta);
+    let n = read_i32(G_OFFICIAL_COUNT).wrapping_add(conta);
     *(G_OFFICIAL_COUNT as *mut i32) = n;
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     crate::comparacao::ramo("cpy_9 ordenar");
@@ -794,10 +794,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_off
     }));
     let estado_rust = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     estado.escrever();
-    let antes = read_i32(0xae2390);
+    let antes = read_i32(G_OFFICIAL_COUNT);
     o(this, conta, nacao);
     let estado_orig = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let total = read_i32(0xae2390);
+    let total = read_i32(G_OFFICIAL_COUNT);
     let t = read_usize(G_OFFICIAL_TABLE);
     let mut usada = vec![false; total.max(0) as usize];
     let mut faltam = Vec::new();
@@ -836,7 +836,7 @@ pub(crate) unsafe fn fix_official_attribute(e: usize, o: usize, f: impl FnOnce()
 pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
     let base = read_usize(G_OFFICIAL_TABLE);
     let mut i = 0i32;
-    while i < read_i32(0xae2390) {
+    while i < read_i32(G_OFFICIAL_COUNT) {
         let e = base.wrapping_add((i as usize).wrapping_mul(0x2b));
         if read_usize(e + 0x16) == 0 {
             let (n1, n2) = (read_usize(e + 4), read_usize(e + 8));
@@ -845,7 +845,7 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
             } else if read_i32(n2 + 0x37) >= 0 {
                 read_i32(n2 + 0x37)
             } else {
-                sortear(read_i32(0xae2350))
+                sortear(read_i32(G_NATION_COUNT))
             };
             write_usize(e + 0x16, read_usize(G_NATION_TABLE).wrapping_add(k.wrapping_mul(0x122) as usize));
         }
@@ -909,7 +909,7 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
 /// [pt] Comparador: lado a lado pelas fichas de todos os árbitros e pelo estado do sorteio.
 pub(crate) unsafe extern "C" fn comparar_officials_manager_validate_officials() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_OFFICIALS_MANAGER_VALIDATE_OFFICIALS);
-    let total = read_i32(0xae2390).max(0) as usize;
+    let total = read_i32(G_OFFICIAL_COUNT).max(0) as usize;
     if read_usize(G_OFFICIAL_TABLE) == 0 {
         return o();
     }

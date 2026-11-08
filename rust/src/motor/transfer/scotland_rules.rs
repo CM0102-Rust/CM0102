@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0
     let mes: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     *ini_mes = (mes(G_CURRENT_DATE) as i8).wrapping_add(1);
-    *ini_ano = read_i16(0xae2c92);
+    *ini_ano = read_i16(G_CURRENT_DATE_YEAR);
     if *ini_mes > 0xb {
         *ini_mes = (*ini_mes).wrapping_sub(0xc);
         *ini_ano = (*ini_ano).wrapping_add(1);
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
         if *ini_mes < e {
             *fim_ano = *ini_ano;
         } else {
-            *fim_ano = read_i16(0xae2c92).wrapping_add(1);
+            *fim_ano = read_i16(G_CURRENT_DATE_YEAR).wrapping_add(1);
         }
         return;
     }

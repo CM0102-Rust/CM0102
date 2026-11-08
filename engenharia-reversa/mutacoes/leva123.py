@@ -5,7 +5,7 @@ MUTACOES = [
     ('u_tabela', "        let pula = v <= 0x3c && matches!(v, 0 | 5..=13 | 0x3b | 0x3c);", "        let pula = v <= 0x3c && matches!(v, 0 | 5..=12 | 0x3b | 0x3c);"),
     ('u_fora', "                    (peso as f64 * 0.16666666666666666 + 0.83) as f32", "                    (peso as f64 * 0.16666666666666666 + 0.84) as f32"),
     ('u_campo', "                    ((peso as f64 + 1.0) * 0.5) as f32", "                    ((peso as f64 + 1.0) * 0.6) as f32"),
-    ('u_cansar', "                chamar(0x716e10, j, [1, 0, 0, 0, 0]);", "                chamar(0x716e10, j, [0; 5]);"),
+    ('u_cansar', "                chamar(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, j, [1, 0, 0, 0, 0]);", "                chamar(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, j, [0; 5]);"),
     ('u_nove', "            if sortear(9) == 0 {", "            if sortear(8) == 0 {"),
     ('u_fim', "    *((m + 0x8eb4) as *mut u8) = 2;", "    *((m + 0x8eb4) as *mut u8) = 3;"),
 ]

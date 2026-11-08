@@ -225,7 +225,7 @@ pub(crate) unsafe fn manager_or_current_human(tecnico: usize) -> usize {
 /// [pt] O índice do registro do técnico humano no gerenciador `this` (id − [0xae2364] + 16), se estiver entre 0 e a conta
 /// ([this+4]) − 1; fora disso a original mostra a caixa "Error".
 pub(crate) unsafe fn human_manager_human_manager_index(this: usize, tecnico: usize) -> Option<usize> {
-    let k = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    let k = read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if k < 0 || k > read_i32(this + 4).wrapping_sub(1) {
         return None;
     }
@@ -943,7 +943,7 @@ pub(crate) unsafe extern "C" fn comparar_split_mask(m: u32, setor: *mut u16, lad
 pub(crate) unsafe extern "C" fn comparar_human_club(clube: usize, a: u32, b: u8, pessoa: usize, c: u32) -> u32 {
     if is_recording_post_match() {
         let o = original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB);
-        return call_recording(0x600a50, 0, [clube as u32, a, b as u32, pessoa as u32, c], || o(clube, a, b, pessoa, c));
+        return call_recording(FN_HUMAN_MANAGER_IS_HUMAN_CLUB, 0, [clube as u32, a, b as u32, pessoa as u32, c], || o(clube, a, b, pessoa, c));
     }
     let r = original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB)(clube, a, b, pessoa, c);
     let v = human_club(clube, a, b, pessoa, c);

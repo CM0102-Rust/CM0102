@@ -12,5 +12,5 @@ MUTACOES = [
     ('m_largar', "            if pm == -5 || (pm > -4 && pm < 0) {", "            if pm == -5 || (pm > -3 && pm < 0) {"),
     # sobreviventes da leva 95, refeitas com a foto de antes da chamada
     ('s_fica', "            *w(0x198) = 0x76;", "            *w(0x198) = 0x77;"),
-    ('s_formacao', "        *w(0x198) = 0x68;\n        chamar(0x6f46b0, [x as u32", "        *w(0x198) = 0x69;\n        chamar(0x6f46b0, [x as u32"),
+    ('s_formacao', "        *w(0x198) = 0x68;\n        chamar(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL, [x as u32", "        *w(0x198) = 0x69;\n        chamar(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL, [x as u32"),
 ]

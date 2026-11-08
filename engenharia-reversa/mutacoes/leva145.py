@@ -4,7 +4,7 @@ MUTACOES = [
     ('l_limpeza', "*((f + 0x19) as *mut u8) = 0xfb;", "*((f + 0x19) as *mut u8) = 0x05;"),
     ('l_pontape', "narrar(if *w(0x8ed0) > 1 { 0x1f74 } else { 0x212f }", "narrar(if *w(0x8ed0) > 1 { 0x1f74 } else { 0x1f74 }"),
     ('l_tentativas', "let c = sortear(0x14) as i8;", "let c = sortear(0x13) as i8;"),
-    ('l_sorteio5', "} else if sortear(5) == 0 && call_thiscall0(0x6bac40, m)", "} else if sortear(6) == 0 && call_thiscall0(0x6bac40, m)"),
+    ('l_sorteio5', "} else if sortear(5) == 0 && call_thiscall0(FN_CM3_MATCH_ENGINE_AWARD_PENDING_FOUL, m)", "} else if sortear(6) == 0 && call_thiscall0(FN_CM3_MATCH_ENGINE_AWARD_PENDING_FOUL, m)"),
     ('l_sorteio7', "            } else if sortear(7) == 0 {\n                let v = if byte(m, 0x475a)", "            } else if sortear(8) == 0 {\n                let v = if byte(m, 0x475a)"),
     ('l_direcao', "let d = if byte(m, 0x8eae) != 0 { 1 } else { 0xa };", "let d = if byte(m, 0x8eae) != 0 { 2 } else { 0xa };", "laco pick_restart_taker da bola parada"),
     ('l_acrescimos', "let v = sortear(match_pl_ftol(r as f64 * read_f64_at(0x9689b0)));", "let v = sortear(match_pl_ftol(r as f64 * read_f64_at(0x9689b0) * 1.5));"),

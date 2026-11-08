@@ -1246,7 +1246,7 @@ pub(crate) unsafe fn european_cup_write_entrant(p: usize, clube: usize, rodada: 
 /// 2 em +0x60 (até 18, rodada 8), 3 em +0xcc (até 19, rodada 0xd), 4 em +0x13e (até 18, rodada 0). Devolve a soma
 /// das quatro contas.
 pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
-    let clubes = read_i32(0xae235c);
+    let clubes = read_i32(G_CLUB_COUNT);
     let (mut n1, mut n2, mut n3, mut n4) = (0i32, 0i32, 0i32, 0i32);
     let (mut o1, mut o2, mut o3, mut o4) = (0usize, 0usize, 0usize, 0usize);
     if clubes <= 0 {

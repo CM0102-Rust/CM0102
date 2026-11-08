@@ -74,7 +74,7 @@ pub(crate) unsafe fn play_with(j: usize, forca: i16, altura: f32, estilo: i8, fo
     let m = *((j + 0x19e) as *const usize);
     // o setimo argumento da narracao vai no alto do codigo (ver `dispatch_tackle_calls`)
     let narrar7 = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a5: u32, a7: i8| {
-        chamar(0x6d6f70, *((m + 0x8f7a) as *const usize), [codigo | (a7 as u8 as u32) << 16, m as u32, a3, a4, a5]);
+        chamar(FN_MATCH_EVENTS_ADD_EVENT, *((m + 0x8f7a) as *const usize), [codigo | (a7 as u8 as u32) << 16, m as u32, a3, a4, a5]);
     };
     let narrar = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a5: u32| narrar7(chamar, codigo, a3, a4, a5, 0);
     let area_de = |p: usize, lado1: bool| {
@@ -82,7 +82,7 @@ pub(crate) unsafe fn play_with(j: usize, forca: i16, altura: f32, estilo: i8, fo
     };
     let in_the_box = || area_de(j, byte(j, 0x27) == 1);
     let espirra = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, espalhar: i32, chutador: usize| {
-        chamar(0x6cd770, m, [ub(j, 0x102), ub(j, 0x103), (espalhar as u8 as u32) | ub(j, 0x27) << 8, 0, chutador as u32]);
+        chamar(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [ub(j, 0x102), ub(j, 0x103), (espalhar as u8 as u32) | ub(j, 0x27) << 8, 0, chutador as u32]);
     };
     if goleiro_de(m, byte(j, 0x27)) == j || *((m + 0xf582) as *const usize) == j {
         return 0;
@@ -258,7 +258,7 @@ pub(crate) unsafe fn play_with(j: usize, forca: i16, altura: f32, estilo: i8, fo
                     }
                 }
                 ao_time(m, j, peso);
-                chamar(0x716e10, j, [0; 5]);
+                chamar(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, j, [0; 5]);
             }
             return 1;
         }
@@ -279,7 +279,7 @@ pub(crate) unsafe fn play_with(j: usize, forca: i16, altura: f32, estilo: i8, fo
         } else {
             narrar7(chamar, 0x1f65, ub(j, 0x2e), ub(j, 0x27), u32::MAX, estilo);
         }
-        chamar(0x6f0630, j, [0; 5]);
+        chamar(FN_MATCH_PLAYER_TAKE_POSSESSION, j, [0; 5]);
         *w(j, 0x198) = lance;
         return 1;
     }
@@ -667,7 +667,7 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
     };
     if SYNTHETIC.load(Relaxed) {
         if RECORD_6F5C30.load(Relaxed) && is_recording() {
-            return call_recording(0x6f5c30, p, [a, b, c, d, 0], rodar) as u8;
+            return call_recording(FN_MATCH_PLAYER_TRY_INTERCEPT_BALL, p, [a, b, c, d, 0], rodar) as u8;
         }
         return rodar() as u8;
     }
@@ -676,7 +676,7 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
     // da unidade (aninhada, com a fita de fora guardada)
     let comparar = || comparar_respond(p, a, b, c, d, &rodar) as u32;
     if RECORD_6F5C30.load(Relaxed) && is_recording() {
-        return call_recording(0x6f5c30, p, [a, b, c, d, 0], comparar) as u8;
+        return call_recording(FN_MATCH_PLAYER_TRY_INTERCEPT_BALL, p, [a, b, c, d, 0], comparar) as u8;
     }
     if is_recording_top_level() {
         return rodar() as u8;
@@ -729,7 +729,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_procurar(this: usize, lado: i8, 
     let gravar = RECORD_6F5C30.swap(true, Relaxed);
     let (r, n, igual, sequencia, k) = comparar_com_fita(regioes, || f(this, lado, grupo, a3, a4, a5, a6, modo), |chamar| {
         search_cell_side_with(this, lado, grupo, a3, a4, a5, a6, modo, &mut |p, w, x, y, z| {
-            chamar(0x6f5c30, p, [w, x, y, z, 0], [u32::MAX, u32::MAX, u32::MAX, u32::MAX, 0]) as u8
+            chamar(FN_MATCH_PLAYER_TRY_INTERCEPT_BALL, p, [w, x, y, z, 0], [u32::MAX, u32::MAX, u32::MAX, u32::MAX, 0]) as u8
         })
     });
     RECORD_6F5C30.store(gravar, Relaxed);

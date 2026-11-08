@@ -445,7 +445,7 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
         let minimo = match_pl_ftol(jogos_do_clube() as i32 as f64 * fator) as i16;
         for s in 0..50usize {
             let p = read_usize(clube + club::SQUAD + 4 * s);
-            if p == 0 || read_i32(p) >= read_i32(0xae2364) {
+            if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
             let jogador = read_usize(p + 0x61);

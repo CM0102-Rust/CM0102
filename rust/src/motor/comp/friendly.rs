@@ -1773,7 +1773,7 @@ pub(crate) unsafe fn nations_with_continent() -> Vec<usize> {
     let mut v = Vec::new();
     let t = read_usize(G_NATION_TABLE);
     let mut i = 0;
-    while i < read_i32(0xae2350) {
+    while i < read_i32(G_NATION_COUNT) {
         let n = t.wrapping_add(i as usize * 0x122);
         if read_usize(n + 0x71) != 0 {
             v.push(n);
@@ -1801,7 +1801,7 @@ pub(crate) unsafe fn sort_by_reputation(base: usize, n: u32) {
 pub(crate) unsafe extern "thiscall" fn build_nation_list(this: usize) {
     core::ptr::write_unaligned((this + 0x34fe) as *mut i32, 0);
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let p = malloc((read_i32(0xae2350) as u32).wrapping_mul(4));
+    let p = malloc((read_i32(G_NATION_COUNT) as u32).wrapping_mul(4));
     write_usize(this + 0x34fa, p);
     if p == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_NATION_LIST)(this); // ponytail: sem memória, a caixa da original

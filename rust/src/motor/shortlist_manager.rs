@@ -3490,7 +3490,7 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_us
         let base = read_usize(G_STAFF_TABLE);
         let mut n = 0i32;
         let mut i = 0usize;
-        while (i as i32) < read_i32(0xae2364) {
+        while (i as i32) < read_i32(G_STAFF_COUNT) {
             if serve(base.wrapping_add(i * 0x6e), vaga) != 0 {
                 n += 1;
             }
@@ -3512,7 +3512,7 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_us
     }
     let base = read_usize(G_STAFF_TABLE);
     let mut i = 0usize;
-    while (i as i32) < read_i32(0xae2364).wrapping_sub(0x10) {
+    while (i as i32) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         let p = base.wrapping_add(i * 0x6e);
         for vaga in 0..16u32 {
             if serve(p, vaga) == 0 {
@@ -3530,7 +3530,7 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_us
             let mut nacao = read_usize(p + 0x1a);
             if nacao == 0 {
                 let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-                nacao = read_usize(G_NATION_TABLE).wrapping_add((sortear(read_i32(0xae2350)) as usize).wrapping_mul(nation::SIZE));
+                nacao = read_usize(G_NATION_TABLE).wrapping_add((sortear(read_i32(G_NATION_COUNT)) as usize).wrapping_mul(nation::SIZE));
                 write_u32(p + 0x1a, nacao as u32);
             }
             write_u32(l1 + 4, read_usize(nacao) as u32);
@@ -3642,7 +3642,7 @@ pub(crate) unsafe extern "thiscall" fn collect_interested_clubs(this: usize, jog
         let controla: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CURRENT_CONTROLS_CLUB);
         let in_list: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_IS_PLAYER_SHORTLISTED);
         for k in 0..16i32 {
-            let h = staff_records_staff_by_id(read_i32(0xae2364).wrapping_sub(k).wrapping_sub(1) as usize);
+            let h = staff_records_staff_by_id(read_i32(G_STAFF_COUNT).wrapping_sub(k).wrapping_sub(1) as usize);
             let clube = read_usize(h + 0x39);
             if read_u8(h + 0x5f) == 0 || clube == 0 {
                 continue;

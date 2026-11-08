@@ -11,5 +11,5 @@ MUTACOES = [
     ('f_nove', "if sortear(9) == 0 {\n        narrar(chamar, 0x20df", "if sortear(8) == 0 {\n        narrar(chamar, 0x20df"),
     ('f_lado', "let lado_de = |p: usize| if sofreu { zero(p) } else { ub(p, 0x27) };", "let lado_de = |p: usize| if sofreu { ub(p, 0x27) } else { zero(p) };"),
     ('p_achou', "                *((this + 0x1a6) as *mut u8) = 0;\n                *((this + 0x1a5) as *mut u8) = 0;\n                return 1;", "                *((this + 0x1a6) as *mut u8) = 0;\n                *((this + 0x1a5) as *mut u8) = 1;\n                return 1;"),
-    ('f_cansar', "chamar(0x716e10, u(0x4761), [0; 5]);", "chamar(0x716e10, u(0x4761), [1, 0, 0, 0, 0]);"),
+    ('f_cansar', "chamar(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, u(0x4761), [0; 5]);", "chamar(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, u(0x4761), [1, 0, 0, 0, 0]);"),
 ]

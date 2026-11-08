@@ -1,0 +1,17 @@
+Leitor de fora, rodada 3 (08/11/2026, madrugada). Resumo dele: acha-se qual rotina faz o quê (nomes e a primeira frase
+em inglês confiáveis); entender como o jogo decide ainda exige decodificar deslocamentos crus, constantes em hex e locais
+em português ("um disassembly bem anotado traduzido para Rust, não um modelo do jogo").
+Os 10 maiores obstáculos, na ordem dele:
+1. Registros sem nome de campo (pessoa, nação, liga, jogador na partida, motor): estender fields.rs e trocar.
+2. Endereços crus onde já há constante (read_i32(0xae2350), call_thiscall_1(0x775ba0, ..)): passada mais larga.
+3. Identificadores locais em português: ~85% dos nomes de mais de uma letra (clube 947 usos, pessoa 550).
+4. Português no corpo das funções: ~2.000 linhas de comentário fora do [pt], rótulos de ramo e mensagens de comparador.
+5. Rotinas no arquivo errado e ~84 nomes com endereço no fim.
+6. Dados opacos: as tuplas de regras, códigos de narração, idades e datas em hex.
+7. O andaime de teste misturado à lógica: 808 comentários "ponytail:", 726 marcas de mutação, 1.710 ramo(), um
+   comparador gêmeo por função. Proposta: comparadores em arquivos próprios, "ponytail:" -> "simplification:".
+8. Cabeçalhos em formatos misturados (o antigo { 0x... } e o Original:).
+9. O motor.rs é uma tabela de 2.200 linhas com auxiliares centrais escondidos atrás; o cabeçalho dele saiu de
+   sincronia (orig x original_fn).
+10. Auxiliares e constantes repetidos (0xa15e44 8+ vezes; club_of_contract em 3 cópias).
+Português nos identificadores: ~85% dos locais/parâmetros de mais de uma letra; nomes de função e constantes ~95% inglês.

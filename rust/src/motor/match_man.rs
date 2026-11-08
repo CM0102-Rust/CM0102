@@ -1265,7 +1265,7 @@ pub(crate) unsafe fn place_in_slot_with(c: usize, pos: u32, pessoa: usize, extra
         return 0;
     }
     let j = *((c + 0x23) as *const usize) + 0x1be * p as usize;
-    chamar(0x6eaea0, j, [*((c + 0x12) as *const usize) as u32, pessoa as u32, *((c + 0x18) as *const u8) as u32, pos, extra]);
+    chamar(FN_MATCH_PLAYER_SETUP, j, [*((c + 0x12) as *const usize) as u32, pessoa as u32, *((c + 0x18) as *const u8) as u32, pos, extra]);
     1
 }
 
@@ -1291,7 +1291,7 @@ pub(crate) unsafe extern "thiscall" fn init_player_hook(j: usize, m: u32, pessoa
     if !is_recording() {
         return o(j, m, pessoa, lado, pos, extra);
     }
-    call_recording(0x6eaea0, j, [m, pessoa, lado, pos, extra], || {
+    call_recording(FN_MATCH_PLAYER_SETUP, j, [m, pessoa, lado, pos, extra], || {
         o(j, m, pessoa, lado, pos, extra);
         0
     });
@@ -1404,7 +1404,7 @@ pub(crate) unsafe fn starters_with(c: usize, chamar: &mut dyn FnMut(usize, usize
         if p != 0 && estado(u(G_INJURY, 0), p) != 2 {
             let jogo = u(c, 0x37);
             let livre = *(jogo as *const i32) == -2 || suspenso(u(G_DISCIPLINE, 0), p, u(jogo, 0x14), 1, 0) == 0;
-            if livre && impedido(u(G_NATIONAL_TEAMS, 0), p, G_CURRENT_DATE, u(c, 0x2f), 0, 0) == 0 && chamar(0x6e0d00, c, [pos, p as u32, pos, 0, 0]) as u8 != 0 {
+            if livre && impedido(u(G_NATIONAL_TEAMS, 0), p, G_CURRENT_DATE, u(c, 0x2f), 0, 0) == 0 && chamar(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM, c, [pos, p as u32, pos, 0, 0]) as u8 != 0 {
                 n = n.wrapping_add(1);
             }
         }
@@ -2338,7 +2338,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goleiro: u8, chamar: &mut dyn FnM
         &[(args[0], 4 * n1), (args[2], 2 * vagas), (args[11], 8 * vagas), (args[12], vagas), (args[14], 2 * vagas)],
         &[(args[5], 4 * vagas)],
     );
-    chamar(0x6e2000, 0, [args.as_ptr() as u32, n1 as u32, modo, clube as u32, c as u32]);
+    chamar(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS, 0, [args.as_ptr() as u32, n1 as u32, modo, clube as u32, c as u32]);
     let m = u(0x12);
     let mut entraram = [0usize; 20];
     let mut sairam = [0usize; 20];
@@ -2395,7 +2395,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goleiro: u8, chamar: &mut dyn FnM
         2 => 0x1f5c,
         _ => 0x1f59,
     };
-    chamar(0x6d6f70, narrador, [codigo, m as u32, u32::MAX, lado_c, u32::MAX]);
+    chamar(FN_MATCH_EVENTS_ADD_EVENT, narrador, [codigo, m as u32, u32::MAX, lado_c, u32::MAX]);
     for i in 0..ne {
         let (sai, entra) = (sairam[i], entraram[i]);
         let comentarios = byte(m, 0x8ebb) != 0;
@@ -2408,7 +2408,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goleiro: u8, chamar: &mut dyn FnM
             None
         };
         if let Some(p) = cansado {
-            chamar(0x6d6f70, narrador, [0x211d, m as u32, u32::MAX, (byte(p, 0x27) == 0) as u32, u32::MAX]);
+            chamar(FN_MATCH_EVENTS_ADD_EVENT, narrador, [0x211d, m as u32, u32::MAX, (byte(p, 0x27) == 0) as u32, u32::MAX]);
         }
         let machucado = if comentarios && {
             let r = sortear(w(sai, 0x35) as i32 / 30 + w(sai, 0x33) as i32 - 0xe9);
@@ -2424,12 +2424,12 @@ pub(crate) unsafe fn substitute_with(c: usize, goleiro: u8, chamar: &mut dyn FnM
             None
         };
         if let Some(p) = machucado {
-            chamar(0x6d6f70, narrador, [0x211e, m as u32, u32::MAX, byte(p, 0x27) as u8 as u32, u32::MAX]);
+            chamar(FN_MATCH_EVENTS_ADD_EVENT, narrador, [0x211e, m as u32, u32::MAX, byte(p, 0x27) as u8 as u32, u32::MAX]);
         }
         let cod = if byte(sai, 0x22) > -1 { 0x20d7 } else { 0x1f5b };
         let a = [cod, m as u32, byte(entra, 0x2e) as u8 as u32, byte(entra, 0x27) as u8 as u32, byte(sai, 0x2e) as u8 as u32];
         NEXT_SIXTH_ARG.store(byte(sai, 0x27) as u8 as u32, std::sync::atomic::Ordering::Relaxed);
-        chamar(0x6d6f70, narrador, a);
+        chamar(FN_MATCH_EVENTS_ADD_EVENT, narrador, a);
     }
     // o capitao
     let (mut melhor, mut nota) = (-1i8, 0i16);
@@ -2444,8 +2444,8 @@ pub(crate) unsafe fn substitute_with(c: usize, goleiro: u8, chamar: &mut dyn FnM
         }
         j += 0x1be;
     }
-    chamar(0x897760, *(G_TACTICS as *const usize), [clube as u32, melhor as u8 as u32, byte(c, 0x19) as i32 as u32, 0, 0]);
-    chamar(0x6e1aa0, c, [0, 0, 0, 0, 0]);
+    chamar(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, *(G_TACTICS as *const usize), [clube as u32, melhor as u8 as u32, byte(c, 0x19) as i32 as u32, 0, 0]);
+    chamar(FN_MATCH_MAN_REASSIGN_POSITIONS, c, [0, 0, 0, 0, 0]);
 }
 
 /// O 6o argumento da proxima narracao (o lado de quem sai em 0x20d7/0x1f5b; -1 nas outras).
@@ -2515,9 +2515,9 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, chamar: &mut dyn FnMut(usize, u
     }
     if n == 11 {
         request_buffers(&[(fichas.as_ptr() as usize, 44)], &[]);
-        if chamar(0x6e0230, c, [fichas.as_ptr() as u32, 0xb, 0x8c1, 2, 0]) as u8 != 0 {
+        if chamar(FN_MATCH_MAN_CHOOSE_COMPUTER_TACTIC, c, [fichas.as_ptr() as u32, 0xb, 0x8c1, 2, 0]) as u8 != 0 {
             let m = u(0x12);
-            chamar(0x6d6f70, *((m + 0x8f7a) as *const usize), [0x2007, m as u32, u32::MAX, byte(c, 0x18) as u8 as u32, u32::MAX]);
+            chamar(FN_MATCH_EVENTS_ADD_EVENT, *((m + 0x8f7a) as *const usize), [0x2007, m as u32, u32::MAX, byte(c, 0x18) as u8 as u32, u32::MAX]);
         }
     }
     let mut pos = [0i8; 20];
@@ -2557,7 +2557,7 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, chamar: &mut dyn FnMut(usize, u
         &[(args[0], 4 * n), (args[2], 2 * n), (args[11], 8 * n), (args[12], n), (args[14], 2 * n)],
         &[(args[5], 4 * n)],
     );
-    chamar(0x6e2000, 0, [args.as_ptr() as u32, n as u32, modo, clube as u32, c as u32]);
+    chamar(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS, 0, [args.as_ptr() as u32, n as u32, modo, clube as u32, c as u32]);
     for i in 0..n {
         let mut j = u(0x23);
         let mut achou = false;
@@ -4769,7 +4769,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_put_in_place(c: usize, pos: u32,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32) -> u8>(IDX_PUT_IN_PLACE);
     if is_recording_top_level() {
         // dentro dos titulares (ou da comissao): unidade da fita
-        return call_recording(0x6e0d00, c, [pos, pessoa as u32, extra, 0, 0], || o(c, pos, pessoa, extra) as u32) as u8;
+        return call_recording(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM, c, [pos, pessoa as u32, extra, 0, 0], || o(c, pos, pessoa, extra) as u32) as u8;
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(*((c + 0x12) as *const usize), MOTOR), (0xb67a34, 4)]);
@@ -4801,7 +4801,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_starters(c: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_STARTERS);
     if is_recording_top_level() {
         // dentro da comissao do inicio da partida: unidade da fita
-        return call_recording(0x6dbb80, c, [0, 0, 0, 0, 0], || o(c) as u32) as u8;
+        return call_recording(FN_MATCH_MAN_PLACE_SELECTED_PLAYERS, c, [0, 0, 0, 0, 0], || o(c) as u32) as u8;
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(*((c + 0x12) as *const usize), MOTOR), (0xb67a34, 4)]);
@@ -4825,7 +4825,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_store_tactic(c: usize) {
 pub(crate) unsafe extern "thiscall" fn comparar_substitute(c: usize, goleiro: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SUBSTITUTE);
     if is_recording_top_level() {
-        call_recording(0x6e1090, c, [goleiro, 0, 0, 0, 0], || {
+        call_recording(FN_MATCH_MAN_MAKE_SUBSTITUTIONS, c, [goleiro, 0, 0, 0, 0], || {
             o(c, goleiro);
             0
         });
@@ -4852,7 +4852,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_substitute(c: usize, goleiro: u3
 pub(crate) unsafe extern "thiscall" fn comparar_redo_team(c: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REDO_TEAM);
     if is_recording_top_level() {
-        call_recording(0x6e1aa0, c, [0, 0, 0, 0, 0], || {
+        call_recording(FN_MATCH_MAN_REASSIGN_POSITIONS, c, [0, 0, 0, 0, 0], || {
             o(c);
             0
         });

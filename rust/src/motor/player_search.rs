@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
             continue;
         }
         let p = staff_records_staff_by_id(id as usize);
-        if p != 0 && read_i32(p) >= read_i32(0xae2364) {
+        if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
         let c = read_usize(p + 0x39);
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
             continue;
         }
         let p = staff_records_staff_by_id(id as usize);
-        if p != 0 && read_i32(p) >= read_i32(0xae2364) {
+        if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
         if read_usize(clube_obs + club::MANAGER) != 0 && humano(clube_obs, 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
@@ -385,7 +385,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize
                 continue;
             }
             let p = staff_records_staff_by_id(id as usize);
-            if p != 0 && read_i32(p) >= read_i32(0xae2364) {
+            if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
             if player_search_contract_club(p) == clube_olheiro || read_usize(p + 0x61) == 0 {

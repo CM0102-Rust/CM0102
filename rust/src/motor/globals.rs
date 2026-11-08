@@ -490,3 +490,23 @@ pub(crate) const G_SCREEN_RECORDS_DISPLAY: usize = 0xb74c4c;
 pub(crate) const G_LAST_AUTOSAVE_DATE: usize = 0xdd70a0;
 /// The SimulatedStats object that game creation and loading build and free_game_data frees. (SimulatedStats *)
 pub(crate) const G_SIMULATED_STATS: usize = 0xdd7ee4;
+/// Key id of the club "Arsenal": the row index that the database load stores for this name. (s32)
+pub(crate) const G_KEY_CLUB_ARSENAL: usize = 0x9d0110;
+/// Key id of the club "Liverpool": the row index that the database load stores for this name. (s32)
+pub(crate) const G_KEY_CLUB_LIVERPOOL: usize = 0x9d0244;
+/// Key id of the club "Everton": the row index that the database load stores for this name. (s32)
+pub(crate) const G_KEY_CLUB_EVERTON: usize = 0x9d0248;
+/// Key id of the club "Tottenham Hotspur": the row index that the database load stores for this name. (s32)
+pub(crate) const G_KEY_CLUB_TOTTENHAM_HOTSPUR: usize = 0x9d024c;
+/// Key id of the club "Chelsea": the row index that the database load stores for this name. (s32)
+pub(crate) const G_KEY_CLUB_CHELSEA: usize = 0x9d0250;
+/// g_injury_type_table+0x6 training_return_percent: the percentage of the injury length after which the player returns to training. (s8)
+pub(crate) const G_INJURY_TYPE_TRAINING_RETURN_PERCENT: usize = 0x9e7adf;
+/// Table of 12 rows by 9 columns of float distances between pitch grid cells, indexed by row times 9 plus column. (table)
+pub(crate) const G_CELL_DISTANCE_TABLE: usize = 0xa15e44;
+/// The fallback attendance that Stadium::calculate_match_attendance returns when it gets no match data, with an initial value of 15000. (u32)
+pub(crate) const G_STADIUM_DEFAULT_ATTENDANCE: usize = 0xa835ac;
+/// The number of continent records. (s32)
+pub(crate) const G_CONTINENT_COUNT: usize = 0xae234c;
+/// The year word of the cached fitness update date, compared with the current year in Injury::update_player_fitness. (u16)
+pub(crate) const G_FITNESS_UPDATE_CACHE_DATE_YEAR: usize = 0xb63d0a;

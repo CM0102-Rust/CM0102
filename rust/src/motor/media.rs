@@ -206,7 +206,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 }
                 add_unique_recipient(&mut dest, &mut nd, month_award_club_by_id(id));
             }
-            let total = read_i32(0xae2364);
+            let total = read_i32(G_STAFF_COUNT);
             for q in 0..16i32 {
                 let h = read_usize(G_STAFF_TABLE).wrapping_add(((total - 1 - q) as usize).wrapping_mul(staff::SIZE));
                 let hc = read_usize(h + 0x39);
@@ -454,7 +454,7 @@ pub(crate) unsafe fn club_staff_vector(clube: usize, chamar: &mut dyn FnMut(usiz
     reunir(clube, v.as_mut_ptr(), 0);
     v[50] = read_usize(clube + club::CHAIRMAN);
     let tecnico = read_usize(clube + club::MANAGER);
-    v[51] = if chamar(0x600a50, 0, [clube as u32, 0, 1, 0, 0]) != 0 || (tecnico != 0 && tipo(*((tecnico + 0x3d) as *const u8) as u32) != 0) {
+    v[51] = if chamar(FN_HUMAN_MANAGER_IS_HUMAN_CLUB, 0, [clube as u32, 0, 1, 0, 0]) != 0 || (tecnico != 0 && tipo(*((tecnico + 0x3d) as *const u8) as u32) != 0) {
         0
     } else {
         tecnico
@@ -539,7 +539,7 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, c
     if replay_inner_tape_calls(chamar, || listada(jogador, 0)) != 0 {
         chance -= 0x19;
     } else {
-        let c = chamar(0x4cf5f0, read_usize(G_CONTRACT_MANAGER), [jogador as u32, clube as u32, 0, 0, 0]) as usize;
+        let c = chamar(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB, read_usize(G_CONTRACT_MANAGER), [jogador as u32, clube as u32, 0, 0, 0]) as usize;
         if c == 0 {
             chance -= 0xf;
         } else {
@@ -628,15 +628,15 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, c
         let r1 = friendly_random(chance);
         if r1 > friendly_random(nota as i32) { // cqb8: o desafeto sorteado
             crate::comparacao::ramo("cqb_8 desafeto sorteado");
-            chamar(0x547af0, 0, [p as u32, jogador as u32, 1, 0, 0]);
-            let c = chamar(0x4cf5f0, read_usize(G_CONTRACT_MANAGER), [p as u32, clube as u32, 0, 0, 0]) as usize;
+            chamar(FN_STAFF_ADD_DISLIKED_STAFF, 0, [p as u32, jogador as u32, 1, 0, 0]);
+            let c = chamar(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB, read_usize(G_CONTRACT_MANAGER), [p as u32, clube as u32, 0, 0, 0]) as usize;
             if c != 0 {
                 let r = friendly_random(nota as i32);
                 if r < friendly_random(10) {
                     if topico != 0x1e && topico != 0x20 && friendly_random(nota as i32) != 0 {
-                        chamar(0x867560, c, [1, 0, 0, 0, 0]);
+                        chamar(FN_STAFF_CONTRACT_SET_FLAGS, c, [1, 0, 0, 0, 0]);
                     } else {
-                        chamar(0x867700, c, [0x800, 0, 0, 0, 0]);
+                        chamar(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS, c, [0x800, 0, 0, 0, 0]);
                     }
                 }
             }
@@ -729,7 +729,7 @@ pub(crate) unsafe fn warn_position_rivals_with(jogador: usize, clube: usize, cha
             continue;
         }
         // cqb8: a 0x4cf5f0 é unidade da fita (direta e de dentro da 0x544520; a 0x62c400 alcança a 0x600a50)
-        let c = chamar(0x4cf5f0, read_usize(G_CONTRACT_MANAGER), [p as u32, clube as u32, 0, 0, 0]) as usize;
+        let c = chamar(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB, read_usize(G_CONTRACT_MANAGER), [p as u32, clube as u32, 0, 0, 0]) as usize;
         if c == 0 || read_usize(p + 0x61) == 0 || read_i8(c + 0x3d) <= 0 {
             continue;
         }
@@ -758,13 +758,13 @@ pub(crate) unsafe fn warn_position_rivals_with(jogador: usize, clube: usize, cha
             continue;
         }
         if !postou {
-            chamar(0x72c1f0, read_usize(G_MEDIA), [p as u32, clube as u32, 0x25, 0, jogador as u32]);
+            chamar(FN_MEDIA_CREATE_PLAYER_MEDIA_STORY, read_usize(G_MEDIA), [p as u32, clube as u32, 0x25, 0, jogador as u32]);
             postou = true;
         }
         if bandeiras(c) & 0x800 != 0 {
             continue;
         }
-        chamar(0x867560, c, [0x800, 0, 0, 0, 0]);
+        chamar(FN_STAFF_CONTRACT_SET_FLAGS, c, [0x800, 0, 0, 0, 0]);
     }
 }
 
