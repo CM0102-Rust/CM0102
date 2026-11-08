@@ -1781,7 +1781,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
 /// Rehearsal comparer for rare finance events: copy without news/budget vs original from the same state, comparing
 /// return, balance, +0xb4, +0x154, +0x165 and extra regions.
 ///
-/// [pt] O comparador dos eventos raros, em ensaio (modelo CPV6_ENSAIO: a cópia sem a notícia nem a verba, que alocam; sem a
+/// [pt] O comparador dos eventos raros, em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN: a cópia sem a notícia nem a verba, que alocam; sem a
 /// troca do presidente na 0x59e940): a cópia e a original a partir do mesmo estado (o registro de finanças, o sorteio e
 /// os `extras`). Sem evento: tudo igual; com evento: a devolução, o saldo, +0xb4, +0x154, +0x165 e os `conferir` (a
 /// tipo da notícia e a marca +0x82 dependem da verba, e os sorteios depois dela também).
@@ -1790,9 +1790,9 @@ pub(crate) unsafe fn compare_rare_finance_event(nome: &str, fin: usize, extras: 
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regioes.extend_from_slice(extras);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPV6_ENSAIO = true;
+    RARE_FINANCE_EVENT_DRY_RUN = true;
     let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(copia));
-    CPV6_ENSAIO = false;
+    RARE_FINANCE_EVENT_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = original();
@@ -1878,7 +1878,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: us
     add_to_i32(fin + 0x154, v);
     credit_balance(fin, v);
     let verba = transfer_budget(fin);
-    if com_ficha && !CPV6_ENSAIO {
+    if com_ficha && !RARE_FINANCE_EVENT_DRY_RUN {
         let pres = read_usize(clube + club::CHAIRMAN);
         let nac = read_usize(clube + club::NATION);
         let nova = if nac != 0 && friendly_random(0x3e8) != 0 {
@@ -2669,13 +2669,13 @@ pub(crate) unsafe fn run_weekly_event(rotina: usize, this: usize, clube: usize, 
 
 /// O ensaio do comparador: a cópia roda sem a notícia (0x59f300) e sem a verba (0x598800), que alocam e não podem
 /// rodar duas vezes.
-pub(crate) static mut CPV6_ENSAIO: bool = false;
+pub(crate) static mut RARE_FINANCE_EVENT_DRY_RUN: bool = false;
 
 /// Posts the finance event news (FN_FINANCE_POST_FINANCE_BOOST_NEWS); nothing in rehearsal.
 ///
 /// [pt] A notícia do evento (0x59f300: thiscall(tabela, clube, valor, verba, tipo), ret 0x10); no ensaio, nada.
 pub(crate) unsafe fn post_finance_boost_news(this: usize, clube: usize, valor: i32, verba: u32, tipo: u32) {
-    if CPV6_ENSAIO {
+    if RARE_FINANCE_EVENT_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32) = core::mem::transmute(FN_FINANCE_POST_FINANCE_BOOST_NEWS);
@@ -2687,7 +2687,7 @@ pub(crate) unsafe fn post_finance_boost_news(this: usize, clube: usize, valor: i
 /// [pt] A verba de transferências (Finance::get_transfer_budget 0x598800 com 0, 0, 0, 1, 0) que vai na notícia; no
 /// ensaio, 0 (a notícia não sai).
 pub(crate) unsafe fn transfer_budget(fin: usize) -> u32 {
-    if CPV6_ENSAIO {
+    if RARE_FINANCE_EVENT_DRY_RUN {
         return 0;
     }
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_FINANCE_GET_TRANSFER_BUDGET);
@@ -2998,9 +2998,9 @@ pub(crate) unsafe fn compare_finance_event(nome: &str, fin: usize, original: imp
     let mut regioes = vec![(fin, 0x167)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPV6_ENSAIO = true;
+    RARE_FINANCE_EVENT_DRY_RUN = true;
     let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(copia));
-    CPV6_ENSAIO = false;
+    RARE_FINANCE_EVENT_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = original();

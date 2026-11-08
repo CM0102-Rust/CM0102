@@ -52,11 +52,11 @@ unsafe fn increment_permit_counter(r: usize, o: usize) {
 
 /// O ensaio do comparador: a cópia roda sem pagar os prêmios por jogos (0x8cb340 dá notícia, aloca e paga), como se
 /// nenhum pagasse (sem tirar o bônus); a contagem das permissões não depende deles.
-static mut CPY11_ENSAIO: bool = false;
+static mut APPEARANCE_CLAUSES_DRY_RUN: bool = false;
 
 /// TRANSFER_MANAGER::pay_appearance_money (0x8cb340: thiscall(this, pessoa, jogos, tipo, 0), ret 0x10); no ensaio, 0.
 unsafe fn pay_appearance_money_unless_dry_run(this: usize, p: usize, jogos: i32, tipo: u32) -> u32 {
-    if CPY11_ENSAIO {
+    if APPEARANCE_CLAUSES_DRY_RUN {
         return 0;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32) -> u32 = core::mem::transmute(0x8cb340usize);
@@ -210,9 +210,9 @@ unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_match(this:
     }
     let regioes = [(v, n as usize * 0xe)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPY11_ENSAIO = true;
+    APPEARANCE_CLAUSES_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| update_appearance_clauses_after_match(this, jogo, partida)));
-    CPY11_ENSAIO = false;
+    APPEARANCE_CLAUSES_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this, jogo, partida);

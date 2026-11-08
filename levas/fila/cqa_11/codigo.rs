@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn comparar_add_league_finish_records(this: usize, liga
 }
 
 /// O ensaio do comparador da 0x86dc30: a cópia sem o histórico (arquivo).
-static mut CQA11_ENSAIO: bool = false;
+static mut SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN: bool = false;
 
 /// { 0x86dc30 } (thiscall, ret 0x10, staff_records.cpp, SEH só da data local): `Staff_Records::
 /// add_supporters_player_of_year_record(pessoa, clube, a, b)`, pelo fim da temporada dos recordes (0x447880). O histórico
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn add_supporters_player_of_year_record(this: usize, pe
     put_i32(&mut e, 8, cqa11_i(clube));
     put_i32(&mut e, 0xd, (a & 0xffff) as i32);
     put_i32(&mut e, 0x11, b as i32);
-    append_person_history_by_id(!CQA11_ENSAIO, this, cqa11_d(pessoa), &e);
+    append_person_history_by_id(!SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN, this, cqa11_d(pessoa), &e);
     let r1 = cqa11_sortear(0x15 - cqa11_c(pessoa + 0x59));
     if r1 < cqa11_sortear(10) {
         crate::comparacao::ramo("cqa_11 goal_crowd_reaction favorita");
@@ -253,9 +253,9 @@ unsafe extern "thiscall" fn comparar_add_supporters_player_of_year_record(this: 
         reg.push((pref + 4, 0x18));
     }
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQA11_ENSAIO = true;
+    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_supporters_player_of_year_record(this, pessoa, clube, a, b)));
-    CQA11_ENSAIO = false;
+    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     o(this, pessoa, clube, a, b);

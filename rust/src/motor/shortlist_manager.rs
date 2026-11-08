@@ -2456,7 +2456,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_loa
 
 
 /// As datas estáticas da 0x54c5b0, da 0x54c8e0 e da 0x54cdb0 (valor e guarda).
-pub(crate) const CPY2_ESTATICAS: [(usize, usize); 6] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
+pub(crate) const STAFF_STATUS_DATE_STATICS: [(usize, usize); 6] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
 
 /// Removes a (person, club) pair from a sorted 8-byte pair array of the Shortlist_Manager via bsearch, shifting the
 /// rest; returns whether found.
@@ -2670,7 +2670,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_staff_status(this: usize,
     if is_original_only_case(this, pessoa, clube, evento, tipo) {
         return o(this, pessoa, clube, evento, tipo);
     }
-    let mut reg = CPY2_ESTATICAS.to_vec();
+    let mut reg = STAFF_STATUS_DATE_STATICS.to_vec();
     for base in [this, this + 4] {
         reg.push((base + 0x10, 4));
         if read_usize(base) != 0 {
@@ -4267,7 +4267,7 @@ pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jo
     let dono = if c != 0 { friendly_club_by_id(read_usize(c + 4)) } else { 0 };
     if dono == 0 {
         if entrada != 0 {
-            if CPW3_ENSAIO {
+            if LOAN_OFFER_DRY_RUN {
                 return -3;
             }
             let estado: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_SHORTLIST_MANAGER_UPDATE_STAFF_STATUS);
@@ -4356,7 +4356,7 @@ pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jo
     let dif = read_i16(clube + club::REPUTATION) as i32 - read_i16(dono + 0x80) as i32;
     let pct = if dif > 0x9c4 { 100 } else if dif <= -0x5dc { 0 } else { 50 };
     let vaga = (vaga & !0xff) | pct;
-    if CPW3_ENSAIO {
+    if LOAN_OFFER_DRY_RUN {
         return -2;
     }
     let oferta: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_MAKE_LOAN_OFFER);
@@ -4374,9 +4374,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_loan_offer_for_player(this: 
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regioes.extend(TRANSFER_MANAGER_DATE_STATICS);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW3_ENSAIO = true;
+    LOAN_OFFER_DRY_RUN = true;
     let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| try_loan_offer_for_player(this, jogador, clube)));
-    CPW3_ENSAIO = false;
+    LOAN_OFFER_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = o(this, jogador, clube);

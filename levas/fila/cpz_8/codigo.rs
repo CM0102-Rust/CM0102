@@ -258,9 +258,9 @@ unsafe extern "thiscall" fn comparar_reschedule_club_fixtures_near_date(this: us
 }
 
 /// O ensaio da notícia: a cópia monta a notícia nova aqui em vez de pô-la na fila (e não cria a fila).
-static mut CPZ8_ENSAIO: bool = false;
-static mut CPZ8_NOTICIA: [u8; 0xe0] = [0; 0xe0];
-static mut CPZ8_MONTADA: bool = false;
+static mut FIXTURE_MOVED_NEWS_DRY_RUN: bool = false;
+static mut FIXTURE_MOVED_NEWS_BUILT: [u8; 0xe0] = [0; 0xe0];
+static mut FIXTURE_MOVED_NEWS_WAS_BUILT: bool = false;
 
 unsafe fn news_slot(n: usize, k: u32) -> u32 {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x785830usize);
@@ -294,7 +294,7 @@ unsafe fn find_queued_fixture_news(l: usize, f: usize) -> usize {
 unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, causa: usize, velha: usize) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
-    if cpz8_d(this + 0x1128) == 0 && !CPZ8_ENSAIO {
+    if cpz8_d(this + 0x1128) == 0 && !FIXTURE_MOVED_NEWS_DRY_RUN {
         let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
         let m = novo(0xe);
         if m != 0 {
@@ -335,9 +335,9 @@ unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, caus
         gravar(nt, 0xc, cpz8_sw(velha) as u32);
         gravar(nt, 0xd, cpz8_w(velha + 2) as u32);
     }
-    if CPZ8_ENSAIO {
-        core::ptr::copy_nonoverlapping(nt as *const u8, core::ptr::addr_of_mut!(CPZ8_NOTICIA) as *mut u8, 0xe0);
-        CPZ8_MONTADA = true;
+    if FIXTURE_MOVED_NEWS_DRY_RUN {
+        core::ptr::copy_nonoverlapping(nt as *const u8, core::ptr::addr_of_mut!(FIXTURE_MOVED_NEWS_BUILT) as *mut u8, 0xe0);
+        FIXTURE_MOVED_NEWS_WAS_BUILT = true;
         return;
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
@@ -364,19 +364,19 @@ unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: us
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
     let conta = if l != 0 { cpz8_sw(l) } else { 0 };
-    CPZ8_ENSAIO = true;
-    CPZ8_MONTADA = false;
+    FIXTURE_MOVED_NEWS_DRY_RUN = true;
+    FIXTURE_MOVED_NEWS_WAS_BUILT = false;
     crate::aleatorio::pausar_rastro(|| queue_fixture_moved_news(this, f, causa, velha));
-    CPZ8_ENSAIO = false;
+    FIXTURE_MOVED_NEWS_DRY_RUN = false;
     antes.escrever();
     o(this, f, causa, velha);
     let l2 = cpz8_d(this + 0x1128);
-    let montada = CPZ8_MONTADA;
+    let montada = FIXTURE_MOVED_NEWS_WAS_BUILT;
     let igual = montada
         && l2 != 0
         && cpz8_sw(l2) == conta + 1
         && cpz8_d(cpz8_d(l2 + 6)) != 0
         && core::slice::from_raw_parts(cpz8_d(cpz8_d(l2 + 6)) as *const u8, 0xde)
-            == core::slice::from_raw_parts(core::ptr::addr_of!(CPZ8_NOTICIA) as *const u8, 0xde);
+            == core::slice::from_raw_parts(core::ptr::addr_of!(FIXTURE_MOVED_NEWS_BUILT) as *const u8, 0xde);
     PLACAR.registrar(igual, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { cpz8_sw(l2) } else { -1 }));
 }

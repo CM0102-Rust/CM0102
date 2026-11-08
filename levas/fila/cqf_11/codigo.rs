@@ -23,10 +23,10 @@ unsafe fn list_item_values(lista: usize) -> Vec<u32> {
 }
 
 /// O ensaio do relatório (0x7706c0): os sorteios vêm da fita da original e a notícia não é entregue.
-static mut CQF11_FITA: Option<(Vec<(i32, i32)>, usize, bool)> = None;
+static mut INTERNATIONAL_REPORT_TAPE: Option<(Vec<(i32, i32)>, usize, bool)> = None;
 
 unsafe fn random_or_tape(n: i32) -> i32 {
-    let f = &mut *core::ptr::addr_of_mut!(CQF11_FITA);
+    let f = &mut *core::ptr::addr_of_mut!(INTERNATIONAL_REPORT_TAPE);
     match f {
         Some((v, k, falhou)) => match v.get(*k) {
             Some(&(m, r)) if m == n && !*falhou => {
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn send_club_international_report_news(this: usize, clu
                 gravar(nt, idx as u32, codigos[k]);
                 idx = idx.wrapping_add(1);
             }
-            if (*core::ptr::addr_of!(CQF11_FITA)).is_none() {
+            if (*core::ptr::addr_of!(INTERNATIONAL_REPORT_TAPE)).is_none() {
                 entregar(cqf11_d(0xb7431c), nt, cqf11_d(primeiro + 0x39));
             }
         }
@@ -227,13 +227,13 @@ unsafe extern "thiscall" fn comparar_send_club_international_report_news(this: u
     for k in 0..q {
         *elenco.add(k) = antes[k];
     }
-    *core::ptr::addr_of_mut!(CQF11_FITA) = Some((tape_lock, 0, false));
+    *core::ptr::addr_of_mut!(INTERNATIONAL_REPORT_TAPE) = Some((tape_lock, 0, false));
     crate::aleatorio::sem_contar(|| send_club_international_report_news(this, clube, jogo, resultado, destaque, elenco, conta));
-    let (k, falhou) = match &*core::ptr::addr_of!(CQF11_FITA) {
+    let (k, falhou) = match &*core::ptr::addr_of!(INTERNATIONAL_REPORT_TAPE) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
     };
-    *core::ptr::addr_of_mut!(CQF11_FITA) = None;
+    *core::ptr::addr_of_mut!(INTERNATIONAL_REPORT_TAPE) = None;
     let depois_r: Vec<usize> = (0..q).map(|k| *elenco.add(k)).collect();
     for k in 0..q {
         *elenco.add(k) = depois_o[k];
@@ -340,7 +340,7 @@ unsafe extern "thiscall" fn comparar_national_teams_post_call_up_news(this: usiz
 }
 
 /// O ensaio da 0x76d560: os valores que iriam para a lista nova, sem alocar.
-static mut CQF11_PLANO: Option<Vec<u32>> = None;
+static mut FIXTURE_OPPONENTS_PLAN: Option<Vec<u32>> = None;
 
 /// { 0x76d560 } (thiscall, ret 8, national_teams.cpp, quadro SEH da lista local): `national_teams_collect_fixture_
 /// opponents(seleção, jogo)`, pela notícia da convocação (0x76e0b0) e pelo pedido ao técnico (0x76f1a0). Uma lista
@@ -364,7 +364,7 @@ unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(this: usize
     // cdecl; 0x68d0d0: push 4; push &valor; mov ecx, lista -> thiscall, ret 8; 0x5409b0 / 0x53b4f0: push; add esp, 4 ->
     // cdecl; 0x549ef0: push +0x28; push +0x2a; lea ecx -> thiscall, ret 8; 0x54c5b0: push n; push &saída; mov ecx, data
     // -> thiscall, ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24
-    let ensaio = (*core::ptr::addr_of!(CQF11_PLANO)).is_some();
+    let ensaio = (*core::ptr::addr_of!(FIXTURE_OPPONENTS_PLAN)).is_some();
     let mut local = [0u8; 16];
     let l = local.as_mut_ptr() as usize;
     nova(l);
@@ -377,7 +377,7 @@ unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(this: usize
     }
     let mut por = |v: usize| {
         if ensaio {
-            if let Some(p) = &mut *core::ptr::addr_of_mut!(CQF11_PLANO) {
+            if let Some(p) = &mut *core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN) {
                 p.push(cqf11_d(v) as u32);
             }
         } else {
@@ -433,9 +433,9 @@ unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(this: usize
 /// ensaio diz os valores que vão na lista (sem alocar), e a lista da original tem de ter exatamente esses, na ordem.
 unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_opponents(this: usize, selecao: usize, jogo: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
-    *core::ptr::addr_of_mut!(CQF11_PLANO) = Some(Vec::new());
+    *core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN) = Some(Vec::new());
     national_teams_collect_fixture_opponents(this, selecao, jogo);
-    let plano = (*core::ptr::addr_of_mut!(CQF11_PLANO)).take().unwrap_or_default();
+    let plano = (*core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN)).take().unwrap_or_default();
     let r = o(this, selecao, jogo);
     let agora = list_item_values(r);
     PLACAR.registrar(agora == plano, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));

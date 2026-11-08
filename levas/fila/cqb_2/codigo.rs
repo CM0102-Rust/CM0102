@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
     1
 }
 
-/// O comparador dos eventos raros, em ensaio (modelo CPV6_ENSAIO: a cópia sem a notícia nem a verba, que alocam; sem a
+/// O comparador dos eventos raros, em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN: a cópia sem a notícia nem a verba, que alocam; sem a
 /// troca do presidente na 0x59e940): a cópia e a original a partir do mesmo estado (o registro de finanças, o sorteio e
 /// os `extras`). Sem evento: tudo igual; com evento: a devolução, o saldo, +0xb4, +0x154, +0x165 e os `conferir` (a
 /// tipo da notícia e a marca +0x82 dependem da verba, e os sorteios depois dela também).
@@ -191,9 +191,9 @@ unsafe fn compare_rare_finance_event(nome: &str, fin: usize, extras: &[(usize, u
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regioes.extend_from_slice(extras);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPV6_ENSAIO = true;
+    RARE_FINANCE_EVENT_DRY_RUN = true;
     let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(copia));
-    CPV6_ENSAIO = false;
+    RARE_FINANCE_EVENT_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = original();
@@ -273,7 +273,7 @@ unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: u
     cpv6_somar(fin + 0x154, v);
     credit_balance(fin, v);
     let verba = transfer_budget(fin);
-    if com_ficha && !CPV6_ENSAIO {
+    if com_ficha && !RARE_FINANCE_EVENT_DRY_RUN {
         let pres = cqb2_d(clube + 0xbf);
         let nac = cqb2_d(clube + 0x53);
         let nova = if nac != 0 && cpv6_sortear(0x3e8) != 0 {

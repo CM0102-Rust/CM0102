@@ -193,8 +193,8 @@ unsafe extern "thiscall" fn comparar_player_search_record_scouted_club_match(thi
 
 /// O ensaio da 0x7b5be0 (só no comparador): a cópia decide tudo até o relatório sem os efeitos (o histórico 0x7bd310 e o
 /// relatório não rodam) e anota se chegaria ao relatório.
-static mut CQF10_ENSAIO: bool = false;
-static mut CQF10_RELATORIO: bool = false;
+static mut SCOUT_MATCH_DRY_RUN: bool = false;
+static mut SCOUT_MATCH_WOULD_REPORT: bool = false;
 
 /// { 0x7b5be0 } (thiscall, ret 0xc, player_search.cpp, quadro SEH da lista local e das datas): `PLAYER_SEARCH::
 /// scout_match(jogo, resultado, saida)`, pela partida observada (0x7f8c00). `this` é a lista de busca do olheiro: +0 o
@@ -254,7 +254,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
     }
     let acompanhado = cqf10_i(this + 0x190);
     if acompanhado > -1 && cqf10_d(this + 0x170) != 0 && (cqf10_i(jogo + 0xc) == acompanhado || cqf10_i(jogo + 0x10) == acompanhado) {
-        if !CQF10_ENSAIO {
+        if !SCOUT_MATCH_DRY_RUN {
             crate::comparacao::ramo("cqf_10 historico do clube");
             let historico: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7bd310usize);
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
@@ -345,8 +345,8 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
     // [this+0x1a5] -> thiscall, ret 8
     let (mut tmp, mut copia) = ([0u32; 2], [0u32; 2]);
     let amanha = mais(0xae2c90, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã
-    if CQF10_ENSAIO {
-        CQF10_RELATORIO = true;
+    if SCOUT_MATCH_DRY_RUN {
+        SCOUT_MATCH_WOULD_REPORT = true;
         return 1;
     }
     copiar(this + 0x1a5, copia.as_mut_ptr() as usize, amanha);
@@ -456,11 +456,11 @@ unsafe extern "thiscall" fn comparar_player_search_scout_match(this: usize, jogo
     }
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = (cqf10_d(this + 0x1a5), cqf10_d(this + 0x1a9));
-    CQF10_ENSAIO = true;
-    CQF10_RELATORIO = false;
+    SCOUT_MATCH_DRY_RUN = true;
+    SCOUT_MATCH_WOULD_REPORT = false;
     let n = crate::aleatorio::sem_contar(|| player_search_scout_match(this, jogo, resultado, saida));
-    CQF10_ENSAIO = false;
-    let relata = CQF10_RELATORIO;
+    SCOUT_MATCH_DRY_RUN = false;
+    let relata = SCOUT_MATCH_WOULD_REPORT;
     estado.escrever();
     let previsto = if relata {
         let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);

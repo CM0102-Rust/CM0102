@@ -460,3 +460,93 @@ TextoDoGerente,ManagerTextFn,type,rust/src/motor/match_screens.rs
 VANTAGEM_SEM_RESPOSTA,ADVANTAGE_UNANSWERED,static,rust/src/motor/match_eng.rs
 VETORES_PEDIDOS,REQUESTED_BUFFERS,static,rust/src/motor/match_eng.rs
 ZONAS_DE_POSSE,POSSESSION_ZONES,const,rust/src/motor/match_eng.rs
+CPE2_LINHA,RESULT_TABLE_ROW_SIZE,const,rust/src/motor/comp/league.rs
+CPM2_LINHA,TABLE_ROW_SIZE,const,rust/src/motor/comp/league.rs
+CPO6_NOTICIA,STORED_NEWS_SIZE,const,rust/src/motor/news.rs
+CPQ6_ESTATICAS,DATE_OP_STATICS,const,rust/src/motor/transfer_manager.rs
+CPV6_ENSAIO,RARE_FINANCE_EVENT_DRY_RUN,static mut,rust/src/motor/comp/leagues/fin_prm.rs
+CPW11_ENSAIO,LEAGUE_ADD_RESULT_DRY_RUN,static mut,rust/src/motor/comp/league.rs
+CPW12_ENSAIO,INTERNATIONAL_RESULT_DRY_RUN,static mut,rust/src/motor/national_teams.rs
+CPW3_ENSAIO,LOAN_OFFER_DRY_RUN,static mut,rust/src/motor/contract_manager.rs
+CPW4_ENSAIO,CONTRACT_OFFER_DRY_RUN,static mut,rust/src/motor/contract_manager.rs
+CPW4_REGISTRO,DRY_RUN_CONTRACT_OFFER_RECORD,static mut,rust/src/motor/contract_manager.rs
+CPW6_ENSAIO,MONTH_AWARD_DRY_RUN,static mut,rust/src/motor/award/month_award.rs
+CPW7_DECISAO,MISS_TRAINING_DECISION,static mut,rust/src/motor/awol.rs
+CPW7_ENSAIO,MISS_TRAINING_DRY_RUN,static mut,rust/src/motor/awol.rs
+CPW8_ENSAIO,END_INJURY_DRY_RUN,static mut,rust/src/motor/manager_manager.rs
+CPW8_TERMINOU,END_INJURY_REACHED,static mut,rust/src/motor/manager_manager.rs
+CPW9_ENSAIO,INJURY_DAILY_DRY_RUN,static mut,rust/src/motor/injury.rs
+CPW9_ESPERA,INJURY_DAILY_PENDING_REGIONS,static mut,rust/src/motor/injury.rs
+CPW9_PAROU,INJURY_DAILY_STOPPED,static mut,rust/src/motor/injury.rs
+CPX10_ALCANCE,MANAGER_NEWS_REACH,static mut,rust/src/motor/manager_manager.rs
+CPX10_ENSAIO,MANAGER_NEWS_DRY_RUN,static mut,rust/src/motor/manager_manager.rs
+CPX10_NOTICIA,MANAGER_NEWS_BUILT,static mut,rust/src/motor/manager_manager.rs
+CPX11_ENSAIO,LEAGUE_PRIZE_MONEY_DRY_RUN,static mut,rust/src/motor/comp/league.rs
+CPX12_ENSAIO,POSITION_RECORDS_DRY_RUN,static mut,rust/src/motor/club_records.rs
+CPX12_ENSAIO_FILA,RECORD_NEWS_DRY_RUN,static mut,rust/src/motor/club_records.rs
+CPX13_ENSAIO,SELECT_SQUADS_DRY_RUN,static mut,rust/src/motor/national_teams.rs
+CPX13_ENSAIO_NOTICIA,CALLED_UP_NEWS_DRY_RUN,static mut,rust/src/motor/national_teams.rs
+CPX13_PEDIU,SELECT_SQUADS_REQUESTED_SQUAD,static mut,rust/src/motor/national_teams.rs
+CPX1_DESFAZER,DRY_RUN_OFFERS_TO_RESTORE,static mut,rust/src/motor/transfer_manager.rs
+CPX1_ENSAIO,OFFER_RESPONSE_DRY_RUN,static mut,rust/src/motor/transfer_manager.rs
+CPX2_CHEGOU,UNSETTLE_PLAYER_REACHED,static mut,rust/src/motor/transfer_manager.rs
+CPX2_ENSAIO,UNSETTLE_PLAYER_DRY_RUN,static mut,rust/src/motor/transfer_manager.rs
+CPY11_ENSAIO,APPEARANCE_CLAUSES_DRY_RUN,static mut,rust/src/motor/transfer_manager.rs
+CPY12_SEMEOU,BOARD_VETO_SEEDED_RAND,static mut,rust/src/motor/manager_manager.rs
+CPY2_ESTATICAS,STAFF_STATUS_DATE_STATICS,const,rust/src/motor/shortlist_manager.rs
+CPY6_ENSAIO,EUROPEAN_CUP_FIXTURE_DRY_RUN,static mut,rust/src/motor/comp/eurocomp/european_cup.rs
+CPZ3_ENSAIO,POSITIONS_STATUS_DRY_RUN,static mut,rust/src/motor/comp/league.rs
+CPZ3_FITA,STATUS_ANNOUNCE_TAPE,static mut,rust/src/motor/comp/league.rs
+CPZ3_GRAVAR,STATUS_ANNOUNCE_RECORD,static mut,rust/src/motor/comp/league.rs
+CPZ3_LIDO,STATUS_ANNOUNCE_TAPE_POS,static mut,rust/src/motor/comp/league.rs
+CPZ8_ENSAIO,FIXTURE_MOVED_NEWS_DRY_RUN,static mut,rust/src/motor/comp/fix_man.rs
+CPZ8_MONTADA,FIXTURE_MOVED_NEWS_WAS_BUILT,static mut,rust/src/motor/comp/fix_man.rs
+CPZ8_NOTICIA,FIXTURE_MOVED_NEWS_BUILT,static mut,rust/src/motor/comp/fix_man.rs
+CPZ9_ENSAIO,FINE_NEWS_DRY_RUN,static mut,rust/src/motor/fine.rs
+CPZ9_MONTARIA,FINE_NEWS_WOULD_BUILD,static mut,rust/src/motor/fine.rs
+CQA11_ENSAIO,SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN,static mut,rust/src/motor/staff_records.rs
+CQA12_ENSAIO,CUP_PLACED_CLUB_DRY_RUN,static mut,rust/src/motor/staff_records.rs
+CQA13_ENSAIO,MEDIA_REACTION_DRY_RUN,static mut,rust/src/motor/media.rs
+CQA13_PAROU,MEDIA_REACTION_STOPPED,static mut,rust/src/motor/media.rs
+CQA1_ENSAIO,ROUND_PRIZE_MONEY_DRY_RUN,static mut,rust/src/motor/comp/cup.rs
+CQA2_RESPONDIDO,LAST_FRIENDLY_REPLY,static mut,rust/src/motor/comp/friendly.rs
+CQA5_ENSAIO,SQUAD_LIMITS_DRY_RUN,static mut,rust/src/motor/transfer_manager.rs
+CQA5_LIBERADO,SQUAD_LIMITS_RELEASED_PLAYER,static mut,rust/src/motor/transfer_manager.rs
+CQB13_ENSAIO,SAME_DAY_CLASH_DRY_RUN,static mut,rust/src/motor/comp/fix_man.rs
+CQB6_ENSAIO,FORMER_CLUB_FEE_DRY_RUN,static mut,rust/src/motor/transfer_manager.rs
+CQB6_ENTREGAS,FORMER_CLUB_FEE_DELIVERIES,static mut,rust/src/motor/transfer_manager.rs
+CQC11_FITA,FRIENDLY_TAPE,static mut,rust/src/motor/comp/friendly.rs
+CQC3_ACRESCIMOS,DAY_CLASHES_APPENDED,static mut,rust/src/motor/comp/fix_man.rs
+CQC3_ENSAIO,DAY_CLASHES_DRY_RUN,static mut,rust/src/motor/comp/fix_man.rs
+CQC4_RET,DATE_OP_RESULT,static mut,rust/src/motor/comp/fix_man.rs
+CQD11_DESTINO,AWOL_NEWS_DESTINATION,static mut,rust/src/motor/awol.rs
+CQD11_FITA,AWOL_NEWS_TAPE,static mut,rust/src/motor/awol.rs
+CQD13_DATA_SOLTA,DRY_RUN_STRAY_SCRATCH_DATE,static mut,rust/src/motor/staff_records.rs
+CQD13_ENSAIO,STAFF_HISTORY_DRY_RUN,static mut,rust/src/motor/staff_records.rs
+CQD13_RENOVADOS,DRY_RUN_RENEWED_CONTRACTS,static mut,rust/src/motor/staff_records.rs
+CQF10_ENSAIO,SCOUT_MATCH_DRY_RUN,static mut,rust/src/motor/player_search.rs
+CQF10_RELATORIO,SCOUT_MATCH_WOULD_REPORT,static mut,rust/src/motor/player_search.rs
+CQF11_FITA,INTERNATIONAL_REPORT_TAPE,static mut,rust/src/motor/national_teams.rs
+CQF11_PLANO,FIXTURE_OPPONENTS_PLAN,static mut,rust/src/motor/national_teams.rs
+CQF12_ENSAIO,SCOUT_DAILY_DRY_RUN,static mut,rust/src/motor/scout_manager.rs
+CQF12_GRUPOS,SCOUT_REPORT_GROUPS,static mut,rust/src/motor/scout_manager.rs
+CQF9_ENSAIO,RECOVERY_NEWS_DRY_RUN,static mut,rust/src/motor/injury.rs
+CQF9_FUGIU,RECOVERY_NEWS_WOULD_GO_AWOL,static mut,rust/src/motor/injury.rs
+CQH8_CLUBE,ARCHIVE_STATS_CLUB_ID,static mut,rust/src/motor/player_stats.rs
+CQH8_ENSAIO,ARCHIVE_STATS_DRY_RUN,static mut,rust/src/motor/player_stats.rs
+CQH8_PENDENTES,ARCHIVE_STATS_PENDING_TOTALS,static mut,rust/src/motor/player_stats.rs
+CQI4_ENSAIO,ENG_PRM_RULES_DRY_RUN,static mut,rust/src/motor/comp/leagues/eng_prm.rs
+CQI6_ENSAIO,ITA_SER_A_RULES_DRY_RUN,static mut,rust/src/motor/comp/leagues/ita_ser_a.rs
+CQJ5_ENSAIO,FRA_FIRST_RULES_DRY_RUN,static mut,rust/src/motor/comp/leagues/fra_first.rs
+CQK4_ENSAIO,SPA_FIRST_RULES_DRY_RUN,static mut,rust/src/motor/comp/leagues/spa_first.rs
+CQL3_PLANO,SQUAD_NUMBERS_PLAN,static mut,rust/src/motor/comp/squad_manager.rs
+CQL3_VAGAS,EURO_REFERENCE_LINEUP_SLOTS,const,rust/src/motor/comp/squad_manager.rs
+CQO5_LIGA_CFA,CFA_LEAGUE,const,rust/src/motor/comp/leagues/fra_cfa.rs
+PORTA_62ED70,GET_PLAYER_INJURY_TRAMPOLINE,static mut,rust/src/motor/match_eng.rs
+PORTA_68D0D0,LLIST_ADD_TAIL_TRAMPOLINE,static mut,rust/src/motor/match_eng.rs
+PORTA_6EAEA0,INIT_MATCH_PLAYER_TRAMPOLINE,static mut,rust/src/motor/match_man.rs
+PORTA_6F5C30,MATCH_PLAYER_RESPOND_TRAMPOLINE,static mut,rust/src/motor/shared.rs
+PORTA_70DFD0,TRY_BLOCK_SHOT_TRAMPOLINE,static mut,rust/src/motor/match_eng.rs
+PORTA_716630,START_FIGHT_TRAMPOLINE,static mut,rust/src/motor/match_eng.rs
+PORTA_716C90,HANDLE_SUSPECTED_DIVE_TRAMPOLINE,static mut,rust/src/motor/match_eng.rs
+PORTA_716E10,REACT_TO_FOUL_DECISION_TRAMPOLINE,static mut,rust/src/motor/match_eng.rs

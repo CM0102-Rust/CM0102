@@ -3254,31 +3254,31 @@ pub unsafe fn instalar(comparando: bool) {
             }
         }
         if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGUE_6F5C30, respond_hook as *const () as usize) {
-            PORTA_6F5C30 = t;
+            MATCH_PLAYER_RESPOND_TRAMPOLINE = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGO_6D6F70, porta_6d6f70 as *const () as usize) {
             PORTA_6D6F70 = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_6eaea0 (gravacao)", &PROLOGUE_6EAEA0, init_player_hook as *const () as usize) {
-            PORTA_6EAEA0 = t;
+            INIT_MATCH_PLAYER_TRAMPOLINE = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_716630 (gravacao)", &PROLOGUE_716630, gate_start_fight as *const () as usize) {
-            PORTA_716630 = t;
+            START_FIGHT_TRAMPOLINE = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_716e10 (gravacao)", &PROLOGUE_716E10, gate_react_to_foul_decision as *const () as usize) {
-            PORTA_716E10 = t;
+            REACT_TO_FOUL_DECISION_TRAMPOLINE = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_716c90 (gravacao)", &PROLOGUE_716C90, gate_handle_suspected_dive as *const () as usize) {
-            PORTA_716C90 = t;
+            HANDLE_SUSPECTED_DIVE_TRAMPOLINE = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_70dfd0 (gravacao)", &PROLOGUE_70DFD0, gate_try_block_shot as *const () as usize) {
-            PORTA_70DFD0 = t;
+            TRY_BLOCK_SHOT_TRAMPOLINE = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGUE_68D0D0, gate_llist_add_tail as *const () as usize) {
-            PORTA_68D0D0 = t;
+            LLIST_ADD_TAIL_TRAMPOLINE = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_62ed70 (gravacao)", &PROLOGUE_62ED70, gate_get_player_injury as *const () as usize) {
-            PORTA_62ED70 = t;
+            GET_PLAYER_INJURY_TRAMPOLINE = t;
         }
     }
     let rust: [usize; N] = [

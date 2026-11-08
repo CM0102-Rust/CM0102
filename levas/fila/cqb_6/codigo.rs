@@ -68,10 +68,10 @@ unsafe fn send_news_to_club_manager(n: usize, clube: usize) {
 }
 
 /// O ensaio dos comparadores: a cópia roda sem as notícias e sem os totais do clube (0x448ad0), que alocam ou entregam
-/// e não podem rodar duas vezes; CQB6_ENTREGAS conta as entregas que a original faria (elas podem mexer em [0xae1080]
+/// e não podem rodar duas vezes; FORMER_CLUB_FEE_DELIVERIES conta as entregas que a original faria (elas podem mexer em [0xae1080]
 /// pela resposta automática do humano de férias).
-static mut CQB6_ENSAIO: bool = false;
-static mut CQB6_ENTREGAS: u32 = 0;
+static mut FORMER_CLUB_FEE_DRY_RUN: bool = false;
+static mut FORMER_CLUB_FEE_DELIVERIES: u32 = 0;
 
 /// { 0x8e4f20 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor; o this não é usado):
 /// `TRANSFER_MANAGER::pay_former_club_fee_cuts(oferta)`, pela transferência efetivada com valor (+0x1b) de jogador sem
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
     crate::comparacao::ramo("cqb_6 parte dos clubes anteriores");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         transfer_manager_construct_news_item(n, 0xfc3);
     }
     let r = cqb6_d(0xae2d0c).wrapping_add(cqb6_d(p).wrapping_mul(0x4f));
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
     }
     let vinte = (cqb6_d(o + 0x1b) as i32) / 20;
     let divisor = if soma == 0 { 1 } else { soma as i32 };
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         cqb6_gravar(n, 0, cqb6_d(p) as u32);
         cqb6_gravar(n, 1, cqb6_d(cqb6_d(p + 4) + 0x33) as u32);
         cqb6_gravar(n, 2, cqb6_d(cqb6_d(p + 8) + 0x33) as u32);
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
         // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de passar)
         if c2 != 0 && cqb6_b(c2 + 0x35) & 0x3f != 5 { cqb6_d(transfer_manager_club_of_contract(c2)) as u32 } else { u32::MAX }
     };
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         cqb6_gravar(n, 7, v7);
     }
     for k in 0..5 {
@@ -133,8 +133,8 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
         crate::comparacao::ramo("cqb_6 parte paga");
         post_finance_amount(0x599800, fin, valor); // cqb6: entra nas vendas do comprador
         if valor > (cqb6_w(clube + 0x80) as i32).wrapping_mul(11).wrapping_sub(10000) {
-            CQB6_ENTREGAS += 1;
-            if !CQB6_ENSAIO {
+            FORMER_CLUB_FEE_DELIVERIES += 1;
+            if !FORMER_CLUB_FEE_DRY_RUN {
                 cqb6_gravar(n, 5, valor as u32);
                 cqb6_gravar(n, 6, cqb6_d(clube) as u32);
                 send_news_to_club_manager(n, clube);
@@ -148,13 +148,13 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
 unsafe extern "thiscall" fn comparar_pay_former_club_fee_cuts(this: usize, o: usize) {
     let original = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let fin = cqb6_financas(cqb6_clube(cqb6_d(o + 8)));
-    CQB6_ENTREGAS = 0;
+    FORMER_CLUB_FEE_DELIVERIES = 0;
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(fin, 0x167), (0xae1080, 4)], || original(this, o), || {
-        CQB6_ENSAIO = true;
+        FORMER_CLUB_FEE_DRY_RUN = true;
         crate::aleatorio::sem_contar(|| pay_former_club_fee_cuts(this, o));
-        CQB6_ENSAIO = false;
+        FORMER_CLUB_FEE_DRY_RUN = false;
     });
-    let entregas = CQB6_ENTREGAS;
+    let entregas = FORMER_CLUB_FEE_DELIVERIES;
     let igual = igual || (entregas != 0 && mo.0[0] == mr.0[0]);
     PLACAR.registrar(igual, || format!("pay_former_club_fee_cuts(oferta {:#x}) entregas={} original={:x?} rust={:x?}", o, entregas, mo, mr));
 }
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: usize, o: u
         return 0;
     }
     crate::comparacao::ramo("cqb_6 write_percent_pair pago");
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         let noticia: unsafe extern "thiscall" fn(usize, usize, i32, usize, u32) = core::mem::transmute(0x8db3a0usize);
         noticia(this, e, parte, o, da_oferta);
     }
@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: usize, o: u
     let fin_recebe = cqb6_financas(da_clausula);
     let fin_paga = cqb6_financas(transfer_manager_club_of_contract(cqb6_contrato(p)));
     let do_contrato = transfer_manager_club_of_contract(cqb6_contrato(p));
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         let totais: unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32 = core::mem::transmute(0x448ad0usize);
         totais(cqb6_d(0xad9dac), parte, do_contrato, cqb6_clube(cqb6_d(e + 5)));
     }
@@ -254,9 +254,9 @@ unsafe extern "thiscall" fn comparar_pay_next_sale_percentage(this: usize, p: us
         regioes.push((b, 0x167));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || original(this, p, o), || {
-        CQB6_ENSAIO = true;
+        FORMER_CLUB_FEE_DRY_RUN = true;
         let n = crate::aleatorio::sem_contar(|| pay_next_sale_percentage(this, p, o));
-        CQB6_ENSAIO = false;
+        FORMER_CLUB_FEE_DRY_RUN = false;
         n
     });
     let igual = r == n && (igual || (r != 0 && mo.0[3..] == mr.0[3..]));

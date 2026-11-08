@@ -284,10 +284,10 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
     cap_value_at_release_fee(contrato, w)
 }
 
-/// As estáticas das datas (CPQ6_ESTATICAS) e o contrato guardado em [0xae1080]: o que a original e as chamadas dela
+/// As estáticas das datas (DATE_OP_STATICS) e o contrato guardado em [0xae1080]: o que a original e as chamadas dela
 /// gravam, com o estado do sorteador (na pilha: a rotina é quente).
 fn player_value_regions() -> [(usize, usize); 11] {
-    let (e, c) = (crate::aleatorio::REGIOES_DO_ESTADO, CPQ6_ESTATICAS);
+    let (e, c) = (crate::aleatorio::REGIOES_DO_ESTADO, DATE_OP_STATICS);
     [e[0], e[1], (0xae1080, 4), c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]]
 }
 

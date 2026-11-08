@@ -36,7 +36,7 @@ unsafe fn put_u32_le(r: &mut [u8; 13], k: usize, v: usize) {
 }
 
 /// As estáticas das operações de data (valor e guarda), para os comparadores.
-const CPQ6_ESTATICAS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1), (0xae2470, 8), (0xae2418, 1)];
+const DATE_OP_STATICS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1), (0xae2470, 8), (0xae2418, 1)];
 
 /// { 0x8d0780 } (stdcall, ret 0xc, transfer_manager.cpp, quadro SEH só da data local):
 /// `transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas)`: sem pessoa ou comprador, a caixa
@@ -254,7 +254,7 @@ unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usi
 /// Comparador: pelo valor (lado a lado pelas estáticas das datas; o valor do jogador 0x4d0c60 e a idade só calculam).
 unsafe extern "stdcall" fn comparar_transfer_manager_calc_compensation_fee(pessoa: usize, comprador: usize, sem_regras_novas: u32) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> i32>(%%I0%%);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&CPQ6_ESTATICAS, || o(pessoa, comprador, sem_regras_novas), || transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas));
+    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&DATE_OP_STATICS, || o(pessoa, comprador, sem_regras_novas), || transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas));
     PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_calc_compensation_fee(pessoa {:x}) {} x {}, estáticas iguais {}", if pessoa != 0 { cpq6_d(pessoa) } else { 0 }, ro, rr, igual));
     ro
 }
@@ -272,7 +272,7 @@ unsafe extern "stdcall" fn comparar_transfer_manager_selling_club_must_accept(of
     if !motivo.is_null() {
         reg.push((motivo as usize, 2));
     }
-    reg.extend_from_slice(&CPQ6_ESTATICAS);
+    reg.extend_from_slice(&DATE_OP_STATICS);
     let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(oferta, estrito, motivo), || transfer_manager_selling_club_must_accept(oferta, estrito, motivo));
     PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_selling_club_must_accept(estrito {}) {} x {}, memória igual {}", estrito, ro, rr, igual));
     ro

@@ -7,7 +7,7 @@ unsafe fn cpw12_d(a: usize) -> usize {
 /// O ensaio do comparador da 0x76b600: a cópia roda sem o ranking da FIFA (0x58cf70, acrescenta pontos ao histórico),
 /// sem a primeira convocação (0x86cc50, vai para o arquivo), sem o jogo pela seleção no registro de transferências
 /// (0x8ce920) e sem a notícia aos clubes (0x7706c0, aloca).
-static mut CPW12_ENSAIO: bool = false;
+static mut INTERNATIONAL_RESULT_DRY_RUN: bool = false;
 
 /// A vaga `k` (0..20) da escalação do lado `lado` no resumo do jogo `m`: m + 0x625 × lado + 0x190 + 0x49 × k.
 fn lineup_slot(m: usize, lado: usize, k: usize) -> usize {
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m
         let fifa: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x58cf70usize);
         let primeira: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x86cc50usize);
         let jogo_pela_selecao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8ce920usize);
-        if !CPW12_ENSAIO {
+        if !INTERNATIONAL_RESULT_DRY_RUN {
             fifa(cpw12_d(this + 0x1c), p);
         }
         for lado in 0..2usize {
@@ -112,14 +112,14 @@ unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m
                 if *((pessoa + 0x22) as *const u8) == 0 {
                     swap_to_club_nation(pessoa, clube);
                     let adversario = if clube == cpw12_d(p + 0x1c) { cpw12_d(p + 0x20) } else { cpw12_d(p + 0x1c) };
-                    if !CPW12_ENSAIO {
+                    if !INTERNATIONAL_RESULT_DRY_RUN {
                         primeira(cpw12_d(0xdd7f00), pessoa, adversario);
                     }
                 }
                 crate::comparacao::ramo("cpw_12 jogo pela seleção");
                 *((pessoa + 0x22) as *mut u8) = (*((pessoa + 0x22) as *const u8)).wrapping_add(1); // cpw12: um jogo
                 *((pessoa + 0x23) as *mut u8) = (*((pessoa + 0x23) as *const u8)).wrapping_add(*((vaga + 0x21) as *const u8)); // cpw12: os gols
-                if !CPW12_ENSAIO {
+                if !INTERNATIONAL_RESULT_DRY_RUN {
                     // a original empurra o edx com o curto dos jogos embaixo e o alto de 55 × id da nação
                     let id_nacao = cpw12_d(cpw12_d(clube + 0x53)) as u32;
                     let n = core::ptr::read_unaligned(jogos) as u16 as u32;
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m
         let destaque_k = *((m + 0x625 * lado + 0x153) as *const i8) as isize;
         let destaque_id = cpw12_d((m + 0x625 * lado + 0x190) .wrapping_add((0x49 * destaque_k) as usize));
         let destaque = cpw12_d(0xae23bc).wrapping_add(destaque_id.wrapping_mul(0x6e));
-        if !CPW12_ENSAIO {
+        if !INTERNATIONAL_RESULT_DRY_RUN {
             // ponytail: a original empurra a conta num dword da local com só o byte de baixo gravado; a 0x7706c0 lê o byte
             noticia(this, clube, p, m, destaque, lista.as_mut_ptr(), q as u32);
         }
@@ -192,9 +192,9 @@ unsafe extern "thiscall" fn comparar_record_international_result(this: usize, p:
     }
     let regioes = caps_update_regions(this, p, m);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW12_ENSAIO = true;
+    INTERNATIONAL_RESULT_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| record_international_result(this, p, m)));
-    CPW12_ENSAIO = false;
+    INTERNATIONAL_RESULT_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this, p, m);

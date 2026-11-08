@@ -6,12 +6,12 @@ use super::*;
 
 /// O ensaio dos comparadores: as cópias sem os históricos (arquivo), sem as notícias (0x75c390), sem acabar as
 /// convocações (0x774f30) e sem a renovação (0x4cda70), anotando os contratos que a renovação mexeria.
-pub(crate) static mut CQD13_ENSAIO: bool = false;
-pub(crate) static mut CQD13_RENOVADOS: Vec<usize> = Vec::new();
+pub(crate) static mut STAFF_HISTORY_DRY_RUN: bool = false;
+pub(crate) static mut DRY_RUN_RENEWED_CONTRACTS: Vec<usize> = Vec::new();
 /// Depois da última conta de dias (0x54cdb0) da cópia, o ensaio pulou uma chamada da original que também conta dias
 /// e deixa a data de rascunho estática dela (0xae2470) noutro ano: a renovação (0x4cda70, pela idade), o fim das
 /// convocações (0x774f30) ou a notícia do elogio (0x75c390). Essa data então fica fora da conta.
-pub(crate) static mut CQD13_DATA_SOLTA: bool = false;
+pub(crate) static mut DRY_RUN_STRAY_SCRATCH_DATE: bool = false;
 
 /// Raises club reputation (club::REPUTATION) toward weight × 500, at most 750 at once, clamped to 1..10000.
 ///
@@ -52,7 +52,7 @@ pub(crate) unsafe fn offer_renewal_if_due(clube: usize, p: usize, k: usize) {
     if read_usize(G_TRANSFER_MANAGER) == 0 {
         return;
     }
-    CQD13_DATA_SOLTA = false;
+    DRY_RUN_STRAY_SCRATCH_DATE = false;
     if days_between(G_CURRENT_DATE, k + 0x25) <= 300 {
         return;
     }
@@ -62,9 +62,9 @@ pub(crate) unsafe fn offer_renewal_if_due(clube: usize, p: usize, k: usize) {
     if v == 0 || read_i32(v + 0xf) != read_i32(p) {
         return;
     }
-    if CQD13_ENSAIO {
-        (*core::ptr::addr_of_mut!(CQD13_RENOVADOS)).push(k);
-        CQD13_DATA_SOLTA = true;
+    if STAFF_HISTORY_DRY_RUN {
+        (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).push(k);
+        DRY_RUN_STRAY_SCRATCH_DATE = true;
         return;
     }
     let oferecer: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_OFFER_CONTRACT);
@@ -95,7 +95,7 @@ pub(crate) unsafe fn add_lineup_histories(this: usize, clube: usize, escalacao: 
             show_error_at(0xa83b78, 0x1010);
             continue;
         }
-        append_person_history_by_id(!CQD13_ENSAIO, this, read_usize(p), e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p), e);
     }
 }
 
@@ -108,7 +108,7 @@ pub(crate) unsafe fn add_club_history(this: usize, clube: usize, tipo: u8, comp:
     stamp_game_date(e.as_mut_ptr());
     e[8] = tipo;
     put_i32(&mut e, 9, read_i32(comp));
-    if !CQD13_ENSAIO {
+    if !STAFF_HISTORY_DRY_RUN {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
         let p = read_usize(this + 0x10).wrapping_add(read_usize(clube).wrapping_mul(8));
         f(read_usize(this + 4), p, p + 4, e.as_ptr());
@@ -119,8 +119,8 @@ pub(crate) unsafe fn add_club_history(this: usize, clube: usize, tipo: u8, comp:
 ///
 /// [pt] A notícia do elogio do título (0x75c390 em [0xb6b7c8]; fora do ensaio).
 pub(crate) unsafe fn post_trophy_praise(clube: usize, comp: usize, marca: u32) {
-    if CQD13_ENSAIO {
-        CQD13_DATA_SOLTA = true;
+    if STAFF_HISTORY_DRY_RUN {
+        DRY_RUN_STRAY_SCRATCH_DATE = true;
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_MEDIA_QUEUE_TROPHY_PRAISE_STORY);
@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
             raise_side_rating(np + 8, peso, k1);
             raise_side_rating(np + 0xc, peso, k2);
         }
-        append_person_history_by_id(!CQD13_ENSAIO, this, read_usize(t), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(t), &e);
         let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         // 0x86f5b0: push 1; push técnico; mov ecx, edi (o this) -> thiscall (ret 8)
         let r = registro(this, read_usize(clube + club::MANAGER), 1);
@@ -214,7 +214,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     }
     let presidente = read_usize(clube + club::CHAIRMAN);
     if presidente != 0 {
-        append_person_history_by_id(!CQD13_ENSAIO, this, read_usize(presidente), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(presidente), &e);
     }
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         let f = media(read_usize(G_PLAYER_STATS), read_usize(p + 0x61), 2, 1, 6.5);
         if f > limiar as f64 { // cqd13: acima do limiar
             crate::comparacao::ramo("cqd_13 jogador destacado do campeao");
-            append_person_history_by_id(!CQD13_ENSAIO, this, read_usize(p), &e);
+            append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p), &e);
             moral(p, 0x14, 1); // cqd13: o moral do jogador destacado
             let k = contrato(read_usize(G_CONTRACT_MANAGER), p, clube);
             if k == 0 {
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
             raise_side_rating(lado + 2, peso, k1);
             raise_side_rating(lado + 4, peso, k2);
         }
-        append_person_history_by_id(!CQD13_ENSAIO, this, read_usize(read_usize(clube + club::MANAGER)), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(read_usize(clube + club::MANAGER)), &e);
         let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         let r = registro(this, read_usize(clube + club::MANAGER), 1);
         if r != 0 {
@@ -311,7 +311,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
     }
     let presidente = read_usize(clube + club::CHAIRMAN);
     if presidente != 0 {
-        append_person_history_by_id(!CQD13_ENSAIO, this, read_usize(presidente), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(presidente), &e);
     }
     let escalacao = partida + 0x190 + 0x625 * (clube != read_usize(jogo + 0x1c)) as usize;
     add_lineup_histories(this, clube, escalacao, &e);
@@ -342,8 +342,8 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
     let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
     // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx e só compara o id; ret 4 nas duas)
     if guardada(read_usize(G_NATIONAL_TEAMS), read_usize(jogo + 0x14)) != 0 {
-        if CQD13_ENSAIO {
-            CQD13_DATA_SOLTA = true;
+        if STAFF_HISTORY_DRY_RUN {
+            DRY_RUN_STRAY_SCRATCH_DATE = true;
         } else {
             let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_END_DUTY_FOR_COMPETITION);
             acabar(read_usize(G_NATIONAL_TEAMS), read_usize(jogo + 0x14));
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
 /// sorteiam) não entram na conta; o sorteador volta ao de antes para a original. A renovação da original também sorteia
 /// e conta dias (0x54cdb0): o moral das fichas depois do primeiro renovado fica fora da igualdade e é conferido pela
 /// faixa da 0x544710; a data estática fica fora quando o ensaio pulou, depois da última conta de dias da cópia, uma
-/// chamada da original que conta dias (CQD13_DATA_SOLTA). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
+/// chamada da original que conta dias (DRY_RUN_STRAY_SCRATCH_DATE). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
 pub(crate) unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: (usize, usize), liga: bool, original: impl FnOnce(), copia: impl FnOnce()) {
     let mut fixas: Vec<(usize, usize)> = vec![(clube + club::REPUTATION, 2), (G_DAYS_SINCE_SCRATCH_DATE, 8), notas];
     let t = read_usize(clube + club::MANAGER);
@@ -405,14 +405,14 @@ pub(crate) unsafe fn compare_champion_update(nome: &str, this: usize, clube: usi
     todas.extend(contratos.iter().map(|&k| (k + 0x44, 1)));
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO.iter().copied());
     let antes = crate::comparacao::Memoria::ler(&todas);
-    (*core::ptr::addr_of_mut!(CQD13_RENOVADOS)).clear();
-    CQD13_DATA_SOLTA = false;
-    CQD13_ENSAIO = true;
+    (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).clear();
+    DRY_RUN_STRAY_SCRATCH_DATE = false;
+    STAFF_HISTORY_DRY_RUN = true;
     crate::aleatorio::sem_contar(copia);
-    CQD13_ENSAIO = false;
-    let renovados = core::mem::take(&mut *core::ptr::addr_of_mut!(CQD13_RENOVADOS));
+    STAFF_HISTORY_DRY_RUN = false;
+    let renovados = core::mem::take(&mut *core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS));
     let mut conta = fixas;
-    if CQD13_DATA_SOLTA {
+    if DRY_RUN_STRAY_SCRATCH_DATE {
         conta.retain(|&(a, _)| a != G_DAYS_SINCE_SCRATCH_DATE);
     }
     // A renovação da original sorteia (0x4cda70): o moral dos jogadores depois do primeiro renovado (0x544710 sorteia)
@@ -707,7 +707,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_league_finish_records(this: 
 }
 
 /// O ensaio do comparador da 0x86dc30: a cópia sem o histórico (arquivo).
-pub(crate) static mut CQA11_ENSAIO: bool = false;
+pub(crate) static mut SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN: bool = false;
 
 /// the supporters' player of the year in his history and, by a draw, the favourite link between him and the club
 /// Original: `Staff_Records::add_supporters_player_of_year_record` (0x86dc30, staff_records.cpp, thiscall).
@@ -727,7 +727,7 @@ pub(crate) unsafe extern "thiscall" fn add_supporters_player_of_year_record(this
     put_i32(&mut e, 8, read_i32(clube));
     put_i32(&mut e, 0xd, (a & 0xffff) as i32);
     put_i32(&mut e, 0x11, b as i32);
-    append_person_history_by_id(!CQA11_ENSAIO, this, read_usize(pessoa), &e);
+    append_person_history_by_id(!SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN, this, read_usize(pessoa), &e);
     let r1 = friendly_random(0x15 - read_i8_as_i32(pessoa + staff::LOYALITY));
     if r1 < friendly_random(10) {
         crate::comparacao::ramo("cqa_11 goal_crowd_reaction favorita");
@@ -755,9 +755,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_supporters_player_of_year_re
         reg.push((pref + 4, 0x18));
     }
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQA11_ENSAIO = true;
+    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_supporters_player_of_year_record(this, pessoa, clube, a, b)));
-    CQA11_ENSAIO = false;
+    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     o(this, pessoa, clube, a, b);
@@ -771,7 +771,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_supporters_player_of_year_re
 
 
 /// O ensaio dos comparadores: as cópias sem o histórico (arquivo) e sem acabar as convocações.
-pub(crate) static mut CQA12_ENSAIO: bool = false;
+pub(crate) static mut CUP_PLACED_CLUB_DRY_RUN: bool = false;
 
 /// Appends history entry e to club id's list in the club history FILE_LLIST [this+4]; nothing in rehearsal (takes the
 /// club id; skipped in rehearsal).
@@ -779,7 +779,7 @@ pub(crate) static mut CQA12_ENSAIO: bool = false;
 /// [pt] A entrada `e` no fim da lista do clube `id` no arquivo do histórico dos clubes (FILE_LLIST [this+4], 0x58e340; o
 /// começo e o fim em [this+0x10] + id × 8). No ensaio, nada.
 pub(crate) unsafe fn append_club_history_by_id(this: usize, id: usize, e: &[u8; 0x40]) {
-    if CQA12_ENSAIO {
+    if CUP_PLACED_CLUB_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
@@ -848,11 +848,11 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, clube: usize, jogo: usi
             raise_side_rating(lado + 2, peso, k1);
             raise_side_rating(lado + 4, peso, k2);
         }
-        append_person_history_by_id(!CQA12_ENSAIO, this, read_usize(t), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(t), &e);
     }
     let presidente = read_usize(clube + club::CHAIRMAN);
     if presidente != 0 {
-        append_person_history_by_id(!CQA12_ENSAIO, this, read_usize(presidente), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(presidente), &e);
     }
     let escalacao = partida + 0x190 + 0x625 * (clube != read_usize(jogo + 0x1c)) as usize;
     for j in 0..0x14usize {
@@ -871,9 +871,9 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, clube: usize, jogo: usi
             show_error_at(0xa83b78, 0x1010);
             continue;
         }
-        append_person_history_by_id(!CQA12_ENSAIO, this, read_usize(p), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(p), &e);
     }
-    if tipo == 2 && !CQA12_ENSAIO {
+    if tipo == 2 && !CUP_PLACED_CLUB_DRY_RUN {
         let guardada: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
         if guardada(read_usize(jogo + 0x14)) != 0 {
             let acabar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_END_DUTY_FOR_NATION_IN_COMPETITION);
@@ -927,9 +927,9 @@ pub(crate) unsafe fn compare_cup_placed(nome: &str, clube: usize, jogo: usize, p
     }
     let reg = [(clube + club::REPUTATION, 2), (partida + 0x188 + 0x625 * (read_usize(jogo + 0x20) == clube) as usize, 6)];
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQA12_ENSAIO = true;
+    CUP_PLACED_CLUB_DRY_RUN = true;
     copia();
-    CQA12_ENSAIO = false;
+    CUP_PLACED_CLUB_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     original();
@@ -1048,7 +1048,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, te
     e[0xc] = 0x96;
     put_i32(&mut e, 8, read_i32(clube));
     put_i32(&mut e, 0xd, contratado as i32);
-    append_person_history_by_id(!CQA12_ENSAIO, this, read_usize(tecnico), &e);
+    append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(tecnico), &e);
     if read_usize(clube + club::CHAIRMAN) != 0 {
         let mut e2 = history_entry();
         stamp_game_date(e2.as_mut_ptr());
@@ -1056,7 +1056,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, te
         put_i32(&mut e2, 8, read_i32(clube));
         put_i32(&mut e2, 0xd, contratado as i32);
         put_person_keys(&mut e2, 0x11, tecnico);
-        append_person_history_by_id(!CQA12_ENSAIO, this, read_usize(read_usize(clube + club::CHAIRMAN)), &e2);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(read_usize(clube + club::CHAIRMAN)), &e2);
     }
     let mut e3 = history_entry();
     stamp_game_date(e3.as_mut_ptr());
@@ -1085,9 +1085,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_manager_job_change(this: 
         }
     }
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQA12_ENSAIO = true;
+    CUP_PLACED_CLUB_DRY_RUN = true;
     record_manager_job_change(this, tecnico, clube, contratado);
-    CQA12_ENSAIO = false;
+    CUP_PLACED_CLUB_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     o(this, tecnico, clube, contratado);

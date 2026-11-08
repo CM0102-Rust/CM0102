@@ -21,12 +21,12 @@ unsafe fn cqa12_pi(a: usize, v: i32) {
 }
 
 /// O ensaio dos comparadores: as cópias sem o histórico (arquivo) e sem acabar as convocações.
-static mut CQA12_ENSAIO: bool = false;
+static mut CUP_PLACED_CLUB_DRY_RUN: bool = false;
 
 /// A entrada `e` no fim da lista do clube `id` no arquivo do histórico dos clubes (FILE_LLIST [this+4], 0x58e340; o
 /// começo e o fim em [this+0x10] + id × 8). No ensaio, nada.
 unsafe fn append_club_history_by_id(this: usize, id: usize, e: &[u8; 0x40]) {
-    if CQA12_ENSAIO {
+    if CUP_PLACED_CLUB_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(0x58e340usize);
@@ -90,11 +90,11 @@ unsafe fn update_cup_placed_club(this: usize, clube: usize, jogo: usize, partida
             raise_side_rating(lado + 2, peso, k1);
             raise_side_rating(lado + 4, peso, k2);
         }
-        append_person_history_by_id(!CQA12_ENSAIO, this, cqa12_d(t), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, cqa12_d(t), &e);
     }
     let presidente = cqa12_d(clube + 0xbf);
     if presidente != 0 {
-        append_person_history_by_id(!CQA12_ENSAIO, this, cqa12_d(presidente), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, cqa12_d(presidente), &e);
     }
     let escalacao = partida + 0x190 + 0x625 * (clube != cqa12_d(jogo + 0x1c)) as usize;
     for j in 0..0x14usize {
@@ -113,9 +113,9 @@ unsafe fn update_cup_placed_club(this: usize, clube: usize, jogo: usize, partida
             show_error_at(0xa83b78, 0x1010);
             continue;
         }
-        append_person_history_by_id(!CQA12_ENSAIO, this, cqa12_d(p), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, cqa12_d(p), &e);
     }
-    if tipo == 2 && !CQA12_ENSAIO {
+    if tipo == 2 && !CUP_PLACED_CLUB_DRY_RUN {
         let guardada: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x76d940usize);
         if guardada(cqa12_d(jogo + 0x14)) != 0 {
             let acabar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x774f90usize);
@@ -158,9 +158,9 @@ unsafe fn compare_cup_placed(nome: &str, clube: usize, jogo: usize, partida: usi
     }
     let reg = [(clube + 0x80, 2), (partida + 0x188 + 0x625 * (cqa12_d(jogo + 0x20) == clube) as usize, 6)];
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQA12_ENSAIO = true;
+    CUP_PLACED_CLUB_DRY_RUN = true;
     copia();
-    CQA12_ENSAIO = false;
+    CUP_PLACED_CLUB_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     original();
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn record_manager_job_change(this: usize, tecnico: usiz
     e[0xc] = 0x96;
     put_i32(&mut e, 8, cqa12_i(clube));
     put_i32(&mut e, 0xd, contratado as i32);
-    append_person_history_by_id(!CQA12_ENSAIO, this, cqa12_d(tecnico), &e);
+    append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, cqa12_d(tecnico), &e);
     if cqa12_d(clube + 0xbf) != 0 {
         let mut e2 = history_entry();
         stamp_game_date(e2.as_mut_ptr());
@@ -277,7 +277,7 @@ unsafe extern "thiscall" fn record_manager_job_change(this: usize, tecnico: usiz
         put_i32(&mut e2, 8, cqa12_i(clube));
         put_i32(&mut e2, 0xd, contratado as i32);
         put_person_keys(&mut e2, 0x11, tecnico);
-        append_person_history_by_id(!CQA12_ENSAIO, this, cqa12_d(cqa12_d(clube + 0xbf)), &e2);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, cqa12_d(cqa12_d(clube + 0xbf)), &e2);
     }
     let mut e3 = history_entry();
     stamp_game_date(e3.as_mut_ptr());
@@ -304,9 +304,9 @@ unsafe extern "thiscall" fn comparar_record_manager_job_change(this: usize, tecn
         }
     }
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQA12_ENSAIO = true;
+    CUP_PLACED_CLUB_DRY_RUN = true;
     record_manager_job_change(this, tecnico, clube, contratado);
-    CQA12_ENSAIO = false;
+    CUP_PLACED_CLUB_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     o(this, tecnico, clube, contratado);

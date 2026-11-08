@@ -133,11 +133,11 @@ unsafe extern "thiscall" fn comparar_clear_missed_training(this: usize, pessoa: 
 
 /// O ensaio da notícia: os sorteios vêm da fita da original (n e resposta) e, em vez de entregar, a cópia anota o
 /// destino (1 o clube do jogador, 2 a nação do clube, 0 nenhum). A fita fica com o próximo e se algum n não bateu.
-static mut CQD11_FITA: Option<(Vec<(i32, i32)>, usize, bool)> = None;
-static mut CQD11_DESTINO: (u32, usize) = (0, 0);
+static mut AWOL_NEWS_TAPE: Option<(Vec<(i32, i32)>, usize, bool)> = None;
+static mut AWOL_NEWS_DESTINATION: (u32, usize) = (0, 0);
 
 unsafe fn taped_random(n: i32) -> i32 {
-    let f = &mut *core::ptr::addr_of_mut!(CQD11_FITA);
+    let f = &mut *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE);
     match f {
         Some((v, k, falhou)) => match v.get(*k) {
             Some(&(m, r)) if m == n && !*falhou => {
@@ -226,10 +226,10 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
     let de_humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     // 0x7875e0: mov ecx, [0xb7431c]; push clube (ret 4); 0x7861e0: push clube +0x39; push notícia; mov ecx, [0xb7431c];
     // 0x7863f0: push nação; push notícia; mov ecx, [0xb7431c] -> thiscall nas três
-    let ensaio = (*core::ptr::addr_of!(CQD11_FITA)).is_some();
+    let ensaio = (*core::ptr::addr_of!(AWOL_NEWS_TAPE)).is_some();
     if de_humano(noticias, clube) != 0 {
         if ensaio {
-            CQD11_DESTINO = (1, cqd11_d(jogador + 0x39));
+            AWOL_NEWS_DESTINATION = (1, cqd11_d(jogador + 0x39));
         } else {
             let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
             entregar(noticias, nt, cqd11_d(jogador + 0x39));
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
         return;
     }
     if ensaio {
-        CQD11_DESTINO = (2, nacao);
+        AWOL_NEWS_DESTINATION = (2, nacao);
     } else {
         let a_nacao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7863f0usize);
         a_nacao(noticias, nt, nacao);
@@ -255,15 +255,15 @@ unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
     let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, jogador, clube));
     let n = tape_lock.len();
-    *core::ptr::addr_of_mut!(CQD11_FITA) = Some((tape_lock, 0, false));
-    CQD11_DESTINO = (0, 0);
+    *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = Some((tape_lock, 0, false));
+    AWOL_NEWS_DESTINATION = (0, 0);
     crate::aleatorio::sem_contar(|| awol_post_missed_training_news(this, jogador, clube));
-    let (k, falhou) = match &*core::ptr::addr_of!(CQD11_FITA) {
+    let (k, falhou) = match &*core::ptr::addr_of!(AWOL_NEWS_TAPE) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
     };
-    *core::ptr::addr_of_mut!(CQD11_FITA) = None;
-    let destino = CQD11_DESTINO;
+    *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = None;
+    let destino = AWOL_NEWS_DESTINATION;
     PLACAR.registrar(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
         jogador, clube, n, k, falhou, destino));
 }

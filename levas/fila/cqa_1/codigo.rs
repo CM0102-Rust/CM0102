@@ -46,12 +46,12 @@ unsafe fn cqa1_somar(fin: usize, valor: i32) {
 }
 
 /// O ensaio do comparador da 0x522240: a cópia roda sem a notícia do prêmio (0x48e3e0, que aloca).
-static mut CQA1_ENSAIO: bool = false;
+static mut ROUND_PRIZE_MONEY_DRY_RUN: bool = false;
 
 /// A notícia do prêmio (Comp 0x48e3e0: 7 pushes; ecx = a copa; sem add esp -> thiscall(copa, clube, valor, alto do
 /// valor, −1, rodada seguinte, partida, desfecho), ret 0x1c); no ensaio, nada.
 unsafe fn send_prize_news(copa: usize, clube: usize, valor: i32, seguinte: u32, partida: usize, desfecho: u8) {
-    if CQA1_ENSAIO {
+    if ROUND_PRIZE_MONEY_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, u32) = core::mem::transmute(0x48e3e0usize);
@@ -140,9 +140,9 @@ unsafe extern "thiscall" fn comparar_pay_round_prize_money(copa: usize, vencedor
     }
     let regioes = [(copa + 0x28, 4), (fv, 0x167), (fp, 0x167)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CQA1_ENSAIO = true;
+    ROUND_PRIZE_MONEY_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pay_round_prize_money(copa, vencedor, perdedor, rodada, partida)));
-    CQA1_ENSAIO = false;
+    ROUND_PRIZE_MONEY_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(copa, vencedor, perdedor, rodada, partida);

@@ -5,8 +5,8 @@
 # pelo byte; a carreira pela ordem pela posicao da temporada passada, 0x4b0780, no fim da temporada: depois de
 # 2002-06-01 PODE ESCAPAR).
 MUTACOES = [
-    ('cpm_confronto_adversario', 'cpm2_por(p + 14 * k, cpm2_d(tab + j as usize * CPM2_LINHA)); // o clube adversário',
-     'cpm2_por(p + 14 * k, cpm2_d(tab + a as usize * CPM2_LINHA)); // mutacao: o proprio clube',
+    ('cpm_confronto_adversario', 'cpm2_por(p + 14 * k, cpm2_d(tab + j as usize * TABLE_ROW_SIZE)); // o clube adversário',
+     'cpm2_por(p + 14 * k, cpm2_d(tab + a as usize * TABLE_ROW_SIZE)); // mutacao: o proprio clube',
      'cpm_2 confrontos diretos'),
     ('cpm_vetor_conta', '*n = cpm2_w(this + 0x3e); // a conta',
      '*n = cpm2_w(this + 0x3e) - 1; // mutacao: sem o ultimo',

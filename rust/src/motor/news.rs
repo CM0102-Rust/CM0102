@@ -12,7 +12,7 @@ pub(crate) unsafe fn contract_squad_status(contrato: usize) -> u8 {
 }
 
 /// A notícia guardada: 0xdf bytes (+0xd6 id, +0xda lida).
-pub(crate) const CPO6_NOTICIA: usize = 0xdf;
+pub(crate) const STORED_NEWS_SIZE: usize = 0xdf;
 
 
 /// marks read the first unread item with the id in the human's ring unless it needs a reply (button 0x782b70), takes it
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usiz
     let botao: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) -> u8 = core::mem::transmute(FN_NEWSITEM_GET_ACTION_BUTTON);
     let mut v = 0usize;
     for k in 0..0x64usize {
-        v = read_usize(this).wrapping_add((read_usize(e).wrapping_add(k)).wrapping_mul(CPO6_NOTICIA));
+        v = read_usize(this).wrapping_add((read_usize(e).wrapping_add(k)).wrapping_mul(STORED_NEWS_SIZE));
         if read_usize(v + 0xd6) as u32 == id && read_usize(v + 0xda) == 0 {
             let mut tratador = 0u32;
             if botao(v, tecnico, 0xde1f64, 0x7d0, &mut tratador) != 2 {
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usi
         (ini as usize, 0x64)
     };
     for k in 0..n {
-        let v = read_usize(this).wrapping_add(inicio.wrapping_add(k).wrapping_mul(CPO6_NOTICIA));
+        let v = read_usize(this).wrapping_add(inicio.wrapping_add(k).wrapping_mul(STORED_NEWS_SIZE));
         if read_usize(v + 0xd6) as u32 == id {
             copiar(saida, v);
             return 1;
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecn
         return o(this, tecnico, id, sincronizar);
     }
     let regioes = [
-        (read_usize(this), read_i32(this + 4).max(0) as usize * CPO6_NOTICIA),
+        (read_usize(this), read_i32(this + 4).max(0) as usize * STORED_NEWS_SIZE),
         (read_usize(this + 8), 0x10 * 12),
         (0xde1f64, 0x7d0),
     ];
@@ -143,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tec
     if id == 0 || saida == 0 || (tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0) {
         return o(this, tecnico, id, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, CPO6_NOTICIA)], || o(this, tecnico, id, saida), || find_item_by_id(this, tecnico, id, saida));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, STORED_NEWS_SIZE)], || o(this, tecnico, id, saida), || find_item_by_id(this, tecnico, id, saida));
     PLACAR.registrar(igual && r == n, || format!("find_item_by_id(id {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo.0[0].1, mr.0[0].1));
     r
 }

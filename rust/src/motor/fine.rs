@@ -22,8 +22,8 @@ pub(crate) unsafe fn set_news_person_slots(n: usize, k: i8, p: usize) {
 
 
 /// O ensaio das notícias: a cópia para no ponto em que montaria a notícia (que sorteia e vai às caixas dos técnicos).
-pub(crate) static mut CPZ9_ENSAIO: bool = false;
-pub(crate) static mut CPZ9_MONTARIA: bool = false;
+pub(crate) static mut FINE_NEWS_DRY_RUN: bool = false;
+pub(crate) static mut FINE_NEWS_WOULD_BUILD: bool = false;
 
 
 
@@ -62,8 +62,8 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
         return;
     }
     crate::comparacao::ramo("cpz_9 noticia da reacao a multa");
-    if CPZ9_ENSAIO {
-        CPZ9_MONTARIA = true;
+    if FINE_NEWS_DRY_RUN {
+        FINE_NEWS_WOULD_BUILD = true;
         return;
     }
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
@@ -100,15 +100,15 @@ pub(crate) unsafe extern "stdcall" fn comparar_post_fine_reaction_news(jogador: 
     let mut regioes = vec![(G_CONTRACT_LOOKUP_RESULT, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPZ9_ENSAIO = true;
-    CPZ9_MONTARIA = false;
+    FINE_NEWS_DRY_RUN = true;
+    FINE_NEWS_WOULD_BUILD = false;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| post_fine_reaction_news(jogador, motivo, reacao, prazo, efeitos)));
-    CPZ9_ENSAIO = false;
+    FINE_NEWS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(jogador, motivo, reacao, prazo, efeitos);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    let montaria = CPZ9_MONTARIA;
+    let montaria = FINE_NEWS_WOULD_BUILD;
     let igual = if montaria { mo.0[0].1 == mr.0[0].1 } else { mo == mr };
     PLACAR.registrar(igual, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
 }

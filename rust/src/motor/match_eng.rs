@@ -2157,11 +2157,11 @@ pub(crate) unsafe fn apply_pending_punishments_with(m: usize, primeiro: usize, c
 // Portas de 0x716630 (prepara) e 0x716e10 (cansa): as duas narram por dentro. Unidades da fita so na
 // comparacao das punicoes (a 0x716e10 tambem roda dentro de muitas outras rotinas).
 pub(crate) static RECORD_716: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-pub(crate) static mut PORTA_716630: usize = 0;
+pub(crate) static mut START_FIGHT_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_716630: Prologo = Prologo { endereco: 0x716630, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] };
-pub(crate) static mut PORTA_716E10: usize = 0;
+pub(crate) static mut REACT_TO_FOUL_DECISION_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_716E10: Prologo = Prologo { endereco: 0x716e10, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] };
-pub(crate) static mut PORTA_716C90: usize = 0;
+pub(crate) static mut HANDLE_SUSPECTED_DIVE_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_716C90: Prologo = Prologo { endereco: 0x716c90, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0x57] };
 
 /// Shared gate for the 0x716xxx MATCH_PLAYER calls: runs the original directly, or records it on the open tape as one
@@ -2178,17 +2178,17 @@ pub(crate) unsafe fn gate_match_player_call(rotina: usize, alvo: usize, p: usize
 }
 /// Gate for MATCH_PLAYER::start_fight (0x716630): records it on the comparison tape when recording, else just calls it.
 pub(crate) unsafe extern "thiscall" fn gate_start_fight(p: usize, a1: u32) {
-    gate_match_player_call(0x716630, PORTA_716630, p, a1)
+    gate_match_player_call(0x716630, START_FIGHT_TRAMPOLINE, p, a1)
 }
 /// Gate for MATCH_PLAYER::react_to_foul_decision (0x716e10): records it on the comparison tape when recording, else
 /// just calls it.
 pub(crate) unsafe extern "thiscall" fn gate_react_to_foul_decision(p: usize, a1: u32) {
-    gate_match_player_call(0x716e10, PORTA_716E10, p, a1)
+    gate_match_player_call(0x716e10, REACT_TO_FOUL_DECISION_TRAMPOLINE, p, a1)
 }
 /// Gate for MATCH_PLAYER::handle_suspected_dive (0x716c90): records it on the comparison tape when recording, else just
 /// calls it.
 pub(crate) unsafe extern "thiscall" fn gate_handle_suspected_dive(p: usize) {
-    let o: unsafe extern "thiscall" fn(usize) = core::mem::transmute(PORTA_716C90);
+    let o: unsafe extern "thiscall" fn(usize) = core::mem::transmute(HANDLE_SUSPECTED_DIVE_TRAMPOLINE);
     if !(RECORD_716.load(std::sync::atomic::Ordering::Relaxed) && is_recording()) {
         return o(p);
     }
@@ -6959,12 +6959,12 @@ pub(crate) unsafe extern "thiscall" fn tackle_injury(m: usize, a: usize, tipo_a:
 
 // Portas de 0x62ed70 (lesao atual: atualiza a ficha pela 0x62c680) e 0x6d0980 (aplica a lesao,
 // alocando): unidades da fita.
-pub(crate) static mut PORTA_62ED70: usize = 0;
+pub(crate) static mut GET_PLAYER_INJURY_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_62ED70: Prologo = Prologo { endereco: 0x62ed70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] };
 
 /// Gate for Injury::get_player_injury (0x62ed70): records it on the comparison tape when recording, else just calls it.
 pub(crate) unsafe extern "thiscall" fn gate_get_player_injury(l: usize, pessoa: usize) -> usize {
-    let o: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(PORTA_62ED70);
+    let o: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(GET_PLAYER_INJURY_TRAMPOLINE);
     if !is_recording() {
         return o(l, pessoa);
     }
@@ -7754,13 +7754,13 @@ pub(crate) unsafe extern "thiscall" fn pressure(m: usize, j: usize, saida: *mut 
 
 // Porta de 0x68d0d0 (poe na lista a copia de um bloco, alocando): unidade da fita, para a copia
 // Rust nao alocar de novo.
-pub(crate) static mut PORTA_68D0D0: usize = 0;
+pub(crate) static mut LLIST_ADD_TAIL_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_68D0D0: Prologo = Prologo { endereco: 0x68d0d0, bytes: &[0x6a, 0xff, 0x68, 0x56, 0xcb, 0x95, 0x00] };
 
 /// Gate for LLIST::add_tail (0x68d0d0): when recording, records it (by content for stack blocks in wrap-up, injury,
 /// movement and pass comparisons), else just calls it.
 pub(crate) unsafe extern "thiscall" fn gate_llist_add_tail(l: usize, p: usize, n: u32) {
-    let o: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(PORTA_68D0D0);
+    let o: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(LLIST_ADD_TAIL_TRAMPOLINE);
     if !is_recording() {
         return o(l, p, n);
     }
@@ -8698,13 +8698,13 @@ pub(crate) unsafe fn comparar_com_fita<R>(reg: Vec<(usize, usize)>, original: im
 }
 
 // Porta de 0x70dfd0 (a jogada, 7 KB: narra, sorteia e mexe no motor e no jogador).
-pub(crate) static mut PORTA_70DFD0: usize = 0;
+pub(crate) static mut TRY_BLOCK_SHOT_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_70DFD0: Prologo = Prologo { endereco: 0x70dfd0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] };
 
 /// Gate for MATCH_PLAYER::try_block_shot (0x70dfd0): runs its comparer, as a recorded unit when a tape is open.
 pub(crate) unsafe extern "thiscall" fn gate_try_block_shot(p: usize, a1: u32, a2: u32, a3: u32, a4: u32) -> u8 {
     let rodar = || {
-        let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_70DFD0);
+        let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(TRY_BLOCK_SHOT_TRAMPOLINE);
         f(p, a1, a2, a3, a4) as u32
     };
     // a comparacao da 0x70dfd0 (129a leva): o desvio dela e esta porta. As comparacoes de quem a

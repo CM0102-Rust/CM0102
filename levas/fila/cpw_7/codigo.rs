@@ -356,9 +356,9 @@ unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize, pessoa: u
 // ---- as originais que a awol_daily_update chama e que liam resíduo da pilha particular (bancada da 259ª) ----
 
 /// O ensaio dos comparadores de `miss_training`, `end_absence` e `set_flags`: a cópia para antes
-/// das chamadas que alocam, dão notícia ou não podem rodar duas vezes e deixa em CPW7_DECISAO o que faria.
-static mut CPW7_ENSAIO: bool = false;
-static mut CPW7_DECISAO: u32 = 0;
+/// das chamadas que alocam, dão notícia ou não podem rodar duas vezes e deixa em MISS_TRAINING_DECISION o que faria.
+static mut MISS_TRAINING_DRY_RUN: bool = false;
+static mut MISS_TRAINING_DECISION: u32 = 0;
 
 /// O clube do contrato `k` (+4 id, [0xae23b4], 0x245 bytes), ou 0.
 unsafe fn awol_club_of_contract(k: usize) -> usize {
@@ -408,8 +408,8 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
                 && cpw7_sortear(cpw7_b(pessoa + 0x59) as i8 as i32 + 10) == 0
             {
                 crate::comparacao::ramo("cpw_7 sumiu em vez de faltar");
-                if CPW7_ENSAIO {
-                    CPW7_DECISAO = 1;
+                if MISS_TRAINING_DRY_RUN {
+                    MISS_TRAINING_DECISION = 1;
                     return;
                 }
                 let sumir: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x419840usize);
@@ -419,8 +419,8 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
         }
     }
     crate::comparacao::ramo("cpw_7 marcou a falta");
-    if CPW7_ENSAIO {
-        CPW7_DECISAO = 2;
+    if MISS_TRAINING_DRY_RUN {
+        MISS_TRAINING_DECISION = 2;
         return;
     }
     *m |= 2;
@@ -479,11 +479,11 @@ unsafe extern "thiscall" fn comparar_miss_training(this: usize, pessoa: usize) {
     let mut regioes = vec![(m, 1), (0xae1080, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW7_ENSAIO = true;
-    CPW7_DECISAO = 0;
+    MISS_TRAINING_DRY_RUN = true;
+    MISS_TRAINING_DECISION = 0;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| miss_training(this, pessoa)));
-    CPW7_ENSAIO = false;
-    let n = CPW7_DECISAO;
+    MISS_TRAINING_DRY_RUN = false;
+    let n = MISS_TRAINING_DECISION;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let b0 = cpw7_b(m);
@@ -513,8 +513,8 @@ unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     let k = contract_of(cpw7_d(0xae1050), pessoa);
     cpw7_pd(0xae1080, k as u32);
     if k != 0 && awol_club_of_contract(k) != 0 {
-        if CPW7_ENSAIO {
-            CPW7_DECISAO = 1;
+        if MISS_TRAINING_DRY_RUN {
+            MISS_TRAINING_DECISION = 1;
         } else {
             let p = cpw7_d(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
             let noticia: unsafe extern "stdcall" fn(usize, usize, u32, u32) = core::mem::transmute(0x419ad0usize);
@@ -523,7 +523,7 @@ unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     }
     let m = cpw7_d(this + 0xc).wrapping_add(cpw7_i(r) as usize) as *mut u8;
     *m ^= 1;
-    if CPW7_ENSAIO {
+    if MISS_TRAINING_DRY_RUN {
         return;
     }
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
@@ -540,11 +540,11 @@ unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usize) {
     let m = cpw7_d(this + 0xc).wrapping_add(cpw7_i(r) as usize);
     let regioes = [(m, 1), (0xae1080, 4)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW7_ENSAIO = true;
-    CPW7_DECISAO = 0;
+    MISS_TRAINING_DRY_RUN = true;
+    MISS_TRAINING_DECISION = 0;
     crate::aleatorio::pausar_rastro(|| end_absence(this, r));
-    CPW7_ENSAIO = false;
-    let noticia = CPW7_DECISAO != 0;
+    MISS_TRAINING_DRY_RUN = false;
+    let noticia = MISS_TRAINING_DECISION != 0;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this, r);
@@ -591,8 +591,8 @@ unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
         return;
     }
     crate::comparacao::ramo("cpw_7 pedido de saida");
-    if CPW7_ENSAIO {
-        CPW7_DECISAO = 1;
+    if MISS_TRAINING_DRY_RUN {
+        MISS_TRAINING_DECISION = 1;
         return;
     }
     let pedido: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4d8610usize);
@@ -609,11 +609,11 @@ unsafe extern "thiscall" fn comparar_set_flags(c: usize, marcas: u32) {
     let mut regioes = vec![(c + 0x40, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW7_ENSAIO = true;
-    CPW7_DECISAO = 0;
+    MISS_TRAINING_DRY_RUN = true;
+    MISS_TRAINING_DECISION = 0;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| set_flags(c, marcas)));
-    CPW7_ENSAIO = false;
-    let pediu = CPW7_DECISAO != 0;
+    MISS_TRAINING_DRY_RUN = false;
+    let pediu = MISS_TRAINING_DECISION != 0;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(c, marcas);

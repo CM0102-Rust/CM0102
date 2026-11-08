@@ -53,7 +53,7 @@ unsafe fn contract_club_cached(j: usize) -> usize {
 
 /// Se a cópia semeou o rand da CRT pelo relógio (os fisioterapeutas avaliaram): o comparador não confere o estado do
 /// rand (o relógio anda entre a original e a cópia no jogo real).
-static mut CPY12_SEMEOU: bool = false;
+static mut BOARD_VETO_SEEDED_RAND: bool = false;
 
 /// { 0x696b10 } (thiscall, ret 0x10, manager_manager.cpp): `MANAGER_MANAGER::check_board_transfer_veto(jogador, clube,
 /// valor, comprando)`, pela 0x8cdb80 (oferta sem troca). Comprando um jogador com lesão (0x62ed70) de gravidade +0x28 > 20,
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     let recaida: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62ece0usize);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    CPY12_SEMEOU = false;
+    BOARD_VETO_SEEDED_RAND = false;
     if comprando as u8 != 0 {
         let l = lesao(cpy12_d(0xb63d28), j);
         if l != 0 && cpy12_w(l + 0x28) > 0x14 {
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
                 }
                 semear((cpy12_d(j) as u32).wrapping_add(1).wrapping_mul((cpy12_d(f) as u32).wrapping_add(1)));
                 semeou = true;
-                CPY12_SEMEOU = true;
+                BOARD_VETO_SEEDED_RAND = true;
                 crate::comparacao::ramo("cpy_12 fisioterapeuta avalia");
                 let np = cpy12_d(f + 0x69);
                 // a original empurra o registrador inteiro com o byte +0x1e no baixo; a 0x544410 só lê o byte
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: usize, j: u
     let regioes = [(cpy12_diretoria(this, clube), 0x49), (0xae1080, 4), (0xde1f5c, 8), (0xad6c30, 4)];
     let (r, n, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, j, clube, valor, comprando),
         || crate::aleatorio::sem_contar(|| check_board_transfer_veto(this, j, clube, valor, comprando)));
-    let partes = if CPY12_SEMEOU { 3 } else { 4 };
+    let partes = if BOARD_VETO_SEEDED_RAND { 3 } else { 4 };
     let igual = (0..partes).all(|i| mo.0[i] == mr.0[i]);
     PLACAR.registrar(igual && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, valor, comprando as u8, r, n, mo, mr));
     r

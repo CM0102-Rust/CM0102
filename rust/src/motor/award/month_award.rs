@@ -16,7 +16,7 @@ pub(crate) unsafe fn month_award_club_by_id(id: i32) -> usize {
 
 /// O ensaio dos comparadores: a cópia roda sem a notícia (0x767330), sem o registro do prêmio (0x86c8c0) e sem as
 /// listas dos clubes (0x842c00), que alocam e não podem rodar duas vezes.
-pub(crate) static mut CPW6_ENSAIO: bool = false;
+pub(crate) static mut MONTH_AWARD_DRY_RUN: bool = false;
 
 /// the best of the month ratings (0x768130) in the award league and with the requested age becomes the month winner,
 /// with his club
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_award_best_rated_player(this: us
 ///
 /// [pt] A reputação do premiado: no ensaio, a cópia direto (sem as listas dos clubes); senão pelo endereço (0x412f00).
 pub(crate) unsafe fn raise_winner_reputation(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
-    if CPW6_ENSAIO {
+    if MONTH_AWARD_DRY_RUN {
         return award_raise_winner_reputation(pessoa, clube, nac, mundo, jogador);
     }
     let f: unsafe extern "C" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_AWARD_RAISE_WINNER_REPUTATION);
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, clube_id
         crate::comparacao::ramo("cpw_6 vencedor do mes");
         raise_winner_reputation(month_ratings_staff_by_id(id), clube, alto | read_i16(this + 0x15) as u16 as u32, alto | read_i16(this + 0x17) as u16 as u32, marca);
     }
-    if CPW6_ENSAIO {
+    if MONTH_AWARD_DRY_RUN {
         return;
     }
     let noticia: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_MONTH_AWARD_POST_WINNER_NEWS);
@@ -142,9 +142,9 @@ pub(crate) unsafe fn winner_reputation_regions(regioes: &mut Vec<(usize, usize)>
 /// [pt] O comparador em ensaio: a cópia sem as chamadas que alocam e a original a partir do mesmo estado das `regioes`.
 pub(crate) unsafe fn compare_month_award(nome: &str, regioes: &[(usize, usize)], original: impl FnOnce(), copia: impl FnOnce()) {
     let antes = crate::comparacao::Memoria::ler(regioes);
-    CPW6_ENSAIO = true;
+    MONTH_AWARD_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(copia);
-    CPW6_ENSAIO = false;
+    MONTH_AWARD_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(regioes);
     antes.escrever();
     original();
@@ -222,7 +222,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(pessoa: usize, clu
         add_to_word(p + 0xb, match_pl_ftol(nac as i32 as f64 * read_f64_at(0x967880))); // 0x967880 = 0.1
         clamp_word(p + 0xb, nac);
         let listas = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856);
-        if listas != 0 && !CPW6_ENSAIO {
+        if listas != 0 && !MONTH_AWARD_DRY_RUN {
             let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_PLAYER_TO_CLUB_SHORTLISTS);
             f(listas, pessoa, 1);
         }

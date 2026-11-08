@@ -22,7 +22,7 @@ unsafe fn cpz3_s(a: usize) -> i8 {
 
 /// No ensaio (o comparador da 0x684cd0) a cópia não chama as virtuais +0x40 (o anúncio da situação, que manda notícia
 /// e grava os registros) e +0x68 (a situação nas estatísticas) nem as cláusulas de rebaixamento (0x4cd030).
-static mut CPZ3_ENSAIO: bool = false;
+static mut POSITIONS_STATUS_DRY_RUN: bool = false;
 
 /// A linha `i` da tabela (+0xb1, 0x3b bytes).
 unsafe fn league_table_row(liga: usize, i: i32) -> usize {
@@ -33,7 +33,7 @@ unsafe fn league_table_row(liga: usize, i: i32) -> usize {
 /// o clube da linha `i`. `alto` = os bits de cima do registrador que a original empurra com a fase (+0x44) no byte de
 /// baixo (o ponteiro da linha ou a devolução das cláusulas: reproduzidos).
 unsafe fn league_announce_team_status(liga: usize, i: i32, situacao: u32, alto: u32) {
-    if CPZ3_ENSAIO {
+    if POSITIONS_STATUS_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(cpz3_d(cpz3_d(liga) + 0x40));
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                 let g = *m(cpz3_s(li + 0x39) as i32 - 1);
                 if g == 3 {
                     let mut alto = alto_linha;
-                    if !CPZ3_ENSAIO {
+                    if !POSITIONS_STATUS_DRY_RUN {
                         crate::comparacao::ramo("cpz_3 clausulas de rebaixamento");
                         let clausulas: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x4cd030usize);
                         alto = clausulas(cpz3_d(0xae1050), cpz3_d(li), cpz3_d(this + 4)) & !0xff; // cpz3: as cláusulas de rebaixamento
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
             }
         }
         // a situação nas estatísticas (virtual +0x68)
-        if !CPZ3_ENSAIO {
+        if !POSITIONS_STATUS_DRY_RUN {
             let li = league_table_row(this, ii);
             // ponytail: a original empurra a pior, a melhor, a posição e a fase em registradores com lixo nos bits de
             // cima; as +0x68 (0x573260, 0x578660, Comp::set_club_progress 0x48e380) só leem o byte.
@@ -354,7 +354,7 @@ unsafe fn table_status_regions(this: usize) -> Vec<(usize, usize)> {
     v
 }
 
-/// Comparador da 0x684cd0, em ensaio (modelo CPV6_ENSAIO): a cópia roda primeiro sem as virtuais +0x40 e +0x68 nem
+/// Comparador da 0x684cd0, em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN): a cópia roda primeiro sem as virtuais +0x40 e +0x68 nem
 /// as cláusulas (que mandam notícia, gravam registros e sorteiam o moral); a memória volta e a original roda inteira.
 /// As duas a partir do mesmo estado da tabela, de +0xa7 e das vagas europeias dos clubes da tabela, que têm de sair
 /// iguais (as virtuais e as cláusulas não gravam nelas). Sem linhas ou com +0xdd: só a original.
@@ -365,9 +365,9 @@ unsafe extern "thiscall" fn comparar_update_positions_and_status(this: usize) {
     }
     let regioes = table_status_regions(this);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPZ3_ENSAIO = true;
+    POSITIONS_STATUS_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| update_positions_and_status(this));
-    CPZ3_ENSAIO = false;
+    POSITIONS_STATUS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this);

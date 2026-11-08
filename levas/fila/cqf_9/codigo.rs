@@ -47,8 +47,8 @@ unsafe fn cqf9_sortear(n: i32) -> i32 {
 
 /// O ensaio do comparador: a cópia roda sem a entrega da notícia (0x786090, que aloca) e para antes da fuga (0x419840,
 /// que põe na lista e manda notícia), guardando a decisão.
-static mut CQF9_ENSAIO: bool = false;
-static mut CQF9_FUGIU: bool = false;
+static mut RECOVERY_NEWS_DRY_RUN: bool = false;
+static mut RECOVERY_NEWS_WOULD_GO_AWOL: bool = false;
 
 /// O registro de forma do jogador na tabela das lesões ([this] + 31 × id).
 unsafe fn physical_record_of_player(this: usize, p: usize) -> usize {
@@ -173,8 +173,8 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
                         let a = cqf9_sortear(cqf9_sb(p + 0x59) as i32);
                         let b = cqf9_sortear(5);
                         if a < b {
-                            if CQF9_ENSAIO {
-                                CQF9_FUGIU = true;
+                            if RECOVERY_NEWS_DRY_RUN {
+                                RECOVERY_NEWS_WOULD_GO_AWOL = true;
                                 return;
                             }
                             let fugir: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x419840usize);
@@ -302,7 +302,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
     }
     dado(n, 9, res as i32 as u32);
     dado(n, 10, f1 as i32 as u32);
-    if CQF9_ENSAIO {
+    if RECOVERY_NEWS_DRY_RUN {
         return;
     }
     let nacao = if clube != 0 { cqf9_d(clube + 0x53) } else { cqf9_d(p + 0x1a) };
@@ -311,7 +311,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
     entregar(cqf9_d(0xb7431c), n, clube, 0, nacao, continente, forcar);
 }
 
-/// Comparador em ensaio (modelo CPV6_ENSAIO): a cópia roda primeiro sem a entrega da notícia e parando antes da fuga,
+/// Comparador em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN): a cópia roda primeiro sem a entrega da notícia e parando antes da fuga,
 /// depois a original a partir do mesmo estado; compara o registro do jogador (0x6e), a ficha (0x46), o contrato (0x4f),
 /// o registro de forma (31), o byte +0xc do registro de 79 bytes, o registro do técnico do clube e o estado do sorteio.
 /// Com a fuga na cópia (a original põe na lista, sorteia e manda notícia): só a original.
@@ -340,11 +340,11 @@ unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, e
         reg.push((cqf9_d(clube + 0xcf), 0x6e));
     }
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQF9_ENSAIO = true;
-    CQF9_FUGIU = false;
+    RECOVERY_NEWS_DRY_RUN = true;
+    RECOVERY_NEWS_WOULD_GO_AWOL = false;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| post_recovery_news(this, p, estagio, tipo, forcar, dias)));
-    CQF9_ENSAIO = false;
-    let fugiu = CQF9_FUGIU;
+    RECOVERY_NEWS_DRY_RUN = false;
+    let fugiu = RECOVERY_NEWS_WOULD_GO_AWOL;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     o(this, p, estagio, tipo, forcar, dias);

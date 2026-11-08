@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize,
 
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
-pub(crate) static mut CQI4_ENSAIO: bool = false;
+pub(crate) static mut ENG_PRM_RULES_DRY_RUN: bool = false;
 
 /// Writes the rule fields (offset, size, value) into the league and builds the main-stage round table via virtual +0x3c
 /// into +0xba (skipped in dry run); returns 1.
@@ -203,7 +203,7 @@ pub(crate) unsafe fn eng_prm_apply_league_rules(this: usize, escritas: &[(usize,
             _ => core::ptr::write_unaligned((this + d) as *mut u32, v),
         }
     }
-    if !CQI4_ENSAIO {
+    if !ENG_PRM_RULES_DRY_RUN {
         let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
         let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, t);
@@ -299,9 +299,9 @@ pub(crate) unsafe fn eng_prm_compare_league_rules(nome: &str, this: usize, escri
     let r = original();
     let mo = crate::comparacao::Memoria::ler(&band);
     antes.escrever();
-    CQI4_ENSAIO = true;
+    ENG_PRM_RULES_DRY_RUN = true;
     let rr = crate::aleatorio::pausar_rastro(copia);
-    CQI4_ENSAIO = false;
+    ENG_PRM_RULES_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&band);
     mo.escrever();
     let campo = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {

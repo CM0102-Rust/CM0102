@@ -5,7 +5,7 @@ unsafe fn cqk4_d(a: usize) -> usize {
 }
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
-static mut CQK4_ENSAIO: bool = false;
+static mut SPA_FIRST_RULES_DRY_RUN: bool = false;
 
 /// Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
 /// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
@@ -18,7 +18,7 @@ unsafe fn spa_first_apply_league_rules(this: usize, escritas: &[(usize, u8, u32)
             _ => core::ptr::write_unaligned((this + d) as *mut u32, v),
         }
     }
-    if !CQK4_ENSAIO {
+    if !SPA_FIRST_RULES_DRY_RUN {
         let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(cqk4_d(cqk4_d(this) + 0x3c));
         let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, t);
@@ -95,9 +95,9 @@ unsafe fn spa_first_compare_league_rules(nome: &str, this: usize, escritas: Vec<
     let r = original();
     let mo = crate::comparacao::Memoria::ler(&band);
     antes.escrever();
-    CQK4_ENSAIO = true;
+    SPA_FIRST_RULES_DRY_RUN = true;
     let rr = crate::aleatorio::pausar_rastro(copia);
-    CQK4_ENSAIO = false;
+    SPA_FIRST_RULES_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&band);
     mo.escrever();
     let campo = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {

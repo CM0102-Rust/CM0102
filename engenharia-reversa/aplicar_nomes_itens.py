@@ -80,9 +80,12 @@ def main():
                 if sub(t) != t:
                     open(p, 'w', encoding='utf-8').write(sub(t))
     trocar_nas_mutacoes.aplicar(sub)
-    with open(os.path.join(R, 'docs', 'NOMES_ITENS.csv'), 'w', encoding='utf-8', newline='') as f:
+    saida = os.path.join(R, 'docs', 'NOMES_ITENS.csv')
+    antigos = list(csv.reader(open(saida, encoding='utf-8')))[1:] if os.path.exists(saida) else []
+    with open(saida, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
         w.writerow(['pt', 'en', 'tipo', 'arquivo'])
+        w.writerows(antigos)  # as passadas anteriores ficam
         for v, n in sorted(troca.items()):
             w.writerow([v, n, tipo[v], os.path.relpath(arquivo[v], R).replace(os.sep, '/')])
     print('gravado')

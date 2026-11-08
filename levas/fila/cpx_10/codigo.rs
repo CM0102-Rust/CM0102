@@ -67,16 +67,16 @@ unsafe fn news_set_manager_names(n: usize, p: usize, primeiro: u8, k_proximo: u3
 /// O ensaio do comparador: a cópia roda sem entregar a notícia (as entregas copiam a notícia nas caixas dos técnicos
 /// humanos, alocam e podem dar a resposta automática) e guarda o alcance que daria (+0xde: 4 todos, 2 os do país, 1 os
 /// da divisão; 0 nenhuma) e a notícia montada.
-static mut CPX10_ENSAIO: bool = false;
-static mut CPX10_ALCANCE: u8 = 0;
-static mut CPX10_NOTICIA: [u8; 0xe0] = [0; 0xe0];
+static mut MANAGER_NEWS_DRY_RUN: bool = false;
+static mut MANAGER_NEWS_REACH: u8 = 0;
+static mut MANAGER_NEWS_BUILT: [u8; 0xe0] = [0; 0xe0];
 
 /// A entrega da notícia `n` pelo `alcance` (4: 0x786780; 2: 0x7863f0 com a nação; 1: 0x7862d0 com a divisão) pelas
 /// notícias [0xb7431c]; no ensaio, só o plano.
 unsafe fn deliver_news(n: usize, alcance: u8, alvo: usize) {
-    if CPX10_ENSAIO {
-        CPX10_ALCANCE = alcance;
-        core::ptr::copy_nonoverlapping(n as *const u8, core::ptr::addr_of_mut!(CPX10_NOTICIA) as *mut u8, 0xe0);
+    if MANAGER_NEWS_DRY_RUN {
+        MANAGER_NEWS_REACH = alcance;
+        core::ptr::copy_nonoverlapping(n as *const u8, core::ptr::addr_of_mut!(MANAGER_NEWS_BUILT) as *mut u8, 0xe0);
         return;
     }
     let noticias = cpx10_d(0xb7431c);
@@ -126,12 +126,12 @@ unsafe fn compare_manager_news(nome: &str, regioes: Vec<(usize, usize)>, origina
     let mut todas = regioes.clone();
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&todas);
-    CPX10_ENSAIO = true;
-    CPX10_ALCANCE = 0;
+    MANAGER_NEWS_DRY_RUN = true;
+    MANAGER_NEWS_REACH = 0;
     let (_, rr) = crate::aleatorio::rastrear(|| crate::aleatorio::sem_contar(copia));
-    CPX10_ENSAIO = false;
+    MANAGER_NEWS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
-    let (alcance, noticia) = (CPX10_ALCANCE, *core::ptr::addr_of!(CPX10_NOTICIA));
+    let (alcance, noticia) = (MANAGER_NEWS_REACH, *core::ptr::addr_of!(MANAGER_NEWS_BUILT));
     antes.escrever();
     let (_, ro) = crate::aleatorio::rastrear(original);
     let mo = crate::comparacao::Memoria::ler(&regioes);

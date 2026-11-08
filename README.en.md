@@ -19,6 +19,15 @@ This repository keeps it playable on Windows 11 and prepares the rewrite of the 
 | `levas/` | One folder per batch of the rewrite: the code, the integration and the test results. | yes |
 | `CLAUDE.md` | Instructions for continuing the work in Claude Code. | yes |
 
+**For English readers.** The project started in Portuguese; the code is now in English (bilingual headers), but some
+folder and document names stay Portuguese: `jogo/` = the game install, `original/` = the untouched downloads,
+`referencias/` = third-party references, `engenharia-reversa/` = reverse-engineering tools, `levas/` = batches.
+A **batch** (*leva*) is the unit of work: a few routines rewritten in Rust, hooked into the original exe, and tested
+together (side-by-side comparison with the original routine, mutation tests, two identical Rust careers) before being
+published; `levas/N/` keeps each batch's test results. Docs: `DESCOMPILACAO` = what is known about the binary,
+`COMO_CONTINUAR` = how to continue, `PLACAR` = scoreboard, `CAMPOS` = record fields, `FORMATOS` = file formats,
+`GLOSSARIO` = glossary, `CREDITOS` = credits; every document has an `.en.md` English version.
+
 **State:** 283 batches, 2065 routines in Rust, each one compared with the original (the match engine without the screens is 100% in Rust; saves go beyond 2 GB, up to 4 GB); how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md).
 
 The game files do not go into git: the game is free to download, but the code and the brand still belong to SI and Eidos.

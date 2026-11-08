@@ -2908,10 +2908,10 @@ pub(crate) unsafe fn send_news_to_club_manager(n: usize, clube: usize) {
 }
 
 /// O ensaio dos comparadores: a cópia roda sem as notícias e sem os totais do clube (0x448ad0), que alocam ou entregam
-/// e não podem rodar duas vezes; CQB6_ENTREGAS conta as entregas que a original faria (elas podem mexer em [0xae1080]
+/// e não podem rodar duas vezes; FORMER_CLUB_FEE_DELIVERIES conta as entregas que a original faria (elas podem mexer em [0xae1080]
 /// pela resposta automática do humano de férias).
-pub(crate) static mut CQB6_ENSAIO: bool = false;
-pub(crate) static mut CQB6_ENTREGAS: u32 = 0;
+pub(crate) static mut FORMER_CLUB_FEE_DRY_RUN: bool = false;
+pub(crate) static mut FORMER_CLUB_FEE_DELIVERIES: u32 = 0;
 
 /// player over 22: (offer fee / 20) / sum of weights × weight of each of up to five former clubs goes into the buyer's
 /// sales; news 0xfc3 goes to the former club when the cut exceeds 11 × reputation − 10000
@@ -2933,7 +2933,7 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
     crate::comparacao::ramo("cqb_6 parte dos clubes anteriores");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         transfer_manager_construct_news_item(n, 0xfc3);
     }
     let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p).wrapping_mul(0x4f));
@@ -2945,7 +2945,7 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
     }
     let vinte = (read_usize(o + 0x1b) as i32) / 20;
     let divisor = if soma == 0 { 1 } else { soma as i32 };
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         set_news_slot(n, 0, read_usize(p) as u32);
         set_news_slot(n, 1, read_usize(read_usize(p + 4) + 0x33) as u32);
         set_news_slot(n, 2, read_usize(read_usize(p + 8) + 0x33) as u32);
@@ -2960,7 +2960,7 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
         // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de passar)
         if c2 != 0 && read_u8(c2 + 0x35) & 0x3f != 5 { read_usize(transfer_manager_club_of_contract(c2)) as u32 } else { u32::MAX }
     };
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         set_news_slot(n, 7, v7);
     }
     for k in 0..5 {
@@ -2977,8 +2977,8 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
         crate::comparacao::ramo("cqb_6 parte paga");
         post_finance_amount(0x599800, fin, valor); // cqb6: entra nas vendas do comprador
         if valor > (read_i16(clube + club::REPUTATION) as i32).wrapping_mul(11).wrapping_sub(10000) {
-            CQB6_ENTREGAS += 1;
-            if !CQB6_ENSAIO {
+            FORMER_CLUB_FEE_DELIVERIES += 1;
+            if !FORMER_CLUB_FEE_DRY_RUN {
                 set_news_slot(n, 5, valor as u32);
                 set_news_slot(n, 6, read_usize(clube) as u32);
                 send_news_to_club_manager(n, clube);
@@ -2994,13 +2994,13 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
 pub(crate) unsafe extern "thiscall" fn comparar_pay_former_club_fee_cuts(this: usize, o: usize) {
     let original = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_PAY_FORMER_CLUB_FEE_CUTS);
     let fin = european_cup_club_finance(friendly_club_by_id(read_usize(o + 8)));
-    CQB6_ENTREGAS = 0;
+    FORMER_CLUB_FEE_DELIVERIES = 0;
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(fin, 0x167), (G_CONTRACT_LOOKUP_RESULT, 4)], || original(this, o), || {
-        CQB6_ENSAIO = true;
+        FORMER_CLUB_FEE_DRY_RUN = true;
         crate::aleatorio::sem_contar(|| pay_former_club_fee_cuts(this, o));
-        CQB6_ENSAIO = false;
+        FORMER_CLUB_FEE_DRY_RUN = false;
     });
-    let entregas = CQB6_ENTREGAS;
+    let entregas = FORMER_CLUB_FEE_DELIVERIES;
     let igual = igual || (entregas != 0 && mo.0[0] == mr.0[0]);
     PLACAR.registrar(igual, || format!("pay_former_club_fee_cuts(oferta {:#x}) entregas={} original={:x?} rust={:x?}", o, entregas, mo, mr));
 }
@@ -3057,7 +3057,7 @@ pub(crate) unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: 
         return 0;
     }
     crate::comparacao::ramo("cqb_6 write_percent_pair pago");
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         let noticia: unsafe extern "thiscall" fn(usize, usize, i32, usize, u32) = core::mem::transmute(FN_TRANSFER_MANAGER_POST_SALE_PERCENTAGE_NEWS);
         noticia(this, e, parte, o, da_oferta);
     }
@@ -3065,7 +3065,7 @@ pub(crate) unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: 
     let fin_recebe = european_cup_club_finance(da_clausula);
     let fin_paga = european_cup_club_finance(transfer_manager_club_of_contract(injury_main_contract_stored(p)));
     let do_contrato = transfer_manager_club_of_contract(injury_main_contract_stored(p));
-    if !CQB6_ENSAIO {
+    if !FORMER_CLUB_FEE_DRY_RUN {
         let totais: unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_ADD_TRANSFER_TOTALS);
         totais(read_usize(G_CLUB_RECORDS), parte, do_contrato, friendly_club_by_id(read_usize(e + 5)));
     }
@@ -3109,9 +3109,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_next_sale_percentage(this: u
         regioes.push((b, 0x167));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || original(this, p, o), || {
-        CQB6_ENSAIO = true;
+        FORMER_CLUB_FEE_DRY_RUN = true;
         let n = crate::aleatorio::sem_contar(|| pay_next_sale_percentage(this, p, o));
-        CQB6_ENSAIO = false;
+        FORMER_CLUB_FEE_DRY_RUN = false;
         n
     });
     let igual = r == n && (igual || (r != 0 && mo.0[3..] == mr.0[3..]));
@@ -3446,7 +3446,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_negotiation_slot(this: usize
 /// da troca, cuja marca +4 zera), com +0x10 = 0 entre elas; por fim a situação na lista de observação do comprador
 /// (0x849ce0; achada, 0x843e10 com evento 1 e tipo 0). É a recusa da transferência (0x8bf680) sem o desassossego, sem
 /// a transferência futura, sem fechar as ofertas de contrato ligadas e sem a parte dos jogadores da troca no fim: os
-/// ajudantes `cpx1_*` (com o ensaio CPX1_ENSAIO) servem igual.
+/// ajudantes `cpx1_*` (com o ensaio OFFER_RESPONSE_DRY_RUN) servem igual.
 pub(crate) unsafe extern "thiscall" fn reject_loan_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = *vaga;
     if marcar != 0 {
@@ -3479,9 +3479,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_reject_loan_offer(this: usize, v
 }
 
 /// O ensaio do comparador da 0x8cd450: a cópia roda sem liberar o jogador escolhido (0x86d800 e 0x8c1af0 mexem no
-/// resto do jogo) e guarda quem seria em CQA5_LIBERADO.
-pub(crate) static mut CQA5_ENSAIO: bool = false;
-pub(crate) static mut CQA5_LIBERADO: usize = 0;
+/// resto do jogo) e guarda quem seria em SQUAD_LIMITS_RELEASED_PLAYER.
+pub(crate) static mut SQUAD_LIMITS_DRY_RUN: bool = false;
+pub(crate) static mut SQUAD_LIMITS_RELEASED_PLAYER: usize = 0;
 
 /// Job type byte is a player job (DATABASE is_player_job 0x53b620, types 11..15).
 ///
@@ -3709,8 +3709,8 @@ pub(crate) unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: us
                     return fail_with_reason(clube, o, motivo, 4);
                 }
                 crate::comparacao::ramo("cqa_5 libera o mais barato");
-                if CQA5_ENSAIO {
-                    CQA5_LIBERADO = escolhido;
+                if SQUAD_LIMITS_DRY_RUN {
+                    SQUAD_LIMITS_RELEASED_PLAYER = escolhido;
                 } else {
                     let registrar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FREE_RELEASE_RECORDS);
                     let liberar: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) = core::mem::transmute(FN_TRANSFER_MANAGER_FREE_TRANSFER_STAFF);
@@ -3767,11 +3767,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_squad_limits(this: usize, 
         regioes.push((read_usize(o + 4) + 0xa, 4));
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CQA5_ENSAIO = true;
-    CQA5_LIBERADO = 0;
+    SQUAD_LIMITS_DRY_RUN = true;
+    SQUAD_LIMITS_RELEASED_PLAYER = 0;
     let n = crate::aleatorio::pausar_rastro(|| check_squad_limits(this, clube, o, contar_fila, motivo));
-    CQA5_ENSAIO = false;
-    let liberado = CQA5_LIBERADO;
+    SQUAD_LIMITS_DRY_RUN = false;
+    let liberado = SQUAD_LIMITS_RELEASED_PLAYER;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = f(this, clube, o, contar_fila, motivo);
@@ -3874,14 +3874,14 @@ pub(crate) unsafe fn increment_permit_counter(r: usize, o: usize) {
 
 /// O ensaio do comparador: a cópia roda sem pagar os prêmios por jogos (0x8cb340 dá notícia, aloca e paga), como se
 /// nenhum pagasse (sem tirar o bônus); a contagem das permissões não depende deles.
-pub(crate) static mut CPY11_ENSAIO: bool = false;
+pub(crate) static mut APPEARANCE_CLAUSES_DRY_RUN: bool = false;
 
 /// TRANSFER_MANAGER::pay_appearance_money(person, games, type); returns 0 without calling during the comparer's dry
 /// run.
 ///
 /// [pt] TRANSFER_MANAGER::pay_appearance_money (0x8cb340: thiscall(this, pessoa, jogos, tipo, 0), ret 0x10); no ensaio, 0.
 pub(crate) unsafe fn pay_appearance_money_unless_dry_run(this: usize, p: usize, jogos: i32, tipo: u32) -> u32 {
-    if CPY11_ENSAIO {
+    if APPEARANCE_CLAUSES_DRY_RUN {
         return 0;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_PAY_APPEARANCE_MONEY);
@@ -4042,9 +4042,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_
     }
     let regioes = [(v, n as usize * 0xe)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPY11_ENSAIO = true;
+    APPEARANCE_CLAUSES_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| update_appearance_clauses_after_match(this, jogo, partida)));
-    CPY11_ENSAIO = false;
+    APPEARANCE_CLAUSES_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this, jogo, partida);
@@ -4426,10 +4426,10 @@ pub(crate) unsafe fn llist_items_from_start(l: usize) -> Vec<usize> {
 
 /// O ensaio do comparador: a cópia roda sem as chamadas que mexem no resto do jogo (o desassossego com sorteio, a
 /// notícia, o agendamento, as listas de observação e as ofertas de contrato), que não podem rodar duas vezes.
-pub(crate) static mut CPX1_ENSAIO: bool = false;
+pub(crate) static mut OFFER_RESPONSE_DRY_RUN: bool = false;
 
 /// As ofertas que o ensaio passou do estado 0xf para o 8 (`dry_run_restore_contract_offers`), devolvidas ao 0xf depois da cópia.
-pub(crate) static mut CPX1_DESFAZER: Vec<usize> = Vec::new();
+pub(crate) static mut DRY_RUN_OFFERS_TO_RESTORE: Vec<usize> = Vec::new();
 
 /// Dry run of 0x4cf4a0: for each stored contract offer of the person linked to a transfer offer with the same series, a
 /// status-0xf offer goes back to 8 (recorded for undo).
@@ -4451,7 +4451,7 @@ pub(crate) unsafe fn dry_run_restore_contract_offers(id: usize) {
         let r = read_usize(v);
         if read_usize(r + 0x24) == read_usize(e + 0x5d) && read_u8(r + 0x2c) == 0xf {
             *((r + 0x2c) as *mut u8) = 8;
-            (*core::ptr::addr_of_mut!(CPX1_DESFAZER)).push(r);
+            (*core::ptr::addr_of_mut!(DRY_RUN_OFFERS_TO_RESTORE)).push(r);
         }
     }
 }
@@ -4468,7 +4468,7 @@ pub(crate) unsafe fn shortlist_manager_of(this: usize) -> usize {
 /// [pt] Shortlist_Manager::clear_bid_markers_for_player (0x84aeb0: thiscall(gerência, clube, pessoa), ret 8); no ensaio,
 /// nada.
 pub(crate) unsafe fn clear_bid_markers(this: usize, clube: usize, pessoa: usize) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SHORTLIST_MANAGER_CLEAR_BID_MARKERS_FOR_PLAYER);
@@ -4480,7 +4480,7 @@ pub(crate) unsafe fn clear_bid_markers(this: usize, clube: usize, pessoa: usize)
 /// [pt] Shortlist_Manager::update_staff_status (0x843e10: thiscall(gerência, pessoa, clube, evento, tipo), ret 0x10); no
 /// ensaio, nada.
 pub(crate) unsafe fn update_shortlist_status(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_UPDATE_STAFF_STATUS);
@@ -4494,7 +4494,7 @@ pub(crate) unsafe fn update_shortlist_status(this: usize, pessoa: usize, clube: 
 /// transferência futura, 0x8c6db0 fechar as ofertas de contrato da oferta); no ensaio, nada, só o bit 0x10 da marca da
 /// pessoa que a 0x8cbf70 apaga (o comparador lê o byte; as marcas dos jogadores da troca ele não lê nem devolve).
 pub(crate) unsafe fn call_with_offer(f: usize, this: usize, o: usize) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         if f == 0x8cbf70 {
             *((read_usize(this + 0x86e).wrapping_add(read_usize(o + 0xc).wrapping_mul(8))) as *mut u8) &= 0xef;
         }
@@ -4560,7 +4560,7 @@ pub(crate) unsafe fn update_buyer_shortlist_entry(this: usize, o: usize) {
 /// Removes the contract offers of the target and of each exchange player (clearing +0x10 and each item's +4), and
 /// updates the buyer's shortlist status of exchange players when the seller is AI.
 pub(crate) unsafe fn withdraw_offer_contract_offers(this: usize, o: usize, vendedor: usize, comprador: usize) {
-    if !CPX1_ENSAIO {
+    if !OFFER_RESPONSE_DRY_RUN {
         let tirar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_REMOVE_CONTRACT_OFFER);
         tirar(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(o + 0xc)), friendly_club_by_id(read_usize(o + 8)));
     }
@@ -4569,7 +4569,7 @@ pub(crate) unsafe fn withdraw_offer_contract_offers(this: usize, o: usize, vende
     if troca != 0 {
         let tirar_da_vaga: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_REMOVE_CONTRACT_OFFER_FOR_TRANSFER);
         for e in llist_items_from_start(troca) {
-            if !CPX1_ENSAIO {
+            if !OFFER_RESPONSE_DRY_RUN {
                 tirar_da_vaga(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(e)), read_usize(o + 0x20));
             }
             *((e + 4) as *mut u8) = 0;
@@ -4617,7 +4617,7 @@ pub(crate) unsafe fn contract_club_stored(pessoa: usize) -> usize {
 ///
 /// [pt] A notícia da oferta recusada (0x8d5170: thiscall(gerência, oferta, motivo), ret 8); no ensaio, nada.
 pub(crate) unsafe fn transfer_manager_post_offer_rejected_news(this: usize, o: usize, motivo: u32) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_TRANSFER_MANAGER_POST_OFFER_REJECTED_NEWS);
@@ -4628,7 +4628,7 @@ pub(crate) unsafe fn transfer_manager_post_offer_rejected_news(this: usize, o: u
 ///
 /// [pt] TRANSFER_MANAGER::schedule_offer (0x8c6220: thiscall(gerência, oferta, dias, fatias), ret 0xc); no ensaio, nada.
 pub(crate) unsafe fn schedule_offer_unless_dry_run(this: usize, o: usize, dias: u32) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_SCHEDULE_OFFER);
@@ -4695,7 +4695,7 @@ pub(crate) unsafe extern "thiscall" fn withdraw_transfer_offer(this: usize, vaga
         call_with_offer(0x8cbf70, this, atual);
     }
     if read_u8(o + 0x2c) as i8 >= 0xb {
-        if CPX1_ENSAIO {
+        if OFFER_RESPONSE_DRY_RUN {
             dry_run_restore_contract_offers(read_usize(o + 0xc));
         } else {
             let reenviar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_RESUBMIT_HELD_OFFERS);
@@ -4753,11 +4753,11 @@ pub(crate) unsafe fn compare_reject_withdraw(nome: &str, this: usize, vaga: *mut
         regioes.push((e, 5));
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPX1_ENSAIO = true;
+    OFFER_RESPONSE_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(copia);
-    CPX1_ENSAIO = false;
+    OFFER_RESPONSE_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
-    for r in (*core::ptr::addr_of_mut!(CPX1_DESFAZER)).drain(..) {
+    for r in (*core::ptr::addr_of_mut!(DRY_RUN_OFFERS_TO_RESTORE)).drain(..) {
         *((r + 0x2c) as *mut u8) = 0xf;
     }
     antes.escrever();
@@ -4864,8 +4864,8 @@ pub(crate) unsafe fn get_contract_store_lookup(pessoa: usize) -> usize {
 
 /// O ensaio do comparador: a cópia para antes da queixa (0x867700), da fuga (0x419840) e das antipatias (0x547e70,
 /// 0x547af0), que mexem no resto do jogo, e marca que chegou lá.
-pub(crate) static mut CPX2_ENSAIO: bool = false;
-pub(crate) static mut CPX2_CHEGOU: bool = false;
+pub(crate) static mut UNSETTLE_PLAYER_DRY_RUN: bool = false;
+pub(crate) static mut UNSETTLE_PLAYER_REACHED: bool = false;
 
 /// a draw against the buyer's reputation flags the player as unsettled; when flagged, a score from his attributes and
 /// interest leads to the 0x80 complaint, going missing and grudges
@@ -4942,8 +4942,8 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     if pond < menor {
         return;
     }
-    if CPX2_ENSAIO {
-        CPX2_CHEGOU = true;
+    if UNSETTLE_PLAYER_DRY_RUN {
+        UNSETTLE_PLAYER_REACHED = true;
         return;
     }
     crate::comparacao::ramo("cpx_2 desassossegado");
@@ -4984,14 +4984,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_unsettle_player_after_bid(this: 
     let mut regioes = vec![(o, 0x30usize), (G_CONTRACT_LOOKUP_RESULT, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPX2_ENSAIO = true;
-    CPX2_CHEGOU = false;
+    UNSETTLE_PLAYER_DRY_RUN = true;
+    UNSETTLE_PLAYER_REACHED = false;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| unsettle_player_after_bid(this, o)));
-    CPX2_ENSAIO = false;
+    UNSETTLE_PLAYER_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     orig_f(this, o);
-    if CPX2_CHEGOU {
+    if UNSETTLE_PLAYER_REACHED {
         return;
     }
     let mo = crate::comparacao::Memoria::ler(&regioes);
@@ -8155,7 +8155,7 @@ pub(crate) unsafe fn put_u32_le(r: &mut [u8; 13], k: usize, v: usize) {
 }
 
 /// As estáticas das operações de data (valor e guarda), para os comparadores.
-pub(crate) const CPQ6_ESTATICAS: [(usize, usize); 8] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_ADD_WEEKS_RESULT_DATE, 8), (0xae2430, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
+pub(crate) const DATE_OP_STATICS: [(usize, usize); 8] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_ADD_WEEKS_RESULT_DATE, 8), (0xae2430, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
 
 /// staff on a type 2 contract: what is left of the contract (1000 to 1000000); new rules: the average with the player
 /// value; between clubs of nation [0x9cf4a8] or, under 24, between British nations: half the value (0x4d0c60)
@@ -8387,7 +8387,7 @@ pub(crate) unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(
 /// [pt] Comparador: pelo valor (lado a lado pelas estáticas das datas; o valor do jogador 0x4d0c60 e a idade só calculam).
 pub(crate) unsafe extern "stdcall" fn comparar_transfer_manager_calc_compensation_fee(pessoa: usize, comprador: usize, sem_regras_novas: u32) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> i32>(IDX_TRANSFER_MANAGER_CALC_COMPENSATION_FEE);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&CPQ6_ESTATICAS, || o(pessoa, comprador, sem_regras_novas), || transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas));
+    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&DATE_OP_STATICS, || o(pessoa, comprador, sem_regras_novas), || transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas));
     PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_calc_compensation_fee(pessoa {:x}) {} x {}, estáticas iguais {}", if pessoa != 0 { read_usize(pessoa) } else { 0 }, ro, rr, igual));
     ro
 }
@@ -8408,7 +8408,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_transfer_manager_selling_club_mus
     if !motivo.is_null() {
         reg.push((motivo as usize, 2));
     }
-    reg.extend_from_slice(&CPQ6_ESTATICAS);
+    reg.extend_from_slice(&DATE_OP_STATICS);
     let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(oferta, estrito, motivo), || transfer_manager_selling_club_must_accept(oferta, estrito, motivo));
     PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_selling_club_must_accept(estrito {}) {} x {}, memória igual {}", estrito, ro, rr, igual));
     ro

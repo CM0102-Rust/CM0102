@@ -17,7 +17,7 @@ unsafe fn cqa5_b(a: usize) -> u8 {
 /// da troca, cuja marca +4 zera), com +0x10 = 0 entre elas; por fim a situação na lista de observação do comprador
 /// (0x849ce0; achada, 0x843e10 com evento 1 e tipo 0). É a recusa da transferência (0x8bf680) sem o desassossego, sem
 /// a transferência futura, sem fechar as ofertas de contrato ligadas e sem a parte dos jogadores da troca no fim: os
-/// ajudantes `cpx1_*` (com o ensaio CPX1_ENSAIO) servem igual.
+/// ajudantes `cpx1_*` (com o ensaio OFFER_RESPONSE_DRY_RUN) servem igual.
 unsafe extern "thiscall" fn reject_loan_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = *vaga;
     if marcar != 0 {
@@ -48,9 +48,9 @@ unsafe extern "thiscall" fn comparar_reject_loan_offer(this: usize, vaga: *mut u
 }
 
 /// O ensaio do comparador da 0x8cd450: a cópia roda sem liberar o jogador escolhido (0x86d800 e 0x8c1af0 mexem no
-/// resto do jogo) e guarda quem seria em CQA5_LIBERADO.
-static mut CQA5_ENSAIO: bool = false;
-static mut CQA5_LIBERADO: usize = 0;
+/// resto do jogo) e guarda quem seria em SQUAD_LIMITS_RELEASED_PLAYER.
+static mut SQUAD_LIMITS_DRY_RUN: bool = false;
+static mut SQUAD_LIMITS_RELEASED_PLAYER: usize = 0;
 
 /// Os tipos 0x53b620 (11 a 15: jogador) e 0x53b610 (não 11), cdecl com o byte.
 unsafe fn transfer_manager_is_player_job(t: u8) -> bool {
@@ -261,8 +261,8 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                     return fail_with_reason(clube, o, motivo, 4);
                 }
                 crate::comparacao::ramo("cqa_5 libera o mais barato");
-                if CQA5_ENSAIO {
-                    CQA5_LIBERADO = escolhido;
+                if SQUAD_LIMITS_DRY_RUN {
+                    SQUAD_LIMITS_RELEASED_PLAYER = escolhido;
                 } else {
                     let registrar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x86d800usize);
                     let liberar: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) = core::mem::transmute(0x8c1af0usize);
@@ -317,11 +317,11 @@ unsafe extern "thiscall" fn comparar_check_squad_limits(this: usize, clube: usiz
         regioes.push((cqa5_d(o + 4) + 0xa, 4));
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CQA5_ENSAIO = true;
-    CQA5_LIBERADO = 0;
+    SQUAD_LIMITS_DRY_RUN = true;
+    SQUAD_LIMITS_RELEASED_PLAYER = 0;
     let n = crate::aleatorio::pausar_rastro(|| check_squad_limits(this, clube, o, contar_fila, motivo));
-    CQA5_ENSAIO = false;
-    let liberado = CQA5_LIBERADO;
+    SQUAD_LIMITS_DRY_RUN = false;
+    let liberado = SQUAD_LIMITS_RELEASED_PLAYER;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = f(this, clube, o, contar_fila, motivo);

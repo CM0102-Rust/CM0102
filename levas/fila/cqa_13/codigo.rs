@@ -57,22 +57,22 @@ unsafe fn current_reputation(pessoa: usize) -> i16 {
 }
 
 /// O ensaio do comparador da 0x758200: a cópia roda sem nada que aloque, dê notícia ou peça transferência; quando chega
-/// a um desses, `CQA13_PAROU` e ela para (a comparação fica só com a original).
-static mut CQA13_ENSAIO: bool = false;
-static mut CQA13_PAROU: bool = false;
+/// a um desses, `MEDIA_REACTION_STOPPED` e ela para (a comparação fica só com a original).
+static mut MEDIA_REACTION_DRY_RUN: bool = false;
+static mut MEDIA_REACTION_STOPPED: bool = false;
 
-/// Liga marcas no contrato (STAFF_CONTRACT::set_flags 0x867560). No ensaio, pela cópia em ensaio dela (CPW7_ENSAIO): se
+/// Liga marcas no contrato (STAFF_CONTRACT::set_flags 0x867560). No ensaio, pela cópia em ensaio dela (MISS_TRAINING_DRY_RUN): se
 /// ela pediria transferência, para. Devolve se parou.
 unsafe fn set_contract_flags_or_stop(c: usize, marcas: u32) -> bool {
-    if CQA13_ENSAIO {
-        CPW7_ENSAIO = true;
-        CPW7_DECISAO = 0;
+    if MEDIA_REACTION_DRY_RUN {
+        MISS_TRAINING_DRY_RUN = true;
+        MISS_TRAINING_DECISION = 0;
         set_flags(c, marcas);
-        CPW7_ENSAIO = false;
-        if CPW7_DECISAO != 0 {
-            CQA13_PAROU = true;
+        MISS_TRAINING_DRY_RUN = false;
+        if MISS_TRAINING_DECISION != 0 {
+            MEDIA_REACTION_STOPPED = true;
         }
-        return CQA13_PAROU;
+        return MEDIA_REACTION_STOPPED;
     }
     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x867560usize);
     f(c, marcas);
@@ -121,8 +121,8 @@ unsafe fn would_request_transfer(c: usize, marcas: u32) -> bool {
 /// As queixas do contrato (STAFF_CONTRACT::apply_event_flags 0x867700 com a pessoa). No ensaio, para antes se ela
 /// pediria transferência. Devolve se parou.
 unsafe fn apply_event_flags_or_stop(c: usize, marcas: u32, pessoa: usize) -> bool {
-    if CQA13_ENSAIO && would_request_transfer(c, marcas) {
-        CQA13_PAROU = true;
+    if MEDIA_REACTION_DRY_RUN && would_request_transfer(c, marcas) {
+        MEDIA_REACTION_STOPPED = true;
         return true;
     }
     let f: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x867700usize);
@@ -133,13 +133,13 @@ unsafe fn apply_event_flags_or_stop(c: usize, marcas: u32, pessoa: usize) -> boo
 /// Tira queixas do contrato (STAFF_CONTRACT::clear_grievances 0x8674e0). No ensaio, para antes se o pedido de
 /// transferência seria retirado (a decisão `should_withdraw_transfer_request` com as queixas já tiradas). Devolve se parou.
 unsafe fn clear_grievances_or_stop(c: usize, queixas: u32) -> bool {
-    if CQA13_ENSAIO {
+    if MEDIA_REACTION_DRY_RUN {
         let antes = cqa13_d(c + 0x45);
         core::ptr::write_unaligned((c + 0x45) as *mut usize, antes & !(queixas as usize));
         let retira = should_withdraw_transfer_request(c).is_some();
         core::ptr::write_unaligned((c + 0x45) as *mut usize, antes);
         if retira {
-            CQA13_PAROU = true;
+            MEDIA_REACTION_STOPPED = true;
             return true;
         }
     }
@@ -150,8 +150,8 @@ unsafe fn clear_grievances_or_stop(c: usize, queixas: u32) -> bool {
 
 /// A comemoração da contratação (0x75b6e0); no ensaio, para.
 unsafe fn signing_celebration_or_stop(this: usize, p: usize, clube: usize, tipo: u32, porta_voz: usize) -> bool {
-    if CQA13_ENSAIO {
-        CQA13_PAROU = true;
+    if MEDIA_REACTION_DRY_RUN {
+        MEDIA_REACTION_STOPPED = true;
         return true;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) = core::mem::transmute(0x75b6e0usize);
@@ -476,8 +476,8 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
     {
         let quem = squad_spokesman(velho, p);
         if quem != 0 {
-            if CQA13_ENSAIO {
-                CQA13_PAROU = true;
+            if MEDIA_REACTION_DRY_RUN {
+                MEDIA_REACTION_STOPPED = true;
                 return;
             }
             let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize) = core::mem::transmute(0x75cfc0usize);
@@ -524,13 +524,13 @@ unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions(this: usiz
     }
     core::ptr::write_unaligned(0xae1080 as *mut usize, ficha); // os contratos lidos acima não contam
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQA13_ENSAIO = true;
-    CQA13_PAROU = false;
+    MEDIA_REACTION_DRY_RUN = true;
+    MEDIA_REACTION_STOPPED = false;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| process_transfer_squad_reactions(this, p, novo, velho, flag)));
-    CQA13_ENSAIO = false;
+    MEDIA_REACTION_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
-    if CQA13_PAROU {
+    if MEDIA_REACTION_STOPPED {
         crate::comparacao::ramo("cqa_13 reacoes so na original");
         return o(this, p, novo, velho, flag);
     }

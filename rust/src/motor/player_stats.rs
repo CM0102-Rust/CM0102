@@ -95,9 +95,9 @@ comparar_valor!(comparar_centre_backs_without_conflict, centre_backs_without_con
 
 /// O ensaio do comparador: a cópia roda sem gravar no arquivo de histórico (FILE_LLIST::add_node 0x58e340, que escreve
 /// no arquivo e move as posições da ficha); os nós que ela gravaria entram direto na soma dos jogos e gols pelo clube.
-pub(crate) static mut CQH8_ENSAIO: bool = false;
-pub(crate) static mut CQH8_PENDENTES: (u16, u16) = (0, 0);
-pub(crate) static mut CQH8_CLUBE: i32 = -1;
+pub(crate) static mut ARCHIVE_STATS_DRY_RUN: bool = false;
+pub(crate) static mut ARCHIVE_STATS_PENDING_TOTALS: (u16, u16) = (0, 0);
+pub(crate) static mut ARCHIVE_STATS_CLUB_ID: i32 = -1;
 
 /// Builds the 0x2b-byte career history node: club season year, club id, category bytes, value, type and category bits.
 ///
@@ -123,10 +123,10 @@ pub(crate) unsafe fn career_history_node(clube: usize, dados: Option<usize>, val
 /// [pt] Grava o nó no fim da lista do histórico da ficha (0x58e340 no arquivo [this], posições +0x18/+0x1c do registro);
 /// no ensaio, só soma.
 pub(crate) unsafe fn append_history_node(this: usize, reg: usize, no: &[u8; 0x2b]) {
-    if CQH8_ENSAIO {
-        if i32::from_le_bytes([no[2], no[3], no[4], no[5]]) == CQH8_CLUBE && no[0x2a] & 0xf8 == 0x10 {
-            CQH8_PENDENTES.0 = CQH8_PENDENTES.0.wrapping_add(no[6] as u16);
-            CQH8_PENDENTES.1 = CQH8_PENDENTES.1.wrapping_add(no[8] as u16);
+    if ARCHIVE_STATS_DRY_RUN {
+        if i32::from_le_bytes([no[2], no[3], no[4], no[5]]) == ARCHIVE_STATS_CLUB_ID && no[0x2a] & 0xf8 == 0x10 {
+            ARCHIVE_STATS_PENDING_TOTALS.0 = ARCHIVE_STATS_PENDING_TOTALS.0.wrapping_add(no[6] as u16);
+            ARCHIVE_STATS_PENDING_TOTALS.1 = ARCHIVE_STATS_PENDING_TOTALS.1.wrapping_add(no[8] as u16);
         }
         return;
     }
@@ -242,11 +242,11 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             destruir(lista);
             apagar(lista);
         }
-        if CQH8_ENSAIO {
+        if ARCHIVE_STATS_DRY_RUN {
             let a = (reg + 0x20) as *mut u16;
-            core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(CQH8_PENDENTES.0));
+            core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(ARCHIVE_STATS_PENDING_TOTALS.0));
             let g = (reg + 0x22) as *mut u16;
-            core::ptr::write_unaligned(g, core::ptr::read_unaligned(g).wrapping_add(CQH8_PENDENTES.1));
+            core::ptr::write_unaligned(g, core::ptr::read_unaligned(g).wrapping_add(ARCHIVE_STATS_PENDING_TOTALS.1));
         }
     }
     1
@@ -254,7 +254,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
 
 /// Comparer for `archive_player_stats` (comparison mode: see the header of motor.rs).
 ///
-/// [pt] Comparador em ensaio (modelo CPV6_ENSAIO): a cópia roda primeiro sem gravar no arquivo (os nós que gravaria entram na
+/// [pt] Comparador em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN): a cópia roda primeiro sem gravar no arquivo (os nós que gravaria entram na
 /// soma dos jogos e gols), depois a original a partir do mesmo estado; compara a devolução, os seis registros de 32 bytes
 /// das categorias e os jogos e gols pelo clube (+0x20/+0x22 do registro da ficha). As posições do histórico (+0x18,
 /// +0x1c), que só a gravação da original move, ficam fora. Pessoa nula ou sem ficha: só a original.
@@ -272,11 +272,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize
         }
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CQH8_ENSAIO = true;
-    CQH8_PENDENTES = (0, 0);
-    CQH8_CLUBE = clube_id as i32;
+    ARCHIVE_STATS_DRY_RUN = true;
+    ARCHIVE_STATS_PENDING_TOTALS = (0, 0);
+    ARCHIVE_STATS_CLUB_ID = clube_id as i32;
     let n = crate::aleatorio::pausar_rastro(|| archive_player_stats(this, p, valor, emprestimo, fim, clube_id, outro));
-    CQH8_ENSAIO = false;
+    ARCHIVE_STATS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = o(this, p, valor, emprestimo, fim, clube_id, outro);

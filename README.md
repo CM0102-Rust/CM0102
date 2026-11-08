@@ -19,6 +19,11 @@ Este repositório o mantém jogável no Windows 11 e prepara a reescrita do jogo
 | `levas/` | Uma pasta por leva da reescrita: o código, a integração e o resultado dos testes. | sim |
 | `CLAUDE.md` | Instruções para continuar o trabalho no Claude Code. | sim |
 
+**Para quem lê em inglês.** O projeto começou em português; o código agora é em inglês (com cabeçalhos bilíngues), mas
+alguns nomes de pasta e de documento ficaram em português; o README em inglês traz um guia desses nomes e explica o que
+é uma leva (a unidade de trabalho: algumas rotinas reescritas, desviadas no exe original e testadas juntas antes de
+publicar; `levas/N/` guarda os resultados de cada uma).
+
 **Estado:** 283 levas, 2065 rotinas em Rust, cada uma comparada com a original (o motor de partidas sem as telas está 100% em Rust; o save passa de 2 GB, até 4 GB); quanto falta, módulo a módulo: [`docs/PLACAR.md`](docs/PLACAR.md).
 
 Os arquivos do jogo não entram no git: o jogo é gratuito para baixar, mas o código e a marca continuam da SI e da Eidos.

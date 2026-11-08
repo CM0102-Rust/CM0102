@@ -37,11 +37,11 @@ unsafe fn add_uefa_coefficient(nacao: usize, pontos: u32) {
 
 /// O ensaio do comparador da 0x583b10: a cópia roda sem a notícia do prêmio (0x48e3e0, que aloca) e sem a base da copa
 /// (0x51a150, que processa o jogo inteiro e não pode rodar duas vezes).
-static mut CPY6_ENSAIO: bool = false;
+static mut EUROPEAN_CUP_FIXTURE_DRY_RUN: bool = false;
 
 /// A notícia do prêmio (Comp 0x48e3e0: thiscall(this, clube, valor, 0, −1, 0, jogo, −2), ret 0x1c); no ensaio, nada.
 unsafe fn european_cup_send_prize_money_news(this: usize, clube: usize, valor: u32, jogo: usize) {
-    if CPY6_ENSAIO {
+    if EUROPEAN_CUP_FIXTURE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, u32, usize, i32) = core::mem::transmute(0x48e3e0usize);
@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn process_fixture(this: usize, jogo: usize, arg: u32) 
             european_cup_send_prize_money_news(this, cpy6_d(jogo + 0x20), 0x186a0, jogo);
         }
     }
-    if CPY6_ENSAIO {
+    if EUROPEAN_CUP_FIXTURE_DRY_RUN {
         return;
     }
     let base: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x51a150usize);
@@ -129,9 +129,9 @@ unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jogo: usize, a
     let conferir = [(ca, 2), (cb, 2)];
     let antes = crate::comparacao::Memoria::ler(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
     let fase = cpy6_i(this + 0x30);
-    CPY6_ENSAIO = true;
+    EUROPEAN_CUP_FIXTURE_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| process_fixture(this, jogo, arg)));
-    CPY6_ENSAIO = false;
+    EUROPEAN_CUP_FIXTURE_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&conferir);
     antes.escrever();
     o(this, jogo, arg);

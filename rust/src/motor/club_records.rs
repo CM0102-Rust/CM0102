@@ -111,7 +111,7 @@ pub(crate) fn stats_categories_for(cat: u8) -> [Option<u8>; 2] {
 
 
 /// O ensaio do comparador da 0x447430: a cópia roda sem ordenar as tabelas (a original, que roda antes, já ordenou).
-pub(crate) static mut CPX12_ENSAIO: bool = false;
+pub(crate) static mut POSITION_RECORDS_DRY_RUN: bool = false;
 
 /// CLUB_RECORDS get_season_record(club, create).
 pub(crate) unsafe fn club_season_record(this: usize, clube: usize, criar: u32) -> usize {
@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
     let ano_da_temporada: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
     let comp = read_usize(read_usize(liga0 + 4)) as i32;
     for liga in league_stage_chain(liga0) {
-        if !CPX12_ENSAIO {
+        if !POSITION_RECORDS_DRY_RUN {
             ordenar(liga, 0);
         }
         let mut i = 0i32;
@@ -297,9 +297,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(t
     let ro = o(this, liga0, sempre);
     let mo = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
-    CPX12_ENSAIO = true;
+    POSITION_RECORDS_DRY_RUN = true;
     let rr = crate::aleatorio::pausar_rastro(|| update_league_position_records(this, liga0, sempre));
-    CPX12_ENSAIO = false;
+    POSITION_RECORDS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     mo.escrever();
     PLACAR.registrar(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
@@ -307,7 +307,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(t
 }
 
 /// O ensaio do comparador da 0x448e30: a cópia roda sem preencher nem entregar as notícias e sem soltar a fila.
-pub(crate) static mut CPX12_ENSAIO_FILA: bool = false;
+pub(crate) static mut RECORD_NEWS_DRY_RUN: bool = false;
 
 /// delivers the news item of each queued record (human club or national side) and empties the queue (freed at capacity
 /// 100 or more)
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         let n = local.as_mut_ptr() as usize;
         construir(n, 0x3e8, 0);
         let reg = if read_u8(e + 5) == 2 { club_season_record(this, clube, 0) } else { club_all_time_record(this, clube, 0) };
-        if CPX12_ENSAIO_FILA {
+        if RECORD_NEWS_DRY_RUN {
             continue;
         }
         // ponytail: a original empurra o dword da local com o tipo no byte baixo (o resto é sobra); a 0x453120 lê o byte
@@ -357,7 +357,7 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         }
     }
     if read_usize(this + 0x28) as i32 >= 100 {
-        if !CPX12_ENSAIO_FILA {
+        if !RECORD_NEWS_DRY_RUN {
             liberar(read_usize(this + 0x24));
         }
         core::ptr::write_unaligned((this + 0x24) as *mut usize, 0);
@@ -375,9 +375,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_record_news(this: usize) ->
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SEND_RECORD_NEWS);
     let regioes = [(this + 0x24, 0xc)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPX12_ENSAIO_FILA = true;
+    RECORD_NEWS_DRY_RUN = true;
     let rr = crate::aleatorio::pausar_rastro(|| send_record_news(this));
-    CPX12_ENSAIO_FILA = false;
+    RECORD_NEWS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let ro = o(this);

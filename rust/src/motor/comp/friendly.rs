@@ -366,13 +366,13 @@ pub(crate) struct FriendlyComparerTrial {
 
 /// A fita do ensaio: os sorteios que a original fez (n, resposta), o próximo e se um n não bateu. Também estão nela os
 /// sorteios de dentro das rotinas que a original chama no amistoso (0x53b3d0, 0x5c6f00, 0x5c5f40), que o ensaio pula.
-pub(crate) static mut CQC11_FITA: (Vec<(i32, i32)>, usize, bool) = (Vec::new(), 0, false);
+pub(crate) static mut FRIENDLY_TAPE: (Vec<(i32, i32)>, usize, bool) = (Vec::new(), 0, false);
 
 /// Dry-run RNG replacement: returns the next taped result if its n matches, else marks the tape broken and returns 0.
 ///
 /// [pt] O sorteio do ensaio: o próximo da fita, com o mesmo n.
 pub(crate) unsafe extern "C" fn tape_random(n: i32) -> i32 {
-    let f = &mut *core::ptr::addr_of_mut!(CQC11_FITA);
+    let f = &mut *core::ptr::addr_of_mut!(FRIENDLY_TAPE);
     match f.0.get(f.1) {
         Some(&(m, r)) if m == n && !f.2 => {
             f.1 += 1;
@@ -387,7 +387,7 @@ pub(crate) unsafe extern "C" fn tape_random(n: i32) -> i32 {
 
 /// True if the dry-run RNG tape was consumed exactly to its end without a mismatch.
 pub(crate) unsafe fn tape_fully_consumed() -> bool {
-    let f = &*core::ptr::addr_of!(CQC11_FITA);
+    let f = &*core::ptr::addr_of!(FRIENDLY_TAPE);
     !f.2 && f.1 == f.0.len()
 }
 
@@ -556,7 +556,7 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
         if livre_a && quantas > 0 && nation_in_date_confederations(datas, quantas, a) && !is_african_excluded(datas, a) {
             let mut j = i + 1;
             while j < total(this) {
-                if ens.is_some() && (*core::ptr::addr_of!(CQC11_FITA)).2 {
+                if ens.is_some() && (*core::ptr::addr_of!(FRIENDLY_TAPE)).2 {
                     return; // a fita já não bate
                 }
                 let b = nacao(this, j);
@@ -603,7 +603,7 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
                                             e.por(i as usize, idb as u32);
                                             e.por(j as usize, ida as u32);
                                         }
-                                        let f = core::ptr::addr_of_mut!(CQC11_FITA);
+                                        let f = core::ptr::addr_of_mut!(FRIENDLY_TAPE);
                                         if (*f).2 {
                                             return;
                                         }
@@ -693,11 +693,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_arrange_international_friendlies
     link_nations_near_date(this, datas, 0, Some(&mut e));
     let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, datas, n));
     let quantos = tape_lock.len();
-    *core::ptr::addr_of_mut!(CQC11_FITA) = (tape_lock, 0, false);
+    *core::ptr::addr_of_mut!(FRIENDLY_TAPE) = (tape_lock, 0, false);
     pair_nations_for_friendlies(this, datas, n, 0, Some(&mut e), 0);
     let igual = tape_fully_consumed();
-    let (pos, falhou) = { let f = &*core::ptr::addr_of!(CQC11_FITA); (f.1, f.2) };
-    *core::ptr::addr_of_mut!(CQC11_FITA) = (Vec::new(), 0, false);
+    let (pos, falhou) = { let f = &*core::ptr::addr_of!(FRIENDLY_TAPE); (f.1, f.2) };
+    *core::ptr::addr_of_mut!(FRIENDLY_TAPE) = (Vec::new(), 0, false);
     let mut dif = Vec::new();
     for q in 0..k.max(e.novos.len()) {
         let mut depois = if q < k { list_item_ids(nation_friendly_list(this, q)) } else { Vec::new() };
@@ -1664,7 +1664,7 @@ pub(crate) unsafe fn list_holds(l: usize, m: usize) -> bool {
 /// da lista das respostas (+0x34d4). Sem quem pede ou sem nação num dos dois: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usize, forcar: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FRIENDLY_REPLY);
-    CQA2_RESPONDIDO = m;
+    LAST_FRIENDLY_REPLY = m;
     let a = if m != 0 { read_usize(m + 0xc) } else { 0 };
     let outro = if m != 0 { other_friendly_club(m) } else { 0 };
     if a == 0 || (outro != 0 && (read_usize(a + 0x53) == 0 || read_usize(outro + 0x53) == 0)) {
@@ -1737,7 +1737,7 @@ pub(crate) unsafe fn list_len(l: usize) -> usize {
 }
 
 /// O último pedido que passou pelo comparador da 0x5c5f40 (a resposta).
-pub(crate) static mut CQA2_RESPONDIDO: usize = 0;
+pub(crate) static mut LAST_FRIENDLY_REPLY: usize = 0;
 
 /// Comparer for `send_friendly_request` (comparison mode: see the header of motor.rs).
 ///
@@ -1751,10 +1751,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_friendly_request(this: usiz
     let outro = other_friendly_club(m);
     let antes = list_len(read_usize(this + 0x34d4));
     let s = if outro != 0 && read_u8(m + 0x18) == 1 && club_has_human_manager(outro) { 2 } else { read_u8(m + 0x18) };
-    CQA2_RESPONDIDO = 0;
+    LAST_FRIENDLY_REPLY = 0;
     o(this, m);
     let l = read_usize(this + 0x34d4);
-    let respondido = s == 2 && CQA2_RESPONDIDO == m;
+    let respondido = s == 2 && LAST_FRIENDLY_REPLY == m;
     if respondido {
         crate::comparacao::ramo("cqa_2 pedido respondido pelo assistente");
     }

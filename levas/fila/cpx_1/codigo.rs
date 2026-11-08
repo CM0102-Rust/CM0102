@@ -42,7 +42,7 @@ unsafe fn llist_items_from_start(l: usize) -> Vec<usize> {
 
 /// O ensaio do comparador: a cópia roda sem as chamadas que mexem no resto do jogo (o desassossego com sorteio, a
 /// notícia, o agendamento, as listas de observação e as ofertas de contrato), que não podem rodar duas vezes.
-static mut CPX1_ENSAIO: bool = false;
+static mut OFFER_RESPONSE_DRY_RUN: bool = false;
 
 /// A gerência da lista de observação (Shortlist_Manager em +0x856 da gerência de transferências).
 unsafe fn shortlist_manager_of(this: usize) -> usize {
@@ -52,7 +52,7 @@ unsafe fn shortlist_manager_of(this: usize) -> usize {
 /// Shortlist_Manager::clear_bid_markers_for_player (0x84aeb0: thiscall(gerência, clube, pessoa), ret 8); no ensaio,
 /// nada.
 unsafe fn clear_bid_markers(this: usize, clube: usize, pessoa: usize) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
@@ -62,7 +62,7 @@ unsafe fn clear_bid_markers(this: usize, clube: usize, pessoa: usize) {
 /// Shortlist_Manager::update_staff_status (0x843e10: thiscall(gerência, pessoa, clube, evento, tipo), ret 0x10); no
 /// ensaio, nada.
 unsafe fn update_shortlist_status(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x843e10usize);
@@ -72,7 +72,7 @@ unsafe fn update_shortlist_status(this: usize, pessoa: usize, clube: usize, even
 /// Uma chamada thiscall(gerência de transferências, oferta) com ret 4 (0x8c1290 desassossegar, 0x8cbf70 tirar a
 /// transferência futura, 0x8c6db0 fechar as ofertas de contrato da oferta); no ensaio, nada.
 unsafe fn call_with_offer(f: usize, this: usize, o: usize) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(f);
@@ -128,7 +128,7 @@ unsafe fn update_buyer_shortlist_entry(this: usize, o: usize) {
 }
 
 unsafe fn withdraw_offer_contract_offers(this: usize, o: usize, vendedor: usize, comprador: usize) {
-    if !CPX1_ENSAIO {
+    if !OFFER_RESPONSE_DRY_RUN {
         let tirar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4cca70usize);
         tirar(cpx1_d(0xae1050), cpx1_pessoa(cpx1_d(o + 0xc)), cpx1_clube(cpx1_d(o + 8)));
     }
@@ -137,7 +137,7 @@ unsafe fn withdraw_offer_contract_offers(this: usize, o: usize, vendedor: usize,
     if troca != 0 {
         let tirar_da_vaga: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4ccb30usize);
         for e in llist_items_from_start(troca) {
-            if !CPX1_ENSAIO {
+            if !OFFER_RESPONSE_DRY_RUN {
                 tirar_da_vaga(cpx1_d(0xae1050), cpx1_pessoa(cpx1_d(e)), cpx1_d(o + 0x20));
             }
             *((e + 4) as *mut u8) = 0;
@@ -179,7 +179,7 @@ unsafe fn contract_club_stored(pessoa: usize) -> usize {
 
 /// A notícia da oferta recusada (0x8d5170: thiscall(gerência, oferta, motivo), ret 8); no ensaio, nada.
 unsafe fn transfer_manager_post_offer_rejected_news(this: usize, o: usize, motivo: u32) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8d5170usize);
@@ -188,7 +188,7 @@ unsafe fn transfer_manager_post_offer_rejected_news(this: usize, o: usize, motiv
 
 /// TRANSFER_MANAGER::schedule_offer (0x8c6220: thiscall(gerência, oferta, dias, fatias), ret 0xc); no ensaio, nada.
 unsafe fn schedule_offer_unless_dry_run(this: usize, o: usize, dias: u32) {
-    if CPX1_ENSAIO {
+    if OFFER_RESPONSE_DRY_RUN {
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn withdraw_transfer_offer(this: usize, vaga: *mut usiz
     if cpx1_b(atual + 0x2c) == 0x13 {
         call_with_offer(0x8cbf70, this, atual);
     }
-    if cpx1_b(o + 0x2c) as i8 >= 0xb && !CPX1_ENSAIO {
+    if cpx1_b(o + 0x2c) as i8 >= 0xb && !OFFER_RESPONSE_DRY_RUN {
         let reenviar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4cf4a0usize);
         reenviar(cpx1_d(0xae1050), cpx1_d(o + 0xc));
     }
@@ -296,9 +296,9 @@ unsafe fn compare_reject_withdraw(nome: &str, this: usize, vaga: *mut usize, ori
         regioes.push((e, 5));
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPX1_ENSAIO = true;
+    OFFER_RESPONSE_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(copia);
-    CPX1_ENSAIO = false;
+    OFFER_RESPONSE_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     original();

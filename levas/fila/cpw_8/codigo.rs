@@ -42,13 +42,13 @@ unsafe fn days_since(d: usize) -> i32 {
 }
 
 /// O ensaio do comparador: a cópia roda sem o fim da lesão (0x62e700: histórico em arquivo e notícia), que não pode
-/// rodar duas vezes; chegando lá, marca `CPW8_TERMINOU` e o comparador fica com a original sozinha.
-static mut CPW8_ENSAIO: bool = false;
-static mut CPW8_TERMINOU: bool = false;
+/// rodar duas vezes; chegando lá, marca `END_INJURY_REACHED` e o comparador fica com a original sozinha.
+static mut END_INJURY_DRY_RUN: bool = false;
+static mut END_INJURY_REACHED: bool = false;
 
 unsafe fn end_injury(this: usize, pessoa: usize) {
-    if CPW8_ENSAIO {
-        CPW8_TERMINOU = true;
+    if END_INJURY_DRY_RUN {
+        END_INJURY_REACHED = true;
         return;
     }
     let terminar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x62e700usize);
@@ -321,13 +321,13 @@ unsafe extern "thiscall" fn comparar_update_player_fitness(this: usize, pessoa: 
     let geral = cpw8_d(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f));
     let e = crate::aleatorio::REGIOES_DO_ESTADO;
     let reg = [(rec, 31), (geral + 0xa, 1), (0xb63d08, 0x2c), e[0], e[1]];
-    CPW8_TERMINOU = false;
+    END_INJURY_REACHED = false;
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa), || {
-        CPW8_ENSAIO = true;
+        END_INJURY_DRY_RUN = true;
         crate::aleatorio::sem_contar(|| update_player_fitness(this, pessoa));
-        CPW8_ENSAIO = false;
+        END_INJURY_DRY_RUN = false;
     });
-    if CPW8_TERMINOU {
+    if END_INJURY_REACHED {
         crate::comparacao::ramo("cpw_8 fim da lesao so na original");
         return;
     }

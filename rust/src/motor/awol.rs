@@ -145,12 +145,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_missed_training(this: usiz
 
 /// O ensaio da notícia: os sorteios vêm da fita da original (n e resposta) e, em vez de entregar, a cópia anota o
 /// destino (1 o clube do jogador, 2 a nação do clube, 0 nenhum). A fita fica com o próximo e se algum n não bateu.
-pub(crate) static mut CQD11_FITA: Option<(Vec<(i32, i32)>, usize, bool)> = None;
-pub(crate) static mut CQD11_DESTINO: (u32, usize) = (0, 0);
+pub(crate) static mut AWOL_NEWS_TAPE: Option<(Vec<(i32, i32)>, usize, bool)> = None;
+pub(crate) static mut AWOL_NEWS_DESTINATION: (u32, usize) = (0, 0);
 
-/// Random draw: replays from CQD11_FITA when set (marking failure on mismatch), else the game's random.
+/// Random draw: replays from AWOL_NEWS_TAPE when set (marking failure on mismatch), else the game's random.
 pub(crate) unsafe fn taped_random(n: i32) -> i32 {
-    let f = &mut *core::ptr::addr_of_mut!(CQD11_FITA);
+    let f = &mut *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE);
     match f {
         Some((v, k, falhou)) => match v.get(*k) {
             Some(&(m, r)) if m == n && !*falhou => {
@@ -244,10 +244,10 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     let de_humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     // 0x7875e0: mov ecx, [0xb7431c]; push clube (ret 4); 0x7861e0: push clube +0x39; push notícia; mov ecx, [0xb7431c];
     // 0x7863f0: push nação; push notícia; mov ecx, [0xb7431c] -> thiscall nas três
-    let ensaio = (*core::ptr::addr_of!(CQD11_FITA)).is_some();
+    let ensaio = (*core::ptr::addr_of!(AWOL_NEWS_TAPE)).is_some();
     if de_humano(noticias, clube) != 0 {
         if ensaio {
-            CQD11_DESTINO = (1, read_usize(jogador + 0x39));
+            AWOL_NEWS_DESTINATION = (1, read_usize(jogador + 0x39));
         } else {
             let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
             entregar(noticias, nt, read_usize(jogador + 0x39));
@@ -259,7 +259,7 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
         return;
     }
     if ensaio {
-        CQD11_DESTINO = (2, nacao);
+        AWOL_NEWS_DESTINATION = (2, nacao);
     } else {
         let a_nacao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_MANAGERS);
         a_nacao(noticias, nt, nacao);
@@ -275,15 +275,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(t
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_AWOL_POST_MISSED_TRAINING_NEWS);
     let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, jogador, clube));
     let n = tape_lock.len();
-    *core::ptr::addr_of_mut!(CQD11_FITA) = Some((tape_lock, 0, false));
-    CQD11_DESTINO = (0, 0);
+    *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = Some((tape_lock, 0, false));
+    AWOL_NEWS_DESTINATION = (0, 0);
     crate::aleatorio::sem_contar(|| awol_post_missed_training_news(this, jogador, clube));
-    let (k, falhou) = match &*core::ptr::addr_of!(CQD11_FITA) {
+    let (k, falhou) = match &*core::ptr::addr_of!(AWOL_NEWS_TAPE) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
     };
-    *core::ptr::addr_of_mut!(CQD11_FITA) = None;
-    let destino = CQD11_DESTINO;
+    *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = None;
+    let destino = AWOL_NEWS_DESTINATION;
     PLACAR.registrar(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
         jogador, clube, n, k, falhou, destino));
 }
@@ -656,9 +656,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize
 // ---- as originais que a awol_daily_update chama e que liam resíduo da pilha particular (bancada da 259ª) ----
 
 /// O ensaio dos comparadores de `miss_training`, `end_absence` e `set_flags`: a cópia para antes
-/// das chamadas que alocam, dão notícia ou não podem rodar duas vezes e deixa em CPW7_DECISAO o que faria.
-pub(crate) static mut CPW7_ENSAIO: bool = false;
-pub(crate) static mut CPW7_DECISAO: u32 = 0;
+/// das chamadas que alocam, dão notícia ou não podem rodar duas vezes e deixa em MISS_TRAINING_DECISION o que faria.
+pub(crate) static mut MISS_TRAINING_DRY_RUN: bool = false;
+pub(crate) static mut MISS_TRAINING_DECISION: u32 = 0;
 
 /// Club record of contract k (id +4, G_CLUB_TABLE), or 0.
 ///
@@ -714,8 +714,8 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize)
                 && friendly_random(read_u8(pessoa + staff::LOYALITY) as i8 as i32 + 10) == 0
             {
                 crate::comparacao::ramo("cpw_7 sumiu em vez de faltar");
-                if CPW7_ENSAIO {
-                    CPW7_DECISAO = 1;
+                if MISS_TRAINING_DRY_RUN {
+                    MISS_TRAINING_DECISION = 1;
                     return;
                 }
                 let sumir: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_AWOL_START_ABSENCE);
@@ -725,8 +725,8 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize)
         }
     }
     crate::comparacao::ramo("cpw_7 marcou a falta");
-    if CPW7_ENSAIO {
-        CPW7_DECISAO = 2;
+    if MISS_TRAINING_DRY_RUN {
+        MISS_TRAINING_DECISION = 2;
         return;
     }
     *m |= 2;
@@ -787,11 +787,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_miss_training(this: usize, pesso
     let mut regioes = vec![(m, 1), (G_CONTRACT_LOOKUP_RESULT, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW7_ENSAIO = true;
-    CPW7_DECISAO = 0;
+    MISS_TRAINING_DRY_RUN = true;
+    MISS_TRAINING_DECISION = 0;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| miss_training(this, pessoa)));
-    CPW7_ENSAIO = false;
-    let n = CPW7_DECISAO;
+    MISS_TRAINING_DRY_RUN = false;
+    let n = MISS_TRAINING_DECISION;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let b0 = read_u8(m);
@@ -824,8 +824,8 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     let k = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
     if k != 0 && awol_club_of_contract(k) != 0 {
-        if CPW7_ENSAIO {
-            CPW7_DECISAO = 1;
+        if MISS_TRAINING_DRY_RUN {
+            MISS_TRAINING_DECISION = 1;
         } else {
             let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
             let noticia: unsafe extern "stdcall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_AWOL_POST_NEWS);
@@ -834,7 +834,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     }
     let m = read_usize(this + 0xc).wrapping_add(read_i32(r) as usize) as *mut u8;
     *m ^= 1;
-    if CPW7_ENSAIO {
+    if MISS_TRAINING_DRY_RUN {
         return;
     }
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
@@ -853,11 +853,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usiz
     let m = read_usize(this + 0xc).wrapping_add(read_i32(r) as usize);
     let regioes = [(m, 1), (G_CONTRACT_LOOKUP_RESULT, 4)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW7_ENSAIO = true;
-    CPW7_DECISAO = 0;
+    MISS_TRAINING_DRY_RUN = true;
+    MISS_TRAINING_DECISION = 0;
     crate::aleatorio::pausar_rastro(|| end_absence(this, r));
-    CPW7_ENSAIO = false;
-    let noticia = CPW7_DECISAO != 0;
+    MISS_TRAINING_DRY_RUN = false;
+    let noticia = MISS_TRAINING_DECISION != 0;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this, r);

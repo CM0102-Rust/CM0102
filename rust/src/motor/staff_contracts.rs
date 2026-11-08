@@ -486,8 +486,8 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
         return;
     }
     crate::comparacao::ramo("cpw_7 pedido de saida");
-    if CPW7_ENSAIO {
-        CPW7_DECISAO = 1;
+    if MISS_TRAINING_DRY_RUN {
+        MISS_TRAINING_DECISION = 1;
         return;
     }
     let pedido: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_HANDLE_TRANSFER_REQUEST);
@@ -506,11 +506,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_flags(c: usize, marcas: u32)
     let mut regioes = vec![(c + 0x40, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW7_ENSAIO = true;
-    CPW7_DECISAO = 0;
+    MISS_TRAINING_DRY_RUN = true;
+    MISS_TRAINING_DECISION = 0;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| set_flags(c, marcas)));
-    CPW7_ENSAIO = false;
-    let pediu = CPW7_DECISAO != 0;
+    MISS_TRAINING_DRY_RUN = false;
+    let pediu = MISS_TRAINING_DECISION != 0;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(c, marcas);

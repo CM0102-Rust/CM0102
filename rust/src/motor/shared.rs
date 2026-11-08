@@ -647,7 +647,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_facing(this: usize, a: i8, b: i8
 // proximos jogadores da lista, que a original pula). No autoteste (jogadores sinteticos) a porta
 // responde de forma sintetica, sem rodar a rotina real.
 
-pub(crate) static mut PORTA_6F5C30: usize = 0;
+pub(crate) static mut MATCH_PLAYER_RESPOND_TRAMPOLINE: usize = 0;
 pub(crate) static RECORD_6F5C30: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 pub(crate) static SYNTHETIC: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -661,7 +661,7 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
         if SYNTHETIC.load(Relaxed) {
             (p as u32 ^ a ^ b.wrapping_mul(3) ^ c.wrapping_mul(5) ^ d.wrapping_mul(7)) >> 4 & 1
         } else {
-            let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_6F5C30);
+            let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(MATCH_PLAYER_RESPOND_TRAMPOLINE);
             f(p, a, b, c, d) as u32
         }
     };

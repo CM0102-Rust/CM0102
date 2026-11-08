@@ -151,12 +151,12 @@ pub(crate) unsafe fn list_item_values(lista: usize) -> Vec<u32> {
 }
 
 /// O ensaio do relatório (0x7706c0): os sorteios vêm da fita da original e a notícia não é entregue.
-pub(crate) static mut CQF11_FITA: Option<(Vec<(i32, i32)>, usize, bool)> = None;
+pub(crate) static mut INTERNATIONAL_REPORT_TAPE: Option<(Vec<(i32, i32)>, usize, bool)> = None;
 
 /// Random draw: replays from the CQF11 comparison tape when set (marks failure on mismatch), else calls the game's
 /// random.
 pub(crate) unsafe fn random_or_tape(n: i32) -> i32 {
-    let f = &mut *core::ptr::addr_of_mut!(CQF11_FITA);
+    let f = &mut *core::ptr::addr_of_mut!(INTERNATIONAL_REPORT_TAPE);
     match f {
         Some((v, k, falhou)) => match v.get(*k) {
             Some(&(m, r)) if m == n && !*falhou => {
@@ -340,7 +340,7 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
                 gravar(nt, idx as u32, codigos[k]);
                 idx = idx.wrapping_add(1);
             }
-            if (*core::ptr::addr_of!(CQF11_FITA)).is_none() {
+            if (*core::ptr::addr_of!(INTERNATIONAL_REPORT_TAPE)).is_none() {
                 entregar(read_usize(G_NEWS), nt, read_usize(primeiro + 0x39));
             }
         }
@@ -367,13 +367,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_club_international_report_n
     for k in 0..q {
         *elenco.add(k) = antes[k];
     }
-    *core::ptr::addr_of_mut!(CQF11_FITA) = Some((tape_lock, 0, false));
+    *core::ptr::addr_of_mut!(INTERNATIONAL_REPORT_TAPE) = Some((tape_lock, 0, false));
     crate::aleatorio::sem_contar(|| send_club_international_report_news(this, clube, jogo, resultado, destaque, elenco, conta));
-    let (k, falhou) = match &*core::ptr::addr_of!(CQF11_FITA) {
+    let (k, falhou) = match &*core::ptr::addr_of!(INTERNATIONAL_REPORT_TAPE) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
     };
-    *core::ptr::addr_of_mut!(CQF11_FITA) = None;
+    *core::ptr::addr_of_mut!(INTERNATIONAL_REPORT_TAPE) = None;
     let depois_r: Vec<usize> = (0..q).map(|k| *elenco.add(k)).collect();
     for k in 0..q {
         *elenco.add(k) = depois_o[k];
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_post_call_up_news
 }
 
 /// O ensaio da 0x76d560: os valores que iriam para a lista nova, sem alocar.
-pub(crate) static mut CQF11_PLANO: Option<Vec<u32>> = None;
+pub(crate) static mut FIXTURE_OPPONENTS_PLAN: Option<Vec<u32>> = None;
 
 /// a new list with the match opponent (its nation's first team, for the second team) and the opponents of the fixtures
 /// from tomorrow to 13 days later that are not finals
@@ -515,7 +515,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     // cdecl; 0x68d0d0: push 4; push &valor; mov ecx, lista -> thiscall, ret 8; 0x5409b0 / 0x53b4f0: push; add esp, 4 ->
     // cdecl; 0x549ef0: push +0x28; push +0x2a; lea ecx -> thiscall, ret 8; 0x54c5b0: push n; push &saída; mov ecx, data
     // -> thiscall, ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24
-    let ensaio = (*core::ptr::addr_of!(CQF11_PLANO)).is_some();
+    let ensaio = (*core::ptr::addr_of!(FIXTURE_OPPONENTS_PLAN)).is_some();
     let mut local = [0u8; 16];
     let l = local.as_mut_ptr() as usize;
     nova(l);
@@ -528,7 +528,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     }
     let mut por = |v: usize| {
         if ensaio {
-            if let Some(p) = &mut *core::ptr::addr_of_mut!(CQF11_PLANO) {
+            if let Some(p) = &mut *core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN) {
                 p.push(read_usize(v) as u32);
             }
         } else {
@@ -586,9 +586,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
 /// ensaio diz os valores que vão na lista (sem alocar), e a lista da original tem de ter exatamente esses, na ordem.
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_opponents(this: usize, selecao: usize, jogo: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_NATIONAL_TEAMS_COLLECT_FIXTURE_OPPONENTS);
-    *core::ptr::addr_of_mut!(CQF11_PLANO) = Some(Vec::new());
+    *core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN) = Some(Vec::new());
     national_teams_collect_fixture_opponents(this, selecao, jogo);
-    let plano = (*core::ptr::addr_of_mut!(CQF11_PLANO)).take().unwrap_or_default();
+    let plano = (*core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN)).take().unwrap_or_default();
     let r = o(this, selecao, jogo);
     let agora = list_item_values(r);
     PLACAR.registrar(agora == plano, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));
@@ -1533,9 +1533,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: 
 
 /// O ensaio do comparador da 0x76bab0: a cópia roda sem escolher elenco (0x76c120), sem dispensar os acima da idade do
 /// sub-21 (0x76d880: no ensaio, só o byte +0x6b que ela zera depois da data) e sem apagar repetidos (0x76c060).
-pub(crate) static mut CPX13_ENSAIO: bool = false;
+pub(crate) static mut SELECT_SQUADS_DRY_RUN: bool = false;
 /// No ensaio: a cópia pediu um elenco (a comparação não vale).
-pub(crate) static mut CPX13_PEDIU: bool = false;
+pub(crate) static mut SELECT_SQUADS_REQUESTED_SQUAD: bool = false;
 
 
 /// For squad type (main, B/Olympic, U21) of a nation record: if picked within 14 days and marked, stamps today and
@@ -1565,8 +1565,8 @@ pub(crate) unsafe fn refresh_or_select_squad(this: usize, p: usize, clube: usize
         }
         return;
     }
-    if CPX13_ENSAIO {
-        CPX13_PEDIU = true;
+    if SELECT_SQUADS_DRY_RUN {
+        SELECT_SQUADS_REQUESTED_SQUAD = true;
         return;
     }
     let escolher: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32) = core::mem::transmute(FN_NATIONALTEAMS_SELECT_SQUAD);
@@ -1596,7 +1596,7 @@ pub(crate) unsafe fn refresh_minor_squads(this: usize, p: usize, clube: usize, r
 /// [pt] O que a 0x76d880 grava no registro (fora das pessoas): depois da data do sub-21 (+0x62/+0x66, 0x456740 sobre
 /// hoje), zera a marca +0x6b.
 pub(crate) unsafe fn release_overage_u21(this: usize, clube: usize) {
-    if !CPX13_ENSAIO {
+    if !SELECT_SQUADS_DRY_RUN {
         let dispensar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_RELEASE_OVERAGE_U21_PLAYERS);
         return dispensar(this, read_usize(clube + club::NATION));
     }
@@ -1652,7 +1652,7 @@ pub(crate) unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p:
         refresh_or_select_squad(this, p, fora, reg, 0, || true);
     }
     refresh_minor_squads(this, p, fora, reg);
-    if !CPX13_ENSAIO {
+    if !SELECT_SQUADS_DRY_RUN {
         repetidos(read_usize(read_usize(p + 0x1c) + 0x53));
         repetidos(read_usize(read_usize(p + 0x20) + 0x53));
     }
@@ -1670,13 +1670,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: 
     o(this, p);
     let mo = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
-    CPX13_ENSAIO = true;
-    CPX13_PEDIU = false;
+    SELECT_SQUADS_DRY_RUN = true;
+    SELECT_SQUADS_REQUESTED_SQUAD = false;
     crate::aleatorio::pausar_rastro(|| select_squads_for_fixture(this, p));
-    CPX13_ENSAIO = false;
+    SELECT_SQUADS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     mo.escrever();
-    if !CPX13_PEDIU {
+    if !SELECT_SQUADS_REQUESTED_SQUAD {
         PLACAR.registrar(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
     }
 }
@@ -1696,7 +1696,7 @@ pub(crate) unsafe fn club_of_person_contract(pessoa: usize) -> usize {
 }
 
 /// O ensaio do comparador da 0x76fd10: a cópia roda sem entregar a notícia.
-pub(crate) static mut CPX13_ENSAIO_NOTICIA: bool = false;
+pub(crate) static mut CALLED_UP_NEWS_DRY_RUN: bool = false;
 
 /// with a human manager at the player's club, news item 0x21 (the player, the national side and the slot) to the
 /// manager of club +0x39 and of the contract club
@@ -1747,14 +1747,14 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
     }
     let noticias = read_usize(G_NEWS);
     let c39 = read_usize(jogador + 0x39);
-    if c39 != 0 && !CPX13_ENSAIO_NOTICIA {
+    if c39 != 0 && !CALLED_UP_NEWS_DRY_RUN {
         ao_clube(noticias, n, c39);
     }
     if club_of_person_contract(jogador) == read_usize(jogador + 0x39) {
         return;
     }
     let c = club_of_person_contract(jogador);
-    if !CPX13_ENSAIO_NOTICIA {
+    if !CALLED_UP_NEWS_DRY_RUN {
         ao_clube(noticias, n, c);
     }
 }
@@ -1767,9 +1767,9 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_teams_post_player_called
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_NATIONAL_TEAMS_POST_PLAYER_CALLED_UP_NEWS);
     let regioes = [(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPX13_ENSAIO_NOTICIA = true;
+    CALLED_UP_NEWS_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| national_teams_post_player_called_up_news(jogador, nacao, vaga));
-    CPX13_ENSAIO_NOTICIA = false;
+    CALLED_UP_NEWS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(jogador, nacao, vaga);
@@ -1785,7 +1785,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_teams_post_player_called
 /// O ensaio do comparador da 0x76b600: a cópia roda sem o ranking da FIFA (0x58cf70, acrescenta pontos ao histórico),
 /// sem a primeira convocação (0x86cc50, vai para o arquivo), sem o jogo pela seleção no registro de transferências
 /// (0x8ce920) e sem a notícia aos clubes (0x7706c0, aloca).
-pub(crate) static mut CPW12_ENSAIO: bool = false;
+pub(crate) static mut INTERNATIONAL_RESULT_DRY_RUN: bool = false;
 
 /// Lineup slot k (0..20) of side in match summary m: m + 0x625 x side + 0x190 + 0x49 x k.
 ///
@@ -1884,7 +1884,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
         let fifa: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIFA_RANKINGS_RECORD_MATCH_RESULT);
         let primeira: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FIRST_CAP_RECORD);
         let jogo_pela_selecao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_TRANSFER_MANAGER_RECORD_INTERNATIONAL_APPEARANCE);
-        if !CPW12_ENSAIO {
+        if !INTERNATIONAL_RESULT_DRY_RUN {
             fifa(read_usize(this + 0x1c), p);
         }
         for lado in 0..2usize {
@@ -1908,14 +1908,14 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
                 if *((pessoa + staff::INT_APPS) as *const u8) == 0 {
                     swap_to_club_nation(pessoa, clube);
                     let adversario = if clube == read_usize(p + 0x1c) { read_usize(p + 0x20) } else { read_usize(p + 0x1c) };
-                    if !CPW12_ENSAIO {
+                    if !INTERNATIONAL_RESULT_DRY_RUN {
                         primeira(read_usize(G_STAFF_RECORDS), pessoa, adversario);
                     }
                 }
                 crate::comparacao::ramo("cpw_12 jogo pela seleção");
                 *((pessoa + staff::INT_APPS) as *mut u8) = (*((pessoa + staff::INT_APPS) as *const u8)).wrapping_add(1); // cpw12: um jogo
                 *((pessoa + staff::INT_GOALS) as *mut u8) = (*((pessoa + staff::INT_GOALS) as *const u8)).wrapping_add(*((vaga + 0x21) as *const u8)); // cpw12: os gols
-                if !CPW12_ENSAIO {
+                if !INTERNATIONAL_RESULT_DRY_RUN {
                     // a original empurra o edx com o curto dos jogos embaixo e o alto de 55 × id da nação
                     let id_nacao = read_usize(read_usize(clube + club::NATION)) as u32;
                     let n = core::ptr::read_unaligned(jogos) as u16 as u32;
@@ -1946,7 +1946,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
         let destaque_k = *((m + 0x625 * lado + 0x153) as *const i8) as isize;
         let destaque_id = read_usize((m + 0x625 * lado + 0x190) .wrapping_add((0x49 * destaque_k) as usize));
         let destaque = read_usize(G_STAFF_TABLE).wrapping_add(destaque_id.wrapping_mul(staff::SIZE));
-        if !CPW12_ENSAIO {
+        if !INTERNATIONAL_RESULT_DRY_RUN {
             // ponytail: a original empurra a conta num dword da local com só o byte de baixo gravado; a 0x7706c0 lê o byte
             noticia(this, clube, p, m, destaque, lista.as_mut_ptr(), q as u32);
         }
@@ -1993,9 +1993,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_international_result(this
     }
     let regioes = caps_update_regions(this, p, m);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW12_ENSAIO = true;
+    INTERNATIONAL_RESULT_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| record_international_result(this, p, m)));
-    CPW12_ENSAIO = false;
+    INTERNATIONAL_RESULT_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this, p, m);

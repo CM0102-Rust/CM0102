@@ -1281,13 +1281,13 @@ pub(crate) unsafe extern "thiscall" fn put_in_place(c: usize, pos: u32, pessoa: 
 }
 
 // Porta de 0x6eaea0 (inicia o jogador na vaga): unidade da fita na comparacao.
-pub(crate) static mut PORTA_6EAEA0: usize = 0;
+pub(crate) static mut INIT_MATCH_PLAYER_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_6EAEA0: Prologo = Prologo { endereco: 0x6eaea0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] };
 
 /// Hook entry for 0x6eaea0 (initialise match player): runs the original directly, or records it as a tape unit while
 /// recording.
 pub(crate) unsafe extern "thiscall" fn init_player_hook(j: usize, m: u32, pessoa: u32, lado: u32, pos: u32, extra: u32) {
-    let o: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) = core::mem::transmute(PORTA_6EAEA0);
+    let o: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) = core::mem::transmute(INIT_MATCH_PLAYER_TRAMPOLINE);
     if !is_recording() {
         return o(j, m, pessoa, lado, pos, extra);
     }

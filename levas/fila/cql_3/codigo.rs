@@ -6,7 +6,7 @@ unsafe fn cql3_d(a: usize) -> u32 {
 
 /// As ligas que a 0x859dc0 da original mandou numerar (gravadas pelo comparador da 0x859e20 enquanto o da 0x859dc0
 /// roda a original), para conferir o plano da cópia.
-static mut CQL3_PLANO: Option<Vec<usize>> = None;
+static mut SQUAD_NUMBERS_PLAN: Option<Vec<usize>> = None;
 
 /// As ligas que a 0x859dc0 numera: as competições da tabela [0xadadfc] (conta [0xadadf8], relida a cada volta) que
 /// são liga de divisão (0x4b0700 com o id [[+4]], cdecl de 1) e usam números (bit 2 do +0x52).
@@ -38,9 +38,9 @@ unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let mut plano = Vec::new();
     for_each_numbered_league(|c| plano.push(c));
-    CQL3_PLANO = Some(Vec::new());
+    SQUAD_NUMBERS_PLAN = Some(Vec::new());
     o(this);
-    let feito = CQL3_PLANO.take().unwrap_or_default();
+    let feito = SQUAD_NUMBERS_PLAN.take().unwrap_or_default();
     let zerado = *(this as *const u16) == 0;
     PLACAR.registrar(feito == plano && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
 }
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, liga: usize
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
 unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, liga: usize, inicial: u32, automatico: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%);
-    if let Some(v) = (*core::ptr::addr_of_mut!(CQL3_PLANO)).as_mut() {
+    if let Some(v) = (*core::ptr::addr_of_mut!(SQUAD_NUMBERS_PLAN)).as_mut() {
         v.push(liga);
     }
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x540a50usize);
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, li
 
 /// As vagas da escalação de referência da 0x85aae0: os 11 titulares e até 14 reservas (as da 0x859fe0, `SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS`,
 /// até a 19ª; a 20ª aqui é de goleiro).
-const CQL3_VAGAS: [u16; 25] = [
+const EURO_REFERENCE_LINEUP_SLOTS: [u16; 25] = [
     0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // os titulares
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, // os reservas
 ];
@@ -169,7 +169,7 @@ const CQL3_VAGAS: [u16; 25] = [
 /// lista, 0)), os candidatos são os da tabela das pessoas com contrato, sem contrato do tipo 5 (+0x35 & 0x3f; o
 /// contrato achado fica em [0xae1080]), sem contrato de empréstimo e sem as marcas 8 e 0x10 (+0x6d & 0x18); fora da
 /// etapa 1, a marca 1 cai para 0 e a 4 vira 2, e os 2 são contados. A escalação de referência (0x6e2000 com
-/// `CQL3_VAGAS`, os 11 titulares e 14 reservas, ou 9 na etapa 1 sem `marca`) escolhe os melhores. Na etapa 3, até 2
+/// `EURO_REFERENCE_LINEUP_SLOTS`, os 11 titulares e 14 reservas, ou 9 na etapa 1 sem `marca`) escolhe os melhores. Na etapa 3, até 2
 /// inscritos (2) que ficaram fora da escalação perdem a inscrição (vão a 4 com `marca`, senão 0) e a conta baixa (no
 /// mínimo 21). Depois cada escalado: na etapa 1, é inscrito (1 com `marca`, senão 2) e contado; nas outras, quem ainda
 /// não é 2 nem tem a marca 8 é inscrito do mesmo jeito enquanto a conta for menor que as vagas da escalação. Devolve a
@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usiz
             conta = conta.wrapping_add(1);
         }
     }
-    let vagas = CQL3_VAGAS;
+    let vagas = EURO_REFERENCE_LINEUP_SLOTS;
     let mut esc = [0usize; 50];
     pick(cand.as_ptr() as usize, n as u32, vagas.as_ptr() as usize, 0xb, reservas as u32, esc.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
     if etapa == 3 {

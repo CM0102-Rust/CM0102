@@ -18,12 +18,12 @@ unsafe fn cqd13_pi(a: usize, v: i32) {
 
 /// O ensaio dos comparadores: as cópias sem os históricos (arquivo), sem as notícias (0x75c390), sem acabar as
 /// convocações (0x774f30) e sem a renovação (0x4cda70), anotando os contratos que a renovação mexeria.
-static mut CQD13_ENSAIO: bool = false;
-static mut CQD13_RENOVADOS: Vec<usize> = Vec::new();
+static mut STAFF_HISTORY_DRY_RUN: bool = false;
+static mut DRY_RUN_RENEWED_CONTRACTS: Vec<usize> = Vec::new();
 /// Depois da última conta de dias (0x54cdb0) da cópia, o ensaio pulou uma chamada da original que também conta dias
 /// e deixa a data de rascunho estática dela (0xae2470) noutro ano: a renovação (0x4cda70, pela idade), o fim das
 /// convocações (0x774f30) ou a notícia do elogio (0x75c390). Essa data então fica fora da conta.
-static mut CQD13_DATA_SOLTA: bool = false;
+static mut DRY_RUN_STRAY_SCRATCH_DATE: bool = false;
 
 /// A reputação do clube (+0x80) sobe até peso × 500, no máximo 750 de uma vez (entre 1 e 10000; soma em 16 bits).
 unsafe fn raise_champion_reputation(clube: usize, peso: i16, campeao_da_liga: bool) {
@@ -57,7 +57,7 @@ unsafe fn offer_renewal_if_due(clube: usize, p: usize, k: usize) {
     if cqd13_d(0xde1f54) == 0 {
         return;
     }
-    CQD13_DATA_SOLTA = false;
+    DRY_RUN_STRAY_SCRATCH_DATE = false;
     if days_between(0xae2c90, k + 0x25) <= 300 {
         return;
     }
@@ -67,9 +67,9 @@ unsafe fn offer_renewal_if_due(clube: usize, p: usize, k: usize) {
     if v == 0 || cqd13_i(v + 0xf) != cqd13_i(p) {
         return;
     }
-    if CQD13_ENSAIO {
-        (*core::ptr::addr_of_mut!(CQD13_RENOVADOS)).push(k);
-        CQD13_DATA_SOLTA = true;
+    if STAFF_HISTORY_DRY_RUN {
+        (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).push(k);
+        DRY_RUN_STRAY_SCRATCH_DATE = true;
         return;
     }
     let oferecer: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, f64, u32) -> u32 = core::mem::transmute(0x4cda70usize);
@@ -97,7 +97,7 @@ unsafe fn add_lineup_histories(this: usize, clube: usize, escalacao: usize, e: &
             show_error_at(0xa83b78, 0x1010);
             continue;
         }
-        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(p), e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, cqd13_d(p), e);
     }
 }
 
@@ -107,7 +107,7 @@ unsafe fn add_club_history(this: usize, clube: usize, tipo: u8, comp: usize) {
     stamp_game_date(e.as_mut_ptr());
     e[8] = tipo;
     put_i32(&mut e, 9, cqd13_i(comp));
-    if !CQD13_ENSAIO {
+    if !STAFF_HISTORY_DRY_RUN {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(0x58e340usize);
         let p = cqd13_d(this + 0x10).wrapping_add(cqd13_d(clube).wrapping_mul(8));
         f(cqd13_d(this + 4), p, p + 4, e.as_ptr());
@@ -116,8 +116,8 @@ unsafe fn add_club_history(this: usize, clube: usize, tipo: u8, comp: usize) {
 
 /// A notícia do elogio do título (0x75c390 em [0xb6b7c8]; fora do ensaio).
 unsafe fn post_trophy_praise(clube: usize, comp: usize, marca: u32) {
-    if CQD13_ENSAIO {
-        CQD13_DATA_SOLTA = true;
+    if STAFF_HISTORY_DRY_RUN {
+        DRY_RUN_STRAY_SCRATCH_DATE = true;
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x75c390usize);
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
             raise_side_rating(np + 8, peso, k1);
             raise_side_rating(np + 0xc, peso, k2);
         }
-        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(t), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, cqd13_d(t), &e);
         let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
         // 0x86f5b0: push 1; push técnico; mov ecx, edi (o this) -> thiscall (ret 8)
         let r = registro(this, cqd13_d(clube + 0xcf), 1);
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
     }
     let presidente = cqd13_d(clube + 0xbf);
     if presidente != 0 {
-        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(presidente), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, cqd13_d(presidente), &e);
     }
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
     let moral: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x544710usize);
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
         let f = media(cqd13_d(0xb74350), cqd13_d(p + 0x61), 2, 1, 6.5);
         if f > limiar as f64 { // cqd13: acima do limiar
             crate::comparacao::ramo("cqd_13 jogador destacado do campeao");
-            append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(p), &e);
+            append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, cqd13_d(p), &e);
             moral(p, 0x14, 1); // cqd13: o moral do jogador destacado
             let k = contrato(cqd13_d(0xae1050), p, clube);
             if k == 0 {
@@ -277,7 +277,7 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
             raise_side_rating(lado + 2, peso, k1);
             raise_side_rating(lado + 4, peso, k2);
         }
-        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(cqd13_d(clube + 0xcf)), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, cqd13_d(cqd13_d(clube + 0xcf)), &e);
         let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
         let r = registro(this, cqd13_d(clube + 0xcf), 1);
         if r != 0 {
@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
     }
     let presidente = cqd13_d(clube + 0xbf);
     if presidente != 0 {
-        append_person_history_by_id(!CQD13_ENSAIO, this, cqd13_d(presidente), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, cqd13_d(presidente), &e);
     }
     let escalacao = partida + 0x190 + 0x625 * (clube != cqd13_d(jogo + 0x1c)) as usize;
     add_lineup_histories(this, clube, escalacao, &e);
@@ -326,8 +326,8 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
     let guardada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
     // 0x76d940 e 0x774f30: push comp; mov ecx, [0xb74318] (a 0x76d940 não lê o ecx e só compara o id; ret 4 nas duas)
     if guardada(cqd13_d(0xb74318), cqd13_d(jogo + 0x14)) != 0 {
-        if CQD13_ENSAIO {
-            CQD13_DATA_SOLTA = true;
+        if STAFF_HISTORY_DRY_RUN {
+            DRY_RUN_STRAY_SCRATCH_DATE = true;
         } else {
             let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x774f30usize);
             acabar(cqd13_d(0xb74318), cqd13_d(jogo + 0x14));
@@ -351,7 +351,7 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
 /// sorteiam) não entram na conta; o sorteador volta ao de antes para a original. A renovação da original também sorteia
 /// e conta dias (0x54cdb0): o moral das fichas depois do primeiro renovado fica fora da igualdade e é conferido pela
 /// faixa da 0x544710; a data estática fica fora quando o ensaio pulou, depois da última conta de dias da cópia, uma
-/// chamada da original que conta dias (CQD13_DATA_SOLTA). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
+/// chamada da original que conta dias (DRY_RUN_STRAY_SCRATCH_DATE). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
 unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: (usize, usize), liga: bool, original: impl FnOnce(), copia: impl FnOnce()) {
     let mut fixas: Vec<(usize, usize)> = vec![(clube + 0x80, 2), (0xae2470, 8), notas];
     let t = cqd13_d(clube + 0xcf);
@@ -386,14 +386,14 @@ unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: 
     todas.extend(contratos.iter().map(|&k| (k + 0x44, 1)));
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO.iter().copied());
     let antes = crate::comparacao::Memoria::ler(&todas);
-    (*core::ptr::addr_of_mut!(CQD13_RENOVADOS)).clear();
-    CQD13_DATA_SOLTA = false;
-    CQD13_ENSAIO = true;
+    (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).clear();
+    DRY_RUN_STRAY_SCRATCH_DATE = false;
+    STAFF_HISTORY_DRY_RUN = true;
     crate::aleatorio::sem_contar(copia);
-    CQD13_ENSAIO = false;
-    let renovados = core::mem::take(&mut *core::ptr::addr_of_mut!(CQD13_RENOVADOS));
+    STAFF_HISTORY_DRY_RUN = false;
+    let renovados = core::mem::take(&mut *core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS));
     let mut conta = fixas;
-    if CQD13_DATA_SOLTA {
+    if DRY_RUN_STRAY_SCRATCH_DATE {
         conta.retain(|&(a, _)| a != 0xae2470);
     }
     // A renovação da original sorteia (0x4cda70): o moral dos jogadores depois do primeiro renovado (0x544710 sorteia)

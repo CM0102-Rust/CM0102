@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: o calendário: o conflito de dois jogos no mesmo dia e os anos de jogos de um clube (fix_man.cpp) ----------
 
 /// Modo de ensaio da 0x5ae380 (o comparador): a cópia para na decisão, antes de mexer no calendário.
-static mut CQB13_ENSAIO: bool = false;
+static mut SAME_DAY_CLASH_DRY_RUN: bool = false;
 
 unsafe fn cqb13_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, con
     core::ptr::write_unaligned((conflitos + 0xa) as *mut usize, cqb13_d(conflitos + 2));
     let outro = proximo(conflitos);
     if jogo == 0 || outro == 0 {
-        if !CQB13_ENSAIO {
+        if !SAME_DAY_CLASH_DRY_RUN {
             show_error_at(0x9cc208, 0xde6); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
         }
         return 1;
@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, con
         crate::comparacao::ramo("cqb_13 novo vence");
     }
     let sai_o_velho = novo_vence && *((v + 0x43) as *const u8) == 0xff; // cqb13: o da lista ainda não jogado
-    if CQB13_ENSAIO {
+    if SAME_DAY_CLASH_DRY_RUN {
         return 1;
     }
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5abc30usize);
@@ -126,9 +126,9 @@ unsafe extern "thiscall" fn comparar_resolve_same_day_clash(this: usize, jogo: u
     }
     let reg = [(conflitos + 2, 0xc)];
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQB13_ENSAIO = true;
+    SAME_DAY_CLASH_DRY_RUN = true;
     resolve_same_day_clash(this, jogo, conflitos);
-    CQB13_ENSAIO = false;
+    SAME_DAY_CLASH_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     let r = o(this, jogo, conflitos);

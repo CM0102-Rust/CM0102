@@ -14,7 +14,7 @@ unsafe fn league_add_i16(a: usize, v: i16) {
 
 /// Linhas da tabela: 0x3b bytes; +0 clube, +5 confrontos (entradas de 14), +0x11..+0x1a os totais, +0x1f..+0x28 em
 /// casa (jogos, vitórias, empates, derrotas, gols pró, contra, pontos), +0x2d..+0x36 fora.
-const CPE2_LINHA: usize = 0x3b;
+const RESULT_TABLE_ROW_SIZE: usize = 0x3b;
 
 /// { 0x685f60 } (thiscall, ret 0x18, league.cpp): `League::apply_result_to_table(partida, tabela, n, marcar,
 /// pts_casa*, pts_fora*)`: acha as linhas do mandante (+0x1c) e do visitante (+0x20) entre as `n` (curto) da tabela
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn apply_result_to_table(liga: usize, p: usize, tab: us
         }
     }
     let n = n as i16;
-    let linha = |k: i16| tab.wrapping_add(CPE2_LINHA.wrapping_mul(k as i32 as usize));
+    let linha = |k: i16| tab.wrapping_add(RESULT_TABLE_ROW_SIZE.wrapping_mul(k as i32 as usize));
     let (mut casa, mut fora): (i16, i16) = (-1, -1);
     let mut k: i16 = 0;
     if n > 0 {
@@ -187,10 +187,10 @@ unsafe fn result_update_regions(p: usize, tab: usize, n: u32, pts_casa: *mut i16
     let n = (n as i16).max(0) as usize;
     let mut reg = vec![(p + 0x3d, 2)];
     if tab != 0 && n > 0 {
-        reg.push((tab, CPE2_LINHA * n));
+        reg.push((tab, RESULT_TABLE_ROW_SIZE * n));
         if cpe2_d(tab + 5) != 0 && n > 1 {
             for i in 0..n {
-                let h = cpe2_d(tab + CPE2_LINHA * i + 5);
+                let h = cpe2_d(tab + RESULT_TABLE_ROW_SIZE * i + 5);
                 if h != 0 {
                     reg.push((h, 14 * (n - 1)));
                 }

@@ -42,7 +42,7 @@ unsafe fn find_contract_offer(l: usize, id: usize, clube: usize) -> usize {
 
 /// O ensaio do comparador: a cópia não cria nem acrescenta à lista (0x944cf1, 0x68d020, 0x68d0d0) e não chama o que vem
 /// depois (0x8c1f80, 0x8c2060, 0x4cd230), que alocam, sorteiam e mexem nas ofertas.
-static mut CPW4_ENSAIO: bool = false;
+static mut CONTRACT_OFFER_DRY_RUN: bool = false;
 
 /// { 0x4cc490 } (thiscall, ret 0x1c, contract_manager.cpp, quadro SEH sem destrutor): `CONTRACT_MANAGER::
 /// add_contract_offer(termos, vaga, valor, marca, a5, decidir, acertado)`, pela oferta de empréstimo (0x8bed60), pelas
@@ -103,8 +103,8 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
         *((r + 0x61) as *mut u8) = marca as u8;
         cpw4_pd(r + 0x63, 0xffff_ffff);
         *((r + 0x62) as *mut u8) = !tipo6 as u8;
-        if CPW4_ENSAIO {
-            core::ptr::copy_nonoverlapping(r as *const u8, core::ptr::addr_of_mut!(CPW4_REGISTRO) as *mut u8, 0x6f);
+        if CONTRACT_OFFER_DRY_RUN {
+            core::ptr::copy_nonoverlapping(r as *const u8, core::ptr::addr_of_mut!(DRY_RUN_CONTRACT_OFFER_RECORD) as *mut u8, 0x6f);
         } else {
             if cpw4_d(this + 0x34) == 0 {
                 let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
         let c = contract_offer_counter(termos) as *mut u8;
         *c = (*c).wrapping_add(1); // cpw4: o contador de ofertas da pessoa
     }
-    if CPW4_ENSAIO {
+    if CONTRACT_OFFER_DRY_RUN {
         return;
     }
     if vaga != -1 {
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
 }
 
 /// O registro que a cópia em ensaio acrescentaria à lista.
-static mut CPW4_REGISTRO: [u8; 0x6f] = [0; 0x6f];
+static mut DRY_RUN_CONTRACT_OFFER_RECORD: [u8; 0x6f] = [0; 0x6f];
 
 /// Comparador. Oferta já na lista (achada antes, sem mexer no cursor): a cópia em ensaio e a original a partir do mesmo
 /// estado, comparando a oferta (0x63 bytes), o contador e a cabeça da lista (o cursor). Oferta nova (acrescentada, aloca):
@@ -166,11 +166,11 @@ unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, termos: usi
     todas.extend(TRANSFER_MANAGER_DATE_STATICS);
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&todas);
-    CPW4_ENSAIO = true;
+    CONTRACT_OFFER_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_contract_offer(this, termos, vaga, valor, marca, a5, decidir, acertado)));
-    CPW4_ENSAIO = false;
+    CONTRACT_OFFER_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&todas[..n_cmp]);
-    let registro = CPW4_REGISTRO;
+    let registro = DRY_RUN_CONTRACT_OFFER_RECORD;
     antes.escrever();
     o(this, termos, vaga, valor, marca, a5, decidir, acertado);
     let mo = crate::comparacao::Memoria::ler(&todas[..n_cmp]);

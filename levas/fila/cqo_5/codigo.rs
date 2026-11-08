@@ -201,12 +201,12 @@ const SERIE_C1_ROUNDS: [FraCfaScheduleRound; 34] = [
     (7, 4, 1, 6, 1, &[(-1, -1, -1)]), // 33: 7/mai (+1 ano)
 ];
 
-const CQO5_LIGA_CFA: SinglePhaseLeague = SinglePhaseLeague { rodadas: 0x22, arquivo: 0x9ccaf0, linha: 0xab, tabela: &CFA_ROUNDS, ramo: "cqo_5 calendario da cfa" };
+const CFA_LEAGUE: SinglePhaseLeague = SinglePhaseLeague { rodadas: 0x22, arquivo: 0x9ccaf0, linha: 0xab, tabela: &CFA_ROUNDS, ramo: "cqo_5 calendario da cfa" };
 
 /// { 0x5b9510 } (thiscall, ret 0x10, fra_cfa.cpp, 2.703 bytes, método +0x3c): `FraCfa::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: a CFA, 34 rodadas (`CFA_ROUNDS`). Fonte 0x9ccaf0, linha 0xab.
 unsafe extern "thiscall" fn fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_cfa_schedule(this, fase, rodadas, extra, liga, &CQO5_LIGA_CFA)
+    create_cfa_schedule(this, fase, rodadas, extra, liga, &CFA_LEAGUE)
 }
 
 unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {

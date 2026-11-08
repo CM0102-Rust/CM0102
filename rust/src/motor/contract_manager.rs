@@ -1362,10 +1362,10 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: us
 /// Memory regions the calc_player_value comparer watches: RNG state, date statics and the contract lookup global
 /// 0xae1080.
 ///
-/// [pt] As estáticas das datas (CPQ6_ESTATICAS) e o contrato guardado em [0xae1080]: o que a original e as chamadas dela
+/// [pt] As estáticas das datas (DATE_OP_STATICS) e o contrato guardado em [0xae1080]: o que a original e as chamadas dela
 /// gravam, com o estado do sorteador (na pilha: a rotina é quente).
 pub(crate) fn player_value_regions() -> [(usize, usize); 11] {
-    let (e, c) = (crate::aleatorio::REGIOES_DO_ESTADO, CPQ6_ESTATICAS);
+    let (e, c) = (crate::aleatorio::REGIOES_DO_ESTADO, DATE_OP_STATICS);
     [e[0], e[1], (G_CONTRACT_LOOKUP_RESULT, 4), c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]]
 }
 
@@ -1617,7 +1617,7 @@ pub(crate) unsafe fn staff_interest_in_club(lista: usize, pessoa: usize, clube: 
 
 /// O ensaio do comparador: a cópia roda sem a oferta de empréstimo (0x8bed60) nem a atualização da lista (0x843e10),
 /// que alocam e mexem nas listas; devolve −2 onde faria a oferta e −3 onde atualizaria a lista.
-pub(crate) static mut CPW3_ENSAIO: bool = false;
+pub(crate) static mut LOAN_OFFER_DRY_RUN: bool = false;
 
 /// True when 8-byte date a (day i16, year u16) is before date b, compared as the original does.
 ///
@@ -1772,7 +1772,7 @@ pub(crate) unsafe fn find_contract_offer(l: usize, id: usize, clube: usize) -> u
 
 /// O ensaio do comparador: a cópia não cria nem acrescenta à lista (0x944cf1, 0x68d020, 0x68d0d0) e não chama o que vem
 /// depois (0x8c1f80, 0x8c2060, 0x4cd230), que alocam, sorteiam e mexem nas ofertas.
-pub(crate) static mut CPW4_ENSAIO: bool = false;
+pub(crate) static mut CONTRACT_OFFER_DRY_RUN: bool = false;
 
 /// updates the same club's offer to the person or adds a new one to the list (the offer count goes up); marks the terms
 /// as offered on the transfer offer and, if asked, schedules the decision
@@ -1837,8 +1837,8 @@ pub(crate) unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: u
         *((r + 0x61) as *mut u8) = marca as u8;
         write_u32(r + 0x63, 0xffff_ffff);
         *((r + 0x62) as *mut u8) = !tipo6 as u8;
-        if CPW4_ENSAIO {
-            core::ptr::copy_nonoverlapping(r as *const u8, core::ptr::addr_of_mut!(CPW4_REGISTRO) as *mut u8, 0x6f);
+        if CONTRACT_OFFER_DRY_RUN {
+            core::ptr::copy_nonoverlapping(r as *const u8, core::ptr::addr_of_mut!(DRY_RUN_CONTRACT_OFFER_RECORD) as *mut u8, 0x6f);
         } else {
             if read_usize(this + 0x34) == 0 {
                 let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
@@ -1854,7 +1854,7 @@ pub(crate) unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: u
         let c = contract_offer_counter(termos) as *mut u8;
         *c = (*c).wrapping_add(1); // cpw4: o contador de ofertas da pessoa
     }
-    if CPW4_ENSAIO {
+    if CONTRACT_OFFER_DRY_RUN {
         return;
     }
     if vaga != -1 {
@@ -1878,7 +1878,7 @@ pub(crate) unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: u
 }
 
 /// O registro que a cópia em ensaio acrescentaria à lista.
-pub(crate) static mut CPW4_REGISTRO: [u8; 0x6f] = [0; 0x6f];
+pub(crate) static mut DRY_RUN_CONTRACT_OFFER_RECORD: [u8; 0x6f] = [0; 0x6f];
 
 /// Comparer for `add_contract_offer` (comparison mode: see the header of motor.rs).
 ///
@@ -1902,11 +1902,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, 
     todas.extend(TRANSFER_MANAGER_DATE_STATICS);
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&todas);
-    CPW4_ENSAIO = true;
+    CONTRACT_OFFER_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_contract_offer(this, termos, vaga, valor, marca, a5, decidir, acertado)));
-    CPW4_ENSAIO = false;
+    CONTRACT_OFFER_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&todas[..n_cmp]);
-    let registro = CPW4_REGISTRO;
+    let registro = DRY_RUN_CONTRACT_OFFER_RECORD;
     antes.escrever();
     o(this, termos, vaga, valor, marca, a5, decidir, acertado);
     let mo = crate::comparacao::Memoria::ler(&todas[..n_cmp]);

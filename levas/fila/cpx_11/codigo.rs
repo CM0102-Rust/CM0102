@@ -20,7 +20,7 @@ unsafe fn cpx11_financas(clube: usize) -> usize {
 
 /// O ensaio do comparador da 0x682e10: a cópia roda sem a notícia do prêmio (0x48e3e0, que aloca e não pode rodar duas
 /// vezes).
-static mut CPX11_ENSAIO: bool = false;
+static mut LEAGUE_PRIZE_MONEY_DRY_RUN: bool = false;
 
 /// O divisor dos prêmios: 1 + 2 + … + n (16 bits, como o ax da original).
 unsafe fn sum_of_positions(n: i16) -> i32 {
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn pay_prize_money(liga: usize) {
         let fin = cpx11_financas(clube);
         crate::comparacao::ramo("cpx_11 premio pago");
         somar(fin, valor); // cpx11: o prêmio
-        if valor > 1000 && !CPX11_ENSAIO {
+        if valor > 1000 && !LEAGUE_PRIZE_MONEY_DRY_RUN {
             // ponytail: a original empurra a posição no dl e o resto do edx (29 × i, sobra da conta da linha); a
             // 0x48e3e0 lê só o byte
             let pos = ((29 * i as i32 as u32) & !0xff) | (i as u8).wrapping_add(1) as u32;
@@ -108,9 +108,9 @@ unsafe extern "thiscall" fn comparar_pay_prize_money(liga: usize) {
         }
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPX11_ENSAIO = true;
+    LEAGUE_PRIZE_MONEY_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pay_prize_money(liga)));
-    CPX11_ENSAIO = false;
+    LEAGUE_PRIZE_MONEY_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(liga);

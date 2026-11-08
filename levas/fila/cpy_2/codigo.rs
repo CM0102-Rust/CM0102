@@ -23,7 +23,7 @@ unsafe fn cpy2_entrada(this: usize, clube: usize) -> usize {
 }
 
 /// As datas estáticas da 0x54c5b0, da 0x54c8e0 e da 0x54cdb0 (valor e guarda).
-const CPY2_ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2470, 8), (0xae2418, 1)];
+const STAFF_STATUS_DATE_STATICS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2470, 8), (0xae2418, 1)];
 
 /// Tira o par (pessoa, clube) de um dos vetores ordenados de pares (8 bytes) do Shortlist_Manager (`base` = +0 ou +4,
 /// conta em `base` + 0x10) pela busca binária (0x946464: cdecl(chave, vetor, conta, 8, comparação), add esp, 0x14):
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn comparar_update_staff_status(this: usize, pessoa: us
     if is_original_only_case(this, pessoa, clube, evento, tipo) {
         return o(this, pessoa, clube, evento, tipo);
     }
-    let mut reg = CPY2_ESTATICAS.to_vec();
+    let mut reg = STAFF_STATUS_DATE_STATICS.to_vec();
     for base in [this, this + 4] {
         reg.push((base + 0x10, 4));
         if cpy2_d(base) != 0 {

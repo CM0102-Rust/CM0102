@@ -14,9 +14,9 @@ unsafe fn cpx13_b(a: usize) -> u8 {
 
 /// O ensaio do comparador da 0x76bab0: a cópia roda sem escolher elenco (0x76c120), sem dispensar os acima da idade do
 /// sub-21 (0x76d880: no ensaio, só o byte +0x6b que ela zera depois da data) e sem apagar repetidos (0x76c060).
-static mut CPX13_ENSAIO: bool = false;
+static mut SELECT_SQUADS_DRY_RUN: bool = false;
 /// No ensaio: a cópia pediu um elenco (a comparação não vale).
-static mut CPX13_PEDIU: bool = false;
+static mut SELECT_SQUADS_REQUESTED_SQUAD: bool = false;
 
 /// O registro da nação do clube na tabela das seleções ([this+4], 0x6e bytes, pelo id da nação +0x53).
 unsafe fn cpx13_registro(this: usize, clube: usize) -> usize {
@@ -47,8 +47,8 @@ unsafe fn refresh_or_select_squad(this: usize, p: usize, clube: usize, reg: usiz
         }
         return;
     }
-    if CPX13_ENSAIO {
-        CPX13_PEDIU = true;
+    if SELECT_SQUADS_DRY_RUN {
+        SELECT_SQUADS_REQUESTED_SQUAD = true;
         return;
     }
     let escolher: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32) = core::mem::transmute(0x76c120usize);
@@ -73,7 +73,7 @@ unsafe fn refresh_minor_squads(this: usize, p: usize, clube: usize, reg: usize) 
 /// O que a 0x76d880 grava no registro (fora das pessoas): depois da data do sub-21 (+0x62/+0x66, 0x456740 sobre
 /// hoje), zera a marca +0x6b.
 unsafe fn release_overage_u21(this: usize, clube: usize) {
-    if !CPX13_ENSAIO {
+    if !SELECT_SQUADS_DRY_RUN {
         let dispensar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x76d880usize);
         return dispensar(this, cpx13_d(clube + 0x53));
     }
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p: usize) {
         refresh_or_select_squad(this, p, fora, reg, 0, || true);
     }
     refresh_minor_squads(this, p, fora, reg);
-    if !CPX13_ENSAIO {
+    if !SELECT_SQUADS_DRY_RUN {
         repetidos(cpx13_d(cpx13_d(p + 0x1c) + 0x53));
         repetidos(cpx13_d(cpx13_d(p + 0x20) + 0x53));
     }
@@ -140,13 +140,13 @@ unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: usize, p: u
     o(this, p);
     let mo = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
-    CPX13_ENSAIO = true;
-    CPX13_PEDIU = false;
+    SELECT_SQUADS_DRY_RUN = true;
+    SELECT_SQUADS_REQUESTED_SQUAD = false;
     crate::aleatorio::pausar_rastro(|| select_squads_for_fixture(this, p));
-    CPX13_ENSAIO = false;
+    SELECT_SQUADS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     mo.escrever();
-    if !CPX13_PEDIU {
+    if !SELECT_SQUADS_REQUESTED_SQUAD {
         PLACAR.registrar(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
     }
 }
@@ -164,7 +164,7 @@ unsafe fn club_of_person_contract(pessoa: usize) -> usize {
 }
 
 /// O ensaio do comparador da 0x76fd10: a cópia roda sem entregar a notícia.
-static mut CPX13_ENSAIO_NOTICIA: bool = false;
+static mut CALLED_UP_NEWS_DRY_RUN: bool = false;
 
 /// { 0x76fd10 } (stdcall, ret 0xc, national_teams.cpp, quadro SEH sem destrutor):
 /// `national_teams_post_player_called_up_news(jogador, nação, vaga)`: só com técnico humano (0x7875e0) no clube +0x39
@@ -211,14 +211,14 @@ unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: us
     }
     let noticias = cpx13_d(0xb7431c);
     let c39 = cpx13_d(jogador + 0x39);
-    if c39 != 0 && !CPX13_ENSAIO_NOTICIA {
+    if c39 != 0 && !CALLED_UP_NEWS_DRY_RUN {
         ao_clube(noticias, n, c39);
     }
     if club_of_person_contract(jogador) == cpx13_d(jogador + 0x39) {
         return;
     }
     let c = club_of_person_contract(jogador);
-    if !CPX13_ENSAIO_NOTICIA {
+    if !CALLED_UP_NEWS_DRY_RUN {
         ao_clube(noticias, n, c);
     }
 }
@@ -229,9 +229,9 @@ unsafe extern "stdcall" fn comparar_national_teams_post_player_called_up_news(jo
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I1%%);
     let regioes = [(0xae1080usize, 4usize)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPX13_ENSAIO_NOTICIA = true;
+    CALLED_UP_NEWS_DRY_RUN = true;
     crate::aleatorio::pausar_rastro(|| national_teams_post_player_called_up_news(jogador, nacao, vaga));
-    CPX13_ENSAIO_NOTICIA = false;
+    CALLED_UP_NEWS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(jogador, nacao, vaga);

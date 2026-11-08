@@ -48,12 +48,12 @@ unsafe fn date_op(rotina: usize, d: usize, n: u32) -> usize {
     // que é lido logo depois (antes da próxima chamada), como na original
     let r = f(d, &mut ret, n);
     if r == ret.as_ptr() as usize {
-        CQC4_RET = ret;
-        return core::ptr::addr_of!(CQC4_RET) as usize;
+        DATE_OP_RESULT = ret;
+        return core::ptr::addr_of!(DATE_OP_RESULT) as usize;
     }
     r
 }
-static mut CQC4_RET: RawDate = [0; 8];
+static mut DATE_OP_RESULT: RawDate = [0; 8];
 unsafe fn date_weekday(d: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x54a3f0usize);
     f(d)

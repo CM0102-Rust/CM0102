@@ -184,8 +184,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_record_scouted_clu
 
 /// O ensaio da 0x7b5be0 (só no comparador): a cópia decide tudo até o relatório sem os efeitos (o histórico 0x7bd310 e o
 /// relatório não rodam) e anota se chegaria ao relatório.
-pub(crate) static mut CQF10_ENSAIO: bool = false;
-pub(crate) static mut CQF10_RELATORIO: bool = false;
+pub(crate) static mut SCOUT_MATCH_DRY_RUN: bool = false;
+pub(crate) static mut SCOUT_MATCH_WOULD_REPORT: bool = false;
 
 /// the matching scout list (type 4) watches the played match: the history of the followed club; within the dates, with
 /// the followed player in the match or with the club asking for a player of either club, the list start moves to
@@ -253,7 +253,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize
     }
     let acompanhado = read_i32(this + 0x190);
     if acompanhado > -1 && read_usize(this + 0x170) != 0 && (read_i32(jogo + 0xc) == acompanhado || read_i32(jogo + 0x10) == acompanhado) {
-        if !CQF10_ENSAIO {
+        if !SCOUT_MATCH_DRY_RUN {
             crate::comparacao::ramo("cqf_10 historico do clube");
             let historico: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_PLAYER_SEARCH_RECORD_SCOUTED_CLUB_MATCH);
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
@@ -344,8 +344,8 @@ pub(crate) unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize
     // [this+0x1a5] -> thiscall, ret 8
     let (mut tmp, mut copia) = ([0u32; 2], [0u32; 2]);
     let amanha = mais(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã
-    if CQF10_ENSAIO {
-        CQF10_RELATORIO = true;
+    if SCOUT_MATCH_DRY_RUN {
+        SCOUT_MATCH_WOULD_REPORT = true;
         return 1;
     }
     copiar(this + 0x1a5, copia.as_mut_ptr() as usize, amanha);
@@ -457,11 +457,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_scout_match(this: 
     }
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = (read_usize(this + 0x1a5), read_usize(this + 0x1a9));
-    CQF10_ENSAIO = true;
-    CQF10_RELATORIO = false;
+    SCOUT_MATCH_DRY_RUN = true;
+    SCOUT_MATCH_WOULD_REPORT = false;
     let n = crate::aleatorio::sem_contar(|| player_search_scout_match(this, jogo, resultado, saida));
-    CQF10_ENSAIO = false;
-    let relata = CQF10_RELATORIO;
+    SCOUT_MATCH_DRY_RUN = false;
+    let relata = SCOUT_MATCH_WOULD_REPORT;
     estado.escrever();
     let previsto = if relata {
         let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);

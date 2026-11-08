@@ -1714,7 +1714,7 @@ pub(crate) const SERIE_B_FIXTURES: [(u8, u8, u16, u32, u32); 380] = [
 
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
-pub(crate) static mut CQI6_ENSAIO: bool = false;
+pub(crate) static mut ITA_SER_A_RULES_DRY_RUN: bool = false;
 
 /// Writes the rule fields (offset, size, value) into the league and builds the main-stage round table via virtual +0x3c
 /// into +0xba (skipped in dry run); returns 1.
@@ -1730,7 +1730,7 @@ pub(crate) unsafe fn ita_ser_a_apply_league_rules(this: usize, escritas: &[(usiz
             _ => core::ptr::write_unaligned((this + d) as *mut u32, v),
         }
     }
-    if !CQI6_ENSAIO {
+    if !ITA_SER_A_RULES_DRY_RUN {
         let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
         let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
         core::ptr::write_unaligned((this + 0xba) as *mut usize, t);
@@ -1833,9 +1833,9 @@ pub(crate) unsafe fn ita_ser_a_compare_league_rules(nome: &str, this: usize, esc
     let r = original();
     let mo = crate::comparacao::Memoria::ler(&band);
     antes.escrever();
-    CQI6_ENSAIO = true;
+    ITA_SER_A_RULES_DRY_RUN = true;
     let rr = crate::aleatorio::pausar_rastro(copia);
-    CQI6_ENSAIO = false;
+    ITA_SER_A_RULES_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&band);
     mo.escrever();
     let campo = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {

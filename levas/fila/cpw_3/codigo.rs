@@ -37,7 +37,7 @@ unsafe fn staff_interest_in_club(lista: usize, pessoa: usize, clube: usize, sala
 
 /// O ensaio do comparador: a cópia roda sem a oferta de empréstimo (0x8bed60) nem a atualização da lista (0x843e10),
 /// que alocam e mexem nas listas; devolve −2 onde faria a oferta e −3 onde atualizaria a lista.
-static mut CPW3_ENSAIO: bool = false;
+static mut LOAN_OFFER_DRY_RUN: bool = false;
 
 /// A data (dia i16, ano u16) de 8 bytes em `a`, como a original a compara (o ano sem sinal, o dia com sinal).
 unsafe fn contract_manager_date_is_before(a: usize, b: usize) -> bool {
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     let dono = if c != 0 { cpw3_clube(cpw3_d(c + 4)) } else { 0 };
     if dono == 0 {
         if entrada != 0 {
-            if CPW3_ENSAIO {
+            if LOAN_OFFER_DRY_RUN {
                 return -3;
             }
             let estado: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x843e10usize);
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     let dif = cpw3_w(clube + 0x80) as i32 - cpw3_w(dono + 0x80) as i32;
     let pct = if dif > 0x9c4 { 100 } else if dif <= -0x5dc { 0 } else { 50 };
     let vaga = (vaga & !0xff) | pct;
-    if CPW3_ENSAIO {
+    if LOAN_OFFER_DRY_RUN {
         return -2;
     }
     let oferta: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x8bed60usize);
@@ -168,9 +168,9 @@ unsafe extern "thiscall" fn comparar_try_loan_offer_for_player(this: usize, joga
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regioes.extend(TRANSFER_MANAGER_DATE_STATICS);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW3_ENSAIO = true;
+    LOAN_OFFER_DRY_RUN = true;
     let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| try_loan_offer_for_player(this, jogador, clube)));
-    CPW3_ENSAIO = false;
+    LOAN_OFFER_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = o(this, jogador, clube);

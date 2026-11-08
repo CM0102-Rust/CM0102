@@ -1841,7 +1841,7 @@ pub(crate) unsafe fn contract_club_cached(j: usize) -> usize {
 
 /// Se a cópia semeou o rand da CRT pelo relógio (os fisioterapeutas avaliaram): o comparador não confere o estado do
 /// rand (o relógio anda entre a original e a cópia no jogo real).
-pub(crate) static mut CPY12_SEMEOU: bool = false;
+pub(crate) static mut BOARD_VETO_SEEDED_RAND: bool = false;
 
 /// when buying an injured player, the physios draw the veto; at a human club, the board vetoes on budget, asking price
 /// or fee and loses confidence
@@ -1871,7 +1871,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     let recaida: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_INJURY_GET_RECURRING_INJURY_LEVEL);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    CPY12_SEMEOU = false;
+    BOARD_VETO_SEEDED_RAND = false;
     if comprando as u8 != 0 {
         let l = lesao(read_usize(G_INJURY), j);
         if l != 0 && read_i16(l + 0x28) > 0x14 {
@@ -1883,7 +1883,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                 }
                 semear((read_usize(j) as u32).wrapping_add(1).wrapping_mul((read_usize(f) as u32).wrapping_add(1)));
                 semeou = true;
-                CPY12_SEMEOU = true;
+                BOARD_VETO_SEEDED_RAND = true;
                 crate::comparacao::ramo("cpy_12 fisioterapeuta avalia");
                 let np = read_usize(f + 0x69);
                 // a original empurra o registrador inteiro com o byte +0x1e no baixo; a 0x544410 só lê o byte
@@ -2039,7 +2039,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: 
     let regioes = [(club_board_row(this, clube), 0x49), (G_CONTRACT_LOOKUP_RESULT, 4), (0xde1f5c, 8), (0xad6c30, 4)];
     let (r, n, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, j, clube, valor, comprando),
         || crate::aleatorio::sem_contar(|| check_board_transfer_veto(this, j, clube, valor, comprando)));
-    let partes = if CPY12_SEMEOU { 3 } else { 4 };
+    let partes = if BOARD_VETO_SEEDED_RAND { 3 } else { 4 };
     let igual = (0..partes).all(|i| mo.0[i] == mr.0[i]);
     PLACAR.registrar(igual && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, valor, comprando as u8, r, n, mo, mr));
     r
@@ -2208,9 +2208,9 @@ pub(crate) unsafe fn news_set_manager_names(n: usize, p: usize, primeiro: u8, k_
 /// O ensaio do comparador: a cópia roda sem entregar a notícia (as entregas copiam a notícia nas caixas dos técnicos
 /// humanos, alocam e podem dar a resposta automática) e guarda o alcance que daria (+0xde: 4 todos, 2 os do país, 1 os
 /// da divisão; 0 nenhuma) e a notícia montada.
-pub(crate) static mut CPX10_ENSAIO: bool = false;
-pub(crate) static mut CPX10_ALCANCE: u8 = 0;
-pub(crate) static mut CPX10_NOTICIA: [u8; 0xe0] = [0; 0xe0];
+pub(crate) static mut MANAGER_NEWS_DRY_RUN: bool = false;
+pub(crate) static mut MANAGER_NEWS_REACH: u8 = 0;
+pub(crate) static mut MANAGER_NEWS_BUILT: [u8; 0xe0] = [0; 0xe0];
 
 /// Delivers news item n by reach (4 all managers, 2 nation managers, else division managers) through G_NEWS; in
 /// rehearsal mode only records the plan.
@@ -2218,9 +2218,9 @@ pub(crate) static mut CPX10_NOTICIA: [u8; 0xe0] = [0; 0xe0];
 /// [pt] A entrega da notícia `n` pelo `alcance` (4: 0x786780; 2: 0x7863f0 com a nação; 1: 0x7862d0 com a divisão) pelas
 /// notícias [0xb7431c]; no ensaio, só o plano.
 pub(crate) unsafe fn deliver_news(n: usize, alcance: u8, alvo: usize) {
-    if CPX10_ENSAIO {
-        CPX10_ALCANCE = alcance;
-        core::ptr::copy_nonoverlapping(n as *const u8, core::ptr::addr_of_mut!(CPX10_NOTICIA) as *mut u8, 0xe0);
+    if MANAGER_NEWS_DRY_RUN {
+        MANAGER_NEWS_REACH = alcance;
+        core::ptr::copy_nonoverlapping(n as *const u8, core::ptr::addr_of_mut!(MANAGER_NEWS_BUILT) as *mut u8, 0xe0);
         return;
     }
     let noticias = read_usize(G_NEWS);
@@ -2276,12 +2276,12 @@ pub(crate) unsafe fn compare_manager_news(nome: &str, regioes: Vec<(usize, usize
     let mut todas = regioes.clone();
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&todas);
-    CPX10_ENSAIO = true;
-    CPX10_ALCANCE = 0;
+    MANAGER_NEWS_DRY_RUN = true;
+    MANAGER_NEWS_REACH = 0;
     let (_, rr) = crate::aleatorio::rastrear(|| crate::aleatorio::sem_contar(copia));
-    CPX10_ENSAIO = false;
+    MANAGER_NEWS_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
-    let (alcance, noticia) = (CPX10_ALCANCE, *core::ptr::addr_of!(CPX10_NOTICIA));
+    let (alcance, noticia) = (MANAGER_NEWS_REACH, *core::ptr::addr_of!(MANAGER_NEWS_BUILT));
     antes.escrever();
     let (_, ro) = crate::aleatorio::rastrear(original);
     let mo = crate::comparacao::Memoria::ler(&regioes);
@@ -2526,14 +2526,14 @@ pub(crate) unsafe fn days_since(d: usize) -> i32 {
 }
 
 /// O ensaio do comparador: a cópia roda sem o fim da lesão (0x62e700: histórico em arquivo e notícia), que não pode
-/// rodar duas vezes; chegando lá, marca `CPW8_TERMINOU` e o comparador fica com a original sozinha.
-pub(crate) static mut CPW8_ENSAIO: bool = false;
-pub(crate) static mut CPW8_TERMINOU: bool = false;
+/// rodar duas vezes; chegando lá, marca `END_INJURY_REACHED` e o comparador fica com a original sozinha.
+pub(crate) static mut END_INJURY_DRY_RUN: bool = false;
+pub(crate) static mut END_INJURY_REACHED: bool = false;
 
 /// Ends the person's injury (FN_INJURY_END_PLAYER_INJURY with 1); in rehearsal mode only records that it would.
 pub(crate) unsafe fn end_injury(this: usize, pessoa: usize) {
-    if CPW8_ENSAIO {
-        CPW8_TERMINOU = true;
+    if END_INJURY_DRY_RUN {
+        END_INJURY_REACHED = true;
         return;
     }
     let terminar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_INJURY_END_PLAYER_INJURY);

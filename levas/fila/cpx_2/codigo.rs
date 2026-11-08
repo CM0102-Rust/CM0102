@@ -41,8 +41,8 @@ unsafe fn get_contract_store_lookup(pessoa: usize) -> usize {
 
 /// O ensaio do comparador: a cópia para antes da queixa (0x867700), da fuga (0x419840) e das antipatias (0x547e70,
 /// 0x547af0), que mexem no resto do jogo, e marca que chegou lá.
-static mut CPX2_ENSAIO: bool = false;
-static mut CPX2_CHEGOU: bool = false;
+static mut UNSETTLE_PLAYER_DRY_RUN: bool = false;
+static mut UNSETTLE_PLAYER_REACHED: bool = false;
 
 /// { 0x8c1290 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::unsettle_player_after_bid(oferta)`, pela
 /// recusa (0x8bf680), pela retirada no motivo 2 (0x8bfcb0) e pelo clube que recusa (0x8c36b0). Sorteio(5750) + 4250
@@ -115,8 +115,8 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     if pond < menor {
         return;
     }
-    if CPX2_ENSAIO {
-        CPX2_CHEGOU = true;
+    if UNSETTLE_PLAYER_DRY_RUN {
+        UNSETTLE_PLAYER_REACHED = true;
         return;
     }
     crate::comparacao::ramo("cpx_2 desassossegado");
@@ -155,14 +155,14 @@ unsafe extern "thiscall" fn comparar_unsettle_player_after_bid(this: usize, o: u
     let mut regioes = vec![(o, 0x30usize), (0xae1080, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPX2_ENSAIO = true;
-    CPX2_CHEGOU = false;
+    UNSETTLE_PLAYER_DRY_RUN = true;
+    UNSETTLE_PLAYER_REACHED = false;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| unsettle_player_after_bid(this, o)));
-    CPX2_ENSAIO = false;
+    UNSETTLE_PLAYER_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     orig_f(this, o);
-    if CPX2_CHEGOU {
+    if UNSETTLE_PLAYER_REACHED {
         return;
     }
     let mo = crate::comparacao::Memoria::ler(&regioes);

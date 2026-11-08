@@ -42,12 +42,12 @@ unsafe fn is_recurring_category(this: usize, idx: i32, categoria: u8) -> bool {
 }
 
 /// O ensaio do comparador: a cópia roda só a fase do treino (sem soltar a lista das batidas, sem o físico do dia 180,
-/// sem a lesão nova nem as rotinas do fim); `CPW9_PAROU` marca que ela chegou a uma lesão nova (0x62d250, que aloca e
+/// sem a lesão nova nem as rotinas do fim); `INJURY_DAILY_STOPPED` marca que ela chegou a uma lesão nova (0x62d250, que aloca e
 /// manda notícia) ou ao físico de todos.
-static mut CPW9_ENSAIO: bool = false;
-static mut CPW9_PAROU: bool = false;
+static mut INJURY_DAILY_DRY_RUN: bool = false;
+static mut INJURY_DAILY_STOPPED: bool = false;
 /// O que a cópia deixou nas regiões da fase do treino, à espera de a original chegar às notícias da volta (0x62e010).
-static mut CPW9_ESPERA: Option<(Vec<(usize, usize)>, crate::comparacao::Memoria)> = None;
+static mut INJURY_DAILY_PENDING_REGIONS: Option<(Vec<(usize, usize)>, crate::comparacao::Memoria)> = None;
 
 /// O switch dos tipos de lesão (tipo − 0xc, byte da tabela 0x62bcd8): 0 os do +0x1b/+0x36, 1 nenhuma lesão (0x14), 2 o
 /// 0x1c, 3 o 0x2d, 4 os 0x3b e 0x3c, 5 só a lesão.
@@ -70,7 +70,7 @@ const INJURY_TYPE_CASES: [u8; 0x31] = [
 unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     let lista = cpw9_d(this + 0x28);
     if lista != 0 {
-        if !CPW9_ENSAIO {
+        if !INJURY_DAILY_DRY_RUN {
             let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
             let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
             destruir(lista);
@@ -88,8 +88,8 @@ unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     }
     let anterior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     if anterior(0xae2c90, cpw9_d(0xdd6ec8) as u32, cpw9_d(0xdd6ecc) as u32) != 0 && cpw9_w(0xae2c90) == 0xb4 {
-        if CPW9_ENSAIO {
-            CPW9_PAROU = true;
+        if INJURY_DAILY_DRY_RUN {
+            INJURY_DAILY_STOPPED = true;
             return;
         }
         let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x62c680usize);
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn injury_daily_update(this: usize) {
         crate::comparacao::ramo("cpw_9 dia de treino");
         roll_training_injuries(this);
     }
-    if CPW9_ENSAIO {
+    if INJURY_DAILY_DRY_RUN {
         return;
     }
     let noticias: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x62e010usize);
@@ -213,8 +213,8 @@ unsafe fn roll_training_injuries(this: usize) {
             if caso == 1 {
                 break 'proximo; // o tipo 0x14: nenhuma lesão
             }
-            if CPW9_ENSAIO {
-                CPW9_PAROU = true;
+            if INJURY_DAILY_DRY_RUN {
+                INJURY_DAILY_STOPPED = true;
                 return;
             }
             apply_injury_attribute_loss(this, idx, p, categoria, caso);
@@ -297,20 +297,20 @@ unsafe extern "thiscall" fn comparar_injury_daily_update(this: usize) {
     }
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CPW9_ENSAIO = true;
-    CPW9_PAROU = false;
+    INJURY_DAILY_DRY_RUN = true;
+    INJURY_DAILY_STOPPED = false;
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| injury_daily_update(this)));
-    CPW9_ENSAIO = false;
+    INJURY_DAILY_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
-    if CPW9_PAROU {
+    if INJURY_DAILY_STOPPED {
         crate::comparacao::ramo("cpw_9 lesao nova so na original");
         return o(this);
     }
-    *core::ptr::addr_of_mut!(CPW9_ESPERA) = Some((reg, mr));
+    *core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS) = Some((reg, mr));
     o(this);
     // sem a 0x62e010 desviada (desligada), a original não passou pelo ponto de conferência: fica sem comparação
-    *core::ptr::addr_of_mut!(CPW9_ESPERA) = None;
+    *core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS) = None;
 }
 
 /// { 0x62e010 } (thiscall, ret 0, injury.cpp, quadro SEH só das datas locais): `Injury::post_due_recovery_news()`, pelo
@@ -467,7 +467,7 @@ unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
 // ponytail: as notícias da volta (0x630ee0) alocam e o físico do dia mexe no sorteio: só a original; a cópia leva o
 // ramo. É também o ponto de conferência da fase do treino do dia das lesões (comparar_injury_daily_update).
 unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usize) {
-    if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(CPW9_ESPERA)).take() {
+    if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS)).take() {
         let mo = crate::comparacao::Memoria::ler(&reg);
         PLACAR.registrar(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
     }

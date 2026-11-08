@@ -31,7 +31,7 @@ unsafe fn scout_manager_date_after(dia: i16, ano: u16, data: usize) -> bool {
 }
 
 /// O ensaio da 0x7f8750: a cópia só poda os pedidos (num vetor dela) e para antes dos relatórios.
-static mut CQF12_ENSAIO: bool = false;
+static mut SCOUT_DAILY_DRY_RUN: bool = false;
 
 /// A poda de um pedido (0x11 bytes: +0 o clube, +4 o jogador, +8 a data, +0x10 quantos relatórios): devolve
 /// (tirar, processar). Sai o pedido de clube que não é humano, de jogador do próprio clube (o +0x39 ou o do contrato),
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
     while i < cqf12_i(this + 0x64) {
         let pedido = cqf12_d(this + 0x5c) + i as usize * 0x11;
         let (tirar, processar, jogador, tecnico, nacao) = judge_scout_request(pedido, catorze);
-        if processar && !CQF12_ENSAIO {
+        if processar && !SCOUT_DAILY_DRY_RUN {
             crate::comparacao::ramo("cqf_12 pedido processado");
             let mut feitos: i8 = 0;
             for k in 0..10u32 {
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
         }
         i += 1;
     }
-    if CQF12_ENSAIO {
+    if SCOUT_DAILY_DRY_RUN {
         soltar(l);
         return 1;
     }
@@ -218,9 +218,9 @@ unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> 
     core::ptr::write_unaligned((this + 0x5c) as *mut usize, copia.as_mut_ptr() as usize);
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let a1080 = cqf12_d(0xae1080);
-    CQF12_ENSAIO = true;
+    SCOUT_DAILY_DRY_RUN = true;
     crate::aleatorio::sem_contar(|| scout_manager_daily_update(this));
-    CQF12_ENSAIO = false;
+    SCOUT_DAILY_DRY_RUN = false;
     estado.escrever();
     core::ptr::write_unaligned(0xae1080 as *mut usize, a1080);
     let n1 = cqf12_i(this + 0x64).max(0) as usize;
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> 
 
 /// O registro das notícias de relatório que a 0x7f9a60 recebe (jogador, clube, quantos), ligado só no comparador da
 /// 0x7f9890 para conferir os grupos da original.
-static mut CQF12_GRUPOS: Option<Vec<(u32, u32, u8)>> = None;
+static mut SCOUT_REPORT_GROUPS: Option<Vec<(u32, u32, u8)>> = None;
 
 /// { 0x7f9890 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::send_scout_reports(lista)`, pelo dia dos olheiros
 /// (0x7f8750) e pela busca (0x7f8c00). Com a lista não vazia (+0 conta): um vetor de conta × 0x67 (0x944e46; sem
@@ -291,8 +291,8 @@ unsafe extern "thiscall" fn send_scout_reports(this: usize, lista: usize) {
             i += 1;
         }
         let primeiro = v + inicio as usize * 0x67;
-        if CQF12_ENSAIO {
-            if let Some(g) = &mut *core::ptr::addr_of_mut!(CQF12_GRUPOS) {
+        if SCOUT_DAILY_DRY_RUN {
+            if let Some(g) = &mut *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) {
                 g.push((cqf12_d(primeiro + 0x2b) as u32, cqf12_d(primeiro + 0x50) as u32, quantos));
             }
         } else {
@@ -309,14 +309,14 @@ unsafe extern "thiscall" fn send_scout_reports(this: usize, lista: usize) {
 unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, lista: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let cursor = cqf12_d(lista + 0xa);
-    *core::ptr::addr_of_mut!(CQF12_GRUPOS) = Some(Vec::new());
-    CQF12_ENSAIO = true;
+    *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) = Some(Vec::new());
+    SCOUT_DAILY_DRY_RUN = true;
     send_scout_reports(this, lista);
-    CQF12_ENSAIO = false;
-    let plano = (*core::ptr::addr_of_mut!(CQF12_GRUPOS)).replace(Vec::new()).unwrap_or_default();
+    SCOUT_DAILY_DRY_RUN = false;
+    let plano = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).replace(Vec::new()).unwrap_or_default();
     core::ptr::write_unaligned((lista + 0xa) as *mut usize, cursor);
     o(this, lista);
-    let feito = (*core::ptr::addr_of_mut!(CQF12_GRUPOS)).take().unwrap_or_default();
+    let feito = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).take().unwrap_or_default();
     PLACAR.registrar(feito == plano, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
 }
 
@@ -377,7 +377,7 @@ unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: usize, quanto
 /// Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (ponytail: o efeito é a
 /// caixa de entrada; os grupos que chegam aqui são conferidos pela 0x7f9890). Com o registro ligado, anota a chamada.
 unsafe extern "thiscall" fn comparar_send_scout_report_news(this: usize, r: usize, quantos: u32) {
-    if let Some(g) = &mut *core::ptr::addr_of_mut!(CQF12_GRUPOS) {
+    if let Some(g) = &mut *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) {
         g.push((cqf12_d(r + 0x2b) as u32, cqf12_d(r + 0x50) as u32, quantos as u8));
     }
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, r, quantos);

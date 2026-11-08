@@ -311,16 +311,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
 
 /// O ensaio do comparador dos conflitos de um dia: a cópia não acrescenta (0x68d0d0 aloca o nó e a cópia do jogo) e
 /// guarda os jogos que acrescentaria, na ordem.
-pub(crate) static mut CQC3_ENSAIO: bool = false;
-pub(crate) static mut CQC3_ACRESCIMOS: Vec<usize> = Vec::new();
+pub(crate) static mut DAY_CLASHES_DRY_RUN: bool = false;
+pub(crate) static mut DAY_CLASHES_APPENDED: Vec<usize> = Vec::new();
 
 /// Appends a copy of the 0x4f-byte fixture to the list (0x68d0d0); in dry-run mode only records it.
 ///
 /// [pt] Acrescenta a cópia dos 0x4f bytes do jogo no fim da lista (0x68d0d0: ecx = lista; push 0x4f; push jogo -> thiscall,
 /// ret 8); no ensaio, só guarda o jogo.
 pub(crate) unsafe fn append_fixture(lista: usize, jogo: usize) {
-    if CQC3_ENSAIO {
-        CQC3_ACRESCIMOS.push(jogo);
+    if DAY_CLASHES_DRY_RUN {
+        DAY_CLASHES_APPENDED.push(jogo);
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
@@ -604,12 +604,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize,
         return o(this, jogo, grav, lista, nacoes, n, data, desloc);
     }
     let mut g = *grav;
-    CQC3_ACRESCIMOS.clear();
-    CQC3_ENSAIO = true;
+    DAY_CLASHES_APPENDED.clear();
+    DAY_CLASHES_DRY_RUN = true;
     collect_day_clashes(this, jogo, &mut g, lista, nacoes, n, data, desloc);
-    CQC3_ENSAIO = false;
-    let esperado = fixtures_bytes(&CQC3_ACRESCIMOS);
-    let ne = CQC3_ACRESCIMOS.len();
+    DAY_CLASHES_DRY_RUN = false;
+    let esperado = fixtures_bytes(&DAY_CLASHES_APPENDED);
+    let ne = DAY_CLASHES_APPENDED.len();
     let antes = fix_man_list_items(lista);
     o(this, jogo, grav, lista, nacoes, n, data, desloc);
     let depois = fix_man_list_items(lista);
@@ -843,12 +843,12 @@ pub(crate) unsafe fn date_op(rotina: usize, d: usize, n: u32) -> usize {
     // que é lido logo depois (antes da próxima chamada), como na original
     let r = f(d, &mut ret, n);
     if r == ret.as_ptr() as usize {
-        CQC4_RET = ret;
-        return core::ptr::addr_of!(CQC4_RET) as usize;
+        DATE_OP_RESULT = ret;
+        return core::ptr::addr_of!(DATE_OP_RESULT) as usize;
     }
     r
 }
-pub(crate) static mut CQC4_RET: RawDate = [0; 8];
+pub(crate) static mut DATE_OP_RESULT: RawDate = [0; 8];
 /// Weekday of a date (0x54a3f0).
 pub(crate) unsafe fn date_weekday(d: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
@@ -1473,7 +1473,7 @@ pub(crate) unsafe extern "C" fn comparar_fix_man_save_fixture_leg_checks() {
 }
 
 /// Modo de ensaio da 0x5ae380 (o comparador): a cópia para na decisão, antes de mexer no calendário.
-pub(crate) static mut CQB13_ENSAIO: bool = false;
+pub(crate) static mut SAME_DAY_CLASH_DRY_RUN: bool = false;
 
 
 
@@ -1513,7 +1513,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo:
     core::ptr::write_unaligned((conflitos + 0xa) as *mut usize, read_usize(conflitos + 2));
     let outro = proximo(conflitos);
     if jogo == 0 || outro == 0 {
-        if !CQB13_ENSAIO {
+        if !SAME_DAY_CLASH_DRY_RUN {
             show_error_at(0x9cc208, 0xde6); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
         }
         return 1;
@@ -1550,7 +1550,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo:
         crate::comparacao::ramo("cqb_13 novo vence");
     }
     let sai_o_velho = novo_vence && *((v + 0x43) as *const u8) == 0xff; // cqb13: o da lista ainda não jogado
-    if CQB13_ENSAIO {
+    if SAME_DAY_CLASH_DRY_RUN {
         return 1;
     }
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
@@ -1601,9 +1601,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_resolve_same_day_clash(this: usi
     }
     let reg = [(conflitos + 2, 0xc)];
     let antes = crate::comparacao::Memoria::ler(&reg);
-    CQB13_ENSAIO = true;
+    SAME_DAY_CLASH_DRY_RUN = true;
     resolve_same_day_clash(this, jogo, conflitos);
-    CQB13_ENSAIO = false;
+    SAME_DAY_CLASH_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     let r = o(this, jogo, conflitos);
@@ -1911,9 +1911,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_reschedule_club_fixtures_near_da
 }
 
 /// O ensaio da notícia: a cópia monta a notícia nova aqui em vez de pô-la na fila (e não cria a fila).
-pub(crate) static mut CPZ8_ENSAIO: bool = false;
-pub(crate) static mut CPZ8_NOTICIA: [u8; 0xe0] = [0; 0xe0];
-pub(crate) static mut CPZ8_MONTADA: bool = false;
+pub(crate) static mut FIXTURE_MOVED_NEWS_DRY_RUN: bool = false;
+pub(crate) static mut FIXTURE_MOVED_NEWS_BUILT: [u8; 0xe0] = [0; 0xe0];
+pub(crate) static mut FIXTURE_MOVED_NEWS_WAS_BUILT: bool = false;
 
 /// Data slot k of a news item (NEWSITEM get_slot).
 pub(crate) unsafe fn news_slot(n: usize, k: u32) -> u32 {
@@ -1954,7 +1954,7 @@ pub(crate) unsafe fn find_queued_fixture_news(l: usize, f: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, causa: usize, velha: usize) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    if read_usize(this + 0x1128) == 0 && !CPZ8_ENSAIO {
+    if read_usize(this + 0x1128) == 0 && !FIXTURE_MOVED_NEWS_DRY_RUN {
         let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
         let m = novo(0xe);
         if m != 0 {
@@ -1995,9 +1995,9 @@ pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: 
         gravar(nt, 0xc, read_i16_as_i32(velha) as u32);
         gravar(nt, 0xd, read_u16(velha + 2) as u32);
     }
-    if CPZ8_ENSAIO {
-        core::ptr::copy_nonoverlapping(nt as *const u8, core::ptr::addr_of_mut!(CPZ8_NOTICIA) as *mut u8, 0xe0);
-        CPZ8_MONTADA = true;
+    if FIXTURE_MOVED_NEWS_DRY_RUN {
+        core::ptr::copy_nonoverlapping(nt as *const u8, core::ptr::addr_of_mut!(FIXTURE_MOVED_NEWS_BUILT) as *mut u8, 0xe0);
+        FIXTURE_MOVED_NEWS_WAS_BUILT = true;
         return;
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
@@ -2026,20 +2026,20 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: u
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
     let conta = if l != 0 { read_i16_as_i32(l) } else { 0 };
-    CPZ8_ENSAIO = true;
-    CPZ8_MONTADA = false;
+    FIXTURE_MOVED_NEWS_DRY_RUN = true;
+    FIXTURE_MOVED_NEWS_WAS_BUILT = false;
     crate::aleatorio::pausar_rastro(|| queue_fixture_moved_news(this, f, causa, velha));
-    CPZ8_ENSAIO = false;
+    FIXTURE_MOVED_NEWS_DRY_RUN = false;
     antes.escrever();
     o(this, f, causa, velha);
     let l2 = read_usize(this + 0x1128);
-    let montada = CPZ8_MONTADA;
+    let montada = FIXTURE_MOVED_NEWS_WAS_BUILT;
     let igual = montada
         && l2 != 0
         && read_i16_as_i32(l2) == conta + 1
         && read_usize(read_usize(l2 + 6)) != 0
         && core::slice::from_raw_parts(read_usize(read_usize(l2 + 6)) as *const u8, 0xde)
-            == core::slice::from_raw_parts(core::ptr::addr_of!(CPZ8_NOTICIA) as *const u8, 0xde);
+            == core::slice::from_raw_parts(core::ptr::addr_of!(FIXTURE_MOVED_NEWS_BUILT) as *const u8, 0xde);
     PLACAR.registrar(igual, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { read_i16_as_i32(l2) } else { -1 }));
 }
 

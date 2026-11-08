@@ -44,11 +44,11 @@ struct FriendlyComparerTrial {
 
 /// A fita do ensaio: os sorteios que a original fez (n, resposta), o próximo e se um n não bateu. Também estão nela os
 /// sorteios de dentro das rotinas que a original chama no amistoso (0x53b3d0, 0x5c6f00, 0x5c5f40), que o ensaio pula.
-static mut CQC11_FITA: (Vec<(i32, i32)>, usize, bool) = (Vec::new(), 0, false);
+static mut FRIENDLY_TAPE: (Vec<(i32, i32)>, usize, bool) = (Vec::new(), 0, false);
 
 /// O sorteio do ensaio: o próximo da fita, com o mesmo n.
 unsafe extern "C" fn tape_random(n: i32) -> i32 {
-    let f = &mut *core::ptr::addr_of_mut!(CQC11_FITA);
+    let f = &mut *core::ptr::addr_of_mut!(FRIENDLY_TAPE);
     match f.0.get(f.1) {
         Some(&(m, r)) if m == n && !f.2 => {
             f.1 += 1;
@@ -62,7 +62,7 @@ unsafe extern "C" fn tape_random(n: i32) -> i32 {
 }
 
 unsafe fn tape_fully_consumed() -> bool {
-    let f = &*core::ptr::addr_of!(CQC11_FITA);
+    let f = &*core::ptr::addr_of!(FRIENDLY_TAPE);
     !f.2 && f.1 == f.0.len()
 }
 
@@ -217,7 +217,7 @@ unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas:
         if livre_a && quantas > 0 && nation_in_date_confederations(datas, quantas, a) && !is_african_excluded(datas, a) {
             let mut j = i + 1;
             while j < total(this) {
-                if ens.is_some() && (*core::ptr::addr_of!(CQC11_FITA)).2 {
+                if ens.is_some() && (*core::ptr::addr_of!(FRIENDLY_TAPE)).2 {
                     return; // a fita já não bate
                 }
                 let b = nacao(this, j);
@@ -264,7 +264,7 @@ unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas:
                                             e.por(i as usize, idb as u32);
                                             e.por(j as usize, ida as u32);
                                         }
-                                        let f = core::ptr::addr_of_mut!(CQC11_FITA);
+                                        let f = core::ptr::addr_of_mut!(FRIENDLY_TAPE);
                                         if (*f).2 {
                                             return;
                                         }
@@ -345,11 +345,11 @@ unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usiz
     link_nations_near_date(this, datas, 0, Some(&mut e));
     let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, datas, n));
     let quantos = tape_lock.len();
-    *core::ptr::addr_of_mut!(CQC11_FITA) = (tape_lock, 0, false);
+    *core::ptr::addr_of_mut!(FRIENDLY_TAPE) = (tape_lock, 0, false);
     pair_nations_for_friendlies(this, datas, n, 0, Some(&mut e), 0);
     let igual = tape_fully_consumed();
-    let (pos, falhou) = { let f = &*core::ptr::addr_of!(CQC11_FITA); (f.1, f.2) };
-    *core::ptr::addr_of_mut!(CQC11_FITA) = (Vec::new(), 0, false);
+    let (pos, falhou) = { let f = &*core::ptr::addr_of!(FRIENDLY_TAPE); (f.1, f.2) };
+    *core::ptr::addr_of_mut!(FRIENDLY_TAPE) = (Vec::new(), 0, false);
     let mut dif = Vec::new();
     for q in 0..k.max(e.novos.len()) {
         let mut depois = if q < k { list_item_ids(nation_friendly_list(this, q)) } else { Vec::new() };

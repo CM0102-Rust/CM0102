@@ -18,14 +18,14 @@ unsafe fn cqc3_b(a: usize) -> u8 {
 
 /// O ensaio do comparador dos conflitos de um dia: a cópia não acrescenta (0x68d0d0 aloca o nó e a cópia do jogo) e
 /// guarda os jogos que acrescentaria, na ordem.
-static mut CQC3_ENSAIO: bool = false;
-static mut CQC3_ACRESCIMOS: Vec<usize> = Vec::new();
+static mut DAY_CLASHES_DRY_RUN: bool = false;
+static mut DAY_CLASHES_APPENDED: Vec<usize> = Vec::new();
 
 /// Acrescenta a cópia dos 0x4f bytes do jogo no fim da lista (0x68d0d0: ecx = lista; push 0x4f; push jogo -> thiscall,
 /// ret 8); no ensaio, só guarda o jogo.
 unsafe fn append_fixture(lista: usize, jogo: usize) {
-    if CQC3_ENSAIO {
-        CQC3_ACRESCIMOS.push(jogo);
+    if DAY_CLASHES_DRY_RUN {
+        DAY_CLASHES_APPENDED.push(jogo);
         return;
     }
     let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x68d0d0usize);
@@ -285,12 +285,12 @@ unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize, jogo: usiz
         return o(this, jogo, grav, lista, nacoes, n, data, desloc);
     }
     let mut g = *grav;
-    CQC3_ACRESCIMOS.clear();
-    CQC3_ENSAIO = true;
+    DAY_CLASHES_APPENDED.clear();
+    DAY_CLASHES_DRY_RUN = true;
     collect_day_clashes(this, jogo, &mut g, lista, nacoes, n, data, desloc);
-    CQC3_ENSAIO = false;
-    let esperado = fixtures_bytes(&CQC3_ACRESCIMOS);
-    let ne = CQC3_ACRESCIMOS.len();
+    DAY_CLASHES_DRY_RUN = false;
+    let esperado = fixtures_bytes(&DAY_CLASHES_APPENDED);
+    let ne = DAY_CLASHES_APPENDED.len();
     let antes = fix_man_list_items(lista);
     o(this, jogo, grav, lista, nacoes, n, data, desloc);
     let depois = fix_man_list_items(lista);

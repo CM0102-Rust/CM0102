@@ -23,7 +23,7 @@ unsafe fn contract_squad_status(contrato: usize) -> u8 {
 }
 
 /// A notícia guardada: 0xdf bytes (+0xd6 id, +0xda lida).
-const CPO6_NOTICIA: usize = 0xdf;
+const STORED_NEWS_SIZE: usize = 0xdf;
 
 /// { 0x735870 } (thiscall, ret 0xc, media.cpp, 3,7 KB): `Media::pick_ai_manager_response(tecnico, jogador, tipo)`: a
 /// resposta (1, 2 ou 3) do técnico da máquina a uma história do `tipo` sobre o jogador. Sem técnico, sem a ficha de
@@ -479,7 +479,7 @@ unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usize, id: u32,
     let botao: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) -> u8 = core::mem::transmute(0x782b70usize);
     let mut v = 0usize;
     for k in 0..0x64usize {
-        v = cpo6_d(this).wrapping_add((cpo6_d(e).wrapping_add(k)).wrapping_mul(CPO6_NOTICIA));
+        v = cpo6_d(this).wrapping_add((cpo6_d(e).wrapping_add(k)).wrapping_mul(STORED_NEWS_SIZE));
         if cpo6_d(v + 0xd6) as u32 == id && cpo6_d(v + 0xda) == 0 {
             let mut tratador = 0u32;
             if botao(v, tecnico, 0xde1f64, 0x7d0, &mut tratador) != 2 {
@@ -536,7 +536,7 @@ unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usize, id: u32
         (ini as usize, 0x64)
     };
     for k in 0..n {
-        let v = cpo6_d(this).wrapping_add(inicio.wrapping_add(k).wrapping_mul(CPO6_NOTICIA));
+        let v = cpo6_d(this).wrapping_add(inicio.wrapping_add(k).wrapping_mul(STORED_NEWS_SIZE));
         if cpo6_d(v + 0xd6) as u32 == id {
             copiar(saida, v);
             return 1;
@@ -570,7 +570,7 @@ unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize,
         return o(this, tecnico, id, sincronizar);
     }
     let regioes = [
-        (cpo6_d(this), cpo6_i(this + 4).max(0) as usize * CPO6_NOTICIA),
+        (cpo6_d(this), cpo6_i(this + 4).max(0) as usize * STORED_NEWS_SIZE),
         (cpo6_d(this + 8), 0x10 * 12),
         (0xde1f64, 0x7d0),
     ];
@@ -585,7 +585,7 @@ unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tecnico: usize
     if id == 0 || saida == 0 || (tecnico != 0 && cpo6_i(tecnico).wrapping_sub(cpo6_i(0xae2364)).wrapping_add(0x10) < 0) {
         return o(this, tecnico, id, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, CPO6_NOTICIA)], || o(this, tecnico, id, saida), || find_item_by_id(this, tecnico, id, saida));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, STORED_NEWS_SIZE)], || o(this, tecnico, id, saida), || find_item_by_id(this, tecnico, id, saida));
     PLACAR.registrar(igual && r == n, || format!("find_item_by_id(id {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo.0[0].1, mr.0[0].1));
     r
 }

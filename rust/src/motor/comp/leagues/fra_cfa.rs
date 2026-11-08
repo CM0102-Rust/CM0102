@@ -194,7 +194,7 @@ pub(crate) const SERIE_C1_ROUNDS: [FraCfaScheduleRound; 34] = [
     (7, 4, 1, 6, 1, &[(-1, -1, -1)]), // 33: 7/mai (+1 ano)
 ];
 
-pub(crate) const CQO5_LIGA_CFA: SinglePhaseLeague = SinglePhaseLeague { rodadas: 0x22, arquivo: 0x9ccaf0, linha: 0xab, tabela: &CFA_ROUNDS, ramo: "cqo_5 calendario da cfa" };
+pub(crate) const CFA_LEAGUE: SinglePhaseLeague = SinglePhaseLeague { rodadas: 0x22, arquivo: 0x9ccaf0, linha: 0xab, tabela: &CFA_ROUNDS, ramo: "cqo_5 calendario da cfa" };
 
 /// the CFA schedule (the French fourth level, background, 4 groups of 18): 34 rounds, from 31 July to 20 May of the
 /// next year; in 25 rounds two matches go to TV slots (mostly day 6 or 4, slots 1 and 2); main stage only
@@ -203,7 +203,7 @@ pub(crate) const CQO5_LIGA_CFA: SinglePhaseLeague = SinglePhaseLeague { rodadas:
 /// [pt] { 0x5b9510 } (thiscall, ret 0x10, fra_cfa.cpp, 2.703 bytes, método +0x3c): `FraCfa::create_schedule(fase, &rodadas, &extra,
 /// &é_liga)`: a CFA, 34 rodadas (`CFA_ROUNDS`). Fonte 0x9ccaf0, linha 0xab.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_cfa_schedule(this, fase, rodadas, extra, liga, &CQO5_LIGA_CFA)
+    create_cfa_schedule(this, fase, rodadas, extra, liga, &CFA_LEAGUE)
 }
 
 /// Comparer for `fra_cfa_create_schedule` (comparison mode: see the header of motor.rs).

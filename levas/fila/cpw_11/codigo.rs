@@ -10,7 +10,7 @@ unsafe fn cpw11_w(a: usize) -> i16 {
 
 /// O ensaio do comparador da 0x685d30: a cópia roda sem a estatística da competição (0x49f570, que acha ou cria os
 /// registros dos jogadores e não pode rodar duas vezes).
-static mut CPW11_ENSAIO: bool = false;
+static mut LEAGUE_ADD_RESULT_DRY_RUN: bool = false;
 
 /// { 0x685d30 } (thiscall, ret 8, league.cpp): `League::add_result(partida, jogo)`: grava a data do dia em +0xc9
 /// (0x417c10 de [0xae2c90]); liga com fases (+0x44 = 0xff) e partida de uma fase (+0x42 ≠ 0xff): a fase
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, jogo: usize
     if comp == 0 || cpw11_d(comp + 8) == 0 || jogo == 0 {
         return 1;
     }
-    if !CPW11_ENSAIO {
+    if !LEAGUE_ADD_RESULT_DRY_RUN {
         // ponytail: a original empurra os pontos como dwords das locais com o alto sem valor; a 0x49f570 lê os curtos
         let estatistica: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32) -> u32 = core::mem::transmute(0x49f570usize);
         estatistica(cpw11_d(comp + 8), p, jogo, pts_casa as i32, pts_fora as i32);
@@ -73,9 +73,9 @@ unsafe extern "thiscall" fn comparar_league_add_result(liga: usize, p: usize, jo
     let mut regioes = vec![(liga + 0xc9, 8)];
     regioes.extend(result_update_regions(p, cpw11_d(liga + 0xb1), n, core::ptr::null_mut(), core::ptr::null_mut()));
     let antes = crate::comparacao::Memoria::ler(&regioes);
-    CPW11_ENSAIO = true;
+    LEAGUE_ADD_RESULT_DRY_RUN = true;
     let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| league_add_result(liga, p, jogo)));
-    CPW11_ENSAIO = false;
+    LEAGUE_ADD_RESULT_DRY_RUN = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let ro = o(liga, p, jogo);
