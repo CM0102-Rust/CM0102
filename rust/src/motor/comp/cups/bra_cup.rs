@@ -14,9 +14,9 @@ pub(crate) unsafe fn call_cup_virtual(this: usize, o: usize) -> i32 {
 /// The same template is used in all the cups, checked instruction by instruction: only the source file of the error
 /// boxes, the line numbers and the entrants routine change.
 ///
-/// Steps: +0x4c = 0; the entrant list (+0xa7) and the round list (+0xa3) are freed (0x9452ca, cdecl) and zeroed; the
+/// Steps: +0x4c = 0; the entrant list (+0xa7) and the round list (+0xa3) are freed (`exe::crt_free`, cdecl) and zeroed; the
 /// ties per round (+0xad: one array per round, +0x3c rounds, signed word) are freed and zeroed one by one, and the
-/// array itself is freed and zeroed; with stats (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, push 1; mov ecx
+/// array itself is freed and zeroed; with stats (+8), Comp_Stats::archive_season_and_reset (`exe::comp_stats_archive_season_and_reset`, push 1; mov ecx
 /// -> thiscall, ret 4); the year (+0x40, word) goes up by `ano` (1); +0xab = 0 and +0xb1 = 0 (bytes).
 ///
 /// Then, each with its own error box if it returns negative: the entrants (`inscritos`, mov ecx, esi; direct call ->
@@ -135,10 +135,10 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, s
     eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &COPA_DO_BRASIL_ROUNDS, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
 }
 
-/// `BraCup::build_team_table()` (0x427c20, thiscall, ret 0, bra_cup.cpp): sets +0x3e = 71 and builds the team table
+/// `BraCup::build_team_table()` (`bra_cup_build_team_table`, thiscall, ret 0, bra_cup.cpp): sets +0x3e = 71 and builds the team table
 /// from the entrant list; returns 1.
 ///
-/// The team table is allocated with 0x944e46 (0x1aa bytes) at +0xa7; when out of memory, the error box for line 0x143
+/// The team table is allocated with `exe::crt_malloc` (0x1aa bytes) at +0xa7; when out of memory, the error box for line 0x143
 /// and −1. Each slot i (6 bytes) receives the club of entry i of the list at +0x14 (6 bytes), status +5 = 0xff and
 /// class +4 = 0.
 ///

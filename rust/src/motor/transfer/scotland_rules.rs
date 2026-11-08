@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
 /// next), otherwise three months later.
 ///
 /// `SCOTLAND_RULES::get_loan_period(a1, a2, start_month, start_year, end_month, end_year, player)`: it starts in the
-/// following month; the end is the season end month of nation a1 (0x4d45f0) for those under 22 (+0x18), this year if
+/// following month; the end is the season end month of nation a1 (`contract_manager_season_end_month`) for those under 22 (+0x18), this year if
 /// the start comes before it, otherwise the following year; for the others, three months after the start.
 /// Original: `SCOTLAND_RULES::get_loan_period` (0x7f6530, scotland_rules.cpp, thiscall, ret 0x1c).
 ///
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
 /// March (moved to the Thursday [inference]); dword +0x15 = 1.
 ///
 /// `SCOTLAND_RULES::SCOTLAND_RULES`; SEH frame only for the `new`, no destructor on the normal path. The Scotland
-/// transfer rules (rule 21): the base (0x8e84a0), the vtable 0x96f838, 1 window from `SCOTLAND_TRANSFER_WINDOWS` and
+/// transfer rules (rule 21): the base (`exe::new_transfer_rules`), the vtable 0x96f838, 1 window from `SCOTLAND_TRANSFER_WINDOWS` and
 /// dword +0x15 = 1. Returns the object.
 /// Original: `SCOTLAND_RULES::SCOTLAND_RULES` (0x7f6390, scotland_rules.cpp, thiscall, ret 0x14).
 ///

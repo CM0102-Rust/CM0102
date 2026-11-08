@@ -3,8 +3,8 @@ use super::*;
 // The comparers of the routines in ../comp/eurocomp/con_champ.rs.
 // [pt] Os comparadores das rotinas de ../comp/eurocomp/con_champ.rs (modo comparação: ver o cabeçalho do motor.rs).
 
-/// Comparer of 0x4c11a0: side by side on the eight teams (+0xa7, 48 bytes), on +0x3e and on the random generator's
-/// state (0x4afbd0 shuffles; the copy without counting).
+/// Comparer of `con_champ_select_qualified_clubs`: side by side on the eight teams (+0xa7, 48 bytes), on +0x3e and on the random generator's
+/// state (`comp_util_sort_and_shuffle_top_clubs` shuffles; the copy without counting).
 ///
 /// When a list is short of clubs (fewer than 2 Mexican, 3 Central American, 1 Caribbean, or 2 MLS without the object
 /// [0x9cf728]) the original reads stack leftovers: only the original.

@@ -105,10 +105,10 @@ pub(crate) unsafe fn season_loans_entry(club: usize) -> usize {
 /// the squad (0x26) and outside the window (9); otherwise 1.
 ///
 /// `ENGLAND_RULES::can_loan_player(club, player, message, reason)`, through the nation's rules in
-/// `TRANSFER_MANAGER::can_loan_player` (0x8d0040). Without a contract (or without the contract's club): allowed. The
+/// `TRANSFER_MANAGER::can_loan_player` (`transfer_manager_can_loan_player`). Without a contract (or without the contract's club): allowed. The
 /// requesting club and the owner in the same English division (`[0x9cf5bc]`): reason 0x1d. Five loans in the season
 /// (the table `[[0xde1f54] + 0x91c]`): 0x1e. More than one player from another club in the squad (the 50 slots at
-/// +0xd7, counted only with the player's id below `[0xae2364]`): 0x26. Outside the window (0x8e8e50): 9, with the
+/// +0xd7, counted only with the player's id below `[0xae2364]`): 0x26. Outside the window (`exe::transfer_rules_find_open_window`): 9, with the
 /// nation's adjective.
 /// Original: `ENGLAND_RULES::can_loan_player` (0x579d60, england_rules.cpp, thiscall, ret 0x10).
 ///
@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
 
 /// On 20 June, resets the season loan count of every club of this rule set's nation.
 ///
-/// `ENGLAND_RULES::daily_update(date)`, from the rules' daily pass: on 20 June (only the day of the year, 0x549f70 with
+/// `ENGLAND_RULES::daily_update(date)`, from the rules' daily pass: on 20 June (only the day of the year, `exe::date_date_549f70` with
 /// 1998), the season count of each club (`[0xae235c]` in `[0xae23b4]`) of these rules' nation (+0xa) goes back to zero.
 /// Original: `ENGLAND_RULES::daily_update` (0x57a020, england_rules.cpp, thiscall, ret 4).
 ///
@@ -297,8 +297,8 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
 /// to three months later.
 ///
 /// `ENGLAND_RULES::get_loan_period(club, a2, start_month, start_year, end_month, end_year, player)`, called from the
-/// loan period (0x8d0590). After 19 June (only the day of the year, 0x549f70 with 1998) and with the player under 24
-/// (+0x18): the base rule period (0x8e8bd0). Otherwise it starts the following month and ends three months later.
+/// loan period (`transfer_manager_get_loan_period`). After 19 June (only the day of the year, `exe::date_date_549f70` with 1998) and with the player under 24
+/// (+0x18): the base rule period (`exe::transfer_rules_get_loan_period`). Otherwise it starts the following month and ends three months later.
 /// Original: `ENGLAND_RULES::get_loan_period` (0x579c70, england_rules.cpp, thiscall, ret 0x1c).
 ///
 /// [pt] { 0x579c70 } (thiscall, ret 0x1c, england_rules.cpp): `ENGLAND_RULES::get_loan_period(clube, a2, início_mês,

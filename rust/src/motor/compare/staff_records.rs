@@ -113,9 +113,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: 
 
 /// Comparer for `record_manager_job_change`.
 ///
-/// A comparer in rehearsal mode: the manager's record created beforehand (0x86f5b0, as the original routine would do on
+/// A comparer in rehearsal mode: the manager's record created beforehand (`get_manager_record`, as the original routine would do on
 /// the two paths that need it), the copy without the histories and the original from the same state (the record, 0xd2
-/// bytes, and the static date of 0x54cdb0).
+/// bytes, and the static date of `exe::date_days_since`).
 ///
 /// Nulls: only the original.
 ///
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn compare_rewind_staff_history(this: usize,
 
 /// Comparer for `add_year_award_record`.
 ///
-/// The manager side by side through his points record (created beforehand by 0x86f5b0, as the original routine would
+/// The manager side by side through his points record (created beforehand by `get_manager_record`, as the original routine would
 /// do; the copy without the history entry in the file).
 ///
 /// The player draws at random, renews the contract and sends a news item (it cannot run twice): only the original.
@@ -427,7 +427,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_first_cap_record(this: usize,
 
 /// Comparer for `add_month_award_record`.
 ///
-/// The manager side by side on his points record (created beforehand by 0x86f5b0, as the original would; the copy
+/// The manager side by side on his points record (created beforehand by `get_manager_record`, as the original would; the copy
 /// without the history entry in the file).
 ///
 /// The player case draws at random, renews the contract and sends a news item (it cannot run twice): only the original

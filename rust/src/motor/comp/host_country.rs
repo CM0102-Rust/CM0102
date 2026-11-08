@@ -1,6 +1,6 @@
 use super::*;
 
-/// The reference dates of the host decisions (Date::set 0x54a130: day of the month, month from 0, year 1997, no
+/// The reference dates of the host decisions (Date::set `exe::date_set`: day of the month, month from 0, year 1997, no
 /// weekday): their day of the year goes into +0x1f of the entries of the following loop.
 ///
 /// [pt] As datas de referência das decisões (Date::set 0x54a130: dia do mês, mês a partir de 0, ano 1997, sem dia da
@@ -162,15 +162,15 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     }
 }
 
-/// `HostCountry::post_host_news(list)`: posts the news of changed hosts. Called by the hosts calendar 0x5fa850; SEH
+/// `HostCountry::post_host_news(list)`: posts the news of changed hosts. Called by the hosts calendar `host_country_daily_update`; SEH
 /// frame only for the local news, no destructor.
 ///
-/// For each entry of the list (cursor reset, 0x68d1b0), except the chosen bid (or the fixed default) of the edition 8
+/// For each entry of the list (cursor reset, `next_list_item`), except the chosen bid (or the fixed default) of the edition 8
 /// years ahead ([0xae2c92] + 8), the Olympics ([0x9cf7a0]) and the 2006 World Cup in Germany ([0x9cf79c], 0x7d6,
 /// [0x9cf314]): with voting open (−1), news 4 (the bids: competition, year and the six nations); otherwise news 5 (the
-/// chosen bid: competition, year and its two hosts, the first one in the fixed default), built by 0x77bbe0/0x785790 and
-/// delivered to the managers of the competition's continent (table [0xae23d0], 0x6b bytes, +0x59; 0x786640) or to
-/// everyone (0x786780).
+/// chosen bid: competition, year and its two hosts, the first one in the fixed default), built by `construct_news_item`/`set_news_field` and
+/// delivered to the managers of the competition's continent (table [0xae23d0], 0x6b bytes, +0x59; `send_to_continent_managers`) or to
+/// everyone (`send_to_all_managers`).
 /// Original: `HostCountry::post_host_news` (0x5faec0, host_country.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x5faec0 } (thiscall, ret 4, host_country.cpp, `HostCountry::post_host_news(lista)`; pelo calendário das sedes
@@ -232,9 +232,9 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
 
 /// `HostCountry::load_temp_file`: reads HostCountry.tmp. Called by the constructor 0x5f97c0.
 ///
-/// Reads HostCountry.tmp from the CM3_TEMP folder (0x90bde0, fopen 0x945b00 "rb"): the count (word, +4) and the
-/// 0x22-byte entries into a new block ([this], 0x944e46); if the read fails, the error box (lines 0x448/0x452/0x45c),
-/// closes the file (0x945a09) and, if the block exists, frees it (0x9452ca). Returns 1 with everything read, 0 without
+/// Reads HostCountry.tmp from the CM3_TEMP folder (`exe::utils_build_file_path`, fopen `exe::crt_fopen` "rb"): the count (word, +4) and the
+/// 0x22-byte entries into a new block ([this], `exe::crt_malloc`); if the read fails, the error box (lines 0x448/0x452/0x45c),
+/// closes the file (`exe::crt_fclose`) and, if the block exists, frees it (`exe::crt_free`). Returns 1 with everything read, 0 without
 /// the file (a new game builds the default table) or on error.
 /// Original: `HostCountry::load_temp_file` (0x5fb160, host_country.cpp, thiscall, ret 0).
 ///

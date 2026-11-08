@@ -28,15 +28,15 @@ pub(crate) unsafe fn stage_club_at(this: usize, f: usize, j: i32) -> usize {
 /// The same template is used in the Libertadores and the Merconorte, checked instruction by instruction: only the list
 /// size, the group stages, the knockout stage, the source file and the error-box lines change.
 ///
-/// The list (0x944e46(4 × times): push; add esp, 4 -> cdecl; when out of memory, the error box `linha_sem_lista` and
+/// The list (`exe::crt_malloc`(4 × times): push; add esp, 4 -> cdecl; when out of memory, the error box `linha_sem_lista` and
 /// return) gets the first +0xbe of group 1 (in row order) and, from each group stage 0..`fases` − 1, the first +0xbe
 /// (positions 0, 1...). The round table comes from virtual +0x3c (push 0; push &id; push &rodadas; push `mata`; mov
-/// ecx, this -> thiscall, ret 0x10). The stage (0x944cf1(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage
-/// 0x522e00, thiscall, ret 0x3c: the cup, `times`, the list, the rounds, +4, the table, the year +0x40, `mata`, 2, the
+/// ecx, this -> thiscall, ret 0x10). The stage (`exe::crt_operator_new`(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage
+/// `construct_cup_stage`, thiscall, ret 0x3c: the cup, `times`, the list, the rounds, +4, the table, the year +0x40, `mata`, 2, the
 /// id, 0x14, 0, 0, 0 and no seeds; the original routine pushes the rounds, the id and the year with garbage in the high
-/// 16 bits, which the constructor does not read) goes into [+0xc][`mata`]; the list and the table are freed (0x9452ca).
+/// 16 bits, which the constructor does not read) goes into [+0xc][`mata`]; the list and the table are freed (`exe::crt_free`).
 ///
-/// Without a stage: the error box `linha_sem_fase`. With one: the draw of round 0 (0x51c410 Cup::draw_round: push 0;
+/// Without a stage: the error box `linha_sem_fase`. With one: the draw of round 0 (`draw_round` Cup::draw_round: push 0;
 /// mov ecx, stage -> thiscall, ret 4).
 ///
 /// The original routine's SEH frame only covers the constructor (no destructor).
@@ -99,7 +99,7 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
 /// the round is drawn).
 ///
 /// The qualifiers are read first (group 1 in the rows, the stages through the rows of their table +0xb1, like
-/// 0x6826d0); then the stage in [+0xc][`mata`] is checked: +0x3e = `times`, the cup's +4, and the clubs of its list
+/// `league_record`); then the stage in [+0xc][`mata`] is checked: +0x3e = `times`, the cup's +4, and the clubs of its list
 /// (+0xa7, 6 bytes) equal to the plan's as a set (the draw may reorder them).
 ///
 /// [pt] O plano do mata-mata (o comparador roda só a original: a lista, a tabela e a fase são alocadas e a rodada é
@@ -185,27 +185,27 @@ impl NationClubList {
     }
 }
 
-/// `ConMercCup::select_invited_clubs()` (0x4c2560, thiscall, ret 0, con_merc_cup.cpp): builds the 16 invited clubs from
-/// Mexico, Colombia, Peru, Bolivia and the MLS, shuffled. +0xf2 = 16 and the list +0xee (0x944e46(0x40): push; add esp,
+/// `ConMercCup::select_invited_clubs()` (`con_merc_cup_select_invited_clubs`, thiscall, ret 0, con_merc_cup.cpp): builds the 16 invited clubs from
+/// Mexico, Colombia, Peru, Bolivia and the MLS, shuffled. +0xf2 = 16 and the list +0xee (`exe::crt_malloc`(0x40): push; add esp,
 /// 4 -> cdecl; out of memory, the box for line 0x262 and returns 0).
 ///
-/// The clubs of the table ([0xae23b4], 0x245 bytes, [0xae235c] of them; the first national team, 0x53b900
+/// The clubs of the table ([0xae23b4], 0x245 bytes, [0xae235c] of them; the first national team, `exe::database_is_national_team`
 /// database_is_national_team: push club; add esp, 4 -> cdecl, ends the search) with a nation (+0x53) go, by the
 /// nation's id (its +0), to the lists of Mexico ([0x9cf3d0]), Colombia ([0x9cf29c]), Peru ([0x9cf428]) and Bolivia
 /// ([0x9cf254]), up to 30 in each; those of another nation whose league (+0x57) is [0x9cf590] (the MLS) go to the
 /// American league list, up to 12.
 ///
-/// Each list is sorted by reputation and has its top band shuffled (0x4afbd0 comp_util_sort_and_shuffle_top_clubs: push
+/// Each list is sorted by reputation and has its top band shuffled (`comp_util_sort_and_shuffle_top_clubs` comp_util_sort_and_shuffle_top_clubs: push
 /// how many; push the count (word); push list; add esp, 0xc -> cdecl; uses random draws): Mexico 4, Colombia 5, Peru 3,
 /// Bolivia 2, the American league 2.
 ///
 /// The list: in slots 2..5 the top 4 of Mexico, 6..10 the 5 of Colombia, 11..13 the 3 of Peru, 14..15 the 2 of Bolivia;
 /// in slots 0 and 1, without the American league competition ([[0xadadfc] + 4 × [0x9cf728]] = 0) the top 2 of its list;
 /// with it, the champion of the last record of competition [0x9cf590] (0xae23d0 + 0x6b × id) and that of its
-/// competition +4 (0x4afd80 comp_util_get_latest_placed_club: push place; push competition; add esp -> cdecl), and, if
+/// competition +4 (`comp_util_get_latest_placed_club` comp_util_get_latest_placed_club: push place; push competition; add esp -> cdecl), and, if
 /// they are the same club, the runner-up of the first in slot 0.
 ///
-/// The list is shuffled (0x4afb40(list, 16): push; push; add esp, 8 -> cdecl; 3 × 16 random swaps). Returns 1.
+/// The list is shuffled (`comp_util_shuffle_pointer_array`(list, 16): push; push; add esp, 8 -> cdecl; 3 × 16 random swaps). Returns 1.
 ///
 /// The original keeps the lists on the stack without zeroing them: with fewer clubs than slots, it reads leftovers; the
 /// copy reads zero [inference: in this career the four nations and the MLS have enough clubs; the comparer checks the
@@ -360,7 +360,7 @@ pub(crate) unsafe fn con_merc_cup_drawn_club(this: usize, k: usize) -> usize {
 /// rule: the Merconorte has 16 invited clubs (the best of four nations and two clubs of the American league
 /// [inference], shuffled) in 4 groups of 4, home and away (3/1 points, one qualifies from each group, to the
 /// semi-finals); it starts on 1 August; on the draw day group 1 stays in the cup's own table (drawn clubs 0 to 3) and
-/// groups 2 to 4 are stages (4g + 4 to 4g + 7, always 4 teams); on the draw day: the clubs (0x4c2560 (the 16 invited
+/// groups 2 to 4 are stages (4g + 4 to 4g + 7, always 4 teams); on the draw day: the clubs (`con_merc_cup_select_invited_clubs` (the 16 invited
 /// clubs, shuffled)), the group 1 table, the fixtures, the sorted table, the other groups' stages and the predicted
 /// positions; then the league day
 /// Original: `ConMercCup::update_for_date` (0x4c2c90, con_merc_cup.cpp, thiscall, ret 8).
@@ -418,10 +418,10 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
 /// Rule: group 1 of the Copa Merconorte has 4 clubs, the first 4 drawn, each in the row of its order; human managers
 /// get the group draw news.
 ///
-/// The table of the Merconorte's first group: 4 teams (+0x3e), the table +0xb1 (0x944e46(0xec): push 0xec; add esp, 4
+/// The table of the Merconorte's first group: 4 teams (+0x3e), the table +0xb1 (`exe::crt_malloc`(0xec): push 0xec; add esp, 4
 /// -> cdecl; 4 rows of 0x3b bytes; out of memory, the error box at line 0x145 and returns 0), each row i with drawn
-/// club i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret
-/// 0x10), the group draw news (0x684230: mov ecx, this -> thiscall, ret 0) and returns 1. The same body as 0x4019c0 of
+/// club i (+0xee) (`init_table_row` League::init_table_row: push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret
+/// 0x10), the group draw news (`send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and returns 1. The same body as `init_group_a_table` of
 /// the African Cup (only the file and the error box line change).
 /// Original: `ConMercCup::create_first_group_table` (0x4c1de0, con_merc_cup.cpp, thiscall, ret 0).
 ///
@@ -456,15 +456,15 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
 /// 7), the cup's rules and year and the cup's round table for the group; human managers get the news.
 ///
 /// SEH frame only for the stage's new: no destructor on the normal path. Builds the stage of group g + 1 (g from 0 to
-/// 2, on the draw day). The teams in a vector of 4 pointers (0x944e46(0x10): push; add esp, 4 -> cdecl; out of memory,
+/// 2, on the draw day). The teams in a vector of 4 pointers (`exe::crt_malloc`(0x10): push; add esp, 4 -> cdecl; out of memory,
 /// the error box at line 0x1e9 and 0): drawn clubs 4g + 4 to 4g + 7 (+0xee); the round table through virtual +0x3c
-/// (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xee) push; add
+/// (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) push; add
 /// esp, 4 -> cdecl; the League_Stage constructor 0x68b100, thiscall, ret 0x58, 22 arguments: the cup, the teams (4),
 /// the vector, +0x3c (word), +4, the round table, the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the year
 /// +0x40 (word), g, the id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; the original pushes the words and bytes with
 /// garbage in the high bytes, which the constructor does not read: the copy passes clean values) into [+0xc][g]; the
-/// vector and the round table freed (0x9452ca). No stage: the error box at line 0x1ff and 0. With it: the group news
-/// (0x684230 on the stage), +0x30 = g and 1.
+/// vector and the round table freed (`exe::crt_free`). No stage: the error box at line 0x1ff and 0. With it: the group news
+/// (`send_group_draw_news` on the stage), +0x30 = g and 1.
 /// Original: `ConMercCup::create_group_stage` (0x4c2140, con_merc_cup.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x4c2140 } (thiscall, ret 4, con_merc_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase

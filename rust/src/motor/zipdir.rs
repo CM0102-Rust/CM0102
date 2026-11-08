@@ -5,7 +5,7 @@ use super::*;
 ///
 /// `zipdir_match_filename_pattern(pattern, name)`: 1 if the item's name matches the pattern. "{ Empty }" (0xad6ad8, the
 /// empty slot of the unpack list) never matches; a name equal to the pattern, or an empty pattern, matches; otherwise
-/// letter by letter, case-insensitively (0x90c2f0, only the low byte). `*.` skips the name up to the last dot; `*`
+/// letter by letter, case-insensitively (`exe::utils_char_to_lower`, only the low byte). `*.` skips the name up to the last dot; `*`
 /// followed by anything else only matches if it is the end of the pattern. As in the original, the pattern ending
 /// before the name also matches ("abc" matches "abcdef").
 /// Original: `zipdir_match_filename_pattern` (0x933a00, zipdir.cpp, cdecl).
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "C" fn zget_archive_id(path: usize) -> u32 {
 /// original).
 ///
 /// `zget_matching_size(path, pattern)`: the sum of the (uncompressed) sizes of the items whose name matches the pattern
-/// (0x933a00). The sum is a signed `int`, as in the original: above 2 GB it goes negative and the space check of
+/// (`zipdir_match_filename_pattern`). The sum is a signed `int`, as in the original: above 2 GB it goes negative and the space check of
 /// `load_game_data` always passes (fixing it is a separate decision, like the save above 2 GB). Out of memory, the
 /// error box (zipdir.cpp 849) and 0; a container that does not open or is of an unknown type, 0.
 /// Original: `zget_matching_size` (0x933860, zipdir.cpp, cdecl).
@@ -181,9 +181,9 @@ pub(crate) unsafe fn zipdir_c_strcat(target: *mut u8, source: *const u8) {
 /// in 0x30d40-byte blocks, zclose.
 ///
 /// `zadd_matching_files(path, folder, pattern, a4, kind)`: each file in the folder that `FindFirstFile` finds with the
-/// pattern (0x4c0aa0/0x4c0b50, files only, in the system's order) becomes a container item: `zopen` for writing
-/// (0x9326e0, creates the container with `a4`/`kind` if it does not exist) + `fread` in blocks of 0x30d40 into the
-/// item's read buffer (+0x41705) + `zwrite` (0x932e10) + `zclose` (0x932b00). 1 at the end; 0 if nothing matches. A
+/// pattern (`exe::file_find_first`/`exe::file_find_next`, files only, in the system's order) becomes a container item: `zopen` for writing
+/// (`exe::zopen`, creates the container with `a4`/`kind` if it does not exist) + `fread` in blocks of 0x30d40 into the
+/// item's read buffer (+0x41705) + `zwrite` (`zipdir_zwrite`) + `zclose` (`zclose`). 1 at the end; 0 if nothing matches. A
 /// file that does not open or an item refused: the error box (zipdir.cpp 797 / 805) and 0, without closing the search
 /// (as the original).
 /// Original: `zadd_matching_files` (0x933610, zipdir.cpp, cdecl).
@@ -239,9 +239,9 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
 /// 0x30d40-byte blocks, fwrite).
 ///
 /// `zextract_matching_files(path, folder, pattern)`: copies the names of the index's 1000 slots (the empty ones as "{
-/// Empty }") into a list of 0x104 bytes per name (malloc 0x944e46); each name that matches the pattern (0x933a00) and
+/// Empty }") into a list of 0x104 bytes per name (malloc `exe::crt_malloc`); each name that matches the pattern (`zipdir_match_filename_pattern`) and
 /// opens (`zopen` reading, a4 0x15, kind 4) becomes a file in the folder ("wb"), in blocks of 0x30d40 read by `zread`
-/// (0x932c30) into the item's write buffer (+0x72445). 1 if it extracted any. A file that cannot be created: 0 (closes
+/// (`zipdir_zread`) into the item's write buffer (+0x72445). 1 if it extracted any. A file that cannot be created: 0 (closes
 /// the item).
 ///
 /// Stack garbage in the original: on the error paths (out of memory for the list, a container that does not open or is

@@ -8,12 +8,12 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 5110 |
+| deslocamentos crus | 5100 |
 | chaves fixas cruas | 1821 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
-| locais/parâmetros em português | 929 |
+| locais/parâmetros em português | 911 |
 | linhas | 210170 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
@@ -24,7 +24,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/match_screens.rs` | 240 | 4 | 0 | 0 | 0 | 52 | 5914 |
 | `motor/manager_manager.rs` | 231 | 2 | 0 | 0 | 0 | 11 | 5161 |
 | `motor/match_eng.rs` | 186 | 7 | 0 | 0 | 0 | 75 | 11651 |
-| `motor/match_pl.rs` | 179 | 5 | 0 | 0 | 0 | 25 | 10170 |
+| `motor/match_pl.rs` | 177 | 5 | 0 | 0 | 0 | 25 | 10170 |
 | `motor/transfer_manager.rs` | 144 | 29 | 0 | 0 | 0 | 46 | 10482 |
 | `motor/national_teams.rs` | 143 | 33 | 0 | 0 | 0 | 22 | 3521 |
 | `motor/injury.rs` | 132 | 0 | 0 | 0 | 0 | 15 | 3063 |
@@ -34,8 +34,8 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/shortlist_manager.rs` | 105 | 31 | 0 | 0 | 0 | 13 | 4264 |
 | `motor/database.rs` | 102 | 86 | 0 | 0 | 0 | 31 | 9307 |
 | `motor/comp/cup.rs` | 96 | 8 | 0 | 0 | 0 | 9 | 3527 |
-| `motor/comp/fix_man.rs` | 91 | 31 | 0 | 0 | 0 | 17 | 2629 |
-| `motor/comp/league.rs` | 91 | 20 | 0 | 0 | 0 | 21 | 4115 |
+| `motor/comp/fix_man.rs` | 88 | 31 | 0 | 0 | 0 | 17 | 2629 |
+| `motor/comp/league.rs` | 88 | 20 | 0 | 0 | 0 | 21 | 4115 |
 | `motor/comp/leagues/fin_prm.rs` | 85 | 24 | 0 | 0 | 0 | 9 | 3083 |
 | `motor/formation.rs` | 82 | 0 | 0 | 0 | 0 | 2 | 1091 |
 | `motor/player_search.rs` | 73 | 0 | 0 | 0 | 0 | 2 | 899 |
@@ -48,7 +48,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/human_manager.rs` | 56 | 3 | 0 | 0 | 0 | 5 | 771 |
 | `motor/scout_manager.rs` | 56 | 18 | 0 | 0 | 0 | 5 | 1236 |
 | `motor/comp/eurocomp/european_cup.rs` | 55 | 9 | 0 | 0 | 0 | 2 | 1519 |
-| `motor/comp/friendly.rs` | 54 | 26 | 0 | 0 | 0 | 26 | 3354 |
+| `motor/comp/friendly.rs` | 52 | 26 | 0 | 0 | 0 | 26 | 3354 |
 | `motor/comp/stadium.rs` | 50 | 19 | 0 | 0 | 0 | 15 | 1362 |
 | `motor/player_stats.rs` | 47 | 8 | 0 | 0 | 0 | 8 | 1497 |
 | `motor/comp/comp.rs` | 39 | 9 | 0 | 0 | 0 | 2 | 744 |

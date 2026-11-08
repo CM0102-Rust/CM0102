@@ -360,7 +360,7 @@ pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: 
     0 // nobody watches
 }
 
-/// Index of human manager (or current one) for 0x600740: None without human, Some(None) out of range.
+/// Index of human manager (or current one) for `has_nickname`: None without human, Some(None) out of range.
 ///
 /// [pt] O índice (0..[this+4]) do técnico humano `humano` (ou o da vez, [0xb74c26 + 0x300 × [0xb77c7a]])
 /// para a 0x600740: None se não há humano; Some(None) fora da faixa (caso de erro da original).

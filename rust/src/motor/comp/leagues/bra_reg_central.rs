@@ -29,21 +29,21 @@ pub(crate) unsafe fn bra_reg_central_set_state_league_rules(o: usize, rounds: u1
     write_u8_at(o, 0x49, 7);
 }
 
-/// State league rules for Centro-Oeste (0x430ff0): single round, 8 top places, 3 relegated.
+/// State league rules for Centro-Oeste (`bra_reg_central_set_up_rules`): single round, 8 top places, 3 relegated.
 ///
 /// [pt] O Centro-Oeste (0x430ff0): turno único, 8 vagas de cima (o mata-mata de 8), 3 rebaixados.
 pub(crate) unsafe fn centro_oeste_rules(o: usize) {
     bra_reg_central_set_state_league_rules(o, 1, 8, 3); // cqi8: o Centro-Oeste
 }
 
-/// State league rules for Gaucho (0x4322d0, also Nordeste and Paulista): single round, 4 top places, 2 relegated.
+/// State league rules for Gaucho (`bra_reg_gaucho_set_up_rules`, also Nordeste and Paulista): single round, 4 top places, 2 relegated.
 ///
 /// [pt] O Gaúcho (0x4322d0, também o Nordeste e o Paulista): turno único, 4 vagas de cima, 2 rebaixados.
 pub(crate) unsafe fn gaucho_rules(o: usize) {
     bra_reg_central_set_state_league_rules(o, 1, 4, 2); // cqi8: o Gaúcho
 }
 
-/// State league rules for Catarinense (0x43bc70, also Baiano): two rounds, 4 top places, 1 relegated.
+/// State league rules for Catarinense (`bra_reg_santa_set_up_rules`, also Baiano): two rounds, 4 top places, 1 relegated.
 ///
 /// [pt] O Catarinense (0x43bc70, também o Baiano): dois turnos, 4 vagas de cima, 1 rebaixado.
 pub(crate) unsafe fn catarinense_rules(o: usize) {
@@ -127,7 +127,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, gam
     (0, 0)
 }
 
-/// Centro-Oeste and Goiano (0x4314e0) stage handler: league stage -1, knockout at stage 0 (3-round scale); returns
+/// Centro-Oeste and Goiano (`bra_reg_central_update_staff_records_for_status`) stage handler: league stage -1, knockout at stage 0 (3-round scale); returns
 /// (result, row, destination).
 ///
 /// [pt] O Centro-Oeste e o Goiano (0x4314e0): a fase -1 de pontos corridos e o mata-mata na fase 0 (escala de 3 rodadas).
@@ -145,7 +145,7 @@ pub(crate) unsafe fn centro_oeste_end_of_stage(this: usize, club: usize, status:
     (0, l, d)
 }
 
-/// Mineiro, Paranaense and Carioca (0x434d90) stage handler: league stage -1, stages 0-1 return -1, knockout at stage
+/// Mineiro, Paranaense and Carioca (`bra_reg_minas_gerais_update_staff_records_for_status`) stage handler: league stage -1, stages 0-1 return -1, knockout at stage
 /// 2; returns (result, row, destination).
 ///
 /// [pt] O Mineiro, o Paranaense e o Carioca (0x434d90): a fase -1 de pontos corridos; as fases 0 e 1 (os turnos) devolvem -1;
@@ -166,7 +166,7 @@ pub(crate) unsafe fn mineiro_end_of_stage(this: usize, club: usize, status: u32,
     (0, l, d)
 }
 
-/// NSL (0x411980) stage handler: qualification records in the regular season and final stage, failed-to-qualify record,
+/// NSL (`aus_nsl_update_staff_records_for_status`) stage handler: qualification records in the regular season and final stage, failed-to-qualify record,
 /// champion record; returns (result, 0, 0).
 ///
 /// [pt] A NSL (0x411980). Devolve (devolução, 0, 0): não grava na tabela.

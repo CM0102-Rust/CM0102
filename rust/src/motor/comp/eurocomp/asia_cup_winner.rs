@@ -137,21 +137,21 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: usize) -> [usize; 4] {
     v
 }
 
-/// `AsiaCupWinner::create_finals_stage()` (0x40e030, thiscall, ret 0, asia_cup_winner.cpp): builds the 4-team finals
+/// `AsiaCupWinner::create_finals_stage()` (`exe::asiacupwinner_create_finals_stage`, thiscall, ret 0, asia_cup_winner.cpp): builds the 4-team finals
 /// stage of the Asian Cup Winners' Cup from its finalists, gets the round table from the cup's virtual +0x3c,
 /// constructs the Cup_Stage in stage slot 1 (cup +0xc) and draws its round 0.
 ///
 /// The SEH frame is only for the stage's new: no destructor on the normal path.
 ///
-/// The list of 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; out of memory, the error box for line 0x34b and return)
+/// The list of 4 (`exe::crt_malloc`(0x10): push; add esp, 4 -> cdecl; out of memory, the error box for line 0x34b and return)
 /// from asian_cup_winners_finalists; the round table via virtual +0x3c (push 0; push &id; push &rodadas; push 1; mov
-/// ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage
-/// 0x522e00, thiscall, ret 0x3c: the cup, 4, the list, the rounds, +4, the table, the year +0x40, 1, 2, the id, 0x14,
+/// ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage
+/// `construct_cup_stage`, thiscall, ret 0x3c: the cup, 4, the list, the rounds, +4, the table, the year +0x40, 1, 2, the id, 0x14,
 /// 0, 0, 0 and no seed; the original pushes the rounds, the id and the year with garbage in the high 16 bits, which the
-/// constructor does not read) stored in [+0xc][1]; the table is freed (0x9452ca).
+/// constructor does not read) stored in [+0xc][1]; the table is freed (`exe::crt_free`).
 ///
 /// No stage: the error box for line 0x375 and return (the list is not freed, as in the original). With it: the draw of
-/// round 0 (0x51c410 Cup::draw_round: push 0; mov ecx, stage -> thiscall, ret 4) and the list is freed.
+/// round 0 (`draw_round` Cup::draw_round: push 0; mov ecx, stage -> thiscall, ret 4) and the list is freed.
 ///
 /// [pt] { 0x40e030 } (thiscall, ret 0, asia_cup_winner.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `AsiaCupWinner::create_finals_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem

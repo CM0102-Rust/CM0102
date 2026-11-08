@@ -23,14 +23,14 @@ pub(crate) struct BraRegGoiasStateChampionship {
 /// The constructor of a Brazilian state league (the same 544-byte template in all twelve, checked instruction by
 /// instruction: only the vtable, the stages, the three own routines, the source file and the line numbers change).
 ///
-/// League::League (0x682200, thiscall, ret 0); +4 = the competition record; the vtable; the year (+0x40, word) = `ano`;
-/// the discipline rule (+0x50) = 7. If the saved state loads (League::load_from_temp_file 0x687b10, thiscall(this, 1),
+/// League::League (`exe::new_league`, thiscall, ret 0); +4 = the competition record; the vtable; the year (+0x40, word) = `ano`;
+/// the discipline rule (+0x50) = 7. If the saved state loads (League::load_from_temp_file `exe::league_load_from_temp_file`, thiscall(this, 1),
 /// ret 4; returns ≠ 0), returns this.
 ///
 /// Otherwise (new career): +0x51 = 0xf (the importance), +0x44 = 0xff, +0x30 = −1, +0x2c = the stages and their array
-/// (malloc 0x944e46, unchecked); then, each with its own error box (returning this) if it returns 0: the rules, the
-/// table, the fixtures (League::create_fixtures 0x6835c0, thiscall, ret 0) and the sort (League::sort_table 0x6827d0,
-/// thiscall(this, 0), ret 4); the stats (operator new 0x944cf1 of 0x5ce and Comp_Stats::Comp_Stats 0x49ee70,
+/// (malloc `exe::crt_malloc`, unchecked); then, each with its own error box (returning this) if it returns 0: the rules, the
+/// table, the fixtures (League::create_fixtures `create_fixtures`, thiscall, ret 0) and the sort (League::sort_table `sort_table`,
+/// thiscall(this, 0), ret 4); the stats (operator new `exe::crt_operator_new` of 0x5ce and Comp_Stats::Comp_Stats `exe::new_comp_stats`,
 /// thiscall(new, this), ret 4; the original's SEH frame covers only that new) at +8 (without them: the error box);
 /// finally the predicted positions.
 ///
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_table(this: usize) -
     fill_state_league_table(this, 0xe, 0x98ae90, 0x160, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, 0, "cql_9 goiano cheio")
 }
 
-/// Writes the Goiano league rules (what 0x433640 writes before the calendar): points, tiebreaks, 8 qualifiers,
+/// Writes the Goiano league rules (what `bra_reg_goias_set_up_rules` writes before the calendar): points, tiebreaks, 8 qualifiers,
 /// substitutions.
 ///
 /// [pt] As regras do Goiano (o que a 0x433640 grava antes do calendário).
@@ -207,7 +207,7 @@ pub(crate) unsafe fn goiano_rules(o: usize) {
     write_u8_at(o, 0x49, 7);
 }
 
-/// Writes the Japanese J1 rules (0x663620): two rounds, points, tiebreaks, two relegated to J2.
+/// Writes the Japanese J1 rules (`jap_j1_set_up_rules`): two rounds, points, tiebreaks, two relegated to J2.
 ///
 /// [pt] As regras da J1 (0x663620).
 pub(crate) unsafe fn j1_rules(o: usize) {
@@ -234,7 +234,7 @@ pub(crate) unsafe fn j1_rules(o: usize) {
     write_u8_at(o, 0x49, 5);
 }
 
-/// Writes the Japanese J2 rules (0x665140): four rounds, points, tiebreaks, two promoted to J1; leaves +0x52 and +0xd9
+/// Writes the Japanese J2 rules (`jap_j2_set_up_rules`): four rounds, points, tiebreaks, two promoted to J1; leaves +0x52 and +0xd9
 /// as League::League set them.
 ///
 /// [pt] As regras da J2 (0x665140): não grava +0x52 nem a palavra +0xd9 (fica a de `League::League`).

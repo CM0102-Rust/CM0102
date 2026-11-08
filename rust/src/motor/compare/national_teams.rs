@@ -5,7 +5,7 @@ use super::*;
 
 /// Comparer for `send_club_international_report_news`.
 ///
-/// Comparer of 0x7706c0: the original routine delivers the news items (it allocates in the inboxes), so only it runs,
+/// Comparer of `send_club_international_report_news`: the original routine delivers the news items (it allocates in the inboxes), so only it runs,
 /// with the random draws traced and the squad saved beforehand.
 ///
 /// Then the squad is put back as it was, the copy redoes the work in rehearsal mode (draws from the tape, without
@@ -42,11 +42,11 @@ pub(crate) unsafe extern "thiscall" fn compare_send_club_international_report_ne
 
 /// Comparer for `national_teams_post_call_up_news`.
 ///
-/// Comparer of 0x76e0b0: it only builds and delivers news items (allocating in the humans' inboxes) and builds and
+/// Comparer of `national_teams_post_call_up_news`: it only builds and delivers news items (allocating in the humans' inboxes) and builds and
 /// frees the opponents list: it cannot run twice and writes nothing of the game besides the inboxes.
 ///
 /// Only the original routine runs (simplification: the effect is the human's inbox; the opponents list is checked
-/// through 0x76d560).
+/// through `national_teams_collect_fixture_opponents`).
 ///
 /// [pt] Comparador da 0x76e0b0: ela só monta e entrega notícias (aloca nas caixas dos humanos) e monta e libera a lista dos
 /// adversários: não pode rodar duas vezes e não grava nada do jogo além das caixas. Só a original roda (simplification: o
@@ -72,8 +72,8 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_collect_fixture_op
 
 /// Comparer for `select_squad`.
 ///
-/// The original allocates (0x68d020/0x68d0d0), changes the squads and the tactic slots and sends news (0x76e0b0,
-/// 0x76f1a0): it cannot run twice. Only it runs, with a tape recording open on the squad_selection_regions: the lineup
+/// The original allocates (`exe::new_llist`/0x68d0d0), changes the squads and the tactic slots and sends news (`national_teams_post_call_up_news`,
+/// `exe::national_teams_post_squad_request_news`): it cannot run twice. Only it runs, with a tape recording open on the squad_selection_regions: the lineup
 /// picker (0x6e2000) enters it as a unit, with the input arrays (the list and the codes) and the state of the regions
 /// just before. Afterwards, with that state restored, the Rust copy builds the list (collect_squad_candidates) and the
 /// codes (squad_position_codes), which must match the original's, together with the count, the mode and the team; the
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
 /// The original routine runs first; the copy afterwards, as a dry run, from the same records of the two nations (+0x32
 /// to +0x6c: today's marks, squad dates and call-up marks).
 ///
-/// If the copy requested any squad (0x76c120 allocates and touches the squads), the comparison does not count and the
+/// If the copy requested any squad (`select_squad` allocates and touches the squads), the comparison does not count and the
 /// original stands; otherwise the records must match.
 ///
 /// [pt] Comparador: a original roda antes; a cópia depois, em ensaio, a partir dos mesmos registros das duas nações (+0x32
@@ -494,8 +494,8 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player_from
 
 /// Comparer: byte +0x6b of the record, the under-21 slots and their persons (+0x24 to +0x5e).
 ///
-/// The copy's 0x896c60 no longer finds the persons that the original routine has already removed (it stays outside the
-/// regions, as in 0x7762f0).
+/// The copy's `remove_player_from_selection` no longer finds the persons that the original routine has already removed (it stays outside the
+/// regions, as in `national_teams_remove_player_from_squad`).
 ///
 /// Null under-21 team: only the original.
 ///
@@ -656,7 +656,7 @@ pub(crate) unsafe extern "stdcall" fn compare_national_team_ages(comp: usize, ki
 /// Side by side on the team's squad (50 slots) and, for each club of the squad that counts, on the record (6 bytes) and
 /// on the whole entries vector (capacity × 9).
 ///
-/// When some vector may grow (0x945667 releases the old one; it cannot run twice): only the original routine, then
+/// When some vector may grow (`exe::crt_realloc` releases the old one; it cannot run twice): only the original routine, then
 /// checking the squad sorted by club (the same qsort on a copy, done beforehand).
 ///
 /// [pt] Comparador: lado a lado no elenco do time (50 vagas) e, de cada clube do elenco que conta, no registro (6 bytes) e

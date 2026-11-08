@@ -193,21 +193,21 @@ pub(crate) unsafe fn bra_reg_parana_set_state_league_rules(o: usize, cima: u8, r
     write_u16_at(o, 0xd9, 8);
 }
 
-/// State league rules for Paranaense (0x437fc0): no top places, 4 relegated.
+/// State league rules for Paranaense (`bra_reg_parana_set_up_rules`): no top places, 4 relegated.
 ///
 /// [pt] O Paranaense (0x437fc0): nenhuma vaga de cima na tabela geral (os turnos têm estágios próprios), 4 rebaixados.
 pub(crate) unsafe fn parana_rules(o: usize) {
     bra_reg_parana_set_state_league_rules(o, 0, 4); // cqi9: o Paranaense
 }
 
-/// State league rules for Pernambucano (0x439430, also Norte): 4 top places, 2 relegated.
+/// State league rules for Pernambucano (`bra_reg_pern_set_up_rules`, also Norte): 4 top places, 2 relegated.
 ///
 /// [pt] O Pernambucano (0x439430, também o Norte): 4 vagas de cima, 2 rebaixados.
 pub(crate) unsafe fn pernambucano_rules(o: usize) {
     bra_reg_parana_set_state_league_rules(o, 4, 2); // cqi9: o Pernambucano
 }
 
-/// State league rules for Carioca (0x43a600, also Mineiro): no top places, 2 relegated.
+/// State league rules for Carioca (`bra_reg_rio_set_up_rules`, also Mineiro): no top places, 2 relegated.
 ///
 /// [pt] O Carioca (0x43a600, também o Mineiro): nenhuma vaga de cima na tabela geral, 2 rebaixados.
 pub(crate) unsafe fn carioca_rules(o: usize) {

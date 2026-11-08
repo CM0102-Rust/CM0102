@@ -3,7 +3,7 @@ use super::*;
 /// Constructs the Ireland transfer rules (rule 13): one window, from 10 May to 31 January.
 ///
 /// `IRELAND_RULES::IRELAND_RULES`; SEH frame only for the `new`, no destructor on the normal path. The Ireland transfer
-/// rules (rule 13): the base (0x8e84a0), the vtable 0x96c190, 1 window from `IRELAND_TRANSFER_WINDOWS`. Returns the
+/// rules (rule 13): the base (`exe::new_transfer_rules`), the vtable 0x96c190, 1 window from `IRELAND_TRANSFER_WINDOWS`. Returns the
 /// object.
 /// Original: `IRELAND_RULES::IRELAND_RULES` (0x63c210, ireland_rules.cpp, thiscall, ret 0x14).
 ///

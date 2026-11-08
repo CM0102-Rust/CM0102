@@ -13,8 +13,8 @@ pub(crate) type EngSecondScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8,
 
 /// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
 ///
-/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
-/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// For each round, the date (`league_round_set_date`: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (`store_round_match`: push 0; push c; push b; push a; push j; push i; push
 /// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
@@ -33,7 +33,7 @@ pub(crate) unsafe fn eng_second_set_league_rounds(t: usize, year: u32, first: i3
 
 /// The main stage with the Christmas rounds.
 ///
-/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date `exe::date_date_549f70`: push −1; push year;
 /// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
 /// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
 /// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
@@ -391,7 +391,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
     0
 }
 
-/// Comp_Stats::find_club_entry (0x4a4850) for a club in this competition.
+/// Comp_Stats::find_club_entry (`exe::comp_stats_find_club_entry`) for a club in this competition.
 ///
 /// [pt] A entrada do clube nas estatísticas da competição (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, clube), ret 4;
 /// põe a tabela na ordem dos clubes se precisa e procura).
@@ -449,7 +449,7 @@ pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, club: us
     SCOREBOARD.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, club, mo, mr));
 }
 
-/// like the First one (line 0x294; the play-offs 0x576a70)
+/// like the First one (line 0x294; the play-offs `eng_second_create_play_off_stage`)
 /// Original: `EngSecond::advance_stage` (0x5769e0, eng_second.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5769e0 } (thiscall, ret 0, eng_second.cpp): `EngSecond::advance_stage()` (a virtual +0x28): fonte 0x9c43e8,

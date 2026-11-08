@@ -7,15 +7,15 @@ use super::*;
 /// ecx, local; push year; push day -> thiscall, ret 8, pure); before it (today's year lower, unsigned; or the same year
 /// and today's day lower, signed) the routine returns 0 without the league day.
 ///
-/// On the draw date, if the draw has not been done (+0x45 = 0): the draw of the 16 (0x4022c0: mov ecx -> thiscall, ret
+/// On the draw date, if the draw has not been done (+0x45 = 0): the draw of the 16 (`exe::africannations_draw_finalists`: mov ecx -> thiscall, ret
 /// 0; the return value is not read), the predicted positions (virtual +0x5c, thiscall, ret 0), group A's table
-/// (0x4019c0, thiscall, ret 0; 0: the error box for line 0x3c2), the fixtures (0x6835c0 League::create_fixtures,
-/// thiscall, ret 0; 0: the error box for line 0x3c8), the sorted table (0x6827d0 push 0; mov ecx -> thiscall, ret 4; 0:
-/// the error box for line 0x3cf) (an error returns 0 without the league day), the stages of groups B to D (0x401ea0:
-/// push g; mov ecx -> thiscall, ret 4, g = 0..2), the list at +0xee freed (0x9452ca: push; add esp, 4 -> cdecl) and
+/// (`init_group_a_table`, thiscall, ret 0; 0: the error box for line 0x3c2), the fixtures (`create_fixtures` League::create_fixtures,
+/// thiscall, ret 0; 0: the error box for line 0x3c8), the sorted table (`sort_table` push 0; mov ecx -> thiscall, ret 4; 0:
+/// the error box for line 0x3cf) (an error returns 0 without the league day), the stages of groups B to D (`exe::africannations_create_group_stage`:
+/// push g; mov ecx -> thiscall, ret 4, g = 0..2), the list at +0xee freed (`exe::crt_free`: push; add esp, 4 -> cdecl) and
 /// zeroed, +0xf2 (word) = 0 and +0x45 = 1.
 ///
-/// Then the league day (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), whose return value it
+/// Then the league day (`league_update_for_date`: push completo; push hoje; mov ecx, this -> thiscall, ret 8), whose return value it
 /// passes on.
 ///
 /// [pt] { 0x4025a0 } (thiscall, ret 8, african_nations.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
@@ -77,29 +77,29 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
 // on the draw day (the copy’s condition): +0x45 = 1, the list +0xee and +0xf2 zeroed, the group A table and the three stages
 // created, and the current stage (+0x30) is the last of them (2).
 
-/// `AfricanNations::draw_finalists()` (0x4022c0, thiscall, ret 0, african_nations.cpp): hosts first, then African
+/// `AfricanNations::draw_finalists()` (`exe::africannations_draw_finalists`, thiscall, ret 0, african_nations.cpp): hosts first, then African
 /// nations by reputation, drawn from 4 pots into 4 groups of 4 stored in +0xee.
 ///
-/// +0xf2 (word) = 16 and the list +0xee of 50 (0x944e46(0xc8): push; add esp, 4 -> cdecl; out of memory, the box for
+/// +0xf2 (word) = 16 and the list +0xee of 50 (`exe::crt_malloc`(0xc8): push; add esp, 4 -> cdecl; out of memory, the box for
 /// line 0x349 and returns 0).
 ///
-/// First the hosts of the African Cup of Nations ([0x9cf7ac]) in year +0x40 (0x5fa730 HostCountry::find_hosts on
+/// First the hosts of the African Cup of Nations ([0x9cf7ac]) in year +0x40 (`find_hosts` HostCountry::find_hosts on
 /// [0xb5e134]: push 1; push &second; push &first; push year; push competition -> thiscall, ret 0x14; returns how many,
-/// signed byte; the outputs are only read up to the count), each one via its national team (0x53b3d0
+/// signed byte; the outputs are only read up to the count), each one via its national team (`exe::database_get_national_team`
 /// database_get_national_team: push nation; add esp -> cdecl; the nations in [0xae23a8], 0x122 bytes).
 ///
 /// Then, in nation order ([0xae2350], i as a word), those of the African continent ([0x9cfa08]; the nation's +0x71, its
 /// +0) while there are fewer than 50, except the hosts (+0x53 of the national team). Fewer than 16: returns 0 (no box;
 /// the list stays in +0xee).
 ///
-/// Those after the hosts are sorted by reputation (qsort 0x945333 with 0x4b07d0: 4 pushes; add esp -> cdecl).
+/// Those after the hosts are sorted by reputation (qsort `exe::crt_qsort` with 0x4b07d0: 4 pushes; add esp -> cdecl).
 ///
-/// The groups (0x944e46(0x40); out of memory, the box for line 0x380 and returns 0): for each group j (0..3) and pot p
-/// (0..3), one randomly drawn (0x90cfc0(4): push 4; add esp -> cdecl; the signed byte; again while the pot's slot was
+/// The groups (`exe::crt_malloc`(0x40); out of memory, the box for line 0x380 and returns 0): for each group j (0..3) and pot p
+/// (0..3), one randomly drawn (`exe::utils_random`(4): push 4; add esp -> cdecl; the signed byte; again while the pot's slot was
 /// already taken) among the 4 of the pot (the list in slots 4p to 4p + 3) goes to slot 4j + p of the groups and leaves
 /// the pot (zeroed).
 ///
-/// The list is freed (0x9452ca) and +0xee = the groups. Returns 1.
+/// The list is freed (`exe::crt_free`) and +0xee = the groups. Returns 1.
 ///
 /// [pt] { 0x4022c0 } (thiscall, ret 0, african_nations.cpp): `AfricanNations::draw_finalists()`: +0xf2 (palavra) = 16 e a
 /// lista +0xee de 50 (0x944e46(0xc8): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x349 e devolve 0). Na
@@ -299,10 +299,10 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
 /// Builds the group A table of the African Nations Cup. Rule: group A has four national teams, the first four of the
 /// draw list, in order; the managers get the draw news.
 ///
-/// Ret 0: `AfricanNations::init_group_a_table()`: group A with 4 teams (+0x3e), table +0xb1 (0x944e46(0xec): push 0xec;
+/// Ret 0: `AfricanNations::init_group_a_table()`: group A with 4 teams (+0x3e), table +0xb1 (`exe::crt_malloc`(0xec): push 0xec;
 /// add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of memory: the box at line 0x1f1 and returns 0), each row i with
-/// national side i of the draw list (+0xee) (0x687430: push 0; push 0; push national side; push i; mov ecx, this ->
-/// thiscall, ret 0x10), the group draw news (0x684230: mov ecx, this -> thiscall, ret 0) and returns 1.
+/// national side i of the draw list (+0xee) (`init_table_row`: push 0; push 0; push national side; push i; mov ecx, this ->
+/// thiscall, ret 0x10), the group draw news (`send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and returns 1.
 /// Original: `AfricanNations::init_group_a_table` (0x4019c0, african_nations.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x4019c0 } (thiscall, ret 0, african_nations.cpp): `AfricanNations::init_group_a_table()`: o grupo A com 4 times
@@ -361,12 +361,12 @@ pub(crate) unsafe fn african_nations_record_final_result(f: usize, club: usize, 
 /// Virtual +0x44 of a national-team tournament with groups and knockout (the African Nations Cup and the Copa América):
 /// writes the qualification, elimination and final-placing records by outcome and stage; returns 0.
 ///
-/// `fase` (signed byte) below `grupos` is the group stage: 6, qualification (0x86bdd0: stage 0, round 0x78, weight
-/// 0x19); 0xfe, non-qualification (0x86c1d0: stage 0x41c, weight 0x19), which ends the call-ups.
+/// `fase` (signed byte) below `grupos` is the group stage: 6, qualification (`add_qualified_for_round_record`: stage 0, round 0x78, weight
+/// 0x19); 0xfe, non-qualification (`add_failed_to_qualify_record`: stage 0x41c, weight 0x19), which ends the call-ups.
 ///
 /// At stage `grupos` (the knockout, stage [+0xc][grupos]): 0, qualification with the match's stage +0x32, the +0x6f of
-/// the match's round (+0x34) in the stage's round table (+0xa3, 0x68 bytes) and the weight 0x4bf850(0x28, 0x64, round,
-/// 3); 0xff, elimination (0x86c000) with +0x32, +0x30 and the same weight; 1, 2 and 3, the champion, runner-up and
+/// the match's round (+0x34) in the stage's round table (+0xa3, 0x68 bytes) and the weight `comp_util_scale_by_round`(0x28, 0x64, round,
+/// 3); 0xff, elimination (`add_knocked_out_record`) with +0x32, +0x30 and the same weight; 1, 2 and 3, the champion, runner-up and
 /// third-place records.
 ///
 /// Returns 0.

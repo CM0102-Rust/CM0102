@@ -8,7 +8,7 @@ use super::*;
 /// (+0xc4), +0x43 = 2, tie-breakers 1, 2, 4, 5 (+0xc5..+0xc8), one direct place (+0xbe = 1) and one play-off place
 /// (+0xbf = 1), no relegation (+0xc0 = +0xc1 = 0), +0x49 = 7, +0xa7 = 0xffff (word).
 ///
-/// The draw date (+0xb6, the day of the year) = Date(10, 2, year +0x40, 5) (0x549f70: push 5; push year; push 2; push
+/// The draw date (+0xb6, the day of the year) = Date(10, 2, year +0x40, 5) (`exe::date_date_549f70`: push 5; push year; push 2; push
 /// 0xa; lea ecx, local -> thiscall, ret 0x10: 10 March moved to the Friday [inference]); +0xb8 = 0 (word); the round
 /// table from virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) at +0xba.
 ///
@@ -57,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize)
     set_up_rules(this)
 }
 
-/// `EuroChampQual::get_group_team_count(g)` (0x57d9d0, thiscall, ret 4, euro_champ_qual.cpp): the number of teams in
+/// `EuroChampQual::get_group_team_count(g)` (`exe::eurochampqual_get_group_team_count`, thiscall, ret 4, euro_champ_qual.cpp): the number of teams in
 /// group `g`, 6 or 5 depending on the format (+0xf6).
 ///
 /// With format 1 (9 groups [inference]), groups 0, 2 and 5 have 6 national teams and the others 5; with format 2 (10

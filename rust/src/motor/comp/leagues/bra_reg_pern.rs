@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage(this
 /// beforehand: the clubs of the rows.
 ///
 /// Afterwards, the stage in the first slot must exist, with +0x3e = n, +4 = the league's +4 and the first n clubs of
-/// its list (+0xa7, 6 bytes) equal to those of the plan (as a set: the round draw 0x51c800 may reorder the brackets),
+/// its list (+0xa7, 6 bytes) equal to those of the plan (as a set: the round draw `set_up_round` may reorder the brackets),
 /// and +0x30 = 0.
 ///
 /// [pt] O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O

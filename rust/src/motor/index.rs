@@ -5,7 +5,7 @@ use super::*;
 include!("../nation_adjectives.rs");
 
 /// the nation's adjective into the text (size >= 50): with gender 0 or outside languages 9, 4, 5, 10 and 6 the nation's
-/// name; in those, the form from 0x545a60 and the chains of 937 nations (generated from the exe by adjetivos_nacao.py,
+/// name; in those, the form from `get_adjective_form_index` and the chains of 937 nations (generated from the exe by adjetivos_nacao.py,
 /// texts by address), with the name if the text stays empty (except in languages 4 and 5); returns 1 (0 with a null
 /// nation or text or a short size)
 /// Original: `nation_get_nationality_adjective` (0x6181d0, index.cpp, cdecl).
@@ -106,15 +106,15 @@ pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
 ///
 /// 1) The colours ([0xae2394] of [0xae23ec] + 4, step 0x3a): CORES_DAS_CHAVES.
 ///
-/// 2) With [0x9b5984] ≠ 0 and CM3_TEMP\eng.lng open: 8 counts (bytes swapped if 0x90c140(f) = 0xf1fffff1) and the
-/// tables in file order: clubs c0 × 0x4f (0x6146b0; through list [0xae23fc] up to [0xae235c], if present), continents
-/// c1 × 0xba, competitions c2 × 0x53 (0x60efd0 with row c5 + i), nations c3 × 0x6d (0x60d810), skips c6 × 0x34 and c4 ×
-/// 0x34, awards c7 × 0x4f (0x6115e0), competitions c5 × 0x53 (0x60efd0); a table out of memory: fseek past it.
+/// 2) With [0x9b5984] ≠ 0 and CM3_TEMP\eng.lng open: 8 counts (bytes swapped if `exe::utils_read_file_format_marker`(f) = 0xf1fffff1) and the
+/// tables in file order: clubs c0 × 0x4f (`match_club_key_id`; through list [0xae23fc] up to [0xae235c], if present), continents
+/// c1 × 0xba, competitions c2 × 0x53 (`match_club_comp_key_id` with row c5 + i), nations c3 × 0x6d (`match_nation_key_id`), skips c6 × 0x34 and c4 ×
+/// 0x34, awards c7 × 0x4f (`match_staff_comp_key_id`), competitions c5 × 0x53 (`match_club_comp_key_id`); a table out of memory: fseek past it.
 ///
-/// 3) Otherwise, from the database: nations (0x60d810), club competitions up to [0xae2378] − 0x7f (0x60efd0),
-/// continents, awards (0x6115e0) and clubs (0x6146b0).
+/// 3) Otherwise, from the database: nations (`match_nation_key_id`), club competitions up to [0xae2378] − 0x7f (`match_club_comp_key_id`),
+/// continents, awards (`match_staff_comp_key_id`) and clubs (`match_club_key_id`).
 ///
-/// 4) The report (RELATO_DAS_CHAVES): 0x60d780 (the box "Unable to find the %s index"); the 7 fatal ones quit the game
+/// 4) The report (RELATO_DAS_CHAVES): `exe::report_missing_key_id` (the box "Unable to find the %s index"); the 7 fatal ones quit the game
 /// if the key's nation has byte +0x11c.
 ///
 /// [pt] O miolo da set_key_ids depois do -1 (o -1 é de cada entrada). `marca` = o edi na entrada (-1 na original;
@@ -272,7 +272,7 @@ pub(crate) unsafe extern "C" fn set_key_ids_1080() -> u32 {
 /// [pt] As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 pub(crate) const FIXED_KEY_REGIONS: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
-/// Os nomes das regiões 1..14 da 0x616f20 (imediatos do código, pelos endereços no exe): (adjetivo, substantivo). A
+/// Os nomes das regiões 1..14 da `get_region_name` (imediatos do código, pelos endereços no exe): (adjetivo, substantivo). A
 /// 3 (Caribe) tem textos próprios.
 pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
     (0x9e20bc, 0x9d9458), // African / Africa
@@ -295,13 +295,13 @@ pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
 /// translated adjective or noun by form.
 ///
 /// `get_region_name(region, text, size, form)`: clears the text and writes the name of the region (1..14, signed byte).
-/// Form (byte) other than 0xff with language (0x66f4d0) 4, 5 or 9: the text from the language's table, read by address
+/// Form (byte) other than 0xff with language (`exe::langlib_get_language`) 4, 5 or 9: the text from the language's table, read by address
 /// (`[0x9d0518 + 4 × (4 × region + f)]`, `[0x9d06d4 + 4 × (5 × region + f)]`, `[0x9d05f8 + 4 × (4 × region + f)]`, with
-/// f the adjective form from 0x545a60, already in Rust, called through the game's address), copied. Otherwise, through
+/// f the adjective form from `get_adjective_form_index`, already in Rust, called through the game's address), copied. Otherwise, through
 /// 0x66f4e0: in languages 2, 4, 5 and 9 the adjective with form 0xff and the noun with the others; in the rest the
 /// opposite; the Caribbean: "Caribbean" in languages 2, 4, 5 and 9, otherwise the region texts (form 0xff) or
 /// regionality texts, with the empty string 0xad9c64. Returns 1. Null text, region out of range or size (signed short)
-/// < 100: the original (error box). Used in the region order (0x545dc0, in Rust), in the player search (player_search,
+/// < 100: the original (error box). Used in the region order (`get_regions_sorted_by_name`, in Rust), in the player search (player_search,
 /// search_screens) and in screens without a module (0x7db360, 0x7e13d0, 0x7e29e0).
 /// Original: `get_region_name` (0x616f20, index.cpp, cdecl).
 ///
@@ -358,7 +358,7 @@ pub(crate) unsafe extern "C" fn get_region_name(region: u32, text: usize, size: 
     1
 }
 
-/// Os adjetivos dos continentes da 0x6177f0 por idioma (imediatos do código, pelos endereços no exe; levantados
+/// Os adjetivos dos continentes da `get_continent_adjective` por idioma (imediatos do código, pelos endereços no exe; levantados
 /// seguindo os desvios da original): linhas África [0x9cfa08], Ásia [0x9cfa0c], Europa [0x9cfa10], América do Norte
 /// [0x9cfa14], Oceania [0x9cfa18] e os outros; colunas a forma do adjetivo 0, 1, 2, 3 e as outras.
 pub(crate) const CONTINENT_ADJECTIVES: [[usize; 5]; 6] = [
@@ -390,11 +390,11 @@ pub(crate) const CONTINENT_NAMES_LANGUAGE_4: [[usize; 5]; 6] = [
 /// adjective form.
 ///
 /// The community map gives 629 bytes; the routine runs to 0x6181c5: 2518. `get_continent_adjective(continent, text,
-/// size, form)`: clears the text and copies the continent's adjective. Form (byte) 0 or language (0x66f4d0) other than
+/// size, form)`: clears the text and copies the continent's adjective. Form (byte) 0 or language (`exe::langlib_get_language`) other than
 /// 9, 5 and 4: the record's own adjective (+0x23). Otherwise the language's text by continent (id +0 compared with the
-/// keys `[0x9cfa08..0x9cfa18]`, in that order) and by the adjective form (0x545a60, already in Rust, through the game's
+/// keys `[0x9cfa08..0x9cfa18]`, in that order) and by the adjective form (`get_adjective_form_index`, already in Rust, through the game's
 /// address). Returns 1. Null continent or text, or size (signed short) < 50: the original (0). Used in the search
-/// (find_screens), the Menubar, the day's matches (0x717cc0, in Rust) and 0x7dd400.
+/// (find_screens), the Menubar, the day's matches (`open_day_fixtures_screen`, in Rust) and 0x7dd400.
 /// Original: `get_continent_adjective` (0x6177f0, index.cpp, cdecl).
 ///
 /// [pt] { 0x6177f0 } (cdecl, index.cpp; o mapa dá 629 bytes, a rotina vai até 0x6181c5: 2518): `get_continent_adjective(
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: 
     1
 }
 
-/// As chaves de clube do index.cpp (0x6146b0), na ordem do código: (texto do nome, global que recebe a linha), em 4 cadeias. Vários nomes podem dar na mesma global (grafias).
+/// As chaves de clube do index.cpp (`match_club_key_id`), na ordem do código: (texto do nome, global que recebe a linha), em 4 cadeias. Vários nomes podem dar na mesma global (grafias).
 pub(crate) static CLUB_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
@@ -822,7 +822,7 @@ pub(crate) static CLUB_KEYS: &[&[(u32, u32)]] = &[
     ],
 ];
 
-/// As chaves de nação do index.cpp (0x60d810), na ordem do código: (texto do nome, global que recebe a linha), em 2 cadeias.
+/// As chaves de nação do index.cpp (`match_nation_key_id`), na ordem do código: (texto do nome, global que recebe a linha), em 2 cadeias.
 pub(crate) static NATION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
@@ -1049,7 +1049,7 @@ pub(crate) static NATION_KEYS: &[&[(u32, u32)]] = &[
     ],
 ];
 
-/// As globais de clube na ordem em que 0x60ba80 as compara (as mesmas 313 de CLUB_KEYS).
+/// As globais de clube na ordem em que `remap_club_key_id` as compara (as mesmas 313 de CLUB_KEYS).
 pub(crate) static CLUB_KEYS_SWAP_ORDER: &[u32] = &[
     0x9d00a4, // MLS All Stars East
     0x9d00a8, // MLS All Stars West
@@ -1370,7 +1370,7 @@ pub(crate) static CLUB_KEYS_SWAP_ORDER: &[u32] = &[
 /// chain stores the row in the key's global.
 ///
 /// Matches the database's club name with the game's fixed keys (CLUB_KEYS): in each chain, the first text equal to the
-/// name (_stricmp 0x951c50, case-insensitive) stores the `row` in the key's global and the chain ends; with no hit, it
+/// name (_stricmp `exe::crt_stricmp`, case-insensitive) stores the `row` in the key's global and the chain ends; with no hit, it
 /// moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if the last chain hit).
 /// Original: `match_club_key_id` (0x6146b0, index.cpp, cdecl).
 ///
@@ -1395,7 +1395,7 @@ pub(crate) unsafe extern "C" fn match_club_key_id(name: usize, row: u32) -> u32 
 
 /// After the club table trim, the first club key holding the old id gets the new one (returns 1; none: 0).
 ///
-/// After the club table is trimmed to the database size (0x5267c0), the first club key (in CLUB_KEYS_SWAP_ORDER order)
+/// After the club table is trimmed to the database size (`database_trim_club_table`), the first club key (in CLUB_KEYS_SWAP_ORDER order)
 /// that holds the id `old` is set to `new` and the routine returns 1; none: 0.
 /// Original: `remap_club_key_id` (0x60ba80, index.cpp, cdecl).
 ///
@@ -1415,7 +1415,7 @@ pub(crate) unsafe extern "C" fn remap_club_key_id(old: u32, new: u32) -> u32 {
 /// Matches the database nation name with the 209 fixed nation keys (217 names in 2 chains, _stricmp).
 ///
 /// Matches the database's nation name with the game's fixed keys (NATION_KEYS): in each chain, the first text equal to
-/// the name (_stricmp 0x951c50, case-insensitive) stores the `row` in the key's global and the chain ends; with no hit,
+/// the name (_stricmp `exe::crt_stricmp`, case-insensitive) stores the `row` in the key's global and the chain ends; with no hit,
 /// it moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if the last chain hit).
 /// Original: `match_nation_key_id` (0x60d810, index.cpp, cdecl).
 ///
@@ -1454,7 +1454,7 @@ pub(crate) fn describe_key_diffs(mo: &crate::comparison::MemorySnapshot, mr: &cr
     s
 }
 
-/// The club competition keys of index.cpp (0x60efd0), in code order: (long name text, global that receives the row), in
+/// The club competition keys of index.cpp (`match_club_comp_key_id`), in code order: (long name text, global that receives the row), in
 /// 3 chains; (0, global) = one more global written in the same assignment.
 ///
 /// [pt] As chaves de competição de clube do index.cpp (0x60efd0), na ordem do código: (texto do nome longo, global que recebe a linha), em 3 cadeias; (0, global) = mais uma global gravada no mesmo acerto.
@@ -1823,7 +1823,7 @@ pub(crate) static CLUB_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     ],
 ];
 
-/// As chaves de competição e prêmio de pessoa do index.cpp (0x6115e0), na ordem do código: (texto do nome, global que recebe a linha), em 5 cadeias.
+/// As chaves de competição e prêmio de pessoa do index.cpp (`match_staff_comp_key_id`), na ordem do código: (texto do nome, global que recebe a linha), em 5 cadeias.
 pub(crate) static PERSON_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
@@ -2288,7 +2288,7 @@ pub(crate) static PERSON_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
 /// divisions also store 0x9cf8a4).
 ///
 /// Matches the database's club competition name with the game's fixed keys (CLUB_COMPETITION_KEYS): in each chain, the
-/// first text equal to the name (_stricmp 0x951c50, case-insensitive) stores the `row` in the key's global and the
+/// first text equal to the name (_stricmp `exe::crt_stricmp`, case-insensitive) stores the `row` in the key's global and the
 /// chain ends; with no hit, it moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if
 /// the last chain hit).
 /// Original: `match_club_comp_key_id` (0x60efd0, index.cpp, cdecl).
@@ -2326,7 +2326,7 @@ pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) ->
 /// Matches the staff competition or award name with the 417 fixed keys (442 names in 5 chains, _stricmp).
 ///
 /// Matches the database's person competition or award name with the game's fixed keys (PERSON_COMPETITION_KEYS): in
-/// each chain, the first text equal to the name (_stricmp 0x951c50, case-insensitive) stores the `row` in the key's
+/// each chain, the first text equal to the name (_stricmp `exe::crt_stricmp`, case-insensitive) stores the `row` in the key's
 /// global and the chain ends; with no hit, it moves on to the next. Returns the original's eax: the result of the last
 /// _stricmp (0 if the last chain hit).
 /// Original: `match_staff_comp_key_id` (0x6115e0, index.cpp, cdecl).

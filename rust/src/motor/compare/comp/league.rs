@@ -22,10 +22,10 @@ pub(crate) unsafe extern "thiscall" fn compare_relegate_club_to_division(this: u
 
 /// Comparer for `move_fixtures_for_tv`.
 ///
-/// Comparer of 0x685640: only the original routine runs (the matches leave the calendar and come back through 0x5aa680,
+/// Comparer of `move_fixtures_for_tv`: only the original routine runs (the matches leave the calendar and come back through `add_fixture`,
 /// which allocates, the ratings draw at random and the news items go to the managers).
 ///
-/// The plan, made beforehand: from the date's entry, the league's matches on its day and slice (0x5abd90 into a
+/// The plan, made beforehand: from the date's entry, the league's matches on its day and slice (`collect_comp_fixtures_on_day` into a
 /// temporary list) and the valid slots (slice 0..2) before the first empty one; each valid slot takes one match while
 /// the list has any (every rating gets past the initial −1), and the slot becomes 0xff: the 0xff slots of the block
 /// after the original are min(valid slots, matches).
@@ -166,7 +166,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_positions_and_status(this:
 ///
 /// With +0xe1 = 3 (the competition's virtual pays on its own) or a zero divisor: only the original routine.
 ///
-/// Otherwise, the dry run: the copy without the prize news item (0x48e3e0 allocates) and the original from the same
+/// Otherwise, the dry run: the copy without the prize news item (`send_prize_money_news` allocates) and the original from the same
 /// state, on the finance records (0x167 bytes) of all the clubs in the table.
 ///
 /// [pt] Comparador: com +0xe1 = 3 (a virtual da competição paga por conta própria) ou o divisor zero: só a original. Nos
@@ -224,8 +224,8 @@ pub(crate) unsafe extern "thiscall" fn compare_announce_team_status(league: usiz
 /// Comparer for `league_add_result`.
 ///
 /// The null match and the stage match (the stage's virtual receives the match and compares on its own): only the
-/// original. In the other cases, a dry run: the copy without the stats (0x49f570 finds or creates records) and the
-/// original from the same state: the date at +0xc9, the table rows with the head-to-heads (the regions of 0x685f60),
+/// original. In the other cases, a dry run: the copy without the stats (`exe::comp_stats_record_match_result` finds or creates records) and the
+/// original from the same state: the date at +0xc9, the table rows with the head-to-heads (the regions of `apply_result_to_table`),
 /// the match's +0x3d/+0x3e and the return value.
 ///
 /// [pt] Comparador: a partida nula e a da fase (a virtual da fase recebe a partida e compara por conta própria): só a
@@ -307,7 +307,7 @@ pub(crate) unsafe extern "thiscall" fn compare_copy_table(league: usize) -> usiz
 /// Comparer for `league_set_predicted_positions`.
 ///
 /// The routine writes and may create records in the stats (it does not run twice): the plan is made first, over a copy
-/// of the vector sorted by the core of 0x4c08f0 (keys in a Vec); afterwards, each club's record (the last time it
+/// of the vector sorted by the core of `comp_util_sort_clubs_by_strength` (keys in a Vec); afterwards, each club's record (the last time it
 /// appears) must have the planned position in +0x72.
 ///
 /// [pt] Comparador: grava e pode criar registros na estatística (não roda duas vezes): o plano sai antes, sobre uma cópia

@@ -5,7 +5,7 @@ use super::*;
 
 /// Comparer for `scout_manager_daily_update`.
 ///
-/// Comparer of 0x7f8750: the reports draw at random and allocate and the searches change the human players' lists, so
+/// Comparer of `scout_manager_daily_update`: the reports draw at random and allocate and the searches change the human players' lists, so
 /// only the original routine runs.
 ///
 /// Beforehand, the copy in rehearsal mode prunes a copy of the requests (without the reports) and puts them in the
@@ -47,8 +47,8 @@ pub(crate) unsafe extern "thiscall" fn compare_scout_manager_daily_update(this: 
 
 /// Comparer for `send_scout_reports`.
 ///
-/// Comparer of 0x7f9890: the original routine delivers news items (allocating in the inboxes), so only it runs, with
-/// logging of the calls to 0x7f9a60 turned on; beforehand, the copy as a dry run (without 0x7f9a60) gives the groups
+/// Comparer of `send_scout_reports`: the original routine delivers news items (allocating in the inboxes), so only it runs, with
+/// logging of the calls to `send_scout_report_news` turned on; beforehand, the copy as a dry run (without `send_scout_report_news`) gives the groups
 /// (player, club, how many) in order, and the original's calls must be those.
 ///
 /// [pt] Comparador da 0x7f9890: a original entrega notícias (aloca nas caixas): só ela roda, com o registro das chamadas à
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_club_in_session_searches(this:
 
 /// Comparer for `scout_manager_scout_match`.
 ///
-/// The scouting (0x7b5be0, original) writes what the scouts know and the reports, 0x7ae9c0 starts searches and 0x7f9890
+/// The scouting (`player_search_scout_match`, original) writes what the scouts know and the reports, `exe::player_search_start_scout_assignment` starts searches and `send_scout_reports`
 /// delivers the news: it cannot run twice. Only the original runs (simplification: the routine itself only writes the
 /// local array and list, which are discarded); it checks the return value (1).
 ///

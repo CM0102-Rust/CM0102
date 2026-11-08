@@ -81,11 +81,11 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
 /// Finds the nth club of a nation in the South American club table, optionally skipping clubs already qualified and
 /// clubs with a human manager.
 ///
-/// `ConmebolSeeding::find_nth_unqualified_club_of_nation`; this is not read; the same code as UEFA's 0x9050d0. In the
+/// `ConmebolSeeding::find_nth_unqualified_club_of_nation`; this is not read; the same code as UEFA's `uefa_find_nth_unplaced_club_of_nation`. In the
 /// South American club table (12-byte records sorted by nation: +0 the club, +4 the nation id), a binary search
-/// (bsearch 0x946464 with 0x905ce0; the key holds only the nation and +8 = 0xff) finds a club of the nation; it steps
+/// (bsearch `exe::crt_bsearch` with 0x905ce0; the key holds only the nation and +8 = 0xff) finds a club of the nation; it steps
 /// back to the first club of the nation, then walks to the `n`th (char, 1 = the first) that counts, skipping, on
-/// request, those that already have a place (+0x1db ≠ −1) and those with a human manager (0x600a50(club, 0, 1, 0, 0)).
+/// request, those that already have a place (+0x1db ≠ −1) and those with a human manager (`exe::human_manager_is_human_club`(club, 0, 1, 0, 0)).
 /// The table is sorted by nation and, within it, by division, position and reputation. The last record of the table is
 /// never examined by the loop (if the loop reaches it with the count at zero, it is chosen without the tests). Returns
 /// the club if it belongs to the nation, otherwise 0.
@@ -175,14 +175,14 @@ pub(crate) unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, cl
 /// Builds the CONMEBOL club table: South American and Mexican clubs (national teams excluded), each stripped of its
 /// continental place, sorted by nation.
 ///
-/// `collect_conmebol_clubs` (stdcall, ret 4). It allocates 12 bytes per club in the game (0x944e46; out of memory, the
+/// `collect_conmebol_clubs` (stdcall, ret 4). It allocates 12 bytes per club in the game (`exe::crt_malloc`; out of memory, the
 /// box for line 0xbb and returns 0) and stores the pointer in `*out`. For each club with a nation that is not a
-/// national team (0x53b900) and is from Mexico ([0x9cf3d0]) or from a South American nation (continent +0x71 equal to
+/// national team (`exe::database_is_national_team`) and is from Mexico ([0x9cf3d0]) or from a South American nation (continent +0x71 equal to
 /// the id of [0x9cfa1c]): it removes the continental place (+0x1db = −1) and writes the record (+0 the club, +4 the
 /// nation id, +8 the reputation +0x80 / 500, +9 the +0x69 of the division +0x5b, +0xb the +0x5f; without a division −1
 /// and 0x7f; with a division belonging to a competition without +0x11c, the division and the club's +0x5f are zeroed).
 /// Within a nation the order is by division, position and reputation [inference: the division +0x69 and club +0x5f
-/// fields]. It sorts by nation (qsort 0x945333 with 0x905ce0). Returns the number of clubs (only the low 16 bits
+/// fields]. It sorts by nation (qsort `exe::crt_qsort` with 0x905ce0). Returns the number of clubs (only the low 16 bits
 /// count).
 /// Original: `collect_conmebol_clubs` (0x4c6280, conmebol_seeding.cpp, stdcall, ret 4).
 ///
@@ -259,8 +259,8 @@ pub(crate) unsafe fn club_seeding_regions() -> Vec<(usize, usize)> {
 /// The Libertadores calendar: every new game year it builds the CONMEBOL club table and gives out the places.
 ///
 /// `ConmebolSeeding::update_for_new_season`, called by the Libertadores and by the Mercosur. Without `skip` and with
-/// the game year ([0xae2c92]) different from +0x6f: it stores the year, builds the club table (0x4c6280; if empty, the
-/// box for line 0x9b and it returns without freeing), gives the Libertadores places (0x4c6430) and frees the table.
+/// the game year ([0xae2c92]) different from +0x6f: it stores the year, builds the club table (`collect_conmebol_clubs`; if empty, the
+/// box for line 0x9b and it returns without freeing), gives the Libertadores places (`assign_libertadores_places`) and frees the table.
 /// Original: `ConmebolSeeding::update_for_new_season` (0x4c61b0, conmebol_seeding.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x4c61b0 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::update_for_new_season`): chamada pela

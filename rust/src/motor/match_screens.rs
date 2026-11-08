@@ -370,8 +370,8 @@ pub(crate) unsafe extern "C" fn match_stats_compare_events(a: *const u8, b: *con
 }
 
 /// Os 25 registros de aba (0xd4 bytes: +4 o título, +0xcc a marca, +0xd0 o valor) que a barra de abas
-/// (0x5ed780) lê, construídos (0x4568f0) e destruídos (0x5a53c0) pelos iteradores do runtime
-/// (0x9463af/0x9462bb) como na original.
+/// (`exe::gui_add_tab_bar`) lê, construídos (0x4568f0) e destruídos (0x5a53c0) pelos iteradores do runtime
+/// (`exe::crt_vector_constructor_iterator`/`exe::crt_vector_destructor_iterator`) como na original.
 pub(crate) type MatchTabs = [u32; 0x14b4 / 4];
 
 /// Constructs the 25 match tab objects (0xd4 bytes each) with the CRT vector constructor.
@@ -464,10 +464,10 @@ pub(crate) unsafe fn format_match_team_name(team: usize, so_name: u8) {
 }
 
 /// Adds a commentary speed row `valor` to list `lista`, flagged (0x2002) when it is the current one `v` (the return
-/// value of 0x5fcff0).
+/// value of `exe::human_manager_get_commentary_speed`).
 ///
 /// The original pushes one of the three colours (0xae31aa, 0xaebdec, 0xaebdea, in that order) in the `eax` left over
-/// from 0x5fcff0 (with the high 16 bits known) and the others in dirty registers (extended here); `sujo` says which, as
+/// from `exe::human_manager_get_commentary_speed` (with the high 16 bits known) and the others in dirty registers (extended here); `sujo` says which, as
 /// (flagged, not flagged).
 ///
 /// [pt] Uma linha da velocidade da narração `valor` na lista `lista`, marcada (0x2002) quando é a atual `v`
@@ -2745,7 +2745,7 @@ pub(crate) unsafe fn colour_word_u32(a: usize) -> u32 {
 }
 
 /// The regions a match-screen routine touches: those of the screen, the network buffer position ([0xae290c]) and, in
-/// the updates (0x801c70 and company, which become a packet for the `Display`), the manager's local `Display`
+/// the updates (`exe::screenmanager_set_widget_text` and company, which become a packet for the `Display`), the manager's local `Display`
 /// (+0x3844).
 ///
 /// An update that goes over the network (slot with [+0x7d4] ≠ 0): `None` (the packet would be sent twice).
@@ -4028,10 +4028,10 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
 }
 
 /// Saves into `copia` (screen parameter 0x1d) the match state `estado` (0xd7a bytes), as the three values routines do
-/// at the end (the copy is 0x71dd70 / 0x71df00 inlined).
+/// at the end (the copy is `match_team_block_assign` / `match_player_row_assign` inlined).
 ///
 /// Fields of 4, 2 and 1 bytes up to 0x11f, the two team blocks of 0x625 bytes and the tail 0xd69..0xd7a. With no copy
-/// yet: allocates it (0x944cf1), constructs the two blocks (0x9463af with 0x453c30) and writes it into parameter 0x1d.
+/// yet: allocates it (`exe::crt_operator_new`), constructs the two blocks (`exe::crt_vector_constructor_iterator` with 0x453c30) and writes it into parameter 0x1d.
 ///
 /// [pt] Guarda em `copia` (o parâmetro 0x1d) o estado da partida `estado` (0xd7a bytes), como as três
 /// rotinas de valores fazem no fim (a cópia é a 0x71dd70 / 0x71df00 em linha): campos de 4, 2 e 1
@@ -5355,13 +5355,13 @@ pub(crate) unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
 
 // simplification: opening the screen touches screens and the network (does not run twice): in comparison mode original only
 
-/// Reads parameter k of the current screen (screen manager 0x7ff010).
+/// Reads parameter k of the current screen (screen manager `exe::screenmanager_get_screen_param`).
 ///
 /// [pt] Lê e grava os parâmetros da tela atual do gerente de telas [0xb74450] (0x7ff010, 0x7ff270).
 pub(crate) unsafe fn get_screen_param(k: u32) -> usize {
     exe::screenmanager_get_screen_param(G_SCREEN_MANAGER, k)
 }
-/// Writes parameter k of the current screen (screen manager 0x7ff270).
+/// Writes parameter k of the current screen (screen manager `exe::screenmanager_set_screen_param`).
 pub(crate) unsafe fn set_screen_param(k: u32, v: usize) {
     exe::screenmanager_set_screen_param(G_SCREEN_MANAGER, k, v, 0);
 }
@@ -5393,7 +5393,7 @@ pub(crate) unsafe extern "C" fn open_match_details(partida: usize) {
 /// item's club (`0x899a50`) and returns −4. Then, by tab: 1 possession (`0x71d9e0`), 2 statistics (`0x71e750`), 3
 /// action zones (`0x720320`; and an item with id 4 changes the action of param `0xa`), 4 report, 5 and 7 the team
 /// statistics (`0x722dc0`), 6 the ratings (`0x723350`); the redraws only with flag 4 of the match menu (`[[param
-/// 0]+0x5b]`) and `[0xb6b7ac]`. Finally −11, the redraw (`0x802d00`) and the menu bar.
+/// 0]+0x5b]`) and `[0xb6b7ac]`. Finally −11, the redraw (``exe::screenmanager_redraw_screen``) and the menu bar.
 /// Original: `match_details_input` (0x71bdc0, match_screens.cpp, cdecl).
 ///
 /// [pt] { 0x71bdc0 } (cdecl, match_screens.cpp): a resposta da tela de detalhes ao item `item` (−1 nenhum).

@@ -61,10 +61,10 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_advance_stage(this: usize) {
 ///
 /// `UsaMls::create_playoff_stage()`, the MLS play-off, from the next stage; SEH frame only for the new.
 ///
-/// 1) A list of 8 (malloc 0x944e46 of 0x20; out of memory: the box for line 0x58d and it returns).
+/// 1) A list of 8 (malloc `exe::crt_malloc` of 0x20; out of memory: the box for line 0x58d and it returns).
 ///
 /// 2) The three division winners (the first of the league table, of stage 0 and of stage 1), in 6-byte records (the
-/// club and the points, +0x19 of the row), sorted by points (qsort 0x945333 with 0x90a130: more points first), go to
+/// club and the points, +0x19 of the row), sorted by points (qsort `exe::crt_qsort` with 0x90a130: more points first), go to
 /// slots 1, 3 and 5 of the list.
 ///
 /// 3) The others: the second, third and fourth of each table (in the order: league, stage 0, stage 1, row by row), nine
@@ -74,10 +74,10 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_advance_stage(this: usize) {
 /// follow the list].
 ///
 /// 4) The round table through virtual +0x3c (thiscall(this, 2, &rounds, &extra, 0), ret 0x10); the stage (operator new
-/// 0x944cf1(0xb2) and the Cup_Stage constructor 0x522e00, thiscall, ret 0x3c: the league, 8, the list, the rounds, +4,
+/// `exe::crt_operator_new`(0xb2) and the Cup_Stage constructor `construct_cup_stage`, thiscall, ret 0x3c: the league, 8, the list, the rounds, +4,
 /// the table, the year +0x40, 2, 1, the extra, 0x12, 1, 0, 0 and null seeds; the port passes clean words) into
-/// [+0xc][2] and the table freed (free 0x9452ca). Without a stage: the box for line 0x5c4. With it: Cup::set_up_round
-/// (0x51c800, thiscall(stage, 0), ret 4). The list is not freed (the stage keeps it; the original leaves it so).
+/// [+0xc][2] and the table freed (free `exe::crt_free`). Without a stage: the box for line 0x5c4. With it: Cup::set_up_round
+/// (`set_up_round`, thiscall(stage, 0), ret 4). The list is not freed (the stage keeps it; the original leaves it so).
 /// Original: `UsaMls::create_playoff_stage` (0x9094c0, usa_mls.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x9094c0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_playoff_stage()`, o play-off
@@ -152,11 +152,11 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
 ///
 /// `UsaMls::create_final_stage()`, the MLS Cup final, from the next stage; SEH frame only for the new. The first two
 /// play-off teams ([+0xc][2], the 6-byte records of +0xa7, in order) with the winner mark (+5 = 1) in a list of 2
-/// (malloc 0x944e46 of 8; out of memory: the box for line 0x5e5 and it returns); the round table through virtual +0x3c
-/// (thiscall(this, 3, &rounds, &extra, 0), ret 0x10); the stage (operator new 0x944cf1(0xb2) and the Cup_Stage
-/// constructor 0x522e00: the league, 2, the list, the rounds, +4, the table, the year, 3, 1, the extra, 0x14, 0, 0, 0
+/// (malloc `exe::crt_malloc` of 8; out of memory: the box for line 0x5e5 and it returns); the round table through virtual +0x3c
+/// (thiscall(this, 3, &rounds, &extra, 0), ret 0x10); the stage (operator new `exe::crt_operator_new`(0xb2) and the Cup_Stage
+/// constructor `construct_cup_stage`: the league, 2, the list, the rounds, +4, the table, the year, 3, 1, the extra, 0x14, 0, 0, 0
 /// and null seeds) into [+0xc][3] and the table freed. Without a stage: the box for line 0x5fe and it returns (without
-/// freeing the list). With it: Cup::set_up_round (thiscall(stage, 0)) and the list freed (free 0x9452ca).
+/// freeing the list). With it: Cup::set_up_round (thiscall(stage, 0)) and the list freed (free `exe::crt_free`).
 /// Original: `UsaMls::create_final_stage` (0x9097d0, usa_mls.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x9097d0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_final_stage()`, a final da MLS
@@ -218,9 +218,9 @@ pub(crate) unsafe fn is_in_mls_division(this: usize, c: usize, code: i16) -> boo
 /// Creates the MLS table (the first division, code 0x413): the four clubs of the competition with that division code,
 /// in database order; succeeds if it found all four.
 ///
-/// `UsaMls::create_table()`: +0x3e = 4; the table (malloc 0x944e46 of 0xec, 4 rows of 0x3b; out of memory: the box for
+/// `UsaMls::create_table()`: +0x3e = 4; the table (malloc `exe::crt_malloc` of 0xec, 4 rows of 0x3b; out of memory: the box for
 /// line 0x2fe and 0) at +0xb1; in database order ([0xae23b4], [0xae235c] clubs of 0x245 bytes, i16 counter), while rows
-/// are missing, each club of the competition with code 0x413 goes to the next row (League::init_table_row 0x687430:
+/// are missing, each club of the competition with code 0x413 goes to the next row (League::init_table_row `init_table_row`:
 /// push 0; push 0; push club; push eax with the row in the low byte and the code's garbage above, which it does not
 /// read; mov ecx -> thiscall, ret 0x10). Returns 1 if it filled the 4 rows.
 /// Original: `UsaMls::create_table` (0x908560, usa_mls.cpp, thiscall, ret 0).
@@ -260,19 +260,19 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
 /// Same template in both, checked instruction by instruction: only the division code, slot k, the error boxes' source
 /// file and the lines change.
 ///
-/// 1) A vector of +0x3e clubs (malloc 0x944e46 of 4 × +0x3e; when out of memory: the error box for line `linhas[0]` and
+/// 1) A vector of +0x3e clubs (malloc `exe::crt_malloc` of 4 × +0x3e; when out of memory: the error box for line `linhas[0]` and
 /// return) with the clubs of the competition with `codigo`, in database order (i32 counter), while there are slots
 /// left.
 ///
 /// 2) The round table from virtual +0x3c (create_round_table: thiscall(this, −3, &rodadas, &extra, 0), ret 0x10).
 ///
-/// 3) The stage: operator new 0x944cf1(0xee) and the League_Stage constructor 0x68b100 (thiscall, ret 0x58, 22
+/// 3) The stage: operator new `exe::crt_operator_new`(0xee) and the League_Stage constructor 0x68b100 (thiscall, ret 0x58, 22
 /// arguments, in the original routine's order: the league, +0x3e (word), the vector, +0x3c (word, the rounds), +4, the
 /// round table, the rounds (word), the points +0xc2 (`pv`) and +0xc3, the category +0xc4, &+0xc5, &+0xbe (the league's
 /// places), the year +0x40 (word), k, the extra (word), +0x51, 1, +0xab (word), +0xd9 (word), +0xa7 (word), 0, 2; the
 /// copy passes clean values). When out of memory: 0.
 ///
-/// 4) [+0xc][k] = the stage; the vector and the round table freed (free 0x9452ca, in that order). Without a stage: the
+/// 4) [+0xc][k] = the stage; the vector and the round table freed (free `exe::crt_free`, in that order). Without a stage: the
 /// error box for line `linhas[1]`. With one: +0x30 = `atual` (the original writes k) and the stage's +0x3a = the
 /// division code.
 ///
@@ -489,11 +489,11 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_start_new_season(this: usize) -> 
 /// 7 and 10, one scale shared by the three divisions.
 ///
 /// `UsaMls::set_predicted_positions()`. Without statistics (+8): the box for line 0x675 and it returns. A vector of 3 ×
-/// +0x3e clubs (malloc 0x944e46; out of memory: the box for line 0x67d and it returns): those of the league table,
+/// +0x3e clubs (malloc `exe::crt_malloc`; out of memory: the box for line 0x67d and it returns): those of the league table,
 /// those of stage 0 and those of stage 1 (the three divisions, row by row), each block of +0x3e sorted by reputation
-/// (qsort 0x945333 with 0x4b07d0, highest first, nulls at the end). The first twelve of the vector get, in each
-/// division, positions 1, 4, 7 and 10 (Comp_Stats::set_club_final_position 0x4a2540, thiscall(+8, club, position), ret
-/// 8; the order of the twelve calls is the vector's); the vector is freed (free 0x9452ca). [inference] The three
+/// (qsort `exe::crt_qsort` with 0x4b07d0, highest first, nulls at the end). The first twelve of the vector get, in each
+/// division, positions 1, 4, 7 and 10 (Comp_Stats::set_club_final_position `set_club_final_position`, thiscall(+8, club, position), ret
+/// 8; the order of the twelve calls is the vector's); the vector is freed (free `exe::crt_free`). [inference] The three
 /// divisions are mixed in the prediction: each division's favourite is predicted 1st, the second 4th, the third 7th and
 /// the last 10th.
 /// Original: `UsaMls::set_predicted_positions` (0x909bb0, usa_mls.cpp, thiscall, ret 0).
@@ -574,7 +574,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list:
     crate::comparison::branch("cqs_2 clubes da mls");
 }
 
-/// Staff_Records::add_failed_to_qualify_record (0x86c1d0) for a club.
+/// Staff_Records::add_failed_to_qualify_record (`add_failed_to_qualify_record`) for a club.
 ///
 /// [pt] 0x86c1d0 Staff_Records::add_failed_to_qualify_record (thiscall em [0xdd7f00], ret 0x10; já em Rust).
 pub(crate) unsafe fn usa_mls_add_failed_to_qualify_record(club: usize, comp: usize, stage: u32, weight: u32) {
@@ -588,7 +588,7 @@ pub(crate) unsafe fn weight_by_round(game: usize) -> u32 {
     exe::comp_util_scale_by_round(0x32, 0x46, read_i16(game + 0x34) as u16 as u32, 2)
 }
 
-/// The MLS stage-end outcome (0x908200): qualified, failed or knocked-out records by situation and phase; dry run
+/// The MLS stage-end outcome (`usa_mls_update_staff_records_for_status`): qualified, failed or knocked-out records by situation and phase; dry run
 /// without effects when `fazer` is false.
 ///
 /// [pt] A MLS no fim das fases (0x908200). `fazer` = falso: o ensaio do comparador (só a devolução).
@@ -660,7 +660,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(t
 /// and West [inference]), without counting the statistics twice.
 ///
 /// `UsaMls::add_result(match, statistics)` (slot 2): the match goes to the overall table (`League::add_result`
-/// 0x685d30) with the match's mark +0x42 set to -1 when below 2; in stage 1 (the regular season), it also goes to the
+/// `league_add_result`) with the match's mark +0x42 set to -1 when below 2; in stage 1 (the regular season), it also goes to the
 /// tables of the two conferences (stages 0 and 1, through their slot 2, with mark 0 and 1 and without the statistics
 /// block +8, which is saved and restored). Returns 1.
 /// Original: `UsaMls::add_result` (0x9099d0, usa_mls.cpp, thiscall).
@@ -729,7 +729,7 @@ pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(club: usize
 /// MLS: 32 games per team (+0xa7; four round robins in +0x3c); win 3, draw 1; tie-break by goal difference, goals
 /// scored and head-to-head; 1 top place in the overall table (rule word 0x48: 0x8 next stage, the play-offs; 0x40 fixed
 /// round order); nobody goes up or down; the word +0xab = 0xc2 copied to each match. No schedule here: the games are
-/// built by hand (0x9086e0)
+/// built by hand (`exe::usamls_create_season_fixtures`)
 /// Original: `UsaMls::set_up_rules` (0x908660, usa_mls.cpp, thiscall).
 ///
 /// [pt] { 0x908660 } (thiscall, usa_mls.cpp): `UsaMls::set_up_rules`, as regras da MLS; devolve 1 (o eax que ela usa como

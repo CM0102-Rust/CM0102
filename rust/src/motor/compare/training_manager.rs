@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_coach_assignments(this: us
 /// Comparer for `reassign_squad_schedules`.
 ///
 /// Side by side over the training entry and fitness load of each player of the two squads, the manager's staff
-/// (0x8b2880 at the end) and the clubs' mark +0x244 (0x541f90 via 0x540a50). With an error box (a player with no player
+/// (`update_coach_assignments` at the end) and the clubs' mark +0x244 (`database_collect_club_squad` via `exe::club_get_linked_b_team`). With an error box (a player with no player
 /// sheet in the old squad, or a manager outside the 16 humans with a new club): only the original runs.
 ///
 /// [pt] Comparador: lado a lado na entrada do treino e na carga de forma de cada jogador dos dois elencos, na comissão do
@@ -83,11 +83,11 @@ pub(crate) unsafe extern "thiscall" fn compare_training_manager_cpp_0x8b2230(thi
 }
 
 /// Comparer: side by side on the random generator's state, on [0xae1080], on the training entry (6 bytes), on the
-/// player sheet (+0xf..+0x41, what 0x8b2be0 writes) and on the load of the fitness sheet (31 bytes per player at
+/// player sheet (+0xf..+0x41, what `apply_training_progress` writes) and on the load of the fitness sheet (31 bytes per player at
 /// [[0xb63d28]], +0x1e), with the copy's draws not counted.
 ///
-/// Only the original routine: the error cases and the player with position training (0x8b4b20 before running), because
-/// there 0x8b4450, the contract mark (0x867700) and 0x5885c0 write outside these regions.
+/// Only the original routine: the error cases and the player with position training (`find_position_training` before running), because
+/// there `exe::training_manager_set_position_training_rate`, the contract mark (`exe::staff_contract_apply_event_flags`) and `exe::news_post_player_unhappy_with_training` write outside these regions.
 ///
 /// [pt] Comparador: lado a lado no estado do sorteador, em [0xae1080], na entrada do treino (6 bytes), na ficha (+0xf..+0x41,
 /// o que a 0x8b2be0 grava) e na carga da ficha de forma (31 bytes por jogador em [[0xb63d28]], +0x1e), com os sorteios

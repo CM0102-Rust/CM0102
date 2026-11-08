@@ -13,8 +13,8 @@ pub(crate) type EngFirstScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, 
 
 /// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
 ///
-/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
-/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// For each round, the date (`league_round_set_date`: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (`store_round_match`: push 0; push c; push b; push a; push j; push i; push
 /// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
@@ -33,7 +33,7 @@ pub(crate) unsafe fn eng_first_set_league_rounds(t: usize, year: u32, first: i32
 
 /// The main stage with the Christmas rounds.
 ///
-/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date `exe::date_date_549f70`: push −1; push year;
 /// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
 /// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
 /// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
@@ -355,18 +355,18 @@ pub(crate) unsafe fn eng_first_league_row_club(league: usize, k: usize) -> usize
 /// Creates the play-off stage of the three divisions from 4 table rows: club list, round table, Cup_Stage in the first
 /// stage slot, then Cup::set_up_round.
 ///
-/// This is the body of 0x573080, 0x576a70 and 0x5783c0, which differ only in the lines, the source file and the stage's
+/// This is the body of `eng_first_create_playoff_stage`, `eng_second_create_play_off_stage` and `eng_third_create_play_off_stage`, which differ only in the lines, the source file and the stage's
 /// +0x3a.
 ///
-/// The list of `+0xbf` clubs (malloc 0x944e46 of 4 × the signed byte; when out of memory: the error box
+/// The list of `+0xbf` clubs (malloc `exe::crt_malloc` of 4 × the signed byte; when out of memory: the error box
 /// `linha_sem_lista` and nothing else) takes the clubs of the 4 table `linhas`, in this order (the brackets: 0 × 1 and
 /// 2 × 3). Virtual +0x3c (create_round_table: thiscall(this, stage 0, &rodadas, &extra, null), ret 0x10) builds the
-/// round table; the new stage (operator new 0x944cf1 of 0xb2 bytes; Cup_Stage::Cup_Stage 0x522e00, thiscall with 15
+/// round table; the new stage (operator new `exe::crt_operator_new` of 0xb2 bytes; Cup_Stage::Cup_Stage `construct_cup_stage`, thiscall with 15
 /// arguments, ret 0x3c: the league, the count, the list, the rounds, +4, the round table, the word +0x40, 0, 1, `a10`
 /// (or the virtual's extra), 0x14, 0, 0, 0, 0) goes into the first stage slot ([+0xc]); the list and the round table
-/// are freed (free 0x9452ca).
+/// are freed (free `exe::crt_free`).
 ///
-/// Without a stage: the error box `linha_sem_fase`; otherwise Cup::set_up_round (0x51c800, thiscall(stage, 0), ret 4).
+/// Without a stage: the error box `linha_sem_fase`; otherwise Cup::set_up_round (`set_up_round`, thiscall(stage, 0), ret 4).
 ///
 /// The original routine's SEH frame only covers the constructor (no destructor).
 ///
@@ -415,7 +415,7 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
 }
 
 /// builds the play-off stage with the 6th, 3rd, 5th and 4th of the table (ties 6th v 3rd and 5th v 4th), the round
-/// table from virtual +0x3c and +0x3a = 0xa0; puts the stage in the first slot (+0xc) and sets up the round (0x51c800);
+/// table from virtual +0x3c and +0x3a = 0xa0; puts the stage in the first slot (+0xc) and sets up the round (`set_up_round`);
 /// out of memory, the error box (lines 0x2f0 and 0x306)
 /// Original: `EngFirst::create_playoff_stage` (0x573080, eng_first.cpp, thiscall, ret 0).
 ///
@@ -432,7 +432,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_playoff_stage(this: usiz
 /// The original allocates the list, the round table and the stage and builds the round (only it runs). The plan, made
 /// beforehand: the clubs of the 4 rows. Afterwards, the stage of the first slot must exist, with +0x3e = the count
 /// (+0xbf), +4 = the league's +4, and the first 4 clubs of its list (+0xa7, 6 bytes) equal to those of the plan (as a
-/// set: the round draw 0x51c800 may reorder the ties).
+/// set: the round draw `set_up_round` may reorder the ties).
 ///
 /// [pt] O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
 /// plano, feito antes: os clubes das 4 linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = a conta
@@ -463,7 +463,7 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize
 }
 
 /// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the
-/// play-offs (0x573080)
+/// play-offs (`eng_first_create_playoff_stage`)
 /// Original: `EngFirst::advance_stage` (0x572ff0, eng_first.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x572ff0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::advance_stage()` (a virtual +0x28): fonte 0x9c4374,

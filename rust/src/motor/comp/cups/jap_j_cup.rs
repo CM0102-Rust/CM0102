@@ -2,8 +2,8 @@ use super::*;
 
 /// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
 ///
-/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through 0x521e60; the
-/// match (the same, plus the leg at +6 and the venue at +0x13) through 0x521eb0.
+/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through `cup_set_round_draw_date`; the
+/// match (the same, plus the leg at +6 and the venue at +0x13) through `cup_set_round_match_date`.
 ///
 /// Then the fields: +7 the round name, +9 the index, +0xb the draw bits, +0xd and +0xf the tie-breakers (single match
 /// and two legs), +0x17 the category copied into each match, +0x18/+0x1a/+0x1c/+0x1e teams, matches, new teams and
@@ -35,7 +35,7 @@ pub(crate) const fn cqn11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, 
     JapJCupCupRound { draw: sorteio, game: jogo, code: codigo, bits, category: categoria, teams: times, tie: confronto, prizes: premios }
 }
 
-/// Writes cup round i of table t (0x68 bytes): draw and match dates (0x521e60, 0x521eb0) plus code, bits, category,
+/// Writes cup round i of table t (0x68 bytes): draw and match dates (`cup_set_round_draw_date`, `cup_set_round_match_date`) plus code, bits, category,
 /// team counts, tie settings and prizes from a static record.
 ///
 /// [pt] Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
@@ -70,7 +70,7 @@ pub(crate) unsafe fn jap_j_cup_write_cup_round(t: usize, i: u32, r: &JapJCupCupR
 /// single-stage cups: only stage −1 builds the round table.
 ///
 /// Outside stage −1 (the byte), returns 0 without writing anything. In −1: saida (if requested) = 0, rodadas = the
-/// table size, extra = 0; the table (0x944e46 of 0x68 × rodadas; when out of memory, the error box `linha` of `arquivo`
+/// table size, extra = 0; the table (`exe::crt_malloc` of 0x68 × rodadas; when out of memory, the error box `linha` of `arquivo`
 /// and returns 0) is filled with each round.
 ///
 /// Returns the table.
@@ -181,14 +181,14 @@ pub(crate) unsafe fn jap_j_cup_club_by_index(i: i32) -> usize {
     read_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize)
 }
 
-/// Random 0..n-1 (0x90cfc0).
+/// Random 0..n-1 (`exe::utils_random`).
 ///
 /// [pt] O sorteio de 0 a n − 1 (0x90cfc0: push n; add esp, 4 -> cdecl).
 pub(crate) unsafe fn jap_j_cup_random(n: i32) -> i32 {
     exe::utils_random(n)
 }
 
-/// Sorts n clubs by reputation and shuffles the top `escolhas` (comp_util_sort_and_shuffle_top_clubs 0x4afbd0).
+/// Sorts n clubs by reputation and shuffles the top `escolhas` (comp_util_sort_and_shuffle_top_clubs `comp_util_sort_and_shuffle_top_clubs`).
 ///
 /// [pt] Ordena `n` clubes do vetor pela reputação e embaralha os melhores (0x4afbd0: push escolhas; push n; push vetor; add
 /// esp, 0xc -> cdecl; já em Rust).
@@ -197,7 +197,7 @@ pub(crate) unsafe fn sort_and_shuffle_top_clubs(v: *mut usize, n: i32, escolhas:
     exe::comp_util_sort_and_shuffle_top_clubs(v as usize, n as i16 as u16 as u32, escolhas);
 }
 
-/// CRT qsort of n 6-byte entrants with comparator 0x522190.
+/// CRT qsort of n 6-byte entrants with comparator `cup_compare_entries_by_level_desc`.
 ///
 /// [pt] O qsort de `n` inscritos a partir de `base` (0x945333 com 0x522190: push 0x522190; push 6; push n; push base; add
 /// esp, 0x10 -> cdecl; 0x522190 já em Rust).
@@ -205,11 +205,11 @@ pub(crate) unsafe fn sort_entrants(base: usize, n: u32) {
     exe::crt_qsort(base, n, 6, 0x522190);
 }
 
-/// `JapJCup::collect_entrants()` (0x665a00, thiscall, ret 0, jap_j_cup.cpp): 28 entrants (+0x3e = 28); the list
-/// (0x944e46 of 0xa8 at +0xa7; out of memory, the box for line 0x11a and −1).
+/// `JapJCup::collect_entrants()` (`jap_j_cup_collect_entrants`, thiscall, ret 0, jap_j_cup.cpp): 28 entrants (+0x3e = 28); the list
+/// (`exe::crt_malloc` of 0xa8 at +0xa7; out of memory, the box for line 0x11a and −1).
 ///
 /// The J2 clubs ([0x9cf768]) while they fit, class 0; the J1 clubs ([0x9cf65c]) while they fit, each with a random
-/// class from 0 to 19 (0x90cfc0(20), after writing the club); qsort (0x522190) of the 16 entries from the 11th (+0x42).
+/// class from 0 to 19 (`exe::utils_random`(20), after writing the club); qsort (`cup_compare_entries_by_level_desc`) of the 16 entries from the 11th (+0x42).
 ///
 /// Returns 1 with the list full, otherwise 0 (as the result and count pair).
 ///
@@ -308,13 +308,13 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: 
     a
 }
 
-/// `UsaOpenCup::collect_entrants()` (0x90b530, thiscall, ret 0, usa_open_cup.cpp): 32 entrants.
+/// `UsaOpenCup::collect_entrants()` (`usa_open_cup_collect_entrants`, thiscall, ret 0, usa_open_cup.cpp): 32 entrants.
 ///
 /// +0x3e = 32. Clubs whose division (+0x57, the pointer) is the database competition of [0x9cf594] or that of
 /// [0x9cf598] go into two local arrays of up to 50 each (the pass stops when both are full); each array is sorted and
-/// shuffled (0x4afbd0, 10 picks).
+/// shuffled (`comp_util_sort_and_shuffle_top_clubs`, 10 picks).
 ///
-/// The list (0x945501, the calloc of +0x3e × 6, at +0xa7; out of memory, the error box for line 0x138 and −1) gets the
+/// The list (`exe::crt_calloc`, the calloc of +0x3e × 6, at +0xa7; out of memory, the error box for line 0x138 and −1) gets the
 /// first 10 of each array with class 2 and then all the MLS clubs ([0x9cf590]) with class 1 (without checking the space
 /// left). Returns 1.
 ///
@@ -374,10 +374,10 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
-/// `JapEmpCup::collect_entrants()` (0x6624f0, thiscall, ret 0, jap_emp_cup.cpp): the 80 entrants of the Emperor's Cup,
+/// `JapEmpCup::collect_entrants()` (`jap_emp_cup_collect_entrants`, thiscall, ret 0, jap_emp_cup.cpp): the 80 entrants of the Emperor's Cup,
 /// from the Japanese lower divisions (shuffled), then the J2 and J1 clubs.
 ///
-/// Sets +0x3e = 80 and allocates the list (0x944e46 of 0x1e0 at +0xa7; when out of memory, the error box for line 0x147
+/// Sets +0x3e = 80 and allocates the list (`exe::crt_malloc` of 0x1e0 at +0xa7; when out of memory, the error box for line 0x147
 /// and −1).
 ///
 /// From the Japanese clubs (+0x53 = [0x9cf36c]) that have a division, into local vectors: those of [0x9cf678] (up to
@@ -385,9 +385,9 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
 /// ([0x9cf768]) and J1 ([0x9cf65c]) (up to 6); if there are none of the latter, the last club of [0x9cf678] is moved
 /// from there to here. With fewer than 47, 2, 3 or 1 in each of them, the error box for line 0x178 and 0.
 ///
-/// Each vector is sorted and shuffled (0x4afbd0 with 47, 2, 3 and 1 picks); the list takes the first 47, 2 and 3 (the
+/// Each vector is sorted and shuffled (`comp_util_sort_and_shuffle_top_clubs` with 47, 2, 3 and 1 picks); the list takes the first 47, 2 and 3 (the
 /// last vector is not used), class 0; then the J2 clubs while they fit (class 0) and the J1 clubs while they fit, with
-/// class = last season's position (+0x5f), until the list is full; then qsort (0x522190) of the last 16 entries.
+/// class = last season's position (+0x5f), until the list is full; then qsort (`cup_compare_entries_by_level_desc`) of the last 16 entries.
 ///
 /// Returns 1 with the list full, otherwise 0.
 ///

@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn compare_load_fixtures(this: usize) {
 ///
 /// The copy as a dry run (it stores the matches instead of appending them, with its own severity) and the original from
 /// the same state; it checks the severity and the new nodes at the end of the list (the 0x4f bytes of each match, in
-/// order). The day lists (0x5abf10) have their cursor reset in both.
+/// order). The day lists (`get_fixture_list`) have their cursor reset in both.
 ///
 /// [pt] O comparador dos conflitos de um dia: a cópia em ensaio (guarda os jogos em vez de acrescentar, com uma gravidade
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_day_clashes(this: usize, 
 /// which both redo).
 ///
 /// It checks the return value (list or 0), the output and the matches of the two lists (0x4f bytes each, in order), and
-/// destroys and frees the copy's list as the calendar does (0x68d040, 0x944c94).
+/// destroys and frees the copy's list as the calendar does (`exe::drop_llist`, `exe::crt_operator_delete`).
 ///
 /// [pt] O comparador dos conflitos de um jogo: a original e a cópia, cada uma com a sua lista nova, a partir do mesmo estado
 /// (a original não muda o jogo: só cria a lista e mexe nos cursores das listas dos dias, que as duas refazem); confere a
@@ -183,7 +183,7 @@ pub(crate) unsafe extern "C" fn compare_fix_man_save_fixture_leg_checks() {
 
 /// Comparer for `resolve_same_day_clash` (comparison mode: see the header of motor.rs), as a dry run.
 ///
-/// The routine only writes the list cursor (+0xa, read by 0x68d1b0) and the rest goes through the calendar calls
+/// The routine only writes the list cursor (+0xa, read by `next_list_item`) and the rest goes through the calendar calls
 /// (remove, merge, clashes that allocate the list, the news item), which cannot run twice.
 ///
 /// The copy runs as a dry run (it stops at the decision, without the box) and the original routine afterwards, from the
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn compare_reschedule_club_fixtures_near_dat
 ///
 /// Already in the queue: side by side on the queue header and the found news item (the new date). New: the copy builds
 /// the news item without queueing it and the original runs; the queue must grow by one and the last item (the tail, +6,
-/// node +0) must be the copy's news item over the 0xde bytes the constructor (0x77bbe0) writes; the last of the 0xdf
+/// node +0) must be the copy's news item over the 0xde bytes the constructor (`construct_news_item`) writes; the last of the 0xdf
 /// copied bytes is stack leftover in the original (the copy puts zero).
 ///
 /// [pt] O comparador da notícia, em ensaio. Já na fila: lado a lado no cabeçalho da fila e na notícia achada (a data nova).

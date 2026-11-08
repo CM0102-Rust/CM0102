@@ -113,7 +113,7 @@ pub fn is_leap_year(year: u16) -> i32 {
     }
 }
 
-/// { 0x54a110 }
+/// { `exe::date_date_54a110` }
 pub unsafe extern "thiscall" fn default_date(this: *mut Data) -> *mut Data {
     *this = Data { day: 40, year: 1972, is_leap_year: 1 };
     this
@@ -128,7 +128,7 @@ pub unsafe extern "thiscall" fn new_date(this: *mut Data, day: u32, year: u32) -
     this
 }
 
-/// { 0x54a3f0 } Days since 1600 (years * 365 + leap years) + day of the year, minus 1 if the year is
+/// { `exe::date_get_weekday` } Days since 1600 (years * 365 + leap years) + day of the year, minus 1 if the year is
 /// a leap year, signed modulo 7; 1..6 becomes 0..5, 0 becomes 6 and negative stays as is.
 ///
 /// [pt] { 0x54a3f0 } Dias desde 1600 (anos * 365 + bissextos) + dia do ano, menos 1 se o ano e
@@ -150,7 +150,7 @@ pub unsafe extern "thiscall" fn weekday(this: *const Data) -> i32 {
     }
 }
 
-/// { 0x417c10 } this = *src (year, day, leap flag, in that order); *ret = *this; returns ret.
+/// { `exe::date_operator_3d` } this = *src (year, day, leap flag, in that order); *ret = *this; returns ret.
 ///
 /// [pt] { 0x417c10 } this = *src (ano, dia, bissexto, nessa ordem); *ret = *this; devolve ret.
 pub unsafe extern "thiscall" fn copia(this: *mut Data, ret: *mut Data, src: *const Data) -> *mut Data {
@@ -210,7 +210,7 @@ unsafe fn store(st: *mut Data, ret: *mut Data, day: i16, year: u16) -> *mut Data
     ret
 }
 
-/// { 0x54c5b0 } n (16 bits) negative: static = *this and returns static - (-n).
+/// { `exe::date_add_days` } n (16 bits) negative: static = *this and returns static - (-n).
 /// Quirk preserved: with n = -32768, -n stays -32768 and plus/minus call each other until the stack
 /// overflows (same in the original; the game never asks for that).
 ///
@@ -248,7 +248,7 @@ pub unsafe extern "thiscall" fn menos(this: *const Data, ret: *mut Data, n: u32)
     store(st, ret, day, year)
 }
 
-/// { 0x54c770 } n (8 bits) weeks.
+/// { `exe::date_add_weeks` } n (8 bits) weeks.
 ///
 /// [pt] { 0x54c770 } n (8 bits) semanas.
 pub unsafe extern "thiscall" fn add_weeks(this: *const Data, ret: *mut Data, n: u32) -> *mut Data {
@@ -258,7 +258,7 @@ pub unsafe extern "thiscall" fn add_weeks(this: *const Data, ret: *mut Data, n: 
     store(st, ret, day, year)
 }
 
-/// { 0x54a2d0 } *dest = *this and, if the weekday is not `target`, moves dest to the nearest `target`
+/// { `exe::date_get_nearest_weekday` } *dest = *this and, if the weekday is not `target`, moves dest to the nearest `target`
 /// (difference brought to -3..3). The return value is not used by the callers.
 ///
 /// [pt] { 0x54a2d0 } *dest = *this e, se o dia da semana nao for `alvo`, move dest para o `alvo` mais
@@ -290,7 +290,7 @@ fn valid_input(day: u32, month: u32) -> bool {
     (1..=31).contains(&(day as i16)) && (0..=11).contains(&(month as u8 as i8))
 }
 
-/// { 0x549f70 } Data(day_of_month, month 0..11, year, weekday or 0xffff).
+/// { `exe::date_date_549f70` } Data(day_of_month, month 0..11, year, weekday or 0xffff).
 ///
 /// [pt] { 0x549f70 } Data(dia_do_mes, mes 0..11, ano, dia_da_semana ou 0xffff).
 pub unsafe extern "thiscall" fn from_dmy(this: *mut Data, day: u32, month: u32, year: u32, weekday: u32) -> *mut Data {
@@ -319,7 +319,7 @@ pub unsafe extern "thiscall" fn from_dmy(this: *mut Data, day: u32, month: u32, 
     this
 }
 
-/// Days of year `year` by the rule of { 0x54cdb0 } (the same Gregorian one, on the year as unsigned 32 bits).
+/// Days of year `year` by the rule of { `exe::date_days_since` } (the same Gregorian one, on the year as unsigned 32 bits).
 ///
 /// [pt] Dias do ano `ano` pela regra do { 0x54cdb0 } (a mesma gregoriana, em 32 bits sem sinal do ano).
 fn days_in_year(year: u16) -> i32 {
@@ -333,8 +333,8 @@ fn days_in_year(year: u16) -> i32 {
     }
 }
 
-/// { 0x54cdb0 } (ret 8) this - other in days, with `other` by value (8 bytes on the stack). In the same
-/// year it is just the difference of the days. With different years, the static 0xae2470 gets *this (0x417c10)
+/// { `exe::date_days_since` } (ret 8) this - other in days, with `other` by value (8 bytes on the stack). In the same
+/// year it is just the difference of the days. With different years, the static 0xae2470 gets *this (`exe::date_operator_3d`)
 /// and walks year by year to `other`'s, adding the days of each year: going back, those of the year
 /// reached itself, going forward, those of the year before each one (as in the original); at the end the static
 /// holds `other`'s year.

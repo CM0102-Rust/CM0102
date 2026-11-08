@@ -10,7 +10,7 @@ pub(crate) const TURKEY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 /// [inference: the foreign player limit]; +0x14 = 8 (default 30).
 ///
 /// Ret 0x14, `TURKEY_RULES::TURKEY_RULES`; SEH frame only for the `new`, no destructor on the normal path: the base
-/// (0x8e84a0), vtable 0x97075c, 1 window from `TURKEY_TRANSFER_WINDOWS`; +0x13 = 8 (the base default is 50) [inference:
+/// (`exe::new_transfer_rules`), vtable 0x97075c, 1 window from `TURKEY_TRANSFER_WINDOWS`; +0x13 = 8 (the base default is 50) [inference:
 /// the foreign player limit]; +0x14 = 8 (the default is 30). Returns the object.
 /// Original: `TURKEY_RULES::TURKEY_RULES` (0x9020a0, turkey_rules.cpp, thiscall, ret 0x14).
 ///

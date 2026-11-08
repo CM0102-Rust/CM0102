@@ -4,7 +4,7 @@ use super::*;
 /// to 25 July; +0x13 = 7 (base default 50) [inference: the foreign limit].
 ///
 /// `KOREA_RULES::KOREA_RULES`; SEH frame only for the `new`, no destructor on the normal path: the transfer rules of
-/// South Korea (rule 27): the base (0x8e84a0), the vtable 0x96cfec, 1 window from `SOUTH_KOREA_TRANSFER_WINDOWS`; +0x13
+/// South Korea (rule 27): the base (`exe::new_transfer_rules`), the vtable 0x96cfec, 1 window from `SOUTH_KOREA_TRANSFER_WINDOWS`; +0x13
 /// = 7 (the base default is 50) [inference: the foreign player limit]. Returns the object.
 /// Original: `KOREA_RULES::KOREA_RULES` (0x66e630, korea_rules.cpp, thiscall, ret 0x14).
 ///

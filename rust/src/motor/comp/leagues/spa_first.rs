@@ -13,8 +13,8 @@ pub(crate) type SpaFirstLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 
 /// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
 ///
-/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
-/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// For each round, the date (`league_round_set_date`: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (`store_round_match`: push 0; push c; push b; push a; push j; push i; push
 /// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
@@ -33,7 +33,7 @@ pub(crate) unsafe fn spa_first_write_league_rounds(t: usize, year: u32, first: i
 
 /// The main stage with the Christmas rounds.
 ///
-/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date `exe::date_date_549f70`: push −1; push year;
 /// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
 /// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
 /// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
@@ -77,7 +77,7 @@ pub(crate) unsafe fn write_rounds_winter_break(t: usize, year: u32, n: &SpaFirst
 ///
 /// The outputs and the written bytes of both tables must be equal (at stage −1 the league rounds,
 /// `written_league_round_bytes`; at the others the cup rounds, `eng_cc_cup_written_round_bytes`); the copy's table is
-/// freed (0x9452ca, cdecl).
+/// freed (`exe::crt_free`, cdecl).
 ///
 /// [pt] Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
@@ -438,12 +438,12 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, wri
 /// Creates the La Primera table of 20 clubs; first the clubs of the Spanish lower division move to the generic lower
 /// division; prize fund of 250,000 per place; TV pays 5,000,000 to each club.
 ///
-/// `SpaFirst::create_table()`. +0x3e = 20 and the table (malloc 0x944e46 of 0x49c; out of memory: the box with source
+/// `SpaFirst::create_table()`. +0x3e = 20 and the table (malloc `exe::crt_malloc` of 0x49c; out of memory: the box with source
 /// 0xa82844, line 0x250, and 0). Before filling, the clubs of the Spanish lower division ([0x9cf6b0]) move to the
 /// generic lower division (+0x57 = the record of [0x9cf764]). Then the Primera clubs ([0x9cf624]) in database order,
-/// each in the next row (League::init_table_row 0x687430: thiscall(league, row, club, 0, 0), ret 0x10), until full (not
-/// filled: 0). Full: the prize fund (+0x28 = League::calc_prize_fund 0x682f70 with the share of 250,000), +0xe1 = 1,
-/// the TV money of 5,000,000 to each club (0x683010: thiscall(league, value, 0), ret 8) and 1.
+/// each in the next row (League::init_table_row `init_table_row`: thiscall(league, row, club, 0, 0), ret 0x10), until full (not
+/// filled: 0). Full: the prize fund (+0x28 = League::calc_prize_fund `calc_prize_fund` with the share of 250,000), +0xe1 = 1,
+/// the TV money of 5,000,000 to each club (`pay_tv_rights`: thiscall(league, value, 0), ret 8) and 1.
 /// Original: `SpaFirst::create_table` (0x84fc70, spa_first.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x84fc70 } (thiscall, ret 0, spa_first.cpp): `SpaFirst::create_table()`. +0x3e = 20 e a tabela (malloc 0x944e46
@@ -504,8 +504,8 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
 /// Writes the club's current, best and worst possible position into La Primera statistics; places 17 and 18 become 16
 /// for the best and 19 for the worst.
 ///
-/// `SpaFirst::set_club_progress(club, stage, current, best, worst)`, virtual +0x68 (from 0x684cd0 for each table row):
-/// in the club's entry in the statistics (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, club), ret 4) it writes
+/// `SpaFirst::set_club_progress(club, stage, current, best, worst)`, virtual +0x68 (from `update_positions_and_status` for each table row):
+/// in the club's entry in the statistics (Comp_Stats::find_club_entry `exe::comp_stats_find_club_entry`: thiscall(+8, club), ret 4) it writes
 /// the current position (+0x73), the best possible (+0x74; 17 and 18 become 16) and the worst (+0x75; 17 and 18 become
 /// 19): the 17 to 18 band of the Primera does not count as a band of its own [inference: positions 17 to 18 join the
 /// neighbouring band above for the best and the one below for the worst].

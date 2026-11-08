@@ -7,8 +7,8 @@ pub(crate) unsafe fn month_award_club_by_id(id: i32) -> usize {
     read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE))
 }
 
-/// The comparers' rehearsal run. The copy runs without the news item (0x767330), without the award record (0x86c8c0)
-/// and without the club lists (0x842c00), because these allocate and cannot run twice.
+/// The comparers' rehearsal run. The copy runs without the news item (`exe::month_award_post_winner_news`), without the award record (`add_month_award_record`)
+/// and without the club lists (`add_player_to_club_shortlists`), because these allocate and cannot run twice.
 ///
 /// [pt] O ensaio dos comparadores: a cópia roda sem a notícia (0x767330), sem o registro do prêmio (0x86c8c0) e sem as
 /// listas dos clubes (0x842c00), que alocam e não podem rodar duas vezes.
@@ -18,8 +18,8 @@ pub(crate) static mut MONTH_AWARD_DRY_RUN: bool = false;
 /// club.
 ///
 /// `MONTH_AWARD::award_best_rated_player(ratings, age)`, called at the turn of the month by the nations' awards
-/// (England's at 0x579a37..0x579adc). It takes the best of the ratings (0x768130) in the award's league (`[+9]`, or −1)
-/// and with the requested age; when one is found, it records the winner (0x7671c0) with the person's club (+0x39, or
+/// (England's at 0x579a37..0x579adc). It takes the best of the ratings (`find_best_player`) in the award's league (`[+9]`, or −1)
+/// and with the requested age; when one is found, it records the winner (`set_winner`) with the person's club (+0x39, or
 /// −1), and the month (+0xc) and year (+0xd) of the ratings. The high bytes of the month and the year are passed
 /// exactly as the original pushes them (taken from the person table in the register).
 /// Original: `MONTH_AWARD::award_best_rated_player` (0x767150, month_award.cpp, thiscall, ret 8).
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, note
 // simplification: its job is to call the player of the month and the winner’s slot, which have their own comparer (side by side and in
 // rehearsal); the slot calls the news and the award record, which allocate: original only; the copy takes the branch.
 
-/// Raises the award winner's reputation: the port directly in dry run, else the original 0x412f00.
+/// Raises the award winner's reputation: the port directly in dry run, else the original `award_raise_winner_reputation`.
 ///
 /// [pt] A reputação do premiado: no ensaio, a cópia direto (sem as listas dos clubes); senão pelo endereço (0x412f00).
 pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {
@@ -73,8 +73,8 @@ pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation:
 ///
 /// `MONTH_AWARD::set_winner(person, club, month, year)`. It looks for the month's slot (12 slots of 11 bytes: month at
 /// +0x25, year at +0x26); without one, it does nothing. It stores the person (+0x1d) and the club (+0x21); when there
-/// is a person, it raises the award winner's reputation (0x412f00, with the award's reputations +0x15 and +0x17 and the
-/// player flag +0x19); then the news (0x767330) and the award record (0x86c8c0 on `[0xdd7f00]`, with the award's +5).
+/// is a person, it raises the award winner's reputation (`award_raise_winner_reputation`, with the award's reputations +0x15 and +0x17 and the
+/// player flag +0x19); then the news (`exe::month_award_post_winner_news`) and the award record (`add_month_award_record` on `[0xdd7f00]`, with the award's +5).
 /// Original: `MONTH_AWARD::set_winner` (0x7671c0, month_award.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x7671c0 } (thiscall, ret 0x10, month_award.cpp): `MONTH_AWARD::set_winner(pessoa, clube, mês, ano)`. Acha a vaga

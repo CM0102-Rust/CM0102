@@ -2,8 +2,8 @@ use super::*;
 
 /// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
 ///
-/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through 0x521e60; the
-/// match (the same, plus the leg at +6 and the venue at +0x13) through 0x521eb0.
+/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through `cup_set_round_draw_date`; the
+/// match (the same, plus the leg at +6 and the venue at +0x13) through `cup_set_round_match_date`.
 ///
 /// Then the fields: +7 the round name, +9 the index, +0xb the draw bits, +0xd and +0xf the tie-breakers (single match
 /// and two legs), +0x17 the category copied into each match, +0x18/+0x1a/+0x1c/+0x1e teams, matches, new teams and
@@ -35,7 +35,7 @@ pub(crate) const fn cql10r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, 
     EngCcCupCupRound { draw: sorteio, game: jogo, code: codigo, bits, category: categoria, teams: times, tie: confronto, prizes: premios }
 }
 
-/// Writes round i of a cup round table: draw and match dates (0x521e60, 0x521eb0) and the round fields (code, bits,
+/// Writes round i of a cup round table: draw and match dates (`cup_set_round_draw_date`, `cup_set_round_match_date`) and the round fields (code, bits,
 /// category, team counts, tie flags, prizes).
 ///
 /// [pt] Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
@@ -282,10 +282,10 @@ pub(crate) unsafe fn came_from_division(c: usize, de: usize) -> bool {
     p != 0 && read_usize(p) == read_usize(de)
 }
 
-/// `EngCcCup::collect_entrants()` (0x56ccc0, thiscall, ret 0, eng_cc_cup.cpp): fills the League Cup entrant list from
+/// `EngCcCup::collect_entrants()` (`eng_cc_cup_collect_entrants`, thiscall, ret 0, eng_cc_cup.cpp): fills the League Cup entrant list from
 /// the four English divisions with seeding classes, sorts it and sets +0xb2; returns the result and the count.
 ///
-/// +0x3e = 92 and +0xb2 = 0; the list is allocated (0x944e46 of 0x228 bytes at +0xa7; out of memory, the error box for
+/// +0x3e = 92 and +0xb2 = 0; the list is allocated (`exe::crt_malloc` of 0x228 bytes at +0xa7; out of memory, the error box for
 /// line 0x18f and −1).
 ///
 /// Clubs not in the European cups, in this order: the Third ([0x9cf5c8]) and the Second ([0x9cf5c4]) with class 0; the
@@ -294,7 +294,7 @@ pub(crate) unsafe fn came_from_division(c: usize, de: usize) -> bool {
 /// position if it came up from the First, 0 otherwise. Then the clubs of the four divisions that are in the European
 /// cups (+0x1db ≠ −1), with class 0x78, each adding 1 to +0xb2.
 ///
-/// The list goes to qsort (0x945333 with 0x5221c0: lower class first, ties broken by reputation) and the class then
+/// The list goes to qsort (`exe::crt_qsort` with `cup_compare_entries_by_level_asc`: lower class first, ties broken by reputation) and the class then
 /// becomes 1 (Premier), 2 (First) or 3 (the others). With the list full: +0xb2 capped at 12 (signed byte) and result 1;
 /// otherwise 0. Also returns how many entered (for the comparer).
 ///
@@ -468,7 +468,7 @@ pub(crate) unsafe fn collect_auto_cup_entrants(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
-/// Club that finished at place (0 champion, 1 runner-up) last season in competition id (0x4afd80).
+/// Club that finished at place (0 champion, 1 runner-up) last season in competition id (`comp_util_get_latest_placed_club`).
 ///
 /// [pt] O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (a competição do
 /// banco: [0xae23d0] + 0x6b × id; 0x4afd80: push lugar; push competição; add esp, 8 -> cdecl).
@@ -525,7 +525,7 @@ pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
     (1, 2)
 }
 
-/// First dword of Date(day, month, year, weekday) (0x549f70): low word day of year, high word year.
+/// First dword of Date(day, month, year, weekday) (`exe::date_date_549f70`): low word day of year, high word year.
 ///
 /// [pt] A primeira dword de Date(dia, mês, ano, dia da semana) (0x549f70: push semana; push ano; push mês; push dia; lea ecx,
 /// local -> thiscall, ret 0x10): a palavra de baixo é o dia do ano, a de cima o ano.
@@ -547,7 +547,7 @@ pub(crate) unsafe fn is_date_today(d: u32, today: usize) -> bool {
 /// Frees the season tables before rebuilding them.
 ///
 /// It frees the entrant list (+0xa7), the rounds table (+0xa3) and the per-round ties (+0xad, one vector per round,
-/// +0x3c rounds), each one only if it exists (0x9452ca, cdecl). The pointers are left as they are (the following
+/// +0x3c rounds), each one only if it exists (`exe::crt_free`, cdecl). The pointers are left as they are (the following
 /// routines rebuild them).
 ///
 /// [pt] Libera as tabelas da temporada antes de refazer: a lista dos inscritos (+0xa7), a das rodadas (+0xa3) e os confrontos
@@ -573,7 +573,7 @@ pub(crate) unsafe fn free_season_tables(this: usize) {
     }
 }
 
-/// Calls the base cup update (FN_CUP_UPDATE_FOR_DATE, 0x51f890) with today and the stage, returning its result.
+/// Calls the base cup update (FN_CUP_UPDATE_FOR_DATE, `cup_update_for_date`) with today and the stage, returning its result.
 ///
 /// [pt] A atualização da copa (0x51f890: push fase; push hoje; mov ecx, copa -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe fn eng_cc_cup_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {

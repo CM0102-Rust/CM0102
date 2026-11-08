@@ -3,7 +3,7 @@ use super::*;
 /// The range (start, end) of the items of the discipline nation index for the nation of `time`.
 ///
 /// Items are 8 bytes (+0 person id, +4 nation id) in the discipline nation index ([this+0xc], count +0x12, signed), for
-/// the nation of `time` (+0x53), in index order: bsearch (0x946464 with 0x55e5f0, cdecl) by the key (−1, nation), which
+/// the nation of `time` (+0x53), in index order: bsearch (`exe::crt_bsearch` with 0x55e5f0, cdecl) by the key (−1, nation), which
 /// matches any person of the nation; then it walks back to the first equal item and forward to the last. 0 items if not
 /// found.
 ///
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tea
     exe::drop_llist(list);
 }
 
-/// O plano do recurso: a entrada da pessoa no órgão da `regra` (0x7e82e0 sem criar), a suspensão (20 bytes em
+/// O plano do recurso: a entrada da pessoa no órgão da `regra` (`exe::rulingbody_find_or_add_discipline_entry` sem criar), a suspensão (20 bytes em
 /// [this+4]), os valores novos de +0 (jogos) ou +2 (dias) e se ela é solta.
 pub(crate) struct AppealPlan {
     pub(crate) body: usize,
@@ -402,7 +402,7 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
     }
 }
 
-/// What 0x556570 is going to do, read beforehand (the list of held bans loses and frees its items): the contract and
+/// What `restore_held_bans` is going to do, read beforehand (the list of held bans loses and frees its items): the contract and
 /// the club, the person's held items (the slot and the 5 bytes) and, after them, the slots 0..2 not restored that the
 /// club does not cover.
 ///
@@ -416,7 +416,7 @@ pub(crate) struct ContractReturnPlan {
     pub(crate) soltas: Vec<(usize, usize)>,
 }
 
-/// Read-only plan of 0x556570: the person's contract and club, stored bans restored from the list, and bans to release
+/// Read-only plan of `restore_held_bans`: the person's contract and club, stored bans restored from the list, and bans to release
 /// for bodies not covering the club.
 ///
 /// [pt] O plano da 0x556570 (o cursor da lista é zerado pela original na entrada; a busca sem criar só lê).
@@ -526,7 +526,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
     }
 }
 
-/// O caminho da 0x556940, lido antes: a suspensão velha estendida (e os valores novos dela), ou a vaga da nova e a
+/// O caminho da `add_ban`, lido antes: a suspensão velha estendida (e os valores novos dela), ou a vaga da nova e a
 /// conta do vetor depois; `None` nas caixas (capacidade no máximo).
 pub(crate) enum SuspensionPlan {
     Estender { s: usize, games: u8, days: i16 },
@@ -580,7 +580,7 @@ pub(crate) unsafe fn ruling_body_for_rule(this: usize, rule: u8) -> usize {
     read_usize(read_usize(this).wrapping_add((rule as i8 as isize as usize).wrapping_mul(4)))
 }
 
-/// The person's 14-byte entry in a ruling body (0x7e82e0 without creating; +6 ban index).
+/// The person's 14-byte entry in a ruling body (`exe::rulingbody_find_or_add_discipline_entry` without creating; +6 ban index).
 ///
 /// [pt] A entrada (14 bytes; +6 o índice da suspensão, −1 sem) da pessoa no órgão: 0x7e82e0 sem criar (só lê).
 pub(crate) unsafe fn ruling_body_entry(body: usize, id: u32) -> usize {
@@ -607,7 +607,7 @@ pub(crate) unsafe fn find_in_nation_index(this: usize, id: u32) -> usize {
     exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this + discipline_fields::NATION_INDEX), (read_i16(this + discipline_fields::NATION_INDEX_COUNT) as i32) as u32, 8, 0x55e5f0)
 }
 
-/// O que a 0x556e90 faz com o jogo: a entrada no órgão, a suspensão (20 bytes em [this+4]), o contador novo de jogos
+/// O que a `update_ban_progress` faz com o jogo: a entrada no órgão, a suspensão (20 bytes em [this+4]), o contador novo de jogos
 /// cumpridos (+1) e se a suspensão termina.
 pub(crate) struct SuspensionMatchUpdate {
     pub(crate) entry: usize,
@@ -616,13 +616,13 @@ pub(crate) struct SuspensionMatchUpdate {
     pub(crate) cumprida: bool,
 }
 
-/// The read-only plan of a match for a ban (only reads; 0x7e82e0 without creating, and 0x54c5b0 only writes its scratch
+/// The read-only plan of a match for a ban (only reads; `exe::rulingbody_find_or_add_discipline_entry` without creating, and `exe::date_add_days` only writes its scratch
 /// date): the person's suspension in the body of `regra`; reports completion.
 ///
 /// By matches (+0 ≠ 0xff): from the start (day +4, year +6; today [0xae2c90]: day +0, year +2), with `conta`, +1 on the
 /// counter (+1), and it ends on reaching +0.
 ///
-/// By days (+0 = 0xff): it ends when today reaches start + days (+2) (0x54c5b0).
+/// By days (+0 = 0xff): it ends when today reaches start + days (+2) (`exe::date_add_days`).
 ///
 /// [pt] O plano do jogo (só lê; a 0x7e82e0 sem criar e a 0x54c5b0 só gravam a data de rascunho dela): a suspensão da
 /// pessoa no órgão da `regra`; por jogos (+0 ≠ 0xff): a partir do começo (dia +4, ano +6; hoje [0xae2c90]: dia +0,
@@ -668,8 +668,8 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
 }
 
 /// the person's ban in the rule's ruling body: match bans, from the start date (+4/+6) and when counting, +1 to the
-/// counter (+1); on reaching the total (+0), or day bans once today reaches start + days (+2, 0x54c5b0), it goes to the
-/// history (0x58e340) and is released (0x556d00)
+/// counter (+1); on reaching the total (+0), or day bans once today reaches start + days (+2, `exe::date_add_days`), it goes to the
+/// history (0x58e340) and is released (`release_ban`)
 /// Original: `Discipline::update_ban_progress` (0x556e90, discipline.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x556e90 } (thiscall, ret 0xc, discipline.cpp): `Discipline::update_ban_progress(id, regra, conta)`: a suspensão

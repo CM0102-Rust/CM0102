@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
 
 /// Comparer for `arrange_international_friendlies`.
 ///
-/// The original routine creates friendlies (0x5c6f00, 0x5c5f40), adds to the lists (0x68d0d0) and draws at random, so
+/// The original routine creates friendlies (`add_friendly_match`, `process_friendly_reply`), adds to the lists (0x68d0d0) and draws at random, so
 /// only it runs, with the plan in rehearsal mode. The first part of the rehearsal runs before it (afterwards the
 /// calendar would already have the new friendlies); the second part, after it, uses the tape of the draws it made
 /// (rng::rastrear: n and the answer, including those inside the friendly's routines) and decides each friendly by what
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
 /// and the tape ends at the same point) and, nation list by nation list, that the original's new items are the ones the
 /// rehearsal would add.
 ///
-/// (Side by side by the random generator's state did not work: 0x5c6f00 and 0x5c5f40 draw internally in the original
+/// (Side by side by the random generator's state did not work: `add_friendly_match` and `process_friendly_reply` draw internally in the original
 /// and the rehearsal does not call them.)
 ///
 /// [pt] Comparador: a original cria amistosos (0x5c6f00, 0x5c5f40), acrescenta às listas (0x68d0d0) e sorteia: só ela roda,
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn compare_friendly_check_tournament_invitat
 
 /// Comparer for `build_international_date_table`.
 ///
-/// Comparer of 0x5ca4f0: the copy first (it allocates its own table, which is copied out and freed: free 0x9452ca,
+/// Comparer of `build_international_date_table`: the copy first (it allocates its own table, which is copied out and freed: free `exe::crt_free`,
 /// cdecl), then the original routine from the same +0x34ec..+0x34f5; checks the count, the last day done and the 110
 /// dates.
 ///
@@ -202,11 +202,11 @@ pub(crate) unsafe extern "thiscall" fn compare_resolve_international_dates(this:
     SCOREBOARD.record(igual, || format!("resolve_international_dates(conta {}) original={:x?} rust={:x?}", n, mo, mr));
 }
 
-/// Comparer for `plan_club_friendlies` (0x5c4770; comparison mode: see the header of motor.rs).
+/// Comparer for `plan_club_friendlies` (`plan_club_friendlies`; comparison mode: see the header of motor.rs).
 ///
-/// Only the original runs (simplification: it frees and allocates the plan, and 0x5c4380 allocates the candidates' date
+/// Only the original runs (simplification: it frees and allocates the plan, and `plan_friendly_on_free_date` allocates the candidates' date
 /// and opponent lists; it does not run twice), checking the plan it leaves: the plan allocated, the capacity (+0x34e4)
-/// not lower than the count (+0x34e0), +0x34dc zeroed and the plan in date order (0x778e90 between neighbours).
+/// not lower than the count (+0x34e0), +0x34dc zeroed and the plan in date order (`compare_call_up_records_by_date` between neighbours).
 ///
 /// [pt] Comparador da 0x5c4770: só a original (simplification: ela libera e aloca o plano, e a 0x5c4380 aloca as listas de datas e
 /// de adversários dos candidatos; não roda duas vezes), conferindo o plano que ela deixa: o plano alocado, a capacidade
@@ -285,11 +285,11 @@ pub(crate) unsafe extern "thiscall" fn compare_process_friendly_reply(this: usiz
 
 /// Comparer for `send_friendly_request`.
 ///
-/// Comparer of 0x5c5570: only the original routine runs (the list node and the news item allocate). The plan, made
+/// Comparer of `send_friendly_request`: only the original routine runs (the list node and the news item allocate). The plan, made
 /// beforehand: the reply list gets one more node and keeps the request; the status goes to 2 when the other club, in
 /// status 1, has a human manager; otherwise it does not change.
 ///
-/// News item 6 to a human on holiday is answered on the spot by the assistant (0x784100: status 1 and 0x5c5f40 with
+/// News item 6 to a human on holiday is answered on the spot by the assistant (`exe::newsitem_auto_respond`: status 1 and `process_friendly_reply` with
 /// `forcar`, checked by its own comparer): then the request has already left the list (the list keeps the earlier
 /// nodes) and may have been freed (the status is not read).
 ///
@@ -424,7 +424,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_due_planned_friendlies(thi
 /// Comparer for `add_friendly_match`.
 ///
 /// It allocates and appends to the list (it does not run twice): the original does it and the copy checks the result
-/// against the home side's stadium, looked up beforehand (0x5ae870, read-only): occupied → 0; otherwise the returned
+/// against the home side's stadium, looked up beforehand (`is_stadium_in_use`, read-only): occupied → 0; otherwise the returned
 /// friendly has the date, +0xc the club, +8 = 0, +0x18 = 1 and home and away sides according to `em_casa`.
 ///
 /// [pt] Comparador: aloca e acrescenta à lista (não roda duas vezes): a original faz e a cópia confere o resultado com o
@@ -653,7 +653,7 @@ pub(crate) unsafe extern "thiscall" fn compare_register_comp_objects(friendly: u
 /// Comparer for `update_international_friendlies`.
 ///
 /// On the first day of the year (the lists are emptied, freeing memory) and when there are friendlies to arrange
-/// (0x5cbdf0 creates matches and draws at random), only the original routine runs, checking the plan: the day set at
+/// (`arrange_international_friendlies` creates matches and draws at random), only the original routine runs, checking the plan: the day set at
 /// +0x34f4.
 ///
 /// On the other days, side by side on the set day and the static dates.

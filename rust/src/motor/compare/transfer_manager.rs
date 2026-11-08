@@ -66,11 +66,11 @@ pub(crate) unsafe extern "thiscall" fn compare_add_loan_negotiation(this: usize,
 
 /// Comparer for `make_exchange_option`.
 ///
-/// Comparer of 0x8c8860: side by side from the same state of [0xae1080], *saida, *atracao and the random generator
-/// (0x8e78f0 draws at random); the copy runs without counting random draws.
+/// Comparer of `make_exchange_option`: side by side from the same state of [0xae1080], *saida, *atracao and the random generator
+/// (`exe::transfer_offer_init_transfer_offer` draws at random); the copy runs without counting random draws.
 ///
 /// It checks the return value, the attraction, [0xae1080] and the snapshot of each side's new offer; the copy's offer
-/// is destroyed (0x8e5710) and freed (0x944c94) and everything stays as the original left it.
+/// is destroyed (`exe::drop_transfer_offer`) and freed (`exe::crt_operator_delete`) and everything stays as the original left it.
 ///
 /// [pt] Comparador da 0x8c8860: lado a lado a partir do mesmo estado de [0xae1080], *saida, *atracao e do sorteador (a
 /// 0x8e78f0 sorteia); a cópia roda sem contar sorteios. Confere a devolução, a atração, [0xae1080] e a foto da oferta
@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_offer_made_news(this: usize,
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_OFFER_MADE_NEWS)(this, o) // simplification: only the news item
 }
 
-/// Comparer for `transfer_manager_can_loan_player` (0x8d0040; comparison mode: see the header of motor.rs).
+/// Comparer for `transfer_manager_can_loan_player` (`transfer_manager_can_loan_player`; comparison mode: see the header of motor.rs).
 ///
 /// Side by side, with [0xae1080], the text at [0xde1f64] and the message (0x100 bytes), and the byte of the player's
 /// 8-byte record at [[0xde1f54]+0x86e] (the only one it can clear); the return value too. The rules, the period and the
@@ -158,10 +158,10 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_exchange_player(this: usiz
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_REMOVE_EXCHANGE_PLAYER)(this, person, offer, so_esta, reason) // simplification: o efeito segue por outras rotinas
 }
 
-/// Comparer for `check_offer_work_permits` (0x8c7690; comparison mode: see the header of motor.rs).
+/// Comparer for `check_offer_work_permits` (`check_offer_work_permits`; comparison mode: see the header of motor.rs).
 ///
-/// Only the original runs (the news items allocate, the offer is rescheduled and continues through 0x8c2f50). The plan,
-/// made beforehand with the side-effect-free queries (0x8c7560, 0x4cc9e0, 0x8c7950 without random draw): a refused
+/// Only the original runs (the news items allocate, the offer is rescheduled and continues through `advance_offer_to_club_approval`). The plan,
+/// made beforehand with the side-effect-free queries (`player_needs_work_permit`, `contract_offer`, `is_work_permit_granted` without random draw): a refused
 /// target returns 0 with the offer in status 0x10; otherwise 1.
 ///
 /// [pt] Comparador da 0x8c7690: só a original (as notícias alocam, a oferta é reagendada e segue pela 0x8c2f50). O plano,
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_offer_work_permits(this: us
 
 /// Comparer for `transfer_manager_daily_update`.
 ///
-/// Comparer of 0x8c5880: only the original routine runs (it processes the offers, which change squads, finances and
+/// Comparer of `transfer_manager_daily_update`: only the original routine runs (it processes the offers, which change squads, finances and
 /// news). It checks what it guarantees, against the previous state: running the day (today equal to the base and the
 /// slice equal to +0x855), in slice 2 the base becomes tomorrow, +0x855 goes back to 0 and +0x84c goes up (from 49 to
 /// 0); in the others +0x855 goes up by 1.
@@ -277,9 +277,9 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_former_club_fee_cuts(this: us
 
 /// Comparer for `pay_next_sale_percentage`.
 ///
-/// Comparer of 0x8cb0f0: the copy in rehearsal mode (without the news item and without the club totals) and the
+/// Comparer of `pay_next_sale_percentage`: the copy in rehearsal mode (without the news item and without the club totals) and the
 /// original routine from the same state, side by side on the two clubs' finances, on [0xae1080] and on the random
-/// generator (0x4d0c60 may draw).
+/// generator (`calc_player_value` may draw).
 ///
 /// When paid (the original's news item and totals may rewrite [0xae1080]), only the finances and the return value.
 ///
@@ -329,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_work_permit_granted(this: usiz
     r
 }
 
-/// Comparador da 0x8c5800: lado a lado em [0xae1080] e no al devolvido.
+/// Comparador da `transfer_manager_get_squad_status_for_reason`: lado a lado em [0xae1080] e no al devolvido.
 pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_get_squad_status_for_reason(this: usize, p: usize, reason: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_TRANSFER_MANAGER_GET_SQUAD_STATUS_FOR_REASON);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, p, reason), || transfer_manager_get_squad_status_for_reason(this, p, reason));
@@ -418,7 +418,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_next_sale_percentage(this: u
 ///
 /// The copy as a dry run (without paying the bonuses) and the original from the same state of the work permit array;
 /// the matches (+4) and the misses (+6) must match. National team at home: the original's local squad starts with stack
-/// garbage, so only the original runs. The bonuses are proved by 0x8cb340 itself (compared) and by the career.
+/// garbage, so only the original runs. The bonuses are proved by `pay_appearance_money` itself (compared) and by the career.
 ///
 /// [pt] Comparador: a cópia em ensaio (sem pagar os prêmios) e a original a partir do mesmo estado do vetor das permissões
 /// de trabalho; os jogos (+4) e as faltas (+6) têm de bater. Seleção em casa: o elenco local da original começa com o
@@ -1175,7 +1175,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_club_uses_bosman(person: us
 
 /// Comparer for `check_board_veto`.
 ///
-/// The board (0x696b10) changes the confidence and cannot run twice: the plan beforehand (the player's three words),
+/// The board (`check_board_transfer_veto`) changes the confidence and cannot run twice: the plan beforehand (the player's three words),
 /// then the original runs and it checks: return value 0 or 1; with a reason, 0x24 (the words at 90%), 0x17 or 0x18 when
 /// 1 and untouched when 0; the words untouched outside reason 0x24 (with no reason, untouched or all three at 90%).
 ///
@@ -1588,7 +1588,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_work_permit(this: usize, per
 /// The copy's choice first; with nobody, only the original routine.
 ///
 /// With a person, original and copy side by side on the club (0x245 bytes) and on the person (0x6e), which is
-/// everything 0x53bd10 writes: it may refuse (home occupied, the human players' range; it happens with more leagues) or
+/// everything `database_add_staff_to_club` writes: it may refuse (home occupied, the human players' range; it happens with more leagues) or
 /// write to the national team (+0x24), and the person does not stay at +0x39.
 ///
 /// [pt] Comparador: a escolha da cópia antes; sem ninguém, só a original. Com a pessoa, original e cópia lado a lado no

@@ -23,14 +23,14 @@ pub(crate) struct StateLeague {
 /// The constructor of a Brazilian state championship (the same 544-byte template in all twelve, checked instruction by
 /// instruction: only the vtable, the stages, the three own routines, the source file and the lines change).
 ///
-/// League::League (0x682200, thiscall, ret 0); +4 = the competition record; the vtable; the year (+0x40, word) = `ano`;
-/// the discipline rule (+0x50) = 7. If the saved state loads (League::load_from_temp_file 0x687b10, thiscall(this, 1),
+/// League::League (`exe::new_league`, thiscall, ret 0); +4 = the competition record; the vtable; the year (+0x40, word) = `ano`;
+/// the discipline rule (+0x50) = 7. If the saved state loads (League::load_from_temp_file `exe::league_load_from_temp_file`, thiscall(this, 1),
 /// ret 4; returns ≠ 0), returns this.
 ///
 /// Otherwise (a new career): +0x51 = 0xf (the importance), +0x44 = 0xff, +0x30 = −1, +0x2c = the stages and their
-/// vector (malloc 0x944e46, unchecked); then, each with its own box (and returning this) if it returns 0: the rules,
-/// the table, the fixtures (League::create_fixtures 0x6835c0, thiscall, ret 0) and the order (League::sort_table
-/// 0x6827d0, thiscall(this, 0), ret 4); the stats (operator new 0x944cf1 of 0x5ce and Comp_Stats::Comp_Stats 0x49ee70,
+/// vector (malloc `exe::crt_malloc`, unchecked); then, each with its own box (and returning this) if it returns 0: the rules,
+/// the table, the fixtures (League::create_fixtures `create_fixtures`, thiscall, ret 0) and the order (League::sort_table
+/// `sort_table`, thiscall(this, 0), ret 4); the stats (operator new `exe::crt_operator_new` of 0x5ce and Comp_Stats::Comp_Stats `exe::new_comp_stats`,
 /// thiscall(new, this), ret 4; the original's SEH frame covers only that new) in +8 (without them: the box); finally
 /// the predicted positions.
 ///

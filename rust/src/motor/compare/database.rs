@@ -21,9 +21,9 @@ pub(crate) unsafe extern "C" fn compare_rejected_by(a: usize, b: usize) -> u32 {
 
 /// Comparer for `database_player_initialisation`.
 ///
-/// Comparer of 0x535a80: original routine and copy side by side over the database it writes (whole persons, players and
+/// Comparer of `database_player_initialisation`: original routine and copy side by side over the database it writes (whole persons, players and
 /// non-players, the 79-byte-per-person table at [0xae2d0c]), [0x9b59b4], the flags 0x9b59b8/9 and the four global
-/// template vectors, the text at 0xde1f64, the stored date of 0x54cab0 and the random generator's state (the copy
+/// template vectors, the text at 0xde1f64, the stored date of `exe::date_sub_weeks` and the random generator's state (the copy
 /// without counting draws).
 ///
 /// Without persons (error box and end): only the original.
@@ -809,7 +809,7 @@ pub(crate) unsafe extern "C" fn compare_database_count_club_coaches(club: usize)
     r
 }
 
-/// Comparer for `nome_em_ingles`, the English names (0x5454c0, 0x5455a0, 0x5456a0) (comparison mode: see the header of
+/// Comparer for `nome_em_ingles`, the English names (`nation_get_english_three_letter_name`, `comp_get_english_name`, `staff_comp_get_english_name`) (comparison mode: see the header of
 /// motor.rs).
 ///
 /// With the names language ([0x9b5984]) ≠ 0 and ≠ 1 and the eng.lng table ([0xae2408]) still null, the first use
@@ -873,7 +873,7 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_lng_free_tables(t: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_LNG_FREE_TABLES)(t)
 }
 
-/// Comparer for `database_generate_extra_non_playing_staff` (0x527240; comparison mode: see the header of motor.rs).
+/// Comparer for `database_generate_extra_non_playing_staff` (`database_generate_extra_non_playing_staff`; comparison mode: see the header of motor.rs).
 ///
 /// Original and copy side by side over the whole club and person tables, [0x9b59b4], the text at 0xde1f64 and the
 /// random generator state (the copy without counting draws). With a person of job 8 outside the slots (error box), only
@@ -1110,7 +1110,7 @@ pub(crate) unsafe extern "C" fn compare_database_merge_b_team_staff() {
 /// Comparer for `database_build_nation_name_index`.
 ///
 /// The original routine builds the index; the copy builds another (new malloc), the two are compared byte by byte, the
-/// copy's is freed (free 0x9452ca) and the original's goes back to [0xae2338].
+/// copy's is freed (free `exe::crt_free`) and the original's goes back to [0xae2338].
 ///
 /// It changes the heap in comparison mode (its fingerprint is not a criterion).
 ///

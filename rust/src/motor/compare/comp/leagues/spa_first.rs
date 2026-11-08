@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_set_up_rules(this: usiz
 
 /// Comparer for `spa_first_create_table`.
 ///
-/// Comparer of 0x84fc70: the original routine allocates the table, changes the clubs' division and pays the TV money
+/// Comparer of `spa_first_create_table`: the original routine allocates the table, changes the clubs' division and pays the TV money
 /// (with a news item), so only it runs. The plan, made beforehand: the clubs of the lower Spanish division (which move
 /// to the generic one) and those of the Primera in database order (up to 20).
 ///

@@ -43,7 +43,7 @@ pub(crate) struct ItaSerASingleStageLeague {
 /// The common create_schedule body (thiscall(league, stage, &rounds, &extra, &é_liga), ret 0x10; no saved state): only
 /// the main stage (−1; the others return 0 without writing anything).
 ///
-/// é_liga (if requested) = 1, the rounds, extra = 0, the table of rounds × 0x41 bytes (malloc 0x944e46: push; add esp,
+/// é_liga (if requested) = 1, the rounds, extra = 0, the table of rounds × 0x41 bytes (malloc `exe::crt_malloc`: push; add esp,
 /// 4 -> cdecl; out of memory: the box and 0) with the league's dates and slots. Returns the table.
 ///
 /// [pt] O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal
@@ -230,7 +230,7 @@ pub(crate) struct ItalianLeagueWithTiebreak {
 /// 0x10; no saved state).
 ///
 /// Stage −1 is the main one (`build_league_schedule`); stage 0, the play-off match: é_liga (if requested) = 0, 1 round,
-/// extra 0, the table of 0x68 bytes (malloc 0x944e46; out of memory: the box and 0); the others return 0 without
+/// extra 0, the table of 0x68 bytes (malloc `exe::crt_malloc`; out of memory: the box and 0); the others return 0 without
 /// writing anything. Returns the table.
 ///
 /// [pt] O corpo comum das duas (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): a fase −1 é a
@@ -286,7 +286,7 @@ pub(crate) unsafe fn ita_ser_a_table_row(league: usize, i: usize) -> usize {
 /// The Serie A zones by position (0 = first): 1 champion, 2 the other Champions League places, 3 UEFA Cup places, 4 the
 /// next two [inference: Intertoto], 5 relegation (+0xc1), 0 the rest.
 ///
-/// 2 covers the nation's `cl` places (UefaSeeding::get_nation_places 0x905c60: push &uefa; push &cl; push
+/// 2 covers the nation's `cl` places (UefaSeeding::get_nation_places `exe::uefaseeding_get_nation_places`: push &uefa; push &cl; push
 /// [[liga+4]+0x5d] (the competition's nation); mov ecx, [0xde1f58] -> thiscall, ret 0xc, which writes 1 to both before
 /// searching); 3 the `uefa` UEFA Cup places, right after; 4 the next two [inference: Intertoto]; 5 the last `+0xc1` of
 /// 18 (relegation); 0 the rest.
@@ -577,16 +577,16 @@ pub(crate) struct ItalianDivision {
 /// The body of the four Italian division constructors (thiscall(this, year, record), ret 8, SEH frame only for the
 /// operator new); returns this.
 ///
-/// The base (League::League 0x682200: mov ecx -> thiscall, ret 0), the record (+4), the vtable, the year (+0x40) and
+/// The base (League::League `exe::new_league`: mov ecx -> thiscall, ret 0), the record (+4), the vtable, the year (+0x40) and
 /// discipline rule 0x11 (+0x50, the Italian leagues' one); it tries to load the state (League::load_from_temp_file
-/// 0x687b10: push 1; mov ecx -> thiscall, ret 4). If it loaded: done.
+/// `exe::league_load_from_temp_file`: push 1; mov ecx -> thiscall, ret 4). If it loaded: done.
 ///
 /// Otherwise, the new league: in A and B, +0xee = 0 and +0x4c = 1; stage 0xff (+0x44), current stage −1 (+0x30), +0x2c
-/// stages and the array [+0xc] (malloc 0x944e46 of 4 × stages: push; add esp, 4 -> cdecl; 0 with no stages); the rules
+/// stages and the array [+0xc] (malloc `exe::crt_malloc` of 4 × stages: push; add esp, 4 -> cdecl; 0 with no stages); the rules
 /// and the table (error box and stop if they fail); the real 2001/02 calendar (unchecked); the fixtures
-/// (League::create_fixtures 0x6835c0), the sort (League::sort_table 0x6827d0: push 0 -> thiscall, ret 4), the stats
-/// (operator new 0x944cf1 of 0x5ce: push; add esp, 4 -> cdecl; Comp_Stats::Comp_Stats 0x49ee70: push league; mov ecx,
-/// new -> thiscall, ret 4) at +8 and the predicted positions (0x68a850: mov ecx -> thiscall, ret 0).
+/// (League::create_fixtures `create_fixtures`), the sort (League::sort_table `sort_table`: push 0 -> thiscall, ret 4), the stats
+/// (operator new `exe::crt_operator_new` of 0x5ce: push; add esp, 4 -> cdecl; Comp_Stats::Comp_Stats `exe::new_comp_stats`: push league; mov ecx,
+/// new -> thiscall, ret 4) at +8 and the predicted positions (`league_set_predicted_positions`: mov ecx -> thiscall, ret 0).
 ///
 /// [pt] O corpo dos quatro construtores (thiscall(this, ano, registro), ret 8, quadro SEH só para o operator new): a base
 /// (League::League 0x682200: mov ecx -> thiscall, ret 0), o registro (+4), a vtable, o ano (+0x40) e a regra de
@@ -738,18 +738,18 @@ pub(crate) unsafe fn league_match_count(league: usize) -> i32 {
 /// allocates the fixed-fixture vector (+0xea), fills each fixture from the table by club names, and destroys it (+0xea
 /// = 0) if any club was not found.
 ///
-/// The vector of fixed fixtures (operator new 0x944cf1 of n × 16 + 4: push; add esp, 4 -> cdecl; the count n in the
+/// The vector of fixed fixtures (operator new `exe::crt_operator_new` of n × 16 + 4: push; add esp, 4 -> cdecl; the count n in the
 /// first dword and each fixture through constructor 0x645800, with destructor 0x5a53c0 for the exception: `eh vector
-/// constructor iterator` 0x9463af, push 0x5a53c0; push 0x645800; push n; push 0x10; push vector -> stdcall, ret 0x14)
+/// constructor iterator` `exe::crt_vector_constructor_iterator`, push 0x5a53c0; push 0x645800; push n; push 0x10; push vector -> stdcall, ret 0x14)
 /// in +0xea; out of memory, the box for line `linha` of source file `arquivo` and end.
 ///
-/// Then each fixture of `tabela`, in order, in its place in the vector (fixed_fixture_set_by_club_names 0x68aff0: push
+/// Then each fixture of `tabela`, in order, in its place in the vector (fixed_fixture_set_by_club_names `exe::fixed_fixture_set_by_club_names`: push
 /// the 6th (away, via the map); push the 5th (home); push year; push month (0 = January); push day; push league; mov
 /// ecx, [+0xea] + 16 × k -> thiscall, ret 0x18: the date and the clubs found by name, −1 in +8/+0xc if not found).
 ///
 /// Finally, if any of the n fixtures was left with a club not found (+8 or +0xc = −1), the vector is destroyed (`eh
-/// vector destructor iterator` 0x9462bb: push 0x5a53c0; push count; push 0x10; push vector -> stdcall, ret 0x10;
-/// operator delete 0x944c94 of the block: push; add esp, 4 -> cdecl) and +0xea = 0: the league goes back to the
+/// vector destructor iterator` `exe::crt_vector_destructor_iterator`: push 0x5a53c0; push count; push 0x10; push vector -> stdcall, ret 0x10;
+/// operator delete `exe::crt_operator_delete` of the block: push; add esp, 4 -> cdecl) and +0xea = 0: the league goes back to the
 /// randomly drawn calendar.
 ///
 /// [pt] O corpo das duas (set_up_fixed_fixtures; thiscall, ret 0, quadro SEH só para o construtor de vetor): o vetor dos
@@ -1637,10 +1637,10 @@ pub(crate) unsafe fn ita_ser_a_compare_league_rules(name: &str, this: usize, wri
 /// Shared table body: sets the club count, allocates the table and fills the rows with the division's clubs in database
 /// order; returns whether it filled up.
 ///
-/// +0x3e = `n` clubs; the table (malloc 0x944e46 of n × 0x3b; when out of memory: the error box of source file
+/// +0x3e = `n` clubs; the table (malloc `exe::crt_malloc` of n × 0x3b; when out of memory: the error box of source file
 /// `arquivo` at line `linha` and None); the clubs of [0xae23b4] (0x245 bytes, [0xae235c] of them) whose competition
 /// (+0x57, the id at +0) is that of global `g`, in database order, each in the next row (League::init_table_row
-/// 0x687430: thiscall(league, row, club, 0, 0), ret 0x10), until full.
+/// `init_table_row`: thiscall(league, row, club, 0, 0), ret 0x10), until full.
 ///
 /// Returns whether it filled up.
 ///

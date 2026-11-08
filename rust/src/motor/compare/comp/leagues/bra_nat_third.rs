@@ -40,10 +40,10 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_start_new_season(th
 
 /// Comparer for `bra_nat_third_set_predicted_positions`.
 ///
-/// The predicted positions comparer: only the original routine runs (0x4a2540 adds the record of a club that has none;
+/// The predicted positions comparer: only the original routine runs (`set_club_final_position` adds the record of a club that has none;
 /// it cannot run twice), with the plan made beforehand: the list of the 56 sorted by the same qsort on a copy.
 ///
-/// Afterwards, the league's list in the same order and the position (+0x72 of the record found by 0x4a4850) of each
+/// Afterwards, the league's list in the same order and the position (+0x72 of the record found by `exe::comp_stats_find_club_entry`) of each
 /// club.
 ///
 /// [pt] O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não

@@ -978,7 +978,7 @@ const ADJETIVOS_6_5: [EntradaDbx; 39] = [
     (0x9cf424, [1, 0x9e2128, 0x9e2128, 0x9e2128, 0x9e2128, 0x9e2128]),
 ];
 
-/// The languages (0x66f4d0) in the original's order: (language, the nation name to use if the text comes out empty, the
+/// The languages (`exe::langlib_get_language`) in the original's order: (language, the nation name to use if the text comes out empty, the
 /// chains).
 ///
 /// In each chain the first key equal to the id wins; otherwise it moves on to the next chain.

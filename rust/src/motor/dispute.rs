@@ -4,8 +4,8 @@ use super::*;
 ///
 /// `DISPUTE::remove_dispute(person)`: without a person or without the flag table (+4), or with the person's flag at
 /// zero: nothing. Otherwise it zeroes the flag and, with the list (+0), moves the cursor back to the start (+0xa = +2)
-/// and searches, among the first `count` (+0, word), the entry with the person's id (0x68d1b0): if found, it removes it
-/// (0x68d1f0).
+/// and searches, among the first `count` (+0, word), the entry with the person's id (`next_list_item`): if found, it removes it
+/// (`manager_manager_remove`).
 /// Original: `DISPUTE::remove_dispute` (0x56a090, dispute.cpp, thiscall).
 ///
 /// [pt] { 0x56a090 } (thiscall, ret 4, dispute.cpp): `DISPUTE::remove_dispute(pessoa)`: sem pessoa ou sem a tabela de marcas

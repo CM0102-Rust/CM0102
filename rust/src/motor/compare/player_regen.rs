@@ -143,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_regen_check_initial_retire
     r
 }
 
-/// Comparador: como o da 0x7a79c0.
+/// Comparador: como o da `player_regen_check_initial_retirement`.
 pub(crate) unsafe extern "thiscall" fn compare_player_regen_check_retirement(this: usize, person: usize, out: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_PLAYER_REGEN_CHECK_RETIREMENT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(out), || o(this, person, out),

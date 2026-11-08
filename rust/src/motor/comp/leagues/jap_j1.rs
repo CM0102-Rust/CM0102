@@ -198,11 +198,11 @@ pub(crate) unsafe fn alloc_league_table(this: usize, n: i16, file: usize, row: u
     t
 }
 
-/// League::init_table_row (0x687430: thiscall(league, row, club, 0, 0), ret 0x10) for row (k + `girar`) % n with the
+/// League::init_table_row (`init_table_row`: thiscall(league, row, club, 0, 0), ret 0x10) for row (k + `girar`) % n with the
 /// club.
 ///
 /// `girar` is 0 (the original: row k); it exists only for each league's mutations. Simplification: the original routine
-/// pushes the row in eax with spare upper bits; 0x687430 only reads the byte.
+/// pushes the row in eax with spare upper bits; `init_table_row` only reads the byte.
 ///
 /// [pt] League::init_table_row (0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10). `girar` é 0 (o original: a linha
 /// k); existe só para as mutações de cada liga. simplification: a original empurra a linha no eax com bits de cima de sobra;

@@ -149,9 +149,9 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_start_new_season(this: us
 
 /// Comparer for `usa_mls_set_predicted_positions`.
 ///
-/// The predicted positions comparer: only the original routine runs (simplification: 0x4a2540 adds the record of a club
+/// The predicted positions comparer: only the original routine runs (simplification: `set_club_final_position` adds the record of a club
 /// that has none; it cannot run twice), with the plan made beforehand: the twelve clubs of the three tables, each block
-/// sorted by the same qsort on a copy; afterwards, the position (+0x72 of the record found by 0x4a4850) of each one.
+/// sorted by the same qsort on a copy; afterwards, the position (+0x72 of the record found by `exe::comp_stats_find_club_entry`) of each one.
 ///
 /// [pt] O comparador das posições previstas: só a original (simplification: a 0x4a2540 acrescenta o registro de um clube que não
 /// tem; não pode rodar duas vezes), com o plano feito antes: os doze clubes das três tabelas, cada bloco ordenado pela

@@ -23,14 +23,14 @@ pub(crate) struct BraRegRioStateChampionship {
 /// The constructor of a Brazilian state league (the same 544-byte template in all twelve, checked instruction by
 /// instruction: only the vtable, the stages, the three own routines, the source file and the line numbers change).
 ///
-/// League::League (0x682200, thiscall, ret 0); +4 = the competition record; the vtable; the year (+0x40, word) = `ano`;
-/// the discipline rule (+0x50) = 7. If the saved state loads (League::load_from_temp_file 0x687b10, thiscall(this, 1),
+/// League::League (`exe::new_league`, thiscall, ret 0); +4 = the competition record; the vtable; the year (+0x40, word) = `ano`;
+/// the discipline rule (+0x50) = 7. If the saved state loads (League::load_from_temp_file `exe::league_load_from_temp_file`, thiscall(this, 1),
 /// ret 4; returns ≠ 0), returns this.
 ///
 /// Otherwise (new career): +0x51 = 0xf (the importance), +0x44 = 0xff, +0x30 = −1, +0x2c = the stages and their array
-/// (malloc 0x944e46, unchecked); then, each with its own error box (returning this) if it returns 0: the rules, the
-/// table, the fixtures (League::create_fixtures 0x6835c0, thiscall, ret 0) and the sort (League::sort_table 0x6827d0,
-/// thiscall(this, 0), ret 4); the stats (operator new 0x944cf1 of 0x5ce and Comp_Stats::Comp_Stats 0x49ee70,
+/// (malloc `exe::crt_malloc`, unchecked); then, each with its own error box (returning this) if it returns 0: the rules, the
+/// table, the fixtures (League::create_fixtures `create_fixtures`, thiscall, ret 0) and the sort (League::sort_table `sort_table`,
+/// thiscall(this, 0), ret 4); the stats (operator new `exe::crt_operator_new` of 0x5ce and Comp_Stats::Comp_Stats `exe::new_comp_stats`,
 /// thiscall(new, this), ret 4; the original's SEH frame covers only that new) at +8 (without them: the error box);
 /// finally the predicted positions.
 ///
@@ -208,7 +208,7 @@ pub(crate) unsafe fn cap_attendance(c: usize, lim: i32) {
 /// record (+0x7b). The weight `f` comes from the competition's nation (the first dword of [+4]+0x5d): 0.1 in
 /// [0x9cf510], [0x9cf2dc], [0x9cf3e4], [0x9cf224]; 0.25 in [0x9cf2c0], [0x9cf2fc], [0x9cf408], [0x9cf4a8], [0x9cf4f8];
 /// 0.5 in [0x9cf45c]; 1 in the others. `r` = the competition's reputation (+0x69 of the record, word). The final table
-/// comes from the statistics (Comp_Stats::get_sorted_team_table 0x4a4b20, thiscall(+8, 1, &n, 1000), ret 0xc: 0x76-byte
+/// comes from the statistics (Comp_Stats::get_sorted_team_table `exe::comp_stats_get_sorted_team_table`, thiscall(+8, 1, &n, 1000), ret 0xc: 0x76-byte
 /// records, +0 the club id, +0x72 the predicted position, +0x73 the final one, +5 the home games [inference], +6 the
 /// summed attendance [inference]).
 ///
@@ -235,7 +235,7 @@ pub(crate) unsafe fn cap_attendance(c: usize, lim: i32) {
 /// real attendance (without the weight f); the floor by reputation; and the ceiling of 2000 r (r ≤ 7), 3000 r (r ≤ 12)
 /// or 5000 r.
 ///
-/// At the end of each: at least 500, and within [+0x77, +0x7b]. The table is freed (free 0x9452ca).
+/// At the end of each: at least 500, and within [+0x77, +0x7b]. The table is freed (free `exe::crt_free`).
 /// Original: `atualizar_media_de_publico (sem nome no mapa)` (0x5d6280, game.cpp, cdecl).
 ///
 /// [pt] { 0x5d6280 } (cdecl, game.cpp, sem nome no mapa): `atualizar_media_de_publico(liga)`, do laço das temporadas
@@ -416,17 +416,17 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
 /// Called from each match's result (0x43af20 and its siblings: push dl = +0x30 + 1; mov ecx -> thiscall, ret 4; the
 /// original reads the whole argument, uses the low byte and pushes it whole to the constructor).
 ///
-/// 1) The clubs of the league table (+0xb1, rows of 0x3b bytes, the +0x3e rows) in a vector (malloc 0x944e46 of 4 ×
+/// 1) The clubs of the league table (+0xb1, rows of 0x3b bytes, the +0x3e rows) in a vector (malloc `exe::crt_malloc` of 4 ×
 /// +0x3e; out of memory: the box and return).
 ///
-/// 2) The stage: operator new 0x944cf1(0xee) and the League_Stage constructor 0x68b100 (thiscall, ret 0x58, 22
+/// 2) The stage: operator new `exe::crt_operator_new`(0xee) and the League_Stage constructor 0x68b100 (thiscall, ret 0x58, 22
 /// arguments, in the original's order: the league, +0x3e (word), the vector, 1, +4, 0, 0, the points per win +0xc2
 /// (`pv`), per draw +0xc3, the match category +0xc4, &+0xc5 (the tie-break criteria), &{1,0,0,0} (one top slot: the
 /// half's champion), the year +0x40 (word), k, the id 0x439 (first half) or 0x43a (second), 0, 1, 0, 8, `vinte`, 0, 2;
 /// the original pushes the words and bytes with garbage in the high bytes, which the constructor does not read: the
 /// copy passes clean values; k goes whole, as it arrived). Out of memory for the stage: 0 in the slot, no box.
 ///
-/// 3) [+0xc][k] = the stage, +0x30 = k (the signed byte) and the vector freed (free 0x9452ca). The original's SEH frame
+/// 3) [+0xc][k] = the stage, +0x30 = k (the signed byte) and the vector freed (free `exe::crt_free`). The original's SEH frame
 /// only covers the constructor (no destructor on the normal path).
 ///
 /// [pt] O turno `k` de uma liga de dois turnos (o slot create_half_season_stage; o mesmo molde nos três estaduais e na J1,
@@ -643,7 +643,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
 /// the first-half winner as seed 0; if the same club wins both halves, it is champion without a final.
 ///
 /// `BraRegRio::create_final_stage()`, called from the next stage when the second half ends. The two half winners (the
-/// club in the first row of each League_Stage's table) go into a list of 2 (malloc 0x944e46 of 8; out of memory: the
+/// club in the first row of each League_Stage's table) go into a list of 2 (malloc `exe::crt_malloc` of 8; out of memory: the
 /// error box at line 0x226 and return).
 ///
 /// - The same club in both halves: it is champion without a final. +0x30 = 1, +0x2c = 2 (the season ends with the two
@@ -651,11 +651,11 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
 /// the +0x3e rows). The list is not freed (the original leaks it; so does the copy).
 ///
 /// - Different winners: the final, over two games [inference: home and away]. Virtual +0x3c (create_round_table:
-/// thiscall(this, stage 2, &rounds, &extra, 0), ret 0x10) builds the round table; the new stage (operator new 0x944cf1
-/// of 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the league, 2, the list, the rounds, +4, the table, the
+/// thiscall(this, stage 2, &rounds, &extra, 0), ret 0x10) builds the round table; the new stage (operator new `exe::crt_operator_new`
+/// of 0xb2; Cup_Stage::Cup_Stage `construct_cup_stage`, thiscall, ret 0x3c: the league, 2, the list, the rounds, +4, the table, the
 /// year +0x40, 2, 1, the extra, 0x14, 0, 1, 0 and the seeds {0, 1}: the first-half winner is seed 0) goes into the
 /// third stage slot ([+0xc]+8; no stage: the error box at line 0x250 and return, without freeing). With it:
-/// Cup::set_up_round (0x51c800, thiscall(stage, 0), ret 4), the table and the list freed (free 0x9452ca, in that order)
+/// Cup::set_up_round (`set_up_round`, thiscall(stage, 0), ret 4), the table and the list freed (free `exe::crt_free`, in that order)
 /// and +0x30 = 2. The original's SEH frame covers only the constructor (no destructor).
 /// Original: `BraRegRio::create_final_stage` (0x43a900, bra_reg_rio.cpp, thiscall, ret 0).
 ///
@@ -734,14 +734,14 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
 /// `BraRegRio::record_season_honours()` (slot 13).
 ///
 /// - With a final (+0x30 = 2): the history of the final (slot 13, +0x30, of stage [+0xc]+8) and then, as a tail jump,
-/// 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl with no arguments: when the twelve state leagues are
+/// `exe::bra_nat_first_fill_champions_cup_entrants` (`bra_nat_first_fill_champions_cup_entrants`, cdecl with no arguments: when the twelve state leagues are
 /// over, it puts the champions into the Champions Cup); returns its eax.
 ///
-/// - Without a final (the same champion in both halves): the league history (League::record_season_honours 0x684640,
+/// - Without a final (the same champion in both halves): the league history (League::record_season_honours `league_record_season_honours`,
 /// thiscall, ret 0); the prizes, 675,000 to the champion (first row of table +0xb1) and 250,000 to the runner-up
-/// (second row), each one to the balance (0x5a0590 on [0xae2a38] -> the club's finances, thiscall, ret 4; 0x5999a0
-/// Finance::add_prize_money, thiscall, ret 4) and in the prize money news (0x48e3e0 Comp::send_prize_money_news:
-/// thiscall(this, club, 64-bit amount, position 1 or 2, round 0, match 0, type −2), ret 0x1c); then 0x42bba0, as above.
+/// (second row), each one to the balance (`get_club_finance` on [0xae2a38] -> the club's finances, thiscall, ret 4; `add_prize_money`
+/// Finance::add_prize_money, thiscall, ret 4) and in the prize money news (`send_prize_money_news` Comp::send_prize_money_news:
+/// thiscall(this, club, 64-bit amount, position 1 or 2, round 0, match 0, type −2), ret 0x1c); then `exe::bra_nat_first_fill_champions_cup_entrants`, as above.
 /// Original: `BraRegRio::record_season_honours` (0x43ad20, bra_reg_rio.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x43ad20 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::record_season_honours()` (slot 13), o fim da temporada do Carioca.

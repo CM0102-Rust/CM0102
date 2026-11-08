@@ -159,17 +159,17 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, year
 /// The same template is used in the nine round-robin state leagues with a knockout; only the source file, the error-box
 /// lines and the table routine change, checked instruction by instruction.
 ///
-/// +0x4c = 0 and the table freed (League::free_table 0x687970, thiscall(this, 0), ret 4); the list at +0xba freed (free
-/// 0x9452ca) and zeroed; with statistics (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1), ret 4);
+/// +0x4c = 0 and the table freed (League::free_table `free_table`, thiscall(this, 0), ret 4); the list at +0xba freed (free
+/// `exe::crt_free`) and zeroed; with statistics (+8), Comp_Stats::archive_season_and_reset (`exe::comp_stats_archive_season_and_reset`, thiscall(+8, 1), ret 4);
 /// with the current stage ≥ 0, the existing stages 0..=+0x30 destroyed (virtual 0, the destructor with 1: frees); the
 /// year (+0x40, word) goes up by one (`ano`; the counter `ramo`) and +0x30 = −1.
 ///
 /// Then, each with its own error box if it returns 0: the season rules (virtual +0x8c, set_up_rules), the table with
-/// the state league's clubs (`tabela`, thiscall, ret 0), the fixtures (League::create_fixtures 0x6835c0, thiscall, ret
-/// 0) and the table order (League::sort_table 0x6827d0, thiscall(this, 0), ret 4).
+/// the state league's clubs (`tabela`, thiscall, ret 0), the fixtures (League::create_fixtures `create_fixtures`, thiscall, ret
+/// 0) and the table order (League::sort_table `sort_table`, thiscall(this, 0), ret 4).
 ///
 /// Finally the predicted positions (virtual +0x5c) and the renewal of the state league's referees
-/// (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), whose eax it returns.
+/// (OfficialsManager::renew_officials `renew_officials`, thiscall([0xb74340], +4), ret 4), whose eax it returns.
 ///
 /// [pt] A virada da temporada de um estadual (`start_new_season`, slot 3, +0x08; o mesmo molde nos nove estaduais de pontos
 /// corridos com mata-mata: só mudam o fonte, as linhas das caixas e a rotina da tabela, conferido instrução a instrução):
@@ -315,9 +315,9 @@ pub(crate) unsafe fn is_in_state_league(club: usize, g: usize) -> bool {
 /// The common table setup of the state leagues (the same template in all twelve, only the constants change): fills the
 /// table with the state's clubs; returns 1 if it is full.
 ///
-/// +0x3e = `n` clubs; the table (malloc 0x944e46 of n × 0x3b; out of memory: the error box of source `arquivo` at line
+/// +0x3e = `n` clubs; the table (malloc `exe::crt_malloc` of n × 0x3b; out of memory: the error box of source `arquivo` at line
 /// `linha` and returns 0); the clubs of [0xae23b4] (0x245 bytes, [0xae235c] of them) in the state league of global `g`,
-/// in database order, each in the next row (League::init_table_row 0x687430: thiscall(league, row, club, 0, 0), ret
+/// in database order, each in the next row (League::init_table_row `init_table_row`: thiscall(league, row, club, 0, 0), ret
 /// 0x10), until full.
 ///
 /// `girar` is 0 (the original: row k gets the k-th club); it exists only for each state league's mutations.

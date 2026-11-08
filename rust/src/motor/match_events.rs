@@ -154,7 +154,7 @@ pub(crate) unsafe fn fatal_error_at(file: usize, row: u32) -> ! {
 ///
 /// About 5.2 KB: reads `events_<language>.cfg` (CM3_DATA; without it, `events_eng.cfg`, and without that the game
 /// stops, error 0xcc4) into the table of the 677 event codes at `[0xb68788]` (0x12 bytes: 7 option bytes, +8 the
-/// 0x110-byte sounds, +0xc count, +0xe the weight). With a different language since the last read, 0x6d5b50 clears
+/// 0x110-byte sounds, +0xc count, +0xe the weight). With a different language since the last read, `free_event_tables` clears
 /// first; already read (`[0xb6b723]`), nothing. Lines: `=id,o0..o6` opens an event (o4 between 0 and 11; o2 without o0
 /// warns 0xd40), `>weight,type,name` adds a sound (with `-verifysounds` on the command line, checks the file in
 /// CM3_SOUNDS), `G`/`R` the two texts of the last sound (allocated; unknown `<X` tokens warn). At the end, the weights
@@ -427,17 +427,17 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 // by the career (Rust x original) and by the comparison of the table at the end of the read.
 
 /// Builds the event sound's `R` text with the tokens replaced (`<P1>` player, `<T1>`/`<T2>` club, `<C>` competition,
-/// `<F>` stage, `<D>`/`<N>` number, `<rf>`/`<Rf>` referee), `{...}` prefix and suffix (0x6701f0) and upper case; writes
+/// `<F>` stage, `<D>`/`<N>` number, `<rf>`/`<Rf>` referee), `{...}` prefix and suffix (`exe::langlib_apply_grammar_modifier`) and upper case; writes
 /// to `[0xb67ea0]`.
 ///
 /// Stdcall, ret 0x10: the text of event `ev` (+0 code, +2 which sound, +5/+6 and +7/+8 the two players (side, index),
 /// +9 a number) of match `ctx` (+0/+4 the clubs, +0x40 the referee), with `comp` the competition (-1 none) and
 /// `variant` the segment between `|` (0 the first). Reads the `R` text (+0x10c) of the chosen sound (at most the last)
-/// and replaces the tokens: `<P1>`/`<P>` player (0x6db2d0), `<T1>`/`<T2>` club, `<C>` competition, `<F>` its stage
-/// (0x4bfa30/0x4bff70), `<D>`/`<D1>` the number (+1), `<N>` the number in words (0x90c310), `<rf>`/`<Rf>` the referee
+/// and replaces the tokens: `<P1>`/`<P>` player (`commentary_player_name`), `<T1>`/`<T2>` club, `<C>` competition, `<F>` its stage
+/// (`exe::comp_util_format_comp_stage_round_label`/`exe::comp_util_get_label_gender`), `<D>`/`<D1>` the number (+1), `<N>` the number in words (`exe::utils_format_ordinal`), `<rf>`/`<Rf>` the referee
 /// ("Mr ..." or "the referee" depending on the language and a remainder of division by 5), `<O>`/`<Y>` nothing. `{...}`
-/// before or after the token are prefix and suffix (0x6701f0, which applies article and gender); a following letter `C`
-/// puts it in upper case (0x90c2d0). Writes into `[0xb67ea0]` (and returns it), recounting the length with `strlen`
+/// before or after the token are prefix and suffix (`exe::langlib_apply_grammar_modifier`, which applies article and gender); a following letter `C`
+/// puts it in upper case (`exe::utils_char_to_upper`). Writes into `[0xb67ea0]` (and returns it), recounting the length with `strlen`
 /// after each token, as the original; without an event, without text or without the requested segment, 0. An unknown
 /// token warns 0xb10.
 /// Original: `event_text` (0x6d8d10, match_events.cpp, stdcall, ret 0x10).
@@ -714,19 +714,19 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 // simplification: only runs in network games (creates and frees engine and summary); no comparison of its own.
 
 /// The commentator writes the event on the panel and plays its sound: restores the crowd sound, builds the event's `G`
-/// text (like 0x6d8d10) into a line with the club colours (`<O>` the other's, `<Y>`/`<R>` the default ones), wraps or
-/// cuts with "..." by the width (0x5e5ad0, 0x90cb20), draws on the panel (0x801040…0x800580), plays the event sound
-/// (0x8025e0) and marks the time and duration (+0x2d6c, +0x2dac).
+/// text (like `event_text`) into a line with the club colours (`<O>` the other's, `<Y>`/`<R>` the default ones), wraps or
+/// cuts with "..." by the width (`exe::font_text_width`, `exe::utils_break_line_near_middle`), draws on the panel (`exe::screenmanager_set_widget_colour`…0x800580), plays the event sound
+/// (`exe::screenmanager_play_sound`) and marks the time and duration (+0x2d6c, +0x2dac).
 ///
 /// Ret 0x20, about 4.4 KB: commentator `nar` writes event `ev` of match `ctx` on `panel` (0xb74450) and plays its
 /// sound. First, the crowd noise of the human whose turn it is (`[0xb77c7a]`; channel +0x20, "fxloop2.wav") is restored
 /// if it stopped. With a valid code and option 1 zeroed, builds the `G` text (+0x108) of the chosen sound (segment +0xd
-/// between `|`) as 0x6d8d10 does, but in its own line and with colours: it starts with those of the club in the
-/// incident (0x53b640 with the side's kit), `<O>` switches to the other's, `<Y>` and `<R>`/`<r>` without `f` the
+/// between `|`) as `event_text` does, but in its own line and with colours: it starts with those of the club in the
+/// incident (`database_get_club_kit_colours` with the side's kit), `<O>` switches to the other's, `<Y>` and `<R>`/`<r>` without `f` the
 /// default ones (`[0xaebdea]`/`[0xaebdec]` or `[0xae31a8]`); `<N>` is the number, `<n>` in words; the player name is
-/// the short one if the whole text fits in less than 300 (0x5e5ad0 with the `font`). Too wide for `width` - 16: wraps
-/// (0x90cb20) or cuts at a word with "...". Draws (0x801040, 0x801660, 0x801960, 0x801c70, 0x800d30, 0x800580 with
-/// option 3). Finally, without a segment (+0xd) and with volume (+0x2db0 >= 101), plays the event sound (0x8025e0 on
+/// the short one if the whole text fits in less than 300 (`exe::font_text_width` with the `font`). Too wide for `width` - 16: wraps
+/// (`exe::utils_break_line_near_middle`) or cuts at a word with "...". Draws (`exe::screenmanager_set_widget_colour`, `exe::screenmanager_set_widget_font`, `exe::screenmanager_set_widget_text_colour`, `exe::screenmanager_set_widget_text`, `exe::screenmanager_set_widget_style`, 0x800580 with
+/// option 3). Finally, without a segment (+0xd) and with volume (+0x2db0 >= 101), plays the event sound (`exe::screenmanager_play_sound` on
 /// the channel from option 6, side from option 5), and marks the time and the sound duration (+0x2d6c, +0x2dac = weight
 /// × volume / 100).
 /// Original: `commentate_on_panel` (0x6d7b00, match_events.cpp (~4.4 KB), thiscall, ret 0x20).
@@ -1229,8 +1229,8 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
 /// short name.
 ///
 /// Writes into `buf` (`size` bytes) the name of player `player` on side `side` of match `pt` (0x49-byte record at
-/// +0x190: id and the three names +0x198..+0x1a0, sides of 0x625 bytes) through 0x53e140: with `short` and random(5) =
-/// 0, form 1; otherwise form 5, and if any of the 100 players of either club (+0, +4; list from 0x541f90) with another
+/// +0x190: id and the three names +0x198..+0x1a0, sides of 0x625 bytes) through `database_format_name_from_ids`: with `short` and random(5) =
+/// 0, form 1; otherwise form 5, and if any of the 100 players of either club (+0, +4; list from `database_collect_club_squad`) with another
 /// id or another name has the same form 5, the `long` form.
 /// Original: `commentary_player_name` (0x6db2d0, match_events.cpp, cdecl).
 ///
@@ -1274,7 +1274,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
 
 // simplification: writes into `buf` and calls 0x53e140 and 0x541f90 (effects outside); comparison by the text
 
-/// The jump labels of 0x6d60b0 (the end of each one returns or continues to another).
+/// The jump labels of `combine_with_previous` (the end of each one returns or continues to another).
 ///
 /// [pt] Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
@@ -1295,7 +1295,7 @@ pub(crate) enum BranchLabel {
 /// the last one in the queue (position +8 − 1 in the ring of 12, 14-byte records at +0x30): returns the combined event
 /// (negative = replaces the previous one; 0 = no combination) and, in combinations, copies the player, the side, the
 /// other and the integer of the previous one into `e`. `m` is the engine (0 outside the match): it gives the side in
-/// possession (+0x8eab) and the ball in the area (0x6d58f0). The original's two calls to 0x6cb960 have no effect and
+/// possession (`engine::LAST_POSSESSION_SIDE`) and the ball in the area (`ball_goal_end`). The original's two calls to `band` have no effect and
 /// their value is discarded (they are left out).
 /// Original: `combine_with_previous` (0x6d60b0, match_events.cpp, thiscall).
 ///
@@ -1636,7 +1636,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
 /// clubs) and minute 31, the paths that depend on the news.
 ///
 /// The random generator state and the ratings are restored, and the random draws are neither counted nor recorded in
-/// the trace of an ongoing tape comparison (the shot, 0x702050, calls this routine from inside): the trajectory of the
+/// the trace of an ongoing tape comparison (the shot, `shoot`, calls this routine from inside): the trajectory of the
 /// game while comparing does not change.
 ///
 /// [pt] Sonda de vizinhança do comentário de contexto: o jogo só pergunta pelo evento do gol, então cada
@@ -1735,8 +1735,8 @@ pub(crate) unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, 
 /// The commentary queue constructor: clears the queue, reads the events and, if asked, plays the crowd loop.
 ///
 /// Ret 4: zeroes the queue and the fields (+0x2db0 = 125, +1 and +0xa = −1, +0x2d68 = −1), the event globals
-/// (0xb68670..), reads the events (0x6d9e50), marks the 16 slots (+0x10, +0x20) with −1 and zeroes the 16 times
-/// (+0x2d6c); with `crowd`, plays the crowd loop of the side whose turn it is (`[0xb77c7a]`) through 0x8025e0. Returns
+/// (0xb68670..), reads the events (`read_events_cfg`), marks the 16 slots (+0x10, +0x20) with −1 and zeroes the 16 times
+/// (+0x2d6c); with `crowd`, plays the crowd loop of the side whose turn it is (`[0xb77c7a]`) through `exe::screenmanager_play_sound`. Returns
 /// `this`.
 /// Original: `construct_commentary_queue` (0x6d5bf0, match_events.cpp, thiscall).
 ///
@@ -1818,13 +1818,13 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 // simplification: all three queue commentary, play sound or free memory (do not run twice): without
 // own comparison, proven by the career (queue of 19414 matches, 285 thousand events ahead).
 
-/// Tells whether the sounds of the 16 marked events have played and passed their window (clock 0x90c510; stops the
-/// finished channels, 0x802a50).
+/// Tells whether the sounds of the 16 marked events have played and passed their window (clock `exe::utils_get_time_ms`; stops the
+/// finished channels, `exe::screenmanager_stop_sound`).
 ///
 /// Ret 4: have the sounds of the `active` events (16 marks) played? For each marked one, a channel (+0x10 + k; -1 free,
-/// -2 waiting) that is still playing (0x8029f0 on 0xb74450) holds; one that has finished is stopped (0x802a50) and
+/// -2 waiting) that is still playing (`exe::screenmanager_is_sound_playing` on 0xb74450) holds; one that has finished is stopped (`exe::screenmanager_stop_sound`) and
 /// freed. Returns 1 only if all marked ones have passed their window (+0x2d6c + 4k up to + `[+0x2dac]`, by clock
-/// 0x90c510).
+/// `exe::utils_get_time_ms`).
 /// Original: `sounds_finished` (0x6d8c70, match_events.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x6d8c70 } (thiscall, ret 4, match_events.cpp): os sons dos eventos `ativos` (16 marcas) ja

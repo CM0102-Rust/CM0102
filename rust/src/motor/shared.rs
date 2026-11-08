@@ -1,6 +1,6 @@
 use super::*;
 
-/// Port of 0x6cd490 with commentary injected: releases the ball and, if out of play, sets the restart (throw-in/goal
+/// Port of `exe::cm3_match_engine_ball_out_of_play` with commentary injected: releases the ball and, if out of play, sets the restart (throw-in/goal
 /// kick/corner) and side, narrates and returns 1; 0 in play.
 ///
 /// [pt] { 0x6cd490 } (match_eng.cpp) com o comentario injetado: com o lance ja parado (0x8eb2), 1.
@@ -331,24 +331,24 @@ pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posic
 // validated by the career (Rust x original; the database and the histories pass through here all the time) and
 // by the filler save above 2 GB.
 
-/// Port of 0x6b6cc0 (cdecl, match_day.cpp) with calls injected: post-match updates for both sides' players (news,
+/// Port of `exe::match_day_apply_post_match_player_changes` (cdecl, match_day.cpp) with calls injected: post-match updates for both sides' players (news,
 /// contract flags, manager ratings). For the two sides of the match record `t` (club at t+0 / t+4; side at t + side x
 /// 0x625): the 20 players (rows of 0x49 from +0x1c5; person at -0x35) with a player sheet (+0x61) and from the database
 /// (id < [0xae2364]).
 ///
 /// With the match's competition ([[0xadadfc][+0]]+8), the competition's club (+0x57 = match+0x14) and without +0x4c in
-/// the record: by contract (0x4cf5f0) of type 0x10/0x20/0x30, the test 0x849ce0/0x600a50, rating +3 above 5000 and
+/// the record: by contract (`exe::contract_manager_get_contract_for_club`) of type 0x10/0x20/0x30, the test `exe::shortlist_manager_find_club_shortlist_entry`/`exe::human_manager_is_human_club`, rating +3 above 5000 and
 /// above 1.1 x +0x18e (or +7 above 0.9 x, or the player sheet's +5 above 0.024 x), +0 up to 6, the side's score not
-/// above the other's, random(10) + 5 < rating 1 (0x4a31a0) and random(10) above the player sheet's +0x45, and rating
-/// 0x11 within 0.2 of the competition's average ([0xb74350]+0x10 / +0x18, or 6.8): news item 0x72c1f0 type 0x11.
+/// above the other's, random(10) + 5 < rating 1 (`exe::comp_stats_get_player_stat`) and random(10) above the player sheet's +0x45, and rating
+/// 0x11 within 0.2 of the competition's average ([0xb74350]+0x10 / +0x18, or 6.8): news item `exe::media_create_player_media_story` type 0x11.
 ///
 /// Also with 0x76d940, +0 from 9 upward, the side's score not below the other's, random(5) + 2 < rating 1 and still no
 /// news item 0x34 in the match: with rating 0x11 above random(9) x 0.1 + average + 0.5, 0x744240 (0x34). Then it copies
 /// into the player sheet +0x45, +0xb, +9, +0xd (from -4, +3, +5, +7).
 ///
-/// Two clubs of the same nation (+0x53) and -8 in the row: with 0x7c1e30 non-zero, the previous club (+0x1a) of another
+/// Two clubs of the same nation (+0x53) and -8 in the row: with `get_stat` non-zero, the previous club (+0x1a) of another
 /// nation (+0x76), the player sheet's +0xb above 5750, +0x57 above 10, +0x59 below 15, +0x5c or +0x5d below 10 and
-/// random(3) == 0 (of the club itself [0x9cf300]) or random(10) == 0: 0x20 in the contract (0x867560).
+/// random(3) == 0 (of the club itself [0x9cf300]) or random(10) == 0: 0x20 in the contract (`set_flags`).
 ///
 /// Finally the manager (person at +0x184): his player sheet (+0x69) gets +0x188/+0x18a/+0x18c in +0xa/+8/+0xc, and the
 /// assistant (+0xd3) and the 5 of +0x19f gain a quarter of the difference (between 1 and 10000); the club's +0x80 =
@@ -535,7 +535,7 @@ pub(crate) static SYNTHETIC: std::sync::atomic::AtomicBool = std::sync::atomic::
 // 0x6f5c30: sub esp, 0x218
 pub(crate) const PROLOGUE_6F5C30: Prologue = Prologue { address: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
 
-/// Hook entry for 0x6f5c30: synthetic result in self-test, tape recording, or the comparer around the original.
+/// Hook entry for `exe::match_player_try_intercept_ball`: synthetic result in self-test, tape recording, or the comparer around the original.
 pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c: u32, d: u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
     let rodar = || {

@@ -5,11 +5,11 @@ use super::*;
 /// the board confidence gains 1000.
 ///
 /// `award_raise_winner_reputation(person, club, national_rep, world_rep, for_player)`, called for the
-/// player-of-the-month slot (0x7671c0) and for the yearly and national side awards. A player (+0x61) in a player award:
+/// player-of-the-month slot (`set_winner`) and for the yearly and national side awards. A player (+0x61) in a player award:
 /// world (+0xd) + 5% of the award's world reputation, up to 10000 and at least that value; home (+9): for the club of
 /// his own nation (+0x53 = +0x1a of the person), + 10% of the national reputation and at least that value; otherwise +
 /// 2.5% of the sum and at least the average; current (+0xb) + 10% of the national reputation, at least that value; puts
-/// the player in the clubs' lists (0x842c00, with 1) if the list manager exists. A non-player (+0x69) in a non-player
+/// the player in the clubs' lists (`add_player_to_club_shortlists`, with 1) if the list manager exists. A non-player (+0x69) in a non-player
 /// award: the three rise to the floors (+0xc world, +8 by the club's nation, +0xa national) and, with a club, the board
 /// confidence (+6 of the 73-byte row) + 1000, between 6500 and 10000. Only the low words of the reputations count.
 /// Original: `award_raise_winner_reputation` (0x412f00, award_manager.cpp, cdecl).

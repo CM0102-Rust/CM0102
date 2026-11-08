@@ -88,7 +88,7 @@ unsafe fn count_draw(n: i32) {
     }
 }
 
-/// Rust version of { 0x90cfc0 }.
+/// Rust version of { `exe::utils_random` }.
 ///
 /// [pt] Versao Rust de { 0x90cfc0 }.
 pub unsafe extern "C" fn aleatorio(n: i32) -> i32 {

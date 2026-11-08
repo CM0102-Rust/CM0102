@@ -37,13 +37,13 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
 ///
 /// `AusNsl::create_finals_series_stage()` (SEH frame only for the new), called at the end of the regular season. 1) The
 /// top six of the league table (rows 0 to 5, in order) in a local vector of 6. 2) The round table through virtual +0x3c
-/// (create_round_table: thiscall(this, 0, &rounds, &extra, 0), ret 0x10). 3) The stage: operator new 0x944cf1(0xee) and
+/// (create_round_table: thiscall(this, 0, &rounds, &extra, 0), ret 0x10). 3) The stage: operator new `exe::crt_operator_new`(0xee) and
 /// the League_Stage constructor 0x68b100 (thiscall, ret 0x58, 22 arguments, in the original's order: the league, 6, the
 /// vector, 1, +4, the round table, the rounds (word), the points +0xc2 and +0xc3, the category +0xc4, &+0xc5,
 /// &{2,0,0,0} (two top places: the two who go to the grand final), the year +0x40 (word), 0, the extra (word), +0x51,
 /// 1, 0, +0xd9 (word), −1, 0, 2; the original pushes the words and bytes with garbage in the high bytes, which the
 /// constructor does not read: the copy passes clean values). Out of memory: 0. 4) [+0xc][0] = the stage and the round
-/// table freed (free 0x9452ca). No stage: the error box at line 0x328 and 0. With it: the draw news (0x684230 on the
+/// table freed (free `exe::crt_free`). No stage: the error box at line 0x328 and 0. With it: the draw news (`send_group_draw_news` on the
 /// stage, thiscall, ret 0), +0x30 = 0 and 1.
 ///
 /// [inference] The finals series is a short league of the six; its top two go to the grand final. The real NSL used a
@@ -99,12 +99,12 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
 /// champion.
 ///
 /// `AusNsl::create_grand_final_stage()` (SEH frame only for the new), called at the end of the finals series: the top
-/// two of the finals series table ([+0xc][0], rows 0 and 1, in that order) in a list of 2 (malloc 0x944e46 of 8; out of
+/// two of the finals series table ([+0xc][0], rows 0 and 1, in that order) in a list of 2 (malloc `exe::crt_malloc` of 8; out of
 /// memory: the error box at line 0x348 and return); the round table through virtual +0x3c (thiscall(this, 1, &rounds,
-/// &extra, 0), ret 0x10); the stage (operator new 0x944cf1(0xb2) and the Cup_Stage constructor 0x522e00, thiscall, ret
+/// &extra, 0), ret 0x10); the stage (operator new `exe::crt_operator_new`(0xb2) and the Cup_Stage constructor `construct_cup_stage`, thiscall, ret
 /// 0x3c: the league, 2, the list, the rounds, +4, the table, the year +0x40, 1, 1, the extra, 0x14, 0, 0, 0 and null
-/// seeds; the copy passes clean words) into [+0xc][1] and the table freed (free 0x9452ca). No stage: the error box at
-/// line 0x35c and return (without freeing the list). With it: Cup::set_up_round (0x51c800, thiscall(stage, 0), ret 4)
+/// seeds; the copy passes clean words) into [+0xc][1] and the table freed (free `exe::crt_free`). No stage: the error box at
+/// line 0x35c and return (without freeing the list). With it: Cup::set_up_round (`set_up_round`, thiscall(stage, 0), ret 4)
 /// and the list freed. The current stage (+0x30 = 1) was already written by the next stage.
 ///
 /// [inference] The grand final is a single game, with the finals series winner as the home side.

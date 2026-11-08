@@ -62,7 +62,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
     3
 }
 
-/// Would the club hit the 0x669360 "Error" box (not a national team, nation selected but not in the league table)?
+/// Would the club hit the `key_nation_index_of_club` "Error" box (not a national team, nation selected but not in the league table)?
 ///
 /// [pt] Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
 pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {

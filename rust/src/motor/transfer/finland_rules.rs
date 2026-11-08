@@ -3,7 +3,7 @@ use super::*;
 /// Constructs the Finland transfer rules (rule 8): one window, from 16 November to 15 August; dword +0x15 = 1.
 ///
 /// `FINLAND_RULES::FINLAND_RULES`; SEH frame only for the `new`, no destructor on the normal path. The Finland transfer
-/// rules (rule 8): the base (0x8e84a0), the vtable 0x96a75c, 1 window from `FINLAND_TRANSFER_WINDOWS`; dword +0x15 = 1.
+/// rules (rule 8): the base (`exe::new_transfer_rules`), the vtable 0x96a75c, 1 window from `FINLAND_TRANSFER_WINDOWS`; dword +0x15 = 1.
 /// Returns the object.
 /// Original: `FINLAND_RULES::FINLAND_RULES` (0x5a9950, finland_rules.cpp, thiscall, ret 0x14).
 ///

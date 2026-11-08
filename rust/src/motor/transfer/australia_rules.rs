@@ -4,7 +4,7 @@ use super::*;
 /// 17 April; +0x13 = 6 [inference: the foreign squad limit].
 ///
 /// `AUSTRALIA_RULES::Australia_rules`; SEH frame only for the `new`, no destructor on the normal path: the transfer
-/// rules of Australia (rule 2): the base (0x8e84a0), the vtable 0x967830, 1 window from `AUSTRALIA_TRANSFER_WINDOWS`
+/// rules of Australia (rule 2): the base (`exe::new_transfer_rules`), the vtable 0x967830, 1 window from `AUSTRALIA_TRANSFER_WINDOWS`
 /// and +0x13 = 6 [inference: the foreign player limit]. Returns the object.
 /// Original: `AUSTRALIA_RULES::Australia_rules` (0x412c80, australia_rules.cpp, thiscall, ret 0x14).
 ///

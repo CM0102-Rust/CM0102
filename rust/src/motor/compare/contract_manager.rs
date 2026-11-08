@@ -312,7 +312,7 @@ pub(crate) unsafe extern "C" fn compare_compare_decision_dates(a: usize, b: usiz
 
 /// Comparer for `process_due_decision_dates`.
 ///
-/// The offer decision (0x4ce4e0) changes the contracts, the offers and the array itself: the plan (the dates read
+/// The offer decision (`exe::contract_manager_resolve_contract_offers`) changes the contracts, the offers and the array itself: the plan (the dates read
 /// beforehand, without running anything) tells whether any type-3 entry with a person falls due; if so, only the
 /// original runs. If not (the everyday case), side by side over index +0x18 and the entries that fall due (they become
 /// −1).

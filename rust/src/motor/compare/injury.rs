@@ -90,10 +90,10 @@ pub(crate) unsafe extern "stdcall" fn compare_injury_get_category_name(category:
     r
 }
 
-/// Comparer for `add_injury` (0x62d250; comparison mode: see the header of motor.rs).
+/// Comparer for `add_injury` (`add_injury`; comparison mode: see the header of motor.rs).
 ///
 /// Only the original runs (it allocates, delivers the news item, schedules retirement and calls original routines that
-/// draw random numbers along the way, such as training 0x8b1750 and relapse 0x62e500, which may injure again: it cannot
+/// draw random numbers along the way, such as training `update_player_training` and relapse `roll_recurring_injury`, which may injure again: it cannot
 /// run twice). It checks what the injury guarantees afterwards: invalid arguments or recurrence only give −1; otherwise
 /// −1 only with the person still injured (+0xe ≠ −1) or with no array; a valid slot with the person still in it (+0xe =
 /// slot, with no relapse having changed it): the type in the slot and at +0x1d, +0x1c = 0, +0x2c = +0x28, +0x2e =
@@ -336,7 +336,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_illness_outbreak(this: usize,
 
 /// Comparer for `spread_illness_outbreaks`.
 ///
-/// The original routine draws at random and makes people ill (0x62d250, which may add outbreaks): only it runs, and the
+/// The original routine draws at random and makes people ill (`add_injury`, which may add outbreaks): only it runs, and the
 /// plan made beforehand is checked: how many outbreaks were more than five days old (the ones that leave) and,
 /// afterwards, no outbreak older than five days and the count at least the previous one minus those that leave.
 ///
@@ -517,7 +517,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_training_load(injuries: usize
 /// Comparer for `update_player_fitness` (comparison mode: see the header of motor.rs), side by side.
 ///
 /// Compared: the person's 31-byte record, byte +0xa of the 79-byte record, the statics and the club's saved data
-/// (0xb63d08..0xb63d34), and the random draw. The copy runs as a dry run, without the end of the injury (0x62e700):
+/// (0xb63d08..0xb63d34), and the random draw. The copy runs as a dry run, without the end of the injury (`end_player_injury`):
 /// when it reaches that point, only the original stands (it already ran first). The first time (statics still to be
 /// created, with atexit) and with no record (null person, id outside the table, no player sheet): only the original
 /// runs.

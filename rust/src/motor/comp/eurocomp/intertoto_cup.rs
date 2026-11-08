@@ -84,15 +84,15 @@ pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
     (t, n)
 }
 
-/// `IntertotoCup::collect_entrants()` (0x6336c0, thiscall, ret 0, intertoto_cup.cpp): the 60 clubs whose European cup
+/// `IntertotoCup::collect_entrants()` (`intertoto_cup_collect_entrants`, thiscall, ret 0, intertoto_cup.cpp): the 60 clubs whose European cup
 /// (+0x1db) is the Intertoto, put in the team list (+0xa7) with their coefficient as class and sorted.
 ///
-/// +0x3e = 60; a local vector of 60 pointers (0x944e46 of 0xf0; out of memory, the box for line 0x161 and 0) with the
+/// +0x3e = 60; a local vector of 60 pointers (`exe::crt_malloc` of 0xf0; out of memory, the box for line 0x161 and 0) with the
 /// clubs of the table ([0xae23b4], up to [0xae235c]) whose European cup (+0x1db) is the Intertoto ([0x9cf6f8]), up to
 /// 60; if short, the box for line 0x172 and 0 (the vector stays allocated, as in the original).
 ///
-/// The list (0x944e46 of 6 × 60 at +0xa7; out of memory, the box 0x17c and −1) takes each club with class = its
-/// coefficient (+0x1df) and status 0, goes to qsort (0x522190) and the vector is freed. Returns 1 with the 60 (as the
+/// The list (`exe::crt_malloc` of 6 × 60 at +0xa7; out of memory, the box 0x17c and −1) takes each club with class = its
+/// coefficient (+0x1df) and status 0, goes to qsort (`cup_compare_entries_by_level_desc`) and the vector is freed. Returns 1 with the 60 (as the
 /// result pair).
 ///
 /// [pt] { 0x6336c0 } (thiscall, ret 0, intertoto_cup.cpp): `IntertotoCup::collect_entrants()`: +0x3e = 60; um vetor local de
@@ -212,7 +212,7 @@ pub(crate) unsafe fn uefa_cup_object() -> usize {
     read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(4)))
 }
 
-/// The Intertoto winners (+5 = 1 in +0xa7) that fit the last three UEFA Cup slots, in the order 0x633d40 puts them →
+/// The Intertoto winners (+5 = 1 in +0xa7) that fit the last three UEFA Cup slots, in the order `intertoto_cup_update_for_date` puts them →
 /// (clubs, count).
 ///
 /// [pt] Os vencedores do Intertoto (+5 = 1 no registro de 6 bytes de +0xa7) que cabem nas três últimas vagas da UEFA, na
@@ -253,7 +253,7 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: usize, uefa: usize) -> ([u
 /// and +5 zeroed) and into its entry book (+0x14, 6 bytes: the club and status 4 at +4 [inference: entry through the
 /// Intertoto]; +0x36 goes up); then the UEFA predicted positions (virtual +0x5c: mov ecx, uefa -> thiscall, ret 0),
 /// +0xb2 = 1 and the predicted positions once more (the original re-reads the UEFA Cup). Always, at the end, the cup
-/// update (0x51f890: push stage; push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
+/// update (`cup_update_for_date`: push stage; push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `IntertotoCup::update_for_date` (0x633d40, intertoto_cup.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x633d40 } (thiscall, ret 8, intertoto_cup.cpp; a virtual +0x14 do Intertoto): `IntertotoCup::update_for_date(hoje,
@@ -323,16 +323,16 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
 /// through gets the next round record, a club knocked out leaves European competition.
 ///
 /// `IntertotoCup::update_staff_records_for_status(club, outcome, _, _, match, _)`, virtual +0x44 of the Intertoto;
-/// returns 0. Weight = 0x4bf850(low, high, match round +0x34, rounds +0x3c) (cdecl, 4 pushes; add esp, 0x10).
+/// returns 0. Weight = `comp_util_scale_by_round`(low, high, match round +0x34, rounds +0x3c) (cdecl, 4 pushes; add esp, 0x10).
 ///
-/// - 1 (won the final): the qualification record (0x86bdd0) for the UEFA Cup (the competition [0xae23d0] + 0x6b ×
+/// - 1 (won the final): the qualification record (`add_qualified_for_round_record`) for the UEFA Cup (the competition [0xae23d0] + 0x6b ×
 /// [0x9cf6f0]), stage 0, round 0xa, weight(0x3c, 0x64), and the club moves to the UEFA Cup (+0x1db = [0x9cf6f0]).
 ///
 /// - 0 (went through a round): if the next round exists (+0x34 + 1 < +0x3c), the qualification record in the Intertoto
 /// (+4) with the match's stage +0x32, the +7 of the next round (+0xa3, 0x68 bytes) and the weight round × 99 / (rounds
 /// − 1) + 1 (only the low byte is incremented: inc al).
 ///
-/// - 0xff or 2 (knocked out, or lost the final): the elimination record (0x86c000) in the Intertoto, stage 0, round
+/// - 0xff or 2 (knocked out, or lost the final): the elimination record (`add_knocked_out_record`) in the Intertoto, stage 0, round
 /// +0x30 of the match, weight(0x14, 0x50), and the club leaves European competition (+0x1db = −1).
 /// Original: `IntertotoCup::update_staff_records_for_status` (0x633c10, intertoto_cup.cpp, thiscall, ret 0x18).
 ///

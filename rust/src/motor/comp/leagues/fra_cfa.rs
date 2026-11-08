@@ -13,8 +13,8 @@ pub(crate) type FraCfaScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 
 /// Sets rounds `primeira`.. of round table `t` from a static list, in the original's order.
 ///
-/// For each one, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push i;
-/// push t; add esp -> cdecl: value 0) and the match ranges (0x68a1c0: push 0; push c; push b; push a; push j; push i;
+/// For each one, the date (`league_round_set_date`: push 0; push year; push code; push week; push years; push month; push day; push i;
+/// push t; add esp -> cdecl: value 0) and the match ranges (`store_round_match`: push 0; push c; push b; push a; push j; push i;
 /// push t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
@@ -44,7 +44,7 @@ pub(crate) struct SinglePhaseLeague {
 /// state): returns the round table.
 ///
 /// Only the main stage (−1) builds it; the others return 0 without writing anything. é_liga (if requested) = 1, the
-/// rounds, extra = 0, a table of rounds × 0x41 bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; out of memory: the
+/// rounds, extra = 0, a table of rounds × 0x41 bytes (malloc `exe::crt_malloc`: push; add esp, 4 -> cdecl; out of memory: the
 /// error box and 0) with the league's dates and slots.
 ///
 /// [pt] O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal
@@ -250,7 +250,7 @@ pub(crate) struct C1BracketVariant {
 /// as a word); 0 the play-offs (é_liga = 0, 2 rounds, extra 0xa0, the table of 0xd0 bytes with the semi-finals and the
 /// final); 1 the play-outs (é_liga = 0, 1 round, extra 0, 0x68 bytes); the others return 0 without writing anything.
 ///
-/// Out of memory (malloc 0x944e46: push; add esp, 4 -> cdecl): the box for the stage's line and 0.
+/// Out of memory (malloc `exe::crt_malloc`: push; add esp, 4 -> cdecl): the box for the stage's line and 0.
 ///
 /// [pt] O corpo comum da C1 A e da C1 B (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo), pela
 /// fase (o byte): −1 a fase principal (é_liga = 1, 34 rodadas, extra 0, a tabela de 0x8a2 bytes com `SERIE_C1_ROUNDS`, o ano
@@ -347,7 +347,7 @@ pub(crate) struct BackgroundLeague {
     /// o máximo da lista (72 a CFA, 40 a de baixo) e o máximo dos da genérica (34 e 20)
     pub(crate) maximo: i16,
     pub(crate) genericos: i16,
-    /// os grupos e a tabela de cada um (thiscall(liga, lista), ret 4: 0x5b9fa0 e 0x5be230)
+    /// os grupos e a tabela de cada um (thiscall(liga, lista), ret 4: `fra_cfa_create_group_table` e `fra_lower_create_table`)
     pub(crate) groups: usize,
     pub(crate) by_group: usize,
     pub(crate) table: usize,
@@ -359,16 +359,16 @@ pub(crate) struct BackgroundLeague {
 /// The body of the two French lower-league constructors (thiscall(this, year), ret 4, SEH frame only on the exception
 /// path; no saved state).
 ///
-/// The base (League::League 0x682200: mov ecx -> thiscall, ret 0), the vtable, the year (+0x40), +0x2c = 0, no
-/// discipline (+0x50 = 0xff), the record (+4), stage 0xff (+0x44) and −1 (+0x30); the rules (0x5ba0a0: mov ecx ->
+/// The base (League::League `exe::new_league`: mov ecx -> thiscall, ret 0), the vtable, the year (+0x40), +0x2c = 0, no
+/// discipline (+0x50 = 0xff), the record (+4), stage 0xff (+0x44) and −1 (+0x30); the rules (`fra_cfa_set_up_rules`: mov ecx ->
 /// thiscall, ret 0; on failure, the error box and stop).
 ///
 /// Then the club list, in database order (the first [0xae235c] − 2 × [0xae2350]), up to the maximum: those of the
 /// `todas` competitions; and, up to the generic maximum, those of the generic division meeting the league's condition.
-/// The list is shuffled (comp_util_shuffle_pointer_array 0x4afb40: push count; push list; add esp, 8 -> cdecl; uses the
+/// The list is shuffled (comp_util_shuffle_pointer_array `comp_util_shuffle_pointer_array`: push count; push list; add esp, 8 -> cdecl; uses the
 /// random draw) and each group, with its clubs consecutive in the list, gets the table (on failure, the error box), the
-/// fixtures (League::create_fixtures 0x6835c0: mov ecx -> thiscall, ret 0; on failure, the error box) and the table is
-/// released (League::free_table 0x687970: push 0; mov ecx -> thiscall, ret 4): the group's matches stay in the game
+/// fixtures (League::create_fixtures `create_fixtures`: mov ecx -> thiscall, ret 0; on failure, the error box) and the table is
+/// released (League::free_table `free_table`: push 0; mov ecx -> thiscall, ret 4): the group's matches stay in the game
 /// calendar and the league carries on without a table.
 ///
 /// The list is a local record of 72 or 40 pointers; the copy uses a zeroed array (the career fills the list; the
@@ -564,9 +564,9 @@ pub(crate) unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
 /// Shared body of the two French table creations: `n` clubs (+0x3e), allocates the table and fills the rows from the
 /// list `clubes`, marking clubs whose competition is in `marcadas`; returns whether it filled up.
 ///
-/// +0x3e = `n`, the table (malloc 0x944e46 of n × 0x3b; when out of memory: the error box of source file `arquivo` at
+/// +0x3e = `n`, the table (malloc `exe::crt_malloc` of n × 0x3b; when out of memory: the error box of source file `arquivo` at
 /// line `linha` and 0) and the `n` clubs of the list `clubes`, in order, each in the next row (League::init_table_row
-/// 0x687430: thiscall(league, row, club, mark, 0), ret 0x10), with mark 1 on the clubs whose competition (+0x57, the id
+/// `init_table_row`: thiscall(league, row, club, mark, 0), ret 0x10), with mark 1 on the clubs whose competition (+0x57, the id
 /// at +0) is one of `marcadas`.
 ///
 /// Returns whether it filled up (the row count = +0x3e).
@@ -637,8 +637,8 @@ pub(crate) unsafe fn compare_french_table(name: &str, this: usize, clubs: usize,
     r
 }
 
-/// The club's situation in the Serie C1 stats (the body of 0x64bd80 and 0x64ff40): in the club's entry
-/// (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, club), ret 4) it writes the current position (+0x73), the best
+/// The club's situation in the Serie C1 stats (the body of `ita_ser_c1a_set_club_progress` and `ita_ser_c1b_set_club_progress`): in the club's entry
+/// (Comp_Stats::find_club_entry `exe::comp_stats_find_club_entry`: thiscall(+8, club), ret 4) it writes the current position (+0x73), the best
 /// (+0x74) and the worst (+0x75), folding play-off/play-out ranges by stage.
 ///
 /// In the league (stage 0xff): a best of 2 to 5 (the promotion play-off) becomes 2 and of 14 to 17 (the play-out)

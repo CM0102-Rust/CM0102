@@ -2,8 +2,8 @@ use super::*;
 
 /// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
 ///
-/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through 0x521e60; the
-/// match (the same, plus the leg at +6 and the venue at +0x13) through 0x521eb0.
+/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through `cup_set_round_draw_date`; the
+/// match (the same, plus the leg at +6 and the venue at +0x13) through `cup_set_round_match_date`.
 ///
 /// Then the fields: +7 the round name, +9 the index, +0xb the draw bits, +0xd and +0xf the tie-breakers (single match
 /// and two legs), +0x17 the category copied into each match, +0x18/+0x1a/+0x1c/+0x1e teams, matches, new teams and
@@ -69,7 +69,7 @@ pub(crate) unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &FraSuperCup
 /// single-stage cups.
 ///
 /// Outside stage −1 (the byte), returns 0 without writing anything. At −1: saida (if requested) = 0, rodadas = the
-/// table size, extra = 0; the table is allocated (0x944e46 of 0x68 × rodadas; out of memory, the error box `linha` of
+/// table size, extra = 0; the table is allocated (`exe::crt_malloc` of 0x68 × rodadas; out of memory, the error box `linha` of
 /// `arquivo` and returns 0) and filled with each round; returns the table.
 ///
 /// `ajuste` modifies the first round after allocation (the drawn venue of the French Super Cup).

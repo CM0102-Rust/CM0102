@@ -44,7 +44,7 @@ pub struct Prologue {
 pub static mut RETURN_TO: u32 = 0;
 static mut GAME_ESP: u32 = 0;
 /// The game's ECX on entry: third-party patch code (NickPatcher) relies on ECX being preserved after
-/// calling a routine that preserves it (0x90cfc0 does push ecx/pop ecx); the exit stub used ECX and the
+/// calling a routine that preserves it (`exe::utils_random` does push ecx/pop ecx); the exit stub used ECX and the
 /// patch's 9-iteration loop at 0x602610 never reached 0 (CLZ, 25/10/2026).
 ///
 /// [pt] O ECX do jogo na entrada: o código de patch de terceiros (NickPatcher) conta com o ECX preservado depois de
@@ -278,7 +278,7 @@ pub unsafe fn preserve_ecx(target: usize) -> usize {
 /// The same for a cdecl routine with `n` arguments, without swapping the return address: push ecx; copy the
 /// arguments; call; add esp; pop ecx; ret. Keeps calls and returns matched (the return swap of
 /// `preservar_ecx` defeats the processor's return prediction and doubled the career's time, with the draw
-/// 0x90cfc0 called billions of times).
+/// `exe::utils_random` called billions of times).
 ///
 /// [pt] O mesmo para uma rotina cdecl de `n` argumentos, sem trocar o endereço de retorno: push ecx; copia os
 /// argumentos; call; add esp; pop ecx; ret. Fica com as chamadas e retornos casados (a troca do retorno do
@@ -649,7 +649,7 @@ unsafe extern "C" fn message_box(title: *const u8, text: *const u8, allow_exit: 
     original(title, text, allow_exit)
 }
 
-/// Detours 0x5e8290 to `message_box`. The original entry (`sub esp,0x6c; mov ecx,[0xb67a30]`, 9 bytes with no
+/// Detours `exe::gui_show_message_box` to `message_box`. The original entry (`sub esp,0x6c; mov ecx,[0xb67a30]`, 9 bytes with no
 /// relative instruction) goes to the trampoline; a `jmp` from another DLL there (CLZ's LaMOHatesCD swaps those 9 bytes) is
 /// chained to its target; anything else, leave it alone and say so in the log. Only once (again, it would chain to itself).
 ///

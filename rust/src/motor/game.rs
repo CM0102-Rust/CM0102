@@ -167,26 +167,26 @@ pub(crate) unsafe fn game_club_of_contract(c: usize) -> usize {
     }
 }
 
-/// CONTRACT_MANAGER get_contract_for_club (0x4cf5f0).
+/// CONTRACT_MANAGER get_contract_for_club (`exe::contract_manager_get_contract_for_club`).
 ///
 /// [pt] O vínculo da pessoa com o clube (0x4cf5f0).
 pub(crate) unsafe fn game_contract_for_club(p: usize, club: usize) -> usize {
     exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club)
 }
 
-/// staff_is_disliked_by (0x547840): does `pessoa` dislike `alvo`.
+/// staff_is_disliked_by (`exe::staff_is_disliked_by`): does `pessoa` dislike `alvo`.
 ///
 /// [pt] `pessoa` não gosta de `alvo` (0x547840)?
 pub(crate) unsafe fn is_disliked_by(target: usize, person: usize) -> u32 {
     exe::staff_is_disliked_by(target, person)
 }
 
-/// The shared end of the friction routines (0x5d6d10 and 0x5d7190): finds a squad mate the person dislikes and, on the
+/// The shared end of the friction routines (`game_update_squad_relationships` and `game_check_club_dressing_room_unrest`): finds a squad mate the person dislikes and, on the
 /// rare date condition, posts the complaint and sets the link mark.
 ///
 /// The first squad mate (+0xd7, 50 slots) the person does not like; if found, and only when day % 14 + the person's id
-/// gives zero (in practice the person with id 0, every 14 days), the complaint (0x587c60) against the manager (+0xcf,
-/// type 0), the assistant (+0xd3, 1) or someone else (2) and the mark on link `k` (0x867700 with 0x2000, 0x1000 or
+/// gives zero (in practice the person with id 0, every 14 days), the complaint (`exe::news_post_dressing_room_unrest`) against the manager (+0xcf,
+/// type 0), the assistant (+0xd3, 1) or someone else (2) and the mark on link `k` (`exe::staff_contract_apply_event_flags` with 0x2000, 0x1000 or
 /// 0x800).
 ///
 /// [pt] O fim comum do atrito (0x5d6d10 e 0x5d7190): o primeiro colega do elenco (+0xd7, 50 vagas) de quem a pessoa não
@@ -225,15 +225,15 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
 }
 
 /// Updates the relationships in the squads: ten random pairs of team-mates: a disliked one stops being disliked and may
-/// fight (0x5888a0); otherwise becomes disliked, liked or stops being liked; every 50 days, random clubs go through the
+/// fight (`exe::news_post_feud_settled`); otherwise becomes disliked, liked or stops being liked; every 50 days, random clubs go through the
 /// dressing room friction; on the other days each player, by attribute draws, may reach friction with the manager.
 ///
 /// `game_update_squad_relationships()`, every day from the game's day loop. (1) Ten times: a random club and two random
 /// squad slots (50); different people and random(the first one's +0x5b) = 0: if the first dislikes the second, he stops
-/// disliking him (0x547c50) and, at the same contract club and with the link flagged in +0x45 & 0x800, the fight
-/// (0x5888a0); otherwise, 1/3 start disliking (0x547af0), 1/3 of the rest start liking (0x547a10) and the rest stop
-/// liking (0x547c10). (2) Day a multiple of 50: `[0xae235c]`/100 random clubs go through the dressing room friction
-/// (0x5d7190). On the other days, each person (except the last 17) with a player record and preferences, a contract and
+/// disliking him (`staff_remove_disliked_staff`) and, at the same contract club and with the link flagged in +0x45 & 0x800, the fight
+/// (`exe::news_post_feud_settled`); otherwise, 1/3 start disliking (`exe::staff_add_disliked_staff`), 1/3 of the rest start liking (`staff_add_favoured_staff`) and the rest stop
+/// liking (`staff_remove_favoured_staff`). (2) Day a multiple of 50: `[0xae235c]`/100 random clubs go through the dressing room friction
+/// (`game_check_club_dressing_room_unrest`). On the other days, each person (except the last 17) with a player record and preferences, a contract and
 /// the club's link with the +0xff person: three random draws (+0x5b, +0x5d, +0x5a, each + 5) filter; the sum of five
 /// attributes minus 3, 5, 15, 15 by draws that came out zero and 5 if the player's reputation (+0xb) exceeds 4500 and
 /// the club's (+0x80) gives the draw that, when zero, leads to friction with the manager.
@@ -357,7 +357,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
 // the copy takes the branches (runs every day).
 
 /// each squad player with a contract and preferences: the first team-mate he dislikes; with day % 14 + id = 0, the
-/// complaint against the manager, the assistant or another (0x587c60) and the flag on the contract (0x867700)
+/// complaint against the manager, the assistant or another (`exe::news_post_dressing_room_unrest`) and the flag on the contract (`exe::staff_contract_apply_event_flags`)
 /// Original: `game_check_club_dressing_room_unrest` (0x5d7190, game.cpp, cdecl).
 ///
 /// [pt] { 0x5d7190 } (cdecl, game.cpp): `game_check_club_dressing_room_unrest(clube)`: cada pessoa do elenco (+0xd7, 50
@@ -392,13 +392,13 @@ pub(crate) unsafe fn is_club_squad_player(p: usize, club: usize) -> bool {
 
 /// Spreads morale through the squads by leadership: one club in seven each day (not national teams): the squad's
 /// leadership and leadership × morale are summed; each player draws from them and his own morale, and his morale goes
-/// up or down by one (0x544710).
+/// up or down by one (`staff_adjust_morale`).
 ///
 /// `game_spread_squad_morale_by_leadership()`, every day from the game's day loop. Each club that is not a national
-/// team (0x53b900), with random(7) = 0: sums the leadership (player +0x2f) and leadership × morale of the link (+0x44)
+/// team (`exe::database_is_national_team`), with random(7) = 0: sums the leadership (player +0x2f) and leadership × morale of the link (+0x44)
 /// over the squad (+0xd7, 50 slots); fewer than 16 players count 10 for each one missing. With a non-zero sum, each
 /// player draws (2 × Σ leadership × morale) / (his leadership + sum) plus random(morale / 12), as a signed byte:
-/// negative, random(s) < random(−5) lowers the morale (0x544710 with −1); positive, random(s) > random(5) raises it
+/// negative, random(s) < random(−5) lowers the morale (`staff_adjust_morale` with −1); positive, random(s) > random(5) raises it
 /// (+1).
 /// Original: `game_spread_squad_morale_by_leadership` (0x5ce0b0, game.cpp, cdecl).
 ///
@@ -487,17 +487,17 @@ pub(crate) unsafe fn days_since_staff_date(p: usize) -> i32 {
 }
 
 /// Checks players missing training: n/250 consecutive people from a random one; a present player with training and
-/// without a serious injury misses training (0x41a360) by a random draw on the sum of attributes, morale and liking of
+/// without a serious injury misses training (`miss_training`) by a random draw on the sum of attributes, morale and liking of
 /// the manager (more likely when newly arrived) or by the contract flags.
 ///
 /// `game_check_players_missing_training()`, every day from the game's day loop. Starting from a random person (random(n
 /// − n/250 − 1)), n/250 consecutive people: a player (+0x61, function +0x3d = 11) with a contract and a club, present
-/// (0x418f60), with the training record (0x8b39f0, +0x15) and without a serious injury (0x62c400 ≠ 2). (1) With +0x5b <
+/// (`is_player_awol`), with the training record (`get_player_schedule`, +0x15) and without a serious injury (`get_player_injury_status` ≠ 2). (1) With +0x5b <
 /// 8, player +0x2f < 8 and the sum (player +0x2f, +0x18, +0x5b, link +0x44, −5 if +0x5b or the morale are 1, −5 if he
 /// dislikes the manager, +2 if he likes him) < 43: random(+0x5b + 100, 50 or 25 depending on the days since +0x3e: <
 /// 30, < 90, < 180) coming out zero is a miss. (2) Otherwise, with +0x5b < 10 and a link with the club: the link flags
 /// (+0x45: 0x8000, 0x30000; with +0x5b < 5, 0x7800) give random(+0x5b) draws that, when zero, are a miss. The miss:
-/// 0x41a360.
+/// `miss_training`.
 /// Original: `game_check_players_missing_training` (0x5d6aa0, game.cpp, cdecl).
 ///
 /// [pt] { 0x5d6aa0 } (cdecl, game.cpp): `game_check_players_missing_training()`, todo dia pelo laço do dia do jogo. A partir
@@ -600,11 +600,11 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
 // simplification: draws and the foul (0x41a360) fines, draws and changes the form: original only; the copy carries the branches.
 
 /// Gives the day to each competition in the list (virtual +0x14 with the game date and the flag); with the flag, the
-/// next step of `[0xae2a58]` (0x5aaf00).
+/// next step of `[0xae2a58]` (`fix_man_daily_update`).
 ///
 /// `game_update_comps_for_date(flag)`: each competition in the list (`[0xadadfc]`, count `[0xadadf8]` re-read on each
 /// iteration) receives the day (virtual +0x14 with the game date 0xae2c90 and the flag); with the flag, the next step
-/// of `[0xae2a58]` (0x5aaf00, which the original calls as a tail jump). Called from the game's day loop (with 1).
+/// of `[0xae2a58]` (`fix_man_daily_update`, which the original calls as a tail jump). Called from the game's day loop (with 1).
 /// Original: `game_update_comps_for_date` (0x5ce060, game.cpp, cdecl).
 ///
 /// [pt] { 0x5ce060 } (cdecl, game.cpp): `game_update_comps_for_date(marca)`: cada competição da lista ([0xadadfc], conta

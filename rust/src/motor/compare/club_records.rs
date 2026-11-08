@@ -5,11 +5,11 @@ use super::*;
 
 /// Comparer for `update_league_position_records`.
 ///
-/// The original routine runs first (it sorts the tables, which 0x6827d0 checks on its own) and the copy afterwards, as
+/// The original routine runs first (it sorts the tables, which `sort_table` checks on its own) and the copy afterwards, as
 /// a dry run (without sorting), from the same records: the first 14 bytes of each chain club's season and all-time
 /// records, the queue header (+0x24..+0x30) and the queue; and the return value.
 ///
-/// A null league or one with +0x44 ≠ 0xff, a record to be created (0x4528d0/0x452710 allocate) or a queue that may
+/// A null league or one with +0x44 ≠ 0xff, a record to be created (`get_season_record`/`get_all_time_record` allocate) or a queue that may
 /// grow: only the original.
 ///
 /// [pt] Comparador: a original roda antes (ordena as tabelas, que a 0x6827d0 confere por conta própria) e a cópia depois,

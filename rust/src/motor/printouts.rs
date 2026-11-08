@@ -4,7 +4,7 @@ use super::*;
 /// and nation (−1 any); up to 20, random(n) and the id, or −1.
 ///
 /// Ret 0xc; 0x1094-byte frame through 0x945610: `PunditList::pick_random_pundit(club, type, nation)`, from the press
-/// stories (0x72c1f0, 0x733a60) and from the news texts. Type 1 on Sunday (0x54a3f0 = 6) becomes 7. Types 2 and 4
+/// stories (`exe::media_create_player_media_story`, 0x733a60) and from the news texts. Type 1 on Sunday (0x54a3f0 = 6) becomes 7. Types 2 and 4
 /// (local): those of list `[this+4]` whose +0xcb is the id of `[[club+0x69]+0x38]` (none: −1); the others: those of
 /// list `[this]` of the type (+0xca) and the nation (+0xcf; −1 accepts any). Up to 20; none: −1; otherwise the id (word
 /// +0, signed) of one of them by random(n).

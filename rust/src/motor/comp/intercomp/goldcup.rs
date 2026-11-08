@@ -19,21 +19,21 @@ pub(crate) const COPA_AMERICA_2001_NATIONS: [usize; 12] = [
     KEY_NATION_URUGUAY, KEY_NATION_VENEZUELA, KEY_NATION_PARAGUAY, KEY_NATION_BOLIVIA, // cqs12: slots 8 to 11 (Bolivia in 11)
 ];
 
-/// `GoldCup::set_up_team_list()` (0x5e1cd0, thiscall, ret 0, goldcup.cpp): the 12 teams, sorted by reputation; returns
+/// `GoldCup::set_up_team_list()` (`set_up_team_list`, thiscall, ret 0, goldcup.cpp): the 12 teams, sorted by reputation; returns
 /// 1, or 0 on failure.
 ///
-/// +0xf2 = 12 and the list at +0xee (0x944e46(0x30): push; add esp, 4 -> cdecl; out of memory, the error box for line
-/// 0x37b and returns 0). In 2001 (+0x40 = 0x7d1): the 12 fixed ones (COPA_AMERICA_2001_NATIONS, each via 0x53b3d0) and
+/// +0xf2 = 12 and the list at +0xee (`exe::crt_malloc`(0x30): push; add esp, 4 -> cdecl; out of memory, the error box for line
+/// 0x37b and returns 0). In 2001 (+0x40 = 0x7d1): the 12 fixed ones (COPA_AMERICA_2001_NATIONS, each via `exe::database_get_national_team`) and
 /// returns 1, unsorted.
 ///
-/// In other years: the Copa America hosts ([0x9cf7a8]) of the year (0x5fa730 HostCountry::find_hosts on [0xb5e134]:
+/// In other years: the Copa America hosts ([0x9cf7a8]) of the year (`find_hosts` HostCountry::find_hosts on [0xb5e134]:
 /// push 1; push &second; push &first; push year; push competition -> thiscall, ret 0x14; both start at −1; returns how
 /// many, signed byte) go first; then, in nation order ([0xae23a8], [0xae2350] of them, i as a word) and while the list
 /// is not full (+0xf2), the nations of continent [0x9cfa1c] (+0x71, its +0) and the guests: in 1999 (0x7cf) [0x9cf36c],
 /// in other years [0x9cf280]; and always Mexico ([0x9cf3d0]); each one enters if it is not the nation of a host (+0x53
 /// of the national team).
 ///
-/// Without 12: the error box for line 0x3bc and returns 0; with 12, the list is sorted by reputation (qsort 0x945333
+/// Without 12: the error box for line 0x3bc and returns 0; with 12, the list is sorted by reputation (qsort `exe::crt_qsort`
 /// with 0x4b07d0: 4 pushes; add esp -> cdecl) and returns 1.
 ///
 /// [pt] { 0x5e1cd0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::set_up_team_list()`: +0xf2 = 12 e a lista +0xee (0x944e46(0x30):
@@ -123,10 +123,10 @@ pub(crate) const COPA_AMERICA_PREDICTED_PLACES: [u32; 12] = [1, 2, 3, 3, 5, 5, 5
 /// Rule: the Copa América predicted positions by reputation: 1, 2, 3, 3, four 5ths, 9 and three 10ths.
 ///
 /// `GoldCup::set_predicted_positions()` (virtual +0x5c): without statistics (+8), the error box at line 0x419 and
-/// return; a copy of the list (0x944e46(+0xf2 × 4); out of memory, the error box at line 0x421 and return), sorted by
-/// reputation (qsort 0x945333 with 0x4b07d0, +0xf2 items), and each one's predicted position in the statistics
-/// (0x4a2540 Comp_Stats::set_club_final_position: push position; push club; mov ecx, [+8] -> thiscall, ret 8): 1, 2, 3,
-/// 3, four 5, 9 and three 10 (the first 12 of the copy); the copy freed (0x9452ca).
+/// return; a copy of the list (`exe::crt_malloc`(+0xf2 × 4); out of memory, the error box at line 0x421 and return), sorted by
+/// reputation (qsort `exe::crt_qsort` with 0x4b07d0, +0xf2 items), and each one's predicted position in the statistics
+/// (`set_club_final_position` Comp_Stats::set_club_final_position: push position; push club; mov ecx, [+8] -> thiscall, ret 8): 1, 2, 3,
+/// 3, four 5, 9 and three 10 (the first 12 of the copy); the copy freed (`exe::crt_free`).
 /// Original: `GoldCup::set_predicted_positions` (0x5e2340, goldcup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5e2340 } (thiscall, ret 0, goldcup.cpp; a virtual +0x5c): `GoldCup::set_predicted_positions()`: sem estatística
@@ -160,9 +160,9 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
 /// Rule: the Copa América is every 2 years: when it ends, the table and stages are undone, the season goes to the
 /// statistics history, the year goes up 2 and the rules are set up again.
 ///
-/// `GoldCup::start_new_season()` (virtual +8), the next Copa América: +0x4c = 0, the cup table freed (0x687970
-/// League::free_table: push 0; mov ecx, this -> thiscall, ret 4), the round table +0xba freed (0x9452ca) and zeroed,
-/// the season archived in the statistics (0x4a1c50 Comp_Stats::archive_season_and_reset: push 1; mov ecx, [+8] ->
+/// `GoldCup::start_new_season()` (virtual +8), the next Copa América: +0x4c = 0, the cup table freed (`free_table`
+/// League::free_table: push 0; mov ecx, this -> thiscall, ret 4), the round table +0xba freed (`exe::crt_free`) and zeroed,
+/// the season archived in the statistics (`exe::comp_stats_archive_season_and_reset` Comp_Stats::archive_season_and_reset: push 1; mov ecx, [+8] ->
 /// thiscall, ret 4), stages 0..+0x30 destroyed (virtual 0 of each with 1: the destructor that frees), the year +0x40
 /// goes up 2, +0x45 = 0, +0x30 = −1 and the rules again (virtual +0x8c, thiscall, ret 0; 0: the error box at line
 /// 0x28b).
@@ -231,12 +231,12 @@ pub(crate) unsafe fn drawn_team(this: usize, k: usize) -> usize {
 /// thiscall, ret 8, pure: the day of the year and the year). Before it (today's year lower, unsigned; or the same year
 /// and today's day lower, signed) the routine returns 0 without the league day. On the draw day, if the draw is not
 /// done (+0x45 = 0) and WITHOUT `completo` (the original draws only on the call with completo = 0): the list of the 12
-/// national teams (0x5e1cd0: mov ecx -> thiscall, ret 0), the predicted positions (virtual +0x5c, thiscall, ret 0), the
-/// first group's table (0x5e11e0, thiscall, ret 0; 0: the error box at line 0x3e7), the fixtures (0x6835c0
-/// League::create_fixtures, thiscall, ret 0; 0: the error box at line 0x3ed), the sorted table (0x6827d0 push 0; mov
+/// national teams (`set_up_team_list`: mov ecx -> thiscall, ret 0), the predicted positions (virtual +0x5c, thiscall, ret 0), the
+/// first group's table (`goldcup_create_group_table`, thiscall, ret 0; 0: the error box at line 0x3e7), the fixtures (`create_fixtures`
+/// League::create_fixtures, thiscall, ret 0; 0: the error box at line 0x3ed), the sorted table (`sort_table` push 0; mov
 /// ecx -> thiscall, ret 4; 0: the error box at line 0x3f4) (an error returns 0 without the league day), the stages of
-/// groups 0 and 1 (0x5e16b0: push g; mov ecx -> thiscall, ret 4), the list +0xee freed (0x9452ca: push; add esp, 4 ->
-/// cdecl) and zeroed, +0xf2 = 0 and +0x45 = 1. Then the league day (0x6847c0: push completo; push today; mov ecx, this
+/// groups 0 and 1 (`goldcup_create_group_stage`: push g; mov ecx -> thiscall, ret 4), the list +0xee freed (`exe::crt_free`: push; add esp, 4 ->
+/// cdecl) and zeroed, +0xf2 = 0 and +0x45 = 1. Then the league day (`league_update_for_date`: push completo; push today; mov ecx, this
 /// -> thiscall, ret 8), whose return value it passes on.
 /// Original: `GoldCup::update_for_date` (0x5e2120, goldcup.cpp, thiscall, ret 8).
 ///
@@ -299,10 +299,10 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
 /// Rule: group A of the Copa América has 4 nations, drawn entries 0, 3, 6 and 9 (the groups are interleaved in the
 /// list), each in the row of its order; human managers get the group draw news.
 ///
-/// `GoldCup::create_group_table()`, group A of the Copa América: 4 teams (+0x3e), the table +0xb1 (0x944e46(0xec): push
+/// `GoldCup::create_group_table()`, group A of the Copa América: 4 teams (+0x3e), the table +0xb1 (`exe::crt_malloc`(0xec): push
 /// 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of memory, the error box at line 0x1d4 and returns 0), each row
-/// i with drawn entry 3i (+0xee: the groups interleaved) (0x687430 League::init_table_row: push 0; push 0; push
-/// national team; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (0x684230: mov ecx, this ->
+/// i with drawn entry 3i (+0xee: the groups interleaved) (`init_table_row` League::init_table_row: push 0; push 0; push
+/// national team; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (`send_group_draw_news`: mov ecx, this ->
 /// thiscall, ret 0) and returns 1.
 /// Original: `GoldCup::create_group_table` (0x5e11e0, goldcup.cpp, thiscall, ret 0).
 ///
@@ -337,15 +337,15 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
 /// cup's rules and year and the cup's round table for the group (6, 10 and 13 July); human managers get the news.
 ///
 /// `GoldCup::create_group_stage(g)` (SEH frame only for the stage's new: no destructor on the normal path), the stage
-/// of group g + 1 (g = 0 and 1, on the draw day). The teams in a vector of 4 pointers (0x944e46(0x10): push; add esp, 4
+/// of group g + 1 (g = 0 and 1, on the draw day). The teams in a vector of 4 pointers (`exe::crt_malloc`(0x10): push; add esp, 4
 /// -> cdecl; out of memory, the error box at line 0x2bf and 0): drawn entries g + 1, g + 4, g + 7 and g + 10 (+0xee);
 /// the round table through virtual +0x3c (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10);
-/// the stage (0x944cf1(0xee) push; add esp, 4 -> cdecl; the League_Stage constructor 0x68b100, thiscall, ret 0x58, 22
+/// the stage (`exe::crt_operator_new`(0xee) push; add esp, 4 -> cdecl; the League_Stage constructor 0x68b100, thiscall, ret 0x58, 22
 /// arguments: the cup, 4, the vector, 1, +4, the round table, the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe,
 /// the year +0x40 (word), g, the id (word), +0x51, 4, 0, +0xd9 (word), −1, 0, 2; the original pushes the words and
 /// bytes with garbage in the high bytes, which the constructor does not read: the copy passes clean values) into
-/// [+0xc][g]; the vector and the round table freed (0x9452ca). No stage: the error box at line 0x2d6 and 0. With it:
-/// +0x30 = g, the group news (0x684230 on the stage) and 1.
+/// [+0xc][g]; the vector and the round table freed (`exe::crt_free`). No stage: the error box at line 0x2d6 and 0. With it:
+/// +0x30 = g, the group news (`send_group_draw_news` on the stage) and 1.
 /// Original: `GoldCup::create_group_stage` (0x5e16b0, goldcup.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x5e16b0 } (thiscall, ret 4, goldcup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
@@ -423,10 +423,10 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
 
 /// One operation of building the round table, in the original routine's order.
 ///
-/// `D` the date of a group round (0x68a160: round, day, month with 0 = January, years to add, weekday, code, value;
-/// records of 0x41 bytes), `L` a match of the group round (0x68a1c0: round, match, a, b, c, value), `S` the draw of a
-/// cup round (0x521e60: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
-/// (0x521eb0: round, day, month, years, weekday, time, home side), `E` a day of the tie (0x521f10: round, slot,
+/// `D` the date of a group round (`league_round_set_date`: round, day, month with 0 = January, years to add, weekday, code, value;
+/// records of 0x41 bytes), `L` a match of the group round (`store_round_match`: round, match, a, b, c, value), `S` the draw of a
+/// cup round (`cup_set_round_draw_date`: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
+/// (`cup_set_round_match_date`: round, day, month, years, weekday, time, home side), `E` a day of the tie (`cup_set_round_match_day`: round, slot,
 /// weekday, time, code, home side) and `B`/`W`/`X` writing a byte/word/dword at the given offset of the table.
 ///
 /// [pt] Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
@@ -473,9 +473,9 @@ pub(crate) struct GoldcupStagePlan {
 
 /// Builds the round table of tournament phase `f`, or returns 0 without it.
 ///
-/// It writes the outputs, the table (0x944e46; when out of memory, the error box `linha` of source file `arquivo` and
-/// 0) and the operations in order. The cup year (+0x40) goes as clean 16 bits to 0x68a160 (the original routine pushes
-/// the register with garbage in the high 16 bits; 0x68a160 only uses the word) and signed to the cup routines.
+/// It writes the outputs, the table (`exe::crt_malloc`; when out of memory, the error box `linha` of source file `arquivo` and
+/// 0) and the operations in order. The cup year (+0x40) goes as clean 16 bits to `league_round_set_date` (the original routine pushes
+/// the register with garbage in the high 16 bits; `league_round_set_date` only uses the word) and signed to the cup routines.
 ///
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
@@ -554,7 +554,7 @@ pub(crate) unsafe fn phase_table_written_bytes(ops: &[GoldcupScheduleOp], ops2: 
 ///
 /// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
 /// both from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal; the copy's table
-/// is freed (0x9452ca).
+/// is freed (`exe::crt_free`).
 ///
 /// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
 ///

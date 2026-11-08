@@ -4,15 +4,15 @@ use super::*;
 /// file and the box lines change): builds the 4-club list, creates the Cup_Stage in the first stage slot, sets up round
 /// 0, frees the list and sets +0x30 = 0.
 ///
-/// The list of 4 (malloc 0x944e46 of 0x10; out of memory: the box `linha_sem_lista` and return) with the clubs of the
+/// The list of 4 (malloc `exe::crt_malloc` of 0x10; out of memory: the box `linha_sem_lista` and return) with the clubs of the
 /// table's `linhas`, in this order (the ties: 0 × 1, 2 × 3); the virtual +0x3c (create_round_table: thiscall(this,
 /// stage 0, &rounds, &extra, 0), ret 0x10) builds the round table.
 ///
-/// The new stage (operator new 0x944cf1 of 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the league, 4, the
+/// The new stage (operator new `exe::crt_operator_new` of 0xb2; Cup_Stage::Cup_Stage `construct_cup_stage`, thiscall, ret 0x3c: the league, 4, the
 /// list, the rounds, +4, the table, the year +0x40, 0, 1, the extra, 0x14, 0, 0, 0 and no seed: the order is not by
-/// seeds) goes to the first stage slot ([+0xc]) and the round table is freed (free 0x9452ca).
+/// seeds) goes to the first stage slot ([+0xc]) and the round table is freed (free `exe::crt_free`).
 ///
-/// No stage: the box `linha_sem_fase`, the list freed and return. With it: Cup::set_up_round (0x51c800, thiscall(stage,
+/// No stage: the box `linha_sem_fase`, the list freed and return. With it: Cup::set_up_round (`set_up_round`, thiscall(stage,
 /// 0), ret 4), the list freed and +0x30 = 0. The original's SEH frame only covers the constructor (no destructor).
 ///
 /// [pt] O play-off de uma Série (o mesmo molde na A e na B, conferido instrução a instrução: só mudam o fonte e as linhas
@@ -218,7 +218,7 @@ pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows
 }
 
 /// The common end of the season rollover: sets each club's board expectations (League::set_club_season_expectations
-/// 0x68aa80, thiscall, ret 0) and renews the officials (OfficialsManager::renew_officials 0x79cee0,
+/// `set_club_season_expectations`, thiscall, ret 0) and renews the officials (OfficialsManager::renew_officials `renew_officials`,
 /// thiscall([0xb74340], +4), ret 4), whose eax the rollover returns.
 ///
 /// [pt] O fim comum: as expectativas da diretoria de cada clube (League::set_club_season_expectations 0x68aa80, thiscall,
@@ -321,9 +321,9 @@ pub(crate) unsafe fn club_in_comp_global(club: usize, field: usize, g: usize) ->
 /// The common body of the Série A and Série B table setup (the same template as the state leagues): fills the table
 /// with the division's clubs; returns 1 if it is full.
 ///
-/// +0x3e = `n` clubs; the table (malloc 0x944e46 of n × 0x3b; out of memory: the error box of source `arquivo` at line
+/// +0x3e = `n` clubs; the table (malloc `exe::crt_malloc` of n × 0x3b; out of memory: the error box of source `arquivo` at line
 /// `linha` and returns 0); the clubs of [0xae23b4] (0x245 bytes, [0xae235c] of them) in the competition of global `g`,
-/// in database order, each in the next row (League::init_table_row 0x687430: thiscall(league, row, club, 0, 0), ret
+/// in database order, each in the next row (League::init_table_row `init_table_row`: thiscall(league, row, club, 0, 0), ret
 /// 0x10), until full.
 ///
 /// `girar` is 0 (the original: row k gets the k-th club); it exists only for each division's mutations.
@@ -369,7 +369,7 @@ pub(crate) unsafe fn create_division_table(this: usize, n: i16, file: usize, row
 /// pays 150,000 to each club (no prize fund).
 ///
 /// `BraNatFirst::create_table()`: Series A has 28 clubs (those with national division +0x57 = `[0x9cf9ec]`); when full,
-/// TV pays 150,000 to each club (League::pay_tv_rights 0x683010: push 0; push 0x249f0; mov ecx, edi -> thiscall(league,
+/// TV pays 150,000 to each club (League::pay_tv_rights `pay_tv_rights`: push 0; push 0x249f0; mov ecx, edi -> thiscall(league,
 /// amount, filter), ret 8; it sends the TV news) and returns 1. Source 0x98aa30, line 0x1a1.
 /// Original: `BraNatFirst::create_table` (0x42a480, bra_nat_first.cpp, thiscall, ret 0).
 ///
@@ -449,7 +449,7 @@ pub(crate) fn league_regions_without_schedule(o: usize) -> [(usize, usize); 4] {
     [(o, 0x3a), (o + league::LEGS, 0xa9 - 0x3c), (o + league::MATCH_RULES, 0xba - 0xab), (o + league::PROMOTED_COUNT, 0xee - 0xbe)]
 }
 
-/// Writes the Série A rule fields (what 0x42a5a0 writes before the schedule).
+/// Writes the Série A rule fields (what `bra_nat_first_set_up_rules` writes before the schedule).
 ///
 /// [pt] As regras da Série A (o que a 0x42a5a0 grava antes do calendário).
 pub(crate) unsafe fn set_serie_a_rules(o: usize) {
@@ -473,7 +473,7 @@ pub(crate) unsafe fn set_serie_a_rules(o: usize) {
     write_u8_at(o, 0x49, 7); // substitutes on the bench
 }
 
-/// Writes the Série B rule fields (0x42cb70).
+/// Writes the Série B rule fields (`bra_nat_second_set_up_rules`).
 ///
 /// [pt] As regras da Série B (0x42cb70).
 pub(crate) unsafe fn set_serie_b_rules(o: usize) {
@@ -497,7 +497,7 @@ pub(crate) unsafe fn set_serie_b_rules(o: usize) {
     write_u8_at(o, 0x49, 7);
 }
 
-/// Writes the Série C rule fields (0x42de50).
+/// Writes the Série C rule fields (`bra_nat_third_set_up_rules`).
 ///
 /// [pt] As regras da Série C (0x42de50).
 pub(crate) unsafe fn set_serie_c_rules(o: usize) {
@@ -573,7 +573,7 @@ pub(crate) unsafe fn bra_nat_first_find_club_row(league: usize, club: usize) -> 
     exe::league_find_club_row(league, club, 0)
 }
 
-/// Série A update_staff_records_for_status (0x42abc0); fazer = false is the comparer's dry run → (return, row written,
+/// Série A update_staff_records_for_status (`bra_nat_first_update_staff_records_for_status`); fazer = false is the comparer's dry run → (return, row written,
 /// destination).
 ///
 /// [pt] A Série A (0x42abc0). `fazer` = falso: o ensaio do comparador, sem os registros nem a gravação; devolve
@@ -616,7 +616,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32
     (0, 0, 0)
 }
 
-/// Série C update_staff_records_for_status (0x42eb00), like Série A's.
+/// Série C update_staff_records_for_status (`bra_nat_third_update_staff_records_for_status`), like Série A's.
 ///
 /// [pt] A Série C (0x42eb00); como a da Série A.
 pub(crate) unsafe fn serie_c_staff_records(this: usize, club: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
@@ -688,7 +688,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, club: usize, status: u32
     (0, 0, 0)
 }
 
-/// Baiano update_staff_records_for_status (0x430210), like Série A's but the club row comes from the table (+0xb1).
+/// Baiano update_staff_records_for_status (`bra_reg_bahia_update_staff_records_for_status`), like Série A's but the club row comes from the table (+0xb1).
 ///
 /// [pt] O Baiano (0x430210); como a da Série A. O clube vem da tabela (+0xb1, +0x3e linhas), não da 0x68ab70.
 pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32, stage: u32, game: usize, fazer: bool) -> (u32, usize, u8) {

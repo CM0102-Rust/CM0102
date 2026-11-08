@@ -33,7 +33,7 @@ pub(crate) unsafe fn spa_second_set_league_rounds(t: usize, year: u32, first: i3
 
 /// The main stage with the Christmas rounds.
 ///
-/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date `exe::date_date_549f70`: push −1; push year;
 /// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
 /// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
 /// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
@@ -257,7 +257,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u
 /// The common rules, 2 legs, 3 points, the 4th tie-breaker 3, 3 go up directly (+0xbe), no promotion play-off, 4 go
 /// down (+0xc1), the Primera above ([0x9cf624]) and Segunda B below ([0x9cf7b8]) when the nation has its lower
 /// divisions loaded (bit 4 of the nation's +0x11c [inference]), otherwise −1; +0x52 = 2. B teams cannot go up (marked
-/// by the table, 0x855b40).
+/// by the table, `spa_second_create_table`).
 /// Original: `SpaSecond::set_up_rules` (0x855cc0, spa_second.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x855cc0 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::set_up_rules()`. A Segunda: as comuns, 2 turnos, 3
@@ -271,12 +271,12 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
 
 /// `SpaSecond::create_table()`: the Segunda has 22 clubs (+0x3e), those of the competition in database order.
 ///
-/// The table (malloc 0x944e46 of 0x512: push; add esp, 4 -> cdecl; out of memory, the error box at line 0x298 and 0)
+/// The table (malloc `exe::crt_malloc` of 0x512: push; add esp, 4 -> cdecl; out of memory, the error box at line 0x298 and 0)
 /// receives, in database order ([0xae23b4], [0xae235c] clubs of 0x245 bytes), the clubs of the competition of id
-/// [0x9cf628] until it is full (League::init_table_row 0x687430: push 0; push 0; push club; push row (the pushed word
-/// has the row byte with stack garbage above it; 0x687430 reads only the byte); mov ecx, this -> thiscall, ret 0x10);
+/// [0x9cf628] until it is full (League::init_table_row `init_table_row`: push 0; push 0; push club; push row (the pushed word
+/// has the row byte with stack garbage above it; `init_table_row` reads only the byte); mov ecx, this -> thiscall, ret 0x10);
 /// the B team of a Primera club ([0x9cf624]) gets fate −4 (+0x37 = 0xfc: cannot go up). Full: the prize fund (+0x28 =
-/// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 and 1; otherwise 0.
+/// League::calc_prize_fund `calc_prize_fund`: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 and 1; otherwise 0.
 /// Original: `SpaSecond::create_table` (0x855b40, spa_second.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x855b40 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::create_table()`: a Segunda tem 22 clubes (+0x3e),

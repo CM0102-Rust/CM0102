@@ -1,6 +1,6 @@
 use super::*;
 
-/// `EurSuperCup::select_teams()` (0x57a500, thiscall, ret 0, eur_super_cup.cpp): the two Super Cup teams; returns 1.
+/// `EurSuperCup::select_teams()` (`eur_super_cup_select_teams`, thiscall, ret 0, eur_super_cup.cpp): the two Super Cup teams; returns 1.
 ///
 /// A two-entry list (out of memory, the error box for line 0xc1 and −1). The Champions League winner ([0x9cf6e8]; if
 /// missing, error box 0xca and 0) and, in the 1999 cup, the Cup Winners' Cup winner ([0x9cf6ec]); in the others, the
@@ -72,7 +72,7 @@ pub(crate) unsafe fn select_asian_super_cup_teams(this: usize) -> (i32, i32) {
     finish_two_team_list(l)
 }
 
-/// `ItaC1Super::init_team_list()` (0x63c9d0, thiscall, ret 0, ita_c1_super.cpp): a two-entry list with both slots
+/// `ItaC1Super::init_team_list()` (`ita_c1_super_init_team_list`, thiscall, ret 0, ita_c1_super.cpp): a two-entry list with both slots
 /// empty; returns 1.
 ///
 /// Out of memory: the error box for line 0xc2 and −1. The clubs enter later, with the winners of the two C1 groups

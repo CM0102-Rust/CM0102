@@ -1,7 +1,7 @@
 use super::*;
 
 /// Assigns the `n` people in `pessoas` to `m` positions (+ `x` extras) and writes each position's person to `saida`,
-/// scoring each (person, position) pair (0x6e2f20: position code, mode, club, staff). With fewer people than positions
+/// scoring each (person, position) pair (`lineup_slot_score`: position code, mode, club, staff). With fewer people than positions
 /// each free person takes the position where he beats the holder; with more, each position takes the best and
 /// duplicates are resolved by least loss; extras get the leftovers recursively (mode | 0x200); finally pairs are
 /// swapped while the total improves. Returns 1, or 0 with no people or positions [inference: picking the line-up].
@@ -318,10 +318,10 @@ pub(crate) unsafe extern "C" fn pick(
 }
 
 /// the stance the staff ask for (1 all-out attack … 5 park the bus). Starts from the sides' strength (with the engine
-/// running, +0x8ea5, the sum of the 0x6e86d0 scores of those on the pitch × 50 / 11; otherwise the +0x80 reputation),
-/// possession (+0x1fc/+0x206/+0x210), time (+0x8ed0), sendings-off (+0x1ad, 0x6cbbb0) and the aggregate score
-/// (0x6ce310); adjusts for the league (table positions through 0x4a4850 and dates through 0x54cdb0), the manager (+0xe)
-/// and the end of the match (+0x8ed4 = 0x3de). Stores the factor in engine+0x476a[side] (10 and −1 at the extremes);
+/// running, `engine::MATCH_RUNNING`, the sum of the `perceived_ability` scores of those on the pitch × 50 / 11; otherwise the +0x80 reputation),
+/// possession (`engine::ZONE_LOW_TICKS`/`engine::ZONE_MIDDLE_TICKS`/`engine::ZONE_HIGH_TICKS`), time (`engine::CLOCK`), sendings-off (+0x1ad, `exe::cm3_match_engine_count_players_on_pitch`) and the aggregate score
+/// (`exe::cm3_match_engine_get_goal_margin`); adjusts for the league (table positions through `exe::comp_stats_find_club_entry` and dates through `exe::date_days_since`), the manager (+0xe)
+/// and the end of the match (`engine::PERIOD_END` = 0x3de). Stores the factor in engine`engine::STANCE_FACTOR`[side] (10 and −1 at the extremes);
 /// with the engine running and the factor within 0.5 of the stored one, keeps the current stance (+0x1ab)
 /// Original: `stance` (0x6df460, match_man.cpp (~3 KB), thiscall).
 ///
@@ -655,7 +655,7 @@ pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, sheets: usize,
     0
 }
 
-/// Core of choose_formation (0x6e0230): rates each sector/band by the best two players and judges each formation;
+/// Core of choose_formation (`exe::match_man_choose_computer_tactic`): rates each sector/band by the best two players and judges each formation;
 /// returns the best.
 ///
 /// [pt] O miolo da 0x6e0230: as notas por setor e faixa e o julgamento de cada formacao; devolve a melhor.
@@ -867,14 +867,14 @@ pub(crate) unsafe fn judge_formations(
     melhor
 }
 
-/// the staff set the instructions of the tactic copied at +0x2b (0x5b50d0 general, 0x5b2ba0 per position, 0x5b5290
-/// 64-bit marks, 0x5b5910 man-marking in the engine's tactic block) and in the tactics bank (0x897ee0). With a human
+/// the staff set the instructions of the tactic copied at +0x2b (`set_formation_flag` general, `set_slot_position` per position, 0x5b5290
+/// 64-bit marks, 0x5b5910 man-marking in the engine's tactic block) and in the tactics bank (`extra_tactic_slot`). With a human
 /// manager to consult it does nothing. At home (or by a draw against the reputation gap in competitions +0x3a = 1 or 9)
 /// it asks for 0x20; the manager (+0x13, +0x1f, +0x1c) picks tempo and marking. A factor (reputations / 17000, manager
-/// +0xe and the remainder of the ids' sum by 13 − 0x544410/2) is compared with the attributes (0x5431e0) of each of the
-/// 20 on the side on the pitch: wing runs, man-marking the opponent from 0x6d4330 (with 0x7c1e30 for midfielders),
+/// +0xe and the remainder of the ids' sum by 13 − `exe::non_player_attribute_rating`/2) is compared with the attributes (`staff_get_player_attribute`) of each of the
+/// 20 on the side on the pitch: wing runs, man-marking the opponent from `exe::cm3_match_engine_find_marking_target` (with `get_stat` for midfielders),
 /// passing, long shots, dribbling, tackling, offside, set pieces (minus the accumulated value of those with high
-/// +0x2e), crosses by table and the set-piece taker (0x897ee0 for whoever is at +6/+0xa/+0xe of the staff). Quirk kept:
+/// +0x2e), crosses by table and the set-piece taker (`extra_tactic_slot` for whoever is at +6/+0xa/+0xe of the staff). Quirk kept:
 /// the marked player's side comes from the player's +0x19 (position 0 becomes the other side)
 /// Original: `instructions` (0x6ddab0, match_man.cpp (~6.4 KB), thiscall).
 ///
@@ -1229,13 +1229,13 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     }
 }
 
-/// Port of 0x6e0d00 (thiscall, ret 0xc, match_man.cpp): puts `pessoa` in slot `pos` (0..19) of the staff block (+0x23)
-/// via 0x6eaea0 (engine +0x12, side +0x18, `extra`). Without a person returns 0; otherwise 1.
+/// Port of `exe::match_man_place_player_in_team` (thiscall, ret 0xc, match_man.cpp): puts `pessoa` in slot `pos` (0..19) of the staff block (+0x23)
+/// via `exe::match_player_setup` (engine +0x12, side +0x18, `extra`). Without a person returns 0; otherwise 1.
 ///
 /// simplification: a slot outside 0..19 stops the game with an error in the original (match_man.cpp 0xc39); here it
 /// just returns 0.
 ///
-/// 0x6eaea0 (initialises the player, with random draws and effects outside the engine) is injected: in the comparison
+/// `exe::match_player_setup` (initialises the player, with random draws and effects outside the engine) is injected: in the comparison
 /// it is a tape unit (the original records; the Rust copy checks and does not run it again).
 ///
 /// [pt] { 0x6e0d00 } (thiscall, ret 0xc, match_man.cpp): poe `pessoa` na vaga `pos` (0..19) do bloco da
@@ -1253,8 +1253,8 @@ pub(crate) unsafe fn place_in_slot_with(c: usize, pos: u32, person: usize, extra
     1
 }
 
-/// Hook entry for 0x6e0d00 (place_in_slot_with): puts `pessoa` in slot `pos` (0..19) of the staff's player block
-/// (+0x23), setting up the match player (0x6eaea0) with the engine, side and `extra`; returns 1, or 0 without a person
+/// Hook entry for `exe::match_man_place_player_in_team` (place_in_slot_with): puts `pessoa` in slot `pos` (0..19) of the staff's player block
+/// (+0x23), setting up the match player (`exe::match_player_setup`) with the engine, side and `extra`; returns 1, or 0 without a person
 /// or with a bad slot.
 pub(crate) unsafe extern "thiscall" fn put_in_place(c: usize, pos: u32, person: usize, extra: u32) -> u8 {
     place_in_slot_with(c, pos, person, extra, &mut |_, this, a| {
@@ -1267,7 +1267,7 @@ pub(crate) unsafe extern "thiscall" fn put_in_place(c: usize, pos: u32, person: 
 pub(crate) static mut INIT_MATCH_PLAYER_TRAMPOLINE: usize = 0;
 pub(crate) const PROLOGUE_6EAEA0: Prologue = Prologue { address: 0x6eaea0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] };
 
-/// Hook entry for 0x6eaea0 (initialise match player): runs the original directly, or records it as a tape unit while
+/// Hook entry for `exe::match_player_setup` (initialise match player): runs the original directly, or records it as a tape unit while
 /// recording.
 pub(crate) unsafe extern "thiscall" fn init_player_hook(j: usize, m: u32, person: u32, side: u32, pos: u32, extra: u32) {
     let o: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) = core::mem::transmute(INIT_MATCH_PLAYER_TRAMPOLINE);
@@ -1350,8 +1350,8 @@ pub(crate) unsafe extern "C" fn order_by_condition(pa: *const usize, pb: *const 
     match_condition(a).wrapping_sub(vb)
 }
 
-/// for each place from 0 to 10 + (match +0x4d & 0xf), the person from the club's tactic (0x8968f0) comes in (0x6e0d00)
-/// if able to play (0x62c400 ≠ 2, 0x55d270 and 0x7757d0 without impediment); returns how many
+/// for each place from 0 to 10 + (match +0x4d & 0xf), the person from the club's tactic (`tactic_slot_person`) comes in (`exe::match_man_place_player_in_team`)
+/// if able to play (`get_player_injury_status` ≠ 2, `is_player_suspended` and `get_international_duty_club` without impediment); returns how many
 /// Original: `starters` (0x6dbb80, match_man.cpp, thiscall).
 ///
 /// [pt] { 0x6dbb80 } (thiscall, match_man.cpp): os titulares do inicio do jogo. Para cada vaga de 0 a
@@ -1364,7 +1364,7 @@ pub(crate) unsafe extern "thiscall" fn starters(c: usize) -> u8 {
     })
 }
 
-/// Port of `starters` with 0x6e0d00 injected: places each tactic-selected player who is not injured, banned or on
+/// Port of `starters` with `exe::match_man_place_player_in_team` injected: places each tactic-selected player who is not injured, banned or on
 /// international duty; returns how many.
 ///
 /// [pt] `titulares` com a 0x6e0d00 (poe na vaga) injetada.
@@ -1387,7 +1387,7 @@ pub(crate) unsafe fn starters_with(c: usize, call: &mut dyn FnMut(usize, usize, 
     n
 }
 
-/// stores the staff's tactic (+0x3f) in the bank (0x8984d0); with a human manager only when 0x600a50 denies or 0x5fd480
+/// stores the staff's tactic (+0x3f) in the bank (`write_tactics_row`); with a human manager only when `exe::human_manager_is_human_club` denies or `exe::human_manager_controls_reserve_team`
 /// confirms
 /// Original: `store_tactic` (0x6dbb10, match_man.cpp, thiscall, virtual).
 ///
@@ -1424,10 +1424,10 @@ pub(crate) unsafe fn show_error_at(file: usize, row: u32) {
 }
 
 /// the staff selects the team against the opponent. Outside the human, weighs today's match against the next one on the
-/// list (0x5acbe0: competition reputation, rival, same city, days until it) to rest players (+0x1a 0/1/2 and the slot
+/// list (`find_fixtures`: competition reputation, rival, same city, days until it) to rest players (+0x1a 0/1/2 and the slot
 /// masks); filters the 50 of the lines (state, suspension, already played, barred, on loan), selects (0x6e2000), picks
-/// the formation (0x6e0230), the three references (+6/+0xa/+0xe), the rotation (0x8cf880/0x6e8910), the slots
-/// (0x6e0d00), the captain (0x897760), the instructions (0x6ddab0) and the general orders by the stance (0x5b50d0). The
+/// the formation (`exe::match_man_choose_computer_tactic`), the three references (+6/+0xa/+0xe), the rotation (`transfer_manager_check_matchday_squad_limit`/`apply_squad_rule`), the slots
+/// (`exe::match_man_place_player_in_team`), the captain (0x897760), the instructions (`instructions`) and the general orders by the stance (`set_formation_flag`). The
 /// locals live in a frame with the original stack offsets (zeroed, like the determinised original)
 /// Original: `select_automatically` (0x6dbc50, match_man.cpp (~7.7 KB), thiscall, ret 8).
 ///
@@ -2100,7 +2100,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
 // simplification: allocates the list and the rotation arrays and calls 24 routines still original; no comparison
 // own, validated by the career (Rust x original), like those of the 145th, 148th and 149th.
 
-/// Match clock minute (+0x8ed0 / 11) capped at the end of the current period (+0x8ed4: 45, 90, 105, 120).
+/// Match clock minute (`engine::CLOCK` / 11) capped at the end of the current period (`engine::PERIOD_END`: 45, 90, 105, 120).
 ///
 /// [pt] Minuto do relogio (+0x8ed0 / 11), no maximo o fim do periodo (+0x8ed4: 45, 90, 105, 120).
 pub(crate) unsafe fn minute_in_period(m: usize) -> i8 {
@@ -2114,24 +2114,24 @@ pub(crate) unsafe fn minute_in_period(m: usize) -> i8 {
     }
 }
 
-/// { 0x6e1090 } (ret 4, match_man.cpp) with the calls that touch the game injected (0x6e2000 lineup picker, 0x6d6f70
-/// commentates, 0x897760 writes the captain, 0x6e1aa0 rebuilds the team): staff `c` makes up to +0x17 substitutions.
+/// { `exe::match_man_make_substitutions` } (ret 4, match_man.cpp) with the calls that touch the game injected (0x6e2000 lineup picker, 0x6d6f70
+/// commentates, 0x897760 writes the captain, `redo_team` rebuilds the team): staff `c` makes up to +0x17 substitutions.
 ///
-/// The eligible players (on the pitch, or −2 without +0x1e) go into a list sorted by the CRT's qsort (0x945333 with
-/// 0x6e0df0, or 0x6e0fe0 with 11 or more); the first `m` give the slots (tables 0x717430 for the −2 ones,
-/// 0x717410/0x717450; position +0x19 or +0x1a; the first is 0 with `goleiro`; marks 0x5b5270 and byte 0x5b57c0 of the
+/// The eligible players (on the pitch, or −2 without +0x1e) go into a list sorted by the CRT's qsort (`exe::crt_qsort` with
+/// 0x6e0df0, or 0x6e0fe0 with 11 or more); the first `m` give the slots (tables `exe::match_player_get_alt_slot_position` for the −2 ones,
+/// `player_table`/`exe::match_player_get_secondary_position`; position +0x19 or +0x1a; the first is 0 with `goleiro`; marks `exe::formation_get_player_instructions` and byte `position_byte` of the
 /// position); after them, the free substitutes (+0x19 = −1) from the 12th on, up to 11 + (competition +0x4d & 0xf),
 /// enter as candidates.
 ///
-/// The lineup picker's mode comes from the club (0x53b900), the strength against the opponent (+0x80, with random
-/// draws), the competition (+0x3a, +0x1a = 3 and 0x48f150), +0x16 and the human manager. Whoever wins a slot and was on
-/// the bench comes on (0x6cdd00, −1 at +0x17, minute at +0x1f) with the slot's position; whoever is left without a slot
-/// goes off (0x6cdd50 with −1, +0x19 = −4, +0x1e = 1, minute at +0x20).
+/// The lineup picker's mode comes from the club (`exe::database_is_national_team`), the strength against the opponent (+0x80, with random
+/// draws), the competition (+0x3a, +0x1a = 3 and `exe::comp_is_club_still_in_contention`), +0x16 and the human manager. Whoever wins a slot and was on
+/// the bench comes on (`exe::cm3_match_engine_place_player_at_entry_cell`, −1 at +0x17, minute at +0x1f) with the slot's position; whoever is left without a slot
+/// goes off (`exe::cm3_match_engine_remove_player_from_pitch` with −1, +0x19 = −4, +0x1e = 1, minute at +0x20).
 ///
-/// It recomposes the positions (0x6ce0f0, 0x6ce110) and commentates the substitutions (0x1f59 for more than 2, 0x1f5c
+/// It recomposes the positions (`exe::cm3_match_engine_clear_goalkeeper`, `exe::cm3_match_engine_get_goalkeeper`) and commentates the substitutions (0x1f59 for more than 2, 0x1f5c
 /// for two, 0x1f5a for one; with no substitution it stops), each with the fatigue comments (0x211d by random
 /// draw(+0x31) below −10) and injury comments (0x211e) of the outgoing and incoming players, and 0x20d7 or 0x1f5b
-/// (negative +0x22 of the outgoing one). Finally the best-rated player (0x6e1cf0) becomes captain and the team is
+/// (negative +0x22 of the outgoing one). Finally the best-rated player (`exe::match_man_get_captain_score`) becomes captain and the team is
 /// rebuilt.
 ///
 /// [pt] { 0x6e1090 } (ret 4, match_man.cpp) com as chamadas que mexem no jogo injetadas (0x6e2000 escala,
@@ -2409,17 +2409,17 @@ pub(crate) unsafe extern "thiscall" fn substitute(c: usize, goalkeeper: u32) {
 /// Argumentos da 0x6e2000 (escalar: distribui as pessoas pelas posicoes, recursiva, aloca), cdecl.
 pub(crate) type AssignPositionsFn = unsafe extern "C" fn(usize, u32, usize, u32, u32, usize, u32, usize, usize, u32, u32, usize, usize, u32, usize) -> u32;
 
-/// `0x6e1aa0` (match_man.cpp) with the calls that change the game injected (0x6e0230 judges the line-up, 0x6e2000 picks
+/// `0x6e1aa0` (match_man.cpp) with the calls that change the game injected (`exe::match_man_choose_computer_tactic` judges the line-up, 0x6e2000 picks
 /// the team, 0x6d6f70 commentary): the staff (`c`: +0x12 engine, +0x23 first of the 20 players, +0x2b tactic, +0x2f
 /// club) rebuild the team (formation check, selection, new positions and ratings for each player).
 ///
-/// With exactly 11 on the pitch and the line-up rejected (0x6e0230 with 0x8c1, 2) it comments 0x2007.
+/// With exactly 11 on the pitch and the line-up rejected (`exe::match_man_choose_computer_tactic` with 0x8c1, 2) it comments 0x2007.
 ///
-/// Then it gathers the outfield players on the pitch (except table 1): position +0x19, tables 0x717410/0x717450, marks
-/// (0x5b5270) and byte (0x5b57c0) of the position and the player sheet +0x69; picks the team (0x6e2000 with 0x8800, or
-/// 0x408800 with a human manager to be consulted: 0x600a50, the staff's +0x19, the club's +0xcf, 0x5fd210, 0x5fea50
+/// Then it gathers the outfield players on the pitch (except table 1): position +0x19, tables `player_table`/`exe::match_player_get_secondary_position`, marks
+/// (`exe::formation_get_player_instructions`) and byte (`position_byte`) of the position and the player sheet +0x69; picks the team (0x6e2000 with 0x8800, or
+/// 0x408800 with a human manager to be consulted: `exe::human_manager_is_human_club`, the staff's +0x19, the club's +0xcf, `exe::human_manager_is_on_holiday`, `exe::human_manager_get_holiday_option`
 /// with 3) and gives each selected player sheet the position of the place it won, recomputing its performance
-/// (0x6eecb0).
+/// (`exe::match_player_calc_ratings`).
 ///
 /// [pt] { 0x6e1aa0 } (match_man.cpp) com as chamadas que mexem no jogo injetadas (0x6e0230 julga a
 /// escalacao, 0x6e2000 escala, 0x6d6f70 narra): a comissao (`c`: +0x12 motor, +0x23 primeiro dos 20
@@ -2505,13 +2505,13 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, call: &mut dyn FnMut(usize, usi
     }
 }
 
-/// the staff redo the team. With 11 on the pitch and the line-up rejected (0x6e0230 with 0x8c1, 2) narrates 0x2007.
-/// Gathers the outfield players on the pitch (position +0x19, tables 0x717410/0x717450, position marks 0x5b5270 and
-/// byte 0x5b57c0, record +0x69), picks the team (0x6e2000 with 0x8800, or 0x408800 when a human manager is to be
-/// consulted: 0x600a50, 0x5fd210, 0x5fea50) and gives each picked record the position of the place it won, redoing
-/// performance (0x6eecb0). 0x6e0230 and 0x6e2000 (pick, recursive, allocates) are units with vectors: the tape records
+/// the staff redo the team. With 11 on the pitch and the line-up rejected (`exe::match_man_choose_computer_tactic` with 0x8c1, 2) narrates 0x2007.
+/// Gathers the outfield players on the pitch (position +0x19, tables `player_table`/`exe::match_player_get_secondary_position`, position marks `exe::formation_get_player_instructions` and
+/// byte `position_byte`, record +0x69), picks the team (0x6e2000 with 0x8800, or 0x408800 when a human manager is to be
+/// consulted: `exe::human_manager_is_human_club`, `exe::human_manager_is_on_holiday`, `exe::human_manager_get_holiday_option`) and gives each picked record the position of the place it won, redoing
+/// performance (`exe::match_player_calc_ratings`). `exe::match_man_choose_computer_tactic` and 0x6e2000 (pick, recursive, allocates) are units with vectors: the tape records
 /// the bytes of the input and output vectors passed by pointer, checks the Rust copy's inputs and writes its outputs
-/// (`call_recording_buffers`, `request_buffers`). The provisional 0x6e1aa0 port from batch 114 is gone
+/// (`call_recording_buffers`, `request_buffers`). The provisional `redo_team` port from batch 114 is gone
 /// Original: `redo_team` (0x6e1aa0, match_man.cpp, thiscall).
 ///
 /// [pt] { 0x6e1aa0 } (match_man.cpp): ver `rebuild_team_with`.
@@ -2534,7 +2534,7 @@ pub(crate) unsafe extern "thiscall" fn redo_team(c: usize) {
 }
 
 /// Among the `n` people in `lista` with a player record (+0x61), returns the one best rated by the staff of club +0x2f
-/// (captain score 0x6e1cf0); with the object at +0x1f, a rating may drop to (1.1 - 0.01 x (object address mod 20)) x
+/// (captain score `exe::match_man_get_captain_score`); with the object at +0x1f, a rating may drop to (1.1 - 0.01 x (object address mod 20)) x
 /// rating when its attribute is below the person's id mod 20, as in the original. Ties keep the first; 0 if none.
 ///
 /// [pt] { 0x6e1940 } (ret 8, match_man.cpp): entre as `n` pessoas de `lista` (com ficha +0x61), a mais
@@ -2563,7 +2563,7 @@ pub(crate) unsafe extern "thiscall" fn best_in_list(this: usize, list: *const us
     melhor
 }
 
-/// the index (0..20) of the active player (+0x19 ≥ 0) best rated by the staff (0x6e1cf0 with club +0x2f) among the 20
+/// the index (0..20) of the active player (+0x19 ≥ 0) best rated by the staff (`exe::match_man_get_captain_score` with club +0x2f) among the 20
 /// in the block starting at +0x23; the first active one counts even with a negative rating, then only strictly higher;
 /// −1 with none active
 /// Original: `best_rated` (0x6e1a40, match_man.cpp, thiscall).
@@ -2589,13 +2589,13 @@ pub(crate) unsafe extern "thiscall" fn best_rated(this: usize) -> i8 {
     melhor
 }
 
-/// 0x6e1cf0 (cdecl, match_man.cpp): the rating (i16) the staff give `pessoa` (or the person of match player `jogador`
+/// `exe::match_man_get_captain_score` (cdecl, match_man.cpp): the rating (i16) the staff give `pessoa` (or the person of match player `jogador`
 /// +0x69) for `clube`; -10000 with no person.
 ///
-/// It adds the fit (0x53ce90) as (fit^2 + 5) x 0.1 negative, the difference between the player sheet's rating +0xd and
-/// the club's reputation (x 0.002 + 1.5, between -4 and 4), the contract (0x4cf5f0: +0x44 / 75 + 0.5, adjusted by the
+/// It adds the fit (`exe::database_get_contract_rating_modifier`) as (fit^2 + 5) x 0.1 negative, the difference between the player sheet's rating +0xd and
+/// the club's reputation (x 0.002 + 1.5, between -4 and 4), the contract (`exe::contract_manager_get_contract_for_club`: +0x44 / 75 + 0.5, adjusted by the
 /// type in +0x4f >> 4: -10, +2.5, +2, -3, -15, -20, -50) and the player sheet's +0x2f times the age factor (days of
-/// life from today's date 0xae2c90 and the birth date +0x3e, 0x54cdb0; for national teams, +0x22 x 75): above 1000
+/// life from today's date 0xae2c90 and the birth date +0x3e, `exe::date_days_since`; for national teams, +0x22 x 75): above 1000
 /// days, 1 + (days - 1000) x 0.000125.
 ///
 /// Then by age +0x18 (x0.5 below 18, x0.75 below 21, x0.9 below 24, x1.05 above 25), x0.9 if the days fall below (50 -
@@ -2998,7 +2998,7 @@ pub(crate) unsafe fn signed_byte_at(p: usize, k: usize) -> i32 {
     *((p + k) as *const i8) as i32
 }
 
-/// PLAYERSTATS get_stat (0x7c1e30 on G_PLAYER_STATS) for player data `f`.
+/// PLAYERSTATS get_stat (`get_stat` on G_PLAYER_STATS) for player data `f`.
 ///
 /// [pt] A 0x7c1e30 das notas ([0xb74350]) da ficha `f`.
 pub(crate) unsafe fn player_stat(f: usize, k: u32, c: u32, x: f32) -> f64 {
@@ -3174,7 +3174,7 @@ pub(crate) unsafe fn injury_history_penalty(p: usize, l4c: i32) -> i32 {
     l4c + if w <= 10 { -2 * w } else { -20 - w }
 }
 
-/// Value from INJURY 0x62c3d0 by person id (exe map: get_fatigue / word_0c; the code comment calls it reputation)
+/// Value from INJURY `exe::injury_get_fatigue` by person id (exe map: get_fatigue / word_0c; the code comment calls it reputation)
 /// [inference].
 ///
 /// [pt] A reputação do jogador (0x62c3d0 pelo id).
@@ -3369,7 +3369,7 @@ pub(crate) unsafe fn contract_adjust(p: usize, f: usize, club: usize, contract: 
 /// The observer bonus (flag 0x1000): the knowledge `conhece` (+0x22 for the youngsters, +0x14, +0x0e, +0x1a, +0x1f,
 /// +0x13), the player's liking for the club and for `quem`, and the attributes of each position band.
 ///
-/// `craque_meia` also turns on the star players' bonus in band 0x20 (only in 0x6e6340).
+/// `craque_meia` also turns on the star players' bonus in band 0x20 (only in `off_match_score`).
 ///
 /// [pt] O bônus do observador (flag 0x1000): o conhecimento `conhece` (+0x22 dos jovens, +0x14, +0x0e,
 /// +0x1a, +0x1f, +0x13), o gosto do jogador pelo clube e por `quem`, e os atributos de cada faixa de
@@ -3545,7 +3545,7 @@ pub(crate) unsafe fn contract_bond(p: usize, c: usize, flags: u32) -> i32 {
     }
 }
 
-/// Adjusts l4c when the 0x62c3d0 value is below -1000 or above 500.
+/// Adjusts l4c when the `exe::injury_get_fatigue` value is below -1000 or above 500.
 ///
 /// [pt] O ajuste pela reputação (0x62c3d0) abaixo de -1000 ou acima de 500.
 pub(crate) unsafe fn injury_word_0c_adjust(p: usize, l4c: i32) -> i32 {
@@ -3812,7 +3812,7 @@ pub(crate) unsafe fn potential_or_average_value(p: usize, f: usize, club: usize,
     }
 }
 
-/// Fame (flag 0x200000): -200 for famous players (value/100 >= 99) with high +0x3c, low +0x2d and 0x62c3d0 value < 500;
+/// Fame (flag 0x200000): -200 for famous players (value/100 >= 99) with high +0x3c, low +0x2d and `exe::injury_get_fatigue` value < 500;
 /// else 100 - value/100.
 ///
 /// [pt] A fama (flag 0x200000): -200 para os famosos (valor/100 >= 99) de +0x3c alto, +0x2d baixo e
@@ -4291,7 +4291,7 @@ pub(crate) unsafe fn holiday_selection_bonus(p: usize, club: usize, holiday: usi
 }
 
 /// sets up one side's tactics (manager, players, club, opponent, match, home side) and selects: at the human's club the
-/// stored lines (0x5fbe20/0x5fbd00) and the automatic 0x6dbc50 mode 1 or the regulars (0x6dbb80); otherwise the
+/// stored lines (`select_tactic_slot`/`get_active_tactic`) and the automatic `select_automatically` mode 1 or the regulars (`starters`); otherwise the
 /// automatic mode 2 and the count of the home players; the substitutes by the bench and the club's tactical line.
 /// Returns how many it selected
 /// Original: `select_side` (0x6db500, match_man.cpp, thiscall, ret 0x24).

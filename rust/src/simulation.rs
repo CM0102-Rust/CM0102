@@ -319,7 +319,7 @@ const FIXED_CLOCK: u32 = 1_000_000_000;
 const PROLOGUE_TIME: crate::detours::Prologue =
     crate::detours::Prologue { address: 0x946ebb, bytes: &[0x55, 0x8b, 0xec, 0x81, 0xec, 0xcc, 0x00, 0x00, 0x00] };
 
-/// CRT time() { 0x946ebb } in the simulation: always the same instant. The game reseeds rand()
+/// CRT time() { `exe::at_946ebb` } in the simulation: always the same instant. The game reseeds rand()
 /// with the clock (manager_manager.cpp, 0x696d4b), which would make the simulation irreproducible.
 ///
 /// [pt] time() da CRT { 0x946ebb } na simulacao: sempre o mesmo instante. O jogo ressemeia o rand()
@@ -348,7 +348,7 @@ unsafe extern "C" fn observed_rand() -> i32 {
 // 0x947299: push ebp; mov ebp, esp; push ecx; push ecx
 const PROLOGUE_CLOCK: crate::detours::Prologue =
     crate::detours::Prologue { address: 0x947299, bytes: &[0x55, 0x8b, 0xec, 0x51, 0x51] };
-/// Game functions that call clock() (via 0x90c510; return addresses checked with refs.py).
+/// Game functions that call clock() (via `exe::utils_get_time_ms`; return addresses checked with refs.py).
 ///
 /// [pt] Funcoes do jogo que chamam clock() (via 0x90c510; enderecos de retorno conferidos com refs.py).
 const CLOCK_CALLERS: [u32; 13] = [
@@ -569,10 +569,10 @@ static mut RESTORE_ORIGINAL: usize = 0;
 /// CM_FERIAS=1 (save proof, load step): the game does not allow saving with the manager on holiday, and a save
 /// loaded with -load waits for Continue. On entry to 0x8387e0 (Setup.cpp, the humans restored; only
 /// -load and the network go through it, after load_game_data) each active human (+0x5f = 1, among the last 16
-/// people) goes on holiday like auto_setup's ON_HOLIDAY=YES (0x827cc9: set_on_holiday 0x5fd2f0 with 1), and the
-/// holiday stamp (+0x9a65, setter 0x5fdd30) goes back to 0, as after the reset 0x5fb810 of the automatic
+/// people) goes on holiday like auto_setup's ON_HOLIDAY=YES (0x827cc9: set_on_holiday `set_on_holiday` with 1), and the
+/// holiday stamp (+0x9a65, setter `set_human_field`) goes back to 0, as after the reset `exe::human_manager_reset_human_record` of the automatic
 /// career: with the save's real-clock stamp, the simulation's fixed clock would never pass it + 2000 and the
-/// sidebar (0x7615d0) would not move on its own. Same in both modes (it is not a ported routine).
+/// sidebar (`exe::menubar_handle_command`) would not move on its own. Same in both modes (it is not a ported routine).
 ///
 /// [pt] CM_FERIAS=1 (prova do save, etapa de carregar): o jogo nao deixa gravar com o tecnico de ferias, e um save
 /// carregado com -load espera o Continuar. Na entrada da 0x8387e0 (Setup.cpp, os humanos restaurados; so o

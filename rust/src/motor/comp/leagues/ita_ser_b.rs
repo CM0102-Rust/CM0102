@@ -15,8 +15,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_create_schedule(this: usize, st
 ///
 /// Like the Serie A one, with the fixed Serie B bands (the champion, 3 more promotion places so 4 go up, and the 4
 /// relegated of 20) and without stopping at the first pair: each tied pair of neighbours on a boundary is ordered by
-/// head-to-head (0x6471a0: push edi, the points in the low word and the rest of `completo` in the high bits, which
-/// 0x6471a0 does not read; mov ecx -> thiscall, ret 4); if there is any, the tie-break stage (+0x2c = 1, +0xc = malloc
+/// head-to-head (`ita_league_sort_clubs_level_on_points`: push edi, the points in the low word and the rest of `completo` in the high bits, which
+/// `ita_league_sort_clubs_level_on_points` does not read; mov ecx -> thiscall, ret 4); if there is any, the tie-break stage (+0x2c = 1, +0xc = malloc
 /// of 4, virtual +0x28). With none: +0xdd = 0, +0xe6 = 0 and virtual +0x94.
 /// Original: `ItaSerB::update_for_date` (0x647050, ita_ser_b.cpp, thiscall, ret 8).
 ///
@@ -63,9 +63,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
 /// `ita_league_sort_clubs_level_on_points(points)` (also called by the Serie A one): clubs level on points are ordered
 /// by the head-to-head among them and the table positions are renumbered.
 ///
-/// Builds the head-to-head at +4 of each row (League::build_h2h_table 0x682b30: push [+0xb1]; mov ecx, this ->
+/// Builds the head-to-head at +4 of each row (League::build_h2h_table `build_h2h_table`: push [+0xb1]; mov ecx, this ->
 /// thiscall, ret 4), finds the block of rows with those points (the first one and how many; the table is already sorted
-/// by points), sorts the block by the head-to-head comparison (qsort 0x945333 with 0x683410, rows of 0x3b: push; add
+/// by points), sorts the block by the head-to-head comparison (qsort `exe::crt_qsort` with `league_compare_table_rows_h2h`, rows of 0x3b: push; add
 /// esp, 0x10 -> cdecl; with no row, qsort receives 0 and 0) and renumbers the position (+4) of all rows.
 /// Original: `ita_league_sort_clubs_level_on_points` (0x6471a0, ita_ser_b.cpp, thiscall, ret 4).
 ///

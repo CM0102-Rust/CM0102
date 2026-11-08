@@ -2,8 +2,8 @@ use super::*;
 
 /// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
 ///
-/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through 0x521e60; the
-/// match (the same, plus the leg at +6 and the venue at +0x13) through 0x521eb0.
+/// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through `cup_set_round_draw_date`; the
+/// match (the same, plus the leg at +6 and the venue at +0x13) through `cup_set_round_match_date`.
 ///
 /// Then the fields: +7 the round name, +9 the index, +0xb the draw bits, +0xd and +0xf the tie-breakers (single match
 /// and two legs), +0x17 the category copied into each match, +0x18/+0x1a/+0x1c/+0x1e teams, matches, new teams and
@@ -35,7 +35,7 @@ pub(crate) const fn cql11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, 
     FraCupCupRound { draw: sorteio, game: jogo, code: codigo, bits, category: categoria, teams: times, tie: confronto, prizes: premios }
 }
 
-/// Writes round i of cup round table t: draw and match dates (0x521e60/0x521eb0) and the round fields.
+/// Writes round i of cup round table t: draw and match dates (`cup_set_round_draw_date`/`cup_set_round_match_date`) and the round fields.
 ///
 /// [pt] Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
@@ -69,7 +69,7 @@ pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRoun
 /// single-stage cups: only stage −1 builds the round table.
 ///
 /// Outside stage −1 (the byte), returns 0 without writing anything. In −1: saida (if requested) = 0, rodadas = the
-/// table size, extra = 0; the table (0x944e46 of 0x68 × rodadas; when out of memory, the error box `linha` of `arquivo`
+/// table size, extra = 0; the table (`exe::crt_malloc` of 0x68 × rodadas; when out of memory, the error box `linha` of `arquivo`
 /// and returns 0) is filled with each round.
 ///
 /// Returns the table.
@@ -208,15 +208,15 @@ pub(crate) unsafe fn french_cup_amateur_limit(this: usize) -> i32 {
     if read_i16(this + cup::YEAR) == 0x7d1 { 0xb8 } else { 0xb6 }
 }
 
-/// `FraCup::collect_entrants()` (0x5baa50, thiscall, ret 0, fra_cup.cpp): builds the 222-entrant French Cup list;
+/// `FraCup::collect_entrants()` (`fra_cup_collect_entrants`, thiscall, ret 0, fra_cup.cpp): builds the 222-entrant French Cup list;
 /// returns (full flag, count).
 ///
-/// +0x3e = 222; the list is allocated (0x944e46 of 0x534 bytes at +0xa7; out of memory, the error box for line 0x16f
+/// +0x3e = 222; the list is allocated (`exe::crt_malloc` of 0x534 bytes at +0xa7; out of memory, the error box for line 0x16f
 /// and −1).
 ///
 /// In this order: all clubs of division [0x9cf5d4] (without checking the space left); the clubs of division [0x9cf764]
 /// linked (+0x60) to [0x9cf5d8]; the French clubs (+0x53 = [0x9cf300]) of [0x9cf764] with no link; the French clubs
-/// with no division that are not national teams (0x53b900), among the clubs before the 2 × [0xae2350] national teams at
+/// with no division that are not national teams (`exe::database_is_national_team`), among the clubs before the 2 × [0xae2350] national teams at
 /// the end — these last three groups up to `french_cup_amateur_limit`; then the Second ([0x9cf5d0]) and the First
 /// ([0x9cf5cc]) while they fit.
 ///
@@ -321,10 +321,10 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
 
-/// `FraSuper::select_teams()` (0x5bf770, thiscall, ret 0, fra_super.cpp): picks the First Division champion and the
+/// `FraSuper::select_teams()` (`fra_super_select_teams`, thiscall, ret 0, fra_super.cpp): picks the First Division champion and the
 /// French Cup winner, or the First Division runner-up when they are the same club.
 ///
-/// Sets +0x3e = 2 and allocates the list (0x944e46 of 0xc at +0xa7; when out of memory, the error box for line 0xc4 and
+/// Sets +0x3e = 2 and allocates the list (`exe::crt_malloc` of 0xc at +0xa7; when out of memory, the error box for line 0xc4 and
 /// −1). The First Division champion ([0x9cf5cc]; if missing, error box 0xcd and 0) and the French Cup winner
 /// ([0x9cf70c]; if missing, 0xd6 and 0); if they are the same club, the second one becomes the First Division runner-up
 /// (if missing, 0xe2 and 0).

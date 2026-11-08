@@ -172,11 +172,11 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
 
 /// Comparer for `european_cup_collect_club_list`.
 ///
-/// Comparer of 0x586660: the original routine allocates the list (only it runs; the caller frees). The plan, made
+/// Comparer of `european_cup_collect_club_list`: the original routine allocates the list (only it runs; the caller frees). The plan, made
 /// beforehand in a local list from the same entrants: the count (low word of the return value) and the clubs of its
 /// list must be equal.
 ///
-/// For the types that go to 0x48e1c0 and without a list: the return value and the output as the original left them.
+/// For the types that go to `comp_collect_club_list` and without a list: the return value and the output as the original left them.
 ///
 /// [pt] Comparador da 0x586660: a original aloca a lista (só ela roda; quem chama libera). O plano, feito antes numa lista
 /// local pelos mesmos inscritos: a conta (palavra de baixo da devolução) e os clubes da lista dela iguais. Nos tipos
@@ -207,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_club_list(th
     r
 }
 
-/// Comparer for `european_cup_collect_entrants` (0x584fa0; comparison mode: see the header of motor.rs).
+/// Comparer for `european_cup_collect_entrants` (`european_cup_collect_entrants`; comparison mode: see the header of motor.rs).
 ///
 /// The original allocates (only it runs); the plan then checks everything it wrote: the new list, copied and refilled
 /// by the copy (fill_champions_league_entrants only reads the clubs, which the original does not change), must come out

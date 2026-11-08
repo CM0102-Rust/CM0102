@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn shortlist_entry(this: usize, person: usiz
     0
 }
 
-/// CONTRACT_MANAGER get_contract (0x4cf5a0) for a person, also stored in G_CONTRACT_LOOKUP_RESULT.
+/// CONTRACT_MANAGER get_contract (`exe::contract_manager_get_contract`) for a person, also stored in G_CONTRACT_LOOKUP_RESULT.
 ///
 /// [pt] O contrato da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4), guardado em [0xae1080].
 pub(crate) unsafe fn contract_of_staff_cached(person: usize) -> usize {
@@ -475,7 +475,7 @@ pub(crate) unsafe fn reputation_by_division(club: usize) -> i16 {
 ///
 /// The competition is +0x1db (or the one in list [0xae2d14] + id × 6 when it is negative or is [0x9cf6f8] with
 /// reputation 5000): the record from [0xae23d0] (0x6b bytes; 15000 for [0x9cf6e8], otherwise 600 × +0x69 in 16 bits)
-/// and, with the club in its table (0x4a4850) in 1st to 16th place without mark +4, (1.32 − 0.02 × position) × that.
+/// and, with the club in its table (`exe::comp_stats_find_club_entry`) in 1st to 16th place without mark +4, (1.32 − 0.02 × position) × that.
 /// With no record: the minimum of 0.8 × `pela_divisao` and 7000.
 ///
 /// [pt] A reputação pela competição do clube (+0x1db; a da lista [0xae2d14] + id × 6 quando ela é negativa ou é a
@@ -558,7 +558,7 @@ pub(crate) fn half_or_minus_2000(h: i16) -> i16 {
 
 /// The fluency factor: max(F × 0.1, L / (12000 − 200 F)) + 0.2; returns (factor, F).
 ///
-/// L = (s + 5000)² × 1/15000 and F is the person's fluency in the language of the club's nation (0x7c6830: push 1; push
+/// L = (s + 5000)² × 1/15000 and F is the person's fluency in the language of the club's nation (`get_language_fluency`: push 1; push
 /// language; push club; push person; mov ecx, [0xb74350] -> thiscall, ret 0x10; the language goes in a register with
 /// garbage above, the copy passes only the byte).
 ///
@@ -1726,7 +1726,7 @@ pub(crate) unsafe extern "C" fn shortlist_compare_slots_by_index(a: usize, b: us
     if d != 0 { d } else { 1 }
 }
 
-/// Clubs interested in a player, collected by Shortlist_Manager collect_interested_clubs (0x842180, mode 1) into a
+/// Clubs interested in a player, collected by Shortlist_Manager collect_interested_clubs (`collect_interested_clubs`, mode 1) into a
 /// temporary list.
 ///
 /// [pt] Os clubes interessados no jogador, como a 0x84b580 os pede (0x842180 com modo 1 numa lista local; os itens de 8
@@ -1814,7 +1814,7 @@ pub(crate) unsafe extern "thiscall" fn mark_player_under_offer(this: usize, play
     exe::drop_llist(list);
 }
 
-/// The valueless end of 0x840d80: for a loan slot (bit 0 of +0x24) and a loan-listed person, raises the rating to max(r
+/// The valueless end of `value_player_for_club`: for a loan slot (bit 0 of +0x24) and a loan-listed person, raises the rating to max(r
 /// + 5000, r x 1.2); returns 0.
 ///
 /// [pt] O fim sem valor da 0x840d80 (0x841f62): fora da lista de empréstimos da vaga (bit 0 de +0x24), 0; com ela e a pessoa
@@ -1834,7 +1834,7 @@ pub(crate) unsafe fn loan_listed_value_end(p: usize, slot: usize, out: *mut i32)
 
 /// Adjusts young players' ratings by the ability seen by the club's manager (slot types 1, 2 and 3 at +0x24 >> 1).
 ///
-/// Under 27 (person +0x18) and with a rating above 20000: the current ability seen by the club's manager (0x6e86d0 with
+/// Under 27 (person +0x18) and with a rating above 20000: the current ability seen by the club's manager (`perceived_ability` with
 /// 1 and rating/4) × 220 / rating, capped at `frac` + 0.6 and pulled towards 1 at ages 24, 25 and 26; with 1.05 ×
 /// minimum below the rating, or for the high-rating slot (`alta`), above 1 it is further scaled by the club's
 /// reputation in table [this+0xdc] (9 bytes per club, word +5) over the club's reputation (+0x80, at least 1000),
@@ -2250,7 +2250,7 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, club: 
     ftol(x)
 }
 
-/// CONTRACT_MANAGER get_contract (0x4cf5a0) for a person, without storing it.
+/// CONTRACT_MANAGER get_contract (`exe::contract_manager_get_contract`) for a person, without storing it.
 ///
 /// [pt] O contrato principal da pessoa (CONTRACT_MANAGER::get_contract 0x4cf5a0: thiscall([0xae1050], pessoa), ret 4).
 /// As três marcas não guardam o contrato em [0xae1080].
@@ -2258,7 +2258,7 @@ pub(crate) unsafe fn contract_of_staff(person: usize) -> usize {
     exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person)
 }
 
-/// As datas estáticas da 0x54c5b0, da 0x54c8e0 e da 0x54cdb0 (valor e guarda).
+/// As datas estáticas da `exe::date_add_days`, da 0x54c8e0 e da `exe::date_days_since` (valor e guarda).
 pub(crate) const SHORTLIST_MANAGER_DATE_STATICS: [(usize, usize); 6] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
 
 /// Counts the club's shortlist slots with a target and a bid at the given position (`0xff`: any); with the list in
@@ -2362,13 +2362,13 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_remove_from_loan_list(pe
     (c as u32 & !0xff) | 1
 }
 
-/// As datas estáticas da 0x54c5b0, da 0x54c8e0 e da 0x54cdb0 (valor e guarda).
+/// As datas estáticas da `exe::date_add_days`, da 0x54c8e0 e da `exe::date_days_since` (valor e guarda).
 pub(crate) const STAFF_STATUS_DATE_STATICS: [(usize, usize); 6] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
 
 /// Removes the (person, club) pair from one of the Shortlist_Manager's sorted 8-byte pair vectors by binary search;
 /// returns whether it was found.
 ///
-/// `base` = +0 or +4, count at `base` + 0x10; the search is 0x946464 (cdecl(key, vector, count, 8, comparison), add
+/// `base` = +0 or +4, count at `base` + 0x10; the search is `exe::crt_bsearch` (cdecl(key, vector, count, 8, comparison), add
 /// esp, 0x14). The following pairs move down one place, the last one is zeroed and the count drops.
 ///
 /// [pt] Tira o par (pessoa, clube) de um dos vetores ordenados de pares (8 bytes) do Shortlist_Manager (`base` = +0 ou +4,
@@ -3039,10 +3039,10 @@ pub(crate) unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: u
     }
 }
 
-/// Comparador: a 0x83cb40 reavalia o elenco (sorteios, ofertas, vagas de muitos clubes): roda só a original.
+/// Comparador: a `exe::shortlist_manager_assess_club_squad` reavalia o elenco (sorteios, ofertas, vagas de muitos clubes): roda só a original.
 // simplification: original only; the copy is proven by the branch and by the mutation in the career.
 
-/// CONTRACT_MANAGER get_contract (0x4cf5a0) for a person.
+/// CONTRACT_MANAGER get_contract (`exe::contract_manager_get_contract`) for a person.
 ///
 /// [pt] O contrato da pessoa (0x4cf5a0 no CONTRACT_MANAGER [0xae1050]).
 pub(crate) unsafe fn get_contract(person: usize) -> usize {
@@ -3059,7 +3059,7 @@ pub(crate) unsafe fn shortlist_manager_get_contract_and_store(person: usize) -> 
 }
 
 /// with the player's filters (record, marked regen, job, career end, nation, untouchable, arrived less than 200 days
-/// ago without being listed), tries to put him on the list of each club in the array (0x842e10) up to 5 clubs, except
+/// ago without being listed), tries to put him on the list of each club in the array (`exe::shortlist_manager_try_add_player_to_club_shortlist`) up to 5 clubs, except
 /// national teams, the contract's club and his own; turned off (DESLIGADAS) from 2026-10-30 to 2026-10-31, when the test criterion changed and the list was emptied: the detour alone (without running
 /// the copy) made the career in original mode leave the reference be54a138 (bisection of the 39 routines of batch 252):
 /// the detour changes the stack residue a later original reads; the copy stays in the code and does not run
@@ -3207,7 +3207,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_list_player(this: usize, player:
 }
 
 /// The person's appearance-bonus record (0xd bytes: +0 person id, +4 value, +8 matches, +9 old club id), found by
-/// binary search (0x946464 with 0x8b4e00) in the TRANSFER_MANAGER's national team array (type 5: +0x898, count +0x8a0)
+/// binary search (`exe::crt_bsearch` with 0x8b4e00) in the TRANSFER_MANAGER's national team array (type 5: +0x898, count +0x8a0)
 /// or club array (+0x88c, count +0x894).
 ///
 /// [pt] O registro de prêmio por jogos (0xd bytes: +0 id da pessoa, +4 valor, +8 jogos, +9 id do clube antigo) da pessoa,
@@ -3219,14 +3219,14 @@ pub(crate) unsafe fn appearance_bonus_record(this: usize, player: usize, kind: u
     exe::crt_bsearch((key.as_ptr()) as usize, vetor, (conta) as u32, 0xd, 0x8b4e00)
 }
 
-/// Comparer: 0x842e10 changes the slots of many clubs (and the lists do not fit in a cheap copy), so only the original
+/// Comparer: `exe::shortlist_manager_try_add_player_to_club_shortlist` changes the slots of many clubs (and the lists do not fit in a cheap copy), so only the original
 /// routine runs.
 ///
 /// [pt] Comparador: a 0x842e10 mexe nas vagas de muitos clubes (e as listas não cabem numa cópia barata): roda só a
 /// original.
 // simplification: original only; the copy is proven by the branch and by the mutation in the career.
 
-/// The person's main contract (stored), its club, and the contract with that club (0x4cf5f0).
+/// The person's main contract (stored), its club, and the contract with that club (`exe::contract_manager_get_contract_for_club`).
 ///
 /// [pt] O contrato principal da pessoa (0x4cf5a0, guardado em [0xae1080]), o clube dele (id em +4) e o contrato com esse
 /// clube (0x4cf5f0).
@@ -3689,7 +3689,7 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_res
     1
 }
 
-/// Year of the default date (0x54a110: day 40 of 1972).
+/// Year of the default date (`exe::date_date_54a110`: day 40 of 1972).
 ///
 /// [pt] O ano da data padrão (0x54a110: dia 40 de 1972).
 pub(crate) unsafe fn default_date_year() -> u16 {

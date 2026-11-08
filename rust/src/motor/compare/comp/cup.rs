@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_start_new_season(cup: usize) 
 
 /// Comparer for `pay_round_prize_money`.
 ///
-/// Comparer of 0x522240, as a dry run: the copy without the news item and the whole original routine, from the same
+/// Comparer of `pay_round_prize_money`, as a dry run: the copy without the news item and the whole original routine, from the same
 /// state (the fund and the finance records of both clubs, restored after the dry run); checks the fund and the
 /// finances.
 ///
@@ -170,8 +170,8 @@ pub(crate) unsafe extern "thiscall" fn compare_set_home_teams_for_round(cup: usi
 
 /// Comparer for `record_team_progress`.
 ///
-/// Comparer of 0x521b30: side by side on the 3 progress bytes (+0x73..+0x75) of the club's record in the cup's
-/// Comp_Stats (+8, found by 0x4a4850: push club; ecx = the statistics; thiscall, ret 4), which +0x68 writes. The
+/// Comparer of `record_team_progress`: side by side on the 3 progress bytes (+0x73..+0x75) of the club's record in the cup's
+/// Comp_Stats (+8, found by `exe::comp_stats_find_club_entry`: push club; ecx = the statistics; thiscall, ret 4), which +0x68 writes. The
 /// versions that pass it on to another competition write outside that region (then the comparison only checks that
 /// nothing changed in it).
 ///
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_team_progress(cup: usize, 
     SCOREBOARD.record(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", team as i16, round as i16, mo, mr));
 }
 
-/// Comparer for `draw_round` (0x51c410; comparison mode: see the header of motor.rs).
+/// Comparer for `draw_round` (`draw_round`; comparison mode: see the header of motor.rs).
 ///
 /// Only the original runs (the random draws draw, the news item allocates). The plan, made beforehand: with no draw (no
 /// +0x45 or already drawn), nothing changes in the ties or the dates; with a team still open, the predicted dates of
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_update_staff_records_for_stat
 
 /// Comparer for `cup_record_season_honours`.
 ///
-/// Comparer of 0x519a90: only the original routine runs (0x4afce0 may grow the history and 0x519fc0 has its own
+/// Comparer of `cup_record_season_honours`: only the original routine runs (`comp_util_add_history_record` may grow the history and `register_semi_final_losers_for_uefa` has its own
 /// comparer). The plan, made beforehand: the free history row (free_comp_history_row) gets the competition (+4), the
 /// year [0xae2c92] and the four of season_honours.
 ///
@@ -542,10 +542,10 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_check_complete(this: usize, s
 
 /// Comparer for `move_round_fixtures_to_set_dates`.
 ///
-/// Comparer of 0x51ebe0: only the original routine runs (the matches leave the calendar and come back through 0x5aa680,
+/// Comparer of `move_round_fixtures_to_set_dates`: only the original routine runs (the matches leave the calendar and come back through `add_fixture`,
 /// which allocates, and the news items go to the managers).
 ///
-/// The plan, made beforehand: the cup's matches on the date and slice (0x5abd90 into a temporary list), in list order;
+/// The plan, made beforehand: the cup's matches on the date and slice (`collect_comp_fixtures_on_day` into a temporary list), in list order;
 /// each one of the league's type takes the next slot (every 7 bytes, up to 0x38 and up to the first 0xff), and the slot
 /// of the one on the round's date becomes 0xff; the other slots do not change.
 ///

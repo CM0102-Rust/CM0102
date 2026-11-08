@@ -20,9 +20,9 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_trophy_praise_story(this: u
 
 /// Comparer for `apply_squad_reaction_to_player_story`.
 ///
-/// Through the tape of the post-match gates (compare_pos): the disaffections (0x547af0), the mark (0x867560) and the
-/// complaints (0x867700) run once, in the original, and the copy checks the call and receives the state afterwards.
-/// Regions: the random generator, [0xae1080], the six persons of the club (+0x9b, 0x547940), the player's contract and,
+/// Through the tape of the post-match gates (compare_pos): the disaffections (`exe::staff_add_disliked_staff`), the mark (`set_flags`) and the
+/// complaints (`exe::staff_contract_apply_event_flags`) run once, in the original, and the copy checks the call and receives the state afterwards.
+/// Regions: the random generator, [0xae1080], the six persons of the club (+0x9b, `club_add_disliked_staff`), the player's contract and,
 /// for each person of the array, the preferences (+0x1c..+0x33), +0x58..+0x5d and the club contract (+0 to +0x4f).
 ///
 /// [pt] Comparador: pela fita das portas do pós-jogo (compare_pos): as desafeições (0x547af0), a marca (0x867560) e as

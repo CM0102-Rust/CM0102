@@ -139,7 +139,7 @@ pub(crate) unsafe extern "C" fn is_national_team(club: usize) -> u32 {
     (*(club as *const i32) >= limit) as u32
 }
 
-/// Computes each club's strength key (0x4c0720) and sorts clubs and keys descending by swapping, as 0x4c08f0.
+/// Computes each club's strength key (`comp_util_get_club_strength_score`) and sorts clubs and keys descending by swapping, as `comp_util_sort_clubs_by_strength`.
 ///
 /// [pt] O núcleo da 0x4c08f0 sobre os `n` clubes em `v` e as chaves em `k`: a chave de cada clube é a força
 /// (0x4c0720; clube nulo, 0); depois, para cada i, todo j > i com chave maior troca de lugar com i (chave e clube),
@@ -161,10 +161,10 @@ pub(crate) unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
     }
 }
 
-/// Sorts an array of clubs by strength (0x4c0720), strongest first.
+/// Sorts an array of clubs by strength (`comp_util_get_club_strength_score`), strongest first.
 ///
-/// `comp_util_sort_clubs_by_strength(clubs, n)`: sorts the array of `n` clubs by strength (0x4c0720), highest first,
-/// keeping the keys in a temporary array (0x944e46 / 0x9452ca; the original fills it with 0x60 beforehand, all of which
+/// `comp_util_sort_clubs_by_strength(clubs, n)`: sorts the array of `n` clubs by strength (`comp_util_get_club_strength_score`), highest first,
+/// keeping the keys in a temporary array (`exe::crt_malloc` / `exe::crt_free`; the original fills it with 0x60 beforehand, all of which
 /// is overwritten). Out of memory: the error box (line 0x292d) and nothing else.
 /// Original: `comp_util_sort_clubs_by_strength` (0x4c08f0, comp_util.cpp, cdecl).
 ///
@@ -185,7 +185,7 @@ pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i3
 
 /// Finds or adds the club's record in the competition statistics and stores the position at +0x72.
 ///
-/// `Comp_Stats::set_club_final_position(club, position)`: finds (0x4a4850) or adds (0x4aceb0) the club's record in the
+/// `Comp_Stats::set_club_final_position(club, position)`: finds (`exe::comp_stats_find_club_entry`) or adds (`exe::comp_stats_add_club_entry`) the club's record in the
 /// competition statistics and stores the position (a byte) at +0x72; returns the record. Null club: the error box (line
 /// 0x680).
 /// Original: `Comp_Stats::set_club_final_position` (0x4a2540, comp_stats.cpp, thiscall, ret 8).
@@ -207,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club
     e
 }
 
-/// The calls 0x5223a0 makes to 0x4a2540 (Comp_Stats set_club_final_position: club, position), in order, with the vector
+/// The calls `cup_rank_teams` makes to `set_club_final_position` (Comp_Stats set_club_final_position: club, position), in order, with the vector
 /// `v` already sorted.
 ///
 /// From the second-to-last round (+0x3c − 2) backward ([+0xa3] + r × 0x68, the count of who goes out in +0x1a), until a
@@ -270,7 +270,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
 /// stadiums (national sides: by the stadium's nation).
 ///
 /// `comp_util_get_fixture_venue_side(club, fixture)`. Without a venue in the fixture (+0x18): by the home club (+0x1c),
-/// 3 if it has no stadium (+0x69), otherwise 1 for the home club and 2 for the other. National side (0x53b900): 1 if
+/// 3 if it has no stadium (+0x69), otherwise 1 for the home club and 2 for the other. National side (`exe::database_is_national_team`): 1 if
 /// the venue's nation (+0x38, +0x1f) is the club's (+0x53), 2 if it is the opponent's, otherwise 3. Club: if the venue
 /// is the club's stadium and not the opponent's, 1; if it is both clubs' stadium, 1 for the home club and 2 for the
 /// other; if only the opponent's, 2; if neither's, 3. The caller reads only `al`.
@@ -378,7 +378,7 @@ pub(crate) unsafe extern "C" fn comp_util_shuffle_pointer_array(items: usize, n:
 /// Sorts the clubs by reputation (nulls last) and shuffles the first min(3 × picks, n).
 ///
 /// `comp_util_sort_and_shuffle_top_clubs(clubs, n, picks)`: sorts the `n` clubs by reputation, highest first and nulls
-/// at the end (qsort 0x945333 with 0x4b07d0), and shuffles the first m = min(3 × picks, n) with m swaps of randomly
+/// at the end (qsort `exe::crt_qsort` with 0x4b07d0), and shuffles the first m = min(3 × picks, n) with m swaps of randomly
 /// drawn pairs among them. `n` negative or smaller than `picks`: the "Error" box (the original); `picks` < 1: nothing.
 /// Original: `comp_util_sort_and_shuffle_top_clubs` (0x4afbd0, comp_util.cpp, cdecl).
 ///
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubs: usiz
     }
 }
 
-/// A club's rating in the league stats (0x4b02e0): weighted average of 4 attributes, weights scaled by games under 25.
+/// A club's rating in the league stats (`comp_util_get_league_clash_type`): weighted average of 4 attributes, weights scaled by games under 25.
 ///
 /// [pt] A nota de um clube na estatística da liga (0x4b02e0): pesos 1 nos 4 atributos (+0x72..+0x75; +0x75 e +0x74 com
 /// o peso [0x968968]) ou, com menos de 25 jogos (+4), proporcionais aos jogos; a média ponderada, na ordem do x87.
@@ -426,10 +426,10 @@ pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
 }
 
 /// Classifies a league match between two clubs: 1 = title clash, 3 = zone clash, 0 = none, from the weighted statistics
-/// ratings (0x4a4850) against a third of the clubs or 0.2 × clubs + `+0xbe` (+ `+0xbf`).
+/// ratings (`exe::comp_stats_find_club_entry`) against a third of the clubs or 0.2 × clubs + `+0xbe` (+ `+0xbf`).
 ///
 /// `comp_util_get_league_clash_type(a, b)`: both clubs must be in the same division (+0x57, neither reserve nor minor:
-/// 0x7e6f20), its league (`[0xadadfc][id]`) must have statistics (+8, 0x4a4850 for both), no stages (+0x30 = −1) and
+/// 0x7e6f20), its league (`[0xadadfc][id]`) must have statistics (+8, `exe::comp_stats_find_club_entry` for both), no stages (+0x30 = −1) and
 /// +0x43 = 2, and the difference in +0x73 must be at most a quarter of the clubs (+0x3e). With the ratings
 /// (league_stats_rating): 1 = title clash (virtual +0x98 = 0, both below a third of the clubs and each not below the
 /// other's +0x74); 3 = zone clash (+0x98 ≠ 0, both up to 0.2 × clubs + +0xbe, or, with +0xbf, up to 0.2 × clubs + +0xbe
@@ -507,12 +507,12 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
 // reorder the statistics, and the original already leaves it sorted for the copy).
 
 /// Computes a club's strength score: money (+0x65 / 400 or balance / 300) + 16 × reputation + the off-match ratings
-/// (0x6e6340) of the 15 picked (0x6e2000) from the squad; null club: −10,000,000.
+/// (`off_match_score`) of the 15 picked (0x6e2000) from the squad; null club: −10,000,000.
 ///
 /// `comp_util_get_club_strength_score(club)`: the money (without the finance table `[0xae2a38]`: +0x65 / 400; with it,
-/// the 64-bit balance / 300 via 0x5a0590), plus 16 × the reputation (+0x80), plus the off-match rating (0x6e6340,
+/// the 64-bit balance / 300 via `get_club_finance`), plus 16 × the reputation (+0x80), plus the off-match rating (`off_match_score`,
 /// 0x840, limit −1) of the 15 picked players (0x6e2000, codes 1, 0x804, 0x84, 3 × 0x204, 0x810, 0x90, 3 × 0x210, 4 ×
-/// 0x40) among the players (+0x61) of the squad (0x541f90). Null club: −10,000,000. No SEH, no random draw of its own.
+/// 0x40) among the players (+0x61) of the squad (`database_collect_club_squad`). Null club: −10,000,000. No SEH, no random draw of its own.
 /// The original pushes the number of players as a dword with only the low byte written (the rest is stack leftover);
 /// 0x6e2000 reads only the byte, and the copy passes the byte zero-extended.
 /// Original: `comp_util_get_club_strength_score` (0x4c0720, comp_util.cpp, cdecl).
@@ -566,10 +566,10 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
 /// Sorts the competition history and returns the winner, runner-up or third (+0xa, +0xe, +0x12) from the competition's
 /// first row; not found: 0.
 ///
-/// `comp_util_get_latest_placed_club(comp, place)`: sorts the competition history (qsort 0x945333 with 0x540780),
-/// searches (bsearch 0x946464) for the competition with year −1 (any), walks back to its first row and returns the club
+/// `comp_util_get_latest_placed_club(comp, place)`: sorts the competition history (qsort `exe::crt_qsort` with `database_compare_comp_history_rows`),
+/// searches (bsearch `exe::crt_bsearch`) for the competition with year −1 (any), walks back to its first row and returns the club
 /// in `place` (0 winner +0xa, 1 runner-up +0xe, 2 third +0x12); not found: 0. Any other place: the original (the
-/// comp_util.cpp error box). The key on the original's stack has only +4 and +8 written, and 0x540780 reads only those
+/// comp_util.cpp error box). The key on the original's stack has only +4 and +8 written, and `database_compare_comp_history_rows` reads only those
 /// two; the copy zeroes the rest.
 /// Original: `comp_util_get_latest_placed_club` (0x4afd80, comp_util.cpp, cdecl).
 ///
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
 
 /// Rebuilds the fixture from eighteen consecutive news slots and resolves its clubs, stadium and competition.
 ///
-/// The fixture (`partida`) is rebuilt from 18 consecutive slots of the `noticia` (news item, 0x785830) starting at
+/// The fixture (`partida`) is rebuilt from 18 consecutive slots of the `noticia` (news item, `get_slot`) starting at
 /// `*cursor` (which advances by 18): +0xc and +0x10 the clubs, +0x3d, +0x3e, +4 the stadium, +0 the competition, +0x42,
 /// +0x32, +0x30, +0x43/+0x44, +0x4b/+0x4c and +0x47/+0x48 the scores, +0x2a, +0x28 and +8. Then the pointers: clubs
 /// (0xae23b4, 0x245 bytes) at +0x1c/+0x20, stadium (0xae23b0, 0x4e) at +0x18 and competition (0xae23d0, 0x6b) at +0x14;
@@ -740,11 +740,11 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
 /// cursor.
 ///
 /// The community map gives the 2nd argument as unused, but it is the news item. Writes the fixture into 18 consecutive
-/// data slots of the news item (0x785790), starting at slot `[cursor]`, and advances the cursor by 18. Order: +0xc,
+/// data slots of the news item (`set_news_field`), starting at slot `[cursor]`, and advances the cursor by 18. Order: +0xc,
 /// +0x10, +0x3d, +0x3e, +4, +0, +0x42, +0x32, +0x30, +0x43, +0x44, +0x4b, +0x4c, +0x47, +0x48, +0x2a, +0x28, +8 (bytes
 /// and the words +0x30/+0x32 signed; +0x28 and +0x2a unsigned). Returns what the last write returned. The original
 /// keeps the index of the 18th slot in the low byte of the `cursor` argument itself (only the low part reaches
-/// 0x785790).
+/// `set_news_field`).
 /// Original: `comp_util_write_fixture_to_news_slots` (0x4afeb0, comp_util.cpp, cdecl).
 ///
 /// [pt] { 0x4afeb0 } (cdecl, comp_util.cpp; a convenção do mapa dá o 2º argumento como sem uso, mas é a
@@ -776,7 +776,7 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usiz
 ///
 /// `comp_util_format_stage_round_name(stage, round, output, size, style)`: without an output or with fewer than 200
 /// bytes, the error box (line 0x26a1) and 0. Clears the output; with both stage and round, "{stage} {round}" (0x66f4e0
-/// with template 0x9a7cfc, the 100-byte names from 0x4b4850 and the genders from 0x4ba8f0); with only one of them, its
+/// with template 0x9a7cfc, the 100-byte names from 0x4b4850 and the genders from `exe::comp_util_get_stage_name_gender`); with only one of them, its
 /// name directly in the output (0x4b4850 with the size); with neither, just the zero. Returns 1 (0 on the error box).
 /// Original: `comp_util_format_stage_round_name` (0x4bffc0, comp_util.cpp, cdecl).
 ///
@@ -816,7 +816,7 @@ pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, ro
 /// `comp_util_scale_by_round(low, high, round, rounds)` (signed bytes and words; the words arrive in registers with
 /// garbage above them and only the word is read): with a single round, the average (low + high) / 2; otherwise (high −
 /// low) × round / (rounds − 1). Outside 0..=100: the original (error box at line 0x256e, returns 0 or 100). Returns the
-/// original's whole eax (the caller pushes the whole register to 0x86bdd0/0x86c000): the byte in `al` over the sum
+/// original's whole eax (the caller pushes the whole register to `add_qualified_for_round_record`/`add_knocked_out_record`): the byte in `al` over the sum
 /// (single round) or the quotient.
 /// Original: `comp_util_scale_by_round` (0x4bf850, comp_util.cpp, cdecl).
 ///
@@ -837,10 +837,10 @@ pub(crate) unsafe extern "C" fn comp_util_scale_by_round(low: u32, high: u32, ro
 }
 
 /// Stores competition, year and four values in the free row of the competition history (without one, grows by 20 rows
-/// through 0x527f60); returns the row.
+/// through `database_grow_comp_history_table`); returns the row.
 ///
 /// `comp_util_add_history_record(league, first, second, third, extra)`: the free row of the competition history
-/// (without one, it grows by 20 rows through 0x527f60 and uses the first new one; out of memory, 0) receives the
+/// (without one, it grows by 20 rows through `database_grow_comp_history_table` and uses the first new one; out of memory, 0) receives the
 /// competition (the league's +4), the year `[0xae2c92]` (+8), and the four values at +0xa, +0xe, +0x12, +0x16. Returns
 /// the row. No SEH, no random draw, no locals.
 /// Original: `comp_util_add_history_record` (0x4afce0, comp_util.cpp, cdecl).

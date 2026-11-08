@@ -5,8 +5,8 @@ use super::*;
 
 /// Comparer for `serve_international_bans`.
 ///
-/// The count (0x556e90) writes the history to the file when the suspension ends and cannot run twice: the plan first
-/// (the nation's persons and, for each one, what 0x556e90 will do, serve_ban_match_plan), then the original routine
+/// The count (`update_ban_progress`) writes the history to the file when the suspension ends and cannot run twice: the plan first
+/// (the nation's persons and, for each one, what `update_ban_progress` will do, serve_ban_match_plan), then the original routine
 /// runs.
 ///
 /// It checks, person by person, the new counter or the released suspension (free: +0 = 0xff, +2 = −1).
@@ -118,7 +118,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
 
 /// Comparer for `clear_bans_invalid_for_club`.
 ///
-/// 0x556270 releases bans (nation index, governing bodies): the plan beforehand (the slots the club does not cover and
+/// `clear_bans_invalid_for_club` releases bans (nation index, governing bodies): the plan beforehand (the slots the club does not cover and
 /// the entries), then the original runs; it checks the freed slots (0xff, −1, entry −1) and that the others are intact.
 /// An entry repeated in two slots is not checked for the second one.
 ///
@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
 
 /// Comparer for `restore_held_bans`.
 ///
-/// 0x556570 removes and frees items from the list (lesson 1: the expected result is built BEFORE; no item is read
+/// `restore_held_bans` removes and frees items from the list (lesson 1: the expected result is built BEFORE; no item is read
 /// afterwards) and releases suspensions: the plan first, then the original routine runs.
 ///
 /// It checks [0xae1080], the restored slots (the 5 stored bytes), the released ones (0xff, −1, entry −1), the count of

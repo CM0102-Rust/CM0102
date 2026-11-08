@@ -31,15 +31,15 @@ pub(crate) struct EnglishDivision {
 /// The body of the four English division constructors (thiscall(this, year, record), ret 8, SEH frame only for the
 /// operator new).
 ///
-/// The base (League::League 0x682200: mov ecx -> thiscall, ret 0), the year (+0x40, word), the competition record (+4),
+/// The base (League::League `exe::new_league`: mov ecx -> thiscall, ret 0), the year (+0x40, word), the competition record (+4),
 /// the vtable, discipline rule 9 (+0x50) and the minimum stadium; tries to load the state from the temp file
-/// (League::load_from_temp_file 0x687b10: push 1; mov ecx -> thiscall, ret 4). Loaded: done.
+/// (League::load_from_temp_file `exe::league_load_from_temp_file`: push 1; mov ecx -> thiscall, ret 4). Loaded: done.
 ///
 /// Otherwise, the new league: stage 0xff (+0x44), current stage −1 (+0x30), +0x2c stages (and the vector [+0xc]), the
-/// rules, the table, the fixtures (League::create_fixtures 0x6835c0: mov ecx -> thiscall, ret 0), the table order
-/// (League::sort_table 0x6827d0: push 0; mov ecx -> thiscall, ret 4), the stats (operator new 0x944cf1 of 0x5ce: push;
-/// add esp, 4 -> cdecl; Comp_Stats::Comp_Stats 0x49ee70: push league; mov ecx, new -> thiscall, ret 4) in +8 and the
-/// predicted positions (League::set_predicted_positions 0x68a850: mov ecx -> thiscall, ret 0).
+/// rules, the table, the fixtures (League::create_fixtures `create_fixtures`: mov ecx -> thiscall, ret 0), the table order
+/// (League::sort_table `sort_table`: push 0; mov ecx -> thiscall, ret 4), the stats (operator new `exe::crt_operator_new` of 0x5ce: push;
+/// add esp, 4 -> cdecl; Comp_Stats::Comp_Stats `exe::new_comp_stats`: push league; mov ecx, new -> thiscall, ret 4) in +8 and the
+/// predicted positions (League::set_predicted_positions `league_set_predicted_positions`: mov ecx -> thiscall, ret 0).
 ///
 /// Each step that fails shows its line's box and stops. Returns this.
 ///
@@ -314,7 +314,7 @@ pub(crate) unsafe fn is_after_1999() -> bool {
     core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) > 0x7cf
 }
 
-/// League pay_tv_rights (0x683010): pays the value to every table club, or only those that came from competition
+/// League pay_tv_rights (`pay_tv_rights`): pays the value to every table club, or only those that came from competition
 /// `filtro`.
 ///
 /// [pt] League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8): o valor a cada clube da tabela, ou só aos

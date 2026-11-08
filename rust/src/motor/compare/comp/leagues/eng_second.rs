@@ -9,7 +9,7 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_schedule(this: 
     compare_league_round_table("eng_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_second_create_schedule(this, stage, r, e, l))
 }
 
-/// Comparer for `eng_second_update_staff_records_for_status` (0x576c50; comparison mode: see the header of motor.rs).
+/// Comparer for `eng_second_update_staff_records_for_status` (`eng_second_update_staff_records_for_status`; comparison mode: see the header of motor.rs).
 ///
 /// The records write the history to the file, draw the morale and may renew contracts (they do not run twice): only the
 /// original runs. The plan, made beforehand, in the knockout: the club's first row decides what the routine writes

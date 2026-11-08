@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn eng_third_set_club_progress(this: usize, 
 }
 
 /// after the Third Division league, the current stage goes up and, on the first, the promotion play-off is created
-/// (0x5783c0)
+/// (`eng_third_create_play_off_stage`)
 /// Original: `EngThird::advance_stage` (0x578330, eng_third.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x578330 } (thiscall, ret 0, eng_third.cpp): `EngThird::advance_stage()`; cria o play-off da Third Division pela

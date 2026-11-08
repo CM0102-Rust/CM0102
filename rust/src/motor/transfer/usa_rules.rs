@@ -4,7 +4,7 @@ use super::*;
 /// August; +0x13 = 4 (default 50) [inference: the foreign squad limit].
 ///
 /// `USA_RULES::USA_RULES`; SEH frame only for the `new`, no destructor on the normal path: the transfer rules of the
-/// USA (rule 25): the base (0x8e84a0), the vtable 0x970a38, 1 window from `USA_TRANSFER_WINDOWS` and +0x13 = 4 (the
+/// USA (rule 25): the base (`exe::new_transfer_rules`), the vtable 0x970a38, 1 window from `USA_TRANSFER_WINDOWS` and +0x13 = 4 (the
 /// base default is 50) [inference: the foreign player limit]. Returns the object.
 /// Original: `USA_RULES::USA_RULES` (0x90b940, usa_rules.cpp, thiscall, ret 0x14).
 ///

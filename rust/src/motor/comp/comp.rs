@@ -89,11 +89,11 @@ pub(crate) unsafe fn finalize_league_table(league: usize) {
 /// club won.
 ///
 /// `Comp::send_prize_money_news(club, amount (i64), position, round, fixture, kind)`, ret 0x1c; SEH frame only for the
-/// local news item. To the club's human manager (0x7875e0), with an amount of at least 50 × the reputation (+0x80),
-/// news 0x1a (0x77bbe0): 0 the competition (`[this+4]`), 1 the amount, 2 the club, 3 the position, 4 the round, 7 the
+/// local news item. To the club's human manager (`news_club_has_human_manager`), with an amount of at least 50 × the reputation (+0x80),
+/// news 0x1a (`construct_news_item`): 0 the competition (`[this+4]`), 1 the amount, 2 the club, 3 the position, 4 the round, 7 the
 /// kind; with the fixture, 5 the opponent and 6 whether the club won (+0x3d/+0x3e the penalty shoot-out winner
 /// [inference], otherwise +0x4b/+0x4c, otherwise +0x43/+0x44 the score); without it, −1 and 0. Delivered to him
-/// (0x7861e0).
+/// (`send_to_club_manager`).
 /// Original: `Comp::send_prize_money_news` (0x48e3e0, comp.cpp, thiscall, ret 0x1c).
 ///
 /// [pt] { 0x48e3e0 } (thiscall, ret 0x1c, comp.cpp, `Comp::send_prize_money_news(clube, valor (i64), posição, rodada, partida,
@@ -143,8 +143,8 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
 /// Sends the TV rights news to the club's human manager: the club, the competition, the amount and the year.
 ///
 /// `Comp::send_tv_rights_news(club, amount)`, ret 8; SEH frame only for the local news item. To the club's human
-/// manager (0x7875e0), news 0x1f (0x77bbe0): 0 the club, 1 the competition (`[this+4]`), 2 the amount, 3 the
-/// competition year (+0x40), delivered to him (0x7861e0).
+/// manager (`news_club_has_human_manager`), news 0x1f (`construct_news_item`): 0 the club, 1 the competition (`[this+4]`), 2 the amount, 3 the
+/// competition year (+0x40), delivered to him (`send_to_club_manager`).
 /// Original: `Comp::send_tv_rights_news` (0x48ea40, comp.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x48ea40 } (thiscall, ret 8, comp.cpp, `Comp::send_tv_rights_news(clube, valor)`; quadro SEH só pela notícia local):
@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
 /// Builds the vector of the distinct clubs of all stages (up to 200) and returns the count.
 ///
 /// Ret 8, method +0x58 of the competitions: `Comp::collect_club_list(&list, _)`: a vector of 200 pointers
-/// (0x944e46(0x320); out of memory: the box at line 0x681, a null list and 0) with the distinct clubs of all stages (−1
+/// (`exe::crt_malloc`(0x320); out of memory: the box at line 0x681, a null list and 0) with the distinct clubs of all stages (−1
 /// the competition itself up to +0x30; the others in `[+0xc]`): in a league (+0x43 = 2) those of table +0xb1 (rows of
 /// 0x3b bytes), otherwise those of +0xa7 (6 bytes), skipping null and repeated ones, up to 200; stores the vector in
 /// `list` and returns the count (word, in ax).
@@ -247,7 +247,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
 ///
 /// Ret 0x10: `Comp::find_club_progress(club, &stage, &round, &status)`: over the stages from the last (+0x30) to the
 /// first (−1 the competition itself; the others in `[+0xc]`), skipping those with id 0x3fc: in a league (+0x43 = 2),
-/// the club's table row (0x6826d0 push i; mov ecx, stage -> thiscall, ret 4): stage = the id (+0x3a) and status = +0x37
+/// the club's table row (`league_record` push i; mov ecx, stage -> thiscall, ret 4): stage = the id (+0x3a) and status = +0x37
 /// of the row, and returns; in a cup, the last team of table +0xa7 (6 bytes) that is the club gives stage = the id and
 /// status = +5, and the round is the first round (from +0xab − 1 backwards, +0xa3 with 0x68 bytes, the ties of +0xad
 /// with 0x35 bytes) with a tie in which the team plays (+0 or +2): round = +7 of the round, and returns.
@@ -341,7 +341,7 @@ pub(crate) unsafe fn comp_stage(comp: usize, k: i32) -> usize {
 /// From the given stage backwards, returns the index of the first stage of the same group.
 ///
 /// Ret 4: `Comp::get_first_stage_of_group(k)`, used by the competition screens (0x4947a0): from stage `k` backwards,
-/// while the stages have the same group (0x4b01d0 of the id +0x3a: push id; add esp, 4 -> cdecl) and the index is
+/// while the stages have the same group (`comp_util_get_parent_stage_id` of the id +0x3a: push id; add esp, 4 -> cdecl) and the index is
 /// greater than −1, the index of the first of them (k itself when it has no group).
 /// Original: `Comp::get_first_stage_of_group` (0x48d2b0, comp.cpp, thiscall, ret 4).
 ///
@@ -371,7 +371,7 @@ pub(crate) unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: 
 ///
 /// Ret 0: `Comp::get_current_stage()`, used by the competition screens (0x48f8e0): the first stage (−1 the competition
 /// itself, up to +0x30) that has not finished (method 0x10 with (0, 1) = 0); if it is a cup (+0x43 = 1) that has not
-/// started (+0xab = 0), goes back to the start of its group through the previous stage (0x4b01d0 and 0x48d200: push k;
+/// started (+0xab = 0), goes back to the start of its group through the previous stage (`comp_util_get_parent_stage_id` and `get_stage`: push k;
 /// mov ecx, this -> thiscall, ret 4). All finished: the start of the last one's group. Invalid stage at the end: the
 /// box at line 0x36e and the competition itself; null stage: the competition itself.
 /// Original: `Comp::get_current_stage` (0x48cec0, comp.cpp, thiscall, ret 0).
@@ -539,8 +539,8 @@ pub(crate) unsafe fn club_callup_record(this: usize, c: usize) -> Option<usize> 
 /// Adds `conta` call-ups for club `c` on date `d` (day at +0, year at +2).
 ///
 /// If there is an entry with the same date, the count is added to it; otherwise a new entry is created (when the array
-/// is full, 3 more slots are added via 0x945667) with the date and the count, and the array is re-sorted by date (qsort
-/// 0x945333 with 0x778e90). Out of memory: the error box (line 0x21c8) and false (the routine stops).
+/// is full, 3 more slots are added via `exe::crt_realloc`) with the date and the count, and the array is re-sorted by date (qsort
+/// `exe::crt_qsort` with `compare_call_up_records_by_date`). Out of memory: the error box (line 0x21c8) and false (the routine stops).
 ///
 /// [pt] Soma `conta` convocados do clube `c` na data `d` (dia +0, ano +2): na entrada da mesma data, se houver; senão uma
 /// entrada nova (com o vetor cheio, mais 3 vagas por 0x945667) com a data e a conta, e o vetor reordenado pela data
@@ -584,7 +584,7 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
     true
 }
 
-/// True when some club that 0x7771c0 may add to has its call-up array full (capacity = count), so it may reallocate.
+/// True when some club that `record_club_call_ups` may add to has its call-up array full (capacity = count), so it may reallocate.
 ///
 /// [pt] O registro de algum clube que a 0x7771c0 pode somar está com o vetor cheio (capacidade = quantas, inclusive sem
 /// vetor)? Então ela pode realocar.
@@ -632,14 +632,14 @@ pub(crate) unsafe extern "thiscall" fn get_stage(this: usize, k: i32) -> usize {
 /// clubs in a friendly, 0 for the World Cup, 1 for national side tournaments.
 ///
 /// `comp_active_key_nation_of_fixture(competition, fixture)`, the key of the FIXTURE_MANAGER match lists (add_fixture
-/// 0x5aa680, find_fixtures 0x5acbe0, ...), of the quick simulation (0x6b66a0) and of the FIFA ranking weight
-/// (0x58cf70). Friendly (0x5c6710 over `[0xae2c74]`) or reserves (`[0x9cf684]`) with the given fixture and its
-/// competition being the friendly one (`[0xae2c74]`+4) or the reserves one: with either side a national side (0x53b900
+/// `add_fixture`, find_fixtures `find_fixtures`, ...), of the quick simulation (`exe::match_day_can_quick_simulate`) and of the FIFA ranking weight
+/// (`exe::fifa_rankings_record_match_result`). Friendly (`exe::friendly_is_friendly_competition` over `[0xae2c74]`) or reserves (`[0x9cf684]`) with the given fixture and its
+/// competition being the friendly one (`[0xae2c74]`+4) or the reserves one: with either side a national side (`exe::database_is_national_team`
 /// of the clubs +0x1c/+0x20), 1; different nations (+0x53) or outside the selection (+0x11c), 3; the nation in the
 /// table of the 35 key nations (0xb63d60, 72 bytes each, selected in +0x11c), byte +0x14 of the row; otherwise 0 with
 /// the home side a national side and 3 without. Otherwise, a nation's competition (+0x5d): byte +0x14 of its row, or 3.
-/// Without a nation: World Cup and qualifiers (0x669a10), 0; international tournament (0x669ae0), 1; otherwise the key
-/// nation index (0x669470). TapeCall on every fixture searched: no counter.
+/// Without a nation: World Cup and qualifiers (`key_nation_is_world_cup_comp`), 0; international tournament (`key_nation_is_international_comp`), 1; otherwise the key
+/// nation index (`key_nation_index_of_comp`). TapeCall on every fixture searched: no counter.
 /// Original: `comp_active_key_nation_of_fixture` (0x48dd70, comp.cpp, cdecl).
 ///
 /// [pt] { 0x48dd70 } (cdecl, comp.cpp): `comp_active_key_nation_of_fixture(competição, partida)`, a chave das listas de jogos
@@ -731,7 +731,7 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, sta
 /// Returns 1 when the match round (+0x30) ends in 0 or is 1000 or above, else 0.
 ///
 /// Ret 8: `Comp::counts_for_fixture_clash(match, other)` (virtual +0x60 of the competitions, used by the date clash
-/// check 0x5adba0): 1 if the units digit (0x4b0850) of the round (+0x30, signed) is 0 (a round of 1000 or more also
+/// check `collect_day_clashes`): 1 if the units digit (`exe::comp_util_get_round_variant`) of the round (+0x30, signed) is 0 (a round of 1000 or more also
 /// gives 0), otherwise 0. `other` is not read.
 /// Original: `Comp::counts_for_fixture_clash` (0x48e360, comp.cpp, thiscall, ret 8).
 ///

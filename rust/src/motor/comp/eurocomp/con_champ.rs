@@ -7,10 +7,10 @@ pub(crate) unsafe fn club_comp_record(id: usize) -> usize {
     read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b))
 }
 
-/// The four lists of 0x4c11a0 (Mexican, Central American, Caribbean and MLS clubs) with their counts.
+/// The four lists of `con_champ_select_qualified_clubs` (Mexican, Central American, Caribbean and MLS clubs) with their counts.
 ///
 /// Built in the order of the club database ([0xae23b4], 0x245 bytes, [0xae235c] clubs; it stops at the first one that
-/// is a national team, 0x53b900).
+/// is a national team, `exe::database_is_national_team`).
 ///
 /// [pt] As quatro listas da 0x4c11a0, na ordem do banco de clubes ([0xae23b4], 0x245 bytes, [0xae235c] clubes; para no
 /// primeiro que é seleção, 0x53b900): (mexicanos, centro-americanos, caribenhos, da MLS) com as contagens.
@@ -22,7 +22,7 @@ pub(crate) struct ConcacafClubLists {
     pub(crate) n: [u32; 4],
 }
 
-/// The four club lists of 0x4c11a0 in database order (Mexican, Central American, Caribbean, MLS) with their counts,
+/// The four club lists of `con_champ_select_qualified_clubs` in database order (Mexican, Central American, Caribbean, MLS) with their counts,
 /// stopping at the first national team.
 pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
     // simplification: the four lists start zeroed in the copy (in the original, stack leftover that is only read when a club is missing;
@@ -126,8 +126,8 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
 /// qualified clubs and the predicted positions; every day, the cup update (draws and matches).
 ///
 /// Ret 8; virtual +0x14 of the cup: `ConChamp::update_for_date(today, stage)`. With the team table empty (the club of
-/// team 0 = 0) and stage ≠ 0: the qualified clubs (0x4c11a0: mov ecx, this -> thiscall, ret 0; negative: the box at
-/// line 0x1ba and returns 0) and the predicted positions (virtual +0x5c). Then the cup update (0x51f890: push stage;
+/// team 0 = 0) and stage ≠ 0: the qualified clubs (`con_champ_select_qualified_clubs`: mov ecx, this -> thiscall, ret 0; negative: the box at
+/// line 0x1ba and returns 0) and the predicted positions (virtual +0x5c). Then the cup update (`cup_update_for_date`: push stage;
 /// push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `ConChamp::update_for_date` (0x4c1620, con_champ.cpp, thiscall, ret 8).
 ///
@@ -178,8 +178,8 @@ pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u
 /// and played on 28/8, semi-final on 1/9 and final on 4/9; category 8, tie-break 3; no per-round prize (−1).
 ///
 /// Ret 0x10; virtual +0x3c: `ConChamp::create_round_table(stage, &rounds, &extra, &out)`: at stage −1, out (if
-/// requested) = 0, rounds = 3, extra = 0; the table (0x944e46 of 0x138; out of memory: the box at line 0x97 and 0) with
-/// the 3 rounds and, in the first two, day 0 of the empty tie (0x521f10 with −1, −1, −1 and home 0; the original calls
+/// requested) = 0, rounds = 3, extra = 0; the table (`exe::crt_malloc` of 0x138; out of memory: the box at line 0x97 and 0) with
+/// the 3 rounds and, in the first two, day 0 of the empty tie (`cup_set_round_match_day` with −1, −1, −1 and home 0; the original calls
 /// it between the match and the fields, which do not overlap). Outside −1, 0.
 /// Original: `ConChamp::create_round_table` (0x4c0f00, con_champ.cpp, thiscall, ret 0x10).
 ///

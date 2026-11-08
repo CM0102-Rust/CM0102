@@ -952,7 +952,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
 // simplification: the day’s setup allocates the vectors and calls routines still original; the side and the sounds are
 // read-only and screen. No comparison of its own, validated by the career (Rust x original).
 
-/// Memory regions 0x6b5040 marks for a match day: day +0x29..+0x2e, each group +0x14, each competition +0xc..+0x13 and
+/// Memory regions `exe::match_day_refresh_human_interest_flags` marks for a match day: day +0x29..+0x2e, each group +0x14, each competition +0xc..+0x13 and
 /// each match +0x53.
 ///
 /// [pt] As regioes que a 0x6b5040 marca no dia `d`: +0x29 a +0x2e do dia, +0x14 de cada grupo, +0xc a
@@ -977,7 +977,7 @@ pub(crate) unsafe fn match_day_marked_regions(d: usize) -> Vec<(usize, usize)> {
 /// Marks on match day `d` what interests the human managers: clears the counters (+0x29 groups, +0x2a competitions,
 /// +0x2b any), then for each group and competition flags the competition (+0xc) when one of the 16 human managers'
 /// clubs (+0x39 or +0x24) plays in it, and flags each fixture (+0x53) involving a human club or watched by a human,
-/// counting the groups and competitions with such fixtures; other fixtures of human interest (0x6b61e0) only flag the
+/// counting the groups and competitions with such fixtures; other fixtures of human interest (`exe::match_day_is_fixture_of_human_interest`) only flag the
 /// competition. Any flag sets +0x2b. Returns 1.
 ///
 /// [pt] { 0x6b5040 } (thiscall, match_day.cpp): marca no dia de jogos `d` o que interessa ao humano.
@@ -1079,7 +1079,7 @@ pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
 /// linked club plays, for certain fixed competitions (world club competitions, Welsh Premier Cup with England/Wales
 /// flagged), when a human manages a club of the same nation, in some cases when the clubs' reputations (+0x80) add up
 /// to more than 12000, or when the competition's national team is flagged for a human; otherwise 1 if no scouted player
-/// is involved (0x7f9720). First marks the human managers' national teams once.
+/// is involved (`fixture_has_scouted_player`). First marks the human managers' national teams once.
 ///
 /// [pt] { 0x6b66a0 } (cdecl, match_day.cpp): 1 se a `partida` nao envolve o humano, pela 0x7f9720. Antes,
 /// uma vez ([0xa15704]), marca as selecoes dos humanos em 0xb67a58. Sem [0xdd7118]: 1. Devolve 0 se:
@@ -1175,20 +1175,20 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     final_()
 }
 
-/// 0x6b79a0 (cdecl, match_day.cpp; called twice at 0x6b61a9/0x6b61bd, once per club) with calls injected: the
+/// `exe::match_day_post_player_reaction_news` (cdecl, match_day.cpp; called twice at 0x6b61a9/0x6b61bd, once per club) with calls injected: the
 /// post-match news of `clube` after the match against `outro`.
 ///
-/// No club, other club or match: error box. No manager (+0xcf): nothing; without 0x600a50, with +0x80 below 4750 and
+/// No club, other club or match: error box. No manager (+0xcf): nothing; without `exe::human_manager_is_human_club`, with +0x80 below 4750 and
 /// random(100) != 0: nothing.
 ///
-/// With 0x6b7cf0, match +0x40 and +0x41 and the club not out (0x53b900): among the 50 of +0xd7, with a contract
-/// (0x4cf5a0) without +0x45, the player sheet's +0xb above 4250, +0x59 above 5, +0x57 above 15, +0x58 above 10, `n`
+/// With 0x6b7cf0, match +0x40 and +0x41 and the club not out (`exe::database_is_national_team`): among the 50 of +0xd7, with a contract
+/// (`exe::contract_manager_get_contract`) without +0x45, the player sheet's +0xb above 4250, +0x59 above 5, +0x57 above 15, +0x58 above 10, `n`
 /// above 2 and random(n) != 0: 0x5896d0(person, club, other, n) and end (the turnaround story for a senior player).
 ///
-/// Then, the 20 of the club's row in record `t` (side by club at t+0; rows of 0x49 from +0x1ce, person at -0x3e, only
+/// Then, the 20 of the club's row in record `t` (side by club at t+0; rows of 0x49 from `engine::SIDE_STRENGTH`, person at -0x3e, only
 /// those with +0 in the row): player sheet, youth product, age (+0x18) up to 20, contract without +0x45, the match of
 /// the club's competition (+0x14 = +0x57, with +0x40/+0x41), the club not out, +0x59 above 15, +0x57 above random(5) +
-/// 10, the player sheet's +0xb below 4250 and 0x7c3a40 zero: 0x589bc0 and, without 0x547d60, 0x547d90(person, club, 1),
+/// 10, the player sheet's +0xb below 4250 and 0x7c3a40 zero: 0x589bc0 and, without `exe::staff_favours_club`, `exe::staff_add_favoured_club`(person, club, 1),
 /// and end (a pleased youngster favouring the club).
 ///
 /// [pt] { 0x6b79a0 } (cdecl, match_day.cpp; chamada duas vezes em 0x6b61a9/0x6b61bd, uma por clube): o
@@ -1385,22 +1385,22 @@ pub(crate) unsafe fn pass_or_record_post_match(routine: usize, this: usize, a: [
     f()
 }
 
-/// Gate for STAFF_CONTRACT::clear_flags (0x8676d0) in post-match recording.
+/// Gate for STAFF_CONTRACT::clear_flags (`exe::staff_contract_clear_flags`) in post-match recording.
 pub(crate) unsafe extern "thiscall" fn gate_clear_contract_flags(c: usize, a: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[0]);
     pass_or_record_post_match(0x8676d0, c, [a, 0, 0, 0, 0], || f(c, a))
 }
-/// Gate for STAFF_CONTRACT::clear_grievances (0x8674e0) in post-match recording.
+/// Gate for STAFF_CONTRACT::clear_grievances (`exe::staff_contract_clear_grievances`) in post-match recording.
 pub(crate) unsafe extern "thiscall" fn gate_clear_grievances(c: usize, a: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[1]);
     pass_or_record_post_match(0x8674e0, c, [a, 0, 0, 0, 0], || f(c, a))
 }
-/// Gate for STAFF_CONTRACT::set_flags (0x867560) in post-match recording.
+/// Gate for STAFF_CONTRACT::set_flags (`set_flags`) in post-match recording.
 pub(crate) unsafe extern "thiscall" fn gate_set_contract_flags(c: usize, a: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(PORTAS_POS[2]);
     pass_or_record_post_match(0x867560, c, [a, 0, 0, 0, 0], || f(c, a))
 }
-/// Gate for STAFF_CONTRACT::apply_event_flags (0x867700) in post-match recording.
+/// Gate for STAFF_CONTRACT::apply_event_flags (`exe::staff_contract_apply_event_flags`) in post-match recording.
 pub(crate) unsafe extern "thiscall" fn gate_apply_event_flags(c: usize, a: u32, b: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[3]);
     pass_or_record_post_match(0x867700, c, [a, b, 0, 0, 0], || f(c, a, b))
@@ -1425,7 +1425,7 @@ pub(crate) unsafe extern "thiscall" fn gate_player_praise_story(c: usize, a: u32
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[7]);
     pass_or_record_post_match(0x744240, c, [a, b, d, e, 0], || f(c, a, b, d, e))
 }
-/// Gate for Media::create_player_media_story (0x72c1f0) in post-match recording.
+/// Gate for Media::create_player_media_story (`exe::media_create_player_media_story`) in post-match recording.
 pub(crate) unsafe extern "thiscall" fn gate_player_media_story(c: usize, a: u32, b: u32, d: u32, e: u32, g: u32) -> u64 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[8]);
     pass_or_record_post_match(0x72c1f0, c, [a, b, d, e, g], || f(c, a, b, d, e, g))
@@ -1435,7 +1435,7 @@ pub(crate) unsafe extern "C" fn gate_obscene_gesture_ban(a: u32, b: u32, d: u32)
     let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[9]);
     pass_or_record_post_match(0x7daf50, 0, [a, b, d, 0, 0], || f(a, b, d))
 }
-/// Gate for staff_add_disliked_staff (0x547af0) in post-match recording.
+/// Gate for staff_add_disliked_staff (`exe::staff_add_disliked_staff`) in post-match recording.
 pub(crate) unsafe extern "C" fn gate_add_disliked_staff(a: u32, b: u32, d: u32) -> u64 {
     let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[10]);
     pass_or_record_post_match(0x547af0, 0, [a, b, d, 0, 0], || f(a, b, d))
@@ -1450,7 +1450,7 @@ pub(crate) unsafe extern "C" fn gate_news_pleased_with_chance(a: u32, b: u32) ->
     let f: unsafe extern "C" fn(u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[12]);
     pass_or_record_post_match(0x589bc0, 0, [a, b, 0, 0, 0], || f(a, b))
 }
-/// Gate for staff_add_favoured_club (0x547d90) in post-match recording.
+/// Gate for staff_add_favoured_club (`exe::staff_add_favoured_club`) in post-match recording.
 pub(crate) unsafe extern "C" fn gate_add_favoured_club(a: u32, b: u32, d: u32) -> u64 {
     let f: unsafe extern "C" fn(u32, u32, u32) -> u64 = core::mem::transmute(PORTAS_POS[13]);
     pass_or_record_post_match(0x547d90, 0, [a, b, d, 0, 0], || f(a, b, d))

@@ -25,12 +25,12 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 /// Decides whether the weather postpones a match: only the home club's league matches at an uncovered stadium, outside
 /// the end of the key nation's season; by the evening slot and by the weather.
 ///
-/// `Weather::check_postponement(match)`, from the match day (0x6b3c10) and from the match preparation (0x6b7f20).
+/// `Weather::check_postponement(match)`, from the match day (`set_up_the_day`) and from the match preparation (`prepare_match`).
 /// Without a stadium (+0x18) with a city (+0x38) and places (+0x3c), without a competition (+0x14), with the home club
 /// (+0x1c) outside a league (+0x57) or the match outside its league, or a covered stadium (+0x4c): 0. In the home
-/// club's key nation (0x669360, table 0xb63d60 of 0x48 bytes), near the end of the year's season (+0x39/+0x3b): 0. In
-/// the evening slot (+0x3f = 2), by the home club's finances (0x5a0590, band 0x5986b0): random(1000/2500/5000) zero
-/// returns 0x12. Then the match weather (0x923010, written into the argument's slot as in the original): rain 5 at 1 to
+/// club's key nation (`key_nation_index_of_club`, table 0xb63d60 of 0x48 bytes), near the end of the year's season (+0x39/+0x3b): 0. In
+/// the evening slot (+0x3f = 2), by the home club's finances (`get_club_finance`, band `get_wealth_band`): random(1000/2500/5000) zero
+/// returns 0x12. Then the match weather (`get_match_weather`, written into the argument's slot as in the original): rain 5 at 1 to
 /// 13 degrees, an uncovered stadium (+0x4d) of up to 20000 places: a random draw by places and home club (+0x64), zero
 /// = 9 (postponement); rain 8 (up to 15000 places) and 9 (ice; by wind 4 and by 10000 places): a chain of random draws
 /// that returns 0, 5 or 6.
@@ -176,11 +176,11 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
 
 // simplification: rolls: original only; the copy takes the branches.
 
-/// Returns the finance record (0x167 bytes) by the club id; for a B club with an A partner, the A one (0x540a50); null
+/// Returns the finance record (0x167 bytes) by the club id; for a B club with an A partner, the A one (`exe::club_get_linked_b_team`); null
 /// club, error box.
 ///
 /// `FinanceTable::get_club_finance(club)` (finance.cpp): the finance record (0x167 bytes at [this]) of the club by id
-/// (+0); a B club with an A partner (0x540a50 with the returned byte 0): the A one's. Null club: the "Error" box of
+/// (+0); a B club with an A partner (`exe::club_get_linked_b_team` with the returned byte 0): the A one's. Null club: the "Error" box of
 /// finance.CPP (as in the original).
 /// Original: `FinanceTable::get_club_finance` (0x5a0590, finance.cpp, thiscall, ret 4).
 ///
@@ -216,15 +216,15 @@ pub(crate) unsafe fn weather_region(this: usize, city: usize) -> Option<usize> {
 /// Returns the match weather: wind (0..4), rain (0, 1, 2, 3, 5), temperature and its band, from the city, its region
 /// and the period by the day; below zero, the rain becomes snow/ice (6..9).
 ///
-/// `Weather::get_match_weather(out, match)`, in the match preparation (0x6b7f20, at +0x4756 of the engine: the wind
-/// weighs on long shots), in the postponement (0x923630) and in the screens. Without regions ([this], [this + 8]):
+/// `Weather::get_match_weather(out, match)`, in the match preparation (`prepare_match`, at +0x4756 of the engine: the wind
+/// weighs on long shots), in the postponement (`check_postponement`) and in the screens. Without regions ([this], [this + 8]):
 /// nothing. The city: the stadium's (+0x18 → +0x38), otherwise that of the home club's stadium (+0x1c → +0x69 → +0x38),
 /// otherwise the capital of its nation (+0x53 → +0x7a). With a city: out[3] = the city's wind (table [this + 4], 4
 /// bytes per city, byte 3) and its region (otherwise that of the nation's capital +0x1f, otherwise the first). The
 /// period by the match day (+0x2a; without a match, the game day) against the region's limits +0x1e/+0x31/+0x44/+0x57
 /// (3, 0, 1, 2, 3); in the period (19 bytes from +0x20): out[0] = wind by the city's reading 2 (+0x20..+0x24: 0..4),
 /// out[1] = rain by reading 1 (+0x25..+0x29: 0, 1, 2, 3, 5), and the temperature band by reading 2 (+0x2a..+0x30: 1, 0,
-/// 2..6, otherwise 3). Without a city: out[3], [0] and [1] = 0 and band 2. out[2] = the temperature (0x9232c0); below
+/// 2..6, otherwise 3). Without a city: out[3], [0] and [1] = 0 and band 2. out[2] = the temperature (`get_temperature`); below
 /// zero, the rain becomes snow/ice: 1 → 6, 2 and 3 → 6/7/8 and 5 → 8/7/9 by the city's wind 0/1/other.
 /// Original: `Weather::get_match_weather` (0x923010, weather.cpp, thiscall, ret 8).
 ///
@@ -424,7 +424,7 @@ pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, 
 /// Returns the pitch condition from the rain, the temperature, the stadium flag and places and a fixture remainder
 /// modulo 20: 0, 1, 2, 4, 8, 0x10, 0x20 or 0x40; covered stadium, 0.
 ///
-/// `Weather::get_pitch_condition(weather, match)`, in the match preparation (0x6b7f20, at +1 of the engine: pitch 2 and
+/// `Weather::get_pitch_condition(weather, match)`, in the match preparation (`prepare_match`, at +1 of the engine: pitch 2 and
 /// 0x20 weigh on shots). Without a match, without a stadium (+0x18) or a covered stadium (+0x4c): 0. h = (day +0x2a +
 /// +0x10 + +0xc + +0) % 20. By the rain weather[1] and the temperature weather[2] (1 to 28 degrees), with the stadium
 /// flag +0x4d and the places +0x3c: rain 5: 2/1 or 8/1; rain 1: 2 or 0 by h < 6/4; rain 2 and 3: by h < 4/1/3; rain 4:
@@ -505,7 +505,7 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
     0
 }
 
-/// Next line of the file into buf (utils read_config_line 0x90cba0); 0 at end.
+/// Next line of the file into buf (utils read_config_line `exe::utils_read_config_line`); 0 at end.
 ///
 /// [pt] A linha seguinte do arquivo (0x90cba0: FILE*, buffer), 0 no fim.
 pub(crate) unsafe fn read_config_line(f: usize, buf: *mut u8) -> i32 {
@@ -558,11 +558,11 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
 
 // simplification: rolls 3 or 4 times per city: original only; the copy takes the branches.
 
-/// Reads one weather.cfg line with the region id and name ("%ld %s") and its four periods (0x922d20) at +0x1e, +0x31,
+/// Reads one weather.cfg line with the region id and name ("%ld %s") and its four periods (`read_region_period`) at +0x1e, +0x31,
 /// +0x44 and +0x57.
 ///
-/// `Weather::read_region(f, region)`: one line of weather.cfg (0x90cba0, buffer of 2000) with "%ld %s" (0xad4e24) into
-/// the id (+0) and the name (+4) of the region (0x6e bytes); then the four periods (0x922d20) at +0x1e, +0x31, +0x44
+/// `Weather::read_region(f, region)`: one line of weather.cfg (`exe::utils_read_config_line`, buffer of 2000) with "%ld %s" (0xad4e24) into
+/// the id (+0) and the name (+4) of the region (0x6e bytes); then the four periods (`read_region_period`) at +0x1e, +0x31, +0x44
 /// and +0x57. Returns 1 if it read everything (only al, as in the original).
 /// Original: `Weather::read_region` (0x922c40, weather.cpp, thiscall, ret 8).
 ///
@@ -593,7 +593,7 @@ pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, region
 /// the 17 bytes; a null file gives the "Error" box.
 ///
 /// `Weather::read_region_period(f, period)`: a null file gives the "Error" box (weather.cpp, 0xea) and 0. One line
-/// (0x90cba0) with the format at 0xad4e2c (the name and 18 integers: the day, five W, five P and seven H); with all 19
+/// (`exe::utils_read_config_line`) with the format at 0xad4e2c (the name and 18 integers: the day, five W, five P and seven H); with all 19
 /// read, the period (0x13 bytes) receives the day (word at +0) and the next 17 bytes (+2..+0x12). Returns 1 if read
 /// (only al).
 /// Original: `Weather::read_region_period` (0x922d20, weather.cpp, thiscall, ret 8).
@@ -632,14 +632,14 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
 
 // simplification: reads from the file: original only; the copy takes the branch.
 
-/// Reads CM3_DATA\weather.cfg: the region count, the regions (0x922c40) and the city table, with the three readings and
+/// Reads CM3_DATA\weather.cfg: the region count, the regions (`read_region`) and the city table, with the three readings and
 /// the wind drawn at random; a file or memory error stops the game.
 ///
-/// `Weather::load_config()`, on game creation (0x9226c0, Setup.cpp). Opens CM3_DATA\weather.cfg (0x90bde0, fopen
-/// 0x945b00 "r"); the first line (0x90cba0, buffer of 1000) gives how many regions ("%ld" into +8); the regions (malloc
+/// `Weather::load_config()`, on game creation (0x9226c0, Setup.cpp). Opens CM3_DATA\weather.cfg (`exe::utils_build_file_path`, fopen
+/// `exe::crt_fopen` "r"); the first line (`exe::utils_read_config_line`, buffer of 1000) gives how many regions ("%ld" into +8); the regions (malloc
 /// of 0x6e bytes each at +0) and the city table (malloc of 4 bytes per city [0xae2354] at +4); each region through
-/// 0x922c40 (the first that fails stops the game; the others only end the reading); each city draws the three readings
-/// ((random(100) + random(100)) × 0.5) and the wind (random(3)). Closes the file (0x945a09). The errors (file, line,
+/// `read_region` (the first that fails stops the game; the others only end the reading); each city draws the three readings
+/// ((random(100) + random(100)) × 0.5) and the wind (random(3)). Closes the file (`exe::crt_fclose`). The errors (file, line,
 /// count, memory) give the "Error" box of weather.cpp and the game stops.
 /// Original: `Weather::load_config` (0x922810, weather.cpp, thiscall).
 ///

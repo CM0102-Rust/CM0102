@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
 
 /// After a match (attribute masking / fog of war): for each side whose club is controlled by a human manager that has a
 /// knowledge map, every valid player among the 20 lineup slots of the match data (substitutes only if used, +0x32 !=
-/// 0xff) becomes known to that manager (0x5b09d0).
+/// 0xff) becomes known to that manager (`exe::fog_of_war_map_raise_knowledge`).
 ///
 /// [pt] { 0x5afe00 } (stdcall, fog_of_war.cpp): depois da partida, para cada lado (clube em +0x20 e
 /// +0x1c) controlado por humano (0x600a50) com tecnico e quadro de conhecimento (0xae2a60, pelo

@@ -42,7 +42,7 @@ pub(crate) unsafe fn create_first_group_table(this: usize, n: i16, file: usize, 
 
 /// Runs only the original routine and checks the plan made beforehand.
 ///
-/// Simplification: 0x687430 allocates the form and the head-to-head of each row and the news item goes to the human
+/// Simplification: `init_table_row` allocates the form and the head-to-head of each row and the news item goes to the human
 /// players, so it cannot run twice.
 ///
 /// The check: returns 1, +0x3e = n, the table at +0xb1 holds the first n entrants in its rows (of 0x3b bytes), in
@@ -143,16 +143,16 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage_63d950(this: usize)
 /// checked instruction by instruction: only the source file and the box lines change.
 ///
 /// The round table via the cup's method +0x3c (push 0; push &id; push &rounds; push g; mov ecx -> thiscall, ret 0x10);
-/// a vector of +0x3e pointers (0x944e46, cdecl; out of memory, the box of `linhas[0]` and 0) with the first +0x3e
+/// a vector of +0x3e pointers (`exe::crt_malloc`, cdecl; out of memory, the box of `linhas[0]` and 0) with the first +0x3e
 /// entrants still in the list (+0xee, vector of pointers: the non-null ones, in order, each zeroed as it leaves).
 ///
-/// The stage (0x944cf1(0xee), cdecl; the League_Stage constructor 0x68b100, thiscall, ret 0x58, 22 arguments: the cup,
+/// The stage (`exe::crt_operator_new`(0xee), cdecl; the League_Stage constructor 0x68b100, thiscall, ret 0x58, 22 arguments: the cup,
 /// the teams (word +0x3e), the vector, 1, +4, the round table, the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe,
 /// the year +0x40 (word), g, the id (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; the original pushes the words and
 /// bytes with garbage in the high bytes, which the constructor does not read: the copy passes clean values) is stored
-/// in [+0xc][g]; the vector and the round table are freed (0x9452ca).
+/// in [+0xc][g]; the vector and the round table are freed (`exe::crt_free`).
 ///
-/// No stage: the box of `linhas[1]` and 0. With it: the group draw news (0x684230 on the stage), +0x30 = g and 1.
+/// No stage: the box of `linhas[1]` and 0. With it: the group draw news (`send_group_draw_news` on the stage), +0x30 = g and 1.
 ///
 /// [pt] A fase do grupo `g` de uma copa italiana (`create_group_stage(g)`, quadro SEH só para o new: sem destrutor no caminho
 /// normal; o molde da Copa da Itália e da Série C, conferido instrução a instrução: só mudam o fonte e as linhas das
@@ -342,12 +342,12 @@ pub(crate) unsafe fn take_direct_entrants(this: usize, teams: usize, mut k: usiz
 /// round.
 ///
 /// The rounds come from the cup's method +0x3c (push 0; push &extra; push &rodadas; push fase; mov ecx -> thiscall, ret
-/// 0x10). The stage (0x944cf1(0xb2), cdecl; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the cup, n, the vector,
+/// 0x10). The stage (`exe::crt_operator_new`(0xb2), cdecl; Cup_Stage::Cup_Stage `construct_cup_stage`, thiscall, ret 0x3c: the cup, n, the vector,
 /// the rounds (word), +4, the round table, the year +0x40 (word), the stage, 1, the extra (word), 0x14, 0, 0, 0 and
 /// `sementes`; the original routine pushes the words with garbage in the high 16 bits, which the constructor does not
-/// read) goes into [+0xc][fase]; the vector and the round table are freed (0x9452ca, cdecl; in this order).
+/// read) goes into [+0xc][fase]; the vector and the round table are freed (`exe::crt_free`, cdecl; in this order).
 ///
-/// Without a stage, the error box for `linha`; with one, the draw of the first round (Cup::draw_round 0x51c410: push 0;
+/// Without a stage, the error box for `linha`; with one, the draw of the first round (Cup::draw_round `draw_round`: push 0;
 /// mov ecx, stage -> thiscall, ret 4).
 ///
 /// [pt] O mata-mata (Cup_Stage) com os `n` times de `times`: as rodadas pelo método +0x3c da copa (push 0; push &extra; push
@@ -523,8 +523,8 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
 
 /// Writes one group round (a 0x41-byte record, like the league rounds).
 ///
-/// The date goes through 0x68a160 (day, month with 0 = January, weekday, code), with no years to add and value 0; and
-/// match 0 is left empty (0x68a1c0 with −1, −1, −1 and value 0).
+/// The date goes through `league_round_set_date` (day, month with 0 = January, weekday, code), with no years to add and value 0; and
+/// match 0 is left empty (`store_round_match` with −1, −1, −1 and value 0).
 ///
 /// [pt] Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
@@ -534,7 +534,7 @@ pub(crate) type ItaCupGroupRound = (u32, u32, u32, u32);
 /// 0x10; the stage is read as a signed byte): returns the round table or 0.
 ///
 /// Below `limite` (−1 included), the groups: é_liga (if requested) = 1, rodadas = the number of group rounds, extra =
-/// stage + `id` (16 bits); a table of 0x41 bytes per round (0x944e46; out of memory, the error box `linha_g` and
+/// stage + `id` (16 bits); a table of 0x41 bytes per round (`exe::crt_malloc`; out of memory, the error box `linha_g` and
 /// returns 0) with the dates from `grupos`.
 ///
 /// At stage `limite`, the knockout: é_liga = 0, rodadas = the size of `mata`, extra = 0; a table of 0x68 bytes per
@@ -613,7 +613,7 @@ pub(crate) unsafe fn written_group_schedule_bytes(t: usize, n: i16) -> Vec<u8> {
 ///
 /// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
 /// both from the same [0xb67a34]; the outputs and the bytes written to the two tables (group or knockout tables,
-/// according to the copy's é_liga) must be equal; the copy's table is freed (0x9452ca).
+/// according to the copy's é_liga) must be equal; the copy's table is freed (`exe::crt_free`).
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas (de grupos ou de mata-mata, pelo é_liga
@@ -755,7 +755,7 @@ pub(crate) unsafe fn push_entrant(this: usize, n: &mut i32, c: usize) -> bool {
     *n == read_usize(this + 0xf2) as i32
 }
 
-/// `ItaCup::select_entrants()` (0x63faf0, thiscall, ret 0, ita_cup.cpp): the 48 Coppa Italia entrants (+0xf2 = 0x30;
+/// `ItaCup::select_entrants()` (`ita_cup_select_entrants`, thiscall, ret 0, ita_cup.cpp): the 48 Coppa Italia entrants (+0xf2 = 0x30;
 /// the list of 0xc0 bytes at +0xee; out of memory, the box for line 0x2e1 and 0). Returns 1.
 ///
 /// The 32 for the groups go into a local vector: the Italian clubs of the season (single pass) that did not come from
@@ -764,7 +764,7 @@ pub(crate) unsafe fn push_entrant(this: usize, n: &mut i32, c: usize) -> bool {
 /// 5th or 6th; if short, those of C1 outside Serie B by position (6th, 7th...).
 ///
 /// The vector goes to qsort (0x640590) and is split into 4 pots of 8: 8 passes, each takes one randomly drawn club from
-/// each pot (0x90cfc0(8), moving to the next in the pot if it was already taken).
+/// each pot (`exe::utils_random`(8), moving to the next in the pot if it was already taken).
 ///
 /// Then the top 3 of the previous Serie B and those of the previous Serie A from 10th to 15th (until reaching 48) and,
 /// without checking first, the top 9 of the previous Serie A.
@@ -953,7 +953,7 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
     a
 }
 
-/// `ItaCCup::select_entrants()` (0x63dfe0, thiscall, ret 0, ita_c_cup.cpp): the 90 entrants of the Serie C Cup from C1
+/// `ItaCCup::select_entrants()` (`ita_c_cup_select_entrants`, thiscall, ret 0, ita_c_cup.cpp): the 90 entrants of the Serie C Cup from C1
 /// and C2, reordered, shuffled and sorted by longitude into groups.
 ///
 /// Sets +0xf2 = 0x5a and allocates the list of 0x168 bytes at +0xee (when out of memory, the error box for line 0x322
@@ -962,7 +962,7 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
 /// Of the first 80, those relegated from Serie B ([0x9cf574]) and those from C1 that finished 4th, 5th or 6th go, one
 /// by one, to slots 80, 81... (swapped with whatever was there).
 ///
-/// The first 80 are shuffled (0x4afb40), sorted by longitude (qsort with 0x53fe50) and each of their 8 groups of ten is
+/// The first 80 are shuffled (`comp_util_shuffle_pointer_array`), sorted by longitude (qsort with `database_compare_clubs_by_longitude`) and each of their 8 groups of ten is
 /// shuffled (the regional groups [inference]); the last 10 slots stay as they are. Returns 1.
 ///
 /// [pt] { 0x63dfe0 } (thiscall, ret 0, ita_c_cup.cpp): `ItaCCup::select_entrants()`: os 90 inscritos da Copa da Série C (+0xf2
@@ -1024,7 +1024,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
     (1, m)
 }
 
-/// `ItaSuper::init_team_list()` (0x65fa60, thiscall, ret 0, ita_super.cpp): the two Supercoppa teams.
+/// `ItaSuper::init_team_list()` (`ita_super_init_team_list`, thiscall, ret 0, ita_super.cpp): the two Supercoppa teams.
 ///
 /// A two-entry list (+0x3e = 2, 0xc bytes at +0xa7; out of memory, the error box for line 0xc2 and −1). The Serie A
 /// champion ([0x9cf570]; if missing, error box 0xcb and 0) and the Coppa Italia winner ([0x9cf71c]; if missing, 0xd4

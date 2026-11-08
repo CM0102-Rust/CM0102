@@ -81,7 +81,7 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, entrant
 /// and the tree (no predicted positions).
 ///
 /// `UsaMlsAllStars::start_new_season()` (virtual +0x08 of the All-Star Game): the turn
-/// (`usa_mls_all_stars_cup_start_new_season`) with the two teams from UsaMlsAllStars::set_up_teams (0x90a540) and the
+/// (`usa_mls_all_stars_cup_start_new_season`) with the two teams from UsaMlsAllStars::set_up_teams (`set_up_teams`) and the
 /// usa_mls_all_stars.cpp error boxes at lines 0x133, 0x13a and 0x141, without the predicted positions.
 /// Original: `UsaMlsAllStars::start_new_season` (0x90a760, usa_mls_all_stars.cpp, thiscall, ret 0).
 ///
@@ -99,16 +99,16 @@ pub(crate) unsafe fn usa_mls_all_stars_club_by_index(i: usize) -> usize {
     read_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(club::SIZE))
 }
 
-/// `UsaMlsAllStars::set_up_teams()` (0x90a540, thiscall, ret 0, usa_mls_all_stars.cpp): the two teams of the All-Star
+/// `UsaMlsAllStars::set_up_teams()` (`set_up_teams`, thiscall, ret 0, usa_mls_all_stars.cpp): the two teams of the All-Star
 /// Game; returns 1.
 ///
-/// +0x3e = 2; the list (0x944e46 of 0xc, cdecl; out of memory, the error box for line 0xc6 and −1) with the two
+/// +0x3e = 2; the list (`exe::crt_malloc` of 0xc, cdecl; out of memory, the error box for line 0xc6 and −1) with the two
 /// All-Star clubs ([0x9d00a4] and [0x9d00a8], indices into the club table): in an odd year (+0x40, signed) the one in
 /// [0x9d00a4] is first (home side) and the stadium conference is 0x413; in an even year the one in [0x9d00a8] is first
 /// and the conference is 0x414.
 ///
-/// A random draw from 0 to 5 (0x90cfc0(6), cdecl) picks the k-th MLS club ([0x9cf590] as the club's division, +0x57) of
-/// that conference (usa_mls_get_club_division 0x909ec0, push club; add esp -> cdecl, signed word), in table order: the
+/// A random draw from 0 to 5 (`exe::utils_random`(6), cdecl) picks the k-th MLS club ([0x9cf590] as the club's division, +0x57) of
+/// that conference (usa_mls_get_club_division `exe::usa_mls_get_club_division`, push club; add esp -> cdecl, signed word), in table order: the
 /// first All-Star team takes its stadium (+0x69) and +0x6d = 0 (if there is no k-th club, nothing changes).
 ///
 /// Both get the nation [0xae23a8] + 0x122 × [0x9cf4f8] (+0x53, the USA [inference]) and the four list bytes (+4, +5,
@@ -206,9 +206,9 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
 /// [inference]); category 8; no prize.
 ///
 /// `UsaMlsAllStars::create_round_table(stage, &rounds, &extra, &out)` (virtual +0x3c of the All-Star Game): outside
-/// stage −1 (the byte), 0. On −1: out (if requested) = 0, rounds = 1, extra = 0; the table (0x944e46 of 0x68; out of
+/// stage −1 (the byte), 0. On −1: out (if requested) = 0, rounds = 1, extra = 0; the table (`exe::crt_malloc` of 0x68; out of
 /// memory, the error box at line 0x9a and 0) with the single round: the draw on day 15 of month 5 (June) moved to
-/// weekday 5, the match on day 2 of month 7 (August) moved to weekday 6, leg 1, venue 0 (0x521e60 and 0x521eb0, cdecl,
+/// weekday 5, the match on day 2 of month 7 (August) moved to weekday 6, leg 1, venue 0 (`cup_set_round_draw_date` and `cup_set_round_match_date`, cdecl,
 /// with the year +0x40); name 0, +0xd = 0x20, category 8, 2 teams, 1 match, 2 new, 1 match per tie, no prize.
 /// Original: `UsaMlsAllStars::create_round_table` (0x90a400, usa_mls_all_stars.cpp, thiscall, ret 0x10).
 ///

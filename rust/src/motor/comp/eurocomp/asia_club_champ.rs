@@ -2,7 +2,7 @@ use super::*;
 
 /// AsiaClubChamp::advance_stage: moves the Asian Club Championship to its next stage (+0x30); at the last stage (+0x30
 /// >= +0x2c - 1) it shows the error box instead. Reaching stage 1 (after the two zonal knockouts) it creates the two
-/// groups (0x40c110); reaching stage 3 (after the groups) it creates the semi-finals (0x40c3d0).
+/// groups (`exe::asiaclubchamp_create_group_stages`); reaching stage 3 (after the groups) it creates the semi-finals (`exe::asiaclubchamp_create_semi_final_stage`).
 ///
 /// [pt] { 0x40c070 } (thiscall, ret 0, asia_club_champ.cpp; a virtual +0x28): `AsiaClubChamp::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x355; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
@@ -63,11 +63,11 @@ pub(crate) unsafe fn group_stage_qualifiers(this: usize) -> [usize; 8] {
 /// Creates one group (a League_Stage with 4 teams) in [+0xc][`g`], frees the round table and returns the stage.
 ///
 /// The round table comes from virtual +0x3c (push 0; push &id; push &rodadas; push `g`; mov ecx, this -> thiscall, ret
-/// 0x10). The stage (0x944cf1(0xee) push; add esp, 4 -> cdecl; constructor League_Stage 0x68b100, thiscall, ret 0x58,
+/// 0x10). The stage (`exe::crt_operator_new`(0xee) push; add esp, 4 -> cdecl; constructor League_Stage 0x68b100, thiscall, ret 0x58,
 /// 22 arguments: the cup, 4, the 4 teams, 1, +4, the round table, the rounds (word), 3, 1, 8, &{1, 2, 0, 0}, &{2, 0, 0,
 /// 0}, the year +0x40 (word), `g`, the id (word), +0x51, `a17`, 0, 0x28, −1, 0, 2; the original routine pushes the
 /// words and bytes with garbage in the high bytes, which the constructor does not read) goes into [+0xc][`g`]; the
-/// table is freed (0x9452ca).
+/// table is freed (`exe::crt_free`).
 ///
 /// Returns the stage.
 ///
@@ -160,20 +160,20 @@ pub(crate) unsafe fn asia_semi_finalists(this: usize) -> [usize; 4] {
     [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1st of 1 × 2nd of 2, 1st of 2 × 2nd of 1
 }
 
-/// `AsiaClubChamp::create_semi_final_stage()` (0x40c3d0, thiscall, ret 0, asia_club_champ.cpp; SEH frame only for the
+/// `AsiaClubChamp::create_semi_final_stage()` (`exe::asiaclubchamp_create_semi_final_stage`, thiscall, ret 0, asia_club_champ.cpp; SEH frame only for the
 /// stage's new: no destructor on the normal path): builds the 4-team semi-final stage of the Asian Club Championship.
 ///
-/// The list of 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; out of memory, the box for line 0x3d1 and return), with
+/// The list of 4 (`exe::crt_malloc`(0x10): push; add esp, 4 -> cdecl; out of memory, the box for line 0x3d1 and return), with
 /// the pairings of asia_semi_finalists; the round table via the virtual +0x3c (push 0; push &id; push &rounds; push 3;
 /// mov ecx, this -> thiscall, ret 0x10).
 ///
-/// The stage (0x944cf1(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the cup, 4,
+/// The stage (`exe::crt_operator_new`(0xb2) push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage `construct_cup_stage`, thiscall, ret 0x3c: the cup, 4,
 /// the list, the rounds, +4, the table, the year +0x40, 3, 2, the id, 0x14, 0, 0, 0 and no seed; the original pushes
 /// the rounds, the id and the year with garbage in the high 16 bits, which the constructor does not read) goes in
-/// [+0xc][3] (stage slot 3); the table is freed (0x9452ca).
+/// [+0xc][3] (stage slot 3); the table is freed (`exe::crt_free`).
 ///
 /// No stage: the box for line 0x3e6 and return (the list is not freed, as in the original). With it: the draw of round
-/// 0 (0x51c410 Cup::draw_round: push 0; mov ecx, stage -> thiscall, ret 4) and the list freed.
+/// 0 (`draw_round` Cup::draw_round: push 0; mov ecx, stage -> thiscall, ret 4) and the list freed.
 ///
 /// [pt] { 0x40c3d0 } (thiscall, ret 0, asia_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
 /// `AsiaClubChamp::create_semi_final_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a
@@ -222,10 +222,10 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(t
 
 /// One operation of building the round table, in the original routine's order.
 ///
-/// `D` the date of a group round (0x68a160: round, day, month with 0 = January, years to add, weekday, code, value;
-/// records of 0x41 bytes), `L` a match of the group round (0x68a1c0: round, match, a, b, c, value), `S` the draw of a
-/// cup round (0x521e60: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
-/// (0x521eb0: round, day, month, years, weekday, time, home side), `E` a day of the tie (0x521f10: round, slot,
+/// `D` the date of a group round (`league_round_set_date`: round, day, month with 0 = January, years to add, weekday, code, value;
+/// records of 0x41 bytes), `L` a match of the group round (`store_round_match`: round, match, a, b, c, value), `S` the draw of a
+/// cup round (`cup_set_round_draw_date`: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
+/// (`cup_set_round_match_date`: round, day, month, years, weekday, time, home side), `E` a day of the tie (`cup_set_round_match_day`: round, slot,
 /// weekday, time, code, home side) and `B`/`W`/`X` writing a byte/word/dword at the given offset of the table.
 ///
 /// [pt] Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
@@ -271,9 +271,9 @@ pub(crate) struct ScheduleStage {
 /// Runs stage description `f` (or returns 0 if there is none): sets the outputs, allocates the round table and applies
 /// its operations; returns the table or 0.
 ///
-/// The table is allocated with 0x944e46 (out of memory, the error box `linha` of source `arquivo` and 0) and the
-/// operations are applied in order. The cup's year (+0x40) is passed as a clean 16-bit value to 0x68a160 (the original
-/// pushes the register with garbage in the high 16 bits; 0x68a160 only uses the word) and as signed to the cup
+/// The table is allocated with `exe::crt_malloc` (out of memory, the error box `linha` of source `arquivo` and 0) and the
+/// operations are applied in order. The cup's year (+0x40) is passed as a clean 16-bit value to `league_round_set_date` (the original
+/// pushes the register with garbage in the high 16 bits; `league_round_set_date` only uses the word) and as signed to the cup
 /// routines.
 ///
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
@@ -353,7 +353,7 @@ pub(crate) unsafe fn written_round_table_bytes(ops: &[AsiaClubChampScheduleOp], 
 ///
 /// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
 /// both from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal; the copy's table
-/// is freed (0x9452ca).
+/// is freed (`exe::crt_free`).
 ///
 /// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
 ///
@@ -404,7 +404,7 @@ pub(crate) const ASIAN_CLUB_CHAMPIONSHIP_GROUP_OPS: [AsiaClubChampScheduleOp; 12
     Cqp11L(1, 1, 4, 1, 3, 0x10), Cqp11L(1, 2, -1, -1, -1, 0), Cqp11D(2, 0x19, 2, 1, 6, 1, 1),
     Cqp11L(2, 0, 6, 2, 3, 0x10), Cqp11L(2, 1, 6, 1, 3, 0x10), Cqp11L(2, 2, -1, -1, -1, 0),
 ];
-/// The Asian Champions League final stage in May of the following year: semi-final (with ties 0x521f10), third place
+/// The Asian Champions League final stage in May of the following year: semi-final (with ties `cup_set_round_match_day`), third place
 /// and final.
 ///
 /// [pt] A Liga dos Campeões asiática, fase final em maio do ano seguinte: semifinal (com os confrontos 0x521f10), terceiro lugar e final.

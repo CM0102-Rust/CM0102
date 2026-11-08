@@ -42,7 +42,7 @@ pub(crate) unsafe extern "C" fn compare_match_stats_compare_events(a: *const u8,
 /// Comparer for `montagem_da_partida`, the match screen builds.
 ///
 /// They are compared through the display list: the screen regions, the parameter block without 0x14 (the time that the
-/// redraw of the latest scores 0x724520 writes in tab 8), the marks 0xb6b7a8/ac/b0, the text 0xde1f64 and the network
+/// redraw of the latest scores `refresh_latest_scores_rows` writes in tab 8), the marks 0xb6b7a8/ac/b0, the text 0xde1f64 and the network
 /// buffer position ([0xae290c]), plus `extra`.
 ///
 /// [pt] As montagens da tela da partida são comparadas pela lista de exibição: as regiões da tela, o bloco
@@ -72,7 +72,7 @@ pub(crate) unsafe fn compare_montagem_da_partida(name: &str, extra: &[(usize, us
 /// The match screen is compared by its display list, plus what it writes outside the screen: the human's player sheet
 /// (+0 and +0xea), his mark among the spectators and the count, the speed focus in the human's `Display` (+0x12f4fe)
 /// and the commentator volume (+0x2db0). Only the original runs when there is something that cannot run twice: the
-/// photo of parameter 0x1d to be freed, the highlight of parameter 7 to be commentated (sound, 0x6d7b00), or tabs 1
+/// photo of parameter 0x1d to be freed, the highlight of parameter 7 to be commentated (sound, `commentate_on_panel`), or tabs 1
 /// (the summary also commentates), 3 (the zones allocate the photo) and 10 (the live table).
 ///
 /// [pt] A tela da partida é comparada pela lista de exibição, com o que ela grava fora da tela: a ficha do
@@ -328,7 +328,7 @@ pub(crate) unsafe fn compare_pela_lista_com(name: &str, extra: &[(usize, usize)]
 /// Comparer for `draw_action_zones_panel`.
 ///
 /// The action zones are compared for real, including `*topo` (+0x19), the fixed colour 0xb6b7a4, the guard 0xb6b7b4 and
-/// the match photo that the values routine (0x720320) compares and rewrites (parameter 0x1d, 0xd7a bytes). Without the
+/// the match photo that the values routine (`refresh_action_zones_values`) compares and rewrites (parameter 0x1d, 0xd7a bytes). Without the
 /// photo yet (the first draw), the values routine allocates it: only the original runs.
 ///
 /// [pt] As zonas de ação são comparadas de verdade, com o `*topo` (+0x19), a cor fixa 0xb6b7a4 e a guarda

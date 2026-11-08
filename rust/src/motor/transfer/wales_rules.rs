@@ -3,7 +3,7 @@ use super::*;
 /// Constructs the Wales transfer rules (rule 26): one window, from 7 May (moved to the Sunday [inference]) to 20 March.
 ///
 /// `WALES_RULES::WALES_RULES`; SEH frame only for the `new`, no destructor on the normal path. The Wales transfer rules
-/// (rule 26): the base (0x8e84a0), the vtable 0x970a9c, 1 window from `WALES_TRANSFER_WINDOWS`. Returns the object.
+/// (rule 26): the base (`exe::new_transfer_rules`), the vtable 0x970a9c, 1 window from `WALES_TRANSFER_WINDOWS`. Returns the object.
 /// Original: `WALES_RULES::WALES_RULES` (0x90f080, wales_rules.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x90f080 } (thiscall, ret 0x14, wales_rules.cpp, `WALES_RULES::WALES_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência do País de Gales (regra 26): a base (0x8e84a0), a vtable 0x970a9c, 1 janela(s) de `WALES_TRANSFER_WINDOWS`. Devolve o objeto.

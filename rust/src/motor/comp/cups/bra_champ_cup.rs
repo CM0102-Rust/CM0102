@@ -2,8 +2,8 @@ use super::*;
 
 /// Writes one group round (a 0x41-byte record, like the league rounds).
 ///
-/// The date goes through 0x68a160 (day, month with 0 = January, weekday, code), with no years to add and value 0; and
-/// match 0 is left empty (0x68a1c0 with −1, −1, −1 and value 0).
+/// The date goes through `league_round_set_date` (day, month with 0 = January, weekday, code), with no years to add and value 0; and
+/// match 0 is left empty (`store_round_match` with −1, −1, −1 and value 0).
 ///
 /// [pt] Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
@@ -26,7 +26,7 @@ pub(crate) enum BraChampCupStagePlan {
 /// The virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10) for the chosen stage `f`;
 /// sets the outputs and returns the table.
 ///
-/// Group stages: é_liga (if requested) = 1, rounds, extra; the table of 0x41 bytes per round (0x944e46; out of memory,
+/// Group stages: é_liga (if requested) = 1, rounds, extra; the table of 0x41 bytes per round (`exe::crt_malloc`; out of memory,
 /// the box and 0) with the dates, the year +0x40 in 16 bits.
 ///
 /// Knockout: é_liga = 0, rounds, extra = 0; the table of 0x68 bytes per round (out of memory, the box and 0), the
@@ -115,7 +115,7 @@ pub(crate) unsafe fn written_schedule_bytes(f: BraChampCupStagePlan, t: usize, n
 ///
 /// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
 /// both from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal; the copy's table
-/// is freed (0x9452ca).
+/// is freed (`exe::crt_free`).
 ///
 /// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
 ///

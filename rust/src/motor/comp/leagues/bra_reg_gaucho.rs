@@ -75,11 +75,11 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
     create_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98ae50, 0x217, 0x22b, "cqn_9 gaucho"); // cqn9: 1º × 4º, 2º × 3º Gaúcho
 }
 
-/// End of a state league: records the honours of the first stage (the table) and calls 0x42bba0, which, once the twelve
+/// End of a state league: records the honours of the first stage (the table) and calls `exe::bra_nat_first_fill_champions_cup_entrants`, which, once the twelve
 /// state leagues are over, puts the champions into the Champions Cup.
 ///
 /// `BraRegGaucho::record_season_honours` (slot 13 of nine state leagues: Baiano, Centro-Oeste, Gaúcho, Goiano, Norte,
-/// Nordeste, Pernambucano, Catarinense and Paulista): the history of the first stage and then, as a tail jump, 0x42bba0
+/// Nordeste, Pernambucano, Catarinense and Paulista): the history of the first stage and then, as a tail jump, `exe::bra_nat_first_fill_champions_cup_entrants`
 /// (`bra_nat_first_fill_champions_cup_entrants`, cdecl with no arguments: when the twelve state leagues are over, it
 /// puts the champions into the Champions Cup); returns its eax.
 /// Original: `BraRegGaucho::record_season_honours` (0x432970, bra_reg_gaucho.cpp, thiscall).

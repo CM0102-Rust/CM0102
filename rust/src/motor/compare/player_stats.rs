@@ -222,7 +222,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
     r
 }
 
-/// Comparer for `add_language` (0x7c6a30; comparison mode: see the header of motor.rs).
+/// Comparer for `add_language` (`add_language`; comparison mode: see the header of motor.rs).
 ///
 /// It allocates and reallocates the table (it cannot run twice): the plan beforehand (the count and capacity
 /// afterwards, the fluency), then the original runs; it checks the count, the capacity and the new record (at the end

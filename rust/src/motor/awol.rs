@@ -16,12 +16,12 @@ pub(crate) unsafe fn llist_items(list: usize) -> Vec<usize> {
     v
 }
 
-/// Shared body of { 0x4196a0 } and { 0x4197c0 }: removes the person's first entry from a list when the person has the
+/// Shared body of { `clear_awol` } and { `clear_missed_training` }: removes the person's first entry from a list when the person has the
 /// mark bit.
 ///
 /// With the person's mark `bit` ([this+0xc] + id), the mark is flipped (the original's `or bit` never yields zero) and,
 /// with the list ([this + `lista`]), the cursor goes back to the head and, among the first `conta` (+0, signed word)
-/// items, the first one with the person's id at +0 is removed (0x68d1f0, which frees the node). A list that ends before
+/// items, the first one with the person's id at +0 is removed (`manager_manager_remove`, which frees the node). A list that ends before
 /// the count is reached stops the loop.
 ///
 /// [pt] O corpo comum de { 0x4196a0 } e { 0x4197c0 }: com a marca `bit` da pessoa ([this+0xc] + id), a marca troca (o
@@ -75,8 +75,8 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
     }
 }
 
-/// `AWOL::clear_awol(person)`: ends the absence. Called by the end of the absence without a contract (0x418f60), by
-/// retirements (0x7a59e0) and by transfers (0x8c1af0, 0x8c2180, 0x8c9720).
+/// `AWOL::clear_awol(person)`: ends the absence. Called by the end of the absence without a contract (`is_player_awol`), by
+/// retirements (`process_retirements`) and by transfers (`free_transfer_staff`, `handle_player_accepted_terms`, `exe::transfer_manager_move_player_to_club`).
 ///
 /// With the person and the flag table ([this+0xc]) not null and bit 1 of the person's flag set: flips the bit and
 /// removes the person's record from the absence list ([this]).
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn clear_awol(this: usize, person: usize) {
 }
 
 /// `AWOL::clear_missed_training(person)`: ends the missed training. Called by the missed-training check for someone
-/// left without a contract (0x418ff0, which the daily player update consults) and by retirements (0x7a59e0).
+/// left without a contract (`has_missed_training`, which the daily player update consults) and by retirements (`process_retirements`).
 ///
 /// With the person and the flag table not null and bit 2 of the flag set: flips the bit and removes the person's record
 /// from the missed training list ([this+4]).
@@ -172,16 +172,16 @@ pub(crate) unsafe fn taped_random(n: i32) -> i32 {
 }
 
 /// `awol_post_missed_training_news(player, club)`: posts the 0xbc9 missed training news. Called by the missed training
-/// (0x41a360). SEH frame for the local news, no destructor.
+/// (`miss_training`). SEH frame for the local news, no destructor.
 ///
-/// With a player who has a player sheet (+0x61) and a club with a manager (+0xcf): the news 0xbc9 (0x77bbe0) with the
-/// player (id and the +0x33 keys of +4, +8, +0xc), the club id, draw(3), whether the club is human-run (0x600a50 with
-/// 0, 1) and who reports it: the manager, if the club has a manager and is not human-run (0x600a50 with 1, 1; id and
+/// With a player who has a player sheet (+0x61) and a club with a manager (+0xcf): the news 0xbc9 (`construct_news_item`) with the
+/// player (id and the +0x33 keys of +4, +8, +0xc), the club id, draw(3), whether the club is human-run (`exe::human_manager_is_human_club` with
+/// 0, 1) and who reports it: the manager, if the club has a manager and is not human-run (`exe::human_manager_is_human_club` with 1, 1; id and
 /// keys); otherwise, with draw(2), one of the 5 coaches (+0x19f, draw(5) until one is found or a thousand tries), and
 /// without the draw the assistant (+0xd3); with nobody (or id −1), −1 in all four.
 ///
-/// Human-run club (0x7875e0): sent to the player's club (+0x39, 0x7861e0); otherwise, if the player has a nation
-/// (+0x53) and his reputation (+0x61, +0xb) is above 7250, to the nation's inboxes (0x7863f0).
+/// Human-run club (`news_club_has_human_manager`): sent to the player's club (+0x39, `send_to_club_manager`); otherwise, if the player has a nation
+/// (+0x53) and his reputation (+0x61, +0xb) is above 7250, to the nation's inboxes (`send_to_nation_managers`).
 /// Original: `awol_post_missed_training_news` (0x41a630, awol.cpp, thiscall).
 ///
 /// [pt] { 0x41a630 } (thiscall, ret 8, awol.cpp, SEH da notícia local, sem destrutor): `awol_post_missed_training_news(jogador,
@@ -334,19 +334,19 @@ pub(crate) unsafe fn awol_miss_training(this: usize, person: usize) {
 /// `AWOL::daily_update()`: resolves the day's AWOL cases, missed trainings and late arrivals. Called every day by the
 /// game loop (0x5cccd0). Three lists, each with its cursor at +0xa.
 ///
-/// (1) Absences ([this]): the first one whose return date (+4) has passed ends (0x419710).
+/// (1) Absences ([this]): the first one whose return date (+4) has passed ends (`end_absence`).
 ///
 /// (2) Missed trainings ([this+4]): the first one a week past its date (+4) is resolved. Repeat case (byte +0xc), with
 /// two draws coming out zero, by the person's professionalism (+0x5b) and temperament (+0x5d): both drop by a draw and
-/// the person misses training again (0x41a360). New case: the teammates at the club (50 slots at +0xd7) under the
-/// offender's contract may ask to leave (0x867560 with 2) or lose professionalism, morale (+0x44 of the player) and
+/// the person misses training again (`miss_training`). New case: the teammates at the club (50 slots at +0xd7) under the
+/// offender's contract may ask to leave (`set_flags` with 2) or lose professionalism, morale (+0x44 of the player) and
 /// temperament; and the offender, when draw(professionalism) is below draw(15) + 1, loses professionalism and morale,
-/// misses training again and falls out with the club (0x72c1f0 with 8).
+/// misses training again and falls out with the club (`exe::media_create_player_media_story` with 8).
 ///
 /// (3) Late arrivals ([this+8]): the first one a week past (+8) that wins the draws loses professionalism and
 /// temperament or morale.
 ///
-/// Each resolved case leaves its list (0x68d1f0) and bit 2 of the flag flips. A list that ends before the count ends
+/// Each resolved case leaves its list (`manager_manager_remove`) and bit 2 of the flag flips. A list that ends before the count ends
 /// the day.
 /// Original: `AWOL::daily_update` (0x4190d0, awol.cpp, thiscall).
 ///
@@ -541,7 +541,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
 /// Called by the daily player update (0x5a69b0) and by the screens.
 ///
 /// Null person or beyond the count [0xae2364]: false. With bit 2 of her flag ([this+0xc] + id) set and no contract
-/// (0x4cf5a0, stored in [0xae1080]), clears the miss (0x4197c0) first. Returns bit 2 of the flag.
+/// (`exe::contract_manager_get_contract`, stored in [0xae1080]), clears the miss (`clear_missed_training`) first. Returns bit 2 of the flag.
 /// Original: `AWOL::has_missed_training` (0x418ff0, awol.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x418ff0 } (thiscall, ret 4, awol.cpp): `AWOL::has_missed_training(pessoa)`, pelos jogadores do dia (0x5a69b0) e
@@ -633,9 +633,9 @@ pub(crate) unsafe fn awol_club_of_contract(k: usize) -> usize {
 
 /// Byte +0xc (repeated case) of the absence record.
 ///
-/// 0x41a360 does not write it: the 13-byte record is built in a local and +0xc keeps whatever the previous call left in
+/// `miss_training` does not write it: the 13-byte record is built in a local and +0xc keeps whatever the previous call left in
 /// the dword E−0x10 of the stack (E: esp on entry). On the original routine's normal path, through
-/// game_check_players_missing_training (0x5d6aa0), the previous call that reaches that depth is 0x54cdb0 (days since
+/// game_check_players_missing_training (`game_check_players_missing_training`), the previous call that reaches that depth is `exe::date_days_since` (days since
 /// arrival), which stores its `this` there, the game date 0xae2c90: the low byte is 0x90.
 ///
 /// The copy uses that value (a repeated case); the comparer does not compare it (the original's value is genuine
@@ -649,17 +649,17 @@ pub(crate) unsafe fn awol_club_of_contract(k: usize) -> usize {
 pub(crate) const AWOL_RESIDUE_BYTE: u8 = 0x90;
 
 /// `AWOL::miss_training(person)`: the player misses training (or, if very unhappy, may go AWOL). Called by the day's
-/// missed trainings (0x5d6aa0) and by awol_daily_update. SEH frame only for the local date, no destructor.
+/// missed trainings (`game_check_players_missing_training`) and by awol_daily_update. SEH frame only for the local date, no destructor.
 ///
-/// Player (+0x61) within the count, with a contract (0x4cf5a0, in [0xae1080]) at a club and without flag 2: if the
+/// Player (+0x61) within the count, with a contract (`exe::contract_manager_get_contract`, in [0xae1080]) at a club and without flag 2: if the
 /// contract has morale (+0x44) at or below −100 and bit 0x2000 (then 0x800) in +0x45, and draw(professionalism + 10)
-/// and draw(+0x59 + 10) both come out zero, he goes AWOL (0x419840 with 0, 0).
+/// and draw(+0x59 + 10) both come out zero, he goes AWOL (`exe::awol_start_absence` with 0, 0).
 ///
-/// Otherwise: sets bit 2, posts the missed training news (0x41a630, with the contract's club), byte +0xa of the 79-byte
-/// row ([0xae2d0c]) adds draw(10), the condition (0x62c590) drops by 25 × (21 − the player's +0x34) + draw + 100
-/// (0x62bd10), and the record (person, today, case) joins the missed training list ([this+4], 0x68d0d0); the case byte,
-/// unset in the original, goes 0x90. AI club (0x600a50) with a manager (+0xcf, +0x69) and draw(his +0x14) not zero: the
-/// fine (0x5a5980, period 1 if draw(manager rating 0x544410 with +0x19) beats draw(5), else 2; reason 1).
+/// Otherwise: sets bit 2, posts the missed training news (`awol_post_missed_training_news`, with the contract's club), byte +0xa of the 79-byte
+/// row ([0xae2d0c]) adds draw(10), the condition (`get_condition`) drops by 25 × (21 − the player's +0x34) + draw + 100
+/// (`recover_injury`), and the record (person, today, case) joins the missed training list ([this+4], 0x68d0d0); the case byte,
+/// unset in the original, goes 0x90. AI club (`exe::human_manager_is_human_club`) with a manager (+0xcf, +0x69) and draw(his +0x14) not zero: the
+/// fine (`exe::fine_fine_player`, period 1 if draw(manager rating `exe::non_player_attribute_rating` with +0x19) beats draw(5), else 2; reason 1).
 /// Original: `AWOL::miss_training` (0x41a360, awol.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x41a360 } (thiscall, ret 4, awol.cpp, SEH só com a data local, sem destrutor): `AWOL::miss_training(pessoa)`,
@@ -747,9 +747,9 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
 
 /// `AWOL::end_absence(record)`: ends an absence. Called by awol_daily_update.
 ///
-/// With the person's flag (+0 id; [this+0xc] + id) not zero: if she has a contract (0x4cf5a0, in [0xae1080]) at a club,
-/// the return news (0x419ad0 with the person's club +0x39, 0 and −1); flips bit 1 of the flag (the original's `or 1`
-/// never gives zero) and removes the record from the absence list ([this], 0x68d1f0). Does not read an unset local.
+/// With the person's flag (+0 id; [this+0xc] + id) not zero: if she has a contract (`exe::contract_manager_get_contract`, in [0xae1080]) at a club,
+/// the return news (`exe::awol_post_news` with the person's club +0x39, 0 and −1); flips bit 1 of the flag (the original's `or 1`
+/// never gives zero) and removes the record from the absence list ([this], `manager_manager_remove`). Does not read an unset local.
 /// Original: `AWOL::end_absence` (0x419710, awol.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x419710 } (thiscall, ret 4, awol.cpp): `AWOL::end_absence(registro)`, pela awol_daily_update. Registro com a marca
@@ -791,11 +791,11 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
 /// The record (player, club, today and a byte that in the original is stack leftover) joins the incident list
 /// ([this+8], 0x68d0d0, 0x11 bytes).
 ///
-/// Human-run club (0x7875e0): one coach from the 5 slots (+0x19f, draw(5), until one is found or draw(20) comes out
+/// Human-run club (`news_club_has_human_manager`): one coach from the 5 slots (+0x19f, draw(5), until one is found or draw(20) comes out
 /// zero) and the news 0x138f to the club (the player, draw(2), his keys and the coach's, or −1).
 ///
-/// AI club (0x600a50) with a manager (+0xcf, +0x69): draw(his +0x14) above draw(10) leads to the fine (0x5a5980, period
-/// 1 if draw(rating 0x544410 with +0x19) beats draw(5), else 2; reason 1).
+/// AI club (`exe::human_manager_is_human_club`) with a manager (+0xcf, +0x69): draw(his +0x14) above draw(10) leads to the fine (`exe::fine_fine_player`, period
+/// 1 if draw(rating `exe::non_player_attribute_rating` with +0x19) beats draw(5), else 2; reason 1).
 /// Original: `AWOL::report_poor_fitness` (0x41add0, awol.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x41add0 } (thiscall, ret 8, awol.cpp, SEH da data e da notícia local, sem destrutor): `AWOL::
@@ -877,8 +877,8 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
 /// transfers.
 ///
 /// Null person or id beyond [0xae2364]: 0 (only al). With `read_only`, bit 0 of the person's flag ([this+0xc] + id).
-/// Otherwise, with the bit set and no contract (0x4cf5a0, stored in [0xae1080]) or no club on the contract, the absence
-/// ends (0x4196a0); returns the bit read again.
+/// Otherwise, with the bit set and no contract (`exe::contract_manager_get_contract`, stored in [0xae1080]) or no club on the contract, the absence
+/// ends (`clear_awol`); returns the bit read again.
 /// Original: `AWOL::is_player_awol` (0x418f60, awol.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x418f60 } (thiscall, ret 8, awol.cpp): `AWOL::is_player_awol(pessoa, só_ler)`, pela seleção, pelo treino, pelo

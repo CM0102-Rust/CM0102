@@ -15,12 +15,12 @@ pub(crate) unsafe fn selected_club(this: usize, k: usize) -> usize {
 /// destructor): the Oceania Club Championship's day. The draw date is that of 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx,
 /// local; push year; push day -> thiscall, ret 8, pure). Before it (today's year lower, unsigned; or the same year and
 /// today's day lower, signed) the routine returns 0 without the league day. On the draw day, if the draw is not done
-/// (+0x45 = 0) and WITHOUT `completo`: the 8 clubs (0x798220: mov ecx -> thiscall, ret 0), the predicted positions
-/// (virtual +0x5c, thiscall, ret 0), the group A table (0x7978c0, thiscall, ret 0; 0: the error box at line 0x21d), the
-/// fixtures (0x6835c0 League::create_fixtures, thiscall, ret 0; 0: the error box at line 0x224), the sorted table
-/// (0x6827d0 push 0; mov ecx -> thiscall, ret 4; 0: the error box at line 0x22b) (an error returns 1, without the
-/// league day), the group B stage (0x797e80, thiscall, ret 0), the list +0xee freed (0x9452ca: push; add esp, 4 ->
-/// cdecl) and zeroed, +0xf2 = 0 and +0x45 = 1. Then the league day (0x6847c0: push completo; push today; mov ecx, this
+/// (+0x45 = 0) and WITHOUT `completo`: the 8 clubs (`oceania_club_champ_select_qualified_clubs`: mov ecx -> thiscall, ret 0), the predicted positions
+/// (virtual +0x5c, thiscall, ret 0), the group A table (`create_group_a_table`, thiscall, ret 0; 0: the error box at line 0x21d), the
+/// fixtures (`create_fixtures` League::create_fixtures, thiscall, ret 0; 0: the error box at line 0x224), the sorted table
+/// (`sort_table` push 0; mov ecx -> thiscall, ret 4; 0: the error box at line 0x22b) (an error returns 1, without the
+/// league day), the group B stage (`create_group_b_stage`, thiscall, ret 0), the list +0xee freed (`exe::crt_free`: push; add esp, 4 ->
+/// cdecl) and zeroed, +0xf2 = 0 and +0x45 = 1. Then the league day (`league_update_for_date`: push completo; push today; mov ecx, this
 /// -> thiscall, ret 8), whose return value it passes on.
 /// Original: `OceaniaClubChamp::update_for_date` (0x797b40, oceania_club_champ.cpp, thiscall, ret 8).
 ///
@@ -80,10 +80,10 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
 /// Rule: group A of the Oceania Club Championship has the first 4 chosen clubs, each in the row of its order; human
 /// managers get the group draw news.
 ///
-/// `OceaniaClubChamp::create_group_a_table()`: 4 teams (+0x3e), the table +0xb1 (0x944e46(0xec): push 0xec; add esp, 4
+/// `OceaniaClubChamp::create_group_a_table()`: 4 teams (+0x3e), the table +0xb1 (`exe::crt_malloc`(0xec): push 0xec; add esp, 4
 /// -> cdecl; 4 rows of 0x3b bytes; out of memory, the error box at line 0x182 and returns 0), each row i with chosen
-/// club i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret
-/// 0x10), the group draw news (0x684230: mov ecx, this -> thiscall, ret 0) and returns 1. The same body as 0x4019c0 of
+/// club i (+0xee) (`init_table_row` League::init_table_row: push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret
+/// 0x10), the group draw news (`send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and returns 1. The same body as `init_group_a_table` of
 /// the African Cup (only the file and the error box line change).
 /// Original: `OceaniaClubChamp::create_group_a_table` (0x7978c0, oceania_club_champ.cpp, thiscall, ret 0).
 ///
@@ -118,14 +118,14 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
 /// and the cup's round table for stage 0 (10, 12 and 14 January); human managers get the news.
 ///
 /// `OceaniaClubChamp::create_group_b_stage()` (SEH frame only for the stage's new: no destructor on the normal path):
-/// the teams in a vector of 4 pointers (0x944e46(0x10): push; add esp, 4 -> cdecl; out of memory, the error box at line
+/// the teams in a vector of 4 pointers (`exe::crt_malloc`(0x10): push; add esp, 4 -> cdecl; out of memory, the error box at line
 /// 0x296 and 0): chosen clubs 4 to 7 (+0xee); the round table through virtual +0x3c (push 0; push &id; push &rounds;
-/// push 0; mov ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xee) push; add esp, 4 -> cdecl; the League_Stage
+/// push 0; mov ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) push; add esp, 4 -> cdecl; the League_Stage
 /// constructor 0x68b100, thiscall, ret 0x58, 22 arguments: the cup, 4, the vector, 1, +4, the round table, the rounds
 /// (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the year +0x40 (word), 0, the id (word), +0x51, 2, 0, +0xd9 (word), −1,
 /// 0, 2; the original pushes the words and bytes with garbage in the high bytes, which the constructor does not read:
-/// the copy passes clean values) into [+0xc][0]; the vector and the round table freed (0x9452ca). No stage: the error
-/// box at line 0x2ad and 0. With it: +0x30 = 0, the group news (0x684230 on the stage) and 1.
+/// the copy passes clean values) into [+0xc][0]; the vector and the round table freed (`exe::crt_free`). No stage: the error
+/// box at line 0x2ad and 0. With it: +0x30 = 0, the group news (`send_group_draw_news` on the stage) and 1.
 /// Original: `OceaniaClubChamp::create_group_b_stage` (0x797e80, oceania_club_champ.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x797e80 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
@@ -227,7 +227,7 @@ impl SourceClubList {
 
     /// Sorts by reputation and shuffles the top band.
     ///
-    /// Uses 0x4afbd0 comp_util_sort_and_shuffle_top_clubs (push how many; push the count; push list; add esp -> cdecl;
+    /// Uses `comp_util_sort_and_shuffle_top_clubs` comp_util_sort_and_shuffle_top_clubs (push how many; push the count; push list; add esp -> cdecl;
     /// draws at random).
     ///
     /// [pt] Ordena pela reputação e embaralha a faixa de cima (0x4afbd0 comp_util_sort_and_shuffle_top_clubs: push quantos;
@@ -414,13 +414,13 @@ pub(crate) unsafe fn semifinalists(this: usize) -> [usize; 4] {
 /// in a cup stage (stage 1) with the first round set up at once.
 ///
 /// `OceaniaClubChamp::create_knockout_stage()` (SEH frame only for the stage's new: no destructor on the normal path),
-/// the semi-finals: the list of the 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; out of memory, the error box at line
+/// the semi-finals: the list of the 4 (`exe::crt_malloc`(0x10): push; add esp, 4 -> cdecl; out of memory, the error box at line
 /// 0x2cb and return), the semi-finalist pairings; the round table through virtual +0x3c (push 0; push &id; push
-/// &rounds; push 1; mov ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xb2) push; add esp, 4 -> cdecl;
-/// Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the cup, 4, the list, the rounds, +4, the table, the year +0x40,
+/// &rounds; push 1; mov ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xb2) push; add esp, 4 -> cdecl;
+/// Cup_Stage::Cup_Stage `construct_cup_stage`, thiscall, ret 0x3c: the cup, 4, the list, the rounds, +4, the table, the year +0x40,
 /// 1, 2, the id, 0x14, 0, 0, 0 and no seed; the original pushes the rounds, the id and the year with garbage in the
-/// high 16 bits, which the constructor does not read) into [+0xc][1]; the table and the list freed (0x9452ca). No
-/// stage: the error box at line 0x2e3 and return. With it: the round set up (0x51c800 Cup::set_up_round: push 0; mov
+/// high 16 bits, which the constructor does not read) into [+0xc][1]; the table and the list freed (`exe::crt_free`). No
+/// stage: the error box at line 0x2e3 and return. With it: the round set up (`set_up_round` Cup::set_up_round: push 0; mov
 /// ecx, stage -> thiscall, ret 4).
 /// Original: `OceaniaClubChamp::create_knockout_stage` (0x798050, oceania_club_champ.cpp, thiscall, ret 0).
 ///
@@ -470,10 +470,10 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
 
 /// One operation of building the round table, in the original routine's order.
 ///
-/// `D` the date of a group round (0x68a160: round, day, month with 0 = January, years to add, weekday, code, value;
-/// records of 0x41 bytes), `L` a match of the group round (0x68a1c0: round, match, a, b, c, value), `S` the draw of a
-/// cup round (0x521e60: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
-/// (0x521eb0: round, day, month, years, weekday, time, home side), `E` a day of the tie (0x521f10: round, slot,
+/// `D` the date of a group round (`league_round_set_date`: round, day, month with 0 = January, years to add, weekday, code, value;
+/// records of 0x41 bytes), `L` a match of the group round (`store_round_match`: round, match, a, b, c, value), `S` the draw of a
+/// cup round (`cup_set_round_draw_date`: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
+/// (`cup_set_round_match_date`: round, day, month, years, weekday, time, home side), `E` a day of the tie (`cup_set_round_match_day`: round, slot,
 /// weekday, time, code, home side) and `B`/`W`/`X` writing a byte/word/dword at the given offset of the table.
 ///
 /// [pt] Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
@@ -518,11 +518,11 @@ pub(crate) struct OceaniaStage {
     pub(crate) name: &'static str,
 }
 
-/// Runs stage `f` (or returns 0 without it): the outputs, the table (0x944e46; out of memory, the box `linha` of source
+/// Runs stage `f` (or returns 0 without it): the outputs, the table (`exe::crt_malloc`; out of memory, the box `linha` of source
 /// file `arquivo` and 0) and the date/match operations in order.
 ///
-/// The cup's year (+0x40) goes as clean 16 bits to 0x68a160 (the original pushes the register with garbage in the high
-/// 16 bits; 0x68a160 only uses the word) and signed to the cup ones.
+/// The cup's year (+0x40) goes as clean 16 bits to `league_round_set_date` (the original pushes the register with garbage in the high
+/// 16 bits; `league_round_set_date` only uses the word) and signed to the cup ones.
 ///
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
@@ -601,7 +601,7 @@ pub(crate) unsafe fn oceania_club_champ_written_table_bytes(ops: &[OceaniaClubCh
 ///
 /// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
 /// both from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal; the copy's table
-/// is freed (0x9452ca).
+/// is freed (`exe::crt_free`).
 ///
 /// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
 ///
@@ -695,10 +695,10 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: 
     build_stage_table(this, oceania_stage_spec(stage), rounds, extra, league, 0xa6a068)
 }
 
-/// The 16-team table of the Asian cups (AsiaClubChamp::build_team_table 0x40b620 and AsiaCupWinner::create_team_entries
-/// 0x40d4d0, the same body).
+/// The 16-team table of the Asian cups (AsiaClubChamp::build_team_table `asia_club_champ_build_team_table` and AsiaCupWinner::create_team_entries
+/// `create_team_entries`, the same body).
 ///
-/// +0x3e = 16 and the table (0x944e46 of 0x60 at +0xa7; out of memory, the box `linha` of `arquivo` and −1); slot i
+/// +0x3e = 16 and the table (`exe::crt_malloc` of 0x60 at +0xa7; out of memory, the box `linha` of `arquivo` and −1); slot i
 /// gets club i of the qualified list (+0xb2, pointers; `ordem` gives the index) with class and status 0. Returns 1.
 ///
 /// [pt] A tabela dos 16 times das copas asiáticas (AsiaClubChamp::build_team_table 0x40b620 e AsiaCupWinner::

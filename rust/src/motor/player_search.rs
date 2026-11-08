@@ -10,17 +10,17 @@ pub(crate) unsafe fn player_search_contract_club(person: usize) -> usize {
     if c != 0 { friendly_club_by_id(read_usize(c + contract::CLUB)) } else { 0 }
 }
 
-/// `player_search_record_scouted_club_match(match, result)`, called by the watched match (0x7b5be0) when the list
+/// `player_search_record_scouted_club_match(match, result)`, called by the watched match (`player_search_scout_match`) when the list
 /// follows a club (+0x190) that plays in it: records the match in the watched club's player histories.
 ///
 /// `this` is the record of the watched club ([list+0x170]: +0 the club id, 50 slots of 0x1a2 bytes from +4). First the
 /// slots of those who left the club are cleared (id −1, the counter +4 and bytes +0x1a0/+0x1a1 zeroed); then, on the
 /// club's side of the result (+0x190, 20 records of 0x49, the away side at 0x625), each player who played (+4 ≠ −1;
-/// substitutes beyond the 11th only with a rating, +0x32) gets a line in the 10-match history of his slot (0x7bd700
+/// substitutes beyond the 11th only with a rating, +0x32) gets a line in the 10-match history of his slot (`player_search_find_or_claim_player_slot`
 /// with 1; without a slot, the box of line 0x2065): goals, rating, date, opponent, score, competition, the side
-/// (0x4afa80) and the statistics; the type +0x2e (1 starter, 2 substitute, 5/6 with the rating from +0x30) and the
+/// (`comp_util_get_fixture_venue_side`) and the statistics; the type +0x2e (1 starter, 2 substitute, 5/6 with the rating from +0x30) and the
 /// rating +0x15. With the manager of a human club and the attribute masks set, the manager comes to know the player
-/// (0x5b09d0, which draws).
+/// (`exe::fog_of_war_map_raise_knowledge`, which draws).
 /// Original: `player_search_record_scouted_club_match` (0x7bd310, player_search.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x7bd310 } (thiscall, ret 8, player_search.cpp): `player_search_record_scouted_club_match(jogo, resultado)`, pela
@@ -160,8 +160,8 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
     }
 }
 
-/// The dry run of 0x7b5be0 (only in the comparer): the copy decides everything up to the report without the effects
-/// (the history 0x7bd310 and the report do not run) and notes whether it would reach the report.
+/// The dry run of `player_search_scout_match` (only in the comparer): the copy decides everything up to the report without the effects
+/// (the history `player_search_record_scouted_club_match` and the report do not run) and notes whether it would reach the report.
 ///
 /// [pt] O ensaio da 0x7b5be0 (só no comparador): a cópia decide tudo até o relatório sem os efeitos (o histórico 0x7bd310 e o
 /// relatório não rodam) e anota se chegaria ao relatório.
@@ -169,20 +169,20 @@ pub(crate) static mut SCOUT_MATCH_DRY_RUN: bool = false;
 pub(crate) static mut SCOUT_MATCH_WOULD_REPORT: bool = false;
 
 /// `PLAYER_SEARCH::scout_match(match, result, out)` (SEH frame for the local list and dates), called by the watched
-/// match (0x7f8c00): the matching scout list (type 4) watches the played match and produces reports.
+/// match (`scout_manager_scout_match`): the matching scout list (type 4) watches the played match and produces reports.
 ///
 /// `this` is the scout's search list: +0 the owner, +0xa the type (4 = watch matches), +0x170 the watched club's
 /// record, +0x174..+0x184 the scout's names, +0x180 his id, +0x190 the followed club, +0x195 the followed player,
 /// +0x1a5/+0x1ad the start and the end. Without a match or result: the box of line 0xef1. Of type 4, with a scout that
-/// checks out (0x53e990) and the result of a played match (+0x4c zero): the followed club, if it plays, gets the
-/// history (0x7bd310); within the dates (before the end only with a followed player), if the match is the followed
-/// player's, it reports; otherwise the search must cover the competition's nation (0x7b7490) and the scout's club must
-/// have asked for (0x7f9690, 0x7f8d70 with 1) some player of one of the two clubs.
+/// checks out (`database_staff_matches_names`) and the result of a played match (+0x4c zero): the followed club, if it plays, gets the
+/// history (`player_search_record_scouted_club_match`); within the dates (before the end only with a followed player), if the match is the followed
+/// player's, it reports; otherwise the search must cover the competition's nation (`scout_covers_nation`) and the scout's club must
+/// have asked for (`collect_club_scout_targets`, `has_scout_request` with 1) some player of one of the two clubs.
 ///
 /// The report: the list's start moves to tomorrow; on both sides (+0x1c0 / +0x1c0+0x625, 20 records of 0x49), each
-/// valid player of another club (substitutes beyond the 11th only with a rating) becomes known to the owner (0x5b09d0,
-/// with the masks) and, if asked for (0x7f8d70 with 0), followed or with a seen reputation below 4000 (0x5407e0) and a
-/// rating of at least 15 (90 with a result without ratings), becomes a report (0x7b62a0, mode 0 followed, 1 asked for,
+/// valid player of another club (substitutes beyond the 11th only with a rating) becomes known to the owner (`exe::fog_of_war_map_raise_knowledge`,
+/// with the masks) and, if asked for (`has_scout_request` with 0), followed or with a seen reputation below 4000 (`database_get_staff_reputation_for_viewer`) and a
+/// rating of at least 15 (90 with a result without ratings), becomes a report (`exe::player_search_report_on_player`, mode 0 followed, 1 asked for,
 /// 2 with +5 ≥ 8) that goes into the output (0x68d0d0, 0x67 bytes) if byte +0x66 ended up ≥ 0. Returns 1 with a report,
 /// otherwise 0.
 /// Original: `PLAYER_SEARCH::scout_match` (0x7b5be0, player_search.cpp, thiscall, ret 0xc).
@@ -425,12 +425,12 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
 }
 
 /// `PLAYER_SEARCH::contains_player(person)` (SEH frame only for the two local dates, no destructor), called from the
-/// human manager's scout list (0x7f7490, which the player assessment and the interested clubs consult every day) and
+/// human manager's scout list (`is_player_shortlisted`, which the player assessment and the interested clubs consult every day) and
 /// from screens: looks the player up in the search results and returns 1 when found and not marked as removed.
 ///
-/// The local 0x2d-byte key starts with the two default dates (+0x10 and +0x18, 0x54a110); a null person: the box of
-/// line 0x33e and 0. Without results (+0x1f6 = count): 0. The reference to the person's name in the key (0x7e4920: +0xc
-/// the id, the only field the comparison 0x7bce50 reads) and the binary search in the results (0x946464 with the vector
+/// The local 0x2d-byte key starts with the two default dates (+0x10 and +0x18, `exe::date_date_54a110`); a null person: the box of
+/// line 0x33e and 0. Without results (+0x1f6 = count): 0. The reference to the person's name in the key (`fill_staff_name_ref`: +0xc
+/// the id, the only field the comparison 0x7bce50 reads) and the binary search in the results (`exe::crt_bsearch` with the vector
 /// +0x1ee, the count, 0x2d and 0x7bce50); found and without the removed flag (bit 0 of +0x20), 1; otherwise 0.
 /// Original: `PLAYER_SEARCH::contains_player` (0x7af600, player_search.cpp, thiscall, ret 4).
 ///
@@ -489,8 +489,8 @@ pub(crate) unsafe fn set_search_scout(l: usize, scout: usize) {
 }
 
 /// `player_search_find_or_claim_player_slot(person, claim)`: returns the player's slot among the 50 of the watched
-/// club's record (0x1a2 bytes from +4: +0 the id, −1 free), called by its match (0x7bd310) and by the screens
-/// (0x7f8610).
+/// club's record (0x1a2 bytes from +4: +0 the id, −1 free), called by its match (`player_search_record_scouted_club_match`) and by the screens
+/// (`find_club_search_entry`).
 ///
 /// The slot with the person's id; otherwise, with `claim`, the first free one gets the id (null person: −1), zeroes
 /// word +4 and bytes +0x1a0 and +0x1a1 and is returned (none free: the box of line 0x210d and 0); without `claim`, 0.
@@ -540,7 +540,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(t
 /// the reputation), the nation one (+0x57: +0x69 × 500, if greater than reputation / 500) and the league one (+0x1db in
 /// [0xae23d0], 0x6b bytes: +0x69 × 600, likewise), weighted and / 16; half at a non-professional club (+0x64 ≠ 1). The
 /// rating comes from the base by bands (up to 3000, 5000, 7000, 9000 and above). Without `forced`, by the squad
-/// (0x53c590) and the wealth band of the finances (0x5a0590 of [0xae2a38], 0x5986b0) for clubs with a nation in
+/// (`database_count_club_squad`) and the wealth band of the finances (`get_club_finance` of [0xae2a38], `get_wealth_band`) for clubs with a nation in
 /// [0xadadfc]: a short squad (< 16) halves; < 20 halves, or 2/3 for the poor; otherwise it shrinks by the shortage of
 /// players compared with the nation (+0x69 × 1.35 + 20) and wealth pulls it (−2..2: × 0.909 or − 1000, × 0.952 or −
 /// 500, nothing, × 1.0125 or + 125, × 1.025 or + 250). At least 500. The base goes into `*base` (if not null). The
@@ -702,7 +702,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_slot_sum_goals(this: usize)
 }
 
 /// `PLAYER_SEARCH::get_scout`: returns the search's scout: the index at +0x180 (> −1) in the people vector [0xae23bc]
-/// (110 bytes), if it still matches the stored names and date (0x53e990 with +0x174, +0x178, +0x17c and the date at
+/// (110 bytes), if it still matches the stored names and date (`database_staff_matches_names` with +0x174, +0x178, +0x17c and the date at
 /// +0x184); otherwise 0.
 /// Original: `PLAYER_SEARCH::get_scout` (0x7ae950, player_search.cpp, thiscall).
 ///
@@ -760,7 +760,7 @@ pub(crate) unsafe extern "thiscall" fn set_list_type(search: usize, kind: i8) ->
 
 /// `PLAYER_SEARCH::set_scout(scout)`: sets a new scout.
 ///
-/// If the scout changes (the current one through 0x7ae950), it stores his ids at +0x174 (0x7e4920) or, without a scout,
+/// If the scout changes (the current one through `get_scout`), it stores his ids at +0x174 (`fill_staff_name_ref`) or, without a scout,
 /// the index +0x180 = −1; and the nation (+0x18c), region (+0x194) and competition (+0x195) assignments go back to −1.
 /// Returns 1.
 /// Original: `PLAYER_SEARCH::set_scout` (0x7ae8a0, player_search.cpp, thiscall, ret 4).
@@ -830,14 +830,14 @@ pub(crate) unsafe extern "thiscall" fn get_scout_assignment(this: usize, club: *
 }
 
 /// `PLAYER_SEARCH::scout_covers_nation(nation)`: tells whether the scout search (type +0xa = 4) with the scout checked
-/// (index +0x180 > −1 and 0x53e990 with the names +0x174..+0x17c and the date +0x184) and with a club (+0x39) covers
+/// (index +0x180 > −1 and `database_staff_matches_names` with the names +0x174..+0x17c and the date +0x184) and with a club (+0x39) covers
 /// `nation`.
 ///
-/// With an assignment set (0x7aefd0, which copies the assignments +0x18c..+0x19d onto themselves): the nation of the
+/// With an assignment set (`get_scout_assignment`, which copies the assignments +0x18c..+0x19d onto themselves): the nation of the
 /// assignment's club (+0x53 of club +0x190), the assignment's nation (+0x18c = id +0 of the nation), the region
 /// (+0x194, signed byte, = +0x76 of the nation), or with the base (+0x199) the same region. Without an assignment: both
-/// nations with +0x7f = 2, the same region (+0x76) as the club's nation, the nation not foreign to the scout (0x53d980
-/// with 1) or the club's scouts covering the nation (0x7f9190 of [0xb74448]). Returns 1 or 0.
+/// nations with +0x7f = 2, the same region (+0x76) as the club's nation, the nation not foreign to the scout (`database_is_staff_foreign`
+/// with 1) or the club's scouts covering the nation (`can_club_scout_nation` of [0xb74448]). Returns 1 or 0.
 /// Original: `PLAYER_SEARCH::scout_covers_nation` (0x7b7490, player_search.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x7b7490 } (thiscall, ret 4, player_search.cpp): `PLAYER_SEARCH::scout_covers_nation(nacao)`: a busca de olheiro

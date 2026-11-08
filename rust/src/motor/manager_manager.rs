@@ -7,7 +7,7 @@ pub(crate) unsafe fn board_row(this: usize, club: usize) -> usize {
     read_usize(this).wrapping_add((read_i32(club) as usize).wrapping_mul(0x49))
 }
 
-/// Calls 0x53b900 (FN_DATABASE_IS_NATIONAL_TEAM): nonzero if the club is a national team.
+/// Calls `exe::database_is_national_team` (FN_DATABASE_IS_NATIONAL_TEAM): nonzero if the club is a national team.
 ///
 /// [pt] 0x53b900 (cdecl, 1): o clube é seleção.
 pub(crate) unsafe fn manager_manager_is_national_team(c: usize) -> u32 {
@@ -17,7 +17,7 @@ pub(crate) unsafe fn manager_manager_is_national_team(c: usize) -> u32 {
 /// The weight of a match for board confidence (the double at [esp+0x2c]) and the factor (the double at [esp+0x34], 0.5
 /// initially), by the match's competition.
 ///
-/// No competition: 0.01; outside the club's competition (0x48f150): 0.2; friendly (0x5c6710): 0.67 if the home side is
+/// No competition: 0.01; outside the club's competition (`exe::comp_is_club_still_in_contention`): 0.2; friendly (`exe::friendly_is_friendly_competition`): 0.67 if the home side is
 /// a national team, otherwise 0.05; not played (+0x40): 0.1; in the home side's league: 1, with factor 0.06 × (league
 /// +0x69) + 0.27; otherwise 1 − |500 × (+0x69) − reputation| / 15000, × 1.25 in the cup (+0x3a = 8) and by stage
 /// (+0x30: 0x78 × 1.25, 0x82 × 1.5, 0x8c × 0.75, 0x96 and 0xa0 × 2).
@@ -102,22 +102,22 @@ pub(crate) unsafe fn lineup_rating(game: usize, e: usize, k: i32, rating: usize,
 /// sacking the manager.
 ///
 /// `MANAGER_MANAGER::update_board_confidence_after_match(club, fixture, match, home)`, called from the board after the
-/// match (0x6951e0, one side at a time). The adjustment starts from the rivalry (±20/30 against the opponent or by the
+/// match (`update_board_after_fixture`, one side at a time). The adjustment starts from the rivalry (±20/30 against the opponent or by the
 /// fixture's national side +0x18), adds the reputation difference / 35 (without a match) or, with the match, the team
 /// rating (average of the ratings by age +0x1c4, the ratings +0x127/+0x128, the difference with the opponent, the sum
 /// of +0x4d − rating; x87: (... + 0.1) × 67 − 470, × factor) plus the average reputation of the opponents (by nation,
-/// 0x53d980) against the club's / 40, up to ±100. By the score (+0x47/+0x48 or +0x43/+0x44): win 0x800, defeat 0x1000
-/// (outside friendlies, × 2 or × 5 with a thrashing; below −50 with an AI manager, the request to the FA 0x6a9e60 by
+/// `database_is_staff_foreign`) against the club's / 40, up to ±100. By the score (+0x47/+0x48 or +0x43/+0x44): win 0x800, defeat 0x1000
+/// (outside friendlies, × 2 or × 5 with a thrashing; below −50 with an AI manager, the request to the FA `exe::manager_manager_handle_fa_request` by
 /// random draw), draw 0x400 (in the cup, +15 and the stages 0x7b/0x7c/0x85/0x86/0x99/0x9a). The aggregate (+0x4b/+0x4c,
 /// +0x49/+0x4a, +0x43/+0x44) gives 0x100/0x200 and ±10/15/20; the derby (0x40, same city or a rival within 25 km) or
 /// the rival/clash (0x80) multiply the weight (2.25 or 1.5) and give ±12/±5. Weight × 0.5 for the B national team, × 2
 /// for the senior one, × 2 or 1.5 in the cup (flag 0x400 of the row); the adjustment × weight, ÷ 3 or ÷ 2 by the flags.
 /// The flags 1/2/4/8/0x10/0x20 (by the score, the adjustment and confidence +6) go into the text (0x6a69c0) and into
-/// the reaction news (0x6a5fa0, human manager only). The media story 0x3d (0x74b060, −250 at +0x16) by random draw at a
+/// the reaction news (`post_board_match_reaction_news`, human manager only). The media story 0x3d (`exe::media_post_team_media_story`, −250 at +0x16) by random draw at a
 /// manageable club; story 0x5c in the league with the club in danger. The confidence: +6 += 0.7 ×, +0xa += 0.5 ×, +8 +=
-/// 1.15 ×, +0xc += 0.2 × (half with flag 0x7a7eb0 when negative), between 1 and 10000; floors by stage and by the
-/// competition's strength; the fan protest (0x6a5d10); in the league or when negative, consider sacking (0x69aba0, 1 on
-/// a defeat); otherwise it leaves the ultimatum list (0x68d1f0).
+/// 1.15 ×, +0xc += 0.2 × (half with flag `record_bits` when negative), between 1 and 10000; floors by stage and by the
+/// competition's strength; the fan protest (`post_supporter_protest_news`); in the league or when negative, consider sacking (`consider_sacking_manager`, 1 on
+/// a defeat); otherwise it leaves the ultimatum list (`manager_manager_remove`).
 /// Original: `MANAGER_MANAGER::update_board_confidence_after_match` (0x695240, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x695240 } (thiscall, ret 0x10, manager_manager.cpp): `MANAGER_MANAGER::update_board_confidence_after_match(
@@ -615,10 +615,10 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
 /// scores, the named players and the match record.
 ///
 /// SEH frame with no destructor on the normal path. `MANAGER_MANAGER::post_board_match_reaction_news(club, opponent,
-/// fixture, flags, a, b, c, d)`: with club, opponent, fixture and competition (+0x14), news 0x138c (0x77bbe0) with the
+/// fixture, flags, a, b, c, d)`: with club, opponent, fixture and competition (+0x14), news 0x138c (`construct_news_item`) with the
 /// flags, the two ids, the scores a and b, the aggregate c and d and the fixture's +8; the up to 3 players the board
-/// names (0x6aaee0, with defeat = a > b), a random(4), the defeat and their 5 flags; the club's match record (0x7e4750)
-/// written into the news (0x7e4de0); delivered to the club's manager (0x7861e0).
+/// names (`board_named_players_after_match`, with defeat = a > b), a random(4), the defeat and their 5 flags; the club's match record (`fill_match_record_from_fixture`)
+/// written into the news (0x7e4de0); delivered to the club's manager (`send_to_club_manager`).
 /// Original: `MANAGER_MANAGER::post_board_match_reaction_news` (0x6a5fa0, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x6a5fa0 } (thiscall, ret 0x20, manager_manager.cpp, quadro SEH sem destrutor no caminho normal):
@@ -675,8 +675,8 @@ pub(crate) unsafe extern "thiscall" fn post_board_match_reaction_news(this: usiz
 /// Posts news item 0x1781 with the FA's assessment of the national team manager in a competition, from the game start.
 ///
 /// SEH frame with no destructor on the normal path. `MANAGER_MANAGER::post_fa_performance_news(competition,
-/// national_team, rating)`: from the game start date (`[0xdd6ec8]`) on, news 0x1781 (0x77bbe0) with the national team's
-/// id, the competition's id (*competition) and the FA's rating, through the reach (0x786090 with the national team and
+/// national_team, rating)`: from the game start date (`[0xdd6ec8]`) on, news 0x1781 (`construct_news_item`) with the national team's
+/// id, the competition's id (*competition) and the FA's rating, through the reach (`send_by_scope` with the national team and
 /// 0, 0, 0, 0).
 /// Original: `MANAGER_MANAGER::post_fa_performance_news` (0x6a5a60, manager_manager.cpp, thiscall).
 ///
@@ -726,20 +726,20 @@ pub(crate) unsafe fn call_comp_virtual(obj: usize, desloc: usize) -> u32 {
 ///
 /// `MANAGER_MANAGER::set_season_expectations(club, news)`. Clears the flags (+0xe) and the target (+0x2c), +0x30 =
 /// reputation² / 4, +0x38 ÷ 4, +0 = 0. Without flag 1 of +2, with a manager and outside national teams: by the
-/// manager's days in the job (0x54cdb0), above 3650 with confidence +6 < 3500 (random(30) above the chairman's +0x1d,
+/// manager's days in the job (`exe::date_days_since`), above 3650 with confidence +6 < 3500 (random(30) above the chairman's +0x1d,
 /// or 10) or above 1825 with +6 < 3000 (random(20)), the item {1, 6, id} in list `[this+4]` (0x68d0d0). National team:
-/// the B team nothing; the senior one takes its competition's expectations (0x7751e0 and virtual +0x70) and the FA news
-/// (0x6a44a0). Club: the nation's UEFA places (0x905c60 on `[0xde1f58]`); without a manager nothing; without a division
+/// the B team nothing; the senior one takes its competition's expectations (`exe::nationalteams_get_current_competition` and virtual +0x70) and the FA news
+/// (`post_fa_expectations_news`). Club: the nation's UEFA places (`exe::uefaseeding_get_nation_places` on `[0xde1f58]`); without a manager nothing; without a division
 /// with a competition: 0x10. The target = the danger position of the league row (+0x72; without it, 8 with 0x40 and the
-/// news, and it returns), minus 1 if it is the last one; by wealth (0x5986b0: 2 → −3/−2, 1 → −2/−1, 0 with budget
+/// news, and it returns), minus 1 if it is the last one; by wealth (`get_wealth_band`: 2 → −3/−2, 1 → −2/−1, 0 with budget
 /// (0x598800) above 250 × reputation → −1, −1 → +1 below 5, −2 → +1); by the previous division (+0x5b: stronger +4/+2,
 /// weaker −7/−3/−2) or by the manager's days (below 365 +1; above 1095 −1 above 10); between 1 and the number of clubs
 /// − 1; with flag 1, the average with the row's +0x73 between +0x74 and +0x75. The flags: 2 (champion's place), 1 (UEFA
 /// places, outside Australia), 4 (+0xbe), 8 (+0xbf), 0x40 (top half), 0x20 (avoid relegation, +0xc1) or 0x10/0;
 /// chairman draws (0x80, 0x100, 0x200 by the target) and the cup league (`[0xae23d0]`, 0x400 or the swap 0x80/0x200).
-/// The news (0x6a4a20). Confidence values below 6500 rise to (5x + 27500 or 25000) / 10; the wealth into +1; the
+/// The news (`post_board_expectations_news`). Confidence values below 6500 rise to (5x + 27500 or 25000) / 10; the wealth into +1; the
 /// manager's record (+0xa, +0xc) rises to the club's reputation; the new manager (of the last 16) gets 1 in +0x59 up to
-/// 20; clears +2, +3, +4, +5, +0x12..+0x16, +0x28 and +0x40 & 7; the fines (0x5a5930 on `[0xae2a3c]`).
+/// 20; clears +2, +3, +4, +5, +0x12..+0x16, +0x28 and +0x40 & 7; the fines (`exe::fine_halve_club_fine_count` on `[0xae2a3c]`).
 /// Original: `MANAGER_MANAGER::set_season_expectations` (0x6a3770, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x6a3770 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::set_season_expectations(clube, notícia)`.
@@ -1014,7 +1014,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     finish_board_update(this, club);
 }
 
-/// When requested, posts the board expectations news (0x6a4a20) with the flags word at +0xe of the club's board row.
+/// When requested, posts the board expectations news (`post_board_expectations_news`) with the flags word at +0xe of the club's board row.
 ///
 /// [pt] A notícia das expectativas (0x6a4a20 com as marcas +0xe) quando pedida.
 pub(crate) unsafe fn post_expectations_news(this: usize, club: usize, news: u32) {
@@ -1024,7 +1024,7 @@ pub(crate) unsafe fn post_expectations_news(this: usize, club: usize, news: u32)
     }
 }
 
-/// Common tail of 0x6a3770: restores confidences, writes the wealth band (+1), adjusts the manager record, clears flags
+/// Common tail of `set_season_expectations`: restores confidences, writes the wealth band (+1), adjusts the manager record, clears flags
 /// and applies fines on the club's board row.
 ///
 /// [pt] O fim comum da 0x6a3770 (a partir de 0x6a415f): as confianças, a riqueza, a ficha do técnico, as marcas zeradas e as
@@ -1115,28 +1115,28 @@ pub(crate) unsafe fn staff_state_byte_b(k: i32) -> u8 {
     read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((k as usize).wrapping_mul(0x4f)) + 0xb)
 }
 
-/// Calls the original FN_SCORE_STAFF_FOR_JOB (0x69d1b0) with (person, club, 0, 5): the candidate's job score.
+/// Calls the original FN_SCORE_STAFF_FOR_JOB (`exe::score_staff_for_job`) with (person, club, 0, 5): the candidate's job score.
 ///
 /// [pt] A nota do candidato (0x69d1b0: thiscall, 4: pessoa, clube, 0, 5; original).
 pub(crate) unsafe fn score_candidate(this: usize, p: usize, club: usize) -> i32 {
     exe::score_staff_for_job(this, p, club, 0, 5)
 }
 
-/// Calls 0x69f810 (FN_MANAGER_MANAGER_IS_STAFF_SUITABLE_FOR_JOB) with person, club and the minimum score as a double.
+/// Calls `is_staff_suitable_for_job` (FN_MANAGER_MANAGER_IS_STAFF_SUITABLE_FOR_JOB) with person, club and the minimum score as a double.
 ///
 /// [pt] 0x69f810 (thiscall, 4: pessoa, clube e a nota mínima em double, em dois dwords).
 pub(crate) unsafe fn is_staff_suitable(this: usize, p: usize, club: usize, minimum: f64) -> u8 {
     exe::manager_manager_is_staff_suitable_for_job(this, p, club, minimum)
 }
 
-/// Calls 0x4cf6d0 on G_CONTRACT_MANAGER (FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT): the person's contract record or 0.
+/// Calls `contract_record` on G_CONTRACT_MANAGER (FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT): the person's contract record or 0.
 ///
 /// [pt] 0x4cf6d0 (thiscall em [0xae1050], 1): a pessoa tem ficha de contrato.
 pub(crate) unsafe fn loan_contract_of(p: usize) -> usize {
     exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p)
 }
 
-/// Calls 0x69fc60 (FN_MANAGER_MANAGER_IS_VACANCY_CANDIDATE): nonzero if the person is already on a vacancy list.
+/// Calls `person_in_list` (FN_MANAGER_MANAGER_IS_VACANCY_CANDIDATE): nonzero if the person is already on a vacancy list.
 ///
 /// [pt] 0x69fc60 (thiscall, 1): a pessoa já está numa lista de vagas.
 pub(crate) unsafe fn is_vacancy_candidate(this: usize, p: usize) -> u8 {
@@ -1145,7 +1145,7 @@ pub(crate) unsafe fn is_vacancy_candidate(this: usize, p: usize) -> u8 {
 
 /// O item de 0x26 bytes da vaga (o que a original monta em [esp+0x1c]): +0 achou um livre, +1 0, +2 o id dele, +6 o
 /// índice do escolhido, +0xa o id do técnico que saiu, +0xe o id do clube, +0x12 a nota anterior, +0x16 a data da
-/// chegada e +0x1e a data do anúncio (8 bytes cada, 0x54a110).
+/// chegada e +0x1e a data do anúncio (8 bytes cada, `exe::date_date_54a110`).
 pub(crate) struct ManagerVacancy(pub(crate) [u8; 0x28]);
 
 impl ManagerVacancy {
@@ -1174,18 +1174,18 @@ impl ManagerVacancy {
 /// without a division and with reputation below 5000: nothing; B national team with ranking (nation's +0x88) up to 1000
 /// or senior team up to 100: nothing. The board starts over (the four confidence values 5000, +0xe = 0x10, the flags
 /// cleared). The chosen one: from all people with a manager record (+0x69; the last 16, the humans, only with +0x5f),
-/// except the one who left, without state 0x30, without a contract (0x4cf6d0), off the lists (0x69fc60), of the same
+/// except the one who left, without state 0x30, without a contract (`contract_record`), off the lists (`person_in_list`), of the same
 /// nation or with +0xa ≥ 3750, of the same continent (+0x75) or with +0xc ≥ 4250 and the club with reputation ≥ 4750,
-/// suited to the job (0x69f810 with 3.5), excluding players with a contract in force in jobs 11/12/13/15, only national
-/// team managers (+0x3d = 5) for a national team: the highest score (0x69d1b0). With nobody: the assistant (+0xd3), the
+/// suited to the job (`is_staff_suitable_for_job` with 3.5), excluding players with a contract in force in jobs 11/12/13/15, only national
+/// team managers (+0x3d = 5) for a national team: the highest score (`exe::score_staff_for_job`). With nobody: the assistant (+0xd3), the
 /// first of +0x19f or, from back to front starting at the 17th from last, the first free person in jobs 0, 5, 6, 7, 8,
 /// 11, 12, 15 (without wrapping around: the "Can't find a manager" box and nothing). National team or big club
 /// (reputation above 4500 + random(2000)): draws as many people as their count and keeps the best free one (with 150
-/// days in the job, 3.15). The human rejected by the club (0x547e70). The dates: before the game start, 1 to 7 days
+/// days in the job, 3.15). The human rejected by the club (`staff_add_disliked_club`). The dates: before the game start, 1 to 7 days
 /// after it (the announcement) and the arrival 1 to 7 days later; otherwise, the announcement in 1 to 3 days and the
-/// arrival in 4 to 8 days (7 to 11 if the one who left is human; 10 to 14 with the offer news 0x6a0540 to the chosen
+/// arrival in 4 to 8 days (7 to 11 if the one who left is human; 10 to 14 with the offer news `post_job_offer_news` to the chosen
 /// one's human club), sometimes 0 to 19 more; the turn of the year. The item goes into list `[this+8]` (0x68d0d0, the
-/// cursor saved); the humans (0x5fd210, 0x5fea50) of smaller clubs apply (0x69ca00).
+/// cursor saved); the humans (`exe::human_manager_is_on_holiday`, `exe::human_manager_get_holiday_option`) of smaller clubs apply (`exe::manager_manager_apply_for_job`).
 /// Original: `MANAGER_MANAGER::add_job_vacancy` (0x69ba50, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x69ba50 } (thiscall, ret 8, manager_manager.cpp, quadro SEH sem destrutor no caminho normal):
@@ -1480,9 +1480,9 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, club: usize,
 /// Posts news item 0x1775 telling the club's manager that another club offered one of his staff the manager job.
 ///
 /// SEH frame with no destructor on the normal path. `MANAGER_MANAGER::post_job_offer_news(person, club)`: with the
-/// person employed (+0x39) and the club, from the game start (`[0xdd6ec8]`) on, news 0x1775 (0x77bbe0) with the
+/// person employed (+0x39) and the club, from the game start (`[0xdd6ec8]`) on, news 0x1775 (`construct_news_item`) with the
 /// person's id, the three names (+0x33 of +4, +8, +0xc), the id of the club where they are, that of the offering club
-/// and the job (+0x3d), to the manager of their club (0x7861e0).
+/// and the job (+0x3d), to the manager of their club (`send_to_club_manager`).
 /// Original: `MANAGER_MANAGER::post_job_offer_news` (0x6a0540, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x6a0540 } (thiscall, ret 8, manager_manager.cpp, quadro SEH sem destrutor no caminho normal):
@@ -1519,12 +1519,12 @@ pub(crate) unsafe extern "thiscall" fn post_job_offer_news(_this: usize, person:
 /// After the match, by a random draw, gathers the league position for the news and the manager's favoured or rejected
 /// players who played badly, with the board confidence rising or falling because of them.
 ///
-/// Called from the board's news after the match (0x6a5fa0): `(match, club, ids, fixture, praise, a6..a10)`. Sets the 3
+/// Called from the board's news after the match (`post_board_match_reaction_news`): `(match, club, ids, fixture, praise, a6..a10)`. Sets the 3
 /// ids to −1. Club outside the national teams with a manager (+0xbf) with a record (+0x69): random(the record's +0x16)
 /// against random(10); if it passes, it clears the 5 outputs and, in a match of the club's division, a10 = 1 and, from
-/// the league table (0x4a4850, with more than 8 matches), a9/a8 (the row's +0x74/+0x73), a7 (the board's +0x2c) and a6
-/// (2 or 0xfe by the row's +0x19/+0x2d). The players (job 11, with a record) that the manager rejects (0x5480f0, if
-/// `praise` = 0) or favours (0x548090), of the club by contract (0x4cf5a0, on `[0xae1080]`), below the club's
+/// the league table (`exe::comp_stats_find_club_entry`, with more than 8 matches), a9/a8 (the row's +0x74/+0x73), a7 (the board's +0x2c) and a6
+/// (2 or 0xfe by the row's +0x19/+0x2d). The players (job 11, with a record) that the manager rejects (`staff_get_disliked_staff`, if
+/// `praise` = 0) or favours (`staff_get_favoured_staff`), of the club by contract (`exe::contract_manager_get_contract`, on `[0xae1080]`), below the club's
 /// reputation (rejected) or up to 35 years old and above it − 750 (favoured), with a rating below 7 in the match
 /// (0x6ab670 = −1): their ids go into `ids` and the board confidence (+6) rises (favoured) or falls (rejected) by 10 ×
 /// the manager's +0x57. Returns the sum of the two counts (the caller does not read it).
@@ -1644,8 +1644,8 @@ pub(crate) unsafe extern "thiscall" fn board_named_players_after_match(this: usi
 
 /// Finds the player among the starters of the match record: −1 for a rating under 7, 1 above, otherwise 0.
 ///
-/// SEH frame for the local array. `get_player_match_rating_verdict(person, fixture)`: reads the match record (0x729600
-/// on `[0xb6b7c0]`, with the two 0x625-byte sides constructed and destroyed by the iterators 0x9463af/0x9462bb) and
+/// SEH frame for the local array. `get_player_match_rating_verdict(person, fixture)`: reads the match record (`read_match_record`
+/// on `[0xb6b7c0]`, with the two 0x625-byte sides constructed and destroyed by the iterators `exe::crt_vector_constructor_iterator`/`exe::crt_vector_destructor_iterator`) and
 /// looks for the person among the first 11 of each side (ids at +0x71, 0x49 bytes): a rating (+0x35) below 7 gives −1,
 /// above 7 gives 1, 7 gives 0; not found (or no person), 0. The ecx is irrelevant.
 /// Original: `get_player_match_rating_verdict` (0x6ab670, manager_manager.cpp, thiscall).
@@ -1681,7 +1681,7 @@ pub(crate) unsafe extern "thiscall" fn get_player_match_rating_verdict(_this: us
 ///
 /// `build_board_player_performance_text(ids, win, output, variant)`, called from the board text (0x6a69c0). The
 /// original keeps only the first id that is not −1 (in its own place, 0, 1 or 2), counts 1, and the texts always read
-/// place 0. Win: with the first one, the name (0x53dba0, 200, style 1) in one of the three praises by variant (0, 1,
+/// place 0. Win: with the first one, the name (`database_format_staff_name`, 200, style 1) in one of the three praises by variant (0, 1,
 /// other); then, since no player counts on a defeat, the output stays empty (the original clears the first byte).
 /// Defeat: the output empty and, with the first one, one of the four blames by variant (0, 1, 2, other), with 100 and
 /// the name. Without ids, nothing.
@@ -1752,14 +1752,14 @@ pub(crate) unsafe fn clamp_confidence_floor(this: usize, club: usize) -> u32 {
     0x800
 }
 
-/// Calls CONTRACT_MANAGER::calc_player_value (0x4d0c60) on G_CONTRACT_MANAGER with (player, club, 0, -1, mode).
+/// Calls CONTRACT_MANAGER::calc_player_value (`calc_player_value`) on G_CONTRACT_MANAGER with (player, club, 0, -1, mode).
 ///
 /// [pt] O valor do jogador (CONTRACT_MANAGER::calc_player_value 0x4d0c60 em [0xae1050] com 0, −1 e `modo`).
 pub(crate) unsafe fn player_value(j: usize, club: usize, mode: u32) -> i32 {
     exe::contract_manager_calc_player_value(read_usize(G_CONTRACT_MANAGER), j, club, 0, -1, mode)
 }
 
-/// Looks up the player's contract (0x4cf5a0), stores it in G_CONTRACT_LOOKUP_RESULT and returns the contract's club (id
+/// Looks up the player's contract (`exe::contract_manager_get_contract`), stores it in G_CONTRACT_LOOKUP_RESULT and returns the contract's club (id
 /// at +4) or 0.
 ///
 /// [pt] O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]) ou 0.
@@ -1781,19 +1781,19 @@ pub(crate) static mut BOARD_VETO_SEEDED_RAND: bool = false;
 /// Checks whether the board vetoes a transfer: when buying an injured player, the physios draw the veto; at a human
 /// club, the board vetoes on budget, asking price or fee and loses confidence.
 ///
-/// `MANAGER_MANAGER::check_board_transfer_veto(player, club, amount, buying)`, called from 0x8cdb80 (offer without a
-/// swap). When buying a player with an injury (0x62ed70) of severity +0x28 > 20, each of the club's three physios
+/// `MANAGER_MANAGER::check_board_transfer_veto(player, club, amount, buying)`, called from `check_board_veto` (offer without a
+/// swap). When buying a player with an injury (`exe::injury_get_player_injury`) of severity +0x28 > 20, each of the club's three physios
 /// (+0x1cf, with a record +0x69) seeds the CRT rand with the two ids and draws: retirement announced because of the
-/// injury (0x7a7ed0) against his rating (0x544410 of byte +0x1e), the severity against random(200) + 25 and (41 −
-/// rating) × 5, the relapse (0x62ece0), rating³ + 100 (pow 0x945ff0) and the rating against the player's (+0x61 +0x2d):
-/// any of them vetoes (0x2000); at the end the rand goes back to the clock (0x946ebb). Then, only with a contract
-/// outside types 1 and 3, a current club (+0x39) and a human club (0x600a50): the limit (reputation +0x80 × 0.2)²
+/// injury (`find_retirement_entry`) against his rating (`exe::non_player_attribute_rating` of byte +0x1e), the severity against random(200) + 25 and (41 −
+/// rating) × 5, the relapse (`exe::injury_get_recurring_injury_level`), rating³ + 100 (pow 0x945ff0) and the rating against the player's (+0x61 +0x2d):
+/// any of them vetoes (0x2000); at the end the rand goes back to the clock (`exe::at_946ebb`). Then, only with a contract
+/// outside types 1 and 3, a current club (+0x39) and a human club (`exe::human_manager_is_human_club`): the limit (reputation +0x80 × 0.2)²
 /// between 150 thousand and 2 million. Selling: a league with a division and a squad below 15, the board loses
-/// 1250/1250/500 (+6/+0x14/+0x16, floor 1 on +6) and vetoes 0x200; otherwise the asking price (0x4d1600, at most the
+/// 1250/1250/500 (+6/+0x14/+0x16, floor 1 on +6) and vetoes 0x200; otherwise the asking price (`exe::contract_manager_calc_asking_price`, at most the
 /// value for the contract's club) above the limit and the value for the current club not below `amount`: asking > 2 ×
 /// amount with the contract's +0x3d > 25, or asking > 5 million with +0x3d > 0 and > 2.5 × amount, lose 1250/1250/500;
 /// > 6 × amount, 500/500/250; veto 0x800. Buying: an amount above 1.2 × the budget (0x598800) vetoes 0x800; above the
-/// limit, the lowest value (for the club and for the contract's club) + 0.65 × limit + the wealth band (0x5986b0: 1.25
+/// limit, the lowest value (for the club and for the contract's club) + 0.65 × limit + the wealth band (`get_wealth_band`: 1.25
 /// million, 650 thousand or 65 thousand), truncated, below 0.275 × amount loses 250/500/500 and vetoes 0x800. Otherwise
 /// 0.
 /// Original: `check_board_transfer_veto` (0x696b10, manager_manager.cpp, thiscall).
@@ -1969,10 +1969,10 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
 /// division or the country.
 ///
 /// SEH frame for the local news item. `MANAGER_MANAGER::post_board_ultimatum_news(club, opponent, competition)`, called
-/// from the board ultimatum (0x6ac560). Club with a division (+0x57), a manager (+0xcf) and the competition: news
+/// from the board ultimatum (`issue_board_ultimatum`). Club with a division (+0x57), a manager (+0xcf) and the competition: news
 /// 0x178d with the manager (the id and the three keys), the club, the opponent, the competition and a random(5); a club
-/// with reputation (+0x80) below 5750, to the club's manager (0x7861e0); otherwise, by random(3), to the division's
-/// managers (0x7862d0) or to the country's (+0x53, 0x7863f0).
+/// with reputation (+0x80) below 5750, to the club's manager (`send_to_club_manager`); otherwise, by random(3), to the division's
+/// managers (`send_to_division_managers`) or to the country's (+0x53, `send_to_nation_managers`).
 /// Original: `post_board_ultimatum_news` (0x6ac700, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x6ac700 } (thiscall, ret 0xc, manager_manager.cpp, quadro SEH da notícia local): `MANAGER_MANAGER::
@@ -2011,11 +2011,11 @@ pub(crate) unsafe extern "thiscall" fn post_board_ultimatum_news(_this: usize, c
 
 /// Writes the headline or body of the ultimatum news, with the names and links of the manager and the clubs.
 ///
-/// `news_board_ultimatum_text(news, body, output)`: reads fields 0 to 7 of the news (0x785830: the manager, the three
-/// keys, the club, the opponent, the competition); the manager's name (0x53dba0, 500, style 1). Body: text 0xa12dac in
+/// `news_board_ultimatum_text(news, body, output)`: reads fields 0 to 7 of the news (`get_slot`: the manager, the three
+/// keys, the club, the opponent, the competition); the manager's name (`database_format_staff_name`, 500, style 1). Body: text 0xa12dac in
 /// 0xde1f64 (0x66f4e0) with the genders (the clubs' +0x37, the competition's +0x52), the names (the clubs' +4, the
 /// competition's +0x38) and the manager's, into `output` (0x4ae660), and the links (0x4ae8a0): the manager (0x7da, if
-/// the names match via 0x53e990), the club and the opponent (0x7d5). Headline: 0xa12d64 with the club's gender (+0x52)
+/// the names match via `database_staff_matches_names`), the club and the opponent (0x7d5). Headline: 0xa12d64 with the club's gender (+0x52)
 /// and short name (+0x38).
 /// Original: `news_board_ultimatum_text` (0x6ac880, manager_manager.cpp, stdcall).
 ///
@@ -2099,7 +2099,7 @@ pub(crate) unsafe fn is_human_manager(p: usize) -> bool {
     read_i32(p) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10)
 }
 
-/// Writes the human manager's two name strings (+4, +8) into a news item from slot `first` (0x7858c0) and stores the
+/// Writes the human manager's two name strings (+4, +8) into a news item from slot `first` (`set_slot_string`) and stores the
 /// next free slot in slot k_next.
 ///
 /// [pt] Os dois nomes do técnico humano (os textos de +4 e +8, 0x7858c0) a partir do dado `primeiro`; o próximo dado livre
@@ -2227,13 +2227,13 @@ pub(crate) unsafe fn compare_manager_news(name: &str, regions: Vec<(usize, usize
 /// delivered to all, to the nation or to the division's managers; today's date into +0x18 of the board row.
 ///
 /// `MANAGER_MANAGER::post_manager_under_pressure_news(club, kind)`, called when considering sacking the manager
-/// (0x69aba0: kind 1 when swapping for the best candidate, 2 after 14 days). Club without a manager (+0xcf) or before
+/// (`consider_sacking_manager`: kind 1 when swapping for the best candidate, 2 after 14 days). Club without a manager (+0xcf) or before
 /// the date `[0xdd6ec8]`: nothing. News 0x1777: the manager (0..3), the club (4), the chairman (+0xbf: 5..7 and the id
 /// in 10; without one, −1). The reason (8) from the board row (+6 the confidence): rating +8, +0xa or +0xc below
 /// confidence − 500 with random(3) zero gives 2, 1 or 3 (+1 with random(5) non-zero); otherwise 0. The kind (9) and the
-/// rumour (11): random(10), or 1 if the manager knows the club well (0x544410 of the non-player +0x69 with +0x1b above
+/// rumour (11): random(10), or 1 if the manager knows the club well (`exe::non_player_attribute_rating` of the non-player +0x69 with +0x1b above
 /// 10). Delivery: human manager, to all; club with reputation above 5000, to the country's; otherwise to those of the
-/// division (+0x57) unless it is `[0x9cf764]`. Finally today's date into the row's +0x18 (0x417c10).
+/// division (+0x57) unless it is `[0x9cf764]`. Finally today's date into the row's +0x18 (`exe::date_operator_3d`).
 /// Original: `MANAGER_MANAGER::post_manager_under_pressure_news` (0x6a0e70, manager_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x6a0e70 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::post_manager_under_pressure_news(clube, tipo)`,
@@ -2312,10 +2312,10 @@ pub(crate) unsafe extern "thiscall" fn post_manager_under_pressure_news(this: us
 /// nation).
 ///
 /// `MANAGER_MANAGER::post_manager_departure_news(manager, kind, reason, club, job)`, called when removing the manager
-/// from the job (0x69b790). Null manager or club, before the date `[0xdd6ec8]` or kind 5: nothing. News 6000: the
+/// from the job (`remove_club_manager`). Null manager or club, before the date `[0xdd6ec8]` or kind 5: nothing. News 6000: the
 /// manager (0..3), the kind (4), the club (5), the job (7), the chairman's keys (+0xbf: 8..10; without one, −1) and the
 /// reason (11). Human manager: his names from data slot 13 on (the next free one in 12) and to all; otherwise by the
-/// club (0x544820; national team or reputation above 7250 to all, otherwise to the country's).
+/// club (`club_can_be_managed`; national team or reputation above 7250 to all, otherwise to the country's).
 /// Original: `MANAGER_MANAGER::post_manager_departure_news` (0x6a1b00, manager_manager.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x6a1b00 } (thiscall, ret 0x14, manager_manager.cpp): `MANAGER_MANAGER::post_manager_departure_news(tecnico, tipo,
@@ -2360,7 +2360,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_departure_news(this: usize, 
 /// `MANAGER_MANAGER::post_manager_appointment_news(manager, previous, club, job)`, called from the manager market's day
 /// (0x68f9c0) and from the appointment (0x69ebc0). Null manager or club, before the date `[0xdd6ec8]` or job 5:
 /// nothing. Only a club of an active nation (the nation's +0x11c) with its division in the array `[0xadadfc]`, or a
-/// national team (0x53b900) of an active nation. News 0x1787: the manager (0..3), the previous club (4; −1), the club
+/// national team (`exe::database_is_national_team`) of an active nation. News 0x1787: the manager (0..3), the previous club (4; −1), the club
 /// (5), the job (6) and the previous role (7: +0x28 for a national team, +0x3d for a club; without a previous one, −1).
 /// Human manager: the names from data slot 8 on (the next free one in 7) and to all; otherwise by the club, like the
 /// departure news.
@@ -2414,7 +2414,7 @@ pub(crate) unsafe extern "thiscall" fn post_manager_appointment_news(this: usize
     }
 }
 
-/// Copies date `origin` into `destination` via the Date assignment operator (0x417c10).
+/// Copies date `origin` into `destination` via the Date assignment operator (`exe::date_operator_3d`).
 ///
 /// [pt] A data `destino` recebe `origem` (0x417c10, com a devolução numa local).
 pub(crate) unsafe fn manager_manager_copy_date(target: usize, source: usize) {
@@ -2422,7 +2422,7 @@ pub(crate) unsafe fn manager_manager_copy_date(target: usize, source: usize) {
     exe::date_operator_3d(target, (t.as_mut_ptr()) as usize, source);
 }
 
-/// Days between today (0xae2c90) and date d (0x54cc30): days (+0) plus 365 × years (+2).
+/// Days between today (0xae2c90) and date d (`exe::date_get_difference`): days (+0) plus 365 × years (+2).
 ///
 /// [pt] A diferença entre hoje ([0xae2c90]) e a data `d` (0x54cc30): os dias (+0, com sinal) mais 365 × os anos (+2).
 pub(crate) unsafe fn days_since(d: usize) -> i32 {
@@ -2432,7 +2432,7 @@ pub(crate) unsafe fn days_since(d: usize) -> i32 {
     (read_u16(p + 2) as i32).wrapping_mul(365).wrapping_add(read_i16(p) as i32)
 }
 
-/// The comparer's dry run: the copy runs without the end of the injury (0x62e700: history in file and news item), which
+/// The comparer's dry run: the copy runs without the end of the injury (`end_player_injury`: history in file and news item), which
 /// cannot run twice; on reaching it, it sets `END_INJURY_REACHED` and the comparer keeps the original alone.
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem o fim da lesão (0x62e700: histórico em arquivo e notícia), que não pode
@@ -2450,7 +2450,7 @@ pub(crate) unsafe fn end_injury(this: usize, person: usize) {
 }
 
 /// One-time init of a function-local static Date guarded by a bit of G_FITNESS_UPDATE_STATIC_INIT_FLAGS: Date()
-/// (0x54a110) and its destructor registered with atexit.
+/// (`exe::date_date_54a110`) and its destructor registered with atexit.
 ///
 /// [pt] A estática local da guarda [0xb63d10] (bit `bit`): na primeira vez, Data() (0x54a110) e o destrutor vazio no atexit.
 pub(crate) unsafe fn init_static_date(bit: u8, data: usize, destrutor: usize) {
@@ -2544,7 +2544,7 @@ pub(crate) unsafe fn news_date_not_reached() -> bool {
 ///
 /// SEH frame with no destructor. `MANAGER_MANAGER::post_board_confidence_update_news(club)`: before the news date,
 /// nothing. News 0x1772 (local): 0 = the club's id, 1 = the manager's (+0xcf) days in the job (since date +0x3e, 365
-/// days per year) or 100 without a manager; through the reach (0x786090) with the club.
+/// days per year) or 100 without a manager; through the reach (`send_by_scope`) with the club.
 /// Original: `post_board_confidence_update_news` (0x6a4c40, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x6a4c40 } (thiscall, ret 4, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
@@ -2575,7 +2575,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_confidence_update_news(_this: 
 ///
 /// SEH frame with no destructor. `MANAGER_MANAGER::post_board_expectations_news(club, expectations)`: before the news
 /// date, nothing. News 0x1771 (local): 0 = the club's id, 1 = the expectations (signed word); to the club's manager
-/// (0x7861e0).
+/// (`send_to_club_manager`).
 /// Original: `post_board_expectations_news` (0x6a4a20, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x6a4a20 } (thiscall, ret 8, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
@@ -2615,7 +2615,7 @@ pub(crate) unsafe fn offer_contract_club(c: usize, filter: bool) -> usize {
     }
 }
 
-/// Puts a transfer offer on hold: status 1, flag bits at +0x30, removes the buyer's contract offer (0x4cca70), clears
+/// Puts a transfer offer on hold: status 1, flag bits at +0x30, removes the buyer's contract offer (`remove_contract_offer`), clears
 /// terms and the per-player offers of the swap list.
 ///
 /// [pt] Põe a oferta em espera: status 1, a marca +0x30 (bits 1..3 limpos, bit 0 ligado), sai a proposta de contrato do
@@ -2645,7 +2645,7 @@ pub(crate) unsafe fn put_offer_on_hold(o: usize) {
 ///
 /// SEH frame with no destructor. `MANAGER_MANAGER::post_fa_expectations_news(national_team, expectation, competition)`:
 /// news 0x177e (local): 0 = the national team's id, 1 = the expectation (signed word), 2 = the competition; through the
-/// reach (0x786090) with the national team.
+/// reach (`send_by_scope`) with the national team.
 /// Original: `post_fa_expectations_news` (0x6a44a0, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x6a44a0 } (thiscall, ret 0xc, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
@@ -2667,7 +2667,7 @@ pub(crate) unsafe extern "thiscall" fn post_fa_expectations_news(_this: usize, n
 ///
 /// SEH frame with no destructor. `MANAGER_MANAGER::post_supporter_protest_news(club)`: before the news date
 /// (`[0xdd6ec8]`), nothing. News 0x1782 (local): 0 = the club's id, 1..4 the manager (+0xcf: the id and the three keys
-/// +0x33 of +4, +8, +0xc); through the reach (0x786090).
+/// +0x33 of +4, +8, +0xc); through the reach (`send_by_scope`).
 /// Original: `post_supporter_protest_news` (0x6a5d10, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x6a5d10 } (thiscall, ret 4, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
@@ -2700,14 +2700,14 @@ pub(crate) unsafe extern "thiscall" fn post_supporter_protest_news(_this: usize,
 
 // simplification: the news item goes by reach (allocates): original only; the copy takes the branch.
 
-/// Calls 0x53ca90 (FN_DATABASE_GET_CLUB_MANAGER): the club's manager or national coach.
+/// Calls `database_get_club_manager` (FN_DATABASE_GET_CLUB_MANAGER): the club's manager or national coach.
 ///
 /// [pt] O técnico (ou o selecionador) do clube (0x53ca90).
 pub(crate) unsafe fn club_manager(club: usize) -> usize {
     exe::database_get_club_manager(club)
 }
 
-/// Calls FN_HUMAN_MANAGER_IS_HUMAN_CLUB (0x600a50) with (club, 0, any, person, 0).
+/// Calls FN_HUMAN_MANAGER_IS_HUMAN_CLUB (`exe::human_manager_is_human_club`) with (club, 0, any, person, 0).
 pub(crate) unsafe fn manager_manager_is_human_club(club: usize, any: u8, person: usize) -> u32 {
     exe::human_manager_is_human_club(club, 0, (any) as u32, (person) as u32, 0)
 }
@@ -2753,8 +2753,8 @@ pub(crate) unsafe fn clear_board_flags(l: usize) {
 
 /// Fixes the jobs of staff with a club (manager at +0xcf) and builds each club's board row: dates, reputation squared,
 /// the four confidence values drawn from the expectation (board rating or reputation) and the reputation, held to
-/// 5750/5500..10000, or 5000 without a manager; the season expectations (0x6a3770) and, without a manager, the vacancy
-/// (0x69ba50).
+/// 5750/5500..10000, or 5000 without a manager; the season expectations (`set_season_expectations`) and, without a manager, the vacancy
+/// (`add_job_vacancy`).
 ///
 /// `MANAGER_MANAGER::init_club_board_records()`: at the start of the career (from the constructor 0x68dbf0). (1) Each
 /// person with a club (+0x24): function (+0x28) 5 or 12 becomes the club's manager (+0xcf); 11 stays; 13 and 15 become
@@ -2766,9 +2766,9 @@ pub(crate) unsafe fn clear_board_flags(l: usize) {
 /// expectation `f` (the reputation, the board rating +0xa or 4500, which drops to 0.75 × reputation), `h` = f /
 /// (reputation × 0.5 + 2500) × 7500 and the four confidence values (+6, +8, +0xa, +0xc) by random draws, clamped below
 /// (5750, or 5500 with a draw) and above (10000; +6 above 9500 becomes 10000 − random(500)); clears the flags and sets
-/// the season expectations (0x6a3770 with 1). Without a manager (outside the partner club): confidence 5000, +0xe = 16,
+/// the season expectations (`set_season_expectations` with 1). Without a manager (outside the partner club): confidence 5000, +0xe = 16,
 /// flags cleared; a manageable club (or one with a competition and a nation with +0x11c & 3) gets the expectations and
-/// the vacancy (0x69ba50).
+/// the vacancy (`add_job_vacancy`).
 /// Original: `MANAGER_MANAGER::init_club_board_records` (0x68f130, manager_manager.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x68f130 } (thiscall, ret 0, manager_manager.cpp): `MANAGER_MANAGER::init_club_board_records()`: no começo da
@@ -2950,12 +2950,12 @@ pub(crate) unsafe extern "thiscall" fn init_club_board_records(this: usize) {
 // branches (runs once, at the start of the career).
 
 /// Processes the ban appeals: for each appeal (+0x14) whose date has come, the result is applied on up to 4 discipline
-/// rule sets (0x557000), the news is sent (0x6ac060) and the appeal leaves the list.
+/// rule sets (`apply_appeal_result`), the news is sent (`exe::manager_manager_post_ban_appeal_result_news`) and the appeal leaves the list.
 ///
 /// `MANAGER_MANAGER::process_ban_appeals()`: walks the appeals list (+0x14, the count a signed word re-read on each
-/// iteration) and, for each one whose date (+5) is no longer after today (0x456740), with a result (+4): the up to 4
-/// rules (+0xd..+0x10, ≥ 0) receive the result in the discipline (0x557000 with fields +0x11..+0x18); then the result
-/// news (0x6ac060) and the appeal leaves (0x68d1f0). Null item: the "Error" box (0x57f5) and it stops. Called from the
+/// iteration) and, for each one whose date (+5) is no longer after today (`exe::date_operator_3e`), with a result (+4): the up to 4
+/// rules (+0xd..+0x10, ≥ 0) receive the result in the discipline (`apply_appeal_result` with fields +0x11..+0x18); then the result
+/// news (`exe::manager_manager_post_ban_appeal_result_news`) and the appeal leaves (`manager_manager_remove`). Null item: the "Error" box (0x57f5) and it stops. Called from the
 /// board's daily pass (0x68f9c0); only the human's appeals enter the list.
 /// Original: `MANAGER_MANAGER::process_ban_appeals` (0x6abef0, manager_manager.cpp, thiscall, ret 0).
 ///
@@ -3018,7 +3018,7 @@ pub(crate) unsafe fn chairman_record(club: usize) -> usize {
     }
 }
 
-/// Days from date (d0, d1), passed by value, to the current game date (0x54cdb0).
+/// Days from date (d0, d1), passed by value, to the current game date (`exe::date_days_since`).
 ///
 /// [pt] Os dias da data `(d0, d1)` (por valor) até a data do jogo (0x54cdb0).
 pub(crate) unsafe fn days_until_today(d0: usize, d1: usize) -> i32 {
@@ -3031,7 +3031,7 @@ pub(crate) unsafe fn list_add_tail(list: usize, item: usize, n: u32) {
     f(list, item, n);
 }
 
-/// Appends a manager departure (type, reason from 0x69b350, club id) to the departures list [this+4] and sets bit 2 at
+/// Appends a manager departure (type, reason from `get_departure_reason`, club id) to the departures list [this+4] and sets bit 2 at
 /// +2 of the club's board row.
 ///
 /// [pt] A saída do técnico na lista das saídas [this+4] (6 bytes: `tipo`, o motivo 0x69b350 e o id do clube) e o bit 2 em
@@ -3073,21 +3073,21 @@ pub(crate) unsafe fn check_better_candidate(this: usize, club: usize) -> bool {
 
 /// Considers sacking the manager: with low board confidence and the manager in the job for 150 days, the limit comes
 /// from the division table, the runs and the manager flag; chairman draws hold back, issue the ultimatum, let the
-/// manager leave or sack him (the departure queued, reason 0x69b350), or look for a better candidate with the pressure
+/// manager leave or sack him (the departure queued, reason `get_departure_reason`), or look for a better candidate with the pressure
 /// story.
 ///
-/// `MANAGER_MANAGER::consider_sacking_manager(club, check)`: before the date `[0xdd6ec8]` (0x456770), with bit 2 in +2
-/// of the board row, with the ultimatum resolved (0x6ac470, only with `check`), with confidence (+6) above 4275 or with
+/// `MANAGER_MANAGER::consider_sacking_manager(club, check)`: before the date `[0xdd6ec8]` (`exe::date_operator_3c`), with bit 2 in +2
+/// of the board row, with the ultimatum resolved (`resolve_board_ultimatum`, only with `check`), with confidence (+6) above 4275 or with
 /// the manager in the job for less than 150 days: nothing. A well-regarded manager (the non-player's +0xa above 5000
 /// and above the club's reputation +0x80 − 750) for less than 400 days: with random(chairman's patience +0x1d, or 10) ≠
 /// 0 the confidence goes to 4275. The limit (10 above 3500, 500 up to 3000, 200 in between) changes by the club's row
-/// in the division table (0x4a4850): position (+4) above 30 − patience/2 in the top places (+0xbf, or +0xbe by the
+/// in the division table (`exe::comp_stats_find_club_entry`): position (+4) above 30 − patience/2 in the top places (+0xbf, or +0xbe by the
 /// competition's virtual +0x98) holds; the last 5 results (+0x14..+0x18) averaging above 2 hold; the runs +0x19, +0x41,
-/// +0x55 and +0x2d move the limit (×1.5 on +0x55). With the manager flagged (0x7a7eb0), the limit ×0.25.
-/// random(patience × 50, or 500) above the limit holds; random(patience + 1, or 11) = 0 gives the ultimatum (0x6ac560;
-/// once given, nothing more). An AI manager (0x600a50), without the flag, with random(+0x5a) and random(4) zero leaves
+/// +0x55 and +0x2d move the limit (×1.5 on +0x55). With the manager flagged (`record_bits`), the limit ×0.25.
+/// random(patience × 50, or 500) above the limit holds; random(patience + 1, or 11) = 0 gives the ultimatum (`issue_board_ultimatum`;
+/// once given, nothing more). An AI manager (`exe::human_manager_is_human_club`), without the flag, with random(+0x5a) and random(4) zero leaves
 /// (departure 2). With a chairman: at a league club or national team, random(patience) < 5 and random(20) ≠ 0 tries to
-/// swap for the best candidate; otherwise the pressure news (0x6a0e70 with 2) after 14 days, and that is all. Without a
+/// swap for the best candidate; otherwise the pressure news (`post_manager_under_pressure_news` with 2) after 14 days, and that is all. Without a
 /// chairman: random(3) = 0 tries the swap. Without a swap, the non-player's confidence drops by 250 (minimum 1500 with
 /// a chairman, 1 without) and the manager is sacked (departure 1).
 /// Original: `MANAGER_MANAGER::consider_sacking_manager` (0x69aba0, manager_manager.cpp, thiscall, ret 8).
@@ -3323,7 +3323,7 @@ pub(crate) unsafe fn issue_ultimatum(this: usize, club: usize, l: usize) -> u8 {
 /// story with the opponent and the club in the ultimatum list; returns 1, or 0 without a match.
 ///
 /// SEH frame for the local list. `MANAGER_MANAGER::issue_board_ultimatum(club)`: club with a manager (+0xcf) and a
-/// division (+0x57): the local list (LLIST 0x68d020, released by 0x68d040) receives the matches of the next 8 weeks;
+/// division (+0x57): the local list (LLIST `exe::new_llist`, released by `exe::drop_llist`) receives the matches of the next 8 weeks;
 /// the first valid one gives the ultimatum news and puts the club in the ultimatum list `[this+0x10]`: returns 1.
 /// Otherwise 0.
 /// Original: `MANAGER_MANAGER::issue_board_ultimatum` (0x6ac560, manager_manager.cpp, thiscall, ret 4).
@@ -3344,8 +3344,8 @@ pub(crate) unsafe extern "thiscall" fn issue_board_ultimatum(this: usize, club: 
 // simplification: allocates the match list, the news item and the ultimatum list item: original only, checked by the plan:
 // the ultimatum list [this+0x10] grows by 1 when it returns 1 and stays the same with 0.
 
-/// The contract flags that the manager's departure clears: read by 0x8676f0 (+0x40; 0x10000000 is cleared by 0x8674e0,
-/// which touches +0x45) and read in +0x45 (cleared by 0x8674e0, which also updates the person).
+/// The contract flags that the manager's departure clears: read by `contract_flags` (+0x40; 0x10000000 is cleared by `exe::staff_contract_clear_grievances`,
+/// which touches +0x45) and read in +0x45 (cleared by `exe::staff_contract_clear_grievances`, which also updates the person).
 ///
 /// [pt] As marcas do contrato que a saída do técnico apaga: lidas pela 0x8676f0 (+0x40; a 0x10000000 é apagada pela
 /// 0x8674e0, que mexe no +0x45) e lidas no +0x45 (apagadas pela 0x8674e0, que também atualiza a pessoa).
@@ -3376,12 +3376,12 @@ pub(crate) unsafe fn manager_and_role(club: usize) -> Option<(usize, u8)> {
 /// contracts' grievances and flags.
 ///
 /// `MANAGER_MANAGER::remove_club_manager(club, kind, reason, keep)`: with the manager in the job: at the human club
-/// (0x600a50) the automatic replies (0x7874b0); the departure date (+0x29 for a national team, +0x3e for a club)
-/// becomes today's; with a manager job (12, 13 or 15) he leaves the squad (0x690730); he leaves the staff (0x690890);
-/// outside national teams he loses the contract (0x4d0b50); outside type 3 the departure news (0x6a1b00 with 2 for
+/// (`exe::human_manager_is_human_club`) the automatic replies (`auto_respond_all`); the departure date (+0x29 for a national team, +0x3e for a club)
+/// becomes today's; with a manager job (12, 13 or 15) he leaves the squad (`manager_manager_remove_player_from_squad`); he leaves the staff (`remove_staff_from_club`);
+/// outside national teams he loses the contract (`remove_contract`); outside type 3 the departure news (`post_manager_departure_news` with 2 for
 /// manager jobs, 3 for the others); without `keep` the confidence (+6 of the row) goes to 3500. The change record
-/// (0x869aa0, with 0 for kind 2 and 2 for the others), the club's fines (0x5a5960) and, outside national teams, the
-/// grievances and flags of each squad player with a contract (0x4cf5a0) are removed.
+/// (`record_manager_job_change`, with 0 for kind 2 and 2 for the others), the club's fines (`exe::fine_clear_club_fine_count`) and, outside national teams, the
+/// grievances and flags of each squad player with a contract (`exe::contract_manager_get_contract`) are removed.
 /// Original: `MANAGER_MANAGER::remove_club_manager` (0x69b790, manager_manager.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x69b790 } (thiscall, ret 0x10, manager_manager.cpp): `MANAGER_MANAGER::remove_club_manager(clube, tipo, motivo,
@@ -3476,7 +3476,7 @@ pub(crate) unsafe fn record_national_departure(this: usize, national_team: usize
     append(read_usize(this + manager_manager_fields::DEPARTURE_LIST), reg.as_mut_ptr() as usize, 6);
 }
 
-/// Calls 0x69aba0 (FN_MANAGER_MANAGER_CONSIDER_SACKING_MANAGER) without the ultimatum check: the federation considers
+/// Calls `consider_sacking_manager` (FN_MANAGER_MANAGER_CONSIDER_SACKING_MANAGER) without the ultimatum check: the federation considers
 /// sacking.
 ///
 /// [pt] A federação pensa em demitir (0x69aba0 sem conferir o ultimato).
@@ -3487,7 +3487,7 @@ pub(crate) unsafe fn consider_sacking(this: usize, national_team: usize) {
 
 /// Reviews the national team's performance: the FA confidence from the manager's grade in the competition (−3..3,
 /// virtual +0x74), the assessment story and, by time in the job, reputation and random draws, the manager's departure
-/// or the FA considering the sacking (0x69aba0).
+/// or the FA considering the sacking (`consider_sacking_manager`).
 ///
 /// `MANAGER_MANAGER::review_national_team_performance(comp, national_team)`: a national team with a manager (+0xcf) and
 /// a competition in `[0xadadfc]`: with the manager there for less than 365 days, the FA confidence (+6 of the row)
@@ -3495,9 +3495,9 @@ pub(crate) unsafe fn consider_sacking(this: usize, national_team: usize) {
 /// 10000, floor 8500); 2: +750 (ceiling 10000, floor 6500), and the AI national team with the manager there for more
 /// than 3650 days lets him go if random(15000) + 3750 < reputation (+0x80); 0: −250 and, only with the row's +0xe = −3,
 /// 3500 and the departure (more than 3650 days) or, with reputation above 6750 and more than 1460 days, random(15000)
-/// against the reputation (below: departure; otherwise the FA considers it, 0x69aba0); −1: −750 (1..3500), departure
+/// against the reputation (below: departure; otherwise the FA considers it, `consider_sacking_manager`); −1: −750 (1..3500), departure
 /// after 1460 days, random(20000) after 730; −2: −1250 (1..3000), departure after 730 days, otherwise random(15000) +
-/// 1250; −3: −1750 (1..3000) and the departure. The assessment goes into the news (0x6a5a60) right after the change.
+/// 1250; −3: −1750 (1..3000) and the departure. The assessment goes into the news (`post_fa_performance_news`) right after the change.
 /// The departures carry reason 6 (2, 0 and −1 with longer tenure) or 0.
 /// Original: `MANAGER_MANAGER::review_national_team_performance` (0x6a5610, manager_manager.cpp, thiscall, ret 8).
 ///
@@ -3598,8 +3598,8 @@ pub(crate) unsafe extern "thiscall" fn review_national_team_performance(this: us
 /// Returns 1 for a manageable club, not a national team, with board confidence at row +8 under 3000 and a negative
 /// balance.
 ///
-/// `MANAGER_MANAGER::is_club_in_financial_trouble(club)`: a manageable club (0x544820), not a national team (0x53b900),
-/// with the board confidence at +8 of the row below 3000 and the balance (64 bits in the finance record, 0x5a0590 on
+/// `MANAGER_MANAGER::is_club_in_financial_trouble(club)`: a manageable club (`club_can_be_managed`), not a national team (`exe::database_is_national_team`),
+/// with the board confidence at +8 of the row below 3000 and the balance (64 bits in the finance record, `get_club_finance` on
 /// `[0xae2a38]`) negative: 1. Otherwise 0. Used by the match engine (crowd chants).
 /// Original: `MANAGER_MANAGER::is_club_in_financial_trouble` (0x69eb50, manager_manager.cpp, thiscall, ret 4).
 ///
@@ -3664,7 +3664,7 @@ pub(crate) unsafe fn roll_mood(q: f32) -> i16 {
 /// stays in the code and does not run.
 ///
 /// `MANAGER_MANAGER::reset_board_for_new_manager(club)`: sets bit 1 of +2 of the board row, recalculates the season
-/// expectations (0x6a3770 with the news) and sets it again; the club list of the Shortlist_Manager (+0xdc, 9 bytes per
+/// expectations (`set_season_expectations` with the news) and sets it again; the club list of the Shortlist_Manager (+0xdc, 9 bytes per
 /// club, +4) is set to 2. The manager's (+0xcf, record +0x69) reputation: in the same nation (+0x53 = the manager's
 /// +0x1a) the current (+0xa) and domestic (+8) move 10% towards the club's (+0x80); otherwise the current moves 10%
 /// starting from the other-nation one (+0xc). The base: the current reputation (zero: half the club's, or 5000 without;
@@ -3673,8 +3673,8 @@ pub(crate) unsafe fn roll_mood(q: f32) -> i16 {
 /// 6500. The confidence (+6) and the moods +8/+0xa/+0xc come from the base with two random draws of 500 each (limits
 /// 6250..9500, 6250..10000, 5250..10000, 5750..10000, with random draws on the lower ones); clears the changes
 /// +0x10..+0x16, the doubles +0x38, +0x28, +4, +5 and flags (+2 &~0x2e, +3 &0xe0, +0x40 &7). Records the new manager
-/// (0x869aa0 with 1). With a human manager (id ≥ `[0xae2364]` − 16): cancels the club's offers (0x8c4950), rebuilds the
-/// club's list (0x84abe0) and the tactics of the 50 slots (0x896c60). +1 = the finances' wealth band (0x5986b0), 0 for
+/// (`record_manager_job_change` with 1). With a human manager (id ≥ `[0xae2364]` − 16): cancels the club's offers (`exe::transfer_manager_cancel_club_offers`), rebuilds the
+/// club's list (`exe::shortlist_manager_rebuild_club_shortlist`) and the tactics of the 50 slots (`remove_player_from_selection`). +1 = the finances' wealth band (`get_wealth_band`), 0 for
 /// national teams or without finances.
 /// Original: `MANAGER_MANAGER::reset_board_for_new_manager` (0x694c80, manager_manager.cpp, thiscall, ret 4).
 ///
@@ -3815,13 +3815,13 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
 /// and moods (with random draws) and time in the job.
 ///
 /// `MANAGER_MANAGER::get_departure_reason(id)`: the reason (0..11) for the departure of the manager of club `id`.
-/// National team (0x53b900): 0. More than 2 squad players with grievance 0x10000000 in the contract (+0x45): 9. In the
-/// season (0x547770): in the league with the nation flagged (+0x11c), a table row with more than 25 (+4) and more than
-/// 1 match (+0x55), by the competition's position 0x9c: progress (+0x73) inside and the projected position (0x4ae300)
+/// National team (`exe::database_is_national_team`): 0. More than 2 squad players with grievance 0x10000000 in the contract (+0x45): 9. In the
+/// season (`club_is_in_season`): in the league with the nation flagged (+0x11c), a table row with more than 25 (+4) and more than
+/// 1 match (+0x55), by the competition's position 0x9c: progress (+0x73) inside and the projected position (`exe::comp_stats_get_club_projected_positions`)
 /// outside the (+0x3e − +0xc1) places: 11; debt (double +0x30 < +0x38) with the change +0x12 below −300: 10. Then:
-/// +0x12 below −750 outside a type 1 run (0x690c30) with a random draw of 3 = 0: 2; in the season with bit 8 of +2: 7;
+/// +0x12 below −750 outside a type 1 run (`get_current_run`) with a random draw of 3 = 0: 2; in the season with bit 8 of +2: 7;
 /// +0x10 < −350: 3; +0x14 < −750: 5; mood +0xa below confidence +6 and random(+0xa) < random(+6): 8; +0x16 < −750 with
-/// a random draw of 3 ≠ 0: 4; the manager in the job for more days (0x54cdb0 since +0x3e) than 1000 + a random draw of
+/// a random draw of 3 ≠ 0: 4; the manager in the job for more days (`exe::date_days_since` since +0x3e) than 1000 + a random draw of
 /// 2000: 6. Otherwise 0.
 /// Original: `MANAGER_MANAGER::get_departure_reason` (0x69b350, manager_manager.cpp, thiscall, ret 4).
 ///
@@ -3922,7 +3922,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     0
 }
 
-/// Returns the 210-byte manager record read by 0x86f5b0: humans by their slot after the non-player records, others by
+/// Returns the 210-byte manager record read by `get_manager_record`: humans by their slot after the non-player records, others by
 /// the non-player record id; None without one.
 ///
 /// [pt] O registro do técnico (210 bytes) que a 0x86f5b0 olha: humano (id em [0xae2364] − 16 .. [0xae2364]) pela vaga dele
@@ -3975,7 +3975,7 @@ pub(crate) unsafe fn board_row_at(this: usize, id: usize) -> usize {
     read_usize(this).wrapping_add(id.wrapping_mul(0x49))
 }
 
-/// Player value via CONTRACT_MANAGER 0x4d0c60, using the player's current club if any, else the given club, with the
+/// Player value via CONTRACT_MANAGER `calc_player_value`, using the player's current club if any, else the given club, with the
 /// last argument 1 for human clubs.
 ///
 /// [pt] O valor do jogador para o clube (CONTRACT_MANAGER 0x4d0c60 em [0xae1050], pode sortear) como a 0x696570 o pede:
@@ -4007,11 +4007,11 @@ pub(crate) unsafe fn fee_limit(club: usize) -> i32 {
 /// chairman's favoured or disliked player.
 ///
 /// `MANAGER_MANAGER::assess_transfer_deal(transfer, f1, f2)`: with the player (+0xc) who has a record (+0x61), clears
-/// the two flag words and: for the buying club (+8, 0x245-byte record) adds the player's value (0x4d0c60, 1 if 0) to
-/// the net spend (+0x38) and flags `f1` by the ratio fee (0x8e7a70) / value: fee up to the limit (reputation × 0.2)² =
+/// the two flag words and: for the buying club (+8, 0x245-byte record) adds the player's value (`calc_player_value`, 1 if 0) to
+/// the net spend (+0x38) and flags `f1` by the ratio fee (`exe::transfer_offer_get_total_value`) / value: fee up to the limit (reputation × 0.2)² =
 /// 4; value above 250,000: < 0.2 = 0x10, < 0.5 = 8, < 2 = 4, < 6 = 2, otherwise 1; up to 250,000: < 0.125 = 8, < 8 = 4,
 /// otherwise 2; the favoured or rejected player of the club or of the chairman (+0xbf;
-/// 0x547790/0x5477d0/0x547810/0x547840) = 0x40 or 0x100. For the selling club (the player's +0x39) it subtracts the
+/// `favourite_of`/`rejected_by`/`exe::staff_is_favoured_by`/`exe::staff_is_disliked_by`) = 0x40 or 0x100. For the selling club (the player's +0x39) it subtracts the
 /// value from the spend and flags `f2` with the mirrored bands (0.25/0.5/2/4; 0.125/8) and 0x20 or 0x80. Transfer
 /// already assessed (+0x1f = 1): nothing (the flags stay as they are).
 /// Original: `MANAGER_MANAGER::assess_transfer_deal` (0x696570, manager_manager.cpp, thiscall, ret 0xc).
@@ -4162,13 +4162,13 @@ pub(crate) unsafe fn apply_reason_flags(e: usize, f: u32) {
 /// Changes the board confidence (+6, 1..10000) and moods (+0x14, +0x16) of the buyer and the seller from the deal flags
 /// and removes the player from the seller chairman's favoured people.
 ///
-/// `MANAGER_MANAGER::apply_transfer_confidence_changes(transfer)`: assesses the deal (0x696570) with the buyer's flags
+/// `MANAGER_MANAGER::apply_transfer_confidence_changes(transfer)`: assesses the deal (`assess_transfer_deal`) with the buyer's flags
 /// in the slot of the argument itself and the seller's in the slot of the pushed `ecx` (already assessed, +0x1f = 1:
 /// the pointer's bits stay, as in the original) and changes the board row of the buyer (+8) and, if the seller (the
-/// player's +0x39) is not a national team (0x53b900) and does not have finances with +0x165 = 1 (0x5a0590), the
+/// player's +0x39) is not a national team (`exe::database_is_national_team`) and does not have finances with +0x165 = 1 (`get_club_finance`), the
 /// seller's: ratio 1: −125/−500, 2: −25/−250, 8: +25/+25, 0x10: +75/+75 (confidence +6 and mood +0x14); favoured and
 /// rejected on mood +0x16 (and +0x14). Clamps the confidence to 1..10000 and +0x16 to −10000 or more; at the end the
-/// player is removed from the seller chairman's favoured people (0x547c10).
+/// player is removed from the seller chairman's favoured people (`staff_remove_favoured_staff`).
 /// Original: `MANAGER_MANAGER::apply_transfer_confidence_changes` (0x6978f0, manager_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x6978f0 } (thiscall, ret 4, manager_manager.cpp): `MANAGER_MANAGER::apply_transfer_confidence_changes(transf)`:
@@ -4234,9 +4234,9 @@ pub(crate) unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: u
 /// departure (reason 2, or 7 without games in the table) and returns 1.
 ///
 /// `MANAGER_MANAGER::resolve_board_ultimatum(club)`: walks the ultimatum list (+0x10, up to the count, which drops with
-/// each removal) and removes the club's item (0x68d1f0); if the manager (+0xcf) has been in the job for more than 100
-/// days (0x54cdb0 since +0x3e), it puts the departure in the list (+4, 0x68d0d0, 6 bytes: 1, reason 2, or 7 if the
-/// club's row in the division table (0x4a4850) has no matches (+0x55), and the club's id), sets bit 2 in +2 of the
+/// each removal) and removes the club's item (`manager_manager_remove`); if the manager (+0xcf) has been in the job for more than 100
+/// days (`exe::date_days_since` since +0x3e), it puts the departure in the list (+4, 0x68d0d0, 6 bytes: 1, reason 2, or 7 if the
+/// club's row in the division table (`exe::comp_stats_find_club_entry`) has no matches (+0x55), and the club's id), sets bit 2 in +2 of the
 /// board row and returns 1. Otherwise 0.
 /// Original: `MANAGER_MANAGER::resolve_board_ultimatum` (0x6ac470, manager_manager.cpp, thiscall, ret 4).
 ///
@@ -4292,9 +4292,9 @@ pub(crate) unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, club
 ///
 /// `MANAGER_MANAGER::process_pending_departures()`: walks the pending departures list (+4, 6-byte items: two bytes and
 /// the club's id at +2) up to the count (which drops with each removal: the original goes through only part of the
-/// items) and, for each item, with a manager at the club (+0xcf) calls the departure (0x69b790 with the two bytes
+/// items) and, for each item, with a manager at the club (+0xcf) calls the departure (`remove_club_manager` with the two bytes
 /// pushed in the integer registers: the upper bits are those of the id and of 145 × id) and, if the club opens a
-/// vacancy (0x544820), the vacancy (0x69ba50 with the departing manager); removes the item (0x68d1f0). Null item: the
+/// vacancy (`club_can_be_managed`), the vacancy (`add_job_vacancy` with the departing manager); removes the item (`manager_manager_remove`). Null item: the
 /// "Error" box.
 /// Original: `MANAGER_MANAGER::process_pending_departures` (0x69b650, manager_manager.cpp, thiscall, ret 0).
 ///
@@ -4368,9 +4368,9 @@ pub(crate) unsafe fn remove_from_squad(club: usize, person: usize) {
 ///
 /// `MANAGER_MANAGER::remove_player_from_squad(person, club)`: at the person's club (+0x39): the player-manager function
 /// (+0x3d) goes back to the manager one (12 → 5, 13 → 6, 15 → 8) or becomes 0xb and the person leaves the club; removed
-/// from the lists (0x7c5fe0), the media (0x843e10 with 4, 2), the club's two tactics (0x896c60) and the 50 squad slots
-/// (+0xd7). For the national team (+0x24, function +0x28) the same without 0x7c5fe0 and 0x843e10. At the end the loan
-/// contract (0x4cf5a0) gets state +0x4e = 4. Returns the result of 0x4cf5a0.
+/// from the lists (`archive_player_stats`), the media (`update_staff_status` with 4, 2), the club's two tactics (`remove_player_from_selection`) and the 50 squad slots
+/// (+0xd7). For the national team (+0x24, function +0x28) the same without `archive_player_stats` and `update_staff_status`. At the end the loan
+/// contract (`exe::contract_manager_get_contract`) gets state +0x4e = 4. Returns the result of `exe::contract_manager_get_contract`.
 /// Original: `MANAGER_MANAGER::remove_player_from_squad` (0x690730, manager_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x690730 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::remove_player_from_squad(pessoa, clube)`: no
@@ -4422,7 +4422,7 @@ pub(crate) unsafe fn clear_slots_holding(c: usize, base: usize, n: usize, person
     }
 }
 
-/// Body of 0x690890 without the calls: person `pessoa` (fields in `s`) leaves his post at club `clube` (fields in `c`),
+/// Body of `remove_staff_from_club` without the calls: person `pessoa` (fields in `s`) leaves his post at club `clube` (fields in `c`),
 /// by role.
 ///
 /// `s` and `c` are the records themselves in the copy and copies of them in the comparer's plan.
@@ -4548,10 +4548,10 @@ pub(crate) unsafe extern "thiscall" fn remove_staff_from_club(_this: usize, pers
     r
 }
 
-/// Comparador: a saída e a vaga (0x69b790, 0x69ba50) demitem e contratam: roda só a original.
+/// Comparador: a saída e a vaga (`remove_club_manager`, `add_job_vacancy`) demitem e contratam: roda só a original.
 // simplification: no plan (0x69ba50 may append outputs to the same list); the proof is the career and Rust mode.
 
-/// Copies the fields 0x690730/0x690890 write: the person's national job (6 bytes), club job (5 bytes) and the club's
+/// Copies the fields `manager_manager_remove_player_from_squad`/`remove_staff_from_club` write: the person's national job (6 bytes), club job (5 bytes) and the club's
 /// staff slots (+0xbf..+0x1db).
 ///
 /// [pt] Os campos da pessoa e do clube que a 0x690730/0x690890 gravam: (pessoa +0x24..+0x29, +0x39..+0x3e) e as vagas do
@@ -4593,7 +4593,7 @@ pub(crate) unsafe fn club_has_vacancy(this: usize, club: usize) -> Option<bool> 
     }
 }
 
-/// True if the club has no exe::database_get_club_manager(0x53ca90), can be managed, is not the B team of a linked pair and has no open
+/// True if the club has no exe::database_get_club_manager(`database_get_club_manager`), can be managed, is not the B team of a linked pair and has no open
 /// vacancy yet; None if the vacancy list ends early.
 ///
 /// [pt] O `clube` está sem técnico (0x53ca90), pode ser dirigido (0x544820), não é o time B de um par (0x540a50 com 1
@@ -4608,14 +4608,14 @@ pub(crate) unsafe fn club_needs_vacancy(this: usize, club: usize, eh_a: &mut u32
     club_has_vacancy(this, club).map(|tem| !tem)
 }
 
-/// Gives each club without a manager (0x53ca90), manageable (0x544820), not a B team and without an entry in the
-/// `[this+8]` list the "Job not found" note and a job vacancy (0x69ba50).
+/// Gives each club without a manager (`database_get_club_manager`), manageable (`club_can_be_managed`), not a B team and without an entry in the
+/// `[this+8]` list the "Job not found" note and a job vacancy (`add_job_vacancy`).
 ///
 /// `MANAGER_MANAGER::fix_missing_jobs()`: each club (`[0xae23b4]`, 0x245 bytes, `[0xae235c]` re-read on each iteration)
 /// without a manager, manageable, not a B team and without an open vacancy (`club_needs_vacancy`) gets the note "Job
-/// not found for %s" (name +4) in `[0xde1f64]` and the vacancy (0x69ba50 without a previous manager). A list that ends
+/// not found for %s" (name +4) in `[0xde1f64]` and the vacancy (`add_job_vacancy` without a previous manager). A list that ends
 /// before the count: the "Error" box (line 0x311e) and the routine ends. No SEH, no random draw; the partner local
-/// starts at 0 only once and is read only when 0x540a50 finds it (and writes it).
+/// starts at 0 only once and is read only when `exe::club_get_linked_b_team` finds it (and writes it).
 /// Original: `MANAGER_MANAGER::fix_missing_jobs` (0x69d060, manager_manager.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x69d060 } (thiscall, ret 0, manager_manager.cpp): `MANAGER_MANAGER::fix_missing_jobs()`: cada clube
@@ -4646,17 +4646,17 @@ pub(crate) unsafe extern "thiscall" fn fix_missing_jobs(this: usize) {
     }
 }
 
-/// Returns the highest manager score (0x69d1b0, job 5) among the available staff accepted for the club (nation,
-/// continent, reputation, contract, 0x69f810), ignoring the current manager; nobody: −10000.
+/// Returns the highest manager score (`exe::score_staff_for_job`, job 5) among the available staff accepted for the club (nation,
+/// continent, reputation, contract, `is_staff_suitable_for_job`), ignoring the current manager; nobody: −10000.
 ///
-/// `MANAGER_MANAGER::best_manager_candidate_score(club, current)`: the highest manager score (0x69d1b0 with 0 and job
+/// `MANAGER_MANAGER::best_manager_candidate_score(club, current)`: the highest manager score (`exe::score_staff_for_job` with 0 and job
 /// 5) among the people (`[0xae23bc]`, 0x6e bytes, `[0xae2364]` re-read on each iteration) with a staff record (+0x69),
 /// of the last 16 only the human ones (+0x5f), who are not `current`, without flags 0x30 in byte +0xb of the 79-byte
-/// record (`[0xae2d0c]`), without a loan contract (0x4cf6d0), who are not candidates for another vacancy (0x69fc60),
+/// record (`[0xae2d0c]`), without a loan contract (`contract_record`), who are not candidates for another vacancy (`person_in_list`),
 /// with a nation (+0x1a) and the club with a nation (+0x53): from another nation only with reputation (+0x69 → +0xa)
 /// from 3750; from another continent (+0x75) with +0x69 → +0xc from 4250 and the club with reputation (+0x80) from
-/// 4750; a player (+0x61) with a club (+0x39) and job 11, 12, 13 or 15 cannot have a contract with the club (0x4cf5f0)
-/// flagged in +0x49; and accepted for the job (0x69f810 with 3.5). Nobody: −10000.
+/// 4750; a player (+0x61) with a club (+0x39) and job 11, 12, 13 or 15 cannot have a contract with the club (`exe::contract_manager_get_contract_for_club`)
+/// flagged in +0x49; and accepted for the job (`is_staff_suitable_for_job` with 3.5). Nobody: −10000.
 /// Original: `MANAGER_MANAGER::best_manager_candidate_score` (0x69c540, manager_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x69c540 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::best_manager_candidate_score(clube,
@@ -4723,7 +4723,7 @@ pub(crate) unsafe extern "thiscall" fn best_manager_candidate_score(this: usize,
 /// The offer date is today ([0xae2c90]) + `dias` (with `dias` ≥ 50 the original shows the error box and uses 10), with
 /// the slice [0xae2c88] + `fatias` brought into 0..2 (every 3 slices, one more day). The list bucket: the days since
 /// the base date (+0x84d; with no year at +0x84f yet, today) plus the start (+0x84c), modulo 50 from 50 to 127, × 3 +
-/// slice, in the 14-byte lists starting at +0x18. Read-only (0x54c5b0 and 0x54cdb0 on copies of the dates).
+/// slice, in the 14-byte lists starting at +0x18. Read-only (`exe::date_add_days` and `exe::date_days_since` on copies of the dates).
 ///
 /// [pt] O plano do agendamento: a data da oferta (hoje [0xae2c90] + `dias`; com `dias` ≥ 50 a original mostra a caixa e
 /// usa 10) com a fatia [0xae2c88] + `fatias` trazida para 0..2 (cada 3 fatias, mais um dia), e o balde da lista: os
@@ -4752,10 +4752,10 @@ pub(crate) unsafe fn vacancy_schedule_plan(this: usize, days: u8, slices: u8) ->
     (data, slice, this.wrapping_add(0x18).wrapping_add((balde as usize).wrapping_mul(14)))
 }
 
-/// For a played match, changes the board confidence of each side with a manager (0x695240, home with 1).
+/// For a played match, changes the board confidence of each side with a manager (`update_board_confidence_after_match`, home with 1).
 ///
 /// `MANAGER_MANAGER::update_board_after_fixture(fixture, match)`: a played fixture (+0 ≠ −2, +0x40 ≠ 0): the board
-/// confidence of each side with a manager (+0xcf) changes through 0x695240 (home +0x1c with 1, away +0x20 with 0).
+/// confidence of each side with a manager (+0xcf) changes through `update_board_confidence_after_match` (home +0x1c with 1, away +0x20 with 0).
 /// Original: `MANAGER_MANAGER::update_board_after_fixture` (0x6951e0, manager_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x6951e0 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::update_board_after_fixture(partida,
@@ -4826,9 +4826,9 @@ pub(crate) unsafe fn is_offer_eligible(o: usize, club: u32) -> bool {
     (read_usize(o + offer::BUYER_CLUB_ID) as u32 == club || *((o + offer::PLAYER_AWARE) as *const u8) == 1) && *((o + offer::STATUS) as *const u8) == 2
 }
 
-/// Is the person in the list (iterator 0x68d1b0, restored at the end)?
+/// Is the person in the list (iterator `next_list_item`, restored at the end)?
 ///
-/// Is the person `*p` in the list `[this+8]` (count word at +0, iterator 0x68d1b0 with the position at +0xa, restarted
+/// Is the person `*p` in the list `[this+8]` (count word at +0, iterator `next_list_item` with the position at +0xa, restarted
 /// from +2 and restored at the end)? A list that ends before the count: the original (error box). Returns only `al`.
 /// Original: `person_in_list` (0x69fc60, manager_manager.cpp, thiscall).
 ///
@@ -4866,15 +4866,15 @@ compare_value!(compare_contract_record, contract_record, IDX_CONTRACT_RECORD, (p
 /// without a club: 0. The vetoes (0): other-nation reputation (+0xc) above 4250 from another nation with weight (+0x85)
 /// below 10; domestic (+8) above 6250, a manager (+0x3d = 5) from another nation and a club below 5750; a national team
 /// that is already one of their three (+0x65 +0x10..+0x18); a player (0xb) with a rating (+0x61 +0xb) above 4750 at a
-/// club below 6750, with a contract (0x4cf5a0) of band 1..3 (+0x4f >> 4), less than 180 days, +0x3f above 1, +0x3e
+/// club below 6750, with a contract (`exe::contract_manager_get_contract`) of band 1..3 (+0x4f >> 4), less than 180 days, +0x3f above 1, +0x3e
 /// zero, younger than 35 with +0x3d positive, or from another nation at a club below 7250 that is not their own; a club
 /// manager in a better division (+0x57 +0x69), or a stronger one, or recently appointed (days since +0x3e below (+0x59
 /// + 21) × 10) at a club above 5250; a national team manager (+0x24, +0x28 = 5); a club below 2250 (with reputation
 /// +0xa above 4750 or without a record); +0x22 above 75 at a club below 3250; a non-player with retirement pending
-/// (0x7ae350). The yeses (1): a club below 2500 of their nation, domestic below 1500, without a club or national team;
+/// (`is_retirement_pending`). The yeses (1): a club below 2500 of their nation, domestic below 1500, without a club or national team;
 /// their nation's national team with reputation below 6750, without a club, or with their club weaker (below 7750 and
 /// 750 below the national team) for a while; a club above 7750 with the perceived reputation above their club's + 25 ×
-/// +0x59 + 250. Otherwise, their interest in the job (0x844780, float) not below `min_score`.
+/// +0x59 + 250. Otherwise, their interest in the job (`exe::staff_interest_in_job_at_club`, float) not below `min_score`.
 /// Original: `MANAGER_MANAGER::is_staff_suitable_for_job` (0x69f810, manager_manager.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x69f810 } (thiscall, ret 0x10, manager_manager.cpp): `MANAGER_MANAGER::is_staff_suitable_for_job(pessoa, clube,
@@ -5009,7 +5009,7 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
 ///
 /// `LLIST::remove(data)`: the first node with the bytes of `data` (find_list_node_by_bytes) leaves the list: the head
 /// (+2) or the previous node's next, the tail (+6) or the next node's previous, the count (+0, word) − 1, the cursor
-/// (+0xa) moves on if it was on it; the item (0x68d010) and the node (0x944c94) are freed. Returns 1; not found, 0.
+/// (+0xa) moves on if it was on it; the item (`exe::drop_llist_node`) and the node (`exe::crt_operator_delete`) are freed. Returns 1; not found, 0.
 /// Used by ~77 callers (lists of offers, absences, ultimatums, manager vacancies, friendlies...).
 /// Original: `LLIST::remove` (0x68d1f0, manager_manager.cpp, thiscall).
 ///
@@ -5081,8 +5081,8 @@ pub(crate) unsafe extern "thiscall" fn get_current(this: usize) -> usize {
 /// row in the league statistics; otherwise 5 and 0.
 ///
 /// `MANAGER_MANAGER::get_current_run(club, kind, length)`: the club's current run in the league (+0x57; the competition
-/// by id in `[0xadadfc]`, statistics at +8, the club's row via 0x4a4850): the first of more than 1 match whose last one
-/// was less than 10 days ago (0x54cdb0 from the match date), in the order +0x19 (type 1, date +0x25), +0x2d (3, +0x39),
+/// by id in `[0xadadfc]`, statistics at +8, the club's row via `exe::comp_stats_find_club_entry`): the first of more than 1 match whose last one
+/// was less than 10 days ago (`exe::date_days_since` from the match date), in the order +0x19 (type 1, date +0x25), +0x2d (3, +0x39),
 /// +0x55 (4, +0x61) and +0x41 (2, +0x4d): the type and the length (byte). None (or without league, competition,
 /// statistics or row): type 5 and length 0. `this` is not used.
 /// Original: `MANAGER_MANAGER::get_current_run` (0x690c30, manager_manager.cpp, thiscall, ret 0xc).
@@ -5117,8 +5117,8 @@ pub(crate) unsafe extern "thiscall" fn get_current_run(_this: usize, club: usize
 /// SEH frame with no destructor. `MANAGER_MANAGER::post_job_rumour_news(person, club)`: without a person or without
 /// their club (+0x39), nothing; a random(4) = 0, nothing; before the news date (`[0xdd6ec8]`), nothing. News 0x1776
 /// (local): 0..3 the person, 4 = the job (+0x3d), 5 = the id of their club, 6 = the id of the rumoured club, 7 =
-/// random(4); to the recipients (0x8d1da0 of the transfer manager `[0xde1f54]`, with 0x52, up to 30; without a manager,
-/// none) through the delivery to the manager (0x7861e0).
+/// random(4); to the recipients (`exe::transfer_manager_collect_player_news_recipients` of the transfer manager `[0xde1f54]`, with 0x52, up to 30; without a manager,
+/// none) through the delivery to the manager (`send_to_club_manager`).
 /// Original: `post_job_rumour_news` (0x69fd50, manager_manager.cpp, thiscall).
 ///
 /// [pt] { 0x69fd50 } (thiscall, ret 8, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::

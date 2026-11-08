@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_stage(this
 ///
 /// Only the original routine runs (it adds records to the stats and notifies the manager handler), checking the plan
 /// made beforehand: the vector sorted as it sorts (the same qsort, on a copy) and, afterwards, the predicted position
-/// (+0x72 of the record found by 0x4a4850) of each of the first 32.
+/// (+0x72 of the record found by `exe::comp_stats_find_club_entry`) of each of the first 32.
 ///
 /// [pt] Só a original (acrescenta registros à estatística e avisa o gerenciador dos técnicos), conferindo o plano feito
 /// antes: o vetor ordenado como ela ordena (a mesma qsort, numa cópia) e, depois, a posição prevista (+0x72 do registro

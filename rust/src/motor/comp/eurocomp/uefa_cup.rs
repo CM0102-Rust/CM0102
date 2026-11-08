@@ -10,7 +10,7 @@ pub(crate) unsafe fn entrants_minus_half_prelim(this: usize, k: i16) -> i32 {
 /// `UefaCup::build_entrants()` (0x902b90, thiscall, ret 0, uefa_cup.cpp; called from the constructor, 2001-000): builds
 /// and sorts the 118-entrant list and the Intertoto list; returns 1, 0 or −1.
 ///
-/// +0x3e = 145; the list (calloc 0x945501(161, 6) at +0xa7; out of memory, the error box for line 0x1bf and −1); +0xb2
+/// +0x3e = 145; the list (calloc `exe::crt_calloc`(161, 6) at +0xa7; out of memory, the error box for line 0x1bf and −1); +0xb2
 /// = 0.
 ///
 /// 1) In club table order, the clubs the European rules put in the UEFA Cup (+0x1db = [0x9cf6f0]), each with class =
@@ -24,8 +24,8 @@ pub(crate) unsafe fn entrants_minus_half_prelim(this: usize, k: i16) -> i32 {
 ///
 /// 3) If over 118, removes the last ones (the slot is zeroed) down to 118.
 ///
-/// The list goes to qsort (0x945333, 6 bytes, 0x522190: by class). With +0xb2 even (and not negative): +0x36 = 0, +0x38
-/// = the entrants + 27, the list of those coming from the Intertoto [inference] (0x944e46 of +0x38 × 6 at +0x14; out of
+/// The list goes to qsort (`exe::crt_qsort`, 6 bytes, `cup_compare_entries_by_level_desc`: by class). With +0xb2 even (and not negative): +0x36 = 0, +0x38
+/// = the entrants + 27, the list of those coming from the Intertoto [inference] (`exe::crt_malloc` of +0x38 × 6 at +0x14; out of
 /// memory, the error box for line 0x21a and 0) with the class-1 entrants, each set to class 3 and counted in +0x36;
 /// +0x3e = +0x38; returns 1. With +0xb2 odd or negative, 0.
 ///

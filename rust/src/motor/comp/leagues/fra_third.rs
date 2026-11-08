@@ -13,8 +13,8 @@ pub(crate) type FraThirdLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 
 /// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
 ///
-/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
-/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// For each round, the date (`league_round_set_date`: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (`store_round_match`: push 0; push c; push b; push a; push j; push i; push
 /// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
@@ -65,7 +65,7 @@ pub(crate) struct FraThirdSingleStageLeague {
 /// The common create_schedule body (thiscall(league, stage, &rounds, &extra, &é_liga), ret 0x10; no saved state): only
 /// the main stage (−1; the others return 0 without writing anything).
 ///
-/// é_liga (if requested) = 1, the rounds, extra = 0, the table of rounds × 0x41 bytes (malloc 0x944e46: push; add esp,
+/// é_liga (if requested) = 1, the rounds, extra = 0, the table of rounds × 0x41 bytes (malloc `exe::crt_malloc`: push; add esp,
 /// 4 -> cdecl; out of memory: the box and 0) with the league's dates and slots. Returns the table.
 ///
 /// [pt] O corpo comum (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): só a fase principal

@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn move_counts(this: usize) -> u8 {
 
 /// Referee decision on whether an incident on player `j` becomes a call: none while a foul is pending or for a
 /// goalkeeper in his box; the referee may let it go (random(refereeing +0x28 + 15) == 0, strictness -250), and in the
-/// box 3 times in 4; otherwise strictness +175 and, by `codigo` (0x25: 19 in 20; others 1 in 155 when engine +0x8ea9 >
+/// box 3 times in 4; otherwise strictness +175 and, by `codigo` (0x25: 19 in 20; others 1 in 155 when engine `engine::BALL_HEIGHT` >
 /// 1), writes 4 to `tipo` and random(player +0x14) + 1 to `valor` and returns 1; else 0.
 ///
 /// [pt] { 0x6e9540 }: decide se o lance vira falta (ou similar) para o jogador: nao com lance valendo, nem

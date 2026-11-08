@@ -3,10 +3,10 @@ use super::*;
 /// Fills the match record as seen by the club: date, fixture id, competition, venue, club, opponent and goals for and
 /// against (the extra-time score, if any).
 ///
-/// `fill_match_record_from_fixture(match, club, out)`, from the tactic statistics (0x896290, at the end of each match
+/// `fill_match_record_from_fixture(match, club, out)`, from the tactic statistics (`record_tactic_result`, at the end of each match
 /// without a human) and from the records. Null match, club or output: the box (lines 0x29, 0x31, 0x39) and 0. Otherwise
-/// the date (+0, 0x417c10 of the Date(day +0x2a, year +0x28) from 0x549ef0), +8 the match id (+0), +0xc word +0x32,
-/// +0xe word +0x30, +0x10 the side (0x4afa80, cdecl(club, match)), +0x11 the club id, +0x1b dword +8 of the match; home
+/// the date (+0, `exe::date_operator_3d` of the Date(day +0x2a, year +0x28) from 0x549ef0), +8 the match id (+0), +0xc word +0x32,
+/// +0xe word +0x30, +0x10 the side (`comp_util_get_fixture_venue_side`, cdecl(club, match)), +0x11 the club id, +0x1b dword +8 of the match; home
 /// side (+0x1c): +0x15 the match's +0x10 and the score (+0x19 for, +0x1a against) from the extra-time one (+0x47/+0x48)
 /// if it is not negative, otherwise the normal one (+0x43/+0x44); away side: +0x15 the +0xc and the score reversed.
 /// Returns 1.
@@ -79,7 +79,7 @@ pub(crate) unsafe fn name_id(p: u32) -> u32 {
 ///
 /// `fill_staff_name_ref(person, out)`, from the club and competition records, the suspension news, the award and the
 /// player search. Null person or output: the box (lines 0x80, 0x88) and 0. Otherwise +0, +4, +8 the name ids (+4, +8,
-/// +0xc of the person; −1 with no name), +0xc the person's id and +0x10 the birth date (+0x10, 0x417c10); returns 1.
+/// +0xc of the person; −1 with no name), +0xc the person's id and +0x10 the birth date (+0x10, `exe::date_operator_3d`); returns 1.
 /// Original: `fill_staff_name_ref` (0x7e4920, record_utils.cpp, cdecl).
 ///
 /// [pt] { 0x7e4920 } (cdecl, record_utils.cpp): `fill_staff_name_ref(pessoa, saida)`, dos recordes do clube e da competição,
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -
 
 /// Returns the result code of the record: 3 win, 2 score draw, 1 goalless draw, −3 defeat.
 ///
-/// `match_record_result_code(record)`, from the competition statistics (0x49f570, on each match). Null record: the box
+/// `match_record_result_code(record)`, from the competition statistics (`exe::comp_stats_record_match_result`, on each match). Null record: the box
 /// (line 0x25a) and 0. For (+0x19) > against (+0x1a), signed: 3; draw with goals: 2; goalless draw: 1; defeat: −3 (only
 /// the byte counts: the caller reads al).
 /// Original: `match_record_result_code` (0x7e56d0, record_utils.cpp, cdecl).
@@ -131,7 +131,7 @@ pub(crate) unsafe extern "C" fn match_record_result_code(record: usize) -> u8 {
     }
 }
 
-/// Body of Staff_Records::add_year_award_record (0x86c390); without gravar (the comparer's copy) skips the history file
+/// Body of Staff_Records::add_year_award_record (`add_year_award_record`); without gravar (the comparer's copy) skips the history file
 /// entry.
 ///
 /// [pt] O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.

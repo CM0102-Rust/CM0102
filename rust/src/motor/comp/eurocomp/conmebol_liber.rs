@@ -10,7 +10,7 @@ pub(crate) unsafe fn conmebol_liber_drawn_club(this: usize, k: usize) -> usize {
 /// rule: the Libertadores has 32 clubs (those the South American rules put in it, shuffled) in 8 groups of 4, home and
 /// away (3 points a win, 1 a draw; two qualify from each group, to the round of 16); the draw is on the start day (15
 /// January of the cup year): group 1 stays in the cup's own table (drawn clubs 0 to 3, in order) and groups 2 to 8 are
-/// stages (drawn clubs 4g + 4 to 4g + 7); on the draw day: the clubs (0x4c3f40 (the 32 clubs with the Libertadores as
+/// stages (drawn clubs 4g + 4 to 4g + 7); on the draw day: the clubs (`conmebol_liber_select_qualified_clubs` (the 32 clubs with the Libertadores as
 /// their season competition, shuffled)), the group 1 table, the fixtures, the sorted table, the other groups' stages
 /// and the predicted positions; then the league day
 /// Original: `ConmebolLiber::update_for_date` (0x4c4410, conmebol_liber.cpp, thiscall, ret 8).
@@ -62,10 +62,10 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
 /// Builds the table of the first group of the Copa Libertadores. Rule: group 1 has 4 clubs, the first 4 drawn, each in
 /// the row of its order; human managers get the group draw news.
 ///
-/// Ret 0: 4 teams (+0x3e), table +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of
-/// memory: the box at line 0x16f and returns 0), each row i with drawn club i (+0xee) (0x687430 League::init_table_row:
-/// push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (0x684230: mov ecx,
-/// this -> thiscall, ret 0) and returns 1. The same body as 0x4019c0 of the African Nations Cup (only the file and the
+/// Ret 0: 4 teams (+0x3e), table +0xb1 (`exe::crt_malloc`(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of
+/// memory: the box at line 0x16f and returns 0), each row i with drawn club i (+0xee) (`init_table_row` League::init_table_row:
+/// push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (`send_group_draw_news`: mov ecx,
+/// this -> thiscall, ret 0) and returns 1. The same body as `init_group_a_table` of the African Nations Cup (only the file and the
 /// box line change).
 /// Original: `ConmebolLiber::build_first_group_table` (0x4c37a0, conmebol_liber.cpp, thiscall, ret 0).
 ///
@@ -101,15 +101,15 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
 /// the news.
 ///
 /// Ret 4; SEH frame only for the stage's exe::crt_operator_new(no destructor on the normal path): the stage of group g + 1 (g from 0 to
-/// 6, from the draw day). The teams in a vector of +0x3e pointers (0x944e46(+0x3e << 2): push; add esp, 4 -> cdecl; out
+/// 6, from the draw day). The teams in a vector of +0x3e pointers (`exe::crt_malloc`(+0x3e << 2): push; add esp, 4 -> cdecl; out
 /// of memory: the box at line 0x218 and 0): drawn clubs 4g + 4 to 4g + 7 (+0xee); the round table through virtual +0x3c
-/// (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xee) push; add
+/// (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) push; add
 /// esp, 4 -> cdecl; the League_Stage constructor 0x68b100, thiscall, ret 0x58, 22 arguments: the cup, the teams (+0x3e,
 /// word), the vector, +0x3c (word), +4, the round table, the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the
 /// year +0x40 (word), g, the id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; the original pushes the words and bytes
 /// with garbage in the high bytes, which the constructor does not read: the copy passes clean values) in `[+0xc][g]`;
-/// the vector and the round table are freed (0x9452ca). No stage: the box at line 0x22e and 0. With it: the group news
-/// (0x684230 on the stage), +0x30 = g and 1.
+/// the vector and the round table are freed (`exe::crt_free`). No stage: the box at line 0x22e and 0. With it: the group news
+/// (`send_group_draw_news` on the stage), +0x30 = g and 1.
 /// Original: `ConmebolLiber::create_group_stage` (0x4c3b10, conmebol_liber.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x4c3b10 } (thiscall, ret 4, conmebol_liber.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
 // drawn 4g + 4 to 4g + 7 (in any order: the constructor sorts the table).
 
 /// The rules of a continental group (virtual +0x8c, set_up_rules, on a group league): the byte and word fields written
-/// (offset, size 1 or 2, value), the start date (0x549f70: day, month, competition year +0x40, weekday; −1 = any) and
+/// (offset, size 1 or 2, value), the start date (`exe::date_date_549f70`: day, month, competition year +0x40, weekday; −1 = any) and
 /// the prize fund (+0x28), when there is one.
 ///
 /// [pt] As regras de um grupo continental (a virtual +0x8c, set_up_rules, numa liga de grupo): os campos de byte e palavra
@@ -341,10 +341,10 @@ pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usi
 /// continental competition (the mark comes from league qualification), in database order, then shuffled (96 random
 /// swaps) for the groups; any other count is an error (the box).
 ///
-/// Ret 0: `ConmebolLiber::select_qualified_clubs()`: +0xf2 = 32 and the list +0xee (0x944e46(0x80): push 0x80; add esp,
+/// Ret 0: `ConmebolLiber::select_qualified_clubs()`: +0xf2 = 32 and the list +0xee (`exe::crt_malloc`(0x80): push 0x80; add esp,
 /// 4 -> cdecl; out of memory: the box at line 0x285 and returns 0) with the clubs, in database order, whose season
 /// competition (+0x1db) is the Libertadores, up to 32; fewer than 32: the box at line 0x297 and returns 0; otherwise
-/// the list is shuffled (0x4afb40(list, 32): push n; push list; add esp, 8 -> cdecl; 3 × 32 random swaps) and returns
+/// the list is shuffled (`comp_util_shuffle_pointer_array`(list, 32): push n; push list; add esp, 8 -> cdecl; 3 × 32 random swaps) and returns
 /// 1.
 /// Original: `ConmebolLiber::select_qualified_clubs` (0x4c3f40, conmebol_liber.cpp, thiscall, ret 0).
 ///

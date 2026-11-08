@@ -92,8 +92,8 @@ pub(crate) unsafe extern "stdcall" fn compare_build_board_player_performance_tex
 /// Comparer: side by side from the same state of the club's board record, of the contract stored at [0xae1080] and of
 /// the random generator; the return value and all of these must match (the CRT rand, only without the clock seed).
 ///
-/// When buying, the first thing both do is the injury (0x62ed70), which first brings the player's injury up to date
-/// (0x62c680: once a day, it may draw at random and writes the date to the record); the original routine, running
+/// When buying, the first thing both do is the injury (`exe::injury_get_player_injury`), which first brings the player's injury up to date
+/// (`update_player_fitness`: once a day, it may draw at random and writes the date to the record); the original routine, running
 /// first, brought it up to date and the copy then skipped a draw (one draw fewer).
 ///
 /// The comparer performs that same update beforehand (the game's own, at the same point: nothing before it draws), and

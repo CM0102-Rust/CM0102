@@ -8,7 +8,7 @@ pub(crate) fn is_recording_injury() -> bool {
     RECORD_INJURY.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
 }
 
-/// { 0x62be00 } (ret 0xc, injury.cpp) with the list copy injected (0x68d0d0): records the player sheet's injury in the
+/// { `register_injury` } (ret 0xc, injury.cpp) with the list copy injected (0x68d0d0): records the player sheet's injury in the
 /// object's injury list (+0x28), returning the resulting type and severity.
 ///
 /// With no list, the original runs (it creates it). Player sheet already in the list (by id): the same type adds to the
@@ -215,7 +215,7 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
 
 /// can the player earn highlight `codigo` (0x1f40..0x21e4)? Not if the side already had it (table at engine +0x21e) or
 /// the record is from outside; 0x219e..0x21b8 with rules on performance, goals, cards, time on the pitch and the
-/// history search (0x757da0, last 7 or 30 days). Compared side by side
+/// history search (`has_logged_story`, last 7 or 30 days). Compared side by side
 /// Original: `player_highlight` (0x717470, thiscall, ret 4).
 ///
 /// [pt] { 0x717470 } (ret 4): o jogador pode ganhar o destaque `codigo` (0x1f40..=0x21e4) nesta partida?
@@ -352,15 +352,15 @@ pub(crate) unsafe extern "thiscall" fn injury_grade(injuries: usize, person: usi
 /// ordem da original; o último, ARTHRITIS (8 caracteres, 0xa6b3a8), dá 0x4c, e nenhum, 0x4b.
 pub(crate) const INJURY_NAMES: [(u32, usize, u8); 75] = [(4, 0xa6b840, 0), (3, 0xa6b83c, 1), (5, 0xa6b834, 2), (10, 0xa6b824, 3), (10, 0xa6b80c, 4), (10, 0xa6b7fc, 5), (10, 0xa6b7ec, 6), (10, 0xa6b7dc, 7), (10, 0xa6b7d0, 8), (10, 0xa6b7c0, 9), (10, 0xa6b7b4, 10), (15, 0xa6b7a0, 11), (15, 0xa6b788, 12), (10, 0xa6b778, 80), (10, 0xa6b768, 13), (10, 0xa6b758, 14), (10, 0xa6b74c, 15), (10, 0xa6b73c, 16), (10, 0xa6b730, 17), (10, 0xa6b71c, 18), (10, 0xa6b70c, 19), (10, 0xa6b6fc, 20), (10, 0xa6b6ec, 21), (10, 0xa6b6dc, 22), (10, 0xa6b6c8, 23), (10, 0xa6b6b4, 24), (10, 0xa6b6a0, 25), (10, 0xa6b690, 26), (10, 0xa6b678, 27), (10, 0xa6b664, 28), (10, 0xa6b654, 29), (10, 0xa6b644, 30), (10, 0xa6b634, 31), (10, 0xa6b628, 32), (10, 0xa6b618, 33), (10, 0xa6b608, 34), (10, 0xa6b5f8, 35), (10, 0xa6b5e4, 36), (5, 0xa6b5d8, 37), (10, 0xa6b5c8, 38), (10, 0xa6b5bc, 39), (10, 0xa6b5ac, 40), (10, 0xa6b5a0, 41), (14, 0xa6b590, 42), (10, 0xa6b584, 43), (10, 0xa6b574, 44), (10, 0xa6b564, 45), (10, 0xa6b554, 46), (5, 0xa6b548, 47), (10, 0xa6b538, 48), (10, 0xa6b52c, 49), (10, 0xa6b51c, 50), (10, 0xa6b50c, 52), (15, 0xa6b4fc, 53), (5, 0xa6b4f0, 54), (13, 0xa6b4e0, 55), (10, 0xa6b4d0, 56), (10, 0xa6b4c4, 57), (10, 0xa6b4b0, 58), (10, 0xa6b49c, 59), (10, 0xa6b48c, 60), (10, 0xa6b47c, 61), (10, 0xa6b46c, 62), (10, 0xa6b458, 63), (10, 0xa6b448, 64), (10, 0xa6b438, 65), (5, 0xa6b42c, 66), (10, 0xa6b420, 67), (5, 0xa6b414, 68), (5, 0xa6b408, 69), (13, 0xa6b3f8, 70), (10, 0xa6b3e8, 71), (19, 0xa6b3d4, 72), (10, 0xa6b3c0, 73), (10, 0xa6b3b4, 74)];
 
-/// Calls the CRT strncmp (0x946fa0, cdecl).
+/// Calls the CRT strncmp (`exe::crt_strncmp`, cdecl).
 ///
 /// [pt] strncmp (0x946fa0, cdecl).
 pub(crate) unsafe fn strncmp(a: usize, b: usize, n: u32) -> i32 {
     exe::crt_strncmp(a, b, n)
 }
 
-/// The comparer's rehearsal: the copy runs without delivering the news item (0x786090, which allocates) and stops
-/// before the walkout (0x419840, which adds to the list and sends a news item), keeping the decision.
+/// The comparer's rehearsal: the copy runs without delivering the news item (`send_by_scope`, which allocates) and stops
+/// before the walkout (`exe::awol_start_absence`, which adds to the list and sends a news item), keeping the decision.
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem a entrega da notícia (0x786090, que aloca) e para antes da fuga (0x419840,
 /// que põe na lista e manda notícia), guardando a decisão.
@@ -383,7 +383,7 @@ pub(crate) unsafe fn call_preference_routine(routine: usize, p: usize, manager: 
     f(p, manager)
 }
 
-/// Calls a cdecl routine adding the manager to the person's favourites (0x547a10) or rejected (0x547af0) list.
+/// Calls a cdecl routine adding the manager to the person's favourites (`staff_add_favoured_staff`) or rejected (`exe::staff_add_disliked_staff`) list.
 ///
 /// [pt] Acrescentar aos favoritos (0x547a10) ou aos rejeitados (0x547af0), cdecl(pessoa, outra, 1).
 pub(crate) unsafe fn injury_add_to_preference_list(routine: usize, p: usize, manager: usize) {
@@ -407,21 +407,21 @@ pub(crate) unsafe fn like_manager_more(p: usize, club: usize) {
 /// the treatment, the return and the holidays (contract grievances, happiness, liking for the manager, chance of going
 /// absent and personality attribute changes).
 ///
-/// `Injury::post_recovery_news(player, stage, type, force, days)`, from the returns to training (0x62e010) and from the
-/// end of the injury (0x62e700); SEH frame for the local news. Without a player: nothing; without `force`, only for a
-/// club with a human manager (0x7875e0). News 2001 (0x77bbe0) with the stage, the type, the id, the three names, the
-/// birth date, the year and the days (0x785790, data 0..8). Category type 12 (the table of 13-byte entries at
-/// 0x9e7ad9): random(32000) and: type 'Q' (holidays): with a contract (0x4cf5a0), player sheet and club, each contract
-/// grievance (+0x45: 0x20000, 0x20, 0x40) drops (0x8674e0) with random(+0x5b) > random(25); if none drops,
+/// `Injury::post_recovery_news(player, stage, type, force, days)`, from the returns to training (`post_due_recovery_news`) and from the
+/// end of the injury (`end_player_injury`); SEH frame for the local news. Without a player: nothing; without `force`, only for a
+/// club with a human manager (`news_club_has_human_manager`). News 2001 (`construct_news_item`) with the stage, the type, the id, the three names, the
+/// birth date, the year and the days (`set_news_field`, data 0..8). Category type 12 (the table of 13-byte entries at
+/// 0x9e7ad9): random(32000) and: type 'Q' (holidays): with a contract (`exe::contract_manager_get_contract`), player sheet and club, each contract
+/// grievance (+0x45: 0x20000, 0x20, 0x40) drops (`exe::staff_contract_clear_grievances`) with random(+0x5b) > random(25); if none drops,
 /// random(+0x5b) 0 leads to the chance of going absent (with the absences manager [0xad9c6c] and +0x59 below 12,
-/// random(+0x59) < random(5): the absence 0x419840 with 4 and the news is not posted); otherwise the contract happiness
+/// random(+0x59) < random(5): the absence `exe::awol_start_absence` with 4 and the news is not posted); otherwise the contract happiness
 /// (+0x44) rises 15 (−100..100) and, with a dropped flag, the manager likes him more (outcome 2); then random(+0x5b +
 /// +0x59, − 5 with player sheet value +0xb above 7250) < random(20) and random(4) adjusts +0x57, +0x5d, +0x44 of the
 /// player sheet and +0x59. Stage 0, type 'M' (treatment): 0 gives outcome 2 (form +0x12 = 0xff, +0x13 = 0); below 5,
 /// outcome 1 (+0x13 = 0); otherwise outcome 0 and, with +0x5d below 5, the manager may lose sympathy
-/// (0x547810/0x547c10, random(+0x5d) 0: rejected 0x547af0); +0x59 (or +0x57) above 10: the manager likes him more.
+/// (`exe::staff_is_favoured_by`/`staff_remove_favoured_staff`, random(+0x5d) 0: rejected `exe::staff_add_disliked_staff`); +0x59 (or +0x57) above 10: the manager likes him more.
 /// Stage 1, types 'O' and 'N': the outcome by the random draw, the form, and the flag +0xc of the 79-byte record
-/// ([0xae2d0c]) is cleared. Data 9 (outcome) and 10; delivery by the reach `force` (0x786090: the club, the nation of
+/// ([0xae2d0c]) is cleared. Data 9 (outcome) and 10; delivery by the reach `force` (`send_by_scope`: the club, the nation of
 /// the club or of the person, and her continent).
 /// Original: `Injury::post_recovery_news` (0x630ee0, injury.cpp, thiscall).
 ///
@@ -658,7 +658,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
 ///
 /// `injury_get_category_name(category, text, size)` (stdcall, ret 0xc): the translated name (0x66f4e0) of injury
 /// category 0..12 (internal, foot, shin, knee, thigh, groin, upper body, hand, arm, shoulder, neck, head,
-/// rehabilitation); otherwise the box (line 0x10e7). Returns 2 with language 3 (0x66f4d0), otherwise 0 (the name's
+/// rehabilitation); otherwise the box (line 0x10e7). Returns 2 with language 3 (`exe::langlib_get_language`), otherwise 0 (the name's
 /// gender). Size below 20: the box (line 0x10d0) and al zeroed.
 /// Original: `injury_get_category_name` (0x630c50, injury.cpp, stdcall).
 ///
@@ -736,26 +736,26 @@ pub(crate) unsafe fn return_to_training_days(kind: i8, days: i16) -> i16 {
 /// retirement and the outbreak.
 ///
 /// `Injury::add_injury(type, retroactive, person, match, outbreak, news arg, recurrence, recurrence_only)`, from the
-/// injuries day (0x62b7b0), the physical effects of the match (0x62c080), the initial records (0x62cf70), the relapse
-/// (0x62e500), the illness outbreaks (0x62e9e0) and two original routines; frame of 0x220 bytes without SEH. Null
+/// injuries day (`injury_daily_update`), the physical effects of the match (`apply_match_effects`), the initial records (`init_records`), the relapse
+/// (`roll_recurring_injury`), the illness outbreaks (`spread_illness_outbreaks`) and two original routines; frame of 0x220 bytes without SEH. Null
 /// person, no player sheet (+0x61) or type outside 0..0x51: as in the original (box and −1); id beyond [0xae2364]: −1.
-/// The day's fitness (0x62c680) and the training ([0xde1f44], 0x8b1750 with 0). Recurrence only: with a recurrence and
+/// The day's fitness (`update_player_fitness`) and the training ([0xde1f44], `update_player_training` with 0). Recurrence only: with a recurrence and
 /// a type that can recur, the record's relapse flag (+0x12 type, +0x13: 1 if random(rec / 10) and random(rec) both give
 /// zero with a negative rec; rec if positive); −1. Otherwise, with an injury (+0xe ≠ −1): only types 0x4d, 0x4e, 0x4f
 /// and 0x51 replace it (the remaining days +0x2c are kept, the old one goes to the history 0x58e340 and the slot is
 /// freed). +0x1d = type; the first free slot (byte 0xff) of the vector [this+4] (count [this+8]) or 100 more slots
 /// (realloc; out of memory, the box for line 0x909 and −1). The type in the slot; the match (through the home club
 /// +0x1c or the away club +0x20 that has the person among the 50 of the squad +0xd7) writes the match record at +1
-/// (0x7e4750), otherwise +0x1a = 0xff. The club's best physio (0x544410 of the three +0x1cf with +0x69). Days = base +
+/// (`fill_match_record_from_fixture`), otherwise +0x1a = 0xff. The club's best physio (`exe::non_player_attribute_rating` of the three +0x1cf with +0x69). Days = base +
 /// variable × (35 − best) / 20 (minus a random draw of them if random(best + 5) > random(20); 0 for type 0x51) + the
 /// remaining days of the old one (+ random draws by age and by proneness +0x2d of the player sheet, with base above
 /// 10). The +0xa of the 79-byte record goes up 1 for each zero of random(5 × natural + 12), per day, up to 100. A
 /// current injury (retroactive 0): of 100 days, outside the human club and outside the list, the club's flag 100 in the
-/// watch list; days ≥ random(50) + 30, the clubs targeting the player suspend it (0x842b00). +0x28 = +0x2c = days,
+/// watch list; days ≥ random(50) + 30, the clubs targeting the player suspend it (`suspend_clubs_shortlisting_player`). +0x28 = +0x2c = days,
 /// +0x2a = +0x2e = the return to training (the type's percentage, at most 60 days before the end); +0x20 = the date
-/// (today, or today − random(days) − 1 when retroactive). The fitness again, the news (0x62dca0), +0xe = the slot, the
-/// recurrence, the national team (0x775cd0), +0x1c = 0, the relapse (0x62e500), the relapse count (from two: retirement
-/// 0x7a7f20 by random draw), the retirement by age and by a long return to training, and the outbreak (0x62e820) for
+/// (today, or today − random(days) − 1 when retroactive). The fitness again, the news (`injury_post_injury_news`), +0xe = the slot, the
+/// recurrence, the national team (`withdraw_injured_player`), +0x1c = 0, the relapse (`roll_recurring_injury`), the relapse count (from two: retirement
+/// `schedule_injury_retirement` by random draw), the retirement by age and by a long return to training, and the outbreak (`add_illness_outbreak`) for
 /// types 0, 1 and 2. Returns the slot.
 /// Original: `Injury::add_injury` (0x62d250, injury.cpp, thiscall, ret 0x20).
 ///
@@ -1052,14 +1052,14 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
 /// national team.
 ///
 /// `injury_post_injury_news(person, injury, arg)`. The function map gives it as stdcall: the original replaces ecx with
-/// [0xde1f54] right at entry; the only call site, in 0x62d250, puts the Injury in ecx: thiscall with this unused; ret
-/// 0xc; SEH frame without destructor. The interested clubs (0x8d1da0 on [0xde1f54] with 0x5a, up to 30) and the
+/// [0xde1f54] right at entry; the only call site, in `add_injury`, puts the Injury in ecx: thiscall with this unused; ret
+/// 0xc; SEH frame without destructor. The interested clubs (`exe::transfer_manager_collect_player_news_recipients` on [0xde1f54] with 0x5a, up to 30) and the
 /// national team (+0x24) if it fits; news 0x7d0 (local): 0..3 the person (id and the +0x33 of +4/+8/+0xc, 0 if
 /// missing), 4 = the type, 5/6 = the injury date (+0x20 signed, +0x22 unsigned), 7 = the days (+0x28), 8/9 = the birth
 /// date (+0x10, +0x12), 0xa..0xc = the match record (+0x12, +0x16, +9) or −1 with no match (+0x1a = 0xff), 0xd = arg,
 /// 0xe = the club id or −1, 0xf = 0x420e9; the match in the news (0x7e4de0 with byte 0x10). Over 100 days: with
-/// potential (+0xd of the player sheet) above 8000, to everyone (0x786780); otherwise to the interested clubs
-/// (0x7861e0). Up to 100: a human club (0x7875e0), to the club; the contract club (0x4cf5a0) if it is a different one;
+/// potential (+0xd of the player sheet) above 8000, to everyone (`send_to_all_managers`); otherwise to the interested clubs
+/// (`send_to_club_manager`). Up to 100: a human club (`news_club_has_human_manager`), to the club; the contract club (`exe::contract_manager_get_contract`) if it is a different one;
 /// the national team.
 /// Original: `injury_post_injury_news` (0x62dca0, injury.cpp, thiscall (this sem uso), ret 0xc).
 ///
@@ -1177,7 +1177,7 @@ pub(crate) unsafe fn is_recurring_category(this: usize, idx: i32, category: u8) 
 
 /// The comparer's dry run: the copy runs only the training phase (without freeing the knock list, without the day-180
 /// fitness, without the new injury or the end routines); `INJURY_DAILY_STOPPED` marks that it has reached a new injury
-/// (0x62d250, which allocates and sends a news item) or the fitness update for everyone.
+/// (`add_injury`, which allocates and sends a news item) or the fitness update for everyone.
 ///
 /// [pt] O ensaio do comparador: a cópia roda só a fase do treino (sem soltar a lista das batidas, sem o físico do dia 180,
 /// sem a lesão nova nem as rotinas do fim); `INJURY_DAILY_STOPPED` marca que ela chegou a uma lesão nova (0x62d250, que aloca e
@@ -1185,7 +1185,7 @@ pub(crate) unsafe fn is_recurring_category(this: usize, idx: i32, category: u8) 
 pub(crate) static mut INJURY_DAILY_DRY_RUN: bool = false;
 pub(crate) static mut INJURY_DAILY_STOPPED: bool = false;
 /// What the copy left in the regions of the training phase, waiting for the original routine to reach the comeback news
-/// items (0x62e010).
+/// items (`post_due_recovery_news`).
 ///
 /// [pt] O que a cópia deixou nas regiões da fase do treino, à espera de a original chegar às notícias da volta (0x62e010).
 pub(crate) static mut INJURY_DAILY_PENDING_REGIONS: Option<(Vec<(usize, usize)>, crate::comparison::MemorySnapshot)> = None;
@@ -1201,16 +1201,16 @@ pub(crate) const INJURY_TYPE_CASES: [u8; 0x31] = [
 /// everyone's fitness, draws the training injuries on weekdays, then posts the return news and spreads the outbreaks.
 ///
 /// `Injury::daily_update()`, from the day loop (0x5cccd0) and from advancing to the start date (0x5cc850), every day:
-/// frees the match knock list (+0x28, 0x68d040 and free); the two counters (+0x2c, +0x2e) of each injury in the table
-/// (0x30 bytes at [+4], count +8) go down by one; on day 180 of the first season (0x456770 with the start date),
-/// everyone's fitness (0x62c680). Except on Saturday and Sunday (0x54a3f0: 5 and 6), the training injuries: [0xae2364]
+/// frees the match knock list (+0x28, `exe::drop_llist` and free); the two counters (+0x2c, +0x2e) of each injury in the table
+/// (0x30 bytes at [+4], count +8) go down by one; on day 180 of the first season (`exe::date_operator_3c` with the start date),
+/// everyone's fitness (`update_player_fitness`). Except on Saturday and Sunday (`exe::date_get_weekday`: 5 and 6), the training injuries: [0xae2364]
 /// / 150 random draws (at least 10) of a person: a player (+0x61) — otherwise the draw does not count — in jobs 11, 13
-/// and 15, present (0x418f60), uninjured (+0xe = −1), passing the risk draws (the player sheet's +0x2d, the proneness
+/// and 15, present (`is_player_awol`), uninjured (+0xe = −1), passing the risk draws (the player sheet's +0x2d, the proneness
 /// +0x1e and the recurrence +0x12/+0x13 of the 31-byte record; rating 20: random(5) against random(2)), one in three
-/// and proneness of 20: the category (the recurrence's, or drawn by the bands 0x9e7f05/0x9e7f06), the type (0x62d140,
+/// and proneness of 20: the category (the recurrence's, or drawn by the bands 0x9e7f05/0x9e7f06), the type (`choose_injury_type`,
 /// serious in the first 1/14 of the draws), the attributes the injury wears (+0x1b, +0x36, +0x1d of the player sheet)
-/// and the new injury (0x62d250); outside the season (0x62ce30) nothing; category 7 with a rating below 15 does not
-/// count. At the end the return news (0x62e010) and the illness outbreaks (0x62e9e0).
+/// and the new injury (`add_injury`); outside the season (`injury_player_in_close_season`) nothing; category 7 with a rating below 15 does not
+/// count. At the end the return news (`post_due_recovery_news`) and the illness outbreaks (`spread_illness_outbreaks`).
 /// Original: `Injury::daily_update` (0x62b7b0, injury.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x62b7b0 } (thiscall, ret 0, injury.cpp): `Injury::daily_update()`, pelo laço do dia (0x5cccd0) e pela ida até a
@@ -1266,7 +1266,7 @@ pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     exe::injury_spread_illness_outbreaks(this);
 }
 
-/// The day's training injuries (middle of 0x62b7b0): draws players and gives them injuries.
+/// The day's training injuries (middle of `injury_daily_update`): draws players and gives them injuries.
 ///
 /// [pt] As lesões no treino do dia (o meio da 0x62b7b0).
 pub(crate) unsafe fn roll_training_injuries(this: usize) {
@@ -1376,7 +1376,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
     }
 }
 
-/// Applies the attribute losses an injury causes (cases 0, 2, 3, 4 of 0x62b7b0's switch) to the player record (+0x61).
+/// Applies the attribute losses an injury causes (cases 0, 2, 3, 4 of `injury_daily_update`'s switch) to the player record (+0x61).
 ///
 /// [pt] Os atributos que a lesão gasta (os casos 0, 2, 3 e 4 do switch da 0x62b7b0): a ficha (+0x61) é relida a cada vez.
 pub(crate) unsafe fn apply_injury_attribute_loss(this: usize, idx: i32, p: usize, category: u8, case: u8) {
@@ -1439,13 +1439,13 @@ pub(crate) unsafe fn apply_injury_attribute_loss(this: usize, idx: i32, p: usize
 /// At the human managers' clubs, posts the light training return news and updates the daily fitness of injured players;
 /// then processes the return queue: entries due today get the news and past entries leave the front.
 ///
-/// `Injury::post_due_recovery_news()`, from the injuries day (0x62b7b0), every day; SEH frame only for the local dates.
+/// `Injury::post_due_recovery_news()`, from the injuries day (`injury_daily_update`), every day; SEH frame only for the local dates.
 /// At the clubs of the 16 human managers (the last 16 persons of [0xae23bc]), each squad player (50 slots +0xd7) who is
 /// injured (+0xe): on the day when start (+0x20) + days out (+0x2a, more than 5) is reached, the light training return
-/// news (0x630ee0, once: +0x1c of the 31-byte record) and the day's fitness (0x62c680). Then the return queue ([+0x10],
+/// news (`post_recovery_news`, once: +0x1c of the 31-byte record) and the day's fitness (`update_player_fitness`). Then the return queue ([+0x10],
 /// 22 bytes: +0 date A, +8 date B, +0x10 id, +0x14 and +0x15 what the news carries, count +0x18): those with date A
-/// today (bsearch 0x946464 with 0x778e90, stepping back while not before today, 0x456740) give the news with the days
-/// between B and A (0x54cc30); those with date B today (bsearch with 0x632040) the full return news; those with date B
+/// today (bsearch `exe::crt_bsearch` with `compare_call_up_records_by_date`, stepping back while not before today, `exe::date_operator_3e`) give the news with the days
+/// between B and A (`exe::date_get_difference`); those with date B today (bsearch with `injury_compare_entry_dates`) the full return news; those with date B
 /// already past leave the front of the queue.
 /// Original: `Injury::post_due_recovery_news` (0x62e010, injury.cpp, thiscall, ret 0).
 ///
@@ -1631,16 +1631,16 @@ pub(crate) unsafe fn slot_rhythm_level(partida: usize, slot: usize) -> i8 {
 /// Applies a match's physical effects: for the 20 slots of each side, the recovery at a rate based on the slot's level
 /// and condition; the person's knocks in the match list become injuries.
 ///
-/// `Injury::apply_match_effects(game, match)`, from close_day_match (0x6b5f00) and from the simulated statistics
+/// `Injury::apply_match_effects(game, match)`, from close_day_match (`close_day_match`) and from the simulated statistics
 /// (0x84be20), for every match: for both sides of the match (0x625 bytes from +0x1c0), the 20 slots of 0x49 bytes with
 /// a person (id at −0x30). The rate: the level (+0x5a in the first eleven with the match flag +0x4c; otherwise the
 /// slot's, minus +2 for the substitutes, which with 0xff gives 0) plus (10000 − condition +6) / 100, in 32 bits (the
 /// level enters only in the low 16). A game without the flag +0x40: half (16 bits). With it: above 33 + random(3) years
 /// (+0x18), × 1.25 (0x968928, _ftol); otherwise below 23 − random(5), double. Before the start of the game ([0xdd6ec8]
-/// after today, 0x456740): 0. The recovery (0x62bd10) with the condition and the rate. With the knock (−0x11) and the
+/// after today, `exe::date_operator_3e`): 0. The recovery (`recover_injury`) with the condition and the rate. With the knock (−0x11) and the
 /// match knock list (+0x28): each knock of the person (type 7 only with player sheet +0xf of 15 or more) has the
 /// severity by +5 (above 95: 2; above 66: 1; above 51: 0; otherwise the previous knock's) and the injury type
-/// (0x62d140); a valid type: end of the current injury (0x62e700) and the new injury (0x62d250 with the game, or 0 for
+/// (`choose_injury_type`); a valid type: end of the current injury (`end_player_injury`) and the new injury (`add_injury` with the game, or 0 for
 /// game −2).
 /// Original: `Injury::apply_match_effects` (0x62c080, injury.cpp, thiscall, ret 8).
 ///
@@ -1720,7 +1720,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
     }
 }
 
-/// True when the person has an entry in the match's injury list that reaches the injury (same check as 0x62c080);
+/// True when the person has an entry in the match's injury list that reaches the injury (same check as `apply_match_effects`);
 /// cursor restored.
 ///
 /// [pt] A pessoa tem batida na lista da partida que chega à lesão (a mesma conferência da 0x62c080)? O cursor (+0xa) volta
@@ -1742,7 +1742,7 @@ pub(crate) unsafe fn has_injury_hit(this: usize, id: i32, person: usize) -> bool
 /// Returns the match knock list (+0x28) item with the person's id, or 0.
 ///
 /// `Injury::find_match_injury(person)`: the item of the match knock list (+0x28; cursor +0xa restarts from +2,
-/// 0x68d1b0) with the person's id, or 0 (also with no list). Used by the staff screens (0x870650, 0x885820).
+/// `next_list_item`) with the person's id, or 0 (also with no list). Used by the staff screens (0x870650, 0x885820).
 /// Original: `Injury::find_match_injury` (0x62bf60, injury.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x62bf60 } (thiscall, ret 4, injury.cpp): `Injury::find_match_injury(pessoa)`: o item da lista das batidas da
@@ -1764,7 +1764,7 @@ pub(crate) unsafe extern "thiscall" fn find_match_injury(this: usize, person: us
     0
 }
 
-/// 1 if the person's current injury (0x62ed70 on [0xb63d28]) is a holiday (type 0x51)
+/// 1 if the person's current injury (`exe::injury_get_player_injury` on [0xb63d28]) is a holiday (type 0x51)
 /// Original: `Injury::is_player_on_holiday` (0x631550, injury.cpp, thiscall, ret 4 (this não é lido)).
 ///
 /// [pt] { 0x631550 } (ret 4, injury.cpp; `this` não é lido): `Injury::is_player_on_holiday(pessoa)`: 1 se a lesão atual
@@ -1784,11 +1784,11 @@ pub(crate) unsafe fn physical_record_of_id(injuries: usize, id: i32) -> usize {
 /// Ends the person's current injury: the history (except holidays), the return news at a human club (when asked), entry
 /// type 0xff and the record's +0xe set to −1.
 ///
-/// `Injury::end_player_injury(person, news)`, from the day's fitness (0x62c680, with news), from the match knocks
-/// (0x62c080, without) and from the fitness restart (0x62bfa0, without): with a current injury (+0xe of the record,
+/// `Injury::end_player_injury(person, news)`, from the day's fitness (`update_player_fitness`, with news), from the match knocks
+/// (`apply_match_effects`, without) and from the fitness restart (`injury_reset_player`, without): with a current injury (+0xe of the record,
 /// index into the 0x30-byte table at [this+4]; −1 none): except holidays (type 0x51), the history ([this+0xc], 0x58e340
-/// with +0x14 and +0x18 of the record); with `news` and the person's club (+0x39) human (0x600a50), the return news
-/// (0x630ee0 with 1 and the type). The type becomes 0xff and +0xe −1. Without a person: the error box (line 0xc87).
+/// with +0x14 and +0x18 of the record); with `news` and the person's club (+0x39) human (`exe::human_manager_is_human_club`), the return news
+/// (`post_recovery_news` with 1 and the type). The type becomes 0xff and +0xe −1. Without a person: the error box (line 0xc87).
 /// Original: `Injury::end_player_injury` (0x62e700, injury.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x62e700 } (thiscall, ret 8, injury.cpp): `Injury::end_player_injury(pessoa, noticia)`, pelo físico do dia
@@ -1835,7 +1835,7 @@ pub(crate) unsafe extern "thiscall" fn end_player_injury(this: usize, person: us
     core::ptr::write_unaligned((physical_record_of_id(this, read_i32(person)) + 0xe) as *mut i32, -1); // cpv10: no current injury
 }
 
-/// Memory regions 0x787630 writes: the box and, with a first news item, +0xd6..+0xde of the 100 news items.
+/// Memory regions `clear_inbox` writes: the box and, with a first news item, +0xd6..+0xde of the 100 news items.
 ///
 /// [pt] As regiões que a 0x787630 grava (a caixa e, com a primeira notícia, +0xd6..+0xde das 100 notícias).
 pub(crate) unsafe fn news_box_regions(this: usize, caixa: usize) -> Vec<(usize, usize)> {
@@ -1852,7 +1852,7 @@ pub(crate) unsafe fn news_box_regions(this: usize, caixa: usize) -> Vec<(usize, 
 /// The person's injury status from the age of the current injury: 2 injured, 1 regaining fitness, 0 fit.
 ///
 /// The current injury is the index at [this] + id × 31 + 0xe (−1 without an injury). The difference from the game date
-/// to the injury date (+0x20 of the 48-byte record at [this+4], 0x54cc30) in years × 365 + days: below +0x2a, 2
+/// to the injury date (+0x20 of the 48-byte record at [this+4], `exe::date_get_difference`) in years × 365 + days: below +0x2a, 2
 /// (injured); below +0x28, 1 (regaining fitness); otherwise 0.
 ///
 /// [pt] O estado pela lesão atual da pessoa (o índice em [this] + id × 31 + 0xe; −1 sem lesão): a diferença da data do jogo
@@ -1874,7 +1874,7 @@ pub(crate) unsafe fn injury_status(this: usize, person: usize) -> u8 {
     (days < read_i16(l + injury_entry::DAYS_OUT) as i32) as u8 // cpr10: recuperando a forma
 }
 
-/// updates the daily fitness (0x62c680) and returns 2 while the injury lasts, 1 while recovering match fitness and 0
+/// updates the daily fitness (`update_player_fitness`) and returns 2 while the injury lasts, 1 while recovering match fitness and 0
 /// when fit, by the gap from the injury date to the game date
 /// Original: `Injury::get_player_injury_status` (0x62c400, injury.cpp, thiscall, ret 4).
 ///
@@ -1899,7 +1899,7 @@ pub(crate) unsafe fn injury_date_add_days(d: usize, n: u32, t: &mut [u8; 8]) -> 
     exe::date_add_days(d, (t.as_mut_ptr()) as usize, n)
 }
 
-/// Assigns the date at p to date d (0x417c10).
+/// Assigns the date at p to date d (`exe::date_operator_3d`).
 ///
 /// [pt] A data `d` = a data em `p` (0x417c10).
 pub(crate) unsafe fn injury_assign_date(d: usize, p: usize) {
@@ -1971,7 +1971,7 @@ pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], 
     0
 }
 
-/// As datas estáticas da 0x54c5b0, da 0x54c8e0 e da 0x54cdb0 (valor e guarda).
+/// As datas estáticas da `exe::date_add_days`, da 0x54c8e0 e da `exe::date_days_since` (valor e guarda).
 pub(crate) const INJURY_DATE_STATICS: [(usize, usize); 6] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
 
 /// Club record (0x245 bytes) of index i in G_CLUB_TABLE.
@@ -1990,7 +1990,7 @@ pub(crate) unsafe fn injury_is_national_team(club: usize) -> bool {
 /// +9 o índice do clube, +0xd o id da partida (−1 sem).
 pub(crate) const OUTBREAK_SIZE: usize = 0x11;
 
-/// Whether an illness outbreak of a type takes hold at the club (random draws as 0x62e820; never type 4 or national
+/// Whether an illness outbreak of a type takes hold at the club (random draws as `add_illness_outbreak`; never type 4 or national
 /// teams).
 ///
 /// [pt] Se o surto entra (os sorteios da 0x62e820, na ordem): tipo 4 nunca; tipo 3 só com 1 em 15 (sorteio de 15 = 0); os
@@ -2013,9 +2013,9 @@ pub(crate) unsafe fn outbreak_takes_hold(kind: u8, club_i: i32) -> bool {
 /// others with 3 in 4; outside national teams) and re-sorts the array by date.
 ///
 /// `Injury::add_illness_outbreak(date, type, club, match)`: the type is the low byte; if the outbreak takes hold
-/// (`outbreak_takes_hold`), the vector grows by 30 when full (0x945667, or 0x944e46 with no vector; out of memory, the
-/// "Error" box for line 0xd01 and nothing), the outbreak is written at the end (date through 0x417c10) and the vector
-/// is re-sorted by date (qsort 0x945333 with 0x778e90).
+/// (`outbreak_takes_hold`), the vector grows by 30 when full (`exe::crt_realloc`, or `exe::crt_malloc` with no vector; out of memory, the
+/// "Error" box for line 0xd01 and nothing), the outbreak is written at the end (date through `exe::date_operator_3d`) and the vector
+/// is re-sorted by date (qsort `exe::crt_qsort` with `compare_call_up_records_by_date`).
 /// Original: `Injury::add_illness_outbreak` (0x62e820, injury.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x62e820 } (thiscall, ret 0x10, injury.cpp): `Injury::add_illness_outbreak(data, tipo, clube, partida)`: o tipo
@@ -2083,8 +2083,8 @@ pub(crate) unsafe fn is_after_outbreak(limit: &[u8; 8], e: usize) -> bool {
 /// `Injury::spread_illness_outbreaks()`; SEH frame without destructor. It walks the outbreaks (sorted by date) up to
 /// the first one after today. One older than five days (0x54c8e0) is marked to leave; the others spread: type 3 only on
 /// the day itself, with 1 to 4 ill (random of 4, +1); the others 0 to 2 (random of 3). Outside national teams
-/// (0x53b900), up to 20 tries: one of the 50 squad slots (random of 50, +0xd7), a player (id below [0xae2364]) without
-/// that illness (+0x1d of the 31-byte record at [this]) becomes ill (0x62d250: the type in the low byte of the
+/// (`exe::database_is_national_team`), up to 20 tries: one of the 50 squad slots (random of 50, +0xd7), a player (id below [0xae2364]) without
+/// that illness (+0x1d of the 31-byte record at [this]) becomes ill (`add_injury`: the type in the low byte of the
 /// outbreak's offset dword, as in the original; the outbreak's fixture). At the end, those leaving go from the front of
 /// the vector (the others move down) and the count drops.
 /// Original: `Injury::spread_illness_outbreaks` (0x62e9e0, injury.cpp, thiscall).
@@ -2156,10 +2156,10 @@ pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
 /// out of its nation's season with less than 40 days to go and there is no future national call-up; otherwise 0.
 ///
 /// `injury_player_in_close_season(person)` (stdcall, ret 4; SEH frame without destructor): without a person, 1. With a
-/// national team (+0x24), its date (0x76e040 on [0xb74318], the national team's nation +0x53, the class from 0x76d780
+/// national team (+0x24), its date (`exe::nationalteams_get_squad_slot_record` on [0xb74318], the national team's nation +0x53, the class from `exe::national_teams_get_squad_slot`
 /// by bit 3 of +0x5e) after today counts as called up. Without a club (+0x39), called up, or a club with +0x1db ≠ −1:
-/// 0. Otherwise, out of the season of the club's nation (0x669bd0 with the two dates) and with less than 40 days to go
-/// (0x54cdb0 from today to the second date, 16 bits unsigned): 1; otherwise 0.
+/// 0. Otherwise, out of the season of the club's nation (`key_nation_club_in_season` with the two dates) and with less than 40 days to go
+/// (`exe::date_days_since` from today to the second date, 16 bits unsigned): 1; otherwise 0.
 /// Original: `injury_player_in_close_season` (0x62ce30, injury.cpp, stdcall, ret 4).
 ///
 /// [pt] { 0x62ce30 } (stdcall, ret 4, injury.cpp, quadro SEH sem destrutor): `injury_player_in_close_season(pessoa)`: sem
@@ -2287,11 +2287,11 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
 /// Allocates every person's 31-byte injury record fully fit; players may get a recurring injury (1 in 10) or start
 /// injured (1 in 100); the totals go to 0xde1f64.
 ///
-/// `Injury::init_records()`: [this] = 31 bytes per person of [0xae2364] (0x944e46; out of memory, the "Error" box for
-/// line 0x7d0 and nothing). Each record: today's date (0x417c10), form and condition 10000 (+8, +0xa), wear 0 (+0xc),
+/// `Injury::init_records()`: [this] = 31 bytes per person of [0xae2364] (`exe::crt_malloc`; out of memory, the "Error" box for
+/// line 0x7d0 and nothing). Each record: today's date (`exe::date_operator_3d`), form and condition 10000 (+8, +0xa), wear 0 (+0xc),
 /// no injury (+0xe −1), no recurring injury (+0x12 0xff), history −1 (+0x14, +0x18), +0x1d 0xff, +0x1e 50. A player
 /// (+0x61): the type drawn from 82 with weight (+8 of the 13-byte table at 0x9e7ad8) and 1 in 10 becomes recurring; 1
-/// in 100 starts injured: category drawn from 12, type through 0x62d140 (severity −1) and the new injury 0x62d250. At
+/// in 100 starts injured: category drawn from 12, type through `choose_injury_type` (severity −1) and the new injury `add_injury`. At
 /// the end the two totals in 0xde1f64 ("%d players with ...").
 /// Original: `Injury::init_records` (0x62cf70, injury.cpp, thiscall).
 ///
@@ -2352,7 +2352,7 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
     format(0xde1f64, 0x9e7f74, iniciais);
 }
 
-/// Nation whose youth list the club joins (0x7acfc0 rules), or 0 for national teams, no nation or excluded clubs.
+/// Nation whose youth list the club joins (`build_nation_club_lists` rules), or 0 for national teams, no nation or excluded clubs.
 ///
 /// [pt] A nação em cuja lista dos jovens o clube entra (0x7acfc0): nenhuma para seleção (0x53b900), sem nação (+0x53),
 /// nação sem +0x71 ou os dois clubes de 0x9d00a4/0x9d00a8. Nação com +0x11c: só com +0x80 até 2 e divisão (+0x57);
@@ -2389,7 +2389,7 @@ pub(crate) unsafe fn injury_history_record(this: usize, id: usize) -> usize {
     read_usize(this).wrapping_add(id.wrapping_mul(31))
 }
 
-/// O que a 0x62e500 decide depois de sortear.
+/// O que a `roll_recurring_injury` decide depois de sortear.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub(crate) enum RecurringInjuryOutcome {
     Nada,
@@ -2465,7 +2465,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
 
 /// with 1 in 20, a recurring-capable injury becomes recurring in the record (+0x12 type, +0x13 = 0); among the
 /// recurring records, the best score (roll 0x65 − 5 × level − proneness, stops at 95): a player at a big club
-/// (reputation > 4250) without a human and 1 in 3 gets a new injury 0x4d/0x4e/0x4f (0x62d250); otherwise his mark is
+/// (reputation > 4250) without a human and 1 in 3 gets a new injury 0x4d/0x4e/0x4f (`add_injury`); otherwise his mark is
 /// cleared; turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied (the detour, even passing through, changes the stack residue a later
 /// original reads: the career left be54a138); the copy stays in the code and does not run
 /// Original: `Injury::roll_recurring_injury` (0x62e500, injury.cpp, thiscall, ret 8).
@@ -2522,8 +2522,8 @@ pub(crate) unsafe extern "thiscall" fn reset_player_history(this: usize, person:
 /// and restarts the 31-byte record; bit 0 of +0xc of the 79-byte record is cleared.
 ///
 /// `Injury::reset_player(id)`: removes from list [this+0x28] (from the start: cursor +0xa back to +2) each item with
-/// the id (0x68d1f0); with an injury (+0xe ≠ −1), ends it (0x62e700, no news); restarts the history (0x631f90); the
-/// 31-byte record restarts: today's date (0x417c10 of [0xae2c90]), condition and form 10000 (+8, +0xa), wear 0 (+0xc),
+/// the id (`manager_manager_remove`); with an injury (+0xe ≠ −1), ends it (`end_player_injury`, no news); restarts the history (`reset_player_history`); the
+/// 31-byte record restarts: today's date (`exe::date_operator_3d` of [0xae2c90]), condition and form 10000 (+8, +0xa), wear 0 (+0xc),
 /// no injury (+0xe −1), no recurring injury (+0x12 0xff), history −1 (+0x14, +0x18), +0x1d 0xff. Bit 0 of +0xc of the
 /// 79-byte record ([0xae2d0c]) is cleared. Returns the address of that byte.
 /// Original: `Injury::reset_player` (0x62bfa0, injury.cpp, thiscall, ret 4).
@@ -2647,10 +2647,10 @@ pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, player: usize,
     c as u16
 }
 
-/// Updates the day's fitness (0x62c680) and returns the match condition (out of 10000, or as a percentage).
+/// Updates the day's fitness (`update_player_fitness`) and returns the match condition (out of 10000, or as a percentage).
 ///
 /// `Injury::get_match_condition(player, as_percent)`: without a player, 0; an id outside the persons ([0xae2364]):
-/// 10000 (100 as a percentage); otherwise it updates the day's fitness (0x62c680, once a day) and returns the condition
+/// 10000 (100 as a percentage); otherwise it updates the day's fitness (`update_player_fitness`, once a day) and returns the condition
 /// (31-byte record at [this], +0xa), as a percentage × 0.01f truncated. Only ax is the return value.
 /// Original: `Injury::get_match_condition` (0x62c510, injury.cpp, thiscall, ret 8).
 ///
@@ -2686,12 +2686,12 @@ pub(crate) unsafe extern "thiscall" fn set_training_load(injuries: usize, id: *c
 /// holiday days, which raise or lower fitness (+8) and match condition (+0xa); stores today's date.
 ///
 /// `Injury::update_player_fitness(person)`; SEH frame only for the local statics. Once a day (if date +0 of the
-/// person's 31-byte record at [this] is already today: nothing), called from the match condition (0x62c510), the injury
-/// state (0x62c400), the injuries day (0x62b7b0) and the return news (0x62e010): every person who plays, every day
-/// someone asks. T = days since the last update (0x54cc30). Injured (+0xe in the 0x30-byte table at [this+4]): by the
+/// person's 31-byte record at [this] is already today: nothing), called from the match condition (`get_match_condition`), the injury
+/// state (`get_player_injury_status`), the injuries day (`injury_daily_update`) and the return news (`post_due_recovery_news`): every person who plays, every day
+/// someone asks. T = days since the last update (`exe::date_get_difference`). Injured (+0xe in the 0x30-byte table at [this+4]): by the
 /// days since the start (+0x20) against +0x2a and +0x28, the stopped days (loss), recovery days or free days, with the
-/// end of the injury (0x62e700) when it passes +0x28. Not injured: free days, except with the national team with a
-/// future date (0x76d780/0x76e040) or at a club out of season (0x669bd0, cached in 0xb63d2c/0xb63d30 with the dates
+/// end of the injury (`end_player_injury`) when it passes +0x28. Not injured: free days, except with the national team with a
+/// future date (`exe::national_teams_get_squad_slot`/`exe::nationalteams_get_squad_slot_record`) or at a club out of season (`key_nation_club_in_season`, cached in 0xb63d2c/0xb63d30 with the dates
 /// 0xb63d18/0xb63d20): holidays (byte +0xa of the 79-byte record rises when random(+0x5b / 3 + 2) is zero, up to 50)
 /// and the pre-season return (15 days, or the middle of a random(2) with form × condition below 80%). The fitness (+8):
 /// recovery of 1000 − 12 × (+0x1e − natural (+0x34 of the player sheet), 0..100) per free day, loss of 66 per stopped
@@ -3023,9 +3023,9 @@ pub(crate) unsafe extern "thiscall" fn choose_injury_type(injuries: usize, categ
 
 /// Compares the key date with that of a 0x16-byte return to training queue entry, for bsearch.
 ///
-/// `injury_compare_entry_dates(key, item)` (cdecl), the bsearch (0x946464) order of the return to training queue
-/// (0x16-byte entries) in Injury::post_due_recovery_news (0x62e010, every day): the date at +8 of the key before the
-/// item's (0x456770), −1; after (0x456740), 1; equal, 0.
+/// `injury_compare_entry_dates(key, item)` (cdecl), the bsearch (`exe::crt_bsearch`) order of the return to training queue
+/// (0x16-byte entries) in Injury::post_due_recovery_news (`post_due_recovery_news`, every day): the date at +8 of the key before the
+/// item's (`exe::date_operator_3c`), −1; after (`exe::date_operator_3e`), 1; equal, 0.
 /// Original: `injury_compare_entry_dates` (0x632040, injury.cpp, cdecl).
 ///
 /// [pt] { 0x632040 } (cdecl, injury.cpp): `injury_compare_entry_dates(chave, item)`, a ordem do bsearch (0x946464) da fila

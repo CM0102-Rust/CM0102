@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn person_competition(this: usize, person: u
     (*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(107))
 }
 
-/// Byte o of the national-team block (class 0/1/2 by flag and second team via 0x5409b0) of the club's nation in
+/// Byte o of the national-team block (class 0/1/2 by flag and second team via `exe::club_is_national_team`) of the club's nation in
 /// [this+4] records (110 bytes each).
 ///
 /// [pt] O byte `o` do bloco da classe (0x76d780: 1 com `flag`, 2 para a segunda selecao, senao 0) da
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn national_side_byte_43(this: usize, club: 
     national_block_byte(this, club, flag, 0x43)
 }
 
-/// Returns 1 if the club is a national team (0x53b900) or one of the two MLS All-Stars clubs (East/West), else 0.
+/// Returns 1 if the club is a national team (`exe::database_is_national_team`) or one of the two MLS All-Stars clubs (East/West), else 0.
 ///
 /// [pt] { 0x775790 } (stdcall): selecao (0x53b900) ou um dos clubes de 0x9d00a4 e 0x9d00a8?
 pub(crate) unsafe extern "stdcall" fn national_or_special(club: usize) -> u32 {
@@ -141,7 +141,7 @@ pub(crate) unsafe fn list_item_values(list: usize) -> Vec<u32> {
     v
 }
 
-/// The rehearsal of the report (0x7706c0): the random draws come from the original routine's tape and the news item is
+/// The rehearsal of the report (`send_club_international_report_news`): the random draws come from the original routine's tape and the news item is
 /// not delivered.
 ///
 /// [pt] O ensaio do relatório (0x7706c0): os sorteios vêm da fita da original e a notícia não é entregue.
@@ -207,9 +207,9 @@ pub(crate) unsafe fn match_performance_code(result: usize, side: usize, player: 
 /// how they did), random(2) and the codes; the group players leave the array.
 ///
 /// Ret 0x18; SEH frame for the local news item: `NationalTeams::send_club_international_report_news(club, match,
-/// result, star, squad, count)`, from the result between national sides (0x76b600), for each side. The squad (a vector
-/// of `count` persons, the low byte) is sorted by club (0x945333 with 0x778ef0); each group of players of the same club
-/// becomes news 0x24 to the club's manager (0x7861e0): the match record for the club (0x7e4750, only once) and its data
+/// result, star, squad, count)`, from the result between national sides (`record_international_result`), for each side. The squad (a vector
+/// of `count` persons, the low byte) is sorted by club (`exe::crt_qsort` with `compare_by_club`); each group of players of the same club
+/// becomes news 0x24 to the club's manager (`send_to_club_manager`): the match record for the club (`fill_match_record_from_fixture`, only once) and its data
 /// (0x7e4de0), the star player (id and keys, if he is from the club; otherwise −1 in the four), how many there are, the
 /// club, up to 4 players (the star first, the others by the code of how they did, from highest to lowest), 0x420e9,
 /// random(2) and the codes. The group's players leave the vector (zeroed).
@@ -351,16 +351,16 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
 
 /// Posts the call-up news: the called-up players (flag 4, or 8 for the second team) of human-managed clubs, grouped by
 /// club, become news 0x1d to the manager: national side, club, type, how many, the opponents (given list or built by
-/// 0x76d560) and up to 3 players.
+/// `national_teams_collect_fixture_opponents`) and up to 3 players.
 ///
 /// Ret 0x1c; SEH frame for the local news item: `national_teams_post_call_up_news(national_side, second, match, type,
-/// no_opponents, opponents, count)`, from the call-up (0x76c120) and from the screen. Of the 50 slots of the national
+/// no_opponents, opponents, count)`, from the call-up (`select_squad`) and from the screen. Of the 50 slots of the national
 /// side's squad (+0xd7, pointers), each player with the flag (+0x5e: 8 for the second team, otherwise 4) and a club
-/// with a human manager (0x7875e0) joins his club's group; when the next one in the slot is not from the same club (or
-/// lacks the flag, or the list ended), news 0x1d goes to the club's manager (0x7861e0): the national side, the club,
+/// with a human manager (`news_club_has_human_manager`) joins his club's group; when the next one in the slot is not from the same club (or
+/// lacks the flag, or the list ended), news 0x1d goes to the club's manager (`send_to_club_manager`): the national side, the club,
 /// `no_opponents`, the type, how many, `second`, how many opponents and, with fewer than 4, their ids (from the given
-/// list or built once by 0x76d560 with the match, when there is no list and no `no_opponents`), and up to 3 players (id
-/// and keys). The list built here is destroyed and freed at the end (0x68d040, 0x944c94).
+/// list or built once by `national_teams_collect_fixture_opponents` with the match, when there is no list and no `no_opponents`), and up to 3 players (id
+/// and keys). The list built here is destroyed and freed at the end (`exe::drop_llist`, `exe::crt_operator_delete`).
 /// Original: `national_teams_post_call_up_news` (0x76e0b0, national_teams.cpp, thiscall, ret 0x1c).
 ///
 /// [pt] { 0x76e0b0 } (thiscall, ret 0x1c, national_teams.cpp, quadro SEH da notícia local): `national_teams_post_call_up_news(
@@ -447,17 +447,17 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
     }
 }
 
-/// O ensaio da 0x76d560: os valores que iriam para a lista nova, sem alocar.
+/// O ensaio da `national_teams_collect_fixture_opponents`: os valores que iriam para a lista nova, sem alocar.
 pub(crate) static mut FIXTURE_OPPONENTS_PLAN: Option<Vec<u32>> = None;
 
 /// Returns a new list with the match opponent (its nation's first team, for the second team) and the opponents of the
 /// fixtures from tomorrow to 13 days later that are not finals.
 ///
 /// Ret 8; SEH frame for the local list: `national_teams_collect_fixture_opponents(national_side, match)`, from the
-/// call-up news (0x76e0b0) and from the request to the manager (0x76f1a0). A new list (0x944cf1 with 0xe, 0x68d020)
+/// call-up news (`national_teams_post_call_up_news`) and from the request to the manager (`exe::national_teams_post_squad_request_news`). A new list (`exe::crt_operator_new` with 0xe, `exe::new_llist`)
 /// with the match opponent (the away side if the home side is from the national side's nation, otherwise the home side;
-/// for the second team, the main national side of its nation, 0x53b4f0) and the opponents of the national side's other
-/// matches from tomorrow to 13 days later (0x5acbe0, with byte +0x40 of the match) that are not final-stage matches
+/// for the second team, the main national side of its nation, `exe::database_get_national_u21_team`) and the opponents of the national side's other
+/// matches from tomorrow to 13 days later (`find_fixtures`, with byte +0x40 of the match) that are not final-stage matches
 /// (the nine national side competitions). Returns the list.
 /// Original: `national_teams_collect_fixture_opponents` (0x76d560, national_teams.cpp, thiscall, ret 8).
 ///
@@ -567,8 +567,8 @@ pub(crate) const SQUAD_SLOTS_24_EXTRAS: [u16; 3] = [0x202, 0x88, 0x808];
 /// Faithful to the original routine for 26 and 24 and for the first 22 slots of the other sizes (the 22 table).
 ///
 /// Approved fix of the original (01/11/2026): the original only fills the slots for 22, 24 or 26 players; in squads of
-/// 23 (the finals, 0x76d430: the 2002 World Cup, on 29/05/2002) and 25, the slots from the 22nd onwards keep stack
-/// residue (local_86c), which goes to the team selection (0x6e2000) and to the filter of selected players (0x5b7d20),
+/// 23 (the finals, `national_team_ages`: the 2002 World Cup, on 29/05/2002) and 25, the slots from the 22nd onwards keep stack
+/// residue (local_86c), which goes to the team selection (0x6e2000) and to the filter of selected players (`position_mask`),
 /// and the residue changes on every run (halves of heap pointers).
 ///
 /// Here the slots beyond the 22 of the original's table receive, in order, the ones the 24 table adds to the 22 table
@@ -618,7 +618,7 @@ pub(crate) unsafe fn squad_nation_record(this: usize, nation: usize) -> usize {
 
 /// The accepted reputation bands (+9 of player sheet +0x61) for selection: (exclusive minimum, maximum).
 ///
-/// −1 and 0x2711 outside Australia ([0x9cf224]); for Australia, by the match's competition (friendly 0x5c6710 of
+/// −1 and 0x2711 outside Australia ([0x9cf224]); for Australia, by the match's competition (friendly `exe::friendly_is_friendly_competition` of
 /// [0xae2c74], or the Oceania one: 0x8ca/0x2134; Confederations Cup 0xabe/0x222e; Oceania qualifiers 0x8ca and 9000,
 /// 8000 or 10001 by byte +0x42; World Cup 0xabe/10000).
 ///
@@ -852,23 +852,23 @@ pub(crate) unsafe fn collect_squad_candidates(this: usize, nation: usize, t: i8,
 /// 22nd on): the original 22 plus, in order, 0x202, 0x88 and 0x808, the slots the 24 table has beyond the 22 table.
 ///
 /// Ret 0x14, about 4.9 KB; SEH frame only for the local dates, no destructor: `NationalTeams::select_squad(nation,
-/// type, date, fixture, forced)`, from the call-up (0x76bab0, in Rust: nation +0x53 of the side, type, 0xae2c90,
-/// fixture, 0), from building the tables (0x76a840: fixture 0) and from the news (0x784100: forced 1). Type 0 senior, 1
-/// B/Olympic (flag 8, tactic team 1), 2 under-21 (0x53b4f0). Without `forced`: in the final stages (+0x14 of the
+/// type, date, fixture, forced)`, from the call-up (`select_squads_for_fixture`, in Rust: nation +0x53 of the side, type, 0xae2c90,
+/// fixture, 0), from building the tables (0x76a840: fixture 0) and from the news (`exe::newsitem_auto_respond`: forced 1). Type 0 senior, 1
+/// B/Olympic (flag 8, tactic team 1), 2 under-21 (`exe::database_get_national_u21_team`). Without `forced`: in the final stages (+0x14 of the
 /// fixture in one of the 9 keys) an item (team, competition, match date − 10, 1000) goes into the list at +0 (0x68d0d0,
-/// created with 0x68d020 if missing); the squad date for the type (+0x3a of the record: today − 1 without a fixture,
+/// created with `exe::new_llist` if missing); the squad date for the type (+0x3a of the record: today − 1 without a fixture,
 /// the match date in type 0 and above 2, the match date − 1 in types 1 and 2, which first mark both nations in vector
-/// `[this + 0x36]` at the Olympic Games or release the flagged under-21 player, 0x76d880) and today's (+0x32); the ages
-/// and the size (0x76d430 into +0x42/+0x43). With a human manager who decides (0x600a50, 0x5fd6b0; or through the main
-/// national side for a B team without a manager): players injured for more than 10 days (0x62c400 = 2, 0x62ed70 +0x2e)
-/// leave the squad; if it is still his, the request to the manager (0x76f1a0) and stop. Otherwise: the slot codes
+/// `[this + 0x36]` at the Olympic Games or release the flagged under-21 player, `release_overage_u21_players`) and today's (+0x32); the ages
+/// and the size (`national_team_ages` into +0x42/+0x43). With a human manager who decides (`exe::human_manager_is_human_club`, `exe::human_manager_controls_all_national_teams`; or through the main
+/// national side for a B team without a manager): players injured for more than 10 days (0x62c400 = 2, `exe::injury_get_player_injury` +0x2e)
+/// leave the squad; if it is still his, the request to the manager (`exe::national_teams_post_squad_request_news`) and stop. Otherwise: the slot codes
 /// (squad_position_codes, with the 23 and 25 fix); those from another team leave the squad, those with the flag and, in
-/// type 0 with bit 1 of +0x4e of the fixture, those without it (0x896c60 and +0x5e/+0x24/+0x28); the pool list
+/// type 0 with bit 1 of +0x4e of the fixture, those without it (`remove_player_from_selection` and +0x5e/+0x24/+0x28); the pool list
 /// (collect_squad_candidates) goes to the slot assignment (0x6e2000, mode 0x2100914 in type 1, 0x2000814 in 0 and 0x814
-/// in 2); each picked player who fits the slot (0x5b7d20) joins the squad: he leaves the previous team (slot, 0x76db00,
-/// 0x896c60) or his own tactic slots (0x8968f0/0x896e90, 0x76db00), gets the flag (0x540980), the team and +0x28 (0xc
-/// from 5 or 0xc, otherwise 0xb) and +9 of the 79-byte record goes to 0..100. Finally the squad is sorted (0x945333
-/// with 0x778ef0), the news (0x76e0b0) and the tactic slots with those not in the team are cleared. The error boxes
+/// in 2); each picked player who fits the slot (`position_mask`) joins the squad: he leaves the previous team (slot, `national_teams_can_change_squad`,
+/// `remove_player_from_selection`) or his own tactic slots (`tactic_slot_person`/`clear_selection_slot`, `national_teams_can_change_squad`), gets the flag (`staff_set_squad_flags`), the team and +0x28 (0xc
+/// from 5 or 0xc, otherwise 0xb) and +9 of the 79-byte record goes to 0..100. Finally the squad is sorted (`exe::crt_qsort`
+/// with `compare_by_club`), the news (`national_teams_post_call_up_news`) and the tactic slots with those not in the team are cleared. The error boxes
 /// (lines 0x748 and 0x76b) as the original.
 /// Original: `NationalTeams::select_squad` (0x76c120, national_teams.cpp, thiscall).
 ///
@@ -1097,7 +1097,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
     }
 }
 
-/// Memory regions the squad selection (0x76c120) touches: nation record and each scanned reserve player's +0x24..+0x28
+/// Memory regions the squad selection (`select_squad`) touches: nation record and each scanned reserve player's +0x24..+0x28
 /// and +0x5e.
 ///
 /// [pt] O que a escala da 0x76c120 lê e a original muda depois dela: o registro da nação (0x6e bytes) e, de cada jogador
@@ -1133,10 +1133,10 @@ pub(crate) unsafe fn all_star_club(g: usize) -> usize {
 /// writes the comment; otherwise 0 (and 0 for a national side or all-star club).
 ///
 /// Ret 0x14: `NationalTeams::get_international_duty_club(player, date, club, comment, opponent)`, from the line-up
-/// (0x6dbb80, 0x6dbc50), the scouts, the transfers and the screens. With a temporary list (0x68d020, destroyed at the
-/// end by 0x68d040). Club is a national side (0x53b900) or one of the all-star teams (id in `[0x9d00a4]`/`[0x9d00a8]`):
-/// 0. The window goes from the day before (0x54c8e0) to the day after (0x54c5b0). Called-up player (+0x24, the national
-/// side): the national side's matches in the window (0x5acbe0, side by bit 4 of +0x5e: set 1, otherwise 0; the days and
+/// (`starters`, `select_automatically`), the scouts, the transfers and the screens. With a temporary list (`exe::new_llist`, destroyed at the
+/// end by `exe::drop_llist`). Club is a national side (`exe::database_is_national_team`) or one of the all-star teams (id in `[0x9d00a4]`/`[0x9d00a8]`):
+/// 0. The window goes from the day before (0x54c8e0) to the day after (`exe::date_add_days`). Called-up player (+0x24, the national
+/// side): the national side's matches in the window (`find_fixtures`, side by bit 4 of +0x5e: set 1, otherwise 0; the days and
 /// years as the original's dwords); with a match and no opponent, or with the opponent (+0x14 of the match) among them,
 /// he is on duty (text 0xa62ff4 into `comment`, 0x66f4e0) and returns the national side. With bit 4 set, the call-ups
 /// of list `[this]` (+0 the national side, +4 the opponent, +8 the date) with his national side (and the opponent, if
@@ -1288,7 +1288,7 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
 ///
 /// Stdcall, ret 8: `national_teams_player_is_eligible(player, manager)`, from the player search (0x7afa70, 0x807450)
 /// and from the comparison screen. No player sheet (+0x61), no national side for the manager (+0x24) or it not being a
-/// national side (0x53b900): 0. Already called up for it: 1. A national side of the second set (0x5409b0, the under-21)
+/// national side (`exe::database_is_national_team`): 0. Already called up for it: 1. A national side of the second set (`exe::club_is_national_team`, the under-21)
 /// and age (+0x18) above 21: 0. With +0x22 or bit 2 of +0xc of the person's 79-byte record (`[0xae2d0c]`), the
 /// nationality (+0x1a) must be that of the national side (+0x53); called up for another national side of another
 /// nation: 0. The national side's nation must be the first or the second (+0x1e) nationality; if the nation is
@@ -1401,8 +1401,8 @@ pub(crate) unsafe fn national_teams_list_items(list: usize) -> Vec<usize> {
 // cursors): the call-up competitions not yet in `saida`, in order, without repeats; then, the return value
 // is how many and the last items of `saida` (4 bytes each) are them.
 
-/// O ensaio do comparador da 0x76bab0: a cópia roda sem escolher elenco (0x76c120), sem dispensar os acima da idade do
-/// sub-21 (0x76d880: no ensaio, só o byte +0x6b que ela zera depois da data) e sem apagar repetidos (0x76c060).
+/// O ensaio do comparador da `select_squads_for_fixture`: a cópia roda sem escolher elenco (`select_squad`), sem dispensar os acima da idade do
+/// sub-21 (`release_overage_u21_players`: no ensaio, só o byte +0x6b que ela zera depois da data) e sem apagar repetidos (`national_teams_remove_duplicate_squad_entries`).
 pub(crate) static mut SELECT_SQUADS_DRY_RUN: bool = false;
 /// In the dry run: the copy requested a squad (the comparison is not valid).
 ///
@@ -1477,15 +1477,15 @@ pub(crate) unsafe fn release_overage_u21(this: usize, club: usize) {
 }
 
 /// Selects the squads for a fixture: from two weeks before the match, for each side, a senior, B/Olympic or under-21
-/// squad at most 14 days old and flagged only moves its date up to the match; otherwise asks for a new one (0x76c120);
+/// squad at most 14 days old and flagged only moves its date up to the match; otherwise asks for a new one (`select_squad`);
 /// releases the over-age under-21 players and clears duplicates.
 ///
 /// Ret 4; SEH frame without a destructor: `NationalTeams::select_squads_for_fixture(fixture)`: without flag +0x40 with
-/// bit 1 of +0x4e, or with a B national side at home (0x5409b0) with bit 2, nothing. Only from two weeks before the
-/// match (0x54cab0 over date +0x2a/+0x28). Home side: outside a B national side, the senior squad
-/// (refresh_or_select_squad type 0) and, without bit 2, the release of the under-21 players (0x76d880) of both nations;
+/// bit 1 of +0x4e, or with a B national side at home (`exe::club_is_national_team`) with bit 2, nothing. Only from two weeks before the
+/// match (`exe::date_sub_weeks` over date +0x2a/+0x28). Home side: outside a B national side, the senior squad
+/// (refresh_or_select_squad type 0) and, without bit 2, the release of the under-21 players (`release_overage_u21_players`) of both nations;
 /// the smaller squads (refresh_minor_squads). Away side: the same without the release. Finally deletes the duplicates
-/// (0x76c060) of both.
+/// (`national_teams_remove_duplicate_squad_entries`) of both.
 /// Original: `NationalTeams::select_squads_for_fixture` (0x76bab0, national_teams.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x76bab0 } (thiscall, ret 4, national_teams.cpp, quadro SEH sem destrutor): `NationalTeams::select_squads_for_fixture
@@ -1531,7 +1531,7 @@ pub(crate) unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p:
     }
 }
 
-/// Club of the person's contract (0x4cf5a0, stored in [0xae1080]; club = table + 0x245 x contract +4), or 0.
+/// Club of the person's contract (`exe::contract_manager_get_contract`, stored in [0xae1080]; club = table + 0x245 x contract +4), or 0.
 ///
 /// [pt] O clube do contrato da pessoa (0x4cf5a0 de [0xae1050], gravado em [0xae1080]; clube +4 em [0xae23b4], 0x245
 /// bytes), ou 0.
@@ -1544,16 +1544,16 @@ pub(crate) unsafe fn club_of_person_contract(person: usize) -> usize {
     read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE))
 }
 
-/// O ensaio do comparador da 0x76fd10: a cópia roda sem entregar a notícia.
+/// O ensaio do comparador da `national_teams_post_player_called_up_news`: a cópia roda sem entregar a notícia.
 pub(crate) static mut CALLED_UP_NEWS_DRY_RUN: bool = false;
 
 /// With a human manager at the player's club, sends news item 0x21 (the player, the national side and the slot) to the
 /// manager of club +0x39 and of the contract club.
 ///
 /// Stdcall, ret 0xc; SEH frame without a destructor: `national_teams_post_player_called_up_news(player, nation, slot)`:
-/// only with a human manager (0x7875e0) at the player's club +0x39 or at the contract club (which must exist). News
-/// 0x21 (local): 0 the id, 1..3 the +0x33 of +4, +8, +0xc; slot 0: 4 the senior national side (0x53b3d0), 5 = 0; slot
-/// 1: the senior side and 1; other: the B team (0x53b4f0) and 0. Delivered to the manager (0x7861e0) of +0x39, if any,
+/// only with a human manager (`news_club_has_human_manager`) at the player's club +0x39 or at the contract club (which must exist). News
+/// 0x21 (local): 0 the id, 1..3 the +0x33 of +4, +8, +0xc; slot 0: 4 the senior national side (`exe::database_get_national_team`), 5 = 0; slot
+/// 1: the senior side and 1; other: the B team (`exe::database_get_national_u21_team`) and 0. Delivered to the manager (`send_to_club_manager`) of +0x39, if any,
 /// and to that of the contract club when it is another one.
 /// Original: `national_teams_post_player_called_up_news` (0x76fd10, national_teams.cpp, stdcall, ret 0xc).
 ///
@@ -1613,9 +1613,9 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
 // simplification: the cup’s virtual +0x44 appends records to people and the news goes to the managers’ inboxes (they allocate): only
 // the original; the copy takes the branch.
 
-/// The comparer's dry run of 0x76b600: the copy runs without the FIFA ranking (0x58cf70, adds points to the history),
-/// without the first call-up (0x86cc50, goes to the file), without the national-team match in the transfer record
-/// (0x8ce920) and without the news item to the clubs (0x7706c0, allocates).
+/// The comparer's dry run of `record_international_result`: the copy runs without the FIFA ranking (`exe::fifa_rankings_record_match_result`, adds points to the history),
+/// without the first call-up (`add_first_cap_record`, goes to the file), without the national-team match in the transfer record
+/// (`record_international_appearance`) and without the news item to the clubs (`send_club_international_report_news`, allocates).
 ///
 /// [pt] O ensaio do comparador da 0x76b600: a cópia roda sem o ranking da FIFA (0x58cf70, acrescenta pontos ao histórico),
 /// sem a primeira convocação (0x86cc50, vai para o arquivo), sem o jogo pela seleção no registro de transferências
@@ -1692,15 +1692,15 @@ pub(crate) unsafe fn for_each_lineup_person(this: usize, p: usize, m: usize, mut
 /// swaps the nationality or, in real internationals, scores the FIFA ranking and adds caps and goals to everyone who
 /// played; clears the type's +0x44 on its date and sends the news to the clubs.
 ///
-/// Ret 8: `NationalTeams::record_international_result(fixture, summary)`: only between two national sides (0x53b900).
+/// Ret 8: `NationalTeams::record_international_result(fixture, summary)`: only between two national sides (`exe::database_is_national_team`).
 /// By the fixture's competition (`[+0x14]`): that of `[0x9cf794]` marks +0xd = 1 in the general record of those who
 /// played; that of `[0x9cf798]` sets bit 2 of +0xc and swaps the nation (+0x1a/+0x1e); that of `[0x9cf7a0]` nothing;
-/// the others: the FIFA ranking (0x58cf70 on `[this+0x1c]`) and, for those who played, the first call-up (0x86cc50 with
+/// the others: the FIFA ranking (`exe::fifa_rankings_record_match_result` on `[this+0x1c]`) and, for those who played, the first call-up (`add_first_cap_record` with
 /// the opponent, if +0x22 = 0, after the nation swap), a cap (+0x22) and the goals (+0x23 += +0x21 of the slot) for the
-/// national side and the match in the record (0x8ce920 with the nation's number of matches). In all of them, the
+/// national side and the match in the record (`record_international_appearance` with the nation's number of matches). In all of them, the
 /// nation's match count (+2) goes up. Then, per side: the type (1 if +0x40 = 0; otherwise 2 for the second team
-/// 0x5409b0, otherwise 0); on the type's date (+0x3a + 20 × type, 0x4a7f20 with today's) zeroes +0x44 + 20 × type; the
-/// news to the clubs (0x7706c0) with the star player (slot +0x153) and the list of those who played. No SEH, no box, no
+/// `exe::club_is_national_team`, otherwise 0); on the type's date (+0x3a + 20 × type, `exe::date_operator_3d_3d` with today's) zeroes +0x44 + 20 × type; the
+/// news to the clubs (`send_club_international_report_news`) with the star player (slot +0x153) and the list of those who played. No SEH, no box, no
 /// random draw.
 /// Original: `NationalTeams::record_international_result` (0x76b600, national_teams.cpp, thiscall, ret 8).
 ///
@@ -1792,7 +1792,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
     }
 }
 
-/// Regions 0x76b600 writes: each side's nation record fields and, per lineup person in range, staff +0x1a..+0x24 and
+/// Regions `record_international_result` writes: each side's nation record fields and, per lineup person in range, staff +0x1a..+0x24 and
 /// state record +0xc/+0xd.
 ///
 /// [pt] As regiões que a 0x76b600 grava por conta própria: de cada lado, o registro da nação (o +2 e os +0x44 dos tipos) e,
@@ -1854,7 +1854,7 @@ pub(crate) unsafe fn nation_record(this: usize, nation: usize) -> usize {
     read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add((read_usize(nation) as i32).wrapping_mul(0x6e) as usize)
 }
 
-/// Call-up type of the player in the national side: 2 for second national teams (0x5409b0), else bit 3 of squad marks
+/// Call-up type of the player in the national side: 2 for second national teams (`exe::club_is_national_team`), else bit 3 of squad marks
 /// (+0x5e).
 ///
 /// [pt] O tipo de convocação do jogador no clube da seleção `clube`: 2 no segundo conjunto de seleções (0x5409b0), senão o
@@ -1878,7 +1878,7 @@ pub(crate) unsafe fn set_news_player_slots(n: usize, p: usize) {
     }
 }
 
-/// Writes news slot 6: severity category of the player's injury (0x62ec00 over the injury type), or 0.
+/// Writes news slot 6: severity category of the player's injury (`exe::injury_get_type_category` over the injury type), or 0.
 ///
 /// [pt] O dado 6 da notícia: a gravidade da lesão do jogador (0x62ec00 sobre o tipo do registro 0x62ed70), ou 0.
 pub(crate) unsafe fn set_news_injury_severity(n: usize, p: usize) {
@@ -1893,7 +1893,7 @@ pub(crate) unsafe fn set_news_injury_severity(n: usize, p: usize) {
     write(n, 6, v as u32);
 }
 
-/// Club of the player's contract (0x4cf5a0, cached in [0xae1080]; 0x245-byte records), or 0.
+/// Club of the player's contract (`exe::contract_manager_get_contract`, cached in [0xae1080]; 0x245-byte records), or 0.
 ///
 /// [pt] O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]; registros de 0x245 bytes), ou 0.
 pub(crate) unsafe fn club_of_player_contract(p: usize) -> usize {
@@ -1911,11 +1911,11 @@ pub(crate) unsafe fn club_of_player_contract(p: usize) -> usize {
 ///
 /// Ret 8: `NationalTeams::withdraw_injured_player(p, days)`: with 14 or more days of injury, the called-up player
 /// (+0x28 = 0xb) of the national side's club (+0x24) leaves: with an injury of type 0x51 he only leaves the tactic
-/// (0x896c60, twice) and the squad (0x7762f0). Otherwise, only before the type's date (+0x3a of the type record:
-/// `[this+4]` + 0x6e × nation id + 20 × type; 0x456740 over `[0xae2c90]`) and if list `[this]` does not have the club
-/// with a date already past: the news to his club (0x76f7d0), the removal, the type's open slots (+0x45) go up 1, the
-/// level (0x76d810) and, if the national side's manager is human and decides (0x600a50, 0x5fd6b0), the request for a
-/// replacement (0x7701f0); otherwise the replacement (0x775f90) and the repeated call-ups deleted (0x76c060). Without a
+/// (`remove_player_from_selection`, twice) and the squad (`national_teams_remove_player_from_squad`). Otherwise, only before the type's date (+0x3a of the type record:
+/// `[this+4]` + 0x6e × nation id + 20 × type; `exe::date_operator_3e` over `[0xae2c90]`) and if list `[this]` does not have the club
+/// with a date already past: the news to his club (`national_teams_post_player_withdrawn_news`), the removal, the type's open slots (+0x45) go up 1, the
+/// level (`national_team_level`) and, if the national side's manager is human and decides (`exe::human_manager_is_human_club`, `exe::human_manager_controls_all_national_teams`), the request for a
+/// replacement (`national_teams_post_replacement_needed_news`); otherwise the replacement (`call_up_replacement`) and the repeated call-ups deleted (`national_teams_remove_duplicate_squad_entries`). Without a
 /// club: the original routine (box and 0).
 /// Original: `NationalTeams::withdraw_injured_player` (0x775cd0, national_teams.cpp, thiscall, ret 8).
 ///
@@ -2002,7 +2002,7 @@ pub(crate) unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: u
     exe::national_teams_remove_duplicate_squad_entries(nation);
 }
 
-/// Read-only plan of what 0x775cd0 will do for the player: 0 nothing, 1 illness (just leaves), 2 leaves with news.
+/// Read-only plan of what `withdraw_injured_player` will do for the player: 0 nothing, 1 illness (just leaves), 2 leaves with news.
 ///
 /// [pt] O caminho que a 0x775cd0 vai tomar, só lendo (a lista [this] percorrida pelos nós, sem mexer no cursor): 0 nada, 1
 /// doença (só sai), 2 sai com notícia. O clube (+0x24) já conferido.
@@ -2041,10 +2041,10 @@ pub(crate) unsafe fn release_plan(this: usize, p: usize, days: u32) -> u8 {
 /// when human-managed.
 ///
 /// Ret 0xc; SEH frame without a destructor; `this` is not read: `national_teams_post_player_withdrawn_news(p, nation,
-/// type)`: if the player's club (+0x39) or the contract club (0x4cf5a0) has a human manager (0x7875e0), builds news
-/// 0x20 in a local (0x77bbe0 with 0): data 0..3 the player and those of +4/+8/+0xc, 4 the national side's id (senior
-/// 0x53b3d0 in types 0 and 1, otherwise 0x53b4f0), 5 = (type == 1), 6 the injury severity; delivers it to club +0x39
-/// and, if it is another one, to the contract club (0x7861e0).
+/// type)`: if the player's club (+0x39) or the contract club (`exe::contract_manager_get_contract`) has a human manager (`news_club_has_human_manager`), builds news
+/// 0x20 in a local (`construct_news_item` with 0): data 0..3 the player and those of +4/+8/+0xc, 4 the national side's id (senior
+/// `exe::database_get_national_team` in types 0 and 1, otherwise `exe::database_get_national_u21_team`), 5 = (type == 1), 6 the injury severity; delivers it to club +0x39
+/// and, if it is another one, to the contract club (`send_to_club_manager`).
 /// Original: `national_teams_post_player_withdrawn_news` (0x76f7d0, national_teams.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x76f7d0 } (thiscall, ret 0xc, national_teams.cpp, quadro SEH sem destrutor; `this` não é lido):
@@ -2090,9 +2090,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news
 ///
 /// Ret 0x10; SEH frame without a destructor; `this` is not read: `national_teams_post_replacement_needed_news(p,
 /// nation, type, level)`: news 0x22 to the national side's manager: data 0..3 the player, 4 the team id (type 1: senior
-/// with flag 8 and 5 = 1; type 0: senior, otherwise the under-21 0x53b4f0, flag 4 and 5 = 0), 6 the injury severity, 7
-/// = 0, 8 those in the squad with the flag (0x53c590), 9 the level, 0xa the type and 0xb the nation id. Delivered to
-/// the team if its manager is human (0x600a50), otherwise to the senior side if its manager is.
+/// with flag 8 and 5 = 1; type 0: senior, otherwise the under-21 `exe::database_get_national_u21_team`, flag 4 and 5 = 0), 6 the injury severity, 7
+/// = 0, 8 those in the squad with the flag (`database_count_club_squad`), 9 the level, 0xa the type and 0xb the nation id. Delivered to
+/// the team if its manager is human (`exe::human_manager_is_human_club`), otherwise to the senior side if its manager is.
 /// Original: `national_teams_post_replacement_needed_news` (0x7701f0, national_teams.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x7701f0 } (thiscall, ret 0x10, national_teams.cpp, quadro SEH sem destrutor; `this` não é lido):
@@ -2130,7 +2130,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_replacement_needed_ne
     }
 }
 
-/// Writes the national team name (0x542100) into buf and returns the grammar byte (+0x52).
+/// Writes the national team name (`club_get_national_team_name`) into buf and returns the grammar byte (+0x52).
 ///
 /// [pt] O nome do time (0x542100: time, marca de segundo time, destino de 0x47 bytes, 2, 1) e o byte de gramática (+0x52).
 pub(crate) unsafe fn national_team_name(team: usize, second: u32, buf: &mut [u8; 0x48]) -> i32 {
@@ -2143,13 +2143,13 @@ pub(crate) unsafe fn national_team_name(team: usize, second: u32, buf: &mut [u8;
 /// date and match day, human manager) and writes the reason.
 ///
 /// Ret 0x18; SEH frame with the local list of the match search: `national_teams_can_change_squad(nation, type, p,
-/// joining, msg, size)`: a player (if any) retired from the national side (0x547d30) or from a club of another nation
+/// joining, msg, size)`: a player (if any) retired from the national side (`exe::staff_dislikes_club`) or from a club of another nation
 /// cannot change (0). The team of the type (0 and 1 the senior side, type 1 with flag 8 and the second team; otherwise
-/// the under-21 0x53b4f0, flag 4). Joining: a full squad (0x53c590 against +0x42 of the type record) or an injured
+/// the under-21 `exe::database_get_national_u21_team`, flag 4). Joining: a full squad (`database_count_club_squad` against +0x42 of the type record) or an injured
 /// player (0x62c400 = 2) cannot change. Can change (1): joining with open slots (+0x45), the type with no window (+0x44
 /// = 0), the type's date (+0x3a) already past or, on the day itself, a team match today (0x5acee0 into a local list);
-/// in types 1 and 2 with a human manager who decides (0x600a50), also when list `[this]` does not have the team with a
-/// past date and he does not allow it (0x5fd6b0). The reasons go to `msg` (0x66f4e0). Without a nation, or `msg` with
+/// in types 1 and 2 with a human manager who decides (`exe::human_manager_is_human_club`), also when list `[this]` does not have the team with a
+/// past date and he does not allow it (`exe::human_manager_controls_all_national_teams`). The reasons go to `msg` (0x66f4e0). Without a nation, or `msg` with
 /// fewer than 0x32 bytes: the original routine (box and 1).
 /// Original: `national_teams_can_change_squad` (0x76db00, national_teams.cpp, thiscall, ret 0x18).
 ///
@@ -2286,7 +2286,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
 /// Tells whether the player is in the squad of the type (senior, second or under-21) with the type's flag.
 ///
 /// Stdcall, ret 0xc: `national_teams_player_in_squad(p, nation, type)`: 1 if the club of the player's national side
-/// (+0x24) is the team of the type (0 and 1 the senior side 0x53b3d0, 2 the under-21 0x53b4f0) and he has the type's
+/// (+0x24) is the team of the type (0 and 1 the senior side `exe::database_get_national_team`, 2 the under-21 `exe::database_get_national_u21_team`) and he has the type's
 /// flag (+0x5e: 4 in types 0 and 2, 8 in 1). No club or another type: 0.
 /// Original: `national_teams_player_in_squad` (0x76da80, national_teams.cpp, stdcall, ret 0xc).
 ///
@@ -2388,10 +2388,10 @@ pub(crate) unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, ga
     1
 }
 
-/// qsort comparer of records by the date at +0 (0x456770/0x456740), earliest first.
+/// qsort comparer of records by the date at +0 (`exe::date_operator_3c`/`exe::date_operator_3e`), earliest first.
 ///
 /// `compare_call_up_records_by_date(a, b)`: the qsort of records with the date at +0 (the 9-byte call-ups, the
-/// injuries, the transfers): −1 if that of `a` is earlier (0x456770), 1 if later (0x456740), otherwise 0. Hot (qsort):
+/// injuries, the transfers): −1 if that of `a` is earlier (`exe::date_operator_3c`), 1 if later (`exe::date_operator_3e`), otherwise 0. Hot (qsort):
 /// no counter.
 /// Original: `compare_call_up_records_by_date` (0x778e90, national_teams.cpp, cdecl).
 ///
@@ -2450,7 +2450,7 @@ pub(crate) struct NationCurrentCompUpdate {
     pub(crate) avisa: bool,
 }
 
-/// Read-only plan of 0x775220: whether the new competition becomes current or is queued, what goes to the queue, and
+/// Read-only plan of `set_current_competition`: whether the new competition becomes current or is queued, what goes to the queue, and
 /// whether the manager manager is notified.
 ///
 /// [pt] O plano da 0x775220 (só lê): com competição atual (≠ −1) que é fase final grande, a nova vai para a fila e a atual
@@ -2476,7 +2476,7 @@ pub(crate) unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -
 }
 
 /// makes the competition the nation's current one; with a major finals under way, the new one goes to the queue; when
-/// the new one is a major finals, the current one goes to the queue; notifies the manager handler (0x6a3770)
+/// the new one is a major finals, the current one goes to the queue; notifies the manager handler (`set_season_expectations`)
 /// Original: `NationalTeams::set_current_competition` (0x775220, national_teams.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x775220 } (thiscall, ret 8, national_teams.cpp): `NationalTeams::set_current_competition(nacao, comp)`: a
@@ -2523,8 +2523,8 @@ pub(crate) unsafe fn has_flagged_nation(c: usize) -> bool {
 
 /// in the one-byte-per-club table, marks the clubs of the non-friendly fixtures on the date: 1 the club's league game,
 /// 2 another, 3 a club of a flagged nation (entry with no nation); turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied: with the detour the
-/// career in Rust mode left the reference be54a138 (bisection of batch 251's 39 routines; with 0x77bbe0, the news
-/// constructor, the game later crashed in 0x7c6650 on a broken index); the cause (stack residue or a difference in the
+/// career in Rust mode left the reference be54a138 (bisection of batch 251's 39 routines; with `construct_news_item`, the news
+/// constructor, the game later crashed in `player_stats_reset_player` on a broken index); the cause (stack residue or a difference in the
 /// copy) is not isolated yet; the copy stays in the code and does not run
 /// Original: `NationalTeams::mark_clubs_with_fixtures` (0x7775c0, national_teams.cpp, thiscall, ret 4).
 ///
@@ -2618,10 +2618,10 @@ pub(crate) unsafe fn end_call_ups(this: usize, passes: impl Fn(usize) -> bool) {
     }
 }
 
-/// In the call-up record list, those of the competition (+4) end tomorrow (+0x10, the day from 0x54c5b0).
+/// In the call-up record list, those of the competition (+4) end tomorrow (+0x10, the day from `exe::date_add_days`).
 ///
 /// Ret 4: `end_duty_for_competition(comp)`: in the call-up record list `[this]`, those of the competition (+4 equal to
-/// *comp) end tomorrow (+0x10). No SEH, no box, no random draw; the local is the date that 0x54c5b0 writes.
+/// *comp) end tomorrow (+0x10). No SEH, no box, no random draw; the local is the date that `exe::date_add_days` writes.
 /// Original: `end_duty_for_competition` (0x774f30, national_teams.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x774f30 } (thiscall, ret 4, national_teams.cpp): `end_duty_for_competition(comp)`: na lista de registros
@@ -2631,7 +2631,7 @@ pub(crate) unsafe extern "thiscall" fn end_duty_for_competition(this: usize, com
     end_call_ups(this, |r| read_usize(r + 4) == read_usize(comp) /* a competição */)
 }
 
-/// like 0x774f30, only the records of the competition (+4) and the nation (+0)
+/// like `end_duty_for_competition`, only the records of the competition (+4) and the nation (+0)
 /// Original: `end_duty_for_nation_in_competition` (0x774f90, national_teams.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x774f90 } (thiscall, ret 8, national_teams.cpp): `end_duty_for_nation_in_competition(nacao, comp)`: como a
@@ -2653,20 +2653,20 @@ pub(crate) unsafe fn end_call_ups_regions(this: usize) -> Vec<(usize, usize)> {
     reg
 }
 
-/// Number of per-club call-up records of 0x7774b0: club count - 2 x nation count.
+/// Number of per-club call-up records of `prune_club_call_up_records`: club count - 2 x nation count.
 ///
 /// [pt] O número de registros de convocação por clube da 0x7774b0: [0xae235c] − 2 × [0xae2350].
 pub(crate) unsafe fn club_call_up_record_count() -> i32 {
     (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2))
 }
 
-/// In each club record (+0x20, 6 bytes), drops the expired entries (0x456770) at the start, moves the rest down
-/// (0x777590) and frees the emptied buffer.
+/// In each club record (+0x20, 6 bytes), drops the expired entries (`exe::date_operator_3c`) at the start, moves the rest down
+/// (`exe::call_up_record_assign`) and frees the emptied buffer.
 ///
 /// `prune_club_call_up_records()`: each club record (+0x20, 6 bytes: +0 vector of 9-byte entries, +4 flag, +5 count,
-/// signed byte) counts the entries already expired (0x456770: their date before `[0xae2c90]`; the routine assumes they
-/// are at the start), moves the others down over them (0x777590) and decreases the count; zeroed with a vector, frees
-/// the vector (0x9452ca) and zeroes +4 and +0. No SEH, no box, no random draw; the local (the expired count) is zeroed
+/// signed byte) counts the entries already expired (`exe::date_operator_3c`: their date before `[0xae2c90]`; the routine assumes they
+/// are at the start), moves the others down over them (`exe::call_up_record_assign`) and decreases the count; zeroed with a vector, frees
+/// the vector (`exe::crt_free`) and zeroes +4 and +0. No SEH, no box, no random draw; the local (the expired count) is zeroed
 /// before being read.
 /// Original: `prune_club_call_up_records` (0x7774b0, national_teams.cpp, thiscall).
 ///
@@ -2723,7 +2723,7 @@ pub(crate) unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
     }
 }
 
-/// Would record rec of 0x7774b0 end with no entries but a vector (so the original frees it)? Counts entries before
+/// Would record rec of `prune_club_call_up_records` end with no entries but a vector (so the original frees it)? Counts entries before
 /// today.
 ///
 /// [pt] O registro `rec` da 0x7774b0 terminaria sem entradas e com vetor (a original solta o vetor)? Escrito à parte da
@@ -2735,14 +2735,14 @@ pub(crate) unsafe fn would_free_call_up_record(rec: usize) -> bool {
     v != 0 && n.wrapping_sub(vencidas as i8) == 0
 }
 
-/// National team for call-up type: main team (0x53b3d0) for 0 and 1, U21 (0x53b4f0) otherwise.
+/// National team for call-up type: main team (`exe::database_get_national_team`) for 0 and 1, U21 (`exe::database_get_national_u21_team`) otherwise.
 ///
 /// [pt] O time da nação para o tipo de convocação: 0 e 1 a seleção principal (0x53b3d0), os outros o sub-21 (0x53b4f0).
 pub(crate) unsafe fn national_team_for_type(nation: usize, kind: u8) -> usize {
     if kind == 0 || kind == 1 { exe::database_get_national_team(nation) } else { exe::database_get_national_u21_team(nation) }
 }
 
-/// Removes person p from the team's tactics selection (0x896c60 with 1 then 0), as the originals do before clearing the
+/// Removes person p from the team's tactics selection (`remove_player_from_selection` with 1 then 0), as the originals do before clearing the
 /// slot.
 ///
 /// [pt] Tira a pessoa `p` da tática do time (0x896c60 de [0xde1d08], com 1 e com 0 no 3º argumento), como as originais
@@ -2763,7 +2763,7 @@ pub(crate) unsafe fn clear_national_call_up(p: usize) {
 }
 
 /// the first of the 50 free squad slots of the team (+0xd7; type 0/1 the senior team, else the under-21) takes the
-/// person, who gets the team (+0x24), today's date (+0x29), mark 0xb (+0x28) and squad bit 4 or 8 (0x540980)
+/// person, who gets the team (+0x24), today's date (+0x29), mark 0xb (+0x28) and squad bit 4 or 8 (`staff_set_squad_flags`)
 /// Original: `add_player_to_squad` (0x776250, national_teams.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x776250 } (thiscall, ret 0xc, national_teams.cpp): `add_player_to_squad(nacao, tipo, p)`: a primeira vaga
@@ -2794,12 +2794,12 @@ pub(crate) unsafe fn squad_change_regions(team: usize, p: usize) -> [(usize, usi
     [(team + club::SQUAD, 200), (p + staff::NATIONAL_JOB, 0x3b)]
 }
 
-/// Removes the person from the team tactics (0x896c60) and, if found in a slot, empties it and clears +0x24, +0x28 and
+/// Removes the person from the team tactics (`remove_player_from_selection`) and, if found in a slot, empties it and clears +0x24, +0x28 and
 /// the national bits of +0x5e.
 ///
-/// Ret 0xc: `remove_player_from_squad(nation, type, p)`: takes `p` out of the team's tactic (0x896c60, twice) and, if
+/// Ret 0xc: `remove_player_from_squad(nation, type, p)`: takes `p` out of the team's tactic (`remove_player_from_selection`, twice) and, if
 /// he is in one of the 50 slots (+0xd7), empties the slot and clears the person (+0x24, +0x28, +0x5e & 3). No SEH, no
-/// random draw, no locals; a box only with a null team or person (0x896c60).
+/// random draw, no locals; a box only with a null team or person (`remove_player_from_selection`).
 /// Original: `remove_player_from_squad` (0x7762f0, national_teams.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x7762f0 } (thiscall, ret 0xc, national_teams.cpp): `remove_player_from_squad(nacao, tipo, p)`: tira `p` da
@@ -2824,9 +2824,9 @@ pub(crate) unsafe fn nation_record_by_id(this: usize, nation: usize) -> usize {
 /// Once the nation record date (+0x62) has passed, removes from the under-21 squad everyone older than 21 (+0x18) and
 /// clears record +0x6b.
 ///
-/// Ret 4: `release_overage_u21_players(nation)`: after the date of the nation record (+0x62/+0x66; 0x456740 over
-/// `[0xae2c90]`), each of the 50 slots of the under-21 side (0x53b4f0) with a person aged (+0x18, signed byte) above 21
-/// leaves the tactic (0x896c60, twice), is cleared (+0x24, +0x28, +0x5e & 3) and the slot is emptied; finally zeroes
+/// Ret 4: `release_overage_u21_players(nation)`: after the date of the nation record (+0x62/+0x66; `exe::date_operator_3e` over
+/// `[0xae2c90]`), each of the 50 slots of the under-21 side (`exe::database_get_national_u21_team`) with a person aged (+0x18, signed byte) above 21
+/// leaves the tactic (`remove_player_from_selection`, twice), is cleared (+0x24, +0x28, +0x5e & 3) and the slot is emptied; finally zeroes
 /// byte +0x6b of the record. No SEH, no random draw; the local is `this`.
 /// Original: `release_overage_u21_players` (0x76d880, national_teams.cpp, thiscall, ret 4).
 ///
@@ -2864,11 +2864,11 @@ pub(crate) unsafe fn notify_manager_manager(nation: usize) {
 }
 
 /// The nation's current competition (record +4) becomes −1 and, if there is a next one (`[this+8][id]`), that one takes
-/// its place, notifying the managers (0x6a3770).
+/// its place, notifying the managers (`set_season_expectations`).
 ///
 /// Ret 4: `clear_current_competition(nation)`: the current competition of the nation record (`[this+4]` + 0x6e × id,
 /// +4) becomes −1; if there is a next one (`[this+8][id]` ≠ −1), it becomes the current one, the next becomes −1 and
-/// the manager manager is notified (0x6a3770). No SEH, no box, no locals.
+/// the manager manager is notified (`set_season_expectations`). No SEH, no box, no locals.
 /// Original: `clear_current_competition` (0x775000, national_teams.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x775000 } (thiscall, ret 4, national_teams.cpp): `clear_current_competition(nacao)`: a competição atual do
@@ -2888,7 +2888,7 @@ pub(crate) unsafe extern "thiscall" fn clear_current_competition(this: usize, na
     }
 }
 
-/// Has competition v finished for 0x775070? Without end-of-stage: comp +0x59 is null; with it: it equals the European
+/// Has competition v finished for `release_competitions_of_continent`? Without end-of-stage: comp +0x59 is null; with it: it equals the European
 /// continent stage.
 ///
 /// [pt] A competição `v` (−1: nenhuma) acabou para a 0x775070? Sem `fim_de_fase`, quando +0x59 da competição
@@ -2903,7 +2903,7 @@ pub(crate) unsafe fn is_comp_finished(v: i32, end_of_stage: bool) -> bool {
 }
 
 /// in the nations of the continent (+0x71), the current and next competitions that ended (competition +0x59 null, or
-/// stage [0x9cfa10]) become −1; empty current and a next one: the next moves up, with the notice (0x6a3770)
+/// stage [0x9cfa10]) become −1; empty current and a next one: the next moves up, with the notice (`set_season_expectations`)
 /// Original: `release_competitions_of_continent` (0x775070, national_teams.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x775070 } (thiscall, ret 8, national_teams.cpp): `release_competitions_of_continent(continente, fim_de_fase)`:
@@ -2938,7 +2938,7 @@ pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: u
     }
 }
 
-/// Comparer: the warning 0x6a3770 draws at random and touches the managers (it cannot run twice), so only the original
+/// Comparer: the warning `set_season_expectations` draws at random and touches the managers (it cannot run twice), so only the original
 /// routine runs; the proof is the career and the copy's branch in Rust mode.
 ///
 /// [pt] Comparador: o aviso 0x6a3770 sorteia e mexe nos técnicos (não pode rodar duas vezes): só a original; a prova é a
@@ -2946,18 +2946,18 @@ pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: u
 // simplification: original only (4 calls in the career); comparing would require separating the decision from the warning.
 
 /// Calls up a replacement: in the pool of the level, the first eligible player of the nation who plays a position of
-/// the one leaving (0x5b7d20) is called up (0x776250, leaving another squad first through 0x7762f0) with the news
-/// (0x76fd10); nobody: clears the type's slot count (+0x45).
+/// the one leaving (`position_mask`) is called up (`add_player_to_squad`, leaving another squad first through `national_teams_remove_player_from_squad`) with the news
+/// (`national_teams_post_player_called_up_news`); nobody: clears the type's slot count (+0x45).
 ///
-/// Ret 0x10: `call_up_replacement(nation, type, level, leaving)`: in the section of the level (0x76d810) in the type's
+/// Ret 0x10: `call_up_replacement(nation, type, level, leaving)`: in the section of the level (`national_team_level`) in the type's
 /// pool (`[this+0xc]`, under-21 `[this+0x10]`; start +8/+0x1d of the record plus the slots of the previous levels,
-/// count +0xd/+0x22), the first one who is not `leaving`, has a player sheet (+0x61), likes the club (0x547d30), is fit
-/// (0x62c400), is not a flagged regen (0x7a7eb0) outside the senior side, is from the nation (team +0x24, nationalities
-/// +0x1a/+0x1e, +0x22, bit 2 of the 79-byte record), is not suspended (0x55d270) and plays one of the positions of
-/// `leaving` (0x5b7d20). Without a team he goes straight in; called up (+0x28 = 0xb) for another type (2 with 0x5409b0,
-/// otherwise bit 3 of +0x5e) only after the type's date (+0x3a; 0x456770) and, for type 0, if the club allows
-/// (0x600a50): he leaves there (0x7762f0). He joins (0x776250), the type's slot (+0x45) goes down 1 and the news goes
-/// out (0x76fd10). Nobody: zeroes +0x45. No SEH, no random draw; the local for the type of the other squad is written
+/// count +0xd/+0x22), the first one who is not `leaving`, has a player sheet (+0x61), likes the club (`exe::staff_dislikes_club`), is fit
+/// (`get_player_injury_status`), is not a flagged regen (`record_bits`) outside the senior side, is from the nation (team +0x24, nationalities
+/// +0x1a/+0x1e, +0x22, bit 2 of the 79-byte record), is not suspended (`is_player_suspended`) and plays one of the positions of
+/// `leaving` (`position_mask`). Without a team he goes straight in; called up (+0x28 = 0xb) for another type (2 with `exe::club_is_national_team`,
+/// otherwise bit 3 of +0x5e) only after the type's date (+0x3a; `exe::date_operator_3c`) and, for type 0, if the club allows
+/// (`exe::human_manager_is_human_club`): he leaves there (`national_teams_remove_player_from_squad`). He joins (`add_player_to_squad`), the type's slot (+0x45) goes down 1 and the news goes
+/// out (`national_teams_post_player_called_up_news`). Nobody: zeroes +0x45. No SEH, no random draw; the local for the type of the other squad is written
 /// before being read (only the byte counts).
 /// Original: `call_up_replacement` (0x775f90, national_teams.cpp, thiscall, ret 0x10).
 ///
@@ -3043,8 +3043,8 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nation: 
     *(slot as *mut u8) = 0;
 }
 
-/// Comparador: a entrada no elenco sai com a notícia (0x76fd10) e a saída do outro mexe na tática: só a original
-/// (a 0x776250 e a 0x7762f0 que ela chama passam pelos comparadores delas).
+/// Comparador: a entrada no elenco sai com a notícia (`national_teams_post_player_called_up_news`) e a saída do outro mexe na tática: só a original
+/// (a `add_player_to_squad` e a `national_teams_remove_player_from_squad` que ela chama passam pelos comparadores delas).
 // simplification: original only; the proof is the career (140 calls) and the copy’s branch in Rust mode.
 
 /// Rating of the person in reserve slot q: word +9 of his player record (+0x61).
@@ -3069,10 +3069,10 @@ pub(crate) unsafe fn reserve_level_start(rec: usize, o: usize, level: i8) -> i32
 /// Puts person `p` in the reserve of record `rec` (main or U21) in his level's block, keeping it sorted by rating.
 ///
 /// `sub` 0: the main team at [this+0xc]; 1: the U21 at [this+0x10], fields 0x15 further on; the block is that of his
-/// level (0x76d810). With a free slot (+0xd < +0xe), at the end of the block, and the lowest rating (+0xf) goes down if
+/// level (`national_team_level`). With a free slot (+0xd < +0xe), at the end of the block, and the lowest rating (+0xf) goes down if
 /// needed; when full, only with a rating above the lowest: he enters at the position given by the rating (descending,
 /// after equal ones), pushing the last one out, and the lowest rating becomes the last one's. Block full: it is sorted
-/// (qsort 0x945333 with 0x778ed0).
+/// (qsort `exe::crt_qsort` with `compare_by_rating`).
 ///
 /// [pt] Põe a pessoa `p` na reserva do registro `rec` (`sub` 0: a principal em [this+0xc]; 1: o sub-21 em [this+0x10],
 /// campos 0x15 adiante), no trecho do nível dela (0x76d810). Com vaga (+0xd < +0xe), no fim do trecho, e a menor nota
@@ -3123,12 +3123,12 @@ pub(crate) unsafe fn add_to_reserves(this: usize, p: usize, rec: usize, sub: u32
 
 /// Builds the selection pools: clears the 4 levels of each nation record and puts every eligible person in the nation
 /// pool (and the under-21 one, up to 21 years and under 5 caps), also by the second nationality; full section: enters
-/// by rating, and sorts (qsort with 0x778ed0).
+/// by rating, and sorts (qsort with `compare_by_rating`).
 ///
 /// `build_selection_pools()`: zeroes the counts (+0xd, +0x22) and puts 10000 in the lowest ratings (+0xf, +0x24) of the
 /// 4 levels of each nation record (`[this+4]`, 0x6e bytes); then each person (`[0xae23bc]`, 0x6e bytes) with a nation
 /// (+0x1a), a player sheet (+0x61), over 16 years old (+0x18), without a national side or already called up (+0x24,
-/// +0x28 = 0xb), in a player position (0x53b620 of +0x3d) and with a club (+0x39) joins the nation's pool
+/// +0x28 = 0xb), in a player position (`exe::database_is_player_job` of +0x3d) and with a club (+0x39) joins the nation's pool
 /// (add_to_reserves) and, up to 21 years with fewer than 5 caps (+0x22), the under-21 one; and again by the second
 /// nationality (+0x1e: with no caps for the first, a different one and not `[0x9cf434]`). No SEH, no box, no random
 /// draw; the locals are written before being read (of the rating stored in 32 bits only the short counts).
@@ -3228,7 +3228,7 @@ pub(crate) unsafe extern "C" fn compare_by_club(a: usize, b: usize) -> i32 {
 /// Takes the player out of his level pool in the nation and out of the squad, clearing his national team fields.
 ///
 /// Ret 4: takes `player` out of the national side. With a nation (+0x1a) and a player sheet (+0x61): in the nation's
-/// 110-byte record in `[this+4]`, the level (0x76d810 with the record and 0); if the level's rating (word +0xf + level
+/// 110-byte record in `[this+4]`, the level (`national_team_level` with the record and 0); if the level's rating (word +0xf + level
 /// × 4) is lower than the player sheet's (+9), looks for the player in the level's section of list `[this+0xc]` (start
 /// = dword +8 + bytes +0xe of the previous levels, size in byte +0xd + level × 4): found, the last of the section goes
 /// into his slot and the size decreases. Then, if called up (+0x24): his slot among the 50 (+0xd7) is zeroed, +0x24 is
@@ -3462,8 +3462,8 @@ pub(crate) unsafe extern "stdcall" fn national_team_ages(comp: usize, kind: i8, 
 /// stops club fixtures near that date).
 ///
 /// Ret 0xc; SEH frame only for the state, the dates have no destructor: `NationalTeams::record_club_call_ups(team, b,
-/// fixture)`: sorts the team's squad (+0xd7, 50 slots) by club (qsort with 0x778ef0). With the fixture: its date
-/// (+0x2a, +0x28; a day earlier for the second team 0x5409b0 or with `b`); counts the consecutive called-up players of
+/// fixture)`: sorts the team's squad (+0xd7, 50 slots) by club (qsort with `compare_by_club`). With the fixture: its date
+/// (+0x2a, +0x28; a day earlier for the second team `exe::club_is_national_team` or with `b`); counts the consecutive called-up players of
 /// each club (+0x39), skipping the empty slots, the persons out of range (`[0xae2364]`) and those of another squad
 /// (+0x5e bit 3 without `b`, bit 2 with it), and when the club changes adds the previous club's count to its record
 /// (add_club_callups). The last club of the loop gets no record (as in the original).

@@ -81,10 +81,10 @@ pub(crate) unsafe fn cap_current_ability(f: usize, ceiling: i16, n: i32) {
 /// Rebuilds a retired person from the regen queue as a young player: player record, nation, names, languages, age and
 /// ability, reputations, birth date, personality attributes and, by chance, a club.
 ///
-/// `PLAYER_REGEN::regenerate_as_youth_player(person)`, from the regen queue (0x7a65d0) for every young regen. A person
+/// `PLAYER_REGEN::regenerate_as_youth_player(person)`, from the regen queue (`process_regen_queue`) for every young regen. A person
 /// not retired (bits 0x30 of +0xb of the 79-byte record) or with a club: it only clears the bits. Otherwise: leaves the
-/// national team (0x775ba0), takes the front record of the player record pool (this+0x3c, 16-byte entries: record,
-/// nation, second nation; 0x7a8470), becomes a player (+0x5f = 2, +0x61 the record) and the 79-byte record gets the
+/// national team (`national_teams_remove_player`), takes the front record of the player record pool (this+0x3c, 16-byte entries: record,
+/// nation, second nation; `remove_player_data_from_pool`), becomes a player (+0x5f = 2, +0x61 the record) and the 79-byte record gets the
 /// regen mark (0x40) and loses the others; the person's lists and histories are cleared (fog, statistics, history,
 /// suspensions, injuries, dispute, discipline, fitness, contracts); the record's nation (or, if its reputation is below
 /// 100, with 1/4, any one with reputation below 100), the second nation (Spain with 1/100 keeps the previous one;
@@ -92,11 +92,11 @@ pub(crate) unsafe fn cap_current_ability(f: usize, ceiling: i16, n: i32) {
 /// nation's by weight, level (weight − (20 − +0x56) × 10) / 75 up to 10), the joining date today, +0x3d/+0x28 = 11. The
 /// age and ability: a small nation (reputation below 350, +0x11c zero) by the reputation (23..27 or 17..23 years) and
 /// by the PA; otherwise by the record's position and the age by random(10000) (15..18 rare, 16..18, 17..20, 21..26).
-/// The reputations (+9, +0xb, +0xd), the ability caps, the birth year and day, the age (0x53ab90), the personality
+/// The reputations (+9, +0xb, +0xd), the ability caps, the birth year and day, the age (`database_get_staff_age`), the personality
 /// attributes (+0x1b, +0x36, +0x1d, +0x2e, +0x34, +0x44, +0x3c, +0x3d, +0x1e, +0x24, +0x2c, +0x2f, +0x21) by age; under
-/// 19 and a nation with +0x11c, with 3/4, the best club (0x7ad0e0) and the contract (0x7a6f10, news 0x7a8ba0 at a human
-/// club and the assistant manager may like him); otherwise, by chance, a club of the nation (0x7ad590). Without a club
-/// and under 20, the reputations up to 1250 and +0xd = 1. At the end, the attributes normalised (0x538ec0, 0x538bc0).
+/// 19 and a nation with +0x11c, with 3/4, the best club (`pick_best_club_for_player`) and the contract (`player_regen_sign_for_club`, news `player_regen_post_youth_promotion_news` at a human
+/// club and the assistant manager may like him); otherwise, by chance, a club of the nation (`pick_club_from_nation_list`). Without a club
+/// and under 20, the reputations up to 1250 and +0xd = 1. At the end, the attributes normalised (`staff_normalise_player_physical_attributes`, `staff_normalise_player_attributes`).
 /// Original: `PLAYER_REGEN::regenerate_as_youth_player` (0x7abac0, player_regen.cpp, thiscall).
 ///
 /// [pt] { 0x7abac0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::regenerate_as_youth_player(pessoa)`, pela fila dos
@@ -587,7 +587,7 @@ pub(crate) unsafe fn name_matches(p: usize, k: usize, text: usize) -> bool {
 ///
 /// `player_setup_find_staff(first, common, second, club, in_squad)` (cdecl). Without `club` (null or empty): the first
 /// of the [0xae2364] persons ([0xae23bc], 0x6e bytes) whose non-empty names match (each name checked only if both the
-/// text and the person's name exist). With `club`: the club with that name (0x545880, 51 characters); not found, 0.
+/// text and the person's name exist). With `club`: the club with that name (`club_get_english_name`, 51 characters); not found, 0.
 /// With `in_squad` 1: the first of the 50 squad slots (+0xd7) whose names match; otherwise (or none in the squad), the
 /// club's manager (+0xcf) if the names match; otherwise 0.
 /// Original: `player_setup_find_staff` (0x7a50f0, player_regen.cpp, cdecl).
@@ -735,14 +735,14 @@ pub(crate) unsafe fn retirement_flags_byte(id: i32) -> *mut u8 {
     read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as isize * 0x4f + 0xb) as usize) as *mut u8
 }
 
-/// The person's contract (0x4cf5a0) without storing it in [0xae1080].
+/// The person's contract (`exe::contract_manager_get_contract`) without storing it in [0xae1080].
 ///
 /// [pt] O contrato da pessoa (0x4cf5a0 no gerente [0xae1050]), sem guardar em [0xae1080] (a 0x7a59e0 não guarda).
 pub(crate) unsafe fn contract_of_uncached(p: usize) -> usize {
     exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p)
 }
 
-/// Calls PLAYER_REGEN::remove_retirement (0x7a8690): removes the pending retirement (later ones shift up).
+/// Calls PLAYER_REGEN::remove_retirement (`remove_retirement`): removes the pending retirement (later ones shift up).
 ///
 /// [pt] PLAYER_REGEN::remove_retirement (0x7a8690): tira a aposentadoria pendente (as seguintes sobem um lugar).
 pub(crate) unsafe fn player_regen_remove_retirement(this: usize, item: usize) {
@@ -788,10 +788,10 @@ pub(crate) unsafe fn set_coach_attributes(p: usize, f: usize, nj: usize, k: f64,
 /// random(+0x5b) above random(100); random(ftol(player sheet's +0xb + reputation³)) above random(50000), or (the
 /// nation's +0x8e, via +0x1a) × reputation above random(200000) + 200000; with more than 2 player sheets in reserve
 /// (this +0x20): the first (this +0x1c; records of 0x44 bytes in [0xae23c0]) becomes the +0x69 and leaves the reserve
-/// (0x7a82b0).
+/// (`remove_spare_non_player_record`).
 ///
 /// Goalkeeper (player sheet's +0xf 20): +0x10/+0x11 swapped when +0x10 is larger and, with random(4) zero, +0x11 =
-/// random(50) + 50; the normalisation (0x539490) and the coach attributes (0x9/7500 with the player sheet's +0xb above
+/// random(50) + 50; the normalisation (`staff_normalise_non_player_attributes`) and the coach attributes (0x9/7500 with the player sheet's +0xb above
 /// 7500; otherwise, with random(+0x57) ≠ 0, 0.75/6000/3750; otherwise 0.5/4500/1).
 ///
 /// [pt] O jogador aposentado sem registro de não jogador (+0x69) pode virar técnico: sorteio(+0x5b) acima de sorteio(100);
@@ -1014,20 +1014,20 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
 /// the future ones.
 ///
 /// `PLAYER_REGEN::process_retirements()`, every day from the day loop; SEH frame with no destructor on the normal path.
-/// The local slot for the regen (id and the default date 0x54a110, which leaves leap flag 1 in it); it sorts the
+/// The local slot for the regen (id and the default date `exe::date_date_54a110`, which leaves leap flag 1 in it); it sorts the
 /// pending retirements ([this+4], [this+8] of 26 bytes: +0 the person, +4 the club or −1, +8/+0xa the announcement day
-/// and year, +0x10/+0x12 those of the retirement, +0x18 the reason, +0x19 announced) with 0x7ae2a0 and walks through
-/// them (the pointer only advances on an announcement: 0x7a8690 pulls the following ones). Due (the date has passed): a
-/// young player (up to 29) with a club or flag, except reason 8, gives up; with a contract record (0x4cf6d0) or under
-/// offer (0x8cde70), gives up (flags & 0xcf); one who moved club less than 210 days ago, up to 37 years old, with a
-/// contract, off the list and without +0x45, stays; otherwise the news (0x7a92e0), the offers (0x4ccbf0), the contract,
-/// the national team (0x775ba0), the watch lists, the squad (0x7aace0), the absences (0x4196a0, 0x4197c0) and the
-/// dispute (0x56a090); the player may become a coach (attributes from reputation and record); with a player record and
-/// a non-player record, the record goes to the pool (0x7a8350) and the new contract (0x85e960); otherwise the regen
-/// slot (0x7a87d0) and, with a non-player record, he leaves the jobs (0x7aaeb0) or is rebuilt as a non-player
-/// (0x7ab340). Not due: with the announcement date passed and not announced, the announcement news (0x7aa340, if flags
+/// and year, +0x10/+0x12 those of the retirement, +0x18 the reason, +0x19 announced) with `player_regen_compare_retirements` and walks through
+/// them (the pointer only advances on an announcement: `remove_retirement` pulls the following ones). Due (the date has passed): a
+/// young player (up to 29) with a club or flag, except reason 8, gives up; with a contract record (`contract_record`) or under
+/// offer (`is_player_under_offer`), gives up (flags & 0xcf); one who moved club less than 210 days ago, up to 37 years old, with a
+/// contract, off the list and without +0x45, stays; otherwise the news (`player_regen_post_retirement_news`), the offers (`remove_pending_offers_for_staff`), the contract,
+/// the national team (`national_teams_remove_player`), the watch lists, the squad (`retire_from_playing_staff`), the absences (`clear_awol`, `clear_missed_training`) and the
+/// dispute (`remove_dispute`); the player may become a coach (attributes from reputation and record); with a player record and
+/// a non-player record, the record goes to the pool (`add_player_data_to_pool`) and the new contract (0x85e960); otherwise the regen
+/// slot (`queue_staff_for_regen`) and, with a non-player record, he leaves the jobs (`player_regen_retire_from_non_playing_staff`) or is rebuilt as a non-player
+/// (`exe::player_regen_regenerate_as_non_player`). Not due: with the announcement date passed and not announced, the announcement news (`player_regen_post_retirement_announcement_news`, if flags
 /// & 0x30 are not 0x10), the announced flag and flags 0x10; otherwise it stops. At the end it sorts the regen slots
-/// ([this+0x10], [this+0x14] of 12 bytes) with 0x7ae240.
+/// ([this+0x10], [this+0x14] of 12 bytes) with `player_regen_compare_queue_entries`.
 /// Original: `PLAYER_REGEN::process_retirements` (0x7a59e0, player_regen.cpp, thiscall).
 ///
 /// [pt] { 0x7a59e0 } (thiscall, ret 0, player_regen.cpp; quadro SEH sem destrutor no caminho normal):
@@ -1089,18 +1089,18 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
 /// Posts news item 0xbba about the retirement to the managers (all, the country, the division, the club or the
 /// interested clubs, by fame) and pays the club insurance when injury retires a valuable player.
 ///
-/// `player_regen_post_retirement_news(person, reason, announced)` (stdcall, ret 0xc; 0x7a59e0 puts this in ecx, unused;
+/// `player_regen_post_retirement_news(person, reason, announced)` (stdcall, ret 0xc; `process_retirements` puts this in ecx, unused;
 /// SEH frame with no destructor on the normal path). No person, a player with job 8 or 5, no club, or a club without a
-/// human manager (0x7875e0): nothing. News 0xbba (local): 0..3 the person (id and the +0x33 of +4/+8/+0xc), 4 the
+/// human manager (`news_club_has_human_manager`): nothing. News 0xbba (local): 0..3 the person (id and the +0x33 of +4/+8/+0xc), 4 the
 /// reason, 5 announced, 6 the club (−1 if none), 7 the nation (+0x1a) with the national team caps (+0x22) or −1, 8 the
 /// job (0xf becomes 8, 0xd becomes 6), 9 the reputation, 0xa +0x28, 0xb player record and non-player record, 0xc the
-/// age, 0xd the non-player record, 0xe the player record. The interested clubs (0x8d1da0 on [0xde1f54] with 0xa, up to
+/// age, 0xd the non-player record, 0xe the player record. The interested clubs (`exe::transfer_manager_collect_player_news_recipients` on [0xde1f54] with 0xa, up to
 /// 30, only for a player). A major nation (+0x85 above 8) and a star (+0xd of the player record above 8500, or a
-/// manager of job 5 with +0xc above 8750): to everyone (0x786780); a lesser star (+0xd above 7500, or job 5 with +0xa
-/// above 7250): to the managers of the nation and of the club's nation (0x7863f0); a manager of job 5 at a club with a
-/// division: to those of the division (0x7862d0); a non-player: to the club (0x7861e0); a player: to the interested
-/// clubs. Reason 8 (injury) with +0xb of the player record above 4250 and a contract club (0x4cf5a0, cached in
-/// [0xae1080]): the insurance (0x58a980 with +0x52).
+/// manager of job 5 with +0xc above 8750): to everyone (`send_to_all_managers`); a lesser star (+0xd above 7500, or job 5 with +0xa
+/// above 7250): to the managers of the nation and of the club's nation (`send_to_nation_managers`); a manager of job 5 at a club with a
+/// division: to those of the division (`send_to_division_managers`); a non-player: to the club (`send_to_club_manager`); a player: to the interested
+/// clubs. Reason 8 (injury) with +0xb of the player record above 4250 and a contract club (`exe::contract_manager_get_contract`, cached in
+/// [0xae1080]): the insurance (`exe::news_post_insurance_payout` with +0x52).
 /// Original: `player_regen_post_retirement_news` (0x7a92e0, player_regen.cpp, stdcall).
 ///
 /// [pt] { 0x7a92e0 } (stdcall, ret 0xc, player_regen.cpp; a 0x7a59e0 põe o this no ecx, sem uso; quadro SEH sem destrutor
@@ -1211,13 +1211,13 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
 /// his ability.
 ///
 /// `player_regen_post_youth_promotion_news(player, club)` (stdcall, ret 8; SEH frame with no destructor on the normal
-/// path), from the young regen (0x7abac0). No player or club: nothing. News 0xbce (local): 0..3 the player (id and the
+/// path), from the young regen (`regenerate_as_youth_player`). No player or club: nothing. News 0xbce (local): 0..3 the player (id and the
 /// +0x33 of +4/+8/+0xc), 4 the club id, 5 the age, 6 the club's strength (+0x7f) above 15. The assistant manager
 /// (+0xd3) and the five coaches (+0x19f) give their opinion until the first one who gives a verdict: the perceived
 /// reputation = random(2500) + club reputation (+0x80) / 2 + strength × 12.5 (truncated); the two perceived abilities
-/// (0x6e86d0 with 2 and with 1) against reputation / 50 + 75 (verdict 2) and reputation / 100 + 50 (1). With a verdict:
+/// (`perceived_ability` with 2 and with 1) against reputation / 50 + 75 (verdict 2) and reputation / 100 + 50 (1). With a verdict:
 /// 7 assistant?, 8..0xb who (id and names), 0xc and 0xd the verdicts; otherwise −1. Delivered at the club's scope
-/// (0x786090).
+/// (`send_by_scope`).
 /// Original: `player_regen_post_youth_promotion_news` (0x7a8ba0, player_regen.cpp, stdcall).
 ///
 /// [pt] { 0x7a8ba0 } (stdcall, ret 8, player_regen.cpp; quadro SEH sem destrutor no caminho normal):
@@ -1312,14 +1312,14 @@ pub(crate) unsafe fn first_free_squad_slot(club: usize) -> usize {
 /// wage; returns 1 (0 without a slot).
 ///
 /// `player_regen_sign_for_club(person, club)` (stdcall, ret 8; SEH frame only for the local dates), from
-/// PLAYER_REGEN::regenerate_as_youth_player (0x7abac0) for every young regen: in the first free slot of the 50 in the
-/// squad (+0xd7; no slot, 0) the person, her club (+0x39) and +0x4e = 0; the value (+0x52) through 0x4d0c60 (club, 1,
-/// −1, 0), the squad (0x540980 with 1), one time in four (random(4) = 0) 0x547d90 (person, club, 0); a club with +0x64
+/// PLAYER_REGEN::regenerate_as_youth_player (`regenerate_as_youth_player`) for every young regen: in the first free slot of the 50 in the
+/// squad (+0xd7; no slot, 0) the person, her club (+0x39) and +0x4e = 0; the value (+0x52) through `calc_player_value` (club, 1,
+/// −1, 0), the squad (`staff_set_squad_flags` with 1), one time in four (random(4) = 0) `exe::staff_add_favoured_club` (person, club, 0); a club with +0x64
 /// = 3: value at most 5000. The contract end (+0x46): under 19 (+0x18), today's year + 2; otherwise + random(6) + 1; in
-/// the month of the club's season end (0x4d45f0) and on day random(28) + 1 (0x549f70). The contract (0x4c7950 with the
-/// value); a human club (0x600a50 with 1, 1): for the reserves (0x4cc0f0) and the contract bits +0x4f (0x60 high) and
-/// +0x35 (1 low). With a contract: the default wage (0x8626e0), +0x3a = 0 and, outside the human club, the end (+0x2f)
-/// at most today's year + 5 (with day +0x2d = 0). At the end the squad numbers ([0xdd7ef0], 0x85add0 and 0x85a470).
+/// the month of the club's season end (`contract_manager_season_end_month`) and on day random(28) + 1 (`exe::date_date_549f70`). The contract (`add_staff_contract` with the
+/// value); a human club (`exe::human_manager_is_human_club` with 1, 1): for the reserves (`move_to_reserves`) and the contract bits +0x4f (0x60 high) and
+/// +0x35 (1 low). With a contract: the default wage (`set_default_wage`), +0x3a = 0 and, outside the human club, the end (+0x2f)
+/// at most today's year + 5 (with day +0x2d = 0). At the end the squad numbers ([0xdd7ef0], `club_uses_squad_numbers` and `allocate_squad_number`).
 /// Returns 1.
 /// Original: `player_regen_sign_for_club` (0x7a6f10, player_regen.cpp, stdcall, ret 8).
 ///
@@ -1400,10 +1400,10 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
 
 /// Replaces the person's pending retirement with a new one through injury (reason 8), random(days / 2) + 1 days ahead.
 ///
-/// `PLAYER_REGEN::schedule_injury_retirement(person, days)`, from the new injury (0x62d250) that ends the career; SEH
+/// `PLAYER_REGEN::schedule_injury_retirement(person, days)`, from the new injury (`add_injury`) that ends the career; SEH
 /// frame only for the local dates. It removes the person's pending retirement (the first with her id in the 26-byte
-/// table [this+4], count +8; 0x7a8690) and adds (0x7a8510) the new one: id, club id (+0x39, or −1), today's date +
-/// random(days / 2) + 1 (0x54c5b0) at +8 and again at +0x10, reason 8 (+0x18) and 0 (+0x19).
+/// table [this+4], count +8; `remove_retirement`) and adds (`add_retirement`) the new one: id, club id (+0x39, or −1), today's date +
+/// random(days / 2) + 1 (`exe::date_add_days`) at +8 and again at +0x10, reason 8 (+0x18) and 0 (+0x19).
 /// Original: `PLAYER_REGEN::schedule_injury_retirement` (0x7a7f20, player_regen.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x7a7f20 } (thiscall, ret 8, player_regen.cpp, quadro SEH só das datas locais):
@@ -1439,11 +1439,11 @@ pub(crate) unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, p
 /// Builds news 0xbbb (id, names, reason, contract club, age) and sends it to the managers of the interested clubs.
 ///
 /// `player_regen_post_retirement_announcement_news(person, reason)` (stdcall, ret 8; SEH frame without destructor),
-/// from PLAYER_REGEN::process_retirements (0x7a59e0): except for a player (+0x61) with job +0x3d 8 or 5, news 0xbbb in
-/// a local (0x77bbe0 with 0) with data 0 = id, 1 to 3 = the names (+0x33 of +4, +8 and +0xc), 4 = reason, 5 = the id of
-/// the contract club (0x4cf5a0, cached in [0xae1080]; club of the 0x245-byte record in [0xae23b4] by +4; a contract of
+/// from PLAYER_REGEN::process_retirements (`process_retirements`): except for a player (+0x61) with job +0x3d 8 or 5, news 0xbbb in
+/// a local (`construct_news_item` with 0) with data 0 = id, 1 to 3 = the names (+0x33 of +4, +8 and +0xc), 4 = reason, 5 = the id of
+/// the contract club (`exe::contract_manager_get_contract`, cached in [0xae1080]; club of the 0x245-byte record in [0xae23b4] by +4; a contract of
 /// type +0x35 & 0x3f = 5 or no club: −1) and 6 = the age (+0x18); it goes to the managers of up to 30 interested clubs
-/// ([0xde1f54], 0x8d1da0 with 10).
+/// ([0xde1f54], `exe::transfer_manager_collect_player_news_recipients` with 10).
 /// Original: `player_regen_post_retirement_announcement_news` (0x7aa340, player_regen.cpp, stdcall, ret 8).
 ///
 /// [pt] { 0x7aa340 } (stdcall, ret 8, player_regen.cpp, quadro SEH sem destrutor): `player_regen_post_retirement_announcement_news(
@@ -1495,7 +1495,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_announcement_
 /// `PLAYER_REGEN::add_player_data_to_pool(person, nation, second)`: appends to the free player pool (16 bytes at
 /// [this+0x3c], count +0x40, capacity +0x44) the player record id (+0x61) of the person with index `person` (0x6e-byte
 /// record in [0xae23bc]) at +0, the nation at +4 and the second nation at +8 (+0xc is left as it is). Count = capacity
-/// − 1: grows by 250 (realloc 0x945667; out of memory, box 0xa0a and end). From process_retirements (0x7a59e0), when a
+/// − 1: grows by 250 (realloc `exe::crt_realloc`; out of memory, box 0xa0a and end). From process_retirements (`process_retirements`), when a
 /// player who also has a non-player record stops playing.
 /// Original: `PLAYER_REGEN::add_player_data_to_pool` (0x7a8350, player_regen.cpp, thiscall, ret 0xc).
 ///
@@ -1534,7 +1534,7 @@ pub(crate) unsafe extern "thiscall" fn has_spare_non_player_record(this: usize) 
     (c & 0xffff_ff00) | (c != 0) as u32
 }
 
-/// Looks up the person's contract (cached in [0xae1080]) and returns his contract with that club (0x4cf5f0).
+/// Looks up the person's contract (cached in [0xae1080]) and returns his contract with that club (`exe::contract_manager_get_contract_for_club`).
 ///
 /// [pt] O contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) e, pelo clube dele (registro de 0x245 bytes pelo +4; sem
 /// contrato, 0), o contrato da pessoa com esse clube (0x4cf5f0), que a rotina devolve.
@@ -1650,13 +1650,13 @@ pub(crate) unsafe fn set_dates_no_key_nation(out: usize) {
 }
 
 /// Sets the retirement dates on leaving (+8 the announcement, +0x10 the retirement; only day and year, the +4 of each
-/// date stays as it is), by the key nation of the club (0x669360) or, with no club, of the nation (+0x1a, 0x669340);
+/// date stays as it is), by the key nation of the club (`key_nation_index_of_club`) or, with no club, of the nation (+0x1a, `key_nation_index_of_nation`);
 /// with neither, tomorrow.
 ///
 /// Index 0..0x22: the announcement on today + 1 + random draw(95) (past 365, day random draw(60) of the following
 /// year); the retirement at the nation's season end (+0x15 of the 72-byte record at 0xb63d60) + random draw(30) (past
 /// 365, random draw(30) of the following year; with +0x1d, one more year); a retirement before the announcement is
-/// moved to the announcement, and if it is less than 45 days after it (0x54cdb0) the announcement moves to it.
+/// moved to the announcement, and if it is less than 45 days after it (`exe::date_days_since`) the announcement moves to it.
 ///
 /// Index out of range: `fora` (each routine has its own).
 ///
@@ -1713,7 +1713,7 @@ pub(crate) unsafe fn set_retirement_dates(person: usize, out: usize, away: unsaf
 /// by the profile limit, the ability, the club's competition and the contract status; fills the output and the dates.
 ///
 /// `player_regen_check_initial_retirement(person, out)` (thiscall without reading this, ret 8): on a new game (from
-/// 0x7a58f0), does the person with a club (+0x39) retire this season? The contract (contract_with_current_club) and the
+/// `build_initial_retirement_list`), does the person with a club (+0x39) retire this season? The contract (contract_with_current_club) and the
 /// status (contract_status). Without a player record (+0x61): without a manager record (+0x69) always; with it, when
 /// past the limit (non_player_age_limit); reason 0x20. A player: past the record's limit (player_age_limit), v = ⌊⌊1 −
 /// (age − limit) × 0.1⌋ × ability (+0xb)⌋ (16 bits); over 45, reason 1. A club without a competition (+0x57; without a
@@ -1804,16 +1804,16 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
 /// today.
 ///
 /// `player_regen_check_retirement(person, out)` (thiscall without reading this, ret 8), from the search for new
-/// retirements (0x7a5790). Without a player record: as in 0x7a79c0 (reason 0x20). A player above the record's limit:
+/// retirements (`find_new_retirements`). Without a player record: as in `player_regen_check_initial_retirement` (reason 0x20). A player above the record's limit:
 /// over 33, the limit drops 1 without a contract with the club, or with +0x45 in the contract and +0x15/+0x14 of the
 /// record = 20, or the high nibble of +0x4f = 7; with a club and a contract with wage (+0xc) above 750 × (+0x59 + 10)
 /// until after this year (+0x2f), it drops 1 (and 1 more with +0x59 < 6). v = ⌊(1 − (age − limit) × 0.075) × ability
 /// (+0xb)⌋ (16 bits). Reason 1: over 45; over 34 without a club and unemployed for more than 65 days (since +0x3e); 3
 /// years above the limit, over 31 and the contract's +0x3e > 5; 4 above: without a club; or a contract less than 300
-/// days from its exe::staff_contract_days_to_end_date(0x85fa00), status below 50 and manager (+0x69) or +0x57 > random(20) with potential × 0.85 above
+/// days from its exe::staff_contract_days_to_end_date(`days_to_end_date`), status below 50 and manager (+0x69) or +0x57 > random(20) with potential × 0.85 above
 /// the current ability (+7 and +5). Then v > 5500, no. A club in a competition not running in the game ([[0xadadfc] +
 /// id × 4] = 0, or without +0x57; without a club, a nation without +0x11c): random(3) = 0 retires; with a club and a
-/// negative status too; otherwise only with v < 3500. Otherwise as in 0x7a79c0 (+5 > 100 no; +5 < 10 or v < 1500 yes;
+/// negative status too; otherwise only with v < 3500. Otherwise as in `player_regen_check_initial_retirement` (+5 > 100 no; +5 < 10 or v < 1500 yes;
 /// with a club only a negative status; without a club reason 2 with random(25 × +0x3c) = 0). Whoever retires: the
 /// output and the dates (without a valid key nation, set_dates_no_key_nation, near today); returns 1.
 /// Original: `player_regen_check_retirement` (0x7a7310, player_regen.cpp, thiscall, ret 8).
@@ -1942,13 +1942,13 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
     1
 }
 
-/// At a new game, tests every eligible person (0x7a79c0), adds those who retire to the list and sorts it.
+/// At a new game, tests every eligible person (`player_regen_check_initial_retirement`), adds those who retire to the list and sorts it.
 ///
 /// `PLAYER_REGEN::build_initial_retirement_list`; SEH only for the local dates, with an empty destructor. On a new
 /// game, each person (0x6e bytes in [0xae23bc], up to [0xae2364], re-read at each step) with id below [0xae2364] − 16,
-/// without bits 0x30 of +0xb of the 79-byte record ([0xae2d0c]) and without a contract (0x4cf5a0) with +0x49 is tested
-/// (0x7a79c0); whoever retires goes into the list (0x7a8510). At the end the qsort of the list ([this+4], count +8, 26
-/// bytes, 0x7ae2a0).
+/// without bits 0x30 of +0xb of the 79-byte record ([0xae2d0c]) and without a contract (`exe::contract_manager_get_contract`) with +0x49 is tested
+/// (`player_regen_check_initial_retirement`); whoever retires goes into the list (`add_retirement`). At the end the qsort of the list ([this+4], count +8, 26
+/// bytes, `player_regen_compare_retirements`).
 /// Original: `PLAYER_REGEN::build_initial_retirement_list` (0x7a58f0, player_regen.cpp, thiscall).
 ///
 /// [pt] { 0x7a58f0 } (thiscall, player_regen.cpp, SEH só das datas locais, de destrutor vazio):
@@ -1981,7 +1981,7 @@ pub(crate) unsafe extern "thiscall" fn build_initial_retirement_list(this: usize
     exe::crt_qsort(read_usize(this + player_regen_fields::RETIREMENTS), read_usize(this + player_regen_fields::RETIREMENT_COUNT) as u32, 0x1a, 0x7ae2a0);
 }
 
-/// Regions the two retirement decisions touch: random state, [0xae1080], the output entry and 0x54cdb0's static date.
+/// Regions the two retirement decisions touch: random state, [0xae1080], the output entry and `exe::date_days_since`'s static date.
 ///
 /// [pt] As regiões que as duas decisões mudam: o sorteio, [0xae1080], a saída e a data estática da 0x54cdb0.
 pub(crate) unsafe fn retirement_decision_regions(out: usize) -> Vec<(usize, usize)> {
@@ -1998,16 +1998,16 @@ pub(crate) unsafe fn zero_dword(a: usize) {
     core::ptr::write_unaligned(a as *mut u32, 0);
 }
 
-/// Tests every eligible person for retirement by age (0x7a7310) or unemployment (0x7a8050), adds those who retire and
+/// Tests every eligible person for retirement by age (`player_regen_check_retirement`) or unemployment (`player_regen_check_unemployed_retirement`), adds those who retire and
 /// sorts the list.
 ///
-/// `PLAYER_REGEN::find_new_retirements` (on the days of 0x5d6250); SEH only for the local dates, with an empty
+/// `PLAYER_REGEN::find_new_retirements` (on the days of `is_player_regen_day`); SEH only for the local dates, with an empty
 /// destructor. Each person (0x6e bytes in [0xae23bc], up to the end computed with the count [0xae2364] at the start).
 /// Excluded: under 30 years old (+0x18) at a club of a competition that runs in the game ([[0xadadfc] + id × 4] of the
 /// competition +0x57); id from [0xae2364] − 16 on (re-read at each step); bits 0x30 of +0xb of the 79-byte record
-/// ([0xae2d0c]); those already in the list ([this+4], 26 bytes, count +8); a contract (0x4cf5a0) with +0x49. The
-/// others: retirement by age (0x7a7310) or, failing that, the unemployed one (0x7a8050); whoever retires goes into the
-/// list (0x7a8510). At the end the qsort of the list (0x7ae2a0).
+/// ([0xae2d0c]); those already in the list ([this+4], 26 bytes, count +8); a contract (`exe::contract_manager_get_contract`) with +0x49. The
+/// others: retirement by age (`player_regen_check_retirement`) or, failing that, the unemployed one (`player_regen_check_unemployed_retirement`); whoever retires goes into the
+/// list (`add_retirement`). At the end the qsort of the list (`player_regen_compare_retirements`).
 /// Original: `PLAYER_REGEN::find_new_retirements` (0x7a5790, player_regen.cpp, thiscall).
 ///
 /// [pt] { 0x7a5790 } (thiscall, player_regen.cpp, SEH só das datas locais, de destrutor vazio):
@@ -2190,7 +2190,7 @@ pub(crate) unsafe fn job_exit_regions(person: usize) -> Vec<(usize, usize)> {
 /// attribute terms.
 ///
 /// `player_regen_score_non_player_candidate(person)` (stdcall, ret 4): the person's score as donor of the non-player
-/// data (from 0x7a6e60, for each non-player person). −10000 with +0x69, with bits 0x30 of +0xb of the 79-byte record
+/// data (from `player_regen_pick_staff_for_non_player_data`, for each non-player person). −10000 with +0x69, with bits 0x30 of +0xb of the 79-byte record
 /// ([0xae2d0c]) or under 31 (+0x18). Otherwise random 150 × (age − 31); with a club (+0x39) with reputation (+0x80) and
 /// a player record (+0x61), + 250 × (current ability +0xb ÷ reputation); with a player record, + random(⌊(+0x2f ÷ 2)³⌋)
 /// (pow 0x945ff0 and _ftol), +100 with +0xd > 7500 and +50 with +0xb > 7500; the attributes + 5 × (3 × (+0x5d + +0x5a)
@@ -2274,8 +2274,8 @@ pub(crate) unsafe fn entry_effective_date(e: usize) -> usize {
 
 /// qsort comparator of the retirement list: by the effective date, year and day; on a tie by id.
 ///
-/// `player_regen_compare_retirements(a, b)` (cdecl): the qsort of the retirement list (0x1a-byte records; from 0x7a59e0
-/// every day, which stops at the first future entry, from the initial lists 0x7a5790/0x7a58f0 and from 0x7a8690): by
+/// `player_regen_compare_retirements(a, b)` (cdecl): the qsort of the retirement list (0x1a-byte records; from `process_retirements`
+/// every day, which stops at the first future entry, from the initial lists `find_new_retirements`/`build_initial_retirement_list` and from `remove_retirement`): by
 /// the effective date (entry_effective_date: the announcement +8 if not yet past, otherwise the retirement +0x10), the
 /// year unsigned and the day signed; on a tie by the id (+0). Without `a`, −1; without `b`, 1. Hot (qsort): no counter.
 /// Original: `player_regen_compare_retirements` (0x7ae2a0, player_regen.cpp, cdecl).
@@ -2306,7 +2306,7 @@ pub(crate) unsafe extern "C" fn player_regen_compare_retirements(a: usize, b: us
 /// qsort comparator of the regen queue: by year (+6), day (+4) and id (+0).
 ///
 /// `player_regen_compare_queue_entries(a, b)` (cdecl): the qsort of the regen queue (0xc-byte records, at the end of
-/// 0x7a59e0 every day; 0x7a65d0 creates the regens of the due entries): by year (+6, unsigned), then by day (+4,
+/// `process_retirements` every day; `process_regen_queue` creates the regens of the due entries): by year (+6, unsigned), then by day (+4,
 /// signed), then by id (+0). Without `a`, −1; without `b`, 1. Hot (qsort): no counter.
 /// Original: `player_regen_compare_queue_entries` (0x7ae240, player_regen.cpp, cdecl).
 ///
@@ -2337,7 +2337,7 @@ pub(crate) unsafe extern "C" fn player_regen_compare_queue_entries(a: usize, b: 
 
 /// Removes person `p` from the team at `p + campo` (+0x39 the club, +0x24 the national team).
 ///
-/// The tactic (0x896c60 on [0xde1d08], with 0 and then with 1 as the 3rd argument) and the first of the 50 slots
+/// The tactic (`remove_player_from_selection` on [0xde1d08], with 0 and then with 1 as the 3rd argument) and the first of the 50 slots
 /// (+0xd7) holding him, which is emptied. The team is re-read after each call, as in the original routine.
 ///
 /// [pt] Tira a pessoa `p` do time em `p + campo` (+0x39 o clube, +0x24 a seleção): a tática (0x896c60 de [0xde1d08], com 0
@@ -2456,7 +2456,7 @@ pub(crate) unsafe fn is_basque_restricted(player: usize, club: usize) -> bool {
     ![0x9d0120usize, 0x9d0134, G_KEY_CLUB_REAL_SOCIEDAD_C_F, G_KEY_CLUB_REAL_SOCIEDAD_C_F_B, 0x9d0124].iter().any(|&g| read_usize(g) == id)
 }
 
-/// Can the club bid for the player (0x8ce990 of the transfer manager, not ignoring open offers)?
+/// Can the club bid for the player (`can_club_bid_for_player` of the transfer manager, not ignoring open offers)?
 ///
 /// [pt] O clube pode chegar ao jogador (0x8ce990 de [0xde1f54], sem ignorar as ofertas abertas)? O motivo fica numa local
 /// (a original o grava na vaga do argumento, que ninguém lê depois).
@@ -2466,15 +2466,15 @@ pub(crate) unsafe fn can_club_bid(player: usize, club: usize) -> bool {
     can(read_usize(G_TRANSFER_MANAGER), player, club, &mut reason, 0) != 0
 }
 
-/// Picks the best-scored club (0x7ad220) among those where the youngster is not a foreigner, that are not a B team,
+/// Picks the best-scored club (`player_regen_score_club_for_player`) among those where the youngster is not a foreigner, that are not a B team,
 /// that may approach him and with a squad under 50.
 ///
 /// `PLAYER_REGEN::pick_best_club_for_player(player)`: among the clubs ([0xae23b4], 0x245 bytes; the first [0xae235c] −
-/// 2 × [0xae2350], re-read on every loop) where the player is not a foreigner (0x53d980 with the nation +0x53 and 1),
-/// that are not the B team of a pair (0x540a50 with 1, finding the partner with 0), not vetoed
-/// (`is_basque_restricted`), that may approach him (0x8ce990) and with a squad (0x53c590) under 50, the one with the
-/// highest score (0x7ad220, random; compared in 16 bits, starting from −25000). None: 0. No SEH; the partner local is
-/// only read when 0x540a50 finds it (and writes it).
+/// 2 × [0xae2350], re-read on every loop) where the player is not a foreigner (`database_is_staff_foreign` with the nation +0x53 and 1),
+/// that are not the B team of a pair (`exe::club_get_linked_b_team` with 1, finding the partner with 0), not vetoed
+/// (`is_basque_restricted`), that may approach him (`can_club_bid_for_player`) and with a squad (`database_count_club_squad`) under 50, the one with the
+/// highest score (`player_regen_score_club_for_player`, random; compared in 16 bits, starting from −25000). None: 0. No SEH; the partner local is
+/// only read when `exe::club_get_linked_b_team` finds it (and writes it).
 /// Original: `PLAYER_REGEN::pick_best_club_for_player` (0x7ad0e0, player_regen.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x7ad0e0 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::pick_best_club_for_player(jogador)`: entre os
@@ -2537,8 +2537,8 @@ pub(crate) unsafe fn nation_club_list(this: usize, n: usize) -> usize {
 ///
 /// `PLAYER_REGEN::pick_club_from_nation_list(player)`: walks the club list of the youngster's nation
 /// (`player_regen_youth_list_nation`, some nations mapped to [0x9cf2e4]; word +0 is the count, cursor +0xa restarts
-/// from +2, the iterator 0x68d1b0 returns the id) and, among the clubs not vetoed (`is_basque_restricted`), that may
-/// approach him (0x8ce990) and with a squad (0x53c590) under 50, keeps the one with the highest random draw of the
+/// from +2, the iterator `next_list_item` returns the id) and, among the clubs not vetoed (`is_basque_restricted`), that may
+/// approach him (`can_club_bid_for_player`) and with a squad (`database_count_club_squad`) under 50, keeps the one with the highest random draw of the
 /// score (5000 + reputation +0x80 minus its distances to the ability of the player record +0x61: +0xb, +7 × 50 and +5 ×
 /// 50, in 16 bits), compared in 16 bits starting from −25000. No list or an empty list: 0. A list that ends before the
 /// count: the "Error" box (line 0x19e9) and 0. No SEH.
@@ -2610,9 +2610,9 @@ pub(crate) unsafe fn regen_out_of_memory(row: u32) -> ! {
 /// player pool (+0x40/+0x44) is full, as in the original.
 ///
 /// `PLAYER_REGEN::add_spare_non_player_record(id, nation, second)`: appends (id +0, nation +4, second nation +8) to the
-/// 16-byte list of spare non-player records ([this+0x1c], count +0x20, capacity +0x24; taken out by 0x7a82b0). The
+/// 16-byte list of spare non-player records ([this+0x1c], count +0x20, capacity +0x24; taken out by `remove_spare_non_player_record`). The
 /// original decides to grow by the free player pool (count +0x40 = capacity +0x44 − 1), not by this list: kept
-/// faithfully. Grows by 250 (realloc 0x945667; out of memory, box 0x9c4 and end).
+/// faithfully. Grows by 250 (realloc `exe::crt_realloc`; out of memory, box 0x9c4 and end).
 /// Original: `PLAYER_REGEN::add_spare_non_player_record` (0x7a81a0, player_regen.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x7a81a0 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::add_spare_non_player_record(id, nação,
@@ -2643,7 +2643,7 @@ pub(crate) unsafe extern "thiscall" fn add_spare_non_player_record(this: usize, 
 /// `PLAYER_REGEN::add_retirement(record)`: appends to the 26-byte table of pending retirements ([this+4], count +8,
 /// capacity +0xc) the record's fields +0, +4 (dwords), +0x18 (byte), +8, +0xa, +0x10, +0x12 (words) and +0x19 (byte),
 /// in that order (+0xc..+0x10 and +0x14..+0x18 are left as they are). Count = capacity − 1: grows by 250 (realloc
-/// 0x945667; out of memory, box 0xa53 and end).
+/// `exe::crt_realloc`; out of memory, box 0xa53 and end).
 /// Original: `PLAYER_REGEN::add_retirement` (0x7a8510, player_regen.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x7a8510 } (thiscall, ret 4, player_regen.cpp): `PLAYER_REGEN::add_retirement(registro)`: acrescenta à tabela de
@@ -2678,10 +2678,10 @@ pub(crate) unsafe extern "thiscall" fn add_retirement(this: usize, r: usize) {
 /// `PLAYER_REGEN::queue_staff_for_regen(entry)`: the person with id +0 of the entry (0x6e-byte record in [0xae23bc])
 /// enters the regen queue (12 bytes at [this+0x10], count +0x14, capacity +0x18: id +0, words +4 and +6 of the entry).
 /// With non-player data (+0x69): in the 16-byte list [this+0x1c] (count +0x20, capacity +0x24) their id +0, the nation
-/// (+0x1a; without a nation, a random draw 0x90cfc0 among the [0xae2350]) +4 and the person's id +0xc. With player data
+/// (+0x1a; without a nation, a random draw `exe::utils_random` among the [0xae2350]) +4 and the person's id +0xc. With player data
 /// (+0x61): in the free player pool [this+0x3c] (count +0x40, capacity +0x44) their id +0, the nation's +4 (without
 /// checking for null, as in the original) and the person's +0xc. Each list grows by 250 when count = capacity − 1
-/// (realloc 0x945667; boxes 0xaac, 0xac5, 0xae9 and end; in the third the original checks the count, not the pointer:
+/// (realloc `exe::crt_realloc`; boxes 0xaac, 0xac5, 0xae9 and end; in the third the original checks the count, not the pointer:
 /// kept faithfully). Id outside 0..=[0xae2364]: as in the original (box 0xa9d).
 /// Original: `PLAYER_REGEN::queue_staff_for_regen` (0x7a87d0, player_regen.cpp, thiscall, ret 4).
 ///
@@ -2754,7 +2754,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
     }
 }
 
-/// The 26 bytes 0x7a8510 copies from a retirement record (others zeroed).
+/// The 26 bytes `add_retirement` copies from a retirement record (others zeroed).
 ///
 /// [pt] Os 26 bytes que a 0x7a8510 copia do registro (os outros, zerados).
 pub(crate) unsafe fn retirement_entry_fields(r: usize) -> [u8; 26] {
@@ -2765,11 +2765,11 @@ pub(crate) unsafe fn retirement_entry_fields(r: usize) -> [u8; 26] {
     c
 }
 
-/// Removes a pending retirement: finds it (26 bytes), pulls the next ones up (0x7a8780), blanks the last one (person
+/// Removes a pending retirement: finds it (26 bytes), pulls the next ones up (`retire_record_assign`), blanks the last one (person
 /// −1) and lowers the count.
 ///
-/// `PLAYER_REGEN::remove_retirement(key)`: searches (bsearch 0x946464 with 0x7ae2a0) for the pending retirement in the
-/// vector ([this+4], [this+8] records of 26 bytes); found: pulls the following ones up one place (0x7a8780, the record
+/// `PLAYER_REGEN::remove_retirement(key)`: searches (bsearch `exe::crt_bsearch` with `player_regen_compare_retirements`) for the pending retirement in the
+/// vector ([this+4], [this+8] records of 26 bytes); found: pulls the following ones up one place (`retire_record_assign`, the record
 /// copy), the last one gets person −1 and +0x18, +8, +0xa, +0x10, +0x12 zeroed, and the count goes down. Without
 /// re-sorting.
 /// Original: `PLAYER_REGEN::remove_retirement` (0x7a8690, player_regen.cpp, thiscall, ret 4).
@@ -2799,7 +2799,7 @@ pub(crate) unsafe extern "thiscall" fn remove_retirement(this: usize, key: usize
     core::ptr::write_unaligned((this + player_regen_fields::RETIREMENT_COUNT) as *mut u32, read_u32(this + player_regen_fields::RETIREMENT_COUNT).wrapping_sub(1));
 }
 
-/// Is the person on the shortlist (0x842080 on the shortlist manager [[0xde1f54]+0x856], no club)?
+/// Is the person on the shortlist (`is_on_shortlist` on the shortlist manager [[0xde1f54]+0x856], no club)?
 ///
 /// [pt] Está na lista de observados (0x842080 no gerente da lista [[0xde1f54]+0x856], sem clube)?
 pub(crate) unsafe fn player_regen_is_on_shortlist(person: usize) -> bool {
@@ -2884,11 +2884,11 @@ pub(crate) unsafe extern "thiscall" fn regen_queue_entry_assign(this: usize, sou
     this
 }
 
-/// Picks the non-player with the highest positive score (0x7a7150) of the nation; with none, of any nation; otherwise
+/// Picks the non-player with the highest positive score (`player_regen_score_non_player_candidate`) of the nation; with none, of any nation; otherwise
 /// 0.
 ///
 /// `player_regen_pick_staff_for_non_player_data(nation)`: among the non-player persons ([0xae23bc], 0x6e bytes,
-/// [0xae2364] − 16 of them, count re-read on every loop), the one with the highest positive score from 0x7a7150
+/// [0xae2364] − 16 of them, count re-read on every loop), the one with the highest positive score from `player_regen_score_non_player_candidate`
 /// (random; the incoming ecx goes along, as in the original) of nation `nation` ([+0x1a]+0 = nation; initial score
 /// −1000); with none, the one with the highest positive score of any nation (initial −15000); otherwise 0.
 /// Original: `player_regen_pick_staff_for_non_player_data` (0x7a6e60, player_regen.cpp, stdcall, ret 4).
@@ -3015,7 +3015,7 @@ pub(crate) unsafe extern "thiscall" fn find_retirement_entry(regen: usize, id: *
 /// ability (player record +0x61: +0xb, and +7, +5 × 50); with +7 above random(20) + 100, the youth bonus (+0x7f, 20 =
 /// guaranteed, otherwise random(+0x7f) > random(20)); a club of an active competition (0xadadfc) with +7 > 50: the
 /// human club state (0xae2d14) and the reputation against the squad (`squad`); the youth coach (+0xcf → +0x69) of a
-/// computer club (0x600a50) or the human's bonus; the same nation (+0x1a/+0x53) and the Welsh clubs (Swansea, Cardiff,
+/// computer club (`exe::human_manager_is_human_club`) or the human's bonus; the same nation (+0x1a/+0x53) and the Welsh clubs (Swansea, Cardiff,
 /// Wrexham) and Scotland. Only the low 16 bits of the score count.
 /// Original: `player_regen_score_club_for_player` (0x7ad220, player_regen.cpp, stdcall).
 ///
@@ -3118,7 +3118,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_club_for_player(player:
 /// Copies a pending retirement record: the person, the club, the two dates, the reason and the announced flag.
 ///
 /// Copies the pending retirement (0x1a bytes) from `source`: the person's id (+0) and the club's (+4), the dates at +8
-/// and +0x10 (0x417c10, with the return value in a local), the reason (+0x18) and the announced flag (+0x19). Returns
+/// and +0x10 (`exe::date_operator_3d`, with the return value in a local), the reason (+0x18) and the announced flag (+0x19). Returns
 /// `this`.
 /// Original: `retire_record_assign` (0x7a8780, player_regen.cpp, thiscall).
 ///
@@ -3163,7 +3163,7 @@ pub(crate) unsafe extern "C" fn player_setup_injury_from_name(name: usize) -> u3
 /// clubs at 0x9d00a4/0x9d00a8.
 ///
 /// `PLAYER_REGEN::build_nation_club_lists()`; SEH frame for the `new`. [this] = 14 bytes per nation of [0xae2350]
-/// (0x944e46, no check), with a new list (0x944cf1 of 0xe and 0x68d020; out of memory, 0) per nation; each club of
+/// (`exe::crt_malloc`, no check), with a new list (`exe::crt_operator_new` of 0xe and `exe::new_llist`; out of memory, 0) per nation; each club of
 /// [0xae235c] goes (0x68d0d0, the 4 bytes of the id) into its nation's list (`injury_youth_list_nation`: clubs with a
 /// division, a nation with +0x11c only with +0x80 up to 2, except national teams and the clubs at 0x9d00a4/0x9d00a8).
 /// Original: `PLAYER_REGEN::build_nation_club_lists` (0x7acfc0, player_regen.cpp, thiscall).
@@ -3201,14 +3201,14 @@ pub(crate) unsafe extern "thiscall" fn build_nation_club_lists(this: usize) {
 /// 2 of them are given to persons who lend the data.
 ///
 /// `PLAYER_REGEN::process_regen_queue()`, from the day loop (0x5cccd0), every day. The youth regen queue ([+0x10], 12
-/// bytes: +0 id, +4 date; count +0x14): from the front, while the first one's date is before today (0x456770) and +0x40
-/// is not zero, the youth regen (0x7abac0) of the person (id outside 0..[0xae2364]: box "Invalid staff_id for regen"
-/// and end), the following ones move up one place (0x7a8b70) and the last gets id −1. Then, with more than 2 spare
-/// coach records ([+0x1c], count +0x20), for count − 2 of them: the person lending the data (0x7a6e60 by the first
+/// bytes: +0 id, +4 date; count +0x14): from the front, while the first one's date is before today (`exe::date_operator_3c`) and +0x40
+/// is not zero, the youth regen (`regenerate_as_youth_player`) of the person (id outside 0..[0xae2364]: box "Invalid staff_id for regen"
+/// and end), the following ones move up one place (`regen_queue_entry_assign`) and the last gets id −1. Then, with more than 2 spare
+/// coach records ([+0x1c], count +0x20), for count − 2 of them: the person lending the data (`player_regen_pick_staff_for_non_player_data` by the first
 /// one's nation +4) gets the spare's non-player record (+0x69, [0xae23c0] + 0x44 × id); a former player: the swap of
-/// +0x10/+0x11 of the rating 20, the normalisation (0x539490), the job at the computer's club and the three ratings
+/// +0x10/+0x11 of the rating 20, the normalisation (`staff_normalise_non_player_attributes`), the job at the computer's club and the three ratings
 /// (+0xa, +8, +0xc) by the reputation, +9 and +0xd of the player record (band above 7500, or random(+0x57) and the
-/// other two; pow and bands); a non-player: random(1500) and random(500). The spare leaves (0x7a82b0).
+/// other two; pow and bands); a non-player: random(1500) and random(500). The spare leaves (`remove_spare_non_player_record`).
 /// Original: `PLAYER_REGEN::process_regen_queue` (0x7a65d0, player_regen.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x7a65d0 } (thiscall, ret 0, player_regen.cpp): `PLAYER_REGEN::process_regen_queue()`, pelo laço do dia (0x5cccd0),
@@ -3337,9 +3337,9 @@ pub(crate) unsafe extern "thiscall" fn is_retirement_pending(this: usize, person
 /// Copies the first spare non-player record entry (id, nation, second nation) to the outputs and removes it from the
 /// list.
 ///
-/// `PLAYER_REGEN::take_spare_non_player_record(&id, &nation, &second)`, from contract_manager (0x4ce4e0, two calls):
+/// `PLAYER_REGEN::take_spare_non_player_record(&id, &nation, &second)`, from contract_manager (`exe::contract_manager_resolve_contract_offers`, two calls):
 /// copies the first item of the spare non-player record pool (this +0x1c: id, nation and second nation) into the three
-/// outputs and removes it from the pool (PLAYER_REGEN::remove_spare_non_player_record 0x7a82b0 with the id read from
+/// outputs and removes it from the pool (PLAYER_REGEN::remove_spare_non_player_record `remove_spare_non_player_record` with the id read from
 /// the output); returns its eax.
 /// Original: `PLAYER_REGEN::take_spare_non_player_record` (0x7a6e30, player_regen.cpp, thiscall, ret 0xc).
 ///

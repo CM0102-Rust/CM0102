@@ -26,8 +26,8 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize
 /// `EngFaCup::update_for_date(today, stage)`. With +0x45 = 0 and the stage different from 0: on Date(1, 9, 1999) (month
 /// 9 is October) with +0xb2 = 0, the question to the human manager about entering at the 5th round (only in 1999: the
 /// original routine through the trampoline); on Date(3, 9, today's year) (3 October), frees the tables, +0x45 = 1, the
-/// entrants (0x56fab0, thiscall), the rounds (virtual +0x8c), the tree (virtual +0x94) (a negative return gives the
-/// box, lines 0x3d6, 0x3dd, 0x3e4, and 1), the predicted order (virtual +0x5c) and the draw of the 1st round (0x51c800:
+/// entrants (`exe::engfacup_collect_entrants`, thiscall), the rounds (virtual +0x8c), the tree (virtual +0x94) (a negative return gives the
+/// box, lines 0x3d6, 0x3dd, 0x3e4, and 1), the predicted order (virtual +0x5c) and the draw of the 1st round (`set_up_round`:
 /// push 0; mov ecx, cup -> thiscall, ret 4). Always, at the end, the cup update.
 /// Original: `EngFaCup::update_for_date` (0x570550, eng_fa_cup.cpp, thiscall, ret 8).
 ///

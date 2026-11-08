@@ -7,21 +7,21 @@ pub(crate) unsafe fn nation_by_id(id: usize) -> usize {
     read_usize(G_NATION_TABLE).wrapping_add(id.wrapping_mul(nation::SIZE))
 }
 
-/// Calls Stadium::add_booking (0x85de20): books the stadium on the date.
+/// Calls Stadium::add_booking (`add_booking`): books the stadium on the date.
 ///
 /// [pt] `Stadium::add_booking` (0x85de20, thiscall, ret 8, já em Rust): a reserva do estádio na data.
 pub(crate) unsafe fn add_stadium_booking(this: usize, stadium: usize, data: usize) {
     exe::stadium_add_booking(this, stadium, data)
 }
 
-/// Calls Stadium::is_stadium_free_on_date (0x85ddb0).
+/// Calls Stadium::is_stadium_free_on_date (`is_stadium_free_on_date`).
 ///
 /// [pt] `Stadium::is_stadium_free_on_date` (0x85ddb0, thiscall, ret 8, já em Rust).
 pub(crate) unsafe fn is_stadium_free(this: usize, stadium: usize, data: usize) -> bool {
     exe::stadium_is_stadium_free_on_date(this, stadium, data) != 0
 }
 
-/// Calls a cdecl list comparer (0x85e2f0 by nation, 0x85e320 by continent, 0x85e350 by capacity) on (a, b).
+/// Calls a cdecl list comparer (0x85e2f0 by nation, 0x85e320 by continent, `stadium_compare_venues_by_capacity` by capacity) on (a, b).
 ///
 /// [pt] Os comparadores das listas (cdecl, (a, b) -> int): 0x85e2f0 pela nação (+0), 0x85e320 pelo continente (+4), os
 /// dois desempatando pelos lugares do estádio (+0xc → +0x3c, quando os dois têm estádio); 0x85e350 só pelos lugares.
@@ -471,7 +471,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     }
 }
 
-/// Game random number 0..n−1 (FN_UTILS_RANDOM, 0x90cfc0).
+/// Game random number 0..n−1 (FN_UTILS_RANDOM, `exe::utils_random`).
 ///
 /// [pt] O sorteio do jogo (0x90cfc0, cdecl): 0..n-1.
 pub(crate) unsafe fn random_below(n: u32) -> i32 {
@@ -1065,7 +1065,7 @@ pub(crate) unsafe fn england_nation() -> usize {
     read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE))
 }
 
-/// Returns the nation's main national team (FN_DATABASE_GET_NATIONAL_TEAM, 0x53b3d0).
+/// Returns the nation's main national team (FN_DATABASE_GET_NATIONAL_TEAM, `exe::database_get_national_team`).
 ///
 /// [pt] A seleção principal da nação (0x53b3d0).
 pub(crate) unsafe fn nation_national_team(nation: usize) -> usize {
@@ -1079,7 +1079,7 @@ pub(crate) unsafe fn stadium_by_id(id: usize) -> usize {
     read_usize(G_STADIUM_TABLE).wrapping_add(id.wrapping_mul(0x4e))
 }
 
-/// qsorts a list of n 12-byte stadium entries with the comparer 0x85e380.
+/// qsorts a list of n 12-byte stadium entries with the comparer `stadium_compare_bookings`.
 pub(crate) unsafe fn sort_stadium_list(list: usize, n: u32) {
     exe::crt_qsort(list, n, 0xc, 0x85e380);
 }

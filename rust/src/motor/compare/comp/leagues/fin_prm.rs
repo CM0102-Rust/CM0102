@@ -6,13 +6,13 @@ use super::*;
 /// Comparer for `fin_prm_end_season_for_nation`.
 ///
 /// The nation's end-of-season comparer: only the original routine runs, because it calls each club's end of season
-/// (0x59cfa0), which draws at random and delivers news items to the human manager (the copy carries on in Rust mode,
+/// (`season_end_club_update`), which draws at random and delivers news items to the human manager (the copy carries on in Rust mode,
 /// with the counter).
 ///
 /// It checks what the routine guarantees and no call undoes: the last club of the entry (the club order) ends up with
 /// the year's totals (+0x110, 0x50 bytes) zeroed.
 ///
-/// Ponytail: the earlier ones may gain values through the 0x59cfa0 of a later club (the B team that uses the A team's
+/// Ponytail: the earlier ones may gain values through the `season_end_club_update` of a later club (the B team that uses the A team's
 /// record, the shared stadium); checking all of them requires planning those exceptions.
 ///
 /// [pt] O comparador do fim de temporada da nação: só a original, porque ela chama o fim de temporada de cada clube

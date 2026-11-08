@@ -5,7 +5,7 @@ use super::*;
 
 /// Comparer for `ita_ser_c2a_update_staff_records_for_status`.
 ///
-/// Comparer of 0x654180: the records go to the people's history and change reputations and morale (they cannot run
+/// Comparer of `ita_ser_c2a_update_staff_records_for_status`: the records go to the people's history and change reputations and morale (they cannot run
 /// twice), so only the original routine runs.
 ///
 /// The plan, made beforehand, in stages 0 and 1: the club's first row with status 1, 2 or 0xff decides the +0x37 that

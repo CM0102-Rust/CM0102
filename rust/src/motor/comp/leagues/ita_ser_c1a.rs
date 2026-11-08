@@ -7,7 +7,7 @@ pub(crate) unsafe fn ita_ser_c1a_league_row_club(league: usize, i: usize) -> usi
     read_usize(read_usize(league + league::TABLE) + i * 0x3b)
 }
 
-/// Stage advance of the three (League::advance_stage, slot +0x28; the body of 0x64b9e0, 0x64fba0 and 0x578330): error
+/// Stage advance of the three (League::advance_stage, slot +0x28; the body of `ita_ser_c1a_advance_stage`, `ita_ser_c1b_advance_stage` and `eng_third_advance_stage`): error
 /// box at the last stage, otherwise the next stage, creating the end-of-league stages on reaching stage 0.
 ///
 /// With the current stage (+0x30) already at the last one (+0x2c − 1, signed), the error box of source file `arquivo`
@@ -65,31 +65,31 @@ pub(crate) const PROMOTION_PLAYOFF_ROWS: [usize; 4] = [4, 1, 3, 2]; // cql5: the
 pub(crate) const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: the play-out rows
 
 /// Creates the end-of-league stages: the champion goes to the Serie C1 Super Cup, and the play-off and play-out
-/// Cup_Stages are built with their first-round draw. Body of both 0x64ba70 and 0x64fc30, identical except for the
+/// Cup_Stages are built with their first-round draw. Body of both `create_playoff_stages` and `create_play_off_stages`, identical except for the
 /// source file, the line numbers and the order in which the lists are freed at the end.
 ///
 /// 1) The champion (row 0) goes to the Serie C1 Super Cup (competition [[0xadadfc] + [0x9cf938] × 4], entrant list
 /// [+0xa7] of 6 bytes): in slot 0 if empty, otherwise in slot 1.
 ///
-/// 2) The 4-club list (malloc 0x944e46 of 0x10: push; add esp, 4 -> cdecl; out of memory: the error box for line
+/// 2) The 4-club list (malloc `exe::crt_malloc` of 0x10: push; add esp, 4 -> cdecl; out of memory: the error box for line
 /// `linhas[0]` and return) with those in the play-off rows (PROMOTION_PLAYOFF_ROWS).
 ///
 /// 3) The stage 0 schedule (virtual +0x3c: push 0; push &extra; push &rodadas; push 0; mov ecx, this -> thiscall, ret
 /// 0x10; returns the template; `rodadas` and `extra` are words).
 ///
-/// 4) The stage (operator new 0x944cf1 of 0xb2: push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage 0x522e00: 15 arguments
+/// 4) The stage (operator new `exe::crt_operator_new` of 0xb2: push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage `construct_cup_stage`: 15 arguments
 /// pushed, mov ecx, new -> thiscall, ret 0x3c: the league, the clubs (+0xbf, signed byte), the list, the rounds, the
 /// competition record (+4), the template, the year (+0x40), 0, 1, the `extra`, 0x14, 0, 0, 0 and the table positions of
 /// the 4 (local 4-byte record: 4, 1, 3, 2)) goes to [+0xc][0]; no stage: the error box for line `linhas[1]` and return;
-/// otherwise the first-round draw (Cup::set_up_round 0x51c800: push 0; mov ecx, stage -> thiscall, ret 4) and the
-/// template is freed (0x9452ca: push; add esp, 4 -> cdecl).
+/// otherwise the first-round draw (Cup::set_up_round `set_up_round`: push 0; mov ecx, stage -> thiscall, ret 4) and the
+/// template is freed (`exe::crt_free`: push; add esp, 4 -> cdecl).
 ///
 /// 5) The same with stage 1 and the play-out clubs (PLAYOUT_ROWS; positions 16, 13, 15, 14 in the local record and 1, 1
 /// in the two bytes) at [+0xc][1]; frees the list and the template (in `lista_primeiro` order); no stage: the error box
 /// for line `linhas[2]`; otherwise the first-round draw and +0x30 = 1.
 ///
 /// The high bits of the words the original pushes as dwords (the clubs, the rounds, the year and the `extra`) are
-/// garbage from the stack or other registers; the constructor reads only the word (0x522e00: mov ax, word ptr [esp +
+/// garbage from the stack or other registers; the constructor reads only the word (`construct_cup_stage`: mov ax, word ptr [esp +
 /// ...]) and the copy passes zero there.
 ///
 /// [pt] O corpo das duas (0x64ba70 e 0x64fc30, iguais fora o fonte, as linhas e a ordem de soltar as listas no fim):

@@ -115,7 +115,7 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce()
     a
 }
 
-/// `JapSuper::select_teams()` (0x666160, thiscall, ret 0, jap_super.cpp): the J1 champion and the Emperor's Cup winner.
+/// `JapSuper::select_teams()` (`jap_super_select_teams`, thiscall, ret 0, jap_super.cpp): the J1 champion and the Emperor's Cup winner.
 /// The list (out of memory, the box for line 0xc1 and −1).
 ///
 /// The J1 champion ([0x9cf65c]; without it, 0xca and 0) — with no nation (+0x53 = 0), the runner-up (without it, 0xd6

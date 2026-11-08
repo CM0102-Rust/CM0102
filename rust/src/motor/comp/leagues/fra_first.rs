@@ -146,18 +146,18 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
 /// the fixed fixtures vector at +0xea, sets each fixture from the table by club names and drops the vector if any club
 /// was not found.
 ///
-/// The fixed fixtures vector (operator new 0x944cf1 of n × 16 + 4: push; add esp, 4 -> cdecl; the count n in the first
+/// The fixed fixtures vector (operator new `exe::crt_operator_new` of n × 16 + 4: push; add esp, 4 -> cdecl; the count n in the first
 /// dword and each fixture through the constructor 0x645800, with the destructor 0x5a53c0 for the exception: `eh vector
-/// constructor iterator` 0x9463af, push 0x5a53c0; push 0x645800; push n; push 0x10; push vector -> stdcall, ret 0x14)
+/// constructor iterator` `exe::crt_vector_constructor_iterator`, push 0x5a53c0; push 0x645800; push n; push 0x10; push vector -> stdcall, ret 0x14)
 /// goes at +0xea; when out of memory, the error box for line `linha` of source file `arquivo` and the end.
 ///
-/// Then each fixture of `tabela`, in order, in its place in the vector (fixed_fixture_set_by_club_names 0x68aff0: push
+/// Then each fixture of `tabela`, in order, in its place in the vector (fixed_fixture_set_by_club_names `exe::fixed_fixture_set_by_club_names`: push
 /// the 6th (away, via the map); push the 5th (home); push year; push month (0 = January); push day; push league; mov
 /// ecx, [+0xea] + 16 × k -> thiscall, ret 0x18: the date and the clubs found by name, −1 at +8/+0xc if not found).
 ///
 /// Finally, if any of the n fixtures was left with a club not found (+8 or +0xc = −1), the vector is destroyed (`eh
-/// vector destructor iterator` 0x9462bb: push 0x5a53c0; push count; push 0x10; push vector -> stdcall, ret 0x10;
-/// operator delete 0x944c94 of the block: push; add esp, 4 -> cdecl) and +0xea = 0: the league goes back to the
+/// vector destructor iterator` `exe::crt_vector_destructor_iterator`: push 0x5a53c0; push count; push 0x10; push vector -> stdcall, ret 0x10;
+/// operator delete `exe::crt_operator_delete` of the block: push; add esp, 4 -> cdecl) and +0xea = 0: the league goes back to the
 /// randomly drawn calendar.
 ///
 /// [pt] O corpo das duas (set_up_fixed_fixtures; thiscall, ret 0, quadro SEH só para o construtor de vetor): o vetor dos
@@ -986,9 +986,9 @@ pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: usize, wri
 /// The common body, with +0x3e already written: allocates the league table and fills rows with the division's clubs in
 /// database order; returns whether it filled.
 ///
-/// The table (malloc 0x944e46 of +0x3e × 0x3b; out of memory: the box of source file `arquivo` at line `linha` and
+/// The table (malloc `exe::crt_malloc` of +0x3e × 0x3b; out of memory: the box of source file `arquivo` at line `linha` and
 /// None); the clubs of [0xae23b4] (0x245 bytes, [0xae235c] of them) whose competition (+0x57, the id in its +0) is that
-/// of global `g`, in database order, each in the next row (League::init_table_row 0x687430: thiscall(league, row, club,
+/// of global `g`, in database order, each in the next row (League::init_table_row `init_table_row`: thiscall(league, row, club,
 /// 0, 0), ret 0x10), until full.
 ///
 /// [pt] O corpo comum, com +0x3e já gravado: a tabela (malloc 0x944e46 de +0x3e × 0x3b; sem memória: a caixa do fonte

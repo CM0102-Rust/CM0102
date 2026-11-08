@@ -13,8 +13,8 @@ pub(crate) type SpaLowerLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 
 /// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
 ///
-/// For each round, the date (0x68a160: push 0; push year; push code; push week; push years; push month; push day; push
-/// i; push t; add esp -> cdecl: value 0) and the slots (0x68a1c0: push 0; push c; push b; push a; push j; push i; push
+/// For each round, the date (`league_round_set_date`: push 0; push year; push code; push week; push years; push month; push day; push
+/// i; push t; add esp -> cdecl: value 0) and the slots (`store_round_match`: push 0; push c; push b; push a; push j; push i; push
 /// t; add esp -> cdecl, value 0).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
@@ -33,7 +33,7 @@ pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, year: u32, first: i32
 
 /// The main stage with the Christmas rounds.
 ///
-/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date 0x549f70: push −1; push year;
+/// The opening rounds in sequence; then the date of 1 December of the year (Date::Date `exe::date_date_549f70`: push −1; push year;
 /// push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) and the case chosen by the day of the reference round (+0,
 /// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
 /// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
@@ -305,10 +305,10 @@ pub(crate) unsafe fn spa_lower_is_in_comp(c: usize, g: usize) -> bool {
 /// `SpaLower::SpaLower(year)` (SEH frame only on the exception path): the Spanish lower division, a background league
 /// with no discipline (created by the Primera when the nation does not have bit 4 of +0x11c).
 ///
-/// The base (League::League 0x682200: mov ecx -> thiscall, ret 0), the vtable 0x96fb1c, the year (+0x40), discipline
-/// rule 0xff (none) and the record of the competition of id [0x9cf6b0] (+4). Tries to load the saved state (0x687b10:
-/// push 1 -> thiscall, ret 4); otherwise, just the league (+0x44 = 0xff, +0x30 = −1, +0x2c = 0), the rules (0x853790),
-/// the table (0x8533d0) and the fixtures (League::create_fixtures 0x6835c0), all mov ecx -> thiscall, ret 0 (no stats
+/// The base (League::League `exe::new_league`: mov ecx -> thiscall, ret 0), the vtable 0x96fb1c, the year (+0x40), discipline
+/// rule 0xff (none) and the record of the competition of id [0x9cf6b0] (+4). Tries to load the saved state (`exe::league_load_from_temp_file`:
+/// push 1 -> thiscall, ret 4); otherwise, just the league (+0x44 = 0xff, +0x30 = −1, +0x2c = 0), the rules (`spa_lower_set_up_rules`),
+/// the table (`spa_lower_create_table`) and the fixtures (League::create_fixtures `create_fixtures`), all mov ecx -> thiscall, ret 0 (no stats
 /// nor predicted positions); each failure, the error box of its line (0x3f, 0x46, 0x4d of source 0xa82880) and the end.
 /// Returns this.
 /// Original: `SpaLower::SpaLower` (0x851020, spa_lower.cpp, thiscall, ret 4).

@@ -5,9 +5,9 @@ use super::*;
 
 /// Comparer for `player_search_record_scouted_club_match`.
 ///
-/// Comparer of 0x7bd310: side by side over the 50 slots (the whole record).
+/// Comparer of `player_search_record_scouted_club_match`: side by side over the 50 slots (the whole record).
 ///
-/// With the masks on and the club's manager human, 0x5b09d0 writes what is known about the player and draws at random:
+/// With the masks on and the club's manager human, `exe::fog_of_war_map_raise_knowledge` writes what is known about the player and draws at random:
 /// then only the original routine runs (simplification: the case of a human scouting their own club; the automatic
 /// career never reaches this routine).
 ///
@@ -27,9 +27,9 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_record_scouted_club
     SCOREBOARD.record(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", read_usize(this), game, mo, mr));
 }
 
-/// Comparer for `player_search_scout_match` (0x7b5be0; comparison mode: see the header of motor.rs).
+/// Comparer for `player_search_scout_match` (`player_search_scout_match`; comparison mode: see the header of motor.rs).
 ///
-/// The report draws random numbers (0x7b62a0, 0x5b09d0) and puts records in the output (allocates): only the original
+/// The report draws random numbers (`exe::player_search_report_on_player`, `exe::fog_of_war_map_raise_knowledge`) and puts records in the output (allocates): only the original
 /// runs. Beforehand, the copy as a dry run decides up to the report without the side effects (no history and no report,
 /// with the random generator state saved and restored) and states the return value and whether the start of the list
 /// moves to tomorrow; the original must match.

@@ -216,29 +216,29 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
 
 /// `load_game_data(path)` (cdecl, ~14.6 KB, SEH): loads the whole saved game. Returns 1 if it loaded.
 ///
-/// Disk (0x7a1820(0) < 25 sets [0xdd7134]) and memory ([0x9cd1fc] and 0x7a1710() < 50 set [0xdd7138]); the temporary
-/// folder (0x90bde0 "CM3_TEMP"); the CD (`check_game_cd`); a null `path` gives the "Error" box 0x233b. The database:
-/// 0x528080 if [0xae23a8] ≠ 0 and 0x524d10(path, 1) (the answer is not looked at).
+/// Disk (`exe::os_get_free_disk_space_mb`(0) < 25 sets [0xdd7134]) and memory ([0x9cd1fc] and `exe::os_get_free_memory_mb`() < 50 set [0xdd7138]); the temporary
+/// folder (`exe::utils_build_file_path` "CM3_TEMP"); the CD (`check_game_cd`); a null `path` gives the "Error" box 0x233b. The database:
+/// `exe::database_free_all_tables` if [0xae23a8] ≠ 0 and `load_database_from_stream`(path, 1) (the answer is not looked at).
 ///
-/// "Loading game data" and the progress bar 0x802f80 (step 0x2d); clears the `*.tmp` files (0x90cd50), checks their
-/// space (0x933860, in MB, 0 becomes 25) against the disk, unpacks (0x933320; on failure: "Disk Space Error" 0x2382).
+/// "Loading game data" and the progress bar `exe::screenmanager_send_network_status_message` (step 0x2d); clears the `*.tmp` files (`utils_clear_temp_folder`), checks their
+/// space (`zget_matching_size`, in MB, 0 becomes 25) against the disk, unpacks (`zextract_matching_files`; on failure: "Disk Space Error" 0x2382).
 ///
-/// `general.dat` (0x9326e0 reading, 0x15, type 4; without it: "Load Game Error" 0x2397): the version ([0xdd7110]); the
+/// `general.dat` (`exe::zopen` reading, 0x15, type 4; without it: "Load Game Error" 0x2397): the version ([0xdd7110]); the
 /// summary (|v| ≥ 0x3e023; 0xf70 bytes up to 0x3e026 with the play time zeroed, 0xf74 after that, with [0xdd7140] = its
 /// play time); [0xdd7144] = time(); the unique id, the database size, the dates and times (the game's in a local), the
 /// leagues, the default nation ([0xae2d08] = nation id, or 0 if < 0), the runtime data of people ([0xae2d0c], 0x4f ×
 /// [0xae2d10]; old saves converted by `convert_staff_state`; |v| < 0x3e018 clears bit 7 of +0xb of the first
 /// [0xae2364]), of clubs ([0xae2d14], 6 × [0xae2d18] = [0xae235c]; |v| < 0x3e022: −1, 0, 0) and the reputation
-/// ([0xae2d1c], 4 × [0xae235c]; |v| < 0x3e022 does not read it and calls 0x53db40(1)). A failed read: "Load Game Error"
+/// ([0xae2d1c], 4 × [0xae235c]; |v| < 0x3e022 does not read it and calls `database_sort_clubs_by_reputation`(1)). A failed read: "Load Game Error"
 /// with the line and the field's text, item closed; without memory: "Error" and the game closes.
 ///
-/// Steps 4..=0x2d (`LOAD_STEPS`, disk and memory checked before each): at step 5, the game date (0x417c10 into
+/// Steps 4..=0x2d (`LOAD_STEPS`, disk and memory checked before each): at step 5, the game date (`exe::date_operator_3d` into
 /// 0xae2c90); before step 9, the last 16 managers with +0x5f = 5 are undone (News, HUMAN_MANAGER, CONTRACT_MANAGER,
-/// NationalTeams, Staff_Records; empty names, date 1/0/1966, +0x24 and +0x39 = 0, 0x7ff990); after 0x22, 0x7e61c0;
-/// before the last one, |v| < 0x3e032 passes each person through 0x538bc0.
+/// NationalTeams, Staff_Records; empty names, date 1/0/1966, +0x24 and +0x39 = 0, `exe::screenmanager_remove_manager_record`); after 0x22, `exe::reservecomp_create_sub_comps`;
+/// before the last one, |v| < 0x3e032 passes each person through `staff_normalise_player_attributes`.
 ///
-/// FIFA rules (0x839760, |v| ≥ 0x3e039); 0xdd70a0 = the game date; [0xdd711c] = [0xdd7130] = 1, [0xa801bc] = 0; with
-/// [0x9b5980], it switches the rules on or off by the date of [0xae2330] (0x58a890(1) when switching on); without
+/// FIFA rules (`load_fifa_transfer_rules`, |v| ≥ 0x3e039); 0xdd70a0 = the game date; [0xdd711c] = [0xdd7130] = 1, [0xa801bc] = 0; with
+/// [0x9b5980], it switches the rules on or off by the date of [0xae2330] (`exe::news_post_transfer_system_change`(1) when switching on); without
 /// `auto_setup.cfg`, the CD search at the end.
 ///
 /// The original's branches for 0x3e042 ≤ |v| < 0x3e038 (0xd-byte records) and 0x3e042 ≤ |v| < 0x3e034 (0xc) are
@@ -612,34 +612,34 @@ pub(crate) unsafe fn setup_fatal_error(row: u32) -> ! {
 /// game and, with `qst`, saves the quick start `CM3_QSTART\<qst>.qst` and frees everything; without `qst`, puts the
 /// human manager on holiday at a drawn club. Returns 1 if it created the game.
 ///
-/// Folders CM3_TEMP (0x90bde0, only copied, as in the original) and CM3_DATA. A null `cfg` or one that does not open
-/// (0x945b00 "r"): the "Error" box (0x1c13, 0x1c1b) and 0.
+/// Folders CM3_TEMP (`exe::utils_build_file_path`, only copied, as in the original) and CM3_DATA. A null `cfg` or one that does not open
+/// (`exe::crt_fopen` "r"): the "Error" box (0x1c13, 0x1c1b) and 0.
 ///
-/// Each line (0x90cba0, 1000-byte buffer) goes through 0x90bb70 and loses its spaces (one by one, like the original's
-/// `strcpy`); the value is searched for with `strstr` (0x945a60) after the prefix: `DATABASE=` NORMAL/MINIMUM/MAXIMUM →
-/// 0x5d7c60(1/2/4) in [0xae3138]; `MATCH_STATS=` NORMAL/SMALL/LARGE → 0x200/0x400/0x800; `FOREGROUND_LEAGUES=` and
-/// `BACKGROUND_LEAGUES=`: on the first one, without a database ([0xae23a8] = 0), it loads the database (0x524d50,
-/// CM3_DATA; a failure stops the game), applies it (0x5d8480), zeroes byte +0x11c of the nations, [0xae2d00],
-/// [0xae2d04] (and [0xae2d08] for the foreground) and builds the key nations (0x667150; a failure stops the game);
-/// then, for each league in the table 0xb63d60 (0x23 of 0x48 bytes) with a nation and +8, if the name (0x5454c0) is on
-/// the line or 0x839340 accepts it: foreground, flag 0/1 → ((~options & 2) | 1) << 1 and counts (+[0xae2d00] only from
-/// 0, +[0xae2d04]) and the 1st that matches by `strncmp` (0x946fa0) or 0x839340 becomes [0xae2d08]; background, 0 →
+/// Each line (`exe::utils_read_config_line`, 1000-byte buffer) goes through `exe::utils_trim_control_chars` and loses its spaces (one by one, like the original's
+/// `strcpy`); the value is searched for with `strstr` (`exe::crt_strstr`) after the prefix: `DATABASE=` NORMAL/MINIMUM/MAXIMUM →
+/// `exe::config_set_option`(1/2/4) in [0xae3138]; `MATCH_STATS=` NORMAL/SMALL/LARGE → 0x200/0x400/0x800; `FOREGROUND_LEAGUES=` and
+/// `BACKGROUND_LEAGUES=`: on the first one, without a database ([0xae23a8] = 0), it loads the database (`exe::load_database_from_files`,
+/// CM3_DATA; a failure stops the game), applies it (`exe::config_apply_and_save`), zeroes byte +0x11c of the nations, [0xae2d00],
+/// [0xae2d04] (and [0xae2d08] for the foreground) and builds the key nations (`exe::key_nation_build_table`; a failure stops the game);
+/// then, for each league in the table 0xb63d60 (0x23 of 0x48 bytes) with a nation and +8, if the name (`nation_get_english_three_letter_name`) is on
+/// the line or `exe::nation_matches_region_filter` accepts it: foreground, flag 0/1 → ((~options & 2) | 1) << 1 and counts (+[0xae2d00] only from
+/// 0, +[0xae2d04]) and the 1st that matches by `strncmp` (`exe::crt_strncmp`) or `exe::nation_matches_region_filter` becomes [0xae2d08]; background, 0 →
 /// ((~options & 2) << 1) | 1 (+[0xae2d00]) and 2 → the same (−[0xae2d04]); `LANGUAGE=`: the 1st language i (table
-/// 0x9eb244, 19) that exists (0x66ea50), is English, there is no database or the database has it (0x535930), and is on
-/// the line: 0x5d8020(i) and 0x5d8480; `ENABLE_MATCH_ENGINE=` YES/NO → byte [0xa5a390]; `ENABLE_COMPUTER_BIDS=` →
+/// 0x9eb244, 19) that exists (`exe::langlib_is_language_available`), is English, there is no database or the database has it (`database_language_file_exists`), and is on
+/// the line: `exe::config_set_language`(i) and `exe::config_apply_and_save`; `ENABLE_MATCH_ENGINE=` YES/NO → byte [0xa5a390]; `ENABLE_COMPUTER_BIDS=` →
 /// [0x9cd1f8]; `ON_HOLIDAY=` → the manager's holiday.
 ///
 /// Closes the file; with no league flagged, no foreground league, no default nation or one without bit 2: 0. [0xdd7124]
-/// = [0xdd713c] = 1; creates the game (0x828110(qst ≠ 0); a failure stops the game). With `qst`: 0x945b13 (CM3_QSTART,
-/// `qst`, ".qst"), 0x82e430(path, 0x17), 0x82ff40(1) and 1.
+/// = [0xdd713c] = 1; creates the game (`exe::create_game`(qst ≠ 0); a failure stops the game). With `qst`: `exe::crt_makepath` (CM3_QSTART,
+/// `qst`, ".qst"), `save_game_data`(path, 0x17), `free_game_data`(1) and 1.
 ///
 /// Without it: "auto_setup_game" in [0xae3138]+0x113, [0xdd7130] = 1, the date in 0xdd70a0; if the current human
 /// (0xb74c26 + 0x300 × (i16)[0xb77c7a]) already has a person, 0. Otherwise, the 1st of the last 16 people (0xae23bc,
 /// 0x6e) with +0x5f = 0 (without a table, box 0x39b3 and person 0) becomes the human: text +0xc zeroed, date +0x10
-/// (0x54a130: 1, 0, 1966, −1), +0x18 = 1966, +0x24 and +0x39 = 0, +0x5f = 1, 0x5fb810 and 0x5fd2f0(holiday, 0) on
-/// [0xb63c98]; it draws (0x90cfc0) clubs (0xae23b4, 0x245) until one that is not a national side (0x53b900), with a
-/// nation of a foreground league (bit 2) and accepted by 0x544820: its nation into +0x1a, the names (0x539c60,
-/// 0x53a1b0) into +4 and +8, and 0x826f20(person, club). Returns 1.
+/// (`exe::date_set`: 1, 0, 1966, −1), +0x18 = 1966, +0x24 and +0x39 = 0, +0x5f = 1, `exe::human_manager_reset_human_record` and `set_on_holiday`(holiday, 0) on
+/// [0xb63c98]; it draws (`exe::utils_random`) clubs (0xae23b4, 0x245) until one that is not a national side (`exe::database_is_national_team`), with a
+/// nation of a foreground league (bit 2) and accepted by `club_can_be_managed`: its nation into +0x1a, the names (`database_pick_first_name_for_nation`,
+/// `database_pick_second_name_for_nation`) into +4 and +8, and `exe::appoint_human_manager_to_club`(person, club). Returns 1.
 /// Original: `create_game_from_setup_file` (0x827110, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x827110 } (cdecl, Setup.cpp, ~3 KB): `create_game_from_setup_file(cfg, qst)`: lê o arquivo de
@@ -915,7 +915,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
 ///
 /// The text "v%s %s.%s %d (%s)" (version 0x90d130, name and extension of Setup.cpp, `linha`, `texto`) at 0xae24d0; the
 /// title `titulo` translated (0x66f4e0) at 0xae28bc, the body `corpo` (with the text at 0xae24d0) translated at
-/// 0xae26c4 and the box 0x5e8290.
+/// 0xae26c4 and the box `exe::gui_show_message_box`.
 ///
 /// The game continues ([0xb67a34], G_MOUSE_LEFT_BUTTON_DOWN, stays as it is, unlike `setup_warning`).
 ///
@@ -939,7 +939,7 @@ pub(crate) unsafe fn save_error_box(row: u32, text: usize, title: usize, body: u
 /// Steps 2..=0x24 of the save, in the original's order: (global that must be ≠ 0, routine, how to call).
 ///
 /// `this` is the global itself, except for 0x5afad0 (FOG_OF_WAR), which the original checks via [0xb6b7c8] (Media's)
-/// and calls with [0xae2a60]. Step 0x19 (0x6692f0, the competitions) has no global and returns 0 when it fails.
+/// and calls with [0xae2a60]. Step 0x19 (`exe::key_nation_save_all_comps`, the competitions) has no global and returns 0 when it fails.
 ///
 /// [pt] Os passos 2..=0x24 da gravação, na ordem da original: (global que tem de ser ≠ 0, rotina, como
 /// chamar). `this` é o próprio global, menos no 0x5afad0 (FOG_OF_WAR), que a original confere por
@@ -1006,29 +1006,29 @@ pub(crate) const SAVE_STEPS: [SaveStep; 0x23] = [
 /// subsystem saves in the original order with disk and memory checks between them, the packed *.tmp files and the FIFA
 /// rules; on a network game it writes to temp_save_file and renames. Returns 1 if it saved.
 ///
-/// [0xdd7110] = 0xfffc1fb9 (the save version). On a network game (bit 0x20000000), before anything, disk (0x7a1820(0) <
-/// 25) sets [0xdd7134] and memory ([0x9cd1fc] and 0x7a1710() < 1) sets [0xdd7138]: deletes `path` and returns 0.
+/// [0xdd7110] = 0xfffc1fb9 (the save version). On a network game (bit 0x20000000), before anything, disk (`exe::os_get_free_disk_space_mb`(0) <
+/// 25) sets [0xdd7134] and memory ([0x9cd1fc] and `exe::os_get_free_memory_mb`() < 1) sets [0xdd7138]: deletes `path` and returns 0.
 ///
-/// Temporary folder (0x90bde0 "CM3_TEMP"); a null `path` gives the "Error" box (0x2958). The working path is `path` or,
-/// on a network game, the same with the name `temp_save_file` (0x944cff/0x945b13); if it already exists (0x90c120) and
+/// Temporary folder (`exe::utils_build_file_path` "CM3_TEMP"); a null `path` gives the "Error" box (0x2958). The working path is `path` or,
+/// on a network game, the same with the name `temp_save_file` (`exe::crt_strtok`/`exe::crt_makepath`); if it already exists (`exe::utils_file_exists`) and
 /// cannot be removed (0x94643a = −1), returns 0. With bit 0x40000000, disk and memory again (deleting `path`).
 ///
-/// 0x524d30 (the database, step 1 of the save); disk and memory (deleting the working path); the translated "Saving
-/// game data" and the progress bar 0x802f80 (step 1 of 0x25).
+/// `save_database_for_game` (the database, step 1 of the save); disk and memory (deleting the working path); the translated "Saving
+/// game data" and the progress bar `exe::screenmanager_send_network_status_message` (step 1 of 0x25).
 ///
-/// `general.dat` (0x9326e0): 16 fields (the version, the 0xf74-byte summary 0x591f80, the unique id, the database size,
+/// `general.dat` (`exe::zopen`): 16 fields (the version, the 0xf74-byte summary `build_save_game_summary`, the unique id, the database size,
 /// the dates and times, the leagues, the default nation or −1, the runtime data of people, clubs and reputation); a
 /// write error gives the "Disk Space Error" box with the field's line and closes the item.
 ///
 /// Steps 2..=0x24 (`SAVE_STEPS`): disk and memory (before 0x11, without deleting and with memory < 25), the progress
-/// bar and the subsystem's `save`; 0x25: packs the `*.tmp` files (0x933610).
+/// bar and the subsystem's `save`; 0x25: packs the `*.tmp` files (`zadd_matching_files`).
 ///
-/// Hall of fame (0x5f00c0, outside the save), FIFA rules (0x8395b0); on a network game, swaps the old save for the new
-/// one (0x945ba4); [0xdd7130] = 1, [0xa801bc] = 0 and the date of the last save (0xdd70a0).
+/// Hall of fame (`exe::halloffame_save`, outside the save), FIFA rules (`save_fifa_transfer_rules`); on a network game, swaps the old save for the new
+/// one (`exe::crt_rename`); [0xdd7130] = 1, [0xa801bc] = 0 and the date of the last save (0xdd70a0).
 ///
-/// The original's local date ([esp+0x1758], 0x54a110, empty destructor 0x5a53c0 in the SEH) is not used: it is left
+/// The original's local date ([esp+0x1758], `exe::date_date_54a110`, empty destructor 0x5a53c0 in the SEH) is not used: it is left
 /// out. The original's loop ([esp+0x11c] from 1 to 2) runs the body once, with the total 0x25. The summary is a zeroed
-/// buffer here; in the original, what 0x591f80 does not write (the club of the 16 non-human managers, the rest of the
+/// buffer here; in the original, what `build_save_game_summary` does not write (the club of the 16 non-human managers, the rest of the
 /// texts) is leftover from its stack, saved into `general.dat`.
 /// Original: `save_game_data` (0x82e430, Setup.cpp, cdecl).
 ///
@@ -1263,7 +1263,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
 // does not run twice. Original only; the copy takes the branch and is proven by the save proof.
 
 /// `check_saved_game_file(path)` (cdecl): file box filter for saved games: 1 if the container has id 0x16 (`.sav`,
-/// 0x9331c0), otherwise 2.
+/// `zget_archive_id`), otherwise 2.
 ///
 /// The original only sets `ax`: the upper 16 bits of `eax` are those of the id answer, as here. A null path is the
 /// Setup.cpp error 0x3a1b ("Error" box): the port calls the original.
@@ -1285,7 +1285,7 @@ pub(crate) unsafe extern "C" fn check_saved_game_file(path: usize) -> u32 {
 // error) original only.
 
 /// `check_quick_start_file(path)` (cdecl): file box filter for quick starts: 1 if the container has id 0x17 (`.qst`)
-/// and the saved version is the exe's (0x838eb0), otherwise 2.
+/// and the saved version is the exe's (`valid_saved_game_version`), otherwise 2.
 ///
 /// Only `ax` is set: the upper 16 bits of `eax` are those of the last call (the id, or the version). A null path:
 /// Setup.cpp error 0x3a6d, the port calls the original.
@@ -1315,7 +1315,7 @@ pub(crate) unsafe extern "C" fn check_quick_start_file(path: usize) -> u32 {
 /// The "Load Game Error" box of `valid_saved_game_version`, with line and reason.
 ///
 /// Text "v%s %s.%s %d (%s)" (version 0x90d130, file name and extension of Setup.cpp, line, reason) at 0xae24d0, the
-/// translated title at 0xae28bc, the translated message (0x9af334) at 0xae26c4, and the box 0x5e8290. Unlike
+/// translated title at 0xae28bc, the translated message (0x9af334) at 0xae26c4, and the box `exe::gui_show_message_box`. Unlike
 /// `show_error_at`, it does not zero [0xb67a34].
 ///
 /// [pt] A caixa "Load Game Error" de `valid_saved_game_version`: o texto "v%s %s.%s %d (%s)" (versão
@@ -1340,11 +1340,11 @@ pub(crate) unsafe fn load_version_error_box(row: u32, reason: usize) {
 /// `valid_saved_game_version(path)` (cdecl): opens the container's `general.dat` item, reads the version and the
 /// summary and returns 1 if the summary's version text is the exe's.
 ///
-/// Opens the item (0x9326e0 reading, a4 0x15, type 4), reads the saved version (4 bytes) and the save summary (0xf70
+/// Opens the item (`exe::zopen` reading, a4 0x15, type 4), reads the saved version (4 bytes) and the save summary (0xf70
 /// bytes if |version| < 0x3e027, otherwise 0xf74) and returns 1 if the summary's version text (+0x7d0) equals the exe's
 /// (0x90d130), otherwise 0. Each failed read gives the "Load Game Error" box (Setup.cpp 0x3a36, 0x3a3d, 0x3a48, 0x3a55)
 /// and 0. As in the original, on success the item is NOT closed (the ZFILE and the file stay open). The original's SEH
-/// frame only protects the local date (0x54a110, no destructor), which falls inside the summary (+0xf64) and is
+/// frame only protects the local date (`exe::date_date_54a110`, no destructor), which falls inside the summary (+0xf64) and is
 /// overwritten by the read.
 /// Original: `valid_saved_game_version` (0x838eb0, Setup.cpp, cdecl).
 ///
@@ -1394,7 +1394,7 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
 // Rust mode (only the file box, through the quick-start filter, calls it).
 
 /// The FIFA rules "Error" box: the text "v%s %s.%s %d" (version 0x90d130, file name and extension of Setup.cpp, line)
-/// at 0xae24d0, the box 0x5e8290 and [0xb67a34] (G_MOUSE_LEFT_BUTTON_DOWN) = 0.
+/// at 0xae24d0, the box `exe::gui_show_message_box` and [0xb67a34] (G_MOUSE_LEFT_BUTTON_DOWN) = 0.
 ///
 /// Like `show_error_at`, but with the arguments that the original routine's sprintf reads from the stack (name,
 /// extension and line) passed explicitly.
@@ -1416,7 +1416,7 @@ pub(crate) unsafe fn setup_warning(row: u32) {
 /// `save_fifa_transfer_rules(save)` (cdecl): writes the last item of the save, `fifa_transfer_rules.zip`: 2 bytes,
 /// [0xae233c] and the rule in force [0xa83608], then `zclose`.
 ///
-/// The item is opened with 0x9326e0 writing, a4 0x16, type 4 (in an already created container its header applies). A
+/// The item is opened with `exe::zopen` writing, a4 0x16, type 4 (in an already created container its header applies). A
 /// null path, an item that does not open or a failed write: the "Error" box (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38);
 /// on the writes, the item is closed after the box. The original returns nothing (`eax` is leftover).
 /// Original: `save_fifa_transfer_rules` (0x8395b0, Setup.cpp, cdecl).
@@ -1453,7 +1453,7 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
 // simplification: appends an item to the container; it does not run twice. Original only; the copy takes the
 // branch and is proved by the save proof (the .qst written with and without the batch).
 
-/// `load_fifa_transfer_rules(save)` (cdecl): reads the 2 bytes of the `fifa_transfer_rules.zip` item (0x9326e0 reading)
+/// `load_fifa_transfer_rules(save)` (cdecl): reads the 2 bytes of the `fifa_transfer_rules.zip` item (`exe::zopen` reading)
 /// into [0xae233c] and [0xa83608]; if [0xae233c] = 1, the rule in force [0xa83608] becomes 5. Closes the item.
 ///
 /// Errors: the "Error" box (Setup.cpp 0x3b4f, 0x3b57, 0x3b5d, 0x3b63), as in the save.
@@ -1516,11 +1516,11 @@ pub(crate) unsafe fn copy_text(target: *mut u8, font: *const u8) {
 /// `free_game_data(screen)` (cdecl): releases the screens and destroys the subsystems held in globals, in the original
 /// order; returns 1.
 ///
-/// The screen manager (0xb74450) releases the screens (0x7ff5f0) and, if `screen` ≠ 0, also 0x7fc5e0; 0x6d5b50; then
-/// each subsystem kept in a global, in the original's order: destructor (thiscall) + `delete` (0x944c94) and the global
-/// zeroed; the loose vectors through `free` (0x9452ca); two objects through the virtual destructor (vtable[0](1)); the
-/// `*.tmp` files of the temporary folder (0x90cd50), [0xae2338], the database tables (0x528080), the game date
-/// (0x54a130: 1, 0, 2001, −1) and three flags zeroed.
+/// The screen manager (0xb74450) releases the screens (`exe::screenmanager_end_network_session`) and, if `screen` ≠ 0, also `exe::screenmanager_close_all_screens`; `free_event_tables`; then
+/// each subsystem kept in a global, in the original's order: destructor (thiscall) + `delete` (`exe::crt_operator_delete`) and the global
+/// zeroed; the loose vectors through `free` (`exe::crt_free`); two objects through the virtual destructor (vtable[0](1)); the
+/// `*.tmp` files of the temporary folder (`utils_clear_temp_folder`), [0xae2338], the database tables (`exe::database_free_all_tables`), the game date
+/// (`exe::date_set`: 1, 0, 2001, −1) and three flags zeroed.
 /// Original: `free_game_data` (0x82ff40, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x82ff40 } (cdecl, Setup.cpp): `free_game_data(tela)`: o gerente de telas (0xb74450) solta as

@@ -2253,7 +2253,7 @@ unsafe fn table_by_position(this: usize, jogador: usize, campo: usize) -> u16 {
     *tabela.add(posicao as usize)
 }
 
-/// { 0x714d30 } (match_pl.cpp, 4 bytes, not hookable): the player's side. Read directly.
+/// { `player_side` } (match_pl.cpp, 4 bytes, not hookable): the player's side. Read directly.
 ///
 /// [pt] { 0x714d30 } (match_pl.cpp, 4 bytes, nao desviavel): lado do jogador. Lido direto.
 unsafe fn side_of_player(player: usize) -> i8 {
@@ -3642,7 +3642,7 @@ unsafe extern "C" fn compare_won_the_match(jogo: usize, clube: u32) -> u8 {
 // the commentary again (avoids duplicate events). Outside recording, it just passes through.
 static mut PORT_6D6F70: usize = 0;
 static RECORDING_6D6F70: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-/// In the comparison of 0x70dfd0 the tape keeps the seventh argument of the narration in the high part of the code.
+/// In the comparison of `exe::match_player_try_block_shot` the tape keeps the seventh argument of the narration in the high part of the code.
 ///
 /// [pt] Na comparacao da 0x70dfd0 a fita guarda o setimo argumento da narracao no alto do codigo.
 static RECORD_A7: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -8212,7 +8212,7 @@ unsafe fn diag_contract(c: usize) -> String {
 static mut DIAG_CALLS: u32 = 0;
 
 /// At every power of 2 of calls (from any person): the person of the current contract and person P's contract
-/// read directly from memory (0x4cf5a0 over [0xae1050], person = [0xae23bc] + id × 110), to check the save's writing.
+/// read directly from memory (`exe::contract_manager_get_contract` over [0xae1050], person = [0xae23bc] + id × 110), to check the save's writing.
 ///
 /// [pt] A cada potência de 2 de chamadas (de qualquer pessoa): a pessoa do contrato da vez e o contrato da pessoa P lido
 /// direto na memória (0x4cf5a0 sobre [0xae1050], pessoa = [0xae23bc] + id × 110), para conferir a gravação do save.

@@ -19,7 +19,7 @@ pub(crate) const NORWAY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 /// Constructs the Norway transfer rules (rule 17): one window, from 1 September to 31 August.
 ///
 /// `NORWAY_RULES::NORWAY_RULES`; SEH frame only for the `new`, no destructor on the normal path: the transfer rules of
-/// Norway (rule 17): the base (0x8e84a0), the vtable 0x96dfe4, 1 window from `NORWAY_TRANSFER_WINDOWS`. Returns the
+/// Norway (rule 17): the base (`exe::new_transfer_rules`), the vtable 0x96dfe4, 1 window from `NORWAY_TRANSFER_WINDOWS`. Returns the
 /// object.
 /// Original: `NORWAY_RULES::NORWAY_RULES` (0x7944f0, norway_rules.cpp, thiscall, ret 0x14).
 ///

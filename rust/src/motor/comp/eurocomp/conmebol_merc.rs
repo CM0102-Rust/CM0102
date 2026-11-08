@@ -13,19 +13,19 @@ pub(crate) unsafe fn conmebol_merc_drawn_club(this: usize, k: usize) -> usize {
 /// to 3) and groups 2 to 5 are stages (4g + 4 to 4g + 7); the 5 winners and the 3 best runners-up go to the
 /// quarter-finals.
 ///
-/// First the turn of the season: on 1 June of today's year (the date from 0x549f70(1, 5, year, −1): lea ecx, local;
+/// First the turn of the season: on 1 June of today's year (the date from `exe::date_date_549f70`(1, 5, year, −1): lea ecx, local;
 /// push −1; push year; push 5; push 1 -> thiscall, ret 0x10, pure: the day of the year from the month tables, the month
 /// counted from 0), if the cup's year (+0x40, signed) is not today's, virtual +8 (the new season: mov ecx, this ->
 /// thiscall, ret 0).
 ///
 /// When the draw has not been done (+0x45 = 0) and with `full`, on the draw day (the date from 0x549ef0(+0xb6, +0xb8 +
 /// +0x40): the day of the year and the relative year; compared with today's, +0 the day of the year and +2 the year,
-/// unsigned): the clubs (0x4c5850, the 20 invited clubs shuffled: mov ecx, this -> thiscall, ret 0), the group 1 table
-/// (0x4c4e60, thiscall, ret 0; 0: the box of line 0x396), the fixtures (0x6835c0 League::create_fixtures, thiscall, ret
-/// 0; 0: the box of line 0x39b), the sorted table (0x6827d0 push 0; mov ecx -> thiscall, ret 4; 0: the box of line
-/// 0x3a1), the stages of groups 0..3 (0x4c51d0: push g; mov ecx -> thiscall, ret 4), the predicted positions (virtual
-/// +0x5c, thiscall, ret 0), the list +0xee freed (0x9452ca: push; add esp, 4 -> cdecl) and zeroed, and +0x45 = 1. An
-/// error gives the box of its line and goes on. Then the league day (0x6847c0: push full; push today; mov ecx, this ->
+/// unsigned): the clubs (`conmebol_merc_select_invited_clubs`, the 20 invited clubs shuffled: mov ecx, this -> thiscall, ret 0), the group 1 table
+/// (`conmebol_merc_create_first_group_table`, thiscall, ret 0; 0: the box of line 0x396), the fixtures (`create_fixtures` League::create_fixtures, thiscall, ret
+/// 0; 0: the box of line 0x39b), the sorted table (`sort_table` push 0; mov ecx -> thiscall, ret 4; 0: the box of line
+/// 0x3a1), the stages of groups 0..3 (`conmebol_merc_create_group_stage`: push g; mov ecx -> thiscall, ret 4), the predicted positions (virtual
+/// +0x5c, thiscall, ret 0), the list +0xee freed (`exe::crt_free`: push; add esp, 4 -> cdecl) and zeroed, and +0x45 = 1. An
+/// error gives the box of its line and goes on. Then the league day (`league_update_for_date`: push full; push today; mov ecx, this ->
 /// thiscall, ret 8), whose return value it passes on.
 /// Original: `ConmebolMerc::update_for_date` (0x4c5c90, conmebol_merc.cpp, thiscall, ret 8).
 ///
@@ -101,10 +101,10 @@ pub(crate) unsafe fn is_rollover_day(this: usize, today: usize) -> bool {
 /// Builds the table of group 1 of the Copa Mercosur. Rule: group 1 has 4 clubs, the first 4 drawn, each in the row of
 /// its order; human managers get the group draw news.
 ///
-/// 4 teams (+0x3e), the table +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; without
-/// memory, the box of line 0x155 and returns 0), each row i with drawn club i (+0xee) (0x687430 League::init_table_row:
-/// push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (0x684230: mov ecx,
-/// this -> thiscall, ret 0), and returns 1. The same body as 0x4019c0 of the African Cup (only the file and the box
+/// 4 teams (+0x3e), the table +0xb1 (`exe::crt_malloc`(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; without
+/// memory, the box of line 0x155 and returns 0), each row i with drawn club i (+0xee) (`init_table_row` League::init_table_row:
+/// push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (`send_group_draw_news`: mov ecx,
+/// this -> thiscall, ret 0), and returns 1. The same body as `init_group_a_table` of the African Cup (only the file and the box
 /// line change).
 /// Original: `ConmebolMerc::create_first_group_table` (0x4c4e60, conmebol_merc.cpp, thiscall, ret 0).
 ///
@@ -140,14 +140,14 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
 /// round table for the group; human managers get the news.
 ///
 /// SEH frame only for the stage's new: no destructor on the normal path. The teams go into a vector of +0x3e pointers
-/// (0x944e46(+0x3e << 2): push; add esp, 4 -> cdecl; without memory, the box of line 0x1fb and 0): drawn clubs 4g + 4
+/// (`exe::crt_malloc`(+0x3e << 2): push; add esp, 4 -> cdecl; without memory, the box of line 0x1fb and 0): drawn clubs 4g + 4
 /// to 4g + 7 (+0xee); the round table through virtual +0x3c (push 0; push &id; push &rounds; push g; mov ecx, this ->
-/// thiscall, ret 0x10); the stage (0x944cf1(0xee) push; add esp, 4 -> cdecl; the League_Stage constructor 0x68b100,
+/// thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) push; add esp, 4 -> cdecl; the League_Stage constructor 0x68b100,
 /// thiscall, ret 0x58, 22 arguments: the cup, the teams (+0x3e, word), the vector, +0x3c (word), +4, the round table,
 /// the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the year +0x40 (word), g, the id (word), +0x51, 2, 0, +0xd9
 /// (word), −1, 0, 2; the original pushes the words and bytes with garbage in the high bytes, which the constructor does
-/// not read: the port passes clean values) in [+0xc][g]; the vector and the round table freed (0x9452ca). Without a
-/// stage: the box of line 0x211 and 0. With it: the group news (0x684230 on the stage), +0x30 = g and 1.
+/// not read: the port passes clean values) in [+0xc][g]; the vector and the round table freed (`exe::crt_free`). Without a
+/// stage: the box of line 0x211 and 0. With it: the group news (`send_group_draw_news` on the stage), +0x30 = g and 1.
 /// Original: `ConmebolMerc::create_group_stage` (0x4c51d0, conmebol_merc.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x4c51d0 } (thiscall, ret 4, conmebol_merc.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
@@ -227,8 +227,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
 
 /// Writes one group round (a 0x41-byte record, like the league rounds).
 ///
-/// The date goes through 0x68a160 (day, month with 0 = January, weekday, code), with no years to add and value 0; and
-/// match 0 is left empty (0x68a1c0 with −1, −1, −1 and value 0).
+/// The date goes through `league_round_set_date` (day, month with 0 = January, weekday, code), with no years to add and value 0; and
+/// match 0 is left empty (`store_round_match` with −1, −1, −1 and value 0).
 ///
 /// [pt] Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
@@ -238,7 +238,7 @@ pub(crate) type ConmebolMercGroupRound = (u32, u32, u32, u32);
 /// as a signed byte) of the South American cups: group rounds below `limite`, knockout rounds at it, nothing above.
 ///
 /// Below `limite` (−1 included), the groups: é_liga (if requested) = 1, rodadas = the number of group rounds, extra =
-/// stage + 0x3e9 (16 bits); the table of 0x41 bytes per round (0x944e46; when out of memory, the error box `linha_g`
+/// stage + 0x3e9 (16 bits); the table of 0x41 bytes per round (`exe::crt_malloc`; when out of memory, the error box `linha_g`
 /// and returns 0) with the dates of `grupos`.
 ///
 /// At stage `limite`, the knockout: é_liga = 0, rodadas = the size of `mata`, extra = 0; the table of 0x68 bytes per
@@ -306,7 +306,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
 ///
 /// The original runs with the caller's outputs, the copy with its own outputs that start with the same values, from the
 /// same [0xb67a34]; the outputs and the bytes written in the two tables (groups or knockout, the latter including the
-/// words of `a_mais`) must be equal; the copy's table is freed (0x9452ca). Above the knockout stage, only the original
+/// words of `a_mais`) must be equal; the copy's table is freed (`exe::crt_free`). Above the knockout stage, only the original
 /// runs.
 ///
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
@@ -425,7 +425,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
-/// rule: the Copa Mercosur is invitation-only: the 20 clubs of the South American rules' fixed list (0x4c6890), in club
+/// rule: the Copa Mercosur is invitation-only: the 20 clubs of the South American rules' fixed list (`is_mercosur_invited_club`), in club
 /// table order, shuffled for the group draw
 /// Original: `ConmebolMerc::select_invited_clubs` (0x4c5850, conmebol_merc.cpp, thiscall, ret 0).
 ///

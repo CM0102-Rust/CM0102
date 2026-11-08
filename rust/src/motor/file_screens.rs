@@ -11,11 +11,11 @@ use super::*;
 /// (0x3e8): the same with bit 1;
 ///
 /// - 16 managers, from the last of the person table (0xae23bc, 0x6e bytes) backwards: a human one (+0x5f = 1) gives the
-/// name at +0x7e4 + 0x78 × i (0x53dba0, 200) and at +0x820 + 0x78 × i "club / nation" (+0x39 and +0x24, name at +0x38
+/// name at +0x7e4 + 0x78 × i (`database_format_staff_name`, 200) and at +0x820 + 0x78 × i "club / nation" (+0x39 and +0x24, name at +0x38
 /// of each), only one of them, or nothing; a non-human one only zeroes the name (the club stays as it was in the
 /// caller's buffer);
 ///
-/// - +0xf64 the game date (0x417c10 of 0xae2c90), +0x7d0 the version (0x90d130), +0xf6c the play time ([0xdd7140] +=
+/// - +0xf64 the game date (`exe::date_operator_3d` of 0xae2c90), +0x7d0 the version (0x90d130), +0xf6c the play time ([0xdd7140] +=
 /// time() − [0xdd7144]; [0xdd7144] = time()) and +0xf70 the time().
 /// Original: `build_save_game_summary` (0x591f80, file_screens.cpp, cdecl).
 ///

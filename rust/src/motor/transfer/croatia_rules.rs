@@ -3,7 +3,7 @@ use super::*;
 /// Constructs the Croatia transfer rules (rule 5): one window, from 1 June to 30 March.
 ///
 /// `CROATIA_RULES::CROATIA_RULES`; SEH frame only for the `new`, no destructor on the normal path: the transfer rules
-/// of Croatia (rule 5): the base (0x8e84a0), the vtable 0x969394, 1 window from `CROATIA_TRANSFER_WINDOWS`. Returns the
+/// of Croatia (rule 5): the base (`exe::new_transfer_rules`), the vtable 0x969394, 1 window from `CROATIA_TRANSFER_WINDOWS`. Returns the
 /// object.
 /// Original: `CROATIA_RULES::CROATIA_RULES` (0x518500, croatia_rules.cpp, thiscall, ret 0x14).
 ///

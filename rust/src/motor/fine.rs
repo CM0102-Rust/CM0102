@@ -28,10 +28,10 @@ pub(crate) static mut FINE_NEWS_WOULD_BUILD: bool = false;
 ///
 /// SEH frame for the local news item, no destructor. `post_fine_reaction_news(player, reason, reaction, period,
 /// effects)`, called from the fine (0x5a5980, five calls). No player, no contract (0x4cf5a0, on `[0xae1080]`), no club
-/// of his or no club contract (0x4cf5f0): nothing; player of a club (+0x39) without a human (0x7875e0): nothing. News
+/// of his or no club contract (`exe::contract_manager_get_contract_for_club`): nothing; player of a club (+0x39) without a human (`news_club_has_human_manager`): nothing. News
 /// 0xbc6 to the contract's club: the player (id and keys), reason, reaction, random(2), the personality (+0x5d + +0x5b
 /// below 12, +0x59 below 6 and reputation +0xb above 5250), period 1, the type 7 contract (+0x4f), the future transfer
-/// (0x8cca10), the effects and the game by the type (+0x4f 1 with more than 23 years, or 2).
+/// (`get_future_transfer`), the effects and the game by the type (+0x4f 1 with more than 23 years, or 2).
 /// Original: `post_fine_reaction_news` (0x5a74b0, Fine.cpp, stdcall, ret 0x14).
 ///
 /// [pt] { 0x5a74b0 } (stdcall, ret 0x14, Fine.cpp, SEH da notícia local, sem destrutor): `post_fine_reaction_news(jogador,
