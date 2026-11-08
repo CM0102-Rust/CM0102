@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn suspensao_do_vermelho(this: usize, r: usi
 
 /// Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
 pub(crate) unsafe extern "thiscall" fn comparar_suspensao_do_vermelho(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(1221);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_SUSPENSAO_DO_VERMELHO);
     let regioes = [(r, 0x70)];
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, r, j, por_jogos), || suspensao_do_vermelho(this, r, j, por_jogos));
     PLACAR.registrar(igual && a == b, || format!("suspensao_do_vermelho(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", read_u32_as_usize(j), por_jogos, a, b, mo, mr));
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
 // ponytail: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
 pub(crate) unsafe extern "thiscall" fn comparar_nova_temporada_do_orgao(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1222)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_NOVA_TEMPORADA_DO_ORGAO)(this);
 }
 
 /// removes the free entries from the body's discipline table, fixes the stored index of each moved player and
@@ -212,7 +212,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_compactar_disciplina_do_orgao(th
             esperado.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 0xe));
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(1223)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_COMPACTAR_DISCIPLINA_DO_ORGAO)(this);
     let n = (esperado.len() / 0xe) as u32;
     let p = read_u32_as_usize(this + 0xb);
     let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, esperado.len()) == &esperado[..];

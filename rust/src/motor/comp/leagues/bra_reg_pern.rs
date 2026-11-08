@@ -71,32 +71,32 @@ pub(crate) unsafe extern "thiscall" fn cqp9_fase_seguinte_do_paulista(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp9_virada_do_pernambucano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1938);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP9_VIRADA_DO_PERNAMBUCANO);
     cqp7_comparar_virada("cqp9_virada_do_pernambucano", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp9_fase_seguinte_do_pernambucano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1939);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP9_FASE_SEGUINTE_DO_PERNAMBUCANO);
     cqp7_comparar_fase_seguinte("cqp9_fase_seguinte_do_pernambucano", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp9_virada_do_catarinense(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1940);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP9_VIRADA_DO_CATARINENSE);
     cqp7_comparar_virada("cqp9_virada_do_catarinense", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp9_fase_seguinte_do_catarinense(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1941);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP9_FASE_SEGUINTE_DO_CATARINENSE);
     cqp7_comparar_fase_seguinte("cqp9_fase_seguinte_do_catarinense", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp9_virada_do_paulista(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1942);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP9_VIRADA_DO_PAULISTA);
     cqp7_comparar_virada("cqp9_virada_do_paulista", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp9_fase_seguinte_do_paulista(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1943);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP9_FASE_SEGUINTE_DO_PAULISTA);
     cqp7_comparar_fase_seguinte("cqp9_fase_seguinte_do_paulista", this, || o(this))
 }
 
@@ -210,17 +210,17 @@ pub(crate) unsafe fn cqn8_comparar(nome: &str, this: usize, linhas: &[usize], or
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_pernambucano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1846);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN8_MATA_MATA_DO_PERNAMBUCANO);
     cqn8_comparar("cqn8_mata_mata_do_pernambucano", this, &[0, 3, 1, 2], || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_catarinense(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1847);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN8_MATA_MATA_DO_CATARINENSE);
     cqn8_comparar("cqn8_mata_mata_do_catarinense", this, &[0, 3, 1, 2], || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_paulista(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1848);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN8_MATA_MATA_DO_PAULISTA);
     cqn8_comparar("cqn8_mata_mata_do_paulista", this, &[0, 3, 1, 2], || o(this))
 }
 
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn cqt3_construir_pernambucano(this: usize, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2054);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT3_CONSTRUIR_PERNAMBUCANO);
     cqt3_comparar("cqt3_construir_pernambucano", this, ano, registro, &CQT3_PERNAMBUCANO, || o(this, ano, registro))
 }
 
@@ -250,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_pernambucano(this: usize) 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_pernambucano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1836);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM7_TABELA_DO_PERNAMBUCANO);
     cqm7_comparar("cqm7_tabela_do_pernambucano", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, || o(this))
 }
 
@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_pernambucano(this: usize) 
 /// Comparador: como o do Paranaense.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_pernambucano(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1719)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI9_REGRAS_DO_PERNAMBUCANO)(this), || {
         cqi9_regras_pernambucano(this);
         1
     });

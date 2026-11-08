@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn inscricao_europeia(this: usize, etapa: u3
 /// [0xae1080] da 0x85aae0. Com algum clube das três copas com técnico humano (a notícia não roda duas vezes), só a
 /// original.
 pub(crate) unsafe extern "thiscall" fn comparar_inscricao_europeia(this: usize, etapa: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1822);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_INSCRICAO_EUROPEIA);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     let mut tem_humano = false;
     for &chave in CQN3_COPAS.iter() {
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn numero_de_camisa(_this: usize, p: usize, 
 
 /// A devolução das duas (a rotina só lê; as chamadas de dentro são buscas).
 pub(crate) unsafe extern "thiscall" fn comparar_numero_de_camisa(this: usize, p: usize, c: usize) -> i8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(1799);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(IDX_NUMERO_DE_CAMISA);
     let r = o(this, p, c);
     let n = numero_de_camisa(this, p, c);
     PLACAR.registrar(r == n, || format!("numero_de_camisa(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn clube_usa_numeros(_this: usize, c: usize,
 
 /// A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_clube_usa_numeros(this: usize, c: usize, outra: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1800);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CLUBE_USA_NUMEROS);
     if c == 0 {
         return o(this, c, outra);
     }
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn gravar_numero_de_camisa(_this: usize, p: 
 /// Lado a lado: o +0x3a dos dois contratos da pessoa (achados antes; as buscas só leem). Número fora da faixa (a caixa),
 /// sem pessoa ou sem clube: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_numero_de_camisa(this: usize, p: usize, c: usize, n: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(1801);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_GRAVAR_NUMERO_DE_CAMISA);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     if p == 0 || c == 0 || !(-50..=50).contains(&(n as u8 as i8)) {
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn dar_numero_de_camisa(this: usize, c: usiz
 /// posição da ficha é boa, a original lê a lista de preferidos de 4 bytes sem valor na pilha (sobra de quem chamou):
 /// a cópia usa a lista vazia (um valor que o jogo produz quando a sobra é 0xff) e o comparador deixa só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_dar_numero_de_camisa(this: usize, c: usize, p: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1802);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_DAR_NUMERO_DE_CAMISA);
     if p == 0 || read_u32(p + 0x61) == 0 || cql2_preferidos(read_u32(p + 0x61) as usize).is_none() {
         return o(this, c, p);
     }
@@ -575,7 +575,7 @@ pub(crate) unsafe extern "thiscall" fn numerar_elenco(this: usize, c: usize, man
 /// Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_numerar_elenco(this: usize, c: usize, manter: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1803);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_NUMERAR_ELENCO);
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut ps: Vec<usize> = (0..50).map(|k| read_u32(c + 0xd7 + 4 * k) as usize).collect();
     let l = parceiro(c, 0, 1);
@@ -628,7 +628,7 @@ pub(crate) unsafe extern "thiscall" fn numerar_no_comeco(this: usize) {
 /// da cópia (as ligas, achadas antes, sem numerar) tem de ser o que a original fez (gravado pelo comparador da
 /// 0x859e20) e o +0 zerado.
 pub(crate) unsafe extern "thiscall" fn comparar_numerar_no_comeco(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1804);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_NUMERAR_NO_COMECO);
     let mut plano = Vec::new();
     cql3_ligas_a_numerar(|c| plano.push(c));
     CQL3_PLANO = Some(Vec::new());
@@ -708,7 +708,7 @@ pub(crate) unsafe extern "thiscall" fn numerar_liga(this: usize, liga: usize, mu
 /// no do clube ligado, e a marca da caixa. Com algum clube de técnico humano sem `automatico` (a notícia do pedido não
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
 pub(crate) unsafe extern "thiscall" fn comparar_numerar_liga(this: usize, liga: usize, inicial: u32, automatico: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(1805);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_NUMERAR_LIGA);
     if let Some(v) = (*core::ptr::addr_of_mut!(CQL3_PLANO)).as_mut() {
         v.push(liga);
     }
@@ -864,7 +864,7 @@ pub(crate) unsafe extern "thiscall" fn inscrever_na_europa(_this: usize, c: usiz
 /// Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_inscrever_na_europa(this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(1806);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(IDX_INSCREVER_NA_EUROPA);
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let mut sq = [0usize; 50];
     elenco(c, sq.as_mut_ptr(), 0);
@@ -912,5 +912,5 @@ pub(crate) unsafe extern "thiscall" fn gravar_gerente_de_elencos(this: usize, sa
 /// Comparador da 0x859cc0: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_gerente_de_elencos(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1499)(this, save)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GRAVAR_GERENTE_DE_ELENCOS)(this, save)
 }

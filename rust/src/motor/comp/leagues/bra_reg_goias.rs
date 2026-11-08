@@ -147,13 +147,13 @@ pub(crate) unsafe extern "thiscall" fn cqt2_construir_norte(this: usize, ano: u3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2049);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT2_CONSTRUIR_GOIANO);
     cqt2_comparar("cqt2_construir_goiano", this, ano, registro, &CQT2_GOIANO, || o(this, ano, registro))
 }
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2051);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT2_CONSTRUIR_NORTE);
     cqt2_comparar("cqt2_construir_norte", this, ano, registro, &CQT2_NORTE, || o(this, ano, registro))
 }
 
@@ -209,22 +209,22 @@ pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_norte(this: usize) 
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_goiano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1932);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP8_VIRADA_DO_GOIANO);
     cqp7_comparar_virada("cqp8_virada_do_goiano", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_goiano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1933);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP8_FASE_SEGUINTE_DO_GOIANO);
     cqp7_comparar_fase_seguinte("cqp8_fase_seguinte_do_goiano", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_norte(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1934);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP8_VIRADA_DO_NORTE);
     cqp7_comparar_virada("cqp8_virada_do_norte", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_norte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1935);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP8_FASE_SEGUINTE_DO_NORTE);
     cqp7_comparar_fase_seguinte("cqp8_fase_seguinte_do_norte", this, || o(this))
 }
 
@@ -322,13 +322,13 @@ pub(crate) unsafe fn cql9_comparar(nome: &str, this: usize, n: i16, g: usize, or
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_goiano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1831);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL9_TABELA_DO_GOIANO);
     cql9_comparar("cql9_tabela_do_goiano", this, 0xe, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, || o(this))
 }
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_norte(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1833);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL9_TABELA_DO_NORTE);
     cql9_comparar("cql9_tabela_do_norte", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, || o(this))
 }
 
@@ -428,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32
 /// saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1721)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ7_REGRAS_DO_GOIANO)(this), || {
         cqj7_regras_goiano(this);
         1
     });
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
 /// Comparador: como o do Goiano.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j2(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1723)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ7_REGRAS_DA_J2)(this), || {
         cqj7_regras_j2(this);
         1
     });
@@ -473,6 +473,6 @@ pub(crate) unsafe extern "thiscall" fn cqn9_mata_mata_do_goiano(this: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_goiano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1851);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN9_MATA_MATA_DO_GOIANO);
     cqn9_comparar("cqn9_mata_mata_do_goiano", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
 }

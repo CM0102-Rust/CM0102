@@ -320,7 +320,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_segunda_inglesa(this: usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1921);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_SEGUNDA_INGLESA);
     cqp4_comparar("calendario_da_segunda_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_inglesa(this, fase, r, e, l))
 }
 
@@ -372,7 +372,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_terceira_inglesa(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_terceira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1922);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_TERCEIRA_INGLESA);
     cqp4_comparar("calendario_da_terceira_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_terceira_inglesa(this, fase, r, e, l))
 }
 
@@ -460,7 +460,7 @@ pub(crate) unsafe extern "thiscall" fn registros_pela_situacao_inglesa(this: usi
 /// rotina grava (+0x37 = 0 e saiu = 1 com 1; +0x37 = 0xfe com 0xff ou 2; nada com 0, que segue procurando outra linha
 /// do mesmo clube); depois a linha e `saiu` têm de estar assim. Na liga a rotina não grava nada: a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_registros_pela_situacao_inglesa(this: usize, clube: usize, situacao: u32, fase: u32, saiu: usize, a: u32, b: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(1383);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(IDX_REGISTROS_PELA_SITUACAO_INGLESA);
     let s = situacao as u8;
     let mut plano: Option<(usize, u8, bool)> = None;
     if fase as u8 != 0xff {
@@ -555,7 +555,7 @@ pub(crate) unsafe fn cpz2_comparar(nome: &str, this: usize, clube: usize, origin
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_third(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1385);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SITUACAO_NA_THIRD);
     cpz2_comparar("situacao_na_third", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_third(this, clube, fase, atual, melhor, pior))
 }
 
@@ -569,7 +569,7 @@ pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_second(this: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_second(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1388);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASE_SEGUINTE_DA_SECOND);
     cpz3_comparar_fase("fase_seguinte_da_second", this, || o(this), || fase_seguinte_da_second(this))
 }
 
@@ -583,7 +583,7 @@ pub(crate) unsafe extern "thiscall" fn mata_mata_da_second(this: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_mata_mata_da_second(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1381);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_MATA_MATA_DA_SECOND);
     cpz1_comparar("mata_mata_da_second", this, [5, 2, 4, 3], || o(this))
 }
 
@@ -597,7 +597,7 @@ pub(crate) unsafe extern "thiscall" fn construir_second(this: usize, ano: u32, r
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_second(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1863);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_SECOND);
     cql6_comparar("construir_second", this, ano, registro, &CQL6_SECOND, || o(this, ano, registro))
 }
 
@@ -612,7 +612,7 @@ pub(crate) unsafe extern "thiscall" fn regras_da_second(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_second(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1742);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_SECOND);
     cqi4_comparar("regras_da_second", this, cqi4_second(), || o(this), || regras_da_second(this))
 }
 
@@ -626,6 +626,6 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_second(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_second(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1745);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_SECOND);
     cqi5_comparar("tabela_da_second", this, 0x18, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || o(this))
 }

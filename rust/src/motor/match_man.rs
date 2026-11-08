@@ -2142,7 +2142,7 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
 // ponytail: aloca a lista e os vetores do rodizio e chama 24 rotinas ainda originais; sem comparacao
 // propria, validada pela carreira (Rust x original), como as da 145a, 148a e 149a.
 pub(crate) unsafe extern "thiscall" fn comparar_escalar_automatico(t: usize, outro: usize, modo: u32) -> i8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i8>(331)(t, outro, modo)
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i8>(IDX_ESCALAR_AUTOMATICO)(t, outro, modo)
 }
 
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
@@ -2996,7 +2996,7 @@ pub(crate) unsafe extern "C" fn comparar_cumprir_regra_do_elenco(
     clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, titulares: usize, banco: usize, reserva: usize,
     saida: usize, codigos: usize, curtos: usize, marcas: usize, bytes: usize, lado: usize,
 ) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(391);
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(IDX_CUMPRIR_REGRA_DO_ELENCO);
     if gravando_no_topo() {
         return o(clube, tecnico, regra, modo, nt, nb, nr, titulares, banco, reserva, saida, codigos, curtos, marcas, bytes, lado);
     }
@@ -4279,7 +4279,7 @@ pub(crate) unsafe fn bonus_das_ferias(p: usize, clube: usize, ferias: usize, pos
 }
 
 pub(crate) unsafe extern "C" fn comparar_nota_fora_da_partida(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
-    let f = orig::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(392);
+    let f = orig::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(IDX_NOTA_FORA_DA_PARTIDA);
     if gravando_no_topo() {
         return f(p, pos, flags, clube, limite, o);
     }
@@ -4310,7 +4310,7 @@ pub(crate) unsafe extern "C" fn comparar_nota_para_a_vaga(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limite: i32, marca: u32, marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(393);
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(IDX_NOTA_PARA_A_VAGA);
     if gravando_no_topo() {
         return o(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias);
     }
@@ -4457,7 +4457,7 @@ pub(crate) unsafe extern "thiscall" fn escalar_lado(t: usize, m: usize, tecnico:
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_escalar_lado(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(328)(t, m, tecnico, linhas, jogadores, lado, clube, outro, jogo, vagas)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(IDX_ESCALAR_LADO)(t, m, tecnico, linhas, jogadores, lado, clube, outro, jogo, vagas)
 }
 
 /// a player's current or potential ability as an observer sees it (reputation, noise and the observer's knowledge)
@@ -4520,7 +4520,7 @@ pub(crate) unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, t
 }
 
 pub(crate) unsafe extern "C" fn comparar_habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(390)(o, p, c, tipo, rep);
+    let r = orig::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(IDX_HABILIDADE_VISTA)(o, p, c, tipo, rep);
     let n = habilidade_vista(o, p, c, tipo, rep);
     PLACAR.registrar(r == n, || format!("habilidade_vista({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
     r

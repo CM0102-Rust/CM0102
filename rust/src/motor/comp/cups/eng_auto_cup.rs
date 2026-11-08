@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn cqs5_trofeu_clubes(this: usize) -> u32 {
 /// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
 /// caso em que ela lê a dword sem valor da pilha), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2030);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQS5_TROFEU_CLUBES);
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let tem_rebaixado = (0..read_u32_as_usize(G_CLUB_COUNT) as i32).any(|i| {
         let c = base + i as usize * 0x245;
@@ -291,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) 
 
 /// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_das_chaves(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2031);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS5_TROFEU_FASE_DAS_CHAVES);
     o(this);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc));
     PLACAR.registrar(f != 0 && read_u32_as_usize(this + 0x30) == 0, || format!("cqs5_trofeu_fase_das_chaves({:#x}) fase {:#x} +0x30 {}", this, f, read_u32_as_usize(this + 0x30) as i32));
@@ -320,7 +320,7 @@ pub(crate) unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
 
 /// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2032);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS5_TROFEU_FASE_SEGUINTE);
     let antes = read_u32_as_usize(this + 0x30) as i32;
     let ultima = antes >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
@@ -395,7 +395,7 @@ pub(crate) unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
 /// Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
 /// achados antes, quando há fase).
 pub(crate) unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2033);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS6_TROFEU_FINAL);
     o(this);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
     PLACAR.registrar(f != 0, || format!("cqs6_trofeu_final({:#x}) sem a fase da final", this));
@@ -476,7 +476,7 @@ pub(crate) unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
 
 // ponytail: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
 pub(crate) unsafe extern "thiscall" fn comparar_cqs6_trofeu_classificacao(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(2034)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS6_TROFEU_CLASSIFICACAO)(this)
 }
 
 /// rule: the League Trophy (Auto Windscreens) has two 28-club sections; the second takes the last 28 of the 56 chosen
@@ -492,7 +492,7 @@ pub(crate) unsafe extern "thiscall" fn cqm10_trofeu_inscritos(this: usize) -> i3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm10_trofeu_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1782);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM10_TROFEU_INSCRITOS);
     cqm10_comparar("cqm10_trofeu_inscritos", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm10_trofeu(this), |_, n| n.max(0) as usize * 6)
 }
 
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn cqp11_trofeu_tabela(this: usize, fase: u3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp11_trofeu_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1969);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP11_TROFEU_TABELA);
     cqp11_comparar("cqp11_trofeu_tabela", fase, cqp11_trofeu_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqp11_trofeu_tabela(this, fase, r, e, l))
 }

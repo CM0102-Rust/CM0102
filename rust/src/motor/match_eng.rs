@@ -3282,7 +3282,7 @@ pub(crate) unsafe extern "thiscall" fn reiniciar_lance(m: usize) {
 
 pub(crate) unsafe extern "thiscall" fn comparar_reiniciar_lance(m: usize) {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(300);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_REINICIAR_LANCE);
     if gravando_no_topo() {
         return o(m);
     }
@@ -3756,7 +3756,7 @@ pub(crate) unsafe extern "thiscall" fn laco_do_motor(m: usize, n_in: u32) -> u32
 pub(crate) unsafe extern "thiscall" fn comparar_laco_do_motor(m: usize, n: u32) -> u32 {
     // ponytail: orquestrador sem conta propria; a fita dele fotografaria o motor a cada decisao de
     // jogador. Validado pela carreira (Rust x original); as rotinas que ele chama seguem comparadas.
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(320)(m, n)
+    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_LACO_DO_MOTOR)(m, n)
 }
 
 // ---------- centesima quadragesima setima leva: o chute (0x702050, 0x6d5950, 0x6d5a70) ----------
@@ -5680,7 +5680,7 @@ pub(crate) unsafe fn despachar_finalizacao(rotina: usize, this: usize, a: [u32; 
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn fita_do_chute(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32)>(324);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32)>(IDX_CHUTAR);
     let m = *((p + 0x19e) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
@@ -6359,13 +6359,13 @@ pub(crate) unsafe extern "thiscall" fn preparar_partida(m: usize, jogo: usize, r
 // narrador e a lista, que a fita teria de reproduzir); validados pela carreira (Rust x original),
 // como o laco do motor. As rotinas que eles chamam seguem comparadas.
 pub(crate) unsafe extern "thiscall" fn comparar_construir_motor(m: usize) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize) -> usize>(325)(m)
+    orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_MOTOR)(m)
 }
 pub(crate) unsafe extern "thiscall" fn comparar_preparar_partida(m: usize, jogo: usize, rapida: u32, narrador: usize, ao_vivo: u32) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u8>(326)(m, jogo, rapida, narrador, ao_vivo)
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u8>(IDX_PREPARAR_PARTIDA)(m, jogo, rapida, narrador, ao_vivo)
 }
 pub(crate) unsafe extern "thiscall" fn comparar_destruir_motor(m: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(327)(m)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_DESTRUIR_MOTOR)(m)
 }
 
 // ---------- centesima decima quarta leva: o jogador que sai de campo (0x6cda20) ----------
@@ -7985,7 +7985,7 @@ pub(crate) unsafe extern "thiscall" fn arrumar_saida(this: usize) {
     let b = |o: usize| (this + o) as *mut i8;
     let quem = if lado_bola == 0 { u(0xf59e) } else { u(0xf5a2) };
     if quem == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize)>(254)(this);
+        return orig::<unsafe extern "thiscall" fn(usize)>(IDX_ARRUMAR_SAIDA)(this);
     }
     if lado_bola == 0 {
         *b(0x8ea7) = 4;
@@ -10839,7 +10839,7 @@ pub(crate) unsafe extern "thiscall" fn zagueiros_do_lado_sem_conflito(m: usize, 
 
 
 
-comparar_valor!(comparar_zagueiros_do_lado_sem_conflito, zagueiros_do_lado_sem_conflito, 376, (lado: i8) -> u8);
+comparar_valor!(comparar_zagueiros_do_lado_sem_conflito, zagueiros_do_lado_sem_conflito, IDX_ZAGUEIROS_DO_LADO_SEM_CONFLITO, (lado: i8) -> u8);
 
 
 
@@ -10887,9 +10887,9 @@ pub(crate) unsafe extern "thiscall" fn vagas_do_lado_sem_conflito(m: usize, lado
     f(m + if lado != 0 { 0xaac5 } else { 0x91e2 })
 }
 
-comparar_valor!(comparar_bola_na_area, bola_na_area, 373, () -> i8);
-comparar_valor!(comparar_partida_abandonada, partida_abandonada, 374, () -> u8);
-comparar_valor!(comparar_vagas_do_lado_sem_conflito, vagas_do_lado_sem_conflito, 375, (lado: i8) -> u8);
+comparar_valor!(comparar_bola_na_area, bola_na_area, IDX_BOLA_NA_AREA, () -> i8);
+comparar_valor!(comparar_partida_abandonada, partida_abandonada, IDX_PARTIDA_ABANDONADA, () -> u8);
+comparar_valor!(comparar_vagas_do_lado_sem_conflito, vagas_do_lado_sem_conflito, IDX_VAGAS_DO_LADO_SEM_CONFLITO, (lado: i8) -> u8);
 
 /// with the day's event list (+0x478e) and the match, walks the events (0x68d1b0): 0x82 goes to the global list
 /// [0xb67dc8] (0x68d0d0); 0x1e by the score, the clubs' strength and the other side's manager (0x544410) marks the
@@ -10909,7 +10909,7 @@ pub(crate) unsafe extern "C" fn fechamento(m: usize) {
 
 pub(crate) unsafe extern "C" fn comparar_fechamento(m: usize) {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "C" fn(usize)>(309);
+    let o = orig::<unsafe extern "C" fn(usize)>(IDX_FECHAMENTO);
     if gravando_no_topo() {
         return o(m);
     }
@@ -10982,7 +10982,7 @@ pub(crate) unsafe extern "C" fn ordem_das_partidas_do_dia(a: usize, b: usize) ->
 }
 
 pub(crate) unsafe extern "C" fn comparar_ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(382)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DAS_PARTIDAS_DO_DIA)(a, b);
     let n = ordem_das_partidas_do_dia(a, b);
     PLACAR.registrar(r == n, || format!("ordem_das_partidas_do_dia({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
@@ -11022,7 +11022,7 @@ pub(crate) unsafe extern "C" fn ordem_de_acao(a: *const usize, b: *const usize) 
 }
 
 pub(crate) unsafe extern "C" fn comparar_ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(383)(a, b);
+    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_ORDEM_DE_ACAO)(a, b);
     let n = ordem_de_acao(a, b);
     PLACAR.registrar(r == n, || format!("ordem_de_acao({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r
@@ -11217,7 +11217,7 @@ pub(crate) unsafe extern "thiscall" fn comentario_de_contexto(m: usize, lado: u3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_comentario_de_contexto(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32>(386);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32>(IDX_COMENTARIO_DE_CONTEXTO);
     if gravando_no_topo() {
         return o(m, lado, evento, saida);
     }
@@ -11302,7 +11302,7 @@ pub(crate) unsafe extern "thiscall" fn nota_do_arbitro(m: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_nota_do_arbitro(m: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(302);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_NOTA_DO_ARBITRO);
     if gravando_no_topo() {
         return o(m);
     }
@@ -11333,7 +11333,7 @@ pub(crate) unsafe extern "thiscall" fn simulacao_rapida(m: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_simulacao_rapida(m: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(312);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_SIMULACAO_RAPIDA);
     if gravando_no_topo() {
         return o(m);
     }

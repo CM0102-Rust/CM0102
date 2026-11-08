@@ -7,7 +7,7 @@ use super::*;
 /// a original deixa em cima de `eax` o que o chamador tinha ali.
 pub(crate) unsafe extern "thiscall" fn casa_da_vaga(this: usize, vaga: i8, segunda: u32) -> u16 {
     if !(0..=10).contains(&vaga) {
-        return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u16>(223)(this, vaga, segunda);
+        return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u16>(IDX_CASA_DA_VAGA)(this, vaga, segunda);
     }
     let base = if segunda != 0 { 0x14e } else { 0x12d };
     core::ptr::read_unaligned((this + base + 2 * vaga as usize) as *const u16)
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn marcar_craques(this: usize, lado: i8) {
 /// Devolve só `ax` (os chamadores usam 16 bits). `p` nulo: a original (caixa de erro e 0).
 pub(crate) unsafe extern "C" fn mascara_de_posicoes(p: usize) -> u16 {
     if p == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u16>(349)(p);
+        return orig::<unsafe extern "C" fn(usize) -> u16>(IDX_MASCARA_DE_POSICOES)(p);
     }
     let b = |o: usize| *((p + o) as *const i8);
     let mut m = 0u16;
@@ -282,7 +282,7 @@ pub(crate) unsafe extern "C" fn casa_no_campo(mascara: u32, ataque: i8, faixa: u
     let baixo = faixa as u16 as i16;
     let alto = (faixa >> 16) as u16 as i16;
     if !(0..=1).contains(&ataque) || !(0..=2).contains(&baixo) || !(0..=3).contains(&alto) {
-        return orig::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(350)(mascara, ataque, faixa, saida);
+        return orig::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(IDX_CASA_NO_CAMPO)(mascara, ataque, faixa, saida);
     }
     let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
     let (mut setor, mut lado) = (0u16, 0u16);
@@ -415,21 +415,21 @@ pub(crate) unsafe extern "thiscall" fn vagas_sem_conflito(this: usize) -> u8 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_mascara_de_posicoes(p: usize) -> u16 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u16>(349)(p);
+    let r = orig::<unsafe extern "C" fn(usize) -> u16>(IDX_MASCARA_DE_POSICOES)(p);
     let n = mascara_de_posicoes(p);
     PLACAR.registrar(r == n, || format!("mascara_de_posicoes({:#x}) original={:#x} rust={:#x}", p, r, n));
     r
 }
 
 pub(crate) unsafe extern "C" fn comparar_casa_no_campo(mascara: u32, ataque: i8, faixa: u32, saida: *mut i16) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(350);
+    let o = orig::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(IDX_CASA_NO_CAMPO);
     let reg = [(saida as usize, 4)];
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(mascara, ataque, faixa, saida), || casa_no_campo(mascara, ataque, faixa, saida));
     PLACAR.registrar(igual && r == v, || format!("casa_no_campo({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", mascara, ataque, faixa, r, mo, v, mr));
     r
 }
 
-comparar_valor!(comparar_vagas_sem_conflito, vagas_sem_conflito, 351, () -> u8);
+comparar_valor!(comparar_vagas_sem_conflito, vagas_sem_conflito, IDX_VAGAS_SEM_CONFLITO, () -> u8);
 
 // ---------- 257a leva: as casas da formação: gravar a coordenada da casa e escolher as posições, a posição repetida e o tipo de marcação (formation.cpp) ----------
 
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32
     if !(0..=10).contains(&s) || !(0..=1).contains(&f) || !(0..=2).contains(&zx) || !(0..=3).contains(&zy)
         || !(0..=0x1a).contains(&cx) || !(0..=0x23).contains(&cy)
     {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(1224)(this, casa, fase, faixa, coord);
+        return orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(IDX_COORDENADA_DA_CASA)(this, casa, fase, faixa, coord);
     }
     let casa_no: unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32 = core::mem::transmute(FN_FORMATION_GET_DEFAULT_COORDINATE);
     let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(FN_FORMATION_SPLIT_POSITION_CODE);
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32
 pub(crate) unsafe extern "thiscall" fn posicao_repetida_na_formacao(this: usize, casa: u32, saida: *mut u32) -> u32 {
     let s = casa as u8 as i8;
     if !(0..=10).contains(&s) {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(1225)(this, casa, saida);
+        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(IDX_POSICAO_REPETIDA_NA_FORMACAO)(this, casa, saida);
     }
     *saida = 0;
     let su = s as usize;
@@ -631,7 +631,7 @@ pub(crate) unsafe extern "thiscall" fn tipo_de_marcacao(this: usize, casa: u32, 
     let limpa = match m {
         1 | 2 | 4 => 0xf8u8,
         8 | 0x10 => 0xe7,
-        _ => return orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(1226)(this, casa, marca),
+        _ => return orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_TIPO_DE_MARCACAO)(this, casa, marca),
     };
     let b = (this as isize + casa as u8 as i8 as isize + 0x5b4) as *mut u8;
     *b = *b & limpa | m;
@@ -647,7 +647,7 @@ pub(crate) fn cpu11_regioes(this: usize) -> [(usize, usize); 3] {
 
 /// Comparador: grava só a formação (a 0x5b7e60 e a 0x5b73a0 são puras; a 0x5b59a0 refaz a máscara): lado a lado.
 pub(crate) unsafe extern "thiscall" fn comparar_coordenada_da_casa(this: usize, casa: u32, fase: u32, faixa: u32, coord: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(1224);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(IDX_COORDENADA_DA_CASA);
     let reg = cpu11_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, fase, faixa, coord), || coordenada_da_casa(this, casa, fase, faixa, coord));
     PLACAR.registrar(igual && r == n, || format!("coordenada_da_casa({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, faixa, coord, r, n, mo, mr));
@@ -656,7 +656,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_coordenada_da_casa(this: usize, 
 
 /// Comparador: pura (grava só a saída): as duas sobre saídas próprias.
 pub(crate) unsafe extern "thiscall" fn comparar_posicao_repetida_na_formacao(this: usize, casa: u32, saida: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(1225);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(IDX_POSICAO_REPETIDA_NA_FORMACAO);
     if !(0..=10).contains(&(casa as u8 as i8)) {
         return o(this, casa, saida); // ponytail: a caixa, só a original
     }
@@ -670,7 +670,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_posicao_repetida_na_formacao(thi
 
 /// Comparador: grava um byte e +0x187f: lado a lado.
 pub(crate) unsafe extern "thiscall" fn comparar_tipo_de_marcacao(this: usize, casa: u32, marca: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(1226);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_TIPO_DE_MARCACAO);
     if !matches!(marca as u8, 1 | 2 | 4 | 8 | 0x10) {
         return o(this, casa, marca); // ponytail: a caixa, só a original
     }
@@ -736,7 +736,7 @@ pub(crate) unsafe fn registro_da_partida_assistida(this: usize, humano: usize) -
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_mapa_de_casas_da_formacao(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(540);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_MAPA_DE_CASAS_DA_FORMACAO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || mapa_de_casas_da_formacao(this));
     PLACAR.registrar(igual && r == n, || format!("mapa_de_casas_da_formacao {:x?} x {:x?}", mo, mr));
     r
@@ -756,7 +756,7 @@ pub(crate) unsafe extern "thiscall" fn casa_guardada(t: usize, vaga: i8, ataque:
     let baixo = faixa as u16 as i16;
     let alto = (faixa >> 16) as u16 as i16;
     if !(0..=10).contains(&vaga) || !(0..=1).contains(&ataque) || !(0..=2).contains(&baixo) || !(0..=3).contains(&alto) {
-        return orig::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(361)(t, vaga, ataque, faixa, saida);
+        return orig::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_CASA_GUARDADA)(t, vaga, ataque, faixa, saida);
     }
     let i = alto as usize + 4 * (baixo as usize + 3 * (ataque as usize + 2 * vaga as usize));
     *saida = core::ptr::read_unaligned((t + 0x164 + 4 * i) as *const u32);
@@ -779,7 +779,7 @@ pub(crate) unsafe extern "thiscall" fn ligar_marca_da_formacao(t: usize, m: u32)
         0x800 | 0x1000 => 0x1800,
         0x2000 | 0x4000 => 0x6000,
         0x8000 | 0x10000 | 0x20000 => 0x38000,
-        _ => return orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(362)(t, m),
+        _ => return orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_LIGAR_MARCA_DA_FORMACAO)(t, m),
     };
     let marcas = (t + 0x584) as *mut u32;
     let v = core::ptr::read_unaligned(marcas) & !grupo | m;
@@ -790,7 +790,7 @@ pub(crate) unsafe extern "thiscall" fn ligar_marca_da_formacao(t: usize, m: u32)
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_casa_guardada(t: usize, vaga: i8, ataque: i8, faixa: u32, saida: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(361);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_CASA_GUARDADA);
     let reg = [(saida as usize, 4)];
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, vaga, ataque, faixa, saida), || casa_guardada(t, vaga, ataque, faixa, saida));
     PLACAR.registrar(igual && r == v, || format!("casa_guardada({:#x}, {}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, vaga, ataque, faixa, r, mo, v, mr));
@@ -798,7 +798,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_casa_guardada(t: usize, vaga: i8
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_ligar_marca_da_formacao(t: usize, m: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(362);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_LIGAR_MARCA_DA_FORMACAO);
     let reg = [(t + 0x584, 4), (t + 0x187f, 4)];
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, m), || ligar_marca_da_formacao(t, m));
     PLACAR.registrar(igual && r == v, || format!("ligar_marca_da_formacao({:#x}, {:#x}) original={} {:x?} rust={} {:x?}", t, m, r, mo, v, mr));
@@ -994,7 +994,7 @@ pub(crate) unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminh
 /// Comparador: lado a lado na formação (0x18e3 bytes: até as instruções dos jogadores em +0x188b + 0x58) e na
 /// devolução; o arquivo é aberto e lido pelas duas (só leitura).
 pub(crate) unsafe extern "thiscall" fn comparar_ler_formacao_do_disco(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(1632);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_LER_FORMACAO_DO_DISCO);
     if this == 0 {
         return o(this, caminho, quieto, ofuscado);
     }
@@ -1050,7 +1050,7 @@ pub(crate) unsafe extern "thiscall" fn zagueiros_sem_conflito(this: usize) -> u8
 pub(crate) unsafe extern "thiscall" fn posicao_na_formacao(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
     let k = casa as u8 as i8;
     if !(0..=10).contains(&k) {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(903)(this, casa, posicao, extra); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_POSICAO_NA_FORMACAO)(this, casa, posicao, extra); // caixa: só a original
     }
     let s = k as usize;
     let p = posicao as u16 as i16;
@@ -1109,7 +1109,7 @@ pub(crate) unsafe extern "thiscall" fn posicao_na_formacao(this: usize, casa: u3
 /// Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
 /// +0x187f) e [0xb67a34] (a 0x5b73a0 zera quando falha).
 pub(crate) unsafe extern "thiscall" fn comparar_posicao_na_formacao(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(903);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_POSICAO_NA_FORMACAO);
     if !(0..=10).contains(&(casa as u8 as i8)) {
         return o(this, casa, posicao, extra);
     }

@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn clausula_de_rescisao_ativa(c: usize) -> u
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_clausula_de_rescisao_ativa(c: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1203)(c);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLAUSULA_DE_RESCISAO_ATIVA)(c);
     let n = clausula_de_rescisao_ativa(c);
     PLACAR.registrar(r == n, || format!("clausula_de_rescisao_ativa({:x}) original={} rust={}", c, r, n));
     r
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn periodo_protegido(c: usize, _x: usize, no
 pub(crate) unsafe extern "thiscall" fn comparar_periodo_protegido(c: usize, x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
     // as saídas como estavam antes: a cópia parte delas (a original só grava `anos` no período)
     let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(1204)(c, x, no_limite, anos);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(IDX_PERIODO_PROTEGIDO)(c, x, no_limite, anos);
     let (ol, oa) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
     let n = periodo_protegido(
         c,
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "C" fn tipo_de_bonus_permitido(pessoa: usize, tipo: u32
 }
 
 pub(crate) unsafe extern "C" fn comparar_tipo_de_bonus_permitido(pessoa: usize, tipo: u32) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(1205)(pessoa, tipo);
+    let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_TIPO_DE_BONUS_PERMITIDO)(pessoa, tipo);
     let n = tipo_de_bonus_permitido(pessoa, tipo);
     PLACAR.registrar(r == n, || format!("tipo_de_bonus_permitido({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));
     r
@@ -260,7 +260,7 @@ pub(crate) unsafe fn cpl5_regioes(this: usize, id: usize) -> Vec<(usize, usize)>
 
 /// Comparador: lado a lado no contrato e nos vínculos da pessoa (o idioma 0x7c6830 só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_zerar_moral_do_contrato(this: usize, pessoa: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(916);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ZERAR_MORAL_DO_CONTRATO);
     let regioes = cpl5_regioes(this, read_usize(this));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, pessoa, clube), || zerar_moral_do_contrato(this, pessoa, clube));
     PLACAR.registrar(igual, || format!("zerar_moral_do_contrato(pessoa {}) {:x?} x {:x?}", read_usize(pessoa), mo, mr));
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_zerar_moral_do_contrato(this: us
 /// Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_contrato_pelo_atual(this: usize, pessoa: usize, clube: usize, fim: usize, percentual: u32, sem_acesso: u32, multa: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(917);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(IDX_CONTRATO_PELO_ATUAL);
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     if contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa) == 0 {
         return o(this, pessoa, clube, fim, percentual, sem_acesso, multa);
@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_contrato_pelo_atual(this: usize,
 
 /// Comparador: só lê; compara a faixa.
 pub(crate) unsafe extern "thiscall" fn comparar_faixa_do_vencimento(this: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u8>(918)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_FAIXA_DO_VENCIMENTO)(this);
     let n = faixa_do_vencimento(this);
     PLACAR.registrar(r == n, || format!("faixa_do_vencimento(pessoa {}) original={} rust={}", read_usize(this), r, n));
     r
@@ -394,13 +394,13 @@ pub(crate) unsafe extern "thiscall" fn conferir_retirada_do_pedido(this: usize, 
 }
 
 // a 0x54cdb0 só lê: compara o valor
-comparar_valor!(comparar_dias_ate_o_fim_do_contrato, dias_ate_o_fim_do_contrato, 826, () -> u32);
+comparar_valor!(comparar_dias_ate_o_fim_do_contrato, dias_ate_o_fim_do_contrato, IDX_DIAS_ATE_O_FIM_DO_CONTRATO, () -> u32);
 
 /// Comparador: sem `conferir`, lado a lado pelas queixas e pelo registro de opiniões da pessoa (79 bytes, o que a
 /// 0x549c90 escreve); com `conferir`, a retirada (0x4d9460) mexe na transferência: só a original (a 0x867240 passa
 /// pelo comparador dela).
 pub(crate) unsafe extern "thiscall" fn comparar_limpar_todas_as_queixas(this: usize, conferir: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(827);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_LIMPAR_TODAS_AS_QUEIXAS);
     if conferir != 0 {
         return o(this, conferir);
     }
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_limpar_todas_as_queixas(this: us
 /// Comparador: quando a decisão da cópia é não retirar, lado a lado pela ficha [0xae1080] e pelo contrato (0x50
 /// bytes); quando retira, só a original (a 0x4d9460 mexe na transferência e a 0x867240 se chama de novo).
 pub(crate) unsafe extern "thiscall" fn comparar_conferir_retirada_do_pedido(this: usize, ctx: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(828);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CONFERIR_RETIRADA_DO_PEDIDO);
     let ficha = read_u32(G_CONTRACT_LOOKUP_RESULT);
     let retira = cph1_retira(this).is_some();
     *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = ficha;
@@ -440,7 +440,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conferir_retirada_do_pedido(this
 pub(crate) unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32) {
     if marcas as i32 > 0x1000 {
         // ponytail: a caixa "Error" (antes de qualquer gravação): a original inteira
-        return orig::<unsafe extern "thiscall" fn(usize, u32)>(1313)(c, marcas);
+        return orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_MARCAS_DO_CONTRATO)(c, marcas);
     }
     write_u32(c + 0x40, read_usize(c + 0x40) as u32 | marcas);
     let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(c) as usize).wrapping_mul(0x6e));
@@ -479,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32)
 /// O comparador das marcas do contrato, em ensaio: a cópia sem o pedido de transferência e a original a partir do mesmo
 /// estado (marcas e sorteio); sem pedido, tudo tem de bater; com pedido (que sorteia e dá notícia), só as marcas.
 pub(crate) unsafe extern "thiscall" fn comparar_marcas_do_contrato(c: usize, marcas: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1313);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_MARCAS_DO_CONTRATO);
     if marcas as i32 > 0x1000 {
         return o(c, marcas);
     }
@@ -562,7 +562,7 @@ pub(crate) unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pe
 /// Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
 /// 0x85fc50 grava e o contrato); a devolução e a memória.
 pub(crate) unsafe extern "thiscall" fn comparar_satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1272);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_SATISFACAO_COM_O_CONTRATO);
     let mut regioes = vec![(0xae1080usize, 4usize), (this, 0x50)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
@@ -591,7 +591,7 @@ pub(crate) unsafe extern "thiscall" fn salario_padrao_do_contrato(this: usize, p
 
 /// Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
 pub(crate) unsafe extern "thiscall" fn comparar_salario_padrao_do_contrato(this: usize, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(824);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SALARIO_PADRAO_DO_CONTRATO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 4)], || o(this, pessoa), || salario_padrao_do_contrato(this, pessoa));
     PLACAR.registrar(igual && r == n, || format!("salario_padrao_do_contrato({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
@@ -628,7 +628,7 @@ pub(crate) unsafe extern "thiscall" fn cqe4_construir_contrato(this: usize) -> u
 
 /// Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_cqe4_construir_contrato(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(1585);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CQE4_CONSTRUIR_CONTRATO);
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || cqe4_construir_contrato(this));
     PLACAR.registrar(igual && ro == rr, || format!("cqe4_construir_contrato({:#x}) original={:x?} rust={:x?}", this, mo, mr));
     ro

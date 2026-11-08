@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn regras_turquia(this: usize, a1: u32, a2: 
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_turquia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1813);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_TURQUIA);
     let mut r = 0usize;
     cqk1_comparar("regras_turquia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_turquia(s, a1, a2, a3, a4, a5);
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn regras_polonia(this: usize, a1: u32, a2: 
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_polonia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1814);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_POLONIA);
     let mut r = 0usize;
     cqk1_comparar("regras_polonia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_polonia(s, a1, a2, a3, a4, a5);
@@ -91,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn regras_finlandia(this: usize, a1: u32, a2
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_finlandia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1815);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_FINLANDIA);
     let mut r = 0usize;
     cqk1_comparar("regras_finlandia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_finlandia(s, a1, a2, a3, a4, a5);

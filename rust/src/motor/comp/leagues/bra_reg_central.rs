@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) 
 /// saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1715)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI8_REGRAS_DO_CENTRO_OESTE)(this), || {
         cqi8_regras_centro(this);
         1
     });
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -
 /// Comparador: como o do Centro-Oeste.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1717)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI8_REGRAS_DO_CATARINENSE)(this), || {
         cqi8_regras_catarinense(this);
         1
     });
@@ -261,7 +261,7 @@ pub(crate) unsafe extern "thiscall" fn cqk7_destino_no_centro_oeste(this: usize,
 /// com o plano do ensaio (a cópia sem os registros nem a gravação, rodada antes): a devolução e o destino na linha.
 pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_no_centro_oeste(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let (n, l, dest) = cqk7_centro(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1731)(this, clube, situacao, fase, a4, jogo, a6);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQK7_DESTINO_NO_CENTRO_OESTE)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("cqk7_destino_no_centro_oeste({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn cqt1_construir_centro_oeste(this: usize, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt1_construir_centro_oeste(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2047);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT1_CONSTRUIR_CENTRO_OESTE);
     cqt1_comparar("cqt1_construir_centro_oeste", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
 }
 
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn cqp7_virada_do_centro_oeste(this: usize) 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp7_virada_do_centro_oeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1928);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP7_VIRADA_DO_CENTRO_OESTE);
     cqp7_comparar_virada("cqp7_virada_do_centro_oeste", this, || o(this))
 }
 
@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn cqp7_fase_seguinte_do_centro_oeste(this: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_centro_oeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1929);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP7_FASE_SEGUINTE_DO_CENTRO_OESTE);
     cqp7_comparar_fase_seguinte("cqp7_fase_seguinte_do_centro_oeste", this, || o(this))
 }
 
@@ -324,7 +324,7 @@ pub(crate) unsafe extern "thiscall" fn cql8_tabela_do_centro_oeste(this: usize) 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_centro_oeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1829);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL8_TABELA_DO_CENTRO_OESTE);
     cql8_comparar("cql8_tabela_do_centro_oeste", this, 0xf, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, || o(this))
 }
 
@@ -339,6 +339,6 @@ pub(crate) unsafe extern "thiscall" fn cqn9_mata_mata_do_centro_oeste(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_centro_oeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1850);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN9_MATA_MATA_DO_CENTRO_OESTE);
     cqn9_comparar("cqn9_mata_mata_do_centro_oeste", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
 }

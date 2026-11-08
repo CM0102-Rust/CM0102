@@ -172,7 +172,7 @@ pub(crate) unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(1954)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQQ9_FASE_SEGUINTE_DA_J1)(this);
     let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqq9_fase_seguinte_da_j1({:#x}) antes={} depois={}", this, antes, depois));
 }
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: u
 /// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
     let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(1955)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQQ9_FINAL_DA_J1)(this);
     let fase = read_usize(read_usize(this + 0xc) + 8);
     let igual = fase != 0 && {
         let l = read_usize(fase + 0xa7);
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
 /// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
 pub(crate) unsafe extern "thiscall" fn comparar_cqq9_virada_da_j1(this: usize) -> u32 {
     let antes = read_i16(this + 0x40);
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1956)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQQ9_VIRADA_DA_J1)(this);
     let depois = read_i16(this + 0x40);
     PLACAR.registrar(depois == antes.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("cqq9_virada_da_j1({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, read_usize(this + 0x2c)));
     r
@@ -334,12 +334,12 @@ pub(crate) unsafe fn cqm9_comparar(nome: &str, this: usize, n: i16, g: usize, li
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j1(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1840);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM9_TABELA_DA_J1);
     cqm9_comparar("cqm9_tabela_da_j1", this, 0x10, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, true, 0x186a0, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j2(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1841);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM9_TABELA_DA_J2);
     cqm9_comparar("cqm9_tabela_da_j2", this, 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))
 }
 
@@ -361,7 +361,7 @@ pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
 /// Comparador: como o do Goiano.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1722)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ7_REGRAS_DA_J1)(this), || {
         cqj7_regras_j1(this);
         1
     });
@@ -382,6 +382,6 @@ pub(crate) unsafe extern "thiscall" fn cqr1_turno_da_j1(this: usize, k: u32) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_da_j1(this: usize, k: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1989);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CQR1_TURNO_DA_J1);
     cqr1_comparar("cqr1_turno_da_j1", this, k, || o(this, k))
 }

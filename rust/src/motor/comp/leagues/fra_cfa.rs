@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_cfa(this: usize, fase: u32,
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_cfa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1893);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_CFA);
     cqo5_comparar("calendario_da_cfa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_cfa(this, fase, r, e, l))
 }
 
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_c1_b(this: usize, fase: u32
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_c1_b(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1895);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_C1_B);
     cqo5_comparar_fases("calendario_da_c1_b", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_c1_b(this, fase, r, e, l))
 }
 
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn regras_da_cfa(this: usize) -> u32 {
 
 /// O calendário (a virtual +0x3c) aloca: só a original, conferindo os campos e a devolução 1.
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_cfa(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1876);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_CFA);
     let r = o(this);
     let b = |k: usize| *((this + k) as *const u8);
     let ok = r == 1 && core::ptr::read_unaligned((this + 0x3c) as *const u16) == 2 && b(0xc2) == 3 && b(0xc3) == 1 && b(0xc4) == 2
@@ -497,12 +497,12 @@ pub(crate) unsafe fn cqn4_comparar(nome: &str, this: usize, ano: u32, p: &Cqn4Fu
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_cfa(this: usize, ano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(1877);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUIR_CFA);
     cqn4_comparar("construir_cfa", this, ano, &CQN4_CFA, || o(this, ano))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_divisao_de_baixo_francesa(this: usize, ano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(1878);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUIR_DIVISAO_DE_BAIXO_FRANCESA);
     cqn4_comparar("construir_divisao_de_baixo_francesa", this, ano, &CQN4_BAIXO, || o(this, ano))
 }
 
@@ -564,11 +564,11 @@ pub(crate) unsafe extern "thiscall" fn destruir_divisao_de_baixo_francesa(this: 
 
 /// Soltam memória: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_destruir_cfa(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1879)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_DESTRUIR_CFA)(this)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_destruir_divisao_de_baixo_francesa(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1880)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_DESTRUIR_DIVISAO_DE_BAIXO_FRANCESA)(this)
 }
 
 // ---------- 275a leva: as tabelas dos grupos da CFA e da divisão de baixo francesa (a marca dos clubes de divisão maior) e a situação nas estatísticas da Série C1 italiana (o play-off e o play-out em faixas) (fra_cfa.cpp, fra_lower.cpp, ita_ser_c1a.cpp, ita_ser_c1b.cpp) ----------
@@ -651,12 +651,12 @@ pub(crate) unsafe fn cqk6_comparar(nome: &str, this: usize, clubes: usize, n: i1
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_do_grupo_da_cfa(this: usize, clubes: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1768);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_TABELA_DO_GRUPO_DA_CFA);
     cqk6_comparar("tabela_do_grupo_da_cfa", this, clubes, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubes))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_divisao_de_baixo_francesa(this: usize, clubes: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1769);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_TABELA_DA_DIVISAO_DE_BAIXO_FRANCESA);
     cqk6_comparar("tabela_da_divisao_de_baixo_francesa", this, clubes, 0x14, &[KEY_CLUB_COMP_FRENCH_NATIONAL], || o(this, clubes))
 }
 
@@ -722,7 +722,7 @@ pub(crate) unsafe fn cqk6_comparar_situacao(nome: &str, this: usize, clube: usiz
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_c1b(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1771);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SITUACAO_NA_C1B);
     cqk6_comparar_situacao("situacao_na_c1b", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_c1b(this, clube, fase, atual, melhor, pior))
 }
 

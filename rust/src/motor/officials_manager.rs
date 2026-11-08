@@ -44,7 +44,7 @@ pub(crate) unsafe fn ficha_do_arbitro(gerente: usize, id: i32) -> Vec<(usize, us
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_registrar_nota_do_arbitro(this: usize, r: *const u8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const u8)>(303);
+    let o = orig::<unsafe extern "thiscall" fn(usize, *const u8)>(IDX_REGISTRAR_NOTA_DO_ARBITRO);
     if gravando_no_topo() || r.is_null() {
         return o(this, r);
     }
@@ -268,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
 /// Comparador: só a original (ponytail: aloca, libera e troca a tabela dos árbitros, e as chamadas sorteiam: não pode
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
 pub(crate) unsafe extern "thiscall" fn comparar_montar_os_arbitros(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1635)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_MONTAR_OS_ARBITROS)(this);
     PLACAR.registrar(read_u32_as_usize(this + 0xc) != 0 && read_i32(this + 4) == read_i32(0xae2390) && read_u32_as_usize(this + 8) != 0,
         || format!("montar_os_arbitros: blocos {:x}, conta {} x {}", read_u32_as_usize(this + 0xc), read_i32(this + 4), read_i32(0xae2390)));
 }
@@ -302,7 +302,7 @@ pub(crate) unsafe extern "C" fn ordem_das_vagas_de_competicao(a: usize, b: usize
 
 /// Comparador: a devolução (só lê).
 pub(crate) unsafe extern "C" fn comparar_ordem_das_vagas_de_competicao(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1636)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DAS_VAGAS_DE_COMPETICAO)(a, b);
     let n = ordem_das_vagas_de_competicao(a, b);
     PLACAR.registrar(r == n, || format!("ordem_das_vagas_de_competicao({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -344,7 +344,7 @@ pub(crate) unsafe extern "C" fn ordem_dos_arbitros_decrescente(a: usize, b: usiz
 
 /// Comparador: a devolução (só lê).
 pub(crate) unsafe extern "C" fn comparar_ordem_dos_arbitros_decrescente(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1640)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_ARBITROS_DECRESCENTE)(a, b);
     let n = ordem_dos_arbitros_decrescente(a, b);
     PLACAR.registrar(r == n, || format!("ordem_dos_arbitros_decrescente({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -371,7 +371,7 @@ pub(crate) unsafe extern "C" fn ordem_dos_arbitros_crescente(a: usize, b: usize)
 
 /// Comparador: a devolução (só lê).
 pub(crate) unsafe extern "C" fn comparar_ordem_dos_arbitros_crescente(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1641)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_ARBITROS_CRESCENTE)(a, b);
     let n = ordem_dos_arbitros_crescente(a, b);
     PLACAR.registrar(r == n, || format!("ordem_dos_arbitros_crescente({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -530,7 +530,7 @@ pub(crate) unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, 
 
 /// Comparador: lado a lado pela palavra de saída e pelo estado do sorteio, e pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_escolher_arbitro_da_partida(this: usize, jogo: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1362);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_ESCOLHER_ARBITRO_DA_PARTIDA);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((saida, 2));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida),
@@ -556,7 +556,7 @@ pub(crate) unsafe extern "thiscall" fn limpar_arbitros_ocupados(this: usize) -> 
 
 /// Comparador: lado a lado pelos bytes de ocupado e pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_limpar_arbitros_ocupados(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1363);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_LIMPAR_ARBITROS_OCUPADOS);
     let n = read_i32(this + 4);
     let reg = if n > 0 && read_usize(this + 8) != 0 { vec![(read_usize(this + 8), n as usize)] } else { Vec::new() };
     let (r, m, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || limpar_arbitros_ocupados(this));
@@ -645,7 +645,7 @@ pub(crate) unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize
 /// ([0xae2390] × 17), pelo estado do sorteio e por [0xb67a34], e pela devolução. Sem tabela de árbitros (a caixa a cada
 /// ficha): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_renovar_arbitros(this: usize, comp: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1364);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_RENOVAR_ARBITROS);
     let total = read_i32(0xae2390).max(0) as usize;
     if read_usize(G_OFFICIAL_TABLE) == 0 || read_usize(this) == 0 {
         return o(this, comp);
@@ -747,7 +747,7 @@ pub(crate) unsafe fn cpy9_mesma_ficha(g: &[u8; 0x2b], f: usize) -> bool {
 /// cada ficha do ensaio esteja na tabela ordenada (campos que a original grava). Conta não positiva ou nação sem
 /// continente: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_arbitros_sorteados(this: usize, conta: i32, nacao: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize)>(1365);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_ARBITROS_SORTEADOS);
     if conta <= 0 || (nacao != 0 && read_usize(nacao + nation::CONTINENT) == 0) {
         return o(this, conta, nacao);
     }
@@ -870,7 +870,7 @@ pub(crate) unsafe extern "C" fn validar_arbitros() {
 
 /// Comparador: lado a lado pelas fichas de todos os árbitros e pelo estado do sorteio.
 pub(crate) unsafe extern "C" fn comparar_validar_arbitros() {
-    let o = orig::<unsafe extern "C" fn()>(1366);
+    let o = orig::<unsafe extern "C" fn()>(IDX_VALIDAR_ARBITROS);
     let total = read_i32(0xae2390).max(0) as usize;
     if read_usize(G_OFFICIAL_TABLE) == 0 {
         return o();
@@ -912,7 +912,7 @@ pub(crate) unsafe extern "thiscall" fn copiar_ficha_de_arbitro(this: usize, src:
 
 /// Comparador: lado a lado pela ficha de destino e pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_copiar_ficha_de_arbitro(this: usize, src: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1367);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_FICHA_DE_ARBITRO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x2b)], || o(this, src), || copiar_ficha_de_arbitro(this, src));
     PLACAR.registrar(igual && r == n, || format!("copiar_ficha_de_arbitro(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
     r
@@ -967,5 +967,5 @@ pub(crate) unsafe extern "thiscall" fn gravar_estatisticas_dos_arbitros(this: us
 /// Comparador da 0x79bb80: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1504)(this, save)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GRAVAR_ESTATISTICAS_DOS_ARBITROS)(this, save)
 }

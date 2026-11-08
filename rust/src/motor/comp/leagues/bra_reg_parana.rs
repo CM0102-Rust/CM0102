@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this:
 pub(crate) unsafe extern "thiscall" fn comparar_cqo8_fase_seguinte_do_paranaense(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(1902)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQO8_FASE_SEGUINTE_DO_PARANAENSE)(this);
     let depois = read_usize(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
     PLACAR.registrar(igual, || format!("cqo8_fase_seguinte_do_paranaense({:#x}) antes={} depois={}", this, antes, depois));
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo8_fase_seguinte_do_paranaense
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn comparar_cqo8_final_do_paranaense(this: usize) {
     let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(1903)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQO8_FINAL_DO_PARANAENSE)(this);
     let igual = if a == b {
         let marca = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
         let na_liga = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
@@ -183,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo8_final_do_paranaense(this: u
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_8 historico da final" e "cqo_8 premios") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_cqo8_fim_da_temporada_do_paranaense(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(1904)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQO8_FIM_DA_TEMPORADA_DO_PARANAENSE)(this)
 }
 
 // ---------- 274a leva: as regras dos estaduais Paranaense, Pernambucano (Norte), Carioca e Mineiro (bra_reg_parana.cpp, bra_reg_pern.cpp, bra_reg_rio.cpp) ----------
@@ -254,7 +254,7 @@ pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_paranaense(this: usize) ->
 /// saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_paranaense(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1718)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI9_REGRAS_DO_PARANAENSE)(this), || {
         cqi9_regras_parana(this);
         1
     });
@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn cqt3_construir_paranaense(this: usize, an
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2053);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT3_CONSTRUIR_PARANAENSE);
     cqt3_comparar("cqt3_construir_paranaense", this, ano, registro, &CQT3_PARANAENSE, || o(this, ano, registro))
 }
 
@@ -288,7 +288,7 @@ pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_paranaense(this: usize) ->
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_paranaense(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1835);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM7_TABELA_DO_PARANAENSE);
     cqm7_comparar("cqm7_tabela_do_paranaense", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
 }
 
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn cqr1_turno_do_paranaense(this: usize, k: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_do_paranaense(this: usize, k: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1988);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CQR1_TURNO_DO_PARANAENSE);
     cqr1_comparar("cqr1_turno_do_paranaense", this, k, || o(this, k))
 }
 
@@ -321,6 +321,6 @@ pub(crate) unsafe extern "thiscall" fn cqr2_virada_do_paranaense(this: usize) ->
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr2_virada_do_paranaense(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1992);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR2_VIRADA_DO_PARANAENSE);
     cqr2_comparar("cqr2_virada_do_paranaense", this, || o(this))
 }

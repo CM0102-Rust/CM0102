@@ -163,7 +163,7 @@ pub(crate) unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1869);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_FRANCA_2);
     cqm5_comparar("construir_franca_2", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
 }
 
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn regras_da_franca_2(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_2(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1757);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_FRANCA_2);
     cqj5_comparar("regras_da_franca_2", this, cqj5_segunda(this), || o(this), || regras_da_franca_2(this))
 }
 
@@ -206,7 +206,7 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_franca_2(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1760);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_FRANCA_2);
     cqj6_comparar("tabela_da_franca_2", this, 0x14, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION, None, || o(this))
 }
 
@@ -221,6 +221,6 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_segunda_francesa(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1891);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_SEGUNDA_FRANCESA);
     cqo4_comparar("calendario_da_segunda_francesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_francesa(this, fase, r, e, l))
 }

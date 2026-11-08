@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn organizar_area(area: usize) {
     let linhas = *((area + 0xbac) as *const u8);
     if marcas & 0x80000 == 0 && colunas != 0 && (colunas > 30 || (linhas != 0 && linhas > 30)) {
         // ponytail: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
-        return orig::<unsafe extern "thiscall" fn(usize)>(496)(area);
+        return orig::<unsafe extern "thiscall" fn(usize)>(IDX_ORGANIZAR_AREA)(area);
     }
     crate::comparacao::ramo("telas organizar a area");
     let dono = core::ptr::read_unaligned((area + 0x20e) as *const i16);
@@ -125,7 +125,7 @@ pub(crate) unsafe extern "thiscall" fn organizar_area(area: usize) {
 /// A área inteira, o +0x7c do item dono (se houver) e o ponteiro da barra de rolagem do teclado
 /// (0xad9c58, que a 0x403600 grava) têm de sair iguais.
 pub(crate) unsafe extern "thiscall" fn comparar_organizar_area(area: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(496);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ORGANIZAR_AREA);
     let marcas = *((area + 0x18) as *const u32);
     let colunas = *((area + 0xbab) as *const u8);
     let linhas = *((area + 0xbac) as *const u8);
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_iniciar_area(
     area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
     pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
 ) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(497);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(IDX_INICIAR_AREA);
     let reg = [(area, 0xbcb + 0xff)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &reg,
@@ -265,7 +265,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_iniciar_area(
 /// erro Area.cpp 245 e a organização 0x403350).
 pub(crate) unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u32) {
     if core::ptr::read_unaligned((area + 0xb76) as *const i16) == -1 {
-        return orig::<unsafe extern "thiscall" fn(usize, u32)>(498)(area, redesenhar);
+        return orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DESENHAR_AREA)(area, redesenhar);
     }
     crate::comparacao::ramo("telas desenhar a area");
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GUI_FREE_IMAGE);
@@ -352,6 +352,6 @@ pub(crate) unsafe fn area_posicionar_item(area: usize, item: usize, d: i32) {
 // duas vezes): no modo comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust
 // (contador "telas desenhar a area" no ddraw.log)
 pub(crate) unsafe extern "thiscall" fn comparar_desenhar_area(area: usize, redesenhar: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(498)(area, redesenhar)
+    orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DESENHAR_AREA)(area, redesenhar)
 }
 

@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn cqj12_eliminatoria_europa_regras(this: us
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_europa_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1700);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ12_ELIMINATORIA_EUROPA_REGRAS);
     cqj12_confere("cqj12_eliminatoria_europa_regras", this, &CQJ12_EUROPA, (0x19, 2, 5), 0, || o(this))
 }
 
@@ -118,7 +118,7 @@ pub(crate) unsafe extern "thiscall" fn cqj12_eliminatoria_sul_americana_regras(t
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras e
 // as vagas diretas (4 − +0xef − +0xee, com o +0xef que a própria rotina copia, calculado antes).
 pub(crate) unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_sul_americana_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1701);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ12_ELIMINATORIA_SUL_AMERICANA_REGRAS);
     let lista = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
     let mut ef = *((this + 0xef) as *const u8);
     if lista != 0 {
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn cqj12_eliminatoria_asia_regras(this: usiz
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_asia_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1702);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ12_ELIMINATORIA_ASIA_REGRAS);
     cqj12_confere("cqj12_eliminatoria_asia_regras", this, &CQJ12_ASIA, (0x19, 2, 5), 1, || o(this))
 }
 

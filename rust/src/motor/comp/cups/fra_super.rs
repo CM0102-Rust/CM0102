@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn cql12_supercopa_da_franca_tabela(this: us
 
 // ponytail: fora de 2001 a original sorteia o mando (0x90cfc0): só ela roda nesse caso.
 pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1778);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL12_SUPERCOPA_DA_FRANCA_TABELA);
     if core::ptr::read_unaligned((this + 0x40) as *const i16) != 0x7d1 {
         return o(this, fase, rodadas, extra, saida);
     }
@@ -178,7 +178,7 @@ pub(crate) unsafe extern "thiscall" fn cql12_supercopa_do_japao_tabela(this: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_do_japao_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1780);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL12_SUPERCOPA_DO_JAPAO_TABELA);
     cql12_comparar("cql12_supercopa_do_japao_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cql12_supercopa_do_japao_tabela(this, fase, r, e, s))
 }
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn cqm11_supercopa_clubes(this: usize) -> i3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm11_supercopa_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1786);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM11_SUPERCOPA_CLUBES);
     cqm10_comparar("cqm11_supercopa_clubes", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_supercopa(this),
         |r, _| if r == 1 { 12 } else { 0 })
 }

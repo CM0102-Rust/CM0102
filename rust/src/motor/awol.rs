@@ -127,11 +127,11 @@ pub(crate) unsafe fn cqd11_comparar(this: usize, pessoa: usize, bit: u8, lista: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_limpar_ausencia(this: usize, pessoa: usize) {
-    cqd11_comparar(this, pessoa, 1, 0, orig::<unsafe extern "thiscall" fn(usize, usize)>(1570), "limpar_ausencia");
+    cqd11_comparar(this, pessoa, 1, 0, orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_LIMPAR_AUSENCIA), "limpar_ausencia");
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_limpar_falta_ao_treino(this: usize, pessoa: usize) {
-    cqd11_comparar(this, pessoa, 2, 4, orig::<unsafe extern "thiscall" fn(usize, usize)>(1571), "limpar_falta_ao_treino");
+    cqd11_comparar(this, pessoa, 2, 4, orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_LIMPAR_FALTA_AO_TREINO), "limpar_falta_ao_treino");
 }
 
 /// O ensaio da notícia: os sorteios vêm da fita da original (n e resposta) e, em vez de entregar, a cópia anota o
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_falta_ao_treino(this: usize, j
 /// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_da_falta_ao_treino(this: usize, jogador: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1572);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_NOTICIA_DA_FALTA_AO_TREINO);
     let ((), fita) = crate::aleatorio::rastrear(|| o(this, jogador, clube));
     let n = fita.len();
     *core::ptr::addr_of_mut!(CQD11_FITA) = Some((fita, 0, false));
@@ -528,7 +528,7 @@ pub(crate) unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
 // ponytail: sorteia, tira e libera nós das listas (0x68d1f0), dá notícia de volta (0x419710) e de falta (0x41a360): só
 // a original; a cópia leva os ramos.
 pub(crate) unsafe extern "thiscall" fn comparar_faltas_do_dia(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1308)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_FALTAS_DO_DIA)(this)
 }
 
 /// bit 2 of the person flag; without a contract, clears the miss first
@@ -560,7 +560,7 @@ pub(crate) unsafe extern "thiscall" fn teve_falta_ao_treino(this: usize, pessoa:
 /// O comparador da falta ao treino: lado a lado pela devolução (byte baixo) e pelo [0xae1080]; sem contrato com o bit 2,
 /// só a original (a 0x4197c0 tira e libera o nó da lista).
 pub(crate) unsafe extern "thiscall" fn comparar_teve_falta_ao_treino(this: usize, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1309);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_TEVE_FALTA_AO_TREINO);
     if pessoa != 0 && read_i32(pessoa) < read_i32(0xae2364) && read_u8(read_usize(this + 0xc).wrapping_add(read_i32(pessoa) as usize)) & 2 != 0 {
         let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
         let k = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
@@ -615,7 +615,7 @@ pub(crate) unsafe extern "thiscall" fn teve_incidente_de_forma(this: usize, pess
 
 /// O comparador do atraso: lado a lado pela devolução (byte baixo) e pelo cursor da lista.
 pub(crate) unsafe extern "thiscall" fn comparar_teve_incidente_de_forma(this: usize, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1310);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_TEVE_INCIDENTE_DE_FORMA);
     let l = read_usize(this + 8);
     let regioes: Vec<(usize, usize)> = if l != 0 { vec![(l + 0xa, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, pessoa), || teve_incidente_de_forma(this, pessoa));
@@ -745,7 +745,7 @@ pub(crate) unsafe extern "thiscall" fn marcar_falta_ao_treino(this: usize, pesso
 /// sumiu; bit 2 novo: faltou). Sem decisão, o estado inteiro tem de bater (os mesmos sorteios). O byte do caso (+0xc do
 /// registro) não entra: na original é resíduo da pilha.
 pub(crate) unsafe extern "thiscall" fn comparar_marcar_falta_ao_treino(this: usize, pessoa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1311);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MARCAR_FALTA_AO_TREINO);
     if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(0xae2364) {
         return o(this, pessoa);
     }
@@ -810,7 +810,7 @@ pub(crate) unsafe extern "thiscall" fn fim_da_ausencia(this: usize, r: usize) {
 /// O comparador do fim da ausência, em ensaio: a cópia sem a notícia e sem tirar da lista; a marca da pessoa e, sem
 /// notícia, o [0xae1080] têm de bater com os da original.
 pub(crate) unsafe extern "thiscall" fn comparar_fim_da_ausencia(this: usize, r: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1312);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIM_DA_AUSENCIA);
     if r == 0 {
         return o(this, r);
     }
@@ -919,7 +919,7 @@ pub(crate) unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: 
 /// plano: jogador e clube não nulos põem logo depois da cauda de antes (ou na cabeça, lista vazia) o registro com o
 /// jogador, o clube e a data de hoje (16 bytes; o byte +0x10 é sobra de pilha).
 pub(crate) unsafe extern "thiscall" fn comparar_incidente_de_forma(this: usize, jogador: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1404);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_INCIDENTE_DE_FORMA);
     let l = read_usize(this + 8);
     if jogador == 0 || clube == 0 || l == 0 {
         return o(this, jogador, clube);
@@ -962,7 +962,7 @@ pub(crate) unsafe extern "thiscall" fn ausente_sem_licenca(this: usize, p: usize
 /// Comparador da 0x418f60 (quente: sem alocar): lado a lado em [0xae1080] e no al devolvido; com o bit, sem `só_ler` e
 /// sem contrato ou clube (a 0x4196a0 tira e libera o nó da lista: não pode rodar duas vezes), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_ausente_sem_licenca(this: usize, p: usize, so_ler: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1472);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_AUSENTE_SEM_LICENCA);
     if p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 && so_ler == 0 && read_u8(read_usize(this + 0xc) + read_usize(p)) & 1 != 0 {
         let c = cqb5_contrato(p); // a original o refaz igual (e regrava [0xae1080])
         if c == 0 || cqb5_clube_do_contrato(c) == 0 {

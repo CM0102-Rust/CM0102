@@ -127,7 +127,7 @@ pub(crate) unsafe extern "thiscall" fn cqs9_uefa_inscritos(this: usize) -> i32 {
 /// Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(2086);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQS9_UEFA_INSCRITOS);
     let (a0, t0) = (read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14));
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut reg: Vec<(usize, usize)> = vec![(this + 0x36, 4), (this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)];
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn cqq10_uefa_tabela(this: usize, fase: u32,
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1977);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQQ10_UEFA_TABELA);
     cql10_comparar("cqq10_uefa_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqq10_uefa_tabela(this, fase, r, e, s))
 }
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn cqi10_uefa_registros(this: usize, clube: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqi10_uefa_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1687);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQI10_UEFA_REGISTROS);
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }

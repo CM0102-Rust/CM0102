@@ -92,7 +92,7 @@ pub(crate) unsafe fn cqn9_comparar(nome: &str, this: usize, linhas: &[usize], or
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_gaucho(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1849);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN9_MATA_MATA_DO_GAUCHO);
     cqn9_comparar("cqn9_mata_mata_do_gaucho", this, &[0, 3, 1, 2], || o(this))
 }
 
@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn cqj8_historico_do_estadual(this: usize) -
 /// pode rodar duas vezes). A cópia roda no modo Rust (contador "cqj_8 historico do estadual") e é provada pelas
 /// mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj8_historico_do_estadual(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(1726)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ8_HISTORICO_DO_ESTADUAL)(this)
 }
 
 /// The Rio Grande do Sul state league at career creation: the year and the database competition, disciplinary rule 7
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn cqt1_construir_gaucho(this: usize, ano: u
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt1_construir_gaucho(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2048);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT1_CONSTRUIR_GAUCHO);
     cqt1_comparar("cqt1_construir_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
 }
 
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn cqp7_virada_do_gaucho(this: usize) -> u32
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp7_virada_do_gaucho(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1930);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP7_VIRADA_DO_GAUCHO);
     cqp7_comparar_virada("cqp7_virada_do_gaucho", this, || o(this))
 }
 
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn cqp7_fase_seguinte_do_gaucho(this: usize)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_gaucho(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1931);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP7_FASE_SEGUINTE_DO_GAUCHO);
     cqp7_comparar_fase_seguinte("cqp7_fase_seguinte_do_gaucho", this, || o(this))
 }
 
@@ -175,7 +175,7 @@ pub(crate) unsafe extern "thiscall" fn cql8_tabela_do_gaucho(this: usize) -> u32
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_gaucho(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1830);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL8_TABELA_DO_GAUCHO);
     cql8_comparar("cql8_tabela_do_gaucho", this, 0x11, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, || o(this))
 }
 
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32
 /// Comparador: como o do Centro-Oeste.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_gaucho(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1716)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI8_REGRAS_DO_GAUCHO)(this), || {
         cqi8_regras_gaucho(this);
         1
     });

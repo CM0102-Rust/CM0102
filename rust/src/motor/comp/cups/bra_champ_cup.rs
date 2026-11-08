@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn cqp10_copa_dos_campeoes_tabela(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp10_copa_dos_campeoes_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1963);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP10_COPA_DOS_CAMPEOES_TABELA);
     cqp10_comparar("cqp10_copa_dos_campeoes_tabela", fase, cqp10_campeoes_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqp10_copa_dos_campeoes_tabela(this, fase, r, e, l))
 }
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn cqp10_supercopa_asiatica_tabela(this: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp10_supercopa_asiatica_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1966);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP10_SUPERCOPA_ASIATICA_TABELA);
     cql10_comparar("cqp10_supercopa_asiatica_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqp10_supercopa_asiatica_tabela(this, fase, r, e, s))
 }
@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn cqi12_copa_dos_campeoes_regras(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqi12_copa_dos_campeoes_regras(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1693)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI12_COPA_DOS_CAMPEOES_REGRAS)(this);
     cqi12_confere("cqi12_copa_dos_campeoes_regras", this, &CQI12_COPA_DOS_CAMPEOES, r);
     r
 }

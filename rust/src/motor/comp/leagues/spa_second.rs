@@ -258,7 +258,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_segunda_espanhola(this: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1944);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_SEGUNDA_ESPANHOLA);
     cqq4_comparar("calendario_da_segunda_espanhola", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_espanhola(this, fase, r, e, l))
 }
 
@@ -272,7 +272,7 @@ pub(crate) unsafe extern "thiscall" fn construir_segunda(this: usize, ano: u32, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1871);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_SEGUNDA);
     cqm5_comparar("construir_segunda", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
 }
 
@@ -290,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn regras_da_segunda(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_segunda(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1763);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_SEGUNDA);
     cqk4_comparar("regras_da_segunda", this, cqk4_segunda(this), || o(this), || regras_da_segunda(this))
 }
 
@@ -348,7 +348,7 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
 /// Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1874);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_SEGUNDA);
     let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut plano: Vec<(usize, bool)> = Vec::new();

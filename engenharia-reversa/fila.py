@@ -2,7 +2,7 @@ r"""A fila de levas: levas escritas antes da hora, com os índices calculados s�
 
 Cada item fica em levas/fila/<nome>/:
   codigo.rs    as rotinas e os comparadores; os índices de `orig::<..>(N)` e `comparar_valor!(.., N, ..)`
-               escritos como %%I0%%, %%I1%%, %%I2%% (na ordem de ROTINAS)
+               escritos como %%I0%%, %%I1%%, %%I2%% (na ordem de ROTINAS); viram IDX_<NOME> (build.rs)
   rotinas.py   ROTINAS = [(nome_rust, endereco, [bytes do prologo])]
                SAVE = True (opcional): item do bloco do save; a leva ganha levas/N/SAVE e a cadeia prova
                pelo save (prova_save.py --leva N, mutacoes.py --prova-save N) em vez da carreira
@@ -103,7 +103,7 @@ def materializar(nomes, n, base, antes):
         rot = runpy.run_path(os.path.join(src, 'rotinas.py'))
         cod = open(os.path.join(src, 'codigo.rs'), encoding='utf-8').read()
         for k in range(len(rot['ROTINAS'])):
-            cod = cod.replace('%%%%I%d%%%%' % k, str(b + k))
+            cod = cod.replace('%%%%I%d%%%%' % k, 'IDX_' + rot['ROTINAS'][k][0].upper())  # a constante do build.rs (07/11/2026)
         assert '%%I' not in cod, 'índice sem valor'
         codigos.append(cod.replace('%%LEVA%%', str(n)))
         rotinas += [(a, e, list(bs)) for a, e, bs in rot['ROTINAS']]
@@ -227,7 +227,7 @@ def main():
                 if 'REGIOES_DO_ESTADO' in chamada and 'sem_contar' not in chamada:
                     print('sem sem_contar', nome, chamada.split('\n')[0][:100])
             for k in range(len(rot['ROTINAS'])):
-                cod = cod.replace('%%%%I%d%%%%' % k, str(base + k))
+                cod = cod.replace('%%%%I%d%%%%' % k, 'IDX_' + rot['ROTINAS'][k][0].upper())
             m += '\n' + cod
             base += len(rot['ROTINAS'])
             for mut, a, *_ in runpy.run_path(os.path.join(FILA, nome, 'mutacoes.py'))['MUTACOES']:

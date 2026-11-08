@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn janelas_espanha(this: usize) {
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_janelas_espanha(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1679);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_JANELAS_ESPANHA);
     cqk1_comparar("janelas_espanha", this, || o(this), |s| janelas_espanha(s));
 }
 
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn janelas_italia(this: usize) {
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_janelas_italia(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1680);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_JANELAS_ITALIA);
     cqk1_comparar("janelas_italia", this, || o(this), |s| janelas_italia(s));
 }
 
@@ -89,7 +89,7 @@ pub(crate) unsafe extern "thiscall" fn janelas_franca(this: usize) {
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_janelas_franca(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1681);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_JANELAS_FRANCA);
     cqk1_comparar("janelas_franca", this, || o(this), |s| janelas_franca(s));
 }
 
@@ -123,5 +123,5 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_espanha(this: usize, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqe6_pode_emprestar_espanha(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(1594), cqe6_pode_emprestar_espanha, "cqe6_pode_emprestar_espanha", this, clube, jogador, msg, motivo)
+    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_CQE6_PODE_EMPRESTAR_ESPANHA), cqe6_pode_emprestar_espanha, "cqe6_pode_emprestar_espanha", this, clube, jogador, msg, motivo)
 }

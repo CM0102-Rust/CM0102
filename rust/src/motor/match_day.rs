@@ -171,10 +171,10 @@ pub(crate) unsafe extern "thiscall" fn escolher_partida_do_dia(dia: usize) -> u3
 // dia de jogos libera motores e listas: sem comparacao propria, validados pela carreira (Rust x
 // original), como o nascimento e o fim do motor. As rotinas que chamam seguem comparadas.
 pub(crate) unsafe extern "thiscall" fn comparar_encerrar_dia(dia: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(329)(dia)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_ENCERRAR_DIA)(dia)
 }
 pub(crate) unsafe extern "thiscall" fn comparar_escolher_partida_do_dia(dia: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(330)(dia)
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ESCOLHER_PARTIDA_DO_DIA)(dia)
 }
 
 // ---------- centesima quinquagesima primeira leva: o andamento do dia de jogos (0x6b5a70, 0x6b5ce0, 0x6b5f00) ----------
@@ -439,13 +439,13 @@ pub(crate) unsafe extern "thiscall" fn fechar_partida_do_dia(_dia: usize, p: usi
 // ponytail: o dia de jogos cria e libera motores e resumos e chama dezenas de rotinas ainda
 // originais; sem comparacao propria, validadas pela carreira (Rust x original), como as da 149a.
 pub(crate) unsafe extern "thiscall" fn comparar_iniciar_proxima_partida(dia: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(332)(dia)
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INICIAR_PROXIMA_PARTIDA)(dia)
 }
 pub(crate) unsafe extern "thiscall" fn comparar_andar_partida_do_dia(dia: usize, ate_o_fim: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(333)(dia, ate_o_fim)
+    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_ANDAR_PARTIDA_DO_DIA)(dia, ate_o_fim)
 }
 pub(crate) unsafe extern "thiscall" fn comparar_fechar_partida_do_dia(dia: usize, p: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(334)(dia, p)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FECHAR_PARTIDA_DO_DIA)(dia, p)
 }
 
 // ---------- centesima quinquagesima segunda leva: o laco do dia de jogos (0x6b4360) ----------
@@ -800,7 +800,7 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
 // ponytail: o laco do dia cria e libera motores e resumos e mexe na tela; sem comparacao propria,
 // validado pela carreira (Rust x original), como as da 151a.
 pub(crate) unsafe extern "thiscall" fn comparar_jogar_o_dia(dia: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(335)(dia)
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JOGAR_O_DIA)(dia)
 }
 
 // ---------- centesima quinquagesima terceira leva: a montagem do dia de jogos (0x6b3c10, 0x714d30, 0x6d8c70) ----------
@@ -988,7 +988,7 @@ pub(crate) unsafe extern "thiscall" fn montar_o_dia(dia: usize, data: usize, mod
 // ponytail: a montagem do dia aloca os vetores e chama rotinas ainda originais; o lado e os sons sao
 // so leitura e tela. Sem comparacao propria, validadas pela carreira (Rust x original).
 pub(crate) unsafe extern "thiscall" fn comparar_montar_o_dia(dia: usize, data: usize, modo: u32) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(336)(dia, data, modo)
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_MONTAR_O_DIA)(dia, data, modo)
 }
 
 // ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
@@ -1094,7 +1094,7 @@ pub(crate) unsafe extern "thiscall" fn interesse_do_dia(d: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_interesse_do_dia(d: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(299);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INTERESSE_DO_DIA);
     if gravando_no_topo() {
         return o(d);
     }
@@ -1223,7 +1223,7 @@ pub(crate) unsafe extern "C" fn partida_sem_humano(partida: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_partida_sem_humano(partida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(298);
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_PARTIDA_SEM_HUMANO);
     if gravando_no_topo() {
         return o(partida);
     }
@@ -1507,7 +1507,7 @@ pub(crate) unsafe fn regiao_do_contrato(pessoa: usize, clube: usize) -> Option<(
 }
 
 pub(crate) unsafe extern "C" fn comparar_eventos_do_pos_jogo(partida: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(295);
+    let o = orig::<unsafe extern "C" fn(usize)>(IDX_EVENTOS_DO_POS_JOGO);
     // o cursor da lista, as linhas dos dois clubes em [[0xb67a44]] e as flags dos contratos dos eventos
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let lista = *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
@@ -1542,7 +1542,7 @@ pub(crate) unsafe extern "C" fn comparar_eventos_do_pos_jogo(partida: usize) {
 }
 
 pub(crate) unsafe extern "C" fn comparar_jogadores_do_pos_jogo(partida: usize, t: usize) {
-    let o = orig::<unsafe extern "C" fn(usize, usize)>(296);
+    let o = orig::<unsafe extern "C" fn(usize, usize)>(IDX_JOGADORES_DO_POS_JOGO);
     // as fichas dos jogadores (+0x45, +9 a +0xe), os contratos, +0x80 dos clubes e as fichas do
     // tecnico e dos auxiliares (+8 a +0xd)
     let g = |a: usize| *(a as *const usize);
@@ -1582,7 +1582,7 @@ pub(crate) unsafe extern "C" fn comparar_jogadores_do_pos_jogo(partida: usize, t
 }
 
 pub(crate) unsafe extern "C" fn comparar_clube_do_pos_jogo(clube: usize, outro: usize, partida: usize, n: u32, t: usize) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(297);
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_CLUBE_DO_POS_JOGO);
     // a copia nao escreve no banco: so as chamadas e o sorteio
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     comparar_pos("clube_do_pos_jogo", reg, || o(clube, outro, partida, n, t), |chamar| clube_do_pos_jogo_com(clube, outro, partida, n, t, chamar));
@@ -1709,7 +1709,7 @@ pub(crate) unsafe extern "C" fn largar_partida_assistida() {
 /// fora de 0..[this+0x1c] ou saída nula: a original (caixa de erro, 0).
 pub(crate) unsafe extern "thiscall" fn ficha_do_registro(estat: usize, k: i32, saida: usize) -> u32 {
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(544)(estat, k, saida);
+        return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FICHA_DO_REGISTRO)(estat, k, saida);
     }
     let jogos: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
@@ -1743,11 +1743,11 @@ pub(crate) unsafe extern "thiscall" fn ficha_do_registro(estat: usize, k: i32, s
 // temporário: rodar duas vezes não dá, então o comparador só chama a original; a cópia se prova no
 // modo Rust (o ramo), na sessão do Lucas com rede (só um jogador da rede saindo a chama).
 pub(crate) unsafe extern "C" fn comparar_largar_partida_assistida() {
-    orig::<unsafe extern "C" fn()>(543)()
+    orig::<unsafe extern "C" fn()>(IDX_LARGAR_PARTIDA_ASSISTIDA)()
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_ficha_do_registro(estat: usize, k: i32, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(544);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FICHA_DO_REGISTRO);
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return o(estat, k, saida);
     }
@@ -1913,7 +1913,7 @@ pub(crate) unsafe extern "thiscall" fn passo_em_rede(dia: usize, p: usize) -> u3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_passo_em_rede(dia: usize, p: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(341)(dia, p)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_PASSO_EM_REDE)(dia, p)
 }
 
 /// each human confirms the network match; with all of them, creates the engine and prepares it for watching, or plays
@@ -2011,7 +2011,7 @@ pub(crate) unsafe extern "thiscall" fn confirmar_partida_em_rede(_dia: usize, p:
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_confirmar_partida_em_rede(dia: usize, p: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(344)(dia, p)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CONFIRMAR_PARTIDA_EM_REDE)(dia, p)
 }
 
 /// the number by code (0: 5/4, 1: 11/10, 0x1ef: 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; the first with the second
@@ -2031,12 +2031,12 @@ pub(crate) unsafe extern "C" fn numero_da_competicao(codigo: u32, segunda: u32) 
         0x3de => 2 + s,
         0x483 => 6 + s,
         0x528 => 8 + s,
-        _ => orig::<unsafe extern "C" fn(u32, u32) -> u32>(306)(codigo, segunda),
+        _ => orig::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_NUMERO_DA_COMPETICAO)(codigo, segunda),
     }
 }
 
 pub(crate) unsafe extern "C" fn comparar_numero_da_competicao(codigo: u32, segunda: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(306);
+    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_NUMERO_DA_COMPETICAO);
     let r = o(codigo, segunda);
     if matches!(codigo as u16 as i16, 0 | 1 | 0x1ef | 0x3de | 0x483 | 0x528) {
         let n = numero_da_competicao(codigo, segunda);

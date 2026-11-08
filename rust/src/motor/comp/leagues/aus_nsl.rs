@@ -140,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
 pub(crate) unsafe extern "thiscall" fn comparar_cqr3_fase_seguinte_da_nsl(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(1993)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR3_FASE_SEGUINTE_DA_NSL)(this);
     let depois = read_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqr3_fase_seguinte_da_nsl({:#x}) antes={} depois={}", this, antes, depois));
 }
@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: us
     for (i, c) in seis.iter_mut().enumerate() {
         *c = cqr3_linha(this, i);
     }
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1994)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR3_SERIE_FINAL_DA_NSL)(this);
     let fase = read_usize(read_usize(this + 0xc));
     let igual = r == 1 && fase != 0 && read_i16(fase + 0x3e) == 6 && read_usize(fase + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0 && {
         let mut nela = [0usize; 6];
@@ -175,7 +175,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: us
 pub(crate) unsafe extern "thiscall" fn comparar_cqr3_grande_final_da_nsl(this: usize) {
     let serie = read_usize(read_usize(this + 0xc));
     let (a, b) = (cqr3_linha(serie, 0), cqr3_linha(serie, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(1995)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR3_GRANDE_FINAL_DA_NSL)(this);
     let fase = read_usize(read_usize(this + 0xc) + 4);
     let igual = fase != 0 && {
         let l = read_usize(fase + 0xa7);
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "thiscall" fn cqj8_regras_da_nsl(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn comparar_cqj8_regras_da_nsl(this: usize) -> u32 {
     let o = this;
     let reg = [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1724)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ8_REGRAS_DA_NSL)(this), || {
         cqj8_regras_nsl(this);
         1
     });
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn cqj8_historico_do_primeiro_estagio(this: 
 
 /// Comparador: só a original (ponytail: grava o histórico e aloca o registro; não pode rodar duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_cqj8_historico_do_primeiro_estagio(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(1727)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ8_HISTORICO_DO_PRIMEIRO_ESTAGIO)(this)
 }
 
 /// NSL: at the end of the regular season, the six clubs through to the finals series get the qualification record
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn cqk7_destino_na_nsl(this: usize, clube: u
 /// Comparador: só a original (os registros alocam) com a devolução prevista pelo ensaio.
 pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_na_nsl(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, _, _) = cqk7_nsl(this, clube, situacao, fase, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(1733)(this, clube, situacao, fase, a4, a5, a6);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_CQK7_DESTINO_NA_NSL)(this, clube, situacao, fase, a4, a5, a6);
     PLACAR.registrar(r == n, || format!("cqk7_destino_na_nsl({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
     r
 }
@@ -353,6 +353,6 @@ pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_nsl(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1842);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM9_TABELA_DA_NSL);
     cqm9_comparar("cqm9_tabela_da_nsl", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
 }

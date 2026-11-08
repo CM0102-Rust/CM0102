@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize
 pub(crate) unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
     #[allow(clippy::type_complexity)]
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(2035);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(IDX_CQS7_FASE_DE_COPA);
     let k = (n as u16 as i16).max(0) as usize;
     let plano: Vec<(usize, u8)> = (0..k).map(|i| {
         let s = if sementes != 0 { *((sementes + i) as *const u8) } else if por_ordem != 0 { i as u8 } else { 0 };
@@ -156,6 +156,6 @@ pub(crate) unsafe extern "thiscall" fn cqs7_fim_da_fase_de_copa(this: usize) -> 
 
 // ponytail: libera as tabelas e destrói a base; não pode rodar duas vezes: só a original
 pub(crate) unsafe extern "thiscall" fn comparar_cqs7_fim_da_fase_de_copa(this: usize) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize) -> usize>(2036)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CQS7_FIM_DA_FASE_DE_COPA)(this)
 }
 

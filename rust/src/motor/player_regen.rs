@@ -571,7 +571,7 @@ pub(crate) unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize)
 /// contrato e manda notícia; não pode rodar duas vezes). A cópia roda no modo Rust (contadores "cqg_7 ...") e é provada
 /// pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_refazer_como_jovem(this: usize, p: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(1630)(this, p)
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REFAZER_COMO_JOVEM)(this, p)
 }
 
 /// clears the person dispute flag and removes her entry from the dispute list
@@ -615,7 +615,7 @@ pub(crate) unsafe extern "thiscall" fn tirar_da_disputa(this: usize, p: usize) {
 /// plano: a marca zerada e a conta da lista uma a menos quando a pessoa está nela (a procura feita antes, com o cursor
 /// devolvido).
 pub(crate) unsafe extern "thiscall" fn comparar_tirar_da_disputa(this: usize, p: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1631);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_TIRAR_DA_DISPUTA);
     if p == 0 || read_u32_as_usize(this + 4) == 0 {
         return o(this, p);
     }
@@ -723,7 +723,7 @@ pub(crate) unsafe extern "C" fn pessoa_pelo_nome(primeiro: usize, comum: usize, 
 
 /// Comparador: a devolução (só lê).
 pub(crate) unsafe extern "C" fn comparar_pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
-    let r = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(1643)(primeiro, comum, segundo, clube, no_elenco);
+    let r = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(IDX_PESSOA_PELO_NOME)(primeiro, comum, segundo, clube, no_elenco);
     let n = pessoa_pelo_nome(primeiro, comum, segundo, clube, no_elenco);
     PLACAR.registrar(r == n, || format!("pessoa_pelo_nome(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
     r
@@ -769,7 +769,7 @@ pub(crate) unsafe extern "C" fn texto_entre_aspas(origem: usize, destino: usize)
 
 /// Comparador: lado a lado no destino (até 0x100 bytes) e na devolução.
 pub(crate) unsafe extern "C" fn comparar_texto_entre_aspas(origem: usize, destino: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(1644);
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_TEXTO_ENTRE_ASPAS);
     if origem == 0 || destino == 0 {
         return o(origem, destino);
     }
@@ -817,7 +817,7 @@ pub(crate) unsafe extern "C" fn tipo_da_linha(nome: usize) -> u32 {
 
 /// Comparador: a devolução (só lê).
 pub(crate) unsafe extern "C" fn comparar_tipo_da_linha(nome: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(1645)(nome);
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_TIPO_DA_LINHA)(nome);
     let n = tipo_da_linha(nome);
     PLACAR.registrar(r == n, || format!("tipo_da_linha({:x}) original={:x} rust={:x}", nome, r, n));
     r
@@ -1165,7 +1165,7 @@ pub(crate) unsafe extern "thiscall" fn aposentadorias_do_dia(this: usize) {
 // ponytail: chama as notícias (alocam e entregam), o regen como não jogador, os contratos novos e as listas: o caminho
 // só se sabe rodando e não pode rodar duas vezes. Só a original; a cópia leva os ramos e a carreira a prova.
 pub(crate) unsafe extern "thiscall" fn comparar_aposentadorias_do_dia(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1567)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_APOSENTADORIAS_DO_DIA)(this)
 }
 
 /// news item 0xbba about the retirement for the managers (all, the country, the division, the club or the interested
@@ -1282,7 +1282,7 @@ pub(crate) unsafe extern "stdcall" fn noticia_da_aposentadoria(p: usize, motivo:
 
 // ponytail: aloca e entrega a notícia (0x77bbe0, 0x786780...). Só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "stdcall" fn comparar_noticia_da_aposentadoria(p: usize, motivo: u32, anunciada: u32) {
-    orig::<unsafe extern "stdcall" fn(usize, u32, u32)>(1568)(p, motivo, anunciada)
+    orig::<unsafe extern "stdcall" fn(usize, u32, u32)>(IDX_NOTICIA_DA_APOSENTADORIA)(p, motivo, anunciada)
 }
 
 /// news item 0xbce about the youth player joining the club, with the assistant manager or a coach verdict on his
@@ -1373,7 +1373,7 @@ pub(crate) unsafe extern "stdcall" fn noticia_do_jovem_promovido(j: usize, c: us
 
 // ponytail: aloca e entrega a notícia e sorteia a opinião: só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "stdcall" fn comparar_noticia_do_jovem_promovido(j: usize, c: usize) {
-    orig::<unsafe extern "stdcall" fn(usize, usize)>(1569)(j, c)
+    orig::<unsafe extern "stdcall" fn(usize, usize)>(IDX_NOTICIA_DO_JOVEM_PROMOVIDO)(j, c)
 }
 
 // ---------- 258a leva: o regen no clube: a vaga no elenco, o valor e o contrato do jovem; a aposentadoria pela lesão e a notícia da aposentadoria anunciada (player_regen.cpp) ----------
@@ -1479,7 +1479,7 @@ pub(crate) unsafe extern "stdcall" fn contratar_o_regen(pessoa: usize, clube: us
 /// Comparador: o contrato novo aloca e o valor sorteia: só a original, conferindo o plano (a vaga, o clube da pessoa, a
 /// devolução e o +0x3a do contrato).
 pub(crate) unsafe extern "stdcall" fn comparar_contratar_o_regen(pessoa: usize, clube: usize) -> u8 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(1257);
+    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(IDX_CONTRATAR_O_REGEN);
     let k = cpv9_vaga_livre(clube);
     let r = o(pessoa, clube);
     if k == 0x32 {
@@ -1535,7 +1535,7 @@ pub(crate) unsafe extern "thiscall" fn aposentar_pela_lesao(this: usize, pessoa:
 /// Comparador: lado a lado no estado do sorteio, na tabela (ponteiro, conta e capacidade, e as entradas até a
 /// capacidade). Com a tabela cheia (conta = capacidade − 1, a 0x7a8510 realoca): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_aposentar_pela_lesao(this: usize, pessoa: usize, dias: i16) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i16)>(1258);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i16)>(IDX_APOSENTAR_PELA_LESAO);
     let (n, cap) = (read_i32(this + 8), read_i32(this + 0xc));
     if pessoa == 0 || n >= cap.wrapping_sub(1) || cap <= 0 {
         return o(this, pessoa, dias);
@@ -1602,7 +1602,7 @@ pub(crate) unsafe extern "stdcall" fn noticia_da_aposentadoria_anunciada(pessoa:
 
 /// Comparador: a notícia vai para as caixas dos técnicos: só a original (a prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "stdcall" fn comparar_noticia_da_aposentadoria_anunciada(pessoa: usize, motivo: i8) {
-    orig::<unsafe extern "stdcall" fn(usize, i8)>(1259)(pessoa, motivo)
+    orig::<unsafe extern "stdcall" fn(usize, i8)>(IDX_NOTICIA_DA_APOSENTADORIA_ANUNCIADA)(pessoa, motivo)
 }
 
 // ---------- 257a leva: as fichas de treino iniciais dos jogadores, o banco de jogadores livres do regen e se há reserva de não jogador (training_manager.cpp, player_regen.cpp) ----------
@@ -1643,7 +1643,7 @@ pub(crate) unsafe extern "thiscall" fn guardar_jogador_no_banco(this: usize, pes
 pub(crate) unsafe extern "thiscall" fn comparar_guardar_jogador_no_banco(this: usize, pessoa: i32, nacao: u32, segunda: u32) {
     let n = read_usize(this + 0x40);
     let id = read_usize(read_usize(read_usize(G_STAFF_TABLE).wrapping_add((pessoa as u32).wrapping_mul(0x6e) as usize) + 0x61)) as u32;
-    orig::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(1219)(this, pessoa, nacao, segunda);
+    orig::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(IDX_GUARDAR_JOGADOR_NO_BANCO)(this, pessoa, nacao, segunda);
     let item = read_usize(this + 0x3c).wrapping_add(n << 4);
     let g = [read_usize(item) as u32, read_usize(item + 4) as u32, read_usize(item + 8) as u32];
     PLACAR.registrar(read_usize(this + 0x40) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
@@ -1664,7 +1664,7 @@ pub(crate) unsafe extern "thiscall" fn tem_reserva_de_tecnico(this: usize) -> u3
 
 /// Comparador: a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_tem_reserva_de_tecnico(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1220)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TEM_RESERVA_DE_TECNICO)(this);
     let n = tem_reserva_de_tecnico(this);
     PLACAR.registrar(r == n, || format!("tem_reserva_de_tecnico({:x}) original={:x} rust={:x}", this, r, n));
     r
@@ -2082,7 +2082,7 @@ pub(crate) unsafe fn cpr8_regioes(saida: usize) -> Vec<(usize, usize)> {
 
 /// Comparador: lado a lado pelo sorteio, [0xae1080], a saída e a data estática (a cópia sem contar), e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_aposentadoria_no_inicio(this: usize, pessoa: usize, saida: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(1098);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_APOSENTADORIA_NO_INICIO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&cpr8_regioes(saida), || o(this, pessoa, saida),
         || crate::aleatorio::sem_contar(|| aposentadoria_no_inicio(this, pessoa, saida)));
     PLACAR.registrar(igual && r == n, || format!("aposentadoria_no_inicio(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
@@ -2091,7 +2091,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_aposentadoria_no_inicio(this: us
 
 /// Comparador: como o da 0x7a79c0.
 pub(crate) unsafe extern "thiscall" fn comparar_aposentadoria_por_idade(this: usize, pessoa: usize, saida: usize) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(1099);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_APOSENTADORIA_POR_IDADE);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&cpr8_regioes(saida), || o(this, pessoa, saida),
         || crate::aleatorio::sem_contar(|| aposentadoria_por_idade(this, pessoa, saida)));
     PLACAR.registrar(igual && r == n, || format!("aposentadoria_por_idade(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
@@ -2101,7 +2101,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_aposentadoria_por_idade(this: us
 // ponytail: a lista inicial acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo
 // Rust e a carreira provam a cópia.
 pub(crate) unsafe extern "thiscall" fn comparar_lista_inicial_de_aposentadorias(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1100)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_LISTA_INICIAL_DE_APOSENTADORIAS)(this)
 }
 
 // ---------- 254a leva: a busca de novas aposentadorias, a saída dos cargos de quem se aposenta e o registro da liberação (player_regen.cpp, staff_records.cpp) ----------
@@ -2267,7 +2267,7 @@ pub(crate) unsafe extern "stdcall" fn sair_dos_cargos(pessoa: usize) {
 // ponytail: a busca acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo Rust e a
 // carreira provam a cópia.
 pub(crate) unsafe extern "thiscall" fn comparar_novas_aposentadorias(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1101)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_NOVAS_APOSENTADORIAS)(this)
 }
 
 /// A saída dos cargos só mexe na pessoa e nos dois clubes? Não quando é técnico do clube (5, 12) nem nos cargos que
@@ -2291,7 +2291,7 @@ pub(crate) unsafe fn cpr9_so_memoria(pessoa: usize) -> bool {
 /// Comparador: sem rotinas com efeito (cpr9_so_memoria), lado a lado pela pessoa (0x6e bytes) e pelos dois clubes
 /// (0x245 bytes cada); senão (vaga do técnico, cancelamento de ofertas, listas do humano) só a original.
 pub(crate) unsafe extern "stdcall" fn comparar_sair_dos_cargos(pessoa: usize) {
-    let o = orig::<unsafe extern "stdcall" fn(usize)>(1102);
+    let o = orig::<unsafe extern "stdcall" fn(usize)>(IDX_SAIR_DOS_CARGOS);
     if !cpr9_so_memoria(pessoa) {
         return o(pessoa);
     }
@@ -2447,7 +2447,7 @@ pub(crate) unsafe extern "C" fn ordem_da_fila_de_regens(a: usize, b: usize) -> i
 
 /// Comparador: lado a lado pelo estado do sorteio (a cópia sem contar), e a nota.
 pub(crate) unsafe extern "stdcall" fn comparar_nota_do_doador_de_dados(pessoa: usize) -> i32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize) -> i32>(1069);
+    let o = orig::<unsafe extern "stdcall" fn(usize) -> i32>(IDX_NOTA_DO_DOADOR_DE_DADOS);
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa),
         || crate::aleatorio::sem_contar(|| nota_do_doador_de_dados(pessoa)));
@@ -2457,7 +2457,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_nota_do_doador_de_dados(pessoa: u
 
 /// Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_ordem_das_aposentadorias(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1070)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DAS_APOSENTADORIAS)(a, b);
     let n = ordem_das_aposentadorias(a, b);
     PLACAR.registrar(r == n, || format!("ordem_das_aposentadorias({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -2465,7 +2465,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_das_aposentadorias(a: usize, b: u
 
 /// Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_ordem_da_fila_de_regens(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1071)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DA_FILA_DE_REGENS)(a, b);
     let n = ordem_da_fila_de_regens(a, b);
     PLACAR.registrar(r == n, || format!("ordem_da_fila_de_regens({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
@@ -2706,7 +2706,7 @@ pub(crate) unsafe extern "thiscall" fn clube_da_nacao_para_o_jovem(this: usize, 
 /// Comparador: lado a lado pela pessoa (+0x24..+0x3d), pelas 50 vagas do clube e da seleção e pelo aviso em
 /// [0xde1f64]. A 0x896c60 tira a pessoa da tática: na segunda vez (a cópia) já não a acha, então a tática fica fora.
 pub(crate) unsafe extern "stdcall" fn comparar_aposentar_do_elenco(p: usize) {
-    let o = orig::<unsafe extern "stdcall" fn(usize)>(955);
+    let o = orig::<unsafe extern "stdcall" fn(usize)>(IDX_APOSENTAR_DO_ELENCO);
     let mut reg = vec![(p + 0x24, 0x1a), (0xde1f64, 0x80)];
     for campo in [0x39usize, 0x24] {
         let time = read_usize(p + campo);
@@ -2721,7 +2721,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_aposentar_do_elenco(p: usize) {
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x7ad220 sorteia), pelo clube devolvido.
 pub(crate) unsafe extern "thiscall" fn comparar_melhor_clube_para_o_jovem(this: usize, jogador: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(956);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MELHOR_CLUBE_PARA_O_JOVEM);
     let reg = crate::aleatorio::REGIOES_DO_ESTADO;
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, jogador), || crate::aleatorio::sem_contar(|| melhor_clube_para_o_jovem(this, jogador)));
     PLACAR.registrar(igual && r == n, || format!("melhor_clube_para_o_jovem(id {}) original={:x} rust={:x} {:x?} x {:x?}", read_usize(jogador), r, n, mo, mr));
@@ -2731,7 +2731,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_melhor_clube_para_o_jovem(this: 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio, pelo clube devolvido e pelo cursor (+0xa) das listas
 /// que podem ser percorridas (a da nação do jovem e a de [0x9cf2e4]).
 pub(crate) unsafe extern "thiscall" fn comparar_clube_da_nacao_para_o_jovem(this: usize, jogador: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(957);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLUBE_DA_NACAO_PARA_O_JOVEM);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     for n in [read_usize(read_usize(jogador + 0x1a)), read_usize(KEY_NATION_ENGLAND)] {
         let l = cpn4_lista(this, n);
@@ -2832,7 +2832,7 @@ pub(crate) unsafe extern "thiscall" fn acrescentar_aposentadoria(this: usize, r:
 pub(crate) unsafe extern "thiscall" fn guardar_vaga_para_regen(this: usize, entrada: usize) {
     let id = read_usize(entrada) as i32;
     if id < 0 || id > *(G_STAFF_COUNT as *const i32) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(888)(this, entrada);
+        return orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_GUARDAR_VAGA_PARA_REGEN)(this, entrada);
     }
     crate::comparacao::ramo("cpk_2 vaga para o regen");
     let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
@@ -2893,7 +2893,7 @@ pub(crate) unsafe extern "thiscall" fn guardar_vaga_para_regen(this: usize, entr
 /// Comparador: a original acrescenta (pode realocar); confere a conta e o item novo.
 pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_reserva_de_tecnico(this: usize, id: u32, nacao: u32, segunda: u32) {
     let n = read_usize(this + 0x20);
-    orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(886)(this, id, nacao, segunda);
+    orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(IDX_ACRESCENTAR_RESERVA_DE_TECNICO)(this, id, nacao, segunda);
     let item = read_usize(this + 0x1c).wrapping_add(n << 4);
     let g = [read_usize(item) as u32, read_usize(item + 4) as u32, read_usize(item + 8) as u32];
     PLACAR.registrar(read_usize(this + 0x20) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
@@ -2914,7 +2914,7 @@ pub(crate) unsafe fn cpk2_campos_da_aposentadoria(r: usize) -> [u8; 26] {
 pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_aposentadoria(this: usize, r: usize) {
     let n = read_usize(this + 8);
     let esperado = cpk2_campos_da_aposentadoria(r);
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(887)(this, r);
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ACRESCENTAR_APOSENTADORIA)(this, r);
     let item = read_usize(this + 4).wrapping_add(n.wrapping_mul(26));
     let g = cpk2_campos_da_aposentadoria(item);
     PLACAR.registrar(read_usize(this + 8) == n.wrapping_add(1) && g == esperado, || {
@@ -2925,7 +2925,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_aposentadoria(this: 
 /// Comparador: a original sorteia e realoca (não pode rodar duas vezes): o plano antes (o que entra em cada lista);
 /// confere as contas e os itens (a nação sorteada só pela faixa).
 pub(crate) unsafe extern "thiscall" fn comparar_guardar_vaga_para_regen(this: usize, entrada: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(888);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_GUARDAR_VAGA_PARA_REGEN);
     let id = read_usize(entrada) as i32;
     if id < 0 || id > *(G_STAFF_COUNT as *const i32) {
         return o(this, entrada);
@@ -3059,7 +3059,7 @@ pub(crate) unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tirar_aposentadoria_pendente(this: usize, chave: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(838);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_TIRAR_APOSENTADORIA_PENDENTE);
     let n = (*((this + 8) as *const i32)).max(0) as usize;
     let reg = [(this + 4, 8), (read_u32(this + 4) as usize, n * 26)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, chave), || tirar_aposentadoria_pendente(this, chave));
@@ -3068,7 +3068,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tirar_aposentadoria_pendente(thi
 
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pela saída (26 bytes), a cópia em sem_contar.
 pub(crate) unsafe extern "stdcall" fn comparar_aposentadoria_do_desempregado(pessoa: usize, saida: usize) -> u8 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(839);
+    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(IDX_APOSENTADORIA_DO_DESEMPREGADO);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((saida, 0x1a));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida),
@@ -3139,17 +3139,17 @@ pub(crate) unsafe extern "thiscall" fn escolher_doador_de_dados(this: usize, nac
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_copiar_entrada_da_fila_de_regens(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(820);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_ENTRADA_DA_FILA_DE_REGENS);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0xc)], || o(this, origem), || copiar_entrada_da_fila_de_regens(this, origem));
     PLACAR.registrar(igual && r == n, || format!("copiar_entrada_da_fila_de_regens {:x?} x {:x?}", mo, mr));
     r
 }
 
-comparar_valor!(comparar_esta_na_lista_de_observados, esta_na_lista_de_observados, 821, (jogador: usize, clube: usize) -> u32);
+comparar_valor!(comparar_esta_na_lista_de_observados, esta_na_lista_de_observados, IDX_ESTA_NA_LISTA_DE_OBSERVADOS, (jogador: usize, clube: usize) -> u32);
 
 /// Comparador: a 0x7a7150 sorteia (0x90cfc0) a cada pessoa; lado a lado pelo estado do sorteio, a cópia sem contar.
 pub(crate) unsafe extern "thiscall" fn comparar_escolher_doador_de_dados(this: usize, nacao: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(822);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ESCOLHER_DOADOR_DE_DADOS);
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, nacao),
         || crate::aleatorio::sem_contar(|| escolher_doador_de_dados(this, nacao)));
@@ -3210,13 +3210,13 @@ pub(crate) unsafe fn regioes_da_lista_de_16(regen: usize, lista: usize, quantos:
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tirar_reserva_de_tecnico(regen: usize, id: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(454);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_TIRAR_RESERVA_DE_TECNICO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes_da_lista_de_16(regen, 0x1c, 0x20), || o(regen, id), || tirar_reserva_de_tecnico(regen, id));
     PLACAR.registrar(igual, || format!("tirar_reserva_de_tecnico({}) {:x?} x {:x?}", id, mo, mr));
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tirar_jogador_do_banco(regen: usize, id: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(455);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(IDX_TIRAR_JOGADOR_DO_BANCO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes_da_lista_de_16(regen, 0x3c, 0x40), || o(regen, id), || tirar_jogador_do_banco(regen, id));
     PLACAR.registrar(igual, || format!("tirar_jogador_do_banco({}) {:x?} x {:x?}", id, mo, mr));
 }
@@ -3246,7 +3246,7 @@ pub(crate) unsafe extern "thiscall" fn entrada_da_aposentadoria(regen: usize, id
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_entrada_da_aposentadoria(regen: usize, id: *const i32, por_lesao: u32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32, u32) -> usize>(448)(regen, id, por_lesao);
+    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32, u32) -> usize>(IDX_ENTRADA_DA_APOSENTADORIA)(regen, id, por_lesao);
     let n = entrada_da_aposentadoria(regen, id, por_lesao);
     PLACAR.registrar(r == n, || format!("entrada_da_aposentadoria({}, {}) original={:#x} rust={:#x}", *id, por_lesao, r, n));
     r
@@ -3358,7 +3358,7 @@ pub(crate) unsafe extern "stdcall" fn nota_do_clube_para_o_jovem(jogador: usize,
 }
 
 pub(crate) unsafe extern "stdcall" fn comparar_nota_do_clube_para_o_jovem(jogador: usize, clube: usize, elenco: i8) -> i32 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize, i8) -> i32>(541);
+    let o = orig::<unsafe extern "stdcall" fn(usize, usize, i8) -> i32>(IDX_NOTA_DO_CLUBE_PARA_O_JOVEM);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO,
         || o(jogador, clube, elenco), || crate::aleatorio::sem_contar(|| nota_do_clube_para_o_jovem(jogador, clube, elenco)));
     PLACAR.registrar(igual && r == n, || format!("nota_do_clube_para_o_jovem(elenco {}) original={} rust={} sorteio igual={}", elenco, r, n, igual));
@@ -3384,7 +3384,7 @@ pub(crate) unsafe extern "thiscall" fn copiar_aposentadoria_pendente(this: usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_copiar_aposentadoria_pendente(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(553);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_APOSENTADORIA_PENDENTE);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this, origem), || copiar_aposentadoria_pendente(this, origem));
     PLACAR.registrar(igual && r == n, || format!("copiar_aposentadoria_pendente {:x?} x {:x?}", mo, mr));
     r
@@ -3409,7 +3409,7 @@ pub(crate) unsafe extern "C" fn lesao_pelo_nome(nome: usize) -> u32 {
 
 /// Comparador: a devolução (o al; só lê).
 pub(crate) unsafe extern "C" fn comparar_lesao_pelo_nome(nome: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(1618)(nome);
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_LESAO_PELO_NOME)(nome);
     let n = lesao_pelo_nome(nome);
     PLACAR.registrar(r as u8 == n as u8, || format!("lesao_pelo_nome({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
     r
@@ -3464,7 +3464,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_listas_de_clubes_por_nacao(this:
             plano[read_i32(nacao) as usize].push(read_usize(clube));
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(1032)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_LISTAS_DE_CLUBES_POR_NACAO)(this);
     let errada = (0..n).find(|&k| {
         let l = read_usize(read_usize(this) + 4 * k);
         let ids: Vec<usize> = if l != 0 { cpd1_itens(l).into_iter().map(|e| read_usize(e)).collect() } else { Vec::new() };
@@ -3582,7 +3582,7 @@ pub(crate) unsafe extern "thiscall" fn fila_de_regens(this: usize) {
 /// lado a lado no cabeçalho (nada muda). Com vencidas (o regen pode pôr entradas novas na fila), reservas (mais de 2)
 /// ou id inválido: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_fila_de_regens(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1296);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FILA_DE_REGENS);
     if read_i32(this + 0x20) > 2 {
         crate::comparacao::ramo("cpw_10 reservas so na original");
         return o(this);
@@ -3655,7 +3655,7 @@ pub(crate) unsafe extern "thiscall" fn tirar_a_ficha_reservada(this: usize, id: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tirar_a_ficha_reservada(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u32) -> u32>(1183)(this, id, nacao, segunda)
+    orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u32) -> u32>(IDX_TIRAR_A_FICHA_RESERVADA)(this, id, nacao, segunda)
 }
 
 /// bits 4..5 of byte +0xb of the person's 79-byte record
@@ -3669,7 +3669,7 @@ pub(crate) unsafe extern "stdcall" fn bits_do_registro(p: *const i32) -> u8 {
 }
 
 pub(crate) unsafe extern "stdcall" fn comparar_bits_do_registro(p: *const i32) -> u8 {
-    let r = orig::<unsafe extern "stdcall" fn(*const i32) -> u8>(403)(p);
+    let r = orig::<unsafe extern "stdcall" fn(*const i32) -> u8>(IDX_BITS_DO_REGISTRO)(p);
     let n = bits_do_registro(p);
     PLACAR.registrar(r == n, || format!("bits_do_registro({:p}) original={} rust={}", p, r, n));
     r

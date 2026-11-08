@@ -167,14 +167,14 @@ pub(crate) unsafe fn cql6_comparar(nome: &str, this: usize, ano: u32, registro: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_premier(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1861);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_PREMIER);
     cql6_comparar("construir_premier", this, ano, registro, &CQL6_PREMIER, || o(this, ano, registro))
 }
 
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_third(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1864);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_THIRD);
     cql6_comparar("construir_third", this, ano, registro, &CQL6_THIRD, || o(this, ano, registro))
 }
 
@@ -300,14 +300,14 @@ pub(crate) unsafe fn cqi4_comparar(nome: &str, this: usize, escritas: Vec<(usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_premier(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1740);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_PREMIER);
     cqi4_comparar("regras_da_premier", this, cqi4_premier(), || o(this), || regras_da_premier(this))
 }
 
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_third(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1743);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_THIRD);
     cqi4_comparar("regras_da_third", this, cqi4_third(this), || o(this), || regras_da_third(this))
 }
 
@@ -433,13 +433,13 @@ pub(crate) unsafe fn cqi5_comparar(nome: &str, this: usize, n: i16, g: usize, co
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_premier(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1744);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_PREMIER);
     cqi5_comparar("tabela_da_premier", this, 0x14, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || o(this))
 }
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_third(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1746);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_THIRD);
     cqi5_comparar("tabela_da_third", this, 0x18, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || o(this))
 }
 
@@ -473,6 +473,6 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_premiership(this: usize, fa
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1924);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_PREMIERSHIP);
     cqp5_comparar("calendario_da_premiership", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_premiership(this, fase, r, e, l))
 }

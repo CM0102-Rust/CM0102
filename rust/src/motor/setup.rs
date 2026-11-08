@@ -574,7 +574,7 @@ pub(crate) unsafe fn tecnicos_de_ferias_desfeitos() {
 // ponytail: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela carga da prova do save.
 pub(crate) unsafe extern "C" fn comparar_carregar_jogo(caminho: *const u8) -> u32 {
-    orig::<unsafe extern "C" fn(*const u8) -> u32>(576)(caminho)
+    orig::<unsafe extern "C" fn(*const u8) -> u32>(IDX_CARREGAR_JOGO)(caminho)
 }
 
 // ---------- 220a leva: o save: criar o jogo pelo arquivo de configuração (o início rápido e a carreira automática) (Setup.cpp) ----------
@@ -896,7 +896,7 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
 // duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst) e pelas
 // carreiras (o auto_setup.cfg).
 pub(crate) unsafe extern "C" fn comparar_criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8) -> u32 {
-    orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(574)(cfg, qst)
+    orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(IDX_CRIAR_JOGO_PELA_CONFIGURACAO)(cfg, qst)
 }
 
 // ---------- 220a leva: o save: gravar o jogo inteiro (save_game_data) (Setup.cpp) ----------
@@ -1230,7 +1230,7 @@ pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 
 // ponytail: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save.
 pub(crate) unsafe extern "C" fn comparar_gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
-    orig::<unsafe extern "C" fn(*const u8, u32) -> u32>(575)(caminho, a4)
+    orig::<unsafe extern "C" fn(*const u8, u32) -> u32>(IDX_GRAVAR_JOGO)(caminho, a4)
 }
 
 // ---------- 219a leva: o save: os filtros da caixa de arquivos (o jogo salvo, o início rápido e a versão) (Setup.cpp) ----------
@@ -1245,7 +1245,7 @@ pub(crate) unsafe extern "C" fn comparar_gravar_jogo(caminho: *const u8, a4: u32
 /// erro de Setup.cpp 0x3a1b (caixa "Error"): a cópia chama a original.
 pub(crate) unsafe extern "C" fn filtro_do_jogo_salvo(caminho: usize) -> u32 {
     if caminho == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u32>(565)(caminho);
+        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_FILTRO_DO_JOGO_SALVO)(caminho);
     }
     let id_do_conteiner: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_ZGET_ARCHIVE_ID);
     let id = id_do_conteiner(caminho);
@@ -1255,7 +1255,7 @@ pub(crate) unsafe extern "C" fn filtro_do_jogo_salvo(caminho: usize) -> u32 {
 // O id só lê o arquivo e libera o que aloca: as duas rodam lado a lado. Caminho nulo (caixa de
 // erro) só a original.
 pub(crate) unsafe extern "C" fn comparar_filtro_do_jogo_salvo(caminho: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(565)(caminho);
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_FILTRO_DO_JOGO_SALVO)(caminho);
     if caminho == 0 {
         return r;
     }
@@ -1274,7 +1274,7 @@ pub(crate) unsafe extern "C" fn comparar_filtro_do_jogo_salvo(caminho: usize) ->
 /// Caminho nulo: erro de Setup.cpp 0x3a6d, a cópia chama a original.
 pub(crate) unsafe extern "C" fn filtro_do_inicio_rapido(caminho: usize) -> u32 {
     if caminho == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u32>(566)(caminho);
+        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_FILTRO_DO_INICIO_RAPIDO)(caminho);
     }
     let id_do_conteiner: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_ZGET_ARCHIVE_ID);
     let versao_valida: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_VALID_SAVED_GAME_VERSION);
@@ -1291,7 +1291,7 @@ pub(crate) unsafe extern "C" fn filtro_do_inicio_rapido(caminho: usize) -> u32 {
 // arquivo ficam abertos, como na original): rodar duas vezes deixaria dois. Só a original; a cópia
 // leva o ramo e roda no modo Rust (só a caixa de arquivos chama).
 pub(crate) unsafe extern "C" fn comparar_filtro_do_inicio_rapido(caminho: usize) -> u32 {
-    orig::<unsafe extern "C" fn(usize) -> u32>(566)(caminho)
+    orig::<unsafe extern "C" fn(usize) -> u32>(IDX_FILTRO_DO_INICIO_RAPIDO)(caminho)
 }
 
 /// A caixa "Load Game Error" de `valid_saved_game_version`: o texto "v%s %s.%s %d (%s)" (versão
@@ -1368,7 +1368,7 @@ pub(crate) unsafe extern "C" fn versao_do_jogo_salvo_valida(caminho: usize) -> u
 // original); nos erros, a caixa. Não roda duas vezes: só a original; a cópia leva o ramo e roda no
 // modo Rust (só a caixa de arquivos, pelo filtro do início rápido, chama).
 pub(crate) unsafe extern "C" fn comparar_versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
-    orig::<unsafe extern "C" fn(usize) -> u32>(567)(caminho)
+    orig::<unsafe extern "C" fn(usize) -> u32>(IDX_VERSAO_DO_JOGO_SALVO_VALIDA)(caminho)
 }
 
 // ---------- 219a leva: o save: as regras FIFA de transferência (gravar e carregar) e o resumo do save (Setup.cpp, file_screens.cpp) ----------
@@ -1428,7 +1428,7 @@ pub(crate) unsafe extern "C" fn gravar_regras_fifa(save: usize) {
 // ponytail: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
 // ramo e é provada pela prova do save (o .qst gravado com e sem a leva).
 pub(crate) unsafe extern "C" fn comparar_gravar_regras_fifa(save: usize) {
-    orig::<unsafe extern "C" fn(usize)>(568)(save)
+    orig::<unsafe extern "C" fn(usize)>(IDX_GRAVAR_REGRAS_FIFA)(save)
 }
 
 /// reads the 2 bytes of fifa_transfer_rules.zip; if the first is 1, the rule in force becomes 5
@@ -1471,7 +1471,7 @@ pub(crate) unsafe extern "C" fn carregar_regras_fifa(save: usize) {
 // ponytail: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
 // (arquivo = só a original). A cópia leva o ramo; a etapa de carregar da prova do save a exercita.
 pub(crate) unsafe extern "C" fn comparar_carregar_regras_fifa(save: usize) {
-    orig::<unsafe extern "C" fn(usize)>(569)(save)
+    orig::<unsafe extern "C" fn(usize)>(IDX_CARREGAR_REGRAS_FIFA)(save)
 }
 
 /// O `strcat` da original (repne scasb + rep movs): `fonte` com o zero no fim de `destino`.
@@ -1571,7 +1571,7 @@ pub(crate) unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
 pub(crate) unsafe extern "C" fn comparar_montar_resumo_do_save(resumo: *mut u8) {
     let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
     let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
-        || orig::<unsafe extern "C" fn(*mut u8)>(570)(resumo),
+        || orig::<unsafe extern "C" fn(*mut u8)>(IDX_MONTAR_RESUMO_DO_SAVE)(resumo),
         || montar_resumo_do_save(resumo));
     PLACAR.registrar(mo.0[0] == mr.0[0], || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
@@ -1676,7 +1676,7 @@ pub(crate) unsafe extern "C" fn liberar_dados_do_jogo(tela: u32) -> u32 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_liberar_dados_do_jogo(tela: u32) -> u32 {
-    orig::<unsafe extern "C" fn(u32) -> u32>(573)(tela)
+    orig::<unsafe extern "C" fn(u32) -> u32>(IDX_LIBERAR_DADOS_DO_JOGO)(tela)
 }
 
 /// the heading text colour (two colours by the flag)
@@ -1690,7 +1690,7 @@ pub(crate) unsafe extern "C" fn cor_do_titulo(x: u32) -> u32 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_cor_do_titulo(x: u32) -> u32 {
-    let r = orig::<unsafe extern "C" fn(u32) -> u32>(435)(x);
+    let r = orig::<unsafe extern "C" fn(u32) -> u32>(IDX_COR_DO_TITULO)(x);
     let n = cor_do_titulo(x);
     PLACAR.registrar(r == n, || format!("cor_do_titulo({:#x}) original={:#x} rust={:#x}", x, r, n));
     r

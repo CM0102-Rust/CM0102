@@ -360,7 +360,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_primeira_inglesa(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_primeira_inglesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1923);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_PRIMEIRA_INGLESA);
     cqp5_comparar("calendario_da_primeira_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_primeira_inglesa(this, fase, r, e, l))
 }
 
@@ -475,13 +475,13 @@ pub(crate) unsafe fn cpz1_comparar(nome: &str, this: usize, linhas: [usize; 4], 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_mata_mata_da_first(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1380);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_MATA_MATA_DA_FIRST);
     cpz1_comparar("mata_mata_da_first", this, [5, 2, 4, 3], || o(this))
 }
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_mata_mata_da_third(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1382);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_MATA_MATA_DA_THIRD);
     cpz1_comparar("mata_mata_da_third", this, [6, 3, 5, 4], || o(this))
 }
 
@@ -496,7 +496,7 @@ pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_first(this: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_first(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1387);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASE_SEGUINTE_DA_FIRST);
     cpz3_comparar_fase("fase_seguinte_da_first", this, || o(this), || fase_seguinte_da_first(this))
 }
 
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn construir_first(this: usize, ano: u32, re
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_first(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1862);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_FIRST);
     cql6_comparar("construir_first", this, ano, registro, &CQL6_FIRST, || o(this, ano, registro))
 }
 
@@ -528,7 +528,7 @@ pub(crate) unsafe extern "thiscall" fn regras_da_first(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_first(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1741);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_FIRST);
     cqi4_comparar("regras_da_first", this, cqi4_first(), || o(this), || regras_da_first(this))
 }
 
@@ -554,7 +554,7 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_first(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_first(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1747);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_FIRST);
     cqi5_comparar("tabela_da_first", this, 0x18, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, 0x11170, || o(this))
 }
 
@@ -569,6 +569,6 @@ pub(crate) unsafe extern "thiscall" fn situacao_na_first(this: usize, clube: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1384);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SITUACAO_NA_FIRST);
     cpz2_comparar("situacao_na_first", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_first(this, clube, fase, atual, melhor, pior))
 }

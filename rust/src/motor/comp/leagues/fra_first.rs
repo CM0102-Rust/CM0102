@@ -139,7 +139,7 @@ pub(crate) unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, 
 /// registro, a disciplina e os dois marcadores (vtable e registro) e, na liga nova, os campos do começo e as
 /// estatísticas.
 pub(crate) unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1946);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_PRIMEIRA_FRANCESA);
     let r = o(this, ano, registro);
     let marcador = |m: usize, vt: usize, g: usize| m == 0 || (read_u32_as_usize(m) == vt && read_u32_as_usize(m + 4) == cqm6_registro(g) && *((m + 0x50) as *const u8) == 0xff);
     let mut ok = r == this && read_u32_as_usize(this) == 0x96aa24 && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
@@ -231,7 +231,7 @@ pub(crate) unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnc
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1b(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1884);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CALENDARIO_FIXO_DA_C1B);
     cqn6_comparar("calendario_fixo_da_c1b", this, || o(this))
 }
 
@@ -255,14 +255,14 @@ pub(crate) unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> 
 
 /// Os dois tocos: compara a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_toco_um_com_dois(this: usize, a: u32, b: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(1885)(this, a, b);
+    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_TOCO_UM_COM_DOIS)(this, a, b);
     let n = toco_um_com_dois(this, a, b);
     PLACAR.registrar(r == n, || format!("toco_um_com_dois: original={} rust={}", r, n));
     r
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_toco_um_com_um(this: usize, a: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(1886)(this, a);
+    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_TOCO_UM_COM_UM)(this, a);
     let n = toco_um_com_um(this, a);
     PLACAR.registrar(r == n, || format!("toco_um_com_um: original={} rust={}", r, n));
     r
@@ -993,7 +993,7 @@ pub(crate) unsafe fn cqj5_comparar(nome: &str, this: usize, escritas: Vec<(usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_1(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1756);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_FRANCA_1);
     cqj5_comparar("regras_da_franca_1", this, cqj5_primeira(this), || o(this), || regras_da_franca_1(this))
 }
 
@@ -1102,7 +1102,7 @@ pub(crate) unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, co
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_franca_1(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1759);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_FRANCA_1);
     let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
     cqj6_comparar("tabela_da_franca_1", this, n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, Some(0x30d40), || o(this))
 }
@@ -1151,6 +1151,6 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_primeira_francesa(this: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_primeira_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1898);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_PRIMEIRA_FRANCESA);
     cqo6_comparar("calendario_da_primeira_francesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_primeira_francesa(this, fase, r, e, l))
 }

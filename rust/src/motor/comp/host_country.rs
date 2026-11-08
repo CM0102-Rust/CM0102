@@ -152,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
 /// Lado a lado (a cópia sem contar os sorteios) pela tabela (conta +4 × 0x22 bytes), pelo estado do sorteador e por
 /// [0xb67a34].
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1957);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_TABELA_DAS_SEDES);
     let n = read_u16(this + 4) as i16;
     if read_u32_as_usize(this) == 0 || n <= 0 {
         return o(this);
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: us
 
 // ponytail: entrega notícias (aloca); só a original. A cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_das_sedes(this: usize, lista: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(1958)(this, lista)
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NOTICIA_DAS_SEDES)(this, lista)
 }
 
 /// reads HostCountry.tmp (the count and the 0x22-byte entries into a new block); without the file 0 (a new game builds
@@ -276,7 +276,7 @@ pub(crate) unsafe extern "thiscall" fn carregar_sedes(this: usize) -> u32 {
 
 // ponytail: abre o arquivo e aloca; só a original. A cópia leva os ramos.
 pub(crate) unsafe extern "thiscall" fn comparar_carregar_sedes(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(1959)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CARREGAR_SEDES)(this)
 }
 
 // ---------- 273a leva: as sedes das competições: a sede de uma edição, a próxima sede e o calendário das candidaturas (host_country.cpp) ----------
@@ -330,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn sede_da_edicao(this: usize, comp: u32, an
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_sede_da_edicao(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32>(1673);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32>(IDX_SEDE_DA_EDICAO);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, ano, a, b, padrao);
     let (oa, ob) = (*a, *b);
@@ -369,7 +369,7 @@ pub(crate) unsafe extern "thiscall" fn proxima_sede(this: usize, comp: u32, a: *
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u32>(1674);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u32>(IDX_PROXIMA_SEDE);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, a, b);
     let (oa, ob) = (*a, *b);
@@ -494,7 +494,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: u
 /// Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_das_sedes(this: usize, hoje: usize) {
     // ponytail: entrega notícias pela 0x5faec0 e mexe na lista: não dá para rodar duas vezes
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(1675)(this, hoje)
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CALENDARIO_DAS_SEDES)(this, hoje)
 }
 
 /// writes CM3_TEMP\HostCountry.tmp: the count (+4, u16) and 0x22 bytes per host from [+0], without checking the writes;
@@ -519,5 +519,5 @@ pub(crate) unsafe extern "thiscall" fn gravar_paises_anfitrioes(this: usize) {
 /// Comparador da 0x5fb320: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_paises_anfitrioes(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize)>(1502)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_GRAVAR_PAISES_ANFITRIOES)(this)
 }

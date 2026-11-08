@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn cqt10_oceania_dia(this: usize, hoje: usiz
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e a fase do
 // grupo B criadas e a fase atual (+0x30) = 0.
 pub(crate) unsafe extern "thiscall" fn comparar_cqt10_oceania_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2059);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQT10_OCEANIA_DIA);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo == 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -127,7 +127,7 @@ pub(crate) unsafe extern "thiscall" fn cqt10_oceania_grupo_a(this: usize) -> u32
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o escolhido i com a posição i (+4).
 pub(crate) unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2060);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQT10_OCEANIA_GRUPO_A);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn cqt10_oceania_grupo_b(this: usize) -> u32
 // fase em [+0xc][0], +0x30 = 0, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
 pub(crate) unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_b(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2061);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQT10_OCEANIA_GRUPO_B);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -398,7 +398,7 @@ pub(crate) unsafe extern "thiscall" fn cqt11_oceania_clubes(this: usize) -> u32 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 8 vagas e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_cqt11_oceania_clubes(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2062);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQT11_OCEANIA_CLUBES);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn cqt11_oceania_fase_seguinte(this: usize) 
 // ponytail: as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da
 // última fase, que dá a caixa e não muda nada).
 pub(crate) unsafe extern "thiscall" fn comparar_cqt11_oceania_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2063);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQT11_OCEANIA_FASE_SEGUINTE);
     let f = read_u32_as_usize(this + 0x30) as i32;
     let ultima = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
@@ -518,7 +518,7 @@ pub(crate) unsafe extern "thiscall" fn cqt11_oceania_semifinais(this: usize) {
 // ponytail: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4 times,
 // o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: a rodada pode reordenar).
 pub(crate) unsafe extern "thiscall" fn comparar_cqt11_oceania_semifinais(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2064);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQT11_OCEANIA_SEMIFINAIS);
     if read_u32_as_usize(this + 0xb1) == 0 || read_u32_as_usize(this + 0xc) == 0 || read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
         return o(this);
     }
@@ -743,7 +743,7 @@ pub(crate) unsafe extern "thiscall" fn cqq12_oceania_tabela(this: usize, fase: u
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq12_oceania_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1983);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQQ12_OCEANIA_TABELA);
     cqq12_comparar("cqq12_oceania_tabela", fase, cqq12_oceania_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqq12_oceania_tabela(this, fase, r, e, l))
 }
@@ -822,6 +822,6 @@ pub(crate) unsafe extern "thiscall" fn cqj11_oceania_clubes_regras(this: usize) 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqj11_oceania_clubes_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1699);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ11_OCEANIA_CLUBES_REGRAS);
     cqj11_confere("cqj11_oceania_clubes_regras", this, &CQJ11_OCEANIA, || o(this))
 }

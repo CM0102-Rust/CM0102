@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn regras_noruega(this: usize, a1: u32, a2: 
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_noruega(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1810);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_NORUEGA);
     let mut r = 0usize;
     cqk1_comparar("regras_noruega", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_noruega(s, a1, a2, a3, a4, a5);
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn regras_irlanda_do_norte(this: usize, a1: 
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_irlanda_do_norte(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1811);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_IRLANDA_DO_NORTE);
     let mut r = 0usize;
     cqk1_comparar("regras_irlanda_do_norte", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_irlanda_do_norte(s, a1, a2, a3, a4, a5);
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn regras_pais_de_gales(this: usize, a1: u32
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_pais_de_gales(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1812);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_PAIS_DE_GALES);
     let mut r = 0usize;
     cqk1_comparar("regras_pais_de_gales", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_pais_de_gales(s, a1, a2, a3, a4, a5);

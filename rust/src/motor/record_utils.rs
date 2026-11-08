@@ -69,7 +69,7 @@ pub(crate) unsafe extern "C" fn registro_da_partida_pelo_clube(jogo: usize, club
 /// Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
 /// só a original.
 pub(crate) unsafe extern "C" fn comparar_registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(1398);
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_REGISTRO_DA_PARTIDA_PELO_CLUBE);
     if jogo == 0 || clube == 0 || saida == 0 {
         return o(jogo, clube, saida);
     }
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) 
 
 /// Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
 pub(crate) unsafe extern "C" fn comparar_referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1399);
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_REFERENCIA_AO_NOME);
     if pessoa == 0 || saida == 0 {
         return o(pessoa, saida);
     }
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "C" fn codigo_do_resultado(registro: usize) -> u8 {
 
 /// Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
 pub(crate) unsafe extern "C" fn comparar_codigo_do_resultado(registro: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(1400);
+    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CODIGO_DO_RESULTADO);
     if registro == 0 {
         return o(registro);
     }
@@ -241,7 +241,7 @@ pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: u
 /// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(1369)(a, b);
+        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_VITORIA_MAIOR)(a, b);
     }
     let (fa, sa, fb, sb) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
     if fa <= sa {
@@ -253,7 +253,7 @@ pub(crate) unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
 pub(crate) unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1369)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_VITORIA_MAIOR)(a, b);
     if a == 0 || b == 0 {
         return r;
     }
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u3
 /// sofridos. Registro nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(1370)(a, b);
+        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DERROTA_MAIOR)(a, b);
     }
     let (fa, sa, fb, sb) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
     if fa >= sa {
@@ -282,7 +282,7 @@ pub(crate) unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
 pub(crate) unsafe extern "C" fn comparar_derrota_maior(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(1370)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DERROTA_MAIOR)(a, b);
     if a == 0 || b == 0 {
         return r;
     }

@@ -93,7 +93,7 @@ pub(crate) unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, mot
 /// O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
 /// sorteio). Sem notícia, tudo igual; com notícia (que sorteia e vai às caixas), só [0xae1080].
 pub(crate) unsafe extern "stdcall" fn comparar_noticia_reacao_a_multa(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
-    let o = orig::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(1405);
+    let o = orig::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(IDX_NOTICIA_REACAO_A_MULTA);
     let mut regioes = vec![(0xae1080, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
@@ -141,6 +141,6 @@ pub(crate) unsafe extern "stdcall" fn noticia_retorno_do_treinador(jogador: usiz
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem
 // notícia as duas não fazem nada.
 pub(crate) unsafe extern "stdcall" fn comparar_noticia_retorno_do_treinador(jogador: usize, treinador: usize, desfecho: u32) {
-    orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(1406)(jogador, treinador, desfecho)
+    orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_NOTICIA_RETORNO_DO_TREINADOR)(jogador, treinador, desfecho)
 }
 

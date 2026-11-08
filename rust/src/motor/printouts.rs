@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn sortear_comentarista(this: usize, clube: 
 
 /// O comparador: lado a lado nos cabeçalhos das duas listas (o cursor) e no sorteio, e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_sortear_comentarista(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(1407);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(IDX_SORTEAR_COMENTARISTA);
     let mut regioes = Vec::new();
     for l in [read_usize(this), read_usize(this + 4)] {
         if l != 0 {
@@ -172,7 +172,7 @@ pub(crate) unsafe extern "thiscall" fn nome_do_veiculo(this: usize, tipo: u32, i
 /// O comparador: lado a lado no nome (até 0xd4 bytes: o nome do comentarista tem 0xd1 e o padrão menos), na marca e
 /// nos cabeçalhos das listas (o cursor).
 pub(crate) unsafe extern "thiscall" fn comparar_nome_do_veiculo(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8)>(1408);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8)>(IDX_NOME_DO_VEICULO);
     let mut regioes = vec![(marca as usize, 1)];
     if nome != 0 {
         regioes.push((nome, 0xd4));

@@ -55,7 +55,7 @@ pub(crate) unsafe extern "C" fn casar_nome_com_padrao(padrao: *const u8, nome: *
 }
 
 pub(crate) unsafe extern "C" fn comparar_casar_nome_com_padrao(padrao: *const u8, nome: *const u8) -> u32 {
-    let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(556)(padrao, nome);
+    let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(IDX_CASAR_NOME_COM_PADRAO)(padrao, nome);
     let n = casar_nome_com_padrao(padrao, nome);
     PLACAR.registrar(r == n, || {
         let t = |p: *const u8| String::from_utf8_lossy(core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes()).into_owned();
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "C" fn id_do_conteiner(caminho: usize) -> u32 {
 
 // O id e o tamanho só leem o arquivo e liberam o que alocam: as duas rodam lado a lado.
 pub(crate) unsafe extern "C" fn comparar_id_do_conteiner(caminho: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(557)(caminho);
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_ID_DO_CONTEINER)(caminho);
     let n = id_do_conteiner(caminho);
     PLACAR.registrar(r == n, || format!("id_do_conteiner {:#x} x {:#x}", r, n));
     r
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "C" fn tamanho_dos_itens_do_padrao(caminho: usize, padr
 }
 
 pub(crate) unsafe extern "C" fn comparar_tamanho_dos_itens_do_padrao(caminho: usize, padrao: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(558)(caminho, padrao);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_TAMANHO_DOS_ITENS_DO_PADRAO)(caminho, padrao);
     let n = tamanho_dos_itens_do_padrao(caminho, padrao);
     PLACAR.registrar(r == n, || format!("tamanho_dos_itens_do_padrao {} x {}", r, n));
     r
@@ -254,7 +254,7 @@ pub(crate) unsafe extern "C" fn empacotar_no_conteiner(caminho: usize, pasta: us
 // ponytail: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
 // save compara o .qst gravado com e sem a leva.
 pub(crate) unsafe extern "C" fn comparar_empacotar_no_conteiner(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
-    orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(559)(caminho, pasta, padrao, a4, tipo)
+    orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_EMPACOTAR_NO_CONTEINER)(caminho, pasta, padrao, a4, tipo)
 }
 
 /// each container item whose name matches the pattern becomes a folder file (zopen for reading, zread in 0x30d40
@@ -367,7 +367,7 @@ pub(crate) unsafe extern "C" fn desempacotar_do_conteiner(caminho: usize, pasta:
 // ponytail: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
 // (--sav) passa por aqui; a gravação não.
 pub(crate) unsafe extern "C" fn comparar_desempacotar_do_conteiner(caminho: usize, pasta: usize, padrao: usize) -> u32 {
-    orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(560)(caminho, pasta, padrao)
+    orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DESEMPACOTAR_DO_CONTEINER)(caminho, pasta, padrao)
 }
 
 /// builds the CM3_TEMP folder path in [0xde279c] and deletes its files matching the pattern, in groups of 100
@@ -426,7 +426,7 @@ pub(crate) unsafe extern "C" fn limpar_pasta_temporaria(padrao: usize) {
 
 // ponytail: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
 pub(crate) unsafe extern "C" fn comparar_limpar_pasta_temporaria(padrao: usize) {
-    orig::<unsafe extern "C" fn(usize)>(561)(padrao)
+    orig::<unsafe extern "C" fn(usize)>(IDX_LIMPAR_PASTA_TEMPORARIA)(padrao)
 }
 
 // ---------- 218a leva: o contêiner do save: ler, gravar e fechar um item (o RLE do tipo 4) (zipdir.cpp) ----------
@@ -548,7 +548,7 @@ pub(crate) unsafe extern "C" fn ler_do_conteiner(buf: *mut u8, tam: i32, quantos
 // ponytail: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
 // (carga, --sav) e a gravação (o zseek relê pela zread) passam por aqui.
 pub(crate) unsafe extern "C" fn comparar_ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    orig::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(562)(buf, tam, quantos, z)
+    orig::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(IDX_LER_DO_CONTEINER)(buf, tam, quantos, z)
 }
 
 /// Um byte comprimido para o buffer de escrita (+0x72445, cursor +0xa3189); cheio, grava o buffer
@@ -624,7 +624,7 @@ pub(crate) unsafe extern "C" fn gravar_no_conteiner(buf: *const u8, tam: i32, qu
 // ponytail: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
 // compara o .qst tipo 4 gravado com e sem a leva.
 pub(crate) unsafe extern "C" fn comparar_gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    orig::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(563)(buf, tam, quantos, z)
+    orig::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(IDX_GRAVAR_NO_CONTEINER)(buf, tam, quantos, z)
 }
 
 /// when writing: flushes the buffer, closes the pending RLE run and rewrites header and index at the start; closes the
@@ -678,6 +678,6 @@ pub(crate) unsafe extern "C" fn fechar_conteiner(zz: *mut usize) {
 
 // ponytail: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
 pub(crate) unsafe extern "C" fn comparar_fechar_conteiner(zz: *mut usize) {
-    orig::<unsafe extern "C" fn(*mut usize)>(564)(zz)
+    orig::<unsafe extern "C" fn(*mut usize)>(IDX_FECHAR_CONTEINER)(zz)
 }
 

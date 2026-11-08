@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn achar_noticia_pelo_id(this: usize, tecnic
 /// Comparador: lado a lado no vetor das notícias (News +0, +4 vagas), nas entradas dos 16 humanos (News +8) e no texto
 /// do botão (0xde1f64; a 0x782b70 só consulta). Caixa "Error": só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_marcar_noticia_lida(this: usize, tecnico: usize, id: u32, sincronizar: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(983);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_MARCAR_NOTICIA_LIDA);
     if tecnico == 0 || id == 0 || read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 || read_usize(this) == 0 {
         return o(this, tecnico, id, sincronizar);
     }
@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_marcar_noticia_lida(this: usize,
 
 /// Comparador: pela notícia copiada em `saida` (0xdf bytes) e pela devolução. Caixa "Error": só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_achar_noticia_pelo_id(this: usize, tecnico: usize, id: u32, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(984);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(IDX_ACHAR_NOTICIA_PELO_ID);
     if id == 0 || saida == 0 || (tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0) {
         return o(this, tecnico, id, saida);
     }
@@ -323,7 +323,7 @@ pub(crate) unsafe extern "thiscall" fn entregar_noticia_ao_tecnico(this: usize, 
 /// Comparador: a entrega pode cair na caixa do humano (realloc, ids, resposta automática): roda só a original e confere
 /// o alcance; alcance fora de 0..5 devolve 0.
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_pelo_alcance(this: usize, noticia: usize, clube: usize, competicao: usize, nacao: usize, continente: usize, alcance: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(946)(this, noticia, clube, competicao, nacao, continente, alcance);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(IDX_NOTICIA_PELO_ALCANCE)(this, noticia, clube, competicao, nacao, continente, alcance);
     let fora = !(0..=5).contains(&(alcance as u8 as i8));
     PLACAR.registrar(!fora || r == 0, || format!("noticia_pelo_alcance alcance {} devolveu {}", alcance as u8 as i8, r));
     r
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_pelo_alcance(this: usize
 /// Comparador: roda só a original (a entrega não pode rodar duas vezes) e confere o plano: o alcance zerado e, sem técnico
 /// humano, a devolução 0 (com humano, a entrega devolve 1 ou 0 sem memória).
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_ao_tecnico_do_clube(this: usize, noticia: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(947);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_AO_TECNICO_DO_CLUBE);
     if noticia == 0 || clube == 0 {
         return o(this, noticia, clube);
     }
@@ -347,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_ao_tecnico_do_clube(this
 /// Comparador: a original realoca o vetor, numera e responde: roda só ela e confere o plano feito antes: o id da notícia,
 /// o contador de ids (News +0x10), o anel do humano (início, próxima vaga, conta), a vaga escrita com o id e +0xda = 0.
 pub(crate) unsafe extern "thiscall" fn comparar_entregar_noticia_ao_tecnico(this: usize, noticia: usize, tecnico: usize, livre: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(948);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_ENTREGAR_NOTICIA_AO_TECNICO);
     if noticia == 0 || tecnico == 0 || cpn1_indice_humano(tecnico) < 0 {
         return o(this, noticia, tecnico, livre);
     }
@@ -540,14 +540,14 @@ pub(crate) unsafe extern "thiscall" fn gravar_texto_na_noticia(this: usize, camp
 /// ou com técnico da máquina; senão 1).
 pub(crate) unsafe extern "thiscall" fn comparar_responder_todas_as_noticias(this: usize, tecnico: usize, clube: usize) -> u32 {
     let humano = tecnico != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) >= 0;
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(949)(this, tecnico, clube);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_RESPONDER_TODAS_AS_NOTICIAS)(this, tecnico, clube);
     PLACAR.registrar(r == humano as u32, || format!("responder_todas_as_noticias(técnico {:x}, humano {}) devolveu {}", tecnico, humano, r));
     r
 }
 
 /// Comparador: lado a lado pela devolução e pelo texto montado em 0xde1f64 (a 0x782b70 não sorteia; a caixa não muda).
 pub(crate) unsafe extern "thiscall" fn comparar_tecnico_tem_noticia_pendente(this: usize, tecnico: usize, so_urgentes: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(950);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_TECNICO_TEM_NOTICIA_PENDENTE);
     if so_urgentes != 0 && read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, so_urgentes); // a caixa "Error"
     }
@@ -559,7 +559,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tecnico_tem_noticia_pendente(thi
 
 /// Comparador: lado a lado pelos campos da notícia (+5..+0xcc) e pelo próximo campo.
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_texto_na_noticia(this: usize, campo: u32, texto: *const u8, proximo: *mut u8) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *const u8, *mut u8) -> u32>(951);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *const u8, *mut u8) -> u32>(IDX_GRAVAR_TEXTO_NA_NOTICIA);
     if !(0..0x32).contains(&(campo as u8 as i8)) || texto.is_null() {
         return o(this, campo, texto, proximo); // a caixa "Error"
     }
@@ -584,7 +584,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_texto_na_noticia(this: us
 /// continente nulos: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_continente(this: usize, noticia: usize, continente: usize) -> u32 {
     if noticia == 0 || continente == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(895)(this, noticia, continente); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_OS_TECNICOS_DO_CONTINENTE)(this, noticia, continente); // caixa: só a original
     }
     cpj3_entregar(this, noticia, 3, |p| {
         let c = read_usize(p + 0x39);
@@ -609,7 +609,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_continente(th
 /// "Error").
 pub(crate) unsafe extern "thiscall" fn noticia_para_a_regiao_da_competicao(this: usize, noticia: usize, comp: usize) -> u32 {
     if noticia == 0 || comp == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(896)(this, noticia, comp); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_A_REGIAO_DA_COMPETICAO)(this, noticia, comp); // caixa: só a original
     }
     let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     if nacao != 0 {
@@ -643,7 +643,7 @@ pub(crate) unsafe fn cpk5_tecnico_do_clube(noticia: usize, o: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn noticia_importante_para_a_pessoa(noticia: usize, pessoa: usize) -> u8 {
     let t = read_usize(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(897)(noticia, pessoa); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_NOTICIA_IMPORTANTE_PARA_A_PESSOA)(noticia, pessoa); // caixa: só a original
     }
     let categoria: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
     let r = match categoria(noticia) as u8 {
@@ -669,17 +669,17 @@ pub(crate) unsafe extern "thiscall" fn noticia_importante_para_a_pessoa(noticia:
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_do_continente(this: usize, noticia: usize, continente: usize) -> u32 {
     crate::comparacao::ramo("noticia_para_os_tecnicos_do_continente");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(895)(this, noticia, continente)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_OS_TECNICOS_DO_CONTINENTE)(this, noticia, continente)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_a_regiao_da_competicao(this: usize, noticia: usize, comp: usize) -> u32 {
     crate::comparacao::ramo("noticia_para_a_regiao_da_competicao");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(896)(this, noticia, comp)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_A_REGIAO_DA_COMPETICAO)(this, noticia, comp)
 }
 
 /// Comparador: pelo valor (a 0x785670 só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_importante_para_a_pessoa(noticia: usize, pessoa: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(897)(noticia, pessoa);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_NOTICIA_IMPORTANTE_PARA_A_PESSOA)(noticia, pessoa);
     let t = read_usize(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {
         return r;
@@ -703,7 +703,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_importante_para_a_pessoa
 pub(crate) unsafe extern "thiscall" fn texto_do_dado_da_noticia(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
     let k = dado as u8 as i8;
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(898)(noticia, dado, destino, n); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_TEXTO_DO_DADO_DA_NOTICIA)(noticia, dado, destino, n); // caixa: só a original
     }
     crate::comparacao::ramo("cpk_6 texto do dado");
     let origem = (noticia + 5 + 4 * k as usize) as *const u8; // o dado
@@ -729,7 +729,7 @@ pub(crate) unsafe fn cpk6_clube(clube: usize) -> usize {
 
 /// Comparador: lado a lado pelos `n` bytes do destino.
 pub(crate) unsafe extern "thiscall" fn comparar_texto_do_dado_da_noticia(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(898);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_TEXTO_DO_DADO_DA_NOTICIA);
     let k = dado as u8 as i8;
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
         return o(noticia, dado, destino, n);
@@ -774,7 +774,7 @@ pub(crate) unsafe fn cpj3_entregar(this: usize, noticia: usize, alcance: u8, pas
 /// (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn noticia_para_todos_os_tecnicos(this: usize, noticia: usize) -> u32 {
     if noticia == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(870)(this, noticia); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_NOTICIA_PARA_TODOS_OS_TECNICOS)(this, noticia); // caixa: só a original
     }
     cpj3_entregar(this, noticia, 4, |_| true) as u32
 }
@@ -788,7 +788,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_para_todos_os_tecnicos(this: usiz
 /// primeira recusada. Notícia ou divisão nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_divisao(this: usize, noticia: usize, divisao: usize) -> u32 {
     if noticia == 0 || divisao == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(871)(this, noticia, divisao); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_OS_TECNICOS_DA_DIVISAO)(this, noticia, divisao); // caixa: só a original
     }
     cpj3_entregar(this, noticia, 1, |p| {
         let c = read_usize(p + 0x39);
@@ -805,7 +805,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_divisao(this:
 /// Notícia ou nação nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_pais(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(872)(this, noticia, nacao); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_OS_TECNICOS_DO_PAIS)(this, noticia, nacao); // caixa: só a original
     }
     cpj3_entregar(this, noticia, 2, |p| {
         let (c, s) = (read_usize(p + 0x39), read_usize(p + 0x24));
@@ -818,17 +818,17 @@ pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_pais(this: us
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_todos_os_tecnicos(this: usize, noticia: usize) -> u32 {
     crate::comparacao::ramo("noticia_para_todos_os_tecnicos");
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(870)(this, noticia)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_NOTICIA_PARA_TODOS_OS_TECNICOS)(this, noticia)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_da_divisao(this: usize, noticia: usize, divisao: usize) -> u32 {
     crate::comparacao::ramo("noticia_para_os_tecnicos_da_divisao");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(871)(this, noticia, divisao)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_OS_TECNICOS_DA_DIVISAO)(this, noticia, divisao)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_do_pais(this: usize, noticia: usize, nacao: usize) -> u32 {
     crate::comparacao::ramo("noticia_para_os_tecnicos_do_pais");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(872)(this, noticia, nacao)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_OS_TECNICOS_DO_PAIS)(this, noticia, nacao)
 }
 
 // ---------- 245a leva: a notícia para os técnicos humanos de uma nação, a missão do olheiro da busca e se a copa terminou ----------
@@ -844,7 +844,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_do_pais
 /// encerra. Devolve 0. Notícia ou nação nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_nacao(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(861)(this, noticia, nacao); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_OS_TECNICOS_DA_NACAO)(this, noticia, nacao); // caixa: só a original
     }
     *((noticia + 0xde) as *mut u8) = 2; // o alcance da nação
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_DELIVER_TO_MANAGER);
@@ -885,7 +885,7 @@ pub(crate) unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_da_nacao(this: usize, noticia: usize, nacao: usize) -> u32 {
     crate::comparacao::ramo("noticia_para_os_tecnicos_da_nacao");
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(861)(this, noticia, nacao)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_NOTICIA_PARA_OS_TECNICOS_DA_NACAO)(this, noticia, nacao)
 }
 
 
@@ -917,7 +917,7 @@ pub(crate) unsafe fn noticia_da_caixa(noticias: usize, inicio: i32, k: i32) -> u
 pub(crate) unsafe extern "thiscall" fn noticias_nao_lidas(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
     let entrada = match if tecnico == 0 { None } else { entrada_da_caixa_do_tecnico(noticias, tecnico) } {
         Some(e) => e,
-        None => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(528)(noticias, tecnico, categoria),
+        None => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_NOTICIAS_NAO_LIDAS)(noticias, tecnico, categoria),
     };
     let total = (entrada + 8) as *mut i32;
     if *total < 0 {
@@ -975,7 +975,7 @@ pub(crate) unsafe fn alvo_da_marca(noticias: usize, tecnico: usize, id: u32, vag
 pub(crate) unsafe extern "thiscall" fn gravar_marca_da_noticia(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
     let alvo = match alvo_da_marca(noticias, tecnico, id, vaga, copia) {
         Ok(a) => a,
-        Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(529)(noticias, tecnico, id, vaga, valor, copia),
+        Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(IDX_GRAVAR_MARCA_DA_NOTICIA)(noticias, tecnico, id, vaga, valor, copia),
     };
     if copia != 0 {
         core::ptr::write_unaligned((copia + 5 + 4 * vaga as usize) as *mut u32, valor);
@@ -1012,7 +1012,7 @@ pub(crate) unsafe extern "stdcall" fn clube_de_tecnico_humano(clube: usize) -> u
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_noticias_nao_lidas(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(528);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_NOTICIAS_NAO_LIDAS);
     let entrada = if tecnico == 0 { None } else { entrada_da_caixa_do_tecnico(noticias, tecnico) };
     let Some(entrada) = entrada else {
         return o(noticias, tecnico, categoria);
@@ -1024,7 +1024,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticias_nao_lidas(noticias: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_marca_da_noticia(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(529);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(IDX_GRAVAR_MARCA_DA_NOTICIA);
     let Ok(alvo) = alvo_da_marca(noticias, tecnico, id, vaga, copia) else {
         return o(noticias, tecnico, id, vaga, valor, copia);
     };
@@ -1043,7 +1043,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_marca_da_noticia(noticias
 
 pub(crate) unsafe extern "stdcall" fn comparar_clube_de_tecnico_humano(clube: usize) -> u32 {
     // só consultas: as duas rodam de novo sem efeito
-    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(530)(clube);
+    let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_CLUBE_DE_TECNICO_HUMANO)(clube);
     let n = clube_de_tecnico_humano(clube);
     PLACAR.registrar(r == n, || format!("clube_de_tecnico_humano original={} rust={}", r, n));
     r
@@ -1092,7 +1092,7 @@ pub(crate) unsafe extern "thiscall" fn esvaziar_caixa_de_entrada(this: usize, te
 /// Comparador: lado a lado na caixa e nas 100 notícias; com resposta padrão a dar (clube ou seleção), só a original,
 /// conferindo o plano depois dela (+4 = +0, +8 = 0 e os dois campos das 100 notícias). Erros: a original.
 pub(crate) unsafe extern "thiscall" fn comparar_esvaziar_caixa_de_entrada(this: usize, tecnico: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1262);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ESVAZIAR_CAIXA_DE_ENTRADA);
     if tecnico == 0 {
         return o(this, tecnico);
     }
@@ -1145,7 +1145,7 @@ pub(crate) unsafe extern "thiscall" fn construir_noticia(this: usize, tipo: u32,
 
 /// Comparador: pela memória da notícia (0xde bytes; a original usa só uma temporária na pilha) e pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_construir_noticia(this: usize, tipo: u32, importante: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(979);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_CONSTRUIR_NOTICIA);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xde)], || o(this, tipo, importante), || construir_noticia(this, tipo, importante));
     PLACAR.registrar(igual && r == n, || format!("construir_noticia(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
     r
@@ -1208,7 +1208,7 @@ pub(crate) unsafe extern "thiscall" fn noticias_da_caixa(this: usize, tecnico: u
 
 /// Comparador: a original aloca o vetor: roda só ela e confere o plano feito antes (a conta e os ids, na ordem).
 pub(crate) unsafe extern "thiscall" fn comparar_noticias_da_caixa(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(954);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(IDX_NOTICIAS_DA_CAIXA);
     if tecnico == 0 || read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10) < 0 {
         return o(this, tecnico, conta, categoria);
     }
@@ -1260,13 +1260,13 @@ pub(crate) unsafe extern "thiscall" fn categoria_da_noticia(noticia: usize) -> u
         4000..=4999 => 5,
         5000..=5999 => 1,
         6000..=0x1790 => 6,
-        _ => return orig::<unsafe extern "thiscall" fn(usize) -> u32>(507)(noticia),
+        _ => return orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CATEGORIA_DA_NOTICIA)(noticia),
     };
     (t as u32 & 0xffff_ff00) | c
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_categoria_da_noticia(noticia: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(507);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CATEGORIA_DA_NOTICIA);
     let t = *(noticia as *const i32);
     if !(1..=0x1790).contains(&t) {
         return o(noticia);
@@ -1284,13 +1284,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_categoria_da_noticia(noticia: us
 /// cada). Fora da faixa: a original (caixa de erro, devolve 0).
 pub(crate) unsafe extern "thiscall" fn vaga_da_noticia(noticia: usize, vaga: i8) -> u32 {
     if !(0..0x32).contains(&vaga) {
-        return orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(450)(noticia, vaga);
+        return orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_VAGA_DA_NOTICIA)(noticia, vaga);
     }
     core::ptr::read_unaligned((noticia + 5 + vaga as usize * 4) as *const u32)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_vaga_da_noticia(noticia: usize, vaga: i8) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(450)(noticia, vaga);
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_VAGA_DA_NOTICIA)(noticia, vaga);
     if !(0..0x32).contains(&vaga) {
         return r;
     }
@@ -1306,14 +1306,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_vaga_da_noticia(noticia: usize, 
 /// cada). Devolve 1. `k` fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn gravar_dado_da_noticia(t: usize, k: i8, valor: u32) -> u32 {
     if !(0..0x32).contains(&k) {
-        return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(399)(t, k, valor);
+        return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_GRAVAR_DADO_DA_NOTICIA)(t, k, valor);
     }
     core::ptr::write_unaligned((t + 5 + 4 * k as usize) as *mut u32, valor);
     1
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_dado_da_noticia(t: usize, k: i8, valor: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(399);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_GRAVAR_DADO_DA_NOTICIA);
     let reg = if (0..0x32).contains(&k) { vec![(t + 5 + 4 * k as usize, 4)] } else { vec![] };
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, k, valor), || gravar_dado_da_noticia(t, k, valor));
     PLACAR.registrar(igual && r == v, || format!("gravar_dado_da_noticia({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, valor, r, mo, v, mr));
@@ -1343,7 +1343,7 @@ pub(crate) unsafe extern "thiscall" fn copiar_noticia(this: usize, origem: usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_copiar_noticia(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(817);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_NOTICIA);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0xdf)], || o(this, origem), || copiar_noticia(this, origem));
     PLACAR.registrar(igual && r == n, || format!("copiar_noticia {:x?} x {:x?}", mo, mr));
     r

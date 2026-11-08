@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_dia(this: usize) {
 /// das filas são liberados e os jogos de reservas entram no calendário: não roda duas vezes). Confere o que a rotina
 /// garante: a fila das notícias some ([+0x1128] = 0 se havia) e a lista das conferências fica vazia.
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_dia(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1555);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CALENDARIO_DIA);
     let havia = read_u32_as_usize(this + 0x1128);
     let antes = read_i16(G_FIXTURE_LEGS_LIST);
     o(this);
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_lista(this: usize, ano: u32, d
 /// O comparador da lista do dia: com o ano no bloco ou no outro bloco, as duas (só leem) e a mesma lista; senão só a
 /// original (ponytail: troca o bloco do outro ano, que grava e lê o arquivo, ou aloca um bloco novo).
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_lista(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(1556);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(IDX_CALENDARIO_LISTA);
     let outro = read_u32_as_usize(this + 0x112c);
     let direto = read_i16(this + 0x1130) == ano as i16 || (outro != 0 && read_i16(outro + 0x1130) == ano as i16);
     if !direto {
@@ -290,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_carregar_ano(this: usize) {
 /// O comparador da carga dos jogos do ano: só a original (ponytail: lê o arquivo e aloca os nós das listas; não roda
 /// duas vezes). Confere o nome gravado em +0x1133.
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_carregar_ano(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1557)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CALENDARIO_CARREGAR_ANO)(this);
     let esperado = format!("fixtures_{}.tmp", read_i16(this + 0x1130) as u16);
     let s = core::slice::from_raw_parts((this + 0x1133) as *const u8, esperado.len() + 1);
     PLACAR.registrar(&s[..esperado.len()] == esperado.as_bytes() && s[esperado.len()] == 0,
@@ -485,7 +485,7 @@ pub(crate) unsafe extern "thiscall" fn conflitos_do_dia(this: usize, jogo: usize
                         let a = read_usize(jogo + 0x20);
                         if c1 == 0 || h == 0 || a == 0 {
                             // a caixa (linha 0xcc8) e o fim do jogo: a original
-                            return orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(1515)(this, jogo, grav, lista, nacoes, n, data, desloc);
+                            return orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(IDX_CONFLITOS_DO_DIA)(this, jogo, grav, lista, nacoes, n, data, desloc);
                         }
                         let c2 = read_usize(x + 0x20);
                         let (sx0, sx1, s0, s1b) = (read_u8(x + 0x40), read_u8(x + 0x41), read_u8(jogo + 0x40), read_u8(jogo + 0x41));
@@ -573,7 +573,7 @@ pub(crate) unsafe extern "thiscall" fn conflitos_do_dia(this: usize, jogo: usize
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
 /// cada jogo, na ordem). As listas dos dias (0x5abf10) têm o cursor refeito nas duas.
 pub(crate) unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(1515);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(IDX_CONFLITOS_DO_DIA);
     if jogo == 0 || lista == 0 || grav.is_null() || read_usize(jogo + 0x1c) == 0 || read_usize(jogo + 0x20) == 0 {
         return o(this, jogo, grav, lista, nacoes, n, data, desloc);
     }
@@ -611,7 +611,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jo
 /// push jogo -> thiscall, ret 4) e 0. Senão a gravidade na saída e a lista.
 pub(crate) unsafe extern "thiscall" fn conflitos_do_jogo(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
     if jogo == 0 || saida.is_null() {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(1516)(this, jogo, saida, dois_dias); // a caixa
+        return orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(IDX_CONFLITOS_DO_JOGO)(this, jogo, saida, dois_dias); // a caixa
     }
     let chave_do_jogo: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
     let do_estadio: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_STADIUM);
@@ -707,7 +707,7 @@ pub(crate) unsafe extern "thiscall" fn conflitos_do_jogo(this: usize, jogo: usiz
 /// devolução (lista ou 0), a saída e os jogos das duas listas (0x4f bytes cada, na ordem), e destrói e libera a lista
 /// da cópia como o calendário faz (0x68d040, 0x944c94).
 pub(crate) unsafe extern "thiscall" fn comparar_conflitos_do_jogo(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(1516);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(IDX_CONFLITOS_DO_JOGO);
     if jogo == 0 || saida.is_null() {
         return o(this, jogo, saida, dois_dias);
     }
@@ -766,7 +766,7 @@ pub(crate) unsafe extern "C" fn carregar_conferencia_das_pernas() {
 /// O comparador da carga das conferências: só a original (ponytail: lê o arquivo e aloca os nós da lista; não pode rodar
 /// duas vezes).
 pub(crate) unsafe extern "C" fn comparar_carregar_conferencia_das_pernas() {
-    orig::<unsafe extern "C" fn()>(1517)()
+    orig::<unsafe extern "C" fn()>(IDX_CARREGAR_CONFERENCIA_DAS_PERNAS)()
 }
 
 // ---------- 266a leva: o calendário: a nova data de um jogo, a entrada do jogo no calendário e a troca do ano do calendário (fix_man.cpp) ----------
@@ -862,7 +862,7 @@ pub(crate) unsafe fn cqc4_liberar(l: usize) {
 /// fica. Sem achar: 2 dias depois da data do jogo (ou de hoje, se já passou).
 pub(crate) unsafe extern "thiscall" fn nova_data_do_jogo(this: usize, jogo: usize) {
     if jogo == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize)>(1518)(this, jogo); // a caixa
+        return orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NOVA_DATA_DO_JOGO)(this, jogo); // a caixa
     }
     let (mut s, mut e, mut j, mut h, mut k) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
     cqc4_padrao(&mut s);
@@ -971,7 +971,7 @@ pub(crate) unsafe extern "thiscall" fn nova_data_do_jogo(this: usize, jogo: usiz
 /// O comparador da nova data: lado a lado no jogo (0x4f bytes); os conflitos de dentro (0x5ad780) criam e destroem a
 /// lista deles. Só a original quando o jogo entra na lista de conferência das pernas (aloca o nó).
 pub(crate) unsafe extern "thiscall" fn comparar_nova_data_do_jogo(this: usize, jogo: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1518);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NOVA_DATA_DO_JOGO);
     let unidades: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
     // a caixa da janela sem data (+0x24, tipo 2) apareceria duas vezes: só a original
     if jogo == 0 || matches!(unidades(read_u16(jogo + 0x30) as i16 as i32), 3 | 4) || (read_u8(jogo + 0x3a) == 2 && read_u16(jogo + 0x24) == 0) {
@@ -1191,7 +1191,7 @@ pub(crate) unsafe extern "thiscall" fn jogo_no_calendario(this: usize, jogo: usi
 /// bloco do outro ano, remarca e entrega notícias; não pode rodar duas vezes). A cópia segue no modo Rust, com os
 /// contadores.
 pub(crate) unsafe extern "thiscall" fn comparar_jogo_no_calendario(this: usize, jogo: usize, zerar: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1519)(this, jogo, zerar)
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_JOGO_NO_CALENDARIO)(this, jogo, zerar)
 }
 
 /// saves the year's fixtures, moves the other block to the neighbouring year if needed, destroys the 366 days' lists,
@@ -1291,7 +1291,7 @@ pub(crate) unsafe extern "thiscall" fn ano_do_calendario(this: usize, ano: u32) 
 /// O comparador do ano do calendário: só a original (ponytail: grava e lê os arquivos dos jogos do ano e refaz todas
 /// as listas; não pode rodar duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_ano_do_calendario(this: usize, ano: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(1520)(this, ano)
+    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_ANO_DO_CALENDARIO)(this, ano)
 }
 // ---------- 265a leva: o save do calendário: gravar e carregar as datas dos clubes e gravar a conferência das pernas (fix_man.cpp) ----------
 
@@ -1333,7 +1333,7 @@ pub(crate) unsafe extern "C" fn gravar_datas_dos_clubes() {
 pub(crate) unsafe extern "C" fn comparar_gravar_datas_dos_clubes() {
     // ponytail: grava o arquivo do save (não pode rodar duas vezes); a cópia é provada pela prova do save (o .qst
     // gravado no modo rust com e sem a leva, item a item: club_dates.tmp)
-    orig::<unsafe extern "C" fn()>(1506)()
+    orig::<unsafe extern "C" fn()>(IDX_GRAVAR_DATAS_DOS_CLUBES)()
 }
 
 /// allocates the [0xae2a5c] table (one word per club) and reads it from CM3_TEMP\club_dates.tmp, or zeroes it without
@@ -1373,7 +1373,7 @@ pub(crate) unsafe extern "C" fn carregar_datas_dos_clubes() {
 pub(crate) unsafe extern "C" fn comparar_carregar_datas_dos_clubes() {
     // ponytail: aloca a tabela global e lê o arquivo (não pode rodar duas vezes); a cópia é provada pela carga do
     // save de férias na prova do save (levas/N/CARGA) e, sem o arquivo, pela carreira nova
-    orig::<unsafe extern "C" fn()>(1507)()
+    orig::<unsafe extern "C" fn()>(IDX_CARREGAR_DATAS_DOS_CLUBES)()
 }
 
 /// with the [0xae2a48] list not empty, writes the count (2 bytes) and the 15-byte items into
@@ -1413,7 +1413,7 @@ pub(crate) unsafe extern "C" fn gravar_conferencia_das_pernas() {
 /// Comparador da 0x5af4a0: só a original.
 pub(crate) unsafe extern "C" fn comparar_gravar_conferencia_das_pernas() {
     // ponytail: grava o arquivo do save e anda o cursor da lista; a cópia é provada pela prova do save
-    orig::<unsafe extern "C" fn()>(1508)()
+    orig::<unsafe extern "C" fn()>(IDX_GRAVAR_CONFERENCIA_DAS_PERNAS)()
 }
 
 // ---------- 264a leva: o calendário: o conflito de dois jogos no mesmo dia e os anos de jogos de um clube (fix_man.cpp) ----------
@@ -1538,7 +1538,7 @@ pub(crate) unsafe extern "thiscall" fn conflito_de_jogos_no_mesmo_dia(this: usiz
 /// A cópia roda em ensaio (para na decisão, sem a caixa) e a original depois, a partir do mesmo estado: lado a lado no
 /// cabeçalho da lista (+2 começo, +0xa cursor). Sem o jogo ou o primeiro da lista: só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_conflito_de_jogos_no_mesmo_dia(this: usize, jogo: usize, conflitos: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1494);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CONFLITO_DE_JOGOS_NO_MESMO_DIA);
     let cabeca = read_usize(conflitos + 2);
     if jogo == 0 || cabeca == 0 || read_usize(cabeca) == 0 {
         return o(this, jogo, conflitos);
@@ -1578,8 +1578,8 @@ pub(crate) unsafe extern "thiscall" fn ultimo_ano_com_jogos(_this: usize, id: us
     if w & 0xfffe != 0 { w >> 1 } else { *(G_CURRENT_DATE_YEAR as *const u16) }
 }
 
-comparar_valor!(comparar_primeiro_ano_com_jogos, primeiro_ano_com_jogos, 1495, (id: usize) -> u16);
-comparar_valor!(comparar_ultimo_ano_com_jogos, ultimo_ano_com_jogos, 1496, (id: usize) -> u16);
+comparar_valor!(comparar_primeiro_ano_com_jogos, primeiro_ano_com_jogos, IDX_PRIMEIRO_ANO_COM_JOGOS, (id: usize) -> u16);
+comparar_valor!(comparar_ultimo_ano_com_jogos, ultimo_ano_com_jogos, IDX_ULTIMO_ANO_COM_JOGOS, (id: usize) -> u16);
 
 // ---------- 262a leva: os jogos remarcados: os jogos vizinhos do clube movidos um dia, os jogos perto da data da seleção e a notícia do jogo remarcado (fix_man.cpp) ----------
 
@@ -1785,7 +1785,7 @@ pub(crate) unsafe extern "thiscall" fn mover_jogos_vizinhos_do_clube(this: usize
 
 // ponytail: move jogos no calendário (tira, junta, aloca e libera listas, notícia): só a original; a cópia leva os ramos.
 pub(crate) unsafe extern "thiscall" fn comparar_mover_jogos_vizinhos_do_clube(this: usize, jogo: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(1401)(this, jogo)
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MOVER_JOGOS_VIZINHOS_DO_CLUBE)(this, jogo)
 }
 
 /// the club's fixtures from one day before to one day after the national team date: those removed from the calendar get
@@ -1827,7 +1827,7 @@ pub(crate) unsafe extern "thiscall" fn remarcar_jogos_perto_da_data(this: usize,
 
 // ponytail: move jogos no calendário e dá a notícia (aloca): só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_remarcar_jogos_perto_da_data(this: usize, clube: usize, data: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1402)(this, clube, data)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_REMARCAR_JOGOS_PERTO_DA_DATA)(this, clube, data)
 }
 
 /// O ensaio da notícia: a cópia monta a notícia nova aqui em vez de pô-la na fila (e não cria a fila).
@@ -1926,7 +1926,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_jogo_remarcado(this: usize, f:
 /// +6, nó +0) ser a notícia da cópia nos 0xde bytes que o construtor (0x77bbe0) grava; o último dos 0xdf copiados é
 /// sobra de pilha na original (a cópia leva zero).
 pub(crate) unsafe extern "thiscall" fn comparar_noticia_do_jogo_remarcado(this: usize, f: usize, causa: usize, velha: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(1403);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_NOTICIA_DO_JOGO_REMARCADO);
     let l = read_usize(this + 0x1128);
     let alvo = if l != 0 { cpz8_na_fila(l, f) } else { 0 };
     if alvo != 0 {
@@ -2086,7 +2086,7 @@ pub(crate) unsafe fn cps11_lista_antes(fm: usize, f: usize) -> usize {
 /// Comparador: a original e a cópia só andam o cursor da lista (e a primeira pode criar o bloco do ano, que a segunda
 /// acha pronto): pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_jogo_guardado_igual(this: usize, f: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1146)(this, f);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_JOGO_GUARDADO_IGUAL)(this, f);
     let n = jogo_guardado_igual(this, f);
     PLACAR.registrar(r == n, || format!("jogo_guardado_igual(jogo {:x}) original={:x} rust={:x}", f, r, n));
     r
@@ -2095,7 +2095,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jogo_guardado_igual(this: usize,
 /// Comparador: acrescenta à lista (não roda duas vezes): a lista é achada antes pela cópia, a original guarda e a conta
 /// tem de subir 1 com a cauda nova igual aos 0x4f bytes do jogo.
 pub(crate) unsafe extern "thiscall" fn comparar_guardar_jogo_no_calendario(this: usize, f: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1147);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_GUARDAR_JOGO_NO_CALENDARIO);
     let l = cps11_lista_antes(this, f);
     if l == 0 {
         return o(this, f); // ponytail: sem memória para o bloco, só a original (a caixa)
@@ -2111,7 +2111,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_guardar_jogo_no_calendario(this:
 /// Comparador: tira da lista (não roda duas vezes): antes da original, a cópia acha a lista e vê se algum item tem os
 /// bytes do jogo (o tamanho guardado em +4, como a 0x68d1f0); a original tira e devolve: a devolução e a conta.
 pub(crate) unsafe extern "thiscall" fn comparar_tirar_jogo_do_calendario(this: usize, f: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1148);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_TIRAR_JOGO_DO_CALENDARIO);
     let l = cps11_lista_antes(this, f);
     if l == 0 {
         return o(this, f); // ponytail: sem memória para o bloco, só a original (a caixa)
@@ -2385,7 +2385,7 @@ pub(crate) unsafe fn cpr12_com_lista_nova(lista: usize, conta_antes: u16, cauda_
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_achar_jogos_do_calendario(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
                                                                lista: usize, comp: u32, tipo: u32, lado: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32>(1110);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32>(IDX_ACHAR_JOGOS_DO_CALENDARIO);
     if lista == 0 {
         let r = o(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
         let n = achar_jogos_do_calendario(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
@@ -2406,7 +2406,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_achar_jogos_do_calendario(this: 
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_jogos_da_competicao_no_dia(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
                                                                 tipo: u32, lista: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32>(1111);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32>(IDX_JOGOS_DA_COMPETICAO_NO_DIA);
     let (conta, cauda) = (*(lista as *const u16), read_u32(lista + 6));
     let r = o(this, ano, dia, fatia, comp, rodada, tipo, lista);
     let (n, iguais) = cpr12_com_lista_nova(lista, conta, cauda,
@@ -2418,7 +2418,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jogos_da_competicao_no_dia(this:
 
 /// Comparador: pela devolução (só anda os cursores das listas do calendário).
 pub(crate) unsafe extern "stdcall" fn comparar_competicao_tem_jogo_na_data(data: usize, comp: u32) -> u8 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, u32) -> u8>(1112)(data, comp);
+    let r = orig::<unsafe extern "stdcall" fn(usize, u32) -> u8>(IDX_COMPETICAO_TEM_JOGO_NA_DATA)(data, comp);
     let n = competicao_tem_jogo_na_data(data, comp);
     PLACAR.registrar(r == n, || format!("competicao_tem_jogo_na_data(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
     r
@@ -2535,7 +2535,7 @@ pub(crate) unsafe extern "thiscall" fn proxima_partida(this: usize, pano: *mut u
 
 pub(crate) unsafe extern "thiscall" fn comparar_proxima_partida(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, fase: i32, clube_a: i32, clube_b: i32, a9: u32, a10: u32, a11: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(785);
+    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(IDX_PROXIMA_PARTIDA);
     let antes = (*pano, *pdia, *pfatia);
     let reg = [(pano as usize, 2), (pdia as usize, 2), (pfatia as usize, 1)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg,
@@ -2595,7 +2595,7 @@ pub(crate) unsafe extern "thiscall" fn estadio_em_uso(this: usize, estadio: usiz
     0
 }
 
-comparar_valor!(comparar_estadio_em_uso, estadio_em_uso, 786, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
+comparar_valor!(comparar_estadio_em_uso, estadio_em_uso, IDX_ESTADIO_EM_USO, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
 
 
 /// A original (ret 4) com eax = ano, como no único chamador.
@@ -2635,7 +2635,7 @@ pub(crate) unsafe extern "thiscall" fn faixa_do_horario(_this: usize, comp: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_faixa_do_horario(this: usize, comp: usize, dia: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(518)(this, comp, dia);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_FAIXA_DO_HORARIO)(this, comp, dia);
     let n = faixa_do_horario(this, comp, dia);
     PLACAR.registrar(r == n, || format!("faixa_do_horario(dia {}) original={} rust={}", dia as i16, r, n));
     r
@@ -2680,7 +2680,7 @@ pub(crate) unsafe extern "thiscall" fn risco_de_doenca_na_viagem(_this: usize, f
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_risco_de_doenca_na_viagem(this: usize, f: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(1154)(this, f)
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RISCO_DE_DOENCA_NA_VIAGEM)(this, f)
 }
 
 /// for an English or Welsh club, the active key-nation index of the other nation; otherwise 0xff
@@ -2714,7 +2714,7 @@ pub(crate) unsafe extern "C" fn nacao_parceira_do_clube(clube: usize) -> u8 {
 
 /// Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_nacao_parceira_do_clube(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(1115)(clube);
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_NACAO_PARCEIRA_DO_CLUBE)(clube);
     let n = nacao_parceira_do_clube(clube);
     PLACAR.registrar(r == n, || format!("nacao_parceira_do_clube({:x}) original={:x} rust={:x}", clube, r, n));
     r
@@ -2737,7 +2737,7 @@ pub(crate) unsafe extern "stdcall" fn lista_da_data(data: usize, fatia: u32, gru
 }
 
 pub(crate) unsafe extern "stdcall" fn comparar_lista_da_data(data: usize, fatia: u32, grupo: u32) -> usize {
-    let r = orig::<unsafe extern "stdcall" fn(usize, u32, u32) -> usize>(784)(data, fatia, grupo);
+    let r = orig::<unsafe extern "stdcall" fn(usize, u32, u32) -> usize>(IDX_LISTA_DA_DATA)(data, fatia, grupo);
     let n = lista_da_data(data, fatia, grupo);
     PLACAR.registrar(r == n, || format!("lista_da_data({:x}, fatia {}, grupo {}) original={:x} rust={:x}", data, fatia, grupo, r, n));
     r
@@ -2753,7 +2753,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_lista_da_data(data: usize, fatia:
 pub(crate) unsafe extern "C" fn marcar_ano_no_calendario(jogo: usize) {
     let tabela = *(G_CLUB_FIXTURE_YEAR_TABLE as *const usize);
     if tabela == 0 {
-        return orig::<unsafe extern "C" fn(usize)>(366)(jogo);
+        return orig::<unsafe extern "C" fn(usize)>(IDX_MARCAR_ANO_NO_CALENDARIO)(jogo);
     }
     let ano = core::ptr::read_unaligned((jogo + 0x28) as *const u16);
     for o in [0xc, 0x10] {
@@ -2775,7 +2775,7 @@ pub(crate) unsafe extern "C" fn marcar_ano_no_calendario(jogo: usize) {
 }
 
 pub(crate) unsafe extern "C" fn comparar_marcar_ano_no_calendario(jogo: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(366);
+    let o = orig::<unsafe extern "C" fn(usize)>(IDX_MARCAR_ANO_NO_CALENDARIO);
     let tabela = *(G_CLUB_FIXTURE_YEAR_TABLE as *const usize);
     let reg: Vec<(usize, usize)> = if tabela == 0 {
         vec![]

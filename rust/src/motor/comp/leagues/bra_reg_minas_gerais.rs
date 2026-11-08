@@ -150,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn cqo7_fim_da_temporada_do_mineiro(this: us
 pub(crate) unsafe extern "thiscall" fn comparar_cqo7_fase_seguinte_do_mineiro(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(1899)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQO7_FASE_SEGUINTE_DO_MINEIRO)(this);
     let depois = read_usize(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
     PLACAR.registrar(igual, || format!("cqo7_fase_seguinte_do_mineiro({:#x}) antes={} depois={}", this, antes, depois));
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo7_fase_seguinte_do_mineiro(th
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn comparar_cqo7_final_do_mineiro(this: usize) {
     let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(1900)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQO7_FINAL_DO_MINEIRO)(this);
     let igual = if a == b {
         let marca = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
         let na_liga = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo7_final_do_mineiro(this: usiz
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_7 historico da final" e "cqo_7 premios") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_cqo7_fim_da_temporada_do_mineiro(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(1901)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQO7_FIM_DA_TEMPORADA_DO_MINEIRO)(this)
 }
 
 // ---------- 274a leva: o progresso do clube nas estatísticas da competição no Mineiro (Paranaense, Carioca), na MLS e na Série C (bra_reg_minas_gerais.cpp, usa_mls.cpp, bra_nat_third.cpp) ----------
@@ -236,7 +236,7 @@ pub(crate) unsafe extern "thiscall" fn cqk8_progresso_no_mineiro(this: usize, cl
 /// busca depois; a original e a cópia a chamam de novo); a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_cqk8_progresso_no_mineiro(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(1734)(this, clube, fase, a, b, c), || cqk8_progresso_no_mineiro(this, clube, fase, a, b, c));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_CQK8_PROGRESSO_NO_MINEIRO)(this, clube, fase, a, b, c), || cqk8_progresso_no_mineiro(this, clube, fase, a, b, c));
     PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_no_mineiro({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }
@@ -282,7 +282,7 @@ pub(crate) unsafe extern "thiscall" fn cqk7_destino_no_mineiro(this: usize, club
 /// Comparador: como o do Centro-Oeste.
 pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_no_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let (n, l, dest) = cqk7_mineiro(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1732)(this, clube, situacao, fase, a4, jogo, a6);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQK7_DESTINO_NO_MINEIRO)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("cqk7_destino_no_mineiro({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
@@ -299,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn cqt2_construir_mineiro(this: usize, ano: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2050);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT2_CONSTRUIR_MINEIRO);
     cqt2_comparar("cqt2_construir_mineiro", this, ano, registro, &CQT2_MINEIRO, || o(this, ano, registro))
 }
 
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_mineiro(this: usize) -> u3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_mineiro(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1832);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL9_TABELA_DO_MINEIRO);
     cql9_comparar("cql9_tabela_do_mineiro", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, || o(this))
 }
 
@@ -331,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn cqr1_turno_do_mineiro(this: usize, k: u32
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_do_mineiro(this: usize, k: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1987);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CQR1_TURNO_DO_MINEIRO);
     cqr1_comparar("cqr1_turno_do_mineiro", this, k, || o(this, k))
 }
 
@@ -347,6 +347,6 @@ pub(crate) unsafe extern "thiscall" fn cqr2_virada_do_mineiro(this: usize) -> u3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr2_virada_do_mineiro(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1991);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR2_VIRADA_DO_MINEIRO);
     cqr2_comparar("cqr2_virada_do_mineiro", this, || o(this))
 }

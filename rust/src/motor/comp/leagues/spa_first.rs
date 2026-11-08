@@ -295,7 +295,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_primera(this: usize, fase: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_primera(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1925);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_PRIMERA);
     cqp6_comparar("calendario_da_primera", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_primera(this, fase, r, e, l))
 }
 
@@ -402,7 +402,7 @@ pub(crate) unsafe fn cqk4_comparar(nome: &str, this: usize, escritas: Vec<(usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_primera(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1762);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_PRIMERA);
     cqk4_comparar("regras_da_primera", this, cqk4_primera(), || o(this), || regras_da_primera(this))
 }
 
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_primera(this: usize) -> u32 {
 /// banco (até 20). Depois: os primeiros com +0x57 = o registro de [0x9cf764]; +0x3e = 20, a devolução, as linhas com
 /// os clubes da Primera na ordem e, cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_primera(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1765);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_PRIMERA);
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for i in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) as usize {
         let clube = read_usize(G_CLUB_TABLE) + i * 0x245;
@@ -607,7 +607,7 @@ pub(crate) unsafe extern "thiscall" fn registros_pela_situacao_na_c2a(this: usiz
 /// decide o +0x37 que a rotina grava (fase 0: 0 com 1, 0xfe com 2/0xff; fase 1: 0xfe com 1, 3 com 2/0xff); depois a
 /// linha tem de estar assim. Na liga ela só registra: a devolução 0.
 pub(crate) unsafe extern "thiscall" fn comparar_registros_pela_situacao_na_c2a(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1766);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_REGISTROS_PELA_SITUACAO_NA_C2A);
     let (s, f) = (situacao as u8, fase as u8);
     let mut plano: Option<(usize, u8)> = None;
     if f <= 1 {
@@ -659,7 +659,7 @@ pub(crate) unsafe extern "thiscall" fn situacao_na_primera(this: usize, clube: u
 /// Comparador da 0x850880: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_primera(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1767);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SITUACAO_NA_PRIMERA);
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let e = achar(read_usize(this + 8), clube);
     if e == 0 {
@@ -680,6 +680,6 @@ pub(crate) unsafe extern "thiscall" fn construir_primera(this: usize, ano: u32, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_primera(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1872);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_PRIMERA);
     cqm5_comparar("construir_primera", this, ano, registro, &CQM5_PRIMERA, || o(this, ano, registro))
 }

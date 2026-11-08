@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn janelas_argentina(this: usize) {
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_janelas_argentina(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1816);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_JANELAS_ARGENTINA);
     cqk1_comparar("janelas_argentina", this, || o(this), |s| janelas_argentina(s));
 }
 
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn janelas_portugal(this: usize) {
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_janelas_portugal(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1817);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_JANELAS_PORTUGAL);
     cqk1_comparar("janelas_portugal", this, || o(this), |s| janelas_portugal(s));
 }
 
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn regras_coreia(this: usize, a1: u32, a2: u
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_coreia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1818);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_COREIA);
     let mut r = 0usize;
     cqk1_comparar("regras_coreia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_coreia(s, a1, a2, a3, a4, a5);

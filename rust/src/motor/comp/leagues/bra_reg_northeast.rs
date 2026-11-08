@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn cqt3_construir_nordeste(this: usize, ano:
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_nordeste(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2052);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT3_CONSTRUIR_NORDESTE);
     cqt3_comparar("cqt3_construir_nordeste", this, ano, registro, &CQT3_NORDESTE, || o(this, ano, registro))
 }
 
@@ -227,7 +227,7 @@ pub(crate) unsafe fn cqm7_comparar(nome: &str, this: usize, n: i16, g: usize, or
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_nordeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1834);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM7_TABELA_DO_NORDESTE);
     cqm7_comparar("cqm7_tabela_do_nordeste", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, || o(this))
 }
 
@@ -242,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn cqn7_mata_mata_do_nordeste(this: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_nordeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1845);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN7_MATA_MATA_DO_NORDESTE);
     cqn7_comparar("cqn7_mata_mata_do_nordeste", this, &[0, 3, 1, 2], || o(this))
 }
 
@@ -258,7 +258,7 @@ pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1936);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP8_VIRADA_DO_NORDESTE);
     cqp7_comparar_virada("cqp8_virada_do_nordeste", this, || o(this))
 }
 
@@ -273,6 +273,6 @@ pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1937);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP8_FASE_SEGUINTE_DO_NORDESTE);
     cqp7_comparar_fase_seguinte("cqp8_fase_seguinte_do_nordeste", this, || o(this))
 }

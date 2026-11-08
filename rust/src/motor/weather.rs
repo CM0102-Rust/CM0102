@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize
 
 // ponytail: sorteia: só a original; a cópia leva os ramos.
 pub(crate) unsafe extern "thiscall" fn comparar_adiar_pelo_clima(this: usize, jogo: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1206)(this, jogo)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_ADIAR_PELO_CLIMA)(this, jogo)
 }
 
 /// the finance record (0x167 bytes) by the club id; a B club with an A partner, the A one (0x540a50); null club, error
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_adiar_pelo_clima(this: usize, jo
 /// Clube nulo: a caixa "Error" de finance.CPP (a original).
 pub(crate) unsafe extern "thiscall" fn financas_do_clube(this: usize, clube: usize) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1207)(this, clube);
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FINANCAS_DO_CLUBE)(this, clube);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut eh_a: u32 = 0;
@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn financas_do_clube(this: usize, clube: usi
 
 /// Comparador: pelo valor (clube nulo: só a original, com a caixa de erro).
 pub(crate) unsafe extern "thiscall" fn comparar_financas_do_clube(this: usize, clube: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(1207);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FINANCAS_DO_CLUBE);
     if clube == 0 {
         return o(this, clube);
     }
@@ -388,7 +388,7 @@ pub(crate) unsafe extern "thiscall" fn clima_da_partida(this: usize, s: *mut u8,
 
 /// Comparador: lado a lado nos 4 bytes da saída.
 pub(crate) unsafe extern "thiscall" fn comparar_clima_da_partida(this: usize, s: *mut u8, jogo: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(1209);
+    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(IDX_CLIMA_DA_PARTIDA);
     let regioes = [(s as usize, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, s, jogo), || clima_da_partida(this, s, jogo));
     PLACAR.registrar(igual, || format!("clima_da_partida(jogo {:#x}) {:x?} x {:x?}", jogo, mo.0, mr.0));
@@ -431,7 +431,7 @@ pub(crate) unsafe extern "thiscall" fn temperatura_do_jogo(_this: usize, faixa: 
 
 /// Comparador: pelo valor.
 pub(crate) unsafe extern "thiscall" fn comparar_temperatura_do_jogo(this: usize, faixa: u32, jogo: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(1210)(this, faixa, jogo);
+    let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(IDX_TEMPERATURA_DO_JOGO)(this, faixa, jogo);
     let n = temperatura_do_jogo(this, faixa, jogo);
     PLACAR.registrar(r == n, || format!("temperatura_do_jogo(faixa {}, jogo {:#x}) original={} rust={}", faixa as u8 as i8, jogo, r as i8, n as i8));
     r
@@ -516,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn gramado_do_jogo(_this: usize, clima: *con
 
 /// Comparador: pelo valor.
 pub(crate) unsafe extern "thiscall" fn comparar_gramado_do_jogo(this: usize, clima: *const u8, jogo: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(1211)(this, clima, jogo);
+    let r = orig::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(IDX_GRAMADO_DO_JOGO)(this, clima, jogo);
     let n = gramado_do_jogo(this, clima, jogo);
     PLACAR.registrar(r == n, || format!("gramado_do_jogo(clima {:x?}, jogo {:#x}) original={:#x} rust={:#x}", core::slice::from_raw_parts(clima, 4), jogo, r, n));
     r
@@ -573,7 +573,7 @@ pub(crate) unsafe extern "thiscall" fn tempo_das_cidades(this: usize) {
 
 // ponytail: sorteia 3 ou 4 vezes por cidade: só a original; a cópia leva os ramos.
 pub(crate) unsafe extern "thiscall" fn comparar_tempo_das_cidades(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1167)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_TEMPO_DAS_CIDADES)(this)
 }
 
 /// one weather.cfg line with the region id and name ("%ld %s") and its four periods (0x922d20) at +0x1e, +0x31, +0x44
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn ler_regiao_do_clima(this: usize, f: usize
 
 // ponytail: lê do arquivo (não dá para ler duas vezes): só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_ler_regiao_do_clima(this: usize, f: usize, regiao: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(1168)(this, f, regiao)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_LER_REGIAO_DO_CLIMA)(this, f, regiao)
 }
 
 /// one line with the name and 18 integers (the day, five W, five P, seven H): the period gets the day (word) and the 17
@@ -645,7 +645,7 @@ pub(crate) unsafe extern "thiscall" fn ler_periodo_do_clima(_this: usize, f: usi
 
 // ponytail: lê do arquivo: só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_ler_periodo_do_clima(this: usize, f: usize, periodo: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(1169)(this, f, periodo)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_LER_PERIODO_DO_CLIMA)(this, f, periodo)
 }
 
 /// reads CM3_DATA\weather.cfg: the region count, the regions (0x922c40) and the city table, with the three readings
@@ -713,5 +713,5 @@ pub(crate) unsafe extern "thiscall" fn ler_o_clima(this: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_ler_o_clima(this: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(1175)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_LER_O_CLIMA)(this)
 }

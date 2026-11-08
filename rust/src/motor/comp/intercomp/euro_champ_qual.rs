@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn cqs8_eurocopa_regras(this: usize) -> u32 
 /// Lado a lado a partir do mesmo estado (os campos +0x3a..+0xc9 da copa, fora o ponteiro +0xba); a tabela das rodadas que
 /// cada lado aloca em +0xba (pela virtual +0x3c, original) só é conferida como montada, e a da cópia é liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs8_eurocopa_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2082);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQS8_EUROCOPA_REGRAS);
     let antes = read_u32_as_usize(this + 0xba);
     let reg = [(this + 0x3a, 0x80usize), (this + 0xbe, 0xb)];
     let to = core::cell::Cell::new(0usize);
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn cqs8_eurocopa_tamanho_do_grupo(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqs8_eurocopa_tamanho_do_grupo(this: usize, g: u32) -> i16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> i16>(2083);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> i16>(IDX_CQS8_EUROCOPA_TAMANHO_DO_GRUPO);
     let r = o(this, g);
     if !matches!(*((this + 0xf6) as *const i8), 1 | 2) {
         return r; // ponytail: o formato desconhecido mostra a caixa: só a original
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn cqs8_eurocopa_situacao(this: usize, clube
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqs8_eurocopa_situacao(this: usize, clube: usize) -> i16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> i16>(2084);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> i16>(IDX_CQS8_EUROCOPA_SITUACAO);
     let r = o(this, clube);
     let n = cqs8_situacao(this, clube);
     PLACAR.registrar(r == n, || format!("cqs8_eurocopa_situacao({:#x}) original={} rust={}", clube, r, n));
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u3
 /// plano feito antes: devolve 1, +0x3e = o tamanho do grupo −1, +0xa7 = (+0x3e − 1) × +0x3c e as seleções de +0xf7 nas
 /// linhas, na ordem.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs8_eurocopa_grupo_um(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2085);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQS8_EUROCOPA_GRUPO_UM);
     let n = if matches!(*((this + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this) };
     let plano: Vec<usize> = (0..n as usize).map(|k| read_u32_as_usize(read_u32_as_usize(this + 0xf7) + k * 4)).collect();
     let r = o(this);

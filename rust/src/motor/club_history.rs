@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn gravar_historico_dos_clubes(this: usize, 
 /// Comparador da 0x443f50: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_historico_dos_clubes(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1503)(this, save)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GRAVAR_HISTORICO_DOS_CLUBES)(this, save)
 }
 
 /// A caixa de erro do officials_manager.cpp na linha `linha`, fechando o item; devolve 0.
@@ -90,6 +90,6 @@ pub(crate) unsafe extern "thiscall" fn gravar_estatisticas_simuladas(this: usize
 /// Comparador da 0x84c680: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_estatisticas_simuladas(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(1505)(this, save)
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_GRAVAR_ESTATISTICAS_SIMULADAS)(this, save)
 }
 

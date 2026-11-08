@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn cqt1_construir_baiano(this: usize, ano: u
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt1_construir_baiano(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2046);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT1_CONSTRUIR_BAIANO);
     cqt1_comparar("cqt1_construir_baiano", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
 }
 
@@ -278,12 +278,12 @@ pub(crate) unsafe extern "thiscall" fn cqp7_fase_seguinte_do_baiano(this: usize)
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp7_virada_do_baiano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1926);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP7_VIRADA_DO_BAIANO);
     cqp7_comparar_virada("cqp7_virada_do_baiano", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_baiano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1927);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP7_FASE_SEGUINTE_DO_BAIANO);
     cqp7_comparar_fase_seguinte("cqp7_fase_seguinte_do_baiano", this, || o(this))
 }
 
@@ -380,7 +380,7 @@ pub(crate) unsafe fn cql8_comparar(nome: &str, this: usize, n: i16, g: usize, or
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_baiano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1828);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL8_TABELA_DO_BAIANO);
     cql8_comparar("cql8_tabela_do_baiano", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, || o(this))
 }
 
@@ -491,12 +491,12 @@ pub(crate) unsafe fn cqn7_comparar(nome: &str, this: usize, linhas: &[usize], or
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_baiano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1843);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN7_MATA_MATA_DO_BAIANO);
     cqn7_comparar("cqn7_mata_mata_do_baiano", this, &[0, 3, 1, 2], || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_norte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1844);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN7_MATA_MATA_DO_NORTE);
     cqn7_comparar("cqn7_mata_mata_do_norte", this, &[0, 3, 1, 2], || o(this))
 }
 
@@ -519,7 +519,7 @@ pub(crate) unsafe extern "thiscall" fn cqj9_destino_no_baiano(this: usize, clube
 /// Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj9_destino_no_baiano(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let (n, l, dest) = cqj9_baiano(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1730)(this, clube, situacao, fase, a4, jogo, a6);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQJ9_DESTINO_NO_BAIANO)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
     PLACAR.registrar(r == n && gravado == dest, || format!("cqj9_destino_no_baiano({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r

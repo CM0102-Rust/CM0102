@@ -83,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn cqr6_virada_supercopa_japonesa(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr6_virada_supercopa_japonesa(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2002);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR6_VIRADA_SUPERCOPA_JAPONESA);
     cqr5_comparar("cqr6_virada_supercopa_japonesa", this, || o(this))
 }
 
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn cqr6_virada_copa_dos_eua(this: usize) -> 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr6_virada_copa_dos_eua(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2003);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR6_VIRADA_COPA_DOS_EUA);
     cqr5_comparar("cqr6_virada_copa_dos_eua", this, || o(this))
 }
 
@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn cqr6_virada_jogo_das_estrelas(this: usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr6_virada_jogo_das_estrelas(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2004);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR6_VIRADA_JOGO_DAS_ESTRELAS);
     cqr5_comparar("cqr6_virada_jogo_das_estrelas", this, || o(this))
 }
 
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn cqr6_times_do_jogo_das_estrelas(this: usi
 /// a lista dela em +0xa7, a cópia faz a sua (sem contar o sorteio), comparada nos 12 bytes e liberada. A lista antiga
 /// (+0xa7 na entrada) não é liberada por nenhuma das duas (a virada já a liberou).
 pub(crate) unsafe extern "thiscall" fn comparar_cqr6_times_do_jogo_das_estrelas(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(2005);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQR6_TIMES_DO_JOGO_DAS_ESTRELAS);
     let antes = read_u32_as_usize(this + 0xa7);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(this + 0x3e, 2usize), (0xb67a34, 4), (cqr6_clube(read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST)), 0x245), (cqr6_clube(read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST)), 0x245)]);
@@ -251,7 +251,7 @@ pub(crate) unsafe extern "thiscall" fn cqn10_jogo_das_estrelas_dia(this: usize, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1792)(this, hoje, fase)
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQN10_JOGO_DAS_ESTRELAS_DIA)(this, hoje, fase)
 }
 
 /// rule: the MLS All-Star game is a single match between the two conference selections, drawn on 15/6 and played on 2/8
@@ -311,7 +311,7 @@ pub(crate) unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usiz
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
 /// fase −1, só a original (nenhuma grava nada).
 pub(crate) unsafe extern "thiscall" fn comparar_cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1789);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQM12_JOGO_DAS_ESTRELAS_TABELA);
     if fase as u8 != 0xff {
         let a = o(this, fase, rodadas, extra, saida);
         PLACAR.registrar(a == 0, || format!("cqm12_jogo_das_estrelas_tabela(fase {}) devolveu {:#x}", fase as u8 as i8, a));

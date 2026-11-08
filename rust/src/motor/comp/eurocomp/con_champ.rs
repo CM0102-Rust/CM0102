@@ -125,7 +125,7 @@ pub(crate) unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize)
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1688);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI11_CONCACAF_CLASSIFICADOS);
     let l = cqi11_listas();
     let outro = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (outro == 0 && l.n[3] < 2) || read_u32_as_usize(this + 0xa7) == 0 {
@@ -172,7 +172,7 @@ pub(crate) unsafe extern "thiscall" fn cqi11_concacaf_dia(this: usize, hoje: usi
 // tabela vazia e fase ≠ 0, a copa sai com 8 times e o time 0 preenchido (a 0x4c11a0 tem o seu comparador); senão +0x3e
 // não muda.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1689);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQI11_CONCACAF_DIA);
     if read_u32_as_usize(this + 0xa7) == 0 {
         return o(this, hoje, fase);
     }
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn cqi11_concacaf_rodadas(this: usize) -> u3
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere o fundo de
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_rodadas(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1690)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI11_CONCACAF_RODADAS)(this);
     PLACAR.registrar(r == 1 && read_u32_as_usize(this + 0x28) == 0x1e8480, || format!("cqi11_concacaf_rodadas({:#x}) devolveu {} prêmios {}", this, r, read_u32_as_usize(this + 0x28)));
     r
 }
@@ -242,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn cqp13_concacaf_tabela(this: usize, fase: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp13_concacaf_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1976);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP13_CONCACAF_TABELA);
     let a = cql10_comparar("cqp13_concacaf_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqp13_concacaf_tabela(this, fase, r, e, s));
     // ponytail: a cql10_comparar não olha os dias dos confrontos (+0x23..); o dia 0 das duas primeiras rodadas é

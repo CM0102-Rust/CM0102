@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn cqr11_mercosul_dia(this: usize, hoje: usi
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 4 fases
 // criadas e a fase atual (+0x30) a última delas.
 pub(crate) unsafe extern "thiscall" fn comparar_cqr11_mercosul_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2009);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQR11_MERCOSUL_DIA);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo != 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -143,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn cqr11_mercosul_primeiro_grupo(this: usize
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
 pub(crate) unsafe extern "thiscall" fn comparar_cqr11_mercosul_primeiro_grupo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2010);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR11_MERCOSUL_PRIMEIRO_GRUPO);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -246,7 +246,7 @@ pub(crate) unsafe extern "thiscall" fn cqr11_mercosul_grupo(this: usize, g: i32)
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 pub(crate) unsafe extern "thiscall" fn comparar_cqr11_mercosul_grupo(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2011);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CQR11_MERCOSUL_GRUPO);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..4).contains(&g) {
         return o(this, g);
@@ -409,7 +409,7 @@ pub(crate) unsafe extern "thiscall" fn cqo13_mercosul_tabela(this: usize, fase: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo13_mercosul_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1919);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO13_MERCOSUL_TABELA);
     cqo13_comparar("cqo13_mercosul_tabela", fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_A_MAIS, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqo13_mercosul_tabela(this, fase, r, e, l))
 }
@@ -460,7 +460,7 @@ pub(crate) unsafe extern "thiscall" fn cqo13_mercosul_convidados(this: usize) ->
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nos convidados que ela gravou e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_cqo13_mercosul_convidados(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1920);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQO13_MERCOSUL_CONVIDADOS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -503,6 +503,6 @@ pub(crate) unsafe extern "thiscall" fn cqs11_mercosul_fase_seguinte(this: usize)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2041);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS11_MERCOSUL_FASE_SEGUINTE);
     cqs11_comparar_fase_seguinte("cqs11_mercosul_fase_seguinte", this, || o(this))
 }

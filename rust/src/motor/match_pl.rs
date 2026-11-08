@@ -2924,7 +2924,7 @@ pub(crate) unsafe extern "thiscall" fn chute(j: usize, forca: u32, x: u32, y: u3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_chute(j: usize, forca: u32, x: u32, y: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(301);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(IDX_CHUTE);
     if gravando_no_topo() {
         return o(j, forca, x, y);
     }
@@ -2989,7 +2989,7 @@ pub(crate) unsafe fn desfecho_do_chute_com(p: usize, f_in: f32, chamar: &mut dyn
     let qualidade = ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 1) as f64 / f as f64);
     let g = manter_posicao_um(m, lado);
     if g == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, f32)>(316)(p, f_in);
+        return orig::<unsafe extern "thiscall" fn(usize, f32)>(IDX_DESFECHO_DO_CHUTE)(p, f_in);
     }
     let mut b18 = 0u8;
     if byte(m, 0x8ea9) > 3 {
@@ -3320,7 +3320,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_desfecho_do_chute(p: usize, f: f
 
 pub(crate) unsafe fn fita_do_desfecho(p: usize, f: f32) {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(316);
+    let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(IDX_DESFECHO_DO_CHUTE);
     let m = *((p + 0x19e) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
@@ -3388,7 +3388,7 @@ pub(crate) unsafe fn chute_a_gol_com(p: usize, f_in: f32, chamar: &mut dyn FnMut
     let qualidade = ftol(r2.wrapping_sub(r1).wrapping_mul(fator as i32 + 1) as f64 / f as f64);
     let g = manter_posicao_um(m, outro as i8);
     if g == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, f32)>(317)(p, f_in);
+        return orig::<unsafe extern "thiscall" fn(usize, f32)>(IDX_CHUTE_A_GOL)(p, f_in);
     }
     let b18 = (byte(m, 0x8ea9) > 3) as u8;
     let (mut b13, mut b15) = (0u8, 0u8);
@@ -4699,7 +4699,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mover(p: usize, a1: u32, a2: u32
 
 pub(crate) unsafe fn fita_do_movimento(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32>(318);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32>(IDX_MOVER_JOGADOR);
     let m = *((p + 0x19e) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
@@ -4736,7 +4736,7 @@ pub(crate) unsafe fn fita_do_movimento(p: usize, a1: u32, a2: u32, a3: u32, a4: 
 
 pub(crate) unsafe fn fita_do_chute_a_gol(p: usize, f: f32) {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(317);
+    let o = orig::<unsafe extern "thiscall" fn(usize, f32)>(IDX_CHUTE_A_GOL);
     let m = *((p + 0x19e) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
@@ -5613,7 +5613,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conduzir(p: usize, modo: u32) ->
 
 pub(crate) unsafe fn fita_da_conducao(p: usize, modo: u32) -> u32 {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(319);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_CONDUZIR);
     let m = *((p + 0x19e) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
@@ -6636,7 +6636,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_executar_passe(p: usize, x: u32,
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn fita_do_passe(p: usize, x: u32, y: u32, tipo: u32, saida: *mut u8, receptor: usize, tx: u32, ty: u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, *mut u8, usize, u32, u32) -> u8>(321);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, *mut u8, usize, u32, u32) -> u8>(IDX_EXECUTAR_PASSE);
     let m = *((p + 0x19e) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4), (saida as usize, 1)]);
@@ -9754,7 +9754,7 @@ pub(crate) unsafe extern "thiscall" fn lado_do_jogador(j: usize) -> u8 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_lado_do_jogador(j: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u8>(337)(j)
+    orig::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_LADO_DO_JOGADOR)(j)
 }
 
 /// `p`'s shot (type, value, commentary, mode 1 match / 2 no challenger / 3 shoot-out / 4 set-piece kick / 5-6 repeat,
@@ -9792,7 +9792,7 @@ pub(crate) unsafe extern "thiscall" fn destruir_jogador_da_partida(j: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_destruir_jogador_da_partida(j: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(378);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_DESTRUIR_JOGADOR_DA_PARTIDA);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(j + 0x19e, 4)], || o(j), || destruir_jogador_da_partida(j));
     PLACAR.registrar(igual, || format!("destruir_jogador_da_partida({:#x}) {:x?} x {:x?}", j, mo, mr));
 }
@@ -9832,7 +9832,7 @@ pub(crate) unsafe extern "thiscall" fn construir_jogador_da_partida(j: usize) ->
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_jogador_da_partida(j: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(387);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_JOGADOR_DA_PARTIDA);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(j, 0x1bc)], || o(j), || construir_jogador_da_partida(j));
     PLACAR.registrar(igual && r == n, || format!("construir_jogador_da_partida({:#x}) {:x?} x {:x?}", j, mo, mr));
     r

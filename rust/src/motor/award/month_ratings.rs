@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn guardar_notas_da_partida(this: usize, jog
 /// O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_guardar_notas_da_partida(this: usize, jogo: usize, partida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(1284);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_GUARDAR_NOTAS_DA_PARTIDA);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
         // ponytail: a tabela pode crescer (realloc): só a original; a 0x767fa0 compara cada nota
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: us
         if tab == 0 {
             // ponytail: sem memória (a caixa "Error" da original): volta a capacidade e deixa a original refazer
             write_u32(this + 8, cap as u32);
-            return orig::<unsafe extern "thiscall" fn(usize, usize)>(1285)(this, e);
+            return orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NOTA_DO_JOGADOR_NO_MES)(this, e);
         }
         write_u32(this, tab as u32);
     }
@@ -127,7 +127,7 @@ pub(crate) unsafe extern "thiscall" fn nota_do_jogador_no_mes(this: usize, e: us
 /// O comparador da nota do mês: lado a lado (cabeçalho e os registros até o novo) quando a tabela não precisa crescer;
 /// senão só a original (realloc).
 pub(crate) unsafe extern "thiscall" fn comparar_nota_do_jogador_no_mes(this: usize, e: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1285);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NOTA_DO_JOGADOR_NO_MES);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     let achou = tab != 0 && (0..n.max(0) as usize).any(|k| read_i32(tab + k * 12) == read_i32(e));
     if tab == 0 || n < 0 || (n >= cap && !achou) {
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn melhor_do_mes(this: usize, liga: i32, ida
 
 /// O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
 pub(crate) unsafe extern "thiscall" fn comparar_melhor_do_mes(this: usize, liga: i32, idade: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(1286);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(IDX_MELHOR_DO_MES);
     let (tab, n) = (read_usize(this), read_i32(this + 4));
     let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, liga, idade), || melhor_do_mes(this, liga, idade));

@@ -20,7 +20,7 @@ pub(crate) unsafe extern "C" fn linha_da_nacao(nacao: usize) -> u8 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_linha_da_nacao(nacao: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(1194)(nacao);
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_LINHA_DA_NACAO)(nacao);
     let n = linha_da_nacao(nacao);
     PLACAR.registrar(r == n, || format!("linha_da_nacao(nação {:x}) original={} rust={}", nacao, r, n));
     r
@@ -71,7 +71,7 @@ pub(crate) unsafe fn cpu1_caixa(clube: usize) -> bool {
 }
 
 pub(crate) unsafe extern "C" fn comparar_linha_da_nacao_do_clube(clube: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(1195);
+    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_LINHA_DA_NACAO_DO_CLUBE);
     if cpu1_caixa(clube) {
         return o(clube);
     }
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "C" fn ano_da_temporada_do_clube(clube: usize) -> u16 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_ano_da_temporada_do_clube(clube: usize) -> u16 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u16>(1196);
+    let o = orig::<unsafe extern "C" fn(usize) -> u16>(IDX_ANO_DA_TEMPORADA_DO_CLUBE);
     if clube != 0 && cpu1_caixa(clube) {
         return o(clube);
     }
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "C" fn clube_na_temporada(clube: usize, inicio: usize, 
 }
 
 pub(crate) unsafe extern "C" fn comparar_clube_na_temporada(clube: usize, inicio: usize, fim: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(1197)(clube, inicio, fim);
+    let r = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_CLUBE_NA_TEMPORADA)(clube, inicio, fim);
     let (mut i, mut f) = ([0u8; 8], [0u8; 8]);
     let n = clube_na_temporada(
         clube,
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "C" fn continente_principal() -> usize {
 }
 
 pub(crate) unsafe extern "C" fn comparar_continente_principal() -> usize {
-    let r = orig::<unsafe extern "C" fn() -> usize>(1198)();
+    let r = orig::<unsafe extern "C" fn() -> usize>(IDX_CONTINENTE_PRINCIPAL)();
     let n = continente_principal();
     PLACAR.registrar(r == n, || format!("continente_principal() original={:x} rust={:x}", r, n));
     r
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "C" fn nacao_principal() -> usize {
 }
 
 pub(crate) unsafe extern "C" fn comparar_nacao_principal() -> usize {
-    let r = orig::<unsafe extern "C" fn() -> usize>(1199)();
+    let r = orig::<unsafe extern "C" fn() -> usize>(IDX_NACAO_PRINCIPAL)();
     let n = nacao_principal();
     PLACAR.registrar(r == n, || format!("nacao_principal() original={:x} rust={:x}", r, n));
     r
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "C" fn e_copa_do_mundo(comp: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_e_copa_do_mundo(comp: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(1162);
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_E_COPA_DO_MUNDO);
     if comp == 0 {
         return o(comp);
     }
@@ -311,7 +311,7 @@ pub(crate) unsafe extern "C" fn e_torneio_internacional(comp: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_e_torneio_internacional(comp: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(1163);
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_E_TORNEIO_INTERNACIONAL);
     if comp == 0 {
         return o(comp);
     }
@@ -362,7 +362,7 @@ pub(crate) unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(1164)(comp);
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_INDICE_DA_NACAO_CHAVE)(comp);
     let n = indice_da_nacao_chave(comp);
     PLACAR.registrar(r == n, || format!("indice_da_nacao_chave(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r

@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn cql11_copa_da_franca_tabela(this: usize, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql11_copa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1775);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL11_COPA_DA_FRANCA_TABELA);
     cql11_comparar("cql11_copa_da_franca_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cql11_copa_da_franca_tabela(this, fase, r, e, s))
 }
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn cql11_copa_da_liga_francesa_tabela(this: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql11_copa_da_liga_francesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1776);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL11_COPA_DA_LIGA_FRANCESA_TABELA);
     cql11_comparar("cql11_copa_da_liga_francesa_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cql11_copa_da_liga_francesa_tabela(this, fase, r, e, s))
 }
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn cqm11_copa_da_franca_inscritos(this: usiz
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm11_copa_da_franca_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1784);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM11_COPA_DA_FRANCA_INSCRITOS);
     cqm10_comparar("cqm11_copa_da_franca_inscritos", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_franca(this),
         |_, n| n.clamp(0, 0xde) as usize * 6)
 }
@@ -344,7 +344,7 @@ pub(crate) unsafe extern "thiscall" fn cqm11_copa_da_liga_inscritos(this: usize)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm11_copa_da_liga_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1785);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM11_COPA_DA_LIGA_INSCRITOS);
     cqm10_comparar("cqm11_copa_da_liga_inscritos", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_liga(this),
         |_, n| n.clamp(0, 0x36) as usize * 6)
 }

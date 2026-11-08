@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn jogos_da_selecao_no_periodo(this: usize, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_jogos_da_selecao_no_periodo(this: usize, nacao: usize, mes_de: u32, ano_de: u32, mes_ate: u32, ano_ate: u32) -> u16 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(1155)(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(IDX_JOGOS_DA_SELECAO_NO_PERIODO)(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
     let n = jogos_da_selecao_no_periodo(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
     PLACAR.registrar(r == n, || format!("jogos_da_selecao_no_periodo(nação {}, {}/{} a {}/{}) original={} rust={}", read_usize(nacao), mes_de as u8, ano_de as u16, mes_ate as u8, ano_ate as u16, r, n));
     r
@@ -114,7 +114,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_ranking_da_fifa(this: usize, da
 /// Comparador: lado a lado pelo objeto (+0..+0xd), pela tabela das nações e por cada histórico (capacidade +8 × 5);
 /// a ordem é alocada e liberada pelas duas.
 pub(crate) unsafe extern "thiscall" fn comparar_atualizar_ranking_da_fifa(this: usize, data: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1156);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ATUALIZAR_RANKING_DA_FIFA);
     let t = read_usize(this);
     let n = read_usize(G_NATION_COUNT);
     let mut reg = vec![(this, 0xd), (t, n * 0x2c)];
@@ -143,7 +143,7 @@ pub(crate) unsafe extern "C" fn ordem_dos_resultados_por_pontos(a: usize, b: usi
 }
 
 pub(crate) unsafe extern "C" fn comparar_ordem_dos_resultados_por_pontos(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1157)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_RESULTADOS_POR_PONTOS)(a, b);
     let n = ordem_dos_resultados_por_pontos(a, b);
     PLACAR.registrar(r == n, || format!("ordem_dos_resultados_por_pontos({}, {}) original={} rust={}", read_i16(a), read_i16(b), r, n));
     r
@@ -207,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_resultado_no_historico(this: usi
     let e = cpt2_entrada(this, nacao);
     let (conta, cap) = (read_i16(e + 0xa), read_i16(e + 8));
     let (mes, ano) = cpt2_mes_e_ano(partida);
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(1158)(this, nacao, pontos, partida);
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_RESULTADO_NO_HISTORICO)(this, nacao, pontos, partida);
     let p = read_usize(e + 4).wrapping_add(conta as isize as usize * 5);
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };
     let lido = (read_i16(e + 0xa), read_i16(e + 8), read_u16(p), *((p + 2) as *const u8), read_u16(p + 3));
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn faixa_da_selecao(this: usize, nacao: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_faixa_da_selecao(this: usize, nacao: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1159)(this, nacao);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_FAIXA_DA_SELECAO)(this, nacao);
     let n = faixa_da_selecao(this, nacao);
     PLACAR.registrar(r == n, || format!("faixa_da_selecao(nação {}) original={} rust={}", read_usize(nacao), r, n));
     r
@@ -316,7 +316,7 @@ pub(crate) unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_pontuacoes_do_ranking(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1160);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_PONTUACOES_DO_RANKING);
     let reg = [(read_usize(this), read_usize(G_NATION_COUNT) * 0x2c)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || pontuacoes_do_ranking(this));
     PLACAR.registrar(igual, || {
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn ordem_do_ranking(this: usize, conta: *mut
 // ponytail: as duas alocam o vetor; a original roda primeiro (o vetor dela volta ao chamador), a cópia depois, e o
 // vetor da cópia é liberado (0x9452ca) depois da conferência da conta e dos ponteiros.
 pub(crate) unsafe extern "thiscall" fn comparar_ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(1165)(this, conta);
+    let r = orig::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(IDX_ORDEM_DO_RANKING)(this, conta);
     if r == 0 {
         return r;
     }
@@ -395,7 +395,7 @@ pub(crate) unsafe extern "C" fn ordem_das_pontuacoes(a: usize, b: usize) -> i32 
 }
 
 pub(crate) unsafe extern "C" fn comparar_ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1166)(a, b);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DAS_PONTUACOES)(a, b);
     let n = ordem_das_pontuacoes(a, b);
     PLACAR.registrar(r == n, || format!("ordem_das_pontuacoes original={} rust={}", r, n));
     r
@@ -448,7 +448,7 @@ pub(crate) unsafe extern "thiscall" fn ranking_fifa_inicial(this: usize) {
 /// Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
 /// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
 pub(crate) unsafe extern "thiscall" fn comparar_ranking_fifa_inicial(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1823);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_RANKING_FIFA_INICIAL);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     o(this);
     let mut s = [0usize; 1];

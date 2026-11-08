@@ -91,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn cqr5_virada_copa_do_brasil(this: usize) -
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_brasil(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1999);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR5_VIRADA_COPA_DO_BRASIL);
     cqr5_comparar("cqr5_virada_copa_do_brasil", this, || o(this))
 }
 
@@ -107,7 +107,7 @@ pub(crate) unsafe extern "thiscall" fn cqr5_virada_copa_do_imperador(this: usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_imperador(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2000);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR5_VIRADA_COPA_DO_IMPERADOR);
     cqr5_comparar("cqr5_virada_copa_do_imperador", this, || o(this))
 }
 
@@ -143,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn cqo12_copa_do_brasil_tabela(this: usize, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo12_copa_do_brasil_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1915);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO12_COPA_DO_BRASIL_TABELA);
     cql10_comparar("cqo12_copa_do_brasil_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqo12_copa_do_brasil_tabela(this, fase, r, e, s))
 }
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn cqo12_times_da_copa(this: usize) -> i32 {
 /// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a tabela dela em +0xa7, a cópia faz a
 /// sua, comparada nas 71 vagas (com a devolução 1) e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_cqo12_times_da_copa(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1916);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQO12_TIMES_DA_COPA);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
@@ -246,7 +246,7 @@ pub(crate) unsafe extern "thiscall" fn cqo12_regras_da_copa(this: usize) -> i32 
 /// Lado a lado: +0x28, +0x3a..+0x3d, +0x49/+0x4a e o [0xb67a34] a partir do mesmo estado; as tabelas das rodadas das
 /// duas (+0xa3) comparadas nos bytes gravados (cql10_gravados) e a da cópia liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_cqo12_regras_da_copa(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1917);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQO12_REGRAS_DA_COPA);
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
     let antes = read_u32_as_usize(this + 0xa3);

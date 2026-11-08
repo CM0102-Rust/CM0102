@@ -220,23 +220,23 @@ pub(crate) unsafe fn cqe6_comparar_pode(o: unsafe extern "thiscall" fn(usize, us
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqe6_pode_emprestar_escocia(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(1590), cqe6_pode_emprestar_escocia, "cqe6_pode_emprestar_escocia", this, clube, jogador, msg, motivo)
+    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_CQE6_PODE_EMPRESTAR_ESCOCIA), cqe6_pode_emprestar_escocia, "cqe6_pode_emprestar_escocia", this, clube, jogador, msg, motivo)
 }
 
 /// Comparador: lado a lado nas quatro saídas e em [0xae1080].
 pub(crate) unsafe extern "thiscall" fn comparar_cqe6_periodo_escocia(this: usize, a1: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(1591);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(IDX_CQE6_PERIODO_ESCOCIA);
     let regioes = [(ini_mes as usize, 1usize), (ini_ano as usize, 2), (fim_mes as usize, 1), (fim_ano as usize, 2), (0xae1080, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, a1, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador), || cqe6_periodo_escocia(this, a1, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador));
     PLACAR.registrar(igual, || format!("cqe6_periodo_escocia(regras {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, jogador, mo, mr));
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqe6_pode_emprestar_italia(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(1592), cqe6_pode_emprestar_italia, "cqe6_pode_emprestar_italia", this, clube, jogador, msg, motivo)
+    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_CQE6_PODE_EMPRESTAR_ITALIA), cqe6_pode_emprestar_italia, "cqe6_pode_emprestar_italia", this, clube, jogador, msg, motivo)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqe6_pode_emprestar_irlanda(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(1593), cqe6_pode_emprestar_irlanda, "cqe6_pode_emprestar_irlanda", this, clube, jogador, msg, motivo)
+    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_CQE6_PODE_EMPRESTAR_IRLANDA), cqe6_pode_emprestar_irlanda, "cqe6_pode_emprestar_irlanda", this, clube, jogador, msg, motivo)
 }
 
 /// the Scottish rule (21): one window, from 30 May (moved to the Saturday [inference]) to 30 March (moved to the
@@ -254,7 +254,7 @@ pub(crate) unsafe extern "thiscall" fn regras_escocia(this: usize, a1: u32, a2: 
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
 pub(crate) unsafe extern "thiscall" fn comparar_regras_escocia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1684);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_ESCOCIA);
     let mut r = 0usize;
     cqk1_comparar("regras_escocia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
         regras_escocia(s, a1, a2, a3, a4, a5);

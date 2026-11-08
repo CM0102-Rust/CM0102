@@ -115,7 +115,7 @@ pub(crate) unsafe extern "C" fn coeficientes_das_nacoes() {
 /// Comparador: a original aloca e solta o vetor (e o ordena), então roda só ela, conferida contra o plano feito antes
 /// pelas mesmas contas da cópia: a história (+0xb0..+0xd8) e a marca (+0x121) de cada nação e [0x9cd218] zerado.
 pub(crate) unsafe extern "C" fn comparar_coeficientes_das_nacoes() {
-    let o = orig::<unsafe extern "C" fn()>(1170);
+    let o = orig::<unsafe extern "C" fn()>(IDX_COEFICIENTES_DAS_NACOES);
     let iniciar = read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT) != 0;
     let hoje = read_usize(G_CURRENT_DATE) as i16;
     let dez = read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_TABLE + (cpt6_mes() * 2) as usize) == hoje && read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_DECEMBER) == hoje;
@@ -166,7 +166,7 @@ pub(crate) unsafe extern "C" fn dia_das_aposentadorias(dia: u32) -> u32 {
 
 /// Comparador: pelo al (o único byte que os chamadores leem).
 pub(crate) unsafe extern "C" fn comparar_dia_das_aposentadorias(dia: u32) -> u32 {
-    let r = orig::<unsafe extern "C" fn(u32) -> u32>(1171)(dia);
+    let r = orig::<unsafe extern "C" fn(u32) -> u32>(IDX_DIA_DAS_APOSENTADORIAS)(dia);
     let n = dia_das_aposentadorias(dia);
     PLACAR.registrar(r as u8 == n as u8, || format!("dia_das_aposentadorias({}) {} x {}", dia as u16, r as u8, n as u8));
     r
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "C" fn soma_presa(a: u32, b: u32, min: u32, max: u32) -
 
 /// Comparador: pelo ax (os 16 bits altos do eax da original são os do chamador).
 pub(crate) unsafe extern "C" fn comparar_soma_presa(a: u32, b: u32, min: u32, max: u32) -> u32 {
-    let r = orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(1172)(a, b, min, max);
+    let r = orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(IDX_SOMA_PRESA)(a, b, min, max);
     let n = soma_presa(a, b, min, max);
     PLACAR.registrar(r as u16 == n as u16, || format!("soma_presa({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));
     r
@@ -396,7 +396,7 @@ pub(crate) unsafe fn cps5_pessoa_e_tecnico(p: usize) {
 // ponytail: sorteia e mexe nas preferências (0x547a10, 0x547af0, 0x547c10, 0x547c50), briga e queixa: só a original;
 // a cópia leva os ramos (roda todo dia).
 pub(crate) unsafe extern "C" fn comparar_relacoes_do_elenco() {
-    orig::<unsafe extern "C" fn()>(1128)()
+    orig::<unsafe extern "C" fn()>(IDX_RELACOES_DO_ELENCO)()
 }
 
 /// each squad player with a contract and preferences: the first team-mate he dislikes; with day % 14 + id = 0, the
@@ -426,7 +426,7 @@ pub(crate) unsafe extern "C" fn atrito_com_o_tecnico(clube: usize) {
 // ponytail: a queixa (0x587c60) e a marca no vínculo (0x867700) não rodam duas vezes: só a original; a cópia leva o
 // ramo do atrito.
 pub(crate) unsafe extern "C" fn comparar_atrito_com_o_tecnico(clube: usize) {
-    orig::<unsafe extern "C" fn(usize)>(1129)(clube)
+    orig::<unsafe extern "C" fn(usize)>(IDX_ATRITO_COM_O_TECNICO)(clube)
 }
 
 /// A pessoa conta para a liderança do clube: id válido (< [0xae2364]), contrato com o clube (+0x39) e ficha de jogador.
@@ -505,7 +505,7 @@ pub(crate) unsafe extern "C" fn moral_pela_lideranca() {
 
 // ponytail: sorteia e muda o moral (0x544710, que também sorteia): só a original; a cópia leva os ramos.
 pub(crate) unsafe extern "C" fn comparar_moral_pela_lideranca() {
-    orig::<unsafe extern "C" fn()>(1130)()
+    orig::<unsafe extern "C" fn()>(IDX_MORAL_PELA_LIDERANCA)()
 }
 
 // ---------- 255a leva: o dia do jogo: as faltas ao treino, as competições do dia e a confiança da diretoria no clube (game.cpp) ----------
@@ -643,7 +643,7 @@ pub(crate) unsafe extern "C" fn faltas_ao_treino() {
 
 // ponytail: sorteia e a falta (0x41a360) multa, sorteia e mexe na forma: só a original; a cópia leva os ramos.
 pub(crate) unsafe extern "C" fn comparar_faltas_ao_treino() {
-    orig::<unsafe extern "C" fn()>(1131)()
+    orig::<unsafe extern "C" fn()>(IDX_FALTAS_AO_TREINO)()
 }
 
 /// each competition in the list gets the day (virtual +0x14 with the game date and the flag); with the flag, the next
@@ -673,7 +673,7 @@ pub(crate) unsafe extern "C" fn competicoes_do_dia(marca: u32) {
 
 // ponytail: passa o dia de todas as competições (virtuais) e do [0xae2a58]: só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "C" fn comparar_competicoes_do_dia(marca: u32) {
-    orig::<unsafe extern "C" fn(u32)>(1132)(marca)
+    orig::<unsafe extern "C" fn(u32)>(IDX_COMPETICOES_DO_DIA)(marca)
 }
 
 /// A confiança da diretoria no clube: a palavra +6 da linha do clube (73 bytes por id em [this]).
@@ -703,7 +703,7 @@ pub(crate) unsafe extern "thiscall" fn mudar_confianca_da_diretoria(this: usize,
 
 /// Comparador: lado a lado pela confiança (2 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_mudar_confianca_da_diretoria(this: usize, clube: usize, delta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1133);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_MUDAR_CONFIANCA_DA_DIRETORIA);
     if clube == 0 {
         return o(this, clube, delta);
     }
@@ -741,14 +741,14 @@ pub(crate) unsafe fn byte_da_carga(lesoes: usize, id: *const i32) -> *mut u8 {
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_lista_de_observados(gerente: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> usize>(436)(gerente);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_LISTA_DE_OBSERVADOS)(gerente);
     let n = lista_de_observados(gerente);
     PLACAR.registrar(r == n, || format!("lista_de_observados original={:#x} rust={:#x}", r, n));
     r
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_entrada_do_treino(treino: usize, jogador: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(437)(treino, jogador);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ENTRADA_DO_TREINO)(treino, jogador);
     let n = entrada_do_treino(treino, jogador);
     PLACAR.registrar(r == n, || format!("entrada_do_treino original={:#x} rust={:#x}", r, n));
     r
@@ -774,13 +774,13 @@ pub(crate) unsafe extern "thiscall" fn media_do_jogo(t: usize, segunda: u8) -> f
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_media_do_jogo(t: usize, segunda: u8) -> f64 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> f64>(406)(t, segunda);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> f64>(IDX_MEDIA_DO_JOGO)(t, segunda);
     let n = media_do_jogo(t, segunda);
     PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("media_do_jogo({:#x}, {}) original={} rust={}", t, segunda, o, n));
     o
 }
 
-comparar_valor!(comparar_valor_do_contrato, valor_do_contrato, 407, (p: *const i32) -> u32);
+comparar_valor!(comparar_valor_do_contrato, valor_do_contrato, IDX_VALOR_DO_CONTRATO, (p: *const i32) -> u32);
 
 /// the game CRT pow (0x945ff0) of two doubles, result in st0
 /// Original: `pow_double` (0x5d5a20, game.cpp, cdecl).
@@ -791,7 +791,7 @@ pub(crate) unsafe extern "C" fn pow_do_game(base: f64, expoente: f64) -> f64 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_pow_do_game(base: f64, expoente: f64) -> f64 {
-    let r = orig::<unsafe extern "C" fn(f64, f64) -> f64>(857)(base, expoente);
+    let r = orig::<unsafe extern "C" fn(f64, f64) -> f64>(IDX_POW_DO_GAME)(base, expoente);
     let n = pow_do_game(base, expoente);
     PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("pow_do_game({}, {}) original={} rust={}", base, expoente, r, n));
     r
@@ -813,7 +813,7 @@ pub(crate) unsafe extern "C" fn ordem_por_habilidade(a: *const usize, b: *const 
 
 /// Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn comparar_ordem_por_habilidade(a: *const usize, b: *const usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(1213)(a, b);
+    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_ORDEM_POR_HABILIDADE)(a, b);
     let n = ordem_por_habilidade(a, b);
     PLACAR.registrar(r == n, || format!("ordem_por_habilidade({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r

@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_dia(this: usize, hoje:
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 7 fases
 // criadas e a fase atual (+0x30) a última delas.
 pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2006);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQR10_LIBERTADORES_DIA);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo != 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_primeiro_grupo(this: u
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
 pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_primeiro_grupo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2007);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR10_LIBERTADORES_PRIMEIRO_GRUPO);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_grupo(this: usize, g: 
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
 pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_grupo(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(2008);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CQR10_LIBERTADORES_GRUPO);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..7).contains(&g) {
         return o(this, g);
@@ -352,7 +352,7 @@ pub(crate) unsafe extern "thiscall" fn cqj11_libertadores_regras(this: usize) ->
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj11_libertadores_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1697);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ11_LIBERTADORES_REGRAS);
     cqj11_confere("cqj11_libertadores_regras", this, &CQJ11_LIBERTADORES, || o(this))
 }
 
@@ -428,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_classificados(this: us
 /// lista dela fica; o estado do sorteador volta, a cópia roda sem contar e a lista dela é comparada com a da original e
 /// liberada (0x9452ca: push; add esp, 4 -> cdecl). Com menos de 32 inscritos (as caixas): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_classificados(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1706);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQK11_LIBERTADORES_CLASSIFICADOS);
     let mut v = [0usize; 32];
     if cqk11_inscritos(this, 0x20, &mut v) != 0x20 {
         return o(this); // ponytail: as caixas de erro: só a original
@@ -528,7 +528,7 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_registros(this: usize,
 // rodam duas vezes. Só a original; o plano: a devolução 0 e, no título (fase 7, desfecho 1), o campeão na vaga do
 // Mundial Interclubes que a regra escolhe (0 se lá está um clube do continente [0x9cfa1c], senão 1).
 pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1707);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQK11_LIBERTADORES_REGISTROS);
     let titulo = fase as u8 == 7 && desfecho as u8 == 1;
     let mut vaga = 0usize;
     if titulo {
@@ -568,7 +568,7 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_fase_seguinte(this: us
 // ponytail: o mata-mata (0x4c3d10) aloca a fase e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1708);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQK11_LIBERTADORES_FASE_SEGUINTE);
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return o(this);
@@ -595,7 +595,7 @@ pub(crate) unsafe extern "thiscall" fn cqo13_libertadores_tabela(this: usize, fa
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo13_libertadores_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1918);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO13_LIBERTADORES_TABELA);
     cqo13_comparar("cqo13_libertadores_tabela", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqo13_libertadores_tabela(this, fase, r, e, l))
 }
@@ -613,6 +613,6 @@ pub(crate) unsafe extern "thiscall" fn cqs10_libertadores_mata_mata(this: usize)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2037);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS10_LIBERTADORES_MATA_MATA);
     cqs10_comparar_mata_mata("cqs10_libertadores_mata_mata", this, 0x10, 7, 7, || o(this))
 }

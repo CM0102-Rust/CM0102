@@ -662,7 +662,7 @@ pub(crate) unsafe extern "thiscall" fn construir_arbitro(a: usize) -> usize {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_arbitro(a: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(377);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_ARBITRO);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(a, 8)], || o(a), || construir_arbitro(a));
     PLACAR.registrar(igual && r == v, || format!("construir_arbitro({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
     r

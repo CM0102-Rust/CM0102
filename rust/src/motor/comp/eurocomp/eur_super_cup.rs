@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn cqq11_europeia_clubes(this: usize) -> i32
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq11_europeia_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1980);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQQ11_EUROPEIA_CLUBES);
     cqm12_comparar("cqq11_europeia_clubes", this, || o(this), || cqq11_europeia(this))
 }
 
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn cqq11_asiatica_clubes(this: usize) -> i32
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq11_asiatica_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1981);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQQ11_ASIATICA_CLUBES);
     cqm12_comparar("cqq11_asiatica_clubes", this, || o(this), || cqq11_asiatica(this))
 }
 
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn cqq11_c1_vagas(this: usize) -> i32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq11_c1_vagas(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1982);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQQ11_C1_VAGAS);
     cqm12_comparar("cqq11_c1_vagas", this, || o(this), || cqq11_c1(this))
 }
 
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn cqp10_supercopa_europeia_tabela(this: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp10_supercopa_europeia_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1965);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP10_SUPERCOPA_EUROPEIA_TABELA);
     cql10_comparar("cqp10_supercopa_europeia_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqp10_supercopa_europeia_tabela(this, fase, r, e, s))
 }

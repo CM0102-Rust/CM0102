@@ -189,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn cqr4_final_da_mls(this: usize) {
 pub(crate) unsafe extern "thiscall" fn comparar_cqr4_fase_seguinte_da_mls(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(1996)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR4_FASE_SEGUINTE_DA_MLS)(this);
     let depois = read_usize(this + 0x30) as i32;
     let esperado = if ultima { antes } else if antes == 1 || antes == 2 { antes + 1 } else { antes };
     PLACAR.registrar(depois == esperado, || format!("cqr4_fase_seguinte_da_mls({:#x}) antes={} depois={}", this, antes, depois));
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr4_play_off_da_mls(this: usize
     for k in 0..5 {
         plano[3 + k] = cqr4_clube(&r, k);
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(1997)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR4_PLAY_OFF_DA_MLS)(this);
     let fase = read_usize(read_usize(this + 0xc) + 8);
     let igual = fase != 0 && read_i16(fase + 0x3e) == 8 && read_usize(fase + 4) == read_usize(this + 4) && {
         let mut nela = [0usize; 8];
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr4_final_da_mls(this: usize) {
         }
         i += 1;
     }
-    orig::<unsafe extern "thiscall" fn(usize)>(1998)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR4_FINAL_DA_MLS)(this);
     let fase = read_usize(read_usize(this + 0xc) + 0xc);
     // ponytail: com menos de dois vencedores a original lê vagas da lista sem valor; aí só a fase é conferida.
     let igual = fase != 0 && n < 2 || fase != 0 && {
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs1_tabela_da_mls(this: usize) 
         }
         i = i.wrapping_add(1);
     }
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2018)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQS1_TABELA_DA_MLS)(this);
     let t = read_usize(this + 0xb1);
     let igual = r == (n == 4) as u32 && read_i16(this + 0x3e) == 4 && t != 0 && (0..n).all(|k| read_usize(t + k * 0x3b) == plano[k]);
     PLACAR.registrar(igual, || format!("cqs1_tabela_da_mls({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
@@ -443,12 +443,12 @@ pub(crate) unsafe fn cqs1_comparar(nome: &str, this: usize, codigo: i16, k: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqs1_segunda_divisao_da_mls(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2019);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS1_SEGUNDA_DIVISAO_DA_MLS);
     cqs1_comparar("cqs1_segunda_divisao_da_mls", this, 0x47b, 0, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqs1_terceira_divisao_da_mls(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2020);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS1_TERCEIRA_DIVISAO_DA_MLS);
     cqs1_comparar("cqs1_terceira_divisao_da_mls", this, 0x414, 1, || o(this))
 }
 
@@ -631,7 +631,7 @@ pub(crate) unsafe extern "thiscall" fn cqs2_clubes_da_mls(this: usize, lista: *m
 /// (+0x3e = 4 e as vagas 0 e 1 das fases).
 pub(crate) unsafe extern "thiscall" fn comparar_cqs2_virada_da_mls(this: usize) -> u32 {
     let antes = read_i16(this + 0x40);
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2021)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQS2_VIRADA_DA_MLS)(this);
     let depois = read_i16(this + 0x40);
     let igual = depois == antes.wrapping_add(1) && read_i16(this + 0x3e) == 4 && read_usize(read_usize(this + 0xc)) != 0 && read_usize(read_usize(this + 0xc) + 4) != 0;
     PLACAR.registrar(igual, || format!("cqs2_virada_da_mls({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, read_i16(this + 0x3e)));
@@ -642,7 +642,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs2_virada_da_mls(this: usize) 
 /// tem; não pode rodar duas vezes), com o plano feito antes: os doze clubes das três tabelas, cada bloco ordenado pela
 /// mesma qsort numa cópia; depois, a posição (+0x72 do registro achado por 0x4a4850) de cada um.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs2_posicoes_previstas_da_mls(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2022);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS2_POSICOES_PREVISTAS_DA_MLS);
     let n = read_i16(this + 0x3e) as usize;
     if read_usize(this + 8) == 0 || n != 4 {
         return o(this);
@@ -670,7 +670,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs2_posicoes_previstas_da_mls(t
 /// O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
 /// das três tabelas na ordem.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs2_clubes_da_mls(this: usize, lista: *mut usize, n: *mut i16) {
-    orig::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(2023)(this, lista, n);
+    orig::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(IDX_CQS2_CLUBES_DA_MLS)(this, lista, n);
     let m = read_i16(this + 0x3e) as usize;
     let igual = *n == 0xc && *lista != 0 && (0..m).all(|i| {
         read_usize(*lista + 4 * i) == cqr3_linha(this, i)
@@ -767,7 +767,7 @@ pub(crate) unsafe extern "thiscall" fn cqk9_destino_na_mls(this: usize, clube: u
 /// devolução prevista pelo ensaio.
 pub(crate) unsafe extern "thiscall" fn comparar_cqk9_destino_na_mls(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let n = cqk9_destino(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1737)(this, clube, situacao, fase, a4, jogo, a6);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQK9_DESTINO_NA_MLS)(this, clube, situacao, fase, a4, jogo, a6);
     PLACAR.registrar(r == n, || format!("cqk9_destino_na_mls({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
     r
 }
@@ -812,7 +812,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk9_resultado_na_mls(this: usiz
     let marca = *((jogo + 0x42) as *const i8);
     let bloco = read_u32_as_usize(this + 8);
     let esperada = if read_u32_as_usize(this + 0x30) == 1 { 1 } else if marca < 2 { -1 } else { marca };
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1738)(this, jogo, estat);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQK9_RESULTADO_NA_MLS)(this, jogo, estat);
     let (m, b) = (*((jogo + 0x42) as *const i8), read_u32_as_usize(this + 8));
     PLACAR.registrar(r == 1 && m == esperada && b == bloco, || format!("cqk9_resultado_na_mls({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
     r
@@ -842,12 +842,12 @@ pub(crate) unsafe extern "C" fn cqk9_conferencia_das_estrelas(clube: usize) -> u
     if OESTE.iter().any(|&k| read_u32_as_usize(k) == id) {
         return 0x414;
     }
-    orig::<unsafe extern "C" fn(usize) -> u16>(1739)(clube)
+    orig::<unsafe extern "C" fn(usize) -> u16>(IDX_CQK9_CONFERENCIA_DAS_ESTRELAS)(clube)
 }
 
 /// Comparador: a devolução (só lê; o caso de erro fica com a original sozinha).
 pub(crate) unsafe extern "C" fn comparar_cqk9_conferencia_das_estrelas(clube: usize) -> u16 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u16>(1739)(clube);
+    let r = orig::<unsafe extern "C" fn(usize) -> u16>(IDX_CQK9_CONFERENCIA_DAS_ESTRELAS)(clube);
     let nacao = read_u32_as_usize(clube + club::DIVISION);
     if nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && r == 0 {
         return r; // o caso de erro (a caixa já saiu na original)
@@ -873,7 +873,7 @@ pub(crate) unsafe extern "thiscall" fn cqj8_regras_da_mls(this: usize) -> u32 {
 
 /// Comparador: lado a lado sobre o objeto da liga (0xee; só grava nele); a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_cqj8_regras_da_mls(this: usize) -> u32 {
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xee)], || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1725)(this), || cqj8_regras_da_mls(this));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xee)], || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ8_REGRAS_DA_MLS)(this), || cqj8_regras_da_mls(this));
     PLACAR.registrar(igual && r == n, || format!("cqj8_regras_da_mls({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
@@ -913,7 +913,7 @@ pub(crate) unsafe extern "thiscall" fn cqk8_progresso_na_mls(this: usize, clube:
 /// Comparador: como o do Mineiro.
 pub(crate) unsafe extern "thiscall" fn comparar_cqk8_progresso_na_mls(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(1735)(this, clube, fase, a, b, c), || cqk8_progresso_na_mls(this, clube, fase, a, b, c));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_CQK8_PROGRESSO_NA_MLS)(this, clube, fase, a, b, c), || cqk8_progresso_na_mls(this, clube, fase, a, b, c));
     PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_na_mls({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }

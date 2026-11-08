@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn cqr7_copa_da_italia_grupo_um(this: usize)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr7_copa_da_italia_grupo_um(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2074);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR7_COPA_DA_ITALIA_GRUPO_UM);
     cqr7_comparar_grupo_um("cqr7_copa_da_italia_grupo_um", this, 4, || o(this))
 }
 
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn cqr7_copa_da_serie_c_grupo_um(this: usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr7_copa_da_serie_c_grupo_um(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2075);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR7_COPA_DA_SERIE_C_GRUPO_UM);
     cqr7_comparar_grupo_um("cqr7_copa_da_serie_c_grupo_um", this, 5, || o(this))
 }
 
@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn cqr7_copa_da_italia_fase_seguinte(this: u
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr7_copa_da_italia_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2076);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR7_COPA_DA_ITALIA_FASE_SEGUINTE);
     cqr7_comparar_fase("cqr7_copa_da_italia_fase_seguinte", this, || o(this))
 }
 
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn cqr7_copa_da_serie_c_fase_seguinte(this: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr7_copa_da_serie_c_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2077);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR7_COPA_DA_SERIE_C_FASE_SEGUINTE);
     cqr7_comparar_fase("cqr7_copa_da_serie_c_fase_seguinte", this, || o(this))
 }
 
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn cqr8_copa_da_italia_grupo(this: usize, g:
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr8_copa_da_italia_grupo(this: usize, g: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(2078);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_CQR8_COPA_DA_ITALIA_GRUPO);
     cqr8_comparar("cqr8_copa_da_italia_grupo", this, g, || o(this, g))
 }
 
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn cqr8_copa_da_serie_c_grupo(this: usize, g
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr8_copa_da_serie_c_grupo(this: usize, g: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(2079);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_CQR8_COPA_DA_SERIE_C_GRUPO);
     cqr8_comparar("cqr8_copa_da_serie_c_grupo", this, g, || o(this, g))
 }
 
@@ -384,7 +384,7 @@ pub(crate) unsafe fn cqr9_comparar(nome: &str, this: usize, fase: usize, cabem: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr9_copa_da_italia_mata_mata(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2080);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR9_COPA_DA_ITALIA_MATA_MATA);
     // ponytail: aloca a fase e sorteia a primeira rodada; não pode rodar duas vezes: só a original, com o plano
     cqr9_comparar("cqr9_copa_da_italia_mata_mata", this, 7, 16, || o(this))
 }
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn cqr9_copa_da_serie_c_mata_mata(this: usiz
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqr9_copa_da_serie_c_mata_mata(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2081);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQR9_COPA_DA_SERIE_C_MATA_MATA);
     // ponytail: monta e destrói a liga provisória, aloca a fase e sorteia; não pode rodar duas vezes: só a original
     cqr9_comparar("cqr9_copa_da_serie_c_mata_mata", this, 0xf, 10, || o(this))
 }
@@ -597,7 +597,7 @@ pub(crate) unsafe extern "thiscall" fn cqo10_copa_da_italia_tabela(this: usize, 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo10_copa_da_italia_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1908);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO10_COPA_DA_ITALIA_TABELA);
     cqo10_comparar("cqo10_copa_da_italia_tabela", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqo10_copa_da_italia_tabela(this, fase, r, e, l), 7)
 }
@@ -630,7 +630,7 @@ pub(crate) unsafe extern "thiscall" fn cqo10_copa_c_tabela(this: usize, fase: u3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo10_copa_c_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1909);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO10_COPA_C_TABELA);
     cqo10_comparar("cqo10_copa_c_tabela", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqo10_copa_c_tabela(this, fase, r, e, l), 0xf)
 }
@@ -652,7 +652,7 @@ pub(crate) unsafe extern "thiscall" fn cqo10_supercopa_tabela(this: usize, fase:
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo10_supercopa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1910);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO10_SUPERCOPA_TABELA);
     cql10_comparar("cqo10_supercopa_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqo10_supercopa_tabela(this, fase, r, e, s))
 }
@@ -673,7 +673,7 @@ pub(crate) unsafe extern "thiscall" fn cqo10_supercopa_c1_tabela(this: usize, fa
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo10_supercopa_c1_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1911);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO10_SUPERCOPA_C1_TABELA);
     cql10_comparar("cqo10_supercopa_c1_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cqo10_supercopa_c1_tabela(this, fase, r, e, s))
 }
@@ -915,7 +915,7 @@ pub(crate) unsafe fn cqo11_comparar(nome: &str, this: usize, o: impl FnOnce() ->
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo11_copa_da_italia_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1912);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQO11_COPA_DA_ITALIA_INSCRITOS);
     cqo11_comparar("cqo11_copa_da_italia_inscritos", this, || o(this), || cqo11_copa_da_italia(this))
 }
 
@@ -993,7 +993,7 @@ pub(crate) unsafe extern "thiscall" fn cqo11_copa_c_inscritos(this: usize) -> i3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo11_copa_c_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1913);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQO11_COPA_C_INSCRITOS);
     cqo11_comparar("cqo11_copa_c_inscritos", this, || o(this), || cqo11_copa_c(this))
 }
 
@@ -1036,7 +1036,7 @@ pub(crate) unsafe extern "thiscall" fn cqo11_supercopa_clubes(this: usize) -> i3
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqo11_supercopa_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1914);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQO11_SUPERCOPA_CLUBES);
     cqm12_comparar("cqo11_supercopa_clubes", this, || o(this), || cqo11_supercopa(this))
 }
 
@@ -1121,7 +1121,7 @@ pub(crate) unsafe extern "thiscall" fn cqi12_copa_italia_regras(this: usize) -> 
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi12_copa_italia_regras(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1691)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI12_COPA_ITALIA_REGRAS)(this);
     cqi12_confere("cqi12_copa_italia_regras", this, &CQI12_COPA_DA_ITALIA, r);
     r
 }
@@ -1140,7 +1140,7 @@ pub(crate) unsafe extern "thiscall" fn cqi12_copa_c_regras(this: usize) -> u32 {
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 pub(crate) unsafe extern "thiscall" fn comparar_cqi12_copa_c_regras(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1692)(this);
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI12_COPA_C_REGRAS)(this);
     cqi12_confere("cqi12_copa_c_regras", this, &CQI12_COPA_DA_SERIE_C, r);
     r
 }

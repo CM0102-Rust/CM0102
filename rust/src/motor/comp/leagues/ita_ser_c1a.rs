@@ -68,17 +68,17 @@ pub(crate) unsafe fn cql5_comparar_passagem(nome: &str, this: usize, original: i
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_c1a(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1856);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASE_SEGUINTE_DA_C1A);
     cql5_comparar_passagem("fase_seguinte_da_c1a", this, || o(this), || fase_seguinte_da_c1a(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_c1b(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1858);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASE_SEGUINTE_DA_C1B);
     cql5_comparar_passagem("fase_seguinte_da_c1b", this, || o(this), || fase_seguinte_da_c1b(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_third(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1860);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASE_SEGUINTE_DA_THIRD);
     cql5_comparar_passagem("fase_seguinte_da_third", this, || o(this), || fase_seguinte_da_third(this))
 }
 
@@ -211,12 +211,12 @@ pub(crate) unsafe fn cql5_comparar_fases(nome: &str, this: usize, original: impl
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fases_do_fim_da_c1a(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1857);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASES_DO_FIM_DA_C1A);
     cql5_comparar_fases("fases_do_fim_da_c1a", this, || o(this))
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_fases_do_fim_da_c1b(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1859);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASES_DO_FIM_DA_C1B);
     cql5_comparar_fases("fases_do_fim_da_c1b", this, || o(this))
 }
 
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_c1_a(this: usize, fase: u32
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_c1_a(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1894);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_C1_A);
     cqo5_comparar_fases("calendario_da_c1_a", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_c1_a(this, fase, r, e, l))
 }
 
@@ -249,7 +249,7 @@ pub(crate) unsafe extern "thiscall" fn situacao_na_c1a(this: usize, clube: usize
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_c1a(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1770);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SITUACAO_NA_C1A);
     cqk6_comparar_situacao("situacao_na_c1a", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_c1a(this, clube, fase, atual, melhor, pior))
 }
 
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_fixo_da_c1a(this: usize) {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1a(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1883);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CALENDARIO_FIXO_DA_C1A);
     cqn6_comparar("calendario_fixo_da_c1a", this, || o(this))
 }
 
@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn construir_c1a(this: usize, ano: u32, regi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_c1a(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1867);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_C1A);
     cqm4_comparar("construir_c1a", this, ano, registro, &CQM4_C1A, || o(this, ano, registro))
 }
 
@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn regras_da_c1a(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_c1a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1750);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_C1A);
     cqi6_comparar("regras_da_c1a", this, cqi6_c1a(this), || o(this), || regras_da_c1a(this))
 }
 
@@ -311,6 +311,6 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_c1a(this: usize) -> u32 {
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_c1a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1754);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_C1A);
     cqj4_comparar("tabela_da_c1a", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, None, || o(this))
 }

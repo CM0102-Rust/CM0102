@@ -138,11 +138,11 @@ pub(crate) unsafe extern "thiscall" fn desmontar_estatisticas_da_partida(estat: 
 // original; as cópias se provam no modo Rust (os ramos: a carreira automática cria o jogo e passa pelo
 // construtor).
 pub(crate) unsafe extern "thiscall" fn comparar_montar_estatisticas_da_partida(estat: usize, zip: usize, n: i32) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> usize>(554)(estat, zip, n)
+    orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> usize>(IDX_MONTAR_ESTATISTICAS_DA_PARTIDA)(estat, zip, n)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_desmontar_estatisticas_da_partida(estat: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(555)(estat)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_DESMONTAR_ESTATISTICAS_DA_PARTIDA)(estat)
 }
 
 // ---------- 212a leva: o registro da partida, a ordem dos eventos e o idioma que o jogador perde (match_stats.cpp, player_stats.cpp) ----------
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_desmontar_estatisticas_da_partid
 /// 0x85a470 quando falta). Partida ou registro nulos: a original (caixa de erro). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn preencher_registro_da_partida(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
     if m == 0 || reg == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(523)(estat, m, reg, sem_renda);
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PREENCHER_REGISTRO_DA_PARTIDA)(estat, m, reg, sem_renda);
     }
     let b = |p: usize| *(p as *const u8);
     let w = |p: usize| core::ptr::read_unaligned(p as *const u16);
@@ -383,7 +383,7 @@ pub(crate) unsafe extern "C" fn ordem_dos_eventos(a: *const u8, b: *const u8) ->
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_preencher_registro_da_partida(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(523);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PREENCHER_REGISTRO_DA_PARTIDA);
     // ponytail: a primeira chamada (data estática e atexit) e os erros só pela original
     if m == 0 || reg == 0 || *(G_MATCH_STATS_FILL_RECORD_STATIC_DATE_GUARD as *const u8) & 1 == 0 {
         return o(estat, m, reg, sem_renda);
@@ -399,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_preencher_registro_da_partida(es
 }
 
 pub(crate) unsafe extern "C" fn comparar_ordem_dos_eventos(a: *const u8, b: *const u8) -> i32 {
-    let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(524)(a, b);
+    let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(IDX_ORDEM_DOS_EVENTOS)(a, b);
     let n = ordem_dos_eventos(a, b);
     PLACAR.registrar(r == n, || format!("ordem_dos_eventos({:x?}, {:x?}) original={} rust={}",
         core::slice::from_raw_parts(a, 4), core::slice::from_raw_parts(b, 4), r, n));
@@ -1376,7 +1376,7 @@ pub(crate) unsafe fn comparar_montagem_da_partida(nome: &str, extra: &[(usize, u
 /// vezes: a foto do parâmetro 0x1d a liberar, o lance do parâmetro 7 a narrar (som, 0x6d7b00) ou as
 /// abas 1 (o resumo também narra), 3 (as zonas alocam a foto) e 10 (a tabela ao vivo).
 pub(crate) unsafe extern "C" fn comparar_montar_tela_da_partida() {
-    let o = orig::<unsafe extern "C" fn()>(499);
+    let o = orig::<unsafe extern "C" fn()>(IDX_MONTAR_TELA_DA_PARTIDA);
     let aba = parametro_da_tela(2) as u8;
     // as abas 2 (estatisticas) e 7 (notas) alocam a copia do estado 0x1d quando ela falta: tambem so a original
     if parametro_da_tela(0x1d) != 0 || parametro_da_tela(7) != 0 || matches!(aba, 1 | 2 | 3 | 7 | 10) {
@@ -1410,14 +1410,14 @@ pub(crate) unsafe extern "C" fn comparar_montar_tela_da_partida() {
 // ponytail: a resposta mexe em telas, menu, rede, narração (som) e tática (não roda duas vezes): no modo
 // comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust (contador "telas ...")
 pub(crate) unsafe extern "C" fn comparar_responder_tela_da_partida(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(500)(item)
+    orig::<unsafe extern "C" fn(u32) -> i32>(IDX_RESPONDER_TELA_DA_PARTIDA)(item)
 }
 
 /// A tela de detalhes é comparada pela lista de exibição quando o registro e a foto da partida já
 /// existem (parâmetros 0x1f e 0x20) e não há foto 0x1d a liberar. Só a original quando eles nascem aqui
 /// (alocação) ou nas abas 1 (o resumo narra com som), 3 (as zonas alocam a foto) e 4 (o relatório nasce).
 pub(crate) unsafe extern "C" fn comparar_montar_detalhes_da_partida() {
-    let o = orig::<unsafe extern "C" fn()>(501);
+    let o = orig::<unsafe extern "C" fn()>(IDX_MONTAR_DETALHES_DA_PARTIDA);
     let aba = parametro_da_tela(2) as u8;
     // as abas 2 (estatisticas) e 6 (notas) alocam a copia do estado 0x1d: tambem so a original
     if parametro_da_tela(0x1d) != 0 || parametro_da_tela(0x1f) == 0 || parametro_da_tela(0x20) == 0 || matches!(aba, 1 | 2 | 3 | 4 | 6) {
@@ -1521,7 +1521,7 @@ pub(crate) unsafe fn visao_geral_avisa_erro() -> bool {
 /// disputa de pênaltis, o árbitro, o público, o tempo, "Match Abandoned" e a barra da posse (0x71d9e0).
 pub(crate) unsafe extern "C" fn painel_da_visao_geral_da_partida(topo: *mut i32, base: *mut i32) {
     if visao_geral_avisa_erro() {
-        return orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(503)(topo, base);
+        return orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_PAINEL_DA_VISAO_GERAL_DA_PARTIDA)(topo, base);
     }
     let txt: TextoDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
     let caixa: CaixaDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
@@ -1926,7 +1926,7 @@ pub(crate) unsafe extern "C" fn painel_da_visao_geral_da_partida(topo: *mut i32,
 /// Sem liga ou sem o parâmetro 0xe (caixa "Error"): a original.
 pub(crate) unsafe extern "C" fn tabela_da_liga_ao_vivo(liga: usize, topo: i32, base: i32) {
     if liga == 0 || parametro_da_tela(0xe) == 0 {
-        return orig::<unsafe extern "C" fn(usize, i32, i32)>(504)(liga, topo, base);
+        return orig::<unsafe extern "C" fn(usize, i32, i32)>(IDX_TABELA_DA_LIGA_AO_VIVO)(liga, topo, base);
     }
     let txt: TextoDoGerente = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
     let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
@@ -2212,7 +2212,7 @@ pub(crate) unsafe extern "C" fn tabela_da_liga_ao_vivo(liga: usize, topo: i32, b
 /// é local: o `Display` do gerente, os parâmetros, a cópia (0xd7a bytes) e o texto 0xde1f64. Sem a cópia
 /// (nasce aqui) ou pela rede: só a original.
 pub(crate) unsafe extern "C" fn comparar_atualizar_barra_da_posse() {
-    let o = orig::<unsafe extern "C" fn()>(502);
+    let o = orig::<unsafe extern "C" fn()>(IDX_ATUALIZAR_BARRA_DA_POSSE);
     let p0 = parametro_da_tela(0);
     let copia = parametro_da_tela(0x1d);
     let mut reg = match regioes_da_atualizacao(false) {
@@ -2234,7 +2234,7 @@ pub(crate) unsafe extern "C" fn comparar_atualizar_barra_da_posse() {
 /// narrador (parâmetro 7: escreve o lance e toca o som), na partida sem a cópia do estado (a barra a
 /// aloca) e com a atualização pela rede.
 pub(crate) unsafe extern "C" fn comparar_painel_da_visao_geral_da_partida(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(503);
+    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_PAINEL_DA_VISAO_GERAL_DA_PARTIDA);
     let p0 = parametro_da_tela(0);
     let foto = parametro_da_tela(0x1d);
     let narrador = p0 != 0
@@ -2261,7 +2261,7 @@ pub(crate) unsafe extern "C" fn comparar_painel_da_visao_geral_da_partida(topo: 
 /// tabela dela ([+0xb1], 59 bytes por clube), que a rotina reordena. As cópias locais nascem e morrem
 /// dentro dela. Sem liga ou sem o parâmetro 0xe (caixa "Error"): só a original.
 pub(crate) unsafe extern "C" fn comparar_tabela_da_liga_ao_vivo(liga: usize, topo: i32, base: i32) {
-    let o = orig::<unsafe extern "C" fn(usize, i32, i32)>(504);
+    let o = orig::<unsafe extern "C" fn(usize, i32, i32)>(IDX_TABELA_DA_LIGA_AO_VIVO);
     if liga == 0 || parametro_da_tela(0xe) == 0 {
         return o(liga, topo, base);
     }
@@ -2657,7 +2657,7 @@ pub(crate) unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
 /// de leitura ou de alocação: erro 0x4a5/0x4ae/0x4b6/0x4be/0x4c6/0x4ce e fecha. Devolve 1 se leu.
 pub(crate) unsafe extern "thiscall" fn carregar_estatisticas_da_partida(estat: usize, zip: usize) -> u32 {
     if zip == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(494)(estat, zip);
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CARREGAR_ESTATISTICAS_DA_PARTIDA)(estat, zip);
     }
     crate::comparacao::ramo("telas estatisticas carregar");
     let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
@@ -2708,7 +2708,7 @@ pub(crate) unsafe extern "thiscall" fn carregar_estatisticas_da_partida(estat: u
 /// 0x4f8/0x500/0x508/0x510/0x518 e fecha. Devolve 1 se gravou.
 pub(crate) unsafe extern "thiscall" fn salvar_estatisticas_da_partida(estat: usize, zip: usize) -> u32 {
     if zip == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(495)(estat, zip);
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SALVAR_ESTATISTICAS_DA_PARTIDA)(estat, zip);
     }
     crate::comparacao::ramo("telas estatisticas salvar");
     let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
@@ -2746,18 +2746,18 @@ pub(crate) unsafe extern "thiscall" fn salvar_estatisticas_da_partida(estat: usi
 /// A conferência é comparada de verdade pela lista de exibição (o Text local é alocado e liberado
 /// dentro de cada execução).
 pub(crate) unsafe extern "C" fn comparar_desenhar_conferencia_da_escalacao() {
-    let o = orig::<unsafe extern "C" fn()>(493);
+    let o = orig::<unsafe extern "C" fn()>(IDX_DESENHAR_CONFERENCIA_DA_ESCALACAO);
     comparar_painel_pela_lista("desenhar_conferencia_da_escalacao", || o(), || desenhar_conferencia_da_escalacao());
 }
 
 // ponytail: carregar e salvar mexem no arquivo do save (e carregar aloca o índice): rodar duas vezes
 // leria/gravaria duas vezes, então o comparador só chama a original; as cópias se provam no modo Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_carregar_estatisticas_da_partida(estat: usize, zip: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(494)(estat, zip)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CARREGAR_ESTATISTICAS_DA_PARTIDA)(estat, zip)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_salvar_estatisticas_da_partida(estat: usize, zip: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(495)(estat, zip)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SALVAR_ESTATISTICAS_DA_PARTIDA)(estat, zip)
 }
 
 // ---------- 206a leva: as estatísticas da partida: ler e gravar o registro no arquivo temporário e registrar a partida (match_stats.cpp) ----------
@@ -2774,7 +2774,7 @@ pub(crate) const REGISTRO_DA_PARTIDA: u32 = 0xd7a;
 /// fread falham: erro 0x12f/0x137 e fecha. Devolve 1 se leu.
 pub(crate) unsafe extern "thiscall" fn ler_registro_da_partida(estat: usize, k: i32, saida: usize) -> u32 {
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(490)(estat, k, saida);
+        return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_LER_REGISTRO_DA_PARTIDA)(estat, k, saida);
     }
     crate::comparacao::ramo("estatisticas ler registro");
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
@@ -2810,7 +2810,7 @@ pub(crate) unsafe extern "thiscall" fn ler_registro_da_partida(estat: usize, k: 
 /// nulos: a original (caixa de erro, devolve 0). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn registrar_partida(estat: usize, m: usize, r: usize) -> u32 {
     if m == 0 || r == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(491)(estat, m, r);
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_REGISTRAR_PARTIDA)(estat, m, r);
     }
     crate::comparacao::ramo("estatisticas registrar partida");
     let preencher: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
@@ -2836,7 +2836,7 @@ pub(crate) unsafe extern "thiscall" fn registrar_partida(estat: usize, m: usize,
 /// de erro). Falhas do arquivo: erro 0x172/0x17f/0x18d/0x1a3 (fechando, como a original). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn gravar_registro_da_partida(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
     if jogo == 0 || r == 0 || eventos == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(492)(estat, jogo, r, eventos);
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_GRAVAR_REGISTRO_DA_PARTIDA)(estat, jogo, r, eventos);
     }
     crate::comparacao::ramo("estatisticas gravar registro");
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
@@ -2900,15 +2900,15 @@ pub(crate) unsafe extern "thiscall" fn gravar_registro_da_partida(estat: usize, 
 // duas vezes gravaria o registro duas vezes, então o comparador só chama a original; as cópias se
 // provam no modo Rust (os ramos) e pela carreira com as mutações.
 pub(crate) unsafe extern "thiscall" fn comparar_ler_registro_da_partida(estat: usize, k: i32, saida: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(490)(estat, k, saida)
+    orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_LER_REGISTRO_DA_PARTIDA)(estat, k, saida)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_registrar_partida(estat: usize, m: usize, r: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(491)(estat, m, r)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_REGISTRAR_PARTIDA)(estat, m, r)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_registro_da_partida(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(492)(estat, jogo, r, eventos)
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_GRAVAR_REGISTRO_DA_PARTIDA)(estat, jogo, r, eventos)
 }
 
 // ---------- 205a leva: as telas da partida (12): as linhas das estatísticas do time, o redesenho dos últimos placares e a espera dos outros jogadores (match_screens.cpp) ----------
@@ -3008,7 +3008,7 @@ pub(crate) unsafe extern "C" fn preencher_estatisticas_do_time(modo: u32, area: 
     let tabela = match parametro_da_tela(0x1c) as u8 {
         1 => 0xa16178usize,
         2 => 0xa1618c,
-        _ => return orig::<unsafe extern "C" fn(u32, usize)>(487)(modo, area),
+        _ => return orig::<unsafe extern "C" fn(u32, usize)>(IDX_PREENCHER_ESTATISTICAS_DO_TIME)(modo, area),
     };
     let dados = if p0 != 0 {
         core::ptr::read_unaligned((p0 + 0x5f) as *const usize)
@@ -3672,7 +3672,7 @@ pub(crate) unsafe extern "C" fn esperar_os_outros_jogadores() -> i32 {
 /// local pelo `Display` do gerente; os parâmetros (o 0x1a) e o texto 0xde1f64 também. Atualização que
 /// vai pela rede ou parâmetro 0x1c fora de 1 e 2: só a original.
 pub(crate) unsafe extern "C" fn comparar_preencher_estatisticas_do_time(modo: u32, area: usize) {
-    let o = orig::<unsafe extern "C" fn(u32, usize)>(487);
+    let o = orig::<unsafe extern "C" fn(u32, usize)>(IDX_PREENCHER_ESTATISTICAS_DO_TIME);
     let coluna = parametro_da_tela(0x1c) as u8;
     let mut reg = match regioes_da_atualizacao(modo != 0) {
         Some(r) if coluna == 1 || coluna == 2 => r,
@@ -3687,7 +3687,7 @@ pub(crate) unsafe extern "C" fn comparar_preencher_estatisticas_do_time(modo: u3
 /// O redesenho é comparado de verdade (atualização local): o `Display` do gerente, os parâmetros (menos
 /// o 0x14, a hora que a rotina grava no fim) e o texto 0xde1f64. Pela rede: só a original.
 pub(crate) unsafe extern "C" fn comparar_atualizar_ultimos_placares() {
-    let o = orig::<unsafe extern "C" fn()>(488);
+    let o = orig::<unsafe extern "C" fn()>(IDX_ATUALIZAR_ULTIMOS_PLACARES);
     let mut reg = match regioes_da_atualizacao(false) {
         Some(r) => r,
         None => return o(),
@@ -3707,7 +3707,7 @@ pub(crate) unsafe extern "C" fn comparar_atualizar_ultimos_placares() {
 // ponytail: a espera fecha as telas, mostra a mensagem e abre a tela da partida (rede); não roda duas
 // vezes: no modo comparação só a original (a cópia é provada no modo Rust pelo ramo)
 pub(crate) unsafe extern "C" fn comparar_esperar_os_outros_jogadores() -> i32 {
-    orig::<unsafe extern "C" fn() -> i32>(489)()
+    orig::<unsafe extern "C" fn() -> i32>(IDX_ESPERAR_OS_OUTROS_JOGADORES)()
 }
 
 // ---------- 204a leva: as telas da partida (10): os painéis das zonas de ação e do relatório da partida e a tela dos jogos do dia (match_screens.cpp) ----------
@@ -3870,7 +3870,7 @@ pub(crate) unsafe extern "C" fn painel_das_zonas_de_acao(topo: *mut i32, base: *
 /// ([parâmetro 0x20 + 0x4c]) ou sem linhas: "There is no match report available.". Relatório nulo ou
 /// sem memória: a original (caixa de erro).
 pub(crate) unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(485);
+    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_PAINEL_DO_RELATORIO_DA_PARTIDA);
     let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
     let lista: ListaDoDisplay = core::mem::transmute(FN_DISPLAY_ADD_AREA);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -4262,7 +4262,7 @@ pub(crate) unsafe fn comparar_pela_lista_com(nome: &str, extra: &[(usize, usize)
 /// 0xb6b7b4 e a foto da partida que os valores (0x720320) comparam e regravam (parâmetro 0x1d, 0xd7a
 /// bytes). Sem a foto ainda (o primeiro desenho), os valores a alocam: só a original roda.
 pub(crate) unsafe extern "C" fn comparar_painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(484);
+    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_PAINEL_DAS_ZONAS_DE_ACAO);
     let foto = parametro_da_tela(0x1d);
     if foto == 0 {
         // ponytail: a alocação não roda duas vezes; esse desenho se prova no modo Rust
@@ -4275,7 +4275,7 @@ pub(crate) unsafe extern "C" fn comparar_painel_das_zonas_de_acao(topo: *mut i32
 /// O relatório é comparado de verdade quando já existe (na partida ou no parâmetro 0x2d); quando nasce
 /// aqui (alocação e construção) só a original roda.
 pub(crate) unsafe extern "C" fn comparar_painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(485);
+    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_PAINEL_DO_RELATORIO_DA_PARTIDA);
     if parametro_da_tela(0) == 0 && *((parametro_da_tela(0x20) + 0x4c) as *const u8) == 0 && parametro_da_tela(0x2d) == 0 {
         // ponytail: a alocação do relatório não roda duas vezes; esse caminho se prova no modo Rust
         return o(topo, base);
@@ -4285,7 +4285,7 @@ pub(crate) unsafe extern "C" fn comparar_painel_do_relatorio_da_partida(topo: *m
 
 /// A montagem é comparada de verdade, com a marca de vista do humano no grupo (+0x14 + 4h).
 pub(crate) unsafe extern "C" fn comparar_montar_jogos_do_dia() {
-    let o = orig::<unsafe extern "C" fn()>(486);
+    let o = orig::<unsafe extern "C" fn()>(IDX_MONTAR_JOGOS_DO_DIA);
     let marca = (parametro_da_tela(1) as isize + 0x14 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 4) as usize;
     comparar_pela_lista_com("montar_jogos_do_dia", &[(marca, 4)], || o(), || montar_jogos_do_dia());
 }
@@ -4670,17 +4670,17 @@ pub(crate) unsafe fn comparar_valores_da_partida(nome: &str, original: impl FnOn
 }
 
 pub(crate) unsafe extern "C" fn comparar_valores_das_estatisticas_da_partida() {
-    let o = orig::<unsafe extern "C" fn()>(481);
+    let o = orig::<unsafe extern "C" fn()>(IDX_VALORES_DAS_ESTATISTICAS_DA_PARTIDA);
     comparar_valores_da_partida("valores_das_estatisticas_da_partida", || o(), || valores_das_estatisticas_da_partida());
 }
 
 pub(crate) unsafe extern "C" fn comparar_valores_das_zonas_de_acao() {
-    let o = orig::<unsafe extern "C" fn()>(482);
+    let o = orig::<unsafe extern "C" fn()>(IDX_VALORES_DAS_ZONAS_DE_ACAO);
     comparar_valores_da_partida("valores_das_zonas_de_acao", || o(), || valores_das_zonas_de_acao());
 }
 
 pub(crate) unsafe extern "C" fn comparar_valores_das_notas_dos_jogadores() {
-    let o = orig::<unsafe extern "C" fn()>(483);
+    let o = orig::<unsafe extern "C" fn()>(IDX_VALORES_DAS_NOTAS_DOS_JOGADORES);
     comparar_valores_da_partida("valores_das_notas_dos_jogadores", || o(), || valores_das_notas_dos_jogadores());
 }
 
@@ -4959,12 +4959,12 @@ pub(crate) unsafe fn comparar_painel_pela_lista(nome: &str, original: impl FnOnc
 }
 
 pub(crate) unsafe extern "C" fn comparar_painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(u32, *mut i32, *mut i32)>(478);
+    let o = orig::<unsafe extern "C" fn(u32, *mut i32, *mut i32)>(IDX_PAINEL_DAS_ESTATISTICAS_DO_TIME);
     comparar_painel_pela_lista("painel_das_estatisticas_do_time", || o(lado, topo, base), || painel_das_estatisticas_do_time(lado, topo, base));
 }
 
 pub(crate) unsafe extern "C" fn comparar_painel_das_notas_dos_jogadores(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(479);
+    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_PAINEL_DAS_NOTAS_DOS_JOGADORES);
     // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
     // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
     if parametro_da_tela(0x1d) == 0 {
@@ -4974,7 +4974,7 @@ pub(crate) unsafe extern "C" fn comparar_painel_das_notas_dos_jogadores(topo: *m
 }
 
 pub(crate) unsafe extern "C" fn comparar_painel_das_estatisticas_da_partida(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(480);
+    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_PAINEL_DAS_ESTATISTICAS_DA_PARTIDA);
     // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
     // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
     if parametro_da_tela(0x1d) == 0 {
@@ -5183,15 +5183,15 @@ pub(crate) unsafe extern "C" fn responder_escalacao_da_partida(item: u32) -> i32
 // ponytail: as três abrem telas, mexem na rede ou no capitão (não rodam duas vezes): no modo comparação
 // só a original; a cópia é provada no modo Rust pelos ramos
 pub(crate) unsafe extern "C" fn comparar_responder_continuar_da_partida(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(475)(item)
+    orig::<unsafe extern "C" fn(u32) -> i32>(IDX_RESPONDER_CONTINUAR_DA_PARTIDA)(item)
 }
 
 pub(crate) unsafe extern "C" fn comparar_abrir_escalacao_da_partida() {
-    orig::<unsafe extern "C" fn()>(476)()
+    orig::<unsafe extern "C" fn()>(IDX_ABRIR_ESCALACAO_DA_PARTIDA)()
 }
 
 pub(crate) unsafe extern "C" fn comparar_responder_escalacao_da_partida(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(477)(item)
+    orig::<unsafe extern "C" fn(u32) -> i32>(IDX_RESPONDER_ESCALACAO_DA_PARTIDA)(item)
 }
 
 // ---------- 200a leva: as telas da partida (9): a cópia do bloco do time e da linha do jogador e o placar ao vivo (match_screens.cpp) ----------
@@ -5231,7 +5231,7 @@ pub(crate) unsafe extern "thiscall" fn atribuir_bloco_do_time(this: usize, src: 
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_atribuir_bloco_do_time(this: usize, src: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(472);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ATRIBUIR_BLOCO_DO_TIME);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x625)], || o(this, src), || atribuir_bloco_do_time(this, src));
     PLACAR.registrar(igual && r == n, || format!("atribuir_bloco_do_time({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
@@ -5255,7 +5255,7 @@ pub(crate) unsafe extern "thiscall" fn atribuir_linha_do_jogador(this: usize, sr
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_atribuir_linha_do_jogador(this: usize, src: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(473);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ATRIBUIR_LINHA_DO_JOGADOR);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x49)], || o(this, src), || atribuir_linha_do_jogador(this, src));
     PLACAR.registrar(igual && r == n, || format!("atribuir_linha_do_jogador({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
@@ -5317,7 +5317,7 @@ pub(crate) unsafe extern "C" fn contar_placar_ao_vivo(partida: usize, indice: u3
 }
 
 pub(crate) unsafe extern "C" fn comparar_contar_placar_ao_vivo(partida: usize, indice: u32, res: usize) {
-    let o = orig::<unsafe extern "C" fn(usize, u32, usize)>(474);
+    let o = orig::<unsafe extern "C" fn(usize, u32, usize)>(IDX_CONTAR_PLACAR_AO_VIVO);
     if res == 0 {
         return o(partida, indice, res);
     }
@@ -5336,7 +5336,7 @@ pub(crate) unsafe extern "C" fn comparar_contar_placar_ao_vivo(partida: usize, i
 /// ou além de [this+0x1c]: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn entrada_do_jogo_bate(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
     if k < -1 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(470)(estat, k, a, b, data_a, data_b);
+        return orig::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(IDX_ENTRADA_DO_JOGO_BATE)(estat, k, a, b, data_a, data_b);
     }
     if k == -1 {
         return 0;
@@ -5414,7 +5414,7 @@ pub(crate) unsafe extern "stdcall" fn balde_do_registro(jogo: usize, registro: u
 
 
 pub(crate) unsafe extern "thiscall" fn comparar_entrada_do_jogo_bate(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(470);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(IDX_ENTRADA_DO_JOGO_BATE);
     if k < -1 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) {
         return o(estat, k, a, b, data_a, data_b);
     }
@@ -5425,7 +5425,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_entrada_do_jogo_bate(estat: usiz
 }
 
 pub(crate) unsafe extern "stdcall" fn comparar_balde_do_registro(jogo: usize, registro: usize) -> u8 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(471)(jogo, registro);
+    let r = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(IDX_BALDE_DO_REGISTRO)(jogo, registro);
     let n = balde_do_registro(jogo, registro);
     PLACAR.registrar(r == n, || format!("balde_do_registro original={} rust={}", r, n));
     r
@@ -5441,7 +5441,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_balde_do_registro(jogo: usize, re
 /// grupo de jogos, 2 e 3 zero, 4 um. Grupo nulo: a original (caixa de erro e [0xb67a34] = 0).
 pub(crate) unsafe extern "C" fn abrir_jogos_do_dia(vaga: u32, grupo: usize) {
     if grupo == 0 {
-        return orig::<unsafe extern "C" fn(u32, usize)>(466)(vaga, grupo);
+        return orig::<unsafe extern "C" fn(u32, usize)>(IDX_ABRIR_JOGOS_DO_DIA)(vaga, grupo);
     }
     crate::comparacao::ramo("telas abrir os jogos do dia");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
@@ -5510,7 +5510,7 @@ pub(crate) unsafe extern "C" fn responder_jogos_do_dia(item: u32) -> i32 {
 /// de erro). Quem chama só usa `al`.
 pub(crate) unsafe extern "C" fn vaga_do_mais_bem_avaliado(tatica: usize, contexto: i32) -> u8 {
     if tatica == 0 {
-        return orig::<unsafe extern "C" fn(usize, i32) -> u8>(468)(tatica, contexto);
+        return orig::<unsafe extern "C" fn(usize, i32) -> u8>(IDX_VAGA_DO_MAIS_BEM_AVALIADO)(tatica, contexto);
     }
     let da_tatica: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> usize = core::mem::transmute(FN_TACTICS_GET_SELECTED_PLAYER);
     let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(FN_MATCH_MAN_GET_CAPTAIN_SCORE);
@@ -5532,16 +5532,16 @@ pub(crate) unsafe extern "C" fn vaga_do_mais_bem_avaliado(tatica: usize, context
 // ponytail: abrir e responder mexem em telas e menu (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 pub(crate) unsafe extern "C" fn comparar_abrir_jogos_do_dia(vaga: u32, grupo: usize) {
-    orig::<unsafe extern "C" fn(u32, usize)>(466)(vaga, grupo)
+    orig::<unsafe extern "C" fn(u32, usize)>(IDX_ABRIR_JOGOS_DO_DIA)(vaga, grupo)
 }
 
 pub(crate) unsafe extern "C" fn comparar_responder_jogos_do_dia(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(467)(item)
+    orig::<unsafe extern "C" fn(u32) -> i32>(IDX_RESPONDER_JOGOS_DO_DIA)(item)
 }
 
 /// Só lê: compara a vaga devolvida (tática nula: só a original, pela caixa de erro).
 pub(crate) unsafe extern "C" fn comparar_vaga_do_mais_bem_avaliado(tatica: usize, contexto: i32) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, i32) -> u8>(468)(tatica, contexto);
+    let r = orig::<unsafe extern "C" fn(usize, i32) -> u8>(IDX_VAGA_DO_MAIS_BEM_AVALIADO)(tatica, contexto);
     if tatica == 0 {
         return r;
     }
@@ -5581,7 +5581,7 @@ pub(crate) unsafe fn id_do_item(item: i16) -> u16 {
 /// confirmou, grava 2 no parâmetro 1. Vaga ou partida nula: a original (caixa de erro).
 pub(crate) unsafe extern "C" fn abrir_tela_da_partida(vaga: u32, partida: usize) {
     if vaga == 0 || partida == 0 {
-        return orig::<unsafe extern "C" fn(u32, usize)>(430)(vaga, partida);
+        return orig::<unsafe extern "C" fn(u32, usize)>(IDX_ABRIR_TELA_DA_PARTIDA)(vaga, partida);
     }
     crate::comparacao::ramo("telas abrir a partida");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
@@ -5703,7 +5703,7 @@ pub(crate) unsafe extern "C" fn responder_estatisticas_do_time(item: u32) -> i32
 
 // ponytail: abrir a tela mexe em telas e na rede (não roda duas vezes): no modo comparação só a original
 pub(crate) unsafe extern "C" fn comparar_abrir_tela_da_partida(vaga: u32, partida: usize) {
-    orig::<unsafe extern "C" fn(u32, usize)>(430)(vaga, partida)
+    orig::<unsafe extern "C" fn(u32, usize)>(IDX_ABRIR_TELA_DA_PARTIDA)(vaga, partida)
 }
 
 /// As duas respostas são comparadas de verdade nos cliques (o bloco de parâmetros da tela e as marcas
@@ -5925,15 +5925,15 @@ pub(crate) unsafe extern "C" fn fechar_detalhes_da_partida() {
 // ponytail: as três mexem em telas, menus e memória (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 pub(crate) unsafe extern "C" fn comparar_abrir_detalhes_da_partida(partida: usize) {
-    orig::<unsafe extern "C" fn(usize)>(421)(partida)
+    orig::<unsafe extern "C" fn(usize)>(IDX_ABRIR_DETALHES_DA_PARTIDA)(partida)
 }
 
 pub(crate) unsafe extern "C" fn comparar_responder_detalhes_da_partida(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(422)(item)
+    orig::<unsafe extern "C" fn(u32) -> i32>(IDX_RESPONDER_DETALHES_DA_PARTIDA)(item)
 }
 
 pub(crate) unsafe extern "C" fn comparar_fechar_detalhes_da_partida() {
-    orig::<unsafe extern "C" fn()>(423)()
+    orig::<unsafe extern "C" fn()>(IDX_FECHAR_DETALHES_DA_PARTIDA)()
 }
 
 // ---------- 182a leva: as telas da partida (2): a tela dos últimos placares (match_screens.cpp) ----------
@@ -5965,7 +5965,7 @@ pub(crate) unsafe fn regioes_da_tela() -> Vec<(usize, usize)> {
 /// (caixa de erro).
 pub(crate) unsafe extern "C" fn abrir_ultimos_placares(vaga: u32, entrada: usize) {
     if vaga == 0 || entrada == 0 {
-        return orig::<unsafe extern "C" fn(u32, usize)>(418)(vaga, entrada);
+        return orig::<unsafe extern "C" fn(u32, usize)>(IDX_ABRIR_ULTIMOS_PLACARES)(vaga, entrada);
     }
     crate::comparacao::ramo("telas abrir os ultimos placares");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
@@ -6065,13 +6065,13 @@ pub(crate) unsafe extern "C" fn responder_ultimos_placares(item: u32) -> i32 {
 // ponytail: abrir e responder mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 pub(crate) unsafe extern "C" fn comparar_abrir_ultimos_placares(vaga: u32, entrada: usize) {
-    orig::<unsafe extern "C" fn(u32, usize)>(418)(vaga, entrada)
+    orig::<unsafe extern "C" fn(u32, usize)>(IDX_ABRIR_ULTIMOS_PLACARES)(vaga, entrada)
 }
 
 /// A montagem é comparada de verdade: as duas montam a tela a partir do mesmo estado e o gerente de
 /// telas, o `Display` da tela atual (a lista de exibição) e o título (0xde1f64) têm de sair iguais.
 pub(crate) unsafe extern "C" fn comparar_montar_ultimos_placares() {
-    let o = orig::<unsafe extern "C" fn()>(419);
+    let o = orig::<unsafe extern "C" fn()>(IDX_MONTAR_ULTIMOS_PLACARES);
     let mut reg = regioes_da_tela();
     reg.push((0xde1f64, 0x100));
     // a lista (0x55fba0) escreve num buffer de rede ([0xae2908] na posicao [0xae290c]): a posicao volta
@@ -6092,7 +6092,7 @@ pub(crate) unsafe extern "C" fn comparar_montar_ultimos_placares() {
 }
 
 pub(crate) unsafe extern "C" fn comparar_responder_ultimos_placares(item: u32) -> i32 {
-    orig::<unsafe extern "C" fn(u32) -> i32>(420)(item)
+    orig::<unsafe extern "C" fn(u32) -> i32>(IDX_RESPONDER_ULTIMOS_PLACARES)(item)
 }
 
 // ---------- 180a leva: as telas da partida (1): o rótulo do controle, fechar a tela e a espera (match_screens.cpp) ----------
@@ -6106,7 +6106,7 @@ pub(crate) unsafe extern "C" fn comparar_responder_ultimos_placares(item: u32) -
 /// quando o botão fica desligado). Sem partida, sem saída, com menos de 100 bytes ou estado fora: a
 /// original (caixa de erro). Devolve 1.
 pub(crate) unsafe extern "C" fn rotulo_do_controle(estado: u8, m: usize, saida: *mut u8, tam: i32, marcas: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(412);
+    let o = orig::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(IDX_ROTULO_DO_CONTROLE);
     if m == 0 || saida.is_null() || tam < 100 || !(1..=5).contains(&estado) {
         return o(estado, m, saida, tam, marcas);
     }
@@ -6173,7 +6173,7 @@ pub(crate) unsafe extern "C" fn fechar_tela_da_partida() {
 /// (0x7fe4a0 com o desenho 0x727fa0 e a resposta 0x727fb0). Vaga 0: a original (caixa de erro).
 pub(crate) unsafe extern "C" fn abrir_tela_de_espera(vaga: u32) {
     if vaga == 0 {
-        return orig::<unsafe extern "C" fn(u32)>(414)(vaga);
+        return orig::<unsafe extern "C" fn(u32)>(IDX_ABRIR_TELA_DE_ESPERA)(vaga);
     }
     crate::comparacao::ramo("telas abrir a espera");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
@@ -6181,7 +6181,7 @@ pub(crate) unsafe extern "C" fn abrir_tela_de_espera(vaga: u32) {
 }
 
 pub(crate) unsafe extern "C" fn comparar_rotulo_do_controle(estado: u8, m: usize, saida: *mut u8, tam: i32, marcas: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(412);
+    let o = orig::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(IDX_ROTULO_DO_CONTROLE);
     if m == 0 || saida.is_null() || tam < 100 || marcas.is_null() {
         return o(estado, m, saida, tam, marcas);
     }
@@ -6195,11 +6195,11 @@ pub(crate) unsafe extern "C" fn comparar_rotulo_do_controle(estado: u8, m: usize
 // comparação só a original roda; as cópias se provam no jogo do Lucas em modo Rust (JOGAR.bat), com
 // os contadores "telas ..." no ddraw.log
 pub(crate) unsafe extern "C" fn comparar_fechar_tela_da_partida() {
-    orig::<unsafe extern "C" fn()>(413)()
+    orig::<unsafe extern "C" fn()>(IDX_FECHAR_TELA_DA_PARTIDA)()
 }
 
 pub(crate) unsafe extern "C" fn comparar_abrir_tela_de_espera(vaga: u32) {
-    orig::<unsafe extern "C" fn(u32)>(414)(vaga)
+    orig::<unsafe extern "C" fn(u32)>(IDX_ABRIR_TELA_DE_ESPERA)(vaga)
 }
 
 /// draws the latest scores panel: title, badge, the day's groups and matches, table and buttons
@@ -6351,7 +6351,7 @@ pub(crate) unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base
 /// `Display` da tela atual, os parâmetros (menos o 0x14, a hora que o redesenho 0x724520 grava), o
 /// `*topo` e o texto 0xde1f64 têm de sair iguais.
 pub(crate) unsafe extern "C" fn comparar_painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32) {
-    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(433);
+    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_PAINEL_DOS_ULTIMOS_PLACARES);
     let mut reg = regioes_da_tela();
     let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
     let bloco = core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7e2 + vaga * 0x300) as *const usize);

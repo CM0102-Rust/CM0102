@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn cqt12_asia_fase_seguinte(this: usize) {
 // ponytail: os grupos e as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (os grupos gravam 2, o mesmo valor) fora da última fase, que dá a caixa e não muda nada.
 pub(crate) unsafe extern "thiscall" fn comparar_cqt12_asia_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2065);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQT12_ASIA_FASE_SEGUINTE);
     let f = read_u32_as_usize(this + 0x30) as i32;
     let ultima = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn cqt12_asia_grupos(this: usize) {
 // lidos antes; depois as fases [+0xc][1] e [+0xc][2] com 4 times, o ano da copa e os 4 vivos de cada (em qualquer ordem:
 // o construtor ordena a tabela) e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn comparar_cqt12_asia_grupos(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2066);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQT12_ASIA_GRUPOS);
     if read_u32_as_usize(this + 0xc) == 0 || read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
         return o(this);
     }
@@ -222,7 +222,7 @@ pub(crate) unsafe extern "thiscall" fn cqt12_asia_semifinais(this: usize) {
 // times, o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio pode
 // reordenar).
 pub(crate) unsafe extern "thiscall" fn comparar_cqt12_asia_semifinais(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2067);
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQT12_ASIA_SEMIFINAIS);
     let fases = read_u32_as_usize(this + 0xc);
     if fases == 0 || read_u32_as_usize(fases + 4) == 0 || read_u32_as_usize(fases + 8) == 0 {
         return o(this);
@@ -500,7 +500,7 @@ pub(crate) unsafe extern "thiscall" fn cqp11_asia_clubes_tabela(this: usize, fas
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp11_asia_clubes_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1967);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP11_ASIA_CLUBES_TABELA);
     cqp11_comparar("cqp11_asia_clubes_tabela", fase, cqp11_asia_clubes_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| cqp11_asia_clubes_tabela(this, fase, r, e, l))
 }
@@ -544,6 +544,6 @@ pub(crate) unsafe extern "thiscall" fn cqq12_asia_clubes_times(this: usize) -> i
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqq12_asia_clubes_times(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1984);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQQ12_ASIA_CLUBES_TIMES);
     cqq12_comparar_times("cqq12_asia_clubes_times", this, || o(this), || cqq12_asia_clubes_times(this))
 }

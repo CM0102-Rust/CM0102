@@ -120,15 +120,15 @@ pub(crate) unsafe fn comparar_conversor_v1(nome: &str, o: ConversorV1, rust: Con
 }
 
 pub(crate) unsafe extern "C" fn comparar_ler_clubes_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("ler_clubes_v1", orig::<ConversorV1>(670), ler_clubes_v1, stream, use_zip, registros, n, 581)
+    comparar_conversor_v1("ler_clubes_v1", orig::<ConversorV1>(IDX_LER_CLUBES_V1), ler_clubes_v1, stream, use_zip, registros, n, 581)
 }
 
 pub(crate) unsafe extern "C" fn comparar_ler_nao_jogadores_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("ler_nao_jogadores_v1", orig::<ConversorV1>(671), ler_nao_jogadores_v1, stream, use_zip, registros, n, 68)
+    comparar_conversor_v1("ler_nao_jogadores_v1", orig::<ConversorV1>(IDX_LER_NAO_JOGADORES_V1), ler_nao_jogadores_v1, stream, use_zip, registros, n, 68)
 }
 
 pub(crate) unsafe extern "C" fn comparar_ler_jogadores_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("ler_jogadores_v1", orig::<ConversorV1>(672), ler_jogadores_v1, stream, use_zip, registros, n, 70)
+    comparar_conversor_v1("ler_jogadores_v1", orig::<ConversorV1>(IDX_LER_JOGADORES_V1), ler_jogadores_v1, stream, use_zip, registros, n, 70)
 }
 
 /// Autoteste dos conversores da versão 1 (CM_AUTOTESTE=1, modo comparação: a base de fábrica e o save são
@@ -192,7 +192,7 @@ pub(crate) unsafe extern "C" fn gravar_historico_de_pessoas(stream: usize, use_z
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_historico_de_pessoas(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(652)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_HISTORICO_DE_PESSOAS)(stream, use_zip, registros, n)
 }
 
 /// writes n 107-byte records (club_comp.dat, in two calls: the competitions and the 127 reserve ones; nation_comp.dat)
@@ -217,7 +217,7 @@ pub(crate) unsafe extern "C" fn gravar_competicoes(stream: usize, use_zip: i32, 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_competicoes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(653)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_COMPETICOES)(stream, use_zip, registros, n)
 }
 
 /// writes n 26-byte records (club_comp_history.dat and nation_comp_history.dat, ids 19 and 20) in one go, through
@@ -242,7 +242,7 @@ pub(crate) unsafe extern "C" fn gravar_historicos_de_competicao(stream: usize, u
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_historicos_de_competicao(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(654)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_HISTORICOS_DE_COMPETICAO)(stream, use_zip, registros, n)
 }
 
 // ---------- 231a leva: a gravação dos .dat: competições de pessoal, árbitros, cores (Db_files.cpp) ----------
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "C" fn gravar_competicoes_de_pessoal(stream: usize, use
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_competicoes_de_pessoal(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(655)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_COMPETICOES_DE_PESSOAL)(stream, use_zip, registros, n)
 }
 
 /// writes n 43-byte records (officials.dat, id 7) in one go, through zwrite (save) or fwrite (Data folder); 1 if
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "C" fn gravar_arbitros(stream: usize, use_zip: i32, reg
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_arbitros(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(656)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_ARBITROS)(stream, use_zip, registros, n)
 }
 
 /// writes n 58-byte records (colour.dat, id 2, and staff_comp_history.dat, id 18: the same routine for both) in one go,
@@ -319,7 +319,7 @@ pub(crate) unsafe extern "C" fn gravar_registros_58(stream: usize, use_zip: i32,
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_registros_58(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(657)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_REGISTROS_58)(stream, use_zip, registros, n)
 }
 
 // ---------- 231a leva: a gravação dos .dat: nomes; abrir e criar os .dat (Db_files.cpp) ----------
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "C" fn gravar_nomes(stream: usize, use_zip: i32, regist
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
 // ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_nomes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(658)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_NOMES)(stream, use_zip, registros, n)
 }
 
 /// O caminho de um .dat: `_makepath(destino, 0, pasta, nome, 0)` (0x945b13 da CRT do jogo): a pasta, a barra
@@ -382,7 +382,7 @@ pub(crate) unsafe extern "C" fn abrir_arquivo_do_banco(pasta: usize, nome: usize
 /// Comparador: abrir duas vezes deixaria outro FILE aberto (ou alocaria um lugar novo na tabela de FILE da
 /// CRT, que fica). Roda a original e compara só o caminho (sem efeito colateral).
 pub(crate) unsafe extern "C" fn comparar_abrir_arquivo_do_banco(pasta: usize, nome: usize) -> usize {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> usize>(659)(pasta, nome);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_ABRIR_ARQUIVO_DO_BANCO)(pasta, nome);
     conferir_caminho_do_banco("abrir_arquivo_do_banco", pasta, nome);
     r
 }
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "C" fn criar_arquivo_do_banco(pasta: usize, nome: usize
 /// Comparador: criar duas vezes truncaria o arquivo com dois FILE abertos. Roda a original e compara só o
 /// caminho.
 pub(crate) unsafe extern "C" fn comparar_criar_arquivo_do_banco(pasta: usize, nome: usize) -> usize {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> usize>(660)(pasta, nome);
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_CRIAR_ARQUIVO_DO_BANCO)(pasta, nome);
     conferir_caminho_do_banco("criar_arquivo_do_banco", pasta, nome);
     r
 }
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "C" fn gravar_continentes(stream: usize, use_zip: i32, 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_continentes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(643)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_CONTINENTES)(stream, use_zip, registros, n)
 }
 
 /// writes the nation.dat (id 4) table of 290-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
@@ -460,7 +460,7 @@ pub(crate) unsafe extern "C" fn gravar_nacoes(stream: usize, use_zip: i32, regis
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_nacoes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(644)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_NACOES)(stream, use_zip, registros, n)
 }
 
 /// writes the city.dat (id 21) table of 56-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
@@ -486,7 +486,7 @@ pub(crate) unsafe extern "C" fn gravar_cidades(stream: usize, use_zip: i32, regi
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_cidades(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(645)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_CIDADES)(stream, use_zip, registros, n)
 }
 
 // ---------- 230a leva: a gravação dos .dat: estádios, clubes, pessoas 110 (Db_files.cpp) ----------
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "C" fn gravar_estadios(stream: usize, use_zip: i32, reg
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_estadios(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(646)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_ESTADIOS)(stream, use_zip, registros, n)
 }
 
 /// writes the club.dat and nat_club.dat (ids 0, 1) table of 581-byte records in one go, through zwrite (save) or fwrite
@@ -540,7 +540,7 @@ pub(crate) unsafe extern "C" fn gravar_clubes(stream: usize, use_zip: i32, regis
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_clubes(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(647)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_CLUBES)(stream, use_zip, registros, n)
 }
 
 /// writes the staff.dat (staff, 110 bytes; id 6) table of 110-byte records in one go, through zwrite (save) or fwrite
@@ -566,7 +566,7 @@ pub(crate) unsafe extern "C" fn gravar_pessoas_110(stream: usize, use_zip: i32, 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_pessoas_110(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(648)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_PESSOAS_110)(stream, use_zip, registros, n)
 }
 
 // ---------- 230a leva: a gravação dos .dat: não jogadores, jogadores, preferências (Db_files.cpp) ----------
@@ -594,7 +594,7 @@ pub(crate) unsafe extern "C" fn gravar_nao_jogadores(stream: usize, use_zip: i32
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_nao_jogadores(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(649)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_NAO_JOGADORES)(stream, use_zip, registros, n)
 }
 
 /// writes the staff.dat player (id 10; the community map calls it non_players) table of 70-byte records in one go,
@@ -620,7 +620,7 @@ pub(crate) unsafe extern "C" fn gravar_jogadores(stream: usize, use_zip: i32, re
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_jogadores(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(650)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_JOGADORES)(stream, use_zip, registros, n)
 }
 
 /// writes the staff preferences (id 22) table of 52-byte records in one go, through zwrite (save) or fwrite (Data); 1
@@ -646,7 +646,7 @@ pub(crate) unsafe extern "C" fn gravar_preferencias(stream: usize, use_zip: i32,
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
 // ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_gravar_preferencias(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(651)(stream, use_zip, registros, n)
+    orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_GRAVAR_PREFERENCIAS)(stream, use_zip, registros, n)
 }
 
 // ---------- 229a leva: a leitura dos .dat: árbitros, cores, nomes (Db_files.cpp) ----------
@@ -664,7 +664,7 @@ pub(crate) unsafe extern "C" fn ler_arbitros(stream: usize, use_zip: i32, regist
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(634)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_ARBITROS)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler árbitros");
     let lidos = if use_zip != 0 {
@@ -680,7 +680,7 @@ pub(crate) unsafe extern "C" fn ler_arbitros(stream: usize, use_zip: i32, regist
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_arbitros(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(634)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_ARBITROS)(stream, use_zip, registros, entrada)
 }
 
 /// reads the colour.dat table (id 2) of 58-byte records in one go, through zread (save) or fread (Data), with the entry
@@ -696,7 +696,7 @@ pub(crate) unsafe extern "C" fn ler_cores(stream: usize, use_zip: i32, registros
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(635)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_CORES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler cores");
     let lidos = if use_zip != 0 {
@@ -712,7 +712,7 @@ pub(crate) unsafe extern "C" fn ler_cores(stream: usize, use_zip: i32, registros
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_cores(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(635)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_CORES)(stream, use_zip, registros, entrada)
 }
 
 /// reads the first_names.dat, second_names.dat and common_names.dat tables (ids 13, 14, 15) of 60-byte records in one
@@ -729,7 +729,7 @@ pub(crate) unsafe extern "C" fn ler_nomes(stream: usize, use_zip: i32, registros
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(636)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_NOMES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler nomes");
     let lidos = if use_zip != 0 {
@@ -745,7 +745,7 @@ pub(crate) unsafe extern "C" fn ler_nomes(stream: usize, use_zip: i32, registros
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_nomes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(636)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_NOMES)(stream, use_zip, registros, entrada)
 }
 
 // ---------- 229a leva: a leitura dos .dat com conversor: clubes, competições, não jogadores (Db_files.cpp) ----------
@@ -771,7 +771,7 @@ pub(crate) unsafe extern "C" fn ler_clubes(stream: usize, use_zip: i32, registro
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(637)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_CLUBES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler clubes");
     let lidos = if use_zip != 0 {
@@ -796,7 +796,7 @@ pub(crate) unsafe extern "C" fn ler_clubes(stream: usize, use_zip: i32, registro
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_clubes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(637)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_CLUBES)(stream, use_zip, registros, entrada)
 }
 
 /// reads the club_comp.dat and nation_comp.dat table (ids 12, 16) of 107-byte records in one go, through zread (save)
@@ -819,7 +819,7 @@ pub(crate) unsafe extern "C" fn ler_competicoes(stream: usize, use_zip: i32, reg
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(638)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_COMPETICOES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler competições");
     let lidos = if use_zip != 0 {
@@ -835,7 +835,7 @@ pub(crate) unsafe extern "C" fn ler_competicoes(stream: usize, use_zip: i32, reg
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_competicoes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(638)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_COMPETICOES)(stream, use_zip, registros, entrada)
 }
 
 /// reads the non-player table of staff.dat (id 9; the community map calls it players) of 68-byte records in one go,
@@ -859,7 +859,7 @@ pub(crate) unsafe extern "C" fn ler_nao_jogadores(stream: usize, use_zip: i32, r
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(639)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_NAO_JOGADORES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler não jogadores");
     let lidos = if use_zip != 0 {
@@ -875,7 +875,7 @@ pub(crate) unsafe extern "C" fn ler_nao_jogadores(stream: usize, use_zip: i32, r
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_nao_jogadores(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(639)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_NAO_JOGADORES)(stream, use_zip, registros, entrada)
 }
 
 // ---------- 229a leva: a leitura dos .dat: jogadores, pessoas 110, preferências (Db_files.cpp) ----------
@@ -901,7 +901,7 @@ pub(crate) unsafe extern "C" fn ler_jogadores(stream: usize, use_zip: i32, regis
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(640)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_JOGADORES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler jogadores");
     let lidos = if use_zip != 0 {
@@ -917,7 +917,7 @@ pub(crate) unsafe extern "C" fn ler_jogadores(stream: usize, use_zip: i32, regis
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_jogadores(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(640)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_JOGADORES)(stream, use_zip, registros, entrada)
 }
 
 /// reads the staff.dat (staff, 110-byte file version: the save and community databases) table (id 6) of 110-byte
@@ -935,7 +935,7 @@ pub(crate) unsafe extern "C" fn ler_pessoas_110(stream: usize, use_zip: i32, reg
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 2 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(641)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_PESSOAS_110)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler pessoas 110");
     let lidos = if use_zip != 0 {
@@ -951,7 +951,7 @@ pub(crate) unsafe extern "C" fn ler_pessoas_110(stream: usize, use_zip: i32, reg
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é a carga do save (a tabela lida vira o banco do jogo) e o ramo da cópia.
 pub(crate) unsafe extern "C" fn comparar_ler_pessoas_110(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(641)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_PESSOAS_110)(stream, use_zip, registros, entrada)
 }
 
 /// reads the staff preferences table (id 22: the save and community databases) of 52-byte records in one go, through
@@ -968,7 +968,7 @@ pub(crate) unsafe extern "C" fn ler_preferencias(stream: usize, use_zip: i32, re
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(642)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_PREFERENCIAS)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler preferências");
     let lidos = if use_zip != 0 {
@@ -984,7 +984,7 @@ pub(crate) unsafe extern "C" fn ler_preferencias(stream: usize, use_zip: i32, re
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é a carga do save (a tabela lida vira o banco do jogo) e o ramo da cópia.
 pub(crate) unsafe extern "C" fn comparar_ler_preferencias(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(642)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_PREFERENCIAS)(stream, use_zip, registros, entrada)
 }
 
 // ---------- 228a leva: a leitura dos .dat: continentes, nações, cidades (Db_files.cpp) ----------
@@ -1002,7 +1002,7 @@ pub(crate) unsafe extern "C" fn ler_continentes(stream: usize, use_zip: i32, reg
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(625)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_CONTINENTES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler continentes");
     let lidos = if use_zip != 0 {
@@ -1018,7 +1018,7 @@ pub(crate) unsafe extern "C" fn ler_continentes(stream: usize, use_zip: i32, reg
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_continentes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(625)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_CONTINENTES)(stream, use_zip, registros, entrada)
 }
 
 /// reads the nation.dat table (id 4) of 290-byte records in one go, through zread (save) or fread (Data), with the
@@ -1034,7 +1034,7 @@ pub(crate) unsafe extern "C" fn ler_nacoes(stream: usize, use_zip: i32, registro
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 2 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(626)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_NACOES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler nações");
     let lidos = if use_zip != 0 {
@@ -1050,7 +1050,7 @@ pub(crate) unsafe extern "C" fn ler_nacoes(stream: usize, use_zip: i32, registro
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_nacoes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(626)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_NACOES)(stream, use_zip, registros, entrada)
 }
 
 /// reads the city.dat table (id 21) of 56-byte records in one go, through zread (save) or fread (Data), with the entry
@@ -1066,7 +1066,7 @@ pub(crate) unsafe extern "C" fn ler_cidades(stream: usize, use_zip: i32, registr
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao <= 0 || versao > 2 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(627)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_CIDADES)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler cidades");
     let lidos = if use_zip != 0 {
@@ -1082,7 +1082,7 @@ pub(crate) unsafe extern "C" fn ler_cidades(stream: usize, use_zip: i32, registr
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_cidades(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(627)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_CIDADES)(stream, use_zip, registros, entrada)
 }
 
 // ---------- 228a leva: a leitura dos .dat: estádios, pessoas 157, histórico de pessoas (Db_files.cpp) ----------
@@ -1100,7 +1100,7 @@ pub(crate) unsafe extern "C" fn ler_estadios(stream: usize, use_zip: i32, regist
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(628)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_ESTADIOS)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler estádios");
     let lidos = if use_zip != 0 {
@@ -1116,7 +1116,7 @@ pub(crate) unsafe extern "C" fn ler_estadios(stream: usize, use_zip: i32, regist
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_estadios(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(628)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_ESTADIOS)(stream, use_zip, registros, entrada)
 }
 
 /// reads the staff.dat (staff, 157-byte file version) table (id 6) of 157-byte records in one go, through zread (save)
@@ -1132,7 +1132,7 @@ pub(crate) unsafe extern "C" fn ler_pessoas_157(stream: usize, use_zip: i32, reg
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(629)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_PESSOAS_157)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler pessoas 157");
     let lidos = if use_zip != 0 {
@@ -1148,7 +1148,7 @@ pub(crate) unsafe extern "C" fn ler_pessoas_157(stream: usize, use_zip: i32, reg
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_pessoas_157(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(629)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_PESSOAS_157)(stream, use_zip, registros, entrada)
 }
 
 /// reads the staff_history.dat table (id 17) of 17-byte records in one go, through zread (save) or fread (Data), with
@@ -1164,7 +1164,7 @@ pub(crate) unsafe extern "C" fn ler_historico_de_pessoas(stream: usize, use_zip:
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(630)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_HISTORICO_DE_PESSOAS)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler histórico de pessoas");
     let lidos = if use_zip != 0 {
@@ -1180,7 +1180,7 @@ pub(crate) unsafe extern "C" fn ler_historico_de_pessoas(stream: usize, use_zip:
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_historico_de_pessoas(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(630)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_HISTORICO_DE_PESSOAS)(stream, use_zip, registros, entrada)
 }
 
 // ---------- 228a leva: a leitura dos .dat: históricos de competição, competições de pessoal, histórico de competições de pessoal (Db_files.cpp) ----------
@@ -1198,7 +1198,7 @@ pub(crate) unsafe extern "C" fn ler_historicos_de_competicao(stream: usize, use_
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(631)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_HISTORICOS_DE_COMPETICAO)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler históricos de competição");
     let lidos = if use_zip != 0 {
@@ -1214,7 +1214,7 @@ pub(crate) unsafe extern "C" fn ler_historicos_de_competicao(stream: usize, use_
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_historicos_de_competicao(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(631)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_HISTORICOS_DE_COMPETICAO)(stream, use_zip, registros, entrada)
 }
 
 /// reads the staff_comp.dat table (id 11) of 101-byte records in one go, through zread (save) or fread (Data), with the
@@ -1230,7 +1230,7 @@ pub(crate) unsafe extern "C" fn ler_competicoes_de_pessoal(stream: usize, use_zi
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 2 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(632)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_COMPETICOES_DE_PESSOAL)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler competições de pessoal");
     let lidos = if use_zip != 0 {
@@ -1246,7 +1246,7 @@ pub(crate) unsafe extern "C" fn ler_competicoes_de_pessoal(stream: usize, use_zi
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_competicoes_de_pessoal(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(632)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_COMPETICOES_DE_PESSOAL)(stream, use_zip, registros, entrada)
 }
 
 /// reads the staff_comp_history.dat table (id 18) of 58-byte records in one go, through zread (save) or fread (Data),
@@ -1262,7 +1262,7 @@ pub(crate) unsafe extern "C" fn ler_historico_de_competicoes_de_pessoal(stream: 
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
-        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(633)(stream, use_zip, registros, entrada);
+        return orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_HISTORICO_DE_COMPETICOES_DE_PESSOAL)(stream, use_zip, registros, entrada);
     }
     crate::comparacao::ramo("banco ler histórico de competições de pessoal");
     let lidos = if use_zip != 0 {
@@ -1278,7 +1278,7 @@ pub(crate) unsafe extern "C" fn ler_historico_de_competicoes_de_pessoal(stream: 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 pub(crate) unsafe extern "C" fn comparar_ler_historico_de_competicoes_de_pessoal(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(633)(stream, use_zip, registros, entrada)
+    orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_LER_HISTORICO_DE_COMPETICOES_DE_PESSOAL)(stream, use_zip, registros, entrada)
 }
 
 /// reads version 1 club_comp.dat / nation_comp.dat field by field (104 bytes on file for 107-byte records, holes at
@@ -1315,7 +1315,7 @@ pub(crate) unsafe extern "C" fn ler_competicoes_v1(stream: usize, use_zip: i32, 
 }
 
 pub(crate) unsafe extern "C" fn comparar_ler_competicoes_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(673);
+    let o = orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_LER_COMPETICOES_V1);
     if use_zip != 0 {
         return o(stream, use_zip, registros, n);
     }

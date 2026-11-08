@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn premiar_o_melhor_do_mes(this: usize, nota
 // ponytail: o trabalho dela é chamar o melhor do mês e a vaga do vencedor, que têm comparador próprio (lado a lado e em
 // ensaio); a vaga chama a notícia e o registro do prêmio, que alocam: só a original; a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_premiar_o_melhor_do_mes(this: usize, notas: usize, idade: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1287)(this, notas, idade)
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PREMIAR_O_MELHOR_DO_MES)(this, notas, idade)
 }
 
 /// A reputação do premiado: no ensaio, a cópia direto (sem as listas dos clubes); senão pelo endereço (0x412f00).
@@ -144,7 +144,7 @@ pub(crate) unsafe fn cpw6_comparar(nome: &str, regioes: &[(usize, usize)], origi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_vencedor_do_mes(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(1288);
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(IDX_GRAVAR_VENCEDOR_DO_MES);
     let mut regioes = vec![(this + 0x1d, 12 * 11)];
     if id > -1 {
         cpw6_regioes_da_reputacao(&mut regioes, cpw5_pessoa(id), if clube_id > -1 { cpw6_clube(clube_id) } else { 0 });
@@ -250,7 +250,7 @@ pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usiz
 }
 
 pub(crate) unsafe extern "C" fn comparar_reputacao_do_premiado(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32, u32)>(1289);
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32, u32)>(IDX_REPUTACAO_DO_PREMIADO);
     let mut regioes = Vec::new();
     cpw6_regioes_da_reputacao(&mut regioes, pessoa, clube);
     cpw6_comparar("reputacao_do_premiado", &regioes, || o(pessoa, clube, nac, mundo, jogador), || reputacao_do_premiado(pessoa, clube, nac, mundo, jogador));

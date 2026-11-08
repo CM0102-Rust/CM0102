@@ -51,7 +51,7 @@ pub(crate) unsafe extern "C" fn trocar_bytes_das_palavras(p: usize, conta: u32) 
 
 /// Comparador: lado a lado no vetor (até 0x420 palavras conferidas).
 pub(crate) unsafe extern "C" fn comparar_trocar_bytes_das_palavras(p: usize, conta: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, u32)>(1633);
+    let o = orig::<unsafe extern "C" fn(usize, u32)>(IDX_TROCAR_BYTES_DAS_PALAVRAS);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "C" fn trocar_bytes_dos_dwords(p: usize, conta: u32) {
 
 /// Comparador: lado a lado no vetor.
 pub(crate) unsafe extern "C" fn comparar_trocar_bytes_dos_dwords(p: usize, conta: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, u32)>(1634);
+    let o = orig::<unsafe extern "C" fn(usize, u32)>(IDX_TROCAR_BYTES_DOS_DWORDS);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }

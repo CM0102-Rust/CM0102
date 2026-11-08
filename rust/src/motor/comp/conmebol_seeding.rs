@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, 
 
 /// Lado a lado: os clubes do jogo e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1667);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_CONMEBOL_VAGAS_LIBERTADORES);
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let reg = [(read_u32(G_CLUB_TABLE) as usize, n * 0x245), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
@@ -163,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_enesimo_clube_da_nacao(_this: us
 
 /// A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_enesimo_clube_da_nacao(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(1668);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONMEBOL_ENESIMO_CLUBE_DA_NACAO);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = conmebol_enesimo_clube_da_nacao(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     PLACAR.registrar(r == c, || format!("conmebol_enesimo_clube_da_nacao(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_convidado_da_mercosul(_this: usi
 
 /// A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_convidado_da_mercosul(this: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1669);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CONMEBOL_CONVIDADO_DA_MERCOSUL);
     let r = o(this, clube);
     let c = conmebol_convidado_da_mercosul(this, clube);
     PLACAR.registrar(r == c, || format!("conmebol_convidado_da_mercosul({:x}): original {} rust {}", clube, r, c));
@@ -291,7 +291,7 @@ pub(crate) unsafe fn cqj2_regioes_dos_clubes() -> Vec<(usize, usize)> {
 /// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// devolução e os registros das duas tabelas.
 pub(crate) unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mut usize) -> u32 {
-    let o = orig::<unsafe extern "stdcall" fn(*mut usize) -> u32>(1670);
+    let o = orig::<unsafe extern "stdcall" fn(*mut usize) -> u32>(IDX_CONMEBOL_JUNTAR_CLUBES);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
     let reg = cqj2_regioes_dos_clubes();
@@ -338,7 +338,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_virada_do_ano(this: usize, pular
 
 /// Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_virada_do_ano(this: usize, pular: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1671);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CONMEBOL_VIRADA_DO_ANO);
     let mut reg = cqj2_regioes_dos_clubes();
     reg.push((this + 0x6f, 2));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pular), || conmebol_virada_do_ano(this, pular));
@@ -356,7 +356,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_campeao_dos_campeoes(this: usize
 
 /// Lado a lado: o +0x71.
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_campeao_dos_campeoes(this: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1672);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CONMEBOL_CAMPEAO_DOS_CAMPEOES);
     let reg = [(this + 0x71, 4)];
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || conmebol_campeao_dos_campeoes(this, clube));
     PLACAR.registrar(igual, || format!("conmebol_campeao_dos_campeoes({:x})", clube));
@@ -399,5 +399,5 @@ pub(crate) unsafe extern "thiscall" fn gravar_sementes_da_conmebol(this: usize) 
 /// Comparador da 0x4c6b70: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_gravar_sementes_da_conmebol(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize)>(1501)(this)
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_GRAVAR_SEMENTES_DA_CONMEBOL)(this)
 }

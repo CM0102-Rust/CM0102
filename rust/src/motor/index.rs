@@ -51,7 +51,7 @@ pub(crate) unsafe extern "C" fn adjetivo_da_nacao(nacao: usize, texto: usize, ta
 }
 
 pub(crate) unsafe extern "C" fn comparar_adjetivo_da_nacao(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(772);
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_ADJETIVO_DA_NACAO);
     if texto == 0 {
         return o(nacao, texto, tamanho, genero);
     }
@@ -273,7 +273,7 @@ pub(crate) unsafe extern "C" fn definir_chaves_fixas_1080() -> u32 {
 pub(crate) const REGIOES_DAS_CHAVES_DBW: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
 pub(crate) unsafe extern "C" fn comparar_definir_chaves_fixas() -> u32 {
-    let o = orig::<unsafe extern "C" fn() -> u32>(769);
+    let o = orig::<unsafe extern "C" fn() -> u32>(IDX_DEFINIR_CHAVES_FIXAS);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
         menos_um_das_chaves_dbw();
         chaves_fixas(u32::MAX, false)
@@ -283,7 +283,7 @@ pub(crate) unsafe extern "C" fn comparar_definir_chaves_fixas() -> u32 {
 }
 
 pub(crate) unsafe extern "C" fn comparar_definir_chaves_fixas_1080() -> u32 {
-    let o = orig::<unsafe extern "C" fn() -> u32>(770);
+    let o = orig::<unsafe extern "C" fn() -> u32>(IDX_DEFINIR_CHAVES_FIXAS_1080);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
         menos_um_das_chaves_1080_dbw();
         chaves_fixas(MARCA_DAS_CHAVES_1080, false)
@@ -331,7 +331,7 @@ pub(crate) const DBU3_REGIOES: [(usize, usize); 14] = [
 pub(crate) unsafe extern "C" fn nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
-        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(767)(regiao, texto, tamanho, forma);
+        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_NOME_DA_REGIAO)(regiao, texto, tamanho, forma);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
@@ -374,7 +374,7 @@ pub(crate) unsafe extern "C" fn nome_da_regiao(regiao: u32, texto: usize, tamanh
 }
 
 pub(crate) unsafe extern "C" fn comparar_nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(767);
+    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_NOME_DA_REGIAO);
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
         return o(regiao, texto, tamanho, forma); // caixa: só a original
@@ -426,7 +426,7 @@ pub(crate) const DBU3_CONTINENTES_4: [[usize; 5]; 6] = [
 /// busca (find_screens), no Menubar, nos jogos do dia (0x717cc0, em Rust) e em 0x7dd400.
 pub(crate) unsafe extern "C" fn adjetivo_do_continente(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(768)(continente, texto, tamanho, forma);
+        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_ADJETIVO_DO_CONTINENTE)(continente, texto, tamanho, forma);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
@@ -456,7 +456,7 @@ pub(crate) unsafe extern "C" fn adjetivo_do_continente(continente: usize, texto:
 }
 
 pub(crate) unsafe extern "C" fn comparar_adjetivo_do_continente(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(768);
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_ADJETIVO_DO_CONTINENTE);
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
         return o(continente, texto, tamanho, forma);
     }
@@ -1479,7 +1479,7 @@ pub(crate) fn chaves_diferentes(mo: &crate::comparacao::Memoria, mr: &crate::com
 }
 
 pub(crate) unsafe extern "C" fn comparar_casar_chave_de_clube(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(620);
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CASAR_CHAVE_DE_CLUBE);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_clube(nome, linha));
     PLACAR.registrar(igual && r == n, || {
@@ -1490,7 +1490,7 @@ pub(crate) unsafe extern "C" fn comparar_casar_chave_de_clube(nome: usize, linha
 }
 
 pub(crate) unsafe extern "C" fn comparar_remapear_chave_de_clube(antigo: u32, novo: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(621);
+    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAPEAR_CHAVE_DE_CLUBE);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remapear_chave_de_clube(antigo, novo));
     PLACAR.registrar(igual && r == n, || format!("remapear_chave_de_clube({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, chaves_diferentes(&mo, &mr)));
@@ -1498,7 +1498,7 @@ pub(crate) unsafe extern "C" fn comparar_remapear_chave_de_clube(antigo: u32, no
 }
 
 pub(crate) unsafe extern "C" fn comparar_casar_chave_de_nacao(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(622);
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CASAR_CHAVE_DE_NACAO);
     let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_nacao(nome, linha));
     PLACAR.registrar(igual && r == n, || {
@@ -2397,7 +2397,7 @@ pub(crate) unsafe extern "C" fn casar_chave_de_competicao_de_pessoa(nome: usize,
 
 
 pub(crate) unsafe extern "C" fn comparar_casar_chave_de_competicao_de_clube(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(623);
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CASAR_CHAVE_DE_COMPETICAO_DE_CLUBE);
     let reg: [(usize, usize); 1] = [(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0x4c0)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_competicao_de_clube(nome, linha));
     PLACAR.registrar(igual && r == n, || {
@@ -2408,7 +2408,7 @@ pub(crate) unsafe extern "C" fn comparar_casar_chave_de_competicao_de_clube(nome
 }
 
 pub(crate) unsafe extern "C" fn comparar_casar_chave_de_competicao_de_pessoa(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(624);
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CASAR_CHAVE_DE_COMPETICAO_DE_PESSOA);
     let reg: [(usize, usize); 1] = [(KEY_STAFF_COMP_FIFA_WORLD_PLAYER_OF_THE_YEAR, 0x684)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_competicao_de_pessoa(nome, linha));
     PLACAR.registrar(igual && r == n, || {

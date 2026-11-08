@@ -302,7 +302,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_divisao_de_baixo_espanhola(
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_divisao_de_baixo_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1945);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_DIVISAO_DE_BAIXO_ESPANHOLA);
     cqq5_comparar("calendario_da_divisao_de_baixo_espanhola", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_divisao_de_baixo_espanhola(this, fase, r, e, l))
 }
 
@@ -367,7 +367,7 @@ pub(crate) unsafe extern "thiscall" fn construir_divisao_de_baixo_espanhola(this
 
 /// Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
 pub(crate) unsafe extern "thiscall" fn comparar_construir_divisao_de_baixo_espanhola(this: usize, ano: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(1873);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUIR_DIVISAO_DE_BAIXO_ESPANHOLA);
     let r = o(this, ano);
     let ok = r == this && read_u32_as_usize(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == cqm6_registro(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
@@ -516,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_espanhola(this
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela
 /// (comportamento da original, que a cópia repete; achado pela comparação de 8 ligas, 05/11/2026).
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_divisao_de_baixo_espanhola(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1875);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_DIVISAO_DE_BAIXO_ESPANHOLA);
     let mut plano: Vec<usize> = Vec::new();
     let mut k: u8 = 0;
     for g in [KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION] {
@@ -552,6 +552,6 @@ pub(crate) unsafe extern "thiscall" fn regras_da_divisao_de_baixo(this: usize) -
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_divisao_de_baixo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1764);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_DIVISAO_DE_BAIXO);
     cqk4_comparar("regras_da_divisao_de_baixo", this, cqk4_baixo(), || o(this), || regras_da_divisao_de_baixo(this))
 }

@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: u
 // ponytail: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
 // original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
 pub(crate) unsafe extern "thiscall" fn comparar_cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2087);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQT5_COPA_DO_REI_DIA);
     let antes = read_u32_as_usize(this + 0x45);
     let vira = antes == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0;
     let r = o(this, hoje, fase);
@@ -97,19 +97,19 @@ pub(crate) unsafe extern "thiscall" fn cqt5_historico_copa_da_serie_c(this: usiz
 
 // ponytail: o histórico grava nas estatísticas das competições (acha ou acrescenta entradas: aloca); só a original
 pub(crate) unsafe extern "thiscall" fn comparar_cqt5_historico_liga_dos_campeoes(this: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> i32>(2088)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQT5_HISTORICO_LIGA_DOS_CAMPEOES)(this)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt5_historico_copa_da_grecia(this: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> i32>(2089)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQT5_HISTORICO_COPA_DA_GRECIA)(this)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt5_historico_copa_da_liga_irlandesa(this: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> i32>(2090)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQT5_HISTORICO_COPA_DA_LIGA_IRLANDESA)(this)
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt5_historico_copa_da_serie_c(this: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> i32>(2091)(this)
+    orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQT5_HISTORICO_COPA_DA_SERIE_C)(this)
 }
 
 /// rule: the Copa del Rey has 7 rounds: preliminary (code 0xe6, 38 teams, 7 days between legs) drawn 18/8, played 30/8;
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn cql11_copa_do_rei_tabela(this: usize, fas
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql11_copa_do_rei_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1777);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL11_COPA_DO_REI_TABELA);
     cql11_comparar("cql11_copa_do_rei_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cql11_copa_do_rei_tabela(this, fase, r, e, s))
 }

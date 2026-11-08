@@ -105,7 +105,7 @@ pub(crate) unsafe fn cqm12_comparar(nome: &str, this: usize, o: impl FnOnce() ->
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1787);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM12_SUPERCOPA_DA_ESPANHA_CLUBES);
     cqm12_comparar("cqm12_supercopa_da_espanha_clubes", this, || o(this), || cqm12_espanha(this))
 }
 
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn cqm12_supercopa_do_japao_clubes(this: usi
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1788);
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM12_SUPERCOPA_DO_JAPAO_CLUBES);
     cqm12_comparar("cqm12_supercopa_do_japao_clubes", this, || o(this), || cqm12_japao(this))
 }
 
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn cql12_supercopa_da_espanha_tabela(this: u
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1779);
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL12_SUPERCOPA_DA_ESPANHA_TABELA);
     cql12_comparar("cql12_supercopa_da_espanha_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cql12_supercopa_da_espanha_tabela(this, fase, r, e, s))
 }
