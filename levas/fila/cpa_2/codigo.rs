@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn comparar_pay_tv_rights(liga: usize, valor: i32, filt
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let reg: Vec<(usize, usize)> = clubes.iter().map(|&c| (get_club_finance(financas, c), 0x167)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(liga, valor, filtro), || pay_tv_money(liga, valor, filtro, false));
-    PLACAR.record(igual, || format!("pay_tv_rights({:x}, {}, {:x}) {:x?} x {:x?}", liga, valor, filtro, mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_tv_rights({:x}, {}, {:x}) {:x?} x {:x?}", liga, valor, filtro, mo, mr));
 }
 
 /// { 0x684640 } (thiscall, league.cpp): `League::record_season_honours()`: campeão, vice e (com mais de 2 clubes)
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn comparar_league_record_season_honours(liga: usize) -
     let quantos = (*(0xae235c as *const i32)).wrapping_sub(*(0xae2350 as *const i32)).max(0) as usize;
     reg.push((*(0xae23b4 as *const usize), 0x245 * quantos));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(liga), || league_record_season_honours(liga));
-    PLACAR.record(igual && r == n, || format!("league_record_season_honours({:x}) {:x}/{:x} {:x?} x {:x?}", liga, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("league_record_season_honours({:x}) {:x}/{:x} {:x?} x {:x?}", liga, r, n, mo, mr));
     r
 }
 
@@ -170,6 +170,6 @@ unsafe extern "C" fn comparar_comp_util_add_history_record(liga: usize, a: u32, 
         return o(liga, a, b, c, d); // cresce (realloc): só a original
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&comp_history_regions(), || o(liga, a, b, c, d), || comp_util_add_history_record(liga, a, b, c, d));
-    PLACAR.record(igual && r == n, || format!("comp_util_add_history_record({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", liga, a, b, c, d, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("comp_util_add_history_record({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", liga, a, b, c, d, r, n, mo, mr));
     r
 }

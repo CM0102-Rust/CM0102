@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage(this: usiz
         nela.sort_unstable();
         a == nela
     };
-    PLACAR.record(igual, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, fase, plano));
+    SCOREBOARD.record(igual, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, fase, plano));
 }
 
 /// O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
@@ -252,7 +252,7 @@ unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
         b.sort_unstable();
         a == b
     };
-    PLACAR.record(igual, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
+    SCOREBOARD.record(igual, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
 }
 
 /// O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
@@ -283,5 +283,5 @@ unsafe extern "thiscall" fn comparar_create_third_round_groups(this: usize) {
         nela.sort_unstable();
         p == nela
     };
-    PLACAR.record(igual, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plano));
+    SCOREBOARD.record(igual, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plano));
 }

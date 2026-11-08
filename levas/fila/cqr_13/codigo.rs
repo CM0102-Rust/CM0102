@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, hoje: 
             && fases != 0
             && (0..2).all(|g| cqr13_d(fases + g * 4) != 0)
             && cqr13_d(this + 0x30) == 1;
-        PLACAR.record(ok, || format!("goldcup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr13_d(this + 0x45), cqr13_d(this + 0x30) as i32));
+        SCOREBOARD.record(ok, || format!("goldcup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr13_d(this + 0x45), cqr13_d(this + 0x30) as i32));
     }
     r
 }
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this: usize) -> 
         }
     }
     let igual = r == 1 && cqr13_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.record(igual, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    SCOREBOARD.record(igual, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this: usize, g: 
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqr13_d(this + 0x30) as i32 == g && cqr13_w(f + 0x3e) == 4 && cqr13_w(f + 0x40) == cqr13_w(this + 0x40) && a == plano;
-        PLACAR.record(ok, || format!("goldcup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        SCOREBOARD.record(ok, || format!("goldcup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }

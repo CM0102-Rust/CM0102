@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_serve_international_bans(this: u
             error = Some(format!("pessoa {} contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{}", id, contador, j.contador, before, j.cumprida, jogos, dias));
         }
     }
-    PLACAR.record(error.is_none(), || format!("serve_international_bans(time {:#x}, {} pessoas): {}", team, plan.len(), error.clone().unwrap_or_default()));
+    SCOREBOARD.record(error.is_none(), || format!("serve_international_bans(time {:#x}, {} pessoas): {}", team, plan.len(), error.clone().unwrap_or_default()));
 }
 
 /// Comparer for `apply_appeal_result` (comparison mode: see the header of motor.rs).
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_appeal_result(this: usize,
     let s = r.suspensao;
     let (jogos, dias) = (*(s as *const u8), read_i16(s + 2));
     let ok = if r.solta { jogos == 0xff && dias == -1 } else { jogos == r.jogos && dias == r.dias };
-    PLACAR.record(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, rule as i8, jogos, dias, r.jogos, r.dias, r.solta));
+    SCOREBOARD.record(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, rule as i8, jogos, dias, r.jogos, r.dias, r.solta));
 }
 
 /// Comparer for `get_slot_text` (comparison mode: see the header of motor.rs).
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_slot_text(this: usize, perso
     }
     let r = o(this, person, slot, out, size);
     let n = get_slot_text(this, person, slot, out, size);
-    PLACAR.record(r == n, || format!("get_slot_text(pessoa {:#x}, vaga {}) original={} rust={}", person, slot as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_slot_text(pessoa {:#x}, vaga {}) original={} rust={}", person, slot as i8, r, n));
     r
 }
 
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_slot_text(this: usize, perso
 /// conta, as entradas das regras apontando para a vaga e, com a quarta regra, o índice das nações com um a mais.
 pub(crate) unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
     let plan = add_ban_plan(this, id, ban);
-    let indice = read_i16(this + 0x12);
+    let index = read_i16(this + 0x12);
     let mut rules = [0u8; 4];
     core::ptr::copy_nonoverlapping((ban + 0xc) as *const u8, rules.as_mut_ptr(), 4);
     original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_ADD_BAN)(this, id, ban);
@@ -97,12 +97,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ba
                 }
             }
             if rules[3] != 0xff {
-                ok &= read_i16(this + 0x12) == indice.wrapping_add(1);
+                ok &= read_i16(this + 0x12) == index.wrapping_add(1);
             }
-            (ok, format!("nova: vaga {} conta {} (esperava {}), índice {} (antes {})", vaga, read_i16(this + 0xa), conta, read_i16(this + 0x12), indice))
+            (ok, format!("nova: vaga {} conta {} (esperava {}), índice {} (antes {})", vaga, read_i16(this + 0xa), conta, read_i16(this + 0x12), index))
         }
     };
-    PLACAR.record(ok, || format!("add_ban({}) {}", id, detalhe));
+    SCOREBOARD.record(ok, || format!("add_ban({}) {}", id, detalhe));
 }
 
 /// Comparer for `clear_bans_invalid_for_club` (comparison mode: see the header of motor.rs).
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ba
 /// [pt] Comparador: a 0x556270 solta suspensões (índice das nações, órgãos): o plano antes (as vagas que o clube não cobre
 /// e as entradas), a original roda; confere as vagas liberadas (0xff, −1, a entrada −1) e as outras intactas. Uma
 /// entrada repetida em duas vagas não entra na conferência da segunda.
-pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, person: usize, nada: u32, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, person: usize, nada: u32, club: usize) {
     let id = read_u32_as_usize(person) as u32;
     let r = discipline_record(this, id);
     let mut before = [0u8; 29];
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this
             continue;
         }
         let body = ruling_body_of_rule(this, rule);
-        if !ruling_body_covers_club(body, clube) {
+        if !ruling_body_covers_club(body, club) {
             let e = ruling_body_entry(body, id);
             if e != 0 {
                 duvida[k] = plan[..k].iter().any(|x| *x == Some(e));
@@ -131,7 +131,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this
             }
         }
     }
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_CLEAR_BANS_INVALID_FOR_CLUB)(this, person, nada, clube);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_CLEAR_BANS_INVALID_FOR_CLUB)(this, person, nada, club);
     let mut after = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, after.as_mut_ptr(), 29);
     let mut ok = after[20..] == before[20..];
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this
             None => *v == before[k * 5..k * 5 + 5],
         };
     }
-    PLACAR.record(ok, || format!("clear_bans_invalid_for_club({}) plano {:x?} antes {:02x?} depois {:02x?}", id, plan, before, after));
+    SCOREBOARD.record(ok, || format!("clear_bans_invalid_for_club({}) plano {:x?} antes {:02x?} depois {:02x?}", id, plan, before, after));
 }
 
 /// Comparer for `restore_held_bans` (comparison mode: see the header of motor.rs).
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_restore_held_bans(this: usize, p
     }
     expected[0x1c] = p.resto;
     ok &= after == expected;
-    PLACAR.record(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.clube, expected, after));
+    SCOREBOARD.record(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.clube, expected, after));
 }
 
 /// Comparer for `update_ban_progress` (comparison mode: see the header of motor.rs).
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize,
     } else {
         contador == j.contador.unwrap_or(before)
     };
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         format!("update_ban_progress({}, {}, {}) contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{} entrada {}",
             id, rule as u8, count, contador, j.contador, before, j.cumprida, jogos, dias, read_i16(j.entrada + 6))
     });
@@ -204,11 +204,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize,
 ///
 /// [pt] Comparador: lado a lado pela suspensão, o índice das nações (conta e itens) e as entradas da pessoa nos órgãos das
 /// regras (achadas antes, sem criar). Quarta regra sem o item no índice: só a original (caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32, indice: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32, index: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_RELEASE_BAN);
-    let s = read_usize(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
+    let s = read_usize(this + 4).wrapping_add((index as u16 as i16 as i32 as usize).wrapping_mul(20));
     if *((s + 0xf) as *const u8) != 0xff && find_in_nation_index(this, id) == 0 {
-        return o(this, id, indice);
+        return o(this, id, index);
     }
     let mut reg = vec![(s, 20), (this + 0x10, 4)];
     let n = read_i16(this + 0x12);
@@ -224,8 +224,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32
             }
         }
     }
-    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id, indice), || release_ban(this, id, indice));
-    PLACAR.record(igual && r == m, || format!("release_ban({}, {}) {:x?} x {:x?}", id, indice as u16 as i16, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id, index), || release_ban(this, id, index));
+    SCOREBOARD.record(igual && r == m, || format!("release_ban({}, {}) {:x?} x {:x?}", id, index as u16 as i16, mo, mr));
     r
 }
 
@@ -239,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_ban_history(this: usize, p
     }
     let r = person_discipline_record(this, read_usize(person));
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + 0x14, 8)], || o(this, person), || clear_ban_history(this, person));
-    PLACAR.record(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", read_usize(person), mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", read_usize(person), mo, mr));
     a
 }
 
@@ -247,7 +247,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_ban_history(this: usize, p
 pub(crate) unsafe extern "thiscall" fn comparar_discipline_operator(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_DISCIPLINE_OPERATOR);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this, source), || discipline_operator(this, source));
-    PLACAR.record(igual && r == n, || format!("discipline_operator {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("discipline_operator {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_discipline_set_slot(this: usize,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8, u8, u32)>(IDX_DISCIPLINE_SET_SLOT);
     let a = (*((this + 0x14) as *const usize) as isize + id as isize * 29 + slot as isize * 5) as usize;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 5)], || o(this, id, slot, kind, value), || discipline_set_slot(this, id, slot, kind, value));
-    PLACAR.record(igual, || format!("discipline_set_slot({}, {}) {:x?} x {:x?}", id, slot, mo, mr));
+    SCOREBOARD.record(igual, || format!("discipline_set_slot({}, {}) {:x?} x {:x?}", id, slot, mo, mr));
 }
 
 /// Comparer for `is_player_suspended` (comparison mode: see the header of motor.rs).
@@ -274,10 +274,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_discipline_set_slot(this: usize,
 /// [pt] Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
 pub(crate) unsafe extern "thiscall" fn comparar_is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(IDX_IS_PLAYER_SUSPENDED);
-    let clube = if player != 0 { read_usize(player + staff::CLUB_JOB) } else { 0 };
-    let regions: &[(usize, usize)] = if clube != 0 { &[(clube + club::TEAM_SELECTED, 80)] } else { &[] };
+    let club = if player != 0 { read_usize(player + staff::CLUB_JOB) } else { 0 };
+    let regions: &[(usize, usize)] = if club != 0 { &[(club + club::TEAM_SELECTED, 80)] } else { &[] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(this, player, comp, extra, partida), || is_player_suspended(this, player, comp, extra, partida));
-    PLACAR.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", player, *comp, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", player, *comp, r, n, mo, mr));
     r
 }
 
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pers
     }
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(IDX_DROP_HELD_BANS)(this, person);
     let after = list_items_capped(l);
-    PLACAR.record(after == expected && *n == resta, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *person, before.len(), after.len(), expected.len(), *n, resta));
+    SCOREBOARD.record(after == expected && *n == resta, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *person, before.len(), after.len(), expected.len(), *n, resta));
 }
 
 /// Comparer for `hold_bans_for_loan` (comparison mode: see the header of motor.rs).
@@ -321,14 +321,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_hold_bans_for_loan(this: usize, 
     expected[0x1c] = expected[0x1c].wrapping_add(vagas.len() as u8);
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HOLD_BANS_FOR_LOAN)(this, player);
     let after = core::slice::from_raw_parts(reg as *const u8, 29).to_vec();
-    PLACAR.record(after == expected, || format!("hold_bans_for_loan({:x}) vagas {:?} {:x?} x {:x?}", player, vagas, after, expected));
+    SCOREBOARD.record(after == expected, || format!("hold_bans_for_loan({:x}) vagas {:?} {:x?} x {:x?}", player, vagas, after, expected));
 }
 
 /// Comparer for `is_one_booking_from_ban` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_is_one_booking_from_ban(this: usize, person: usize, competicao: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_ONE_BOOKING_FROM_BAN)(this, person, competicao);
-    let n = is_one_booking_from_ban(this, person, competicao);
-    PLACAR.record(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", person, competicao, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_is_one_booking_from_ban(this: usize, person: usize, competition: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_ONE_BOOKING_FROM_BAN)(this, person, competition);
+    let n = is_one_booking_from_ban(this, person, competition);
+    SCOREBOARD.record(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", person, competition, r, n));
     r
 }
 
@@ -361,14 +361,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_discipline_remove_player(this: u
     core::ptr::copy_nonoverlapping(r as *const u8, after.as_mut_ptr(), 29);
     let ok = after[..0x1c].iter().all(|&b| b == 0xff) && after[0x1c] == 0
         && entradas.iter().all(|&e| read_u32_as_usize(e) as u32 == 0xffff_ffff);
-    PLACAR.record(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, after, entradas));
+    SCOREBOARD.record(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, after, entradas));
 }
 
 /// Comparer for `find_held_ban` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_find_held_ban(disciplina: usize, id: i32, slot: i8) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_find_held_ban(discipline: usize, id: i32, slot: i8) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8) -> usize>(IDX_FIND_HELD_BAN);
     // the list keeps the cursor: both start from the same one and must leave it the same
-    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(disciplina + 0x1c, 0x12)], || o(disciplina, id, slot), || find_held_ban(disciplina, id, slot));
-    PLACAR.record(igual && ro == rr, || format!("find_held_ban({}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", id, slot, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(discipline + 0x1c, 0x12)], || o(discipline, id, slot), || find_held_ban(discipline, id, slot));
+    SCOREBOARD.record(igual && ro == rr, || format!("find_held_ban({}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", id, slot, ro, rr, mo, mr));
     ro
 }

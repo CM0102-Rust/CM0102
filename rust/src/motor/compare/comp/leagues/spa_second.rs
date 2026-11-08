@@ -48,6 +48,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_table(this: us
             ok = ok && read_u32_as_usize(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
         }
     }
-    PLACAR.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plan));
+    SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plan));
     r
 }

@@ -88,7 +88,7 @@ unsafe fn compare_new_season(nome: &str, this: usize, original: impl FnOnce() ->
     let r = original();
     let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let igual = depois == antes.wrapping_add(1) && cqr2_d(this + 0x2c) == 3 && cqr2_d(this + 0x30) as i32 == -1;
-    PLACAR.record(igual, || format!("{}({:#x}) ano antes={} depois={} +0x2c={} +0x30={}", nome, this, antes, depois, cqr2_d(this + 0x2c), cqr2_d(this + 0x30) as i32));
+    SCOREBOARD.record(igual, || format!("{}({:#x}) ano antes={} depois={} +0x2c={} +0x30={}", nome, this, antes, depois, cqr2_d(this + 0x2c), cqr2_d(this + 0x30) as i32));
     r
 }
 

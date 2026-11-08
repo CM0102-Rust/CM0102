@@ -25,12 +25,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_first_create_table(this: usi
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_FIRST_CREATE_TABLE);
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for i in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) as usize {
-        let clube = read_usize(G_CLUB_TABLE) + i * club::SIZE;
-        let comp = read_usize(clube + club::DIVISION);
+        let club = read_usize(G_CLUB_TABLE) + i * club::SIZE;
+        let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
-            baixo.push(clube);
+            baixo.push(club);
         } else if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && plano.len() < 0x14 {
-            plano.push(clube);
+            plano.push(club);
         }
     }
     let r = o(this);
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_first_create_table(this: usi
             same = same && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == prize(this, 0x3d090);
         }
     }
-    PLACAR.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, found));
+    SCOREBOARD.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, found));
     r
 }
 
@@ -55,15 +55,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_first_create_table(this: usi
 ///
 /// [pt] Comparador da 0x850880: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_spa_first_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_spa_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SPA_FIRST_SET_CLUB_PROGRESS);
     let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let e = find(read_usize(this + 8), clube);
+    let e = find(read_usize(this + 8), club);
     if e == 0 {
-        return o(this, clube, stage, current, best, worst);
+        return o(this, club, stage, current, best, worst);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], || o(this, clube, stage, current, best, worst), || spa_first_set_club_progress(this, clube, stage, current, best, worst));
-    PLACAR.record(igual, || format!("spa_first_set_club_progress({:#x}, {:#x}) original={:x?} rust={:x?}", this, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], || o(this, club, stage, current, best, worst), || spa_first_set_club_progress(this, club, stage, current, best, worst));
+    SCOREBOARD.record(igual, || format!("spa_first_set_club_progress({:#x}, {:#x}) original={:x?} rust={:x?}", this, club, mo, mr));
 }
 
 /// Comparer for `construct_spa_first` (comparison mode: see the header of motor.rs).

@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     base(this);
     write_u32_from_usize(this + 4, a5 as usize);
     write_u16(this + cup::YEAR, year as u16); // cqs7: o ano da fase
-    write_u8(this + cup::COMP_TYPE, b2 as u8);
+    write_u8(this + cup::CLUB_SIDES, b2 as u8);
     write_u8(this + cup::STAGE_INDEX, stage as u8);
     write_u32_from_usize(this + cup::CURRENT_STAGE, usize::MAX);
     write_u32_from_usize(this + cup::STAGE_COUNT, usize::MAX);

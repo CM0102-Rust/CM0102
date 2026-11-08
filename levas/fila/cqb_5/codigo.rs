@@ -396,7 +396,7 @@ unsafe extern "thiscall" fn comparar_add_injury(this: usize, tipo_arg: u32, retr
                 && cqb5_w(l + 0x2a) == return_to_training_days(tipo, cqb5_w(l + 0x28))
         }
     };
-    PLACAR.record(ok, || format!("add_injury(tipo {:#x}, retroativa {}, pessoa {:#x}, recorrencia {}, so {}) = {}", tipo_arg, retroativa, p, rec_arg as u8 as i8, so_recorrencia, r));
+    SCOREBOARD.record(ok, || format!("add_injury(tipo {:#x}, retroativa {}, pessoa {:#x}, recorrencia {}, so {}) = {}", tipo_arg, retroativa, p, rec_arg as u8 as i8, so_recorrencia, r));
     r
 }
 
@@ -530,6 +530,6 @@ unsafe extern "thiscall" fn comparar_is_player_awol(this: usize, p: usize, so_le
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, p, so_ler), || is_player_awol(this, p, so_ler));
-    PLACAR.record(igual && r as u8 == n as u8, || format!("is_player_awol(pessoa {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_ler, r as u8, mo, n as u8, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("is_player_awol(pessoa {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_ler, r as u8, mo, n as u8, mr));
     r
 }

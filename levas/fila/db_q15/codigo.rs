@@ -118,7 +118,7 @@ unsafe extern "C" fn comparar_database_add_staff_to_club(clube: usize, pessoa: u
     let regioes = [(clube, 0x245), (pessoa, 0x6e)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(clube, pessoa, cargo, data, gravar, reduzir),
         || database_add_staff_to_club(clube, pessoa, cargo, data, gravar, reduzir));
-    PLACAR.record(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, pessoa, cargo as u8, data, gravar, reduzir, r, n, mo, mr));
     r
 }

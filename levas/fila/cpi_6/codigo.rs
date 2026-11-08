@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, clube: *m
     let reg = [(clube as usize, 4), (nacao as usize, 4), (regiao as usize, 1), (comp as usize, 4), (base as usize, 4), (adversario as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, clube, nacao, regiao, comp, base, adversario),
         || get_scout_assignment(this, clube, nacao, regiao, comp, base, adversario));
-    PLACAR.record(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
 
@@ -117,6 +117,6 @@ unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, clube: *m
 unsafe extern "thiscall" fn comparar_cup_check_complete(this: usize, fases: u32, x: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I2%%)(this, fases, x);
     let n = cup_check_complete(this, fases, x);
-    PLACAR.record(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, fases, r, n));
+    SCOREBOARD.record(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, fases, r, n));
     r
 }

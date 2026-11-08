@@ -104,6 +104,6 @@ unsafe extern "C" fn comparar_match_screens_find_best_rated_starter_slot(tatica:
         return r;
     }
     let n = match_screens_find_best_rated_starter_slot(tatica, contexto);
-    PLACAR.record(r == n, || format!("match_screens_find_best_rated_starter_slot({:#x}, {}) {} x {}", tatica, contexto, r as i8, n as i8));
+    SCOREBOARD.record(r == n, || format!("match_screens_find_best_rated_starter_slot({:#x}, {}) {} x {}", tatica, contexto, r as i8, n as i8));
     r
 }

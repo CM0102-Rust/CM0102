@@ -13,8 +13,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_create_schedule(this: usize, 
 /// Original: `ItaSerC1b::set_club_progress` (0x64ff40, ita_ser_c1b.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x64ff40 } (thiscall, ret 0x14, ita_ser_c1b.cpp): `ItaSerC1b::set_club_progress(...)`, igual à da C1/A.
-pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
-    set_c1_club_progress(this, clube, stage as u8, current as u8, best as u8, worst as u8)
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    set_c1_club_progress(this, club, stage as u8, current as u8, best as u8, worst as u8)
 }
 
 /// the 2001/02 C1/B, with the same rule

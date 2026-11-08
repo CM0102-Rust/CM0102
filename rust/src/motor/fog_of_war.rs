@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
     let mut data = [0u8; 8];
     let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     copy(reg + 1, data.as_mut_ptr() as usize, G_CURRENT_DATE);
-    let obs = if font == 0 { 0 } else { *((font + 0x69) as *const usize) };
+    let obs = if font == 0 { 0 } else { *((font + staff::NON_PLAYER) as *const usize) };
     let level = reg as *mut u8;
     if obs == 0 {
         *level = 3;
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
         return;
     }
     let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    let c = chance(obs, *((obs + 0x17) as *const i8)) as i8;
+    let c = chance(obs, *((obs + non_player::JUDGEMENT) as *const i8)) as i8;
     let r = sortear(c as i32) as i8;
     *level = if c < 15 && r == 0 {
         (*level).wrapping_add(1)
@@ -56,16 +56,16 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
 /// +0x1c) controlado por humano (0x600a50) com tecnico e quadro de conhecimento (0xae2a60, pelo
 /// id do tecnico): as 20 vagas da escalacao (`dados` + lado x 0x625 + 0x190, 0x49 bytes cada) com
 /// pessoa e +4 validos (reservas, da 11a em diante, so com +0x32 != 0xff) ficam conhecidas (0x5b09d0).
-pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, dados: usize) {
+pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, data: usize) {
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FOG_OF_WAR_MAP_RAISE_KNOWLEDGE);
     let n = || *(G_STAFF_COUNT as *const i32);
     for lado in 0..2usize {
-        let clube = *((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize);
-        if human(clube, 0, 1, 0, 0) == 0 {
+        let club = *((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize);
+        if human(club, 0, 1, 0, 0) == 0 {
             continue;
         }
-        let q = *((clube + club::MANAGER) as *const usize);
+        let q = *((club + club::MANAGER) as *const usize);
         if q == 0 {
             continue;
         }
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, dados: usi
             continue;
         }
         for vaga in 0..20usize {
-            let e = dados + lado * 0x625 + 0x190 + vaga * 0x49;
+            let e = data + lado * 0x625 + 0x190 + vaga * 0x49;
             let i = *(e as *const i32);
             if i == -1 || *((e + 4) as *const i32) == -1 || (vaga > 10 && *((e + 0x32) as *const u8) == 0xff) {
                 continue;

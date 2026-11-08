@@ -75,7 +75,7 @@ unsafe extern "C" fn staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
 unsafe extern "C" fn comparar_database_is_basque_club(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(clube);
     let n = database_is_basque_club(clube);
-    PLACAR.record(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -85,7 +85,7 @@ unsafe extern "C" fn comparar_staff_is_transfer_listed(pessoa: usize, clube: usi
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa, clube),
         || staff_is_transfer_listed(pessoa, clube));
-    PLACAR.record(igual && r == n, || format!("staff_is_transfer_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("staff_is_transfer_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -93,6 +93,6 @@ unsafe extern "C" fn comparar_staff_is_loan_listed(pessoa: usize, clube: usize) 
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa, clube),
         || staff_is_loan_listed(pessoa, clube));
-    PLACAR.record(igual && r == n, || format!("staff_is_loan_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("staff_is_loan_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }

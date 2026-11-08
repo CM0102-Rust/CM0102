@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn comparar_resolve_same_day_clash(this: usize, jogo: u
     antes.write_back();
     let r = o(this, jogo, conflitos);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    PLACAR.record(mo == mr && (r == 0 || r == 1), || format!("resolve_same_day_clash(jogo {:#x}) devolveu {}, cursor da lista {:x?} x {:x?}", jogo, r, mo, mr));
+    SCOREBOARD.record(mo == mr && (r == 0 || r == 1), || format!("resolve_same_day_clash(jogo {:#x}) devolveu {}, cursor da lista {:x?} x {:x?}", jogo, r, mo, mr));
     r
 }
 

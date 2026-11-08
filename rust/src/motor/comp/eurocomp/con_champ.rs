@@ -28,40 +28,40 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
     // the comparer sends this case to the original alone)
     let mut l = ConcacafClubLists { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
     let (mut a, mut b, mut c, mut m) = (0u8, 0u8, 0u8, 0i8);
-    let mut clube = read_u32_as_usize(G_CLUB_TABLE);
+    let mut club = read_u32_as_usize(G_CLUB_TABLE);
     let mut i = 0i32;
     while i < read_u32_as_usize(G_CLUB_COUNT) as i32 {
-        if national_team(clube) != 0 {
+        if national_team(club) != 0 {
             break;
         }
-        let nacao = read_u32_as_usize(clube + club::NATION);
-        if nacao != 0 {
-            let id = read_u32_as_usize(nacao);
+        let nation = read_u32_as_usize(club + club::NATION);
+        if nation != 0 {
+            let id = read_u32_as_usize(nation);
             if id == read_u32_as_usize(KEY_NATION_MEXICO) {
                 if a < 0xc8 {
-                    l.mex[a as usize] = clube;
+                    l.mex[a as usize] = club;
                     a += 1;
                 }
             } else {
-                let div = read_u32_as_usize(clube + club::DIVISION);
+                let div = read_u32_as_usize(club + club::DIVISION);
                 if div != 0 && read_u32_as_usize(div) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
                     if m < 0xc {
-                        l.mls[m as usize] = clube;
+                        l.mls[m as usize] = club;
                         m += 1;
                     }
-                } else if id != read_u32_as_usize(KEY_NATION_UNITED_STATES) && read_u8(nacao + nation::REGION) == 7 {
+                } else if id != read_u32_as_usize(KEY_NATION_UNITED_STATES) && read_u8(nation + nation::REGION) == 7 {
                     if b < 0xc8 {
-                        l.centro[b as usize] = clube;
+                        l.centro[b as usize] = club;
                         b += 1;
                     }
-                } else if read_u8(nacao + nation::REGION) == 6 && c < 0xc8 {
-                    l.caribe[c as usize] = clube;
+                } else if read_u8(nation + nation::REGION) == 6 && c < 0xc8 {
+                    l.caribe[c as usize] = club;
                     c += 1;
                 }
             }
         }
         i += 1;
-        clube = clube.wrapping_add(0x245);
+        club = club.wrapping_add(0x245);
     }
     l.n = [a as u32, b as u32, c as u32, m as u8 as u32];
     l

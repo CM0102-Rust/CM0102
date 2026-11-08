@@ -30,12 +30,12 @@ pub(crate) unsafe extern "thiscall" fn init_strictness(this: usize, engine: u32,
 /// bola (0xf582) do outro lado que o jogador do lance, a bola passando a linha do lance (0x475c)
 /// encerra o lance (limpa e da 0); nos demais casos, 1.
 pub(crate) unsafe extern "thiscall" fn move_counts(this: usize) -> u8 {
-    let p = *((this + 0x4761) as *const usize);
+    let p = *((this + engine::PENDING_PLAY_OFFENDER) as *const usize);
     if byte(this, 0x475a) == 0 || p == 0 {
         return 0;
     }
     let l = byte(p, 0x27);
-    let owner = *((this + 0xf582) as *const usize);
+    let owner = *((this + engine::BALL_HOLDER) as *const usize);
     if owner == 0 || byte(owner, 0x27) as i32 != (l == 0) as i32 {
         return 1;
     }
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
 /// [pt] { 0x6cfd70 } (match_eng.cpp): `look_for_offside` do arbitro do motor (this + 0xf5b2).
 pub(crate) unsafe extern "thiscall" fn engine_look_for_offside(this: usize, side_b: i8, row: i8, y: i8, passador: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(FN_MATCH_OFFICIAL_FIND_OFFSIDE_PLAYER);
-    f(this + 0xf5b2, side_b, row, y, passador)
+    f(this + engine::REFEREE, side_b, row, y, passador)
 }
 
 /// Writes the card code in the player's record: +0x25 when the card total is 1 (or ≤ 1), else +0x26 when non-zero.
@@ -397,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, k
 /// [pt] { 0x6cfd40 } (match_eng.cpp): `card_by_severity` do arbitro do motor (this + 0xf5b2).
 pub(crate) unsafe extern "thiscall" fn engine_card_by_severity(this: usize, j: usize, kind: *mut u8, severity: u8, flag: u8) {
     let f: unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8) = core::mem::transmute(FN_MATCH_OFFICIAL_DECIDE_CARD);
-    f(this + 0xf5b2, j, kind, severity, flag)
+    f(this + engine::REFEREE, j, kind, severity, flag)
 }
 
 /// Referee: judges foul type `tipo` by player `j` on `outro`. Returns 1 or 7 (card given; 0 = nothing) and writes the
@@ -453,7 +453,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     }
     // advantage: (20, or 5 in the band of its own side) x (+0x5c of `outro`’s profile)^1.5 / (1 or 3)
     let a = if faixa_l(j, byte(j, 0x27)) != 0 { 5.0 } else { 20.0 };
-    let b = byte(*((other + 0x69) as *const usize), 0x5c) as f64;
+    let b = byte(*((other + match_player::STAFF) as *const usize), 0x5c) as f64;
     let div = if *((other + 0x1a6) as *const usize) != j { 1.0 } else { 3.0 };
     *advantage = (sortear(match_pl_ftol(a * game_pow(b, read_f64_at(0x968940)) / div)) == 0) as u8; // 0x968940 = 1.5
     let word = |p: usize, d: i16| *((p + 0x31) as *mut i16) = (*((p + 0x31) as *const i16)).wrapping_add(d);
@@ -517,7 +517,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     // final adjustment from `outro`’s record (+0x5c): 1 -> `um`; >= 6 -> +1 below 10; otherwise `senao`
     let by_sheet = |um: i32, senao: i32| {
         if *advantage != 0 && other != 0 {
-            let c = byte(*((other + 0x69) as *const usize), 0x5c);
+            let c = byte(*((other + match_player::STAFF) as *const usize), 0x5c);
             if c == 1 {
                 *grav = (*grav).wrapping_add(um as i8);
             } else if c >= 6 {

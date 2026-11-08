@@ -372,7 +372,7 @@ unsafe extern "thiscall" fn comparar_update_positions_and_status(this: usize) {
     antes.write_back();
     o(this);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(mo == mr, || format!("update_positions_and_status({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("update_positions_and_status({:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// A fase seguinte das ligas com mata-mata (o corpo de 0x572ff0 e 0x5769e0): na última fase (+0x30 ≥ +0x2c − 1, com
@@ -411,7 +411,7 @@ unsafe fn compare_stage_advance(nome: &str, this: usize, original: impl FnOnce()
         return original();
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x30, 4)], original, copia);
-    PLACAR.record(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
+    SCOREBOARD.record(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: usize) {

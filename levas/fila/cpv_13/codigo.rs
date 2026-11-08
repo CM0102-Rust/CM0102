@@ -148,14 +148,14 @@ unsafe extern "thiscall" fn comparar_add_month_award_record(this: usize, p: usiz
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5),
         || add_month_award_record_body(this, p, clube, premio, a4, a5, false));
-    PLACAR.record(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpv13_d(premio), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpv13_d(premio), mo, mr));
 }
 
 /// Comparador: pura.
 unsafe extern "stdcall" fn comparar_friendly_club_reputation_tier(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u8>(%%I1%%)(clube);
     let n = friendly_club_reputation_tier(clube);
-    PLACAR.record(r == n, || format!("friendly_club_reputation_tier({:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("friendly_club_reputation_tier({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -166,6 +166,6 @@ unsafe extern "stdcall" fn comparar_friendly_get_rest_days_for_kind(tipo: u32) -
         return r;
     }
     let n = friendly_get_rest_days_for_kind(tipo);
-    PLACAR.record(r == n, || format!("friendly_get_rest_days_for_kind({}) original={} rust={}", tipo as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("friendly_get_rest_days_for_kind({}) original={} rust={}", tipo as u8 as i8, r, n));
     r
 }

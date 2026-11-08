@@ -18,7 +18,7 @@ use super::*;
 /// Estrelas não as tem: devolve o eax da árvore).
 pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscritos: usize, file: usize, rows: [u32; 3], year: i16, predicted: bool, ramo: &'static str) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    write_u32_from_usize(this + 0x4c, 0);
+    write_u32_from_usize(this + cup::SEASON_CLOSED, 0);
     for o in [0xa7usize, 0xa3] {
         let l = read_u32_as_usize(this + o);
         if l != 0 {
@@ -26,29 +26,29 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, inscrit
             write_u32_from_usize(this + o, 0);
         }
     }
-    if read_u32_as_usize(this + 0xad) != 0 {
+    if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
         let mut i = 0i32;
-        while i < read_i16(this + 0x3c) as i32 {
-            let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
+        while i < read_i16(this + cup::ROUND_COUNT) as i32 {
+            let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
                 soltar(p);
-                write_u32_from_usize(read_u32_as_usize(this + 0xad) + i as usize * 4, 0);
+                write_u32_from_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4, 0);
             }
             i += 1;
         }
-        soltar(read_u32_as_usize(this + 0xad));
-        write_u32_from_usize(this + 0xad, 0);
+        soltar(read_u32_as_usize(this + cup::TIE_TABLES));
+        write_u32_from_usize(this + cup::TIE_TABLES, 0);
     }
     let e = read_u32_as_usize(this + 8);
     if e != 0 {
-        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        arquivar(e, 1);
+        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
+        archive(e, 1);
     }
-    let a = read_i16(this + 0x40);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
+    let a = read_i16(this + cup::YEAR);
+    core::ptr::write_unaligned((this + cup::YEAR) as *mut i16, a.wrapping_add(year));
     crate::comparison::branch(ramo);
-    *((this + 0xab) as *mut u8) = 0;
-    *((this + 0xb1) as *mut u8) = 0;
+    *((this + cup::CURRENT_ROUND) as *mut u8) = 0;
+    *((this + cup::RUN_BY_STAGES) as *mut u8) = 0;
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
     // simplification: in the boxes the original exits with the box’s eax (0x5e8290); the caller of the turnover does not read the return
     if inscritos(this) < 0 {
@@ -111,22 +111,22 @@ pub(crate) unsafe fn usa_mls_all_stars_club_by_index(i: usize) -> usize {
 /// dois ficam com a nação [0xae23a8] + 0x122 × [0x9cf4f8] (+0x53, os EUA [inferência]) e os quatro bytes da lista (+4,
 /// +5, +0xa, +0xb) zerados. Devolve 1.
 pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0xc);
-    write_u32_from_usize(this + 0xa7, l);
+    write_u32_from_usize(this + cup::TEAM_TABLE, l);
     if l == 0 {
         show_error_at(0xaa20a0, 0xc6);
         return -1;
     }
     let (a, b) = (read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST), read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST));
-    let conferencia = if read_i16(this + 0x40) % 2 != 0 {
+    let conferencia = if read_i16(this + cup::YEAR) % 2 != 0 {
         write_u32_from_usize(l, usa_mls_all_stars_club_by_index(a));
-        write_u32_from_usize(read_u32_as_usize(this + 0xa7) + 6, usa_mls_all_stars_club_by_index(b));
+        write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + 6, usa_mls_all_stars_club_by_index(b));
         0x413
     } else {
         write_u32_from_usize(l + 6, usa_mls_all_stars_club_by_index(a));
-        write_u32_from_usize(read_u32_as_usize(this + 0xa7), usa_mls_all_stars_club_by_index(b));
+        write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE), usa_mls_all_stars_club_by_index(b));
         0x414
     };
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
@@ -139,21 +139,21 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
         if league != 0 && read_u32_as_usize(league) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && division(c) as i32 == conferencia {
             if k == 0 {
                 crate::comparison::branch("cqr_6 estadio do jogo das estrelas");
-                let first = read_u32_as_usize(read_u32_as_usize(this + 0xa7));
+                let first = read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE));
                 write_u32_from_usize(first + 0x69, read_u32_as_usize(c + 0x69)); // cqr6: o estádio do clube sorteado
-                *((read_u32_as_usize(read_u32_as_usize(this + 0xa7)) + 0x6d) as *mut u8) = 0;
+                *((read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE)) + 0x6d) as *mut u8) = 0;
                 break;
             }
             k = k.wrapping_sub(1);
         }
         i += 1;
     }
-    let nacao = read_u32_as_usize(G_NATION_TABLE).wrapping_add(read_u32_as_usize(KEY_NATION_UNITED_STATES).wrapping_mul(nation::SIZE));
-    let l = read_u32_as_usize(this + 0xa7);
-    write_u32_from_usize(read_u32_as_usize(l + 6) + 0x53, nacao);
+    let nation = read_u32_as_usize(G_NATION_TABLE).wrapping_add(read_u32_as_usize(KEY_NATION_UNITED_STATES).wrapping_mul(nation::SIZE));
+    let l = read_u32_as_usize(this + cup::TEAM_TABLE);
+    write_u32_from_usize(read_u32_as_usize(l + 6) + 0x53, nation);
     write_u32_from_usize(read_u32_as_usize(l) + 0x53, read_u32_as_usize(read_u32_as_usize(l + 6) + 0x53));
     for o in [4usize, 5, 0xa, 0xb] {
-        *((read_u32_as_usize(this + 0xa7) + o) as *mut u8) = 0;
+        *((read_u32_as_usize(this + cup::TEAM_TABLE) + o) as *mut u8) = 0;
     }
     1
 }
@@ -229,9 +229,9 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     crate::comparison::branch("cqm_12 tabela do jogo das estrelas");
     let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
-    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
+    let game: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     sorteio(t, 0, 0xf, 5, 0, 5, year);
-    jogo(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: o Jogo das Estrelas em 2 de agosto
+    game(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: o Jogo das Estrelas em 2 de agosto
     let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((t + o) as *mut u32, v);
     w(0x18, 2);

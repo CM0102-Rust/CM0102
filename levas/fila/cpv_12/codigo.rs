@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize
     let n = national_teams_can_change_squad(this, nacao, tipo, p, entrando, if msg != 0 { meu.as_mut_ptr() as usize } else { 0 }, tam);
     let texto = |a: *const u8, m: usize| -> Vec<u8> { (0..m).map(|i| *a.add(i)).take_while(|&c| c != 0).collect() };
     let (to, tr) = if msg != 0 { (texto(msg as *const u8, tam as usize), texto(meu.as_ptr(), tam as usize)) } else { (Vec::new(), Vec::new()) };
-    PLACAR.record(r == n && to == tr, || format!("national_teams_can_change_squad({:x}, {}, {:x}, {}) {}/{} {:?} x {:?}", nacao, tipo as u8, p, entrando, r, n,
+    SCOREBOARD.record(r == n && to == tr, || format!("national_teams_can_change_squad({:x}, {}, {:x}, {}) {}/{} {:?} x {:?}", nacao, tipo as u8, p, entrando, r, n,
         String::from_utf8_lossy(&to), String::from_utf8_lossy(&tr)));
     r
 }
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize
 unsafe extern "stdcall" fn comparar_national_teams_player_in_squad(p: usize, nacao: usize, tipo: u32) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I1%%)(p, nacao, tipo);
     let n = national_teams_player_in_squad(p, nacao, tipo);
-    PLACAR.record(r == n, || format!("national_teams_player_in_squad({:x}, {:x}, {}) original={} rust={}", p, nacao, tipo as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("national_teams_player_in_squad({:x}, {:x}, {}) original={} rust={}", p, nacao, tipo as u8, r, n));
     r
 }
 
@@ -225,5 +225,5 @@ unsafe extern "thiscall" fn comparar_schedule_assign_opponent(this: usize, agend
     }
     let reg = [(agenda, 25 * (n as usize + 1) + 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, agenda, adversario), || schedule_assign_opponent(this, agenda, adversario));
-    PLACAR.record(igual, || format!("schedule_assign_opponent({:x}, {:x}) {:x?} x {:x?}", agenda, adversario, mo, mr));
+    SCOREBOARD.record(igual, || format!("schedule_assign_opponent({:x}, {:x}) {:x?} x {:x?}", agenda, adversario, mo, mr));
 }

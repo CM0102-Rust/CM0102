@@ -9,7 +9,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usiz
     let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AUS_NSL_ADVANCE_STAGE)(this);
     let after = read_usize(this + 0x30) as i32;
-    PLACAR.record(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `create_finals_series_stage` (comparison mode: see the header of motor.rs).
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_finals_series_stage(this:
         b.sort_unstable();
         a == b
     };
-    PLACAR.record(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, stage, seis));
+    SCOREBOARD.record(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, stage, seis));
     r
 }
 
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: u
         let (x, y) = (read_usize(l), read_usize(l + 6));
         read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    PLACAR.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, stage));
+    SCOREBOARD.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, stage));
 }
 
 /// Comparer for `aus_nsl_set_up_rules` (comparison mode: see the header of motor.rs).
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_set_up_rules(this: usize
         set_nsl_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("aus_nsl_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("aus_nsl_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -76,10 +76,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_set_up_rules(this: usize
 /// Comparer for `aus_nsl_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: só a original (os registros alocam) com a devolução prevista pelo ensaio.
-pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, _, _) = nsl_end_of_stage(this, clube, status, stage, false);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_AUS_NSL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, status, stage, a4, a5, a6);
-    PLACAR.record(r == n, || format!("aus_nsl_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32));
+pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+    let (n, _, _) = nsl_end_of_stage(this, club, status, stage, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_AUS_NSL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);
+    SCOREBOARD.record(r == n, || format!("aus_nsl_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32));
     r
 }
 

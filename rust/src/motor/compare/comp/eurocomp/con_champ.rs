@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs
         regions.push((history, read_u32_as_usize(G_CLUB_COMP_HISTORY_COUNT).wrapping_mul(0x1a)));
     }
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this), || crate::rng::without_counting(|| con_champ_select_qualified_clubs(this)));
-    PLACAR.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
     r
 }
 
@@ -36,14 +36,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: 
     let n = read_i16(this + 0x3e);
     let r = o(this, today, stage);
     let same = if seleciona { read_i16(this + 0x3e) == 8 } else { read_i16(this + 0x3e) == n };
-    PLACAR.record(same, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, stage, seleciona, n, read_i16(this + 0x3e)));
+    SCOREBOARD.record(same, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, stage, seleciona, n, read_i16(this + 0x3e)));
     r
 }
 
 /// Comparer for `con_champ_set_up_rounds` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this);
-    PLACAR.record(r == 1 && read_u32_as_usize(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, read_u32_as_usize(this + 0x28)));
+    SCOREBOARD.record(r == 1 && read_u32_as_usize(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, read_u32_as_usize(this + 0x28)));
     r
 }
 
@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_champ_create_round_table(thi
             let e = a + r * 0x68 + 0x23;
             core::ptr::read_unaligned(e as *const u32) == 0 && core::slice::from_raw_parts((e + 4) as *const u8, 3) == [0xff, 0xff, 0xff]
         });
-        PLACAR.record(ok, || format!("con_champ_create_round_table: o dia 0 dos confrontos da original difere"));
+        SCOREBOARD.record(ok, || format!("con_champ_create_round_table: o dia 0 dos confrontos da original difere"));
     }
     a
 }

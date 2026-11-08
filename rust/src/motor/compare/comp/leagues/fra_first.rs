@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize,
     if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
         ok = ok && read_u32_as_usize(this + 0x2c) == 0 && read_u32_as_usize(this + 0xc) == 0;
     }
-    PLACAR.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0xee), read_u32_as_usize(this + 0xf2), read_u32_as_usize(this + 8)));
+    SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0xee), read_u32_as_usize(this + 0xf2), read_u32_as_usize(this + 8)));
     r
 }
 
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_stub_return_one_ret8(this: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_STUB_RETURN_ONE_RET8)(this, a, b);
     let n = stub_return_one_ret8(this, a, b);
-    PLACAR.record(r == n, || format!("stub_return_one_ret8: original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("stub_return_one_ret8: original={} rust={}", r, n));
     r
 }
 
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_stub_return_one_ret8(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_stub_return_one_ret4(this: usize, a: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_STUB_RETURN_ONE_RET4)(this, a);
     let n = stub_return_one_ret4(this, a);
-    PLACAR.record(r == n, || format!("stub_return_one_ret4: original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("stub_return_one_ret4: original={} rust={}", r, n));
     r
 }
 

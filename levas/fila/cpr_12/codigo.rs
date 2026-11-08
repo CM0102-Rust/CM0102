@@ -247,7 +247,7 @@ unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0:
     if lista == 0 {
         let r = o(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
         let n = find_fixtures(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
-        PLACAR.record(r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}) original={} rust={}",
+        SCOREBOARD.record(r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}) original={} rust={}",
             dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, clube as i32, comp as i32, tipo as u8, lado as u8, r as u16, n as u16));
         return r;
     }
@@ -255,7 +255,7 @@ unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0:
     let r = o(this, dia0, ano0, dia1, ano1, clube, lista, comp, tipo, lado);
     let (n, iguais) = run_with_temp_list(lista, conta, cauda,
         |p| find_fixtures(this, dia0, ano0, dia1, ano1, clube, p, comp, tipo, lado));
-    PLACAR.record(iguais && r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}, com lista) original={} rust={} itens iguais {}",
+    SCOREBOARD.record(iguais && r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}, com lista) original={} rust={} itens iguais {}",
         dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, clube as i32, comp as i32, tipo as u8, lado as u8, r as u16, n as u16, iguais));
     r
 }
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(this: usize, a
     let r = o(this, ano, dia, fatia, comp, rodada, tipo, lista);
     let (n, iguais) = run_with_temp_list(lista, conta, cauda,
         |p| collect_comp_fixtures_on_day(this, ano, dia, fatia, comp, rodada, tipo, p));
-    PLACAR.record(iguais && r as u16 == n as u16, || format!("collect_comp_fixtures_on_day({}/{} fatia {}, comp {}, rodada {}, tipo {:x}) original={} rust={} itens iguais {}",
+    SCOREBOARD.record(iguais && r as u16 == n as u16, || format!("collect_comp_fixtures_on_day({}/{} fatia {}, comp {}, rodada {}, tipo {:x}) original={} rust={} itens iguais {}",
         dia as u16, ano as u16, fatia as u8, comp as i32, rodada as i32, tipo as u8, r as u16, n as u16, iguais));
     r
 }
@@ -278,6 +278,6 @@ unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(this: usize, a
 unsafe extern "stdcall" fn comparar_fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(%%I2%%)(data, comp);
     let n = fix_man_comp_has_fixture_on_date(data, comp);
-    PLACAR.record(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
+    SCOREBOARD.record(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
     r
 }

@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: usize) -> u3
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let depois = cqs2_w(this + 0x40);
     let igual = depois == antes.wrapping_add(1) && cqs2_w(this + 0x3e) == 4 && cqs2_d(cqs2_d(this + 0xc)) != 0 && cqs2_d(cqs2_d(this + 0xc) + 4) != 0;
-    PLACAR.record(igual, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, cqs2_w(this + 0x3e)));
+    SCOREBOARD.record(igual, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, cqs2_w(this + 0x3e)));
     r
 }
 
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(this: usize
         let e = if v[k] != 0 { achar(cqs2_d(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + 0x72) as *const u8) != LUGARES[k]
     });
-    PLACAR.record(errado.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));
+    SCOREBOARD.record(errado.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));
 }
 
 /// O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
@@ -218,5 +218,5 @@ unsafe extern "thiscall" fn comparar_usa_mls_get_club_array(this: usize, lista: 
             && cqs2_d(*lista + 4 * (m + i)) == cqs2_linha(cqs2_d(cqs2_d(this + 0xc)), i)
             && cqs2_d(*lista + 4 * (2 * m + i)) == cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), i)
     });
-    PLACAR.record(igual, || format!("usa_mls_get_club_array({:#x}) n={}", this, *n));
+    SCOREBOARD.record(igual, || format!("usa_mls_get_club_array({:#x}) n={}", this, *n));
 }

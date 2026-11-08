@@ -268,7 +268,7 @@ unsafe extern "thiscall" fn comparar_add_promotion_record(this: usize, clube: us
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, comp, peso),
         || crate::rng::without_counting(|| apply_promotion(this, clube, comp, peso, false)));
-    PLACAR.record(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
 }
 
 /// A nota do não jogador em `a` soma `v` (16 bits) e fica presa a 1..10000.
@@ -361,7 +361,7 @@ unsafe extern "thiscall" fn comparar_add_relegation_record(this: usize, clube: u
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, comp),
         || crate::rng::without_counting(|| apply_relegation(this, clube, comp, false)));
-    PLACAR.record(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
 }
 
 unsafe fn record_qualification(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32, gravar: bool) {
@@ -419,5 +419,5 @@ unsafe extern "thiscall" fn comparar_add_qualified_for_round_record(this: usize,
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, clube, comp, fase, rodada, peso),
         || record_qualification(this, clube, comp, fase, rodada, peso, false));
-    PLACAR.record(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
 }

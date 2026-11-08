@@ -251,7 +251,7 @@ unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usiz
     } else {
         cqa2_b(m + 0x18) == s && !list_holds(cqa2_d(this + 0x34d4), m)
     };
-    PLACAR.record(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
+    SCOREBOARD.record(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
 }
 
 /// { 0x5c5570 } (thiscall, ret 4, friendly.cpp, quadro SEH sem destrutor no caminho normal):
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn comparar_send_friendly_request(this: usize, m: usize
     o(this, m);
     let l = cqa2_d(this + 0x34d4);
     let ok = l == 0 || (list_len(l) == antes + 1 && list_holds(l, m) && cqa2_b(m + 0x18) == s);
-    PLACAR.record(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, list_len(l), cqa2_b(m + 0x18), s));
+    SCOREBOARD.record(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, list_len(l), cqa2_b(m + 0x18), s));
 }
 
 /// As nações com continente (+0x71) da tabela [0xae23a8] (0x122 bytes cada, [0xae2350] delas), na ordem da tabela.
@@ -366,5 +366,5 @@ unsafe extern "thiscall" fn comparar_build_nation_list(this: usize) {
     let p = cqa2_d(this + 0x34fa);
     let n = cqa2_i(this + 0x34fe);
     let ok = p == 0 || (n as usize == plano.len() && (0..plano.len()).all(|k| cqa2_d(p + 4 * k) == plano[k]));
-    PLACAR.record(ok, || format!("build_nation_list: conta {} prevista {}", n, plano.len()));
+    SCOREBOARD.record(ok, || format!("build_nation_list: conta {} prevista {}", n, plano.len()));
 }

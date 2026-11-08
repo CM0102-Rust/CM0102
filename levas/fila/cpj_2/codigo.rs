@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pessoa: *const 
     }
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I0%%)(this, pessoa);
     let depois = list_items_capped(l);
-    PLACAR.record(depois == esperado && *n == resta, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *n, resta));
+    SCOREBOARD.record(depois == esperado && *n == resta, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *n, resta));
 }
 
 /// Comparador: o mesmo plano pelo byte de pendentes; a original tira (e desmarca); confere os itens e o byte.
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn comparar_remove_pending_offers_for_staff(this: usize
     }
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I1%%)(this, pessoa);
     let depois = list_items_capped(l);
-    PLACAR.record(depois == esperado && *p == resta, || format!("remove_pending_offers_for_staff({}) itens {} -> {} (esperava {}), pendentes {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *p, resta));
+    SCOREBOARD.record(depois == esperado && *p == resta, || format!("remove_pending_offers_for_staff({}) itens {} -> {} (esperava {}), pendentes {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *p, resta));
 }
 
 /// Comparador: a oferta que a cópia marcaria antes; a original marca e agenda (a 0x4cd230 pode acrescentar na lista
@@ -151,6 +151,6 @@ unsafe extern "thiscall" fn comparar_schedule_decision_for_transfer(this: usize,
     let n = ability_above_club_reputation(oferta);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, oferta);
     let marcada = alvo.map_or(true, |e| *((e + 0x62) as *const u8) == 1);
-    PLACAR.record(marcada && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", oferta, alvo, marcada, r, n));
+    SCOREBOARD.record(marcada && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", oferta, alvo, marcada, r, n));
     r
 }

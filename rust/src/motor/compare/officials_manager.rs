@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_referee_grade(this: usize
     }
     let reg = official_record_region(this, *(r as *const i32));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, r), || record_referee_grade(this, r));
-    PLACAR.record(igual, || format!("record_referee_grade(nota {}) {:x?} x {:x?}", *r.add(6), mo, mr));
+    SCOREBOARD.record(igual, || format!("record_referee_grade(nota {}) {:x?} x {:x?}", *r.add(6), mo, mr));
 }
 
 /// Comparer for `set_up_officials` (comparison mode: see the header of motor.rs).
@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_referee_grade(this: usize
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
 pub(crate) unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_UP_OFFICIALS)(this);
-    PLACAR.record(read_u32_as_usize(this + 0xc) != 0 && read_i32(this + 4) == read_i32(G_OFFICIAL_COUNT) && read_u32_as_usize(this + 8) != 0,
+    SCOREBOARD.record(read_u32_as_usize(this + 0xc) != 0 && read_i32(this + 4) == read_i32(G_OFFICIAL_COUNT) && read_u32_as_usize(this + 8) != 0,
         || format!("set_up_officials: blocos {:x}, conta {} x {}", read_u32_as_usize(this + 0xc), read_i32(this + 4), read_i32(G_OFFICIAL_COUNT)));
 }
 
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
 pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_OFFICIALS_MANAGER_COMPARE_COMP_LEVEL)(a, b);
     let n = officials_manager_compare_comp_level(a, b);
-    PLACAR.record(r == n, || format!("officials_manager_compare_comp_level({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("officials_manager_compare_comp_level({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_comp_level(a:
 pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_nation_then_quality_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_OFFICIALS_MANAGER_COMPARE_NATION_THEN_QUALITY_DESC)(a, b);
     let n = officials_manager_compare_nation_then_quality_desc(a, b);
-    PLACAR.record(r == n, || format!("officials_manager_compare_nation_then_quality_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("officials_manager_compare_nation_then_quality_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -50,20 +50,20 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_nation_then_q
 pub(crate) unsafe extern "C" fn comparar_officials_manager_compare_nation_then_quality_asc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_OFFICIALS_MANAGER_COMPARE_NATION_THEN_QUALITY_ASC)(a, b);
     let n = officials_manager_compare_nation_then_quality_asc(a, b);
-    PLACAR.record(r == n, || format!("officials_manager_compare_nation_then_quality_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("officials_manager_compare_nation_then_quality_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparer for `choose_match_official` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pela palavra de saída e pelo estado do sorteio, e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, jogo: usize, out: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, game: usize, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CHOOSE_MATCH_OFFICIAL);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((out, 2));
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo, out),
-        || crate::rng::without_counting(|| choose_match_official(this, jogo, out)));
-    PLACAR.record(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", jogo, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, out),
+        || crate::rng::without_counting(|| choose_match_official(this, game, out)));
+    SCOREBOARD.record(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", game, r, mo, n, mr));
     r
 }
 
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_busy_flags(this: usize) ->
     let n = read_i32(this + 4);
     let reg = if n > 0 && read_usize(this + 8) != 0 { vec![(read_usize(this + 8), n as usize)] } else { Vec::new() };
     let (r, m, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || clear_busy_flags(this));
-    PLACAR.record(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
+    SCOREBOARD.record(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
     r
 }
 
@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_renew_officials(this: usize, com
     reg.extend([(read_usize(G_OFFICIAL_TABLE), total * 0x2b), (read_usize(this), total * 0x11), (0xb67a34, 4)]);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, comp),
         || crate::rng::without_counting(|| renew_officials(this, comp)));
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("renew_officials(comp {:#x}) original={} rust={}, diferencas em {:x?}", comp, r, n, dif)
@@ -109,22 +109,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_renew_officials(this: usize, com
 /// que é reposto; depois roda a original. Confere o estado final do sorteio, a conta nova ([0xae2390] + conta) e que
 /// cada ficha do ensaio esteja na tabela ordenada (campos que a original grava). Conta não positiva ou nação sem
 /// continente: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this: usize, count: i32, nacao: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this: usize, count: i32, nation: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_OFFICIALS_MANAGER_ADD_RANDOM_OFFICIALS);
-    if count <= 0 || (nacao != 0 && read_usize(nacao + nation::CONTINENT) == 0) {
-        return o(this, count, nacao);
+    if count <= 0 || (nation != 0 && read_usize(nation + nation::CONTINENT) == 0) {
+        return o(this, count, nation);
     }
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let mut novas = vec![[0u8; 0x2b]; count as usize];
     crate::rng::pause_trace(|| crate::rng::without_counting(|| {
         for g in novas.iter_mut() {
-            generate_official(g.as_mut_ptr() as usize, nacao);
+            generate_official(g.as_mut_ptr() as usize, nation);
         }
     }));
     let estado_rust = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     state.write_back();
     let before = read_i32(G_OFFICIAL_COUNT);
-    o(this, count, nacao);
+    o(this, count, nation);
     let estado_orig = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let total = read_i32(G_OFFICIAL_COUNT);
     let t = read_usize(G_OFFICIAL_TABLE);
@@ -137,8 +137,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_add_random_off
         }
     }
     let same = estado_orig == estado_rust && total == before.wrapping_add(count) && missing.is_empty();
-    PLACAR.record(same, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
-        count, nacao, total, before, estado_orig == estado_rust, missing));
+    SCOREBOARD.record(same, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
+        count, nation, total, before, estado_orig == estado_rust, missing));
 }
 
 /// Comparer for `officials_manager_validate_officials` (comparison mode: see the header of motor.rs).
@@ -153,7 +153,7 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_validate_officials() 
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((read_usize(G_OFFICIAL_TABLE), total * 0x2b));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || crate::rng::without_counting(|| officials_manager_validate_officials()));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("officials_manager_validate_officials ({} fichas) diferencas em {:x?}", total, dif)
@@ -166,7 +166,7 @@ pub(crate) unsafe extern "C" fn comparar_officials_manager_validate_officials() 
 pub(crate) unsafe extern "thiscall" fn comparar_officials_manager_operator(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_OFFICIALS_MANAGER_OPERATOR);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x2b)], || o(this, src), || officials_manager_operator(this, src));
-    PLACAR.record(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
     r
 }
 

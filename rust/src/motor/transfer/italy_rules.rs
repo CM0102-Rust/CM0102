@@ -12,14 +12,14 @@ use super::*;
 /// motivo)`: fora das duas primeiras janelas (0x8e8c40 com [this+4] e [this+4] + 0xc): motivo 9. Um clube de uma das
 /// cinco divisões ([0x9cf578] a [0x9cf588]) com quatro jogadores emprestados de outros clubes (ids abaixo de
 /// [0xae2364], contrato de empréstimo 0x4cf6d0) não pode (0x25).
-pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     // 0x8e8c40: push janela; push 0xae2c90; ecx = this -> thiscall, ret 8
     let in_window: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_WINDOW_CONTAINS_DATE);
     if in_window(this, G_CURRENT_DATE, read_usize(this + 4)) == 0 && in_window(this, G_CURRENT_DATE, read_usize(this + 4) + 0xc) == 0 {
         crate::comparison::branch("cqe_6 italia fora da janela");
         return refuse_outside_window(this, msg, reason);
     }
-    let comp = read_usize(clube + club::DIVISION);
+    let comp = read_usize(club + club::DIVISION);
     if comp == 0 {
         return 1;
     }
@@ -31,13 +31,13 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut n: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(clube + club::SQUAD + 4 * k);
+        let p = read_usize(club + club::SQUAD + 4 * k);
         if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || loan(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }
         let cp = game_get_contract_and_store(p);
         let de = if cp != 0 { england_rules_club_of_contract(cp) } else { 0 };
-        if de != clube {
+        if de != club {
             n = n.wrapping_add(1);
         }
     }
@@ -45,8 +45,8 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
         crate::comparison::branch("cqe_6 italia quatro emprestados");
         if msg != 0 {
             let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9ea9dc, g, g, clube + club::SHORT_NAME);
+            let g = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
+            text(msg, 0x9ea9dc, g, g, club + club::SHORT_NAME);
         }
         if !reason.is_null() {
             *reason = 0x25;

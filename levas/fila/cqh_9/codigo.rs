@@ -76,7 +76,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
 unsafe extern "C" fn comparar_player_setup_find_staff(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(%%I0%%)(primeiro, comum, segundo, clube, no_elenco);
     let n = player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco);
-    PLACAR.record(r == n, || format!("player_setup_find_staff(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("player_setup_find_staff(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
     r
 }
 
@@ -122,7 +122,7 @@ unsafe extern "C" fn comparar_player_setup_read_quoted_token(origem: usize, dest
         return o(origem, destino);
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(destino, 0x100)], || o(origem, destino), || player_setup_read_quoted_token(origem, destino));
-    PLACAR.record(igual && r == n, || format!("player_setup_read_quoted_token({:x}) original={:x} rust={:x}", origem, r, n));
+    SCOREBOARD.record(igual && r == n, || format!("player_setup_read_quoted_token({:x}) original={:x} rust={:x}", origem, r, n));
     r
 }
 
@@ -163,6 +163,6 @@ unsafe extern "C" fn player_setup_type_from_name(nome: usize) -> u32 {
 unsafe extern "C" fn comparar_player_setup_type_from_name(nome: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nome);
     let n = player_setup_type_from_name(nome);
-    PLACAR.record(r == n, || format!("player_setup_type_from_name({:x}) original={:x} rust={:x}", nome, r, n));
+    SCOREBOARD.record(r == n, || format!("player_setup_type_from_name({:x}) original={:x} rust={:x}", nome, r, n));
     r
 }

@@ -7,7 +7,7 @@ MUTACOES = [
     ('f_c1x2', "(1, 3) => parcelas[3] + parcelas[3],", "(1, 3) => parcelas[3],"),
     ('f_c4', "        let a = f(p, 0xad) + f(p, 0xcd);", "        let c4 = c4 as f32 as f64;" + chr(10) + "        let a = f(p, 0xad) + f(p, 0xcd);"),
     ('f_comp', "} else if id == g(KEY_NATION_SWEDEN) {", "} else if id == g(KEY_NATION_NORWAY) {"),
-    ('f_5c67', "let aplica = if jogo == 0 {" + chr(10) + "        true", "let aplica = if jogo == 0 {" + chr(10) + "        false"),
+    ('f_5c67', "let aplica = if game == 0 {" + chr(10) + "        true", "let aplica = if game == 0 {" + chr(10) + "        false"),
     ('f_1000', "        if dif > 1000 {", "        if dif >= 1000 {"),
     ('f_250', "} else if dif > -250 {", "} else if dif >= -250 {"),
     ('f_750', "} else if side_b == 1 && dif < -750", "} else if side_b == 1 && dif <= -750"),

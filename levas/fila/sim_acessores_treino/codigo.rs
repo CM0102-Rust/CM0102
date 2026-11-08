@@ -27,14 +27,14 @@ unsafe extern "thiscall" fn set_training_load(lesoes: usize, id: *const i32, val
 unsafe extern "thiscall" fn comparar_transfer_manager_get_shortlist_manager(gerente: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%)(gerente);
     let n = transfer_manager_get_shortlist_manager(gerente);
-    PLACAR.record(r == n, || format!("transfer_manager_get_shortlist_manager original={:#x} rust={:#x}", r, n));
+    SCOREBOARD.record(r == n, || format!("transfer_manager_get_shortlist_manager original={:#x} rust={:#x}", r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_training_manager_get_player_entry(treino: usize, jogador: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(treino, jogador);
     let n = training_manager_get_player_entry(treino, jogador);
-    PLACAR.record(r == n, || format!("training_manager_get_player_entry original={:#x} rust={:#x}", r, n));
+    SCOREBOARD.record(r == n, || format!("training_manager_get_player_entry original={:#x} rust={:#x}", r, n));
     r
 }
 
@@ -42,5 +42,5 @@ unsafe extern "thiscall" fn comparar_set_training_load(lesoes: usize, id: *const
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, u8)>(%%I2%%);
     let a = training_load_byte(lesoes, id) as usize;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 1)], || o(lesoes, id, valor), || set_training_load(lesoes, id, valor));
-    PLACAR.record(igual, || format!("set_training_load({}, {}) {:x?} x {:x?}", *id, valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("set_training_load({}, {}) {:x?} x {:x?}", *id, valor, mo, mr));
 }

@@ -1,9 +1,9 @@
 # Mutacoes da leva69 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva69.py
 MUTACOES = [
-    ('c_limite', "    if *(clube as *const i32) >= limit {\n        let continent", "    if *(clube as *const i32) > limit {\n        let continent"),
-    ('c_cont0', "        if continent != 0 && (nacao == 0 || d(nacao, 0x71) != continent) {", "        if continent != 0 && (nacao != 0 && d(nacao, 0x71) != continent) {"),
-    ('c_divisao', "        if nacao == d(base, 0x5d) && d(clube, 0x57) != 0 && d(clube, 0x57) == base {", "        if nacao == d(base, 0x5d) && d(clube, 0x57) != 0 {"),
-    ('c_outro', "        if d(nacao, 0x71) != d(base, 0x59) {\n            return 0;", "        if d(nacao, 0x71) == d(base, 0x59) {\n            return 0;"),
+    ('c_limite', "    if *(club as *const i32) >= limit {\n        let continent", "    if *(club as *const i32) > limit {\n        let continent"),
+    ('c_cont0', "        if continent != 0 && (nation == 0 || d(nation, 0x71) != continent) {", "        if continent != 0 && (nation != 0 && d(nation, 0x71) != continent) {"),
+    ('c_divisao', "        if nation == d(base, 0x5d) && d(club, 0x57) != 0 && d(club, 0x57) == base {", "        if nation == d(base, 0x5d) && d(club, 0x57) != 0 {"),
+    ('c_outro', "        if d(nation, 0x71) != d(base, 0x59) {\n            return 0;", "        if d(nation, 0x71) == d(base, 0x59) {\n            return 0;"),
     ('c_grupo', "        if byte(stage, 0x43) == 2 {\n            grupo = stage;", "        if byte(stage, 0x43) == 1 {\n            grupo = stage;"),
     ('c_passo', "if grupo != 0 { (grupo, 0xb1, 0x3b) }", "if grupo != 0 { (grupo, 0xb1, 0x3a) }"),
     ('c_ate', "    while i <= n {", "    while i < n {"),

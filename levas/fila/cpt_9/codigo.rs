@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn comparar_apply_training_progress(this: usize, pessoa
     let e = cpt9_d(this + 0x651d) + 6 * cpt9_i(f) as usize;
     let regioes = [(f + 0xf, 0x33), (e, 6)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, pessoa, d), || apply_training_progress(this, pessoa, d));
-    PLACAR.record(igual, || format!("apply_training_progress(pessoa {:x}, d {:x?}) {:x?} x {:x?}", pessoa, core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("apply_training_progress(pessoa {:x}, d {:x?}) {:x?} x {:x?}", pessoa, core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
 }
 
 /// { 0x8b4b20 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::find_position_training(pessoa, &primeira)`:
@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn comparar_find_position_training(this: usize, pessoa:
     let n = find_position_training(this, pessoa, saida);
     let sr = *saida;
     *saida = so;
-    PLACAR.record(r == n && so == sr, || format!("find_position_training(pessoa {:x}) original={} {:x} rust={} {:x}", pessoa, r, so, n, sr));
+    SCOREBOARD.record(r == n && so == sr, || format!("find_position_training(pessoa {:x}) original={} {:x} rust={} {:x}", pessoa, r, so, n, sr));
     r
 }
 
@@ -269,6 +269,6 @@ unsafe extern "thiscall" fn has_fast_position_training(this: usize, pessoa: usiz
 unsafe extern "thiscall" fn comparar_has_fast_position_training(this: usize, pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, pessoa);
     let n = has_fast_position_training(this, pessoa);
-    PLACAR.record(r == n, || format!("has_fast_position_training(pessoa {:x}) original={} rust={}", pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("has_fast_position_training(pessoa {:x}) original={} rust={}", pessoa, r, n));
     r
 }

@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn comparar_advance_week_counter(this: usize, dia: *con
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i16) -> i32>(%%I0%%);
     let regioes = [(this + 0x688d, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, dia), || advance_week_counter(this, dia));
-    PLACAR.record(igual && r == n, || format!("advance_week_counter(dia {}) original={} rust={} {:x?} x {:x?}", *dia, r, n, mo.0, mr.0));
+    SCOREBOARD.record(igual && r == n, || format!("advance_week_counter(dia {}) original={} rust={} {:x?} x {:x?}", *dia, r, n, mo.0, mr.0));
     r
 }
 
@@ -61,6 +61,6 @@ unsafe extern "thiscall" fn get_recurring_injury_type(this: usize, pessoa: usize
 unsafe extern "thiscall" fn comparar_get_recurring_injury_type(this: usize, pessoa: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, pessoa);
     let n = get_recurring_injury_type(this, pessoa);
-    PLACAR.record(r == n, || format!("get_recurring_injury_type(pessoa {:x}) original={:x} rust={:x}", pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("get_recurring_injury_type(pessoa {:x}) original={:x} rust={:x}", pessoa, r, n));
     r
 }

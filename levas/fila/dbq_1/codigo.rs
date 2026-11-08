@@ -59,7 +59,7 @@ unsafe extern "C" fn comparar_club_add_favoured_staff(clube: usize, pessoa: usiz
     let reg = preference_regions(if clube != 0 { clube + 0x9b } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, pessoa, forcar),
         || crate::rng::without_counting(|| club_add_favoured_staff(clube, pessoa, forcar)));
-    PLACAR.record(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
+    SCOREBOARD.record(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
 }
 
 /// { 0x547940 } (cdecl, Database.cpp): `club_add_disliked_staff(clube, pessoa, forcar)`: põe a pessoa entre as três
@@ -78,7 +78,7 @@ unsafe extern "C" fn comparar_club_add_disliked_staff(clube: usize, pessoa: usiz
     let reg = preference_regions(if clube != 0 { clube + 0x9b } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, pessoa, forcar),
         || crate::rng::without_counting(|| club_add_disliked_staff(clube, pessoa, forcar)));
-    PLACAR.record(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
+    SCOREBOARD.record(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
 }
 
 /// { 0x547a10 } (cdecl, Database.cpp): `staff_add_favoured_staff(pessoa, outra, forcar)`: põe `outra` entre as três
@@ -103,5 +103,5 @@ unsafe extern "C" fn comparar_staff_add_favoured_staff(pessoa: usize, outra: usi
     let reg = preference_regions(if pref != 0 { pref + 0x1c } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa, outra, forcar),
         || crate::rng::without_counting(|| staff_add_favoured_staff(pessoa, outra, forcar)));
-    PLACAR.record(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, forcar, mo, mr));
+    SCOREBOARD.record(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, forcar, mo, mr));
 }

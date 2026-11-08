@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: u
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("bra_cup_build_team_table({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("bra_cup_build_team_table({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -79,6 +79,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_set_up_rounds(this: usiz
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(tr);
     }
-    PLACAR.record(igual && a == b && table, || format!("bra_cup_set_up_rounds({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, table));
+    SCOREBOARD.record(igual && a == b && table, || format!("bra_cup_set_up_rounds({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, table));
     a
 }

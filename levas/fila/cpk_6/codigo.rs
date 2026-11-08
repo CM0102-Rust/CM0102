@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, dado: u32, 
     }
     let reg = [(destino as usize, n as usize)];
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(noticia, dado, destino, n), || get_slot_string(noticia, dado, destino, n));
-    PLACAR.record(igual && r == m, || format!("get_slot_string({}, {}) {:x?} x {:x?}", k, n, mo, mr));
+    SCOREBOARD.record(igual && r == m, || format!("get_slot_string({}, {}) {:x?} x {:x?}", k, n, mo, mr));
     r
 }
 
@@ -119,6 +119,6 @@ unsafe extern "thiscall" fn comparar_can_club_scout_nation(this: usize, nacao: u
         return r;
     }
     let n = can_club_scout_nation(this, nacao, clube);
-    PLACAR.record(r == n, || format!("can_club_scout_nation({:x}, {:x}) original={} rust={}", nacao, clube, r, n));
+    SCOREBOARD.record(r == n, || format!("can_club_scout_nation({:x}, {:x}) original={} rust={}", nacao, clube, r, n));
     r
 }

@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
 unsafe extern "thiscall" fn comparar_update_wage_bill(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0xc, 12), (0xae1080, 4)], || o(this), || update_wage_bill(this));
-    PLACAR.record(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    SCOREBOARD.record(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// { 0x59cf50 } (thiscall, finance.cpp): `FinanceTable::refresh_all_wage_bills()`, só pela criação do jogo (0x828110):
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn comparar_refresh_all_wage_bills(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = (cpz11_i(0xae235c).max(0) as usize).wrapping_mul(0x167);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(cpz11_d(this), n), (0xae1080, 4)], || o(this), || refresh_all_wage_bills(this));
-    PLACAR.record(igual, || format!("refresh_all_wage_bills({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    SCOREBOARD.record(igual, || format!("refresh_all_wage_bills({:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// { 0x59b4c0 } (ret 8, finance.cpp): `finance_get_days_to_season_start(clube, &passou)`, pelo passe diário das
@@ -219,6 +219,6 @@ unsafe extern "thiscall" fn comparar_finance_get_days_to_season_start(this: usiz
         return o(this, clube, passou);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(passou as usize, 4), (0xae2470, 8)], || o(this, clube, passou), || finance_get_days_to_season_start(this, clube, passou));
-    PLACAR.record(igual && r == n, || format!("finance_get_days_to_season_start(clube {:#x}) original={} {:x?} rust={} {:x?}", clube, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("finance_get_days_to_season_start(clube {:#x}) original={} {:x?} rust={} {:x?}", clube, r, mo, n, mr));
     r
 }

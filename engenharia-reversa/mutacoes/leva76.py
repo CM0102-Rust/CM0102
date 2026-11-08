@@ -5,5 +5,5 @@ MUTACOES = [
     ('l_40', "    for k in 0..40usize {\n        let e = base", "    for k in 0..39usize {\n        let e = base"),
     ('l_13', "(tambem_13 != 0 && *((e + 0x13) as *const u32) == id)", "(*((e + 0x13) as *const u32) == id)"),
     ('l_tipo', "        if home && (not_11 != 0) == (*(e as *const u8) != 11) {", "        if home && (not_11 != 0) == (*(e as *const u8) != 12) {"),
-    ('b_40', "    *((this + 0x40) as *const u32)\n}", "    *((this + 0x44) as *const u32)\n}"),
+    ('b_40', "    *((this + staff_contract::FLAGS) as *const u32)\n}", "    *((this + staff_contract::MORALE) as *const u32)\n}"),
 ]

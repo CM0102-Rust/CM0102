@@ -246,7 +246,7 @@ unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) 
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
         || crate::rng::without_counting(|| database_pick_first_name_for_nation(nacao)));
-    PLACAR.record(igual && r == n, || format!("database_pick_first_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_pick_first_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -254,7 +254,7 @@ unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize)
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
         || crate::rng::without_counting(|| database_pick_second_name_for_nation(nacao)));
-    PLACAR.record(igual && r == n, || format!("database_pick_second_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_pick_second_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -266,6 +266,6 @@ unsafe extern "C" fn comparar_database_format_staff_name(pessoa: usize, destino:
     // o destino tem pelo menos 0x69 bytes (a rotina exige); 0x600740 e 0x6005e0 só leem
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(destino, 0x69)], || o(pessoa, destino, tamanho, estilo),
         || database_format_staff_name(pessoa, destino, tamanho, estilo));
-    PLACAR.record(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", pessoa, estilo as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", pessoa, estilo as u8, r, n, mo, mr));
     r
 }

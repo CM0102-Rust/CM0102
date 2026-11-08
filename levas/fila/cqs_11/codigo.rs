@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usi
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && lista, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    SCOREBOARD.record(igual && a == b && lista, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -185,7 +185,7 @@ unsafe fn con_merc_cup_compare_advance_stage(nome: &str, this: usize, original: 
     let ultima = f >= (cqs11_d(this + 0x2c) as i32).wrapping_sub(1);
     original();
     let depois = cqs11_d(this + 0x30) as i32;
-    PLACAR.record(depois == if ultima { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, f, depois));
+    SCOREBOARD.record(depois == if ultima { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, f, depois));
 }
 
 /// { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte

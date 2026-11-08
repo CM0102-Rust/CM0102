@@ -62,13 +62,13 @@ unsafe extern "thiscall" fn comparar_can_end_loan(this: usize, clube: usize, jog
         crate::comparison::branch("can_end_loan pelas regras");
         return r;
     }
-    PLACAR.record(r == 1, || format!("can_end_loan({:x}, {:x}) original={} rust=1", clube, jogador, r));
+    SCOREBOARD.record(r == 1, || format!("can_end_loan({:x}, {:x}) original={} rust=1", clube, jogador, r));
     r
 }
 
 unsafe extern "C" fn comparar_pow_double(base: f64, expoente: f64) -> f64 {
     let r = original_fn::<unsafe extern "C" fn(f64, f64) -> f64>(%%I2%%)(base, expoente);
     let n = pow_double(base, expoente);
-    PLACAR.record(r.to_bits() == n.to_bits(), || format!("pow_double({}, {}) original={} rust={}", base, expoente, r, n));
+    SCOREBOARD.record(r.to_bits() == n.to_bits(), || format!("pow_double({}, {}) original={} rust={}", base, expoente, r, n));
     r
 }

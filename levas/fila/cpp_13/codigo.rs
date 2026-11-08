@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn limit_club_division_tier(this: usize, valor: u32, fo
 unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = cup_compare_entries_by_level_desc(a, b);
-    PLACAR.record(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -79,7 +79,7 @@ unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usi
 unsafe extern "C" fn comparar_cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = cup_compare_entries_by_level_asc(a, b);
-    PLACAR.record(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -91,6 +91,6 @@ unsafe extern "thiscall" fn comparar_limit_club_division_tier(this: usize, valor
     let reg: Vec<(usize, usize)> = (0..n.max(0) as usize).map(|i| (cpp13_d(tabela + i * 0x3b) + 0x64, 1)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, valor, fora, dentro, baixar),
         || limit_club_division_tier(this, valor, fora, dentro, baixar));
-    PLACAR.record(igual, || format!("limit_club_division_tier(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
+    SCOREBOARD.record(igual, || format!("limit_club_division_tier(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
         valor as u8 as i8, fora as u8, dentro as u8, baixar, mo, mr));
 }

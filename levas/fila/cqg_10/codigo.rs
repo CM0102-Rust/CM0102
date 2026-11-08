@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn comparar_on_friendly_fixture_cancelled(this: usize, 
     }
     o(this, jogo, quem);
     let livre = vaga == 0 || (cqg10_d(vaga + 0x10) == 0 && cqg10_b(vaga + 0x18) == 0);
-    PLACAR.record(livre, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", jogo, vaga));
+    SCOREBOARD.record(livre, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", jogo, vaga));
 }
 
 /// { 0x5cb9e0 } (thiscall, ret 4, friendly.cpp, quadro SEH da lista local e das datas): o amistoso de seleção cancelado
@@ -310,6 +310,6 @@ unsafe extern "thiscall" fn comparar_cancel_tournament(this: usize, torneio: usi
         }
     }
     let ok = cqg10_d(torneio) == 0 && cqg10_d(torneio + 0x65) == 0 && cqg10_d(vaga) == 0 && !in_list;
-    PLACAR.record(ok, || format!("cancel_tournament(torneio {:#x}) dono {:#x} competição {:#x} vaga {:#x} na lista {}",
+    SCOREBOARD.record(ok, || format!("cancel_tournament(torneio {:#x}) dono {:#x} competição {:#x} vaga {:#x} na lista {}",
         torneio, cqg10_d(torneio), cqg10_d(torneio + 0x65), cqg10_d(vaga), in_list));
 }

@@ -105,6 +105,6 @@ unsafe extern "thiscall" fn comparar_is_important_for(noticia: usize, pessoa: us
         return r;
     }
     let n = is_important_for(noticia, pessoa);
-    PLACAR.record(r == n, || format!("is_important_for(tipo {:#x}, {:x}) original={} rust={}", t, pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("is_important_for(tipo {:#x}, {:x}) original={} rust={}", t, pessoa, r, n));
     r
 }

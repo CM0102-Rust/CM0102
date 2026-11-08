@@ -93,7 +93,7 @@ unsafe fn bra_reg_gaucho_compare_knockout_from_table(nome: &str, this: usize, li
     original();
     let fase = cqn9_d(cqn9_d(this + 0xc));
     if fase == 0 {
-        PLACAR.record(false, || format!("{}({:#x}) sem fase", nome, this));
+        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
     let lista = cqn9_d(fase + 0xa7);
@@ -102,7 +102,7 @@ unsafe fn bra_reg_gaucho_compare_knockout_from_table(nome: &str, this: usize, li
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqn9_w(fase + 0x3e) as usize == linhas.len() && cqn9_d(fase + 4) == cqn9_d(this + 4) && cqn9_d(this + 0x30) == 0;
-    PLACAR.record(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn9_w(fase + 0x3e)));
+    SCOREBOARD.record(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn9_w(fase + 0x3e)));
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_gaucho_create_knockout_stage(this: usize) {

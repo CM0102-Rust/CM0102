@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jogo: usize, a
         return; // ponytail: a fase andou na base e o sorteio somou coeficiente: sem comparação
     }
     let mo = crate::comparison::MemorySnapshot::read(&conferir);
-    PLACAR.record(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
 }
 
 /// { 0x586c00 } (thiscall, ret 0x14, european_cup.cpp): `EuropeanCup::set_club_progress(clube, fase, p1, p2, p3)` (a
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(this: usize,
         || o(this, clube, fase, p1, p2, p3),
         || european_cup_set_club_progress(this, clube, fase, p1, p2, p3),
     );
-    PLACAR.record(igual, || format!("european_cup_set_club_progress(fase {} {} {} {}) original={:x?} rust={:x?}", fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
+    SCOREBOARD.record(igual, || format!("european_cup_set_club_progress(fase {} {} {} {}) original={:x?} rust={:x?}", fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
 }
 
 /// { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
@@ -213,6 +213,6 @@ unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, jogo: usize, 
 unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, outro: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, jogo, outro);
     let n = counts_for_fixture_clash(this, jogo, outro);
-    PLACAR.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", cpy6_w(jogo + 0x30), r, n));
+    SCOREBOARD.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", cpy6_w(jogo + 0x30), r, n));
     r
 }

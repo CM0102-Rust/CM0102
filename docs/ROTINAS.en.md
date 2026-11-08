@@ -2,7 +2,7 @@
 
 # Routines migrated to Rust
 
-Each routine enters through a hook (`rust/src/desvios.rs`) and only becomes official after:
+Each routine enters through a hook (`rust/src/detours.rs`) and only becomes official after:
 1. self-test (`CM_AUTOTESTE=1`): synthetic inputs as soon as the game opens the video, original × Rust, comparing the result and the memory touched;
 2. control mutation: a deliberate defect in the Rust version must be caught;
 3. real game in comparison mode (`CM_COMPARAR=1`): automatic on-holiday career (`docs/VERSAO_SEM_TELA.md`) or a match played by Lucas;
@@ -18,7 +18,7 @@ Each routine enters through a hook (`rust/src/desvios.rs`) and only becomes offi
 
 Self-test: 5,000,000 cases, 0 divergences. Mutations caught: +4 in the large-n branch; table wrap-around. Real game: >100 million calls, 0 divergences.
 
-### Dates — `si/code/Date.cpp` → `rust/src/data.rs` (official on 2026-10-06)
+### Dates — `si/code/Date.cpp` → `rust/src/date.rs` (official on 2026-10-06)
 
 | Routine | Original | Convention |
 |---|---|---|
@@ -1023,7 +1023,7 @@ Mutations: 6 of 9 caught; d_ramo (record +0x2d exactly 11), d_grau (injury grade
 
 | Routine | Original | Convention | Notes |
 |---|---|---|---|
-| `dias_ate(outra)` | 0x54cdb0 | thiscall, ret 8 | Date.cpp (`rust/src/data.rs`): this − other in days, with `outra` by value. Within the same year it is the day difference; across years, the static Date 0xae2470 takes *this and walks year by year to `outra`'s, adding each year's days (backwards those of the reached year; forwards, as in the original, those of the year before each), and keeps `outra`'s year. `mutacoes.py` now accepts `ARQUIVO = 'data.rs'` in the list |
+| `dias_ate(outra)` | 0x54cdb0 | thiscall, ret 8 | Date.cpp (`rust/src/date.rs`): this − other in days, with `outra` by value. Within the same year it is the day difference; across years, the static Date 0xae2470 takes *this and walks year by year to `outra`'s, adding each year's days (backwards those of the reached year; forwards, as in the original, those of the year before each), and keeps `outra`'s year. `mutacoes.py` now accepts `ARQUIVO = 'date.rs'` in the list |
 
 Mutations: 2 of 4 caught; y_frente and y_dia survive (the path with the other date after this one does not run up to 2001-08-20: the game only counts backwards, today minus birth); real game to 2002-01-01 with 0 divergences; Rust ×2 and original careers equal with the new reference db8ee4d7a7e1ef8e (the .lng files were rewritten by the game at 08:14 on 2026-10-11, as on 2026-10-10; the original gave the same fingerprint).
 

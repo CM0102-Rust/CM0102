@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn comparar_spa_cup_update_for_date(this: usize, hoje: 
     let vira = antes == 0 && cqt5_w(cqt5_d(0xde1f58) + 0x439) as u16 as i32 == cqt5_w(this + 0x40) as i32 && fase != 0;
     let r = o(this, hoje, fase);
     let depois = cqt5_d(this + 0x45);
-    PLACAR.record(depois == if vira { 1 } else { antes }, || format!("spa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
+    SCOREBOARD.record(depois == if vira { 1 } else { antes }, || format!("spa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
     r
 }
 

@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn comparar_set_current_competition(this: usize, nacao:
     o(this, nacao, comp);
     let (atual2, fila2) = (cpo13_d(p.vaga) as u32, cpo13_d(p.fila) as u32);
     let ok = atual2 == p.nova.unwrap_or(atual) && fila2 == p.na_fila.unwrap_or(fila);
-    PLACAR.record(ok, || format!("set_current_competition(nação {}, comp {}) atual {:#x} -> {:#x} (esperava {:x?}), fila {:#x} -> {:#x} (esperava {:x?})",
+    SCOREBOARD.record(ok, || format!("set_current_competition(nação {}, comp {}) atual {:#x} -> {:#x} (esperava {:x?}), fila {:#x} -> {:#x} (esperava {:x?})",
         cpo13_d(nacao), cpo13_d(comp), atual, atual2, p.nova, fila, fila2, p.na_fila));
 }
 
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn comparar_mark_clubs_with_fixtures(this: usize, data:
         return o(this, data);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(cpo13_d(this + 0x24), n as usize)], || o(this, data), || mark_clubs_with_fixtures(this, data));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<(usize, u8, u8)> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).map(|i| (i, a[i], b[i])).collect();
         format!("mark_clubs_with_fixtures({:x}) clube, original, rust: {:?}", core::ptr::read_unaligned(data as *const u32), dif)
@@ -254,5 +254,5 @@ unsafe extern "thiscall" fn comparar_discipline_remove_player(this: usize, id: u
     core::ptr::copy_nonoverlapping(r as *const u8, depois.as_mut_ptr(), 29);
     let ok = depois[..0x1c].iter().all(|&b| b == 0xff) && depois[0x1c] == 0
         && entradas.iter().all(|&e| cpo13_d(e) as u32 == 0xffff_ffff);
-    PLACAR.record(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, depois, entradas));
+    SCOREBOARD.record(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, depois, entradas));
 }

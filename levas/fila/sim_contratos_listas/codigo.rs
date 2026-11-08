@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn comparar_remove_loan_contract(gerente: usize, id: *c
         reg.push(((*(gerente as *const usize) as isize + vaga as isize * 80) as usize, 4));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, id), || remove_loan_contract(gerente, id));
-    PLACAR.record(igual, || format!("remove_loan_contract({}) {:x?} x {:x?}", *id, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_loan_contract({}) {:x?} x {:x?}", *id, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_clear_bid_markers_for_player(gerente: usize, clube: *const i32, jogador: *const i32) {
@@ -75,12 +75,12 @@ unsafe extern "thiscall" fn comparar_clear_bid_markers_for_player(gerente: usize
     let l = club_shortlist(gerente, clube);
     let reg = if *((l + 4) as *const u8) == 1 { vec![(core::ptr::read_unaligned(l as *const usize), 40 * 0x25)] } else { vec![(l, 9)] };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, clube, jogador), || clear_bid_markers_for_player(gerente, clube, jogador));
-    PLACAR.record(igual, || format!("clear_bid_markers_for_player({}, {}) {:x?} x {:x?}", *clube, *jogador, mo, mr));
+    SCOREBOARD.record(igual, || format!("clear_bid_markers_for_player({}, {}) {:x?} x {:x?}", *clube, *jogador, mo, mr));
 }
 
 unsafe extern "C" fn comparar_human_manager_get_stand_in_manager(clube: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I2%%)(clube);
     let n = human_manager_get_stand_in_manager(clube);
-    PLACAR.record(r == n, || format!("human_manager_get_stand_in_manager({:#x}) original={:#x} rust={:#x}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("human_manager_get_stand_in_manager({:#x}) original={:#x} rust={:#x}", clube, r, n));
     r
 }

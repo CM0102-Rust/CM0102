@@ -50,7 +50,7 @@ pub(crate) mod club {
     pub(crate) const COACHES: usize = 0x19f; // 20 byte(s), int[][5]
     pub(crate) const SCOUTS: usize = 0x1b3; // 28 byte(s), int[][7]
     pub(crate) const PHYSIOS: usize = 0x1cf; // 12 byte(s), int[][3]
-    pub(crate) const EURO_FLAG: usize = 0x1db; // 4 byte(s), int
+    pub(crate) const CONTINENTAL_COMP_ID: usize = 0x1db; // id of the continental competition the club is entered in (-1 none); 4 byte(s), int
     pub(crate) const TEAM_SELECTED: usize = 0x1e0; // 80 byte(s), int[][20]
     pub(crate) const HAS_LINKED_CLUB: usize = 0x244; // 1 byte(s), byte
     pub(crate) const MATCH_DAY: usize = 0x72; // 1 byte(s), byte
@@ -153,7 +153,7 @@ pub(crate) mod staff {
     pub(crate) const SIZE: usize = 0x6e; // the record size (110 bytes)
     pub(crate) const COMMON_NAME: usize = 0xc; // 4 byte(s), int
     pub(crate) const DATE_OF_BIRTH: usize = 0x10; // 8 byte(s), TCMDate
-    pub(crate) const YEAR_OF_BIRTH: usize = 0x18; // 2 byte(s), UInt16
+    pub(crate) const AGE: usize = 0x18; // 2 byte(s): the age in years (read as i8): the year of birth from the file is replaced by the age at the game start (database setup)
     pub(crate) const NATION: usize = 0x1a; // 4 byte(s), int
     pub(crate) const SECOND_NATION: usize = 0x1e; // 4 byte(s), int
     pub(crate) const INT_APPS: usize = 0x22; // 1 byte(s), byte
@@ -183,6 +183,7 @@ pub(crate) mod staff {
     pub(crate) const SPORTSMANSHIP: usize = 0x5c; // 1 byte(s), byte
     pub(crate) const FIRST_NAME: usize = 0x4; // 4 byte(s), int
     pub(crate) const SECOND_NAME: usize = 0x8; // 4 byte(s), int
+    pub(crate) const YEAR_OF_BIRTH: usize = 0x18; // 2 byte(s), UInt16: the year of birth as stored in the file; database setup replaces it with the age (see AGE)
 }
 
 /// Fields of the `bra_nat_third` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `bra_nat_third`.
@@ -220,7 +221,8 @@ pub(crate) mod cup {
     pub(crate) const ROUND_COUNT: usize = 0x3c; // 2 byte(s): Number of rounds (records in ROUND_TABLE / pointers in TIE_TABLES) (inherited from Comp)
     pub(crate) const TEAM_COUNT: usize = 0x3e; // 2 byte(s): Number of teams in TEAM_TABLE +0xa7 (inherited from Comp)
     pub(crate) const YEAR: usize = 0x40; // 2 byte(s): Season year of the competition; round dates store a year offset relative to it (inherited from Comp)
-    pub(crate) const COMP_TYPE: usize = 0x42; // 1 byte(s): Competition type code (1 league, 2 cup, 4 ...), used by club records and to pick which matches a fixture slot applies to (inherited from Comp)
+    pub(crate) const CLUB_SIDES: usize = 0x42; // 1 byte(s): 1 = played by club sides (b2 of Cup_Stage::Cup_Stage; the competition type is +0x43, 1 = cup)
+    pub(crate) const COMP_TYPE: usize = 0x43; // 1 byte(s): competition type: 1 = cup, 2 = league (inherited from Comp)
     pub(crate) const STAGE_INDEX: usize = 0x44; // 1 byte(s): Index of this stage inside its parent competition; 0xff for a top-level competition (inherited from Comp)
     pub(crate) const SEASON_SET_UP: usize = 0x45; // 4 byte(s): Set once the season's entrants and fixture tree are built; rounds are not drawn or set up while 0, cleared at season start (inherited from Comp)
     pub(crate) const SUBSTITUTES_NAMED: usize = 0x49; // 1 byte(s): Number of substitutes named on the bench (e.g. 7) (inherited from Comp)
@@ -679,6 +681,8 @@ pub(crate) mod non_player {
     pub(crate) const CURRENT_ABILITY: usize = 0x4; // 2 byte(s), UInt16
     pub(crate) const POTENTIAL_ABILITY: usize = 0x6; // 2 byte(s), UInt16
     pub(crate) const HOME_REPUTATION: usize = 0x8; // 2 byte(s), UInt16
+    pub(crate) const INTERFERENCE: usize = 0x16; // 1 byte(s), sbyte
+    pub(crate) const YOUNGSTERS: usize = 0x22; // 1 byte(s), sbyte
 }
 
 /// `TPreferences` record. [pt] Registro `TPreferences`.

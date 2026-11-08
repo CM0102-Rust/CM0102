@@ -78,14 +78,14 @@ unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: u
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa, clube),
         || staff_is_listed_by_request(pessoa, clube));
-    PLACAR.record(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
 unsafe extern "C" fn comparar_player_attribute_rating(jogador: usize, valor: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%)(jogador, valor);
     let n = player_attribute_rating(jogador, valor);
-    PLACAR.record(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
     r
 }
 
@@ -97,6 +97,6 @@ unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: usize) -> u
     // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro: a região volta entre os lados
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1)], || o(clube),
         || database_club_has_reserve_squad(clube));
-    PLACAR.record(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

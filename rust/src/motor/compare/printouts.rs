@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `pick_random_pundit` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] O comparador: lado a lado nos cabeçalhos das duas listas (o cursor) e no sorteio, e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, clube: usize, kind: u32, nacao: i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, club: usize, kind: u32, nation: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(IDX_PICK_RANDOM_PUNDIT);
     let mut regions = Vec::new();
     for l in [read_usize(this), read_usize(this + 4)] {
@@ -17,10 +17,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, 
     regions.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regions,
-        || o(this, clube, kind, nacao),
-        || crate::rng::without_counting(|| pick_random_pundit(this, clube, kind, nacao)),
+        || o(this, club, kind, nation),
+        || crate::rng::without_counting(|| pick_random_pundit(this, club, kind, nation)),
     );
-    PLACAR.record(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", clube, kind as i8, nacao, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", club, kind as i8, nation, r, mo, n, mr));
     r
 }
 
@@ -40,5 +40,5 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, kin
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, kind, id, name, mark), || get_pundit_name(this, kind, id, name, mark));
-    PLACAR.record(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", kind as i8, id as i16, mo, mr));
+    SCOREBOARD.record(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", kind as i8, id as i16, mo, mr));
 }

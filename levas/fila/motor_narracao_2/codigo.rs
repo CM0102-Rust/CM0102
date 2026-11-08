@@ -526,7 +526,7 @@ unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, e: usize, m
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(e, 14), (t + 0x30, 12 * 14)]);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, e, m), || crate::rng::without_counting(|| combine_with_previous(t, e, m)));
-    PLACAR.record(igual && r == n, || format!("combine_with_previous({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", core::ptr::read_unaligned(e as *const u16), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("combine_with_previous({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", core::ptr::read_unaligned(e as *const u16), r, n, mo, mr));
     r
 }
 
@@ -540,7 +540,7 @@ unsafe extern "thiscall" fn comparar_context_commentary(m: usize, lado: u32, eve
         reg.push((saida as usize, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m, lado, evento, saida), || crate::rng::without_counting(|| context_commentary(m, lado, evento, saida)));
-    PLACAR.record(igual && r == n, || format!("context_commentary({}, {:#x}) original={} rust={} {:x?} x {:x?}", lado as u8, evento as u16, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("context_commentary({}, {:#x}) original={} rust={} {:x?} x {:x?}", lado as u8, evento as u16, r, n, mo, mr));
     r
 }
 
@@ -578,6 +578,6 @@ unsafe extern "thiscall" fn construct_match_player(j: usize) -> usize {
 unsafe extern "thiscall" fn comparar_construct_match_player(j: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(j, 0x1bc)], || o(j), || construct_match_player(j));
-    PLACAR.record(igual && r == n, || format!("construct_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("construct_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));
     r
 }

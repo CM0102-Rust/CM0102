@@ -100,8 +100,8 @@ pub(crate) const HOST_COUNTRY_TABLE: [(u16, u8, u32); 281] = [
 /// depois o dia da decisão de cada entrada anda um sorteio de −35 a +34 (0x90cfc0(70)); a entrada que não é padrão
 /// fixa (−3) e tem segunda ou terceira candidatura completa leva a caixa (linha 0x226) e perde as duas.
 pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
-    let definir: unsafe extern "thiscall" fn(*mut crate::data::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_SET);
-    let mut d = crate::data::Data { dia: 40, ano: 1972, bissexto: 1 };
+    let definir: unsafe extern "thiscall" fn(*mut crate::date::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_SET);
+    let mut d = crate::date::Data { dia: 40, ano: 1972, bissexto: 1 };
     for &(off, t, v) in HOST_COUNTRY_TABLE.iter() {
         let e = read_u32_as_usize(this) + off as usize;
         match t {
@@ -407,7 +407,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
     let europeias: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_HOSTCOUNTRY_PICK_EUROPEAN_FINAL_HOSTS);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let noticia: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_HOSTCOUNTRY_POST_HOST_NEWS);
+    let news: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_HOSTCOUNTRY_POST_HOST_NEWS);
     let n = read_u16(this + 4) as i16;
     let start = read_u32(this) as usize;
     let end = start.wrapping_add((n as i32 * 0x22 - 0x22) as usize);
@@ -465,7 +465,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
         }
         sort(read_u32(this) as usize, read_u16(this + 4) as i16 as i32, 0x22, 0x5fb3f0);
     }
-    noticia(this, l);
+    news(this, l);
     destroy(l);
 }
 

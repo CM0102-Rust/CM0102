@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn player_needs_work_permit(this: usize, jogador: usize
 unsafe extern "thiscall" fn comparar_fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(t as usize, 42)], || o(this, partida, t, so_a_principal), || fill_squad_restrictions(this, partida, t, so_a_principal));
-    PLACAR.record(igual, || format!("fill_squad_restrictions({:x}, {}) {:x?} x {:x?}", partida, so_a_principal, mo, mr));
+    SCOREBOARD.record(igual, || format!("fill_squad_restrictions({:x}, {}) {:x?} x {:x?}", partida, so_a_principal, mo, mr));
 }
 
 /// Comparador: lado a lado pela saída (6 bytes) e pelo aviso (0x100 bytes, com `msg`), e pela devolução. A 0x8968f0 pode
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_check_matchday_squad_limit
         n += 1;
     }
     let (r, c, igual, mo, mr) = crate::comparison::side_by_side(&regioes[..n], || o(this, clube, partida, msg, jogadores, nao_usado, saida), || transfer_manager_check_matchday_squad_limit(this, clube, partida, msg, jogadores, nao_usado, saida));
-    PLACAR.record(igual && r == c, || format!("transfer_manager_check_matchday_squad_limit(clube {:x}, partida {:x}) original={} rust={} {:x?} x {:x?}", clube, partida, r, c, mo, mr));
+    SCOREBOARD.record(igual && r == c, || format!("transfer_manager_check_matchday_squad_limit(clube {:x}, partida {:x}) original={} rust={} {:x?} x {:x?}", clube, partida, r, c, mo, mr));
     r
 }
 
@@ -236,6 +236,6 @@ unsafe extern "thiscall" fn comparar_player_needs_work_permit(this: usize, jogad
     }
     let r = o(this, jogador, clube, ignorar_a_dada);
     let n = player_needs_work_permit(this, jogador, clube, ignorar_a_dada);
-    PLACAR.record(r == n, || format!("player_needs_work_permit(jogador {}, clube {:x}, {}) original={} rust={}", cpr1_d(jogador), clube, ignorar_a_dada, r, n));
+    SCOREBOARD.record(r == n, || format!("player_needs_work_permit(jogador {}, clube {:x}, {}) original={} rust={}", cpr1_d(jogador), clube, ignorar_a_dada, r, n));
     r
 }

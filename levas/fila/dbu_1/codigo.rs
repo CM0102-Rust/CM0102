@@ -89,7 +89,7 @@ unsafe extern "C" fn comparar_database_format_name_from_strings(nome: usize, sob
     let n = (tamanho as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma),
         || database_format_name_from_strings(nome, sobrenome, comum, texto, tamanho, forma));
-    PLACAR.record(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
     r
 }
 
@@ -151,7 +151,7 @@ unsafe extern "C" fn comparar_database_get_job_name(cargo: u32, curto: u32, maiu
     let reg = if genero != 0 { &regioes[..] } else { &regioes[..1] };
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(cargo, curto, maiuscula, genero),
         || database_get_job_name(cargo, curto, maiuscula, genero));
-    PLACAR.record(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
     r
 }
 
@@ -182,6 +182,6 @@ unsafe extern "C" fn database_get_language_name(idioma: u32) -> usize {
 unsafe extern "C" fn comparar_database_get_language_name(idioma: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(%%I2%%);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae21d4, 100)], || o(idioma), || database_get_language_name(idioma));
-    PLACAR.record(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
     r
 }

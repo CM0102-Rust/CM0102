@@ -74,12 +74,12 @@ unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, pessoa: usiz
     if fora {
         o(this, pessoa, noticia);
         let ok = *(e as *const u8) == 0xff && cpv10_d(physical_record_of_id(this, cpv10_d(pessoa)) + 0xe) == -1;
-        PLACAR.record(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", pessoa, noticia, *(e as *const u8), cpv10_d(physical_record_of_id(this, cpv10_d(pessoa)) + 0xe)));
+        SCOREBOARD.record(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", pessoa, noticia, *(e as *const u8), cpv10_d(physical_record_of_id(this, cpv10_d(pessoa)) + 0xe)));
         return;
     }
     let reg = [(e, 1), (r + 0xe, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, noticia), || end_player_injury(this, pessoa, noticia));
-    PLACAR.record(igual, || format!("end_player_injury({:x}, {}) {:x?} x {:x?}", pessoa, noticia, mo, mr));
+    SCOREBOARD.record(igual, || format!("end_player_injury({:x}, {}) {:x?} x {:x?}", pessoa, noticia, mo, mr));
 }
 
 /// { 0x72bbf0 } (stdcall, ret 0xc, media.cpp, quadro SEH sem destrutor): `media_queue_player_apology_news(jogador,
@@ -185,10 +185,10 @@ unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, tecnico: usize) {
         let noticias = news_box_regions(this, caixa);
         let ok = cpv10_d(caixa + 4) == primeira && cpv10_d(caixa + 8) == 0
             && noticias[1..].iter().all(|&(n, _)| cpv10_d(n) == 0 && cpv10_d(n + 4) == 1);
-        PLACAR.record(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", tecnico, (primeira, cpv10_d(caixa + 4), cpv10_d(caixa + 8))));
+        SCOREBOARD.record(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", tecnico, (primeira, cpv10_d(caixa + 4), cpv10_d(caixa + 8))));
         return;
     }
     let reg = news_box_regions(this, caixa);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tecnico), || clear_inbox(this, tecnico));
-    PLACAR.record(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", tecnico, mo, mr));
+    SCOREBOARD.record(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", tecnico, mo, mr));
 }

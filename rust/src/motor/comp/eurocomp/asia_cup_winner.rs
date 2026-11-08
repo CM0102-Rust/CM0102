@@ -56,19 +56,19 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 8, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + 0x40) as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this, 8, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + league::YEAR) as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + 0xc) + 0xc, stage);
+    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + 0xc, stage);
     soltar(list);
     soltar(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
+    let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 0xc);
     if f == 0 {
         return show_error_at(0x9870f8, 0x32c);
     }
     build(f, 0);
-    write_u32_from_usize(this + 0x30, 3);
+    write_u32_from_usize(this + league::CURRENT_STAGE, 3);
 }
 
 // simplification: allocates the stage and sets up the round: does not run twice. Original only; the plan: the stage at [+0xc][3] with 8 teams,
@@ -82,12 +82,12 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
 /// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x328; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
 /// das duas zonas), as finais (0x40e030: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize) {
-    let f = read_u32_as_usize(this + 0x30) as i32;
-    if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
+    let f = read_u32_as_usize(this + cup::CURRENT_STAGE) as i32;
+    if f >= (read_u32_as_usize(this + cup::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(0x987b60, 0x328);
     }
     let f = f + 1;
-    write_u32_from_usize(this + 0x30, f as usize);
+    write_u32_from_usize(this + cup::CURRENT_STAGE, f as usize);
     if f == 1 {
         crate::comparison::branch("cqt_13 finais da recopa asiatica");
         let finais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ASIACUPWINNER_CREATE_FINALS_STAGE);
@@ -107,8 +107,8 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize
 pub(crate) unsafe fn asian_cup_winners_finalists(this: usize) -> [usize; 4] {
     let mut v = [0usize; 4];
     let mut n = 0i16;
-    let teams = read_i16(this + 0x3e);
-    for tabela in [read_u32_as_usize(this + 0xa7), read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xa7)] {
+    let teams = read_i16(this + cup::TEAM_COUNT);
+    for tabela in [read_u32_as_usize(this + cup::TEAM_TABLE), read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) + 0xa7)] {
         let mut i = 0i16;
         while i < teams && n < 4 {
             let e = tabela + i as usize * 6;
@@ -158,13 +158,13 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 4, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + 0x40) as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this, 4, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + 0xc) + 4, stage);
+    write_u32_from_usize(read_u32_as_usize(this + cup::STAGES) + 4, stage);
     soltar(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + 4);
     if f == 0 {
         return show_error_at(0x987b60, 0x375);
     }

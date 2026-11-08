@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn comparar_find_next_fixture(this: usize, pano: *mut u
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg,
         || o(this, pano, pdia, pfatia, adiante, comp, fase, clube_a, clube_b, a9, a10, a11),
         || find_next_fixture(this, pano, pdia, pfatia, adiante, comp, fase, clube_a, clube_b, a9, a10, a11));
-    PLACAR.record(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         antes, adiante, comp, fase, clube_a, clube_b, r, n, mo, mr));
     r
 }
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn comparar_friendly_international_date_resolve(this: u
     let o = original_fn::<usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 11)], || call_original_with_year(o, this, ano),
         || friendly_international_date_resolve(this, ano));
-    PLACAR.record(igual /* o eax é lixo de pilha: só a memória */, || format!("friendly_international_date_resolve({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    SCOREBOARD.record(igual /* o eax é lixo de pilha: só a memória */, || format!("friendly_international_date_resolve({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         this, ano, r, n, mo, mr));
     r
 }

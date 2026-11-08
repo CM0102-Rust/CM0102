@@ -155,6 +155,6 @@ unsafe extern "thiscall" fn comparar_build_cash_offer_option(this: usize, clube:
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut usize, *mut u8, i32) -> u32>(%%I2%%)(this, clube, jogador, saida, atracao, valor);
     let oferta = *saida;
     let ok = r == 1 && oferta != 0 && core::ptr::read_unaligned((oferta + 0x1b) as *const i32) == valor && *atracao == 0x32;
-    PLACAR.record(ok, || format!("build_cash_offer_option(jogador {:x}, valor {}) devolveu {}, oferta {:x}", cpp7_d(jogador), valor, r, oferta));
+    SCOREBOARD.record(ok, || format!("build_cash_offer_option(jogador {:x}, valor {}) devolveu {}, oferta {:x}", cpp7_d(jogador), valor, r, oferta));
     r
 }

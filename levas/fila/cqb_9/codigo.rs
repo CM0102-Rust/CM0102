@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn comparar_serve_international_bans(this: usize, time:
             erro = Some(format!("pessoa {} contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{}", id, contador, j.contador, antes, j.cumprida, jogos, dias));
         }
     }
-    PLACAR.record(erro.is_none(), || format!("serve_international_bans(time {:#x}, {} pessoas): {}", time, plano.len(), erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("serve_international_bans(time {:#x}, {} pessoas): {}", time, plano.len(), erro.clone().unwrap_or_default()));
 }
 
 /// O plano do recurso: a entrada da pessoa no órgão da `regra` (0x7e82e0 sem criar), a suspensão (20 bytes em
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn comparar_apply_appeal_result(this: usize, id: u32, r
     let s = r.suspensao;
     let (jogos, dias) = (*(s as *const u8), cqb9_w(s + 2));
     let ok = if r.solta { jogos == 0xff && dias == -1 } else { jogos == r.jogos && dias == r.dias };
-    PLACAR.record(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, regra as i8, jogos, dias, r.jogos, r.dias, r.solta));
+    SCOREBOARD.record(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, regra as i8, jogos, dias, r.jogos, r.dias, r.solta));
 }
 
 /// A vaga `vaga` (byte com sinal) da suspensão da pessoa no registro de 29 bytes ([this+0x14]: 5 bytes por vaga): o
@@ -221,6 +221,6 @@ unsafe extern "thiscall" fn comparar_get_slot_text(this: usize, pessoa: usize, v
     }
     let r = o(this, pessoa, vaga, saida, tamanho);
     let n = get_slot_text(this, pessoa, vaga, saida, tamanho);
-    PLACAR.record(r == n, || format!("get_slot_text(pessoa {:#x}, vaga {}) original={} rust={}", pessoa, vaga as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_slot_text(pessoa {:#x}, vaga {}) original={} rust={}", pessoa, vaga as i8, r, n));
     r
 }

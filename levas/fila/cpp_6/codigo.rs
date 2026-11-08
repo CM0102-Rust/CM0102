@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn comparar_transfer_list_player(this: usize, jogador: 
     if marca {
         let c = get_contract(jogador);
         let ok = c != 0 && cpp6_b(c + 0x4e) & 1 != 0 && cpp6_b(c + 0x4f) & 0xf0 == 0x70;
-        PLACAR.record(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", cpp6_d(jogador), c));
+        SCOREBOARD.record(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", cpp6_d(jogador), c));
     }
 }
 
@@ -247,6 +247,6 @@ unsafe extern "thiscall" fn comparar_pay_appearance_money(this: usize, jogador: 
         (r != 0 && cpp6_b(r + 8) as i8 as i32 == jogos && jogos > 0) as u32
     };
     let r = o(this, jogador, jogos, tipo, arg);
-    PLACAR.record(r == esperado, || format!("pay_appearance_money(jogador {:x}, jogos {}, tipo {}) devolveu {}, esperava {}", cpp6_d(jogador), jogos, tipo as u8, r, esperado));
+    SCOREBOARD.record(r == esperado, || format!("pay_appearance_money(jogador {:x}, jogos {}, tipo {}) devolveu {}, esperava {}", cpp6_d(jogador), jogos, tipo as u8, r, esperado));
     r
 }

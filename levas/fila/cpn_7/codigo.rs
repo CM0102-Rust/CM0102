@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_scout_covers_nation(this: usize, nacao: usi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let reg = [(this + 0x18c, 0x15)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nacao), || scout_covers_nation(this, nacao));
-    PLACAR.record(igual && r == n, || format!("scout_covers_nation(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("scout_covers_nation(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: us
         && (l4 == 0 || cpn7_d(l4 + 0xa) == cpn7_d(l4 + 2))
         && itens8 == esperado8
         && (v == 0 || (cpn7_d(v + 0x10) == 0 && cpn7_b(v + 0x18) == 0));
-    PLACAR.record(ok, || format!("remove_friendly_match({:#x}, {}) itens {} e {} (esperava {} e {}), vaga {:#x}", jogo, limpar_vaga, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
+    SCOREBOARD.record(ok, || format!("remove_friendly_match({:#x}, {}) itens {} e {} (esperava {} e {}), vaga {:#x}", jogo, limpar_vaga, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
     r
 }
 
@@ -185,5 +185,5 @@ unsafe extern "thiscall" fn comparar_init_banned_nation_pairs(this: usize) {
         let esperado = [cpn7_d(0x9cf354), cpn7_d(0x9cf4f8), cpn7_d(0x9cf358), usize::MAX, cpn7_d(0x9cf508), cpn7_d(0x9cf4f8), cpn7_d(0x9cf404), cpn7_d(0x9cf484)];
         cpn7_b(this + 0x3506) == 4 && (0..8).all(|k| cpn7_d(v + 4 * k) == esperado[k])
     };
-    PLACAR.record(ok, || format!("init_banned_nation_pairs: conta {} vetor {:#x}", cpn7_b(this + 0x3506), v));
+    SCOREBOARD.record(ok, || format!("init_banned_nation_pairs: conta {} vetor {:#x}", cpn7_b(this + 0x3506), v));
 }

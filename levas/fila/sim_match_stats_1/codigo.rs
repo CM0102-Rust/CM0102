@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_get_club_league_stat(estat: usize, jogador:
         return r;
     }
     let n = get_club_league_stat(estat, jogador, campo);
-    PLACAR.record(r.to_bits() == n.to_bits(), || format!("get_club_league_stat({}) original={} rust={}", campo, r, n));
+    SCOREBOARD.record(r.to_bits() == n.to_bits(), || format!("get_club_league_stat({}) original={} rust={}", campo, r, n));
     r
 }
 
@@ -107,13 +107,13 @@ unsafe extern "thiscall" fn comparar_fixture_entry_matches(estat: usize, k: i32,
     }
     let r = o(estat, k, a, b, data_a, data_b);
     let n = fixture_entry_matches(estat, k, a, b, data_a, data_b);
-    PLACAR.record(r == n, || format!("fixture_entry_matches({}, {}, {}, {}, {}) original={} rust={}", k, a, b, data_a, data_b, r, n));
+    SCOREBOARD.record(r == n, || format!("fixture_entry_matches({}, {}, {}, {}, {}) original={} rust={}", k, a, b, data_a, data_b, r, n));
     r
 }
 
 unsafe extern "stdcall" fn comparar_match_stats_get_record_bucket(jogo: usize, registro: usize) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I2%%)(jogo, registro);
     let n = match_stats_get_record_bucket(jogo, registro);
-    PLACAR.record(r == n, || format!("match_stats_get_record_bucket original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("match_stats_get_record_bucket original={} rust={}", r, n));
     r
 }

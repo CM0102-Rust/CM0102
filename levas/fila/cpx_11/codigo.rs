@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn comparar_pay_prize_money(liga: usize) {
     antes.write_back();
     o(liga);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(mo == mr, || format!("pay_prize_money({:x}) +0xe1 {} n {} original={:x?} rust={:x?}", liga, e1, n, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("pay_prize_money({:x}) +0xe1 {} n {} original={:x?} rust={:x?}", liga, e1, n, mo, mr));
 }
 
 /// { 0x686940 } (thiscall, ret 0x18, league.cpp): `League::update_staff_records_for_status(clube, situação, fase,

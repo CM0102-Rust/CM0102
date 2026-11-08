@@ -83,7 +83,7 @@ unsafe fn compare_south_american_cup_schedule(nome: &str, fase: u32, rodadas: *m
     if f > limit {
         // ponytail: acima do mata-mata nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
-        PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, f, a));
+        SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, f, a));
         return a;
     }
     let (mut r2, mut e2) = (*rodadas, *extra);
@@ -105,7 +105,7 @@ unsafe fn compare_south_american_cup_schedule(nome: &str, fase: u32, rodadas: *m
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
     }
-    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, f, saidas, *rodadas, r2, tabela));
+    SCOREBOARD.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, f, saidas, *rodadas, r2, tabela));
     a
 }
 
@@ -234,6 +234,6 @@ unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: us
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && lista, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, lista, k));
+    SCOREBOARD.record(igual && a == b && lista, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, lista, k));
     a
 }

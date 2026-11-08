@@ -250,7 +250,7 @@ unsafe extern "C" fn comparar_league_compare_table_rows(a: usize, b: usize) -> i
     // a comparação particular de [0xb67a00] (se houver) roda nos dois lados: só lê as linhas
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = league_compare_table_rows(a, b);
-    PLACAR.record(r == n, || format!("league_compare_table_rows original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("league_compare_table_rows original={} rust={}", r, n));
     r
 }
 
@@ -258,7 +258,7 @@ unsafe extern "stdcall" fn comparar_league_build_round_robin_grid(grade: *const 
     let o = original_fn::<unsafe extern "stdcall" fn(*const *mut i32, i32) -> u32>(%%I1%%);
     let regioes: Vec<(usize, usize)> = (1..=n.max(0)).map(|i| (*grade.offset(i as isize) as usize + 4, (n.max(1) as usize - 1) * 4)).collect();
     let (r, s, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(grade, n), || league_build_round_robin_grid(grade, n));
-    PLACAR.record(igual && r == s, || format!("league_build_round_robin_grid({}) {:x?} x {:x?}", n, mo, mr));
+    SCOREBOARD.record(igual && r == s, || format!("league_build_round_robin_grid({}) {:x?} x {:x?}", n, mo, mr));
     r
 }
 
@@ -266,6 +266,6 @@ unsafe extern "thiscall" fn comparar_final_day_margin_needed(liga: usize, linha:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u8>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(saida as usize, 1)], || o(liga, linha, saida),
         || final_day_margin_needed(liga, linha, saida));
-    PLACAR.record(igual && r == n, || format!("final_day_margin_needed original={:#x} rust={:#x} {:x?} x {:x?}", r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("final_day_margin_needed original={:#x} rust={:#x} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, pess
         || o(this, pessoa),
         || crate::rng::without_counting(|| get_contract_satisfaction(this, pessoa)),
     );
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         format!("get_contract_satisfaction(pessoa {:#x}) original={} {:x?} rust={} {:x?}", if pessoa != 0 { cpw1_d(pessoa) } else { 0 }, r, mo, n, mr)
     });
     r

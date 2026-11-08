@@ -125,7 +125,7 @@ unsafe extern "stdcall" fn comparar_national_teams_remove_duplicate_squad_entrie
     }
     let [a, b] = national_squad_slots(nacao);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 200), (b, 200)], || o(nacao), || national_teams_remove_duplicate_squad_entries(nacao));
-    PLACAR.record(igual, || format!("national_teams_remove_duplicate_squad_entries {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("national_teams_remove_duplicate_squad_entries {:x?} x {:x?}", mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_find_selection_slot(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn comparar_find_selection_slot(tatica: usize, clube: u
         return r;
     }
     let n = find_selection_slot(tatica, clube, pessoa, time);
-    PLACAR.record(r == n, || format!("find_selection_slot(time {}) original={} rust={}", time, r, n));
+    SCOREBOARD.record(r == n, || format!("find_selection_slot(time {}) original={} rust={}", time, r, n));
     r
 }
 
@@ -146,6 +146,6 @@ unsafe extern "thiscall" fn comparar_pick_former_international_pundit(this: usiz
     // o comentarista sai só do sorteio
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, clube, assunto),
         || crate::rng::without_counting(|| pick_former_international_pundit(this, clube, assunto)));
-    PLACAR.record(igual && r == n, || format!("pick_former_international_pundit {:#x} x {:#x} {:x?} x {:x?}", r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("pick_former_international_pundit {:#x} x {:#x} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

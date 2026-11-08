@@ -15,7 +15,7 @@ pub(crate) unsafe fn select_european_super_cup_teams(this: usize) -> (i32, i32) 
     if !set_team_slot(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    let cup = if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
+    let cup = if core::ptr::read_unaligned((this + cup::YEAR) as *const i16) == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
     let b = latest_placed_club(cup, 0); // cqq11: o campeão da Copa da UEFA
     if !set_team_slot(l, 1, b, F, 0xd5) {
         return (0, 0);

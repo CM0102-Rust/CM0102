@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn comparar_pay_former_club_fee_cuts(this: usize, o: us
     });
     let entregas = FORMER_CLUB_FEE_DELIVERIES;
     let igual = igual || (entregas != 0 && mo.0[0] == mr.0[0]);
-    PLACAR.record(igual, || format!("pay_former_club_fee_cuts(oferta {:#x}) entregas={} original={:x?} rust={:x?}", o, entregas, mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_former_club_fee_cuts(oferta {:#x}) entregas={} original={:x?} rust={:x?}", o, entregas, mo, mr));
 }
 
 /// { 0x8cb0f0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::pay_next_sale_percentage(pessoa, oferta)`,
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn comparar_pay_next_sale_percentage(this: usize, p: us
         n
     });
     let igual = r == n && (igual || (r != 0 && mo.0[3..] == mr.0[3..]));
-    PLACAR.record(igual, || format!("pay_next_sale_percentage(pessoa {:#x}, oferta {:#x}) original={} {:x?} rust={} {:x?}", p, o, r, mo, n, mr));
+    SCOREBOARD.record(igual, || format!("pay_next_sale_percentage(pessoa {:#x}, oferta {:#x}) original={} {:x?} rust={} {:x?}", p, o, r, mo, n, mr));
     r
 }
 

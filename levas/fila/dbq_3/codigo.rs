@@ -72,7 +72,7 @@ unsafe extern "C" fn staff_get_natural_position_mask(pessoa: usize) -> u32 {
 unsafe extern "C" fn comparar_staff_get_natural_position_mask(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(pessoa);
     let n = staff_get_natural_position_mask(pessoa);
-    PLACAR.record(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", pessoa, r, n));
     r
 }
 
@@ -94,7 +94,7 @@ unsafe extern "C" fn club_count_squad_with_position_mask(clube: usize, mascara: 
 unsafe extern "C" fn comparar_club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%)(clube, mascara);
     let n = club_count_squad_with_position_mask(clube, mascara);
-    PLACAR.record(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
+    SCOREBOARD.record(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
     r
 }
 
@@ -220,6 +220,6 @@ unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(pessoa: usize, clube
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(pessoa, clube),
         || crate::rng::without_counting(|| staff_pick_favoured_team_mate(pessoa, clube)));
-    PLACAR.record(igual && r == n, || format!("staff_pick_favoured_team_mate({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("staff_pick_favoured_team_mate({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }

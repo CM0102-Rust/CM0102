@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn comparar_add_shortlist_entry(this: usize, pessoa: us
     let (d0, d1) = (if tinha { n0 } else { n0 + 1 }, if tinha { n1 } else { n1 + 1 });
     let achado = bsearch(chave.as_ptr(), cpo9_d(this), cpo9_i(this + 0x10), 8, 0x757ea0) != 0;
     let ok = cpo9_i(this + 0x10) == d0 && cpo9_i(this + 0x14) == d1 && cpo9_b(r) == esperado && (achado || clube == 0);
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         format!("add_shortlist_entry({:#x}, {:#x}) tinha={} contas {}/{} -> {}/{} nibble {:#x} -> {:#x} (esperado {:#x})",
             pessoa, clube, tinha, n0, n1, cpo9_i(this + 0x10), cpo9_i(this + 0x14), nib, cpo9_b(r), esperado)
     });
@@ -276,7 +276,7 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_predict_selling_club_respo
         || o(vendedor, jogador, oferta, comprador, pedido, emprestimo),
         || crate::rng::without_counting(|| shortlist_manager_predict_selling_club_response(vendedor, jogador, oferta, comprador, pedido, emprestimo)),
     );
-    PLACAR.record(igual && r == n, || format!("shortlist_manager_predict_selling_club_response({:#x}, {:#x}, {}, {:#x}, {}, {}) original={} rust={} {:x?} x {:x?}", vendedor, jogador, oferta, comprador, pedido, emprestimo as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_predict_selling_club_response({:#x}, {:#x}, {}, {:#x}, {}, {}) original={} rust={} {:x?} x {:x?}", vendedor, jogador, oferta, comprador, pedido, emprestimo as u8, r, n, mo, mr));
     r
 }
 
@@ -290,5 +290,5 @@ unsafe extern "thiscall" fn comparar_transfer_manager_get_loan_period(this: usiz
         || o(this, clube, a2, jogador, ini_mes, ini_ano, mes, ano),
         || crate::rng::without_counting(|| transfer_manager_get_loan_period(this, clube, a2, jogador, ini_mes, ini_ano, mes, ano)),
     );
-    PLACAR.record(igual, || format!("transfer_manager_get_loan_period({:#x}, {:#x}) {:x?} x {:x?}", clube, jogador, mo, mr));
+    SCOREBOARD.record(igual, || format!("transfer_manager_get_loan_period({:#x}, {:#x}) {:x?} x {:x?}", clube, jogador, mo, mr));
 }

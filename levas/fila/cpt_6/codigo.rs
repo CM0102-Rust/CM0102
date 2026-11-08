@@ -158,7 +158,7 @@ unsafe extern "C" fn comparar_game_update_nation_coefficients() {
     if cpt6_b(0x9cd218) != 0 {
         erro = Some(format!("[0x9cd218] = {}", cpt6_b(0x9cd218)));
     }
-    PLACAR.record(erro.is_none(), || format!("game_update_nation_coefficients(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("game_update_nation_coefficients(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
 }
 
 /// { 0x5d6250 } (cdecl, game.cpp): `is_player_regen_day(dia)`: 1 nos dias 0, 80, 173 e 250 do ano (a busca das
@@ -173,7 +173,7 @@ unsafe extern "C" fn is_player_regen_day(dia: u32) -> u32 {
 unsafe extern "C" fn comparar_is_player_regen_day(dia: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(%%I1%%)(dia);
     let n = is_player_regen_day(dia);
-    PLACAR.record(r as u8 == n as u8, || format!("is_player_regen_day({}) {} x {}", dia as u16, r as u8, n as u8));
+    SCOREBOARD.record(r as u8 == n as u8, || format!("is_player_regen_day({}) {} x {}", dia as u16, r as u8, n as u8));
     r
 }
 
@@ -197,6 +197,6 @@ unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
 unsafe extern "C" fn comparar_clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(a, b, min, max);
     let n = clamp_char_sum(a, b, min, max);
-    PLACAR.record(r as u16 == n as u16, || format!("clamp_char_sum({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));
+    SCOREBOARD.record(r as u16 == n as u16, || format!("clamp_char_sum({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));
     r
 }

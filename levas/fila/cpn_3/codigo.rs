@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: 
 unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this: usize, jogador: usize, clube: usize, contrato: usize, tipo: u32, modo: u32, peso: f32) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(%%I0%%)(this, jogador, clube, contrato, tipo, modo, peso);
     let n = rate_player_form_for_story(this, jogador, clube, contrato, tipo, modo, peso);
-    PLACAR.record(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
+    SCOREBOARD.record(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
         || format!("rate_player_form_for_story(tipo {}, modo {}, peso {}) {} x {}", tipo as u16 as i16, modo as u8, peso, o, n));
     o
 }
@@ -284,6 +284,6 @@ unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tecnico: usize
     } else {
         r == 0 || (*conta as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| cpn3_d(r + i * MEDIA_NEWS_ITEM_SIZE + 0xd6) == id))
     };
-    PLACAR.record(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", categoria as u8, if r == 0 { 0 } else { *conta }, ids));
+    SCOREBOARD.record(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", categoria as u8, if r == 0 { 0 } else { *conta }, ids));
     r
 }

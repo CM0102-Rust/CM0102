@@ -87,7 +87,7 @@ unsafe fn cqv12_comparar(nome: &str, this: usize, zera_45: bool, o: impl FnOnce(
     let r = o();
     let novo = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let ok = cqv12_d(this + 0x4c) == 0 && novo == ano.wrapping_add(1) && (!zera_45 || cqv12_d(this + 0x45) == 0);
-    PLACAR.record(ok, || format!("{}({:#x}): ano {} -> {}, +0x4c {}, +0xba {:#x}, +0x45 {}", nome, this, ano, novo, cqv12_d(this + 0x4c), cqv12_d(this + 0xba), cqv12_d(this + 0x45)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): ano {} -> {}, +0x4c {}, +0xba {:#x}, +0x45 {}", nome, this, ano, novo, cqv12_d(this + 0x4c), cqv12_d(this + 0xba), cqv12_d(this + 0x45)));
     r
 }
 

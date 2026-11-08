@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize, jogo: usiz
     o(this, jogo, grav, lista, nacoes, n, data, desloc);
     let depois = fix_man_list_items(lista);
     let igual = *grav == g && depois.len() == antes.len() + ne && depois[..antes.len()] == antes[..] && fixtures_bytes(&depois[antes.len()..]) == esperado;
-    PLACAR.record(igual, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", jogo, desloc as u8 as i8, *grav, g, depois.len().saturating_sub(antes.len()), ne));
+    SCOREBOARD.record(igual, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", jogo, desloc as u8 as i8, *grav, g, depois.len().saturating_sub(antes.len()), ne));
 }
 
 /// { 0x5ad780 } (thiscall, ret 0xc, fix_man.cpp; quadro SEH da lista nova): `FIXTURE_MANAGER::find_fixture_clashes(jogo,
@@ -418,7 +418,7 @@ unsafe extern "thiscall" fn comparar_find_fixture_clashes(this: usize, jogo: usi
     let nr = find_fixture_clashes(this, jogo, &mut gr, dois_dias);
     let (lo, lr) = (fixtures_bytes(&fix_man_list_items(r)), fixtures_bytes(&fix_man_list_items(nr)));
     let igual = (r == 0) == (nr == 0) && go == gr && lo == lr;
-    PLACAR.record(igual, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", jogo, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
+    SCOREBOARD.record(igual, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", jogo, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
     if nr != 0 {
         let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
         let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);

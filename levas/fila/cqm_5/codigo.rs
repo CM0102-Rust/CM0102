@@ -173,7 +173,7 @@ unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: u32, regist
             ok = ok && tem == (*((nacao + 0x11c) as *const u8) & 4 == 0);
         }
     }
-    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", nome, this, r, cqm5_d(this), cqm5_d(this + 0x2c), cqm5_d(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", nome, this, r, cqm5_d(this), cqm5_d(this + 0x2c), cqm5_d(this + 8)));
     r
 }
 

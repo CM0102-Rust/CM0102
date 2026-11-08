@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn move_to_reserves(this: usize, pessoa: usize, clube: 
 unsafe extern "thiscall" fn comparar_get_squad_placement(this: usize, pessoa: usize, clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, pessoa, clube), || get_squad_placement(this, pessoa, clube));
-    PLACAR.record(igual && r == n, || format!("get_squad_placement({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_squad_placement({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -121,7 +121,7 @@ unsafe fn compare_placement_toggle(i: usize, nome: &str, this: usize, pessoa: us
         return o(this, pessoa, clube);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, pessoa, clube), || toggle_placement_if_in(this, pessoa, clube, de));
-    PLACAR.record(igual && r == n, || format!("{}({:x}, {:x}) lugar {} original={} rust={} {:x?} x {:x?}", nome, pessoa, clube, l, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("{}({:x}, {:x}) lugar {} original={} rust={} {:x?} x {:x?}", nome, pessoa, clube, l, r, n, mo, mr));
     r
 }
 

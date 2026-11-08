@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(t
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && lista, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    SCOREBOARD.record(igual && a == b && lista, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage(this: usiz
     let ultima = f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqt11_d(this + 0x30) as i32;
-    PLACAR.record(depois == if ultima { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    SCOREBOARD.record(depois == if ultima { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// Os 4 das semifinais, na ordem da lista: o 1º do grupo A (a tabela da copa, +0xb1), o 2º do B (a tabela da fase
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(th
     o(this);
     let fase = cqt11_d(cqt11_d(this + 0xc) + 4);
     if fase == 0 {
-        PLACAR.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this));
+        SCOREBOARD.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt11_d(fase + 0xa7);
@@ -278,5 +278,5 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(th
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt11_w(fase + 0x3e) == 4 && cqt11_d(fase + 4) == cqt11_d(this + 4);
-    PLACAR.record(igual, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    SCOREBOARD.record(igual, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }

@@ -52,5 +52,5 @@ unsafe extern "thiscall" fn comparar_discipline_set_slot(this: usize, id: i32, v
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8, u8, u32)>(%%I2%%);
     let a = (*((this + 0x14) as *const usize) as isize + id as isize * 29 + vaga as isize * 5) as usize;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 5)], || o(this, id, vaga, tipo, valor), || discipline_set_slot(this, id, vaga, tipo, valor));
-    PLACAR.record(igual, || format!("discipline_set_slot({}, {}) {:x?} x {:x?}", id, vaga, mo, mr));
+    SCOREBOARD.record(igual, || format!("discipline_set_slot({}, {}) {:x?} x {:x?}", id, vaga, mo, mr));
 }

@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_board_named_players_after_match(this: usize
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10),
         || crate::rng::without_counting(|| board_named_players_after_match(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10)));
-    PLACAR.record(igual && r == n, || format!("board_named_players_after_match(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", clube, *elogio, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("board_named_players_after_match(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", clube, *elogio, r, n, mo, mr));
     r
 }
 
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn get_player_match_rating_verdict(_this: usize, pessoa
 unsafe extern "thiscall" fn comparar_get_player_match_rating_verdict(this: usize, pessoa: usize, partida: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, pessoa, partida);
     let n = get_player_match_rating_verdict(this, pessoa, partida);
-    PLACAR.record(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", pessoa, partida as i32, r as i8, n as i8));
+    SCOREBOARD.record(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", pessoa, partida as i32, r as i8, n as i8));
     r
 }
 
@@ -256,6 +256,6 @@ unsafe extern "stdcall" fn comparar_build_board_player_performance_text(ids: *co
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(saida, 0x200)], || o(ids, vitoria, saida, variante),
         || build_board_player_performance_text(ids, vitoria, saida, variante));
-    PLACAR.record(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", vitoria as u8, variante,
+    SCOREBOARD.record(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", vitoria as u8, variante,
         String::from_utf8_lossy(&mo.0[0].1[..0x40]), String::from_utf8_lossy(&mr.0[0].1[..0x40])));
 }

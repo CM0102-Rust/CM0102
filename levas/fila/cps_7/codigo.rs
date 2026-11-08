@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize, hoje: usi
         m += 1;
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes[..m], || o(this, hoje), || stadium_daily_update(this, hoje));
-    PLACAR.record(igual, || format!("stadium_daily_update(dia {}, ano {}) {:x?} x {:x?}", cps7_w(hoje) as i16, cps7_w(hoje + 2), mo, mr));
+    SCOREBOARD.record(igual, || format!("stadium_daily_update(dia {}, ano {}) {:x?} x {:x?}", cps7_w(hoje) as i16, cps7_w(hoje + 2), mo, mr));
 }
 
 /// { 0x85de20 } (thiscall, ret 8, stadium.cpp): `Stadium::add_booking(estadio, data)`: acrescenta a reserva (id do
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn comparar_add_booking(this: usize, estadio: usize, da
     }
     let regioes = [(this, 0xc), (cps7_d(this), (n + 1) * 12)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, estadio, data), || add_booking(this, estadio, data));
-    PLACAR.record(igual, || format!("add_booking(estadio {:x}, reservas {}) {:x?} x {:x?}", estadio, n, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_booking(estadio {:x}, reservas {}) {:x?} x {:x?}", estadio, n, mo, mr));
 }
 
 /// { 0x85ddb0 } (thiscall, ret 8, stadium.cpp): `Stadium::is_stadium_free_on_date(estadio, data)`: 1 sem lista de
@@ -214,6 +214,6 @@ unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, estadio: usize,
 unsafe extern "thiscall" fn comparar_is_stadium_free_on_date(this: usize, estadio: usize, data: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, estadio, data);
     let n = is_stadium_free_on_date(this, estadio, data);
-    PLACAR.record(r == n, || format!("is_stadium_free_on_date(estadio {:x}) original={} rust={}", estadio, r, n));
+    SCOREBOARD.record(r == n, || format!("is_stadium_free_on_date(estadio {:x}) original={} rust={}", estadio, r, n));
     r
 }

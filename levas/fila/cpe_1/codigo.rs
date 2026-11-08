@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: 
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| lista + 0x16 * i));
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, lista, n, band, excluir),
         || crate::rng::without_counting(|| find_friendly_opponent(this, clube, lista, n, band, excluir)));
-    PLACAR.record(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, band {}) original={:x} rust={:x} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, band {}) original={:x} rust={:x} {:x?} x {:x?}",
         clube, lista, n, band as i8, r, m, mo, mr));
     r
 }
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, clube: usiz
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| cpe1_d(ordenados + 4 * i)));
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, ordenados, n, faixa_max, nacao),
         || crate::rng::without_counting(|| find_tour_opponent(this, clube, ordenados, n, faixa_max, nacao)));
-    PLACAR.record(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, band {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, band {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         clube, ordenados, n, faixa_max as i8, nacao, r, m, mo, mr));
     r
 }

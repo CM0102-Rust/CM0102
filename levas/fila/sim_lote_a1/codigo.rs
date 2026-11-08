@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_can_sign_player(gerente: usize, clube: usiz
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(gerente, clube, a2, jogador, a4, a5, saida),
         || can_sign_player(gerente, clube, a2, jogador, a4, a5, saida));
-    PLACAR.record(igual && r == n, || format!("can_sign_player(a5 {}) original={} rust={} {:x?} x {:x?}", a5, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("can_sign_player(a5 {}) original={} rust={} {:x?} x {:x?}", a5, r, n, mo, mr));
     r
 }
 
@@ -153,6 +153,6 @@ unsafe extern "thiscall" fn comparar_get_exchange_offers_for_player(gerente: usi
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(gerente, jogador, saida),
         || get_exchange_offers_for_player(gerente, jogador, saida));
-    PLACAR.record(igual && r == n, || format!("get_exchange_offers_for_player original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_exchange_offers_for_player original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

@@ -438,7 +438,7 @@ unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32
     let (r, m, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regioes, || o(),
         || crate::rng::without_counting(|| database_generate_extra_non_playing_staff()));
     let onde = first_memory_difference(&mo, &mr);
-    PLACAR.record(igual && r == m, || match onde {
+    SCOREBOARD.record(igual && r == m, || match onde {
         Some((a, x, y)) => format!("database_generate_extra_non_playing_staff: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
         None => format!("database_generate_extra_non_playing_staff: original={} rust={}", r, m),
     });

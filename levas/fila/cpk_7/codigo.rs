@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u
 unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%)(this, pessoa, clube, idioma, pelo_contrato);
     let n = get_language_fluency(this, pessoa, clube, idioma, pelo_contrato);
-    PLACAR.record(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
+    SCOREBOARD.record(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
     r
 }
 
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize, pessoa: u
     }
     let par = cpk7_d(this + 0xc).wrapping_add(cpk7_d(pessoa).wrapping_mul(8));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(par, 8)], || o(this, pessoa), || rewind_staff_history(this, pessoa));
-    PLACAR.record(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", cpk7_d(pessoa), mo, mr));
+    SCOREBOARD.record(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", cpk7_d(pessoa), mo, mr));
 }
 
 /// Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
@@ -172,6 +172,6 @@ unsafe extern "thiscall" fn comparar_set_slot_position(this: usize, casa: u32, p
     }
     let reg = [(this + 0x12d, 0x584 - 0x12d), (this + 0x187b, 8), (0xb67a34, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, casa, posicao, extra), || set_slot_position(this, casa, posicao, extra));
-    PLACAR.record(igual && r == n, || format!("set_slot_position({}, {:#x}, {}) {:x?} x {:x?}", casa as u8 as i8, posicao as u16, extra, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_slot_position({}, {:#x}, {}) {:x?} x {:x?}", casa as u8 as i8, posicao as u16, extra, mo, mr));
     r
 }

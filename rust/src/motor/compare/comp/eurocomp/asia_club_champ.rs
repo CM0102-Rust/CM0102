@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_club_champ_advance_stage(th
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
     let expected = if last { f } else if f + 1 == 1 { 2 } else { f + 1 };
-    PLACAR.record(after == expected, || format!("asia_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    SCOREBOARD.record(after == expected, || format!("asia_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `create_group_stages` (comparison mode: see the header of motor.rs).
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_stages(this: usize)
         a == b
     };
     let ok = checks(1, &v[..4]) && checks(2, &v[4..]) && read_u32_as_usize(this + 0x30) == 2;
-    PLACAR.record(ok, || format!("create_group_stages({:#x}): os grupos não batem com os vivos {:x?}", this, v));
+    SCOREBOARD.record(ok, || format!("create_group_stages({:#x}): os grupos não batem com os vivos {:x?}", this, v));
 }
 
 /// Comparer for `asia_club_champ_create_semi_final_stage` (comparison mode: see the header of motor.rs).
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_club_champ_create_semi_fina
     o(this);
     let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
     if stage == 0 {
-        PLACAR.record(false, || format!("asia_club_champ_create_semi_final_stage({:#x}) sem fase", this));
+        SCOREBOARD.record(false, || format!("asia_club_champ_create_semi_final_stage({:#x}) sem fase", this));
         return;
     }
     let list = read_u32_as_usize(stage + 0xa7);
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_club_champ_create_semi_fina
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && read_i16(stage + 0x3e) == 4 && read_u32_as_usize(stage + 4) == read_u32_as_usize(this + 4);
-    PLACAR.record(same, || format!("asia_club_champ_create_semi_final_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    SCOREBOARD.record(same, || format!("asia_club_champ_create_semi_final_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 
 /// Comparer for `asia_club_champ_create_round_table` (comparison mode: see the header of motor.rs).

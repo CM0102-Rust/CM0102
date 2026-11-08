@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_fix_man_daily_update(this: usize) {
     o(this);
     let fila = cqd6_d(this + 0x1128);
     let depois = cqd6_w(0xae2a48);
-    PLACAR.record((havia == 0 || fila == 0) && (antes == 0 || depois == 0),
+    SCOREBOARD.record((havia == 0 || fila == 0) && (antes == 0 || depois == 0),
         || format!("fix_man_daily_update: fila das notícias {:x} -> {:x}, conferências {} -> {}", havia, fila, antes, depois));
 }
 
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn comparar_get_fixture_list(this: usize, ano: u32, dia
     }
     let r = o(this, ano, dia, fatia, tipo);
     let n = get_fixture_list(this, ano, dia, fatia, tipo);
-    PLACAR.record(r == n, || format!("get_fixture_list(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
+    SCOREBOARD.record(r == n, || format!("get_fixture_list(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
         ano as u16, dia as u16, fatia as u8, tipo as u8 as i8, r, n));
     r
 }
@@ -290,6 +290,6 @@ unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let esperado = format!("fixtures_{}.tmp", cqd6_w(this + 0x1130) as u16);
     let s = core::slice::from_raw_parts((this + 0x1133) as *const u8, esperado.len() + 1);
-    PLACAR.record(&s[..esperado.len()] == esperado.as_bytes() && s[esperado.len()] == 0,
+    SCOREBOARD.record(&s[..esperado.len()] == esperado.as_bytes() && s[esperado.len()] == 0,
         || format!("load_fixtures: nome {:?} (esperado {})", s, esperado));
 }

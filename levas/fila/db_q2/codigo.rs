@@ -81,20 +81,20 @@ unsafe extern "C" fn comparar_database_get_staff_age(pessoa: usize, data: *const
     }
     let r = o(pessoa, data);
     let n = database_get_staff_age(pessoa, data);
-    PLACAR.record(r == n, || format!("database_get_staff_age({:x}) original={} rust={}", pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("database_get_staff_age({:x}) original={} rust={}", pessoa, r, n));
     r
 }
 
 unsafe extern "C" fn comparar_nation_allows_free_transfers(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(nacao);
     let n = nation_allows_free_transfers(nacao);
-    PLACAR.record(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
+    SCOREBOARD.record(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
 unsafe extern "C" fn comparar_database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(pessoa, nacao_do_clube);
     let n = database_is_staff_eu_national(pessoa, nacao_do_clube);
-    PLACAR.record(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));
+    SCOREBOARD.record(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));
     r
 }

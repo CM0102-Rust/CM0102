@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_for_date(
             && stages != 0
             && (0..3).all(|g| read_u32_as_usize(stages + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 2;
-        PLACAR.record(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        SCOREBOARD.record(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_create_group_sta
         a.sort_unstable();
         plan.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
-        PLACAR.record(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
     }
     r
 }
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_advance_stage(th
     }
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.record(after == f + 1, || format!("african_nations_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    SCOREBOARD.record(after == f + 1, || format!("african_nations_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `init_group_a_table` (comparison mode: see the header of motor.rs).
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_group_a_table(this: usize) 
         }
     }
     let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    PLACAR.record(same, || format!("init_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    SCOREBOARD.record(same, || format!("init_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
@@ -120,9 +120,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_record_season_ho
 }
 
 /// Comparer for `african_nations_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, outcome, stage, a4, jogo, a6);
-    PLACAR.record(r == 0, || format!("african_nations_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", clube, outcome as u8, stage as u8, r));
+pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, a6);
+    SCOREBOARD.record(r == 0, || format!("african_nations_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", club, outcome as u8, stage as u8, r));
     r
 }
 

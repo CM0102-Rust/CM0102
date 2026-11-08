@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn get_selection_limit(this: usize, partida: usize, sai
 unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%)(this, oferta, exigir);
     let n = offer_breaks_fee_record(this, oferta, exigir);
-    PLACAR.record(r == n, || format!("offer_breaks_fee_record({:x}, {}) original={} rust={}", oferta, exigir, r, n));
+    SCOREBOARD.record(r == n, || format!("offer_breaks_fee_record({:x}, {}) original={} rust={}", oferta, exigir, r, n));
     r
 }
 
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, oferta
 unsafe extern "thiscall" fn comparar_get_condition(this: usize, jogador: usize, em_porcento: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, jogador, em_porcento);
     let n = get_condition(this, jogador, em_porcento);
-    PLACAR.record(r == n, || format!("get_condition({:x}, {}) original={} rust={}", jogador, em_porcento, r, n));
+    SCOREBOARD.record(r == n, || format!("get_condition({:x}, {}) original={} rust={}", jogador, em_porcento, r, n));
     r
 }
 
@@ -110,5 +110,5 @@ unsafe extern "thiscall" fn comparar_get_condition(this: usize, jogador: usize, 
 unsafe extern "thiscall" fn comparar_get_selection_limit(this: usize, partida: usize, saida: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(saida as usize, 6)], || o(this, partida, saida), || get_selection_limit(this, partida, saida));
-    PLACAR.record(igual, || format!("get_selection_limit({:x}) {:x?} x {:x?}", partida, mo, mr));
+    SCOREBOARD.record(igual, || format!("get_selection_limit({:x}) {:x?} x {:x?}", partida, mo, mr));
 }

@@ -28,7 +28,7 @@ unsafe extern "C" fn player_setup_injury_from_name(nome: usize) -> u32 {
 unsafe extern "C" fn comparar_player_setup_injury_from_name(nome: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nome);
     let n = player_setup_injury_from_name(nome);
-    PLACAR.record(r as u8 == n as u8, || format!("player_setup_injury_from_name({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
+    SCOREBOARD.record(r as u8 == n as u8, || format!("player_setup_injury_from_name({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
     r
 }
 
@@ -352,7 +352,7 @@ unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, e
         return;
     }
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    PLACAR.record(mo == mr, || format!("post_recovery_news(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, tipo as u8, mo.0, mr.0));
+    SCOREBOARD.record(mo == mr, || format!("post_recovery_news(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, tipo as u8, mo.0, mr.0));
 }
 
 /// { 0x630c50 } (stdcall, ret 0xc, injury.cpp): `injury_get_category_name(categoria, texto, tamanho)`: o nome traduzido
@@ -383,6 +383,6 @@ unsafe extern "stdcall" fn comparar_injury_get_category_name(categoria: u32, tex
         return o(categoria, texto, tamanho);
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(texto, (tamanho as usize).min(0x100))], || o(categoria, texto, tamanho), || injury_get_category_name(categoria, texto, tamanho));
-    PLACAR.record(igual && r == n, || format!("injury_get_category_name({}) original={} rust={}", categoria as u8 as i8, r, n));
+    SCOREBOARD.record(igual && r == n, || format!("injury_get_category_name({}) original={} rust={}", categoria as u8 as i8, r, n));
     r
 }

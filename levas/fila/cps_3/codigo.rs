@@ -168,13 +168,13 @@ unsafe extern "thiscall" fn comparar_process_free_transfer_queue(this: usize) {
 unsafe extern "thiscall" fn comparar_find_next_window_open_date(this: usize, clube: usize, saida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(saida, 8)], || o(this, clube, saida), || find_next_window_open_date(this, clube, saida));
-    PLACAR.record(igual, || format!("find_next_window_open_date(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
+    SCOREBOARD.record(igual, || format!("find_next_window_open_date(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
 }
 
 /// Comparador: pelo valor (as duas voltas deixam o cursor da lista no mesmo lugar).
 unsafe extern "thiscall" fn comparar_find_negotiated_loan_contract(this: usize, pessoa: usize, clube: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, pessoa, clube);
     let n = find_negotiated_loan_contract(this, pessoa, clube);
-    PLACAR.record(r == n, || format!("find_negotiated_loan_contract(pessoa {}, clube {}) original={:x} rust={:x}", cps3_d(pessoa), cps3_d(clube), r, n));
+    SCOREBOARD.record(r == n, || format!("find_negotiated_loan_contract(pessoa {}, clube {}) original={:x} rust={:x}", cps3_d(pessoa), cps3_d(clube), r, n));
     r
 }

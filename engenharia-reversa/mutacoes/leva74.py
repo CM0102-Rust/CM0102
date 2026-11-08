@@ -6,5 +6,5 @@ MUTACOES = [
     ('c_r1', "    if r1 != 0 && id_de(r1) == id_target {\n        return r1;", "    if r1 != 0 && id_de(r1) == id_club {\n        return r1;"),
     ('n_4f', "    ((*((r + contract::SQUAD_STATUS) as *const u8) & 0xf) as u32).wrapping_sub(10)", "    ((*((r + contract::SQUAD_STATUS) as *const u8) & 0x1f) as u32).wrapping_sub(10)"),
     ('n_limite', "    let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(2 * *(G_NATION_COUNT as *const i32));", "    let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));"),
-    ('n_baixo', "        return clube as u32 & !0xff;", "        return 0;"),
+    ('n_baixo', "        return club as u32 & !0xff;", "        return 0;"),
 ]

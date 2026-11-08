@@ -165,7 +165,7 @@ unsafe fn compare_cup_placed(nome: &str, clube: usize, jogo: usize, partida: usi
     antes.write_back();
     original();
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    PLACAR.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", nome, clube, jogo, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", nome, clube, jogo, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_add_cup_runners_up_record(this: usize, clube: usize, jogo: usize, partida: usize) {
@@ -311,5 +311,5 @@ unsafe extern "thiscall" fn comparar_record_manager_job_change(this: usize, tecn
     antes.write_back();
     o(this, tecnico, clube, contratado);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    PLACAR.record(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", tecnico, clube, contratado as u8, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", tecnico, clube, contratado as u8, mo, mr));
 }

@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn cqv5_supercopa_italiana(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqv5_supercopa_italiana(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv5_plano(this, r, ano, dono, 0x96c8b8, &CQV5_CAMPOS_SUPERCOPA_ITALIANA, true);
-    PLACAR.record(erro.is_none(), || format!("cqv5_supercopa_italiana({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqv5_supercopa_italiana({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn cqv5_supercopa_da_serie_c1(this: usize, ano: u32, do
 unsafe extern "thiscall" fn comparar_cqv5_supercopa_da_serie_c1(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqv5_plano(this, r, ano, dono, 0x96c1c4, &CQV5_CAMPOS_SUPERCOPA_DA_SERIE_C1, true);
-    PLACAR.record(erro.is_none(), || format!("cqv5_supercopa_da_serie_c1({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqv5_supercopa_da_serie_c1({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -240,6 +240,6 @@ unsafe extern "thiscall" fn cqv5_copa_dos_eua(this: usize, ano: u32, dono: usize
 unsafe extern "thiscall" fn comparar_cqv5_copa_dos_eua(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqv5_plano(this, r, ano, dono, 0x970998, &CQV5_CAMPOS_COPA_DOS_EUA, true);
-    PLACAR.record(erro.is_none(), || format!("cqv5_copa_dos_eua({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqv5_copa_dos_eua({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

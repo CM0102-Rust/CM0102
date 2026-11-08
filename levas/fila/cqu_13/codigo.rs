@@ -133,7 +133,7 @@ unsafe fn cqu13_comparar_clubes(nome: &str, this: usize, continentes: (usize, us
         let (a, b) = (cqu13_d(t), cqu13_d(t + 6));
         let bytes = [4usize, 5, 0xa, 0xb].iter().all(|&k| *((t + k) as *const u8) == 0);
         let ok = cqu13_w(this + 0x3e) == 2 && a != 0 && b != 0 && cqu13_do_continente(a, continentes.0) && cqu13_do_continente(b, continentes.1) && bytes;
-        PLACAR.record(ok, || format!("{}({:#x}): clubes {:#x} {:#x} estado zerado {}", nome, this, a, b, bytes));
+        SCOREBOARD.record(ok, || format!("{}({:#x}): clubes {:#x} {:#x} estado zerado {}", nome, this, a, b, bytes));
     }
     r
 }
@@ -273,7 +273,7 @@ unsafe fn cqu13_comparar_previstas(nome: &str, this: usize, _fase: u32, _grupo: 
         lidas.push(if e != 0 { *((e + 0x72) as *const u8) as i32 } else { -1 });
     }
     let ok = lidas[0] == 1 && lidas.iter().all(|&x| x >= 1) && lidas.windows(2).all(|w| w[0] <= w[1]);
-    PLACAR.record(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
 }
 
 unsafe extern "thiscall" fn comparar_cqu13_merconorte_previstas(this: usize) {

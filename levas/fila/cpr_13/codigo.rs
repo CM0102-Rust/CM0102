@@ -122,7 +122,7 @@ unsafe extern "C" fn fix_man_get_partner_key_nation_index(clube: usize) -> u8 {
 unsafe extern "stdcall" fn comparar_friendly_is_club_free_on_date(data: usize, clube: usize, tipo: u32) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I0%%)(data, clube, tipo);
     let n = friendly_is_club_free_on_date(data, clube, tipo);
-    PLACAR.record(r == n, || format!("friendly_is_club_free_on_date(data {:x}, clube {:x}, tipo {}) original={} rust={}", data, clube, tipo as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("friendly_is_club_free_on_date(data {:x}, clube {:x}, tipo {}) original={} rust={}", data, clube, tipo as u8 as i8, r, n));
     r
 }
 
@@ -130,7 +130,7 @@ unsafe extern "stdcall" fn comparar_friendly_is_club_free_on_date(data: usize, c
 unsafe extern "thiscall" fn comparar_has_club(this: usize, clube: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, clube);
     let n = has_club(this, clube);
-    PLACAR.record(r == n, || format!("has_club(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
+    SCOREBOARD.record(r == n, || format!("has_club(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
     r
 }
 
@@ -138,6 +138,6 @@ unsafe extern "thiscall" fn comparar_has_club(this: usize, clube: u32) -> u32 {
 unsafe extern "C" fn comparar_fix_man_get_partner_key_nation_index(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = fix_man_get_partner_key_nation_index(clube);
-    PLACAR.record(r == n, || format!("fix_man_get_partner_key_nation_index({:x}) original={:x} rust={:x}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("fix_man_get_partner_key_nation_index({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }

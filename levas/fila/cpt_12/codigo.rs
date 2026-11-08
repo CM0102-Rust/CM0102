@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn comparar_schedule_tour_matches(this: usize, cand: us
 unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_friendly_candidates_by_band(a, b);
-    PLACAR.record(r == n, || format!("compare_friendly_candidates_by_band({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("compare_friendly_candidates_by_band({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -172,6 +172,6 @@ unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: u
 unsafe extern "C" fn comparar_compare_friendly_candidate_ptrs_by_nation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_friendly_candidate_ptrs_by_nation(a, b);
-    PLACAR.record(r == n, || format!("compare_friendly_candidate_ptrs_by_nation({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("compare_friendly_candidate_ptrs_by_nation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

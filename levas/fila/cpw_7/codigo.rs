@@ -303,7 +303,7 @@ unsafe extern "thiscall" fn comparar_has_missed_training(this: usize, pessoa: us
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(0xae1080, 4)], || o(this, pessoa), || has_missed_training(this, pessoa));
-    PLACAR.record(igual && r as u8 == n as u8, || format!("has_missed_training(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_missed_training(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
     r
 }
 
@@ -349,7 +349,7 @@ unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize, pessoa: u
     let l = cpw7_d(this + 8);
     let regioes: Vec<(usize, usize)> = if l != 0 { vec![(l + 0xa, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, pessoa), || has_fitness_incident(this, pessoa));
-    PLACAR.record(igual && r as u8 == n as u8, || format!("has_fitness_incident(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_fitness_incident(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
     r
 }
 
@@ -492,7 +492,7 @@ unsafe extern "thiscall" fn comparar_miss_training(this: usize, pessoa: usize) {
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let r = if novo & 2 != 0 { 2 } else if novo & 1 != 0 { 1 } else { 0 };
     let igual = (r == n || (n == 1 && b0 & 1 != 0)) && (n != 0 || mo == mr);
-    PLACAR.record(igual, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", pessoa, r, mo, n, mr));
+    SCOREBOARD.record(igual, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", pessoa, r, mo, n, mr));
 }
 
 /// { 0x419710 } (thiscall, ret 4, awol.cpp): `AWOL::end_absence(registro)`, pela awol_daily_update. Registro com a marca
@@ -550,7 +550,7 @@ unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usize) {
     o(this, r);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let igual = mo.0[0] == mr.0[0] && (noticia || mo.0[1] == mr.0[1]);
-    PLACAR.record(igual, || format!("end_absence(marca {:#x}) original={:x?} rust={:x?}", m, mo, mr));
+    SCOREBOARD.record(igual, || format!("end_absence(marca {:#x}) original={:x?} rust={:x?}", m, mo, mr));
 }
 
 /// { 0x867560 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_flags(marcas)`, chamada por muitas rotinas
@@ -619,5 +619,5 @@ unsafe extern "thiscall" fn comparar_set_flags(c: usize, marcas: u32) {
     o(c, marcas);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let igual = if pediu { mo.0[0] == mr.0[0] } else { mo == mr };
-    PLACAR.record(igual, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marcas, pediu, mo, mr));
+    SCOREBOARD.record(igual, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marcas, pediu, mo, mr));
 }

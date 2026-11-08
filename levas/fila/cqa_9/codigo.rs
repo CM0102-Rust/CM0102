@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn comparar_calc_player_value(this: usize, pessoa: usiz
     let regioes = player_value_regions();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, pessoa, clube, modo, habilidade, x),
         || crate::rng::without_counting(|| calc_player_value(this, pessoa, clube, modo, habilidade, x)));
-    PLACAR.record(igual && r == n, || format!("calc_player_value(pessoa {:x}, clube {:x}, modo {}, hab {}) original={} rust={} {:x?} x {:x?}", pessoa, clube, modo as u8, habilidade as i16, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("calc_player_value(pessoa {:x}, clube {:x}, modo {}, hab {}) original={} rust={} {:x?} x {:x?}", pessoa, clube, modo as u8, habilidade as i16, r, n, mo, mr));
     r
 }
 
@@ -343,7 +343,7 @@ unsafe extern "stdcall" fn comparar_contract_manager_write_morale_comparison_tex
     let tn = cqa9_texto(saida);
     core::ptr::copy_nonoverlapping(tr.as_ptr(), saida as *mut u8, tr.len());
     *((saida + tr.len()) as *mut u8) = 0;
-    PLACAR.record(r == n && tr == tn, || format!("contract_manager_write_morale_comparison_text original={} {:?} rust={} {:?}", r as i8, String::from_utf8_lossy(&tr), n as i8, String::from_utf8_lossy(&tn)));
+    SCOREBOARD.record(r == n && tr == tn, || format!("contract_manager_write_morale_comparison_text original={} {:?} rust={} {:?}", r as i8, String::from_utf8_lossy(&tr), n as i8, String::from_utf8_lossy(&tn)));
     r
 }
 
@@ -394,6 +394,6 @@ unsafe extern "thiscall" fn comparar_get_squad_flags_for_club(this: usize, pesso
     }
     let r = o(this, pessoa, clube);
     let n = get_squad_flags_for_club(this, pessoa, clube);
-    PLACAR.record(r == n, || format!("get_squad_flags_for_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+    SCOREBOARD.record(r == n, || format!("get_squad_flags_for_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }

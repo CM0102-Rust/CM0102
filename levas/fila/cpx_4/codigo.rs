@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn comparar_add_config_loan(this: usize, p: usize, club
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I0%%)(this, p, clube, inicio, fim);
     let tem = emprestado(cpx4_d(0xae1050), p);
     let igual = if passa { tem != 0 } else { tem == tinha };
-    PLACAR.record(igual, || format!("add_config_loan(pessoa {:#x}) passa={} antes={:#x} depois={:#x}", cpx4_d(p), passa, tinha, tem));
+    SCOREBOARD.record(igual, || format!("add_config_loan(pessoa {:#x}) passa={} antes={:#x} depois={:#x}", cpx4_d(p), passa, tinha, tem));
 }
 
 /// O contrato principal da pessoa como a 0x4da590 o acha (o mesmo da 0x4cf5a0, em linha): sem pessoa, id fora da tabela

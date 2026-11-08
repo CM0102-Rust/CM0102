@@ -347,7 +347,7 @@ unsafe extern "thiscall" fn comparar_contract_manager_offer_contract(this: usize
         v
     };
     let igual = igual || (sem_sobra(&mo) == sem_sobra(&mr) && mo.0[1..] == mr.0[1..]);
-    PLACAR.record(igual && r == n, || format!(
+    SCOREBOARD.record(igual && r == n, || format!(
         "contract_manager_offer_contract(pessoa {:#x}, clube {:#x}, vaga {}, fator {}, modo {}): original {} rust {}, memória {:x?} x {:x?}",
         pessoa, clube, vaga, fator, modo, r, n, mo, mr));
     r

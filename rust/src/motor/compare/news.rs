@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, mana
         (0xde1f64, 0x7d0),
     ];
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions, || o(this, manager, id, sincronizar), || mark_item_read(this, manager, id, sincronizar));
-    PLACAR.record(igual && r == n, || format!("mark_item_read(id {}, sincronizar {}) original={} rust={} memoria igual {}", id, sincronizar, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("mark_item_read(id {}, sincronizar {}) original={} rust={} memoria igual {}", id, sincronizar, r, n, igual));
     r
 }
 
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, man
         return o(this, manager, id, out);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out, STORED_NEWS_SIZE)], || o(this, manager, id, out), || find_item_by_id(this, manager, id, out));
-    PLACAR.record(igual && r == n, || format!("find_item_by_id(id {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo.0[0].1, mr.0[0].1));
+    SCOREBOARD.record(igual && r == n, || format!("find_item_by_id(id {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo.0[0].1, mr.0[0].1));
     r
 }
 
@@ -39,10 +39,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, man
 ///
 /// [pt] Comparador: a entrega pode cair na caixa do humano (realloc, ids, resposta automática): roda só a original e confere
 /// o alcance; alcance fora de 0..5 devolve 0.
-pub(crate) unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, noticia: usize, clube: usize, competicao: usize, nacao: usize, continent: usize, reach: u32) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(IDX_SEND_BY_SCOPE)(this, noticia, clube, competicao, nacao, continent, reach);
+pub(crate) unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, news: usize, club: usize, competition: usize, nation: usize, continent: usize, reach: u32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(IDX_SEND_BY_SCOPE)(this, news, club, competition, nation, continent, reach);
     let away = !(0..=5).contains(&(reach as u8 as i8));
-    PLACAR.record(!away || r == 0, || format!("send_by_scope alcance {} devolveu {}", reach as u8 as i8, r));
+    SCOREBOARD.record(!away || r == 0, || format!("send_by_scope alcance {} devolveu {}", reach as u8 as i8, r));
     r
 }
 
@@ -50,16 +50,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, notic
 ///
 /// [pt] Comparador: roda só a original (a entrega não pode rodar duas vezes) e confere o plano: o alcance zerado e, sem técnico
 /// humano, a devolução 0 (com humano, a entrega devolve 1 ou 0 sem memória).
-pub(crate) unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize, noticia: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize, news: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CLUB_MANAGER);
-    if noticia == 0 || clube == 0 {
-        return o(this, noticia, clube);
+    if news == 0 || club == 0 {
+        return o(this, news, club);
     }
-    let manager = read_usize(clube + club::MANAGER);
+    let manager = read_usize(club + club::MANAGER);
     let human = manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10);
-    let r = o(this, noticia, clube);
-    let ok = *((noticia + 0xde) as *const u8) == 0 && (human || r == 0) && r <= 1;
-    PLACAR.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", clube, manager, human, r));
+    let r = o(this, news, club);
+    let ok = *((news + 0xde) as *const u8) == 0 && (human || r == 0) && r <= 1;
+    SCOREBOARD.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", club, manager, human, r));
     r
 }
 
@@ -67,10 +67,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize
 ///
 /// [pt] Comparador: a original realoca o vetor, numera e responde: roda só ela e confere o plano feito antes: o id da notícia,
 /// o contador de ids (News +0x10), o anel do humano (início, próxima vaga, conta), a vaga escrita com o id e +0xda = 0.
-pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, noticia: usize, manager: usize, free: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, news: usize, manager: usize, free: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_DELIVER_TO_MANAGER);
-    if noticia == 0 || manager == 0 || news_human_manager_index(manager) < 0 {
-        return o(this, noticia, manager, free);
+    if news == 0 || manager == 0 || news_human_manager_index(manager) < 0 {
+        return o(this, news, manager, free);
     }
     let idx = news_human_manager_index(manager) as usize;
     let e = read_usize(this + 8) + idx * 12;
@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
     let new = read_i32(e) == -1;
     let (inicio, atual, conta) = if new { (read_i32(this + 4), read_i32(this + 4), read_i32(e + 8)) } else { (read_i32(e), read_i32(e + 4), read_i32(e + 8)) };
     let contador = read_usize(this + 0x10);
-    let (id, contador_depois) = if read_usize(noticia + 0xd6) == 0 { (contador.wrapping_add(1), contador.wrapping_add(1)) } else { (read_usize(noticia + 0xd6), contador) };
+    let (id, contador_depois) = if read_usize(news + 0xd6) == 0 { (contador.wrapping_add(1), contador.wrapping_add(1)) } else { (read_usize(news + 0xd6), contador) };
     let mut previous = atual - 1;
     if previous < inicio {
         previous = inicio + 0x63;
@@ -99,9 +99,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
     // more slots and the count together (found on 31/10/2026, when the routine left DESLIGADAS)
     let holiday: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let responde = !repetida && (*(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || holiday(read_usize(G_HUMAN_MANAGER), manager) != 0);
-    let r = o(this, noticia, manager, free);
+    let r = o(this, news, manager, free);
     if r == 0 {
-        PLACAR.record(new, || format!("deliver_to_manager devolveu 0 sem anel novo")); // only without memory
+        SCOREBOARD.record(new, || format!("deliver_to_manager devolveu 0 sem anel novo")); // only without memory
         return r;
     }
     let extra = if responde { (read_i32(e + 4) - prox).rem_euclid(0x64) } else { 0 };
@@ -109,10 +109,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
     let ok = r == 1 && read_i32(e) == inicio && read_i32(e + 4) == if extra == 0 { prox } else { read_i32(e + 4) }
         && read_i32(e + 8) >= conta_depois && read_i32(e + 8) <= conta_depois + extra
         && (read_usize(this + 0x10) == contador_depois || (extra > 0 && read_usize(this + 0x10) > contador_depois))
-        && read_usize(noticia + 0xd6) == id && read_usize(noticia + 0xda) == 0
+        && read_usize(news + 0xd6) == id && read_usize(news + 0xda) == 0
         && (repetida || read_usize(slot + 0xd6) == id);
-    PLACAR.record(ok, || format!("deliver_to_manager(humano {}) id {} (esperava {}), anel {}/{}/{} (esperava {}/{}/{}), repetida {}",
-        idx, read_usize(noticia + 0xd6), id, read_i32(e), read_i32(e + 4), read_i32(e + 8), inicio, prox, conta_depois, repetida));
+    SCOREBOARD.record(ok, || format!("deliver_to_manager(humano {}) id {} (esperava {}), anel {}/{}/{} (esperava {}/{}/{}), repetida {}",
+        idx, read_usize(news + 0xd6), id, read_i32(e), read_i32(e + 4), read_i32(e + 8), inicio, prox, conta_depois, repetida));
     r
 }
 
@@ -120,10 +120,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
 ///
 /// [pt] Comparador: a original responde (convites, propostas, emprego): roda só ela e confere a devolução (0 só sem técnico
 /// ou com técnico da máquina; senão 1).
-pub(crate) unsafe extern "thiscall" fn comparar_auto_respond_all(this: usize, manager: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_auto_respond_all(this: usize, manager: usize, club: usize) -> u32 {
     let human = manager != 0 && read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) >= 0;
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_AUTO_RESPOND_ALL)(this, manager, clube);
-    PLACAR.record(r == human as u32, || format!("auto_respond_all(técnico {:x}, humano {}) devolveu {}", manager, human, r));
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_AUTO_RESPOND_ALL)(this, manager, club);
+    SCOREBOARD.record(r == human as u32, || format!("auto_respond_all(técnico {:x}, humano {}) devolveu {}", manager, human, r));
     r
 }
 
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_urgent_items(this: usize, ma
     }
     let reg = [(0xde1f64usize, 0x7d0usize)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, manager, so_urgentes), || has_urgent_items(this, manager, so_urgentes));
-    PLACAR.record(igual && r == n, || format!("has_urgent_items(urgentes {}) {} x {} {:x?} x {:x?}", so_urgentes, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("has_urgent_items(urgentes {}) {} x {} {:x?} x {:x?}", so_urgentes, r, n, mo, mr));
     r
 }
 
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_slot_string(this: usize, fie
         reg.push((next as usize, 1));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, field, text, next), || set_slot_string(this, field, text, next));
-    PLACAR.record(igual && r == n, || format!("set_slot_string(campo {}) {:x?} x {:x?}", field as u8 as i8, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_slot_string(campo {}) {:x?} x {:x?}", field as u8 as i8, mo, mr));
     r
 }
 
@@ -162,41 +162,41 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_slot_string(this: usize, fie
 ///
 /// [pt] Comparadores: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
-pub(crate) unsafe extern "thiscall" fn comparar_send_to_continent_managers(this: usize, noticia: usize, continent: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_send_to_continent_managers(this: usize, news: usize, continent: usize) -> u32 {
     crate::comparison::branch("send_to_continent_managers");
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, noticia, continent)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, news, continent)
 }
 
 /// Comparer for `send_to_comp_region` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_send_to_comp_region(this: usize, news: usize, comp: usize) -> u32 {
     crate::comparison::branch("send_to_comp_region");
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, noticia, comp)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp)
 }
 
 /// Comparer for `is_important_for` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: pelo valor (a 0x785670 só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_is_important_for(noticia: usize, person: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(noticia, person);
-    let t = read_usize(noticia) as i32;
+pub(crate) unsafe extern "thiscall" fn comparar_is_important_for(news: usize, person: usize) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_IMPORTANT_FOR)(news, person);
+    let t = read_usize(news) as i32;
     if person == 0 || !(1..=0x1790).contains(&t) {
         return r;
     }
-    let n = is_important_for(noticia, person);
-    PLACAR.record(r == n, || format!("is_important_for(tipo {:#x}, {:x}) original={} rust={}", t, person, r, n));
+    let n = is_important_for(news, person);
+    SCOREBOARD.record(r == n, || format!("is_important_for(tipo {:#x}, {:x}) original={} rust={}", t, person, r, n));
     r
 }
 
 /// Comparador: lado a lado pelos `n` bytes do destino.
-pub(crate) unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, given: u32, target: *mut u8, n: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_get_slot_string(news: usize, given: u32, target: *mut u8, n: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_GET_SLOT_STRING);
     let k = given as u8 as i8;
     if !(0..0x32).contains(&k) || target.is_null() || n < 1 {
-        return o(noticia, given, target, n);
+        return o(news, given, target, n);
     }
     let reg = [(target as usize, n as usize)];
-    let (r, m, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(noticia, given, target, n), || get_slot_string(noticia, given, target, n));
-    PLACAR.record(igual && r == m, || format!("get_slot_string({}, {}) {:x?} x {:x?}", k, n, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(news, given, target, n), || get_slot_string(news, given, target, n));
+    SCOREBOARD.record(igual && r == m, || format!("get_slot_string({}, {}) {:x?} x {:x?}", k, n, mo, mr));
     r
 }
 
@@ -204,50 +204,50 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, 
 ///
 /// [pt] Comparadores: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
-pub(crate) unsafe extern "thiscall" fn comparar_send_to_all_managers(this: usize, noticia: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_send_to_all_managers(this: usize, news: usize) -> u32 {
     crate::comparison::branch("send_to_all_managers");
-    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, noticia)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, news)
 }
 
 /// Comparer for `send_to_division_managers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_send_to_division_managers(this: usize, noticia: usize, division: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_send_to_division_managers(this: usize, news: usize, division: usize) -> u32 {
     crate::comparison::branch("send_to_division_managers");
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, noticia, division)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, news, division)
 }
 
 /// Comparer for `send_to_nation_managers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_send_to_nation_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_send_to_nation_managers(this: usize, news: usize, nation: usize) -> u32 {
     crate::comparison::branch("send_to_nation_managers");
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, noticia, nacao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, news, nation)
 }
 
 /// Comparer for `send_to_nation_club_managers` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
-pub(crate) unsafe extern "thiscall" fn comparar_send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_send_to_nation_club_managers(this: usize, news: usize, nation: usize) -> u32 {
     crate::comparison::branch("send_to_nation_club_managers");
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, noticia, nacao)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, news, nation)
 }
 
 /// Comparer for `count_unread` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, manager: usize, category: u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_count_unread(news: usize, manager: usize, category: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_COUNT_UNREAD);
-    let entry = if manager == 0 { None } else { manager_inbox_entry(noticias, manager) };
+    let entry = if manager == 0 { None } else { manager_inbox_entry(news, manager) };
     let Some(entry) = entry else {
-        return o(noticias, manager, category);
+        return o(news, manager, category);
     };
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(entry + 8, 4)], || o(noticias, manager, category),
-        || count_unread(noticias, manager, category));
-    PLACAR.record(igual && r == n, || format!("count_unread(categoria {}) original={} rust={} {:x?} x {:x?}", category as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(entry + 8, 4)], || o(news, manager, category),
+        || count_unread(news, manager, category));
+    SCOREBOARD.record(igual && r == n, || format!("count_unread(categoria {}) original={} rust={} {:x?} x {:x?}", category as u8, r, n, mo, mr));
     r
 }
 
 /// Comparer for `set_item_slot` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, manager: usize, id: u32, slot: i32, value: u32, copy: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_set_item_slot(news: usize, manager: usize, id: u32, slot: i32, value: u32, copy: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(IDX_SET_ITEM_SLOT);
-    let Ok(alvo) = set_slot_target(noticias, manager, id, slot, copy) else {
-        return o(noticias, manager, id, slot, value, copy);
+    let Ok(alvo) = set_slot_target(news, manager, id, slot, copy) else {
+        return o(news, manager, id, slot, value, copy);
     };
     let mut regions = vec![];
     if copy != 0 {
@@ -256,18 +256,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, m
     if let Some(a) = alvo {
         regions.push((a + 5 + 4 * slot as usize, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(noticias, manager, id, slot, value, copy),
-        || set_item_slot(noticias, manager, id, slot, value, copy));
-    PLACAR.record(igual && r == n, || format!("set_item_slot(vaga {}) original={} rust={} {:x?} x {:x?}", slot, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(news, manager, id, slot, value, copy),
+        || set_item_slot(news, manager, id, slot, value, copy));
+    SCOREBOARD.record(igual && r == n, || format!("set_item_slot(vaga {}) original={} rust={} {:x?} x {:x?}", slot, r, n, mo, mr));
     r
 }
 
 /// Comparer for `news_club_has_human_manager` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube: usize) -> u32 {
+pub(crate) unsafe extern "stdcall" fn comparar_news_club_has_human_manager(club: usize) -> u32 {
     // queries only: both run again with no effect
-    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_NEWS_CLUB_HAS_HUMAN_MANAGER)(clube);
-    let n = news_club_has_human_manager(clube);
-    PLACAR.record(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_NEWS_CLUB_HAS_HUMAN_MANAGER)(club);
+    let n = news_club_has_human_manager(club);
+    SCOREBOARD.record(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
     r
 }
 
@@ -288,15 +288,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, manager
     if read_i32(manager + staff::CLUB_JOB) != 0 || read_i32(manager + staff::NATIONAL_JOB) != 0 {
         o(this, manager);
         let first = read_i32(caixa);
-        let noticias = news_box_regions(this, caixa);
+        let news = news_box_regions(this, caixa);
         let ok = read_i32(caixa + 4) == first && read_i32(caixa + 8) == 0
-            && noticias[1..].iter().all(|&(n, _)| read_i32(n) == 0 && read_i32(n + 4) == 1);
-        PLACAR.record(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", manager, (first, read_i32(caixa + 4), read_i32(caixa + 8))));
+            && news[1..].iter().all(|&(n, _)| read_i32(n) == 0 && read_i32(n + 4) == 1);
+        SCOREBOARD.record(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", manager, (first, read_i32(caixa + 4), read_i32(caixa + 8))));
         return;
     }
     let reg = news_box_regions(this, caixa);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, manager), || clear_inbox(this, manager));
-    PLACAR.record(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", manager, mo, mr));
+    SCOREBOARD.record(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", manager, mo, mr));
 }
 
 /// Comparer for `construct_news_item` (comparison mode: see the header of motor.rs).
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, manager
 pub(crate) unsafe extern "thiscall" fn comparar_construct_news_item(this: usize, kind: u32, importante: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_CONSTRUCT_NEWS_ITEM);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0xde)], || o(this, kind, importante), || construct_news_item(this, kind, importante));
-    PLACAR.record(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", kind, importante as u8, mo.0[0].1, mr.0[0].1));
+    SCOREBOARD.record(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", kind, importante as u8, mo.0[0].1, mr.0[0].1));
     r
 }
 
@@ -345,31 +345,31 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, man
     } else {
         r == 0 || (*count as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| read_usize(r + i * MEDIA_NEWS_ITEM_SIZE + 0xd6) == id))
     };
-    PLACAR.record(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", category as u8, if r == 0 { 0 } else { *count }, ids));
+    SCOREBOARD.record(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", category as u8, if r == 0 { 0 } else { *count }, ids));
     r
 }
 
 /// Comparer for `get_category` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_category(noticia: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_get_category(news: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GET_CATEGORY);
-    let t = *(noticia as *const i32);
+    let t = *(news as *const i32);
     if !(1..=0x1790).contains(&t) {
-        return o(noticia);
+        return o(news);
     }
-    let r = o(noticia);
-    let n = get_category(noticia);
-    PLACAR.record(r == n, || format!("get_category({}) original={:x} rust={:x}", t, r, n));
+    let r = o(news);
+    let n = get_category(news);
+    SCOREBOARD.record(r == n, || format!("get_category({}) original={:x} rust={:x}", t, r, n));
     r
 }
 
 /// Comparer for `get_slot` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_slot(noticia: usize, slot: i8) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_GET_SLOT)(noticia, slot);
+pub(crate) unsafe extern "thiscall" fn comparar_get_slot(news: usize, slot: i8) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_GET_SLOT)(news, slot);
     if !(0..0x32).contains(&slot) {
         return r;
     }
-    let n = get_slot(noticia, slot);
-    PLACAR.record(r == n, || format!("get_slot({}) original={:#x} rust={:#x}", slot, r, n));
+    let n = get_slot(news, slot);
+    SCOREBOARD.record(r == n, || format!("get_slot({}) original={:#x} rust={:#x}", slot, r, n));
     r
 }
 
@@ -378,7 +378,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_news_field(t: usize, k: i8, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_SET_NEWS_FIELD);
     let reg = if (0..0x32).contains(&k) { vec![(t + 5 + 4 * k as usize, 4)] } else { vec![] };
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, k, value), || set_news_field(t, k, value));
-    PLACAR.record(igual && r == v, || format!("set_news_field({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, value, r, mo, v, mr));
+    SCOREBOARD.record(igual && r == v, || format!("set_news_field({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, value, r, mo, v, mr));
     r
 }
 
@@ -386,6 +386,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_news_field(t: usize, k: i8, 
 pub(crate) unsafe extern "thiscall" fn comparar_news_operator(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_NEWS_OPERATOR);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0xdf)], || o(this, source), || news_operator(this, source));
-    PLACAR.record(igual && r == n, || format!("news_operator {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("news_operator {:x?} x {:x?}", mo, mr));
     r
 }

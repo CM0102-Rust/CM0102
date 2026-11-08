@@ -412,7 +412,7 @@ unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: 
     original();
     na_faixa &= fichas.iter().skip(corte + 1).all(band);
     let mo = crate::comparison::MemorySnapshot::read(&conta);
-    PLACAR.record(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da band: {}) original={:x?} rust={:x?}",
+    SCOREBOARD.record(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da band: {}) original={:x?} rust={:x?}",
         nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
@@ -469,5 +469,5 @@ unsafe extern "thiscall" fn comparar_clear_human_manager_record(this: usize, pes
     };
     let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, pessoa),
         || clear_human_manager_record(this, pessoa));
-    PLACAR.record(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", pessoa, mo, mr));
 }

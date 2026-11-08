@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn cqu9_copa_da_uefa(this: usize, ano: u32, dono: usize
 unsafe extern "thiscall" fn comparar_cqu9_copa_da_uefa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu9_plano(this, r, ano, dono, 0x970790, &CQU9_CAMPOS_COPA_DA_UEFA, true);
-    PLACAR.record(erro.is_none(), || format!("cqu9_copa_da_uefa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqu9_copa_da_uefa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn cqu9_supercopa_europeia(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqu9_supercopa_europeia(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu9_plano(this, r, ano, dono, 0x969f80, &CQU9_CAMPOS_SUPERCOPA_EUROPEIA, true);
-    PLACAR.record(erro.is_none(), || format!("cqu9_supercopa_europeia({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqu9_supercopa_europeia({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -262,6 +262,6 @@ unsafe extern "thiscall" fn cqu9_intertoto(this: usize, ano: u32, dono: usize) -
 unsafe extern "thiscall" fn comparar_cqu9_intertoto(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqu9_plano(this, r, ano, dono, 0x96bb8c, &CQU9_CAMPOS_INTERTOTO, true);
-    PLACAR.record(erro.is_none(), || format!("cqu9_intertoto({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqu9_intertoto({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

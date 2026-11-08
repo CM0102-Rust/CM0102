@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn player_regen_pick_staff_for_non_player_data(this: us
 unsafe extern "thiscall" fn comparar_regen_queue_entry_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0xc)], || o(this, origem), || regen_queue_entry_assign(this, origem));
-    PLACAR.record(igual && r == n, || format!("regen_queue_entry_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("regen_queue_entry_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -85,6 +85,6 @@ unsafe extern "thiscall" fn comparar_player_regen_pick_staff_for_non_player_data
     let reg = crate::rng::STATE_REGIONS.to_vec();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nacao),
         || crate::rng::without_counting(|| player_regen_pick_staff_for_non_player_data(this, nacao)));
-    PLACAR.record(igual && r == n, || format!("player_regen_pick_staff_for_non_player_data({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_regen_pick_staff_for_non_player_data({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }

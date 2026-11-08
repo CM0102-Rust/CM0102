@@ -59,7 +59,7 @@ unsafe extern "stdcall" fn comparar_player_stats_get_goals_for_club(pessoa: usiz
     }
     let r = o(pessoa, clube);
     let n = player_stats_get_goals_for_club(pessoa, clube);
-    PLACAR.record(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", pessoa, clube, r, n));
+    SCOREBOARD.record(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }
 
@@ -121,6 +121,6 @@ unsafe extern "C" fn staff_records_compare_clubs_by_manager_points(a: usize, b: 
 unsafe extern "C" fn comparar_staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = staff_records_compare_clubs_by_manager_points(a, b);
-    PLACAR.record(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", cps10_d(a), cps10_d(b), r, n));
+    SCOREBOARD.record(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", cps10_d(a), cps10_d(b), r, n));
     r
 }

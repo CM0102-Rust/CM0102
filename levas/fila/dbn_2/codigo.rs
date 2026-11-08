@@ -264,7 +264,7 @@ unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
     }
     let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regioes, || o(leniente), || resolve_database_indexes(leniente));
     let onde = diferenca_dbn2(&mo, &mr);
-    PLACAR.record(igual, || match onde {
+    SCOREBOARD.record(igual, || match onde {
         Some((a, x, y)) => format!("resolve_database_indexes({}): diverge em {:x} original={:02x} rust={:02x}", leniente, a, x, y),
         None => format!("resolve_database_indexes({}): diverge", leniente),
     });
@@ -283,5 +283,5 @@ unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(refazer: u32) {
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(v, n as usize * 4)], || o(refazer), || database_sort_clubs_by_reputation(refazer));
     let onde = diferenca_dbn2(&mo, &mr);
-    PLACAR.record(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", refazer as u8, onde));
+    SCOREBOARD.record(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", refazer as u8, onde));
 }

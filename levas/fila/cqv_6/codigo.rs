@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn cqv6_copa_do_brasil(this: usize, ano: u32, dono: usi
 unsafe extern "thiscall" fn comparar_cqv6_copa_do_brasil(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv6_plano(this, r, ano, dono, 0x967cf8, &CQV6_CAMPOS_COPA_DO_BRASIL, true);
-    PLACAR.record(erro.is_none(), || format!("cqv6_copa_do_brasil({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqv6_copa_do_brasil({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -302,5 +302,5 @@ unsafe extern "thiscall" fn comparar_cqv6_inscritos_da_copa_do_brasil(this: usiz
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && livro, || format!("cqv6_inscritos_da_copa_do_brasil({:#x}) memória {} livro {}", this, igual, livro));
+    SCOREBOARD.record(igual && livro, || format!("cqv6_inscritos_da_copa_do_brasil({:#x}) memória {} livro {}", this, igual, livro));
 }

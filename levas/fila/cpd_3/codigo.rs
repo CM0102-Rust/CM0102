@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn comparar_clear_current_competition(this: usize, naca
     }
     let reg = [(cpd3_d(this + 4).wrapping_add(id.wrapping_mul(0x6e) as usize) + 4, 4), (seguinte, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nacao), || clear_current_competition(this, nacao));
-    PLACAR.record(igual, || format!("clear_current_competition({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
+    SCOREBOARD.record(igual, || format!("clear_current_competition({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
 }
 
 /// A competição `v` (−1: nenhuma) acabou para a 0x775070? Sem `fim_de_fase`, quando +0x59 da competição

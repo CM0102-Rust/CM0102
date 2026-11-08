@@ -18,21 +18,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_missed_training(this: usiz
 /// [pt] Comparador: a original monta a notícia e a entrega (aloca na caixa): só ela roda, com os sorteios rastreados; depois
 /// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
-pub(crate) unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize, player: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize, player: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_AWOL_POST_MISSED_TRAINING_NEWS);
-    let ((), tape_lock) = crate::rng::trace(|| o(this, player, clube));
+    let ((), tape_lock) = crate::rng::trace(|| o(this, player, club));
     let n = tape_lock.len();
     *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = Some((tape_lock, 0, false));
     AWOL_NEWS_DESTINATION = (0, 0);
-    crate::rng::without_counting(|| awol_post_missed_training_news(this, player, clube));
+    crate::rng::without_counting(|| awol_post_missed_training_news(this, player, club));
     let (k, falhou) = match &*core::ptr::addr_of!(AWOL_NEWS_TAPE) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
     };
     *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = None;
     let target = AWOL_NEWS_DESTINATION;
-    PLACAR.record(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
-        player, clube, n, k, falhou, target));
+    SCOREBOARD.record(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
+        player, club, n, k, falhou, target));
 }
 
 /// Comparer for `awol_daily_update` (comparison mode: see the header of motor.rs).
@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_missed_training(this: usize,
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, person), || has_missed_training(this, person));
-    PLACAR.record(igual && r as u8 == n as u8, || format!("has_missed_training(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_missed_training(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
     r
 }
 
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize
     let l = read_usize(this + 8);
     let regions: Vec<(usize, usize)> = if l != 0 { vec![(l + 0xa, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, person), || has_fitness_incident(this, person));
-    PLACAR.record(igual && r as u8 == n as u8, || format!("has_fitness_incident(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_fitness_incident(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
     r
 }
 
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_miss_training(this: usize, perso
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     let r = if new & 2 != 0 { 2 } else if new & 1 != 0 { 1 } else { 0 };
     let same = (r == n || (n == 1 && b0 & 1 != 0)) && (n != 0 || mo == mr);
-    PLACAR.record(same, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", person, r, mo, n, mr));
+    SCOREBOARD.record(same, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", person, r, mo, n, mr));
 }
 
 /// Comparer for `end_absence` (comparison mode: see the header of motor.rs).
@@ -118,13 +118,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usiz
     MISS_TRAINING_DECISION = 0;
     crate::rng::pause_trace(|| end_absence(this, r));
     MISS_TRAINING_DRY_RUN = false;
-    let noticia = MISS_TRAINING_DECISION != 0;
+    let news = MISS_TRAINING_DECISION != 0;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     o(this, r);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    let same = mo.0[0] == mr.0[0] && (noticia || mo.0[1] == mr.0[1]);
-    PLACAR.record(same, || format!("end_absence(marca {:#x}) original={:x?} rust={:x?}", m, mo, mr));
+    let same = mo.0[0] == mr.0[0] && (news || mo.0[1] == mr.0[1]);
+    SCOREBOARD.record(same, || format!("end_absence(marca {:#x}) original={:x?} rust={:x?}", m, mo, mr));
 }
 
 /// Comparer for `report_poor_fitness` (comparison mode: see the header of motor.rs).
@@ -132,22 +132,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usiz
 /// [pt] O comparador do incidente: a original roda sozinha (põe o registro na lista, dá a notícia e multa) e confere o
 /// plano: jogador e clube não nulos põem logo depois da cauda de antes (ou na cabeça, lista vazia) o registro com o
 /// jogador, o clube e a data de hoje (16 bytes; o byte +0x10 é sobra de pilha).
-pub(crate) unsafe extern "thiscall" fn comparar_report_poor_fitness(this: usize, player: usize, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_report_poor_fitness(this: usize, player: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_REPORT_POOR_FITNESS);
     let l = read_usize(this + 8);
-    if player == 0 || clube == 0 || l == 0 {
-        return o(this, player, clube);
+    if player == 0 || club == 0 || l == 0 {
+        return o(this, player, club);
     }
     let cauda = read_usize(l + 6);
     let mut plan = [0u8; 0x10];
     plan[..4].copy_from_slice(&read_u32(player).to_le_bytes());
-    plan[4..8].copy_from_slice(&read_u32(clube).to_le_bytes());
+    plan[4..8].copy_from_slice(&read_u32(club).to_le_bytes());
     plan[8..].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
-    o(this, player, clube);
+    o(this, player, club);
     let no = if cauda != 0 { read_usize(cauda + 6) } else { read_usize(l + 2) };
-    let dados = if no != 0 { read_usize(no) } else { 0 };
-    let same = dados != 0 && core::slice::from_raw_parts(dados as *const u8, 0x10) == plan;
-    PLACAR.record(same, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", player, clube, plan, no, dados));
+    let data = if no != 0 { read_usize(no) } else { 0 };
+    let same = data != 0 && core::slice::from_raw_parts(data as *const u8, 0x10) == plan;
+    SCOREBOARD.record(same, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", player, club, plan, no, data));
 }
 
 /// Comparer for `is_player_awol` (comparison mode: see the header of motor.rs).
@@ -163,6 +163,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_player_awol(this: usize, p: u
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, p, so_read), || is_player_awol(this, p, so_read));
-    PLACAR.record(igual && r as u8 == n as u8, || format!("is_player_awol(pessoa {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_read, r as u8, mo, n as u8, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("is_player_awol(pessoa {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_read, r as u8, mo, n as u8, mr));
     r
 }

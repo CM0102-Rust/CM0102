@@ -67,14 +67,14 @@ unsafe extern "thiscall" fn comparar_recover_injury(t: usize, p: *const i32, mar
         reg.push(((*(t as *const usize)).wrapping_add((*p as usize).wrapping_mul(31)).wrapping_add(0xa), 4));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, p, marca, ritmo), || crate::rng::without_counting(|| recover_injury(t, p, marca, ritmo)));
-    PLACAR.record(igual, || format!("recover_injury({:#x}, {:p}, {}, {}) {:x?} x {:x?}", t, p, marca, ritmo, mo, mr));
+    SCOREBOARD.record(igual, || format!("recover_injury({:#x}, {:p}, {}, {}) {:x?} x {:x?}", t, p, marca, ritmo, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_person_in_transfer_list(t: usize, p: *const i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(%%I1%%);
     let reg = [(t + 0x92c + 0xa, 4)];
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(t, p), || person_in_transfer_list(t, p));
-    PLACAR.record(igual && r == v, || format!("person_in_transfer_list({:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, p, r, mo, v, mr));
+    SCOREBOARD.record(igual && r == v, || format!("person_in_transfer_list({:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, p, r, mo, v, mr));
     r
 }
 

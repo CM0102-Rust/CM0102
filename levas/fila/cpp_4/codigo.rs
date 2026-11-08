@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, pessoa: usiz
 unsafe extern "thiscall" fn comparar_is_staff_suitable_for_job(this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(%%I0%%)(this, pessoa, clube, nota_minima);
     let n = is_staff_suitable_for_job(this, pessoa, clube, nota_minima);
-    PLACAR.record(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", pessoa, clube, nota_minima, r, n));
+    SCOREBOARD.record(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", pessoa, clube, nota_minima, r, n));
     r
 }
 
@@ -231,7 +231,7 @@ unsafe extern "stdcall" fn staff_can_take_job(cargo: u32, pessoa: usize) -> u32 
 unsafe extern "stdcall" fn comparar_staff_can_take_job(cargo: u32, pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32, usize) -> u32>(%%I1%%)(cargo, pessoa);
     let n = staff_can_take_job(cargo, pessoa);
-    PLACAR.record(r == n, || format!("staff_can_take_job(cargo {}, pessoa {:x}) original={} rust={}", cargo as u8 as i8, pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_can_take_job(cargo {}, pessoa {:x}) original={} rust={}", cargo as u8 as i8, pessoa, r, n));
     r
 }
 
@@ -429,5 +429,5 @@ unsafe extern "thiscall" fn comparar_contract_manager_lower_match_morale(this: u
     o(this, pessoa, clube, contrato);
     let depois = read_u8_volatile(contrato + 0x44) as i8;
     let esperada = plano.map_or(antes, |m| lowered_morale(antes, m));
-    PLACAR.record(depois == esperada, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plano, antes, depois, esperada));
+    SCOREBOARD.record(depois == esperada, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plano, antes, depois, esperada));
 }

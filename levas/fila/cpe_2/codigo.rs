@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn comparar_apply_result_to_table(liga: usize, p: usize
     let reg = result_update_regions(p, tab, n, pts_casa, pts_fora);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(liga, p, tab, n, marcar, pts_casa, pts_fora),
         || apply_result_to_table(liga, p, tab, n, marcar, pts_casa, pts_fora));
-    PLACAR.record(igual, || format!("apply_result_to_table({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",
+    SCOREBOARD.record(igual, || format!("apply_result_to_table({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",
         liga, p, tab, n as i16, marcar, mo, mr));
 }
 

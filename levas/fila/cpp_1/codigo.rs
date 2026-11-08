@@ -31,7 +31,7 @@ unsafe extern "C" fn comparar_compare_decision_dates(a: usize, b: usize) -> i32 
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%);
     let r = o(a, b);
     let n = compare_decision_dates(a, b);
-    PLACAR.record(r == n, || format!("compare_decision_dates original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("compare_decision_dates original={} rust={}", r, n));
     r
 }
 
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_process_due_decision_dates(this: usize, dat
         reg.push(((cpp1_d(this + 0xc) as usize).wrapping_add((i0 as usize).wrapping_mul(14)), ((i - i0) as usize) * 14));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, data, fatia), || process_due_decision_dates(this, data, fatia));
-    PLACAR.record(igual, || format!("process_due_decision_dates(fatia {}) {:x?} x {:x?}", fatia as u8 as i8, mo, mr));
+    SCOREBOARD.record(igual, || format!("process_due_decision_dates(fatia {}) {:x?} x {:x?}", fatia as u8 as i8, mo, mr));
 }
 
 /// { 0x4ca300 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::get_current_contract_offers(clube, saida)`:
@@ -161,6 +161,6 @@ unsafe extern "thiscall" fn comparar_get_current_contract_offers(this: usize, cl
     let vetor = cpp1_d(saida) as usize;
     let k = plano.len() / 111;
     let ok = r as usize == k && (k == 0 || core::slice::from_raw_parts(vetor as *const u8, k * 111) == &plano[..]);
-    PLACAR.record(ok, || format!("get_current_contract_offers(clube {:x}) original {} ofertas, plano {}", clube, r, k));
+    SCOREBOARD.record(ok, || format!("get_current_contract_offers(clube {:x}) original {} ofertas, plano {}", clube, r, k));
     r
 }

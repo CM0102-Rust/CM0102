@@ -366,7 +366,7 @@ unsafe fn compare_finance_event(nome: &str, fin: usize, original: impl FnOnce() 
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         r == n && a[..8] == b[..8] && a[0xb4..0xb8] == b[0xb4..0xb8] && a[0x154..0x158] == b[0x154..0x158] && a[0x165] == b[0x165]
     };
-    PLACAR.record(igual, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", nome, fin, r, mo, n, mr));
+    SCOREBOARD.record(igual, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", nome, fin, r, mo, n, mr));
     r
 }
 

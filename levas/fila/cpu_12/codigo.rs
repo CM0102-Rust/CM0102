@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn comparar_get_fixture_side_teams(this: usize, rodada:
     let res = o(this, rodada, jogo, lado, saida);
     let obtido = core::slice::from_raw_parts(saida, res.clamp(0, 0x100) as usize);
     let global = *(0xae1880 as *const i32);
-    PLACAR.record(res == n && global == n && obtido == &esperado[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, rodada, jogo, lado as u8, res, n, global, obtido, &esperado[..n.clamp(0, 0x100) as usize]));
+    SCOREBOARD.record(res == n && global == n && obtido == &esperado[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, rodada, jogo, lado as u8, res, n, global, obtido, &esperado[..n.clamp(0, 0x100) as usize]));
     res
 }
 
@@ -326,6 +326,6 @@ unsafe extern "thiscall" fn comparar_collect_possible_teams(this: usize, rodada:
     let fim = (*conta).clamp(c0, 0x200);
     let obtido = core::slice::from_raw_parts(saida.offset(c0 as isize), (fim - c0) as usize);
     let ok = res == n && *conta == n && obtido == &esperado[c0 as usize..n.clamp(c0, 0x200) as usize];
-    PLACAR.record(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, rodada, jogo, res, n, *conta, obtido, &esperado[c0 as usize..n.clamp(c0, 0x200) as usize]));
+    SCOREBOARD.record(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, rodada, jogo, res, n, *conta, obtido, &esperado[c0 as usize..n.clamp(c0, 0x200) as usize]));
     res
 }

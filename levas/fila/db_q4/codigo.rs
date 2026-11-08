@@ -74,7 +74,7 @@ unsafe extern "C" fn nation_is_uk_or_ireland(nacao: usize) -> u32 {
 unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = database_compare_comp_history_rows(a, b);
-    PLACAR.record(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -90,13 +90,13 @@ unsafe extern "C" fn comparar_database_player_to_attribute_vector(jogador: usize
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes,
         || o(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados),
         || database_player_to_attribute_vector(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados));
-    PLACAR.record(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, pessoa, r, n, mo, mr));
     r
 }
 
 unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nacao);
     let n = nation_is_uk_or_ireland(nacao);
-    PLACAR.record(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));
+    SCOREBOARD.record(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));
     r
 }

@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_records(this: usize, t: usize)
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, t),
         || crate::rng::without_counting(|| record_transfer(this, t, false)));
-    PLACAR.record(igual, || format!("add_transfer_records(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_transfer_records(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// A entrada da pessoa: o clube (+8), o tipo (+0xc), a competição ou −1 (+0xd) e a fase com sinal (+0x11).

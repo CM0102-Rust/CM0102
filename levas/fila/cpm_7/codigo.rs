@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, 
 unsafe extern "thiscall" fn comparar_is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, comp, data);
     let n = is_comp_current_on_date(this, comp, data);
-    PLACAR.record(r == n, || format!("is_comp_current_on_date({}, {:?}) original={} rust={}", cpm7_d(comp), friendly_date_day_year(data), r, n));
+    SCOREBOARD.record(r == n, || format!("is_comp_current_on_date({}, {:?}) original={} rust={}", cpm7_d(comp), friendly_date_day_year(data), r, n));
     r
 }
 
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn comparar_candidate_has_nearby_date(this: usize, club
     let l = cpm7_d(clube + 0x12);
     let reg: &[(usize, usize)] = if l == 0 { &[] } else { &[(l + 0xa, 4)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, clube, data), || candidate_has_nearby_date(this, clube, data));
-    PLACAR.record(igual && r == n, || format!("candidate_has_nearby_date({:?}) original={} rust={} {:x?} x {:x?}", friendly_date_day_year(data), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("candidate_has_nearby_date({:?}) original={} rust={} {:x?} x {:x?}", friendly_date_day_year(data), r, n, mo, mr));
     r
 }
 
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn comparar_add_planned_friendly(this: usize, anfitriao
     }
     let item = v.wrapping_add(n.wrapping_mul(0x14));
     let feito = [cpm7_d(item), cpm7_d(item + 4), 0, cpm7_d(item + 8), cpm7_d(item + 0xc), cpm7_d(item + 0x10)];
-    PLACAR.record(feito == esperado && cpm7_d(this + 0x34e0) == n.wrapping_add(1), || {
+    SCOREBOARD.record(feito == esperado && cpm7_d(this + 0x34e0) == n.wrapping_add(1), || {
         format!("add_planned_friendly conta {} -> {}, item {:x?} (esperava {:x?})", n, cpm7_d(this + 0x34e0), feito, esperado)
     });
 }

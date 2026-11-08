@@ -141,11 +141,11 @@ unsafe extern "thiscall" fn comparar_get_open_offers_for_club_players(this: usiz
     if lista != 0 {
         let n = get_open_offers_for_club_players(this, clube, 0);
         let r = o(this, clube, lista);
-        PLACAR.record(r == n, || format!("get_open_offers_for_club_players({:x}, lista) original={} rust={}", clube, r, n));
+        SCOREBOARD.record(r == n, || format!("get_open_offers_for_club_players({:x}, lista) original={} rust={}", clube, r, n));
         return r;
     }
     let (r, c, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, clube, 0), || get_open_offers_for_club_players(this, clube, 0));
-    PLACAR.record(igual && r == c, || format!("get_open_offers_for_club_players({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
+    SCOREBOARD.record(igual && r == c, || format!("get_open_offers_for_club_players({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
     r
 }
 
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn comparar_collapse_offers_for_player(this: usize, pes
     soltar(l);
     o(this, pessoa);
     let ok = alvo.iter().all(|&of| cpr4_b(of + 0x2c) == 0xf && cpr4_b(of + 0x2e) == 3);
-    PLACAR.record(ok, || format!("collapse_offers_for_player(pessoa {}): {} ofertas, estados {:x?}", cpr4_d(pessoa), alvo.len(), alvo.iter().map(|&of| (cpr4_b(of + 0x2c), cpr4_b(of + 0x2e))).collect::<Vec<_>>()));
+    SCOREBOARD.record(ok, || format!("collapse_offers_for_player(pessoa {}): {} ofertas, estados {:x?}", cpr4_d(pessoa), alvo.len(), alvo.iter().map(|&of| (cpr4_b(of + 0x2c), cpr4_b(of + 0x2e))).collect::<Vec<_>>()));
 }
 
 /// Comparador: o plano antes (a conta e os 13 bytes), a original roda; confere a conta e que o registro está no vetor
@@ -188,5 +188,5 @@ unsafe extern "thiscall" fn comparar_add_next_sale_percentage(this: usize, regis
     }
     let conta = cpr4_d(this + 0x888);
     let ok = conta == n.wrapping_add(1) && vector_contains_record(cpr4_d(this + 0x880), conta, 0xd, &alvo);
-    PLACAR.record(ok, || format!("add_next_sale_percentage: conta {} -> {}, registro {:x?}", n, conta, alvo));
+    SCOREBOARD.record(ok, || format!("add_next_sale_percentage: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }

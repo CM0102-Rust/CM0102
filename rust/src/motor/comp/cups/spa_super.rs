@@ -7,10 +7,10 @@ use super::*;
 ///
 /// [pt] O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.
 pub(crate) unsafe fn alloc_two_team_list(this: usize, file: usize, row: u32) -> Option<usize> {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0xc);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(file, row);
         return None;
@@ -88,15 +88,15 @@ pub(crate) unsafe extern "thiscall" fn spa_super_select_teams(this: usize) -> i3
 pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
+    let reg = [(this + cup::TEAM_COUNT, 2usize), (0xb67a34, 4)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
-        lo.set(read_u32_as_usize(this + 0xa7));
+        lo.set(read_u32_as_usize(this + cup::TEAM_TABLE));
         r
     }, || {
         let (r, _) = c();
-        lr.set(read_u32_as_usize(this + 0xa7));
-        core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
+        lr.set(read_u32_as_usize(this + cup::TEAM_TABLE));
+        core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -110,7 +110,7 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce()
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
     a
 }
 

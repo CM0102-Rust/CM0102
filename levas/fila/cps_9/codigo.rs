@@ -50,7 +50,7 @@ unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize)
     }
     let r = o(pessoa);
     let n = player_stats_get_career_goals(pessoa);
-    PLACAR.record(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", pessoa, r, n));
     r
 }
 
@@ -107,6 +107,6 @@ unsafe extern "C" fn injury_compare_entry_dates(chave: usize, item: usize) -> i3
 unsafe extern "C" fn comparar_injury_compare_entry_dates(chave: usize, item: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(chave, item);
     let n = injury_compare_entry_dates(chave, item);
-    PLACAR.record(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", chave, item, r, n));
+    SCOREBOARD.record(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", chave, item, r, n));
     r
 }

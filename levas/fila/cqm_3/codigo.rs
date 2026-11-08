@@ -52,7 +52,7 @@ unsafe fn cqm3_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnc
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
+    SCOREBOARD.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
 }
 
 /// As janelas da Turquia: uma janela, de 1º de junho a 31 de janeiro.

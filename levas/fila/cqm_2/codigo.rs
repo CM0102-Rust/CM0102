@@ -52,7 +52,7 @@ unsafe fn cqm2_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnc
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
+    SCOREBOARD.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
 }
 
 /// As janelas da Noruega: uma janela, de 1º de setembro a 31 de agosto.

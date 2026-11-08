@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usiz
         r == 0 || (cps12_w(r) == dia && cps12_w(r + 2) == ano && cps12_d(r + 0xc) == clube && cps12_d(r + 8) == 0
             && *((r + 0x18) as *const u8) == 1 && cps12_d(r + 0x10) == casa && cps12_d(r + 0x14) == fora)
     };
-    PLACAR.record(igual, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
+    SCOREBOARD.record(igual, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
         clube, dia, ano, adversario, em_casa, ocupada, r));
     r
 }

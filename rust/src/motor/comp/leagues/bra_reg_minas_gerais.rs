@@ -6,7 +6,7 @@ use super::*;
 ///
 /// [pt] O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
 pub(crate) unsafe fn half_champion(this: usize, k: usize) -> usize {
-    read_usize(read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1))
+    read_usize(read_usize(read_usize(read_usize(this + league::STAGES) + 4 * k) + 0xb1))
 }
 
 /// The Minas Gerais state league has two halves (stages 0 and 1, each a round-robin league) and, if needed, a final
@@ -161,11 +161,11 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
     history(this);
     let finances: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
     let prize: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
-    let noticia: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
+    let news: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 350000i32, 1i32), (0x3b, 100000, 2)] {
         let c = read_usize(read_usize(this + league::TABLE) + linha);
         prize(finances(read_usize(G_FINANCE_TABLE), c), valor);
-        noticia(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
+        news(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparison::branch("cqo_7 premios");
     campeoes()
@@ -178,9 +178,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
 ///
 /// [pt] 0x4a4850 `Comp_Stats::find_club_entry(clube)` (thiscall, ret 4): a entrada do clube nas estatísticas da competição
 /// ([this+8]); ordena a tabela pelo clube quando preciso (marca +0x18) e busca. Original (não portada).
-pub(crate) unsafe fn bra_reg_minas_gerais_comp_stats_club_entry(this: usize, clube: usize) -> usize {
+pub(crate) unsafe fn bra_reg_minas_gerais_comp_stats_club_entry(this: usize, club: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    f(core::ptr::read_unaligned((this + 8) as *const u32) as usize, clube)
+    f(core::ptr::read_unaligned((this + 8) as *const u32) as usize, club)
 }
 
 /// Writes the club's current, lowest and highest progress codes (+0x73, +0x74, +0x75).
@@ -199,8 +199,8 @@ pub(crate) unsafe fn write_progress_codes(e: usize, current: u8, minima: u8, max
 /// b, c)` (slot 27 do Mineiro, do Paranaense e do Carioca): grava os três códigos de progresso do clube na entrada dele
 /// (+0x73, +0x74, +0x75); na fase de pontos corridos (-1), o segundo abaixo de 3 vira 1 e o terceiro abaixo de 3 vira 2.
 /// Devolve a entrada.
-pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(this: usize, clube: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
+pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
+    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, club);
     let (a, mut b, c) = (a as u8, b as u8, c as u8);
     if stage as u8 == 0xff {
         if b < 3 {
@@ -255,9 +255,9 @@ pub(crate) fn serie_c_progress_code(x: u8, one_two: u8) -> u8 {
 /// [pt] { 0x434d90 } (thiscall, ret 0x18, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::update_staff_records_for_status`
 /// (slot 18 do Mineiro, do Paranaense e do Carioca): os pontos corridos como no Centro-Oeste; os turnos (fases 0 e 1)
 /// devolvem -1; o mata-mata na fase 2 (peso pela escala de uma rodada só: 40). Devolve 0 ou -1.
-pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
-    mineiro_end_of_stage(this, clube, status, stage, jogo, true).0
+    mineiro_end_of_stage(this, club, status, stage, game, true).0
 }
 
 

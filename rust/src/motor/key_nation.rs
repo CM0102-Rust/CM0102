@@ -13,9 +13,9 @@ use super::*;
 /// nações-chave (0xb63d60, 72 bytes, nação em +0) com a nação dada (sem conferir a nula), ou 4. Pela moral do jogo
 /// 0x4cb250, pelas aposentadorias 0x7a7310, pelo amistoso livre 0x5c6b70, pelos prêmios do dia das nações e pelas vagas
 /// da UEFA. TapeCall a cada jogador: sem contador.
-pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
+pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nation: usize) -> u8 {
     for k in 0..0x23usize {
-        if read_usize(G_LEAGUE_TABLE + 72 * k) == nacao {
+        if read_usize(G_LEAGUE_TABLE + 72 * k) == nation {
             return k as u8; // cpu1: a linha da nacao dada
         }
     }
@@ -39,13 +39,13 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
 /// 0. Senão (a original chama 0x53b900 de novo): seleção, 1; a primeira linha cujo continente (+4) é o da nação do clube
 /// (+0x71), ou 3 (sem nação, 3). Pelas aposentadorias 0x7a7310, pelo adiamento pelo tempo 0x923630, pelos dias até a
 /// temporada 0x59b4c0, pelo contrato desejado 0x85fc50, pelo ano da temporada 0x669950 e outras. Sem contador.
-pub(crate) unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if national_team(clube) == 0 {
-        let nacao = read_usize(clube + club::NATION);
-        if nacao != 0 && *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 {
+    if national_team(club) == 0 {
+        let nation = read_usize(club + club::NATION);
+        if nation != 0 && *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 {
             for k in 0..0x23usize {
-                if read_usize(G_LEAGUE_TABLE + 72 * k) == nacao {
+                if read_usize(G_LEAGUE_TABLE + 72 * k) == nation {
                     return k as u8; // cpu1: a linha da nacao escolhida
                 }
             }
@@ -53,12 +53,12 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
             return 0;
         }
     }
-    if national_team(clube) != 0 {
+    if national_team(club) != 0 {
         return 1;
     }
-    let nacao = read_usize(clube + club::NATION); // cpu1: a nacao do continente
+    let nation = read_usize(club + club::NATION); // cpu1: a nacao do continente
     for k in 0..0x23usize {
-        if nacao != 0 && read_usize(G_LEAGUE_WORLD_CUP_CONTINENT + 72 * k) == read_usize(nacao + nation::CONTINENT) {
+        if nation != 0 && read_usize(G_LEAGUE_WORLD_CUP_CONTINENT + 72 * k) == read_usize(nation + nation::CONTINENT) {
             return k as u8; // cpu1: a linha do continente
         }
     }
@@ -68,13 +68,13 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
 /// Would the club hit the 0x669360 "Error" box (not a national team, nation selected but not in the league table)?
 ///
 /// [pt] Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
-pub(crate) unsafe fn hits_key_nation_error(clube: usize) -> bool {
+pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let nacao = read_usize(clube + club::NATION);
-    national_team(clube) == 0
-        && nacao != 0
-        && *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0
-        && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao)
+    let nation = read_usize(club + club::NATION);
+    national_team(club) == 0
+        && nation != 0
+        && *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0
+        && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation)
 }
 
 
@@ -92,12 +92,12 @@ pub(crate) unsafe fn hits_key_nation_error(clube: usize) -> bool {
 /// (+0x15, sem sinal) abaixo de 60, e o dia de hoje ([0xae2c90], com sinal) antes do dia de início, o ano anterior. A
 /// original devolve só os 16 bits baixos com sentido (os altos são a sobra da vaga empurrada). Pelos registros do clube
 /// 0x444930/0x447430/0x448ad0 e pela história do jogador 0x7c3e40/0x7c5fe0.
-pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(clube: usize) -> u16 {
+pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(club: usize) -> u16 {
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let row: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let year = *(G_CURRENT_DATE_YEAR as *const u16);
-    if clube != 0 && national_team(clube) == 0 {
-        let k = row(clube) as i8 as isize;
+    if club != 0 && national_team(club) == 0 {
+        let k = row(club) as i8 as isize;
         let e = (0xb63d60isize + 72 * k) as usize;
         let start = core::ptr::read_unaligned((e + 0x15) as *const u16);
         if (read_usize(e + 0x17) != 0 || start < 0x3c) && (*(G_CURRENT_DATE as *const i16) as i32) < start as i32 {
@@ -151,12 +151,12 @@ pub(crate) unsafe fn write_date(dst: usize, day: i16, year: u16) {
 /// datas vão para `início` e `fim` quando não nulos. Pelo clube na temporada 0x547770, pela forma física 0x62a920,
 /// 0x62c680 e 0x62ce30, pelo mês do fim da temporada 0x4d45f0 e pela data da transferência 0x8cee70. TapeCall a cada
 /// jogador: sem contador.
-pub(crate) unsafe extern "C" fn key_nation_club_in_season(clube: usize, start: usize, end: usize) -> u32 {
+pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: usize, end: usize) -> u32 {
     let mut row = G_LEAGUE_EUROPE_NATION;
     let mut c: i16 = 0x28;
-    let nacao = read_usize(clube + club::NATION);
-    if nacao != 0 {
-        if let Some(k) = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao) {
+    let nation = read_usize(club + club::NATION);
+    if nation != 0 {
+        if let Some(k) = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation) {
             row = 0xb63d60 + 72 * k;
             c = read_i16(row + 0x39);
         }
@@ -204,13 +204,13 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(clube: usize, start: u
 /// ([0xae2d08]); sem ela ou sem continente, o da primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
 pub(crate) unsafe extern "C" fn key_nation_get_main_continent() -> usize {
     let h = read_usize(G_MAIN_NATION);
-    if h != 0 && read_usize(h + 0x71) != 0 {
-        return read_usize(h + 0x71);
+    if h != 0 && read_usize(h + nation::CONTINENT) != 0 {
+        return read_usize(h + nation::CONTINENT);
     }
     for k in 0..0x23usize {
         let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        if n != 0 && *((n + 0x11c) as *const u8) & 2 != 0 {
-            return read_usize(n + 0x71);
+        if n != 0 && *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 != 0 {
+            return read_usize(n + nation::CONTINENT);
         }
     }
     0
@@ -229,7 +229,7 @@ pub(crate) unsafe extern "C" fn key_nation_get_main_nation() -> usize {
     }
     for k in 0..0x23usize {
         let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        if n != 0 && *((n + 0x11c) as *const u8) & 2 != 0 {
+        if n != 0 && *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 != 0 {
             return n;
         }
     }
@@ -298,9 +298,9 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
 /// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
 /// conferir a competição nula (o caso de erro nunca chega à caixa). TapeCall a cada partida: sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
-    let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
-    if nacao != 0 {
-        let row = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao); // cpt4: a busca da nacao
+    let nation = read_usize(comp + competition::CLUB_COMP_NATION);
+    if nation != 0 {
+        let row = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation); // cpt4: a busca da nacao
         return match row {
             Some(k) => k as u8, // cpt4: a linha da nacao
             None => 4,

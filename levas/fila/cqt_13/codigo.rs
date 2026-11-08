@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_stage(this:
     o(this);
     let fase = cqt13_d(cqt13_d(this + 0xc) + 0xc);
     if fase == 0 {
-        PLACAR.record(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this));
+        SCOREBOARD.record(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt13_d(fase + 0xa7);
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_stage(this:
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt13_w(fase + 0x3e) == 8 && cqt13_d(fase + 4) == cqt13_d(this + 4) && cqt13_d(this + 0x30) == 3;
-    PLACAR.record(igual, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    SCOREBOARD.record(igual, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 
 /// { 0x40dfa0 } (thiscall, ret 0, asia_cup_winner.cpp; a virtual +0x28): `AsiaCupWinner::advance_stage()`: na última
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_advance_stage(this: usize) 
     let ultima = f >= (cqt13_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqt13_d(this + 0x30) as i32;
-    PLACAR.record(depois == if ultima { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    SCOREBOARD.record(depois == if ultima { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// Os 4 finalistas da Recopa asiática: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize) {
     o(this);
     let fase = cqt13_d(cqt13_d(this + 0xc) + 4);
     if fase == 0 {
-        PLACAR.record(false, || format!("create_finals_stage({:#x}) sem fase", this));
+        SCOREBOARD.record(false, || format!("create_finals_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt13_d(fase + 0xa7);
@@ -215,5 +215,5 @@ unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize) {
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt13_w(fase + 0x3e) == 4 && cqt13_d(fase + 4) == cqt13_d(this + 4);
-    PLACAR.record(igual, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    SCOREBOARD.record(igual, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }

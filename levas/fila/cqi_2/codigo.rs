@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn comparar_collect_european_clubs(this: usize, saida: 
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.record(igual && tabela, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqi2_dif(&mo, &mr)));
+    SCOREBOARD.record(igual && tabela, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqi2_dif(&mo, &mr)));
     a
 }
 
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn comparar_assign_champions_league_places(this: usize,
     let mut reg = club_regions();
     reg.push((this, 0x440));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, conta), || assign_champions_league_places(this, clubes, conta));
-    PLACAR.record(igual, || format!("assign_champions_league_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("assign_champions_league_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
 }
 
 /// { 0x904e30 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_intertoto_places`): as vagas da Intertoto
@@ -299,5 +299,5 @@ unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: usize, clubes
     reg.push((this, 0x440));
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, conta), || crate::rng::without_counting(|| assign_intertoto_places(this, clubes, conta)));
-    PLACAR.record(igual, || format!("assign_intertoto_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("assign_intertoto_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
 }

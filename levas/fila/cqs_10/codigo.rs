@@ -103,7 +103,7 @@ unsafe fn con_merc_cup_compare_knockout_stage(nome: &str, this: usize, times: us
     original();
     let fase = cqs10_d(cqs10_d(this + 0xc) + mata * 4);
     if fase == 0 {
-        PLACAR.record(false, || format!("{}({:#x}) sem fase", nome, this));
+        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
     let lista = cqs10_d(fase + 0xa7);
@@ -112,7 +112,7 @@ unsafe fn con_merc_cup_compare_knockout_stage(nome: &str, this: usize, times: us
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqs10_w(fase + 0x3e) as usize == times && cqs10_d(fase + 4) == cqs10_d(this + 4);
-    PLACAR.record(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqs10_w(fase + 0x3e)));
+    SCOREBOARD.record(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqs10_w(fase + 0x3e)));
 }
 
 /// { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
@@ -164,5 +164,5 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
     let ultima = f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqs10_d(this + 0x30) as i32;
-    PLACAR.record(depois == if ultima { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    SCOREBOARD.record(depois == if ultima { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }

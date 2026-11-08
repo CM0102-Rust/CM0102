@@ -12,7 +12,7 @@ unsafe extern "C" fn database_is_polynesian_nation(nacao: usize) -> u32 {
 unsafe extern "C" fn comparar_database_is_polynesian_nation(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nacao);
     let n = database_is_polynesian_nation(nacao);
-    PLACAR.record(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nacao, r, n));
+    SCOREBOARD.record(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -45,7 +45,7 @@ unsafe extern "C" fn comparar_database_get_coaching_job_name(cargo: u32, genero:
     let com = [(0xae1980usize, 64usize), (genero, 1)];
     let regioes = if genero != 0 { &com[..] } else { &com[..1] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regioes, || o(cargo, genero), || database_get_coaching_job_name(cargo, genero));
-    PLACAR.record(igual && r == n, || format!("database_get_coaching_job_name({}) original={:x} rust={:x} {:x?} x {:x?}", cargo as i8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_coaching_job_name({}) original={:x} rust={:x} {:x?} x {:x?}", cargo as i8, r, n, mo, mr));
     r
 }
 
@@ -76,6 +76,6 @@ unsafe extern "C" fn comparar_database_format_years_between_dates(fim: usize, in
     // "%d" de uma palavra: até 6 bytes com o zero
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, 6)], || o(fim, inicio, texto, tamanho),
         || database_format_years_between_dates(fim, inicio, texto, tamanho));
-    PLACAR.record(igual && r == n, || format!("database_format_years_between_dates({:x}, {:x}) original={} rust={} {:x?} x {:x?}", fim, inicio, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_format_years_between_dates({:x}, {:x}) original={} rust={} {:x?} x {:x?}", fim, inicio, r, n, mo, mr));
     r
 }

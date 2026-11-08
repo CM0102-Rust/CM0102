@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn comparar_record_club_call_ups(this: usize, time: usi
         crate::rng::pause_trace(|| qsort(esperado.as_mut_ptr() as usize, 0x32, 4, 0x778ef0));
         o(this, time, b, p);
         let obtido: Vec<u32> = (0..0x32usize).map(|i| cpw13_d(time + 0xd7 + 4 * i) as u32).collect();
-        PLACAR.record(obtido == esperado, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", time, obtido, esperado));
+        SCOREBOARD.record(obtido == esperado, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", time, obtido, esperado));
         return;
     }
     let mut reg = vec![(time + 0xd7, 0xc8)];
@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn comparar_record_club_call_ups(this: usize, time: usi
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, time, b, p), || record_club_call_ups(this, time, b, p));
-    PLACAR.record(igual, || format!("record_club_call_ups({:x}, b {}, partida {:x}) {:x?} x {:x?}", time, b, p, mo, mr));
+    SCOREBOARD.record(igual, || format!("record_club_call_ups({:x}, b {}, partida {:x}) {:x?} x {:x?}", time, b, p, mo, mr));
 }
 
 /// { 0x48e190 } (thiscall, ret 0xc, comp.cpp): `Comp::get_fixture_match_importance(partida, a, b)`: a fase da partida
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn get_fixture_match_importance(this: usize, p: usize, 
 unsafe extern "thiscall" fn comparar_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I1%%)(this, p, a, b);
     let n = get_fixture_match_importance(this, p, a, b);
-    PLACAR.record(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
     r
 }
 
@@ -210,6 +210,6 @@ unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -> usize {
     }
     let r = o(this, k);
     let n = get_stage(this, k);
-    PLACAR.record(r == n, || format!("get_stage({:x}, {}) original={:x} rust={:x}", this, k, r, n));
+    SCOREBOARD.record(r == n, || format!("get_stage({:x}, {}) original={:x} rust={:x}", this, k, r, n));
     r
 }

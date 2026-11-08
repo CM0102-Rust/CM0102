@@ -6,7 +6,7 @@ Created on 2026-10-17 for Lucas's button football game (a 2D engine in Rust that
 
 ## The contract (version 1)
 
-- The `ddraw.dll` (the core, `rust/src/extensao.rs`) loads, if present, `botao.dll` from the game folder, at the first match instant.
+- The `ddraw.dll` (the core, `rust/src/extension.rs`) loads, if present, `botao.dll` from the game folder, at the first match instant.
 - The DLL exports, in C:
   - `extern "C" fn cm_instante(motor: *const u8)`: called at the start of each instant of the engine loop (0x6b98c0, `laco_do_motor` in `motor.rs`);
   - `extern "C" fn cm_versao() -> u32` (optional): the contract version it expects; if it differs from `extensao::VERSAO`, the DLL is not used.

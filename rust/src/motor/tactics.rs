@@ -13,13 +13,13 @@ use super::*;
 /// negativa, 0. A pessoa (0x6e bytes em [0xae23bc]) sem +0x61 apaga a celula (0); do clube (+0x39),
 /// numa selecao (0x53b900) ou com o vinculo das selecoes (0x775790 em [0xb74318]) e devolvida; senao
 /// a celula vira -1 (0). Clube nulo, tipo ou lado fora: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, clube: usize, kind: u32, side: u32, human: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, kind: u32, side: u32, human: u32) -> usize {
     let (t, l) = (kind as u8 as i8, side as u8 as i8);
-    if clube == 0 || !(0..=4).contains(&t) || !(0..=1).contains(&l) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize>(IDX_STORED_TAKER)(this, clube, kind, side, human);
+    if club == 0 || !(0..=4).contains(&t) || !(0..=1).contains(&l) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize>(IDX_STORED_TAKER)(this, club, kind, side, human);
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(clube, human);
+    let k = row(club, human);
     if k == -1 {
         crate::comparison::branch("batedor sem linha");
         return 0;
@@ -41,13 +41,13 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, clube: usize, k
         *cell = -1;
         return 0;
     }
-    if *((person + staff::CLUB_JOB) as *const usize) == clube {
+    if *((person + staff::CLUB_JOB) as *const usize) == club {
         crate::comparison::branch("batedor do clube");
         return person;
     }
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let contract_bond: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONALTEAMS_IS_NATIONAL_OR_ALL_STAR_TEAM);
-    if national_team(clube) != 0 || contract_bond(*(G_NATIONAL_TEAMS as *const usize), clube) != 0 {
+    if national_team(club) != 0 || contract_bond(*(G_NATIONAL_TEAMS as *const usize), club) != 0 {
         crate::comparison::branch("batedor de fora do clube");
         return person;
     }
@@ -77,12 +77,12 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, clube: usize, k
 /// instrucoes viram -1. Devolvendo com `usar`, o espaco do mesmo clube e pessoa volta para a tabela
 /// e e liberado; sem `usar`, libera todos os espacos do clube e pessoa. Clube nulo: a original (caixa
 /// de erro); linha -1: 0; senao 1.
-pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, clube: usize, person: u32, usar: u32, volta: u32) -> u32 {
-    if clube == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_STORE_INSTRUCTIONS)(this, clube, person, usar, volta);
+pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usize, person: u32, usar: u32, volta: u32) -> u32 {
+    if club == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_STORE_INSTRUCTIONS)(this, club, person, usar, volta);
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(clube, person);
+    let k = row(club, person);
     if k == -1 {
         return 0;
     }
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, clube: us
                 if *u(s, 0x38) == 0 {
                     *ocupados = (*ocupados).wrapping_add(1);
                 }
-                *u(s, 0x30) = clube as u32;
+                *u(s, 0x30) = club as u32;
                 *u(s, 0x34) = person;
                 *u(s, 0x38) = 1;
                 for i in 0..20 {
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, clube: us
     }
     if usar != 0 {
         if let Some(s) = espaco() {
-            if *u(s, 0x38) != 0 && *u(s, 0x30) == clube as u32 && *u(s, 0x34) == person {
+            if *u(s, 0x38) != 0 && *u(s, 0x30) == club as u32 && *u(s, 0x34) == person {
                 crate::comparison::branch("instructions devolvidas");
                 for i in 0..20 {
                     *instrucao(i) = *u(s, 0x3c + 4 * i);
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, clube: us
     if *ocupados != 0 {
         for e in 0..16 {
             let s = this + e * 0x5c;
-            if *u(s, 0x38) != 0 && *u(s, 0x30) == clube as u32 && *u(s, 0x34) == person {
+            if *u(s, 0x38) != 0 && *u(s, 0x30) == club as u32 && *u(s, 0x34) == person {
                 crate::comparison::branch("instructions liberadas");
                 *u(s, 0x38) = 0;
                 *ocupados = (*ocupados).wrapping_sub(1);
@@ -158,12 +158,12 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, clube: us
 /// [pt] { 0x8983f0 } (ret 0xc, tactics.cpp): copia a linha tatica do clube (0x91 bytes em +0x601 + linha
 /// x 0x91, linha da 0x8982b0 com `humano`) para `destino`. Clube nulo: a original (caixa de erro);
 /// linha -1: 0; senao 1.
-pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, clube: usize, target: *mut u8, human: u32) -> u32 {
-    if clube == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32) -> u32>(IDX_READ_TACTICS_ROW)(this, clube, target, human);
+pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, club: usize, target: *mut u8, human: u32) -> u32 {
+    if club == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32) -> u32>(IDX_READ_TACTICS_ROW)(this, club, target, human);
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(clube, human);
+    let k = row(club, human);
     if k == -1 {
         return 0;
     }
@@ -178,12 +178,12 @@ pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, clube: usiz
 ///
 /// [pt] { 0x8984d0 } (ret 0xc, tactics.cpp): o inverso da 0x8983f0, grava `origem` (0x91 bytes) na linha
 /// tatica do clube. Linha -1 ou alem do total (+0x605): 0.
-pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, clube: usize, source: *const u8, human: u32) -> u32 {
-    if clube == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, *const u8, u32) -> u32>(IDX_WRITE_TACTICS_ROW)(this, clube, source, human);
+pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, club: usize, source: *const u8, human: u32) -> u32 {
+    if club == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, *const u8, u32) -> u32>(IDX_WRITE_TACTICS_ROW)(this, club, source, human);
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(clube, human);
+    let k = row(club, human);
     if k == -1 || k >= *((this + 0x605) as *const i32) {
         return 0;
     }
@@ -196,9 +196,9 @@ pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, clube: usi
 /// plus the RNG global.
 ///
 /// [pt] Regioes das duas: o destino/origem e a linha do clube (se houver).
-pub(crate) unsafe fn tactics_row_regions(this: usize, clube: usize, p: usize, human: u32) -> Vec<(usize, usize)> {
+pub(crate) unsafe fn tactics_row_regions(this: usize, club: usize, p: usize, human: u32) -> Vec<(usize, usize)> {
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(clube, human);
+    let k = row(club, human);
     let mut reg = vec![(0xb67a34, 4), (p, 0x91)];
     if k != -1 && k < *((this + 0x605) as *const i32) {
         reg.push(((*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91), 0x91));
@@ -236,7 +236,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     let word = |o: usize, side: usize| *((m + o + 2 * side) as *const i16) as i32;
     let jog = |side: usize, i: i8| (m as isize + 0x4796 + (i as isize + side as isize * 20) * 0x1be) as usize;
     let add = |p: usize, d: i16| {
-        let q = (p + 0x35) as *mut i16;
+        let q = (p + match_player::MATCH_RATING) as *mut i16;
         *q = (*q).wrapping_add(d);
     };
     let pt = || u(m, 0x4792);
@@ -314,7 +314,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     break 'rodadas;
                 }
                 let p = jog(side, c as i8);
-                let f = (read_f32_at(p + 0xdd) as f64 + read_f32_at(0x96b020) as f64) as f32; // 0x96b020 = 15
+                let f = (read_f32_at(p + match_player::TACKLING) as f64 + read_f32_at(0x96b020) as f64) as f32; // 0x96b020 = 15
                 let r = sortear(word(0x1de, other) / 5);
                 if !(r as f64 >= f as f64) {
                     add(p, 0x28);
@@ -338,7 +338,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     }
                 };
                 let p = jog(side, i);
-                let f = (read_f32_at(p + 0xad) as f64 + read_f32_at(0x96b020) as f64) as f32; // 0x96b020 = 15
+                let f = (read_f32_at(p + match_player::JUMPING) as f64 + read_f32_at(0x96b020) as f64) as f32; // 0x96b020 = 15
                 let r = sortear((word(0x1f2, other) + 100) / 7);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5ec + side * 0x36));
@@ -628,7 +628,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 if byte(p, 0x19) < 0 || person == 0 {
                     continue;
                 }
-                let f = read_f32_at(p + 0x4d);
+                let f = read_f32_at(p + match_player::STAMINA);
                 let mut cl = (byte(person, 0x2d) as u8).wrapping_mul(2).wrapping_add(5);
                 if !(f >= read_f32_at(0x96d30c)) { // 0x96d30c = 6750
                     cl = cl.wrapping_add(0xf);
@@ -658,18 +658,18 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     for s in 0..2 {
         for i in 0..20i8 {
             let p = jog(s, i);
-            let q = (p + 0x35) as *mut i16;
+            let q = (p + match_player::MATCH_RATING) as *mut i16;
             if *(pt() as *const i32) == -2 && i < 11 {
                 crate::comparison::branch("simulacao rapida nota do amistoso");
-                let clube = if s != 0 { u(pt(), 0x20) } else { u(pt(), 0x1c) };
-                let a = (*((p + 0x3b) as *const i16) as f64 - read_f64_at(0x968e30)) * read_f64_at(0x968ff8); // 0x968e30 = 40, 0x968ff8 = 50
-                let r = *((clube + club::REPUTATION) as *const i16) as f64 * read_f64_at(0x969018) - read_f64_at(0x96d300); // 0x969018 = 1.6, 0x96d300 = 6000
+                let club = if s != 0 { u(pt(), 0x20) } else { u(pt(), 0x1c) };
+                let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64_at(0x968e30)) * read_f64_at(0x968ff8); // 0x968e30 = 40, 0x968ff8 = 50
+                let r = *((club + club::REPUTATION) as *const i16) as f64 * read_f64_at(0x969018) - read_f64_at(0x96d300); // 0x969018 = 1.6, 0x96d300 = 6000
                 let v = match_pl_ftol(((a - r) * read_f64_at(0x96d2f8) + read_f64_at(0x967890)) * *q as f64) as i16; // 0x96d2f8 = 2e-05, 0x967890 = 1
                 *q = v.clamp(0xdac, 0x2ee0);
             }
             let n = (match_pl_ftol((*q as i32 + 0x1770) as f64 * read_f64_at(0x96a608) + read_f64_at(0x96d2f0)) as i8).clamp(1, 10); // 0x96a608 = 0.0004, 0x96d2f0 = 1.83
             *((p + 0x1b) as *mut i8) = n;
-            *((p + 0x51) as *mut u32) = *((p + 0x4d) as *const u32);
+            *((p + 0x51) as *mut u32) = *((p + match_player::STAMINA) as *const u32);
         }
     }
     for (a, x) in [(0xf5e2, 0xf5e4), (0xf618, 0xf61a)] {
@@ -691,9 +691,9 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
 ///
 /// [pt] Linha tatica do clube (0x8982b0) e o inicio dela na tabela em +0x601 (0x91 bytes por linha), ou
 /// `None` na linha -1.
-pub(crate) unsafe fn tactics_row_of_club(this: usize, clube: usize, human: u32) -> Option<usize> {
+pub(crate) unsafe fn tactics_row_of_club(this: usize, club: usize, human: u32) -> Option<usize> {
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let l = row(clube, human);
+    let l = row(club, human);
     (l != -1).then(|| (*((this + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)))
 }
 
@@ -704,11 +704,11 @@ pub(crate) unsafe fn tactics_row_of_club(this: usize, clube: usize, human: u32) 
 /// [pt] { 0x897590 } (tactics.cpp): a vaga (0..20) cuja pessoa (indice em +2 + 4 x vaga, no vetor de
 /// 0xae23bc) tem o id guardado em +0x52 da linha; sem nenhuma: -1 com `menos_um`, senao 0. Linha
 /// -1: 0. Clube nulo: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn marked_slot(this: usize, clube: usize, human: u32, minus_one: u32) -> i8 {
-    if clube == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(IDX_MARKED_SLOT)(this, clube, human, minus_one);
+pub(crate) unsafe extern "thiscall" fn marked_slot(this: usize, club: usize, human: u32, minus_one: u32) -> i8 {
+    if club == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(IDX_MARKED_SLOT)(this, club, human, minus_one);
     }
-    let Some(linha) = tactics_row_of_club(this, clube, human) else { return 0 };
+    let Some(linha) = tactics_row_of_club(this, club, human) else { return 0 };
     let persons = *(G_STAFF_TABLE as *const usize);
     for vaga in 0..20usize {
         let i = *((linha + 2 + 4 * vaga) as *const i32);
@@ -725,11 +725,11 @@ pub(crate) unsafe extern "thiscall" fn marked_slot(this: usize, clube: usize, hu
 ///
 /// [pt] { 0x897760 } (tactics.cpp): guarda em +0x52 da linha o indice da pessoa da vaga (0..20); 1 se
 /// havia alguem (-1 = vazia). Linha -1: 0. Clube nulo ou vaga fora: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn mark_slot(this: usize, clube: usize, slot: i8, human: u32) -> u32 {
-    if clube == 0 || !(0..20).contains(&slot) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(IDX_MARK_SLOT)(this, clube, slot, human);
+pub(crate) unsafe extern "thiscall" fn mark_slot(this: usize, club: usize, slot: i8, human: u32) -> u32 {
+    if club == 0 || !(0..20).contains(&slot) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(IDX_MARK_SLOT)(this, club, slot, human);
     }
-    let Some(linha) = tactics_row_of_club(this, clube, human) else { return 0 };
+    let Some(linha) = tactics_row_of_club(this, club, human) else { return 0 };
     let i = *((linha + 2 + 4 * slot as usize) as *const i32);
     if i == -1 {
         return 0;
@@ -745,11 +745,11 @@ pub(crate) unsafe extern "thiscall" fn mark_slot(this: usize, clube: usize, slot
 /// [pt] { 0x897dc0 } (tactics.cpp): a pessoa (vetor de 0xae23bc, 110 bytes cada) do indice em +0x56 +
 /// 4 x `qual` (0 ou 1) da linha; indice negativo ou linha -1: 0. Clube nulo ou `qual` fora: a
 /// original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn row_person(this: usize, clube: usize, which: i8, human: u32) -> usize {
-    if clube == 0 || !(0..2).contains(&which) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_ROW_PERSON)(this, clube, which, human);
+pub(crate) unsafe extern "thiscall" fn row_person(this: usize, club: usize, which: i8, human: u32) -> usize {
+    if club == 0 || !(0..2).contains(&which) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_ROW_PERSON)(this, club, which, human);
     }
-    let Some(linha) = tactics_row_of_club(this, clube, human) else { return 0 };
+    let Some(linha) = tactics_row_of_club(this, club, human) else { return 0 };
     let i = *((linha + 0x56 + 4 * which as usize) as *const i32);
     if i < 0 {
         return 0;
@@ -766,27 +766,27 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, clube: usize, whi
 /// linha do tecnico, depois dos clubes (0xae235c): quantidade de pessoas (0xae2364) - id do tecnico
 /// (+0xcf) - 1, ou + 15 numa selecao (0x53b900), fora da faixa: a original (caixa de erro). Nos
 /// outros casos, o id do clube.
-pub(crate) unsafe extern "stdcall" fn tactics_row(clube: usize, human: u32) -> i32 {
+pub(crate) unsafe extern "stdcall" fn tactics_row(club: usize, human: u32) -> i32 {
     let and_human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    if and_human(clube, 1, 1, 0, 0) != 0 && human != 0 {
+    if and_human(club, 1, 1, 0, 0) != 0 && human != 0 {
         let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
-        if second(clube) != 0 {
+        if second(club) != 0 {
             return -1;
         }
-        let manager = *((clube + club::MANAGER) as *const usize);
+        let manager = *((club + club::MANAGER) as *const usize);
         if manager == 0 {
-            return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(clube, human);
+            return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club, human);
         }
         let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
         let clubs = *(G_CLUB_COUNT as *const i32);
         let base = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(manager as *const i32));
-        let i = base.wrapping_add(if is_national_team(clube) != 0 { 0xf } else { -1 }).wrapping_add(clubs);
+        let i = base.wrapping_add(if is_national_team(club) != 0 { 0xf } else { -1 }).wrapping_add(clubs);
         if i < 0 || i >= clubs.wrapping_add(0x20) {
-            return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(clube, human);
+            return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club, human);
         }
         return i;
     }
-    *(clube as *const i32)
+    *(club as *const i32)
 }
 
 /// Returns byte `pos` (0..10) of the club's tactics row (index from 0x8982b0, for the human manager when `humano`) in
@@ -796,12 +796,12 @@ pub(crate) unsafe extern "stdcall" fn tactics_row(clube: usize, human: u32) -> i
 /// [pt] { 0x898040 } (tactics.cpp): byte `pos` (0..=10) da linha tatica do clube (0x8982b0) na tabela
 /// em +0x601 (0x91 bytes por linha, a partir de +0x86); linha -1: 0. Clube nulo ou posicao fora:
 /// a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, clube: usize, pos: i8, human: u32) -> u8 {
-    if clube == 0 || !(0..=10).contains(&pos) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u8>(IDX_TACTICS_BYTE)(this, clube, pos, human);
+pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, club: usize, pos: i8, human: u32) -> u8 {
+    if club == 0 || !(0..=10).contains(&pos) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u8>(IDX_TACTICS_BYTE)(this, club, pos, human);
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let l = row(clube, human);
+    let l = row(club, human);
     if l == -1 {
         return 0;
     }
@@ -816,8 +816,8 @@ pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, clube: usize, p
 ///
 /// [pt] A linha da tabela de estatísticas das táticas ([this], 0x28 bytes por tática) usada pelo clube: a palavra +0 do
 /// registro de 0x91 bytes do clube (id em +0) na tabela tática (+0x601).
-pub(crate) unsafe fn tactic_stats_row(this: usize, clube: usize) -> usize {
-    let id = read_usize(clube);
+pub(crate) unsafe fn tactic_stats_row(this: usize, club: usize) -> usize {
+    let id = read_usize(club);
     let k = read_i16(read_usize(this + 0x601).wrapping_add(id.wrapping_mul(0x91))) as i32;
     read_usize(this).wrapping_add((k as isize * 0x28) as usize)
 }
@@ -853,14 +853,14 @@ pub(crate) fn at_least_one(x: i16) -> f64 {
 /// a = pró, b = contra e c = pontos (cada um pelo menos 1), q = c/p, g = a/p, h = g·q², r = p/b: +0x10 = r·h·g, +0x18
 /// = r·g·q²·q, +0x20 = r·r·h (a ordem das contas do x87). A escolha da formação do computador (0x6e0230) lê +2 e as
 /// três razões. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u32 {
-    if jogo == 0 {
+pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: usize) -> u32 {
+    if game == 0 {
         show_error_at(0xa8b908, 0x1f9);
         return 0;
     }
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     for k in 0..2 {
-        let c = read_usize(jogo + 0x1c + 4 * k);
+        let c = read_usize(game + 0x1c + 4 * k);
         if c != 0 && human(c, 0, 1, 0, 0) != 0 {
             return 0;
         }
@@ -871,13 +871,13 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: u
     let pr = reg.as_mut_ptr() as usize;
     data_default(pr);
     for k in 0..2 {
-        let c = read_usize(jogo + 0x1c + 4 * k);
+        let c = read_usize(game + 0x1c + 4 * k);
         if c == 0 {
             show_error_at(0xa8b908, 0x20a);
             continue;
         }
         let l = tactic_stats_row(this, c);
-        record(jogo, c, pr);
+        record(game, c, pr);
         let m = |o: usize| (l + o) as *mut i16;
         crate::comparison::branch("cpz_5 linha da tatica");
         *m(2) = (*m(2)).wrapping_add(1);
@@ -921,13 +921,13 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: u
 /// [pt] { 0x8976a0 } (thiscall, ret 8, tactics.cpp): `Tactics::get_captain(clube, time)`, das telas de tática (0x8a7440). Clube
 /// nulo: a caixa da linha 0x527 e 0. A linha do clube (0x8982b0, thiscall(this, clube, time), ret 8; −1: 0); devolve o
 /// dword +0x52 do registro de 0x91 bytes da linha na tabela tática (+0x601).
-pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, clube: usize, team: u32) -> u32 {
-    if clube == 0 {
+pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, club: usize, team: u32) -> u32 {
+    if club == 0 {
         show_error_at(0xa8b908, 0x527);
         return 0;
     }
     let row: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(this, clube, team);
+    let k = row(this, club, team);
     if k == -1 {
         return 0;
     }
@@ -945,8 +945,8 @@ pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, clube: usize, te
 /// [pt] { 0x897880 } (thiscall, ret 0xc, tactics.cpp): `Tactics::set_captain(clube, &pessoa, time)`, ao aplicar as mudanças da
 /// tela de tática (0x8a80d0). Clube nulo: a caixa da linha 0x579; ponteiro nulo: a da 0x581; 0. A linha do clube
 /// (0x8982b0; −1: 0); grava o dword apontado em +0x52 do registro da linha (+0x601) e devolve 1.
-pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, clube: usize, person: usize, team: u32) -> u32 {
-    if clube == 0 {
+pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, club: usize, person: usize, team: u32) -> u32 {
+    if club == 0 {
         show_error_at(0xa8b908, 0x579);
         return 0;
     }
@@ -955,7 +955,7 @@ pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, clube: usize, pe
         return 0;
     }
     let row: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(this, clube, team);
+    let k = row(this, club, team);
     if k == -1 {
         return 0;
     }
@@ -973,9 +973,9 @@ pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, clube: usize, pe
 /// Club's row in the tactics table (FN_TACTICS_GET_CLUB_TACTICS_INDEX, stdcall(club, human)); −1 without one.
 ///
 /// [pt] A linha do clube na tabela tática (0x8982b0, stdcall(clube, humano); −1 sem linha).
-pub(crate) unsafe fn club_tactics_index(clube: usize, human: u32) -> i32 {
+pub(crate) unsafe fn club_tactics_index(club: usize, human: u32) -> i32 {
     let f: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    f(clube, human)
+    f(club, human)
 }
 
 /// Start of tactics row l (0x91 bytes each, from [this+0x601]).
@@ -989,13 +989,13 @@ pub(crate) unsafe fn tactics_row_start(this: usize, l: i32) -> usize {
 ///
 /// [pt] As 16 cópias para desfazer (0x5c bytes a partir de this+0x30: +0 clube, +4 time, +8 a cópia; conta em +0x5f0): a do
 /// clube e do time some (+8 = 0) e a conta desce.
-pub(crate) unsafe fn drop_undo_copies(this: usize, clube: usize, team: u32) {
+pub(crate) unsafe fn drop_undo_copies(this: usize, club: usize, team: u32) {
     if read_u8(this + 0x5f0) == 0 {
         return;
     }
     for k in 0..0x10usize {
         let e = this + 0x30 + k * 0x5c;
-        if read_usize(e + 8) != 0 && read_usize(e) == clube && read_usize(e + 4) as u32 == team {
+        if read_usize(e + 8) != 0 && read_usize(e) == club && read_usize(e + 4) as u32 == team {
             write_u32(e + 8, 0);
             *((this + 0x5f0) as *mut u8) = read_u8(this + 0x5f0).wrapping_sub(1);
         }
@@ -1005,9 +1005,9 @@ pub(crate) unsafe fn drop_undo_copies(this: usize, clube: usize, team: u32) {
 /// Memory regions of the club's lineup routines: its tactics row (if any) and the undo copies with their count.
 ///
 /// [pt] As regiões da escalação do clube: a linha dele na tabela tática (se houver) e as cópias para desfazer com a conta.
-pub(crate) unsafe fn lineup_regions(this: usize, clube: usize, team: u32) -> Vec<(usize, usize)> {
+pub(crate) unsafe fn lineup_regions(this: usize, club: usize, team: u32) -> Vec<(usize, usize)> {
     let mut reg = vec![(this + 0x30, 0x5c1)];
-    let l = club_tactics_index(clube, team);
+    let l = club_tactics_index(club, team);
     if l != -1 {
         reg.push((tactics_row_start(this, l), 0x91));
     }
@@ -1034,11 +1034,11 @@ pub(crate) unsafe fn lineup_regions(this: usize, clube: usize, team: u32) -> Vec
 /// +0x5a: 0x897dc0 e 0x897ee0) e os batedores das cinco bolas paradas nos dois lados (0x897990 e 0x897bb0) que são ela
 /// ficam vazios. As cópias para desfazer do clube e do time somem. Devolve 1 se a tirou de uma vaga ou de bola parada.
 /// Clube ou pessoa nulos: a original (caixa "Error", 0).
-pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usize, person: usize, team: u32, papeis: u32) -> u32 {
-    if clube == 0 || person == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_REMOVE_PLAYER_FROM_SELECTION)(this, clube, person, team, papeis); // message box: original only
+pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize, club: usize, person: usize, team: u32, papeis: u32) -> u32 {
+    if club == 0 || person == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_REMOVE_PLAYER_FROM_SELECTION)(this, club, person, team, papeis); // message box: original only
     }
-    let l = club_tactics_index(clube, team);
+    let l = club_tactics_index(club, team);
     if l == -1 {
         return 0;
     }
@@ -1059,21 +1059,21 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
         let batedor: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_TACTICS_GET_SET_PIECE_TAKER);
         let mark: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_SET_PIECE_TAKER);
         for qual in 0..2u32 {
-            if of_row(this, clube, qual, team) == person {
-                extra(this, clube, qual, 0, team);
+            if of_row(this, club, qual, team) == person {
+                extra(this, club, qual, 0, team);
             }
         }
         for tipo in 0..5u32 {
             for lado in 0..2u32 {
-                if batedor(this, clube, tipo, lado, team) == person {
+                if batedor(this, club, tipo, lado, team) == person {
                     crate::comparison::branch("cpx_9 batedor tirado");
-                    mark(this, clube, tipo, lado, 0, team);
+                    mark(this, club, tipo, lado, 0, team);
                     found = 1;
                 }
             }
         }
     }
-    drop_undo_copies(this, clube, team);
+    drop_undo_copies(this, club, team);
     found
 }
 
@@ -1090,19 +1090,19 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
 /// elenco (0x46835e). Vagas `a` e `b` (bytes com sinal, 0..19): troca os ids das duas vagas da escalação (+2 + 4 × vaga
 /// da linha tática, 0x90ba90 com 4 bytes) e as cópias para desfazer do clube e do time somem; devolve 1. Sem linha
 /// (0x8982b0): 0. Clube nulo ou vaga fora: a original (caixa "Error", 0).
-pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, team: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, club: usize, a: u32, b: u32, team: u32) -> u32 {
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
-    if clube == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_SWAP_SELECTION_SLOTS)(this, clube, a, b, team); // message box: original only
+    if club == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_SWAP_SELECTION_SLOTS)(this, club, a, b, team); // message box: original only
     }
-    let l = club_tactics_index(clube, team);
+    let l = club_tactics_index(club, team);
     if l == -1 {
         return 0;
     }
     let swap: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_UTILS_SWAP_BYTES);
     let start = tactics_row_start(this, l);
     swap(start + 2 + 4 * va as usize, start + 2 + 4 * vb as usize, 4);
-    drop_undo_copies(this, clube, team);
+    drop_undo_copies(this, club, team);
     1
 }
 
@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, clube: 
 /// [pt] { 0x897250 } (thiscall, ret 8, tactics.cpp): `Tactics::has_selection_undo(clube, time)`, pela tela do elenco
 /// (0x458a58). Com cópias (+0x5f0) e o humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]): a cópia dele (índice
 /// [0xae2364] − id − 1, de 0 a 15) existe (+8) e é deste clube (+0) e time (+4): 1; senão 0.
-pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: usize, team: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, club: usize, team: u32) -> u32 {
     if read_u8(this + 0x5f0) == 0 {
         return 0;
     }
@@ -1130,7 +1130,7 @@ pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: us
         return 0;
     }
     let e = this + 0x30 + k as usize * 0x5c;
-    (read_usize(e + 8) != 0 && read_usize(e) == clube && read_usize(e + 4) as u32 == team) as u32
+    (read_usize(e + 8) != 0 && read_usize(e) == club && read_usize(e + 4) as u32 == team) as u32
 }
 
 
@@ -1138,9 +1138,9 @@ pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: us
 /// Club's row in the tactics table (FN_TACTICS_GET_CLUB_TACTICS_INDEX); −1 without one (duplicate of club_tactics_index).
 ///
 /// [pt] A linha do clube na tabela tática (0x8982b0, o `this` não é usado; −1 sem linha).
-pub(crate) unsafe fn club_tactics_row(clube: usize, team: u32) -> i32 {
+pub(crate) unsafe fn club_tactics_row(club: usize, team: u32) -> i32 {
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    row(clube, team)
+    row(club, team)
 }
 
 /// Address of dword cell c of tactics row k: [this + 0x601] + 0x91 × k + c.
@@ -1163,12 +1163,12 @@ pub(crate) unsafe fn tactics_cell(this: usize, k: i32, c: usize) -> usize {
 /// da escalação do clube na tabela tática (linha da 0x8982b0, dword em +2 + 4 × vaga) fica −1 e, com espaços guardados
 /// (+0x5f0), os do mesmo clube e time (16 espaços de 0x5c bytes a partir de +0x30: clube +0x30, time +0x34, ocupado
 /// +0x38) são soltos (+0x38 = 0, +0x5f0 − 1). Devolve 1; sem linha, 0. Clube nulo ou vaga fora: a original (caixa).
-pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: usize, slot: u32, team: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, club: usize, slot: u32, team: u32) -> u32 {
     let v = slot as u8 as i8;
-    if clube == 0 || !(0..=0x13).contains(&v) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_CLEAR_SELECTION_SLOT)(this, clube, slot, team);
+    if club == 0 || !(0..=0x13).contains(&v) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_CLEAR_SELECTION_SLOT)(this, club, slot, team);
     }
-    let k = club_tactics_row(clube, team);
+    let k = club_tactics_row(club, team);
     if k == -1 {
         return 0;
     }
@@ -1177,7 +1177,7 @@ pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: 
     if *((this + 0x5f0) as *const u8) != 0 {
         for e in 0..16 {
             let a = this + 0x30 + 0x5c * e;
-            if read_u32(a + 8) != 0 && read_u32(a) as usize == clube && read_u32(a + 4) == team {
+            if read_u32(a + 8) != 0 && read_u32(a) as usize == club && read_u32(a + 4) == team {
                 core::ptr::write_unaligned((a + 8) as *mut u32, 0);
                 *((this + 0x5f0) as *mut u8) = (*((this + 0x5f0) as *const u8)).wrapping_sub(1);
             }
@@ -1202,12 +1202,12 @@ pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: 
 /// 4 × (escolha + 2 × papel)). Com `pessoa` (ponteiro para o id), grava o id. Sem ela, a célula fica −1 e, sendo a
 /// primeira escolha, a seguinte com batedor (> −1) sobe para ela e fica −1. Devolve 1; sem linha, 0. Clube nulo,
 /// papel ou escolha fora: a original (caixa).
-pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, clube: usize, role: u32, choice: u32, person: usize, team: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, club: usize, role: u32, choice: u32, person: usize, team: u32) -> u32 {
     let (p, e) = (role as u8 as i8, choice as u8 as i8);
-    if clube == 0 || !(0..=4).contains(&p) || !(0..=1).contains(&e) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(IDX_SET_SET_PIECE_TAKER)(this, clube, role, choice, person, team);
+    if club == 0 || !(0..=4).contains(&p) || !(0..=1).contains(&e) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(IDX_SET_SET_PIECE_TAKER)(this, club, role, choice, person, team);
     }
-    let k = club_tactics_row(clube, team);
+    let k = club_tactics_row(club, team);
     if k == -1 {
         return 0;
     }
@@ -1272,12 +1272,12 @@ comparar_valor!(comparar_formation_record, formation_record, IDX_FORMATION_RECOR
 /// `clube` na tabela tática (0x8982b0 com `humano`; sem linha, 0): com `pessoa`, `*pessoa` na vaga
 /// `qual` 0/1; sem, a vaga vira −1 e, na 0, a 1 desce para a 0 e fica −1. Devolve 1. `clube` nulo ou
 /// `qual` fora: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, clube: usize, which: i8, person: *const u32, human: u32) -> u32 {
-    if clube == 0 || !(0..=1).contains(&which) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_EXTRA_TACTIC_SLOT)(t, clube, which, person, human);
+pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, which: i8, person: *const u32, human: u32) -> u32 {
+    if club == 0 || !(0..=1).contains(&which) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_EXTRA_TACTIC_SLOT)(t, club, which, person, human);
     }
     let tactics_row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let l = tactics_row(clube, human);
+    let l = tactics_row(club, human);
     if l == -1 {
         return 0;
     }
@@ -1319,32 +1319,32 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, clube: usize,
 /// bloco ativo dele (0x5fbd00). Nos outros, o índice (palavra com sinal) na linha do clube (id × 0x91 em [this+0x601]):
 /// abaixo da conta das táticas prontas ([this+0x5fd]) o bloco pronto ([this+0x5f9]), senão o próprio ([this+0x5f1],
 /// índice − conta); blocos de 0x18e3 bytes. Clube nulo: a original (caixa "Error", 0).
-pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, team: u32) -> usize {
-    if clube == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC)(this, clube, team); // message box: original only
+pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize, team: u32) -> usize {
+    if club == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC)(this, club, team); // message box: original only
     }
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    if human(clube, 1, 1, 0, 0) != 0 {
+    if human(club, 1, 1, 0, 0) != 0 {
         let manager = read_usize(G_HUMAN_MANAGER);
         let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
         let opcao: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
-        if t9a01(manager, read_usize(clube + club::MANAGER)) == 0 || opcao(manager, 2, read_usize(clube + club::MANAGER)) != 0 {
+        if t9a01(manager, read_usize(club + club::MANAGER)) == 0 || opcao(manager, 2, read_usize(club + club::MANAGER)) != 0 {
             let escolher: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
             let active: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_ACTIVE_TACTIC);
             crate::comparison::branch("cpx_8 tatica do humano");
-            escolher(manager, team, clube, read_usize(clube + club::MANAGER)); // cpx8: a vaga pelo time
-            return active(manager, read_usize(clube + club::MANAGER));
+            escolher(manager, team, club, read_usize(club + club::MANAGER)); // cpx8: a vaga pelo time
+            return active(manager, read_usize(club + club::MANAGER));
         }
     }
-    let id = read_i32(clube);
-    let indice = read_i16(read_usize(this + 0x601).wrapping_add(id.wrapping_mul(0x91) as usize)) as i32;
+    let id = read_i32(club);
+    let index = read_i16(read_usize(this + 0x601).wrapping_add(id.wrapping_mul(0x91) as usize)) as i32;
     let prontas = read_i32(this + 0x5fd);
-    if indice < prontas { // cpx8: tática pronta ou própria
+    if index < prontas { // cpx8: tática pronta ou própria
         crate::comparison::branch("cpx_8 tatica pronta");
-        read_usize(this + 0x5f9).wrapping_add(indice.wrapping_mul(0x18e3) as usize) // cpx8: o bloco pronto
+        read_usize(this + 0x5f9).wrapping_add(index.wrapping_mul(0x18e3) as usize) // cpx8: o bloco pronto
     } else {
         crate::comparison::branch("cpx_8 tatica propria");
-        read_usize(this + 0x5f1).wrapping_add(indice.wrapping_sub(prontas).wrapping_mul(0x18e3) as usize) // cpx8: o bloco próprio
+        read_usize(this + 0x5f1).wrapping_add(index.wrapping_sub(prontas).wrapping_mul(0x18e3) as usize) // cpx8: o bloco próprio
     }
 }
 
@@ -1360,12 +1360,12 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize
 /// pessoa: linha tática do clube (0x8982b0 com `time`; -1 devolve 0) e as 20 vagas (dwords em +0x601 +
 /// linha x 0x91 + 2) comparadas com o id; não está: 0xff. Clube ou pessoa nulos: a original (caixa
 /// de erro).
-pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, clube: usize, person: *const i32, team: u32) -> u8 {
-    if clube == 0 || person.is_null() {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(IDX_FIND_SELECTION_SLOT)(tactic, clube, person, team);
+pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, club: usize, person: *const i32, team: u32) -> u8 {
+    if club == 0 || person.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(IDX_FIND_SELECTION_SLOT)(tactic, club, person, team);
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(clube, team);
+    let k = row(club, team);
     if k == -1 {
         return 0;
     }
@@ -1390,12 +1390,12 @@ pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, clube:
 /// `clube` (0x8982b0 com `humano`; sem linha, 0) e apaga, entre as 16 instruções pendentes
 /// (+0x30, 0x5c bytes: clube, humano, ativa), as ativas desse clube e `humano`, descontando o
 /// contador +0x5f0. Devolve 1. `clube` ou `pessoa` nulos, vaga fora: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, clube: usize, slot: i8, person: *const u32, human: u32) -> u32 {
-    if clube == 0 || !(0..=19).contains(&slot) || person.is_null() {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_SET_TACTIC_SLOT)(t, clube, slot, person, human);
+pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, club: usize, slot: i8, person: *const u32, human: u32) -> u32 {
+    if club == 0 || !(0..=19).contains(&slot) || person.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_SET_TACTIC_SLOT)(t, club, slot, person, human);
     }
     let tactics_row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let l = tactics_row(clube, human);
+    let l = tactics_row(club, human);
     if l == -1 {
         return 0;
     }
@@ -1405,7 +1405,7 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, clube: usize, s
         for k in 0..16 {
             let e = t + 0x30 + 0x5c * k;
             let active = (e + 8) as *mut u32;
-            if *active != 0 && *(e as *const usize) == clube && *((e + 4) as *const u32) == human {
+            if *active != 0 && *(e as *const usize) == club && *((e + 4) as *const u32) == human {
                 *active = 0;
                 *pendentes = (*pendentes).wrapping_sub(1);
             }
@@ -1426,13 +1426,13 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, clube: usize, s
 /// 0..19 da linha do `clube`; 0 sem linha ou vaga vazia (negativa). Vaga com pessoa sem ficha
 /// (+0x61), ou, numa seleção (0x53b900), pessoa sem nação (+0x24) ou de outra nação (+0x53): a vaga
 /// vira −1 e devolve 0. `clube` nulo ou vaga fora: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, clube: usize, slot: i8, human: u32) -> usize {
-    if clube == 0 || !(0..=19).contains(&slot) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_TACTIC_SLOT_PERSON)(t, clube, slot, human);
+pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize, slot: i8, human: u32) -> usize {
+    if club == 0 || !(0..=19).contains(&slot) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_TACTIC_SLOT_PERSON)(t, club, slot, human);
     }
     let tactics_row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let l = tactics_row(clube, human);
+    let l = tactics_row(club, human);
     if l == -1 {
         return 0;
     }
@@ -1447,9 +1447,9 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, clube: usize
         core::ptr::write_unaligned(home, -1);
         return 0;
     }
-    if national_team(clube) != 0 {
-        let nacao = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
-        if nacao == 0 || core::ptr::read_unaligned((nacao + nation::THREE_LETTER_NAME) as *const u32) != core::ptr::read_unaligned((clube + club::NATION) as *const u32) {
+    if national_team(club) != 0 {
+        let nation = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
+        if nation == 0 || core::ptr::read_unaligned((nation + nation::THREE_LETTER_NAME) as *const u32) != core::ptr::read_unaligned((club + club::NATION) as *const u32) {
             core::ptr::write_unaligned(home, -1);
             return 0;
         }
@@ -1463,19 +1463,19 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, clube: usize
 /// [pt] { 0x8967d0 } (thiscall, ret 0xc, tactics.cpp): grava a formação `formacao` (palavra) na linha do
 /// `clube`; 0 sem linha, senão 1. `clube` nulo ou formação fora de 0..[+0x5fd]+[+0x5f5]−1: a
 /// original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn set_tactic_formation(t: usize, clube: usize, formacao: i16, human: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn set_tactic_formation(t: usize, club: usize, formation: i16, human: u32) -> u32 {
     let limit = core::ptr::read_unaligned((t + 0x5fd) as *const i32)
         .wrapping_add(core::ptr::read_unaligned((t + 0x5f5) as *const i32))
         .wrapping_sub(1);
-    if clube == 0 || formacao < 0 || formacao as i32 > limit {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i16, u32) -> u32>(IDX_SET_TACTIC_FORMATION)(t, clube, formacao, human);
+    if club == 0 || formation < 0 || formation as i32 > limit {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i16, u32) -> u32>(IDX_SET_TACTIC_FORMATION)(t, club, formation, human);
     }
     let tactics_row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let l = tactics_row(clube, human);
+    let l = tactics_row(club, human);
     if l == -1 {
         return 0;
     }
-    core::ptr::write_unaligned(linha_da_tabela(t, l) as *mut i16, formacao);
+    core::ptr::write_unaligned(linha_da_tabela(t, l) as *mut i16, formation);
     1
 }
 

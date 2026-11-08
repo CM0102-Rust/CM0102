@@ -36,13 +36,13 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 4, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this, 4, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
+    core::ptr::write_unaligned(read_usize(this + league::STAGES) as *mut usize, stage);
     free(t);
-    let stage = read_usize(read_usize(this + 0xc));
+    let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
         show_error_at(file, row_without_stage);
         free(list);
@@ -52,7 +52,7 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
     free(list);
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
 }
 
 /// Série advance_stage: error box on the last stage; else increments +0x30 and builds the play-off when it reaches 0
@@ -62,12 +62,12 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
 /// caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a 0 (o fim dos pontos corridos), monta o play-off
 /// (`play_off`, call direto com o ecx da liga -> thiscall, ret 0).
 pub(crate) unsafe fn advance_series_stage(this: usize, file: usize, row: u32, play_off: usize) {
-    let stage = read_usize(this + 0x30) as i32;
-    if stage >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
+    let stage = read_usize(this + league::CURRENT_STAGE) as i32;
+    if stage >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(file, row);
     }
     let stage = stage + 1;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, stage);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 0 {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(play_off);
         f(this);
@@ -107,18 +107,18 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage(this:
 pub(crate) unsafe fn compare_play_off_stage(name: &str, this: usize, rows: &[usize; 4], original: impl FnOnce()) {
     let mut plan: Vec<usize> = rows.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
     original();
-    let stage = read_usize(read_usize(this + 0xc));
+    let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
-        PLACAR.record(false, || format!("{}({:#x}) sem fase", name, this));
+        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
-    let list = read_usize(stage + 0xa7);
+    let list = read_usize(stage + cup::TEAM_TABLE);
     let mut found: Vec<usize> = (0..4).map(|k| read_usize(list + 6 * k)).collect();
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + 0x3e) == 4 && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
-    PLACAR.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + league::CURRENT_STAGE) == 0;
+    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + cup::TEAM_COUNT)));
 }
 
 
@@ -155,33 +155,33 @@ pub(crate) unsafe fn rebuild_season(this: usize, table: usize, file: usize, rows
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     liberar_tabela(this, 0);
-    let l = read_usize(this + 0xba);
+    let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
         free(l);
-        core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
+        core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
     }
     let stats = read_usize(this + 8);
     if stats != 0 {
         let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
         archive(stats, 1);
     }
-    if (read_usize(this + 0x30) as i32) >= 0 {
+    if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
+            let f = read_usize(read_usize(this + league::STAGES) + 4 * i as usize);
             if f != 0 {
                 let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
                 destroy(f, 1);
             }
             i += 1;
-            if i > read_usize(this + 0x30) as i32 {
+            if i > read_usize(this + league::CURRENT_STAGE) as i32 {
                 break;
             }
         }
     }
-    let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
+    let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16);
+    core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(year));
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
     if bra_nat_first_call_virtual_no_args(this, 0x8c) == 0 {
         show_error_at(file, rows[0]);
         return false;
@@ -302,8 +302,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegatio
 ///
 /// [pt] O clube está na competição do global `g`: o ponteiro do clube em `campo` (+0x57 a divisão nacional) não é nulo e o
 /// id do registro (+0) é o do global.
-pub(crate) unsafe fn club_in_comp_global(clube: usize, field: usize, g: usize) -> bool {
-    let comp = read_usize(clube + field);
+pub(crate) unsafe fn club_in_comp_global(club: usize, field: usize, g: usize) -> bool {
+    let comp = read_usize(club + field);
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
@@ -316,10 +316,10 @@ pub(crate) unsafe fn club_in_comp_global(clube: usize, field: usize, g: usize) -
 /// (League::init_table_row 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve 1 se encheu.
 /// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada divisão.
 pub(crate) unsafe fn create_division_table(this: usize, n: i16, file: usize, row: u32, field: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
-    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
+    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -327,22 +327,22 @@ pub(crate) unsafe fn create_division_table(this: usize, n: i16, file: usize, row
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(G_CLUB_TABLE);
+    let mut club = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if club_in_comp_global(clube, field, g) {
+        if club_in_comp_global(club, field, g) {
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // the byte. With girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
-            iniciar(this, l as u32, clube, 0, 0);
+            iniciar(this, l as u32, club, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
             }
         }
         i = i.wrapping_add(1);
-        clube = clube.wrapping_add(0x245);
+        club = club.wrapping_add(0x245);
     }
-    if k as i8 as i16 != read_i16(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }
     crate::comparison::branch(ramo);
@@ -379,9 +379,9 @@ pub(crate) unsafe fn division_clubs_plan(n: usize, field: usize, g: usize) -> Ve
     let mut plan = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plan.len() < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        if club_in_comp_global(clube, field, g) {
-            plan.push(clube);
+        let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
+        if club_in_comp_global(club, field, g) {
+            plan.push(club);
         }
         i += 1;
     }
@@ -397,15 +397,15 @@ pub(crate) unsafe fn division_clubs_plan(n: usize, field: usize, g: usize) -> Ve
 pub(crate) unsafe fn compare_division_table(name: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let plan = division_clubs_plan(n as usize, 0x57, g);
     let r = original();
-    let t = read_usize(this + 0xb1);
+    let t = read_usize(this + league::TABLE);
     let expected = (plan.len() as i16 == n) as u32;
-    let mut same = r == expected && read_i16(this + 0x3e) == n && t != 0;
+    let mut same = r == expected && read_i16(this + league::CLUB_COUNT) == n && t != 0;
     let mut found: Vec<usize> = Vec::new();
     if same {
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
     }
-    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 
@@ -424,7 +424,7 @@ pub(crate) unsafe fn compare_division_table(name: &str, this: usize, n: i16, g: 
 pub(crate) unsafe fn create_main_schedule(o: usize) {
     let vt = *(o as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
-    let r = f(o, -1, o + 0xa9, o + 0x3a, 0);
+    let r = f(o, -1, o + league::ROUND_COUNT, o + league::STAGE_ID, 0);
     write_u32_at(o, 0xba, r as u32);
 }
 
@@ -433,7 +433,7 @@ pub(crate) unsafe fn create_main_schedule(o: usize) {
 /// [pt] O objeto da liga (0xee bytes) menos as saídas do calendário (+0x3a, +0xa9, +0xba), que o ensaio não chama: os
 /// três calendários não gravam nada no objeto além delas (lido nas três rotinas: nenhum `mov [edi+..]`).
 pub(crate) fn league_regions_without_schedule(o: usize) -> [(usize, usize); 4] {
-    [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)]
+    [(o, 0x3a), (o + league::LEGS, 0xa9 - 0x3c), (o + league::MATCH_RULES, 0xba - 0xab), (o + league::PROMOTED_COUNT, 0xee - 0xbe)]
 }
 
 /// Writes the Série A rule fields (what 0x42a5a0 writes before the schedule).
@@ -535,41 +535,41 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -
 ///
 /// [pt] Os registros de carreira (Staff_Records em [0xdd7f00], thiscall, todos já em Rust):
 /// 0x86bdd0 classificou-se (clube, comp, fase, rodada, peso; ret 0x14).
-pub(crate) unsafe fn bra_nat_first_add_qualified_record(clube: usize, comp: usize, stage: u32, round: u32, weight: u32) {
+pub(crate) unsafe fn bra_nat_first_add_qualified_record(club: usize, comp: usize, stage: u32, round: u32, weight: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, stage, round, weight);
+    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp, stage, round, weight);
 }
 
 /// Staff_Records add_relegation_record (club, league).
 ///
 /// [pt] 0x86a1c0 rebaixado (clube, liga; ret 8).
-pub(crate) unsafe fn bra_nat_first_add_relegation_record(clube: usize, comp: usize) {
+pub(crate) unsafe fn bra_nat_first_add_relegation_record(club: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
+    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
 }
 
 /// Staff_Records add_league_champions_record (club, league).
 ///
 /// [pt] 0x868c50 campeão da liga (clube, liga; ret 8).
-pub(crate) unsafe fn add_champions_record(clube: usize, comp: usize) {
+pub(crate) unsafe fn add_champions_record(club: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
+    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp);
 }
 
 /// Staff_Records add_promotion_record (club, league, weight).
 ///
 /// [pt] 0x869480 promovido (clube, liga, peso; ret 0xc).
-pub(crate) unsafe fn bra_nat_first_add_promotion_record(clube: usize, comp: usize, weight: u32) {
+pub(crate) unsafe fn bra_nat_first_add_promotion_record(club: usize, comp: usize, weight: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
-    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, weight);
+    f(read_u32_as_usize(G_STAFF_RECORDS), club, comp, weight);
 }
 
 /// League::find_club_row(club, 0): the club's row in the league table.
 ///
 /// [pt] 0x68ab70 `League::find_club_row(clube, 0)` (thiscall, ret 8): a linha do clube na tabela da liga.
-pub(crate) unsafe fn bra_nat_first_find_club_row(league: usize, clube: usize) -> usize {
+pub(crate) unsafe fn bra_nat_first_find_club_row(league: usize, club: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_LEAGUE_FIND_CLUB_ROW);
-    f(league, clube, 0)
+    f(league, club, 0)
 }
 
 /// Série A update_staff_records_for_status (0x42abc0); fazer = false is the comparer's dry run → (return, row written,
@@ -577,7 +577,7 @@ pub(crate) unsafe fn bra_nat_first_find_club_row(league: usize, clube: usize) ->
 ///
 /// [pt] A Série A (0x42abc0). `fazer` = falso: o ensaio do comparador, sem os registros nem a gravação; devolve
 /// (devolução, linha gravada ou 0, destino gravado).
-pub(crate) unsafe fn serie_a_staff_records(this: usize, clube: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
+pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (status as u8, stage as u8);
     let comp = read_u32_as_usize(this + 4);
     if fa == 0xff {
@@ -585,10 +585,10 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, clube: usize, status: u3
         if st == 6 {
             if fazer {
                 crate::comparison::branch("cqj_9 serie a classificado");
-                bra_nat_first_add_qualified_record(clube, comp, 0x41c, 0, 0x28);
+                bra_nat_first_add_qualified_record(club, comp, 0x41c, 0, 0x28);
             }
         } else if st == 3 && fazer {
-            bra_nat_first_add_relegation_record(clube, comp);
+            bra_nat_first_add_relegation_record(club, comp);
         }
         return (0, 0, 0);
     }
@@ -597,16 +597,16 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, clube: usize, status: u3
     }
     // o mata-mata
     if st == 1 {
-        let l = bra_nat_first_find_club_row(this, clube);
+        let l = bra_nat_first_find_club_row(this, club);
         if fazer {
             crate::comparison::branch("cqj_9 serie a campeao");
-            add_champions_record(clube, comp); // cqj9: o registro do campeão da Série A
+            add_champions_record(club, comp); // cqj9: o registro do campeão da Série A
             *((l + 0x37) as *mut u8) = 5;
         }
         return (0, l, 5);
     }
     if st == 2 || st == 0xff {
-        let l = bra_nat_first_find_club_row(this, clube);
+        let l = bra_nat_first_find_club_row(this, club);
         if fazer {
             *((l + 0x37) as *mut u8) = 0xfe; // eliminado
         }
@@ -618,13 +618,13 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, clube: usize, status: u3
 /// Série C update_staff_records_for_status (0x42eb00), like Série A's.
 ///
 /// [pt] A Série C (0x42eb00); como a da Série A.
-pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
+pub(crate) unsafe fn serie_c_staff_records(this: usize, club: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (status as u8, stage as u8 as i8);
     let comp = read_u32_as_usize(this + 4);
     if fa < 7 {
         // the groups
         if st == 6 && fazer {
-            bra_nat_first_add_qualified_record(clube, comp, 0x14, 0, 0x28);
+            bra_nat_first_add_qualified_record(club, comp, 0x14, 0, 0x28);
         }
         return (0, 0, 0);
     }
@@ -633,7 +633,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
             return (u32::MAX, 0, 0);
         }
         if fazer {
-            bra_nat_first_add_qualified_record(clube, comp, 0, 0x1e, 0x28);
+            bra_nat_first_add_qualified_record(club, comp, 0, 0x1e, 0x28);
         }
         return (0, 0, 0);
     }
@@ -643,21 +643,21 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
             return (u32::MAX, 0, 0);
         }
         if fazer {
-            bra_nat_first_add_promotion_record(clube, comp, 0x32);
-            bra_nat_first_add_qualified_record(clube, comp, 0, 0x96, 0x28);
+            bra_nat_first_add_promotion_record(club, comp, 0x32);
+            bra_nat_first_add_qualified_record(club, comp, 0, 0x96, 0x28);
         }
         // the club’s row in the league (k = -1) or in stages 0..6, the first that has the club, gets destination 0
         let mut k: i8 = -1;
         let mut achada = 0;
         while k < 7 {
-            let league = if k == -1 { this } else { read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4 * k as i32 as usize) };
+            let league = if k == -1 { this } else { read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 4 * k as i32 as usize) };
             let n = read_i16(league + league::CLUB_COUNT);
             if n > 0 {
                 let t = read_u32_as_usize(league + league::TABLE);
                 let mut i: i8 = 0;
                 while (i as i16) < n {
                     let r = t.wrapping_add(0x3b * i as i32 as usize);
-                    if read_u32_as_usize(r) == clube {
+                    if read_u32_as_usize(r) == club {
                         achada = r;
                         break;
                     }
@@ -681,7 +681,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
             return (u32::MAX, 0, 0);
         }
         if fazer {
-            add_champions_record(clube, comp);
+            add_champions_record(club, comp);
         }
     }
     (0, 0, 0)
@@ -690,32 +690,32 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
 /// Baiano update_staff_records_for_status (0x430210), like Série A's but the club row comes from the table (+0xb1).
 ///
 /// [pt] O Baiano (0x430210); como a da Série A. O clube vem da tabela (+0xb1, +0x3e linhas), não da 0x68ab70.
-pub(crate) unsafe fn baiano_staff_records(this: usize, clube: usize, status: u32, stage: u32, jogo: usize, fazer: bool) -> (u32, usize, u8) {
+pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32, stage: u32, game: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (status as u8, stage as u8);
     let comp = read_u32_as_usize(this + 4);
     if fa == 0xff {
         if st == 6 {
             if fazer {
-                bra_nat_first_add_qualified_record(clube, comp, 0, 0x82, 0x32);
+                bra_nat_first_add_qualified_record(club, comp, 0, 0x82, 0x32);
             }
         } else if st == 3 && fazer {
             crate::comparison::branch("cqj_9 baiano rebaixado");
-            bra_nat_first_add_relegation_record(clube, comp); // cqj9: o rebaixado do Baiano
+            bra_nat_first_add_relegation_record(club, comp); // cqj9: o rebaixado do Baiano
         }
         return (0, 0, 0);
     }
     if fa != 0 {
         return (0, 0, 0);
     }
-    let n = read_i16(this + 0x3e) as i32;
+    let n = read_i16(this + league::CLUB_COUNT) as i32;
     let mut i = 0i32;
     while i < n {
-        if read_u32_as_usize(read_u32_as_usize(this + 0xb1) + 0x3b * i as usize) == clube {
+        if read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize) == club {
             if st == 1 {
                 if fazer {
-                    add_champions_record(clube, comp);
+                    add_champions_record(club, comp);
                 }
-                let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
+                let l = read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 5;
                 }
@@ -727,11 +727,11 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, clube: usize, status: u32
                     // word, ecx with the upper half of the table pointer); 0x4bf850 and 0x86c000 only read the
                     // words (0x4b0870 / `as u16`): the words go.
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
-                    let weight = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, 2);
+                    let weight = escala(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                    elim(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
+                    elim(read_u32_as_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
                 }
-                let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
+                let l = read_u32_as_usize(this + league::TABLE) + 0x3b * i as usize;
                 if fazer {
                     *((l + 0x37) as *mut u8) = 0xfe;
                 }
@@ -752,9 +752,9 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, clube: usize, status: u32
 /// na fase de pontos corridos, os 8 classificados (situação 6) ganham o registro de classificação e os rebaixados (3) o
 /// de rebaixamento; no mata-mata (fase 0), o campeão (1) ganha o registro de campeão e o destino 5, os eliminados (2 ou
 /// -1) o destino -2. Devolve 0.
-pub(crate) unsafe extern "thiscall" fn bra_nat_first_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    serie_a_staff_records(this, clube, status, stage, true).0
+    serie_a_staff_records(this, club, status, stage, true).0
 }
 
 

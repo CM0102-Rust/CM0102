@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
 /// ponteiro) ou enche de 1 (inclusive com 30 ou mais: aí a original passa do vetor de 30, como aqui).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn init(
-    area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
+    area: usize, areas: usize, itens: usize, index: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
     pesos_colunas: usize, rows: u32, pesos_linhas: usize, marks: u32, colour: u32, owner: u32,
 ) {
     crate::comparison::branch("telas iniciar a area");
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn init(
     core::ptr::write_unaligned((area + 0x20e) as *mut u16, owner as u16);
     core::ptr::write_unaligned((area + 0x204) as *mut usize, areas);
     core::ptr::write_unaligned((area + 0x208) as *mut usize, itens);
-    core::ptr::write_unaligned((area + 0xb72) as *mut u16, indice as u16);
+    core::ptr::write_unaligned((area + 0xb72) as *mut u16, index as u16);
     core::ptr::write_unaligned((area + 0x20c) as *mut u16, colour as u16);
     write_i32_at(area, 0xbed, 0);
     write_i32_at(area, 0x200, 0);

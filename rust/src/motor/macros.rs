@@ -23,7 +23,7 @@ macro_rules! comparar_leitor {
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize) -> u8 {
             let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>($i)(this);
             let n = $rust(this);
-            PLACAR.record(r == n, || format!("{} original={} rust={}", stringify!($rust), r, n));
+            SCOREBOARD.record(r == n, || format!("{} original={} rust={}", stringify!($rust), r, n));
             r
         }
     };
@@ -34,7 +34,7 @@ macro_rules! comparar_gravador {
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize, v: $t) {
             let f = original_fn::<unsafe extern "thiscall" fn(usize, $t)>($i);
             let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + $campo, core::mem::size_of::<$t>())], || f(this, v), || $rust(this, v));
-            PLACAR.record(igual, || format!("{} original={:x?} rust={:x?}", stringify!($rust), mo, mr));
+            SCOREBOARD.record(igual, || format!("{} original={:x?} rust={:x?}", stringify!($rust), mo, mr));
         }
     };
 }
@@ -45,7 +45,7 @@ macro_rules! comparar_repartir {
             let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, i16)>($i);
             let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, l, k) + 0x35, 2)).collect();
             let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, l, delta), || $rust(this, l, delta));
-            PLACAR.record(igual, || format!("{}({}, {}) original={:x?} rust={:x?}", stringify!($rust), l, delta, mo, mr));
+            SCOREBOARD.record(igual, || format!("{}({}, {}) original={:x?} rust={:x?}", stringify!($rust), l, delta, mo, mr));
         }
     };
 }
@@ -55,7 +55,7 @@ macro_rules! comparar_valor {
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize $(, $a: $t)*) -> $r {
             let r = original_fn::<unsafe extern "thiscall" fn(usize $(, $t)*) -> $r>($i)(this $(, $a)*);
             let n = $rust(this $(, $a)*);
-            PLACAR.record(r == n, || format!("{}({:#x}{}) original={:#x} rust={:#x}", stringify!($rust), this, String::new() $(+ &format!(", {:?}", $a))*, r, n));
+            SCOREBOARD.record(r == n, || format!("{}({:#x}{}) original={:#x} rust={:#x}", stringify!($rust), this, String::new() $(+ &format!(", {:?}", $a))*, r, n));
             r
         }
     };
@@ -66,7 +66,7 @@ macro_rules! comparar_ordem {
         pub(crate) unsafe extern "C" fn $nome(a: *const usize, b: *const usize) -> i32 {
             let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>($i)(a, b);
             let v = $rust(a, b);
-            PLACAR.record(r == v, || format!("{} original={} rust={}", stringify!($rust), r, v));
+            SCOREBOARD.record(r == v, || format!("{} original={} rust={}", stringify!($rust), r, v));
             r
         }
     };

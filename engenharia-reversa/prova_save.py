@@ -320,13 +320,8 @@ def desligadas(nomes):
     dos testes; no fim (mesmo com erro ou Ctrl+C) o motor.rs volta e e recompilado."""
     original = open(MOTOR, encoding='utf-8').read()
     assert original.count(LACO) == 1, 'laco da instalacao nao achado no motor.rs'
-    # a rotina da leva que esta em ZERADAS roda a original COM a zeragem (como no modo original): so o
-    # `continue` deixava a base sem a zeragem, com o lixo de pilha que a referencia nao tem (220a: o resumo
-    # do general.dat da 0x82e430 saia com lixo na base e zerado na leva, DIFERENTE em +0xf)
+    # (até 31/10/2026 a rotina que estava em ZERADAS rodava a original com a zeragem; não há mais zeragem)
     trava = ('        if [%s].contains(&nomes[i]) {\n'
-             '            if let Some(z) = ZERADAS.iter().find(|z| z.0.endereco == PROLOGOS[i].endereco) {\n'
-             '                desvios::desviar_zerando(nomes[i], &PROLOGOS[i], z.1, desvios::PASSAGEM);\n'
-             '            }\n'
              '            continue;\n'
              '        }\n') % ', '.join('"%s"' % x for x in nomes)
     try:
@@ -427,7 +422,7 @@ def carregar(a, modo):
         if not ok:
             print('carregar %s: nao iniciado: %s' % (modo, motivo))
             return None
-        # CM_FERIAS: a DLL poe o tecnico de ferias logo depois do -load (o jogo nao grava de ferias; simulacao.rs)
+        # CM_FERIAS: a DLL poe o tecnico de ferias logo depois do -load (o jogo nao grava de ferias; simulation.rs)
         os.environ['CM_FERIAS'] = '1'
         # a carga regrava o hall_of_fame.bin do jogo de testes (o do save): guarda e devolve, para nao mudar o
         # que as carreiras e as gravacoes seguintes leem

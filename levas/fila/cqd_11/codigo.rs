@@ -119,7 +119,7 @@ unsafe fn compare_toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, li
     o(this, pessoa);
     let depois = llist_items(l);
     let marca_ok = marca.map_or(true, |(p, m)| *(p as *const u8) == m);
-    PLACAR.record(marca_ok && depois == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
+    SCOREBOARD.record(marca_ok && depois == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
         nome, pessoa, marca, marca.map(|(p, _)| *(p as *const u8)), fica, depois));
 }
 
@@ -264,6 +264,6 @@ unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize,
     };
     *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = None;
     let destino = AWOL_NEWS_DESTINATION;
-    PLACAR.record(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
+    SCOREBOARD.record(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
         jogador, clube, n, k, falhou, destino));
 }

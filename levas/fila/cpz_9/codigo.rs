@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_report_poor_fitness(this: usize, jogador: u
     let no = if cauda != 0 { cpz9_d(cauda + 6) } else { cpz9_d(l + 2) };
     let dados = if no != 0 { cpz9_d(no) } else { 0 };
     let igual = dados != 0 && core::slice::from_raw_parts(dados as *const u8, 0x10) == plano;
-    PLACAR.record(igual, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", jogador, clube, plano, no, dados));
+    SCOREBOARD.record(igual, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", jogador, clube, plano, no, dados));
 }
 
 /// { 0x5a74b0 } (stdcall, ret 0x14, Fine.cpp, SEH da notícia local, sem destrutor): `post_fine_reaction_news(jogador,
@@ -219,7 +219,7 @@ unsafe extern "stdcall" fn comparar_post_fine_reaction_news(jogador: usize, moti
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let montaria = FINE_NEWS_WOULD_BUILD;
     let igual = if montaria { mo.0[0].1 == mr.0[0].1 } else { mo == mr };
-    PLACAR.record(igual, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
+    SCOREBOARD.record(igual, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
 }
 
 /// { 0x5a7f20 } (stdcall, ret 0xc, Fine.cpp, SEH da notícia local, sem destrutor): `post_coach_fine_feedback_news

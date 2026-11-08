@@ -8,7 +8,7 @@ Uso:
 
 Faixa = do início da rotina (tabela PROLOGOS do motor.rs) até a próxima fronteira real (fronteiras.py).
 Hash = FNV-1a 64 dos bytes da faixa. Confere também que nenhum outro desvio da DLL (as portas da
-comparação, a simulação, data.rs...) cai dentro de uma faixa: ele mudaria os bytes antes da conferência."""
+comparação, a simulação, date.rs...) cai dentro de uma faixa: ele mudaria os bytes antes da conferência."""
 import bisect, glob, os, re, sys
 import pefile
 from fronteiras import calcular, R, TXT0, TXT1

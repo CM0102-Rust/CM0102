@@ -83,7 +83,7 @@ comparar_valor!(comparar_formation_record, formation_record, %%I0%%, (f: i16, hu
 unsafe extern "stdcall" fn comparar_competition_weight(p: usize, cod: i8) -> u16 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, i8) -> u16>(%%I1%%)(p, cod);
     let n = competition_weight(p, cod);
-    PLACAR.record(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, cod, r, n));
+    SCOREBOARD.record(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, cod, r, n));
     r
 }
 
@@ -91,6 +91,6 @@ unsafe extern "thiscall" fn comparar_set_news_field(t: usize, k: i8, valor: u32)
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(%%I2%%);
     let reg = if (0..0x32).contains(&k) { vec![(t + 5 + 4 * k as usize, 4)] } else { vec![] };
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, k, valor), || set_news_field(t, k, valor));
-    PLACAR.record(igual && r == v, || format!("set_news_field({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, valor, r, mo, v, mr));
+    SCOREBOARD.record(igual && r == v, || format!("set_news_field({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, valor, r, mo, v, mr));
     r
 }

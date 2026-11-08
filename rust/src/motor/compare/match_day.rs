@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_match_day_interest(d: usize) -> 
     // simplification: 0x5fe8d0 (the humans list) runs in both; it rebuilds the list from scratch
     let reg = match_day_marked_regions(d);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(d), || match_day_interest(d));
-    PLACAR.record(igual && r == n, || format!("match_day_interest original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("match_day_interest original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
 
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "C" fn comparar_match_without_human(partida: usize) -> 
         reg.extend(human_national_team_marks().into_iter().map(|e| (e, 1)));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(partida), || match_without_human(partida));
-    PLACAR.record(igual && r == n, || format!("match_without_human original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("match_without_human original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
 
@@ -74,7 +74,7 @@ pub(crate) unsafe fn comparar_pos(name: &str, reg: Vec<(usize, usize)>, original
     let write = RECORD_POST_MATCH.swap(true, Relaxed);
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, original, |chamar| rust(&mut |r, t, a| chamar(r, t, a, [u32::MAX; 5])));
     RECORD_POST_MATCH.store(write, Relaxed);
-    PLACAR.record(igual && sequencia, || format!("{} ({} chamadas): {}", name, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("{} ({} chamadas): {}", name, k, tape_detail()));
 }
 
 /// Comparer for `post_match_events` (comparison mode: see the header of motor.rs).
@@ -95,18 +95,18 @@ pub(crate) unsafe extern "C" fn comparar_post_match_events(partida: usize) {
             if ev == 0 {
                 break;
             }
-            let clube = (*(G_CLUB_TABLE as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
-            if clube == *((partida + 0x1c) as *const usize) || clube == *((partida + 0x20) as *const usize) {
-                reg.extend(contract_flags_region(person(core::ptr::read_unaligned(ev as *const i32)), clube));
+            let club = (*(G_CLUB_TABLE as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
+            if club == *((partida + 0x1c) as *const usize) || club == *((partida + 0x20) as *const usize) {
+                reg.extend(contract_flags_region(person(core::ptr::read_unaligned(ev as *const i32)), club));
             }
         }
     }
     let table = *(G_MANAGER_MANAGER as *const usize);
     if table != 0 {
         for o in [0x1c, 0x20] {
-            let clube = *((partida + o) as *const usize);
-            if clube != 0 {
-                reg.push(((*(table as *const usize) as isize + *(clube as *const i32) as isize * 0x49) as usize, 0x49));
+            let club = *((partida + o) as *const usize);
+            if club != 0 {
+                reg.push(((*(table as *const usize) as isize + *(club as *const i32) as isize * 0x49) as usize, 0x49));
             }
         }
     }
@@ -122,9 +122,9 @@ pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: u
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for lado in 0..2usize {
-        let clube = (g(0xae23b4) as isize + read(t + 4 * lado) as isize * 0x245) as usize;
+        let club = (g(0xae23b4) as isize + read(t + 4 * lado) as isize * 0x245) as usize;
         let ts = t + lado * 0x625;
-        reg.push((clube + club::REPUTATION, 2));
+        reg.push((club + club::REPUTATION, 2));
         for k in 0..20usize {
             let id = read(ts + 0x1c5 + k * 0x49 - 0x35);
             if id == -1 {
@@ -134,14 +134,14 @@ pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: u
             let f = g(p + staff::PLAYER);
             if f != 0 {
                 reg.extend([(f + 0x45, 1), (f + 9, 6)]);
-                reg.extend(contract_flags_region(p, clube));
+                reg.extend(contract_flags_region(p, club));
             }
         }
         let id = read(ts + 0x184);
         if id > -1 {
             let manager = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
             let mut fichas = vec![g(manager + staff::NON_PLAYER)];
-            for a in [g(clube + club::ASSISTANT_MANAGER), g(clube + club::COACHES), g(clube + 0x1a3), g(clube + 0x1a7), g(clube + 0x1ab), g(clube + 0x1af)] {
+            for a in [g(club + club::ASSISTANT_MANAGER), g(club + club::COACHES), g(club + 0x1a3), g(club + 0x1a7), g(club + 0x1ab), g(club + 0x1af)] {
                 if a != 0 {
                     fichas.push(g(a + 0x69));
                 }
@@ -155,11 +155,11 @@ pub(crate) unsafe extern "C" fn comparar_post_match_players(partida: usize, t: u
 }
 
 /// Comparer for `post_match_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_post_match_club(clube: usize, other: usize, partida: usize, n: u32, t: usize) {
+pub(crate) unsafe extern "C" fn comparar_post_match_club(club: usize, other: usize, partida: usize, n: u32, t: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_POST_MATCH_CLUB);
     // the copy does not write to the database: only the calls and the random rolls
     let reg = crate::rng::STATE_REGIONS.to_vec();
-    comparar_pos("post_match_club", reg, || o(clube, other, partida, n, t), |chamar| post_match_club_with(clube, other, partida, n, t, chamar));
+    comparar_pos("post_match_club", reg, || o(club, other, partida, n, t), |chamar| post_match_club_with(club, other, partida, n, t, chamar));
 }
 
 /// Comparer for `match_day_drop_viewer_and_finish_match` (comparison mode: see the header of motor.rs).
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_record_fixture(stats: usize
         return o(stats, k, out);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out, 0x4f)], || o(stats, k, out), || find_record_fixture(stats, k, out));
-    PLACAR.record(igual && r == n, || format!("find_record_fixture(k {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_record_fixture(k {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }
 
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "C" fn comparar_competition_number(code: u32, second: u
     let r = o(code, second);
     if matches!(code as u16 as i16, 0 | 1 | 0x1ef | 0x3de | 0x483 | 0x528) {
         let n = competition_number(code, second);
-        PLACAR.record(r as u8 == n as u8, || format!("competition_number({:#x}, {}) original={} rust={}", code as u16, second as u8, r as u8, n as u8));
+        SCOREBOARD.record(r as u8 == n as u8, || format!("competition_number({:#x}, {}) original={} rust={}", code as u16, second as u8, r as u8, n as u8));
     }
     r
 }

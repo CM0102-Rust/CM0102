@@ -7,7 +7,7 @@ use super::*;
 ///
 /// [pt] O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
 pub(crate) unsafe fn aus_nsl_table_row_club(t: usize, i: usize) -> usize {
-    read_usize(read_usize(t + 0xb1) + i * 0x3b)
+    read_usize(read_usize(t + league::TABLE) + i * 0x3b)
 }
 
 /// The NSL has the regular season (round robin), the finals series (stage 0) and the grand final (stage 1): the next
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
 pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
         return 0;
     }
     crate::comparison::branch("cqr_3 serie final");
-    noticia(stage);
+    news(stage);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
     1
 }
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 
 /// [pt] O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
 /// [[this+0xc]].
 pub(crate) unsafe fn record_first_stage_honours(this: usize) -> u32 {
-    let e = *(*((this + 0xc) as *const usize) as *const usize);
+    let e = *(*((this + league::STAGES) as *const usize) as *const usize);
     let vt = *(e as *const usize);
     let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(*((vt + 0x30) as *const usize));
     f(e)
@@ -262,9 +262,9 @@ pub(crate) unsafe fn record_first_stage_honours(this: usize) -> u32 {
 /// seis classificados (6) ganham o registro de classificação para a fase final (fase 0x435); os de fora (-2) devolvem
 /// -1; na fase final (fase 0), quem avança (6) ganha o registro (rodada 0x96) e quem cai (-2) o de não classificado
 /// (fase 0x435) e -1; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
-pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    nsl_end_of_stage(this, clube, status, stage, true).0
+    nsl_end_of_stage(this, club, status, stage, true).0
 }
 
 
@@ -284,17 +284,17 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
     }
     let mut k: u32 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(G_CLUB_TABLE);
+    let mut club = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if (k as i16) >= read_i16(this + league::CLUB_COUNT) {
             break;
         }
-        if is_in_division(clube, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
-            jap_j1_init_table_row(this, k as u8, read_i16(this + league::CLUB_COUNT), 0, clube); // cqm9: a linha da NSL
+        if is_in_division(club, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
+            jap_j1_init_table_row(this, k as u8, read_i16(this + league::CLUB_COUNT), 0, club); // cqm9: a linha da NSL
             k = k.wrapping_add(1);
         }
         i = i.wrapping_add(1);
-        clube = clube.wrapping_add(0x245);
+        club = club.wrapping_add(0x245);
     }
     if k as i16 != read_i16(this + league::CLUB_COUNT) {
         show_error_at(0x987c20, 0x252);

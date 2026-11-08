@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categ
 unsafe extern "thiscall" fn comparar_get_coaching_factor(this: usize, clube: usize, categoria: i8) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> u32>(%%I0%%)(this, clube, categoria);
     let n = get_coaching_factor(this, clube, categoria);
-    PLACAR.record(r == n, || format!("get_coaching_factor(clube {:x}, categoria {}) original={:x} rust={:x}", clube, categoria, r, n));
+    SCOREBOARD.record(r == n, || format!("get_coaching_factor(clube {:x}, categoria {}) original={:x} rust={:x}", clube, categoria, r, n));
     r
 }
 
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn comparar_get_coach_assignments(this: usize, tecnico:
     }
     let r = o(this, tecnico);
     let n = get_coach_assignments(this, tecnico);
-    PLACAR.record(r == n, || format!("get_coach_assignments(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
+    SCOREBOARD.record(r == n, || format!("get_coach_assignments(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
     r
 }
 
@@ -119,6 +119,6 @@ unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
 unsafe extern "thiscall" fn comparar_get_training_load(this: usize) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%)(this);
     let n = get_training_load(this);
-    PLACAR.record(r == n, || format!("get_training_load({:x}) original={} rust={}", this, r, n));
+    SCOREBOARD.record(r == n, || format!("get_training_load({:x}) original={} rust={}", this, r, n));
     r
 }

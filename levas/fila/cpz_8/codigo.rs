@@ -355,7 +355,7 @@ unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: us
     if alvo != 0 {
         let regioes = [(this + 0x1128, 4), (l, 0xe), (alvo, 0xdf)];
         let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, f, causa, velha), || queue_fixture_moved_news(this, f, causa, velha));
-        PLACAR.record(igual, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
+        SCOREBOARD.record(igual, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
         return;
     }
     let mut regioes = vec![(this + 0x1128, 4)];
@@ -378,5 +378,5 @@ unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: us
         && cpz8_d(cpz8_d(l2 + 6)) != 0
         && core::slice::from_raw_parts(cpz8_d(cpz8_d(l2 + 6)) as *const u8, 0xde)
             == core::slice::from_raw_parts(core::ptr::addr_of!(FIXTURE_MOVED_NEWS_BUILT) as *const u8, 0xde);
-    PLACAR.record(igual, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { cpz8_sw(l2) } else { -1 }));
+    SCOREBOARD.record(igual, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { cpz8_sw(l2) } else { -1 }));
 }

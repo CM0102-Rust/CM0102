@@ -134,7 +134,7 @@ unsafe extern "stdcall" fn comparar_shortlist_set_up_formation_slots(entrada: us
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     let reg = [(cpp5_d(entrada), 40 * 0x25)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(entrada), || shortlist_set_up_formation_slots(entrada));
-    PLACAR.record(igual, || format!("shortlist_set_up_formation_slots(formacao {}) primeira diferença {:x?}", *((entrada + 7) as *const i8), first_memory_diff(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("shortlist_set_up_formation_slots(formacao {}) primeira diferença {:x?}", *((entrada + 7) as *const i8), first_memory_diff(&mo, &mr)));
 }
 
 /// Comparador: a 0x83cb40 reavalia o elenco (sorteios, ofertas, vagas de muitos clubes): roda só a original.
@@ -172,5 +172,5 @@ unsafe extern "thiscall" fn comparar_suspend_clubs_shortlisting_player(this: usi
     destruir(lista);
     liberar(lista);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogador, limpar), || suspend_clubs_shortlisting_player(this, jogador, limpar));
-    PLACAR.record(igual, || format!("suspend_clubs_shortlisting_player(jogador {:x}, limpar {}, {} regiões) primeira diferença {:x?}", cpp5_d(jogador), limpar, reg.len(), first_memory_diff(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("suspend_clubs_shortlisting_player(jogador {:x}, limpar {}, {} regiões) primeira diferença {:x?}", cpp5_d(jogador), limpar, reg.len(), first_memory_diff(&mo, &mr)));
 }

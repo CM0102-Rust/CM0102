@@ -48,7 +48,7 @@ The `.qst` files have the same container as the saves (`.sav`): compression flag
 
 With a fixed seed the game still varied between runs. Accidental sources, all neutralized **only in simulation mode** (`CM_PARAR_EM`); the normal game does not change:
 
-| Source | Symptom | Neutralization (`simulacao.rs`, `alocador.rs`) |
+| Source | Symptom | Neutralization (`simulation.rs`, `allocator.rs`) |
 |---|---|---|
 | `time()` | `srand(time)` in manager_manager.cpp (0x696d4b) | fixed instant |
 | `clock()` (31 calls, 13 routines) | match-day waits (match_day.cpp 0x6b55c0) depended on how many times menus and screens queried the clock | one clock per routine, +1 ms per query from it |

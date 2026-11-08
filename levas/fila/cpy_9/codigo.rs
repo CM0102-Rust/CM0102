@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this
         }
     }
     let igual = estado_orig == estado_rust && total == antes.wrapping_add(conta) && faltam.is_empty();
-    PLACAR.record(igual, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
+    SCOREBOARD.record(igual, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
         conta, nacao, total, antes, estado_orig == estado_rust, faltam));
 }
 
@@ -227,7 +227,7 @@ unsafe extern "C" fn comparar_officials_manager_validate_officials() {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((cpy9_d(0xae23e8), total * 0x2b));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || crate::rng::without_counting(|| officials_manager_validate_officials()));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("officials_manager_validate_officials ({} fichas) diferencas em {:x?}", total, dif)
@@ -260,6 +260,6 @@ unsafe extern "thiscall" fn officials_manager_operator(this: usize, src: usize) 
 unsafe extern "thiscall" fn comparar_officials_manager_operator(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x2b)], || o(this, src), || officials_manager_operator(this, src));
-    PLACAR.record(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
     r
 }

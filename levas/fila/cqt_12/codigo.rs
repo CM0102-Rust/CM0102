@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn comparar_asia_club_champ_advance_stage(this: usize) 
     o(this);
     let depois = cqt12_d(this + 0x30) as i32;
     let esperado = if ultima { f } else if f + 1 == 1 { 2 } else { f + 1 };
-    PLACAR.record(depois == esperado, || format!("asia_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    SCOREBOARD.record(depois == esperado, || format!("asia_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// Os 8 dos grupos: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da copa, +0xa7) até 4
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn comparar_create_group_stages(this: usize) {
         a == b
     };
     let ok = confere(1, &v[..4]) && confere(2, &v[4..]) && cqt12_d(this + 0x30) == 2;
-    PLACAR.record(ok, || format!("create_group_stages({:#x}): os grupos não batem com os vivos {:x?}", this, v));
+    SCOREBOARD.record(ok, || format!("create_group_stages({:#x}): os grupos não batem com os vivos {:x?}", this, v));
 }
 
 /// Os 4 das semifinais, na ordem da lista: o 1º do grupo 1 ([+0xc][1], tabela +0xb1), o 2º do grupo 2 ([+0xc][2]), o
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn comparar_asia_club_champ_create_semi_final_stage(thi
     o(this);
     let fase = cqt12_d(cqt12_d(this + 0xc) + 0xc);
     if fase == 0 {
-        PLACAR.record(false, || format!("asia_club_champ_create_semi_final_stage({:#x}) sem fase", this));
+        SCOREBOARD.record(false, || format!("asia_club_champ_create_semi_final_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt12_d(fase + 0xa7);
@@ -247,5 +247,5 @@ unsafe extern "thiscall" fn comparar_asia_club_champ_create_semi_final_stage(thi
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt12_w(fase + 0x3e) == 4 && cqt12_d(fase + 4) == cqt12_d(this + 4);
-    PLACAR.record(igual, || format!("asia_club_champ_create_semi_final_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    SCOREBOARD.record(igual, || format!("asia_club_champ_create_semi_final_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }

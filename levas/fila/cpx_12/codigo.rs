@@ -268,7 +268,7 @@ unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: u
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, p, jogo), || {
         crate::rng::without_counting(|| player_stats_record_match(this, p, jogo))
     });
-    PLACAR.record(igual && ro == rr, || format!("player_stats_record_match({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
+    SCOREBOARD.record(igual && ro == rr, || format!("player_stats_record_match({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
     ro
 }
 
@@ -449,7 +449,7 @@ unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize,
     POSITION_RECORDS_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regioes);
     mo.write_back();
-    PLACAR.record(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
+    SCOREBOARD.record(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
     ro
 }
 
@@ -523,6 +523,6 @@ unsafe extern "thiscall" fn comparar_send_record_news(this: usize) -> u32 {
     antes.write_back();
     let ro = o(this);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(ro == rr && mo == mr, || format!("send_record_news({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
+    SCOREBOARD.record(ro == rr && mo == mr, || format!("send_record_news({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
     ro
 }

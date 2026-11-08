@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize, conferir:
         reg.push((c, 79));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, conferir), || clear_all_grievances(this, conferir));
-    PLACAR.record(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this, mo, mr));
+    SCOREBOARD.record(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this, mo, mr));
 }
 
 /// Comparador: quando a decisão da cópia é não retirar, lado a lado pela ficha [0xae1080] e pelo contrato (0x50
@@ -125,5 +125,5 @@ unsafe extern "thiscall" fn comparar_check_transfer_request_withdrawal(this: usi
         return o(this, ctx);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4), (this, 0x50)], || o(this, ctx), || check_transfer_request_withdrawal(this, ctx));
-    PLACAR.record(igual, || format!("check_transfer_request_withdrawal({:x}, {}) {:x?} x {:x?}", this, ctx, mo, mr));
+    SCOREBOARD.record(igual, || format!("check_transfer_request_withdrawal({:x}, {}) {:x?} x {:x?}", this, ctx, mo, mr));
 }

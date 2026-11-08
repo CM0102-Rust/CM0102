@@ -35,7 +35,7 @@ unsafe extern "thiscall" fn clear_manager_record(registros: usize, id: *const i3
 unsafe extern "thiscall" fn comparar_is_own_comp_record(amistoso: usize, competicao: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(amistoso, competicao);
     let n = is_own_comp_record(amistoso, competicao);
-    PLACAR.record(r == n, || format!("is_own_comp_record({:#x}) original={} rust={}", competicao, r, n));
+    SCOREBOARD.record(r == n, || format!("is_own_comp_record({:#x}) original={} rust={}", competicao, r, n));
     r
 }
 
@@ -43,12 +43,12 @@ unsafe extern "thiscall" fn comparar_friendly_international_date_set(data: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8, u8, u8, u8, u32, u32)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(data, 0x14)], || o(data, dia, mes, duracao, ano, continente, competicao),
         || friendly_international_date_set(data, dia, mes, duracao, ano, continente, competicao));
-    PLACAR.record(igual, || format!("friendly_international_date_set {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("friendly_international_date_set {:x?} x {:x?}", mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_clear_manager_record(registros: usize, id: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I2%%);
     let r = friendly_manager_record(registros, id);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 210)], || o(registros, id), || clear_manager_record(registros, id));
-    PLACAR.record(igual, || format!("clear_manager_record({}) {:x?} x {:x?}", *id, mo, mr));
+    SCOREBOARD.record(igual, || format!("clear_manager_record({}) {:x?} x {:x?}", *id, mo, mr));
 }

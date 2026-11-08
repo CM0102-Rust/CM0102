@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn comparar_add_player_to_squad(this: usize, nacao: usi
     }
     let reg = squad_change_regions(time, p);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nacao, tipo, p), || add_player_to_squad(this, nacao, tipo, p));
-    PLACAR.record(igual, || format!("add_player_to_squad({:x}, {}, {:x}) {:x?} x {:x?}", nacao, tipo as u8, p, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_player_to_squad({:x}, {}, {:x}) {:x?} x {:x?}", nacao, tipo as u8, p, mo, mr));
 }
 
 /// { 0x7762f0 } (thiscall, ret 0xc, national_teams.cpp): `remove_player_from_squad(nacao, tipo, p)`: tira `p` da
@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn comparar_national_teams_remove_player_from_squad(thi
     }
     let reg = squad_change_regions(time, p);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nacao, tipo, p), || national_teams_remove_player_from_squad(this, nacao, tipo, p));
-    PLACAR.record(igual, || format!("national_teams_remove_player_from_squad({:x}, {}, {:x}) {:x?} x {:x?}", nacao, tipo as u8, p, mo, mr));
+    SCOREBOARD.record(igual, || format!("national_teams_remove_player_from_squad({:x}, {}, {:x}) {:x?} x {:x?}", nacao, tipo as u8, p, mo, mr));
 }
 
 /// O registro da nação no gerenciador das seleções: [this + 4] + 0x6e × id (+0 da nação).
@@ -132,5 +132,5 @@ unsafe extern "thiscall" fn comparar_release_overage_u21_players(this: usize, na
     let mut reg = vec![(nation_record_by_id(this, nacao) + 0x6b, 1), (time + 0xd7, 200)];
     reg.extend((0..50usize).map(|c| cpd2_d(time + 0xd7 + 4 * c)).filter(|&p| p != 0).map(|p| (p + 0x24, 0x3b)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nacao), || release_overage_u21_players(this, nacao));
-    PLACAR.record(igual, || format!("release_overage_u21_players({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
+    SCOREBOARD.record(igual, || format!("release_overage_u21_players({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
 }

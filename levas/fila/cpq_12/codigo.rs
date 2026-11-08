@@ -53,7 +53,7 @@ unsafe extern "C" fn comparar_comp_util_get_fixture_venue_side(clube: usize, jog
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%);
     let r = o(clube, jogo);
     let n = comp_util_get_fixture_venue_side(clube, jogo);
-    PLACAR.record(r == n, || format!("comp_util_get_fixture_venue_side(clube {:x}, jogo {:x}) original={} rust={}", clube, jogo, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_util_get_fixture_venue_side(clube {:x}, jogo {:x}) original={} rust={}", clube, jogo, r, n));
     r
 }
 
@@ -77,7 +77,7 @@ unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usize, b: usiz
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
     let n = compare_nation_coefficients_desc(a, b);
-    PLACAR.record(r == n, || format!("compare_nation_coefficients_desc original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("compare_nation_coefficients_desc original={} rust={}", r, n));
     r
 }
 
@@ -142,6 +142,6 @@ unsafe extern "thiscall" fn comparar_has_scout_request(this: usize, jogador: usi
     }
     let r = o(this, jogador, clube, so_vencidos);
     let n = has_scout_request(this, jogador, clube, so_vencidos);
-    PLACAR.record(r == n, || format!("has_scout_request(jogador {:x}, clube {:x}, {}) original={} rust={}", jogador, clube, so_vencidos, r, n));
+    SCOREBOARD.record(r == n, || format!("has_scout_request(jogador {:x}, clube {:x}, {}) original={} rust={}", jogador, clube, so_vencidos, r, n));
     r
 }

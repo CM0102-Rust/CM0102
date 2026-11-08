@@ -381,8 +381,8 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     }
     let mut now = 0i32;
     *(G_GAME_PLAY_TIME_LAST_STAMP as *mut i32) = relogio(&mut now);
-    let mut nacao = 0i32;
-    let campos: [(usize, u32, u32, usize); 10] = [
+    let mut nation = 0i32;
+    let fields: [(usize, u32, u32, usize); 10] = [
         (0xdd7120, 4, 0x23cf, 0xa8166c),
         (0xdd7114, 1, 0x23d7, 0xa81634),
         (G_GAME_START_DATE, 8, 0x23df, 0xa81604),
@@ -392,14 +392,14 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         (0xae2cfc, 1, 0x23ff, 0xa81560),
         (0xae2d00, 4, 0x2407, 0xa8151c),
         (0xae2d04, 4, 0x240f, 0xa814cc),
-        (&mut nacao as *mut i32 as usize, 4, 0x2417, 0xa81490),
+        (&mut nation as *mut i32 as usize, 4, 0x2417, 0xa81490),
     ];
-    for (buf, tam, linha, msg) in campos {
+    for (buf, tam, linha, msg) in fields {
         if read(buf, tam, 1, z) != 1 {
             return load_read_error(linha, msg, &mut z);
         }
     }
-    *(G_MAIN_NATION as *mut usize) = if nacao > -1 { (u(G_NATION_TABLE) as usize).wrapping_add((nacao as usize).wrapping_mul(nation::SIZE)) } else { 0 };
+    *(G_MAIN_NATION as *mut usize) = if nation > -1 { (u(G_NATION_TABLE) as usize).wrapping_add((nation as usize).wrapping_mul(nation::SIZE)) } else { 0 };
     if read(0xae2d10, 4, 1, z) != 1 {
         return load_read_error(0x2420, 0xa81450, &mut z);
     }
@@ -601,7 +601,7 @@ pub(crate) unsafe fn undo_holiday_managers() {
         *(u(s + staff::COMMON_NAME) as *mut u8) = 0;
         let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_SET);
         acertar_data(s + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
-        *((s + staff::YEAR_OF_BIRTH) as *mut u16) = 0x7ae;
+        *((s + staff::AGE) as *mut u16) = 0x7ae;
         core::ptr::write_unaligned((s + staff::NATIONAL_JOB) as *mut u32, 0);
         core::ptr::write_unaligned((s + staff::CLUB_JOB) as *mut u32, 0);
         let tela: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(FN_SCREENMANAGER_REMOVE_MANAGER_RECORD);
@@ -808,7 +808,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
             while league < G_KEY_NATION_SETUP_FUNC_LOOP_END {
                 let n = u(league - 8) as usize;
                 if n != 0 && u(league) != 0 && (procurar(v, name_of_nation(n) as usize) != 0 || nation_home(n, v) != 0) {
-                    let m = (n + 0x11c) as *mut u8;
+                    let m = (n + nation::NATION_LEAGUE_SELECTED) as *mut u8;
                     let mark = ((!(u(opcoes() + 4) as u8) & 2) | 1) << 1;
                     if *m == 0 {
                         *m = mark;
@@ -835,7 +835,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
             while league < G_KEY_NATION_SETUP_FUNC_LOOP_END {
                 let n = u(league - 8) as usize;
                 if n != 0 && u(league) != 0 && (procurar(v, name_of_nation(n) as usize) != 0 || nation_home(n, v) != 0) {
-                    let m = (n + 0x11c) as *mut u8;
+                    let m = (n + nation::NATION_LEAGUE_SELECTED) as *mut u8;
                     if *m == 0 {
                         *m = ((!(u(opcoes() + 4) as u8) & 2) << 1) | 1;
                         *(G_NATIONS_TO_LOAD_COUNT as *mut i32) += 1;
@@ -928,32 +928,32 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         }
     }
     core::ptr::write_unaligned(slot() as *mut u32, p as u32);
-    *core::ptr::read_unaligned((p + 0xc) as *const *mut u8) = 0;
-    acertar_data(p + 0x10, 1, 0, 0x7ae, -1);
-    core::ptr::write_unaligned((p + 0x18) as *mut u16, 0x7ae);
-    core::ptr::write_unaligned((p + 0x24) as *mut u32, 0);
-    core::ptr::write_unaligned((p + 0x39) as *mut u32, 0);
-    *((p + 0x5f) as *mut u8) = 1;
+    *core::ptr::read_unaligned((p + staff::COMMON_NAME) as *const *mut u8) = 0;
+    acertar_data(p + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
+    core::ptr::write_unaligned((p + staff::YEAR_OF_BIRTH) as *mut u16, 0x7ae);
+    core::ptr::write_unaligned((p + staff::NATIONAL_JOB) as *mut u32, 0);
+    core::ptr::write_unaligned((p + staff::CLUB_JOB) as *mut u32, 0);
+    *((p + staff::CLASSIFICATION) as *mut u8) = 1;
     new_human(u(G_HUMAN_MANAGER) as usize, p);
     set_on_holiday(u(G_HUMAN_MANAGER) as usize, holiday, 0);
-    let clube = loop {
+    let club = loop {
         let r = sorteio(i(G_CLUB_COUNT));
         let c = (u(G_CLUB_TABLE) as usize).wrapping_add((r as usize).wrapping_mul(club::SIZE));
         if national_team(c) != 0 {
             continue;
         }
-        let nacao = core::ptr::read_unaligned((c + club::NATION) as *const usize);
-        if nacao == 0 || *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 == 0 || accepted(c) == 0 {
+        let nation = core::ptr::read_unaligned((c + club::NATION) as *const usize);
+        if nation == 0 || *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 == 0 || accepted(c) == 0 {
             continue;
         }
         break c;
     };
-    let nacao = core::ptr::read_unaligned((clube + club::NATION) as *const usize);
-    core::ptr::write_unaligned((p + 0x1a) as *mut usize, nacao);
-    core::ptr::write_unaligned((p + 4) as *mut u32, first_name(nacao));
-    let n2 = second_name(core::ptr::read_unaligned((p + 0x1a) as *const usize));
-    core::ptr::write_unaligned((p + 8) as *mut u32, n2);
-    pos_human(p, clube);
+    let nation = core::ptr::read_unaligned((club + club::NATION) as *const usize);
+    core::ptr::write_unaligned((p + staff::NATION) as *mut usize, nation);
+    core::ptr::write_unaligned((p + staff::FIRST_NAME) as *mut u32, first_name(nation));
+    let n2 = second_name(core::ptr::read_unaligned((p + staff::NATION) as *const usize));
+    core::ptr::write_unaligned((p + staff::SECOND_NAME) as *mut u32, n2);
+    pos_human(p, club);
     1
 }
 

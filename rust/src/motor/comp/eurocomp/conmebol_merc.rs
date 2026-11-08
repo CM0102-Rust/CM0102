@@ -103,7 +103,7 @@ pub(crate) unsafe fn is_rollover_day(this: usize, today: usize) -> bool {
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     let mut junho = [0u8; 8];
     data(junho.as_mut_ptr(), 1, 5, year_of_today as u32, -1);
-    core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16) && read_i16(this + 0x40) as i32 != year_of_today as i32
+    core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16) && read_i16(this + league::YEAR) as i32 != year_of_today as i32
 }
 
 /// Builds the table of group 1 of the Copa Mercosur. Rule: group 1 has 4 clubs, the first 4 drawn, each in the row of
@@ -124,7 +124,7 @@ pub(crate) unsafe fn is_rollover_day(this: usize, today: usize) -> bool {
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(this: usize) -> u32 {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
     write_u32_from_usize(this + league::TABLE, t);
@@ -139,7 +139,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
         row(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
-    noticia(this);
+    news(this);
     1
 }
 
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -232,7 +232,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
         show_error_at(0x9a7e5c, 0x211);
         return 0;
     }
-    noticia(f);
+    news(f);
     write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
     1
 }
@@ -261,7 +261,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if f < limit {
         let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-        let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
+        let game: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
         if !league.is_null() {
             *league = 1;
         }
@@ -275,10 +275,10 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
         crate::comparison::branch(name_g);
         // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
         // 0x68a160 only uses the low 16 bits: the copy passes the clean year
-        let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+        let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
         for (r, &(dia, mes, semana, codigo)) in groups.iter().enumerate() {
             data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
-            jogo(t, r as i32, 0, -1, -1, -1, 0);
+            game(t, r as i32, 0, -1, -1, -1, 0);
         }
         return t;
     }
@@ -296,7 +296,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
         return 0;
     }
     crate::comparison::branch(name);
-    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
     for (i, r) in knockout.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
     }
@@ -319,7 +319,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
     if f > limit {
         // simplification: above the knockout neither of the two writes anything; the outputs may not even exist
         let a = o();
-        PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, f, a));
+        SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, f, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
@@ -341,7 +341,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, f, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, f, outs, *rounds, r2, table));
     a
 }
 

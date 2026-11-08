@@ -289,7 +289,7 @@ unsafe extern "thiscall" fn comparar_get_departure_reason(this: usize, id: u32) 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, id),
         || crate::rng::without_counting(|| get_departure_reason(this, id)));
-    PLACAR.record(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
     r
 }
 
@@ -455,6 +455,6 @@ unsafe extern "thiscall" fn comparar_get_manager_record(this: usize, pessoa: usi
         }
     }
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, criar), || get_manager_record(this, pessoa, criar));
-    PLACAR.record(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, criar, a, b, mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, criar, a, b, mo, mr));
     a
 }

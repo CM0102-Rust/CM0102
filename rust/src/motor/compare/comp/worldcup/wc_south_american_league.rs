@@ -17,6 +17,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_wc_south_american_league_set_up_
     let slots = 4u8.wrapping_sub(ef).wrapping_sub(*((this + 0xee) as *const u8));
     let r = check_qualifier_rules("wc_south_american_league_set_up_rules", this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS, (0x19, 0, 5), 0, || o(this));
     let (lido_ef, lido_be) = (*((this + 0xef) as *const u8), *((this + 0xbe) as *const u8));
-    PLACAR.record(lido_ef == ef && lido_be == slots, || format!("wc_south_american_league_set_up_rules({:#x}) +0xef {} previsto {} vagas {} previstas {}", this, lido_ef, ef, lido_be, slots));
+    SCOREBOARD.record(lido_ef == ef && lido_be == slots, || format!("wc_south_american_league_set_up_rules({:#x}) +0xef {} previsto {} vagas {} previstas {}", this, lido_ef, ef, lido_be, slots));
     r
 }

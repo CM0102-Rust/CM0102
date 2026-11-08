@@ -105,8 +105,8 @@ const HOST_COUNTRY_TABLE: [(u16, u8, u32); 281] = [
 /// depois o dia da decisão de cada entrada anda um sorteio de −35 a +34 (0x90cfc0(70)); a entrada que não é padrão
 /// fixa (−3) e tem segunda ou terceira candidatura completa leva a caixa (linha 0x226) e perde as duas.
 unsafe extern "thiscall" fn init_default_table(this: usize) {
-    let definir: unsafe extern "thiscall" fn(*mut crate::data::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(0x54a130usize);
-    let mut d = crate::data::Data { dia: 40, ano: 1972, bissexto: 1 };
+    let definir: unsafe extern "thiscall" fn(*mut crate::date::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(0x54a130usize);
+    let mut d = crate::date::Data { dia: 40, ano: 1972, bissexto: 1 };
     for &(off, t, v) in HOST_COUNTRY_TABLE.iter() {
         let e = cqo3_d(this) + off as usize;
         match t {
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_init_default_table(this: usize) {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(cqo3_d(this), n as usize * 0x22), (0xb67a34, 4)]);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| init_default_table(this)));
-    PLACAR.record(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
+    SCOREBOARD.record(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
 }
 
 /// { 0x5faec0 } (thiscall, ret 4, host_country.cpp, `HostCountry::post_host_news(lista)`; pelo calendário das sedes

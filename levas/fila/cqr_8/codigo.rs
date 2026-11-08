@@ -135,7 +135,7 @@ unsafe fn compare_group_stage(nome: &str, this: usize, g: u32, original: impl Fn
                 a == b
             });
     }
-    PLACAR.record(ok, || format!("{}({:#x}, {}) devolveu {}; plano {:x?}", nome, this, g, r, plano));
+    SCOREBOARD.record(ok, || format!("{}({:#x}, {}) devolveu {}; plano {:x?}", nome, this, g, r, plano));
     r
 }
 

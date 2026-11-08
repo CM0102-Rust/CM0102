@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
     }
     if k == 0 {
         let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x44)], || o(this), || process_regen_queue(this));
-        PLACAR.record(igual, || format!("process_regen_queue({:x}) sem vencidas {:x?} x {:x?}", this, mo, mr));
+        SCOREBOARD.record(igual, || format!("process_regen_queue({:x}) sem vencidas {:x?} x {:x?}", this, mo, mr));
         return;
     }
     let antes = core::slice::from_raw_parts(base as *const u8, c0 as usize * 0xc).to_vec();
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
             igual &= cpw10_i(e) == -1 && cpw10_w(e + 4) == 0 && cpw10_w(e + 6) == 0;
         }
     }
-    PLACAR.record(igual, || format!("process_regen_queue({:x}) {} vencidas de {}: conta {} base {:x}/{:x}", this, k, c0, n, base, b2));
+    SCOREBOARD.record(igual, || format!("process_regen_queue({:x}) {} vencidas de {}: conta {} base {:x}/{:x}", this, k, c0, n, base, b2));
 }
 
 /// O veículo pelo sorteio(100) dos grandes (0x757f30/0x757fa0): 0 → 6; até 7 → 3; até 14 → 5; até 39 → 2; até 59 → 0;
@@ -268,7 +268,7 @@ unsafe extern "C" fn media_pick_outlet_type_for_club(clube: usize) -> u32 {
 unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
     let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(clube), || crate::rng::without_counting(|| media_pick_outlet_type_for_club(clube)));
-    PLACAR.record(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
     r
 }
 
@@ -286,6 +286,6 @@ unsafe extern "C" fn media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
 unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(pessoa), || crate::rng::without_counting(|| media_pick_outlet_type_for_person(pessoa)));
-    PLACAR.record(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
     r
 }

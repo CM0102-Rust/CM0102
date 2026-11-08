@@ -83,7 +83,7 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
     crate::comparison::branch(name);
     let mut t0 = table[0];
     adjust(&mut t0);
-    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         fra_super_write_cup_round(t, i as u32, if i == 0 { &t0 } else { r }, year);
     }
@@ -102,7 +102,7 @@ pub(crate) const FRENCH_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
 /// [pt] O mando da Supercopa da França: 0x400 em 2001 (+0x40 = 0x7d1); nos outros anos, um dos seis (0x200, 0x400, 0x800,
 /// 0x1000, 0x2000, 0x4000) pela 0x90cfc0 (push 6; add esp, 4 -> cdecl, o sorteio de 0 a 5).
 pub(crate) unsafe fn french_super_cup_venue(this: usize) -> u32 {
-    if core::ptr::read_unaligned((this + 0x40) as *const i16) == 0x7d1 {
+    if core::ptr::read_unaligned((this + cup::YEAR) as *const i16) == 0x7d1 {
         return 0x400;
     }
     let sortear: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);

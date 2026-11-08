@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn comparar_african_nations_advance_stage(this: usize) 
     }
     o(this);
     let depois = cqk12_d(this + 0x30) as i32;
-    PLACAR.record(depois == f + 1, || format!("african_nations_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    SCOREBOARD.record(depois == f + 1, || format!("african_nations_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// { 0x4019c0 } (thiscall, ret 0, african_nations.cpp): `AfricanNations::init_group_a_table()`: o grupo A com 4 times
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn comparar_init_group_a_table(this: usize) -> u32 {
         }
     }
     let igual = r == 1 && cqk12_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.record(igual, || format!("init_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    SCOREBOARD.record(igual, || format!("init_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 

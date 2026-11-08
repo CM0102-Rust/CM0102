@@ -2182,14 +2182,14 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 |---|---|---|
 | `video.rs` | video | DirectDraw próprio |
 | `apresentacao.rs` | presentation | quadro → janela, mouse |
-| `ganchos.rs` | hooks (IAT) | ganchos na tabela de importação |
-| `desvios.rs` | detours | desvios no exe, pilha particular |
-| `simulacao.rs` | simulation | simulação reproduzível |
-| `alocador.rs` | allocator | alocador fixo |
+| `iat_hooks.rs` | hooks (IAT) | ganchos na tabela de importação |
+| `detours.rs` | detours | desvios no exe, pilha particular |
+| `simulation.rs` | simulation | simulação reproduzível |
+| `allocator.rs` | allocator | alocador fixo |
 | `rng.rs` | random | sorteio do jogo |
-| `data.rs` | date | datas (Date.cpp) |
+| `date.rs` | date | datas (Date.cpp) |
 | `motor.rs` | engine | motor de partidas |
-| `espiao.rs` | spy | diagnóstico (CM_ESPIAO=1) |
+| `spy.rs` | spy | diagnóstico (CM_ESPIAO=1) |
 | `comparison.rs` | comparison | comparação lado a lado |
 | `registro.rs` | log | registro em ddraw.log |
 | `simular.py` | simulate | carreira automática sem tela |

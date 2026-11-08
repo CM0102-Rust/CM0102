@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, 
     let achou = (0..m).any(|k| {
         core::slice::from_raw_parts(cpl6_d(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &esperado[..]
     });
-    PLACAR.record(m == n.wrapping_add(1) && achou, || {
+    SCOREBOARD.record(m == n.wrapping_add(1) && achou, || {
         format!("log_story(tipo {:#x}, subtipo {}) conta {} -> {}, esperado {:x?} achou {}", tipo, subtipo as u8 as i8, n, m, esperado, achou)
     });
 }
@@ -182,13 +182,13 @@ unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
     reg.push((cpl6_d(this), (cpl6_d(this + 8) as i32).max(0) as usize * 0x17));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| expire_story_log(this)));
     // mo.0[2] e mr.0[2]: ponteiro, capacidade e conta depois de cada lado
-    PLACAR.record(igual, || format!("expire_story_log {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
+    SCOREBOARD.record(igual, || format!("expire_story_log {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
 }
 
 /// Comparador: pelo valor (a busca e a data padrão da chave só leem).
 unsafe extern "thiscall" fn comparar_has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(%%I2%%)(this, a, b, tipo, subtipo, desde);
     let n = has_logged_story(this, a, b, tipo, subtipo, desde);
-    PLACAR.record(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
+    SCOREBOARD.record(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
     r
 }

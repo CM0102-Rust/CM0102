@@ -38,7 +38,7 @@ unsafe extern "C" fn comparar_staff_clear_opinion_links(pessoa: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(%%I0%%);
     let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa) }; // não escreve nada
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(pessoa), || staff_clear_opinion_links(pessoa));
-    PLACAR.record(igual, || format!("staff_clear_opinion_links({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("staff_clear_opinion_links({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// { 0x549cf0 } (cdecl, Database.cpp): `staff_add_opinion_link(pessoa, outra, valor)`: com as duas pessoas válidas
@@ -67,7 +67,7 @@ unsafe extern "C" fn comparar_staff_add_opinion_link(pessoa: usize, outra: usize
     let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa, outra, valor) };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(pessoa, outra, valor),
         || staff_add_opinion_link(pessoa, outra, valor));
-    PLACAR.record(igual, || format!("staff_add_opinion_link({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("staff_add_opinion_link({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, valor, mo, mr));
 }
 
 /// { 0x549d60 } (cdecl, Database.cpp): `staff_remove_opinion_link(pessoa, valor)`: esvazia (−1 no id e no valor) o
@@ -88,5 +88,5 @@ unsafe extern "C" fn comparar_staff_remove_opinion_link(pessoa: usize, valor: i3
     let o = original_fn::<unsafe extern "C" fn(usize, i32)>(%%I2%%);
     let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa, valor) };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(pessoa, valor), || staff_remove_opinion_link(pessoa, valor));
-    PLACAR.record(igual, || format!("staff_remove_opinion_link({:x}, {}) {:x?} x {:x?}", pessoa, valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("staff_remove_opinion_link({:x}, {}) {:x?} x {:x?}", pessoa, valor, mo, mr));
 }

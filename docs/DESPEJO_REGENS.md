@@ -43,7 +43,7 @@ nos `.bin` é o que o jogo tem na memória nesse ponto.
 
 ## Como reproduzir
 
-1. DLL de diagnóstico: `copias\regens\rust` (o `rust\` do HEAD + `src\despejar.rs` + o desvio em `simulacao.rs`; fora
+1. DLL de diagnóstico: `copias\regens\rust` (o `rust\` do HEAD + `src\despejar.rs` + o desvio em `simulation.rs`; fora
    do git). `cargo build --release` nessa pasta.
 2. `python copias\regens\despejar.py`: dentro da trava do laboratório (bancada do `simular.py` apontada para a cópia do
    CLZ; `game.cfg`, `*.tmp`, `ddraw.dll`, `hall_of_fame.bin` e `ddraw.log` da cópia devolvidos), copia o save para

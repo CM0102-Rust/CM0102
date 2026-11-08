@@ -1,7 +1,7 @@
 # Mutações da 275a leva (itens cqk_9, cqi_4, cqi_5, cqi_6, cqj_4, cqj_5, cqj_6, cqk_4, cqk_5, cqk_6). Uso: python mutacoes.py mutacoes\leva275.py --carreira 2002-06-01
 MUTACOES = [
-    ('cqk9_sem_registro_classificado_mls', 'bra_nat_first_add_qualified_record(clube, comp, 0xa0, 0x78, 0x28); // cqk9: o classificado da MLS', '// mutacao: sem o registro do classificado da MLS', 'cqk_9 mls classificado'),
-    ('cqk9_sem_segunda_conferencia', 'f1(e1, jogo, stats); // cqk9: o jogo na tabela da segunda conferência', 'let _ = (e1, f1); // mutacao: o jogo na tabela da segunda conferência', 'cqk_9 mls segunda conferencia'),
+    ('cqk9_sem_registro_classificado_mls', 'bra_nat_first_add_qualified_record(club, comp, 0xa0, 0x78, 0x28); // cqk9: o classificado da MLS', '// mutacao: sem o registro do classificado da MLS', 'cqk_9 mls classificado'),
+    ('cqk9_sem_segunda_conferencia', 'f1(e1, game, stats); // cqk9: o jogo na tabela da segunda conferência', 'let _ = (e1, f1); // mutacao: o jogo na tabela da segunda conferência', 'cqk_9 mls segunda conferencia'),
     ('cqk9_conferencia_trocada', 'return 0x413; // cqk9: a primeira conferência', 'return 0x414; // mutacao: a primeira conferência', 'cqk_9 conferencia 0x413'),
     ('cqi4_premier_rebaixa_4', 'v.push((0xc1, 1, 3)); // cqi4: a Premier rebaixa 3', 'v.push((0xc1, 1, 4)); // mutacao: rebaixa 4', 'cqi_4 regras da premier'),
     ('cqi4_first_um_turno', 'v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a First joga 2 turnos', 'v.extend_from_slice(&[(0x3c, 2, 1), (0xc2, 1, 3)]); // mutacao: 1 turno', 'cqi_4 regras da first'),
@@ -26,7 +26,7 @@ MUTACOES = [
     ('cqk4_segunda_vitoria_vale_2', 'v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqk4: a Segunda joga 2 turnos', 'v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 2)]); // mutacao: 2 pontos', 'cqk_4 regras da segunda'),
     ('cqk5_primera_sem_premio', '*((this + league::PRIZE_MODE) as *mut u8) = 1; // cqk5: o prêmio pela tabela no fim da liga', '*((this + league::PRIZE_MODE) as *mut u8) = 2; // mutacao: sem premio no fim', 'cqk_5 tabela da primera'),
     ('cqk5_cota_da_primera_metade', 'let f = prize(this, 0x3d090); // cqk5: a cota da Primera', 'let f = prize(this, 0x1e848); // mutacao: a metade', 'cqk_5 tabela da primera'),
-    ('cqk5_sem_registro_do_rebaixamento', 'cair(eng_second_staff_records(), clube, comp); // cqk5: o rebaixamento pela tabela da C2/A', 'let _ = (clube, comp); // mutacao: sem o registro', 'cqk_5 rebaixamento na c2a'),
+    ('cqk5_sem_registro_do_rebaixamento', 'cair(eng_second_staff_records(), club, comp); // cqk5: o rebaixamento pela tabela da C2/A', 'let _ = (club, comp); // mutacao: sem o registro', 'cqk_5 rebaixamento na c2a'),
     ('cqk6_marca_invertida', 'let mark = marcadas.iter().any(|&g| read_usize(g) == id) as u32; // cqk6: a marca dos clubes de divisão maior', 'let mark = (!marcadas.iter().any(|&g| read_usize(g) == id)) as u32; // mutacao: a marca invertida', 'cqk_6 tabela francesa de baixo'),
     ('cqk6_cfa_so_a_primeira_marcada', 'create_french_table(this, clubs, 0x12, 0x9ccaf0, 0x185, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION])', 'create_french_table(this, clubs, 0x12, 0x9ccaf0, 0x185, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION])', 'cqk_6 tabela francesa de baixo'),
     ('cqk6_baixo_sem_marca', 'create_french_table(this, clubs, 0x14, 0x9ccbd0, 0x175, &[KEY_CLUB_COMP_FRENCH_NATIONAL])', 'create_french_table(this, clubs, 0x14, 0x9ccbd0, 0x175, &[])', 'cqk_6 tabela francesa de baixo'),

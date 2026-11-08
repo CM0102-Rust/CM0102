@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usize {
     if b != 0 {
         soltar(b);
     }
-    PLACAR.record(igual && mesma, || format!("draw_groups: memória igual={} lista igual={}", igual, mesma));
+    SCOREBOARD.record(igual && mesma, || format!("draw_groups: memória igual={} lista igual={}", igual, mesma));
     a
 }
 
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn comparar_run_group_draw(this: usize) {
     if cqf4_d(this + 0x45) == 1 {
         let fases = cqf4_d(this + 0xc);
         let ok = fases != 0 && (0..7).all(|g| cqf4_d(fases + g * 4) != 0) && cqf4_d(this + 0x30) == 6;
-        PLACAR.record(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", cqf4_d(this + 0x30) as i32));
+        SCOREBOARD.record(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", cqf4_d(this + 0x30) as i32));
     }
 }
 
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: usize, hoje
     let sorteia = cqf4_w(this + 0xb6) as u16 == dia && cqf4_w(this + 0xb8) as i32 + cqf4_w(this + 0x40) as i32 == ano && completo != 0 && cqf4_d(this + 0xb1) == 0;
     let r = o(this, hoje, completo);
     if sorteia {
-        PLACAR.record(cqf4_d(this + 0xb1) != 0 && cqf4_d(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", cqf4_d(this + 0xb1), cqf4_d(this + 0x45)));
+        SCOREBOARD.record(cqf4_d(this + 0xb1) != 0 && cqf4_d(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", cqf4_d(this + 0xb1), cqf4_d(this + 0x45)));
     }
     r
 }

@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_cqv11_mercosul_quartas(this: usize) {
             lidos.sort_unstable();
             lidos.windows(2).all(|w| w[0] != w[1])
         };
-    PLACAR.record(ok, || format!("cqv11_mercosul_quartas({:#x}): quartas {:x?} primeiros {:x?} segundos {:x?}", this, lidos, primeiros, segundos));
+    SCOREBOARD.record(ok, || format!("cqv11_mercosul_quartas({:#x}): quartas {:x?} primeiros {:x?} segundos {:x?}", this, lidos, primeiros, segundos));
 }
 
 /// { 0x4c4210 } (thiscall, ret 0, conmebol_liber.cpp; a virtual +0x5c): `ConmebolLiber::set_predicted_positions()`: as
@@ -292,6 +292,6 @@ unsafe fn cqv11_comparar_previstas(nome: &str, this: usize, _fase: u32, _grupo: 
         lidas.push(if e != 0 { *((e + 0x72) as *const u8) as i32 } else { -1 });
     }
     let ok = lidas[0] == 1 && lidas.iter().all(|&x| x >= 1) && lidas.windows(2).all(|w| w[0] <= w[1]);
-    PLACAR.record(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
 }
 

@@ -7,7 +7,7 @@ Para cada rotina:
   - confere que nenhuma delas e relativa ao endereco (jmp/call/jcc relativos, loop...): elas vao
     para o trampolim, em outro endereco, e mudariam de sentido;
   - confere que nenhum salto ou chamada do .text cai no meio desses bytes (so no inicio).
-Imprime a entrada da tabela `rust/src/desvios.rs` (endereco + bytes esperados). Na abertura do jogo
+Imprime a entrada da tabela `rust/src/detours.rs` (endereco + bytes esperados). Na abertura do jogo
 o nucleo confere esses bytes antes de desviar e recusa se nao baterem.
 """
 import csv

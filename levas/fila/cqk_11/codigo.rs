@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_select_qualified_clubs(this:
     core::ptr::write_unaligned((this + 0xee) as *mut u32, la as u32);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
     depois.write_back();
-    PLACAR.record(r == rr && a == b && igual_estado, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, igual_estado, a, b));
+    SCOREBOARD.record(r == rr && a == b && igual_estado, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, igual_estado, a, b));
     r
 }
 
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_update_staff_records_for_sta
     }
     let r = o(this, clube, desfecho, fase, a4, jogo, a6);
     let igual = r == 0 && (!titulo || cqk11_d(vaga) == clube);
-    PLACAR.record(igual, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, desfecho as u8, fase as u8, r, titulo, vaga));
+    SCOREBOARD.record(igual, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, desfecho as u8, fase as u8, r, titulo, vaga));
     r
 }
 
@@ -200,5 +200,5 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_advance_stage(this: usize) {
     }
     o(this);
     let depois = cqk11_d(this + 0x30) as i32;
-    PLACAR.record(depois == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    SCOREBOARD.record(depois == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }

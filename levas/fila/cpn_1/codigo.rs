@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecn
 unsafe extern "thiscall" fn comparar_send_by_scope(this: usize, noticia: usize, clube: usize, competicao: usize, nacao: usize, continente: usize, alcance: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%)(this, noticia, clube, competicao, nacao, continente, alcance);
     let fora = !(0..=5).contains(&(alcance as u8 as i8));
-    PLACAR.record(!fora || r == 0, || format!("send_by_scope alcance {} devolveu {}", alcance as u8 as i8, r));
+    SCOREBOARD.record(!fora || r == 0, || format!("send_by_scope alcance {} devolveu {}", alcance as u8 as i8, r));
     r
 }
 
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn comparar_send_to_club_manager(this: usize, noticia: 
     let humano = tecnico != 0 && cpn1_i(tecnico) >= cpn1_i(0xae2364).wrapping_sub(0x10);
     let r = o(this, noticia, clube);
     let ok = *((noticia + 0xde) as *const u8) == 0 && (humano || r == 0) && r <= 1;
-    PLACAR.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", clube, tecnico, humano, r));
+    SCOREBOARD.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", clube, tecnico, humano, r));
     r
 }
 
@@ -224,14 +224,14 @@ unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, noticia: us
     };
     let r = o(this, noticia, tecnico, livre);
     if r == 0 {
-        PLACAR.record(novo, || format!("deliver_to_manager devolveu 0 sem anel novo")); // só sem memória
+        SCOREBOARD.record(novo, || format!("deliver_to_manager devolveu 0 sem anel novo")); // só sem memória
         return r;
     }
     let vaga = cpn1_d(this).wrapping_add((atual as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
     let ok = r == 1 && cpn1_i(e) == inicio && cpn1_i(e + 4) == prox && cpn1_i(e + 8) == conta_depois
         && cpn1_d(this + 0x10) == contador_depois && cpn1_d(noticia + 0xd6) == id && cpn1_d(noticia + 0xda) == 0
         && (repetida || cpn1_d(vaga + 0xd6) == id);
-    PLACAR.record(ok, || format!("deliver_to_manager(humano {}) id {} (esperava {}), anel {}/{}/{} (esperava {}/{}/{}), repetida {}",
+    SCOREBOARD.record(ok, || format!("deliver_to_manager(humano {}) id {} (esperava {}), anel {}/{}/{} (esperava {}/{}/{}), repetida {}",
         idx, cpn1_d(noticia + 0xd6), id, cpn1_i(e), cpn1_i(e + 4), cpn1_i(e + 8), inicio, prox, conta_depois, repetida));
     r
 }

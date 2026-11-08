@@ -1,5 +1,5 @@
 """Confere os prologos do motor.rs: instrucoes inteiras e sem salto/chamada relativa (o trampolim copia os bytes como estao)
-e nenhum endereco repetido (com o data.rs).
+e nenhum endereco repetido (com o date.rs).
 
 Uso: python prologos.py"""
 import re
@@ -10,8 +10,8 @@ d1080 = open(r'D:\Sistemas\CM0102\jogo\cm0102-1080.exe', 'rb').read()
 src = open(r'D:\Sistemas\CM0102\rust\src\motor.rs', encoding='utf-8').read()
 md = Cs(CS_ARCH_X86, CS_MODE_32)
 ruins = 0
-# prologos que terminam numa instrucao relativa refeita pelo trampolim (RELATIVAS em desvios.rs)
-des = open(r'D:\Sistemas\CM0102\rust\src\desvios.rs', encoding='utf-8').read()
+# prologos que terminam numa instrucao relativa refeita pelo trampolim (RELATIVAS em detours.rs)
+des = open(r'D:\Sistemas\CM0102\rust\src\detours.rs', encoding='utf-8').read()
 relativas = {int(a, 16): int(k) for a, k in re.findall(r'\((0x[0-9a-f]+), (\d+)\)', des.split('pub const RELATIVAS')[1].split(';')[0])}
 for a, b in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+), bytes: &\[([^\]]*)\]', src):
     a = int(a, 16); n = len(b.split(','))
@@ -27,9 +27,9 @@ for a, b in re.findall(r'Prologo \{ endereco: (0x[0-9a-f]+), bytes: &\[([^\]]*)\
         fim = ins.address + ins.size
     if fim != a + n:
         print('RUIM corte: %#x' % a); ruins += 1
-# o mesmo endereco em dois prologos (motor.rs e data.rs): o segundo desvio e recusado e a rotina
+# o mesmo endereco em dois prologos (motor.rs e date.rs): o segundo desvio e recusado e a rotina
 # nova nunca roda (aconteceu com 0x6d3de0/0x6d3610, ja portadas)
-todos = re.findall(r'endereco: (0x[0-9a-f]+)', src + open(r'D:\Sistemas\CM0102\rust\src\data.rs', encoding='utf-8').read())
+todos = re.findall(r'endereco: (0x[0-9a-f]+)', src + open(r'D:\Sistemas\CM0102\rust\src\date.rs', encoding='utf-8').read())
 for a in sorted({x for x in todos if todos.count(x) > 1}):
     print('RUIM repetido: %s ja tem prologo' % a); ruins += 1
 print('prologos com problema:', ruins)

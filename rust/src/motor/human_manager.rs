@@ -12,23 +12,23 @@ use super::*;
 /// `qualquer`: sim. Senao, selecao: 0x5fd6b0; clube: 0x5fd480. Se nao, e o clube e do segundo
 /// conjunto de selecoes (0x5409b0), repete com a selecao principal da nacao dele (0x53b3d0),
 /// ja sem `qualquer`. Clube nulo: a original (caixa de erro, zera 0xb67a34, 0).
-pub(crate) unsafe extern "C" fn human_club(clube: usize, without_tactic: u32, qualquer: u8, person: usize, force: u32) -> u32 {
+pub(crate) unsafe extern "C" fn human_club(club: usize, without_tactic: u32, qualquer: u8, person: usize, force: u32) -> u32 {
     let h = *(G_HUMAN_MANAGER as *const usize);
-    let (mut clube, mut qualquer, mut person) = (clube, qualquer, person);
+    let (mut club, mut qualquer, mut person) = (club, qualquer, person);
     let t9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
     let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_ALL_NATIONAL_TEAMS);
     let t9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
-    let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+    let main: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     loop {
-        if clube == 0 {
+        if club == 0 {
             return original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB)(0, without_tactic, qualquer, person, force);
         }
         if person == 0 {
-            person = *((clube + club::MANAGER) as *const usize);
+            person = *((club + club::MANAGER) as *const usize);
         }
-        let manager = *((clube + club::MANAGER) as *const usize);
+        let manager = *((club + club::MANAGER) as *const usize);
         if manager != 0 && person == manager && *(person as *const i32) >= (*(G_STAFF_COUNT as *const i32)).wrapping_sub(16) {
             let tactic = without_tactic == 0
                 && (t9ace(h, person) != 0 || matches!(human_manager_record_checked(h, person), Ok(r) if *((r + 0x9a01) as *const u32) != 0));
@@ -36,17 +36,17 @@ pub(crate) unsafe extern "C" fn human_club(clube: usize, without_tactic: u32, qu
                 if force != 0 || qualquer != 0 {
                     return 1;
                 }
-                let sim = if is_national_team(clube) != 0 { t9a06(h, person, core::ptr::null_mut()) as u32 } else { t9a05(h, person) };
+                let sim = if is_national_team(club) != 0 { t9a06(h, person, core::ptr::null_mut()) as u32 } else { t9a05(h, person) };
                 if sim != 0 {
                     return 1;
                 }
             }
         }
-        if second(clube) == 0 {
+        if second(club) == 0 {
             return 0;
         }
         qualquer = 0;
-        clube = principal(*((clube + club::NATION) as *const usize));
+        club = main(*((club + club::NATION) as *const usize));
     }
 }
 
@@ -87,8 +87,8 @@ pub(crate) unsafe extern "thiscall" fn manager_9a06(this: usize, person: usize, 
     }
     match person_and_human_record(this, person) {
         Some((p, r)) => {
-            let clube = *((p + 0x24) as *const usize);
-            if clube != 0 && *((*((clube + club::NATION) as *const usize) + 0x88) as *const i32) < 400 {
+            let club = *((p + 0x24) as *const usize);
+            if club != 0 && *((*((club + club::NATION) as *const usize) + 0x88) as *const i32) < 400 {
                 if !out.is_null() {
                     *out = 1;
                 }
@@ -275,22 +275,22 @@ pub(crate) unsafe extern "thiscall" fn get_active_tactic(this: usize, manager: u
 /// pelos mesmos chamadores da 0x5fbd00. Técnico nulo: o humano da vez (sem nenhum, nada); clube nulo: o do técnico
 /// (+0x39). A vaga ativa (+0x9a69 do registro): 4 na segunda seleção (0x5409b0), 3 com `reserva` numa seleção
 /// (0x53b900), 2 numa seleção, 1 com `reserva`, 0 no time principal. Fora da conta: a original (caixa "Error").
-pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: u32, clube: usize, manager: usize) {
+pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: u32, club: usize, manager: usize) {
     let t = manager_or_current_human(manager);
     if t == 0 {
         return;
     }
     let Some(k) = human_manager_human_manager_index(this, t) else {
-        return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserve, clube, manager); // message box: original only
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserve, club, manager); // message box: original only
     };
-    let clube = if clube != 0 { clube } else { read_usize(t + staff::CLUB_JOB) };
+    let club = if club != 0 { club } else { read_usize(t + staff::CLUB_JOB) };
     let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let slot: u8 = if clube != 0 && second(clube) != 0 {
+    let slot: u8 = if club != 0 && second(club) != 0 {
         4
-    } else if reserve != 0 && clube != 0 && national_team(clube) != 0 {
+    } else if reserve != 0 && club != 0 && national_team(club) != 0 {
         3
-    } else if clube != 0 && national_team(clube) != 0 {
+    } else if club != 0 && national_team(club) != 0 {
         2 // with `reserva` and outside the national team the original asks again (0x53b900 twice)
     } else if reserve != 0 {
         1
@@ -484,15 +484,15 @@ pub(crate) unsafe extern "thiscall" fn get_saved_lineup(manager: usize, person: 
 /// [pt] { 0x600e90 } (cdecl, human_manager.cpp): quem responde pelo técnico do clube: o auxiliar (+0xd3)
 /// se houver; senão, dos cinco da comissão (+0x19f) com dados (+0x69), o de maior reputação (+0xa,
 /// ficando o primeiro no empate); 0 se nenhum.
-pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(clube: usize) -> usize {
-    let auxiliar = core::ptr::read_unaligned((clube + club::ASSISTANT_MANAGER) as *const usize);
+pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) -> usize {
+    let auxiliar = core::ptr::read_unaligned((club + club::ASSISTANT_MANAGER) as *const usize);
     if auxiliar != 0 {
         return auxiliar;
     }
-    let injury_word_0c = |p: usize| core::ptr::read_unaligned((core::ptr::read_unaligned((p + 0x69) as *const usize) + 0xa) as *const i16);
+    let injury_word_0c = |p: usize| core::ptr::read_unaligned((core::ptr::read_unaligned((p + staff::NON_PLAYER) as *const usize) + 0xa) as *const i16);
     let mut best = 0usize;
     for k in 0..5 {
-        let c = core::ptr::read_unaligned((clube + club::COACHES + k * 4) as *const usize);
+        let c = core::ptr::read_unaligned((club + club::COACHES + k * 4) as *const usize);
         if c == 0 || core::ptr::read_unaligned((c + staff::NON_PLAYER) as *const usize) == 0 {
             continue;
         }
@@ -676,13 +676,13 @@ pub(crate) unsafe extern "thiscall" fn remove_nickname_from_all(this: usize, id:
 /// (+0xcf); sem `qualquer`, não pode ter as marcas +0x9ace (0x5fe040) nem +0x9a01 no registro de
 /// humanos [0xb63c98]; e então basta `forcar`, o clube ser seleção (0x53b900) ou a marca +0x9a05
 /// (0x5fd480). Clube nulo: a original (caixa de erro e 0).
-pub(crate) unsafe extern "C" fn human_runs_club(clube: usize, qualquer: u32, force: i8) -> u32 {
+pub(crate) unsafe extern "C" fn human_runs_club(club: usize, qualquer: u32, force: i8) -> u32 {
     let manager_9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
     let manager_9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let is_second_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let main_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
-    let mut c = clube;
+    let mut c = club;
     loop {
         if c == 0 {
             return original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(0, qualquer, force);

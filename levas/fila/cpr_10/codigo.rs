@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_get_player_injury_status(this: usize, pesso
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, pessoa);
     if pessoa != 0 && (cpr10_d(pessoa) as i32) < cpr10_d(0xae2364) as i32 {
         let n = injury_status(this, pessoa);
-        PLACAR.record(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", pessoa, r, n));
+        SCOREBOARD.record(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", pessoa, r, n));
     }
     r
 }
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: usize, id: i3
     reg.push((cpr10_d(this + 0xc), cpr10_d(this + 0x14).wrapping_mul(14)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id, vaga),
         || crate::rng::without_counting(|| schedule_offer_decision(this, id, vaga)));
-    PLACAR.record(igual, || format!("schedule_offer_decision(id {}, vaga {}) {:x?} x {:x?}", id, vaga, mo, mr));
+    SCOREBOARD.record(igual, || format!("schedule_offer_decision(id {}, vaga {}) {:x?} x {:x?}", id, vaga, mo, mr));
 }
 
 /// Comparador: lado a lado pelo vetor dos clubes e pela data estática da 0x54cab0, e a devolução (os registros dos
@@ -268,6 +268,6 @@ unsafe extern "thiscall" fn comparar_get_manager_of_year_candidates(this: usize,
     let k = (n as u16 as i16).max(0) as usize;
     let reg = [(clubes, 4 * k), (0xae24c8, 8), (0xae24aa, 1)];
     let (r, c, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, n), || get_manager_of_year_candidates(this, clubes, n));
-    PLACAR.record(igual && r == c, || format!("get_manager_of_year_candidates({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
+    SCOREBOARD.record(igual && r == c, || format!("get_manager_of_year_candidates({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
     r
 }

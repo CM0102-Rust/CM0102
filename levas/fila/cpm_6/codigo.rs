@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, valor: i32
     let fila = cpm6_d(this + 0x24).wrapping_add(cpm6_d(this + 0x2c).wrapping_mul(6));
     let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + 0x2c, 4), (fila, 12)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, valor, comprador, vendedor), || add_transfer_totals(this, valor, comprador, vendedor));
-    PLACAR.record(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", valor, cpm6_d(comprador), cpm6_d(vendedor), mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", valor, cpm6_d(comprador), cpm6_d(vendedor), mo, mr));
     r
 }
 
@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: us
         return o(this, jogador, clube, jogos, gols);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(reg + 0x247, 0x34)], || o(this, jogador, clube, jogos, gols), || club_records_update_career_records(this, jogador, clube, jogos, gols));
-    PLACAR.record(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", cpm6_d(jogador), cpm6_d(clube), jogos as i16, gols as i16, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", cpm6_d(jogador), cpm6_d(clube), jogos as i16, gols as i16, mo, mr));
     r
 }
 
@@ -214,6 +214,6 @@ unsafe extern "thiscall" fn comparar_update_season_rating_record(this: usize, cl
     let t = temporada(this, clube, 0);
     let reg: &[(usize, usize)] = if t == 0 { &[] } else { &[(t + 0x1f1, 0x1f)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, clube), || update_season_rating_record(this, clube));
-    PLACAR.record(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", cpm6_d(clube), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", cpm6_d(clube), r, n, mo, mr));
     r
 }

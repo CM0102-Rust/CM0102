@@ -285,7 +285,7 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_squad_status_allowed(pesso
     }
     let r = o(pessoa, estatuto);
     let n = shortlist_manager_squad_status_allowed(pessoa, estatuto);
-    PLACAR.record(r == n, || format!("shortlist_manager_squad_status_allowed(pessoa {:x}, estatuto {}) original={} rust={}", pessoa, estatuto as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("shortlist_manager_squad_status_allowed(pessoa {:x}, estatuto {}) original={} rust={}", pessoa, estatuto as i8, r, n));
     r
 }
 
@@ -319,6 +319,6 @@ unsafe extern "C" fn comparar_scout_manager_write_list_name(indice: u32, texto: 
     }
     let reg = [(texto, (tamanho as usize).min(0x100))];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(indice, texto, tamanho), || scout_manager_write_list_name(indice, texto, tamanho));
-    PLACAR.record(igual && r == n, || format!("scout_manager_write_list_name(indice {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("scout_manager_write_list_name(indice {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

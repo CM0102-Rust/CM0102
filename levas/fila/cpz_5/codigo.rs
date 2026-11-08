@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_record_tactic_result(this: usize, jogo: usi
     }
     let reg = [(tactic_stats_row(this, cpz5_d(jogo + 0x1c)), 0x28), (tactic_stats_row(this, cpz5_d(jogo + 0x20)), 0x28)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo), || record_tactic_result(this, jogo));
-    PLACAR.record(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
     r
 }
 
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn comparar_get_captain(this: usize, clube: usize, time
     }
     let r = o(this, clube, time);
     let n = get_captain(this, clube, time);
-    PLACAR.record(r == n, || format!("get_captain(clube {:x}, time {}) original={:x} rust={:x}", clube, time, r, n));
+    SCOREBOARD.record(r == n, || format!("get_captain(clube {:x}, time {}) original={:x} rust={:x}", clube, time, r, n));
     r
 }
 
@@ -164,6 +164,6 @@ unsafe extern "thiscall" fn comparar_set_captain(this: usize, clube: usize, pess
     }
     let p = cpz5_d(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(p, 4)], || o(this, clube, pessoa, time), || set_captain(this, clube, pessoa, time));
-    PLACAR.record(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, time, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, time, r, n, mo, mr));
     r
 }

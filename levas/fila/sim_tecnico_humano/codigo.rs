@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn comparar_get_holiday_stamp(gerente: usize, pessoa: u
     }
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(gerente, pessoa);
     let n = get_holiday_stamp(gerente, pessoa);
-    PLACAR.record(r == n, || format!("get_holiday_stamp original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("get_holiday_stamp original={} rust={}", r, n));
     r
 }
 
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn comparar_get_saved_lineup(gerente: usize, pessoa: us
     }
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(gerente, pessoa);
     let n = get_saved_lineup(gerente, pessoa);
-    PLACAR.record(r == n, || format!("get_saved_lineup original={:#x} rust={:#x}", r, n));
+    SCOREBOARD.record(r == n, || format!("get_saved_lineup original={:#x} rust={:#x}", r, n));
     r
 }
 
@@ -70,6 +70,6 @@ unsafe extern "thiscall" fn comparar_set_manager(busca: usize, pessoa: usize) ->
         return o(busca, pessoa);
     }
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(busca, 4)], || o(busca, pessoa), || set_manager(busca, pessoa));
-    PLACAR.record(igual && ro == rr, || format!("set_manager original={} rust={} {:x?} x {:x?}", ro, rr, mo, mr));
+    SCOREBOARD.record(igual && ro == rr, || format!("set_manager original={} rust={} {:x?} x {:x?}", ro, rr, mo, mr));
     ro
 }

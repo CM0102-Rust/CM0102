@@ -164,6 +164,6 @@ unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
     if tr != 0 && tr != to && tr != t0 {
         soltar(tr);
     }
-    PLACAR.record(igual && a == b && listas, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
+    SCOREBOARD.record(igual && a == b && listas, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
     a
 }

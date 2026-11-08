@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> 
     let r = o(this);
     let n2 = cqf12_i(this + 0x64).max(0) as usize;
     let agora: Vec<u8> = (0..n2 * 0x11).map(|k| cqf12_b(cqf12_d(this + 0x5c) + k)).collect();
-    PLACAR.record(r == 1 && agora == plano, || format!("scout_manager_daily_update: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
+    SCOREBOARD.record(r == 1 && agora == plano, || format!("scout_manager_daily_update: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
     r
 }
 
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, lista: usiz
     core::ptr::write_unaligned((lista + 0xa) as *mut usize, cursor);
     o(this, lista);
     let feito = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).take().unwrap_or_default();
-    PLACAR.record(feito == plano, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
+    SCOREBOARD.record(feito == plano, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
 }
 
 /// { 0x7f9a60 } (thiscall, ret 8, scout_manager.cpp, quadro SEH da notícia local): `SCOUT_MANAGER::

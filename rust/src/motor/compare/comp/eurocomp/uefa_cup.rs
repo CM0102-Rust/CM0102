@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
     if tr != 0 && tr != to && tr != t0 {
         soltar(tr);
     }
-    PLACAR.record(igual && a == b && lists, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, lists));
+    SCOREBOARD.record(igual && a == b && lists, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, lists));
     a
 }
 
@@ -50,16 +50,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this
 }
 
 /// Comparer for `uefa_cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_UEFA_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    if clube == 0 {
-        return o(this, clube, outcome, a3, a4, jogo, a6);
+    if club == 0 {
+        return o(this, club, outcome, a3, a4, game, a6);
     }
     let d = outcome as u8;
-    let before = read_u32_as_usize(clube + club::EURO_FLAG);
+    let before = read_u32_as_usize(club + club::CONTINENTAL_COMP_ID);
     let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { before };
-    let r = o(this, clube, outcome, a3, a4, jogo, a6);
-    let after = read_u32_as_usize(clube + club::EURO_FLAG);
-    PLACAR.record(r == 0 && after == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, before, after, previsto, r));
+    let r = o(this, club, outcome, a3, a4, game, a6);
+    let after = read_u32_as_usize(club + club::CONTINENTAL_COMP_ID);
+    SCOREBOARD.record(r == 0 && after == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club, d, before, after, previsto, r));
     r
 }

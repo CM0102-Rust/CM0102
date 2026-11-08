@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
 unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(registro + 0x371, 0x18)], || o(this, clube, registro), || pick_fans_player_of_year(this, clube, registro));
-    PLACAR.record(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", cpp10_d(clube), r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", cpp10_d(clube), r, mo, n, mr));
     r
 }
 
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube
 /// (1, ou 0 sem nação).
 unsafe extern "thiscall" fn comparar_end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, nacao);
-    PLACAR.record(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
+    SCOREBOARD.record(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
     r
 }
 
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t:
     let vendedor = if contrato != 0 { cpp10_clube(cpp10_i(contrato + 4)) } else { 0 };
     if vendedor == 0 {
         let r = o(this, t);
-        PLACAR.record(r == 1 && cpp10_d(0xae1080) == 0, || format!("update_transfer_fee_records sem vendedor: {} [0xae1080]={:x}", r, cpp10_d(0xae1080)));
+        SCOREBOARD.record(r == 1 && cpp10_d(0xae1080) == 0, || format!("update_transfer_fee_records sem vendedor: {} [0xae1080]={:x}", r, cpp10_d(0xae1080)));
         return r;
     }
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4528d0usize);
@@ -301,7 +301,7 @@ unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t:
     let agora = [(cpp10_i(rg[0] + 0x313), cpp10_d(rg[0] + 0x32f)), (cpp10_i(rg[1] + 0x313), cpp10_d(rg[1] + 0x32f)),
                  (cpp10_i(rg[2] + 0x33c), cpp10_d(rg[2] + 0x358)), (cpp10_i(rg[3] + 0x33c), cpp10_d(rg[3] + 0x358))];
     let fila_agora = cpp10_i(this + 0x2c);
-    PLACAR.record(r == 1 && agora == plano && fila_agora == fila && cpp10_d(0xae1080) == contrato, || {
+    SCOREBOARD.record(r == 1 && agora == plano && fila_agora == fila && cpp10_d(0xae1080) == contrato, || {
         format!("update_transfer_fee_records(valor {}) plano {:x?} fila {} x {:x?} fila {}", valor, plano, fila, agora, fila_agora)
     });
     r

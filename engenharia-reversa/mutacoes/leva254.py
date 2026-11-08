@@ -1,7 +1,7 @@
 # Mutações da 254a leva (itens cpr_1, cpr_2, cpr_3, cpr_4, cpr_5, cpr_8, cpr_9, cpr_10, cpr_11, cpr_12, cpr_13). Uso: python mutacoes.py mutacoes\leva254.py --carreira 2002-06-01
 MUTACOES = [
     ('cpr1_limite_em_2', '*t.add(5) = v; // the non-EU player limit', '*t.add(2) = v; // mutacao: o limite vai para +2', 'cpr_1 limite de nao comunitarios'),
-    ('cpr1_conta_comunitarios', '1 => estrangeira(p, read_usize(clube + club::NATION), 1) != 0 && comunitaria(p, read_usize(clube + club::NATION)) == 0,', '1 => estrangeira(p, read_usize(clube + club::NATION), 1) != 0, // mutacao: conta os da UE', 'cpr_1 conta nao comunitarios'),
+    ('cpr1_conta_comunitarios', '1 => estrangeira(p, read_usize(club + club::NATION), 1) != 0 && comunitaria(p, read_usize(club + club::NATION)) == 0,', '1 => estrangeira(p, read_usize(club + club::NATION), 1) != 0, // mutacao: conta os da UE', 'cpr_1 conta nao comunitarios'),
     ('cpr1_permissao_ignorada', 'return 0; // has the permission', 'return 1; // mutacao: a permissao nao vale', 'cpr_1 permissao achada'),
     ('cpr2_negociacao_livre', 'return (0x12, 0); // already in negotiation', 'return (0, 1); // mutacao: pode mesmo em negociacao', 'cpr_2 oferta em negociacao'),
     ('cpr2_acerto_livre', 'return (0x21, 0); // contrato acertado', 'let _ = 0x21; // mutacao: o acerto nao segura', 'cpr_2 contrato acertado'),
@@ -9,7 +9,7 @@ MUTACOES = [
     ('cpr3_futura_ignorada', '1 // the future transfer exists', '0 // mutacao: nao acha a futura', 'cpr_3 futura achada'),
     ('cpr3_estado_futura', '*((offer + offer::STATUS) as *mut u8) = 0x13; // future transfer', '*((offer + offer::STATUS) as *mut u8) = 0x12; // mutacao: estado errado', 'cpr_3 acrescentar futura'),
     ('cpr3_sem_marca', '*staff_flags_byte(this, read_usize(offer + offer::TARGET_STAFF_ID)) |= 0x10; // the future transfer mark', 'let _ = 0x10; // mutacao: sem a marca', 'cpr_3 acrescentar futura'),
-    ('cpr4_desfeita_conta', 'read_u8(o + 0x2e) < 3 // undone (+0x2e = 3) does not count', 'true // mutacao: a desfeita conta', 'cpr_4 oferta desfeita'),
+    ('cpr4_desfeita_conta', 'read_u8(o + offer::RESPONSE_ROUND) < 3 // undone (+0x2e = 3) does not count', 'true // mutacao: a desfeita conta', 'cpr_4 oferta desfeita'),
     ('cpr4_emprestimo_conta', 'let owner = if c != 0 && read_u8(c + contract::CONTRACT_TYPE) & 0x3f != 5 { friendly_club_by_id(read_usize(c + contract::CLUB)) } else { 0 }; // the loan does not count', 'let owner = if c != 0 { friendly_club_by_id(read_usize(c + contract::CLUB)) } else { 0 }; // mutacao: o emprestimo conta', 'cpr_4 jogador emprestado'),
     ('cpr4_sem_agenda', 'schedule(this, o, 0xa, 0); // a oferta volta daqui a 10 dias', 'let _ = schedule; // mutacao: sem agenda', 'cpr_4 desfazer oferta'),
     ('cpr5_expectativa_7000', '        let h = ((f as f64 / g) * 7500.0) as f32;', '        let h = ((f as f64 / g) * 7000.0) as f32; // mutacao', 'cpr_5 diretoria com tecnico'),
@@ -27,7 +27,7 @@ MUTACOES = [
     ('cpr11_reputacao_invertida', 'rb - ra // the club with the highest reputation first', 'ra - rb // mutacao: a menor primeiro', 'cpr_11 projecao pela reputacao'),
     ('cpr11_pontos_invertidos', 'read_i16(b + 0xa) as i32 - read_i16(a + 0xa) as i32 // most points first', 'read_i16(a + 0xa) as i32 - read_i16(b + 0xa) as i32 // mutacao: os menos primeiro'),
     ('cpr11_normal_acima', 'normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // the position in normal form', 'normal = (normal & !0xff) | (k as u8).wrapping_add(2) as u32; // mutacao: uma abaixo', 'cpr_11 projecao'),
-    ('cpr12_so_em_casa', 'if clube != home && clube != read_u32(f + 0x10) {', 'if clube != home { // mutacao: so em casa'),
+    ('cpr12_so_em_casa', 'if club != home && club != read_u32(f + 0x10) {', 'if club != home { // mutacao: so em casa'),
     ('cpr12_janela_curta', '(ano as u16 == ano1 as u16 && dia as u16 > dia1 as u16)', '(ano as u16 == ano1 as u16 && dia as u16 >= dia1 as u16) /* mutacao: sem o ultimo dia */'),
     ('cpr12_qualquer_rodada', 'ok = false; // outra rodada', '// mutacao: a rodada nao filtra', 'cpr_12 jogo da rodada'),
     ('cpr13_um_jogo_livre', 'if n as u16 != 0 {', 'if n as u16 > 1 { // mutacao: um jogo nao ocupa', 'cpr_13 ocupado'),

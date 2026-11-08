@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn comparar_contains_player(this: usize, pessoa: usize)
     }
     let r = o(this, pessoa);
     let n = contains_player(this, pessoa);
-    PLACAR.record(r == n, || format!("contains_player(busca {:x}, pessoa {:x}) original={} rust={}", this, pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("contains_player(busca {:x}, pessoa {:x}) original={} rust={}", this, pessoa, r, n));
     r
 }
 
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, tecnico: usiz
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, tecnico), || sync_scout_lists(this, tecnico));
-    PLACAR.record(igual && r == n, || format!("sync_scout_lists(técnico {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("sync_scout_lists(técnico {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
     r
 }
 
@@ -215,10 +215,10 @@ unsafe extern "thiscall" fn comparar_player_search_find_or_claim_player_slot(thi
     if reservar == 0 {
         let r = o(this, pessoa, reservar);
         let n = player_search_find_or_claim_player_slot(this, pessoa, reservar);
-        PLACAR.record(r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, pessoa, r, n));
+        SCOREBOARD.record(r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, pessoa, r, n));
         return r;
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this + 4, 0x32 * 0x1a2)], || o(this, pessoa, reservar), || player_search_find_or_claim_player_slot(this, pessoa, reservar));
-    PLACAR.record(igual && r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, pessoa, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, pessoa, r, n, igual));
     r
 }

@@ -42,7 +42,7 @@ unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_comp_active_key_nation_of_club(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = comp_active_key_nation_of_club(clube);
-    PLACAR.record(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -67,7 +67,7 @@ unsafe extern "C" fn comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
 unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(estadio);
     let n = comp_active_key_nation_of_stadium(estadio);
-    PLACAR.record(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", estadio, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", estadio, r, n));
     r
 }
 
@@ -96,6 +96,6 @@ unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index(ativo: i8)
     }
     let r = o(ativo);
     let n = comp_key_nation_entry_from_active_index(ativo);
-    PLACAR.record(r == n, || format!("comp_key_nation_entry_from_active_index({}) original={} rust={}", ativo, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_key_nation_entry_from_active_index({}) original={} rust={}", ativo, r, n));
     r
 }

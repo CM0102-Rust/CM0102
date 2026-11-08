@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_add_spare_non_player_record(this: usize, id
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(%%I0%%)(this, id, nacao, segunda);
     let item = cpk2_d(this + 0x1c).wrapping_add(n << 4);
     let g = [cpk2_d(item) as u32, cpk2_d(item + 4) as u32, cpk2_d(item + 8) as u32];
-    PLACAR.record(cpk2_d(this + 0x20) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
+    SCOREBOARD.record(cpk2_d(this + 0x20) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
         format!("add_spare_non_player_record({}, {}, {}) conta {} -> {}, item {:?}", id, nacao, segunda, n, cpk2_d(this + 0x20), g)
     });
 }
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn comparar_add_retirement(this: usize, r: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, r);
     let item = cpk2_d(this + 4).wrapping_add(n.wrapping_mul(26));
     let g = retirement_entry_fields(item);
-    PLACAR.record(cpk2_d(this + 8) == n.wrapping_add(1) && g == esperado, || {
+    SCOREBOARD.record(cpk2_d(this + 8) == n.wrapping_add(1) && g == esperado, || {
         format!("add_retirement conta {} -> {}, item {:x?} (esperava {:x?})", n, cpk2_d(this + 8), g, esperado)
     });
 }
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn comparar_queue_staff_for_regen(this: usize, entrada:
         let i = cpk2_d(this + 0x3c).wrapping_add(n3 << 4);
         ok &= cpk2_d(i) as u32 == bid && cpk2_d(i + 4) as u32 == bnac && cpk2_d(i + 0xc) as u32 == bp;
     }
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         format!("queue_staff_for_regen({}) contas {} {} {} -> {} {} {}, reserva {:?}, banco {:?}", id, n1, n2, n3,
             cpk2_d(this + 0x14), cpk2_d(this + 0x20), cpk2_d(this + 0x40), reserva, banco)
     });

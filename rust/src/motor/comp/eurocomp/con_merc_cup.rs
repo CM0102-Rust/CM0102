@@ -7,14 +7,14 @@ use super::*;
 ///
 /// [pt] Os classificados por grupo (+0xbe, byte com sinal).
 pub(crate) unsafe fn qualifiers_per_group(this: usize) -> i32 {
-    *((this + 0xbe) as *const i8) as i32
+    *((this + league::PROMOTED_COUNT) as *const i8) as i32
 }
 
 /// Club in row i of group 1's table (the cup's own +0xb1, 0x3b-byte rows).
 ///
 /// [pt] O clube da linha i da tabela do grupo 1 (a da própria copa: +0xb1, linhas de 0x3b bytes).
 pub(crate) unsafe fn group_one_club(this: usize, i: usize) -> usize {
-    read_u32_as_usize(read_u32_as_usize(this + 0xb1) + i * 0x3b) // cqs10: a linha do grupo 1
+    read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + i * 0x3b) // cqs10: a linha do grupo 1
 }
 
 /// Club at position j of stage f (League::get_table_row).
@@ -23,7 +23,7 @@ pub(crate) unsafe fn group_one_club(this: usize, i: usize) -> usize {
 /// mov ecx, fase -> thiscall, ret 4) e o clube no +0 dela.
 pub(crate) unsafe fn stage_club_at(this: usize, f: usize, j: i32) -> usize {
     let row: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
-    let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + f * 4);
+    let stage = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + f * 4);
     read_u32_as_usize(row(stage, j)) // cqs10: a posição j da fase
 }
 
@@ -39,7 +39,7 @@ pub(crate) unsafe fn stage_club_at(this: usize, f: usize, j: i32) -> usize {
 /// as rodadas, o id e o ano com lixo nos 16 bits altos, que o construtor não lê) em [+0xc][`mata`]; a lista e a tabela
 /// liberadas (0x9452ca). Sem fase: a caixa `linha_sem_fase`. Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round:
 /// push 0; mov ecx, fase -> thiscall, ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize, mata: u32, file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
+pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize, knockout: u32, file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -66,20 +66,20 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
-    let table = rounds_of_cup(this, mata, &mut rodadas, &mut id, 0);
+    let table = rounds_of_cup(this, knockout, &mut rodadas, &mut id, 0);
     let p = new(0xb2);
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, teams, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + 0x40) as u16 as u32, mata, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this, teams, list, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + league::YEAR) as u16 as u32, knockout, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + 0xc) + mata as usize * 4, stage);
+    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + knockout as usize * 4, stage);
     soltar(list);
     soltar(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + mata as usize * 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + knockout as usize * 4);
     if f == 0 {
         return show_error_at(file, row_without_stage);
     }
@@ -95,17 +95,17 @@ pub(crate) unsafe fn build_knockout_stage(this: usize, teams: u32, stages: usize
 /// bytes) iguais aos do plano como conjunto (o sorteio pode reordenar).
 pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: usize, teams: usize, stages: usize, knockout: usize, original: impl FnOnce()) {
     let q = qualifiers_per_group(this).max(0) as usize;
-    let mut plan: Vec<usize> = (0..q).map(|i| read_u32_as_usize(read_u32_as_usize(this + 0xb1) + i * 0x3b)).collect();
+    let mut plan: Vec<usize> = (0..q).map(|i| read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + i * 0x3b)).collect();
     for f in 0..stages {
-        let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + f * 4);
+        let stage = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + f * 4);
         for j in 0..q {
             plan.push(read_u32_as_usize(read_u32_as_usize(stage + 0xb1) + j * 0x3b));
         }
     }
     original();
-    let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + knockout * 4);
+    let stage = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + knockout * 4);
     if stage == 0 {
-        PLACAR.record(false, || format!("{}({:#x}) sem fase", name, this));
+        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
     let list = read_u32_as_usize(stage + 0xa7);
@@ -114,7 +114,7 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: usize
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && read_i16(stage + 0x3e) as usize == teams && read_u32_as_usize(stage + 4) == read_u32_as_usize(this + 4);
-    PLACAR.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
+    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
 
@@ -218,9 +218,9 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         if national_team(c) != 0 {
             break;
         }
-        let nacao = read_u32_as_usize(c + 0x53);
-        if nacao != 0 {
-            let id = read_u32_as_usize(nacao);
+        let nation = read_u32_as_usize(c + 0x53);
+        if nation != 0 {
+            let id = read_u32_as_usize(nation);
             if id == read_u32_as_usize(KEY_NATION_MEXICO) {
                 mexico.por(c);
             } else if id == read_u32_as_usize(KEY_NATION_COLOMBIA) {
@@ -297,14 +297,14 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: u
 /// [pt] A fase seguinte de um torneio com grupos e mata-mata (`advance_stage`, a virtual +0x28): na última fase (+0x30 ≥
 /// +0x2c − 1, com sinal), a caixa da linha e volta; senão +0x30 sobe e, chegando a `mata`, o mata-mata (call direto com
 /// o ecx da copa -> thiscall, ret 0).
-pub(crate) unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: usize, file: usize, row: u32, mata: i32, routine: usize, ramo: &'static str) {
-    let f = read_u32_as_usize(this + 0x30) as i32;
-    if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
+pub(crate) unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: usize, file: usize, row: u32, knockout: i32, routine: usize, ramo: &'static str) {
+    let f = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
+    if f >= (read_u32_as_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(file, row);
     }
     let f = f + 1;
-    write_u32_from_usize(this + 0x30, f as usize);
-    if f == mata {
+    write_u32_from_usize(this + league::CURRENT_STAGE, f as usize);
+    if f == knockout {
         crate::comparison::branch(ramo);
         let m: unsafe extern "thiscall" fn(usize) = core::mem::transmute(routine);
         m(this);
@@ -315,11 +315,11 @@ pub(crate) unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: usize,
 // stage, which shows the box and changes nothing).
 /// Comparer: runs only the original and checks +0x30 increased by one (unchanged on the last stage).
 pub(crate) unsafe fn con_merc_cup_compare_advance_stage(name: &str, this: usize, original: impl FnOnce()) {
-    let f = read_u32_as_usize(this + 0x30) as i32;
-    let last = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
+    let f = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
+    let last = f >= (read_u32_as_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1);
     original();
-    let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.record(after == if last { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", name, this, f, after));
+    let after = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
+    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", name, this, f, after));
 }
 
 
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(this: usize) -> u32 {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
     write_u32_from_usize(this + league::TABLE, t);
@@ -432,7 +432,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
         row(this, i as u8 as u32, con_merc_cup_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
-    noticia(this);
+    news(this);
     1
 }
 
@@ -467,7 +467,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -525,7 +525,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
         show_error_at(0x9a7d6c, 0x1ff);
         return 0;
     }
-    noticia(f);
+    news(f);
     write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
     1
 }

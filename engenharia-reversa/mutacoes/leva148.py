@@ -16,6 +16,6 @@ MUTACOES = [
     ('i_forma', "            if form < 0x17 {\n                let m1", "            if form < 0x18 {\n                let m1", "prejogo forma em baixa"),
     ('i_alta', "            } else if form > 0x20 {", "            } else if form > 0x1f {", "prejogo forma em alta"),
     ('i_contrato', "                let r = sortear(200) + 0x32;", "                let r = sortear(200) + 0x33;", "prejogo fim de contrato"),
-    ('i_insatisfeito', "                push_prematch_event(m, f, clube, 0, 0, k as u8, 0x13);", "                push_prematch_event(m, f, clube, 0, 0, k as u8, 0x14);", "prejogo insatisfeito"),
+    ('i_insatisfeito', "                push_prematch_event(m, f, club, 0, 0, k as u8, 0x13);", "                push_prematch_event(m, f, club, 0, 0, k as u8, 0x14);", "prejogo insatisfeito"),
     ('i_marcador', "    *w(0x8d4c) = 0xffff;", "    *w(0x8d4c) = 0;"),
 ]

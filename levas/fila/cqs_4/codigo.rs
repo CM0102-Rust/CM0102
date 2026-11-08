@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage(this: usiz
         let (x, y) = (cqs4_d(l), cqs4_d(l + 6));
         cqs4_w(fase + 0x3e) == 2 && cqs4_d(this + 0x30) == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    PLACAR.record(igual, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, fase));
+    SCOREBOARD.record(igual, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, fase));
 }
 
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(this: usize)
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this);
     let depois = cqs4_w(this + 0x40);
     let igual = depois == antes.wrapping_add(1) && cqs4_d(this + 0xee) == 0 && (0..7).all(|g| cqs4_d(cqs4_d(this + 0xc) + 4 * g) != 0);
-    PLACAR.record(igual, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this, antes, depois, cqs4_d(this + 0xee)));
+    SCOREBOARD.record(igual, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this, antes, depois, cqs4_d(this + 0xee)));
     r
 }
 
@@ -213,5 +213,5 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_positions(this:
         let e = if v[k] != 0 { achar(cqs4_d(this + 8), v[k]) } else { 0 };
         cqs4_d(cqs4_d(this + 0xee) + 4 * k) != v[k] || e == 0 || *((e + 0x72) as *const u8) != place_for_index(k)
     });
-    PLACAR.record(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));
+    SCOREBOARD.record(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));
 }

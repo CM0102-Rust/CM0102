@@ -97,7 +97,7 @@ unsafe fn spa_second_compare_schedule_all_stages(nome: &str, fase: u32, rodadas:
     if b != 0 {
         soltar(b);
     }
-    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
+    SCOREBOARD.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
     a
 }
 

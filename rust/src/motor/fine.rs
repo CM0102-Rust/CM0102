@@ -55,12 +55,12 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     if k == 0 {
         return;
     }
-    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE));
-    if clube == 0 {
+    let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE));
+    if club == 0 {
         return;
     }
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let c = contrato(read_usize(G_CONTRACT_MANAGER), player, clube);
+    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
+    let c = contract(read_usize(G_CONTRACT_MANAGER), player, club);
     if c == 0 {
         return;
     }
@@ -93,9 +93,9 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 9, (kind == 0x70) as u32);
     set_news_slot(nt, 0xa, (future(read_usize(G_TRANSFER_MANAGER), player, 0) != 0) as u32);
     set_news_slot(nt, 0xb, efeitos as i8 as u32);
-    let jogo = (read_i8_as_i32(player + staff::YEAR_OF_BIRTH) > 0x17 && kind == 0x10) || kind == 0x20;
-    set_news_slot(nt, 0xc, jogo as u32);
-    deliver(read_usize(G_NEWS), nt, clube);
+    let game = (read_i8_as_i32(player + staff::AGE) > 0x17 && kind == 0x10) || kind == 0x20;
+    set_news_slot(nt, 0xc, game as u32);
+    deliver(read_usize(G_NEWS), nt, club);
 }
 
 

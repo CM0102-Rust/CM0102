@@ -359,7 +359,7 @@ pub(crate) unsafe fn eng_first_league_row_club(league: usize, k: usize) -> usize
 /// rodadas são liberadas (free 0x9452ca). Sem fase: a caixa `linha_sem_fase`; senão Cup::set_up_round (0x51c800,
 /// thiscall(fase, 0), ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: usize, row_without_list: u32, row_without_stage: u32, a10: Option<u32>, name: &'static str) {
-    let n = read_u8(this + 0xbf) as i8 as i32;
+    let n = read_u8(this + league::PROMOTION_PLAYOFF_COUNT) as i8 as i32;
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let list = alloc((n << 2) as u32);
     if list == 0 {
@@ -380,15 +380,15 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         let a10 = a10.unwrap_or(extra as u16 as u32);
-        construct(p, this, n as u16 as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
+        construct(p, this, n as u16 as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
+    core::ptr::write_unaligned(read_usize(this + league::STAGES) as *mut usize, stage);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     free(list);
     free(t);
-    let stage = read_usize(read_usize(this + 0xc));
+    let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
         return show_error_at(file, row_without_stage);
     }
@@ -421,14 +421,14 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize
     for (k, &l) in rows.iter().enumerate() {
         plan[k] = eng_first_league_row_club(this, l);
     }
-    let n = read_u8(this + 0xbf) as i8 as i16;
+    let n = read_u8(this + league::PROMOTION_PLAYOFF_COUNT) as i8 as i16;
     original();
-    let stage = read_usize(read_usize(this + 0xc));
+    let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
-        PLACAR.record(false, || format!("{}({:#x}) sem fase", name, this));
+        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
-    let list = read_usize(stage + 0xa7);
+    let list = read_usize(stage + cup::TEAM_TABLE);
     let mut found: [usize; 4] = [0; 4];
     for (k, a) in found.iter_mut().enumerate() {
         *a = read_usize(list + 6 * k);
@@ -436,8 +436,8 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize
     let (mut x, mut y) = (plan, found);
     x.sort_unstable();
     y.sort_unstable();
-    let same = x == y && read_i16(stage + 0x3e) == n && read_usize(stage + 4) == read_usize(this + 4);
-    PLACAR.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this, plan, stage, found, read_i16(stage + 0x3e), n));
+    let same = x == y && read_i16(stage + cup::TEAM_COUNT) == n && read_usize(stage + 4) == read_usize(this + 4);
+    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this, plan, stage, found, read_i16(stage + cup::TEAM_COUNT), n));
 }
 
 
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u3
 ///
 /// [pt] { 0x573260 } (thiscall, ret 0x14, eng_first.cpp): `EngFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da First e da Second (da 0x684cd0 a cada linha da tabela): as vagas do mata-mata são 3 a 6.
-pub(crate) unsafe extern "thiscall" fn eng_first_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
-    set_club_stage_status(this, clube, stage as u8, current as u8, best as u8, worst as u8, 3, 6)
+pub(crate) unsafe extern "thiscall" fn eng_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    set_club_stage_status(this, club, stage as u8, current as u8, best as u8, worst as u8, 3, 6)
 }
 

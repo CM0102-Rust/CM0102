@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_match(this:
     o(this, jogo, partida);
     // a original não realoca o vetor (os prêmios mexem em outros vetores)
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(mo == mr, || {
+    SCOREBOARD.record(mo == mr, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).collect();
         format!("update_appearance_clauses_after_match(jogo {:x}) permissões diferentes nos bytes {:x?}", jogo, dif)
@@ -252,7 +252,7 @@ unsafe extern "thiscall" fn comparar_add_international_team_appearance_money(thi
     }
     let conta = cpy11_d(this + 0x8a0);
     let ok = conta == n.wrapping_add(1) && vector_contains_record(cpy11_d(this + 0x898), conta, 0xd, &alvo);
-    PLACAR.record(ok, || format!("add_international_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
+    SCOREBOARD.record(ok, || format!("add_international_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }
 
 /// { 0x8da5e0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da data e da notícia locais): `TRANSFER_MANAGER::

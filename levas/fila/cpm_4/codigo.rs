@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize, id: u32, r
     } else {
         contador == j.contador.unwrap_or(antes)
     };
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         format!("update_ban_progress({}, {}, {}) contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{} entrada {}",
             id, regra as u8, conta, contador, j.contador, antes, j.cumprida, jogos, dias, cpm4_w(j.entrada + 6))
     });
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32, indice: u
         }
     }
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id, indice), || release_ban(this, id, indice));
-    PLACAR.record(igual && r == m, || format!("release_ban({}, {}) {:x?} x {:x?}", id, indice as u16 as i16, mo, mr));
+    SCOREBOARD.record(igual && r == m, || format!("release_ban({}, {}) {:x?} x {:x?}", id, indice as u16 as i16, mo, mr));
     r
 }
 
@@ -220,6 +220,6 @@ unsafe extern "thiscall" fn comparar_clear_ban_history(this: usize, pessoa: usiz
     }
     let r = person_discipline_record(this, cpm4_d(pessoa));
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + 0x14, 8)], || o(this, pessoa), || clear_ban_history(this, pessoa));
-    PLACAR.record(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", cpm4_d(pessoa), mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", cpm4_d(pessoa), mo, mr));
     a
 }

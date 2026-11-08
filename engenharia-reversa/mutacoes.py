@@ -5,7 +5,7 @@ Uso: python mutacoes.py <lista.py> [--sem-base] [--so-base] [--base-completa] [-
      ex.: python mutacoes.py mutacoes\leva43.py
 
 A lista e um arquivo Python com MUTACOES = [(nome, trecho_original, trecho_mutado[, ramo]), ...]; cada
-trecho original tem de aparecer uma unica vez em rust/src/motor.rs (ou no fonte de ARQUIVO = 'data.rs'
+trecho original tem de aparecer uma unica vez em rust/src/motor.rs (ou no fonte de ARQUIVO = 'date.rs'
 na lista; conferido antes de comecar). O `ramo` opcional e o nome de uma marca `ramo("...")` da copia
 Rust: a base registra quantas vezes cada ramo rodou (linhas "ramo <nome>: N" no ddraw.log, a cada
 potencia de 2) e a mutacao cujo ramo nao rodou na base e pulada (lacuna medida, sem gastar a rodada).
@@ -24,7 +24,7 @@ sintetico nao alcanca (o que depende do banco carregado, como a tatica do clube)
 comparacao, ~15x mais rapido) ate a data; a mutacao e acusada se a impressao ou a contagem de
 sorteios muda em relacao a base (ou se o jogo cai). A base nao precisa bater com a do original na mesma
 data (desde 31/10/2026 a cadeia so registra a original). A impressao inclui a das partidas (hash de cada motor de partida ao
-ser liberado) e a do banco (hash diario dos blocos do banco de dados, ver simulacao.rs): pega o que nao
+ser liberado) e a do banco (hash diario dos blocos do banco de dados, ver simulation.rs): pega o que nao
 chega aos sorteios. A mutacao para no primeiro dia em que o diario (linha "dia" do ddraw.log: sorteios,
 pessoas, hash encadeado da memoria) difere do da base: "ACUSADA: divergiu da base em AAAA-DDD" (o
 hash encadeado faz a decisao igual a do fim da carreira, so mais cedo). Para achar a rotina, o modo --jogo.
@@ -240,7 +240,7 @@ def main():
     lista = {}
     exec(open(sys.argv[1], encoding='utf-8').read(), lista)
     mutacoes = lista['MUTACOES']
-    # a lista pode mutar outro fonte (ex.: ARQUIVO = 'data.rs'); o padrao e o motor.rs
+    # a lista pode mutar outro fonte (ex.: ARQUIVO = 'date.rs'); o padrao e o motor.rs
     global SRC
     SRC = os.path.join(RAIZ, 'rust', 'src', lista.get('ARQUIVO', 'motor.rs'))
     casos = int(sys.argv[sys.argv.index('--casos') + 1]) if '--casos' in sys.argv else 200000

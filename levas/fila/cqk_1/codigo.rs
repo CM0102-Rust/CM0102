@@ -52,7 +52,7 @@ unsafe fn compare_transfer_rules_ctor(nome: &str, this: usize, o: impl FnOnce(),
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
+    SCOREBOARD.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
 }
 
 /// A janela da Inglaterra: de 2 de junho (andando para a segunda-feira [inferência]) a 26 de março (andando para a quinta-feira [inferência]).

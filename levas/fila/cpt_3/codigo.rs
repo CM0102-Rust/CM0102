@@ -59,7 +59,7 @@ unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, partida: usi
 unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(comp, partida);
     let n = comp_active_key_nation_of_fixture(comp, partida);
-    PLACAR.record(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", cpt3_d(comp) as i32, partida, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", cpt3_d(comp) as i32, partida, r, n));
     r
 }
 
@@ -89,7 +89,7 @@ unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usize) -> u32 {
     }
     let r = o(comp);
     let n = key_nation_is_world_cup_comp(comp);
-    PLACAR.record(r == n, || format!("key_nation_is_world_cup_comp(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_is_world_cup_comp(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
     r
 }
 
@@ -111,6 +111,6 @@ unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: usize) -> u
     }
     let r = o(comp);
     let n = key_nation_is_international_comp(comp);
-    PLACAR.record(r == n, || format!("key_nation_is_international_comp(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_is_international_comp(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
     r
 }

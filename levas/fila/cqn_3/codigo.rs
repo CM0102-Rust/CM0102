@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn comparar_process_euro_registration(this: usize, etap
     let n = (cqn3_d(0xae2364) as i32).max(0) as usize;
     let reg = [(this, 2usize), (cqn3_d(0xae23bc) as usize, n * 0x6e), (0xae1080, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, etapa), || process_euro_registration(this, etapa));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let base = cqn3_d(0xae23bc) as usize;
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| {
             let a0 = a.0;
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn comparar_create_default_table(this: usize) {
     if tb != 0 {
         soltar(tb);
     }
-    PLACAR.record(igual, || format!("create_default_table: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
+    SCOREBOARD.record(igual, || format!("create_default_table: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
 }
 
 /// { 0x85dfc0 } (thiscall, ret 0, stadium.cpp, `Stadium::build_venue_list`): refaz a lista dos estádios para jogos
@@ -271,5 +271,5 @@ unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
     if lb != 0 {
         soltar(lb);
     }
-    PLACAR.record(campos && listas, || format!("build_venue_list: campos {} listas {} (contas {} e {})", campos, listas, cqn3_d(this + 0x10) as i32, cqn3_d(r + 0x10) as i32));
+    SCOREBOARD.record(campos && listas, || format!("build_venue_list: campos {} listas {} (contas {} e {})", campos, listas, cqn3_d(this + 0x10) as i32, cqn3_d(r + 0x10) as i32));
 }

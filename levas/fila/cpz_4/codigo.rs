@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_statu
     let r = o(this, clube, desfecho, fase, a, jogo, fim);
     let depois = if clube != 0 { core::ptr::read_unaligned((clube + 0x1db) as *const i32) } else { 0 };
     let igual = r == 0 && (clube == 0 || depois == if sai { -1 } else { antes });
-    PLACAR.record(igual, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, clube, d, f, r, antes, depois, sai));
+    SCOREBOARD.record(igual, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, clube, d, f, r, antes, depois, sai));
     r
 }
 
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
     o(this);
     let fase = cpz4_d(cpz4_d(this + 0xc) + 0x30);
     if fase == 0 {
-        PLACAR.record(false, || format!("draw_quarter_finals({:#x}) sem fase", this));
+        SCOREBOARD.record(false, || format!("draw_quarter_finals({:#x}) sem fase", this));
         return;
     }
     let lista = cpz4_d(fase + 0xa7);
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
     esperado.sort_unstable();
     let saiu = fora.iter().all(|&c| core::ptr::read_unaligned((c + 0x1db) as *const i32) == -1);
     let igual = achou == esperado && saiu && cpz4_w(fase + 0x3e) == 8 && core::ptr::read_unaligned((this + 0x30) as *const i32) == 0xc;
-    PLACAR.record(igual, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, esperado, achou, saiu, core::ptr::read_unaligned((this + 0x30) as *const i32)));
+    SCOREBOARD.record(igual, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, esperado, achou, saiu, core::ptr::read_unaligned((this + 0x30) as *const i32)));
 }
 
 /// A lista dos inscritos (+0x14, 6 bytes: +0 o clube, +4 a rodada de entrada; +0x38 deles) que seguem na competição
@@ -336,11 +336,11 @@ unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(this: usize,
     let r = o(this, saida, tipo);
     let v = cpz4_d(saida);
     if v == 0 {
-        PLACAR.record(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) sem lista original={:#x}", this, t, r));
+        SCOREBOARD.record(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) sem lista original={:#x}", this, t, r));
         return r;
     }
     let lista = core::slice::from_raw_parts(v as *const usize, (n.max(0) as usize).min(71));
     let igual = r as u16 as i16 == n && lista == &plano[..lista.len()];
-    PLACAR.record(igual, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this, t, r, n, lista, &plano[..lista.len()]));
+    SCOREBOARD.record(igual, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this, t, r, n, lista, &plano[..lista.len()]));
     r
 }

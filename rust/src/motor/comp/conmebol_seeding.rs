@@ -7,10 +7,10 @@ use super::*;
 ///
 /// [pt] O clube `c` (não nulo e ainda sem vaga, +0x1db = −1) entra na Libertadores na fase `fase`. Devolve se entrou.
 pub(crate) unsafe fn enter_libertadores(c: usize, stage: u8) -> bool {
-    if c == 0 || read_u32(c + club::EURO_FLAG) != u32::MAX {
+    if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
         return false;
     }
-    *((c + club::EURO_FLAG) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
+    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
     *((c + club::EURO_SEEDING) as *mut u8) = stage;
     true
 }
@@ -34,9 +34,9 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
     let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CONMEBOLSEEDING_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
     let row = |key: usize| (read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(read_u32(key).wrapping_mul(0x6b) as usize);
     let h = champion(row(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES), 0);
-    if h != 0 && read_u32(h + club::EURO_FLAG) == u32::MAX {
+    if h != 0 && read_u32(h + club::CONTINENTAL_COMP_ID) == u32::MAX {
         *((h + club::EURO_SEEDING) as *mut u8) = 1;
-        *((h + club::EURO_FLAG) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
+        *((h + club::CONTINENTAL_COMP_ID) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
     } else {
         show_error_at(0x9a7ed8, 0x114);
     }
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
         if read_u32(e) == read_u32(KEY_NATION_BRAZIL) {
             if *(G_CURRENT_DATE_YEAR as *const u16) > 0x7d2 {
                 let mut c = champion(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 0);
-                if c == 0 || read_u32(c + club::EURO_FLAG) != u32::MAX {
+                if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
                     c = champion(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 1);
                 }
                 if enter_libertadores(c, 2) {
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
         }
         while (n as i8) < *((e + 8) as *const i8) {
             let c = enesimo(this, clubs, count, read_u32(e), 1, 1, 0);
-            if c != 0 && read_u32(c + club::EURO_FLAG) == u32::MAX {
+            if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                 crate::comparison::branch("cqj_1 cota da nacao");
                 enter_libertadores(c, 2); // cqj1: a vaga da cota
             }
@@ -104,19 +104,19 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
 /// que conta, pulando, se pedido, os que já têm vaga (+0x1db ≠ −1) e os de técnico humano (0x600a50(clube, 0, 1, 0, 0)).
 /// O último registro da tabela nunca é examinado pela volta (se ela chega nele com a conta zerada, ele é o escolhido sem
 /// os testes). Devolve o clube se for da nação, senão 0.
-pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this: usize, clubs: usize, count: u32, nacao: u32, n: u32, without_slot: u32, without_human: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this: usize, clubs: usize, count: u32, nation: u32, n: u32, without_slot: u32, without_human: u32) -> usize {
     let search: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let k = count as u16 as i16 as i32;
     let last = clubs.wrapping_add((k * 12 - 12) as usize);
     let mut key = [0u8; 12];
-    key[4..8].copy_from_slice(&nacao.to_le_bytes());
+    key[4..8].copy_from_slice(&nation.to_le_bytes());
     key[8] = 0xff;
     let mut p = search(key.as_ptr(), clubs, k, 0xc, 0x905ce0);
     if p == 0 {
         return 0;
     }
-    while p > clubs && read_u32(p - 8) == nacao {
+    while p > clubs && read_u32(p - 8) == nation {
         p -= 12;
     }
     let mut foul = (n as u8).wrapping_sub(1);
@@ -124,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
     if p < last {
         loop {
             let c = read_u32(p) as usize;
-            if without_slot != 0 && c != 0 && read_u32(c + club::EURO_FLAG) != u32::MAX {
+            if without_slot != 0 && c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
                 crate::comparison::branch("cqj_1 ja com vaga");
                 p += 12; // cqj1: pula o clube que já tem vaga
             } else if without_human != 0 && c != 0 && human(c, 0, 1, 0, 0) != 0 {
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
     if !found && foul != 0 {
         return 0;
     }
-    if read_u32(p + 4) == nacao {
+    if read_u32(p + 4) == nation {
         return read_u32(p) as usize;
     }
     0
@@ -168,11 +168,11 @@ pub(crate) const MERCOSUR_INVITED_CLUBS: [usize; 20] = [
 /// [pt] { 0x4c6890 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::is_mercosur_invited_club`; o this não é
 /// lido): 1 se o id do clube é um dos 20 convidados da Copa Mercosul (`MERCOSUR_INVITED_CLUBS`), senão 0 (sem clube, devolve o 0
 /// do próprio ponteiro).
-pub(crate) unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, clube: usize) -> u32 {
-    if clube == 0 {
+pub(crate) unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, club: usize) -> u32 {
+    if club == 0 {
         return 0;
     }
-    let id = read_u32(clube);
+    let id = read_u32(club);
     for &chave in MERCOSUR_INVITED_CLUBS.iter() {
         if id == read_u32(chave) {
             return 1; // cqj1: convidado
@@ -219,19 +219,19 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
     let mut i = 0u32;
     if read_u32(G_CLUB_COUNT) as i32 > 0 {
         loop {
-            let nacao = read_u32(c + club::NATION) as usize;
-            if nacao != 0 && national_team(c) == 0 {
-                let mexico = read_u32(nacao) == read_u32(KEY_NATION_MEXICO); // cqj2: o México entra
-                let cont = if mexico { 0 } else { read_u32(nacao + nation::CONTINENT) as usize };
+            let nation = read_u32(c + club::NATION) as usize;
+            if nation != 0 && national_team(c) == 0 {
+                let mexico = read_u32(nation) == read_u32(KEY_NATION_MEXICO); // cqj2: o México entra
+                let cont = if mexico { 0 } else { read_u32(nation + nation::CONTINENT) as usize };
                 if mexico || (cont != 0 && read_u32(cont) == read_u32(KEY_CONTINENT_SOUTH_AMERICA)) {
                     if mexico {
                         crate::comparison::branch("cqj_2 clube mexicano");
                     }
                     crate::comparison::branch("cqj_2 tira a vaga");
-                    *((c + club::EURO_FLAG) as *mut u32) = u32::MAX; // cqj2: sem vaga continental
+                    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX; // cqj2: sem vaga continental
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
                     core::ptr::write_unaligned(r as *mut u32, c as u32);
-                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nacao));
+                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation));
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
                     let division = read_u32(c + club::LAST_DIVISION) as usize;
                     if division != 0 {
@@ -312,8 +312,8 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, pular:
 ///
 /// [pt] { 0x4c6960 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::set_bra_champ_cup_winner`): guarda o id do
 /// campeão da Copa dos Campeões em +0x71 (a vaga dele na Libertadores, de 2003 em diante).
-pub(crate) unsafe extern "thiscall" fn set_bra_champ_cup_winner(this: usize, clube: usize) {
-    core::ptr::write_unaligned((this + 0x71) as *mut u32, read_u32(clube));
+pub(crate) unsafe extern "thiscall" fn set_bra_champ_cup_winner(this: usize, club: usize) {
+    core::ptr::write_unaligned((this + 0x71) as *mut u32, read_u32(club));
 }
 
 

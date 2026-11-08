@@ -81,7 +81,7 @@ unsafe extern "C" fn comparar_match_control_label(estado: u8, m: usize, saida: *
     }
     let reg = [(saida as usize, tam.min(0x100) as usize), (marcas as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(estado, m, saida, tam, marcas), || match_control_label(estado, m, saida, tam, marcas));
-    PLACAR.record(igual && r == n, || format!("match_control_label(estado {}) original={} rust={} {:x?} x {:x?}", estado, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("match_control_label(estado {}) original={} rust={} {:x?} x {:x?}", estado, r, n, mo, mr));
     r
 }
 

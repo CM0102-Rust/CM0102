@@ -97,7 +97,7 @@ unsafe fn eng_first_compare_round_table(nome: &str, fase: u32, rodadas: *mut i16
     if b != 0 {
         soltar(b);
     }
-    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
+    SCOREBOARD.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
     a
 }
 

@@ -26,13 +26,25 @@ MODULO = {'TStaff': 'staff', 'TPlayer': 'player_sheet', 'TNonPlayer': 'non_playe
           'TCities': 'city', 'TPreferences': 'preferences', 'TContinent': 'continent'}
 
 
+def modulos_de_campos():
+    """{módulo do fields.rs: {deslocamento: CONSTANTE}} (a primeira constante de cada deslocamento)."""
+    t = open(os.path.join(BASE, 'fields.rs'), encoding='utf-8').read()
+    r = {}
+    for mod, corpo in re.findall(r'^pub\(crate\) mod (\w+) \{\n(.*?)^\}', t, re.M | re.S):
+        d = r.setdefault(mod, {})
+        for n_, v in re.findall(r'const (\w+): usize = (0x[0-9a-f]+|\d+);', corpo):
+            d.setdefault(int(v, 0), n_)
+    return r
+
+
 def main():
     lei = nomear_campos.leiautes()
+    mods = modulos_de_campos()
     tipos = collections.defaultdict(dict)  # arquivo -> {função: {var: registro}}
     for t in [a for a in sys.argv[1:] if not a.startswith('--')]:
         for l in open(t, encoding='utf-8'):
             p = [x.strip() for x in l.rstrip('\n').split('\t')]
-            if len(p) >= 4 and p[3] in MODULO and re.fullmatch(r'[a-z_][a-z0-9_]*', p[2]):
+            if len(p) >= 4 and (p[3] in MODULO or p[3] in mods) and re.fullmatch(r'[a-z_][a-z0-9_]*', p[2]):
                 tipos[p[0].replace('\\', '/')].setdefault(p[1], {})[p[2]] = p[3]
     usados = collections.defaultdict(dict)
     mutacoes = []
@@ -60,6 +72,9 @@ def main():
                 def r(mm):
                     reg = vs[mm.group(1)]
                     off = int(mm.group(2), 0)
+                    if reg in mods and reg not in MODULO:  # um módulo do fields.rs: só as constantes que já existem
+                        n_ = mods[reg].get(off)
+                        return '%s + %s::%s' % (mm.group(1), reg, n_) if n_ else mm.group(0)
                     campo = lei.get(reg, {}).get(off)
                     if not campo:
                         return mm.group(0)

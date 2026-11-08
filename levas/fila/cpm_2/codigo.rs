@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u32, clube: 
             ok &= outros.enumerate().all(|(k, j)| cpm2_d(p + 14 * k) == cpm2_d(tab + j * TABLE_ROW_SIZE));
         }
     }
-    PLACAR.record(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
+    SCOREBOARD.record(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
         idx, clube, marca as u8, n, cpm2_w(this + 0xa7), a7_esperado, confrontos, cpm2_d(l + 5), cpm2_d(l + 9)));
 }
 
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn comparar_league_get_club_array(this: usize, saida: *
     }
     let conta = cpm2_w(this + 0x3e);
     let ok = *n == conta && (0..conta.max(0) as usize).all(|i| cpm2_d(p + 4 * i) == cpm2_d(cpm2_d(this + 0xb1) + i * TABLE_ROW_SIZE));
-    PLACAR.record(ok, || format!("league_get_club_array conta {} (tabela {})", *n, conta));
+    SCOREBOARD.record(ok, || format!("league_get_club_array conta {} (tabela {})", *n, conta));
 }
 
 /// Comparador: lado a lado pela divisão da última temporada e pela posição (+0x5b..+0x5f) de cada clube da tabela.
@@ -203,5 +203,5 @@ unsafe extern "thiscall" fn comparar_record_final_positions(this: usize) {
         .map(|i| (cpm2_d(cpm2_d(this + 0xb1) + i * TABLE_ROW_SIZE) + 0x5b, 5))
         .collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || record_final_positions(this));
-    PLACAR.record(igual, || format!("record_final_positions {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("record_final_positions {:x?} x {:x?}", mo, mr));
 }

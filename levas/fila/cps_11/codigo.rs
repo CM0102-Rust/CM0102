@@ -129,7 +129,7 @@ unsafe fn find_fixture_list(fm: usize, f: usize) -> usize {
 unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize, f: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%)(this, f);
     let n = find_stored_fixture(this, f);
-    PLACAR.record(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
+    SCOREBOARD.record(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
     r
 }
 
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: usize) {
     let cauda = cps11_d(l + 6);
     let igual = cps11_w(l) == conta.wrapping_add(1) && cauda != 0
         && core::slice::from_raw_parts(cps11_d(cauda) as *const u8, 0x4f) == core::slice::from_raw_parts(f as *const u8, 0x4f);
-    PLACAR.record(igual, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, conta, cps11_w(l)));
+    SCOREBOARD.record(igual, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, conta, cps11_w(l)));
 }
 
 /// Comparador: tira da lista (não roda duas vezes): antes da original, a cópia acha a lista e vê se algum item tem os
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_remove_fixture(this: usize, f: usize) -> u3
     let r = o(this, f);
     let esperado = tem as u32;
     let igual = r == esperado && cps11_w(l) == conta.wrapping_sub(esperado as u16);
-    PLACAR.record(igual, || format!("remove_fixture(jogo {:x}) original={} esperado={} conta antes={} depois={}",
+    SCOREBOARD.record(igual, || format!("remove_fixture(jogo {:x}) original={} esperado={} conta antes={} depois={}",
         f, r, esperado, conta, cps11_w(l)));
     r
 }

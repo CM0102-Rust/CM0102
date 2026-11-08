@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
 pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u32 {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
     write_u32_from_usize(this + league::TABLE, t);
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
         row(this, i as u8 as u32, conmebol_liber_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
-    noticia(this);
+    news(this);
     1
 }
 
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
         show_error_at(0x9a7de4, 0x22e);
         return 0;
     }
-    noticia(f);
+    news(f);
     write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
     1
 }
@@ -235,16 +235,16 @@ pub(crate) unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, day
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // simplification: the year goes in a register that may have garbage in the high 16 bits; 0x549f70 reads it as a word
-    data(d.as_mut_ptr(), day, g.mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, g.semana);
+    data(d.as_mut_ptr(), day, g.mes, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.semana);
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, core::ptr::read_unaligned(d.as_ptr() as *const u16));
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
     if let Some(p) = g.premio {
-        core::ptr::write_unaligned((this + 0x28) as *mut u32, p);
+        core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut u32, p);
     }
     let vt = core::ptr::read_unaligned(this as *const usize);
     let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
-    let t = table(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
-    core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
+    let t = table(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
+    core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, t as u32);
     1
 }
 
@@ -255,7 +255,7 @@ pub(crate) unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, day
 pub(crate) unsafe fn check_cup_rules(nome: &str, this: usize, g: &ContinentalGroupRules, o: impl FnOnce() -> u32) -> u32 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    data(d.as_mut_ptr(), g.dia, g.mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, g.semana);
+    data(d.as_mut_ptr(), g.dia, g.mes, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.semana);
     let palavra = core::ptr::read_unaligned(d.as_ptr() as *const u16);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
@@ -274,8 +274,8 @@ pub(crate) unsafe fn check_cup_rules(nome: &str, this: usize, g: &ContinentalGro
     }
     let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
     let b8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
-    let premio = g.premio.map_or(true, |p| core::ptr::read_unaligned((this + 0x28) as *const u32) == p);
-    PLACAR.record(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this, r, &errados[..k], b6, palavra, b8, premio));
+    let premio = g.premio.map_or(true, |p| core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const u32) == p);
+    SCOREBOARD.record(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this, r, &errados[..k], b6, palavra, b8, premio));
     r
 }
 
@@ -331,17 +331,17 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) 
 pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usize; 32]) -> i32 {
     let mut n = 0i32;
     let mut i = 0i16;
-    let mut clube = read_u32_as_usize(G_CLUB_TABLE);
+    let mut club = read_u32_as_usize(G_CLUB_TABLE);
     if (read_u32_as_usize(G_CLUB_COUNT) as i32) > 0 {
         loop {
-            if read_u32_as_usize(clube + club::EURO_FLAG) == read_u32_as_usize(read_u32_as_usize(this + 4)) && n < max {
+            if read_u32_as_usize(club + club::CONTINENTAL_COMP_ID) == read_u32_as_usize(read_u32_as_usize(this + 4)) && n < max {
                 if (n as usize) < out.len() {
-                    out[n as usize] = clube;
+                    out[n as usize] = club;
                 }
                 n += 1;
             }
             i = i.wrapping_add(1);
-            clube = clube.wrapping_add(0x245);
+            club = club.wrapping_add(0x245);
             if i as i32 >= read_u32_as_usize(G_CLUB_COUNT) as i32 {
                 break;
             }
@@ -409,43 +409,43 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
 /// tabela +0xa7 dele se o clube que lá está é do continente [0x9cfa1c] (a nação +0x53, o continente +0x71 da nação, +0
 /// o id), senão na vaga 1; depois o arquivo da temporada das estatísticas dele (0x4a1c50 em +8: push 1 -> thiscall, ret
 /// 4) e as posições previstas (virtual +0x5c); 2, o registro de vice (0x86b0b0).
-pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, stage: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, a6: u32) -> u32 {
     let (d, f) = (outcome as u8, stage as u8 as i8);
     let comp = read_u32_as_usize(this + 4);
     let final_ = |g: usize| {
         let h: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(g);
-        h(eng_second_staff_records(), clube, jogo, a6);
+        h(eng_second_staff_records(), club, game, a6);
     };
     if f < 7 {
         if d == 6 {
-            european_cup_add_qualified_record(clube, comp, 0, 0x14, 0x28);
+            european_cup_add_qualified_record(club, comp, 0, 0x14, 0x28);
         } else if d == 0xfe {
-            european_cup_add_failed_to_qualify_record(clube, comp, 0x41c, 0x28);
+            european_cup_add_failed_to_qualify_record(club, comp, 0x41c, 0x28);
         }
     } else if f == 7 {
         match d {
             0xff => {
-                let weight = scale_by_round(0x32, 0x64, read_i16(jogo + 0x34), 4);
+                let weight = scale_by_round(0x32, 0x64, read_i16(game + 0x34), 4);
                 // simplification: +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
-                european_cup_add_knocked_out_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
+                european_cup_add_knocked_out_record(club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
             }
             0 => {
-                let weight = scale_by_round(0x32, 0x64, read_i16(jogo + 0x34), 4);
+                let weight = scale_by_round(0x32, 0x64, read_i16(game + 0x34), 4);
                 let knockout = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 0x1c);
-                let r = read_i16(jogo + 0x34) as isize;
-                let round = (knockout as u32 & 0xffff_0000) | core::ptr::read_unaligned((read_u32_as_usize(knockout + 0xa3).wrapping_add((r * 0x68) as usize) + 0x6f) as *const u16) as u32;
-                european_cup_add_qualified_record(clube, comp, core::ptr::read_unaligned((jogo + 0x32) as *const u16) as u32, round, weight);
+                let r = read_i16(game + 0x34) as isize;
+                let round = (knockout as u32 & 0xffff_0000) | core::ptr::read_unaligned((read_u32_as_usize(knockout + cup::ROUND_TABLE).wrapping_add((r * 0x68) as usize) + 0x6f) as *const u16) as u32;
+                european_cup_add_qualified_record(club, comp, core::ptr::read_unaligned((game + 0x32) as *const u16) as u32, round, weight);
             }
             1 => {
                 final_(0x86a800);
                 let mundial = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
-                let t = read_u32_as_usize(mundial + 0xa7);
-                let nacao = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
+                let t = read_u32_as_usize(mundial + cup::TEAM_TABLE);
+                let nation = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
                 crate::comparison::branch("cqk_11 campeao da libertadores");
-                if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) {
-                    core::ptr::write_unaligned(t as *mut u32, clube as u32); // cqk11: o campeão na vaga sul-americana
+                if nation != 0 && read_u32_as_usize(read_u32_as_usize(nation + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) {
+                    core::ptr::write_unaligned(t as *mut u32, club as u32); // cqk11: o campeão na vaga sul-americana
                 } else {
-                    core::ptr::write_unaligned((t + 6) as *mut u32, clube as u32);
+                    core::ptr::write_unaligned((t + 6) as *mut u32, club as u32);
                 }
                 let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
                 archive(read_u32_as_usize(mundial + 8), 1);

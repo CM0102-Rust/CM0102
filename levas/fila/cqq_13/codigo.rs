@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn cqq13_copa_da_italia_registros(this: usize, clube: u
 // ponytail: os registros (histórico, reputação, moral) não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_copa_da_italia_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, desfecho, fase, a4, jogo, a6);
-    PLACAR.record(r == 0, || format!("cqq13_copa_da_italia_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
+    SCOREBOARD.record(r == 0, || format!("cqq13_copa_da_italia_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }
 
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn cqq13_copa_c_registros(this: usize, clube: usize, de
 // ponytail: os registros não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_copa_c_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, desfecho, fase, a4, jogo, a6);
-    PLACAR.record(r == 0, || format!("cqq13_copa_c_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
+    SCOREBOARD.record(r == 0, || format!("cqq13_copa_c_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }
 
@@ -122,6 +122,6 @@ unsafe extern "thiscall" fn cqq13_trofeu_registros(this: usize, clube: usize, de
 // ponytail: os registros não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_trofeu_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%)(this, clube, desfecho, fase, a4, jogo, a6);
-    PLACAR.record(r == 0, || format!("cqq13_trofeu_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
+    SCOREBOARD.record(r == 0, || format!("cqq13_trofeu_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }

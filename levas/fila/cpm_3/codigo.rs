@@ -132,7 +132,7 @@ unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(itens: usize, n: u
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(itens, n),
         || crate::rng::without_counting(|| comp_util_shuffle_pointer_array(itens, n)));
-    PLACAR.record(igual, || format!("comp_util_shuffle_pointer_array({}) {:x?} x {:x?}", k, mo, mr));
+    SCOREBOARD.record(igual, || format!("comp_util_shuffle_pointer_array({}) {:x?} x {:x?}", k, mo, mr));
 }
 
 /// Comparador: ordena (qsort, determinístico) e sorteia: lado a lado pelo estado do sorteio e pelos `n` clubes, a cópia
@@ -149,5 +149,5 @@ unsafe extern "C" fn comparar_comp_util_sort_and_shuffle_top_clubs(clubes: usize
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clubes, n, escolhas),
         || crate::rng::without_counting(|| comp_util_sort_and_shuffle_top_clubs(clubes, n, escolhas)));
-    PLACAR.record(igual, || format!("comp_util_sort_and_shuffle_top_clubs({}, {}) {:x?} x {:x?}", nn, e, mo, mr));
+    SCOREBOARD.record(igual, || format!("comp_util_sort_and_shuffle_top_clubs({}, {}) {:x?} x {:x?}", nn, e, mo, mr));
 }

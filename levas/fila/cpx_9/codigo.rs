@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn comparar_remove_player_from_selection(this: usize, c
     }
     let reg = lineup_regions(this, clube, time);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, pessoa, time, papeis), || remove_player_from_selection(this, clube, pessoa, time, papeis));
-    PLACAR.record(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, pessoa, time, papeis, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, pessoa, time, papeis, r, mo, n, mr));
     r
 }
 
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn comparar_swap_selection_slots(this: usize, clube: us
     }
     let reg = lineup_regions(this, clube, time);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, a, b, time), || swap_selection_slots(this, clube, a, b, time));
-    PLACAR.record(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, time, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, time, r, mo, n, mr));
     r
 }
 
@@ -176,6 +176,6 @@ unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: usize, time: 
 unsafe extern "thiscall" fn comparar_has_selection_undo(this: usize, clube: usize, time: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%)(this, clube, time);
     let n = has_selection_undo(this, clube, time);
-    PLACAR.record(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));
+    SCOREBOARD.record(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));
     r
 }

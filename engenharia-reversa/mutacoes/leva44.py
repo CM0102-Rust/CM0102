@@ -1,6 +1,6 @@
 # Mutacoes da leva44 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva44.py
 MUTACOES = [
-    ('r_dono', "if *((this + 0xf582) as *const usize) != 0 || *((this + 0xf57a) as *const usize) != 0 || *b(0x8eaa) == 0 {", "if *((this + 0xf57a) as *const usize) != 0 || *b(0x8eaa) == 0 {"),
+    ('r_dono', "if *((this + engine::BALL_HOLDER) as *const usize) != 0 || *((this + engine::SET_PIECE_TAKER) as *const usize) != 0 || *b(0x8eaa) == 0 {", "if *((this + engine::SET_PIECE_TAKER) as *const usize) != 0 || *b(0x8eaa) == 0 {"),
     ('r_parado', "        *b(0x8eaa) = 0;" + chr(10) + "        *b(0x8ea9) = 0;", "        *b(0x8eaa) = 0;"),
     ('r_v2', "    let anda = if v >= 2 {", "    let anda = if v >= 3 {"),
     ('r_v0', "    } else if v <= 0 {" + chr(10) + "        false", "    } else if v < 0 {" + chr(10) + "        false"),

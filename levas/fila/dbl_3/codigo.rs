@@ -28,7 +28,7 @@ unsafe extern "C" fn comparar_database_get_club_assistant(clube: usize) -> usize
     }
     // a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1)], || o(clube), || database_get_club_assistant(clube));
-    PLACAR.record(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -82,7 +82,7 @@ unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize, vetor: *mu
     // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(vetor as usize, 20), (clube + 0x244, 1)],
         || o(clube, vetor), || database_get_club_coaches(clube, vetor));
-    PLACAR.record(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -116,6 +116,6 @@ unsafe extern "C" fn comparar_database_count_club_coaches(clube: usize) -> u8 {
         return o(clube); // caixa: só a original
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1)], || o(clube), || database_count_club_coaches(clube));
-    PLACAR.record(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

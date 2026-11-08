@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn add_players_sold(this: usize, baixo: u32, alto: u32)
 unsafe extern "thiscall" fn comparar_add_players_sold(this: usize, baixo: u32, alto: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, baixo, alto), || add_players_sold(this, baixo, alto));
-    PLACAR.record(igual, || format!("add_players_sold(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_players_sold(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
 }
 
 /// { 0x599890 } (thiscall, ret 8, finance.cpp): `Finance::pay_players_bought(valor)` (valor de 64 bits), pelo pagamento
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn pay_players_bought(this: usize, baixo: u32, alto: u3
 unsafe extern "thiscall" fn comparar_pay_players_bought(this: usize, baixo: u32, alto: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, baixo, alto), || pay_players_bought(this, baixo, alto));
-    PLACAR.record(igual, || format!("pay_players_bought(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_players_bought(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
 }
 
 /// { 0x5998e0 } (thiscall, ret 4, finance.cpp): `Finance::pay_sign_on_fee(valor)`, pela oferta de contrato aceita
@@ -72,5 +72,5 @@ unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, valor: i32) {
 unsafe extern "thiscall" fn comparar_pay_sign_on_fee(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_sign_on_fee(this, valor));
-    PLACAR.record(igual, || format!("pay_sign_on_fee(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_sign_on_fee(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }

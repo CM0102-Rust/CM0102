@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, jogo: usize
 unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(%%I1%%)(this, jogo, cid_est, cid_clube, base);
     let n = get_travel_distance_factor(this, jogo, cid_est, cid_clube, base);
-    PLACAR.record(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
+    SCOREBOARD.record(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
     r
 }
 

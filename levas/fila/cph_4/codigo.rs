@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn comparar_remove_transfer_interest(this: usize, pesso
     let n = (*((this + 0x14) as *const i32)).max(0) as usize;
     let reg = [(this + 0xc, 0xc), (cph4_d(this + 0xc) as usize, n * 25)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa), || remove_transfer_interest(this, pessoa));
-    PLACAR.record(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize, pessoa: usize, clube: usize) {
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize, pessoa: u
     let n = (*((this + 0x64) as *const i32)).max(0) as usize;
     let reg = [(this + 0x5c, 0xc), (cph4_d(this + 0x5c) as usize, n * 17)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, clube), || remove_scout_request(this, pessoa, clube));
-    PLACAR.record(igual, || format!("remove_scout_request({:x}, {:x}) {:x?} x {:x?}", pessoa, clube, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_scout_request({:x}, {:x}) {:x?} x {:x?}", pessoa, clube, mo, mr));
 }
 
 /// Comparador: lado a lado pelos vetores de apelidos e contagens de todos os técnicos humanos; sem técnicos (o qsort
@@ -174,5 +174,5 @@ unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: usize, id: u
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id), || remove_nickname_from_all(this, id));
-    PLACAR.record(igual, || format!("remove_nickname_from_all({:x}) {:x?} x {:x?}", id, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_nickname_from_all({:x}) {:x?} x {:x?}", id, mo, mr));
 }

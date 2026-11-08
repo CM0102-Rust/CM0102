@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize,
             && core::slice::from_raw_parts(r as *const u8, n.max(0) as usize * HISTORY_ENTRY_SIZE)
                 == core::slice::from_raw_parts(t as *const u8, n.max(0) as usize * HISTORY_ENTRY_SIZE)
     };
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let k = (*conta).max(n).max(0) as usize;
         let dif = (0..k).find(|&i| {
             r == 0 || t == 0 || core::slice::from_raw_parts((r + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE) != core::slice::from_raw_parts((t + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE)
@@ -383,7 +383,7 @@ unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(p: usize, c
     }
     let r = o(p, clube);
     let n = player_stats_years_since_at_club(p, clube);
-    PLACAR.record(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
+    SCOREBOARD.record(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
     r
 }
 
@@ -418,6 +418,6 @@ unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, b: usize) -
 unsafe extern "C" fn comparar_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = player_stats_compare_history_by_staff(a, b);
-    PLACAR.record(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
 unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_projection_by_reputation_desc(a, b);
-    PLACAR.record(r == n, || format!("compare_projection_by_reputation_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("compare_projection_by_reputation_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -145,7 +145,7 @@ unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b:
 unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_projection_by_points_desc(a, b);
-    PLACAR.record(r == n, || format!("compare_projection_by_points_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("compare_projection_by_points_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_update_projected_positions(this: usize, clu
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(reg + 0x73, 3)], || o(this, clube),
         || update_projected_positions(this, clube));
-    PLACAR.record(igual && r == n, || format!("update_projected_positions(liga {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("update_projected_positions(liga {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}",
         this, clube, r, n, mo, mr));
     r
 }

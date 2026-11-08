@@ -165,7 +165,7 @@ unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize,
     let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
     let r = o(clube, &mut bo, forcada);
     let n = player_search_get_club_target_rating(clube, &mut br, forcada);
-    PLACAR.record(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
+    SCOREBOARD.record(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
     if !base.is_null() {
         *base = bo;
     }
@@ -176,7 +176,7 @@ unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize,
 unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%)(this, i);
     let n = player_search_slot_get_match_entry(this, i);
-    PLACAR.record(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
     r
 }
 
@@ -184,6 +184,6 @@ unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: us
 unsafe extern "thiscall" fn comparar_player_search_slot_sum_goals(this: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(%%I2%%)(this);
     let n = player_search_slot_sum_goals(this);
-    PLACAR.record(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
+    SCOREBOARD.record(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
     r
 }

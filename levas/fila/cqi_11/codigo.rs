@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usiz
         regioes.push((historico, cqi11_d(0xae237c).wrapping_mul(0x1a)));
     }
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this), || crate::rng::without_counting(|| con_champ_select_qualified_clubs(this)));
-    PLACAR.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
     r
 }
 
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, hoje
     let n = cqi11_w(this + 0x3e);
     let r = o(this, hoje, fase);
     let igual = if seleciona { cqi11_w(this + 0x3e) == 8 } else { cqi11_w(this + 0x3e) == n };
-    PLACAR.record(igual, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, fase, seleciona, n, cqi11_w(this + 0x3e)));
+    SCOREBOARD.record(igual, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, fase, seleciona, n, cqi11_w(this + 0x3e)));
     r
 }
 
@@ -195,6 +195,6 @@ unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
 unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
-    PLACAR.record(r == 1 && cqi11_d(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, cqi11_d(this + 0x28)));
+    SCOREBOARD.record(r == 1 && cqi11_d(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, cqi11_d(this + 0x28)));
     r
 }

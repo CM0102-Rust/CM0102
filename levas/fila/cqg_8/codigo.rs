@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn comparar_load_from_disk(this: usize, caminho: usize,
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x18e3)], || o(this, caminho, quieto, ofuscado),
         || load_from_disk(this, caminho, quieto, ofuscado));
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&k| a[k] != b[k]).take(8).collect();
         format!("load_from_disk(this {:x}) original={} rust={}, bytes diferentes {:x?}", this, r, n, dif)
@@ -252,7 +252,7 @@ unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, conta: u32) {
         return o(p, conta);
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(p, 2 * conta as usize)], || o(p, conta), || swap_bytes_16_array(p, conta));
-    PLACAR.record(igual, || format!("swap_bytes_16_array({:x}, {})", p, conta));
+    SCOREBOARD.record(igual, || format!("swap_bytes_16_array({:x}, {})", p, conta));
 }
 
 /// { 0x43f300 } (cdecl, cash.cpp): `swap_bytes_32_array(dwords, conta)`: inverte os quatro bytes de cada dword.
@@ -269,5 +269,5 @@ unsafe extern "C" fn comparar_swap_bytes_32_array(p: usize, conta: u32) {
         return o(p, conta);
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(p, 4 * conta as usize)], || o(p, conta), || swap_bytes_32_array(p, conta));
-    PLACAR.record(igual, || format!("swap_bytes_32_array({:x}, {})", p, conta));
+    SCOREBOARD.record(igual, || format!("swap_bytes_32_array({:x}, {})", p, conta));
 }

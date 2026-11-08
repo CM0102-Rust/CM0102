@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: usize, fase
     if b != 0 {
         soltar(b);
     }
-    PLACAR.record(igual && saidas && tabela, || format!("world_cup_create_schedule({}): saídas {} tabela {}", fase as u8 as i8, saidas, tabela));
+    SCOREBOARD.record(igual && saidas && tabela, || format!("world_cup_create_schedule({}): saídas {} tabela {}", fase as u8 as i8, saidas, tabela));
     a
 }
 
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn comparar_add_qualified_team(this: usize, clube: usiz
     }
     let reg = [(this + 0x36, 2usize), (cqf6_d(this + 0x14).wrapping_add((n as i32 * 6) as usize), 6usize)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube), || add_qualified_team(this, clube));
-    PLACAR.record(igual, || format!("add_qualified_team: {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("add_qualified_team: {:x?} x {:x?}", mo, mr));
 }
 
 /// { 0x92f230 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::seed_teams()`, do dia da Copa (0x92f1a0, na
@@ -278,5 +278,5 @@ unsafe extern "thiscall" fn comparar_seed_teams(this: usize) {
     }
     let reg = [(this + 0x36, 0x16usize), (this + 0xee, 0xa0usize)];
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || seed_teams(this));
-    PLACAR.record(igual, || "seed_teams: a Copa de 2002 mudou".to_string());
+    SCOREBOARD.record(igual, || "seed_teams: a Copa de 2002 mudou".to_string());
 }

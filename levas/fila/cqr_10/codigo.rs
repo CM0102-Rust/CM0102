@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_update_for_date(this: usize,
             && fases != 0
             && (0..7).all(|g| cqr10_d(fases + g * 4) != 0)
             && cqr10_d(this + 0x30) == 6;
-        PLACAR.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr10_d(this + 0x45), cqr10_d(this + 0x30) as i32));
+        SCOREBOARD.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr10_d(this + 0x45), cqr10_d(this + 0x30) as i32));
     }
     r
 }
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_build_first_group_table(this: usize) -> u32
         }
     }
     let igual = r == 1 && cqr10_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.record(igual, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    SCOREBOARD.record(igual, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_create_group_stage(this: usi
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqr10_d(this + 0x30) as i32 == g && cqr10_w(f + 0x3e) == 4 && cqr10_w(f + 0x40) == cqr10_w(this + 0x40) && a == plano;
-        PLACAR.record(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        SCOREBOARD.record(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }

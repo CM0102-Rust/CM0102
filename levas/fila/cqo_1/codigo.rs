@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marcas, cont, nacao, data, casa, fora, partida), || {
         crate::rng::without_counting(|| find_available_venue(this, marcas, cont, nacao, data, casa, fora, partida))
     });
-    PLACAR.record(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marcas, nacao, cont, ro, rr, mo, mr));
+    SCOREBOARD.record(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marcas, nacao, cont, ro, rr, mo, mr));
     ro
 }
 
@@ -266,8 +266,8 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
     cqo1_pd(fx + 0x18, 0);
     cqo1_pd(fx + 4, u32::MAX as usize);
     let ano = *((fx + 0x28) as *const u16);
-    let d = crate::data::Data { dia: *((fx + 0x2a) as *const i16), ano, bissexto: crate::data::bissexto(ano) };
-    let pd = &d as *const crate::data::Data as usize;
+    let d = crate::date::Data { dia: *((fx + 0x2a) as *const i16), ano, bissexto: crate::date::bissexto(ano) };
+    let pd = &d as *const crate::date::Data as usize;
     let fixar = |st: usize| {
         cqo1_pd(fx + 0x18, st);
         cqo1_pd(fx + 4, cqo1_d(st));
@@ -452,5 +452,5 @@ unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marcas: u32,
         return o(this, marcas, partida, estadio);
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marcas, partida, estadio), || crate::rng::without_counting(|| set_fixture_venue(this, marcas, partida, estadio)));
-    PLACAR.record(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marcas, cqo1_d(partida), mo, mr));
+    SCOREBOARD.record(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marcas, cqo1_d(partida), mo, mr));
 }

@@ -12,15 +12,15 @@ pub(crate) unsafe fn ball_out_with(this: usize, side_b: u8, call: AddEventCall) 
         return 1;
     }
     if byte(this, 0x8eae) != -1 {
-        *((this + 0x8eae) as *mut i8) = -1;
+        *((this + engine::POSSESSION_SIDE) as *mut i8) = -1;
     }
-    let owner = *((this + 0xf582) as *const usize);
+    let owner = *((this + engine::BALL_HOLDER) as *const usize);
     if owner != 0 {
         let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_RELEASE_POSSESSION);
         soltar(owner);
     }
     let (x, y) = (byte(this, 0x8ea7), byte(this, 0x8ea8));
-    let commentator = *((this + 0x8f7a) as *const usize);
+    let commentator = *((this + engine::COMMENTATOR) as *const usize);
     let (parada, quem, codigo): (u8, u8, u32) = if !(0..9).contains(&x) {
         let r = (side_b == 0) as u8;
         (2, r, 0x1f76)
@@ -31,8 +31,8 @@ pub(crate) unsafe fn ball_out_with(this: usize, side_b: u8, call: AddEventCall) 
     } else {
         return 0;
     };
-    *((this + 0x8eb2) as *mut u8) = parada;
-    *((this + 0x8eae) as *mut u8) = quem;
+    *((this + engine::RESTART_TYPE) as *mut u8) = parada;
+    *((this + engine::POSSESSION_SIDE) as *mut u8) = quem;
     call(commentator, [codigo, this as u32, u32::MAX, quem as u32, u32::MAX, u32::MAX, 0]);
     1
 }
@@ -71,10 +71,10 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     let w = |p: usize, o: usize| (p + o) as *mut i16;
     let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
     let zero = |p: usize| (byte(p, 0x27) == 0) as u32;
-    let m = *((j + 0x19e) as *const usize);
+    let m = *((j + match_player::ENGINE) as *const usize);
     // the commentary’s seventh argument goes in the high part of the code (see `dispatch_tackle_calls`)
     let narrar7 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32, a7: i8| {
-        call(FN_MATCH_EVENTS_ADD_EVENT, *((m + 0x8f7a) as *const usize), [code | (a7 as u8 as u32) << 16, m as u32, a3, a4, a5]);
+        call(FN_MATCH_EVENTS_ADD_EVENT, *((m + engine::COMMENTATOR) as *const usize), [code | (a7 as u8 as u32) << 16, m as u32, a3, a4, a5]);
     };
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32| narrar7(call, code, a3, a4, a5, 0);
     let area_de = |p: usize, lado1: bool| {
@@ -84,7 +84,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     let espirra = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, espalhar: i32, chutador: usize| {
         call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [ub(j, 0x102), ub(j, 0x103), (espalhar as u8 as u32) | ub(j, 0x27) << 8, 0, chutador as u32]);
     };
-    if goalkeeper_of(m, byte(j, 0x27)) == j || *((m + 0xf582) as *const usize) == j {
+    if goalkeeper_of(m, byte(j, 0x27)) == j || *((m + engine::BALL_HOLDER) as *const usize) == j {
         return 0;
     }
     if byte(m, 0x8eae) != byte(j, 0x27) && byte(j, 0x10d) == 0 {
@@ -113,7 +113,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         }
         crate::comparison::branch("play bola do proprio lado");
         narrate(call, 0x1f5e, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
-        *((m + 0x4782) as *mut i32) = (*((m + 0x4782) as *const i32)).wrapping_sub(300);
+        *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         let r = sortear(byte(m, 0x8eaa) as i32);
         espirra(call, r.wrapping_add(1), j);
         return 1;
@@ -134,7 +134,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     let (mut valor, lance) = if em_area && table(m, j) == 1 {
         escolher()
     } else {
-        let ficha5c = byte(*((j + 0x69) as *const usize), 0x5c) as i32;
+        let ficha5c = byte(*((j + match_player::STAFF) as *const usize), 0x5c) as i32;
         if sortear(em_area as i32 * 500 + 100 + ficha5c * 200) != 0 {
             escolher()
         } else {
@@ -193,7 +193,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                 crate::comparison::branch("play penalty");
                 som = 0x1f7a;
                 *b(m, 0x8eb2) = 5;
-                *((m + 0x478a) as *mut usize) = 0;
+                *((m + engine::FOULED_PLAYER) as *mut usize) = 0;
                 *w(j, 0x35) = (*w(j, 0x35)).wrapping_sub(500);
             } else {
                 som = 0x1f79;
@@ -202,7 +202,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
             *b(m, 0x8ea7) = *b(j, 0x102);
             *b(m, 0x8ea8) = *b(j, 0x103);
             *b(m, 0x8eae) = zero(j) as u8;
-            *((m + 0xf582) as *mut u32) = 0;
+            *((m + engine::BALL_HOLDER) as *mut u32) = 0;
             if som == 0x1f7a {
                 narrate(call, 0x1f7a, u32::MAX, zero(j), u32::MAX);
             }
@@ -211,9 +211,9 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                 if sortear(4) == 0 {
                     let a = sortear(grav as i8 as i32);
                     if a > sortear(0x14) {
-                        let partida = *((m + 0x4792) as *const usize);
-                        let clube = *((partida + if byte(j, 0x27) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                        let k = *((clube + club::NATION) as *const usize);
+                        let partida = *((m + engine::MATCH) as *const usize);
+                        let club = *((partida + if byte(j, 0x27) == 0 { 0x20 } else { 0x1c }) as *const usize);
+                        let k = *((club + club::NATION) as *const usize);
                         if k != 0 && byte(k, 0x77) == 8 {
                             narrate(call, 0x20f5, 0, 0, u32::MAX);
                         }
@@ -289,7 +289,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     } else if meia_lua && rating > 200 {
         crate::comparison::branch("play meia-lua");
         narrate(call, 0x1ffd, ub(j, 0x2e), ub(j, 0x27), u32::MAX);
-        *((m + 0x4782) as *mut i32) = (*((m + 0x4782) as *const i32)).wrapping_sub(300);
+        *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         espirra(call, sortear(3), 0);
     } else {
         crate::comparison::branch("play perdeu");
@@ -300,7 +300,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         } else {
             narrar7(call, 0x1f84, ub(j, 0x2e), ub(j, 0x27), u32::MAX, estilo);
         }
-        *((m + 0x4782) as *mut i32) = (*((m + 0x4782) as *const i32)).wrapping_sub(300);
+        *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         espirra(call, sortear(3), j);
     }
     *w(j, 0x35) = (*w(j, 0x35)).wrapping_add(0x14);
@@ -346,11 +346,11 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
     let marks: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
     let ch = core::cell::RefCell::new(call);
     let register = |r: usize, pa: usize, t: usize| (ch.borrow_mut())(0x5afe00, r, [pa as u32, t as u32, 0, 0, 0]);
-    let noticia = |n: usize, p: usize, c: usize, tp: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, tp, pa as u32, z]);
+    let news = |n: usize, p: usize, c: usize, tp: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, tp, pa as u32, z]);
     let news_34 = |n: usize, p: usize, c: usize, tp: u32, pa: usize| (ch.borrow_mut())(0x744240, n, [p as u32, c as u32, tp, pa as u32, 0]);
     let por_20 = |c: usize, f: u32| (ch.borrow_mut())(0x867560, c, [f, 0, 0, 0, 0]);
     // simplification: 0x7c1e30 (returns floating point) also reaches 0x68d0d0 in 3 levels, stays direct
-    let contrato = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
+    let contract = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
     let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
     let g = |a: usize| *(a as *const usize);
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
@@ -369,7 +369,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
     let comp = if read(partida) > -1 { g(g(g(G_COMP_OBJECT_TABLE) + read(partida) as usize * 4) + 8) } else { 0 };
     let mut ja_34 = false;
     for lado in 0..2usize {
-        let clube = club_of(read(t + 4 * lado));
+        let club = club_of(read(t + 4 * lado));
         let ts = t + lado * 0x625;
         let other = t + (lado == 0) as usize * 0x625;
         let placar = |r: usize| ub(r + 0x120) + ub(r + 0x11f);
@@ -383,13 +383,13 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(0xae2364)) {
                 continue;
             }
-            if comp != 0 && read(partida + 0x14) == read(clube + club::DIVISION) && *((t + 0x4c) as *const u8) == 0 {
-                let c = contrato(g(G_CONTRACT_MANAGER), p, clube);
+            if comp != 0 && read(partida + 0x14) == read(club + club::DIVISION) && *((t + 0x4c) as *const u8) == 0 {
+                let c = contract(g(G_CONTRACT_MANAGER), p, club);
                 let nota1 = rating(comp, g(p + staff::PLAYER), 1);
                 let nota11 = rating(comp, g(p + staff::PLAYER), 0x11);
                 if c != 0 && matches!(*((c + contract::SQUAD_STATUS) as *const u8) & 0xf0, 0x10 | 0x20 | 0x30) {
-                    let x = teste_849ce0(g(g(G_TRANSFER_MANAGER) + 0x856), clube, p, 0, 0);
-                    let passa = teste_600a50(clube, 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
+                    let x = teste_849ce0(g(g(G_TRANSFER_MANAGER) + 0x856), club, p, 0, 0);
+                    let passa = teste_600a50(club, 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
                     let d = w(ts + 0x18e) as f64;
                     if passa
                         && w(row + 3) > 0x1388
@@ -402,7 +402,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                         && average() - 0.2 < nota11
                     {
                         crate::comparison::branch("jogadores noticia 0x11");
-                        noticia(g(G_MEDIA), p, clube, 0x11, partida, 0);
+                        news(g(G_MEDIA), p, club, 0x11, partida, 0);
                     }
                 }
             }
@@ -414,7 +414,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                     let r = sortear(9);
                     if r as f64 * 0.1 + m + 0.5 < nota11 {
                         crate::comparison::branch("jogadores noticia 0x34");
-                        news_34(g(G_MEDIA), p, clube, 0x34, partida);
+                        news_34(g(G_MEDIA), p, club, 0x34, partida);
                         ja_34 = true;
                     }
                 }
@@ -427,12 +427,12 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             if read(club_of(read(t)) + 0x53) == read(club_of(read(t + 4)) + 0x53) && *((row - 8) as *const u8) != 0 {
                 let v = average_7c1e30(g(G_PLAYER_STATS), g(p + staff::PLAYER), 6, 0xb, 6.5);
                 let previous = g(p + staff::NATION);
-                let nacao = g(clube + club::NATION);
+                let nation = g(club + club::NATION);
                 let f = g(p + staff::PLAYER);
                 if !(v == 0.0 || v.is_nan())
                     && previous != 0
-                    && nacao != 0
-                    && *((previous + nation::ACTUAL_REGION) as *const u8) != *((nacao + nation::ACTUAL_REGION) as *const u8)
+                    && nation != 0
+                    && *((previous + nation::ACTUAL_REGION) as *const u8) != *((nation + nation::ACTUAL_REGION) as *const u8)
                     && f != 0
                     && w(f + 0xb) > 0x1676
                     && byte(p, 0x57) > 0xa
@@ -440,7 +440,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                     && (byte(p, 0x5c) < 0xa || byte(p, 0x5d) < 0xa)
                     && ((read(previous) == read(KEY_NATION_FRANCE) && sortear(3) == 0) || sortear(10) == 0)
                 {
-                    let c = contrato(g(G_CONTRACT_MANAGER), p, clube);
+                    let c = contract(g(G_CONTRACT_MANAGER), p, club);
                     if c != 0 && marks(c) & 0x20 == 0 {
                         crate::comparison::branch("jogadores marca 0x20");
                         por_20(c, 0x20);
@@ -466,7 +466,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 core::ptr::write_unaligned((f + 0xc) as *mut i16, w(f + 0xc).wrapping_add(dc));
             }
             for k in -1i32..5 {
-                let aux = if k == -1 { g(clube + club::ASSISTANT_MANAGER) } else { g(clube + club::COACHES + k as usize * 4) };
+                let aux = if k == -1 { g(club + club::ASSISTANT_MANAGER) } else { g(club + club::COACHES + k as usize * 4) };
                 if aux == 0 || aux == manager || g(aux + staff::NON_PLAYER) == 0 {
                     continue;
                 }
@@ -479,12 +479,12 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 }
             }
         }
-        core::ptr::write_unaligned((clube + club::REPUTATION) as *mut i16, w(ts + 0x18e));
+        core::ptr::write_unaligned((club + club::REPUTATION) as *mut i16, w(ts + 0x18e));
     }
 }
 
 pub(crate) static mut ORIGINAIS: [usize; N] = [0; N];
-pub(crate) static PLACAR: Scoreboard = Scoreboard::new("motor");
+pub(crate) static SCOREBOARD: Scoreboard = Scoreboard::new("motor");
 
 /// Returns original routine i (the bytes saved before the detour) as a function pointer of type F.
 pub(crate) unsafe fn original_fn<F: Copy>(i: usize) -> F {

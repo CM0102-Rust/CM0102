@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(this: usize,
 unsafe extern "thiscall" fn comparar_usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let n = mls_stage_outcome(this, clube, situacao, fase, jogo, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, jogo, a6);
-    PLACAR.record(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
+    SCOREBOARD.record(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
     r
 }
 
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_add_result(this: usize, jogo: usize
     let esperada = if cqk9_d(this + 0x30) == 1 { 1 } else if marca < 2 { -1 } else { marca };
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, estat);
     let (m, b) = (*((jogo + 0x42) as *const i8), cqk9_d(this + 8));
-    PLACAR.record(r == 1 && m == esperada && b == bloco, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
+    SCOREBOARD.record(r == 1 && m == esperada && b == bloco, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
     r
 }
 
@@ -169,6 +169,6 @@ unsafe extern "C" fn comparar_usa_mls_get_club_all_star_conference(clube: usize)
         return r; // o caso de erro (a caixa já saiu na original)
     }
     let n = usa_mls_get_club_all_star_conference(clube);
-    PLACAR.record(r == n, || format!("usa_mls_get_club_all_star_conference({:x}) original={:x} rust={:x}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("usa_mls_get_club_all_star_conference({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }

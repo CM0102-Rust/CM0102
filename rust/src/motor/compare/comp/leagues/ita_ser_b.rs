@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_league_sort_clubs_level_on_p
         return o(this, points);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(t, n * 0x3b)], || o(this, points), || ita_league_sort_clubs_level_on_points(this, points));
-    PLACAR.record(igual, || format!("ita_league_sort_clubs_level_on_points({:#x}, {}) original={:x?} rust={:x?}", this, points as u16 as i16, mo, mr));
+    SCOREBOARD.record(igual, || format!("ita_league_sort_clubs_level_on_points({:#x}, {}) original={:x?} rust={:x?}", this, points as u16 as i16, mo, mr));
 }
 
 /// Comparer for `construct_ita_ser_b` (comparison mode: see the header of motor.rs).

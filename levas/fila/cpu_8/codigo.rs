@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn comparar_set_type(this: usize, vaga: i8, tipo: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8)>(%%I1%%);
     let regioes = [(this, 0x16)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, vaga, tipo), || set_type(this, vaga, tipo));
-    PLACAR.record(igual, || format!("set_type({:x}, {}, {}) {:x?} x {:x?}", this, vaga, tipo, mo, mr));
+    SCOREBOARD.record(igual, || format!("set_type({:x}, {}, {}) {:x?} x {:x?}", this, vaga, tipo, mo, mr));
 }
 
 /// O programa `vaga` (0..=9) do técnico humano `pessoa` como a 0x8b3d40 o calcula sem chamar a 0x8b3930 (vagas 0 a
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn comparar_set_default_schedules(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let regioes = [(this, 0x651d), (0xb67a34, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this), || set_default_schedules(this));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("set_default_schedules({:x}) diferencas em {:x?}", this, dif)
@@ -119,6 +119,6 @@ unsafe extern "thiscall" fn comparar_get_manager_schedule(this: usize, tecnico: 
     }
     let r = o(this, tecnico, vaga);
     let n = get_manager_schedule(this, tecnico, vaga);
-    PLACAR.record(r == n, || format!("get_manager_schedule(tecnico {:x}, vaga {}) original={:x} rust={:x}", tecnico, vaga, r, n));
+    SCOREBOARD.record(r == n, || format!("get_manager_schedule(tecnico {:x}, vaga {}) original={:x} rust={:x}", tecnico, vaga, r, n));
     r
 }

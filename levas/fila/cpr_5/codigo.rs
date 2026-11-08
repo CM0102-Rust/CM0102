@@ -365,6 +365,6 @@ unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, partida: usi
         return r;
     }
     let n = can_watch_fixture(this, partida, humano);
-    PLACAR.record(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, humano, r, n));
+    SCOREBOARD.record(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, humano, r, n));
     r
 }

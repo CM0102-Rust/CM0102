@@ -756,7 +756,7 @@ unsafe extern "C" fn comparar_fill_team_stats_rows(modo: u32, area: usize) {
     reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(modo, area), || fill_team_stats_rows(modo, area));
-    PLACAR.record(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", modo, area, first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", modo, area, first_differences(&mo, &mr)));
 }
 
 /// O redesenho é comparado de verdade (atualização local): o `Display` do gerente, os parâmetros (menos
@@ -776,7 +776,7 @@ unsafe extern "C" fn comparar_refresh_latest_scores_rows() {
     }
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || refresh_latest_scores_rows());
-    PLACAR.record(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 // ponytail: a espera fecha as telas, mostra a mensagem e abre a tela da partida (rede); não roda duas

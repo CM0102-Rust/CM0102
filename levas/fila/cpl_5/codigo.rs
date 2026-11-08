@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, pessoa: usi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let regioes = morale_reset_regions(this, cpl5_d(this));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, pessoa, clube), || reset_morale_state(this, pessoa, clube));
-    PLACAR.record(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", cpl5_d(pessoa), mo, mr));
+    SCOREBOARD.record(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", cpl5_d(pessoa), mo, mr));
 }
 
 /// Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pes
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes,
         || o(this, pessoa, clube, fim, write_percent_pair, sem_acesso, multa),
         || init_from_current_contract(this, pessoa, clube, fim, write_percent_pair, sem_acesso, multa));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         format!("init_from_current_contract(pessoa {}, write_percent_pair {}, {}, {}) {:x?} x {:x?}", cpl5_d(pessoa), write_percent_pair as u8 as i8, sem_acesso as u8, multa as u8, mo, mr)
     });
 }
@@ -174,6 +174,6 @@ unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pes
 unsafe extern "thiscall" fn comparar_get_expiry_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(%%I2%%)(this);
     let n = get_expiry_band(this);
-    PLACAR.record(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", cpl5_d(this), r, n));
+    SCOREBOARD.record(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", cpl5_d(this), r, n));
     r
 }

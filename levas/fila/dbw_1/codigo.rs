@@ -207,7 +207,7 @@ unsafe extern "C" fn comparar_set_key_ids() -> u32 {
         reset_key_globals();
         set_fixed_key_ids(u32::MAX, false)
     });
-    PLACAR.record(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
+    SCOREBOARD.record(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }
 
@@ -217,6 +217,6 @@ unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
         reset_key_ranges_1080();
         set_fixed_key_ids(MARCA_DAS_CHAVES_1080, false)
     });
-    PLACAR.record(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
+    SCOREBOARD.record(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }

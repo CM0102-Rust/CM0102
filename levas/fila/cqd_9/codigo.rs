@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn comparar_remove_or_restore_training_progress(this: u
     let f = cqd9_d(p + 0x61);
     let reg = [(f + 0xf, 0x33), (player_training_entry(this, p), 6), (0xde1f3c, 5)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p, devolver), || remove_or_restore_training_progress(this, p, devolver));
-    PLACAR.record(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
 }
 
 /// { 0x8b37c0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_training_attribute_change(pessoa,
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn comparar_get_training_attribute_change(this: usize, 
     let f = cqd9_d(p + 0x61);
     let reg = [(f + 0xf, 0x33), (player_training_entry(this, p), 6)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p, atributo), || get_training_attribute_change(this, p, atributo));
-    PLACAR.record(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p, atributo as u8 as i8, r as i8, n as i8, mo.0, mr.0));
+    SCOREBOARD.record(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p, atributo as u8 as i8, r as i8, n as i8, mo.0, mr.0));
     r
 }
 
@@ -179,6 +179,6 @@ unsafe extern "thiscall" fn comparar_get_position_aptitude(this: usize, p: usize
     }
     let r = o(this, p, mascara);
     let n = get_position_aptitude(this, p, mascara);
-    PLACAR.record(r == n, || format!("get_position_aptitude(pessoa {:x}, mascara {:x}) original={:x} rust={:x}", p, mascara as u16, r, n));
+    SCOREBOARD.record(r == n, || format!("get_position_aptitude(pessoa {:x}, mascara {:x}) original={:x} rust={:x}", p, mascara as u16, r, n));
     r
 }

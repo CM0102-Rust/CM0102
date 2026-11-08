@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn comparar_manager_manager_remove_player_from_squad(th
     let r = o(this, pessoa, clube);
     let fora = !(no_clube || na_selecao) || (0..0x32usize).all(|k| cpo4_d(clube + 0xd7 + 4 * k) != pessoa);
     let ok = fora && cpo4_b(pessoa + 0x3d) == f39 && cpo4_d(pessoa + 0x39) == c39 && cpo4_b(pessoa + 0x28) == f28 && cpo4_d(pessoa + 0x24) == c24;
-    PLACAR.record(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
+    SCOREBOARD.record(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
         cpo4_d(pessoa), cpo4_d(clube), cpo4_b(pessoa + 0x3d), cpo4_b(pessoa + 0x28), cpo4_d(pessoa + 0x39), cpo4_d(pessoa + 0x24), f39, f28, c39, c24, fora));
     r
 }
@@ -310,7 +310,7 @@ unsafe extern "thiscall" fn comparar_remove_staff_from_club(this: usize, pessoa:
     let esperado = staff_job_fields(s.as_ptr() as usize, c.as_ptr() as usize);
     let r = o(this, pessoa, clube);
     let depois = staff_job_fields(pessoa, clube);
-    PLACAR.record(depois == esperado, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
+    SCOREBOARD.record(depois == esperado, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
         cpo4_d(pessoa), cpo4_b(pessoa + 0x3d) as i8, cpo4_d(clube), depois.0, depois.1, esperado.0, esperado.1));
     r
 }

@@ -43,7 +43,7 @@ unsafe extern "C" fn club_lacks_aerial_strikers(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_club_lacks_aerial_strikers(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_lacks_aerial_strikers(clube);
-    PLACAR.record(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -60,7 +60,7 @@ unsafe extern "C" fn club_lacks_aerial_defenders(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_club_lacks_aerial_defenders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_lacks_aerial_defenders(clube);
-    PLACAR.record(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -77,6 +77,6 @@ unsafe extern "C" fn club_lacks_fast_defenders(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_club_lacks_fast_defenders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = club_lacks_fast_defenders(clube);
-    PLACAR.record(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }

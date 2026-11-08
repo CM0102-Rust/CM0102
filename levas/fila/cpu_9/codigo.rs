@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn comparar_init_player_entries(this: usize) {
             primeira.get_or_insert(k);
         }
     }
-    PLACAR.record(erradas == 0, || format!("init_player_entries: {} fichas fora da regra (a primeira {:?})", erradas, primeira));
+    SCOREBOARD.record(erradas == 0, || format!("init_player_entries: {} fichas fora da regra (a primeira {:?})", erradas, primeira));
 }
 
 /// { 0x7a8350 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::add_player_data_to_pool(pessoa, nacao,
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn comparar_add_player_data_to_pool(this: usize, pessoa
     original_fn::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(%%I1%%)(this, pessoa, nacao, segunda);
     let item = cpk2_d(this + 0x3c).wrapping_add(n << 4);
     let g = [cpk2_d(item) as u32, cpk2_d(item + 4) as u32, cpk2_d(item + 8) as u32];
-    PLACAR.record(cpk2_d(this + 0x40) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
+    SCOREBOARD.record(cpk2_d(this + 0x40) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
         format!("add_player_data_to_pool({}, {}, {}) conta {} -> {}, item {:?} (id {})", pessoa, nacao, segunda, n, cpk2_d(this + 0x40), g, id)
     });
 }
@@ -110,6 +110,6 @@ unsafe extern "thiscall" fn has_spare_non_player_record(this: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_has_spare_non_player_record(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let n = has_spare_non_player_record(this);
-    PLACAR.record(r == n, || format!("has_spare_non_player_record({:x}) original={:x} rust={:x}", this, r, n));
+    SCOREBOARD.record(r == n, || format!("has_spare_non_player_record({:x}) original={:x} rust={:x}", this, r, n));
     r
 }

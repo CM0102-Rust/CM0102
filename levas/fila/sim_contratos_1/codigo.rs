@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn comparar_contract_offer(gerente: usize, pessoa: i32,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> usize>(%%I0%%);
     let reg = offer_list_regions(gerente);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, pessoa, clube), || contract_offer(gerente, pessoa, clube));
-    PLACAR.record(igual && r == n, || format!("contract_offer({}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("contract_offer({}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -56,13 +56,13 @@ unsafe extern "thiscall" fn comparar_agreed_contract_offer(gerente: usize, pesso
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I1%%);
     let reg = offer_list_regions(gerente);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, pessoa), || agreed_contract_offer(gerente, pessoa));
-    PLACAR.record(igual && r == n, || format!("agreed_contract_offer({}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("agreed_contract_offer({}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
 unsafe extern "system" fn comparar_transfer_offer_closed(o: usize) -> u32 {
     let r = original_fn::<unsafe extern "system" fn(usize) -> u32>(%%I2%%)(o);
     let n = transfer_offer_closed(o);
-    PLACAR.record(r == n, || format!("transfer_offer_closed(estado {:#x}, {:#x}) original={} rust={}", *((o + 0x2c) as *const u8), *((o + 0x2e) as *const u8), r, n));
+    SCOREBOARD.record(r == n, || format!("transfer_offer_closed(estado {:#x}, {:#x}) original={} rust={}", *((o + 0x2c) as *const u8), *((o + 0x2e) as *const u8), r, n));
     r
 }

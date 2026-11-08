@@ -127,7 +127,7 @@ unsafe fn check_record_plan(nome: &str, clube: usize, e: usize, conta: usize, ve
     let (i, n, novo) = plano;
     let esperado = if i <= -1 { 0 } else { cpk1_d(vetor).wrapping_add((i as usize).wrapping_mul(0x38b)) };
     let reiniciado = !novo || (r != 0 && cpk1_d(r + 0x1f1) == 0xbf800000 && cpk1_d(r + 0x313) as i32 == -1);
-    PLACAR.record(r == esperado && cpk1_d(e) as i32 == i && cpk1_d(conta) == n && reiniciado, || {
+    SCOREBOARD.record(r == esperado && cpk1_d(e) as i32 == i && cpk1_d(conta) == n && reiniciado, || {
         format!("{}(clube {}) índice {} (esperava {}), conta {} (esperava {}), registro {:x} (esperava {:x}), novo={} reiniciado={}",
             nome, cpk1_d(clube), cpk1_d(e) as i32, i, cpk1_d(conta), n, r, esperado, novo, reiniciado)
     });
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_queue_record_news(this: usize, id: u32, tip
     }
     let item = cpk1_d(this + 0x24).wrapping_add(n.wrapping_mul(6));
     let (gid, gtipo) = (core::ptr::read_unaligned(item as *const u32), *((item + 4) as *const u8));
-    PLACAR.record(r == 1 && cpk1_d(this + 0x2c) == n.wrapping_add(1) && gid == id && gtipo == tipo as u8, || {
+    SCOREBOARD.record(r == 1 && cpk1_d(this + 0x2c) == n.wrapping_add(1) && gid == id && gtipo == tipo as u8, || {
         format!("queue_record_news({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, tipo as u8, r, n, cpk1_d(this + 0x2c), gid, gtipo)
     });
     r

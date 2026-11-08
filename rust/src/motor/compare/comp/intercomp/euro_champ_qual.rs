@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(thi
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(tr);
     }
-    PLACAR.record(igual && a == b && table, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, table));
+    SCOREBOARD.record(igual && a == b && table, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, table));
     a
 }
 
@@ -44,16 +44,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_group_team_count(this: usize
         return r; // simplification: the unknown format shows the message box: original only
     }
     let n = group_team_count(this, g);
-    PLACAR.record(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
     r
 }
 
 /// Comparer for `get_qualification_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_get_qualification_status(this: usize, clube: usize) -> i16 {
+pub(crate) unsafe extern "thiscall" fn comparar_get_qualification_status(this: usize, club: usize) -> i16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i16>(IDX_GET_QUALIFICATION_STATUS);
-    let r = o(this, clube);
-    let n = qualification_status(this, clube);
-    PLACAR.record(r == n, || format!("get_qualification_status({:#x}) original={} rust={}", clube, r, n));
+    let r = o(this, club);
+    let n = qualification_status(this, club);
+    SCOREBOARD.record(r == n, || format!("get_qualification_status({:#x}) original={} rust={}", club, r, n));
     r
 }
 
@@ -70,6 +70,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_group_one_table(this: usize
     let t = read_u32_as_usize(this + 0xb1);
     let ok = r == 1 && read_i16(this + 0x3e) == n && read_i16(this + 0xa7) == (n - 1).wrapping_mul(read_i16(this + 0x3c)) && t != 0
         && plan.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
-    PLACAR.record(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plan));
+    SCOREBOARD.record(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plan));
     r
 }

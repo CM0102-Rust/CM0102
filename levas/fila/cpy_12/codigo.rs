@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: usize, j: u
         || crate::rng::without_counting(|| check_board_transfer_veto(this, j, clube, valor, comprando)));
     let partes = if BOARD_VETO_SEEDED_RAND { 3 } else { 4 };
     let igual = (0..partes).all(|i| mo.0[i] == mr.0[i]);
-    PLACAR.record(igual && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, valor, comprando as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, valor, comprando as u8, r, n, mo, mr));
     r
 }
 

@@ -43,7 +43,7 @@ language; the `.bin` files hold what the game has in memory at that point.
 
 ## How to reproduce
 
-1. Diagnostic DLL: `copias\regens\rust` (HEAD's `rust\` + `src\despejar.rs` + the hook in `simulacao.rs`; outside git).
+1. Diagnostic DLL: `copias\regens\rust` (HEAD's `rust\` + `src\despejar.rs` + the hook in `simulation.rs`; outside git).
    `cargo build --release` in that folder.
 2. `python copias\regens\despejar.py`: inside the lab lock (the `simular.py` bench pointed at the CLZ copy; the copy's
    `game.cfg`, `*.tmp`, `ddraw.dll`, `hall_of_fame.bin` and `ddraw.log` restored), copies the save to

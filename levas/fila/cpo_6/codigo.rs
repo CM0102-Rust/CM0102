@@ -558,7 +558,7 @@ unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, tecni
         || o(this, tecnico, jogador, tipo),
         || crate::rng::without_counting(|| pick_ai_manager_response(this, tecnico, jogador, tipo)),
     );
-    PLACAR.record(igual && r == n, || format!("pick_ai_manager_response(tipo {:#x}) original={} rust={} {:x?} x {:x?}", tipo as i16, r, n, mo.0, mr.0));
+    SCOREBOARD.record(igual && r == n, || format!("pick_ai_manager_response(tipo {:#x}) original={} rust={} {:x?} x {:x?}", tipo as i16, r, n, mo.0, mr.0));
     r
 }
 
@@ -575,7 +575,7 @@ unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize,
         (0xde1f64, 0x7d0),
     ];
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regioes, || o(this, tecnico, id, sincronizar), || mark_item_read(this, tecnico, id, sincronizar));
-    PLACAR.record(igual && r == n, || format!("mark_item_read(id {}, sincronizar {}) original={} rust={} memoria igual {}", id, sincronizar, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("mark_item_read(id {}, sincronizar {}) original={} rust={} memoria igual {}", id, sincronizar, r, n, igual));
     r
 }
 
@@ -586,6 +586,6 @@ unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tecnico: usize
         return o(this, tecnico, id, saida);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(saida, STORED_NEWS_SIZE)], || o(this, tecnico, id, saida), || find_item_by_id(this, tecnico, id, saida));
-    PLACAR.record(igual && r == n, || format!("find_item_by_id(id {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo.0[0].1, mr.0[0].1));
+    SCOREBOARD.record(igual && r == n, || format!("find_item_by_id(id {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo.0[0].1, mr.0[0].1));
     r
 }

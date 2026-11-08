@@ -141,7 +141,7 @@ unsafe extern "stdcall" fn comparar_player_regen_score_non_player_candidate(pess
     let reg = crate::rng::STATE_REGIONS.to_vec();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa),
         || crate::rng::without_counting(|| player_regen_score_non_player_candidate(pessoa)));
-    PLACAR.record(igual && r == n, || format!("player_regen_score_non_player_candidate({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_regen_score_non_player_candidate({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -149,7 +149,7 @@ unsafe extern "stdcall" fn comparar_player_regen_score_non_player_candidate(pess
 unsafe extern "C" fn comparar_player_regen_compare_retirements(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = player_regen_compare_retirements(a, b);
-    PLACAR.record(r == n, || format!("player_regen_compare_retirements({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("player_regen_compare_retirements({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -157,6 +157,6 @@ unsafe extern "C" fn comparar_player_regen_compare_retirements(a: usize, b: usiz
 unsafe extern "C" fn comparar_player_regen_compare_queue_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = player_regen_compare_queue_entries(a, b);
-    PLACAR.record(r == n, || format!("player_regen_compare_queue_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("player_regen_compare_queue_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

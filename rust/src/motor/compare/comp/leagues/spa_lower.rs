@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize,
     let r = o(this, year);
     let ok = r == this && read_u32_as_usize(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
         && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
-    PLACAR.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4)));
+    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4)));
     r
 }
 
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_lower_create_table(this: usi
             ok = ok && read_u32_as_usize(t + i * 0x3b) == c;
         }
     }
-    PLACAR.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plan,
+    SCOREBOARD.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plan,
         (0..plan.len()).map(|i| if t != 0 { read_u32_as_usize(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
     r
 }

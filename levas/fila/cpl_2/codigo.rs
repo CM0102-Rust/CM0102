@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn comparar_is_player_under_offer(this: usize, pessoa: 
     }
     let reg = offer_cursor_and_lookup_regions(this, pessoa);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, visao), || is_player_under_offer(this, pessoa, visao));
-    PLACAR.record(igual && r == n, || format!("is_player_under_offer({}, visao {}) original={} rust={} {:x?} x {:x?}", cpl2_d(pessoa), visao, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("is_player_under_offer({}, visao {}) original={} rust={} {:x?} x {:x?}", cpl2_d(pessoa), visao, r, n, mo, mr));
     r
 }
 
@@ -191,7 +191,7 @@ unsafe extern "stdcall" fn comparar_player_club_uses_bosman(pessoa: usize) -> u3
         return o(pessoa);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa), || player_club_uses_bosman(pessoa));
-    PLACAR.record(igual && r == n, || format!("player_club_uses_bosman({}) original={} rust={} {:x?} x {:x?}", cpl2_d(pessoa), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_club_uses_bosman({}) original={} rust={} {:x?} x {:x?}", cpl2_d(pessoa), r, n, mo, mr));
     r
 }
 
@@ -218,6 +218,6 @@ unsafe extern "thiscall" fn comparar_check_board_veto(this: usize, oferta: usize
         (1, true) => depois == antes || depois == a_90,
         _ => false,
     };
-    PLACAR.record(ok, || format!("check_board_veto devolveu {}, motivo {:#x} (antes {:#x}), palavras {:?} -> {:?}", r, m, m0, antes, depois));
+    SCOREBOARD.record(ok, || format!("check_board_veto devolveu {}, motivo {:#x} (antes {:#x}), palavras {:?} -> {:?}", r, m, m0, antes, depois));
     r
 }

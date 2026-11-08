@@ -92,7 +92,7 @@ unsafe fn bra_reg_goias_compare_state_league_ctor(nome: &str, this: usize, ano: 
     if *((this + 0x44) as *const u8) == 0xff && cqt2_d(this + 8) != 0 {
         ok = ok && cqt2_d(this + 0x2c) == e.fases as usize && cqt2_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt2_d(this), cqt2_d(this + 0x2c), cqt2_d(this + 0xc), cqt2_d(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt2_d(this), cqt2_d(this + 0x2c), cqt2_d(this + 0xc), cqt2_d(this + 8)));
     r
 }
 

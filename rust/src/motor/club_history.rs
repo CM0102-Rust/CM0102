@@ -8,9 +8,9 @@ pub(crate) unsafe fn zip_open_item(save: usize, name: usize) -> usize {
 }
 
 /// Writes count items of size bytes to an open archive item (FN_ZWRITE).
-pub(crate) unsafe fn zip_write(dados: usize, size: u32, how_many: u32, z: usize) -> u32 {
+pub(crate) unsafe fn zip_write(data: usize, size: u32, how_many: u32, z: usize) -> u32 {
     let write_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-    write_item(dados, size, how_many, z)
+    write_item(data, size, how_many, z)
 }
 
 /// Closes an open archive item (FN_ZCLOSE).

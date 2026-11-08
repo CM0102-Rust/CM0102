@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn comparar_free_transfer_staff(this: usize, p: usize, 
     let n = cpy13_d(this + 0x86a);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32)>(%%I0%%)(this, p, clube, motivo, compensacao, so_registro);
     if emprestada {
-        PLACAR.record(cpy13_d(this + 0x86a) == n, || format!("free_transfer_staff(pessoa {}) emprestada: conta {} -> {}", cpy13_d(p), n, cpy13_d(this + 0x86a)));
+        SCOREBOARD.record(cpy13_d(this + 0x86a) == n, || format!("free_transfer_staff(pessoa {}) emprestada: conta {} -> {}", cpy13_d(p), n, cpy13_d(this + 0x86a)));
         return;
     }
     if cpy13_d(this + 0x862) == 0 {
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn comparar_free_transfer_staff(this: usize, p: usize, 
     if so_registro == 0 {
         ok = ok && get_contract_unstored(p) == 0 && cpy13_d(p + 0x52) == 0 && cpy13_b(p + 0x6d) == 0;
     }
-    PLACAR.record(ok, || format!("free_transfer_staff(pessoa {}, clube {:x}, só registro {}): conta {} -> {}, registro {:x?}", cpy13_d(p), clube, so_registro,
+    SCOREBOARD.record(ok, || format!("free_transfer_staff(pessoa {}, clube {:x}, só registro {}): conta {} -> {}, registro {:x?}", cpy13_d(p), clube, so_registro,
         n, cpy13_d(this + 0x86a), core::slice::from_raw_parts(r as *const u8, 0x1d)));
 }
 
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, ferias: u32, te
     let esperada = conta + if ferias != 0 && antes == 0 { 1 } else if ferias == 0 && antes != 0 { -1 } else { 0 };
     o(this, ferias, tecnico);
     let (depois, conta2) = (cpy13_d(marca) as u32, cpy13_d(this + 0xc) as i32);
-    PLACAR.record(depois == ferias && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", ferias, t, antes, depois, conta, conta2, esperada));
+    SCOREBOARD.record(depois == ferias && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", ferias, t, antes, depois, conta, conta2, esperada));
 }
 
 /// { 0x8d7cd0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH das notícias locais): `TRANSFER_MANAGER::

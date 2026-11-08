@@ -25,7 +25,7 @@ pub(crate) unsafe extern "C" fn comparar_check_saved_game_file(path: usize) -> u
         return r;
     }
     let n = check_saved_game_file(path);
-    PLACAR.record(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
+    SCOREBOARD.record(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
     r
 }
 
@@ -59,6 +59,6 @@ pub(crate) unsafe extern "C" fn comparar_free_game_data(tela: u32) -> u32 {
 pub(crate) unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_GET_HEADING_COLOUR)(x);
     let n = get_heading_colour(x);
-    PLACAR.record(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
+    SCOREBOARD.record(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
     r
 }

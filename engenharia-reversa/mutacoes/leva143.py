@@ -4,7 +4,7 @@ MUTACOES = [
     ('m_base', "            0x12 => 0x13e,\n            _ => 0x13c,", "            0x12 => 0x13c,\n            _ => 0x13c,", "movimento com a bola"),
     ('m_cubo', "at -= sortear(c * c * c * 50);", "at -= sortear(c * c * c * 51);", "movimento com a bola"),
     ('m_aprox', "                } else {\n                    Some(0x2161)\n                }", "                } else {\n                    Some(0x2160)\n                }", "movimento aproximacao narrada"),
-    ('m_cresce', "let v = read_f32_at(p + 0x1a2) as f64 * read_f32_at(0x96d3b8) as f64;", "let v = read_f32_at(p + 0x1a2) as f64 * read_f32_at(0x96d3b8) as f64 * 1.01;", "movimento cresce"),
+    ('m_cresce', "let v = read_f32_at(p + match_player::CONFIDENCE) as f64 * read_f32_at(0x96d3b8) as f64;", "let v = read_f32_at(p + match_player::CONFIDENCE) as f64 * read_f32_at(0x96d3b8) as f64 * 1.01;", "movimento cresce"),
     ('m_posse', "        let q = (m as isize + side as isize + 0x8d46) as *mut u8;\n        *q = (*q).wrapping_add(5);", "        let q = (m as isize + side as isize + 0x8d46) as *mut u8;\n        *q = (*q).wrapping_add(6);", "movimento passa"),
     ('m_19c', "let limite_nota = (nota as i32 + 0x32).max(0xfa);", "let limite_nota = (nota as i32 + 0x33).max(0xfa);", "movimento passa"),
     ('m_soma', "            add(p, 9);\n            sum(0x24);", "            add(p, 9);\n            sum(0x25);", "movimento passa"),

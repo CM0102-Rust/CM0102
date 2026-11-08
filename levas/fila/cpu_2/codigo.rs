@@ -85,7 +85,7 @@ unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize, inicio: us
     let ler = |p: usize| if p != 0 { *(p as *const [u8; 8]) } else { [0u8; 8] };
     let (oi, of) = (ler(inicio), ler(fim));
     let ok = r == n && (inicio == 0 || oi == i) && (fim == 0 || of == f);
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         format!("key_nation_club_in_season(clube {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", clube, r, oi, of, n, i, f)
     });
     r
@@ -110,7 +110,7 @@ unsafe extern "C" fn key_nation_get_main_continent() -> usize {
 unsafe extern "C" fn comparar_key_nation_get_main_continent() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(%%I1%%)();
     let n = key_nation_get_main_continent();
-    PLACAR.record(r == n, || format!("key_nation_get_main_continent() original={:x} rust={:x}", r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_get_main_continent() original={:x} rust={:x}", r, n));
     r
 }
 
@@ -133,6 +133,6 @@ unsafe extern "C" fn key_nation_get_main_nation() -> usize {
 unsafe extern "C" fn comparar_key_nation_get_main_nation() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(%%I2%%)();
     let n = key_nation_get_main_nation();
-    PLACAR.record(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));
     r
 }

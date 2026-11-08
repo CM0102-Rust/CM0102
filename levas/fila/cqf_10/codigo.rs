@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn comparar_player_search_record_scouted_club_match(thi
     let regioes = [(this, 4 + 0x32 * 0x1a2), (0xae24d0, 0x100), (0xb67a34, 4)];
     let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, jogo, resultado),
         || player_search_record_scouted_club_match(this, jogo, resultado));
-    PLACAR.record(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", cqf10_d(this), jogo, mo, mr));
+    SCOREBOARD.record(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", cqf10_d(this), jogo, mo, mr));
 }
 
 /// O ensaio da 0x7b5be0 (só no comparador): a cópia decide tudo até o relatório sem os efeitos (o histórico 0x7bd310 e o
@@ -472,7 +472,7 @@ unsafe extern "thiscall" fn comparar_player_search_scout_match(this: usize, jogo
     };
     let r = o(this, jogo, resultado, saida);
     let depois = (cqf10_w(this + 0x1a7) as u16, cqf10_w(this + 0x1a5));
-    PLACAR.record(r == n && depois == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
+    SCOREBOARD.record(r == n && depois == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
         this, jogo, r, n, antes, previsto, depois));
     r
 }

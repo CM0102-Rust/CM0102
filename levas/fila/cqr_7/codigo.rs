@@ -47,7 +47,7 @@ unsafe fn compare_first_group_table(nome: &str, this: usize, n: i16, original: i
     let t = cqr7_d(this + 0xb1);
     let ok = r == 1 && cqr7_w(this + 0x3e) == n && t != 0
         && plano.iter().enumerate().all(|(k, &c)| cqr7_d(t + k * 0x3b) == c && cqr7_d(cqr7_d(this + 0xee) + k * 4) == 0);
-    PLACAR.record(ok, || format!("{}({:#x}) devolveu {}; plano {:x?}", nome, this, r, plano));
+    SCOREBOARD.record(ok, || format!("{}({:#x}) devolveu {}; plano {:x?}", nome, this, r, plano));
     r
 }
 
@@ -97,7 +97,7 @@ unsafe fn ita_cup_compare_advance_stage(nome: &str, this: usize, original: impl 
     let ultima = antes >= (cqr7_d(this + 0x2c) as i32).wrapping_sub(1);
     original();
     let depois = cqr7_d(this + 0x30) as i32;
-    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, antes, depois));
+    SCOREBOARD.record(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, antes, depois));
 }
 
 /// { 0x63f5b0 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x28): `ItaCup::advance_stage()`: a fase seguinte

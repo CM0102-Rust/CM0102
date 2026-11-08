@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn comparar_european_cup_collect_entrants(this: usize) 
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let t = cpy5_d(this + 0x14);
     if t == 0 {
-        PLACAR.record(r == 0, || format!("european_cup_collect_entrants({:x}) sem lista original={}", this, r));
+        SCOREBOARD.record(r == 0, || format!("european_cup_collect_entrants({:x}) sem lista original={}", this, r));
         return r;
     }
     let mut v = core::slice::from_raw_parts(t as *const u8, 0x47 * 6).to_vec();
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn comparar_european_cup_collect_entrants(this: usize) 
         && v[..] == *core::slice::from_raw_parts(t as *const u8, 0x47 * 6)
         && cpy5_w(this + 0x36) == if n == 1 { 0x47 } else { 0 }
         && cpy5_w(this + 0x38) == 0x47;
-    PLACAR.record(igual, || format!("european_cup_collect_entrants({:x}) original={} +0x36={} rust={} total={}", this, r, cpy5_w(this + 0x36), n, total));
+    SCOREBOARD.record(igual, || format!("european_cup_collect_entrants({:x}) original={} +0x36={} rust={} total={}", this, r, cpy5_w(this + 0x36), n, total));
     r
 }
 
@@ -180,13 +180,13 @@ unsafe extern "thiscall" fn comparar_build_qualifying_entry_table(this: usize) -
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%)(this);
     let t = cpy5_d(this + 0xa7);
     if t == 0 || cpy5_w(this + 0x3e) != 0x37 {
-        PLACAR.record(r == -1 && t == 0, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x} +0x3e={}", this, r, t, cpy5_w(this + 0x3e)));
+        SCOREBOARD.record(r == -1 && t == 0, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x} +0x3e={}", this, r, t, cpy5_w(this + 0x3e)));
         return r;
     }
     let mut v = core::slice::from_raw_parts(t as *const u8, 0x14a).to_vec();
     fill_qualifying_table(this, v.as_mut_ptr() as usize);
     let igual = r == 1 && v[..] == *core::slice::from_raw_parts(t as *const u8, 0x14a);
-    PLACAR.record(igual, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x?}", this, r, &v[..]));
+    SCOREBOARD.record(igual, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x?}", this, r, &v[..]));
     r
 }
 

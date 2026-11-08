@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_build_selection_pools(this: usize) {
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || build_selection_pools(this));
-    PLACAR.record(igual, || format!("build_selection_pools({:x}) {:x?} x {:x?}", this, mo, mr));
+    SCOREBOARD.record(igual, || format!("build_selection_pools({:x}) {:x?} x {:x?}", this, mo, mr));
 }
 
 /// { 0x778ed0 } (cdecl, national_teams.cpp): a ordem das reservas para o qsort da 0x76abf0: pela nota (+9 da ficha
@@ -160,7 +160,7 @@ unsafe extern "C" fn compare_by_rating(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_compare_by_rating(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_by_rating(a, b);
-    PLACAR.record(r == n, || format!("compare_by_rating({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("compare_by_rating({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -193,6 +193,6 @@ unsafe extern "C" fn compare_by_club(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_compare_by_club(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_by_club(a, b);
-    PLACAR.record(r == n, || format!("compare_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("compare_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn comparar_get_future_transfer(this: usize, jogador: u
     let regioes = [(staff_flags_byte(this, cpr3_d(jogador)) as usize, 1), (saida as usize, 4)];
     let n = if saida.is_null() { 1 } else { 2 };
     let (r, c, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes[..n], || o(this, jogador, saida), || get_future_transfer(this, jogador, saida));
-    PLACAR.record(igual && r == c, || format!("get_future_transfer(jogador {}) original={} rust={} {:x?} x {:x?}", cpr3_d(jogador), r, c, mo, mr));
+    SCOREBOARD.record(igual && r == c, || format!("get_future_transfer(jogador {}) original={} rust={} {:x?} x {:x?}", cpr3_d(jogador), r, c, mo, mr));
     r
 }
 
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn comparar_remove_future_transfer(this: usize, oferta:
         regioes.push((l + 0xa, 4));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, oferta), || remove_future_transfer(this, oferta));
-    PLACAR.record(igual, || format!("remove_future_transfer(oferta {:x}) {:x?} x {:x?}", cpr3_d(oferta + 0x20), mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_future_transfer(oferta {:x}) {:x?} x {:x?}", cpr3_d(oferta + 0x20), mo, mr));
 }
 
 /// Comparador: a original acrescenta (pode realocar), reordena e suspende as listas de alvos: só ela, conferida pelo
@@ -217,5 +217,5 @@ unsafe extern "thiscall" fn comparar_add_future_transfer(this: usize, oferta: us
     let conta = cpr3_d(this + 0x928);
     let marca = *staff_flags_byte(this, cpr3_d(oferta + 0xc));
     let ok = conta == n.wrapping_add(1) && vector_contains_record(cpr3_d(this + 0x920), conta, 0xc, &alvo) && cpr3_b(oferta + 0x2c) == 0x13 && cpr3_b(oferta + 0x2d) == 1 && marca & 0x10 != 0;
-    PLACAR.record(ok, || format!("add_future_transfer(oferta {:x}): conta {} -> {}, estado {:#x}, marca {:#x}", cpr3_d(oferta + 0x20), n, conta, cpr3_b(oferta + 0x2c), marca));
+    SCOREBOARD.record(ok, || format!("add_future_transfer(oferta {:x}): conta {} -> {}, estado {:#x}, marca {:#x}", cpr3_d(oferta + 0x20), n, conta, cpr3_b(oferta + 0x2c), marca));
 }

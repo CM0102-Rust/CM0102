@@ -16,7 +16,7 @@ pub(crate) unsafe fn eng_auto_cup_is_in_comp(c: usize, g: usize) -> bool {
 /// [pt] Põe o clube `c` na vaga `k` da lista (+0xb2, relida a cada vez) e conta.
 pub(crate) unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
     *k += 1;
-    write_u32_from_usize(read_u32_as_usize(this + 0xb2) + (*k as usize - 1) * 4, c);
+    write_u32_from_usize(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS) + (*k as usize - 1) * 4, c);
 }
 
 /// EngAutoCup::select_section_clubs (0x56b730): 56 League Trophy clubs from the lower English divisions and Conference,
@@ -41,7 +41,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     write_u32_from_usize(this + 0xb6, 0x38);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0xe0);
-    write_u32_from_usize(this + 0xb2, l);
+    write_u32_from_usize(this + eng_auto_cup::SELECTED_CLUBS, l);
     if l == 0 {
         show_error_at(0x9c4180, 0x24c);
         return 0;
@@ -149,8 +149,8 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             if lim > 0 {
                 loop {
                     let c = base + j as u16 as usize * club::SIZE;
-                    let nac = read_u32_as_usize(c + 0x53);
-                    if nac != 0 && read_u32_as_usize(nac) == read_u32_as_usize(KEY_NATION_ENGLAND) && !eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_A_LOWER_DIVISION) {
+                    let nation = read_u32_as_usize(c + 0x53);
+                    if nation != 0 && read_u32_as_usize(nation) == read_u32_as_usize(KEY_NATION_ENGLAND) && !eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_A_LOWER_DIVISION) {
                         local[m as u8 as usize] = c;
                         m = m.wrapping_add(1);
                         if m == 0x1e {
@@ -178,11 +178,11 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     }
     crate::comparison::branch("cqs_5 chaves do trofeu da liga");
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_u32_as_usize(this + 0xb2), read_u32_as_usize(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
+    sort(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS), read_u32_as_usize(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
     let half = (read_u32_as_usize(this + 0xb6) as i32) / 2;
-    sort(read_u32_as_usize(this + 0xb2), half as u32, 4, 0x4b0810);
+    sort(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS), half as u32, 4, 0x4b0810);
     let half = (read_u32_as_usize(this + 0xb6) as i32) / 2;
-    sort(read_u32_as_usize(this + 0xb2) + half as usize * 4, half as u32, 4, 0x4b0810);
+    sort(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS) + half as usize * 4, half as u32, 4, 0x4b0810);
     1
 }
 

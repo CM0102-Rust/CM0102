@@ -192,14 +192,14 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
 unsafe extern "thiscall" fn comparar_is_forward_unavailable(gerente: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
     let n = is_forward_unavailable(gerente);
-    PLACAR.record(r == n, || format!("is_forward_unavailable original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("is_forward_unavailable original={} rust={}", r, n));
     r
 }
 
 unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(%%I2%%)(x);
     let n = get_heading_colour(x);
-    PLACAR.record(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
+    SCOREBOARD.record(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
     r
 }
 
@@ -218,7 +218,7 @@ unsafe extern "C" fn comparar_draw_latest_scores_panel(topo: *mut i32, base: *mu
     reg.push((topo as usize, 4));
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(topo, base), || draw_latest_scores_panel(topo, base));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))

@@ -44,7 +44,7 @@ unsafe extern "C" fn staff_is_player_attribute_visible(quem_ve: usize, pessoa: u
 unsafe extern "C" fn comparar_staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I0%%)(quem_ve, pessoa, atributo);
     let n = staff_is_player_attribute_visible(quem_ve, pessoa, atributo);
-    PLACAR.record(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
     r
 }
 
@@ -78,7 +78,7 @@ unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(quem_ve: usi
         return r; // caixa: só a original
     }
     let n = staff_get_player_attribute_for_viewer(quem_ve, pessoa, atributo);
-    PLACAR.record(r == n, || format!("staff_get_player_attribute_for_viewer({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, x, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_get_player_attribute_for_viewer({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, x, r, n));
     r
 }
 
@@ -132,6 +132,6 @@ unsafe extern "C" fn comparar_database_get_non_player_attribute_name(atributo: u
     let reg = [(texto, 100)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(atributo, texto, tamanho, abreviado),
         || database_get_non_player_attribute_name(atributo, texto, tamanho, abreviado));
-    PLACAR.record(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, texto, tamanho as u16 as i16, abreviado, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, texto, tamanho as u16 as i16, abreviado, r, n, mo, mr));
     r
 }

@@ -142,14 +142,14 @@ unsafe extern "C" fn database_is_staff_foreign(pessoa: usize, nacao: usize, grup
 unsafe extern "C" fn comparar_database_get_reputation_scope(pessoa: usize, quem_ve: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(pessoa, quem_ve);
     let n = database_get_reputation_scope(pessoa, quem_ve);
-    PLACAR.record(r == n, || format!("database_get_reputation_scope({:x}, {:x}) original={} rust={}", pessoa, quem_ve, r, n));
+    SCOREBOARD.record(r == n, || format!("database_get_reputation_scope({:x}, {:x}) original={} rust={}", pessoa, quem_ve, r, n));
     r
 }
 
 unsafe extern "C" fn comparar_database_get_staff_reputation_for_viewer(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u16>(%%I1%%)(pessoa, quem_ve, nao_jogador);
     let n = database_get_staff_reputation_for_viewer(pessoa, quem_ve, nao_jogador);
-    PLACAR.record(r == n, || format!("database_get_staff_reputation_for_viewer({:x}, {:x}, {}) original={} rust={}", pessoa, quem_ve, nao_jogador, r, n));
+    SCOREBOARD.record(r == n, || format!("database_get_staff_reputation_for_viewer({:x}, {:x}, {}) original={} rust={}", pessoa, quem_ve, nao_jogador, r, n));
     r
 }
 
@@ -157,6 +157,6 @@ unsafe extern "C" fn comparar_database_is_staff_foreign(pessoa: usize, nacao: us
     // a 0x4cf5a0 e o Date (num Date local) só leem: os dois lados podem rodar
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u32>(%%I2%%)(pessoa, nacao, grupos);
     let n = database_is_staff_foreign(pessoa, nacao, grupos);
-    PLACAR.record(r == n, || format!("database_is_staff_foreign({:x}, {:x}, {}) original={} rust={}", pessoa, nacao, grupos, r, n));
+    SCOREBOARD.record(r == n, || format!("database_is_staff_foreign({:x}, {:x}, {}) original={} rust={}", pessoa, nacao, grupos, r, n));
     r
 }

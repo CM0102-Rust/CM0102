@@ -95,7 +95,7 @@ unsafe fn compare_state_league_new_season(nome: &str, this: usize, original: imp
     let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let r = original();
     let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    PLACAR.record(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
+    SCOREBOARD.record(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
     r
 }
 
@@ -106,7 +106,7 @@ unsafe fn compare_state_league_advance_stage(nome: &str, this: usize, original: 
     let ultima = antes >= (cqp7_d(this + 0x2c) as i32).wrapping_sub(1);
     original();
     let depois = cqp7_d(this + 0x30) as i32;
-    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
+    SCOREBOARD.record(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
 }
 
 /// { 0x42fe10 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::start_new_season()`, a virada da temporada do Baiano (a tabela:

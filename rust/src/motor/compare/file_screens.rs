@@ -9,7 +9,7 @@ pub(crate) unsafe extern "C" fn comparar_build_save_game_summary(summary: *mut u
     let (_, _, _, mo, mr) = crate::comparison::side_by_side(&regions,
         || original_fn::<unsafe extern "C" fn(*mut u8)>(IDX_BUILD_SAVE_GAME_SUMMARY)(summary),
         || build_save_game_summary(summary));
-    PLACAR.record(mo.0[0] == mr.0[0], || {
+    SCOREBOARD.record(mo.0[0] == mr.0[0], || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let k = (0..a.len()).find(|&k| a[k] != b[k]).unwrap_or(0);
         format!("build_save_game_summary: primeira diferença em +{:#x}: {:#04x} x {:#04x}", k, a[k], b[k])

@@ -99,7 +99,7 @@ unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: usize, kit: u
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(frente as usize, 2), (fundo as usize, 2)],
         || o(clube, kit, frente, fundo), || database_get_club_kit_colours(clube, kit, frente, fundo));
-    PLACAR.record(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, kit as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, kit as u8, r, n, mo, mr));
     r
 }
 
@@ -112,7 +112,7 @@ unsafe extern "C" fn comparar_database_get_club_manager(clube: usize) -> usize {
     // a região volta entre os lados
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1)], || o(clube),
         || database_get_club_manager(clube));
-    PLACAR.record(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -124,6 +124,6 @@ unsafe extern "C" fn comparar_club_get_english_name(clube: usize) -> usize {
     }
     let r = o(clube);
     let n = club_get_english_name(clube);
-    PLACAR.record(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
+    SCOREBOARD.record(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
     r
 }

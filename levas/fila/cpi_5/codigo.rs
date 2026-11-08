@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn comparar_remove_held_offers(this: usize, pessoa: u32
     let esperado: Vec<usize> = antes.iter().copied().filter(|&e| cpi5_d(e) as u32 != pessoa).collect();
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, pessoa);
     let depois: Vec<usize> = if l != 0 { list_items_capped(l) } else { Vec::new() };
-    PLACAR.record(depois == esperado, || format!("remove_held_offers({:x}) {} itens, esperava {}, ficaram {}", pessoa, antes.len(), esperado.len(), depois.len()));
+    SCOREBOARD.record(depois == esperado, || format!("remove_held_offers({:x}) {} itens, esperava {}, ficaram {}", pessoa, antes.len(), esperado.len(), depois.len()));
 }
 
 /// Comparador: o plano da cópia (as vagas que não valem no clube do empréstimo) antes; a original guarda; confere o
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn comparar_hold_bans_for_loan(this: usize, jogador: us
     esperado[0x1c] = esperado[0x1c].wrapping_add(vagas.len() as u8);
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, jogador);
     let depois = core::slice::from_raw_parts(reg as *const u8, 29).to_vec();
-    PLACAR.record(depois == esperado, || format!("hold_bans_for_loan({:x}) vagas {:?} {:x?} x {:x?}", jogador, vagas, depois, esperado));
+    SCOREBOARD.record(depois == esperado, || format!("hold_bans_for_loan({:x}) vagas {:?} {:x?} x {:x?}", jogador, vagas, depois, esperado));
 }
 
 /// Comparador: a escolha da cópia antes; a original preenche; a pessoa escolhida tem de estar agora no clube (+0x39).
@@ -160,7 +160,7 @@ unsafe extern "stdcall" fn comparar_fill_vacated_staff_job(clube: usize, cargo: 
     let escolhida = if clube != 0 { job_sought_by_slot(cargo).and_then(|c| first_unemployed_staff(clube, c as u8)) } else { None };
     original_fn::<unsafe extern "stdcall" fn(usize, u32)>(%%I2%%)(clube, cargo);
     if let Some(p) = escolhida {
-        PLACAR.record(cpi5_d(p + 0x39) == clube, || format!("fill_vacated_staff_job({:x}, {}) a pessoa {:x} ficou em {:x}", clube, cargo as u8, p, cpi5_d(p + 0x39)));
+        SCOREBOARD.record(cpi5_d(p + 0x39) == clube, || format!("fill_vacated_staff_job({:x}, {}) a pessoa {:x} ficou em {:x}", clube, cargo as u8, p, cpi5_d(p + 0x39)));
     } else {
         crate::comparison::branch("fill_vacated_staff_job sem ninguem");
     }

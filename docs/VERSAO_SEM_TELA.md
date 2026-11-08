@@ -46,7 +46,7 @@ Os `.qst` têm o mesmo contêiner dos saves (`.sav`): indicador de compressão, 
 
 Com semente fixa o jogo ainda variava entre execuções. Fontes acidentais, todas neutralizadas **só no modo simulação** (`CM_PARAR_EM`); o jogo normal não muda:
 
-| Fonte | Sintoma | Neutralização (`simulacao.rs`, `alocador.rs`) |
+| Fonte | Sintoma | Neutralização (`simulation.rs`, `allocator.rs`) |
 |---|---|---|
 | `time()` | `srand(time)` em manager_manager.cpp (0x696d4b) | instante fixo |
 | `clock()` (31 chamadas, 13 rotinas) | esperas do dia de jogo (match_day.cpp 0x6b55c0) dependiam de quantas vezes menus e telas consultavam o relógio | um relógio por rotina, +1 ms por consulta dela |

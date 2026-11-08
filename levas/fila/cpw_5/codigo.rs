@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize, jogo: usi
     }
     let regioes = [(this, 12), (tab, (n as usize + 40) * 12)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, jogo, partida), || record_match_ratings(this, jogo, partida));
-    PLACAR.record(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    SCOREBOARD.record(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// A nota da partida (+0x35 da vaga, sem sinal) soma na palavra +8 do registro de 12 bytes e o byte +0xa conta mais um
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e: usize) {
     let vagas = if n < cap { n as usize + 1 } else { n as usize };
     let regioes = [(this, 12), (tab, vagas * 12)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, e), || add_player_rating(this, e));
-    PLACAR.record(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", cpw5_i(e), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", cpw5_i(e), mo, mr));
 }
 
 /// { 0x768130 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::find_best_player(liga, idade)`, pelo prêmio do
@@ -198,6 +198,6 @@ unsafe extern "thiscall" fn comparar_find_best_player(this: usize, liga: i32, id
     let (tab, n) = (cpw5_d(this), cpw5_i(this + 4));
     let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, liga, idade), || find_best_player(this, liga, idade));
-    PLACAR.record(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", liga, idade as u8 as i8, r, mo, m, mr));
+    SCOREBOARD.record(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", liga, idade as u8 as i8, r, mo, m, mr));
     r
 }

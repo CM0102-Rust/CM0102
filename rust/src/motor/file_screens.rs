@@ -37,23 +37,23 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     let copy_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let relogio: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(FN_946EBB);
-    let mut nacao = [0u8; 100];
+    let mut nation = [0u8; 100];
     *summary = 0;
     *summary.add(0x3e8) = 0;
     for (bit, destino) in [(2u8, summary), (1u8, summary.add(0x3e8))] {
         let mut first = true;
         for i in 0..0x23usize {
             let n = *((0xb63d60 + i * 0x48) as *const usize);
-            if n == 0 || *((n + 0x11c) as *const u8) & bit == 0 {
+            if n == 0 || *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) & bit == 0 {
                 continue;
             }
             if first {
-                format(nacao.as_mut_ptr(), n + 0x38);
+                format(nation.as_mut_ptr(), n + nation::SHORT_NAME);
                 first = false;
             } else {
-                translate(nacao.as_mut_ptr(), 0x9c8134, n + 0x38);
+                translate(nation.as_mut_ptr(), 0x9c8134, n + nation::SHORT_NAME);
             }
-            append_text(destino, nacao.as_ptr());
+            append_text(destino, nation.as_ptr());
         }
         if bit == 1 && first {
             *summary.add(0x3e8) = 0;
@@ -69,12 +69,12 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
             continue;
         }
         name_of(p, club_txt.sub(0x3c), 200, 1);
-        let clube = core::ptr::read_unaligned((p + staff::CLUB_JOB) as *const usize);
+        let club = core::ptr::read_unaligned((p + staff::CLUB_JOB) as *const usize);
         let nation_of = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
-        if clube != 0 && nation_of != 0 {
-            translate(club_txt, 0x9c80f4, clube + club::SHORT_NAME, nation_of + nation::SHORT_NAME);
-        } else if clube != 0 {
-            copy_text(club_txt, (clube + club::SHORT_NAME) as *const u8);
+        if club != 0 && nation_of != 0 {
+            translate(club_txt, 0x9c80f4, club + club::SHORT_NAME, nation_of + nation::SHORT_NAME);
+        } else if club != 0 {
+            copy_text(club_txt, (club + club::SHORT_NAME) as *const u8);
         } else if nation_of != 0 {
             copy_text(club_txt, (nation_of + nation::SHORT_NAME) as *const u8);
         } else {

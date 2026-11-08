@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_offer_needs_work_permit(th
         reg.push((lista + 0xa, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, oferta), || transfer_manager_offer_needs_work_permit(this, oferta));
-    PLACAR.record(igual && r == n, || format!("transfer_manager_offer_needs_work_permit({:x}) original={} rust={} {:x?} x {:x?}", oferta, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("transfer_manager_offer_needs_work_permit({:x}) original={} rust={} {:x?} x {:x?}", oferta, r, n, mo, mr));
     r
 }
 
@@ -127,5 +127,5 @@ unsafe extern "thiscall" fn comparar_update_work_permits(this: usize) {
         reg.push((pessoa + 0x1e, 4));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || update_work_permits(this));
-    PLACAR.record(igual, || format!("update_work_permits {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("update_work_permits {:x?} x {:x?}", mo, mr));
 }

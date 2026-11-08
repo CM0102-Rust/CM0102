@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: usize, p: u
     let mr = crate::comparison::MemorySnapshot::read(&regioes);
     mo.write_back();
     if !SELECT_SQUADS_REQUESTED_SQUAD {
-        PLACAR.record(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
+        SCOREBOARD.record(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
     }
 }
 
@@ -236,7 +236,7 @@ unsafe extern "stdcall" fn comparar_national_teams_post_player_called_up_news(jo
     antes.write_back();
     o(jogador, nacao, vaga);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(mo == mr, || format!("national_teams_post_player_called_up_news({:x}, {:x}, {}) original={:x?} rust={:x?}", jogador, nacao, vaga, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("national_teams_post_player_called_up_news({:x}, {:x}, {}) original={:x?} rust={:x?}", jogador, nacao, vaga, mo, mr));
 }
 
 /// { 0x519690 } (thiscall, ret 0x14, Cup.cpp, quadro SEH sem destrutor): `Cup::add_team_result_news(clube, desfecho,

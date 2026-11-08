@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates(this: usiz
     }
     let e = cup_round_entry(this, rodada);
     let depois: [u8; 8] = core::array::from_fn(|k| cqc7_b(e + k * 7 + 0x29));
-    PLACAR.record(depois == esperado, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
+    SCOREBOARD.record(depois == esperado, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
         rodada, depois, esperado));
 }
 
@@ -478,6 +478,6 @@ unsafe extern "thiscall" fn comparar_check_offer_work_permits(this: usize, ofert
     let recusada = precisa && proposta != 0 && !concedida;
     let r = o(this, oferta, quieto);
     let ok = if recusada { r == 0 && cqc7_b(oferta + 0x2c) == 0x10 } else { r == 1 };
-    PLACAR.record(ok, || format!("check_offer_work_permits(oferta {:x}) recusada prevista {} devolveu {}", oferta, recusada, r));
+    SCOREBOARD.record(ok, || format!("check_offer_work_permits(oferta {:x}) recusada prevista {} devolveu {}", oferta, recusada, r));
     r
 }

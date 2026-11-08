@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn comparar_try_loan_offer_for_player(this: usize, joga
         -3 => r == -1,
         _ => r != -1,
     };
-    PLACAR.record(igual, || format!("try_loan_offer_for_player(jogador {:#x}, clube {:#x}) original={} {:x?} rust={} {:x?}", cpw3_d(jogador), cpw3_d(clube), r, mo, n, mr));
+    SCOREBOARD.record(igual, || format!("try_loan_offer_for_player(jogador {:#x}, clube {:#x}) original={} {:x?} rust={} {:x?}", cpw3_d(jogador), cpw3_d(clube), r, mo, n, mr));
     r
 }
 

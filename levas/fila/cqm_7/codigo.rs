@@ -94,7 +94,7 @@ unsafe fn bra_reg_northeast_compare_state_league_table(nome: &str, this: usize, 
         achou = (0..plano.len()).map(|k| cqm7_d(t + k * 0x3b)).collect();
         igual = achou == plano;
     }
-    PLACAR.record(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
+    SCOREBOARD.record(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
     r
 }
 

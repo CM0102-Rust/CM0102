@@ -85,7 +85,7 @@ unsafe extern "C" fn comparar_database_get_colour_family(cor: usize) -> u8 {
         return r; // caixa: só a original
     }
     let n = database_get_colour_family(cor);
-    PLACAR.record(r == n, || format!("database_get_colour_family({:x}: id {}) original={} rust={}", cor, *(cor as *const u32), r, n));
+    SCOREBOARD.record(r == n, || format!("database_get_colour_family({:x}: id {}) original={} rust={}", cor, *(cor as *const u32), r, n));
     r
 }
 
@@ -96,7 +96,7 @@ unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usize) -> u8 {
         return r; // caixa: só a original
     }
     let n = database_colours_clash(a, b);
-    PLACAR.record(r == n, || format!("database_colours_clash({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("database_colours_clash({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -108,6 +108,6 @@ unsafe extern "C" fn comparar_staff_compute_non_player_attribute(pessoa: usize, 
         return r; // caixa: só a original
     }
     let n = staff_compute_non_player_attribute(pessoa, nao_jogador, atributo);
-    PLACAR.record(r == n, || format!("staff_compute_non_player_attribute({:x}, {:x}, {}) original={} rust={}", pessoa, nao_jogador, a, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_compute_non_player_attribute({:x}, {:x}, {}) original={} rust={}", pessoa, nao_jogador, a, r, n));
     r
 }

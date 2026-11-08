@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn comparar_build_position_lists(this: usize, nao_usado
             }
         }
     }
-    PLACAR.record(ruim.is_none(), || format!("build_position_lists: vaga e entrada {:?}", ruim));
+    SCOREBOARD.record(ruim.is_none(), || format!("build_position_lists: vaga e entrada {:?}", ruim));
 }
 
 /// Comparador: lado a lado pelos 32 vetores (12 bytes por entrada) e por [0xae1080].
@@ -322,7 +322,7 @@ unsafe extern "thiscall" fn comparar_sort_position_lists(this: usize) {
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || sort_position_lists(this));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).map(|(a, _)| a.0).take(8).collect();
         format!("sort_position_lists: vetores diferentes {:x?}", dif)
     });
@@ -343,5 +343,5 @@ unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: usize, jogad
     collect_interested_clubs(this, jogador, l, ignorar, modo, so_humanos);
     let (a, b) = (llist_pairs(saida), llist_pairs(l));
     limpar(l);
-    PLACAR.record(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", jogador, a, b));
+    SCOREBOARD.record(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", jogador, a, b));
 }

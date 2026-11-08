@@ -1,4 +1,4 @@
-r"""Acha os dwords de resíduo de pilha que mudam a carreira, pela sonda da DLL (rust/src/sonda_pilha.rs).
+r"""Acha os dwords de resíduo de pilha que mudam a carreira, pela sonda da DLL (rust/src/stack_probe.rs).
 
 A rotina ENDERECO roda na pilha do jogo entre os trechos da sonda; a base é a carreira sem veneno (tem de ser a
 referência: a sonda é transparente). Cada faixa [ini, fim) abaixo da entrada é envenenada a cada chamada; faixa

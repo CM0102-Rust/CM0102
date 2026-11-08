@@ -308,7 +308,7 @@ unsafe fn compare_reject_withdraw(nome: &str, this: usize, vaga: *mut usize, ori
     for k in regioes.len() - nos.len()..regioes.len() {
         igual &= a[k].1[4] == b[k].1[4];
     }
-    PLACAR.record(igual, || format!("{}(oferta {:#x}) original={:x?} rust={:x?}", nome, o, mo, mr));
+    SCOREBOARD.record(igual, || format!("{}(oferta {:#x}) original={:x?} rust={:x?}", nome, o, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_reject_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {

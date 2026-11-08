@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usi
 unsafe extern "thiscall" fn comparar_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
     let n = fixture_has_scouted_player(this, partida);
-    PLACAR.record(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
+    SCOREBOARD.record(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
     r
 }
 
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, pessoa: 
     }
     let r = o(this, pessoa, gerente);
     let n = is_player_shortlisted(this, pessoa, gerente);
-    PLACAR.record(r == n, || format!("is_player_shortlisted(pessoa {:x}, gerente {:x}) original={} rust={}", pessoa, gerente, r, n));
+    SCOREBOARD.record(r == n, || format!("is_player_shortlisted(pessoa {:x}, gerente {:x}) original={} rust={}", pessoa, gerente, r, n));
     r
 }
 

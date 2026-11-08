@@ -166,13 +166,13 @@ unsafe extern "thiscall" fn comparar_collect_club_shortlist_entries(this: usize,
     let antes = list_items_capped(lista).len();
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32, usize)>(%%I2%%)(this, clube, lista);
     let novos: Vec<[u8; 8]> = list_items_capped(lista).iter().skip(antes).map(|&i| core::ptr::read_unaligned(i as *const [u8; 8])).collect();
-    PLACAR.record(novos == esperado, || format!("collect_club_shortlist_entries({}) original {} itens, rust {}", *clube, novos.len(), esperado.len()));
+    SCOREBOARD.record(novos == esperado, || format!("collect_club_shortlist_entries({}) original {} itens, rust {}", *clube, novos.len(), esperado.len()));
 }
 
 /// Comparador: pelo valor (a 0x8e7a70 só calcula; as duas voltam o cursor da lista ao começo).
 unsafe extern "thiscall" fn comparar_find_highest_offer_for_player(this: usize, jogador: *const u32, clube: *const u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32) -> usize>(%%I3%%)(this, jogador, clube);
     let n = find_highest_offer_for_player(this, jogador, clube);
-    PLACAR.record(r == n, || format!("find_highest_offer_for_player({}, {}) original={:#x} rust={:#x}", *jogador, *clube, r, n));
+    SCOREBOARD.record(r == n, || format!("find_highest_offer_for_player({}, {}) original={:#x} rust={:#x}", *jogador, *clube, r, n));
     r
 }

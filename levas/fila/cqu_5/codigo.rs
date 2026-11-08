@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn cqu5_copa_da_inglaterra(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqu5_copa_da_inglaterra(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu5_plano(this, r, ano, dono, 0x969b28, &CQU5_CAMPOS_COPA_DA_INGLATERRA, true);
-    PLACAR.record(erro.is_none(), || format!("cqu5_copa_da_inglaterra({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqu5_copa_da_inglaterra({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn cqu5_copa_da_liga_inglesa(this: usize, ano: u32, don
 unsafe extern "thiscall" fn comparar_cqu5_copa_da_liga_inglesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu5_plano(this, r, ano, dono, 0x969934, &CQU5_CAMPOS_COPA_DA_LIGA_INGLESA, true);
-    PLACAR.record(erro.is_none(), || format!("cqu5_copa_da_liga_inglesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqu5_copa_da_liga_inglesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -250,6 +250,6 @@ unsafe extern "thiscall" fn cqu5_supercopa_inglesa(this: usize, ano: u32, dono: 
 unsafe extern "thiscall" fn comparar_cqu5_supercopa_inglesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqu5_plano(this, r, ano, dono, 0x9699d4, &CQU5_CAMPOS_SUPERCOPA_INGLESA, true);
-    PLACAR.record(erro.is_none(), || format!("cqu5_supercopa_inglesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqu5_supercopa_inglesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

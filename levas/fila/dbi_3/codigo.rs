@@ -183,7 +183,7 @@ unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust:
     *(0xde1f44 as *mut usize) = 0;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(pessoa), || rust(pessoa));
     *(0xde1f44 as *mut usize) = gerente;
-    PLACAR.record(igual, || format!("{}({:x}) {:x?} x {:x?}", nome, pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("{}({:x}) {:x?} x {:x?}", nome, pessoa, mo, mr));
     if gerente != 0 {
         antes.write_back();
         o(pessoa);
@@ -227,7 +227,7 @@ unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) 
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
         || crate::rng::without_counting(|| database_pick_second_name_by_weight(nacao)));
-    PLACAR.record(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 

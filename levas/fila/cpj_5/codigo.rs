@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(this: usize)
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let reg: Vec<(usize, usize)> = (0..0x10).map(|i| (human_manager_watched_match_record(this, i), 79)).collect();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || clear_invalid_watched_fixtures(this));
-    PLACAR.record(igual && r == n, || format!("clear_invalid_watched_fixtures {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("clear_invalid_watched_fixtures {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this: usize, clu
         igual &= itens.len() == alvos.len()
             && itens.iter().zip(&alvos).all(|(&i, &p)| core::slice::from_raw_parts(i as *const u8, 0x6e) == core::slice::from_raw_parts(p as *const u8, 0x6e));
     }
-    PLACAR.record(igual, || format!("collect_club_scout_targets original={} alvos {}", r, alvos.len()));
+    SCOREBOARD.record(igual, || format!("collect_club_scout_targets original={} alvos {}", r, alvos.len()));
     r
 }
 
@@ -109,6 +109,6 @@ unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this: usize, clu
 unsafe extern "thiscall" fn comparar_set_scout(this: usize, olheiro: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x174, 0x25)], || o(this, olheiro), || set_scout(this, olheiro));
-    PLACAR.record(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", olheiro, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", olheiro, mo, mr));
     r
 }

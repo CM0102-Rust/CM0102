@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn comparar_get_free_staff_contract_space(this: usize, 
         return r; // sem memória: a caixa já saiu
     }
     let (er, en, ecap) = if livre >= 0 { (livre, n, cap) } else { (n as i32, n.wrapping_add(1), if n == cap { cap.wrapping_add(200) } else { cap }) };
-    PLACAR.record(r == er && cpl4_d(this + 8) == en && cpl4_d(this + 4) == ecap, || {
+    SCOREBOARD.record(r == er && cpl4_d(this + 8) == en && cpl4_d(this + 4) == ecap, || {
         format!("get_free_staff_contract_space({}) devolveu {} (esperava {}), conta {} -> {} (esperava {}), capacidade {} -> {} (esperava {})",
             so_no_fim, r, er, n, cpl4_d(this + 8), en, cap, cpl4_d(this + 4), ecap)
     });
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn comparar_add_staff_contract(this: usize, pessoa: usi
     let id = cpl4_d(pessoa);
     let ligada = cpl4_d(cpl4_d(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f)));
     let no_contrato = cpl4_d(cpl4_d(this).wrapping_add(n.wrapping_mul(0x50)));
-    PLACAR.record(ligada == n && no_contrato == id && cpl4_d(this + 8) == n.wrapping_add(1), || {
+    SCOREBOARD.record(ligada == n && no_contrato == id && cpl4_d(this + 8) == n.wrapping_add(1), || {
         format!("add_staff_contract(pessoa {}, valor {}) vaga {} (esperava {}), id no contrato {}, conta {} -> {}",
             id, valor, ligada, n, no_contrato, n, cpl4_d(this + 8))
     });
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn comparar_add_decision_date(this: usize, pessoa: usiz
         certo &= cpl4_d(e(j)) == id && data_de(j) == *l && *((e(j) + 0xd) as *const u8) == 2;
     }
     certo &= cpl4_d(e(k)) == id && data_de(k) == d && *((e(k) + 0xc) as *const u8) == fatia as u8 && *((e(k) + 0xd) as *const u8) == tipo as u8;
-    PLACAR.record(certo, || {
+    SCOREBOARD.record(certo, || {
         format!("add_decision_date(pessoa {}, fatia {}, tipo {}) conta {} -> {} (esperava {}), lembretes {:?}, entradas {:?}",
             id, fatia as u8, tipo as u8, n, cpl4_d(this + 0x14), n + k + 1, &lembretes[..k],
             (0..=k).map(|j| core::ptr::read_unaligned(e(j) as *const [u8; 14])).collect::<Vec<_>>())

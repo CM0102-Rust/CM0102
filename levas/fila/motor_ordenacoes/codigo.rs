@@ -89,14 +89,14 @@ unsafe extern "system" fn event_variant(e: *const i16, lados: u32, tipo: u8) -> 
 unsafe extern "C" fn comparar_day_match_order(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = day_match_order(a, b);
-    PLACAR.record(r == n, || format!("day_match_order({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("day_match_order({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }
 
 unsafe extern "C" fn comparar_action_order(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = action_order(a, b);
-    PLACAR.record(r == n, || format!("action_order({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    SCOREBOARD.record(r == n, || format!("action_order({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r
 }
 
@@ -107,6 +107,6 @@ unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, tipo
     }
     let reg = crate::rng::STATE_REGIONS.to_vec();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(e, lados, tipo), || crate::rng::without_counting(|| event_variant(e, lados, tipo)));
-    PLACAR.record(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, tipo, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, tipo, r, n, mo, mr));
     r
 }

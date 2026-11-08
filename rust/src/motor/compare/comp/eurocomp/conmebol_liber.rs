@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_update_for_date(t
             && stages != 0
             && (0..7).all(|g| read_u32_as_usize(stages + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 6;
-        PLACAR.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        SCOREBOARD.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_first_group_table(this: us
         }
     }
     let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    PLACAR.record(same, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    SCOREBOARD.record(same, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_create_group_stag
         a.sort_unstable();
         plan.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
-        PLACAR.record(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
     }
     r
 }
@@ -102,24 +102,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_select_qualified_
     core::ptr::write_unaligned((this + 0xee) as *mut u32, la as u32);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
     depois.write_back();
-    PLACAR.record(r == rr && a == b && same_state, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, same_state, a, b));
+    SCOREBOARD.record(r == rr && a == b && same_state, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, same_state, a, b));
     r
 }
 
 /// Comparer for `conmebol_liber_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CONMEBOL_LIBER_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let title = stage as u8 == 7 && outcome as u8 == 1;
     let mut slot = 0usize;
     if title {
         let mundial = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
         let t = read_u32_as_usize(mundial + 0xa7);
-        let nacao = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
-        slot = if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };
+        let nation = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
+        slot = if nation != 0 && read_u32_as_usize(read_u32_as_usize(nation + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };
     }
-    let r = o(this, clube, outcome, stage, a4, jogo, a6);
-    let same = r == 0 && (!title || read_u32_as_usize(slot) == clube);
-    PLACAR.record(same, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, outcome as u8, stage as u8, r, title, slot));
+    let r = o(this, club, outcome, stage, a4, game, a6);
+    let same = r == 0 && (!title || read_u32_as_usize(slot) == club);
+    SCOREBOARD.record(same, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", club, outcome as u8, stage as u8, r, title, slot));
     r
 }
 
@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_advance_stage(thi
     }
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.record(after == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    SCOREBOARD.record(after == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `conmebol_liber_create_schedule` (comparison mode: see the header of motor.rs).

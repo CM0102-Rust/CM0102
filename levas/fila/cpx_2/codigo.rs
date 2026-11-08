@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn comparar_unsettle_player_after_bid(this: usize, o: u
         return;
     }
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(mo == mr, || format!("unsettle_player_after_bid(oferta {:#x}) original={:x?} rust={:x?}", o, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("unsettle_player_after_bid(oferta {:#x}) original={:x?} rust={:x?}", o, mo, mr));
 }
 
 /// { 0x8de790 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::

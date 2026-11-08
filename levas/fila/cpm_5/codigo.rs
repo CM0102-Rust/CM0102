@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, registro
         }
         RecurringInjuryOutcome::Tratar(_) => true, // a 0x62d250 sorteia e grava o resto
     };
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         format!("roll_recurring_injury(tipo {}) plano {:x?}, marcas {:?} -> {:?}, mesmo sorteio={}", tipo, plano, marcas, agora, mesmo_sorteio)
     });
 }
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn comparar_reset_player_history(this: usize, pessoa: u
     }
     let r = injury_history_record(this, cpm5_d(pessoa));
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + 0x14, 8)], || o(this, pessoa), || reset_player_history(this, pessoa));
-    PLACAR.record(igual && a == b, || format!("reset_player_history({}) {:x?} x {:x?}", cpm5_d(pessoa), mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("reset_player_history({}) {:x?} x {:x?}", cpm5_d(pessoa), mo, mr));
     a
 }
 
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize, id: u32) -
         && cpm5_d(r) == cpm5_d(0xae2c90) && cpm5_d(r + 4) == cpm5_d(0xae2c94)
         && w(8) == 10000 && w(0xa) == 10000 && w(0xc) == 0 && dd(0xe) == -1 && cpm5_b(r + 0x12) == 0xff
         && cpm5_b(r + 0x13) == nivel && dd(0x14) == -1 && dd(0x18) == -1 && cpm5_b(r + 0x1c) == b1c && cpm5_b(r + 0x1d) == 0xff;
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         let v: Vec<u8> = (0..31).map(|o| cpm5_b(r + o)).collect();
         format!("injury_reset_player({}) itens {} (esperava {}), byte {:#x} (esperava {:#x}), registro {:02x?}", id, itens.len(), esperado.len(), cpm5_b(g), byte, v)
     });

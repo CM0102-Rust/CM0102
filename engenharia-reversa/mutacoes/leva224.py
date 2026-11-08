@@ -5,7 +5,7 @@ MUTACOES = [
     ('dq7_copia', '        *((target + i) as *mut u8) = b;', '        *((target + i) as *mut u8) = b ^ 0x20;'),
     ('dq8_casa', '1 => (r(0x83), r(0x87)), // casa', '1 => (r(0x87), r(0x83)), // casa'),
     ('dq8_tecnico', '            return t; // the club’s manager', '            return 0; // the club’s manager'),
-    ('dq8_ingles', 'clube.wrapping_add(4); // language 0 or 1', 'clube.wrapping_add(5); // language 0 or 1'),
+    ('dq8_ingles', 'club.wrapping_add(4); // language 0 or 1', 'club.wrapping_add(5); // language 0 or 1'),
     ('dq9_moral', '    let simples = morale.wrapping_add(d);', '    let simples = morale.wrapping_add(d).wrapping_add(1);'),
     ('dq9_vetor', '0x22, 0x11, 0x10, 0x17', '0x22, 0x10, 0x11, 0x17'),
     ('dq9_elenco', '    *p = mantem | e;', '    *p = mantem | e | 0x10;'),

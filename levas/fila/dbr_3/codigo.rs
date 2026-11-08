@@ -21,7 +21,7 @@ unsafe extern "C" fn database_compare_clubs_by_short_name(a: usize, b: usize) ->
 unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = database_compare_clubs_by_short_name(a, b);
-    PLACAR.record(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -45,7 +45,7 @@ unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b: usize) -> 
 unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = database_compare_staff_by_full_name(a, b);
-    PLACAR.record(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -83,6 +83,6 @@ unsafe extern "C" fn comparar_database_staff_matches_names(pessoa: usize, nome: 
     }
     let r = o(pessoa, nome, sobrenome, comum, data);
     let n = database_staff_matches_names(pessoa, nome, sobrenome, comum, data);
-    PLACAR.record(r == n, || format!("database_staff_matches_names({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", pessoa, nome, sobrenome, comum, data, r, n));
+    SCOREBOARD.record(r == n, || format!("database_staff_matches_names({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", pessoa, nome, sobrenome, comum, data, r, n));
     r
 }

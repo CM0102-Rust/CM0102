@@ -57,7 +57,7 @@ unsafe extern "C" fn comparar_db_files_read_comps_v1(stream: usize, use_zip: i32
             fim_r = ftell(stream);
             r
         });
-    PLACAR.record(igual && r == x && fim_o == fim_r, || {
+    SCOREBOARD.record(igual && r == x && fim_o == fim_r, || {
         let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
         format!("db_files_read_comps_v1(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", n, r, x, fim_o, fim_r, pos, dif)
     });
@@ -89,7 +89,7 @@ unsafe extern "C" fn comparar_nation_get_english_name(nacao: usize) -> usize {
     }
     let r = o(nacao);
     let n = nation_get_english_name(nacao);
-    PLACAR.record(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
+    SCOREBOARD.record(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
     r
 }
 
@@ -128,7 +128,7 @@ unsafe extern "C" fn comparar_club_get_english_short_name(clube: usize) -> usize
     }
     let r = o(clube);
     let n = club_get_english_short_name(clube);
-    PLACAR.record(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
+    SCOREBOARD.record(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
     r
 }
 
@@ -143,7 +143,7 @@ pub unsafe fn autoteste_dbj_2() {
     const ARQ: &str = "autoteste_banco_v1c.tmp";
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
-    let (t0, d0) = PLACAR.counts();
+    let (t0, d0) = SCOREBOARD.counts();
     let mut s = TestRng(0x5631_4442_4a32);
     let v1: usize = COMPETITION_V1_LAYOUT.iter().map(|&(_, t, q)| t.max(1) as usize * q).sum();
     for caso in 0..64u64 {
@@ -188,6 +188,6 @@ pub unsafe fn autoteste_dbj_2() {
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
     }
-    let (t1, d1) = PLACAR.counts();
+    let (t1, d1) = SCOREBOARD.counts();
     linha(&format!("banco v1 e nomes em inglês: AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
 }

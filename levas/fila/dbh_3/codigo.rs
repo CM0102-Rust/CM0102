@@ -35,7 +35,7 @@ unsafe fn check_database_path(rotina: &str, pasta: usize, nome: usize) {
     let o = core::slice::from_raw_parts(0xde1f64 as *const u8, 0x400);
     let fim = |s: &[u8]| s.iter().position(|&b| b == 0).unwrap_or(s.len());
     let (a, b) = (&o[..fim(o)], &c[..fim(&c)]);
-    PLACAR.record(a == b, || format!("{} caminho {:?} x {:?}", rotina, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
+    SCOREBOARD.record(a == b, || format!("{} caminho {:?} x {:?}", rotina, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
 }
 
 /// { 0x54d580 } (cdecl, Db_files.cpp): `db_files_open_for_read(pasta, nome)`: monta o caminho em 0xde1f64

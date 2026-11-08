@@ -52,6 +52,6 @@ unsafe extern "stdcall" fn get_fixture_list_for_date(data: usize, fatia: u32, gr
 unsafe extern "stdcall" fn comparar_get_fixture_list_for_date(data: usize, fatia: u32, grupo: u32) -> usize {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> usize>(%%I1%%)(data, fatia, grupo);
     let n = get_fixture_list_for_date(data, fatia, grupo);
-    PLACAR.record(r == n, || format!("get_fixture_list_for_date({:x}, fatia {}, grupo {}) original={:x} rust={:x}", data, fatia, grupo, r, n));
+    SCOREBOARD.record(r == n, || format!("get_fixture_list_for_date({:x}, fatia {}, grupo {}) original={:x} rust={:x}", data, fatia, grupo, r, n));
     r
 }

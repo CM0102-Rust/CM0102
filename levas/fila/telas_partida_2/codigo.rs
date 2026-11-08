@@ -131,7 +131,7 @@ unsafe extern "C" fn comparar_build_latest_scores() {
     // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
     reg.extend_from_slice(&crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || crate::rng::without_counting(|| build_latest_scores()));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         // so as diferencas (a lista e grande): onde comecam e quantos bytes
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;

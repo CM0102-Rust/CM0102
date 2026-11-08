@@ -21,7 +21,7 @@ pub(crate) unsafe extern "C" fn comparar_cqt4_atualizar_media_de_publico(league:
     let mut regions = vec![(read_usize(G_CLUB_TABLE), read_usize(G_CLUB_COUNT) * club::SIZE)];
     regions.extend_from_slice(&crate::rng::STATE_REGIONS);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&regions, || o(league), || crate::rng::without_counting(|| cqt4_atualizar_media_de_publico(league)));
-    PLACAR.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", league));
+    SCOREBOARD.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", league));
 }
 
 /// Comparer for `bra_reg_rio_create_half_season_stage` (comparison mode: see the header of motor.rs).
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_advance_stage(this: 
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_RIO_ADVANCE_STAGE)(this);
     let after = read_usize(this + 0x30) as i32;
     let same = if last { after == before } else if before + 1 == 2 { after == 2 || after == 1 } else { after == before + 1 };
-    PLACAR.record(same, || format!("bra_reg_rio_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    SCOREBOARD.record(same, || format!("bra_reg_rio_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `bra_reg_rio_create_final_stage` (comparison mode: see the header of motor.rs).
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_final_stage(t
             read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
         }
     };
-    PLACAR.record(same, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
+    SCOREBOARD.record(same, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
 /// Comparer for `bra_reg_rio_record_season_honours` (comparison mode: see the header of motor.rs).
@@ -103,6 +103,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_set_up_rules(this: u
         carioca_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("bra_reg_rio_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("bra_reg_rio_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

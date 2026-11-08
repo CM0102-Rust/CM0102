@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn comparar_national_teams_daily_update(this: usize, ho
     let antes = count_items_on_day(this, dia);
     o(this, hoje);
     let sobra = count_items_on_day(this, dia);
-    PLACAR.record(sobra == 0, || format!("national_teams_daily_update(dia {}) itens do dia antes {} depois {}", dia, antes, sobra));
+    SCOREBOARD.record(sobra == 0, || format!("national_teams_daily_update(dia {}) itens do dia antes {} depois {}", dia, antes, sobra));
 }
 
 /// O índice (0..15) do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]]) pela conta de um byte da original
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn comparar_current_search_has_no_club(this: usize) -> 
     }
     let r = o(this);
     let n = current_search_has_no_club(this);
-    PLACAR.record(r == n, || format!("current_search_has_no_club() original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("current_search_has_no_club() original={} rust={}", r, n));
     r
 }
 
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn comparar_is_club_in_session_searches(this: usize, cl
     }
     let r = o(this, clube);
     let n = is_club_in_session_searches(this, clube);
-    PLACAR.record(r == n, || format!("is_club_in_session_searches(clube {:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("is_club_in_session_searches(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -856,7 +856,7 @@ unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao: usize, tip
     let lim = if corrigido { 22.min(cod_o.len()) } else { cod_o.len() };
     let igual = a[1] as u8 == n && a[2] == modo && a[3] as usize == elenco && cod_o.len() == tam as usize
         && lista_o[..] == cand[..n1.min(200)] && cod_o[..lim] == codigos[..lim];
-    PLACAR.record(igual, || format!(
+    SCOREBOARD.record(igual, || format!(
         "select_squad(nação {:x}, tipo {}, tam {}) original: n {} modo {:#x} time {:x} lista {:x?} códigos {:x?}; rust: n {} modo {:#x} time {:x} lista {:x?} códigos {:x?}",
         nacao, t, tam, a[1] as u8, a[2], a[3], lista_o, cod_o, n, modo, elenco, &cand[..(n as i8).max(0) as usize], &codigos[..tam as usize]));
 }

@@ -205,7 +205,7 @@ unsafe fn compare_rare_finance_event(nome: &str, fin: usize, extras: &[(usize, u
         let campos = r == n && a[..8] == b[..8] && a[0xb4..0xb8] == b[0xb4..0xb8] && a[0x154..0x158] == b[0x154..0x158] && a[0x165] == b[0x165];
         campos && conferir.iter().all(|&k| mo.0[3 + k].1 == mr.0[3 + k].1)
     };
-    PLACAR.record(igual, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", nome, fin, r, mo, n, mr));
+    SCOREBOARD.record(igual, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", nome, fin, r, mo, n, mr));
     r
 }
 
@@ -329,5 +329,5 @@ unsafe extern "thiscall" fn pay_other_costs(this: usize, valor: i32) {
 unsafe extern "thiscall" fn comparar_pay_other_costs(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_other_costs(this, valor));
-    PLACAR.record(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }

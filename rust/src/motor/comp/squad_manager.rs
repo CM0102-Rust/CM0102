@@ -45,7 +45,7 @@ pub(crate) unsafe fn for_each_comp_club(comp: usize, etapa: u32, mut cada: impl 
 /// [0xdd7ef0]).
 pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, etapa: u32) {
     let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    let noticia: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_SQUAD_MANAGER_SEND_EURO_REGISTRATION_NEWS);
+    let news: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_SQUAD_MANAGER_SEND_EURO_REGISTRATION_NEWS);
     let inscrever: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8 = core::mem::transmute(FN_SQUAD_MANAGER_SELECT_EURO_REGISTERED_PLAYERS);
     if etapa as u8 == 1 {
         *(this as *mut u16) = *(G_CURRENT_DATE_YEAR as *const u16);
@@ -65,11 +65,11 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, et
             continue;
         }
         for_each_comp_club(comp, etapa, |c| {
-            if c == 0 || read_u32(c + club::EURO_FLAG) != id {
+            if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != id {
                 return;
             }
             if human(read_u32(G_NEWS) as usize, c) != 0 {
-                noticia(this, c, id, etapa);
+                news(this, c, id, etapa);
             } else {
                 crate::comparison::branch("cqn_3 inscreve o clube");
                 inscrever(read_u32(G_SQUAD_MANAGER) as usize, c, etapa, 0); // cqn3: inscreve o clube
@@ -117,7 +117,7 @@ pub(crate) unsafe fn contract_valid_for_club(k: usize, c: usize) -> bool {
 /// contrato vale no clube: o +0x3a do contrato; senão o contrato de empréstimo (0x4cf6d0, thiscall em [0xae1050], push
 /// pessoa), se vale no clube: o +0x3a dele; senão 0.
 pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -> i8 {
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let player: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
     if p == 0 || c == 0 {
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
     if read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
         return *((read_u32(p + staff::PLAYER) as usize + 4) as *const i8);
     }
-    let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
+    let k = contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && player(*((p + staff::JOB_FOR_CLUB) as *const i8)) != 0 && contract_valid_for_club(k, c) {
         crate::comparison::branch("cql_1 numero do contrato");
         return *((k + 0x3a) as *const i8); // cql1: o número do contrato
@@ -189,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: 
 /// número `n` (char de −50 a 50; fora disso a caixa da linha 0x332) no +0x3a do contrato da pessoa `p` (0x4cf5a0) se ele
 /// vale no clube `c`, senão no do contrato de empréstimo (0x4cf6d0) se ele vale no clube. Sem pessoa ou sem clube, nada.
 pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, c: usize, n: u32) {
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     if p == 0 || c == 0 {
         return;
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, 
         show_error_at(0xa82b88, 0x332);
         return;
     }
-    let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
+    let k = contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
         crate::comparison::branch("cql_1 grava no contrato");
         *((k + 0x3a) as *mut i8) = n; // cql1: grava no contrato
@@ -342,14 +342,14 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
 ///
 /// [pt] O +0x3a dos contratos (o do clube e o de empréstimo) das pessoas `ps` e a marca da caixa [0xb67a34].
 pub(crate) unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut reg = vec![(0xb67a34usize, 4usize)];
     for &p in ps {
         if p == 0 {
             continue;
         }
-        for k in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
+        for k in [contract(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
             if k != 0 && !reg.contains(&(k + 0x3a, 1)) {
                 reg.push((k + 0x3a, 1));
             }
@@ -538,7 +538,7 @@ pub(crate) unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
     let mut i = 0i32;
     while i < read_u32(G_COMP_OBJECT_COUNT) as i32 {
         let c = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * i as usize) as usize;
-        if c != 0 && division(read_u32(read_u32(c + 4) as usize) as i32) != 0 && *((c + 0x52) as *const u8) & 2 != 0 {
+        if c != 0 && division(read_u32(read_u32(c + 4) as usize) as i32) != 0 && *((c + league::SQUAD_FLAGS) as *const u8) & 2 != 0 {
             crate::comparison::branch("cql_3 numera a liga");
             cada(c); // cql3: numera a liga
         }
@@ -595,8 +595,8 @@ pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, 
     let n = clubs(league, &mut list, 0) as i16 as i32;
     for i in 0..n.max(0) as usize {
         let c = read_u32(list + 4 * i) as usize;
-        let mut principal = 0u32;
-        if partner(c, &mut principal, 1) != 0 && principal == 0 {
+        let mut main = 0u32;
+        if partner(c, &mut main, 1) != 0 && main == 0 {
             continue;
         }
         let mut sq = [0usize; 50];
@@ -668,7 +668,7 @@ pub(crate) const EURO_REFERENCE_LINEUP_SLOTS: [u16; 25] = [
 /// conta dos inscritos (char).
 pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usize, etapa: u32, mark: u32) -> u8 {
     let squad: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let etapa = etapa as u8;
@@ -684,7 +684,7 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
         if p == 0 || read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
             continue;
         }
-        let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
+        let k = contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
         *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = k as u32;
         if k != 0 && *((k + contract::CONTRACT_TYPE) as *const u8) & 0x3f == 5 {
             continue;

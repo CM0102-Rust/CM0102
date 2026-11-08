@@ -16,6 +16,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_ireland_rules(this: us
 }
 
 /// Comparer for `ireland_rules_can_loan_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ireland_rules_can_loan_player(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
-    england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_IRELAND_RULES_CAN_LOAN_PLAYER), ireland_rules_can_loan_player, "ireland_rules_can_loan_player", this, clube, player, msg, reason)
+pub(crate) unsafe extern "thiscall" fn comparar_ireland_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+    england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_IRELAND_RULES_CAN_LOAN_PLAYER), ireland_rules_can_loan_player, "ireland_rules_can_loan_player", this, club, player, msg, reason)
 }

@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn comparar_assign_libertadores_places(this: usize, clu
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let reg = [(cqj1_d(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (cqj1_d(0xae23d4) as usize, (cqj1_d(0xae237c) as i32).max(0) as usize * 0x1a)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, conta), || assign_libertadores_places(this, clubes, conta));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let base = cqj1_d(0xae23b4) as usize;
         let l: Vec<String> = cqj1_dif(&mo, &mr).iter().map(|&a| {
             if a < base || a - base >= mo.0[0].1.len() {
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_find_nth_unqualified_club_of_nation(this: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = find_nth_unqualified_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
-    PLACAR.record(r == c, || format!("find_nth_unqualified_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
+    SCOREBOARD.record(r == c, || format!("find_nth_unqualified_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
     r
 }
 
@@ -198,6 +198,6 @@ unsafe extern "thiscall" fn comparar_is_mercosur_invited_club(this: usize, clube
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let r = o(this, clube);
     let c = is_mercosur_invited_club(this, clube);
-    PLACAR.record(r == c, || format!("is_mercosur_invited_club({:x}): original {} rust {}", clube, r, c));
+    SCOREBOARD.record(r == c, || format!("is_mercosur_invited_club({:x}): original {} rust {}", clube, r, c));
     r
 }

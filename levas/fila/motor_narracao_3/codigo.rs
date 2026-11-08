@@ -181,7 +181,7 @@ unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, tipo: i8, r
 unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(%%I2%%)(o, p, c, tipo, rep);
     let n = perceived_ability(o, p, c, tipo, rep);
-    PLACAR.record(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
+    SCOREBOARD.record(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
     r
 }
 
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> 
         reg.push((saida as usize, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, saida), || next_event(t, saida));
-    PLACAR.record(igual && r == n, || format!("next_event({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("next_event({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
     r
 }
 
@@ -203,5 +203,5 @@ unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogador: i8, lad
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((buf as usize, tam as usize));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::rng::without_counting(|| commentary_player_name(pt, jogador, lado, buf, tam, curto, x, longa)));
-    PLACAR.record(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
+    SCOREBOARD.record(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
 }

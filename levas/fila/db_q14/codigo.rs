@@ -94,7 +94,7 @@ unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nacao: usize) -
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
         || crate::rng::without_counting(|| database_pick_first_name_by_weight(nacao)));
-    PLACAR.record(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -106,7 +106,7 @@ unsafe extern "C" fn comparar_database_get_comp_colours(competicao: usize, frent
     let regioes = [(frente as usize, 2), (fundo as usize, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(competicao, frente, fundo),
         || database_get_comp_colours(competicao, frente, fundo));
-    PLACAR.record(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
     r
 }
 
@@ -118,6 +118,6 @@ unsafe extern "C" fn comparar_database_club_has_room_for_job(clube: usize, cargo
         return r; // caixa: só a original
     }
     let n = database_club_has_room_for_job(clube, cargo, pessoa);
-    PLACAR.record(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
     r
 }

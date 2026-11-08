@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpu1_nacao_linha_seguinte', 'return k as u8; // cpu1: a linha da nacao dada', 'return (k + 1) as u8; // mutacao: a linha seguinte'),
     ('cpu1_clube_linha_seguinte', 'return k as u8; // cpu1: a linha da nacao escolhida', 'return (k + 1) as u8; // mutacao: a linha seguinte'),
-    ('cpu1_sem_conferir_a_escolha', 'let nacao = read_usize(clube + club::NATION); // cpu1: a nacao do continente', 'let nacao = read_usize(clube + 0x53); if let Some(k) = (0..0x23usize).find(|&k| nacao != 0 && read_usize(0xb63d60 + 72 * k) == nacao) { return k as u8; } // mutacao: sem conferir a escolha'),
+    ('cpu1_sem_conferir_a_escolha', 'let nation = read_usize(club + club::NATION); // cpu1: a nacao do continente', 'let nation = read_usize(club + 0x53); if let Some(k) = (0..0x23usize).find(|&k| nation != 0 && read_usize(0xb63d60 + 72 * k) == nation) { return k as u8; } // mutacao: sem conferir a escolha'),
     ('cpu2_fim_no_mesmo_ano', 'write_date(end, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte', 'write_date(end, c, y); // mutacao: o fim no mesmo ano'),
     ('cpu2_primavera_fora', 'return 1; // cpu2: antes do fim, na temporada', 'return 0; // mutacao: antes do fim, fora'),
     ('cpu2_janela_na_temporada', 'return 0; // cpu2: entre o fim e o inicio, fora', 'return 1; // mutacao: entre o fim e o inicio, na temporada'),
@@ -13,7 +13,7 @@ MUTACOES = [
     ('cpu4_sem_regras_livre', 'return 1; // cpu4: sem as regras novas', 'return 0; // mutacao: sem as regras novas, livre'),
     ('cpu4_periodo_de_dois_anos', 'let limit: u8 = if (age(person, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade', 'let limite: u8 = { age(person, d); 2 }; // mutacao: sempre 2 anos'),
     ('cpu5_sem_rolagem_das_financas', '            if friendly_random(n) == 0 { // cpu5: a rolagem das finanças', '            if n < 0 { // mutacao: sem o sorteio', 'cpu_5 rolagem das financas'),
-    ('cpu5_fatia_errada', '    if read_u8(jogo + 0x3f) == 2 { // cpu5: a fatia da noite', '    if read_u8(jogo + 0x3f) != 2 { // mutacao: a fatia errada', 'cpu_5 rolagem das financas'),
+    ('cpu5_fatia_errada', '    if read_u8(game + 0x3f) == 2 { // cpu5: a fatia da noite', '    if read_u8(game + 0x3f) != 2 { // mutacao: a fatia errada', 'cpu_5 rolagem das financas'),
     ('cpu5_chuva_sem_sorteio', '            if friendly_random(n) != 0 { // cpu5: o sorteio da chuva forte', '            if n != 0 { // mutacao: sem o sorteio', 'cpu_5 chuva forte'),
     ('cpu6_vento_fraco_moderado', '            1 // cpu6: o vento fraco', '            2 // mutacao: moderado', 'cpu_6 vento fraco'),
     ('cpu6_vento_moderado_forte', '            2 // cpu6: o vento moderado', '            3 // mutacao: forte', 'cpu_6 vento moderado'),

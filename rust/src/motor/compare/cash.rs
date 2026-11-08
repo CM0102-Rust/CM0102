@@ -12,7 +12,7 @@ pub(crate) unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, count: u3
         return o(p, count);
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(p, 2 * count as usize)], || o(p, count), || swap_bytes_16_array(p, count));
-    PLACAR.record(igual, || format!("swap_bytes_16_array({:x}, {})", p, count));
+    SCOREBOARD.record(igual, || format!("swap_bytes_16_array({:x}, {})", p, count));
 }
 
 /// Comparador: lado a lado no vetor.
@@ -22,5 +22,5 @@ pub(crate) unsafe extern "C" fn comparar_swap_bytes_32_array(p: usize, count: u3
         return o(p, count);
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(p, 4 * count as usize)], || o(p, count), || swap_bytes_32_array(p, count));
-    PLACAR.record(igual, || format!("swap_bytes_32_array({:x}, {})", p, count));
+    SCOREBOARD.record(igual, || format!("swap_bytes_32_array({:x}, {})", p, count));
 }

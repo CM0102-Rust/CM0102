@@ -9,5 +9,5 @@ MUTACOES = [
     ('r_marca', '    for o in [0, 4, 8] {\n        *((last + o) as *mut i32) = -1;', '    for o in [0, 4] {\n        *((last + o) as *mut i32) = -1;'),
     ('c_empate', '        add(0xc, *((league + league::DRAW_POINTS) as *const i8) as i16);', '        add(0xc, *((league + league::DRAW_POINTS) as *const i8) as i16 + 1);'),
     ('e_data', '    (clubs && w(8) == data_a && w(0xa) == data_b) as i32', '    (clubs && w(8) == data_a) as i32'),
-    ('b_tipo', '        return (*((jogo + 0x3a) as *const u8) == 1) as u8 + 2;', '        return (*((jogo + 0x3a) as *const u8) == 1) as u8 + 1;'),
+    ('b_tipo', '        return (*((game + 0x3a) as *const u8) == 1) as u8 + 2;', '        return (*((game + 0x3a) as *const u8) == 1) as u8 + 1;'),
 ]

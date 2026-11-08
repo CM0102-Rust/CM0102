@@ -80,7 +80,7 @@ pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, stage: u32, roun
         return 0;
     }
     crate::comparison::branch(name);
-    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         jap_j_cup_write_cup_round(t, i as u32, r, year);
     }
@@ -98,7 +98,7 @@ pub(crate) unsafe fn compare_cup_round_table(name: &str, stage: u32, rounds: *mu
     if stage as u8 != 0xff {
         // simplification: outside stage −1 neither of the two writes anything; the outputs may not even exist
         let a = o();
-        PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+        SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
@@ -111,7 +111,7 @@ pub(crate) unsafe fn compare_cup_round_table(name: &str, stage: u32, rounds: *mu
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -209,10 +209,10 @@ pub(crate) unsafe fn sort_entrants(base: usize, n: u32) {
 /// ([0x9cf65c]) enquanto cabem, cada um com a classe sorteada de 0 a 19 (0x90cfc0(20), depois de gravar o clube); o
 /// qsort (0x522190) das 16 inscrições a partir da 11ª (+0x42). Devolve 1 com a lista cheia, senão 0.
 pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x1c);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x1c);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0xa8);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9eaf14, 0x11a);
         return (-1, 0);
@@ -221,10 +221,10 @@ pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + 0x3e) as i32 {
+        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
             eng_cc_cup_write_entrant(this, n, c, 0);
             n += 1;
-            if n == read_i16(this + 0x3e) as i32 {
+            if n == read_i16(this + cup::TEAM_COUNT) as i32 {
                 break;
             }
         }
@@ -233,22 +233,22 @@ pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + 0x3e) as i32 {
-            let e = read_u32_as_usize(this + 0xa7) + n as usize * 6;
+        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
+            let e = read_u32_as_usize(this + cup::TEAM_TABLE) + n as usize * 6;
             core::ptr::write_unaligned(e as *mut u32, c as u32);
             crate::comparison::branch("cqn_12 semente da j1");
             let s = jap_j_cup_random(0x14); // cqn12: a classe sorteada dos clubes da J1
             *((e + 4) as *mut u8) = s as u8;
             *((e + 5) as *mut u8) = 0;
             n += 1;
-            if n == read_i16(this + 0x3e) as i32 {
+            if n == read_i16(this + cup::TEAM_COUNT) as i32 {
                 break;
             }
         }
         i = i.wrapping_add(1);
     }
-    sort_entrants(read_u32_as_usize(this + 0xa7) + 0x42, 0x10);
-    ((n == read_i16(this + 0x3e) as i32) as i32, n)
+    sort_entrants(read_u32_as_usize(this + cup::TEAM_TABLE) + 0x42, 0x10);
+    ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
 
 /// rule: the J League Cup takes 28 clubs: the J2 ones, class 0, and the J1 ones, each with a class drawn from 0 to 19
@@ -274,16 +274,16 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: 
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
     let a_ = crate::rng::STATE_REGIONS;
-    let reg = [(this + 0x3e, 2usize), (0xb67a34, 4), a_[0], a_[1]];
+    let reg = [(this + cup::TEAM_COUNT, 2usize), (0xb67a34, 4), a_[0], a_[1]];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
-        lo.set(read_u32_as_usize(this + 0xa7));
+        lo.set(read_u32_as_usize(this + cup::TEAM_TABLE));
         r
     }, || {
         let (r, n) = crate::rng::without_counting(c);
-        lr.set(read_u32_as_usize(this + 0xa7));
+        lr.set(read_u32_as_usize(this + cup::TEAM_TABLE));
         nr.set(n);
-        core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
+        core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -297,7 +297,7 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: 
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
     a
 }
 
@@ -311,7 +311,7 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: usize, o: 
 /// (0x945501, o calloc de +0x3e × 6, em +0xa7; sem memória, a caixa da linha 0x138 e −1) leva os 10 primeiros de cada
 /// vetor com a classe 2 e depois todos os clubes da MLS ([0x9cf590]) com a classe 1 (sem conferir o espaço). Devolve 1.
 pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x20);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x20);
     let comp = |id: usize| read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b));
     let (a, b) = (comp(KEY_CLUB_COMP_AMERICAN_A_LEAGUE), comp(KEY_CLUB_COMP_AMERICAN_USISL));
     // simplification: the original’s local vectors start with whatever was on the stack; with fewer than 10 clubs in one of the
@@ -338,8 +338,8 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     sort_and_shuffle_top_clubs(va.as_mut_ptr(), na as i32, 10);
     sort_and_shuffle_top_clubs(vb.as_mut_ptr(), nb as i32, 10);
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let l = calloc(read_i16(this + 0x3e) as i32 as u32, 6);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    let l = calloc(read_i16(this + cup::TEAM_COUNT) as i32 as u32, 6);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0xaa20e0, 0x138);
         return (-1, 0);
@@ -376,10 +376,10 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
 /// depois os da J2 enquanto cabem (classe 0) e os da J1 enquanto cabem, com a classe = a posição da temporada anterior
 /// (+0x5f), até encher; o qsort (0x522190) das 16 últimas inscrições. Devolve 1 com a lista cheia, senão 0.
 pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x50);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x50);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0x1e0);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9eab90, 0x147);
         return (-1, 0);
@@ -445,7 +445,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + 0x3e) as i32 {
+        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
             eng_cc_cup_write_entrant(this, n, c, 0);
             n += 1;
         }
@@ -454,18 +454,18 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     let mut i: i16 = 0;
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
-        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + 0x3e) as i32 {
+        if comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
             crate::comparison::branch("cqn_12 classe da j1 na copa do imperador");
             eng_cc_cup_write_entrant(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: a classe dos clubes da J1 na Copa do Imperador
             n += 1;
-            if n == read_i16(this + 0x3e) as i32 {
+            if n == read_i16(this + cup::TEAM_COUNT) as i32 {
                 break;
             }
         }
         i = i.wrapping_add(1);
     }
-    sort_entrants(read_u32_as_usize(this + 0xa7).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
-    ((n == read_i16(this + 0x3e) as i32) as i32, n)
+    sort_entrants(read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add(((n * 3 - 0x30) * 2) as isize as usize), 0x10);
+    ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
 }
 
 

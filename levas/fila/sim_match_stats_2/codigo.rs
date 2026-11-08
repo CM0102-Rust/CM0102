@@ -268,7 +268,7 @@ unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, r
     // o número da camisa dado pela original (0x85a470) fica fora das regiões: a cópia já o acha dado
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(reg, 0xd7a)], || o(estat, m, reg, sem_renda),
         || fill_match_record(estat, m, reg, sem_renda));
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         let difs: Vec<usize> = mo.0[0].1.iter().zip(mr.0[0].1.iter()).enumerate().filter(|(_, (a, b))| a != b).map(|(i, _)| i).take(16).collect();
         format!("fill_match_record(sem_renda={}) original={} rust={} bytes diferentes em {:x?}", sem_renda, r, n, difs)
     });
@@ -278,7 +278,7 @@ unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, r
 unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(%%I1%%)(a, b);
     let n = match_stats_compare_events(a, b);
-    PLACAR.record(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
+    SCOREBOARD.record(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
         core::slice::from_raw_parts(a, 4), core::slice::from_raw_parts(b, 4), r, n));
     r
 }
@@ -292,5 +292,5 @@ unsafe extern "thiscall" fn comparar_remove_language(estat: usize, ficha: usize,
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(estat + 0x44, 4), (tabela, contagem as usize * 6)],
         || o(estat, ficha, idioma), || remove_language(estat, ficha, idioma));
-    PLACAR.record(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
+    SCOREBOARD.record(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
 }

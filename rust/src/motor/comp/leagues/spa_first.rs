@@ -86,7 +86,7 @@ pub(crate) unsafe fn compare_league_round_table(name: &str, stage: u32, rounds: 
     if b != 0 {
         soltar(b);
     }
-    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -320,8 +320,8 @@ pub(crate) unsafe fn spa_first_apply_league_rules(this: usize, escritas: &[(usiz
     }
     if !SPA_FIRST_RULES_DRY_RUN {
         let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
-        let t = rounds(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
-        core::ptr::write_unaligned((this + 0xba) as *mut usize, t);
+        let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
+        core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, t);
     }
     1
 }
@@ -368,8 +368,8 @@ pub(crate) unsafe fn segunda_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = spanish_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqk4: a Segunda joga 2 turnos
     v.extend_from_slice(&[(0xc8, 1, 3), (0xbe, 1, 3), (0xbf, 1, 0), (0xc1, 1, 4), (0x1c, 4, read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) as u32)]);
-    let nacao = read_usize(read_usize(this + 4) + 0x5d);
-    let abaixo = if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) as u32 } else { 0xffff_ffff };
+    let nation = read_usize(read_usize(this + 4) + 0x5d);
+    let abaixo = if *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) as u32 } else { 0xffff_ffff };
     v.extend_from_slice(&[(0x20, 4, abaixo), (0x52, 1, 2)]);
     v
 }
@@ -390,7 +390,7 @@ pub(crate) unsafe fn lower_division_rules() -> Vec<(usize, u8, u32)> {
 /// grava as regras sem a virtual +0x3c; os campos da lista saem iguais aos da original (o +0xa9 da Primera, que a
 /// virtual reescreve, fica de fora), e a devolução 1; no fim fica a faixa da original.
 pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
-    let band = [(this + 0x1c, 0xd0)];
+    let band = [(this + league::UPPER_DIVISION_ID, 0xd0)];
     let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
     let mo = crate::comparison::MemorySnapshot::read(&band);
@@ -409,7 +409,7 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, esc
         }
     };
     let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    PLACAR.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
+    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
     r
 }
 
@@ -460,21 +460,21 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(G_CLUB_TABLE);
+    let mut club = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        let comp = read_usize(clube + club::DIVISION);
+        let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
             let row = k; // cqk5: a linha k recebe o k-ésimo clube da Primera
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
-            iniciar(this, row as u32, clube, 0, 0);
+            iniciar(this, row as u32, club, 0, 0);
             k = k.wrapping_add(1);
             if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
             }
         }
         i = i.wrapping_add(1);
-        clube = clube.wrapping_add(0x245);
+        club = club.wrapping_add(0x245);
     }
     if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
@@ -508,9 +508,9 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
 /// find_club_entry 0x4a4850: thiscall(+8, clube), ret 4) grava a posição atual (+0x73), a melhor possível (+0x74;
 /// 17 e 18 viram 16) e a pior (+0x75; 17 e 18 viram 19): a faixa de 17 a 18 da Primera não conta como faixa própria
 /// [inferência: as posições de 17 a 18 juntam-se à vizinha de cima na melhor e à de baixo na pior].
-pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
+pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
     let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    let e = find(read_usize(this + 8), clube);
+    let e = find(read_usize(this + 8), club);
     let m = match best as u8 {
         0x11 | 0x12 => 0x10,
         v => v,

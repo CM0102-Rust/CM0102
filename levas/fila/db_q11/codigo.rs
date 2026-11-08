@@ -141,7 +141,7 @@ unsafe extern "C" fn comparar_database_vector_to_non_player(nao_jogador: usize, 
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(nao_jogador + 0x0e, 21)],
         || o(nao_jogador, pessoa, vetor), || database_vector_to_non_player(nao_jogador, pessoa, vetor));
-    PLACAR.record(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
     r
 }
 
@@ -150,7 +150,7 @@ unsafe extern "C" fn comparar_database_vector_to_player(jogador: usize, pessoa: 
     // os deslocamentos de ATTRIBUTE_VECTOR_CELLS ficam em +0x0f..+0x44
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(jogador + 0x0f, 0x44 - 0x0f + 1), (pessoa + 0x58, 1)],
         || o(jogador, pessoa, vetor), || database_vector_to_player(jogador, pessoa, vetor));
-    PLACAR.record(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, r, n, mo, mr));
     r
 }
 
@@ -162,5 +162,5 @@ unsafe extern "C" fn comparar_staff_normalise_non_player_attributes(pessoa: usiz
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(nj + 0x0e, 21)], || o(pessoa),
         || staff_normalise_non_player_attributes(pessoa));
-    PLACAR.record(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }

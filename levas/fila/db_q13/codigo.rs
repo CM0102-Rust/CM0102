@@ -59,7 +59,7 @@ unsafe extern "C" fn comparar_get_adjective_form_index(indice: u32, idioma: u32)
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u8>(%%I0%%);
     let r = o(indice, idioma);
     let n = get_adjective_form_index(indice, idioma);
-    PLACAR.record(r == n, || format!("get_adjective_form_index({}, idioma {}) original={} rust={}", indice as u8 as i8, idioma, r, n));
+    SCOREBOARD.record(r == n, || format!("get_adjective_form_index({}, idioma {}) original={} rust={}", indice as u8 as i8, idioma, r, n));
     r
 }
 
@@ -71,7 +71,7 @@ unsafe extern "C" fn comparar_staff_get_non_player_attribute(pessoa: usize, atri
         return r; // caixa: só a original
     }
     let n = staff_get_non_player_attribute(pessoa, atributo);
-    PLACAR.record(r == n, || format!("staff_get_non_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_get_non_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
     r
 }
 
@@ -79,6 +79,6 @@ unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_ability(jogado
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%);
     let r = o(jogador, valor);
     let n = player_attribute_rating_with_scaled_ability(jogador, valor);
-    PLACAR.record(r == n, || format!("player_attribute_rating_with_scaled_ability({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("player_attribute_rating_with_scaled_ability({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
     r
 }

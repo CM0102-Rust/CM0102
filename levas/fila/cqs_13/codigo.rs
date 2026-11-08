@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn comparar_african_nations_update_for_date(this: usize
             && fases != 0
             && (0..3).all(|g| cqs13_d(fases + g * 4) != 0)
             && cqs13_d(this + 0x30) == 2;
-        PLACAR.record(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqs13_d(this + 0x45), cqs13_d(this + 0x30) as i32));
+        SCOREBOARD.record(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqs13_d(this + 0x45), cqs13_d(this + 0x30) as i32));
     }
     r
 }
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && lista, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    SCOREBOARD.record(igual && a == b && lista, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -304,7 +304,7 @@ unsafe extern "thiscall" fn comparar_african_nations_create_group_stage(this: us
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqs13_d(this + 0x30) as i32 == g && cqs13_w(f + 0x3e) == 4 && cqs13_w(f + 0x40) == cqs13_w(this + 0x40) && a == plano;
-        PLACAR.record(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        SCOREBOARD.record(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }

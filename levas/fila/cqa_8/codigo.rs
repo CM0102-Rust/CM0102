@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn comparar_update_after_match(this: usize, jogo: usize
     for &(fin, antes, total) in &plano {
         if fin != 0 {
             let pago = cqa8_i(fin + 0x138).wrapping_sub(antes);
-            PLACAR.record(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", jogo, fin, pago, total));
+            SCOREBOARD.record(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", jogo, fin, pago, total));
         }
     }
 }
@@ -331,7 +331,7 @@ unsafe extern "stdcall" fn contract_manager_get_player_morale(pessoa: usize) -> 
 unsafe extern "stdcall" fn comparar_contract_manager_get_player_morale(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%)(pessoa);
     let n = contract_manager_get_player_morale(pessoa);
-    PLACAR.record(r == n, || format!("contract_manager_get_player_morale({:x}) original={:#x} rust={:#x}", pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("contract_manager_get_player_morale({:x}) original={:#x} rust={:#x}", pessoa, r, n));
     r
 }
 
@@ -372,5 +372,5 @@ unsafe extern "stdcall" fn comparar_contract_manager_write_morale_text(pessoa: u
     let n = c_string_bytes(saida);
     core::ptr::copy_nonoverlapping(r.as_ptr(), saida as *mut u8, r.len());
     *((saida + r.len()) as *mut u8) = 0;
-    PLACAR.record(r == n, || format!("contract_manager_write_morale_text({:x}) original={:?} rust={:?}", pessoa, String::from_utf8_lossy(&r), String::from_utf8_lossy(&n)));
+    SCOREBOARD.record(r == n, || format!("contract_manager_write_morale_text({:x}) original={:?} rust={:?}", pessoa, String::from_utf8_lossy(&r), String::from_utf8_lossy(&n)));
 }

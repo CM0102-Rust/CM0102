@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn comparar_can_club_bid_for_player(this: usize, jogado
     let regioes = [(marca, 1), (this + 0x936, 4), (motivo as usize, 2)];
     let n = if motivo.is_null() { 2 } else { 3 };
     let (r, c, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes[..n], || o(this, jogador, clube, motivo, ignorar_abertas), || can_club_bid_for_player(this, jogador, clube, motivo, ignorar_abertas));
-    PLACAR.record(igual && r == c, || format!("can_club_bid_for_player(jogador {}, clube {:x}, {}) original={} rust={} {:x?} x {:x?}", cpr2_d(jogador), clube, ignorar_abertas, r, c, mo, mr));
+    SCOREBOARD.record(igual && r == c, || format!("can_club_bid_for_player(jogador {}, clube {:x}, {}) original={} rust={} {:x?} x {:x?}", cpr2_d(jogador), clube, ignorar_abertas, r, c, mo, mr));
     r
 }
 
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn comparar_note_terms_offered_to_exchange_player(this:
         regioes.push((e + 4, 1));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, k, pessoa), || note_terms_offered_to_exchange_player(this, k, pessoa));
-    PLACAR.record(igual, || format!("note_terms_offered_to_exchange_player({}, pessoa {}) {:x?} x {:x?}", k, pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("note_terms_offered_to_exchange_player({}, pessoa {}) {:x?} x {:x?}", k, pessoa, mo, mr));
 }
 
 /// Comparador: lado a lado pelo cursor da fila e pela devolução (só lê). Clube nulo: a caixa, só a original.
@@ -238,6 +238,6 @@ unsafe extern "thiscall" fn comparar_count_club_free_transfer_queue(this: usize,
         return o(this, clube);
     }
     let (r, c, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x936, 4)], || o(this, clube), || count_club_free_transfer_queue(this, clube));
-    PLACAR.record(igual && r == c, || format!("count_club_free_transfer_queue({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
+    SCOREBOARD.record(igual && r == c, || format!("count_club_free_transfer_queue({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
     r
 }

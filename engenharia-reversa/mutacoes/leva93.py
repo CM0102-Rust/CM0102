@@ -5,5 +5,5 @@ MUTACOES = [
     ('k_passou', "                d >= 0\n", "                d > 0\n"),
     ('k_sai', "        let sai_jogando = side_ball as i32 == l as i32;", "        let sai_jogando = side_ball as i32 != l as i32;"),
     ('k_2b', "            write_2b(j, 0);", "            write_2b(j, 1);"),
-    ('k_19a', "    *((who + 0x19a) as *mut u16) = if byte(this, 0x8ea8) != 0 { 0xb4 } else { 0 };", "    *((who + 0x19a) as *mut u16) = if byte(this, 0x8ea8) != 0 { 0xb5 } else { 0 };"),
+    ('k_19a', "    *((who + match_player::FACING) as *mut u16) = if byte(this, 0x8ea8) != 0 { 0xb4 } else { 0 };", "    *((who + match_player::FACING) as *mut u16) = if byte(this, 0x8ea8) != 0 { 0xb5 } else { 0 };"),
 ]

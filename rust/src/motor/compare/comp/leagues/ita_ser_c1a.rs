@@ -25,9 +25,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_schedule(this
 }
 
 /// Comparer for `ita_ser_c1a_set_club_progress` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_ITA_SER_C1A_SET_CLUB_PROGRESS);
-    compare_c1_club_progress("ita_ser_c1a_set_club_progress", this, clube, || o(this, clube, stage, current, best, worst), || ita_ser_c1a_set_club_progress(this, clube, stage, current, best, worst))
+    compare_c1_club_progress("ita_ser_c1a_set_club_progress", this, club, || o(this, club, stage, current, best, worst), || ita_ser_c1a_set_club_progress(this, club, stage, current, best, worst))
 }
 
 /// Comparer for `ita_ser_c1a_set_up_fixed_fixtures` (comparison mode: see the header of motor.rs).

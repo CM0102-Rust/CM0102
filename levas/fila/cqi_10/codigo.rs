@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(this: usize, 
             igual &= cqi10_d(l) == c && cqi10_b(l + 4) == 4;
         }
     }
-    PLACAR.record(igual, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, cqi10_w(uefa + 0x36), previsto, &v[..k]));
+    SCOREBOARD.record(igual, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, cqi10_w(uefa + 0x36), previsto, &v[..k]));
     r
 }
 
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_records_for_stat
     };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
     let depois = cqi10_d(clube + 0x1db);
-    PLACAR.record(r == 0 && depois == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, desfecho as u8, antes, depois, previsto, r));
+    SCOREBOARD.record(r == 0 && depois == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, desfecho as u8, antes, depois, previsto, r));
     r
 }
 
@@ -224,6 +224,6 @@ unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(th
     let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { antes };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
     let depois = cqi10_d(clube + 0x1db);
-    PLACAR.record(r == 0 && depois == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
+    SCOREBOARD.record(r == 0 && depois == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
     r
 }

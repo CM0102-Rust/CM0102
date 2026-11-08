@@ -226,19 +226,19 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
 /// pulando, se pedido, os que já têm vaga nas copas europeias (+0x1db ≠ −1) e os de técnico humano (0x600a50(clube, 0,
 /// 1, 0, 0)). O último registro da tabela nunca é examinado pela volta: se ela chega nele com a conta zerada, ele é o
 /// escolhido sem os testes. Devolve o clube se for da nação, senão 0.
-pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_this: usize, clubs: usize, count: u32, nacao: u32, n: u32, without_slot: u32, without_human: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_this: usize, clubs: usize, count: u32, nation: u32, n: u32, without_slot: u32, without_human: u32) -> usize {
     let search: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let k = count as u16 as i16 as i32;
     let last = clubs.wrapping_add((k * 12 - 12) as usize);
     let mut key = [0u8; 12];
-    key[4..8].copy_from_slice(&nacao.to_le_bytes());
+    key[4..8].copy_from_slice(&nation.to_le_bytes());
     key[8] = 0xff;
     let mut p = search(key.as_ptr(), clubs, k, 0xc, 0x905ce0);
     if p == 0 {
         return 0;
     }
-    while p > clubs && read_u32(p - 8) == nacao {
+    while p > clubs && read_u32(p - 8) == nation {
         p -= 12;
     }
     let mut foul = (n as u8).wrapping_sub(1);
@@ -246,7 +246,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_th
     if p < last {
         loop {
             let c = read_u32(p) as usize;
-            if without_slot != 0 && c != 0 && read_u32(c + club::EURO_FLAG) != u32::MAX {
+            if without_slot != 0 && c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
                 crate::comparison::branch("cqi_1 ja com vaga");
                 p += 12; // cqi1: pula o clube que já tem vaga
             } else if without_human != 0 && c != 0 && human(c, 0, 1, 0, 0) != 0 {
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_th
     if !found && foul != 0 {
         return 0;
     }
-    if read_u32(p + 4) == nacao {
+    if read_u32(p + 4) == nation {
         return read_u32(p) as usize;
     }
     0
@@ -288,11 +288,11 @@ pub(crate) unsafe fn increment_byte(a: usize) {
 /// +0x1db = comp, +0x1df = fase e um clube a mais da nação `i` (+0x11). Devolve se ganhou. (O caso da nação sem entrada,
 /// −1, que a original procura pela nação do clube, não acontece: `i` vem sempre da volta pelas nações.)
 pub(crate) unsafe fn assign_comp_place(this: usize, c: usize, comp: u32, stage: u8, i: i32) -> bool {
-    if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(c + club::EURO_FLAG) != u32::MAX {
+    if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
         return false;
     }
     *((c + club::EURO_SEEDING) as *mut u8) = stage;
-    *((c + club::EURO_FLAG) as *mut u32) = comp;
+    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = comp;
     increment_byte(seeding_nation_entry(this, i) + 0x11);
     true
 }
@@ -337,15 +337,15 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
     let mut i = 0u32;
     if read_u32(G_CLUB_COUNT) as i32 > 0 {
         loop {
-            let nacao = read_u32(c + club::NATION) as usize;
-            if nacao != 0 && national_team(c) == 0 {
-                let cont = read_u32(nacao + nation::CONTINENT) as usize;
+            let nation = read_u32(c + club::NATION) as usize;
+            if nation != 0 && national_team(c) == 0 {
+                let cont = read_u32(nation + nation::CONTINENT) as usize;
                 if cont != 0 && read_u32(cont) == read_u32(KEY_CONTINENT_EUROPE) {
-                    *((c + club::EURO_FLAG) as *mut u32) = u32::MAX;
+                    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX;
                     core::ptr::write_unaligned((read_u32(G_CLUB_STATE_TABLE) as usize).wrapping_add((read_u32(c) as usize).wrapping_mul(6)) as *mut u32, u32::MAX);
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
                     core::ptr::write_unaligned(r as *mut u32, c as u32);
-                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nacao));
+                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation));
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
                     let row = read_u32(c + club::LAST_DIVISION) as usize;
                     if row != 0 {
@@ -413,9 +413,9 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
     let lc = read_u32(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE);
     let mut cap: [u8; 5] = [0, 0x10, 0x12, 0x13, 0x12];
     let h = champion((read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(lc.wrapping_mul(0x6b) as usize), 0);
-    if h != 0 && read_u32(h + club::NATION) != 0 && read_u32(h + club::EURO_FLAG) == u32::MAX {
+    if h != 0 && read_u32(h + club::NATION) != 0 && read_u32(h + club::CONTINENTAL_COMP_ID) == u32::MAX {
         *((h + club::EURO_SEEDING) as *mut u8) = 1;
-        *((h + club::EURO_FLAG) as *mut u32) = lc;
+        *((h + club::CONTINENTAL_COMP_ID) as *mut u32) = lc;
         let id = read_u32(read_u32(h + club::NATION) as usize);
         let n = *((this + 0x438) as *const i8) as i32;
         let mut i = -1i32;
@@ -565,10 +565,10 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
 /// [pt] O clube `c` (com nação e ainda sem vaga) entra na Copa da UEFA na fase `fase`; um clube a mais da nação `r`. Devolve
 /// se entrou. (O caso da nação −1, que a original procura pela nação do clube, não acontece: `r` vem da volta.)
 pub(crate) unsafe fn enter_uefa_cup(this: usize, c: usize, stage: u8, r: i32, colocados: &mut i32) -> bool {
-    if read_u32(c + club::NATION) == 0 || read_u32(c + club::EURO_FLAG) != u32::MAX {
+    if read_u32(c + club::NATION) == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
         return false;
     }
-    *((c + club::EURO_FLAG) as *mut u32) = read_u32(KEY_CLUB_COMP_UEFA_CUP);
+    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = read_u32(KEY_CLUB_COMP_UEFA_CUP);
     *((c + club::EURO_SEEDING) as *mut u8) = stage;
     *colocados += 1;
     let p = seeding_nation_entry(this, r) + 0x11;
@@ -611,9 +611,9 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
     let mut colocados = 0i32;
     let mut nation_of_champion = 0usize;
     let h = champion((read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(uc.wrapping_mul(0x6b) as usize), 0);
-    if h != 0 && read_u32(h + club::NATION) != 0 && read_u32(h + club::EURO_FLAG) == u32::MAX {
+    if h != 0 && read_u32(h + club::NATION) != 0 && read_u32(h + club::CONTINENTAL_COMP_ID) == u32::MAX {
         *((h + club::EURO_SEEDING) as *mut u8) = 1;
-        *((h + club::EURO_FLAG) as *mut u32) = uc;
+        *((h + club::CONTINENTAL_COMP_ID) as *mut u32) = uc;
         colocados = 1;
         let id = read_u32(read_u32(h + club::NATION) as usize);
         let mut i = -1i32;
@@ -655,8 +655,8 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
         };
         let mut slots = [0u8, f1, f2];
         let e = seeding_nation_entry(this, r as i32);
-        let nacao = read_u32(e + 4) as usize;
-        if nacao == nation_of_champion {
+        let nation = read_u32(e + 4) as usize;
+        if nation == nation_of_champion {
             slots[1] = slots[1].wrapping_sub(1);
         }
         if r == s1 || r == s2 || r == s3 {
@@ -675,10 +675,10 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                 loop {
                     let mut tentar_de_novo = false;
                     let c = if chosen == 0 {
-                        if read_u8(nacao + nation::NATION_LEAGUE_SELECTED) == 0 {
+                        if read_u8(nation + nation::NATION_LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
-                            let cup = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + (row(nacao) as i32 * 0x48) as usize) as usize;
+                            let cup = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + (row(nation) as i32 * 0x48) as usize) as usize;
                             if cup == 0 {
                                 show_error_at(0xaa1a1c, 0x418);
                                 tentar_de_novo = true;
@@ -688,22 +688,22 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                                 if c == 0 || read_u32(c + club::NATION) == 0 {
                                     c = um();
                                 }
-                                if read_u32(c + club::EURO_FLAG) == u32::MAX {
+                                if read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                                     c
                                 } else {
                                     let mut c = champion(cup, 1);
-                                    if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(nacao) == read_u32(KEY_NATION_BELGIUM) {
+                                    if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(nation) == read_u32(KEY_NATION_BELGIUM) {
                                         c = um();
                                     }
-                                    if read_u32(c + club::EURO_FLAG) == u32::MAX {
+                                    if read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                                         c
                                     } else if read_u32(G_COMP_OBJECT_TABLE) == 0 {
                                         um()
                                     } else {
                                         let id = read_u32(cup);
-                                        let year = core::ptr::read_unaligned((0xb63d7b + (row(nacao) as i32 * 0x48) as usize) as *const u16) as i32;
+                                        let year = core::ptr::read_unaligned((0xb63d7b + (row(nation) as i32 * 0x48) as usize) as *const u16) as i32;
                                         let comp = read_u32((read_u32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(id as usize * 4)) as usize;
-                                        if read_i16(comp + 0x40) as i32 == year || read_u32(nacao) == read_u32(KEY_NATION_SPAIN) || read_u32(nacao) == read_u32(KEY_NATION_BELGIUM) {
+                                        if read_i16(comp + 0x40) as i32 == year || read_u32(nation) == read_u32(KEY_NATION_SPAIN) || read_u32(nation) == read_u32(KEY_NATION_BELGIUM) {
                                             um()
                                         } else {
                                             let (mut v1, mut v2) = (-1i32, -1i32);
@@ -730,15 +730,15 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                             }
                         }
                     } else if chosen == 1 {
-                        if read_u8(nacao + nation::NATION_LEAGUE_SELECTED) == 0 {
+                        if read_u8(nation + nation::NATION_LEAGUE_SELECTED) == 0 {
                             um()
                         } else {
-                            let cup = read_u32(G_LEAGUE_WORLD_CUP_SECOND_CUP_COMP + (row(nacao) as i32 * 0x48) as usize) as usize;
+                            let cup = read_u32(G_LEAGUE_WORLD_CUP_SECOND_CUP_COMP + (row(nation) as i32 * 0x48) as usize) as usize;
                             if cup == 0 {
                                 um()
                             } else {
                                 let c = champion(cup, 0);
-                                if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(c + club::EURO_FLAG) != u32::MAX {
+                                if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
                                     um()
                                 } else {
                                     c
@@ -769,7 +769,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
         }
         if vencedor != 0 && vice != 0 {
             count_extra += 1;
-            let (a, b) = (read_u32(vencedor + club::EURO_FLAG) == u32::MAX, read_u32(vice + club::EURO_FLAG) == u32::MAX);
+            let (a, b) = (read_u32(vencedor + club::CONTINENTAL_COMP_ID) == u32::MAX, read_u32(vice + club::CONTINENTAL_COMP_ID) == u32::MAX);
             if !a && !b {
                 let c = um();
                 if c != 0 {
@@ -837,7 +837,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     while (read_u8(this + 0x43f) as i8) < 6 && attempts < 0x50 {
         attempts += 1;
         let c = club_drawn();
-        if human(c, 0, 1, 0, 0) == 0 && read_u32(c + club::EURO_FLAG) == u32::MAX {
+        if human(c, 0, 1, 0, 0) == 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
             if read_u32(this + 0x43b) == 0 {
                 *((this + 0x43f) as *mut u8) = 0;
                 let l = alloc(0x78);
@@ -862,7 +862,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
         let base = read_u32(G_CLUB_TABLE) as usize;
         for q in 0..k as usize {
             let c = base.wrapping_add((read_u32(list + q * 4) as usize).wrapping_mul(club::SIZE));
-            if read_u32(c + club::EURO_FLAG) == u32::MAX {
+            if read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                 let v = read_u8(c + club::LAST_POSITION) as i8;
                 if read_u32(c + club::LAST_DIVISION) == read_u32(league + 4) {
                     if v < level {
@@ -878,12 +878,12 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     }
     while best == 0 {
         let c = club_drawn();
-        if read_u32(c + club::EURO_FLAG) == u32::MAX {
+        if read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
             best = c;
         }
     }
-    let mut noticia = [0u8; 0xe8];
-    let n = noticia.as_mut_ptr() as usize;
+    let mut news = [0u8; 0xe8];
+    let n = news.as_mut_ptr() as usize;
     construct(n, 0x17, 0);
     write(n, 0, read_u32(best));
     division(read_u32(G_NEWS) as usize, n, read_u32(league + 4) as usize);
@@ -951,8 +951,8 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
             let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
             let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
             let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-            let mut noticia = [0u8; 0xe8];
-            let p = noticia.as_mut_ptr() as usize;
+            let mut news = [0u8; 0xe8];
+            let p = news.as_mut_ptr() as usize;
             construct(p, 0x16, 0);
             write(p, 0, 0);
             write(p, 2, read_i16(this + 0x439) as u16 as u32);
@@ -990,9 +990,9 @@ pub(crate) unsafe fn open_temp_file_for_write(name: usize) -> usize {
 }
 
 /// Calls the exe's CRT fwrite.
-pub(crate) unsafe fn crt_fwrite(dados: usize, size: u32, how_many: u32, f: usize) -> u32 {
+pub(crate) unsafe fn crt_fwrite(data: usize, size: u32, how_many: u32, f: usize) -> u32 {
     let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    write(dados, size, how_many, f)
+    write(data, size, how_many, f)
 }
 
 /// Calls the exe's CRT fclose.

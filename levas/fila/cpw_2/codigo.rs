@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn comparar_confirm_offer_by_club(this: usize, oferta: 
     }
     let regioes = [(oferta, 0x31usize)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, oferta, clube), || confirm_offer_by_club(this, oferta, clube));
-    PLACAR.record(igual, || format!("confirm_offer_by_club(oferta {:#x}, clube {:#x}) original={:x?} rust={:x?}", oferta, clube, mo, mr));
+    SCOREBOARD.record(igual, || format!("confirm_offer_by_club(oferta {:#x}, clube {:#x}) original={:x?} rust={:x?}", oferta, clube, mo, mr));
 }
 
 /// { 0x8c34e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::try_complete_offer(oferta, no_prazo)`, pela
@@ -271,5 +271,5 @@ unsafe extern "thiscall" fn comparar_settle_previous_transfer_clauses(this: usiz
         return o(this, oferta);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, oferta), || settle_previous_transfer_clauses(this, oferta));
-    PLACAR.record(igual, || format!("settle_previous_transfer_clauses(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
+    SCOREBOARD.record(igual, || format!("settle_previous_transfer_clauses(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
 }

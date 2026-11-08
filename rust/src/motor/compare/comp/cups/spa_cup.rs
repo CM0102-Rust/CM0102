@@ -10,7 +10,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_cup_update_for_date(this: us
     let vira = before == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && stage != 0;
     let r = o(this, today, stage);
     let after = read_u32_as_usize(this + 0x45);
-    PLACAR.record(after == if vira { 1 } else { before }, || format!("spa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, before, after));
+    SCOREBOARD.record(after == if vira { 1 } else { before }, || format!("spa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, before, after));
     r
 }
 

@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn comparar_league_update_for_date(this: usize, data: u
     let parada = cqd5_b(this + 0xb5) != 0 || cqd5_d(this + 0x45) == 0;
     let r = o(this, data, completo);
     let ok = if parada { r as u8 == 0 } else { r as u8 == 1 && (completo == 0 || same_date(this + 0xd1, data)) };
-    PLACAR.record(ok, || format!("league_update_for_date(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
+    SCOREBOARD.record(ok, || format!("league_update_for_date(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
         completo, parada, r as u8, cqd5_d(this + 0xd1), cqd5_d(data)));
     r
 }
@@ -442,7 +442,7 @@ unsafe extern "thiscall" fn comparar_create_fixtures(this: usize) -> u32 {
     let propria = lista != 0 && cqd5_w(this + 0x40) as i32 == cqd5_w(lista + 2) as u16 as i32;
     let r = o(this);
     let ok = !(propria && r == 1) || cqd5_d(this + 0xea) == 0;
-    PLACAR.record(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", propria, r, cqd5_d(this + 0xea)));
+    SCOREBOARD.record(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", propria, r, cqd5_d(this + 0xea)));
     r
 }
 

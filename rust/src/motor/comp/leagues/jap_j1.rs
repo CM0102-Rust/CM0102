@@ -196,8 +196,8 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
 /// True if the club's division (+0x57) is non-null and its id equals the competition id in global g.
 ///
 /// [pt] O clube é da divisão do global `g`: a divisão do clube (+0x57) não é nula e o id do registro (+0) é o do global.
-pub(crate) unsafe fn is_in_division(clube: usize, g: usize) -> bool {
-    let comp = read_usize(clube + club::DIVISION);
+pub(crate) unsafe fn is_in_division(club: usize, g: usize) -> bool {
+    let comp = read_usize(club + club::DIVISION);
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
@@ -206,10 +206,10 @@ pub(crate) unsafe fn is_in_division(clube: usize, g: usize) -> bool {
 /// [pt] +0x3e = `n` e a tabela (malloc 0x944e46 de n × 0x3b, em +0xb1; sem memória: a caixa do fonte `arquivo` na linha
 /// `linha`). Devolve a tabela (0 sem memória).
 pub(crate) unsafe fn alloc_league_table(this: usize, n: i16, file: usize, row: u32) -> usize {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
-    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
+    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
     }
@@ -221,9 +221,9 @@ pub(crate) unsafe fn alloc_league_table(this: usize, n: i16, file: usize, row: u
 /// [pt] League::init_table_row (0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10). `girar` é 0 (o original: a linha
 /// k); existe só para as mutações de cada liga. simplification: a original empurra a linha no eax com bits de cima de sobra;
 /// a 0x687430 só lê o byte.
-pub(crate) unsafe fn jap_j1_init_table_row(this: usize, k: u8, n: i16, girar: u8, clube: usize) {
+pub(crate) unsafe fn jap_j1_init_table_row(this: usize, k: u8, n: i16, girar: u8, club: usize) {
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    iniciar(this, (k as u32 + girar as u32) % n as u32, clube, 0, 0);
+    iniciar(this, (k as u32 + girar as u32) % n as u32, club, 0, 0);
 }
 
 /// Japanese loop: every club of the division fills the next row while rows remain; the rest lose their division (+0x57
@@ -235,20 +235,20 @@ pub(crate) unsafe fn jap_j1_init_table_row(this: usize, k: u8, n: i16, girar: u8
 pub(crate) unsafe fn fill_japanese_table(this: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(G_CLUB_TABLE);
+    let mut club = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if is_in_division(clube, g) {
-            if (k as i8 as i16) < read_i16(this + 0x3e) {
-                jap_j1_init_table_row(this, k, read_i16(this + 0x3e), girar, clube);
+        if is_in_division(club, g) {
+            if (k as i8 as i16) < read_i16(this + league::CLUB_COUNT) {
+                jap_j1_init_table_row(this, k, read_i16(this + league::CLUB_COUNT), girar, club);
                 k = k.wrapping_add(1);
             } else {
-                core::ptr::write_unaligned((clube + club::DIVISION) as *mut usize, 0);
+                core::ptr::write_unaligned((club + club::DIVISION) as *mut usize, 0);
             }
         }
         i = i.wrapping_add(1);
-        clube = clube.wrapping_add(0x245);
+        club = club.wrapping_add(0x245);
     }
-    if k as i8 as i16 != read_i16(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }
     crate::comparison::branch(ramo);
@@ -298,17 +298,17 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: 
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        if is_in_division(clube, g) {
-            plan.push(clube);
+        let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
+        if is_in_division(club, g) {
+            plan.push(club);
         }
         i += 1;
     }
     let r = original();
-    let t = read_usize(this + 0xb1);
+    let t = read_usize(this + league::TABLE);
     let cabem = plan.len().min(n as usize);
     let expected = (plan.len() >= n as usize) as u32;
-    let mut same = r == expected && read_i16(this + 0x3e) == n && t != 0;
+    let mut same = r == expected && read_i16(this + league::CLUB_COUNT) == n && t != 0;
     let mut found: Vec<usize> = Vec::new();
     if same {
         found = (0..cabem).map(|k| read_usize(t + k * 0x3b)).collect();
@@ -318,10 +318,10 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: 
         }
         if r == 1 && cota != 0 {
             let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-            same = same && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == prize(this, cota);
+            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, cota);
         }
     }
-    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 

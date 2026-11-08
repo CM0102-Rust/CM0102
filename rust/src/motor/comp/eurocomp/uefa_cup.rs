@@ -28,10 +28,10 @@ pub(crate) unsafe fn entrants_minus_half_prelim(this: usize, k: i16) -> i32 {
 /// devolve 1. Com +0xb2 ímpar ou negativo, 0.
 pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     const F: usize = 0xaa19e0;
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x91);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x91);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let l = zerada(0xa1, 6);
-    write_u32_from_usize(this + 0xa7, l);
+    write_u32_from_usize(this + cup::TEAM_TABLE, l);
     if l == 0 {
         show_error_at(F, 0x1bf);
         return -1;
@@ -46,9 +46,9 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
             if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) {
                 let e = k as i32 as usize * 6;
                 k = k.wrapping_add(1);
-                write_u32_from_usize(read_u32_as_usize(this + 0xa7) + e, c);
-                *((read_u32_as_usize(this + 0xa7) + e + 4) as *mut u8) = *((c + 0x1df) as *const u8);
-                *((read_u32_as_usize(this + 0xa7) + e + 5) as *mut u8) = 0;
+                write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + e, c);
+                *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 4) as *mut u8) = *((c + 0x1df) as *const u8);
+                *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 5) as *mut u8) = 0;
                 if *((c + 0x1df) as *const i8) >= 0xa { // cqs9: os da preliminar
                     *((this + 0xb2) as *mut u8) = (*((this + 0xb2) as *const u8)).wrapping_add(1);
                 }
@@ -68,14 +68,14 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
                     break;
                 }
                 let c = base + j as u16 as usize * club::SIZE;
-                let nac = read_u32_as_usize(c + 0x53);
-                if nac != 0 && *((nac + 0x11c) as *const u8) == 0 && read_i16(nac + 0x8e) < 0x7d0 && read_u32_as_usize(c + 0x1db) as i32 == -1 {
+                let nation = read_u32_as_usize(c + 0x53);
+                if nation != 0 && *((nation + 0x11c) as *const u8) == 0 && read_i16(nation + 0x8e) < 0x7d0 && read_u32_as_usize(c + 0x1db) as i32 == -1 {
                     crate::comparison::branch("cqs_9 clube completando a uefa");
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);
-                    write_u32_from_usize(read_u32_as_usize(this + 0xa7) + e, c);
-                    *((read_u32_as_usize(this + 0xa7) + e + 4) as *mut u8) = 3; // cqs9: a classe de quem completa
-                    *((read_u32_as_usize(this + 0xa7) + e + 5) as *mut u8) = 0;
+                    write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + e, c);
+                    *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 4) as *mut u8) = 3; // cqs9: a classe de quem completa
+                    *((read_u32_as_usize(this + cup::TEAM_TABLE) + e + 5) as *mut u8) = 0;
                     write_u32_from_usize(c + 0x1db, read_u32_as_usize(read_u32_as_usize(this + 4)));
                 }
                 j = j.wrapping_add(1);
@@ -86,39 +86,39 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
         }
     }
     while entrants_minus_half_prelim(this, k) > 0x76 {
-        write_u32_from_usize(read_u32_as_usize(this + 0xa7) + k as i32 as usize * 6 - 6, 0);
+        write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + k as i32 as usize * 6 - 6, 0);
         k = k.wrapping_sub(1);
     }
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_u32_as_usize(this + 0xa7), k as i32 as u32, 6, 0x522190);
+    sort(read_u32_as_usize(this + cup::TEAM_TABLE), k as i32 as u32, 6, 0x522190);
     let b2 = *((this + 0xb2) as *const i8);
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
     }
     crate::comparison::branch("cqs_9 inscritos da uefa");
-    core::ptr::write_unaligned((this + 0x36) as *mut i16, 0);
+    core::ptr::write_unaligned((this + cup::ENTRANT_COUNT) as *mut i16, 0);
     let n = k.wrapping_add(0x1b);
-    core::ptr::write_unaligned((this + 0x38) as *mut i16, n);
+    core::ptr::write_unaligned((this + cup::ENTRANT_CAPACITY) as *mut i16, n);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alloc((n as i32 * 6) as u32);
-    write_u32_from_usize(this + 0x14, t);
+    write_u32_from_usize(this + cup::ENTRANT_BOOK, t);
     if t == 0 {
         show_error_at(F, 0x21a);
         return 0;
     }
     if k > 0 {
         for q in 0..k as usize {
-            let e = read_u32_as_usize(this + 0xa7) + q * 6;
+            let e = read_u32_as_usize(this + cup::TEAM_TABLE) + q * 6;
             let c = read_u32_as_usize(e);
             if *((e + 4) as *const u8) == 1 && c != 0 {
-                let m = read_i16(this + 0x36) as i32 as usize * 6;
-                write_u32_from_usize(read_u32_as_usize(this + 0x14) + m, c);
-                *((read_u32_as_usize(this + 0x14) + read_i16(this + 0x36) as i32 as usize * 6 + 4) as *mut u8) = 3;
-                core::ptr::write_unaligned((this + 0x36) as *mut i16, read_i16(this + 0x36).wrapping_add(1));
+                let m = read_i16(this + cup::ENTRANT_COUNT) as i32 as usize * 6;
+                write_u32_from_usize(read_u32_as_usize(this + cup::ENTRANT_BOOK) + m, c);
+                *((read_u32_as_usize(this + cup::ENTRANT_BOOK) + read_i16(this + cup::ENTRANT_COUNT) as i32 as usize * 6 + 4) as *mut u8) = 3;
+                core::ptr::write_unaligned((this + cup::ENTRANT_COUNT) as *mut i16, read_i16(this + cup::ENTRANT_COUNT).wrapping_add(1));
             }
         }
     }
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, n);
     1
 }
 
@@ -176,15 +176,15 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
 /// update_staff_records_for_status(clube, desfecho, a3, a4, jogo, a6)`: com o desfecho (byte) 1, 2 ou 0xff (campeão,
 /// vice ou eliminado) o clube sai da competição europeia (+0x1db = −1); depois os registros da base (0x519890: os seis
 /// argumentos como chegaram, o desfecho como dword; mov ecx, this -> thiscall, ret 0x18), cuja devolução sai.
-pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let d = outcome as u8;
     if d == 1 || d == 2 || d == 0xff {
         if d == 0xff {
             crate::comparison::branch("cqi_10 caiu na uefa");
         }
-        core::ptr::write_unaligned((clube + club::EURO_FLAG) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
+        core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
     }
     let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    base(this, clube, outcome, a3, a4, jogo, a6)
+    base(this, club, outcome, a3, a4, game, a6)
 }
 

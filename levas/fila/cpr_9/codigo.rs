@@ -218,7 +218,7 @@ unsafe extern "stdcall" fn comparar_player_regen_retire_from_non_playing_staff(p
     let mut reg = job_exit_regions(pessoa);
     reg.retain(|r| r.0 != 0);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa), || player_regen_retire_from_non_playing_staff(pessoa));
-    PLACAR.record(igual, || format!("player_regen_retire_from_non_playing_staff(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("player_regen_retire_from_non_playing_staff(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 unsafe fn job_exit_regions(pessoa: usize) -> Vec<(usize, usize)> {

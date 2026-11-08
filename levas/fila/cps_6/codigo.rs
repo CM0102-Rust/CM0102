@@ -213,5 +213,5 @@ unsafe extern "thiscall" fn comparar_manager_manager_adjust_board_confidence(thi
     }
     let c = board_confidence_ptr(this, clube);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 2)], || o(this, clube, delta), || manager_manager_adjust_board_confidence(this, clube, delta));
-    PLACAR.record(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", clube, delta as i32, mo, mr));
+    SCOREBOARD.record(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", clube, delta as i32, mo, mr));
 }

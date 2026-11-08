@@ -80,7 +80,7 @@ unsafe fn cqv1_comparar(nome: &str, this: usize, e: &Cqv1Estadual, original: imp
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if r == 0 { -1 } else { *((r + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.record(erros.is_empty(), || format!("{}({:#x}): {}", nome, this, erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("{}({:#x}): {}", nome, this, erros.join("; ")));
 }
 
 const CQV1_MINEIRO: Cqv1Estadual = Cqv1Estadual { arquivo: 0x98aed0, linhas: [0x33f, 0x347], lugares: &[1, 2], ramo: "cqv_1 mineiro" }; // cqv1: os lugares do Mineiro

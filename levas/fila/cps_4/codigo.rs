@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_build_clause_offer_option(this: usize, club
 unsafe extern "stdcall" fn comparar_transfer_manager_is_rejection_reason_valid(motivo: u32, oferta: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(u32, usize) -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(0xae1080, 4)], || o(motivo, oferta), || transfer_manager_is_rejection_reason_valid(motivo, oferta));
-    PLACAR.record(igual && r == n, || format!("transfer_manager_is_rejection_reason_valid({:x}, pessoa {}) original={} rust={} {:x?} x {:x?}", motivo as u16, cps4_d(oferta + 0xc), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("transfer_manager_is_rejection_reason_valid({:x}, pessoa {}) original={} rust={} {:x?} x {:x?}", motivo as u16, cps4_d(oferta + 0xc), r, n, mo, mr));
     r
 }
 
@@ -168,6 +168,6 @@ unsafe extern "stdcall" fn comparar_transfer_manager_is_rejection_reason_valid(m
 unsafe extern "stdcall" fn comparar_transfer_manager_get_squad_status_reason(oferta: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(0xae1080, 4)], || o(oferta), || transfer_manager_get_squad_status_reason(oferta));
-    PLACAR.record(igual && r == n, || format!("transfer_manager_get_squad_status_reason(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps4_d(oferta + 0xc), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("transfer_manager_get_squad_status_reason(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps4_d(oferta + 0xc), r, n, mo, mr));
     r
 }

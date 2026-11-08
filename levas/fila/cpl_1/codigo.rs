@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn comparar_club_has_offer_for_player(this: usize, pess
     }
     let reg = offer_cursor_region(this, pessoa);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, clube), || club_has_offer_for_player(this, pessoa, clube));
-    PLACAR.record(igual && r == n, || format!("club_has_offer_for_player({}, clube {}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("club_has_offer_for_player({}, clube {}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), r, n, mo, mr));
     r
 }
 
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_find_club_offer_for_player(this: usize, pes
     }
     let reg = offer_cursor_region(this, pessoa);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, clube, todas), || find_club_offer_for_player(this, pessoa, clube, todas));
-    PLACAR.record(igual && r == n, || format!("find_club_offer_for_player({}, clube {}, todas {}) original={:x} rust={:x} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), todas, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_club_offer_for_player({}, clube {}, todas {}) original={:x} rust={:x} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), todas, r, n, mo, mr));
     r
 }
 
@@ -141,6 +141,6 @@ unsafe extern "thiscall" fn comparar_player_has_pending_offer(this: usize, pesso
     }
     let reg = offer_cursor_region(this, pessoa);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa), || player_has_pending_offer(this, pessoa));
-    PLACAR.record(igual && r == n, || format!("player_has_pending_offer({}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_has_pending_offer({}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), r, n, mo, mr));
     r
 }

@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize, p: usize,
     antes.write_back();
     let r = o(this, p, valor, emprestimo, fim, clube_id, outro);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
         p, valor as i32, clube_id as i32, r, n, mo.0, mr.0));
     r
 }

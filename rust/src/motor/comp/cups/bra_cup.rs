@@ -23,7 +23,7 @@ pub(crate) unsafe fn call_cup_virtual(this: usize, o: usize) -> i32 {
 /// −1) e a árvore dos confrontos (virtual +0x94); por fim as posições previstas (virtual +0x5c), cujo eax ela devolve.
 pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, file: usize, rows: [u32; 3], year: i16, ramo: &'static str) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
+    core::ptr::write_unaligned((this + cup::SEASON_CLOSED) as *mut u32, 0);
     for o in [0xa7usize, 0xa3] {
         let l = read_u32_as_usize(this + o);
         if l != 0 {
@@ -31,29 +31,29 @@ pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, file: u
             core::ptr::write_unaligned((this + o) as *mut u32, 0);
         }
     }
-    if read_u32_as_usize(this + 0xad) != 0 {
+    if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
         let mut i = 0i32;
-        while i < read_i16(this + 0x3c) as i32 {
-            let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
+        while i < read_i16(this + cup::ROUND_COUNT) as i32 {
+            let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
                 soltar(p);
-                core::ptr::write_unaligned((read_u32_as_usize(this + 0xad) + i as usize * 4) as *mut u32, 0);
+                core::ptr::write_unaligned((read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4) as *mut u32, 0);
             }
             i += 1;
         }
-        soltar(read_u32_as_usize(this + 0xad));
-        core::ptr::write_unaligned((this + 0xad) as *mut u32, 0);
+        soltar(read_u32_as_usize(this + cup::TIE_TABLES));
+        core::ptr::write_unaligned((this + cup::TIE_TABLES) as *mut u32, 0);
     }
     let e = read_u32_as_usize(this + 8);
     if e != 0 {
-        let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-        arquivar(e, 1);
+        let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
+        archive(e, 1);
     }
-    let a = read_i16(this + 0x40);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
+    let a = read_i16(this + cup::YEAR);
+    core::ptr::write_unaligned((this + cup::YEAR) as *mut i16, a.wrapping_add(year));
     crate::comparison::branch(ramo);
-    *((this + 0xab) as *mut u8) = 0;
-    *((this + 0xb1) as *mut u8) = 0;
+    *((this + cup::CURRENT_ROUND) as *mut u8) = 0;
+    *((this + cup::RUN_BY_STAGES) as *mut u8) = 0;
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
     // simplification: in the boxes the original exits with the box’s eax (0x5e8290); the caller of the turnover does not read the return
     if inscritos(this) < 0 {
@@ -76,10 +76,10 @@ pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, file: u
 /// [pt] O comparador da virada: só a original (simplification: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
 /// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
 pub(crate) unsafe fn compare_cup_new_season(name: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
-    let before = read_i16(this + 0x40);
+    let before = read_i16(this + cup::YEAR);
     let r = original();
-    let after = read_i16(this + 0x40);
-    PLACAR.record(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this, before, after));
+    let after = read_i16(this + cup::YEAR);
+    SCOREBOARD.record(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this, before, after));
     r
 }
 
@@ -137,21 +137,21 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, s
 /// de 0x1aa em +0xa7; sem memória, a caixa da linha 0x143 e −1); cada vaga i (6 bytes) recebe o clube da inscrição i da
 /// lista +0x14 (6 bytes), a situação +5 = 0xff e a classe +4 = 0. Devolve 1.
 pub(crate) unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x47);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x47);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0x1aa);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x98a3bc, 0x143);
         return -1;
     }
     crate::comparison::branch("cqo_12 times da copa do brasil");
     let mut i = 0i16;
-    while i < read_i16(this + 0x3e) {
+    while i < read_i16(this + cup::TEAM_COUNT) {
         let o = i as usize * 6;
         let font = o; // cqo12: a inscrição de cada vaga
-        let c = read_u32_as_usize(read_u32_as_usize(this + 0x14) + font);
-        let e = read_u32_as_usize(this + 0xa7) + o;
+        let c = read_u32_as_usize(read_u32_as_usize(this + cup::ENTRANT_BOOK) + font);
+        let e = read_u32_as_usize(this + cup::TEAM_TABLE) + o;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 5) as *mut u8) = 0xff;
         *((e + 4) as *mut u8) = 0;
@@ -179,12 +179,12 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> 
 /// as rodadas em +0x3c e o extra em +0x3a, sem saída) em +0xa3. Devolve 1.
 pub(crate) unsafe fn set_up_brazil_cup_rounds(this: usize) -> i32 {
     crate::comparison::branch("cqo_12 regras da copa do brasil");
-    *((this + 0x49) as *mut u8) = 7;
-    *((this + 0x4a) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
-    core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x7a120);
+    *((this + cup::SUBSTITUTES_NAMED) as *mut u8) = 7;
+    *((this + cup::SUBSTITUTIONS_ALLOWED) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
+    core::ptr::write_unaligned((this + cup::PRIZE_FUND) as *mut u32, 0x7a120);
     let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
-    let t = table(this, 0xffff_ffff, this + 0x3c, this + 0x3a, 0);
-    core::ptr::write_unaligned((this + 0xa3) as *mut u32, t as u32);
+    let t = table(this, 0xffff_ffff, this + cup::ROUND_COUNT, this + cup::STAGE_LABEL, 0);
+    core::ptr::write_unaligned((this + cup::ROUND_TABLE) as *mut u32, t as u32);
     1
 }
 

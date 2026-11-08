@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn comparar_area_layout(area: usize) {
         reg.push((area_item_at(*((area + 0x208) as *const usize), dono) + 0x7c, 2));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(area), || area_layout(area));
-    PLACAR.record(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
 }
 
 /// { 0x402ac0 } (thiscall, Area.cpp): inicia a área. Área que abre por cima de um item (`dono` ≠ -1):
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn comparar_init(
         || o(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, cap_area_rows(linhas), pesos_linhas, marcas, cor, dono),
         || init(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, linhas, pesos_linhas, marcas, cor, dono),
     );
-    PLACAR.record(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
 }
 
 /// { 0x402e70 } (thiscall, Area.cpp): desenha a área. Com `redesenhar`, libera a imagem guardada

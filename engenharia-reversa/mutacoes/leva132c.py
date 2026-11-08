@@ -2,8 +2,8 @@
 # Prova que a comparacao lado a lado do pos-jogo pega o que as impressoes da carreira nao pegam.
 # Uso: python mutacoes.py mutacoes\leva132c.py --jogo 2001-10-01
 MUTACOES = [
-    ('e_1e_sem', "adjust(clube, 0xc, 0x4b);", "adjust(clube, 0xc, 0x4c);", "eventos 0x1e"),
-    ('e_1e_sem2', "adjust(clube, 0xc, 0x4b);", "adjust(clube, 0xc, -0x4b);", "eventos 0x1e"),
+    ('e_1e_sem', "adjust(club, 0xc, 0x4b);", "adjust(club, 0xc, 0x4c);", "eventos 0x1e"),
+    ('e_1e_sem2', "adjust(club, 0xc, 0x4b);", "adjust(club, 0xc, -0x4b);", "eventos 0x1e"),
     ('e_0a_sorteio', "let b = sortear(5);\n                        if a < b || protegido", "let b = sortear(6);\n                        if a < b || protegido", "eventos 0x0a"),
     ('e_0a_limite', "let r = sortear(2000) + 0x1194;", "let r = sortear(2000) + 0x1000;", "eventos 0x0a"),
     ('j_n34', "if r as f64 * 0.1 + m + 0.5 < nota11 {", "if r as f64 * 0.1 + m + 0.4 < nota11 {", "jogadores noticia 0x34"),

@@ -2182,14 +2182,14 @@ Since 7 Nov 2026 the hooked routines have English names in the code (the origina
 |---|---|---|
 | `video.rs` | video | own DirectDraw |
 | `apresentacao.rs` | presentation | frame → window, mouse |
-| `ganchos.rs` | hooks (IAT) | import table hooks |
-| `desvios.rs` | detours | detours in the exe, private stack |
-| `simulacao.rs` | simulation | reproducible simulation |
-| `alocador.rs` | allocator | fixed allocator |
+| `iat_hooks.rs` | hooks (IAT) | import table hooks |
+| `detours.rs` | detours | detours in the exe, private stack |
+| `simulation.rs` | simulation | reproducible simulation |
+| `allocator.rs` | allocator | fixed allocator |
 | `rng.rs` | random | the game's random generator |
-| `data.rs` | date | dates (Date.cpp) |
+| `date.rs` | date | dates (Date.cpp) |
 | `motor.rs` | engine | match engine |
-| `espiao.rs` | spy | diagnostics (CM_ESPIAO=1) |
+| `spy.rs` | spy | diagnostics (CM_ESPIAO=1) |
 | `comparison.rs` | comparison | side-by-side comparison |
 | `registro.rs` | log | logging to ddraw.log |
 | `simular.py` | simulate | headless automatic career |

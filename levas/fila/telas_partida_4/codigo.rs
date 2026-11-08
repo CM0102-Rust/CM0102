@@ -154,7 +154,7 @@ unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) 
         return o(item);
     }
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&screen_param_regions(), || o(item), || r(item));
-    PLACAR.record(igual && ro == rr, || format!("{}(item {:#x}) original={} rust={} {:?} x {:?}", nome, item, ro, rr, mo, mr));
+    SCOREBOARD.record(igual && ro == rr, || format!("{}(item {:#x}) original={} rust={} {:?} x {:?}", nome, item, ro, rr, mo, mr));
     ro
 }
 

@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn comparar_find_new_fixture_date(this: usize, jogo: us
     }
     let reg = [(jogo, 0x4f)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo), || find_new_fixture_date(this, jogo));
-    PLACAR.record(igual, || format!("find_new_fixture_date(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
+    SCOREBOARD.record(igual, || format!("find_new_fixture_date(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
 }
 
 /// { 0x5aa680 } (thiscall, ret 8, fix_man.cpp; quadro SEH das datas e do gerenciador novo): `FIXTURE_MANAGER::add_fixture(jogo,

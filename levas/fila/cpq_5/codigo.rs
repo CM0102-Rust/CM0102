@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_get_offer_completion_date(
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut [u32; 2]) -> u16>(%%I0%%);
     let reg = date_comparer_regions(&[saida as usize]);
     let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, oferta, saida), || transfer_manager_get_offer_completion_date(this, oferta, saida));
-    PLACAR.record(igual && ro == rr, || format!("transfer_manager_get_offer_completion_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
+    SCOREBOARD.record(igual && ro == rr, || format!("transfer_manager_get_offer_completion_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
     ro
 }
 
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn comparar_find_next_allowed_transfer_date(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut [u32; 2]) -> u16>(%%I1%%);
     let reg = date_comparer_regions(&[saida as usize]);
     let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, oferta, saida), || find_next_allowed_transfer_date(this, oferta, saida));
-    PLACAR.record(igual && ro == rr, || format!("find_next_allowed_transfer_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
+    SCOREBOARD.record(igual && ro == rr, || format!("find_next_allowed_transfer_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
     ro
 }
 
@@ -276,5 +276,5 @@ unsafe extern "stdcall" fn comparar_transfer_manager_get_next_window_dates(inici
     let o = original_fn::<unsafe extern "stdcall" fn(*mut [u32; 2], *mut [u32; 2])>(%%I2%%);
     let reg = date_comparer_regions(&[inicio as usize, fim as usize]);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(inicio, fim), || transfer_manager_get_next_window_dates(inicio, fim));
-    PLACAR.record(igual, || format!("transfer_manager_get_next_window_dates(hoje {:x}, fim {}) diferente", *(TODAY as *const u32), !fim.is_null()));
+    SCOREBOARD.record(igual, || format!("transfer_manager_get_next_window_dates(hoje {:x}, fim {}) diferente", *(TODAY as *const u32), !fim.is_null()));
 }

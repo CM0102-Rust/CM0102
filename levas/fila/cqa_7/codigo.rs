@@ -433,7 +433,7 @@ unsafe extern "thiscall" fn comparar_value_player_for_club(this: usize, clube: u
         return o(this, clube, p, vaga, saida, minimo, teto);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(saida as usize, 4)], || o(this, clube, p, vaga, saida, minimo, teto), || value_player_for_club(this, clube, p, vaga, saida, minimo, teto));
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         format!("value_player_for_club(clube {:x}, pessoa {:x}, vaga {:x}, mínimo {}, teto {}) original={} rust={} {:x?} x {:x?}", clube, p, vaga, minimo, teto, r, n, mo, mr)
     });
     r
@@ -472,7 +472,7 @@ unsafe extern "thiscall" fn comparar_find_club_search_entry(this: usize, p: usiz
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let r = o(this, p);
     let n = find_club_search_entry(this, p);
-    PLACAR.record(r == n, || format!("find_club_search_entry(pessoa {:x}) original={:x} rust={:x}", p, r, n));
+    SCOREBOARD.record(r == n, || format!("find_club_search_entry(pessoa {:x}) original={:x} rust={:x}", p, r, n));
     r
 }
 
@@ -500,6 +500,6 @@ unsafe extern "thiscall" fn comparar_find_international_appearance_money(this: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa7_d(this + 0x86e).wrapping_add(cqa7_d(p).wrapping_mul(8));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1)], || o(this, p), || find_international_appearance_money(this, p));
-    PLACAR.record(igual && r == n, || format!("find_international_appearance_money(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_international_appearance_money(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
     r
 }

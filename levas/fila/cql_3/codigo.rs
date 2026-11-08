@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
     o(this);
     let feito = SQUAD_NUMBERS_PLAN.take().unwrap_or_default();
     let zerado = *(this as *const u16) == 0;
-    PLACAR.record(feito == plano && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
+    SCOREBOARD.record(feito == plano && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
 }
 
 /// { 0x859e20 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::assign_league_squad_numbers`): numera os clubes
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, li
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, liga, inicial, automatico), || assign_league_squad_numbers(this, liga, inicial, automatico));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("assign_league_squad_numbers(liga {:x}, {} {}): {}", liga, inicial, automatico, d.join(", "))
     });
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize,
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, etapa, marca), || select_euro_registered_players(this, c, etapa, marca));
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("select_euro_registered_players(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, etapa as u8, marca, r, n, d.join(", "))
     });

@@ -278,7 +278,7 @@ unsafe extern "thiscall" fn comparar_get_offer_response_delay(this: usize, ofert
         || o(this, oferta, dias, fatias),
         || crate::rng::without_counting(|| get_offer_response_delay(this, oferta, dias, fatias)),
     );
-    PLACAR.record(igual, || format!("get_offer_response_delay({:#x}) {:x?} x {:x?}", oferta, mo, mr));
+    SCOREBOARD.record(igual, || format!("get_offer_response_delay({:#x}) {:x?} x {:x?}", oferta, mo, mr));
 }
 
 /// Comparador: só a original, conferindo o plano (feito antes): saem da lista as prestações que tinham 1 a pagar.
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn comparar_pay_transfer_instalments(this: usize) {
     let acabam = antes.iter().filter(|&&e| cpo10_b(e + 0xc) == 1).count();
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let depois = cpo10_itens(lista).len();
-    PLACAR.record(depois + acabam == antes.len(), || format!("pay_transfer_instalments: {} prestações, {} acabando, {} depois", antes.len(), acabam, depois));
+    SCOREBOARD.record(depois + acabam == antes.len(), || format!("pay_transfer_instalments: {} prestações, {} acabando, {} depois", antes.len(), acabam, depois));
 }
 
 /// Comparador: só a original, conferindo o plano (feito antes): a vaga zerada, as contas +8 e +0x14, a menor vaga livre
@@ -308,6 +308,6 @@ unsafe extern "thiscall" fn comparar_remove_offer(this: usize, oferta: usize) {
         && cpo10_i(this + 0x14) == n14 - ligada as i32
         && cpo10_i(this + 0x85e) == livre.min(vaga)
         && cpo10_b(q) == ofertas.wrapping_sub(1);
-    PLACAR.record(ok, || format!("remove_offer: vaga {} contas {}/{} -> {}/{} livre {} -> {} ofertas {} -> {}",
+    SCOREBOARD.record(ok, || format!("remove_offer: vaga {} contas {}/{} -> {}/{} livre {} -> {} ofertas {} -> {}",
         vaga, n8, n14, cpo10_i(this + 8), cpo10_i(this + 0x14), livre, cpo10_i(this + 0x85e), ofertas, cpo10_b(q)));
 }

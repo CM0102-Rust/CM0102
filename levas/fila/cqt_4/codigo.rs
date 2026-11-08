@@ -92,7 +92,7 @@ unsafe fn bra_reg_rio_compare_state_league_ctor(nome: &str, this: usize, ano: u3
     if *((this + 0x44) as *const u8) == 0xff && cqt4_d(this + 8) != 0 {
         ok = ok && cqt4_d(this + 0x2c) == e.fases as usize && cqt4_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt4_d(this), cqt4_d(this + 0x2c), cqt4_d(this + 0xc), cqt4_d(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt4_d(this), cqt4_d(this + 0x2c), cqt4_d(this + 0xc), cqt4_d(this + 8)));
     r
 }
 
@@ -388,5 +388,5 @@ unsafe extern "C" fn comparar_cqt4_atualizar_media_de_publico(liga: usize) {
     let mut regioes = vec![(cqt4_d(0xae23b4), cqt4_d(0xae235c) * 0x245)];
     regioes.extend_from_slice(&crate::rng::STATE_REGIONS);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&regioes, || o(liga), || crate::rng::without_counting(|| cqt4_atualizar_media_de_publico(liga)));
-    PLACAR.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", liga));
+    SCOREBOARD.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", liga));
 }

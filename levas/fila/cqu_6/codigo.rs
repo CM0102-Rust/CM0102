@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn cqu6_copa_do_rei(this: usize, ano: u32, dono: usize)
 unsafe extern "thiscall" fn comparar_cqu6_copa_do_rei(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu6_plano(this, r, ano, dono, 0x96f9c8, &CQU6_CAMPOS_COPA_DO_REI, true);
-    PLACAR.record(erro.is_none(), || format!("cqu6_copa_do_rei({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqu6_copa_do_rei({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn cqu6_supercopa_espanhola(this: usize, ano: u32, dono
 unsafe extern "thiscall" fn comparar_cqu6_supercopa_espanhola(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu6_plano(this, r, ano, dono, 0x96fd38, &CQU6_CAMPOS_SUPERCOPA_ESPANHOLA, true);
-    PLACAR.record(erro.is_none(), || format!("cqu6_supercopa_espanhola({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqu6_supercopa_espanhola({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -374,6 +374,6 @@ unsafe extern "thiscall" fn comparar_cqu6_inscritos_da_copa_do_rei(this: usize) 
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && tabela, || format!("cqu6_inscritos_da_copa_do_rei({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    SCOREBOARD.record(igual && a == b && tabela, || format!("cqu6_inscritos_da_copa_do_rei({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }

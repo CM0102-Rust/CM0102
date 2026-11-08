@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage
         let (x, y) = (read_usize(l), read_usize(l + 6));
         read_i16(stage + 0x3e) == 2 && read_usize(this + 0x30) == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    PLACAR.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, stage));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, stage));
 }
 
 /// Comparer for `bra_nat_third_start_new_season` (comparison mode: see the header of motor.rs).
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(t
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_START_NEW_SEASON)(this);
     let after = read_i16(this + 0x40);
     let same = after == before.wrapping_add(1) && read_usize(this + 0xee) == 0 && (0..7).all(|g| read_usize(read_usize(this + 0xc) + 4 * g) != 0);
-    PLACAR.record(same, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this, before, after, read_usize(this + 0xee)));
+    SCOREBOARD.record(same, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this, before, after, read_usize(this + 0xee)));
     r
 }
 
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_posi
         let e = if v[k] != 0 { achar(read_usize(this + 8), v[k]) } else { 0 };
         read_usize(read_usize(this + 0xee) + 4 * k) != v[k] || e == 0 || *((e + 0x72) as *const u8) != place_for_index(k)
     });
-    PLACAR.record(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));
+    SCOREBOARD.record(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));
 }
 
 /// Comparer for `bra_nat_third_create_group_stage` (comparison mode: see the header of motor.rs).
@@ -82,7 +82,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage
         nela.sort_unstable();
         a == nela
     };
-    PLACAR.record(same, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, stage, plan));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, stage, plan));
 }
 
 /// Comparer for `create_second_round_stage` (comparison mode: see the header of motor.rs).
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_second_round_stage(this: 
         b.sort_unstable();
         a == b
     };
-    PLACAR.record(same, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, stage, plan));
+    SCOREBOARD.record(same, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, stage, plan));
 }
 
 /// Comparer for `create_third_round_groups` (comparison mode: see the header of motor.rs).
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_third_round_groups(this: 
         nela.sort_unstable();
         p == nela
     };
-    PLACAR.record(same, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plan));
+    SCOREBOARD.record(same, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plan));
 }
 
 /// Comparer for `bra_nat_third_create_table` (comparison mode: see the header of motor.rs).
@@ -168,9 +168,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this:
     let mut plan = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plan.len() < 0x38 {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        if read_usize(clube + club::DIVISION) == read_usize(this + 4) {
-            plan.push(clube);
+        let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
+        if read_usize(club + club::DIVISION) == read_usize(this + 4) {
+            plan.push(club);
         }
         i += 1;
     }
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this:
         b.sort_unstable();
         same = rows_ok && a == b;
     }
-    PLACAR.record(same, || format!("bra_nat_third_create_table({:#x}) original={} plano={:x?} lista={:x?}", this, r, plan, drawn));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_table({:#x}) original={} plano={:x?} lista={:x?}", this, r, plan, drawn));
     r
 }
 
@@ -199,25 +199,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_up_rules(this:
         set_serie_c_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("bra_nat_third_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("bra_nat_third_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// Comparer for `bra_nat_third_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, l, dest) = serie_c_staff_records(this, clube, status, stage, false);
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, status, stage, a4, a5, a6);
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+    let (n, l, dest) = serie_c_staff_records(this, club, status, stage, false);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.record(r == n && gravado == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    SCOREBOARD.record(r == n && gravado == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }
 
 /// Comparador: como o do Mineiro.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_club_progress(this: usize, clube: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_NAT_THIRD_SET_CLUB_PROGRESS)(this, clube, stage, a, b, c), || bra_nat_third_set_club_progress(this, clube, stage, a, b, c));
-    PLACAR.record(igual && r == n, || format!("bra_nat_third_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, stage as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
+    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, club);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e + 0x73, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_NAT_THIRD_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || bra_nat_third_set_club_progress(this, club, stage, a, b, c));
+    SCOREBOARD.record(igual && r == n, || format!("bra_nat_third_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, club, stage as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }

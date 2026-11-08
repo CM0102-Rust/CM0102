@@ -4,8 +4,8 @@ use super::*;
 ///
 /// [pt] Os campos de byte e palavra de uma eliminatória (a virtual +0x8c, set_up_rules, na liga do grupo): (deslocamento,
 /// tamanho 1 ou 2, valor). Os pontos da vitória (+0xc2) e a categoria (+0xc4) vêm à parte, para as mutações.
-pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: usize, campos: &[(usize, u8, u32)]) {
-    for &(o, n, v) in campos {
+pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: usize, fields: &[(usize, u8, u32)]) {
+    for &(o, n, v) in fields {
         if n == 1 {
             *((this + o) as *mut u8) = v as u8;
         } else {
@@ -22,7 +22,7 @@ pub(crate) unsafe fn comp_date_word(this: usize, day: u32, month: u32, week: u32
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
-    data(d.as_mut_ptr(), day, month, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, week);
+    data(d.as_mut_ptr(), day, month, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
 
@@ -35,20 +35,20 @@ pub(crate) unsafe fn finish_rules_setup(this: usize, word: u16, b8: u16) -> u32 
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, b8);
     let vt = core::ptr::read_unaligned(this as *const usize);
     let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
-    let t = table(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
-    core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
+    let t = table(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
+    core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, t as u32);
     1
 }
 
 /// Comparer: runs the original and checks fields, +0xb6 date, +0xb8 and return 1.
 ///
 /// [pt] O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
-pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, fields: &[(usize, u8, u32)], data: (u32, u32, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
     let word = comp_date_word(this, data.0, data.1, data.2);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
-    for &(off, n, v) in campos {
+    for &(off, n, v) in fields {
         let (lido, v) = if n == 1 { (*((this + off) as *const u8) as u32, v & 0xff) } else { (core::ptr::read_unaligned((this + off) as *const u16) as u32, v & 0xffff) };
         if lido != v && k < 4 {
             errados[k] = (off, lido);
@@ -57,7 +57,7 @@ pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, campos: &[(u
     }
     let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
     let lido8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
-    PLACAR.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {}", name, this, r, &errados[..k], b6, word, lido8));
+    SCOREBOARD.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {}", name, this, r, &errados[..k], b6, word, lido8));
     r
 }
 

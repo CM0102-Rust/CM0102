@@ -338,7 +338,7 @@ unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: u
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf, f1, f2),
         || crate::rng::without_counting(|| assess_transfer_deal(this, transf, f1, f2)));
-    PLACAR.record(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf, mo, mr));
+    SCOREBOARD.record(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf, mo, mr));
 }
 
 /// Comparador: lado a lado com o estado do sorteador (a avaliação 0x696570 sorteia), as linhas da diretoria do
@@ -358,7 +358,7 @@ unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usi
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf),
         || crate::rng::without_counting(|| apply_transfer_confidence_changes(this, transf)));
-    PLACAR.record(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf, mo, mr));
+    SCOREBOARD.record(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf, mo, mr));
 }
 
 /// Comparador: a original tira o item da lista (e o libera) e acrescenta a saída: roda só ela e confere o plano: a
@@ -373,6 +373,6 @@ unsafe extern "thiscall" fn comparar_resolve_board_ultimatum(this: usize, clube:
     let r = o(this, clube);
     let depois = cpo1_w(cpo1_d(this + 4)) as i32;
     let ok = depois == antes + (r != 0) as i32 && (r == 0 || *((board_row_at(this, cpo1_d(clube)) + 2) as *const u8) & 2 != 0);
-    PLACAR.record(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, antes, depois));
+    SCOREBOARD.record(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, antes, depois));
     r
 }

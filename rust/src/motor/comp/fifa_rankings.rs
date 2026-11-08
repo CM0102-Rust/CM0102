@@ -18,10 +18,10 @@ use super::*;
 /// 0x2c bytes na tabela [this]), o histórico (+4, entradas de 5 bytes: pontos, mês +2, ano +3; conta +0xa) do fim para o
 /// começo; ano × 12 + mês antes do começo do período para a busca, até o fim conta um. Em 16 bits. TapeCall a cada
 /// permissão que chega aos jogos da seleção: sem contador.
-pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nacao: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nation: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
     let de = (year_of & 0xffff) as i32 * 12 + month_of as u8 as i8 as i32;
     let ate = (year_until & 0xffff) as i32 * 12 + month_until as u8 as i8 as i32;
-    let e = read_usize(this).wrapping_add((read_usize(nacao) as u32).wrapping_mul(0x2c) as usize);
+    let e = read_usize(this).wrapping_add((read_usize(nation) as u32).wrapping_mul(0x2c) as usize);
     let hist = read_usize(e + 4);
     let mut j = read_i16(e + 0xa).wrapping_sub(1);
     let mut n = 0u16;
@@ -135,8 +135,8 @@ pub(crate) unsafe extern "C" fn compare_result_points_desc(a: usize, b: usize) -
 /// Nation's entry in the FIFA ranking table [this] (0x2c bytes each).
 ///
 /// [pt] A entrada da nação `nacao` (id em [nacao]) na tabela do ranking [this] (0x2c bytes cada).
-pub(crate) unsafe fn ranking_entry(this: usize, nacao: usize) -> usize {
-    read_usize(this).wrapping_add((read_usize(nacao) as u32).wrapping_mul(0x2c) as usize)
+pub(crate) unsafe fn ranking_entry(this: usize, nation: usize) -> usize {
+    read_usize(this).wrapping_add((read_usize(nation) as u32).wrapping_mul(0x2c) as usize)
 }
 
 /// Month and year of a match: Date from day of year (+0x2a) and year (+0x28), then its month.
@@ -165,8 +165,8 @@ pub(crate) unsafe fn match_month_year(partida: usize) -> (u8, u16) {
 /// com a conta (+0xa) igual à capacidade (+8), a capacidade cresce 5 e o histórico (+4) é realocado (0x945667) ou
 /// alocado (0x944e46) com capacidade × 5 bytes. A entrada nova, no lugar da conta antiga: os pontos (16 bits), o mês do
 /// jogo (+2) e o ano (+3).
-pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, points: u32, partida: usize) {
-    let e = ranking_entry(this, nacao);
+pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize, points: u32, partida: usize) {
+    let e = ranking_entry(this, nation);
     if read_u16(e + 0xa) == read_u16(e + 8) {
         *((e + 8) as *mut u16) = read_u16(e + 8).wrapping_add(5);
         let h = read_usize(e + 4);
@@ -203,9 +203,9 @@ pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, 
 /// [pt] { 0x58e190 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::get_nation_strength_tier(nação)` (duas vezes por
 /// resultado internacional 0x58cf70): reputação (+0x8e) abaixo de 3000 e posição (+0x10 da entrada) abaixo de 50: 3;
 /// reputação abaixo de 6000 e posição abaixo de 15: 2; senão pela posição: abaixo de 21, 1; de 61, 2; de 101, 3; 4.
-pub(crate) unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nacao: usize) -> u8 {
-    let rep = read_i16(nacao + nation::REPUTATION);
-    let pos = || read_i16(ranking_entry(this, nacao) + 0x10);
+pub(crate) unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nation: usize) -> u8 {
+    let rep = read_i16(nation + nation::REPUTATION);
+    let pos = || read_i16(ranking_entry(this, nation) + 0x10);
     if rep < 0xbb8 && pos() < 0x32 {
         return 3;
     }

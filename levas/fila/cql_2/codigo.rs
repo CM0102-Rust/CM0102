@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usize, c: usize
     }
     let reg = squad_number_regions(&[p]);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, p), || allocate_squad_number(this, c, p));
-    PLACAR.record(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
 }
 
 /// O +0x3a dos contratos (o do clube e o de empréstimo) das pessoas `ps` e a marca da caixa [0xb67a34].
@@ -310,7 +310,7 @@ unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: u
     }
     let reg = squad_number_regions(&ps);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, manter), || assign_club_squad_numbers(this, c, manter));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("assign_club_squad_numbers(clube {:x}, manter {}): {}", c, manter, d.join(", "))
     });

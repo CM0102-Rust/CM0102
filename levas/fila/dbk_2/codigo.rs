@@ -140,7 +140,7 @@ unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: usize, pess
     }
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(clube, pessoa, data, desligar, como_jogador),
         || database_remove_staff_from_club(clube, pessoa, data, desligar, como_jogador));
-    PLACAR.record(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, pessoa, data != 0, desligar, r, m, mo, mr));
     r
 }
@@ -153,6 +153,6 @@ unsafe extern "C" fn comparar_database_get_club_scouts(clube: usize, vetor: *mut
     // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(vetor as usize, 28), (clube + 0x244, 1)],
         || o(clube, vetor), || database_get_club_scouts(clube, vetor));
-    PLACAR.record(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

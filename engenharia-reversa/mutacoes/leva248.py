@@ -1,10 +1,10 @@
 # Mutações da 248a leva (itens cpl_1, cpl_2, cpl_3, cpl_4, cpl_5, cpl_6, cpl_7). Uso: python mutacoes.py mutacoes\leva248.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpl_clube_tem_oferta', 'if read_usize(offer_at(this, read_usize(no)) + 8) == read_usize(clube) { // the offer is from the club', 'if read_usize(offer_at(this, read_usize(no)) + 8) != read_usize(clube) { // mutacao: de outro clube', 'cpl_1 clube tem oferta'),
-    ('cpl_oferta_do_clube', 'if read_usize(o + 8) == read_usize(clube) { // the club’s offer', 'if o != 0 { // mutacao: a primeira de qualquer clube', 'cpl_1 oferta do clube'),
-    ('cpl_oferta_pendente', 'if matches!(*((o + 0x2c) as *const u8), 0 | 1 | 5 | 6) { // the pending status', 'if matches!(*((o + 0x2c) as *const u8), 0 | 5 | 6) { // mutacao: sem a 1', 'cpl_1 oferta pendente'),
+    ('cpl_clube_tem_oferta', 'if read_usize(offer_at(this, read_usize(no)) + 8) == read_usize(club) { // the offer is from the club', 'if read_usize(offer_at(this, read_usize(no)) + 8) != read_usize(club) { // mutacao: de outro clube', 'cpl_1 clube tem oferta'),
+    ('cpl_oferta_do_clube', 'if read_usize(o + 8) == read_usize(club) { // the club’s offer', 'if o != 0 { // mutacao: a primeira de qualquer clube', 'cpl_1 oferta do clube'),
+    ('cpl_oferta_pendente', 'if matches!(*((o + offer::STATUS) as *const u8), 0 | 1 | 5 | 6) { // the pending status', 'if matches!(*((o + offer::STATUS) as *const u8), 0 | 5 | 6) { // mutacao: sem a 1', 'cpl_1 oferta pendente'),
     ('cpl_sob_oferta_marca', 'return mark(); // a marca "sob oferta"', 'return 0; // mutacao: ninguem sob oferta'),
-    ('cpl_bosman_invertida', 'free(read_usize(clube + club::NATION)) // the club’s nation', '(free(read_usize(clube + 0x53)) == 0) as u32 // mutacao: invertida'),
+    ('cpl_bosman_invertida', 'free(read_usize(club + club::NATION)) // the club’s nation', '(free(read_usize(club + 0x53)) == 0) as u32 // mutacao: invertida'),
     ('cpl_veto_valores', 'core::ptr::write_unaligned(p, match_pl_ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%', 'let _ = p; // mutacao: sem cortar', 'cpl_2 veto da diretoria valores'),
     ('cpl_passada_conta', 'write_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT, n.wrapping_add(1)); // the count of past transfers', 'write_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT, n); // mutacao: a conta nao sobe', 'cpl_3 transferencia passada'),
     ('cpl_permissao_marca', '*mark |= 0x20; // the permission flag', '*mark |= 0; // mutacao: sem a marca', 'cpl_3 permissao de trabalho'),

@@ -356,7 +356,7 @@ unsafe extern "thiscall" fn comparar_issue_board_ultimatum(this: usize, clube: u
     let antes = cpq1_w(cpq1_d(this + 0x10)) as i32;
     let r = o(this, clube);
     let depois = cpq1_w(cpq1_d(this + 0x10)) as i32;
-    PLACAR.record(depois == antes + (r != 0) as i32, || {
+    SCOREBOARD.record(depois == antes + (r != 0) as i32, || {
         format!("issue_board_ultimatum(clube {:x}) devolveu {}, ultimatos {} -> {}", clube, r, antes, depois)
     });
     r
@@ -486,7 +486,7 @@ unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize, clube: usi
         }
     }
     let conf = cpq1_w(club_board_row(this, clube) + 6);
-    PLACAR.record(sobra == 0 && (manter != 0 || conf == 0xdac), || {
+    SCOREBOARD.record(sobra == 0 && (manter != 0 || conf == 0xdac), || {
         format!("remove_club_manager(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", clube, tipo as u8, manter, sobra, conf)
     });
 }

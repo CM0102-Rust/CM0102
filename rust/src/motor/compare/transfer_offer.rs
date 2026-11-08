@@ -7,6 +7,6 @@ use super::*;
 pub(crate) unsafe extern "system" fn comparar_transfer_offer_closed(o: usize) -> u32 {
     let r = original_fn::<unsafe extern "system" fn(usize) -> u32>(IDX_TRANSFER_OFFER_CLOSED)(o);
     let n = transfer_offer_closed(o);
-    PLACAR.record(r == n, || format!("transfer_offer_closed(estado {:#x}, {:#x}) original={} rust={}", *((o + 0x2c) as *const u8), *((o + 0x2e) as *const u8), r, n));
+    SCOREBOARD.record(r == n, || format!("transfer_offer_closed(estado {:#x}, {:#x}) original={} rust={}", *((o + 0x2c) as *const u8), *((o + 0x2e) as *const u8), r, n));
     r
 }

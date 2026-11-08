@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, clube: usiz
         || o(this, clube, tipo, nacao),
         || crate::rng::without_counting(|| pick_random_pundit(this, clube, tipo, nacao)),
     );
-    PLACAR.record(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", clube, tipo as i8, nacao, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", clube, tipo as i8, nacao, r, mo, n, mr));
     r
 }
 
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, tipo: u32, id:
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, tipo, id, nome, marca), || get_pundit_name(this, tipo, id, nome, marca));
-    PLACAR.record(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", tipo as i8, id as i16, mo, mr));
+    SCOREBOARD.record(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", tipo as i8, id as i16, mo, mr));
 }
 
 /// { 0x758de0 } (thiscall, ret 0x18, media.cpp, SEH da notícia local, sem destrutor): `Media::

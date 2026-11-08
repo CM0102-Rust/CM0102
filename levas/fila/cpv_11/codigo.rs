@@ -291,7 +291,7 @@ unsafe extern "thiscall" fn comparar_withdraw_injured_player(this: usize, p: usi
         0 => depois == antes,
         _ => !estava || depois.0 == 0,
     };
-    PLACAR.record(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p, dias as u16 as i16, plano, estava, antes, depois));
+    SCOREBOARD.record(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p, dias as u16 as i16, plano, estava, antes, depois));
 }
 
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.

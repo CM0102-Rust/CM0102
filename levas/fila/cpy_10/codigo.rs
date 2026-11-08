@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn comparar_add_year_award_record(this: usize, p: usize
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5, credito),
         || add_year_award(this, p, clube, premio, a4, a5, credito, false));
-    PLACAR.record(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpy10_d(premio), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpy10_d(premio), mo, mr));
 }
 
 /// { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
@@ -140,7 +140,7 @@ unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> 
         return r;
     }
     let n = match_record_is_bigger_win(a, b);
-    PLACAR.record(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -166,6 +166,6 @@ unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) 
         return r;
     }
     let n = match_record_is_bigger_defeat(a, b);
-    PLACAR.record(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

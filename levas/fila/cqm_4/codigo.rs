@@ -172,7 +172,7 @@ unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u32, registr
             ok = ok && *((this + 0xee) as *const u8) == 0;
         }
     }
-    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqm4_d(this), cqm4_d(this + 0x2c), cqm4_d(this + 0xc), cqm4_d(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqm4_d(this), cqm4_d(this + 0x2c), cqm4_d(this + 0xc), cqm4_d(this + 8)));
     r
 }
 

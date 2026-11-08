@@ -98,7 +98,7 @@ unsafe extern "C" fn comparar_club_get_national_team_name(clube: usize, variante
     let n = (tamanho as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, n)], || o(clube, variante, texto, tamanho, forma, aspas),
         || club_get_national_team_name(clube, variante, texto, tamanho, forma, aspas));
-    PLACAR.record(igual && r == x, || format!("club_get_national_team_name({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variante, f, aspas, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("club_get_national_team_name({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variante, f, aspas, r, x, mo, mr));
     r
 }
 
@@ -169,7 +169,7 @@ unsafe extern "C" fn comparar_database_get_player_attribute_name(atributo: u32, 
     // os 100 primeiros bytes (o tamanho mínimo aceito): os nomes cabem neles
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, 100)], || o(atributo, texto, tamanho, abreviado),
         || database_get_player_attribute_name(atributo, texto, tamanho, abreviado));
-    PLACAR.record(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
     r
 }
 
@@ -341,6 +341,6 @@ unsafe extern "C" fn comparar_database_format_player_positions(jogador: usize, t
     let reg = [(texto, n), (jogador + 0xf, 12), (0xde1f64, 64)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(jogador, texto, tamanho, forma),
         || database_format_player_positions(jogador, texto, tamanho, forma));
-    PLACAR.record(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", jogador, forma as u8, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", jogador, forma as u8, r, x, mo, mr));
     r
 }

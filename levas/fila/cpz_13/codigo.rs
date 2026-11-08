@@ -26,7 +26,7 @@ unsafe extern "thiscall" fn add_prize_money(this: usize, valor: i32) {
 unsafe extern "thiscall" fn comparar_add_prize_money(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || add_prize_money(this, valor));
-    PLACAR.record(igual, || format!("add_prize_money(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_prize_money(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
 
 /// { 0x5987c0 } (thiscall, ret 4, finance.cpp): `Finance::add_tv_revenue(valor)`, só pelos direitos de TV da liga
@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn add_tv_revenue(this: usize, valor: i32) {
 unsafe extern "thiscall" fn comparar_add_tv_revenue(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || add_tv_revenue(this, valor));
-    PLACAR.record(igual, || format!("add_tv_revenue(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_tv_revenue(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
 
 /// { 0x599920 } (thiscall, ret 4, finance.cpp): `Finance::pay_wages(valor)`, só pela liberação sem custo
@@ -64,5 +64,5 @@ unsafe extern "thiscall" fn pay_wages(this: usize, valor: i32) {
 unsafe extern "thiscall" fn comparar_pay_wages(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_wages(this, valor));
-    PLACAR.record(igual, || format!("pay_wages(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_wages(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }

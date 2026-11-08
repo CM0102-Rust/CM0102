@@ -330,7 +330,7 @@ unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usize, jogo: us
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, jogo)), || fixture_winner_side(this, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        PLACAR.record(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", cpm1_w(jogo + 0x38) as u16, r, n, mo, mr));
+        SCOREBOARD.record(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", cpm1_w(jogo + 0x38) as u16, r, n, mo, mr));
     }
     r
 }
@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, confronto: u
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, confronto, jogo)), || tie_winner_side(confronto, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        PLACAR.record(igual && r == n, || format!("decide_tie_winner(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
+        SCOREBOARD.record(igual && r == n, || format!("decide_tie_winner(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
             cpm1_w(jogo + 0x38) as u16, cpm1_b(confronto + 0x33), r, n, mo, mr));
     }
     r
@@ -353,6 +353,6 @@ unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, confronto: u
 unsafe extern "C" fn comparar_cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = cup_compare_draw_entries_by_seed(a, b);
-    PLACAR.record(r == n, || format!("cup_compare_draw_entries_by_seed({}, {}) original={} rust={}", cpm1_b(a + 6), cpm1_b(b + 6), r, n));
+    SCOREBOARD.record(r == n, || format!("cup_compare_draw_entries_by_seed({}, {}) original={} rust={}", cpm1_b(a + 6), cpm1_b(b + 6), r, n));
     r
 }

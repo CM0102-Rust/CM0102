@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn comparar_count_slots_with_bids(this: usize, clube: u
     let mut reg = SHORTLIST_MANAGER_DATE_STATICS.to_vec();
     reg.push((cpy1_d(cpy1_entrada(this, clube)), 40 * 0x25));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, posicao), || count_slots_with_bids(this, clube, posicao));
-    PLACAR.record(igual && r == n, || format!("count_slots_with_bids(clube {:x}, posicao {}) original={} rust={} {:x?} x {:x?}", clube, posicao as i8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("count_slots_with_bids(clube {:x}, posicao {}) original={} rust={} {:x?} x {:x?}", clube, posicao as i8, r, n, mo, mr));
     r
 }
 
@@ -106,7 +106,7 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_transfer_list(
     let c = contract_of_staff(pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa), || shortlist_manager_remove_from_transfer_list(pessoa));
-    PLACAR.record(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -128,6 +128,6 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_loan_list(pess
     let c = contract_of_staff(pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa), || shortlist_manager_remove_from_loan_list(pessoa));
-    PLACAR.record(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }

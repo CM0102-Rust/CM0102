@@ -239,7 +239,7 @@ unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usi
     } else {
         n == n0
     };
-    PLACAR.record(ok && mesmo_sorteio, || {
+    SCOREBOARD.record(ok && mesmo_sorteio, || {
         format!("add_illness_outbreak(tipo {}, clube {}) plano entra={}, conta {} -> {}, mesmo sorteio={}", tipo as u8, clube_i, entra, n0, n, mesmo_sorteio)
     });
 }
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
     o(this);
     let n = cpp8_i(this + 0x24);
     let velho = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&cinco, cpp8_d(this + 0x1c) + k * OUTBREAK_SIZE));
-    PLACAR.record(velho.is_none() && n >= n0 - saem, || {
+    SCOREBOARD.record(velho.is_none() && n >= n0 - saem, || {
         format!("spread_illness_outbreaks: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, velho)
     });
 }
@@ -275,6 +275,6 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
 unsafe extern "stdcall" fn comparar_injury_player_in_close_season(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
     let n = injury_player_in_close_season(pessoa);
-    PLACAR.record(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", pessoa, r, n));
     r
 }

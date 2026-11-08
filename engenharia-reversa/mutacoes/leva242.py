@@ -1,13 +1,13 @@
 # Mutações da 242a leva (itens cpd_1, cpd_2, cpd_3, cpd_4, cpe_1, cpe_2, cpe_3). Uso: python mutacoes.py mutacoes\leva242.py --carreira 2002-06-01
 MUTACOES = [
     ('cpd_fim_competicao', 'read_usize(r + 4) == read_usize(comp) /* a competição */', 'read_usize(r + 4) != read_usize(comp) /* mutacao: as outras */'),
-    ('cpd_fim_nacao', 'read_usize(r) == read_usize(nacao) /* a nação */', 'read_usize(r) != read_usize(nacao) /* mutacao: as outras */'),
+    ('cpd_fim_nacao', 'read_usize(r) == read_usize(nation) /* a nação */', 'read_usize(r) != read_usize(nation) /* mutacao: as outras */'),
     ('cpd_poda_vencidas', 'vencidas = vencidas.wrapping_add(1); // one won', 'vencidas = vencidas.wrapping_add(0); // mutacao: nenhuma vencida'),
     ('cpd_por_marca', '    *((p + staff::JOB_FOR_NATION) as *mut u8) = 0xb;\n    let mark_squad', '    *((p + staff::JOB_FOR_NATION) as *mut u8) = 0xa; // mutacao: outra marca\n    let mark_squad'),
     ('cpd_tirar_vaga', 'core::ptr::write_unaligned((team + club::SQUAD + 4 * c) as *mut usize, 0);', 'core::ptr::write_unaligned((team + club::SQUAD + 4 * c) as *mut usize, p); // mutacao: a vaga fica'),
-    ('cpd_sub21_idade', '*((p + staff::YEAR_OF_BIRTH) as *const i8) > 0x15 { // over 21 years old', '*((p + staff::YEAR_OF_BIRTH) as *const i8) >= 0x15 { // mutacao: tambem os de 21'),
-    ('cpd_atual_aviso', '        notify_manager_manager(nacao); // the notice of the next competition', '        // mutacao: sem o aviso da competicao seguinte'),
-    ('cpd_continente_aviso', '                notify_manager_manager(nacao); // the continent warning', '                // mutacao: sem o aviso do continente'),
+    ('cpd_sub21_idade', '*((p + staff::AGE) as *const i8) > 0x15 { // over 21 years old', '*((p + staff::AGE) as *const i8) >= 0x15 { // mutacao: tambem os de 21'),
+    ('cpd_atual_aviso', '        notify_manager_manager(nation); // the notice of the next competition', '        // mutacao: sem o aviso da competicao seguinte'),
+    ('cpd_continente_aviso', '                notify_manager_manager(nation); // the continent warning', '                // mutacao: sem o aviso do continente'),
     ('cpd_substituto_posicao', 'as u8 & mask & 0x7f == 0 { // the positions of those leaving', 'as u8 & mask & 0x7f != 0 { // mutacao: as outras posicoes'),
     ('cpd_reservas_posicao', 'pos = j + 1; // after the ones with a higher rating', 'pos = j; // mutacao: antes da de nota maior'),
     ('cpd_ordem_reservas', '(slot_person_rating(b) as i32) - slot_person_rating(a) as i32 // decrescente', '(slot_person_rating(a) as i32) - slot_person_rating(b) as i32 // mutacao: crescente'),
@@ -18,6 +18,6 @@ MUTACOES = [
     ('cpe_pontos_vitoria', 'if venceu(pb(0x43), pb(0x44)) { gain(0xc2) } else { 0 } // the points for a win', 'if venceu(pb(0x43), pb(0x44)) { gain(0xc2).wrapping_add(1) } else { 0 } // mutacao: um a mais'),
     ('cpe_confronto_posicao', 'let dif = *((b + 4) as *const i8) as i32 - *((a + 4) as *const i8) as i32; // the tie’s position', 'let dif = *((a + 4) as *const i8) as i32 - *((b + 4) as *const i8) as i32; // mutacao: invertida'),
     ('cpe_datas_ano', 'if ya < yb { // o ano antes\n        return -1;', 'if ya < yb { // mutacao: invertido\n        return 1;'),
-    ('cpe_linha_do_clube', 'if read_usize(r) == clube { // the club’s row\n                return r;', 'if read_usize(r) == clube { // mutacao: nunca acha\n                return 0;'),
+    ('cpe_linha_do_clube', 'if read_usize(r) == club { // the club’s row\n                return r;', 'if read_usize(r) == club { // mutacao: nunca acha\n                return 0;'),
     ('cpe_liga_tem_o_clube', 'return (r != 0) as u32; // a liga tem o clube', 'return (r == 0) as u32; // mutacao: nao tem'),
 ]

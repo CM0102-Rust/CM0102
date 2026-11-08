@@ -129,7 +129,7 @@ unsafe fn cqw13_comparar(nome: &str, this: usize, ano: u32, comp: usize, vtable:
     let r = o();
     let lido = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let ok = r == this && cqw13_d(this) == vtable && cqw13_d(this + 4) == comp && lido == ano as i16;
-    PLACAR.record(ok, || format!("{}({:#x}): ano {} pedido {}, vtable {:#x}", nome, this, lido, ano as i16, cqw13_d(this)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): ano {} pedido {}, vtable {:#x}", nome, this, lido, ano as i16, cqw13_d(this)));
     r
 }
 

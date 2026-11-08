@@ -93,8 +93,8 @@ pub(crate) unsafe extern "thiscall" fn eng_third_create_schedule(this: usize, st
 ///
 /// [pt] { 0x578660 } (thiscall, ret 0x14, eng_third.cpp): `EngThird::set_club_progress(clube, fase, atual, melhor, pior)`,
 /// a virtual +0x68 da Third: as vagas do mata-mata são 4 a 7.
-pub(crate) unsafe extern "thiscall" fn eng_third_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
-    set_club_stage_status(this, clube, stage as u8, current as u8, best as u8, worst as u8, 4, 7)
+pub(crate) unsafe extern "thiscall" fn eng_third_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    set_club_stage_status(this, club, stage as u8, current as u8, best as u8, worst as u8, 4, 7)
 }
 
 /// after the Third Division league, the current stage goes up and, on the first, the promotion play-off is created

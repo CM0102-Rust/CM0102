@@ -946,7 +946,7 @@ unsafe fn comparar_montagem_da_partida(nome: &str, extra: &[(usize, usize)], ori
     // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
     reg.extend_from_slice(&crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, original, || crate::rng::without_counting(rust));
-    PLACAR.record(igual, || format!("{}: diferencas em {:?}", nome, first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("{}: diferencas em {:?}", nome, first_differences(&mo, &mr)));
 }
 
 /// A tela da partida é comparada pela lista de exibição, com o que ela grava fora da tela: a ficha do

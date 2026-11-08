@@ -296,7 +296,7 @@ unsafe extern "C" fn comparar_apply_squad_rule(
         || o(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado),
         || crate::rng::without_counting(|| apply_squad_rule(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado)),
     );
-    PLACAR.record(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(regra as *const u8, 6), mo, mr));
+    SCOREBOARD.record(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(regra as *const u8, 6), mo, mr));
 }
 // ---- as notas do jogador do match_man.cpp (0x6e6340 fora da partida, 0x6e2f20 para uma vaga): partes comuns ----
 
@@ -1560,7 +1560,7 @@ unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, cl
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((0xae1080, 4));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(p, pos, flags, clube, limit, o), || crate::rng::without_counting(|| off_match_score(p, pos, flags, clube, limit, o)));
-    PLACAR.record(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limit {}) original={} rust={} {:x?} x {:x?}", p, pos as u16, flags, limit, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limit {}) original={} rust={} {:x?} x {:x?}", p, pos as u16, flags, limit, r, n, mo, mr));
     r
 }
 
@@ -1580,6 +1580,6 @@ unsafe extern "C" fn comparar_lineup_slot_score(
         || o(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias),
         || crate::rng::without_counting(|| lineup_slot_score(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias)),
     );
-    PLACAR.record(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
     r
 }

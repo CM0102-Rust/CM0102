@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) {
         }
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&regioes, || o(this), || init_squad_fitness(this));
-    PLACAR.record(igual, || format!("init_squad_fitness: memória difere ({} regiões)", regioes.len()));
+    SCOREBOARD.record(igual, || format!("init_squad_fitness: memória difere ({} regiões)", regioes.len()));
 }
 
 /// Comparador: a original aloca, sorteia e lesiona (0x62d250): roda só ela e confere o que a 0x62d250 não muda: o
@@ -242,7 +242,7 @@ unsafe extern "thiscall" fn comparar_init_records(this: usize) {
         return;
     }
     let errado = (0..cpp9_i(0xae2364).max(0) as usize).find(|&k| cpp9_b(v + 31 * k + 0x1e) != 0x32);
-    PLACAR.record(errado.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", errado));
+    SCOREBOARD.record(errado.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", errado));
 }
 
 /// Comparador: a original aloca as listas: o plano antes (os ids dos clubes de cada nação, na ordem); a original roda;
@@ -264,5 +264,5 @@ unsafe extern "thiscall" fn comparar_build_nation_club_lists(this: usize) {
         let ids: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().map(|e| cpp9_d(e)).collect() } else { Vec::new() };
         l != 0 && ids != plano[k]
     });
-    PLACAR.record(errada.is_none(), || format!("build_nation_club_lists: a lista da nação {:?} difere do plano", errada));
+    SCOREBOARD.record(errada.is_none(), || format!("build_nation_club_lists: a lista da nação {:?} difere do plano", errada));
 }

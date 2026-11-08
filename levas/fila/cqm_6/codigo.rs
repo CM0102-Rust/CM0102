@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize, ano: u32) 
     let r = o(this, ano);
     let ok = r == this && cqm6_d(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && *((this + 0x50) as *const u8) == 0xff && cqm6_d(this + 4) == comp_record_of_key(0x9cf6b0);
-    PLACAR.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, cqm6_d(this), cqm6_d(this + 4)));
+    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, cqm6_d(this), cqm6_d(this + 4)));
     r
 }
 
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32
             ok = ok && cqm6_d(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
         }
     }
-    PLACAR.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plano));
+    SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plano));
     r
 }
 
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn comparar_spa_lower_create_table(this: usize) -> u32 
             ok = ok && cqm6_d(t + i * 0x3b) == c;
         }
     }
-    PLACAR.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plano,
+    SCOREBOARD.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plano,
         (0..plano.len()).map(|i| if t != 0 { cqm6_d(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
     r
 }

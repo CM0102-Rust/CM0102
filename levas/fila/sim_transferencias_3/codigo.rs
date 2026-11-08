@@ -159,7 +159,7 @@ unsafe extern "stdcall" fn comparar_transfer_manager_close_offer_contract_offers
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(oferta), || transfer_manager_close_offer_contract_offers(oferta));
-    PLACAR.record(igual, || format!("transfer_manager_close_offer_contract_offers(id {}) {:x?} x {:x?}", ids[0], mo, mr));
+    SCOREBOARD.record(igual, || format!("transfer_manager_close_offer_contract_offers(id {}) {:x?} x {:x?}", ids[0], mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_queue_free_transfer(gerente: usize, pessoa: usize, motivo: u8, compensacao: u32) {
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_queue_free_transfer(gerente: usize, pessoa:
     let depois = core::ptr::read_unaligned(l as *const u16);
     let cauda = core::ptr::read_unaligned((l + 6) as *const usize);
     let novo = if cauda == 0 { None } else { Some(*(*(cauda as *const usize) as *const [u8; 9])) };
-    PLACAR.record(depois == antes.wrapping_add(1) && novo == registro,
+    SCOREBOARD.record(depois == antes.wrapping_add(1) && novo == registro,
         || format!("queue_free_transfer {} -> {} original={:x?} rust={:x?}", antes, depois, novo, registro));
 }
 
@@ -205,6 +205,6 @@ unsafe extern "thiscall" fn comparar_get_exchange_negotiations_for_player(gerent
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(gerente, pessoa, saida),
         || get_exchange_negotiations_for_player(gerente, pessoa, saida));
-    PLACAR.record(igual && r == n, || format!("get_exchange_negotiations_for_player original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_exchange_negotiations_for_player original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

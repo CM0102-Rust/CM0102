@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize)
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && lista, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    SCOREBOARD.record(igual && a == b && lista, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -233,6 +233,6 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(s2);
     }
-    PLACAR.record(igual && a == b && lista, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
+    SCOREBOARD.record(igual && a == b && lista, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
     a
 }

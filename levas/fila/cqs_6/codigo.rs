@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     o(this);
     let f = cqs6_d(cqs6_d(this + 0xc) + 4);
-    PLACAR.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
+    SCOREBOARD.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
 }
 
 /// { 0x56c010 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual da classificação final, n = 1 até 2002-06-01): `EngAutoCup::

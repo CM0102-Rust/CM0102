@@ -95,7 +95,7 @@ unsafe extern "stdcall" fn comparar_collect_conmebol_clubs(saida: *mut usize) ->
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.record(igual && tabela, || format!("collect_conmebol_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqj2_dif(&mo, &mr)));
+    SCOREBOARD.record(igual && tabela, || format!("collect_conmebol_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqj2_dif(&mo, &mr)));
     a
 }
 
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn comparar_update_for_new_season(this: usize, pular: u
     let mut reg = club_seeding_regions();
     reg.push((this + 0x6f, 2));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pular), || update_for_new_season(this, pular));
-    PLACAR.record(igual, || format!("update_for_new_season({}): diferenças em {:x?}", pular, cqj2_dif(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("update_for_new_season({}): diferenças em {:x?}", pular, cqj2_dif(&mo, &mr)));
 }
 
 /// { 0x4c6960 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::set_bra_champ_cup_winner`): guarda o id do
@@ -146,5 +146,5 @@ unsafe extern "thiscall" fn comparar_set_bra_champ_cup_winner(this: usize, clube
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let reg = [(this + 0x71, 4)];
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, clube), || set_bra_champ_cup_winner(this, clube));
-    PLACAR.record(igual, || format!("set_bra_champ_cup_winner({:x})", clube));
+    SCOREBOARD.record(igual, || format!("set_bra_champ_cup_winner({:x})", clube));
 }

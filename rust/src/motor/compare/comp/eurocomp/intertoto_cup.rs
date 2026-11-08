@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(t
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(s2);
     }
-    PLACAR.record(igual && a == b && list, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, list));
     a
 }
 
@@ -92,24 +92,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(th
             same &= read_u32_as_usize(l) == c && read_u8(l + 4) == 4;
         }
     }
-    PLACAR.record(same, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, read_i16(uefa + 0x36), previsto, &v[..k]));
+    SCOREBOARD.record(same, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, read_i16(uefa + 0x36), previsto, &v[..k]));
     r
 }
 
 /// Comparer for `intertoto_cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    if clube == 0 {
-        return o(this, clube, outcome, a3, a4, jogo, a6);
+    if club == 0 {
+        return o(this, club, outcome, a3, a4, game, a6);
     }
-    let before = read_u32_as_usize(clube + club::EURO_FLAG);
+    let before = read_u32_as_usize(club + club::CONTINENTAL_COMP_ID);
     let previsto = match outcome as u8 {
         1 => read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP),
         0xff | 2 => 0xffff_ffff,
         _ => before,
     };
-    let r = o(this, clube, outcome, a3, a4, jogo, a6);
-    let after = read_u32_as_usize(clube + club::EURO_FLAG);
-    PLACAR.record(r == 0 && after == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, outcome as u8, before, after, previsto, r));
+    let r = o(this, club, outcome, a3, a4, game, a6);
+    let after = read_u32_as_usize(club + club::CONTINENTAL_COMP_ID);
+    SCOREBOARD.record(r == 0 && after == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club, outcome as u8, before, after, previsto, r));
     r
 }

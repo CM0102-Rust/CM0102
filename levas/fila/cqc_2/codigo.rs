@@ -550,7 +550,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
 unsafe extern "thiscall" fn comparar_get_max_wage(fin: usize, pessoa: usize, cargo: u32) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%)(fin, pessoa, cargo);
     let n = get_max_wage(fin, pessoa, cargo);
-    PLACAR.record(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, pessoa, cargo as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, pessoa, cargo as u8 as i8, r, n));
     r
 }
 

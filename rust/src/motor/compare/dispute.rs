@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_dispute(this: usize, p: u
             reg.push((list, 0xe));
         }
         let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p), || remove_dispute(this, p));
-        PLACAR.record(igual, || format!("remove_dispute(pessoa {:x}) {:x?} x {:x?}", p, mo.0, mr.0));
+        SCOREBOARD.record(igual, || format!("remove_dispute(pessoa {:x}) {:x?} x {:x?}", p, mo.0, mr.0));
         return;
     }
     let mut found = 0i16;
@@ -44,6 +44,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_dispute(this: usize, p: u
     }
     o(this, p);
     let count_after = if list != 0 { read_i16(list) } else { 0 };
-    PLACAR.record(*(m as *const u8) == 0 && count_after == count_before - found,
+    SCOREBOARD.record(*(m as *const u8) == 0 && count_after == count_before - found,
         || format!("remove_dispute(pessoa {:x}) conta {} -> {} (achou {})", p, count_before, count_after, found));
 }

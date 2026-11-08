@@ -54,7 +54,7 @@ unsafe extern "C" fn comparar_staff_add_disliked_club(pessoa: usize, clube: usiz
     let reg = dbq2_regioes(if pref != 0 { pref + 4 } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa, clube, forcar),
         || crate::rng::without_counting(|| staff_add_disliked_club(pessoa, clube, forcar)));
-    PLACAR.record(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
+    SCOREBOARD.record(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
 }
 
 /// { 0x547f90 } (cdecl, Database.cpp): `staff_fade_staff_relationships(pessoa)`: cada uma das três pessoas favoritas
@@ -86,7 +86,7 @@ unsafe extern "C" fn comparar_staff_fade_staff_relationships(pessoa: usize) {
     let reg = dbq2_regioes(if pref != 0 { pref + 0x1c } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa),
         || crate::rng::without_counting(|| staff_fade_staff_relationships(pessoa)));
-    PLACAR.record(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// { 0x5480f0 } (cdecl, Database.cpp): `staff_get_disliked_staff(pessoa, saida, n)`: zera o byte `*n` (sempre, antes
@@ -118,6 +118,6 @@ unsafe extern "C" fn comparar_staff_get_disliked_staff(pessoa: usize, saida: usi
         reg.push((saida, 12));
     }
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa, saida, n), || staff_get_disliked_staff(pessoa, saida, n));
-    PLACAR.record(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
+    SCOREBOARD.record(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
     r
 }

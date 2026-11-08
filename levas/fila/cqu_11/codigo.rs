@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn comparar_cqu11_recopa_classificados(this: usize) -> 
             nacoes.push(nacao);
         }
         let ok = lista != 0 && cqu11_d(this + 0xb6) == 0x20 && erro == 0;
-        PLACAR.record(ok, || format!("cqu11_recopa_classificados({:#x}): lista {:#x} +0xb6 {} vaga errada {}", this, lista, cqu11_d(this + 0xb6), erro));
+        SCOREBOARD.record(ok, || format!("cqu11_recopa_classificados({:#x}): lista {:#x} +0xb6 {} vaga errada {}", this, lista, cqu11_d(this + 0xb6), erro));
     }
     r
 }
@@ -251,7 +251,7 @@ unsafe fn cqu11_comparar_fase(nome: &str, this: usize, o: impl FnOnce()) {
     let mut lidos: Vec<usize> = if t != 0 { (0..n).map(|i| cqu11_d(t + i * 6)).collect() } else { Vec::new() };
     lidos.sort_unstable();
     plano.sort_unstable();
-    PLACAR.record(cqu11_d(this + 0x30) == 0 && lidos == plano, || format!("{}({:#x}): times {:x?} plano {:x?} +0x30 {}", nome, this, lidos, plano, cqu11_d(this + 0x30) as i32));
+    SCOREBOARD.record(cqu11_d(this + 0x30) == 0 && lidos == plano, || format!("{}({:#x}): times {:x?} plano {:x?} +0x30 {}", nome, this, lidos, plano, cqu11_d(this + 0x30) as i32));
 }
 
 unsafe extern "thiscall" fn comparar_cqu11_recopa_fase_oeste(this: usize) {
@@ -339,7 +339,7 @@ unsafe fn cqu11_comparar_posicoes(nome: &str, this: usize, o: impl FnOnce()) {
             erro = Some((m, posicoes));
         }
     }
-    PLACAR.record(erro.is_none(), || format!("{}({:#x}): posições pela reputação {:?}", nome, this, erro));
+    SCOREBOARD.record(erro.is_none(), || format!("{}({:#x}): posições pela reputação {:?}", nome, this, erro));
 }
 
 unsafe extern "thiscall" fn comparar_cqu11_recopa_previstas(this: usize) {

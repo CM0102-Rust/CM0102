@@ -19,7 +19,7 @@ MUTACOES = [
     ('s_mando', "more(b(0xf5be + s * 0x36));", "more(b(0xf5bd + s * 0x36));", "simulacao rapida gol do mando"),
     ('s_lesao', "cl = cl.wrapping_add(0xf);", "cl = cl.wrapping_add(0xe);", "simulacao rapida lesao"),
     ('s_nota', "as i8).clamp(1, 10);", "as i8).clamp(1, 9);"),
-    ('s_amistoso', "let a = (*((p + 0x3b) as *const i16) as f64 - read_f64_at(0x968e30)) * read_f64_at(0x968ff8);", "let a = (*((p + 0x3b) as *const i16) as f64 - read_f64_at(0x968e30) - 1.0) * read_f64_at(0x968ff8);", "simulacao rapida nota do amistoso"),
+    ('s_amistoso', "let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64_at(0x968e30)) * read_f64_at(0x968ff8);", "let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64_at(0x968e30) - 1.0) * read_f64_at(0x968ff8);", "simulacao rapida nota do amistoso"),
     ('s_contador', "*w(x) = (sortear(6) + 12) as i16;", "*w(x) = (sortear(6) + 13) as i16;", "simulacao rapida contador reiniciado"),
     ('s_contador_igual', "*w(x) = (*w(x)).wrapping_add((-1i32).wrapping_sub(r) as i16);", "*w(x) = (*w(x)).wrapping_add((-2i32).wrapping_sub(r) as i16);", "simulacao rapida contador igual"),
     ('s_periodo', "0x69 => *w(0x8ed4) = 0x528,", "0x69 => *w(0x8ed4) = 0x529,"),

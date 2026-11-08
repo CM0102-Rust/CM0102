@@ -45,7 +45,7 @@ pub(crate) unsafe fn panel_competition_name(c: usize, rounds: usize) {
     } else if key == *(KEY_CLUB_COMP_RESERVE as *const usize) && more_of_one {
         text(0xde1f64, 0xa16310);
     } else {
-        copy_to_work_text(c + 0x38);
+        copy_to_work_text(c + competition::SHORT_NAME);
     }
 }
 

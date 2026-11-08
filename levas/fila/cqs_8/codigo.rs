@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(this: usize) -
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(tr);
     }
-    PLACAR.record(igual && a == b && tabela, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    SCOREBOARD.record(igual && a == b && tabela, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }
 
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn comparar_get_group_team_count(this: usize, g: u32) -
         return r; // ponytail: o formato desconhecido mostra a caixa: só a original
     }
     let n = group_team_count(this, g);
-    PLACAR.record(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
     r
 }
 
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn comparar_get_qualification_status(this: usize, clube
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i16>(%%I2%%);
     let r = o(this, clube);
     let n = qualification_status(this, clube);
-    PLACAR.record(r == n, || format!("get_qualification_status({:#x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("get_qualification_status({:#x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -184,6 +184,6 @@ unsafe extern "thiscall" fn comparar_init_group_one_table(this: usize) -> u32 {
     let t = cqs8_d(this + 0xb1);
     let ok = r == 1 && cqs8_w(this + 0x3e) == n && cqs8_w(this + 0xa7) == (n - 1).wrapping_mul(cqs8_w(this + 0x3c)) && t != 0
         && plano.iter().enumerate().all(|(k, &c)| cqs8_d(t + k * 0x3b) == c);
-    PLACAR.record(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plano));
+    SCOREBOARD.record(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plano));
     r
 }

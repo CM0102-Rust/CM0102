@@ -6,7 +6,7 @@ MUTACOES = [
     ('a_mascara', "(0x5c, 0x810)", "(0x5c, 0x804)"),
     ('a_ja_jogou', "                if ja_jogou(u(G_TRANSFER_MANAGER, 0), p, x) != 0 || impedido(", "                if impedido("),
     ('c_estado', "        if state(u(G_INJURY, 0), p) == 2 || (byte(t, 0x19) != 0", "        if state(u(G_INJURY, 0), p) == 1 || (byte(t, 0x19) != 0"),
-    ('c_selecao', "    let mut mask: u32 = if national_team(clube) != 0 { 0x208a09c } else { 0xca0ca };", "    let mut mask: u32 = if national_team(clube) != 0 { 0x208a09c } else { 0xca0cb };"),
+    ('c_selecao', "    let mut mask: u32 = if national_team(club) != 0 { 0x208a09c } else { 0xca0ca };", "    let mut mask: u32 = if national_team(club) != 0 { 0x208a09c } else { 0xca0cb };"),
     ('c_sorteio', "            let lim = sorteio(3000) + 3000;", "            let lim = sorteio(3000) + 2000;"),
     ('r_referencia', "                        let v = h16(fi, 0xd).wrapping_add(h16(fi, 0xb));", "                        let v = h16(fi, 0xd);"),
     ('v_extra', "            ww(o, if v < 3 { 4 } else if v >= 6 { 0x40 } else { 0x10 });", "            ww(o, if v < 3 { 4 } else if v >= 5 { 0x40 } else { 0x10 });"),

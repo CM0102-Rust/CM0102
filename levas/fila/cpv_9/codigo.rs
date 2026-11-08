@@ -105,13 +105,13 @@ unsafe extern "stdcall" fn comparar_player_regen_sign_for_club(pessoa: usize, cl
     let k = first_free_squad_slot(clube);
     let r = o(pessoa, clube);
     if k == 0x32 {
-        PLACAR.record(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", pessoa, clube, r));
+        SCOREBOARD.record(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", pessoa, clube, r));
         return r;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(cpv9_d(0xae1050) as usize, pessoa);
     let ok = r == 1 && cpv9_d(clube + 0xd7 + 4 * k) == pessoa as i32 && cpv9_d(pessoa + 0x39) == clube as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
-    PLACAR.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", pessoa, clube, k, r));
+    SCOREBOARD.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", pessoa, clube, k, r));
     r
 }
 
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn comparar_schedule_injury_retirement(this: usize, pes
     reg.push((this + 4, 12));
     reg.push((cpv9_d(this + 4) as usize, cap as usize * 0x1a));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, dias), || crate::rng::without_counting(|| schedule_injury_retirement(this, pessoa, dias)));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("schedule_injury_retirement({:x}, {}) diferencas em {:x?}", pessoa, dias, dif)

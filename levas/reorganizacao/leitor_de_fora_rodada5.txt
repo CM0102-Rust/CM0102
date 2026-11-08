@@ -1,0 +1,18 @@
+Leitor de fora, rodada 5 (08/11/2026, manhã). Veredito: bem melhor que a rodada 4 nas bordas das rotinas (as que usam
+registros leem como Rust: player_regen.rs, a aposentadoria); o motor de partidas e os objetos de classe (this, m, p, o
+com deslocamento cru) seguem desmontagem anotada. ~10.900 deslocamentos crus contra ~7.800 campos com nome;
+match_pl.rs tem 10.100 linhas e só 83 usos de match_player::. Português visível: 7-9% das linhas de comentário fora do
+[pt] (motor.rs, desvios.rs, simulacao.rs); 6% das ocorrências de identificadores (clube, nacao, sorteio, contrato...);
+quase todos os rótulos de branch("...") e mensagens do placar.
+Os 10 obstáculos: 1. campos com nome não usados (o + 0x1b em transfer_manager.rs:184, 0x198/0x1a2 em match_pl.rs,
+this + 0x50 em eng_prm.rs); 2. usize sem tipo em toda parte (newtypes Club(usize) com acessores gerados do fields.rs);
+3. números mágicos (códigos de rodada 0x82/0x96, idades em hex, ids de narração); 4. ~1.400 floats lidos de endereços do
+exe (read_f32_at(0x96d78c) // = 9500); 5. nomes de campo que contradizem o uso (staff::YEAR_OF_BIRTH lido como idade
+i8; nation::NATIONALITY usado como nome); 6. o motor em closures (u, b, w, par...: uma visão MatchPlayer com métodos);
+7. andaime de teste no meio da lógica (43 static mut *_DRY_RUN, 1.051 marcas // cqb6:, 1.710 branch("cqn_12 ..."));
+8. auxiliares com nome de onde moram e repetidos (6 variantes do contrato principal, 3 de clube por id; 92 com
+endereço no nome); 9. motor.rs de 10.771 linhas (PROLOGOS com ordinais em português, tabelas paralelas, ZERADAS e
+SO_NA_COMPARACAO vazias); 10. infraestrutura meio traduzida (rng.rs todo em português, PLACAR x Scoreboard, desvios,
+simulacao, alocador, registro::linha).
+Bom e a manter: um arquivo por .cpp com a árvore compare/ espelhada; o cabeçalho com Original:; o vocabulário no
+cabeçalho do motor.rs; os comentários do fields.rs; FN_* no lugar de transmute de endereço; o modelo lado a lado.

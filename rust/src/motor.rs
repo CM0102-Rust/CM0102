@@ -37,7 +37,7 @@
 //! `i`. Cada arquivo de `motor/` tem as rotinas do arquivo de origem do jogo de mesmo nome; o vocabulário está acima.
 
 use crate::comparison::{Scoreboard, TestRng};
-use crate::desvios::{self, Prologo};
+use crate::detours::{self, Prologo};
 use crate::registro::linha;
 
 const PROLOGOS: [Prologo; N] = [
@@ -121,7 +121,7 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6cb700, bytes: &[0x51, 0x53, 0x8a, 0x5c, 0x24, 0x10] },
     // 0x6cc4e0: movsx eax, byte ptr [esp + 4]
     Prologo { endereco: 0x6cc4e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    // decima segunda leva: acessores do estado da partida (match_pl.cpp, 0x700320..0x700410)
+    // batch 12: match state accessors (match_pl.cpp, 0x700320..0x700410)
     Prologo { endereco: 0x700320, bytes: &[0x8a, 0x81, 0xa7, 0x8e, 0x00, 0x00] },
     Prologo { endereco: 0x700330, bytes: &[0x8a, 0x81, 0xa8, 0x8e, 0x00, 0x00] },
     Prologo { endereco: 0x700340, bytes: &[0x8a, 0x81, 0xa9, 0x8e, 0x00, 0x00] },
@@ -136,7 +136,7 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x7003b0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x80, 0xfa, 0xff] },
     Prologo { endereco: 0x714c60, bytes: &[0x8a, 0x91, 0x01, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6cd660, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
-    // decima terceira leva
+    // batch 13
     Prologo { endereco: 0x6cbbb0, bytes: &[0x56, 0x0f, 0xbe, 0x74, 0x24, 0x08] },
     Prologo { endereco: 0x6cb650, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
     Prologo { endereco: 0x6cd5f0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
@@ -145,12 +145,12 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6c3010, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
     Prologo { endereco: 0x6c3a00, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c3950, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
-    // decima quarta leva
+    // batch 14
     Prologo { endereco: 0x6c06b0, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c07a0, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c0a70, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c2750, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
-    // decima quinta leva
+    // batch 15
     Prologo { endereco: 0x6f4a30, bytes: &[0x66, 0x8b, 0x81, 0x9a, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6ce0f0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x33, 0xc0] },
     Prologo { endereco: 0x70df20, bytes: &[0x8a, 0x81, 0x02, 0x01, 0x00, 0x00] },
@@ -166,7 +166,7 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x70df70, bytes: &[0x8a, 0x41, 0x27, 0x3c, 0x01] },
     Prologo { endereco: 0x6bba10, bytes: &[0x83, 0xc8, 0xff, 0x33, 0xd2] },
     Prologo { endereco: 0x6cf710, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    // decima sexta leva
+    // batch 16
     Prologo { endereco: 0x6c0890, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c0980, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c0b70, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
@@ -174,24 +174,24 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x714ca0, bytes: &[0x8a, 0x91, 0x01, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6cdd00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56, 0x57] },
     Prologo { endereco: 0x70d630, bytes: &[0x8a, 0x41, 0x27, 0x56, 0xf6, 0xd8] },
-    // decima setima leva
+    // batch 17
     Prologo { endereco: 0x6bba80, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] },
     Prologo { endereco: 0x6c41b0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x53] },
     Prologo { endereco: 0x713d90, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c] },
-    // decima oitava leva
+    // batch 18
     Prologo { endereco: 0x6d0f80, bytes: &[0x83, 0xec, 0x20, 0x8b, 0x81, 0x92, 0x47, 0x00, 0x00] },
     Prologo { endereco: 0x6c2880, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
     Prologo { endereco: 0x6c2a40, bytes: &[0x8a, 0x81, 0xae, 0x8e, 0x00, 0x00] },
-    // decima nona leva
+    // batch 19
     Prologo { endereco: 0x6ce9c0, bytes: &[0x83, 0xec, 0x10, 0x8a, 0x44, 0x24, 0x14] },
     Prologo { endereco: 0x6c2050, bytes: &[0x83, 0xec, 0x10, 0x0f, 0xbe, 0x54, 0x24, 0x14] },
-    // vigesima leva
+    // batch 20
     Prologo { endereco: 0x716450, bytes: &[0xd9, 0x44, 0x24, 0x04, 0xd8, 0x89, 0xa2, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x7165b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
     Prologo { endereco: 0x6bb8d0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
     Prologo { endereco: 0x6bb950, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6c2310, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
-    // vigesima primeira leva (rotinas sem arquivo no mapa, chamadas pelo motor)
+    // batch 21 (routines with no file in the map, called by the engine)
     Prologo { endereco: 0x717400, bytes: &[0x66, 0x8b, 0x81, 0xbc, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x7160d0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x51, 0x2b] },
     Prologo { endereco: 0x7160e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x41, 0x2b] },
@@ -205,103 +205,103 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6f0970, bytes: &[0x8b, 0x91, 0x9e, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x6e1cd0, bytes: &[0x8b, 0x41, 0x23, 0x8b, 0x54, 0x24, 0x04] },
     Prologo { endereco: 0x6d5cd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x25, 0xff, 0x7f, 0x00, 0x00] },
-    // vigesima segunda leva
+    // batch 22
     Prologo { endereco: 0x715f50, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] },
     Prologo { endereco: 0x7172d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8a, 0x5c, 0x24, 0x10] },
-    // vigesima terceira leva
+    // batch 23
     Prologo { endereco: 0x6f0630, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] },
-    // vigesima quarta leva
+    // batch 24
     Prologo { endereco: 0x6e9470, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
     Prologo { endereco: 0x6bab90, bytes: &[0x8a, 0x81, 0x5a, 0x47, 0x00, 0x00] },
     Prologo { endereco: 0x6e9540, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    // vigesima quinta leva
+    // batch 25
     Prologo { endereco: 0x6e9630, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] },
     Prologo { endereco: 0x6ea4e0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    // vigesima sexta leva
+    // batch 26
     Prologo { endereco: 0x6cfca0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
     Prologo { endereco: 0x6cfcd0, bytes: &[0x8b, 0x44, 0x24, 0x20, 0x8b, 0x54, 0x24, 0x1c] },
     Prologo { endereco: 0x6cfd10, bytes: &[0x8b, 0x44, 0x24, 0x18, 0x8b, 0x54, 0x24, 0x14] },
-    // vigesima setima leva
+    // batch 27
     Prologo { endereco: 0x6ea760, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6cfd70, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
-    // vigesima oitava leva
+    // batch 28
     Prologo { endereco: 0x6eab60, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
     Prologo { endereco: 0x6cfd40, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
-    // vigesima nona leva
+    // batch 29
     Prologo { endereco: 0x6c23f0, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
-    // trigesima leva
+    // batch 30
     Prologo { endereco: 0x6cf750, bytes: &[0x66, 0x8b, 0x81, 0xd4, 0x8e, 0x00, 0x00] },
-    // trigesima primeira leva
+    // batch 31
     Prologo { endereco: 0x6ce460, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56, 0x57] },
-    // trigesima segunda leva
+    // batch 32
     Prologo { endereco: 0x6c30e0, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
-    // trigesima terceira leva
+    // batch 33
     Prologo { endereco: 0x700420, bytes: &[0x8b, 0x44, 0x24, 0x18, 0x83, 0xec, 0x08] },
-    // trigesima quarta leva
+    // batch 34
     Prologo { endereco: 0x6f46b0, bytes: &[0x8a, 0x81, 0x02, 0x01, 0x00, 0x00] },
-    // trigesima quinta leva
+    // batch 35
     Prologo { endereco: 0x6bce80, bytes: &[0x83, 0xec, 0x2c, 0x55, 0x8b, 0x6c, 0x24, 0x34] },
-    // trigesima sexta leva
+    // batch 36
     Prologo { endereco: 0x70d690, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    // trigesima setima leva
+    // batch 37
     Prologo { endereco: 0x6ccb60, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x14] },
-    // trigesima oitava leva (match_day.cpp)
+    // batch 38 (match_day.cpp)
     Prologo { endereco: 0x6b59a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6b7cf0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    // trigesima nona leva (comentarios: invólucros de 0x6d6f70)
+    // batch 39 (commentary: wrappers of 0x6d6f70)
     Prologo { endereco: 0x7002f0, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x8b, 0x54, 0x24, 0x10] },
     Prologo { endereco: 0x70a860, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
-    // quadragesima leva
+    // batch 40
     Prologo { endereco: 0x6cd490, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x86, 0xb2, 0x8e, 0x00, 0x00] },
-    // quadragesima primeira leva (prova de rotina grande)
+    // batch 41 (large routine trial)
     Prologo { endereco: 0x700bd0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    // quadragesima segunda leva (integradora grande)
+    // batch 42 (large integrating routine)
     Prologo { endereco: 0x6c0c60, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    // quadragesima terceira leva
+    // batch 43
     Prologo { endereco: 0x6c51e0, bytes: &[0x83, 0xec, 0x24, 0x53, 0x55, 0x8b, 0xe9] },
-    // quadragesima quarta leva
+    // batch 44
     Prologo { endereco: 0x6bbe40, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x82, 0xf5, 0x00, 0x00] },
-    // quadragesima quinta leva
+    // batch 45
     Prologo { endereco: 0x7164b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] },
-    // quadragesima sexta leva
+    // batch 46
     Prologo { endereco: 0x547810, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
     Prologo { endereco: 0x547840, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
     Prologo { endereco: 0x5b5910, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x33, 0xd2] },
-    // quadragesima setima leva
+    // batch 47
     Prologo { endereco: 0x6d1770, bytes: &[0x81, 0xec, 0x34, 0x04, 0x00, 0x00] },
-    // quadragesima oitava leva (folhas de outros modulos chamadas pelo motor)
+    // batch 48 (leaves of other modules called by the engine)
     Prologo { endereco: 0x4b0850, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x3d, 0xe8, 0x03, 0x00, 0x00] },
     Prologo { endereco: 0x5c6710, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x04] },
     Prologo { endereco: 0x4cf5a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
     Prologo { endereco: 0x53b900, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    // quadragesima nona leva (human_manager.cpp e formation.cpp)
+    // batch 49 (human_manager.cpp and formation.cpp)
     Prologo { endereco: 0x5fd210, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5fd480, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5b5a60, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04, 0x3d, 0x08, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x5b73a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    // quinquagesima leva
+    // batch 50
     Prologo { endereco: 0x5409b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6ce310, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] },
-    // quinquagesima primeira leva
+    // batch 51
     Prologo { endereco: 0x6d4330, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8a, 0x5c, 0x24, 0x14] },
-    // quinquagesima segunda leva
+    // batch 52
     Prologo { endereco: 0x6cdd50, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    // quinquagesima terceira leva
+    // batch 53
     Prologo { endereco: 0x6bbf60, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] },
-    // quinquagesima quarta leva
+    // batch 54
     Prologo { endereco: 0x6d3de0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x0c] },
-    // quinquagesima quinta leva
+    // batch 55
     Prologo { endereco: 0x6d3610, bytes: &[0x83, 0xec, 0x3c, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    // quinquagesima sexta leva
+    // batch 56
     Prologo { endereco: 0x6ceb90, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] },
-    // quinquagesima setima leva
+    // batch 57
     Prologo { endereco: 0x6c4290, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6c4470, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6c50d0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
-    // quinquagesima oitava leva
+    // batch 58
     Prologo { endereco: 0x5b5290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
     Prologo { endereco: 0x6d10a0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
-    // quinquagesima nona leva
+    // batch 59
     Prologo { endereco: 0x5b58e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
     Prologo { endereco: 0x7160f0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
     Prologo { endereco: 0x53b3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
@@ -333,7 +333,7 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x5b09d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
     Prologo { endereco: 0x5afe00, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] },
     Prologo { endereco: 0x849ce0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0xdc, 0x00, 0x00, 0x00] },
-    // 4 bytes de rotina (mov + ret) e o primeiro nop do alinhamento: o ret sai antes do salto de volta
+    // 4 bytes of routine (mov + ret) and the first alignment nop: the ret runs before the jump back
     Prologo { endereco: 0x8676f0, bytes: &[0x8b, 0x41, 0x40, 0xc3, 0x90] },
     Prologo { endereco: 0x68d1b0, bytes: &[0x8b, 0x51, 0x0a, 0x85, 0xd2] },
     Prologo { endereco: 0x62c3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x64, 0x23, 0xae, 0x00] },
@@ -375,7 +375,7 @@ const PROLOGOS: [Prologo; N] = [
     Prologo { endereco: 0x6ec010, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] },
     Prologo { endereco: 0x6eecb0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
     Prologo { endereco: 0x6bbb60, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    // estes dois terminam numa instrucao relativa, refeita no trampolim (RELATIVAS em desvios.rs)
+    // these two end in a relative instruction, rebuilt in the trampoline (RELATIVAS in desvios.rs)
     Prologo { endereco: 0x714d00, bytes: &[0x80, 0x79, 0x27, 0x01, 0x75, 0x15] },
     Prologo { endereco: 0x6f55c0, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0xe8, 0xd7, 0xee, 0xff, 0xff] },
     Prologo { endereco: 0x6b61e0, bytes: &[0x53, 0x8b, 0x15, 0x68, 0xf6, 0x9c, 0x00] },
@@ -2227,7 +2227,10 @@ const PROLOGOS: [Prologo; N] = [
 const N: usize = 2092;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
-/// Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
+/// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
+/// bytes) and the fields up to +0xf63a lie beyond 0xf5f8.
+///
+/// [pt] Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
 /// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
 const MOTOR: usize = 0xf63b;
 
@@ -2237,7 +2240,9 @@ unsafe fn byte(p: usize, off: usize) -> i8 {
     *((p + off) as *const i8)
 }
 
-/// Valor do jogador numa tabela de 11 palavras (uma por lado), pela posicao dele (0..=10).
+/// The player's value in a table of 11 words (one per side), by the player's position (0..=10).
+///
+/// [pt] Valor do jogador numa tabela de 11 palavras (uma por lado), pela posicao dele (0..=10).
 unsafe fn tabela_por_posicao(this: usize, jogador: usize, campo: usize) -> u16 {
     let posicao = byte(jogador, 0x19);
     if !(0..=10).contains(&posicao) {
@@ -2255,7 +2260,9 @@ unsafe fn tabela_por_posicao(this: usize, jogador: usize, campo: usize) -> u16 {
 
 
 
-/// { 0x714d30 } (match_pl.cpp, 4 bytes, nao desviavel): lado do jogador. Lido direto.
+/// { 0x714d30 } (match_pl.cpp, 4 bytes, not hookable): the player's side. Read directly.
+///
+/// [pt] { 0x714d30 } (match_pl.cpp, 4 bytes, nao desviavel): lado do jogador. Lido direto.
 unsafe fn lado(jogador: usize) -> i8 {
     byte(jogador, 0x27)
 }
@@ -3331,7 +3338,7 @@ pub(crate) use self::weather::*;
 pub(crate) mod zipdir;
 pub(crate) use self::zipdir::*;
 
-// ---------- centesima sexagesima primeira leva: lista de observacao, codigo da posicao e criterio da comissao ----------
+// ---------- 161st batch: watch list, position code and staff criterion ----------
 
 
 
@@ -3340,9 +3347,12 @@ pub(crate) use self::zipdir::*;
 
 comparar_valor!(comparar_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
 
-// ---------- centesima sexagesima segunda leva: as vagas da tabela tatica (tactics.cpp) ----------
+// ---------- 162nd batch: the slots of the tactics table (tactics.cpp) ----------
 
-/// A linha `linha` da tabela tática do objeto `t` ([t+0x601], 0x91 bytes por linha: palavra da
+/// Row `linha` of the tactics table of object `t` ([t+0x601], 0x91 bytes per row: the formation
+/// word and 20 slots of 4 bytes from +2).
+///
+/// [pt] A linha `linha` da tabela tática do objeto `t` ([t+0x601], 0x91 bytes por linha: palavra da
 /// formação e 20 vagas de 4 bytes a partir de +2).
 unsafe fn linha_da_tabela(t: usize, linha: i32) -> usize {
     core::ptr::read_unaligned((t + 0x601) as *const usize).wrapping_add((linha as usize).wrapping_mul(0x91))
@@ -3351,7 +3361,10 @@ unsafe fn linha_da_tabela(t: usize, linha: i32) -> usize {
 
 
 
-/// As regiões que as três podem tocar: a linha do clube na tabela (se houver) e as instruções
+/// The regions the three can touch: the club's row in the table (if any) and the pending
+/// instructions with the counter (+0x30..+0x5f1).
+///
+/// [pt] As regiões que as três podem tocar: a linha do clube na tabela (se houver) e as instruções
 /// pendentes com o contador (+0x30..+0x5f1).
 unsafe fn regioes_da_tabela(t: usize, clube: usize, humano: u32) -> Vec<(usize, usize)> {
     let mut r = vec![(t + 0x30, 0x5c1)];
@@ -3367,10 +3380,10 @@ unsafe fn regioes_da_tabela(t: usize, clube: usize, humano: u32) -> Vec<(usize, 
 
 
 
-unsafe extern "stdcall" fn comparar_bola_parada(c: i16) -> u8 {
+unsafe extern "stdcall" fn comparar_set_piece_code(c: i16) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(i16) -> u8>(IDX_SET_PIECE_CODE)(c);
     let n = set_piece_code(c);
-    PLACAR.record(r == n, || format!("set_piece_code({}) original={} rust={}", c, r, n));
+    SCOREBOARD.record(r == n, || format!("set_piece_code({}) original={} rust={}", c, r, n));
     r
 }
 comparar_repartir!(comparar_add_disposition, add_disposition, IDX_ADD_DISPOSITION);
@@ -3378,47 +3391,47 @@ comparar_repartir!(comparar_add_disposition, add_disposition, IDX_ADD_DISPOSITIO
 comparar_repartir!(comparar_split_d, split_d, IDX_SPLIT_D);
 comparar_repartir!(comparar_split_e, split_e, IDX_SPLIT_E);
 comparar_repartir!(comparar_split_f, split_f, IDX_SPLIT_F);
-unsafe extern "thiscall" fn comparar_remover(this: usize, alvo: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_remove_from_list(this: usize, alvo: usize) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_REMOVE_FROM_LIST);
     let n = byte(this, 0x101).max(0) as usize;
     let reg = [(this + 0x101, 1), (this + 0x1ae, 4 * n)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, alvo), || remove_from_list(this, alvo));
-    PLACAR.record(igual && r == x, || format!("remove_from_list(n {}) original={} {:x?} rust={} {:x?}", n, r, mo, x, mr));
+    SCOREBOARD.record(igual && r == x, || format!("remove_from_list(n {}) original={} {:x?} rust={} {:x?}", n, r, mo, x, mr));
     r
 }
-unsafe extern "thiscall" fn comparar_entrar(this: usize, j: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_take_the_field(this: usize, j: usize) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_TAKE_THE_FIELD);
     let l = lado(j) as isize;
     let n = *((this as isize + 0x4592 + l) as *const i8) as isize;
     let reg = [(j + 0x28, 1), (j + 0x102, 2), ((this as isize + 0x4592 + l) as usize, 1), ((this as isize + 0x453a + 4 * (n + 11 * l)) as usize, 4)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, j), || take_the_field(this, j));
-    PLACAR.record(igual && r == x, || format!("take_the_field(lado {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
+    SCOREBOARD.record(igual && r == x, || format!("take_the_field(lado {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
     r
 }
 comparar_valor!(comparar_in_danger, in_danger, IDX_IN_DANGER, () -> u8);
 
 comparar_valor!(comparar_clear_path, clear_path_to, IDX_CLEAR_PATH_TO, (l: i8, x: i8, y: i8) -> u8);
-comparar_valor!(comparar_alcanca_ponto, reaches_the_point, IDX_REACHES_THE_POINT, (x: i8, y: i8) -> u8);
+comparar_valor!(comparar_reaches_the_point, reaches_the_point, IDX_REACHES_THE_POINT, (x: i8, y: i8) -> u8);
 
-unsafe extern "thiscall" fn comparar_destaque(this: usize) {
+unsafe extern "thiscall" fn comparar_choose_standout(this: usize) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CHOOSE_STANDOUT);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x477a, 4)], || f(this), || choose_standout(this));
-    PLACAR.record(igual, || format!("choose_standout original={:x?} rust={:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("choose_standout original={:x?} rust={:x?}", mo, mr));
 }
-unsafe extern "thiscall" fn comparar_escolher_b(this: usize, arg: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_choose_by_role_b(this: usize, arg: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(IDX_CHOOSE_BY_ROLE_B);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg), || crate::rng::without_counting(|| choose_by_role_b(this, arg)));
-    PLACAR.record(igual && r == n, || format!("choose_by_role_b({:#x}) original={} rust={}", arg, r as i8, n as i8));
+    SCOREBOARD.record(igual && r == n, || format!("choose_by_role_b({:#x}) original={} rust={}", arg, r as i8, n as i8));
     r
 }
-unsafe extern "thiscall" fn comparar_casa_formacao(this: usize, j: usize, x: *mut u8, y: *mut u8) {
+unsafe extern "thiscall" fn comparar_formation_square(this: usize, j: usize, x: *mut u8, y: *mut u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_FORMATION_SQUARE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this, j, x, y), || formation_square(this, j, x, y));
-    PLACAR.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, 0x8eae), byte(j, 0x27), byte(j, 0x19), mo, mr));
+    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, 0x8eae), byte(j, 0x27), byte(j, 0x19), mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_percentuais(this: usize, i: i8) {
+unsafe extern "thiscall" fn comparar_compute_percentages(this: usize, i: i8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_COMPUTE_PERCENTAGES);
     let mut reg = Vec::new();
     for s in [i as isize, 3, 4] {
@@ -3427,46 +3440,46 @@ unsafe extern "thiscall" fn comparar_percentuais(this: usize, i: i8) {
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, i), || compute_percentages(this, i));
-    PLACAR.record(igual, || format!("compute_percentages({}) original={:x?} rust={:x?}", i, mo, mr));
+    SCOREBOARD.record(igual, || format!("compute_percentages({}) original={:x?} rust={:x?}", i, mo, mr));
 }
-unsafe extern "thiscall" fn comparar_escolher_c(this: usize, arg: u32, modo: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_choose_by_role_c(this: usize, arg: u32, modo: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CHOOSE_BY_ROLE_C);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, modo), || crate::rng::without_counting(|| choose_by_role_c(this, arg, modo)));
-    PLACAR.record(igual && r == n, || format!("choose_by_role_c({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
+    SCOREBOARD.record(igual && r == n, || format!("choose_by_role_c({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
     r
 }
 
-comparar_valor!(comparar_valor_condicao, value_by_condition, IDX_VALUE_BY_CONDITION, (alvo: usize) -> i32);
-unsafe extern "thiscall" fn comparar_aplicar_time(this: usize, j: usize, f: f32) {
+comparar_valor!(comparar_value_by_condition, value_by_condition, IDX_VALUE_BY_CONDITION, (alvo: usize) -> i32);
+unsafe extern "thiscall" fn comparar_apply_to_team(this: usize, j: usize, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, f32)>(IDX_APPLY_TO_TEAM);
     let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, lado(j), k) + 0x1a2, 4)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, f), || apply_to_team(this, j, f));
-    PLACAR.record(igual, || format!("apply_to_team({}) original={:x?} rust={:x?}", f, mo, mr));
+    SCOREBOARD.record(igual, || format!("apply_to_team({}) original={:x?} rust={:x?}", f, mo, mr));
 }
-unsafe extern "thiscall" fn comparar_aplicar_lado(this: usize, l: i8, f: f32) {
+unsafe extern "thiscall" fn comparar_apply_to_side(this: usize, l: i8, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, f32)>(IDX_APPLY_TO_SIDE);
     let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, l, k) + 0x1a2, 4)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, f), || apply_to_side(this, l, f));
-    PLACAR.record(igual, || format!("apply_to_side({}, {}) original={:x?} rust={:x?}", l, f, mo, mr));
+    SCOREBOARD.record(igual, || format!("apply_to_side({}, {}) original={:x?} rust={:x?}", l, f, mo, mr));
 }
-unsafe extern "thiscall" fn comparar_escolher_d(this: usize, l: i8, modo: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_choose_by_condition(this: usize, l: i8, modo: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u8>(IDX_CHOOSE_BY_CONDITION);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, l, modo), || crate::rng::without_counting(|| choose_by_condition(this, l, modo)));
-    PLACAR.record(igual && r == n, || format!("choose_by_condition({}, {}) original={} rust={}", l, modo as u8, r as i8, n as i8));
+    SCOREBOARD.record(igual && r == n, || format!("choose_by_condition({}, {}) original={} rust={}", l, modo as u8, r as i8, n as i8));
     r
 }
 
 comparar_valor!(comparar_read_1bc, read_1bc, IDX_READ_1BC, () -> u16);
-comparar_valor!(comparar_tabela_a_1a_j, player_table_a_1a, IDX_PLAYER_TABLE_A_1A, () -> u16);
-comparar_valor!(comparar_tabela_b_j, player_table_b, IDX_PLAYER_TABLE_B, () -> u16);
-comparar_valor!(comparar_diferenca_j, difference_of_player, IDX_DIFFERENCE_OF_PLAYER, () -> u8);
-comparar_valor!(comparar_marcas_rot, player_marks_rot, IDX_PLAYER_MARKS_ROT, () -> u64);
+comparar_valor!(comparar_player_table_a_1a, player_table_a_1a, IDX_PLAYER_TABLE_A_1A, () -> u16);
+comparar_valor!(comparar_player_table_b, player_table_b, IDX_PLAYER_TABLE_B, () -> u16);
+comparar_valor!(comparar_difference_of_player, difference_of_player, IDX_DIFFERENCE_OF_PLAYER, () -> u8);
+comparar_valor!(comparar_player_marks_rot, player_marks_rot, IDX_PLAYER_MARKS_ROT, () -> u64);
 comparar_valor!(comparar_mark_800000, mark_800000, IDX_MARK_800000, () -> u8);
-comparar_valor!(comparar_perto_proprio, near_own_goal, IDX_NEAR_OWN_GOAL, () -> u8);
+comparar_valor!(comparar_near_own_goal, near_own_goal, IDX_NEAR_OWN_GOAL, () -> u8);
 comparar_valor!(comparar_role_880, role_880, IDX_ROLE_880, () -> u8);
-comparar_valor!(comparar_pela_ficha, player_by_record, IDX_PLAYER_BY_RECORD, (ficha: usize) -> usize);
+comparar_valor!(comparar_player_by_record, player_by_record, IDX_PLAYER_BY_RECORD, (ficha: usize) -> usize);
 
 
 
@@ -3477,65 +3490,65 @@ unsafe fn regioes_do_cartao(motor: usize, j: usize, tipo: *mut u8, peso: *mut f3
     reg
 }
 
-// Os invólucros passam pela rotina interna (desviada): comparam-se as mesmas regioes dela.
-unsafe extern "thiscall" fn comparar_motor_decidir(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
+// The wrappers go through the inner (hooked) routine: they compare the same regions as it.
+unsafe extern "thiscall" fn comparar_engine_decide_foul(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_ENGINE_DECIDE_FOUL);
     let mut reg = vec![(this + 0xf5b2 + 8, 2), (tipo as usize, 1), (valor as usize, 1), (this + 0x475a, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, codigo, tipo, valor), || crate::rng::without_counting(|| engine_decide_foul(this, j, codigo, tipo, valor)));
-    PLACAR.record(igual && r == n, || format!("engine_decide_foul original={} {:x?} rust={} {:x?}", r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("engine_decide_foul original={} {:x?} rust={} {:x?}", r, mo, n, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_impedimento(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
+unsafe extern "thiscall" fn comparar_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_LOOK_FOR_OFFSIDE);
     let motor = *(this as *const usize);
     let mut reg = vec![(this + 8, 2), (motor + 0x475a, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| look_for_offside(this, l, linha, y, passador)));
-    PLACAR.record(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));
     r
 }
-unsafe extern "thiscall" fn comparar_motor_impedimento(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
+unsafe extern "thiscall" fn comparar_engine_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_ENGINE_LOOK_FOR_OFFSIDE);
     let mut reg = vec![(this + 0xf5b2 + 8, 2), (this + 0x475a, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| engine_look_for_offside(this, l, linha, y, passador)));
-    PLACAR.record(igual && r == n, || format!("engine_look_for_offside original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("engine_look_for_offside original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_cartao_gravidade(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
+unsafe extern "thiscall" fn comparar_card_by_severity(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8)>(IDX_CARD_BY_SEVERITY);
     let mut reg = vec![(j, 0x40), (tipo as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, tipo, g, flag), || crate::rng::without_counting(|| card_by_severity(this, j, tipo, g, flag)));
-    PLACAR.record(igual, || format!("card_by_severity(g {}, flag {}) original={:x?} rust={:x?}", g, flag, mo, mr));
+    SCOREBOARD.record(igual, || format!("card_by_severity(g {}, flag {}) original={:x?} rust={:x?}", g, flag, mo, mr));
 }
-unsafe extern "thiscall" fn comparar_motor_cartao(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
+unsafe extern "thiscall" fn comparar_engine_card_by_severity(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8)>(IDX_ENGINE_CARD_BY_SEVERITY);
     let mut reg = vec![(j, 0x40), (tipo as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, tipo, g, flag), || crate::rng::without_counting(|| engine_card_by_severity(this, j, tipo, g, flag)));
-    PLACAR.record(igual, || format!("engine_card_by_severity original={:x?} rust={:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("engine_card_by_severity original={:x?} rust={:x?}", mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_escolher_e(this: usize, arg: u32, modo: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_choose_by_role_e(this: usize, arg: u32, modo: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CHOOSE_BY_ROLE_E);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, modo), || crate::rng::without_counting(|| choose_by_role_e(this, arg, modo)));
-    PLACAR.record(igual && r == n, || format!("choose_by_role_e({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
+    SCOREBOARD.record(igual && r == n, || format!("choose_by_role_e({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
     r
 }
 
-unsafe extern "thiscall" fn comparar_estatistica_posse(this: usize, l: i8, janela: u8) {
+unsafe extern "thiscall" fn comparar_possession_statistic(this: usize, l: i8, janela: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u8)>(IDX_POSSESSION_STATISTIC);
     let reg = [(this, 0x230), (this + 0x8d40, 0x260)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, janela), || possession_statistic(this, l, janela));
-    PLACAR.record(igual, || format!("possession_statistic({}, {}) original={:x?} rust={:x?}", l, janela, mo, mr));
+    SCOREBOARD.record(igual, || format!("possession_statistic({}, {}) original={:x?} rust={:x?}", l, janela, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_resumo(this: usize, momento: i16) {
+unsafe extern "thiscall" fn comparar_match_summary(this: usize, momento: i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i16)>(IDX_MATCH_SUMMARY);
     if is_recording_top_level() {
         call_recording(0x6ce460, this, [momento as u16 as u32, 0, 0, 0, 0], || {
@@ -3547,70 +3560,70 @@ unsafe extern "thiscall" fn comparar_resumo(this: usize, momento: i16) {
     let mut reg = vec![(this + 0x4796, 40 * 0x1be), (this + 0xf5b0, 0x90)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, momento), || crate::rng::without_counting(|| match_summary(this, momento)));
-    PLACAR.record(igual, || format!("match_summary({}) original={:x?} rust={:x?}", momento, mo, mr));
+    SCOREBOARD.record(igual, || format!("match_summary({}) original={:x?} rust={:x?}", momento, mo, mr));
 }
 
 comparar_valor!(comparar_closest_on_side, closest_on_side, IDX_CLOSEST_ON_SIDE, (l: i8, a: i8, b: i8, todos: u8) -> usize);
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_defesa(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
+unsafe extern "thiscall" fn comparar_goalkeeper_save(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u8, i8, *mut u8, *mut u8) -> u16>(IDX_GOALKEEPER_SAVE);
     let mut reg = vec![(saida as usize, 1), (rebote as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, a, b, a3, codigo, saida, rebote), || crate::rng::without_counting(|| goalkeeper_save(this, a, b, a3, codigo, saida, rebote)));
-    PLACAR.record(igual && r == n, || format!("goalkeeper_save({}, {}, {}, {}) original={} {:x?} rust={} {:x?}", a, b, a3, codigo, r as i16, mo, n as i16, mr));
+    SCOREBOARD.record(igual && r == n, || format!("goalkeeper_save({}, {}, {}, {}) original={} {:x?} rust={} {:x?}", a, b, a3, codigo, r as i16, mo, n as i16, mr));
     r
 }
 
 
 
-unsafe extern "thiscall" fn comparar_dominio(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
+unsafe extern "thiscall" fn comparar_control_of_move(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u8, *mut u8) -> u16>(IDX_CONTROL_OF_MOVE);
     let mut reg = vec![(codigo as usize, 1), (a as usize, 1), (b as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     let c0 = *codigo;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, codigo, a, b), || crate::rng::without_counting(|| control_of_move(this, codigo, a, b)));
-    PLACAR.record(igual && r == n, || format!("control_of_move({}) original={} {:x?} rust={} {:x?}", c0, r as i16, mo, n as i16, mr));
+    SCOREBOARD.record(igual && r == n, || format!("control_of_move({}) original={} {:x?} rust={} {:x?}", c0, r as i16, mo, n as i16, mr));
     r
 }
 
-// Gravacao das chamadas a 0x6cd330 feitas pela original de `trace_move`: argumentos, resposta e
-// o estado do sorteio depois de cada uma. A copia Rust recebe as respostas gravadas (sem rodar a
-// rotina, que tem efeitos nos jogadores) e o sorteio volta ao estado gravado a cada chamada.
-static GRAVANDO_6CD330: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+// Recording of the calls to 0x6cd330 made by the original of `trace_move`: arguments, answer and
+// the RNG state after each one. The Rust copy receives the recorded answers (without running the
+// routine, which has effects on the players) and the RNG returns to the recorded state at each call.
+static RECORDING_6CD330: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 #[allow(clippy::type_complexity)]
-static FITA_6CD330: std::sync::Mutex<Vec<((i8, usize, u32, u32, u32, u32, i8), u8, crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
+static TAPE_6CD330: std::sync::Mutex<Vec<((i8, usize, u32, u32, u32, u32, i8), u8, crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_procurar_gravando(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
+unsafe extern "thiscall" fn comparar_search_on_side_recording(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
     let r = comparar_procurar(this, lado, grupo, a3, a4, a5, a6, modo);
-    if GRAVANDO_6CD330.load(std::sync::atomic::Ordering::Relaxed) {
+    if RECORDING_6CD330.load(std::sync::atomic::Ordering::Relaxed) {
         let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
-        FITA_6CD330.lock().unwrap_or_else(|e| e.into_inner()).push(((lado, grupo, a3, a4, a5, a6, modo), r, depois));
+        TAPE_6CD330.lock().unwrap_or_else(|e| e.into_inner()).push(((lado, grupo, a3, a4, a5, a6, modo), r, depois));
     }
     r
 }
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, codigo: i8, a6: u32, a7: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_trace_move(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, codigo: i8, a6: u32, a7: u32) -> u8 {
     if is_recording_top_level() {
-        // unidade da fita da execucao do passe (a unica que o chama); por dentro, a propria comparacao
+        // unit of the tape of the pass execution (the only one that calls it); inside, the comparison itself
         let xy = x0 as u8 as u32 | (y0 as u8 as u32) << 8 | (x1 as u8 as u32) << 16 | (y1 as u8 as u32) << 24;
-        return call_recording(0x6ccb60, this, [xy, codigo as u8 as u32, a6, a7, 0], || comparar_tracar(this, x0, y0, x1, y1, codigo, a6, a7) as u32) as u8;
+        return call_recording(0x6ccb60, this, [xy, codigo as u8 as u32, a6, a7, 0], || comparar_trace_move(this, x0, y0, x1, y1, codigo, a6, a7) as u32) as u8;
     }
     use std::sync::atomic::Ordering::Relaxed;
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, i8, u32, u32) -> u8>(IDX_TRACE_MOVE);
-    FITA_6CD330.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    TAPE_6CD330.lock().unwrap_or_else(|e| e.into_inner()).clear();
     let tape_lock = core::cell::RefCell::new(Vec::new());
     let sequencia = core::cell::Cell::new(true);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
         || {
-            GRAVANDO_6CD330.store(true, Relaxed);
+            RECORDING_6CD330.store(true, Relaxed);
             let r = o(this, x0, y0, x1, y1, codigo, a6, a7);
-            GRAVANDO_6CD330.store(false, Relaxed);
-            *tape_lock.borrow_mut() = core::mem::take(&mut *FITA_6CD330.lock().unwrap_or_else(|e| e.into_inner()));
+            RECORDING_6CD330.store(false, Relaxed);
+            *tape_lock.borrow_mut() = core::mem::take(&mut *TAPE_6CD330.lock().unwrap_or_else(|e| e.into_inner()));
             r
         },
         || {
@@ -3618,7 +3631,7 @@ unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8,
             let mut prox = gravadas.iter();
             let n = crate::rng::without_counting(|| {
                 trace_line_interception_with(this, x0, y0, x1, y1, codigo, a6, a7, &mut |l, c, dd, a, t, b| match prox.next() {
-                    // o tipo e a6/a7 so tem o byte baixo (o resto e lixo da pilha no original)
+                    // the type and a6/a7 only have the low byte (the rest is stack garbage in the original)
                     Some(((gl, gc, gd, ga, gt, gb, 1), gr, depois)) if *gl == l && *gc == c && *gd == dd && *ga as u16 == a as u16 && *gt as u8 == t as u8 && *gb as u8 == b as u8 => {
                         depois.write_back();
                         *gr
@@ -3635,38 +3648,40 @@ unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8,
             n
         },
     );
-    PLACAR.record(igual && r == n && sequencia.get(), || format!("trace_move({} {} -> {} {}, cod {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, codigo, r, n, sequencia.get(), mo, mr));
+    SCOREBOARD.record(igual && r == n && sequencia.get(), || format!("trace_move({} {} -> {} {}, cod {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, codigo, r, n, sequencia.get(), mo, mr));
     r
 }
 
 comparar_valor!(comparar_has_match, has_match, IDX_HAS_MATCH, (clube: u32, so: u32) -> u32);
-unsafe extern "C" fn comparar_venceu(jogo: usize, clube: u32) -> u8 {
+unsafe extern "C" fn comparar_won_the_match(jogo: usize, clube: u32) -> u8 {
     if is_recording_post_match() {
         return call_recording(0x6b7cf0, 0, [jogo as u32, clube, 0, 0, 0], || original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_WON_THE_MATCH)(jogo, clube) as u32) as u8;
     }
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_WON_THE_MATCH)(jogo, clube);
     let n = won_the_match(jogo, clube);
-    PLACAR.record(r == n, || format!("won_the_match original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("won_the_match original={} rust={}", r, n));
     r
 }
 
-// Porta de 0x6d6f70 (comentarios): na comparacao, grava as chamadas feitas pela original de uma
-// rotina portada (com o estado do sorteio depois); a copia Rust confere a sequencia e nao roda o
-// comentario de novo (evita eventos em dobro). Fora da gravacao, so passa adiante.
-static mut PORTA_6D6F70: usize = 0;
+// Port of 0x6d6f70 (commentary): in comparison, records the calls made by the original of a
+// ported routine (with the RNG state afterwards); the Rust copy checks the sequence and does not run
+// the commentary again (avoids duplicate events). Outside recording, it just passes through.
+static mut PORT_6D6F70: usize = 0;
 static GRAVANDO_6D6F70: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-/// Na comparacao da 0x70dfd0 a fita guarda o setimo argumento da narracao no alto do codigo.
+/// In the comparison of 0x70dfd0 the tape keeps the seventh argument of the narration in the high part of the code.
+///
+/// [pt] Na comparacao da 0x70dfd0 a fita guarda o setimo argumento da narracao no alto do codigo.
 static GRAVAR_A7: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-static FITA_6D6F70: std::sync::Mutex<Vec<(usize, [u32; 7], crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
-const PROLOGO_6D6F70: Prologo = Prologo { endereco: 0x6d6f70, bytes: &[0x8a, 0x44, 0x24, 0x10, 0x83, 0xec, 0x20] };
+static TAPE_6D6F70: std::sync::Mutex<Vec<(usize, [u32; 7], crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
+const PROLOGUE_6D6F70: Prologo = Prologo { endereco: 0x6d6f70, bytes: &[0x8a, 0x44, 0x24, 0x10, 0x83, 0xec, 0x20] };
 
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32) {
     use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
-    // 0x6d6f70 pode chamar a si mesma (um comentario puxa outro): so a chamada de fora e gravada
-    static PROFUNDIDADE: AtomicU32 = AtomicU32::new(0);
-    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(PORTA_6D6F70);
-    // dentro de uma gravacao da fita (os dois ultimos argumentos sao -1 e 0 nos chamadores portados)
+    // 0x6d6f70 may call itself (one comment triggers another): only the outer call is recorded
+    static DEPTH: AtomicU32 = AtomicU32::new(0);
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(PORT_6D6F70);
+    // inside a tape recording (the last two arguments are -1 and 0 in the ported callers)
     if is_recording() {
         let codigo = if GRAVAR_A7.load(Relaxed) { a1 & 0xffff | (a7 & 0xff) << 16 } else { a1 };
         call_recording(0x6d6f70, this, [codigo, a2, a3, a4, a5], || {
@@ -3675,40 +3690,46 @@ unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32,
         });
         return;
     }
-    let nivel = PROFUNDIDADE.fetch_add(1, Relaxed);
-    // no autoteste o narrador e falso: a chamada so e gravada
+    let nivel = DEPTH.fetch_add(1, Relaxed);
+    // in the autotest the narrator is fake: the call is only recorded
     if !SYNTHETIC.load(Relaxed) {
         f(this, a1, a2, a3, a4, a5, a6, a7);
     }
-    PROFUNDIDADE.fetch_sub(1, Relaxed);
+    DEPTH.fetch_sub(1, Relaxed);
     if nivel == 0 && GRAVANDO_6D6F70.load(Relaxed) {
         let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
-        FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).push((this, [a1, a2, a3, a4, a5, a6, a7], depois));
+        TAPE_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).push((this, [a1, a2, a3, a4, a5, a6, a7], depois));
     }
 }
 
-/// Roda a original gravando os comentarios e a copia Rust reproduzindo-os; devolve (igual, quantos).
+/// Runs the original recording the comments and the Rust copy replaying them; returns (equal, how many).
+///
+/// [pt] Roda a original gravando os comentarios e a copia Rust reproduzindo-os; devolve (igual, quantos).
 unsafe fn comparar_com_comentarios(original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
     comparar_com_comentarios_em(&[], original, rust)
 }
 
-/// 0x6d6f70 le o 1o argumento como palavra e o 3o ao 6o como bytes: o resto e lixo da pilha.
-const MASCARA_6D6F70: [u32; 7] = [0xffff, u32::MAX, 0xff, 0xff, 0xff, 0xff, u32::MAX];
+/// 0x6d6f70 reads the 1st argument as a word and the 3rd to 6th as bytes: the rest is stack garbage.
+///
+/// [pt] 0x6d6f70 le o 1o argumento como palavra e o 3o ao 6o como bytes: o resto e lixo da pilha.
+const MASK_6D6F70: [u32; 7] = [0xffff, u32::MAX, 0xff, 0xff, 0xff, 0xff, u32::MAX];
 
-fn mesmos_argumentos(a: &[u32; 7], b: &[u32; 7]) -> bool {
-    (0..7).all(|i| a[i] & MASCARA_6D6F70[i] == b[i] & MASCARA_6D6F70[i])
+fn same_arguments(a: &[u32; 7], b: &[u32; 7]) -> bool {
+    (0..7).all(|i| a[i] & MASK_6D6F70[i] == b[i] & MASK_6D6F70[i])
 }
 
-/// Como `comparar_com_comentarios`, comparando tambem as `extra` (alem do estado do sorteio).
+/// Like `comparar_com_comentarios`, also comparing the `extra` regions (besides the RNG state).
+///
+/// [pt] Como `comparar_com_comentarios`, comparando tambem as `extra` (alem do estado do sorteio).
 unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
     use std::sync::atomic::Ordering::Relaxed;
-    // dentro de outra comparacao que esta gravando (uma rotina portada chama outra que narra, ou uma
-    // gravacao da fita esta aberta): so a original roda, e os comentarios dela entram na gravacao de fora
+    // inside another comparison that is recording (a ported routine calls another that narrates, or a
+    // tape recording is open): only the original runs, and its comments go into the outer recording
     if GRAVANDO_6D6F70.load(Relaxed) || is_recording() {
         original();
         return (true, 0);
     }
-    FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    TAPE_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).clear();
     let tape_lock = core::cell::RefCell::new(Vec::new());
     let sequencia = core::cell::Cell::new(true);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -3719,14 +3740,14 @@ unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl F
             GRAVANDO_6D6F70.store(true, Relaxed);
             original();
             GRAVANDO_6D6F70.store(false, Relaxed);
-            *tape_lock.borrow_mut() = core::mem::take(&mut *FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()));
+            *tape_lock.borrow_mut() = core::mem::take(&mut *TAPE_6D6F70.lock().unwrap_or_else(|e| e.into_inner()));
         },
         || {
             let gravadas = tape_lock.borrow();
             let mut prox = gravadas.iter();
             crate::rng::without_counting(|| {
                 rust(&mut |t, a| match prox.next() {
-                    Some((gt, ga, depois)) if *gt == t && mesmos_argumentos(ga, &a) => depois.write_back(),
+                    Some((gt, ga, depois)) if *gt == t && same_arguments(ga, &a) => depois.write_back(),
                     _ => sequencia.set(false),
                 })
             });
@@ -3741,13 +3762,13 @@ unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl F
 
 
 
-unsafe extern "thiscall" fn comparar_valor_chute(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
+unsafe extern "thiscall" fn comparar_shot_value(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u16) -> u16>(IDX_SHOT_VALUE);
     let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this + 0x39, 2)];
     reg.extend(crate::rng::STATE_REGIONS);
     let t0 = *tipo;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tipo, som), || crate::rng::without_counting(|| shot_value(this, tipo, som)));
-    PLACAR.record(igual && r == n, || format!("shot_value(tipo {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shot_value(tipo {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
     r
 }
 
@@ -3771,10 +3792,10 @@ comparar_valor!(comparar_club_in_competition, club_in_competition, IDX_CLUB_IN_C
 comparar_valor!(comparar_manager_9b23, manager_9b23, IDX_MANAGER_9B23, (i: i8, pessoa: usize) -> u8);
 comparar_valor!(comparar_contract_flags, contract_flags, IDX_CONTRACT_FLAGS, () -> u32);
 comparar_valor!(comparar_word_0c, word_0c, IDX_WORD_0C, (id: i32) -> i32);
-unsafe extern "C" fn comparar_arredondar(v: i32) -> i32 {
+unsafe extern "C" fn comparar_round_below_1000(v: i32) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_ROUND_BELOW_1000)(v);
     let n = round_below_1000(v);
-    PLACAR.record(r == n, || format!("round_below_1000({:#x}) original={} rust={}", v, r, n));
+    SCOREBOARD.record(r == n, || format!("round_below_1000({:#x}) original={} rust={}", v, r, n));
     r
 }
 comparar_valor!(comparar_how_many_mark, how_many_mark, IDX_HOW_MANY_MARK, (alvo: usize) -> u8);
@@ -3796,7 +3817,9 @@ comparar_valor!(comparar_national_side_byte_42, national_side_byte_42, IDX_NATIO
 comparar_valor!(comparar_national_side_byte_43, national_side_byte_43, IDX_NATIONAL_SIDE_BYTE_43, (clube: usize, flag: u32) -> u8);
 comparar_valor!(comparar_ball_in_attack, ball_in_attack, IDX_BALL_IN_ATTACK, () -> u8);
 comparar_valor!(comparar_group_decided, group_decided, IDX_GROUP_DECIDED, (clube: usize, partida: usize) -> u32);
-/// As linhas do clube da comissao no banco de taticas (0x8982b0 por tecnico humano ou nao).
+/// The rows of the staff's club in the tactics bank (0x8982b0 for human manager or not).
+///
+/// [pt] As linhas do clube da comissao no banco de taticas (0x8982b0 por tecnico humano ou nao).
 unsafe fn linhas_do_clube(clube: usize) -> Vec<(usize, usize)> {
     let taticas = *(G_TACTICS as *const usize);
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
@@ -3809,7 +3832,9 @@ unsafe fn linhas_do_clube(clube: usize) -> Vec<(usize, usize)> {
     }
     v
 }
-/// O primeiro byte diferente entre as memorias (as regioes do motor sao grandes).
+/// The first differing byte between the memories (the engine regions are large).
+///
+/// [pt] O primeiro byte diferente entre as memorias (as regioes do motor sao grandes).
 fn primeira_diferenca(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
     mo.0.iter()
         .zip(mr.0.iter())
@@ -3827,77 +3852,27 @@ comparar_valor!(comparar_players_on_path, players_on_path, IDX_PLAYERS_ON_PATH, 
 comparar_valor!(comparar_direct_marker, direct_marker, IDX_DIRECT_MARKER, (l: i8, k: i8) -> u8);
 
 
-/// Diagnostico: rotinas que ficam no original (para isolar uma diferenca de carreira sem mexer no
+/// Diagnosis: routines that stay original (to isolate a career difference without touching the
+/// game environment, which shifts the heap). Empty in normal use.
+///
+/// [pt] Diagnostico: rotinas que ficam no original (para isolar uma diferenca de carreira sem mexer no
 /// ambiente do jogo, que desloca a heap). Vazio no uso normal.
 const SEM_ROTINAS: &[&str] = &[];
 
-/// Rotinas portadas cujo desvio fica desligado em TODOS os modos (a original roda na pilha do jogo,
-/// sem passar pela pilha particular): o desvio, mesmo de passagem, muda o resíduo que ela deixa na
-/// pilha do jogo e uma original lida depois decide com ele. Voltam quando a cópia reproduzir esse resíduo.
-/// 0x7c6bf0 (212a, desligada em 22/10/2026): o bsearch dela deixa na pilha o ponteiro que vira a palavra
-/// +0x38 da ficha do jogo simulado da 0x84be20 (regras de prorrogação e pênaltis da simulação rápida
-/// 0x6beeb0). Zerar a 0x84be20 (como na 212a) dava empates sem desempate, caminho que o jogo de verdade
-/// quase nunca percorre, e separava Rust e original na carreira de 8 ligas.
-/// 0x524d30 (219a) ficou desligada até a zeragem da save_database 0x52dad0 (opção A, 23/10/2026).
-/// 0x827110 (220a, desligada em 23/10/2026): a cópia roda na pilha particular e a create_game 0x828110 lê
-/// resíduo diferente; o club.dat sai diferente (prova do save).
-/// 0x541f90 (225a, desligada em 24/10/2026): a cópia confere com a desmontagem (vetor, eax = 1, nada
-/// em +0x244 nem em global), mas a original pelo desvio de passagem (SEM_ROTINAS) também leva a carreira
-/// de b2854287 a 82fe4ecf: a 0x540a50 que ela chama deixa resíduo na pilha particular em vez da do jogo.
-/// 0x547770 (233a, desligada em 25/10/2026): club_is_in_season; com o desvio (mesmo de passagem, no modo original)
-/// a carreira até 2002-06-01 vai de b2854287 a 79d4e53e (bissecção por desvio); o jogo real comparando não muda.
-/// 0x689ad0 (241a, desligada em 26/10/2026): League::check_complete; com o desvio (mesmo só de passagem) a carreira até
-/// 2002-06-01 vai de b2854287 a 41532e5b (bissecção por desvio e sonda de passagem); chamada 26 mil vezes.
-/// 0x6827d0 e 0x4b02e0 (241a, desligadas em 27/10/2026; bissecções pela carreira e pelo jogo comparando):
-/// sort_table 0x6827d0: com o desvio (também no modo original, só de passagem) a carreira vai de b2854287
-/// para 5effff2d; comp_util_get_league_clash_type 0x4b02e0: com o desvio o jogo comparando vai de 963cea28 para 1d9532b3
-/// (0 divergências; igual até 2001-10-01; inverter a ordem do comparador não resolveu). Nenhuma das duas lê variável
-/// sem valor (a 0x4a4850 que a 0x4b02e0 chama monta a chave do bsearch e só compara o id): é o resíduo de pilha que
-/// uma original lida depois usa. Com o desvio das duas ligado, a carreira volta a b2854287 por coincidência.
-/// 0x62c510 (243a, desligada em 27/10/2026): Injury::get_match_condition; com o desvio (também no modo original, só
-/// de passagem) a carreira até 2002-06-01 vai de b2854287 para ddda6c3f (bissecção por desvio, confirmada); o jogo
-/// real comparando não muda. A cópia não lê variável sem valor: a 0x62c680 que ela chama (atualiza o físico do dia,
-/// com sorteio) deixa o resíduo na pilha particular em vez da do jogo.
-/// 0x7a8510 e 0x74ae60 (247a, desligadas em 29/10/2026): PLAYER_REGEN::add_retirement e Media::post_financial_trouble_news;
-/// com os 21 desvios da 247a (também no modo original, só de passagem) a carreira até 2002-06-01 ia de be54a138 para
-/// 2523505a, Rust = original, e o jogo comparando de 2f65fd6b para 0c722156 (0 divergências). Busca uma a uma pela
-/// carreira original (prefixos de desvios ligados): só estas duas mudam a carreira; com elas desligadas volta a be54a138.
-/// 0x51c800, 0x51f890, 0x5ce060, 0x5d6aa0, 0x5d7190, 0x5d6d10 (255a, desligadas em 31/10/2026): set_up_round,
-/// cup_update_for_date, e quatro do dia do jogo (cps_5, cps_6); com os 39 desvios da 255a a carreira até 2002-06-01
-/// ia de 7f4ecded para cba167d8 na original e 1e070297 no Rust (o jogo comparando: 0 divergências). Busca pela carreira
-/// original (prefixos de desvios desligados, `copias\desligar255.txt`): só com as seis desligadas volta a 7f4ecded,
-/// nos dois modos.
-/// Desde 31/10/2026 (Lucas) nenhuma: a carreira idêntica à original deixou de barrar a leva (é só registrada); vale a
-/// comparação rotina a rotina. As de antes (e o motivo de cada uma) estão acima e no histórico do git.
-const DESLIGADAS: &[usize] = &[];
-
-/// Rotinas portadas que, fora da comparacao, rodam a original (pelo desvio de passagem, como no modo
-/// original): alguma rotina original chamada abaixo delas le lixo da pilha, e o lixo que a copia Rust
-/// deixa e outro. Na comparacao a copia segue conferida chamada a chamada.
-/// 0x6ccb60 `trace_move` (15/10/2026): com a pasta do jogo atual (o save e o hall da fama do Lucas)
-/// a carreira Rust se separava da original em 2002-01-12; a busca binaria entre as 301 rotinas
-/// apontou so ela, e uma sonda (a original e a copia tracando o mesmo lance, sem rodar nada) deu os
-/// mesmos quadrados e argumentos: o que muda e o resto da pilha que fica para quem e chamado depois.
-/// 0x6b5f00 `close_day_match` e 0x6b74a0 `post_match_events` (31/10/2026): na carreira ampla (8 ligas, ate
-/// 2003-01-31, DLL da 253a) o Rust se separava da original em 2002-299; a busca binaria entre as 1083 rotinas
-/// (SEM_ROTINAS) so fecha com as duas juntas na original (388f944f, igual a original); uma so nao basta. A copia dos
-/// eventos confere ramo a ramo com a desmontagem, e envenenar o quadro das 8 rotinas sem copia chamadas por ela nao
-/// muda a carreira: quem le a sobra esta mais fundo ou depois dos eventos, dentro do fechamento (a varredura das
-/// leitoras, `leitoras.py`, deve acha-la).
-/// Desde 31/10/2026 (Lucas) nenhuma, pelo mesmo critério das DESLIGADAS.
-const SO_NA_COMPARACAO: &[usize] = &[];
 
 
 
 
 
 
-/// Comparacao das bolas paradas da 57a leva: motor inteiro e sorteio.
+/// Comparison of the set pieces of the 57th batch: whole engine and RNG.
+///
+/// [pt] Comparacao das bolas paradas da 57a leva: motor inteiro e sorteio.
 unsafe fn comparar_reinicio(nome: &str, this: usize, o: unsafe extern "thiscall" fn(usize), r: unsafe extern "thiscall" fn(usize)) {
     let mut regioes = vec![(this, MOTOR), (0xb67a34, 4)];
     regioes.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this), || crate::rng::without_counting(|| r(this)));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("{} diferencas em {:x?}", nome, dif)
@@ -3909,35 +3884,35 @@ unsafe fn comparar_reinicio(nome: &str, this: usize, o: unsafe extern "thiscall"
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
         for (k, pr) in POS_PROLOGUES.iter().enumerate() {
-            if let Some(t) = desvios::desviar(&format!("motor_porta_{:x} (pos-jogo)", pr.endereco), pr, post_match_gates()[k]) {
+            if let Some(t) = detours::desviar(&format!("motor_porta_{:x} (pos-jogo)", pr.endereco), pr, post_match_gates()[k]) {
                 PORTAS_POS[k] = t;
             }
         }
-        if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGUE_6F5C30, respond_hook as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGUE_6F5C30, respond_hook as *const () as usize) {
             MATCH_PLAYER_RESPOND_TRAMPOLINE = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGO_6D6F70, porta_6d6f70 as *const () as usize) {
-            PORTA_6D6F70 = t;
+        if let Some(t) = detours::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGUE_6D6F70, porta_6d6f70 as *const () as usize) {
+            PORT_6D6F70 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_6eaea0 (gravacao)", &PROLOGUE_6EAEA0, init_player_hook as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_6eaea0 (gravacao)", &PROLOGUE_6EAEA0, init_player_hook as *const () as usize) {
             INIT_MATCH_PLAYER_TRAMPOLINE = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_716630 (gravacao)", &PROLOGUE_716630, gate_start_fight as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_716630 (gravacao)", &PROLOGUE_716630, gate_start_fight as *const () as usize) {
             START_FIGHT_TRAMPOLINE = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_716e10 (gravacao)", &PROLOGUE_716E10, gate_react_to_foul_decision as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_716e10 (gravacao)", &PROLOGUE_716E10, gate_react_to_foul_decision as *const () as usize) {
             REACT_TO_FOUL_DECISION_TRAMPOLINE = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_716c90 (gravacao)", &PROLOGUE_716C90, gate_handle_suspected_dive as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_716c90 (gravacao)", &PROLOGUE_716C90, gate_handle_suspected_dive as *const () as usize) {
             HANDLE_SUSPECTED_DIVE_TRAMPOLINE = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_70dfd0 (gravacao)", &PROLOGUE_70DFD0, gate_try_block_shot as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_70dfd0 (gravacao)", &PROLOGUE_70DFD0, gate_try_block_shot as *const () as usize) {
             TRY_BLOCK_SHOT_TRAMPOLINE = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGUE_68D0D0, gate_llist_add_tail as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGUE_68D0D0, gate_llist_add_tail as *const () as usize) {
             LLIST_ADD_TAIL_TRAMPOLINE = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_62ed70 (gravacao)", &PROLOGUE_62ED70, gate_get_player_injury as *const () as usize) {
+        if let Some(t) = detours::desviar("motor_porta_62ed70 (gravacao)", &PROLOGUE_62ED70, gate_get_player_injury as *const () as usize) {
             GET_PLAYER_INJURY_TRAMPOLINE = t;
         }
     }
@@ -6054,7 +6029,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_aim_set_facing_direction as *const () as usize,
         comparar_tire_fatigue as *const () as usize,
         comparar_facing as *const () as usize,
-        comparar_procurar_gravando as *const () as usize,
+        comparar_search_on_side_recording as *const () as usize,
         comparar_reaches as *const () as usize,
         comparar_classificar as *const () as usize,
         comparar_distance_to_point as *const () as usize,
@@ -6113,7 +6088,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_side_state as *const () as usize,
         comparar_opponent_state as *const () as usize,
         comparar_write_19c as *const () as usize,
-        comparar_bola_parada as *const () as usize,
+        comparar_set_piece_code as *const () as usize,
         comparar_near_goal as *const () as usize,
         comparar_clear_move as *const () as usize,
         comparar_add_disposition as *const () as usize,
@@ -6121,34 +6096,34 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_split_e as *const () as usize,
         comparar_split_f as *const () as usize,
         comparar_record_move as *const () as usize,
-        comparar_remover as *const () as usize,
-        comparar_entrar as *const () as usize,
+        comparar_remove_from_list as *const () as usize,
+        comparar_take_the_field as *const () as usize,
         comparar_in_danger as *const () as usize,
         comparar_check_move as *const () as usize,
         comparar_clear_path as *const () as usize,
-        comparar_alcanca_ponto as *const () as usize,
-        comparar_destaque as *const () as usize,
-        comparar_escolher_b as *const () as usize,
-        comparar_casa_formacao as *const () as usize,
-        comparar_percentuais as *const () as usize,
-        comparar_escolher_c as *const () as usize,
+        comparar_reaches_the_point as *const () as usize,
+        comparar_choose_standout as *const () as usize,
+        comparar_choose_by_role_b as *const () as usize,
+        comparar_formation_square as *const () as usize,
+        comparar_compute_percentages as *const () as usize,
+        comparar_choose_by_role_c as *const () as usize,
         comparar_apply_factor as *const () as usize,
-        comparar_valor_condicao as *const () as usize,
-        comparar_aplicar_time as *const () as usize,
-        comparar_aplicar_lado as *const () as usize,
-        comparar_escolher_d as *const () as usize,
+        comparar_value_by_condition as *const () as usize,
+        comparar_apply_to_team as *const () as usize,
+        comparar_apply_to_side as *const () as usize,
+        comparar_choose_by_condition as *const () as usize,
         comparar_read_1bc as *const () as usize,
         comparar_add_2b as *const () as usize,
         comparar_write_2b as *const () as usize,
-        comparar_tabela_a_1a_j as *const () as usize,
-        comparar_tabela_b_j as *const () as usize,
-        comparar_diferenca_j as *const () as usize,
-        comparar_marcas_rot as *const () as usize,
+        comparar_player_table_a_1a as *const () as usize,
+        comparar_player_table_b as *const () as usize,
+        comparar_difference_of_player as *const () as usize,
+        comparar_player_marks_rot as *const () as usize,
         comparar_mark_800000 as *const () as usize,
-        comparar_perto_proprio as *const () as usize,
+        comparar_near_own_goal as *const () as usize,
         comparar_role_880 as *const () as usize,
         comparar_release_ball as *const () as usize,
-        comparar_pela_ficha as *const () as usize,
+        comparar_player_by_record as *const () as usize,
         comparar_code_byte as *const () as usize,
         comparar_adjusted_rating as *const () as usize,
         comparar_adjust_17 as *const () as usize,
@@ -6158,28 +6133,28 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_decide_foul as *const () as usize,
         comparar_punish_foul as *const () as usize,
         comparar_punish_move as *const () as usize,
-        comparar_motor_decidir as *const () as usize,
+        comparar_engine_decide_foul as *const () as usize,
         comparar_engine_punish_move as *const () as usize,
         comparar_engine_punish_foul as *const () as usize,
-        comparar_impedimento as *const () as usize,
-        comparar_motor_impedimento as *const () as usize,
-        comparar_cartao_gravidade as *const () as usize,
-        comparar_motor_cartao as *const () as usize,
-        comparar_escolher_e as *const () as usize,
-        comparar_estatistica_posse as *const () as usize,
-        comparar_resumo as *const () as usize,
+        comparar_look_for_offside as *const () as usize,
+        comparar_engine_look_for_offside as *const () as usize,
+        comparar_card_by_severity as *const () as usize,
+        comparar_engine_card_by_severity as *const () as usize,
+        comparar_choose_by_role_e as *const () as usize,
+        comparar_possession_statistic as *const () as usize,
+        comparar_match_summary as *const () as usize,
         comparar_closest_on_side as *const () as usize,
-        comparar_defesa as *const () as usize,
+        comparar_goalkeeper_save as *const () as usize,
         comparar_move_to as *const () as usize,
         comparar_choose_square as *const () as usize,
-        comparar_dominio as *const () as usize,
-        comparar_tracar as *const () as usize,
+        comparar_control_of_move as *const () as usize,
+        comparar_trace_move as *const () as usize,
         comparar_has_match as *const () as usize,
-        comparar_venceu as *const () as usize,
+        comparar_won_the_match as *const () as usize,
         comparar_commentary_a as *const () as usize,
         comparar_commentary_b as *const () as usize,
         comparar_ball_out as *const () as usize,
-        comparar_valor_chute as *const () as usize,
+        comparar_shot_value as *const () as usize,
         comparar_team_strength as *const () as usize,
         comparar_kick_off as *const () as usize,
         comparar_roll_ball as *const () as usize,
@@ -6243,7 +6218,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_contract_flags as *const () as usize,
         comparar_next_list_item as *const () as usize,
         comparar_word_0c as *const () as usize,
-        comparar_arredondar as *const () as usize,
+        comparar_round_below_1000 as *const () as usize,
         comparar_group_nation as *const () as usize,
         comparar_how_many_mark as *const () as usize,
         comparar_who_marks as *const () as usize,
@@ -8243,168 +8218,137 @@ pub unsafe fn instalar(comparando: bool) {
         "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area", "motor_montar_tela_da_partida", "motor_responder_tela_da_partida", "motor_montar_detalhes_da_partida", "motor_atualizar_barra_da_posse", "motor_painel_da_visao_geral_da_partida", "motor_tabela_da_liga_ao_vivo", "motor_historia_punivel_do_jogador", "motor_escolher_tipo_de_lesao", "motor_categoria_da_noticia", "motor_apagar_repetidos_das_convocacoes", "motor_vaga_do_escalado", "motor_escolher_comentarista", "motor_regras_da_rodada_no_jogo", "motor_chave_do_jogo_na_copa", "motor_pais_da_excursao", "motor_fechar_propostas_da_oferta", "motor_enfileirar_transferencia_livre", "motor_negociacoes_de_troca_do_jogador", "motor_tirar_jogador_da_selecao", "motor_faixa_do_horario", "motor_teto_da_observacao", "motor_ofertas_pelo_jogador", "motor_reputacao_alvo_do_clube", "motor_gravar_jogo_na_noticia", "motor_preencher_registro_da_partida", "motor_ordem_dos_eventos", "motor_tirar_idioma_do_jogador", "motor_pode_contratar_jogador", "motor_trocas_oferecendo_o_jogador", "motor_noticias_nao_lidas", "motor_gravar_marca_da_noticia", "motor_clube_de_tecnico_humano", "motor_data_do_sorteio_da_rodada", "motor_data_do_jogo_da_rodada", "motor_tirar_clube_dos_amistosos", "motor_ordem_das_linhas_da_tabela", "motor_montar_grade_de_turnos", "motor_margem_do_ultimo_dia", "motor_partida_das_vagas_da_noticia", "motor_resultado_da_eliminatoria_na_noticia", "motor_dia_da_rodada_da_copa", "motor_mapa_de_casas_da_formacao", "motor_nota_do_clube_para_o_jovem", "motor_partida_assistida_pelo_humano", "motor_largar_partida_assistida", "motor_ficha_do_registro", "motor_liga_tem_rebaixamento", "motor_data_da_rodada_da_liga", "motor_importancia_do_jogo_da_liga", "motor_copiar_recordista", "motor_copiar_registro_de_partida", "motor_copiar_registro_de_sequencia", "motor_humano_assiste_a_partida", "motor_humano_deu_apelido", "motor_copiar_aposentadoria_pendente", "motor_montar_estatisticas_da_partida", "motor_desmontar_estatisticas_da_partida", "motor_casar_nome_com_padrao", "motor_id_do_conteiner", "motor_tamanho_dos_itens_do_padrao", "motor_empacotar_no_conteiner", "motor_desempacotar_do_conteiner", "motor_limpar_pasta_temporaria", "motor_ler_do_conteiner", "motor_gravar_no_conteiner", "motor_fechar_conteiner", "motor_filtro_do_jogo_salvo", "motor_filtro_do_inicio_rapido", "motor_versao_do_jogo_salvo_valida", "motor_gravar_regras_fifa", "motor_carregar_regras_fifa", "motor_montar_resumo_do_save", "motor_gravar_banco_no_save", "motor_carregar_banco_do_save", "motor_liberar_dados_do_jogo", "motor_criar_jogo_pela_configuracao", "motor_gravar_jogo", "motor_carregar_jogo", "motor_escopo_da_reputacao", "motor_reputacao_vista_por", "motor_pessoa_e_estrangeira", "motor_idade_da_pessoa", "motor_nacao_com_transferencia_livre", "motor_pessoa_e_comunitaria", "motor_pessoa_listada_para_transferencia", "motor_atributo_calculado_do_jogador", "motor_atributo_da_pessoa", "motor_ordem_do_historico_de_competicao", "motor_vetor_de_atributos_do_jogador", "motor_nacao_britanica_ou_irlanda", "motor_clube_basco", "motor_pessoa_listada_pelo_clube", "motor_pessoa_listada_para_emprestimo", "motor_pessoa_listada_a_pedido", "motor_nota_relativa_do_atributo", "motor_clube_pode_ter_reservas", "motor_primeiro_nome_da_nacao", "motor_segundo_nome_da_nacao", "motor_formatar_nome_da_pessoa", "motor_cores_do_uniforme_do_clube", "motor_tecnico_do_clube_ou_selecao", "motor_nome_ingles_do_clube", "motor_ajustar_moral_da_pessoa", "motor_vetor_de_atributos_do_nao_jogador", "motor_marcar_elenco_da_pessoa", "motor_contar_elenco_do_clube", "motor_reunir_elenco_do_clube", "motor_clube_pode_ser_dirigido", "motor_vetor_para_o_nao_jogador", "motor_vetor_para_o_jogador", "motor_normalizar_atributos_do_nao_jogador", "motor_familia_da_cor", "motor_cores_se_confundem", "motor_atributo_calculado_do_nao_jogador", "motor_forma_do_adjetivo", "motor_atributo_do_nao_jogador", "motor_nota_relativa_com_habilidade_reduzida", "motor_primeiro_nome_pelo_peso", "motor_cores_da_competicao", "motor_clube_tem_vaga_para_cargo", "motor_incluir_pessoa_no_clube", "motor_casar_chave_de_clube", "motor_remapear_chave_de_clube", "motor_casar_chave_de_nacao", "motor_casar_chave_de_competicao_de_clube", "motor_casar_chave_de_competicao_de_pessoa", "motor_ler_continentes", "motor_ler_nacoes", "motor_ler_cidades", "motor_ler_estadios", "motor_ler_pessoas_157", "motor_ler_historico_de_pessoas", "motor_ler_historicos_de_competicao", "motor_ler_competicoes_de_pessoal", "motor_ler_historico_de_competicoes_de_pessoal", "motor_ler_arbitros", "motor_ler_cores", "motor_ler_nomes", "motor_ler_clubes", "motor_ler_competicoes", "motor_ler_nao_jogadores", "motor_ler_jogadores", "motor_ler_pessoas_110", "motor_ler_preferencias", "motor_gravar_continentes", "motor_gravar_nacoes", "motor_gravar_cidades", "motor_gravar_estadios", "motor_gravar_clubes", "motor_gravar_pessoas_110", "motor_gravar_nao_jogadores", "motor_gravar_jogadores", "motor_gravar_preferencias", "motor_gravar_historico_de_pessoas", "motor_gravar_competicoes", "motor_gravar_historicos_de_competicao", "motor_gravar_competicoes_de_pessoal", "motor_gravar_arbitros", "motor_gravar_registros_58", "motor_gravar_nomes", "motor_abrir_arquivo_do_banco", "motor_criar_arquivo_do_banco", "motor_liberar_historico_de_pessoas", "motor_liberar_historico_de_premios", "motor_crescer_historico_de_competicoes", "motor_ordem_dos_clubes_pela_reputacao", "motor_ordem_do_elenco_pela_habilidade", "motor_ordem_do_elenco_pela_habilidade_atual", "motor_normalizar_atributos_fisicos_do_jogador", "motor_segundo_nome_pelo_peso", "motor_normalizar_atributos_do_jogador", "motor_ler_clubes_v1", "motor_ler_nao_jogadores_v1", "motor_ler_jogadores_v1", "motor_ler_competicoes_v1", "motor_nome_ingles_da_nacao", "motor_nome_curto_ingles_do_clube", "motor_cortar_elencos_de_a_e_b", "motor_juntar_o_time_b_ao_a", "motor_montar_indice_de_nomes", "motor_tirar_pessoa_do_clube", "motor_olheiros_do_clube", "motor_clube_em_temporada", "motor_clube_em_nacao_grande", "motor_nacao_grande", "motor_limpar_vinculos_de_opiniao", "motor_juntar_vinculo_de_opiniao", "motor_tirar_vinculo_de_opiniao", "motor_auxiliar_do_clube", "motor_treinadores_do_clube", "motor_contar_treinadores_do_clube", "motor_sigla_inglesa_da_nacao", "motor_nome_ingles_da_competicao", "motor_nome_ingles_da_competicao_de_pessoal", "motor_nome_ingles_do_estadio", "motor_arquivo_do_idioma_existe", "motor_liberar_tabelas_em_ingles", "motor_gerar_comissao_extra", "motor_cortar_tabela_de_clubes", "motor_podar_historico_de_competicoes", "motor_resolver_indices_do_banco", "motor_ordenar_clubes_pela_reputacao", "motor_clube_tem_defensores", "motor_clube_tem_meias", "motor_clube_tem_atacantes", "motor_clube_tem_esforcados", "motor_clube_tem_goleiro", "motor_clube_tem_meias_que_roubam", "motor_faltam_atacantes_pelo_alto", "motor_faltam_zagueiros_pelo_alto", "motor_faltam_zagueiros_rapidos", "motor_clube_tem_atacante_rapido", "motor_clube_tem_meias_criativos", "motor_faixa_de_forca_do_elenco", "motor_reputacao_do_clube_para_pessoa", "motor_contar_rejeitados_no_clube", "motor_contar_favoritos_no_clube", "motor_tirar_clube_favorito", "motor_clube_tirar_pessoa_favorita", "motor_tirar_pessoa_favorita", "motor_tirar_pessoa_rejeitada", "motor_pessoas_favoritas", "motor_clube_acrescentar_pessoa_favorita", "motor_clube_acrescentar_pessoa_rejeitada", "motor_acrescentar_pessoa_favorita", "motor_acrescentar_clube_rejeitado", "motor_esmaecer_relacoes", "motor_pessoas_rejeitadas", "motor_mascara_da_posicao_natural", "motor_contar_elenco_com_mascara", "motor_escolher_companheiro_favorito", "motor_clube_fora_da_argentina", "motor_clube_fora_de_argentina_franca_croacia", "motor_nacao_da_melanesia", "motor_nacao_da_polinesia", "motor_nome_do_cargo_de_treino", "motor_anos_entre_datas_em_texto", "motor_ordem_dos_clubes_pelo_nome_curto", "motor_ordem_das_pessoas_pelo_nome_completo", "motor_pessoa_confere_com_os_nomes", "motor_ordem_dos_clubes_pela_latitude", "motor_ordem_dos_clubes_pela_longitude", "motor_nome_por_ids", "motor_nome_oficial", "motor_texto_da_mascara_da_posicao", "motor_nome_da_posicao", "motor_descricao_do_jogador", "motor_melhor_candidato_a_favorito", "motor_forcas_do_jogador", "motor_fraquezas_do_jogador", "motor_contar_fisioterapeutas", "motor_clube_e_time_b", "motor_pessoas_fora_do_elenco", "motor_atributo_visivel", "motor_atributo_para_quem_ve", "motor_nome_do_atributo_de_tecnico", "motor_ordem_das_pessoas_pelo_sobrenome", "motor_ordem_dos_ponteiros_de_clube_pela_reputacao", "motor_nacao_do_clube_na_cee", "motor_regioes_pelo_nome", "motor_ordem_das_regioes_pelo_nome", "motor_pessoa_da_opiniao", "motor_nome_pelos_textos", "motor_nome_do_cargo", "motor_nome_do_idioma", "motor_nome_da_selecao", "motor_nome_do_atributo_do_jogador", "motor_texto_das_posicoes", "motor_nome_da_regiao", "motor_adjetivo_do_continente", "motor_definir_chaves_fixas", "motor_definir_chaves_fixas_1080", "motor_inicializar_jogadores", "motor_adjetivo_da_nacao", "motor_ordenar_tabela_da_liga", "motor_mini_tabela_do_confronto", "motor_liberar_tabela_da_liga", "motor_liga_completa", "motor_pagar_direitos_de_tv", "motor_registrar_honras_da_temporada", "motor_acrescentar_ao_historico", "motor_tipo_de_confronto_na_liga", "motor_forca_do_clube", "motor_clube_colocado_mais_recente", "motor_amistoso_do_clube", "motor_lista_da_data", "motor_proxima_partida", "motor_estadio_em_uso", "motor_data_do_amistoso_internacional", "motor_encerrar_convocacoes_da_competicao", "motor_encerrar_convocacoes_da_nacao", "motor_podar_registros_de_convocacao", "motor_por_no_elenco_da_selecao", "motor_tirar_do_elenco_da_selecao", "motor_dispensar_acima_da_idade_do_sub21", "motor_limpar_competicao_atual", "motor_liberar_competicoes_do_continente", "motor_convocar_substituto", "motor_montar_reservas_das_selecoes", "motor_ordem_das_reservas", "motor_ordem_pelo_clube", "motor_adversario_do_amistoso", "motor_adversario_da_excursao", "motor_aplicar_resultado_na_tabela", "motor_pontos_do_resultado", "motor_ordem_pela_posicao_do_confronto", "motor_ordem_das_datas_da_liga", "motor_linha_do_clube", "motor_liga_tem_o_clube", "motor_copiar_recorde_de_nota", "motor_copiar_recorde_de_melhor_em_campo", "motor_copiar_recorde_de_disciplina", "motor_copiar_recorde_de_contagem", "motor_copiar_recorde_do_torcedor", "motor_construir_recorde_de_ocorrencias", "motor_construir_recorde_de_contagem", "motor_copiar_recorde_de_valor", "motor_copiar_recorde_de_gols_na_partida", "motor_copiar_noticia", "motor_copiar_transferencia_passada", "motor_copiar_transferencia_futura", "motor_copiar_entrada_da_fila_de_regens", "motor_esta_na_lista_de_observados", "motor_escolher_doador_de_dados", "motor_copiar_registro_de_suspensao", "motor_salario_padrao_do_contrato", "motor_condicao_de_jogo_do_jogador", "motor_dias_ate_o_fim_do_contrato", "motor_limpar_todas_as_queixas", "motor_conferir_retirada_do_pedido", "motor_lugar_no_elenco", "motor_subir_para_o_principal", "motor_descer_para_os_reservas", "motor_copiar_contrato_de_pessoal", "motor_subir_moral_pela_partida", "motor_tirar_conversas_de_contrato", "motor_tirar_interesses_de_transferencia", "motor_tirar_pedido_de_observacao", "motor_tirar_apelido_de_todos", "motor_tirar_aposentadoria_pendente", "motor_aposentadoria_do_desempregado", "motor_oferta_precisa_de_permissao", "motor_atualizar_permissoes_de_trabalho", "motor_olheiro_da_busca", "motor_sequencia_atual_do_clube", "motor_construir_recordista", "motor_tecnico_rival_para_comentar", "motor_construir_recorde_de_valor_pago", "motor_construir_recorde_de_valor_recebido", "motor_construir_recorde_de_sequencia", "motor_construir_recorde_de_vitorias_seguidas", "motor_construir_recorde_de_derrotas_seguidas", "motor_construir_recorde_de_invencibilidade", "motor_construir_recorde_sem_vencer", "motor_construir_recorde_de_gols_na_partida", "motor_construir_recorde_do_mais_novo", "motor_texto_do_fim_do_prazo", "motor_pode_encerrar_emprestimo", "motor_pow_do_game", "motor_tirar_ofertas_guardadas", "motor_guardar_suspensoes_do_emprestado", "motor_preencher_vaga_da_comissao", "motor_noticia_para_os_tecnicos_da_nacao", "motor_missao_do_olheiro", "motor_copa_completa", "motor_construir_recorde_do_mais_velho", "motor_permissao_de_trabalho_de", "motor_passa_na_permissao", "motor_soltar_suspensoes_guardadas", "motor_tirar_ofertas_pendentes", "motor_marcar_decisao_da_transferencia", "motor_noticia_para_todos_os_tecnicos", "motor_noticia_para_os_tecnicos_da_divisao", "motor_noticia_para_os_tecnicos_do_pais", "motor_oferta_bate_o_recorde", "motor_condicao_do_jogador", "motor_limite_de_escalacao", "motor_limpar_partidas_assistidas", "motor_alvos_dos_olheiros_do_clube", "motor_trocar_olheiro_da_busca", "motor_diretoria_depois_da_partida", "motor_disciplina_da_partida", "motor_entradas_do_clube_na_shortlist", "motor_maior_oferta_pelo_jogador", "motor_recordes_de_sempre", "motor_recordes_da_temporada", "motor_guardar_noticia_de_recorde", "motor_acrescentar_reserva_de_tecnico", "motor_acrescentar_aposentadoria", "motor_guardar_vaga_para_regen", "motor_acionar_clausulas_de_rebaixamento", "motor_tirar_oferta_de_contrato", "motor_esta_suspenso", "motor_escopo_das_regras_da_partida", "motor_codigo_de_inelegibilidade", "motor_vaga_do_amistoso", "motor_noticia_para_os_tecnicos_do_continente", "motor_noticia_para_a_regiao_da_competicao", "motor_noticia_importante_para_a_pessoa", "motor_texto_do_dado_da_noticia", "motor_noticia_de_apuro_financeiro", "motor_olheiros_cobrem_a_nacao", "motor_fluencia_no_idioma", "motor_recomecar_historico_da_pessoa", "motor_posicao_na_formacao", "motor_clube_tem_oferta_pelo_jogador", "motor_oferta_do_clube_pelo_jogador", "motor_jogador_com_oferta_pendente", "motor_jogador_sob_oferta", "motor_clube_do_jogador_com_lei_bosman", "motor_veto_da_diretoria_na_oferta", "motor_guardar_transferencia_passada", "motor_dar_permissao_de_trabalho", "motor_guardar_premio_por_jogo_no_time", "motor_vaga_livre_de_contrato", "motor_acrescentar_contrato_da_pessoa", "motor_acrescentar_data_de_decisao", "motor_zerar_moral_do_contrato", "motor_contrato_pelo_atual", "motor_faixa_do_vencimento", "motor_registrar_historia_da_midia", "motor_expirar_historias_da_midia", "motor_historia_ja_registrada", "motor_acrescentar_interesse_de_transferencia", "motor_ordem_das_chaves_de_ids", "motor_ordem_das_historias", "motor_decidir_jogo_da_copa", "motor_decidir_confronto_da_copa", "motor_ordem_dos_cabecas_de_chave", "motor_iniciar_linha_da_tabela", "motor_vetor_dos_clubes_da_liga", "motor_gravar_posicoes_finais_da_liga", "motor_mudar_clube_de_divisao", "motor_embaralhar_ponteiros", "motor_ordenar_e_embaralhar_os_melhores", "motor_contar_jogo_da_suspensao", "motor_soltar_suspensao", "motor_apagar_historico_de_suspensoes", "motor_sortear_lesao_recorrente", "motor_recomecar_historico_de_lesoes", "motor_reiniciar_fisico_do_jogador", "motor_somar_totais_de_transferencia", "motor_recordes_de_carreira_no_clube", "motor_recorde_de_nota_da_temporada", "motor_competicao_na_data_do_amistoso", "motor_amistoso_perto_da_data", "motor_acrescentar_amistoso_planejado", "motor_noticia_pelo_alcance", "motor_noticia_ao_tecnico_do_clube", "motor_entregar_noticia_ao_tecnico", "motor_responder_todas_as_noticias", "motor_tecnico_tem_noticia_pendente", "motor_gravar_texto_na_noticia", "motor_nota_do_jogador_para_a_historia", "motor_texto_da_crise_financeira", "motor_noticias_da_caixa", "motor_aposentar_do_elenco", "motor_melhor_clube_para_o_jovem", "motor_clube_da_nacao_para_o_jovem", "motor_abrir_vagas_que_faltam", "motor_melhor_nota_de_candidato_a_tecnico", "motor_agendar_oferta", "motor_estatuto_no_elenco_pelo_clube", "motor_estimar_estatuto_no_elenco", "motor_liberar_alvos_da_lista_do_clube", "motor_busca_cobre_a_nacao", "motor_tirar_amistoso_marcado", "motor_iniciar_pares_proibidos_de_amistoso", "motor_avaliar_o_negocio_da_transferencia", "motor_confianca_da_diretoria_na_transferencia", "motor_resolver_o_ultimato_da_diretoria", "motor_tirar_o_contrato_principal", "motor_reenviar_ofertas_guardadas", "motor_mes_do_fim_da_temporada_do_clube", "motor_pontos_dos_tecnicos_no_dia", "motor_pontos_dos_tecnicos_no_fim_da_competicao", "motor_tecnico_do_mes_na_liga", "motor_saidas_pendentes_dos_tecnicos", "motor_tirar_jogador_do_elenco_do_clube", "motor_tirar_pessoa_do_cargo_no_clube", "motor_construir_noticia", "motor_ajustar_confianca_da_torcida", "motor_ajustar_confianca_da_diretoria", "motor_resposta_do_tecnico_da_maquina", "motor_marcar_noticia_lida", "motor_achar_noticia_pelo_id", "motor_noticia_de_gratidao_do_jogador", "motor_noticia_de_pedido_de_apoio", "motor_noticia_de_reacao_a_critica", "motor_montar_listas_de_posicao", "motor_ordenar_listas_de_posicao", "motor_clubes_interessados_no_jogador", "motor_acrescentar_na_lista_de_observacao", "motor_prever_resposta_do_vendedor", "motor_periodo_do_emprestimo", "motor_prazo_da_resposta_a_oferta", "motor_pagar_prestacoes_das_transferencias", "motor_tirar_oferta_de_transferencia", "motor_acrescentar_suspensao", "motor_tirar_suspensoes_de_fora_do_clube", "motor_restaurar_suspensoes_guardadas", "motor_acrescentar_idioma", "motor_melhorar_idioma", "motor_zerar_estatisticas_do_jogador", "motor_definir_competicao_da_selecao", "motor_marcar_clubes_com_jogo", "motor_tirar_jogador_da_disciplina", "motor_comparar_datas_de_decisao", "motor_decidir_as_datas_vencidas", "motor_ofertas_de_contrato_do_clube", "motor_assinar_contrato_de_emprestimo", "motor_encerrar_o_emprestimo", "motor_trocar_lugar_no_elenco", "motor_diretoria_do_tecnico_novo", "motor_motivo_da_saida_do_tecnico", "motor_registro_do_tecnico", "motor_serve_para_o_cargo", "motor_pode_assumir_o_cargo", "motor_baixar_moral_pela_partida", "motor_montar_vagas_da_formacao", "motor_refazer_lista_do_clube", "motor_suspender_clubes_que_miram_o_jogador", "motor_por_jogador_nas_listas_dos_clubes", "motor_por_jogador_a_venda", "motor_pagar_premio_por_jogos", "motor_clube_recusa_a_oferta", "motor_soltar_jogadores_da_oferta", "motor_montar_oferta_em_dinheiro", "motor_acrescentar_surto_de_doenca", "motor_espalhar_surtos_de_doenca", "motor_jogador_fora_da_temporada", "motor_forma_inicial_dos_elencos", "motor_registros_iniciais_de_lesao", "motor_listas_de_clubes_por_nacao", "motor_jogador_do_ano_da_torcida", "motor_arquivar_estatisticas_da_nacao", "motor_recordes_de_valor_de_transferencia", "motor_par_de_nacoes_sem_amistoso", "motor_ordem_das_nacoes_pela_reputacao", "motor_ordem_dos_amistosos_pela_data", "motor_pode_marcar_jogo_do_clube", "motor_ordem_das_convocacoes_pela_data", "motor_acrescentar_nacao_classificada", "motor_ordem_dos_cabecas_de_chave_decrescente", "motor_ordem_dos_cabecas_de_chave_crescente", "motor_teto_da_divisao_dos_clubes", "motor_pensar_em_demitir_o_tecnico", "motor_dar_o_ultimato_da_diretoria", "motor_tirar_o_tecnico_do_cargo", "motor_avaliar_a_selecao_na_competicao", "motor_clube_em_apuro_financeiro", "motor_faixa_da_confianca_da_diretoria", "motor_registrar_o_acesso", "motor_registrar_o_rebaixamento", "motor_registrar_a_classificacao_na_fase", "motor_registrar_a_transferencia", "motor_registrar_a_eliminacao", "motor_registrar_a_nao_classificacao", "motor_data_de_conclusao_da_oferta", "motor_primeiro_dia_permitido_da_oferta", "motor_janela_fixa_de_transferencias", "motor_compensacao_pela_pessoa", "motor_pagar_transferencia_e_clausulas", "motor_clube_vendedor_deve_aceitar", "motor_permissao_de_trabalho_na_mudanca", "motor_concluir_oferta_de_contrato_aceita", "motor_oferecer_contrato_ao_jogador_da_oferta", "motor_desfazer_oferta", "motor_fazer_oferta_de_emprestimo", "motor_concluir_transferencias_futuras", "motor_nota_do_doador_de_dados", "motor_ordem_das_aposentadorias", "motor_ordem_da_fila_de_regens", "motor_registro_da_categoria", "motor_criar_estatisticas", "motor_aposentadoria_marcada", "motor_copa_sortear_times_da_rodada", "motor_copa_separar_estadio_compartilhado", "motor_escala_pela_rodada", "motor_lado_do_jogo_para_o_clube", "motor_ordem_dos_coeficientes_das_nacoes", "motor_pedido_de_observacao", "motor_limpar_vaga_da_escalacao", "motor_marcar_batedor_de_bola_parada", "motor_restricoes_da_partida", "motor_limite_do_banco_do_dia", "motor_precisa_de_permissao_de_trabalho", "motor_clube_pode_chegar_ao_jogador", "motor_termos_ao_jogador_da_troca", "motor_fila_livre_do_clube", "motor_transferencia_futura_do_jogador", "motor_tirar_transferencia_futura", "motor_acrescentar_transferencia_futura", "motor_ofertas_abertas_pelos_jogadores_do_clube", "motor_desfazer_ofertas_pelo_jogador", "motor_guardar_percentual_da_proxima_venda", "motor_iniciar_diretorias_dos_clubes", "motor_apelacoes_de_suspensao", "motor_pode_ver_a_partida", "motor_aposentadoria_no_inicio", "motor_aposentadoria_por_idade", "motor_lista_inicial_de_aposentadorias", "motor_novas_aposentadorias", "motor_sair_dos_cargos", "motor_registrar_a_liberacao", "motor_estado_da_lesao", "motor_marcar_decisao_da_oferta", "motor_candidatos_a_tecnico_do_ano", "motor_projetar_posicoes_da_liga", "motor_ordem_da_projecao_pela_reputacao", "motor_ordem_da_projecao_pelos_pontos", "motor_achar_jogos_do_calendario", "motor_jogos_da_competicao_no_dia", "motor_competicao_tem_jogo_na_data", "motor_clube_livre_na_data", "motor_copa_tem_o_clube", "motor_nacao_parceira_do_clube", "motor_pedido_de_transferencia", "motor_cargo_com_contrato", "motor_fora_da_diretoria", "motor_iniciar_permissoes_de_trabalho", "motor_contagem_da_clausula", "motor_premio_por_jogo_do_jogador", "motor_fila_da_transferencia_livre", "motor_proxima_janela_aberta", "motor_emprestimo_negociado", "motor_oferta_com_clausula", "motor_motivo_da_recusa_vale", "motor_motivo_pelo_status_no_elenco", "motor_relacoes_do_elenco", "motor_atrito_com_o_tecnico", "motor_moral_pela_lideranca", "motor_faltas_ao_treino", "motor_competicoes_do_dia", "motor_mudar_confianca_da_diretoria", "motor_estadios_do_dia", "motor_reservar_estadio", "motor_estadio_livre_na_data", "motor_jogo_com_observado", "motor_na_lista_do_olheiro", "motor_registrar_a_primeira_convocacao", "motor_gols_na_carreira", "motor_registrar_o_emprestimo", "motor_ordem_da_volta_aos_treinos", "motor_gols_pelo_clube", "motor_registrar_a_selecao_do_ano", "motor_ordem_pelos_pontos_do_tecnico", "motor_jogo_guardado_igual", "motor_guardar_jogo_no_calendario", "motor_tirar_jogo_do_calendario", "motor_criar_amistosos_planejados", "motor_acrescentar_amistoso", "motor_planejar_amistoso_em_data_livre", "motor_atualizar_copa_no_dia", "motor_montar_rodada_da_copa", "motor_risco_de_doenca_na_viagem", "motor_jogos_da_selecao_no_periodo", "motor_atualizar_ranking_da_fifa", "motor_ordem_dos_resultados_por_pontos", "motor_resultado_no_historico", "motor_faixa_da_selecao", "motor_pontuacoes_do_ranking", "motor_nacao_chave_do_jogo", "motor_e_copa_do_mundo", "motor_e_torneio_internacional", "motor_indice_da_nacao_chave", "motor_ordem_do_ranking", "motor_ordem_das_pontuacoes", "motor_tempo_das_cidades", "motor_ler_regiao_do_clima", "motor_ler_periodo_do_clima", "motor_coeficientes_das_nacoes", "motor_dia_das_aposentadorias", "motor_soma_presa", "motor_nota_do_estadio_neutro", "motor_fator_da_distancia", "motor_ler_o_clima", "motor_fator_do_treinador", "motor_comissao_do_humano", "motor_carga_do_programa", "motor_aplicar_o_progresso", "motor_achar_o_treino_de_posicao", "motor_aprende_depressa", "motor_avancar_a_semana", "motor_tirar_a_ficha_reservada", "motor_lesao_que_volta", "motor_atualizar_amistosos_do_dia", "motor_planejar_pre_temporada_da_ia", "motor_janelas_da_pre_temporada", "motor_marcar_jogos_da_excursao", "motor_ordem_pela_faixa", "motor_ordem_pela_nacao_e_faixa", "motor_posicoes_previstas_da_copa", "motor_ordenar_clubes_pela_forca", "motor_gravar_posicao_do_clube", "motor_linha_da_nacao", "motor_linha_da_nacao_do_clube", "motor_ano_da_temporada_do_clube", "motor_clube_na_temporada", "motor_continente_principal", "motor_nacao_principal", "motor_estatistica_da_categoria", "motor_ordem_dos_idiomas", "motor_ordem_da_historia_por_clube", "motor_clausula_de_rescisao_ativa", "motor_periodo_protegido", "motor_tipo_de_bonus_permitido", "motor_adiar_pelo_clima", "motor_financas_do_clube", "motor_ordem_das_reservas_do_estadio", "motor_clima_da_partida", "motor_temperatura_do_jogo", "motor_gramado_do_jogo", "motor_faixa_de_riqueza", "motor_ordem_por_habilidade", "motor_ordem_pela_capacidade", "motor_programas_padrao", "motor_tipo_do_programa", "motor_programa_do_humano", "motor_fichas_de_treino_iniciais", "motor_guardar_jogador_no_banco", "motor_tem_reserva_de_tecnico", "motor_suspensao_do_vermelho", "motor_nova_temporada_do_orgao", "motor_compactar_disciplina_do_orgao", "motor_coordenada_da_casa", "motor_posicao_repetida_na_formacao", "motor_tipo_de_marcacao", "motor_sortear_ordem_dos_clubes", "motor_clubes_do_lado_do_jogo", "motor_clubes_possiveis_do_jogo", "motor_nota_alvo_do_clube", "motor_jogo_do_historico", "motor_gols_do_historico", "motor_passar_a_oferta_aos_clubes", "motor_noticia_da_oferta_aceita", "motor_noticia_do_emprestimo_oferecido", "motor_recusa_dos_termos", "motor_noticia_da_confianca_da_diretoria", "motor_noticia_das_expectativas_da_diretoria", "motor_ofertas_em_espera_na_janela", "motor_noticia_das_expectativas_da_federacao", "motor_noticia_do_protesto_da_torcida", "motor_guardar_a_negociacao", "motor_noticia_do_boato_do_tecnico", "motor_noticia_da_recusa_em_se_mudar", "motor_receita_do_merchandising", "motor_ingressos_da_temporada", "motor_melhorar_o_centro_de_treino", "motor_eventos_financeiros_da_semana", "motor_diretoria_paga_a_divida", "motor_injecao_de_dinheiro", "motor_teto_salarial_do_pessoal", "motor_pagar_os_bonus", "motor_ajustar_o_teto_salarial", "motor_efeitos_fisicos_da_partida", "motor_batida_do_jogador", "motor_jogador_de_ferias", "motor_contratar_o_regen", "motor_aposentar_pela_lesao", "motor_noticia_da_aposentadoria_anunciada", "motor_fim_da_lesao", "motor_noticia_do_pedido_de_desculpas", "motor_esvaziar_caixa_de_entrada", "motor_tirar_convocado_machucado", "motor_noticia_da_saida_do_convocado", "motor_noticia_do_pedido_de_substituto", "motor_pode_mudar_a_convocacao", "motor_esta_na_convocacao", "motor_marcar_adversario_do_amistoso", "motor_registrar_premio_do_mes", "motor_faixa_de_reputacao_do_amistoso", "motor_folga_do_amistoso", "motor_satisfacao_com_o_contrato", "motor_noticia_quer_contrato_novo", "motor_noticia_pedido_de_transferencia_retirado", "motor_confirmar_oferta_pelo_clube", "motor_tentar_concluir_oferta", "motor_acertar_clausulas_anteriores", "motor_tentar_emprestimo_pelo_jogador", "motor_noticia_contrato_acabando", "motor_noticia_saida_pela_lei_bosman", "motor_acrescentar_oferta_de_contrato", "motor_tirar_oferta_de_contrato_da_vaga", "motor_menor_salario_pedido", "motor_guardar_notas_da_partida", "motor_nota_do_jogador_no_mes", "motor_melhor_do_mes", "motor_premiar_o_melhor_do_mes", "motor_gravar_vencedor_do_mes", "motor_reputacao_do_premiado", "motor_fisico_do_dia", "motor_faixa_da_confianca_na_liga", "motor_gravar_notas_da_diretoria", "motor_dia_das_lesoes", "motor_noticias_de_volta_aos_treinos", "motor_um_cartao_da_suspensao", "motor_fila_de_regens", "motor_veiculo_pelo_clube", "motor_veiculo_pela_pessoa", "motor_somar_resultado_na_liga", "motor_copiar_tabela_da_liga", "motor_posicoes_previstas_da_liga", "motor_resultado_entre_selecoes", "motor_nome_do_elenco_da_selecao", "motor_rodada_com_jogos_conhecidos", "motor_registrar_convocados_por_clube", "motor_importancia_do_jogo_na_competicao", "motor_fase_da_competicao", "motor_faltas_do_dia", "motor_teve_falta_ao_treino", "motor_teve_incidente_de_forma", "motor_marcar_falta_ao_treino", "motor_fim_da_ausencia", "motor_marcas_do_contrato", "motor_recusar_oferta_de_transferencia", "motor_retirar_oferta_de_transferencia", "motor_noticia_oferta_recusada", "motor_desassossegar_pelo_lance", "motor_noticia_oferta_desfeita", "motor_noticia_premio_por_jogos", "motor_efetivar_transferencia", "motor_noticia_transferencia_concluida", "motor_noticia_transferencia_acertada", "motor_emprestimo_da_configuracao", "motor_noticia_fim_do_contrato", "motor_noticia_pedido_de_adiamento", "motor_tatica_do_clube", "motor_escolher_vaga_de_tatica", "motor_tatica_ativa_do_humano", "motor_tirar_da_escalacao", "motor_trocar_vagas_da_escalacao", "motor_tem_copia_da_escalacao", "motor_noticia_da_pressao", "motor_noticia_da_saida_do_tecnico", "motor_noticia_do_tecnico_novo", "motor_pagar_premios_da_liga", "motor_registros_pela_situacao_na_liga", "motor_anunciar_situacao_na_liga", "motor_registrar_partida_nas_estatisticas", "motor_recordes_de_posicao_na_liga", "motor_noticias_de_recordes", "motor_convocar_selecoes_para_o_jogo", "motor_noticia_do_convocado", "motor_noticia_do_desfecho_na_copa", "motor_contar_vagas_com_lance", "motor_tirar_da_lista_de_transferencias", "motor_tirar_da_lista_de_emprestimos", "motor_situacao_na_lista_de_observacao", "motor_por_na_lista_de_emprestimos", "motor_teto_de_preco_pelo_estatuto", "motor_distribuir_verba_de_transferencias", "motor_estatuto_permitido", "motor_nome_da_lista_do_olheiro", "motor_amistosos_internacionais_do_dia", "motor_lista_escolhida_do_tecnico", "motor_escolher_lista_do_tecnico", "motor_inscritos_da_liga_dos_campeoes", "motor_tabela_da_qualificacao_da_liga_dos_campeoes", "motor_proxima_fase_da_liga_dos_campeoes", "motor_processar_jogo_da_liga_dos_campeoes", "motor_progresso_do_clube_na_liga_dos_campeoes", "motor_conta_para_conflito_de_datas", "motor_escolher_arbitro_da_partida", "motor_limpar_arbitros_ocupados", "motor_renovar_arbitros", "motor_arbitros_sorteados", "motor_validar_arbitros", "motor_copiar_ficha_de_arbitro", "motor_registrar_premio_do_ano", "motor_vitoria_maior", "motor_derrota_maior", "motor_jogos_das_permissoes_e_clausulas", "motor_guardar_premio_por_jogos_na_selecao", "motor_noticia_transferencia_finalizada", "motor_veto_dos_fisios_e_da_diretoria", "motor_noticia_do_ultimato", "motor_texto_do_ultimato", "motor_liberar_sem_custo", "motor_ferias_do_humano", "motor_noticia_conversa_de_contrato", "motor_mata_mata_da_first", "motor_mata_mata_da_second", "motor_mata_mata_da_third", "motor_registros_pela_situacao_inglesa", "motor_situacao_na_first", "motor_situacao_na_third", "motor_posicoes_e_situacao_na_liga", "motor_fase_seguinte_da_first", "motor_fase_seguinte_da_second", "motor_registros_da_liga_dos_campeoes", "motor_sorteio_das_quartas", "motor_clubes_da_liga_dos_campeoes", "motor_registrar_resultado_da_tatica", "motor_capitao_guardado", "motor_escolher_capitao", "motor_selecao_que_tem_o_jogador", "motor_jogador_serve_a_selecao", "motor_juntar_competicoes_das_convocacoes", "motor_registro_da_partida_pelo_clube", "motor_referencia_ao_nome", "motor_codigo_do_resultado", "motor_mover_jogos_vizinhos_do_clube", "motor_remarcar_jogos_perto_da_data", "motor_noticia_do_jogo_remarcado", "motor_incidente_de_forma", "motor_noticia_reacao_a_multa", "motor_noticia_retorno_do_treinador", "motor_sortear_comentarista", "motor_nome_do_veiculo", "motor_noticia_queixa_a_federacao", "motor_folha_salarial_do_clube", "motor_refazer_todas_as_folhas", "motor_dias_ate_a_temporada", "motor_receber_venda_de_jogador", "motor_pagar_compra_de_jogador", "motor_pagar_luvas", "motor_receber_premio_em_dinheiro", "motor_receber_direitos_de_tv", "motor_pagar_salarios", "motor_copa_premio_da_rodada", "motor_copa_mandantes_da_rodada", "motor_copa_progresso_do_time", "motor_amistoso_responder_pedido", "motor_amistoso_enviar_pedido", "motor_amistoso_lista_das_nacoes", "motor_copa_sortear_rodada", "motor_nome_da_fase_e_rodada", "motor_clube_da_divisao_mais_alta", "motor_copa_registros_pelo_desfecho", "motor_copa_honras_da_temporada", "motor_copa_semifinalistas_para_a_uefa", "motor_recusar_oferta_de_emprestimo", "motor_vaga_no_elenco_para_a_oferta", "motor_percentual_da_proxima_venda_achado", "motor_jogador_na_busca", "motor_sincronizar_listas_dos_olheiros", "motor_vaga_do_jogador_observado", "motor_valor_do_jogador_para_o_clube", "motor_entrada_do_jogador_na_busca_do_clube", "motor_premio_de_jogos_na_selecao_achado", "motor_contratos_depois_do_jogo", "motor_moral_da_ficha", "motor_texto_da_moral", "motor_valor_do_jogador", "motor_diferenca_de_moral_em_texto", "motor_marcas_de_elenco_para_a_tela", "motor_jogadores_que_a_diretoria_cita", "motor_veredito_da_nota_na_partida", "motor_texto_da_diretoria_sobre_os_jogadores", "motor_resultado_nos_registros_dos_tecnicos", "motor_posicoes_no_fim_da_liga", "motor_jogador_do_ano_da_torcida_no_registro", "motor_vice_da_copa_nos_registros", "motor_terceiro_da_copa_nos_registros", "motor_troca_de_tecnico_nos_registros", "motor_reacoes_dos_elencos_a_transferencia", "motor_noticia_da_comemoracao_da_contratacao", "motor_noticia_do_companheiro_desassossegado", "motor_renda_da_partida", "motor_renda_do_estadio", "motor_pagar_multa_da_liga", "motor_impulso_das_financas", "motor_troca_do_presidente", "motor_pagar_outros_custos", "motor_tabela_das_datas_internacionais", "motor_resolver_datas_internacionais", "motor_torneio_do_clube_humano", "motor_amistosos_dos_clubes", "motor_acrescentar_torneio", "motor_convite_aberto_do_clube_humano", "motor_lesao_nova", "motor_noticia_da_lesao", "motor_ausente_sem_licenca", "motor_parte_dos_clubes_anteriores", "motor_percentual_da_proxima_venda_pago", "motor_noticia_do_percentual_da_venda", "motor_permissao_concedida", "motor_estatuto_pelo_motivo", "motor_vaga_da_negociacao", "motor_reacao_do_elenco_a_historia", "motor_aviso_ao_rival_de_posicao", "motor_rotulo_da_resposta_da_midia", "motor_cumprir_suspensoes_internacionais", "motor_recurso_da_suspensao", "motor_texto_da_vaga_da_suspensao", "motor_tirar_da_lista", "motor_esvaziar_lista", "motor_item_do_cursor", "motor_copa_sortear_pela_semente", "motor_copa_sortear_separando_nacoes", "motor_copa_comeco_da_temporada", "motor_nacao_chave_do_clube", "motor_nacao_chave_do_estadio", "motor_entrada_da_nacao_chave_ativa", "motor_conflito_de_jogos_no_mesmo_dia", "motor_primeiro_ano_com_jogos", "motor_ultimo_ano_com_jogos", "motor_gravar_financas", "motor_carregar_financas", "motor_gravar_gerente_de_elencos", "motor_gravar_sementes_da_uefa", "motor_gravar_sementes_da_conmebol", "motor_gravar_paises_anfitrioes", "motor_gravar_historico_dos_clubes", "motor_gravar_estatisticas_dos_arbitros", "motor_gravar_estatisticas_simuladas", "motor_gravar_datas_dos_clubes", "motor_carregar_datas_dos_clubes", "motor_gravar_conferencia_das_pernas", "motor_fim_de_temporada_da_nacao", "motor_fim_de_temporada_do_clube", "motor_noticia_do_dividendo", "motor_teto_salarial", "motor_noticia_das_obras", "motor_noticia_da_obra_recusada", "motor_conflitos_do_dia", "motor_conflitos_do_jogo", "motor_carregar_conferencia_das_pernas", "motor_nova_data_do_jogo", "motor_jogo_no_calendario", "motor_ano_do_calendario", "motor_copa_criar_jogos_do_confronto", "motor_copa_noticia_do_confronto_pendente", "motor_janelas_avisos_do_dia", "motor_copa_levar_jogos_as_datas", "motor_tirar_jogador_da_troca", "motor_permissoes_da_oferta", "motor_confianca_depois_da_partida", "motor_noticia_da_reacao_da_diretoria", "motor_noticia_da_avaliacao_da_federacao", "motor_expectativas_da_temporada", "motor_vaga_de_tecnico", "motor_noticia_da_oferta_de_emprego", "motor_boatos_de_transferencia", "motor_noticia_nao_vende", "motor_noticia_do_titulo", "motor_amistosos_entre_selecoes", "motor_convite_de_amistoso_valido", "motor_convite_de_torneio_valido", "motor_dia_das_selecoes", "motor_busca_atual_sem_clube", "motor_clube_nas_buscas_da_sessao", "motor_escolher_elenco_da_selecao", "motor_olheiros_na_partida", "motor_sessao_de_edicao", "motor_escolher_sessao_de_edicao", "motor_dia_das_transferencias", "motor_processar_oferta_vencida", "motor_restricoes_da_oferta", "motor_aceitar_lance", "motor_noticia_da_oferta_feita", "motor_pode_emprestar", "motor_liga_dia", "motor_liga_criar_tabela", "motor_liga_promover_e_rebaixar", "motor_calendario_dia", "motor_calendario_lista", "motor_calendario_carregar_ano", "motor_copa_arvore_dos_confrontos", "motor_competicao_primeira_fase_do_grupo", "motor_competicao_fase_atual", "motor_atualizar_o_treino_do_jogador", "motor_programa_de_treino_do_jogador", "motor_nivel_da_categoria_do_programa", "motor_tirar_ou_devolver_o_progresso", "motor_mudanca_do_atributo_pelo_treino", "motor_aptidao_para_a_posicao", "motor_aposentadorias_do_dia", "motor_noticia_da_aposentadoria", "motor_noticia_do_jovem_promovido", "motor_limpar_ausencia", "motor_limpar_falta_ao_treino", "motor_noticia_da_falta_ao_treino", "motor_troca_com_compensacao", "motor_ordem_das_vagas", "motor_marcar_sob_oferta", "motor_campeao_da_liga_nos_registros", "motor_campeao_da_copa_nos_registros", "motor_limpar_registro_do_humano", "motor_resposta_da_ia_ao_lance", "motor_negociacao_de_emprestimo", "motor_opcao_de_troca", "motor_agendar_fim_do_emprestimo", "motor_lances_do_clube", "motor_cqe4_interesse", "motor_cqe4_construir_contrato", "motor_cqe5_pode_emprestar", "motor_cqe5_registrar_emprestimo", "motor_cqe5_dia_das_regras", "motor_cqe6_periodo_inglaterra", "motor_cqe6_pode_emprestar_escocia", "motor_cqe6_periodo_escocia", "motor_cqe6_pode_emprestar_italia", "motor_cqe6_pode_emprestar_irlanda", "motor_cqe6_pode_emprestar_espanha", "motor_liga_jogos_para_a_tv", "motor_liga_noticia_dos_grupos", "motor_liga_noticia_da_tabela", "motor_por_oferta_de_transferencia", "motor_aceitar_emprestimo", "motor_termos_aceitos", "motor_noticia_de_jogador_listado", "motor_contrato_oferecido", "motor_mundial_sortear_grupos", "motor_mundial_sorteio_dos_grupos", "motor_mundial_dia", "motor_mundial_tabela_do_grupo_um", "motor_mundial_fase_do_grupo", "motor_mundial_posicoes_previstas", "motor_mundial_rodadas_da_fase", "motor_mundial_nacao_classificada", "motor_mundial_cabecas_de_chave", "motor_distribuir_os_treinadores", "motor_trocar_os_programas_do_elenco", "motor_nomes_padrao_dos_programas", "motor_historico_da_carreira", "motor_anos_desde_o_clube", "motor_ordem_do_historico_por_pessoa", "motor_lesao_pelo_nome", "motor_noticia_da_volta_aos_treinos", "motor_nome_da_categoria_da_lesao", "motor_cqf10_olheiro_no_jogo", "motor_cqf10_historico_do_clube_observado", "motor_cqf11_relatorio_da_selecao", "motor_cqf11_noticia_da_convocacao", "motor_cqf11_adversarios_da_selecao", "motor_cqf12_olheiros_do_dia", "motor_cqf12_relatorios_dos_olheiros", "motor_cqf12_noticia_do_relatorio", "motor_assinar_contrato", "motor_refazer_como_jovem", "motor_tirar_da_disputa", "motor_ler_formacao_do_disco", "motor_trocar_bytes_das_palavras", "motor_trocar_bytes_dos_dwords", "motor_montar_os_arbitros", "motor_ordem_das_vagas_de_competicao", "motor_cqg10_amistoso_cancelado", "motor_cqg10_jogo_da_selecao_cancelado", "motor_cqg10_torneio_cancelado", "motor_ordem_dos_arbitros_decrescente", "motor_ordem_dos_arbitros_crescente", "motor_arquivar_estatisticas", "motor_pessoa_pelo_nome", "motor_texto_entre_aspas", "motor_tipo_da_linha", "motor_campeoes_sortear_grupos", "motor_campeoes_ordem_dos_potes", "motor_campeoes_posicoes_previstas", "motor_campeoes_sortear_segunda_fase", "motor_campeoes_ordem_da_segunda_fase", "motor_grupo_da_fase", "motor_campeoes_rodadas_da_fase", "motor_liga_expectativas_da_temporada", "motor_liga_rebaixar_clube", "motor_competicao_todas_completas", "motor_competicao_lista_de_clubes", "motor_competicao_progresso_do_clube", "motor_uefa_rodar_coeficientes", "motor_uefa_vagas_por_nacao", "motor_uefa_enesimo_clube_da_nacao", "motor_uefa_juntar_clubes_europeus", "motor_uefa_vagas_liga_dos_campeoes", "motor_uefa_vagas_intertoto", "motor_uefa_vagas_copa_da_uefa", "motor_uefa_voluntario_ingles", "motor_uefa_virada_da_classificacao", "motor_conmebol_vagas_libertadores", "motor_conmebol_enesimo_clube_da_nacao", "motor_conmebol_convidado_da_mercosul", "motor_conmebol_juntar_clubes", "motor_conmebol_virada_do_ano", "motor_conmebol_campeao_dos_campeoes", "motor_sede_da_edicao", "motor_proxima_sede", "motor_calendario_das_sedes", "motor_regras_inglaterra", "motor_regras_eua", "motor_regras_australia", "motor_janelas_espanha", "motor_janelas_italia", "motor_janelas_franca", "motor_regras_brasil", "motor_janelas_alemanha", "motor_regras_escocia", "motor_cqi10_intertoto_dia", "motor_cqi10_intertoto_registros", "motor_cqi10_uefa_registros", "motor_cqi11_concacaf_classificados", "motor_cqi11_concacaf_dia", "motor_cqi11_concacaf_rodadas", "motor_cqi12_copa_italia_regras", "motor_cqi12_copa_c_regras", "motor_cqi12_copa_dos_campeoes_regras", "motor_cqj10_copa_africana_registros", "motor_cqj10_copa_america_registros", "motor_cqj10_eliminatoria_oceania_registros", "motor_cqj11_libertadores_regras", "motor_cqj11_merconorte_regras", "motor_cqj11_oceania_clubes_regras", "motor_cqj12_eliminatoria_europa_regras", "motor_cqj12_eliminatoria_sul_americana_regras", "motor_cqj12_eliminatoria_asia_regras", "motor_cqk10_copa_america_regras", "motor_cqk10_copa_africana_regras", "motor_cqk10_eliminatoria_oceania_regras", "motor_cqk11_libertadores_classificados", "motor_cqk11_libertadores_registros", "motor_cqk11_libertadores_fase_seguinte", "motor_cqk12_africana_fase_seguinte", "motor_cqk12_africana_grupo_a", "motor_cqk12_africana_historico", "motor_cqi7_regras_da_serie_a", "motor_cqi7_regras_da_serie_b", "motor_cqi7_regras_da_serie_c", "motor_cqi8_regras_do_centro_oeste", "motor_cqi8_regras_do_gaucho", "motor_cqi8_regras_do_catarinense", "motor_cqi9_regras_do_paranaense", "motor_cqi9_regras_do_pernambucano", "motor_cqi9_regras_do_carioca", "motor_cqj7_regras_do_goiano", "motor_cqj7_regras_da_j1", "motor_cqj7_regras_da_j2", "motor_cqj8_regras_da_nsl", "motor_cqj8_regras_da_mls", "motor_cqj8_historico_do_estadual", "motor_cqj8_historico_do_primeiro_estagio", "motor_cqj9_destino_na_serie_a", "motor_cqj9_destino_na_serie_c", "motor_cqj9_destino_no_baiano", "motor_cqk7_destino_no_centro_oeste", "motor_cqk7_destino_no_mineiro", "motor_cqk7_destino_na_nsl", "motor_cqk8_progresso_no_mineiro", "motor_cqk8_progresso_na_mls", "motor_cqk8_progresso_na_serie_c", "motor_cqk9_destino_na_mls", "motor_cqk9_resultado_na_mls", "motor_cqk9_conferencia_das_estrelas", "motor_regras_da_premier", "motor_regras_da_first", "motor_regras_da_second", "motor_regras_da_third", "motor_tabela_da_premier", "motor_tabela_da_second", "motor_tabela_da_third", "motor_tabela_da_first", "motor_regras_da_serie_a", "motor_regras_da_serie_b", "motor_regras_da_c1a", "motor_regras_da_c1b", "motor_tabela_da_serie_a", "motor_tabela_da_serie_b", "motor_tabela_da_c1a", "motor_tabela_da_c1b", "motor_regras_da_franca_1", "motor_regras_da_franca_2", "motor_regras_da_franca_3", "motor_tabela_da_franca_1", "motor_tabela_da_franca_2", "motor_tabela_da_franca_3", "motor_regras_da_primera", "motor_regras_da_segunda", "motor_regras_da_divisao_de_baixo", "motor_tabela_da_primera", "motor_registros_pela_situacao_na_c2a", "motor_situacao_na_primera", "motor_tabela_do_grupo_da_cfa", "motor_tabela_da_divisao_de_baixo_francesa", "motor_situacao_na_c1a", "motor_situacao_na_c1b", "motor_cql10_copa_da_liga_tabela", "motor_cql10_copa_da_inglaterra_tabela", "motor_cql10_supercopa_tabela", "motor_cql11_copa_da_franca_tabela", "motor_cql11_copa_da_liga_francesa_tabela", "motor_cql11_copa_do_rei_tabela", "motor_cql12_supercopa_da_franca_tabela", "motor_cql12_supercopa_da_espanha_tabela", "motor_cql12_supercopa_do_japao_tabela", "motor_cqm10_copa_da_liga_inscritos", "motor_cqm10_trofeu_inscritos", "motor_cqm10_supercopa_clubes", "motor_cqm11_copa_da_franca_inscritos", "motor_cqm11_copa_da_liga_inscritos", "motor_cqm11_supercopa_clubes", "motor_cqm12_supercopa_da_espanha_clubes", "motor_cqm12_supercopa_do_japao_clubes", "motor_cqm12_jogo_das_estrelas_tabela", "motor_cqn10_copa_da_liga_dia", "motor_cqn10_copa_da_inglaterra_dia", "motor_cqn10_jogo_das_estrelas_dia", "motor_cqn11_copa_da_liga_japonesa_tabela", "motor_cqn11_copa_do_imperador_tabela", "motor_cqn11_copa_dos_eua_tabela", "motor_cqn12_copa_da_liga_inscritos", "motor_cqn12_copa_dos_eua_inscritos", "motor_cqn12_copa_do_imperador_inscritos", "motor_numero_de_camisa", "motor_clube_usa_numeros", "motor_gravar_numero_de_camisa", "motor_dar_numero_de_camisa", "motor_numerar_elenco", "motor_numerar_no_comeco", "motor_numerar_liga", "motor_inscrever_na_europa", "motor_regras_holanda", "motor_regras_croacia", "motor_regras_irlanda", "motor_regras_noruega", "motor_regras_irlanda_do_norte", "motor_regras_pais_de_gales", "motor_regras_turquia", "motor_regras_polonia", "motor_regras_finlandia", "motor_janelas_argentina", "motor_janelas_portugal", "motor_regras_coreia", "motor_janelas_grecia", "motor_janelas_russia", "motor_janelas_belgica", "motor_inscricao_europeia", "motor_ranking_fifa_inicial", "motor_lista_de_estadios_neutros", "motor_cql7_tabela_da_serie_a", "motor_cql7_tabela_da_serie_b", "motor_cql7_tabela_da_serie_c", "motor_cql8_tabela_do_baiano", "motor_cql8_tabela_do_centro_oeste", "motor_cql8_tabela_do_gaucho", "motor_cql9_tabela_do_goiano", "motor_cql9_tabela_do_mineiro", "motor_cql9_tabela_do_norte", "motor_cqm7_tabela_do_nordeste", "motor_cqm7_tabela_do_paranaense", "motor_cqm7_tabela_do_pernambucano", "motor_cqm8_tabela_do_carioca", "motor_cqm8_tabela_do_catarinense", "motor_cqm8_tabela_do_paulista", "motor_cqm9_tabela_da_j1", "motor_cqm9_tabela_da_j2", "motor_cqm9_tabela_da_nsl", "motor_cqn7_mata_mata_do_baiano", "motor_cqn7_mata_mata_do_norte", "motor_cqn7_mata_mata_do_nordeste", "motor_cqn8_mata_mata_do_pernambucano", "motor_cqn8_mata_mata_do_catarinense", "motor_cqn8_mata_mata_do_paulista", "motor_cqn9_mata_mata_do_gaucho", "motor_cqn9_mata_mata_do_centro_oeste", "motor_cqn9_mata_mata_do_goiano", "motor_desempate_da_serie_a", "motor_desempate_da_serie_b", "motor_ordem_dos_empatados_na_italia", "motor_resultado_do_desempate_da_serie_a", "motor_fase_seguinte_da_c1a", "motor_fases_do_fim_da_c1a", "motor_fase_seguinte_da_c1b", "motor_fases_do_fim_da_c1b", "motor_fase_seguinte_da_third", "motor_construir_premier", "motor_construir_first", "motor_construir_second", "motor_construir_third", "motor_construir_serie_a", "motor_construir_serie_b", "motor_construir_c1a", "motor_construir_c1b", "motor_construir_franca_2", "motor_construir_franca_3", "motor_construir_segunda", "motor_construir_primera", "motor_construir_divisao_de_baixo_espanhola", "motor_tabela_da_segunda", "motor_tabela_da_divisao_de_baixo_espanhola", "motor_regras_da_cfa", "motor_construir_cfa", "motor_construir_divisao_de_baixo_francesa", "motor_destruir_cfa", "motor_destruir_divisao_de_baixo_francesa", "motor_calendario_fixo_da_serie_a", "motor_calendario_fixo_da_serie_b", "motor_calendario_fixo_da_c1a", "motor_calendario_fixo_da_c1b", "motor_toco_um_com_dois", "motor_toco_um_com_um", "motor_estadio_da_partida", "motor_estadio_neutro", "motor_publico_do_jogo", "motor_calendario_da_terceira_francesa", "motor_calendario_da_segunda_francesa", "motor_calendario_da_divisao_de_baixo_francesa", "motor_calendario_da_cfa", "motor_calendario_da_c1_a", "motor_calendario_da_c1_b", "motor_calendario_da_serie_a", "motor_calendario_da_serie_b", "motor_calendario_da_primeira_francesa", "motor_cqo7_fase_seguinte_do_mineiro", "motor_cqo7_final_do_mineiro", "motor_cqo7_fim_da_temporada_do_mineiro", "motor_cqo8_fase_seguinte_do_paranaense", "motor_cqo8_final_do_paranaense", "motor_cqo8_fim_da_temporada_do_paranaense", "motor_cqo9_fase_seguinte_do_carioca", "motor_cqo9_final_do_carioca", "motor_cqo9_fim_da_temporada_do_carioca", "motor_cqo10_copa_da_italia_tabela", "motor_cqo10_copa_c_tabela", "motor_cqo10_supercopa_tabela", "motor_cqo10_supercopa_c1_tabela", "motor_cqo11_copa_da_italia_inscritos", "motor_cqo11_copa_c_inscritos", "motor_cqo11_supercopa_clubes", "motor_cqo12_copa_do_brasil_tabela", "motor_cqo12_times_da_copa", "motor_cqo12_regras_da_copa", "motor_cqo13_libertadores_tabela", "motor_cqo13_mercosul_tabela", "motor_cqo13_mercosul_convidados", "motor_calendario_da_segunda_inglesa", "motor_calendario_da_terceira_inglesa", "motor_calendario_da_primeira_inglesa", "motor_calendario_da_premiership", "motor_calendario_da_primera", "motor_cqp7_virada_do_baiano", "motor_cqp7_fase_seguinte_do_baiano", "motor_cqp7_virada_do_centro_oeste", "motor_cqp7_fase_seguinte_do_centro_oeste", "motor_cqp7_virada_do_gaucho", "motor_cqp7_fase_seguinte_do_gaucho", "motor_cqp8_virada_do_goiano", "motor_cqp8_fase_seguinte_do_goiano", "motor_cqp8_virada_do_norte", "motor_cqp8_fase_seguinte_do_norte", "motor_cqp8_virada_do_nordeste", "motor_cqp8_fase_seguinte_do_nordeste", "motor_cqp9_virada_do_pernambucano", "motor_cqp9_fase_seguinte_do_pernambucano", "motor_cqp9_virada_do_catarinense", "motor_cqp9_fase_seguinte_do_catarinense", "motor_cqp9_virada_do_paulista", "motor_cqp9_fase_seguinte_do_paulista", "motor_calendario_da_segunda_espanhola", "motor_calendario_da_divisao_de_baixo_espanhola", "motor_construir_primeira_francesa", "motor_cqq7_fase_seguinte_da_serie_a", "motor_cqq7_play_off_da_serie_a", "motor_cqq7_fase_seguinte_da_serie_b", "motor_cqq7_play_off_da_serie_b", "motor_cqq8_virada_da_serie_a", "motor_cqq8_acesso_e_rebaixamento", "motor_cqq8_virada_da_serie_b", "motor_cqq9_fase_seguinte_da_j1", "motor_cqq9_final_da_j1", "motor_cqq9_virada_da_j1", "motor_tabela_das_sedes", "motor_noticia_das_sedes", "motor_carregar_sedes", "motor_cadeia_de_acessos", "motor_noticia_do_premio", "motor_noticia_da_tv", "motor_cqp10_copa_dos_campeoes_tabela", "motor_cqp10_merconorte_tabela", "motor_cqp10_supercopa_europeia_tabela", "motor_cqp10_supercopa_asiatica_tabela", "motor_cqp11_asia_clubes_tabela", "motor_cqp11_asia_recopa_tabela", "motor_cqp11_trofeu_tabela", "motor_cqp12_copa_america_tabela", "motor_cqp12_africana_tabela", "motor_cqp12_confed_tabela", "motor_cqp13_intertoto_tabela", "motor_cqp13_intercontinental_tabela", "motor_cqp13_interamericana_tabela", "motor_cqp13_concacaf_tabela", "motor_cqq10_uefa_tabela", "motor_cqq10_intertoto_inscritos", "motor_cqq10_intertoto_lista", "motor_cqq11_europeia_clubes", "motor_cqq11_asiatica_clubes", "motor_cqq11_c1_vagas", "motor_cqq12_oceania_tabela", "motor_cqq12_asia_clubes_times", "motor_cqq12_asia_recopa_times", "motor_cqr1_turno_do_carioca", "motor_cqr1_turno_do_mineiro", "motor_cqr1_turno_do_paranaense", "motor_cqr1_turno_da_j1", "motor_cqr2_virada_do_carioca", "motor_cqr2_virada_do_mineiro", "motor_cqr2_virada_do_paranaense", "motor_cqr3_fase_seguinte_da_nsl", "motor_cqr3_serie_final_da_nsl", "motor_cqr3_grande_final_da_nsl", "motor_cqr4_fase_seguinte_da_mls", "motor_cqr4_play_off_da_mls", "motor_cqr4_final_da_mls", "motor_cqr5_virada_copa_do_brasil", "motor_cqr5_virada_copa_do_imperador", "motor_cqr5_virada_copa_da_liga_japonesa", "motor_cqr6_virada_supercopa_japonesa", "motor_cqr6_virada_copa_dos_eua", "motor_cqr6_virada_jogo_das_estrelas", "motor_cqr6_times_do_jogo_das_estrelas", "motor_cqr10_libertadores_dia", "motor_cqr10_libertadores_primeiro_grupo", "motor_cqr10_libertadores_grupo", "motor_cqr11_mercosul_dia", "motor_cqr11_mercosul_primeiro_grupo", "motor_cqr11_mercosul_grupo", "motor_cqr12_merconorte_dia", "motor_cqr12_merconorte_primeiro_grupo", "motor_cqr12_merconorte_grupo", "motor_cqr13_copa_america_dia", "motor_cqr13_copa_america_primeiro_grupo", "motor_cqr13_copa_america_grupo", "motor_cqs1_tabela_da_mls", "motor_cqs1_segunda_divisao_da_mls", "motor_cqs1_terceira_divisao_da_mls", "motor_cqs2_virada_da_mls", "motor_cqs2_posicoes_previstas_da_mls", "motor_cqs2_clubes_da_mls", "motor_cqs3_grupo_da_serie_c", "motor_cqs3_segunda_fase_da_serie_c", "motor_cqs3_terceira_fase_da_serie_c", "motor_cqs4_final_da_serie_c", "motor_cqs4_virada_da_serie_c", "motor_cqs4_posicoes_previstas_da_serie_c", "motor_cqs5_trofeu_clubes", "motor_cqs5_trofeu_fase_das_chaves", "motor_cqs5_trofeu_fase_seguinte", "motor_cqs6_trofeu_final", "motor_cqs6_trofeu_classificacao", "motor_cqs7_fase_de_copa", "motor_cqs7_fim_da_fase_de_copa", "motor_cqs10_libertadores_mata_mata", "motor_cqs10_merconorte_semifinais", "motor_cqs10_merconorte_fase_seguinte", "motor_cqs11_merconorte_convidados", "motor_cqs11_mercosul_fase_seguinte", "motor_cqs11_copa_america_fase_seguinte", "motor_cqs12_copa_america_selecoes", "motor_cqs12_copa_america_previstas", "motor_cqs12_copa_america_temporada_nova", "motor_cqt1_construir_baiano", "motor_cqt1_construir_centro_oeste", "motor_cqt1_construir_gaucho", "motor_cqt2_construir_goiano", "motor_cqt2_construir_mineiro", "motor_cqt2_construir_norte", "motor_cqt3_construir_nordeste", "motor_cqt3_construir_paranaense", "motor_cqt3_construir_pernambucano", "motor_cqt4_construir_carioca", "motor_cqt4_construir_catarinense", "motor_cqt4_construir_paulista", "motor_cqt4_atualizar_media_de_publico", "motor_cqt10_oceania_dia", "motor_cqt10_oceania_grupo_a", "motor_cqt10_oceania_grupo_b", "motor_cqt11_oceania_clubes", "motor_cqt11_oceania_fase_seguinte", "motor_cqt11_oceania_semifinais", "motor_cqt12_asia_fase_seguinte", "motor_cqt12_asia_grupos", "motor_cqt12_asia_semifinais", "motor_cqs13_africana_dia", "motor_cqs13_africana_sorteio", "motor_cqs13_africana_grupo", "motor_cqt13_africana_quartas", "motor_cqt13_recopa_asiatica_fase_seguinte", "motor_cqt13_recopa_asiatica_finais", "motor_cqr7_copa_da_italia_grupo_um", "motor_cqr7_copa_da_serie_c_grupo_um", "motor_cqr7_copa_da_italia_fase_seguinte", "motor_cqr7_copa_da_serie_c_fase_seguinte", "motor_cqr8_copa_da_italia_grupo", "motor_cqr8_copa_da_serie_c_grupo", "motor_cqr9_copa_da_italia_mata_mata", "motor_cqr9_copa_da_serie_c_mata_mata", "motor_cqs8_eurocopa_regras", "motor_cqs8_eurocopa_tamanho_do_grupo", "motor_cqs8_eurocopa_situacao", "motor_cqs8_eurocopa_grupo_um", "motor_cqs9_uefa_inscritos", "motor_cqt5_copa_do_rei_dia", "motor_cqt5_historico_liga_dos_campeoes", "motor_cqt5_historico_copa_da_grecia", "motor_cqt5_historico_copa_da_liga_irlandesa", "motor_cqt5_historico_copa_da_serie_c",
     ];
     for i in 0..N {
-        if DESLIGADAS.contains(&PROLOGOS[i].endereco) {
-            continue;
-        }
         if SEM_ROTINAS.contains(&nomes[i]) {
-            // a original pelo mesmo desvio de passagem do modo original (mesma pilha particular)
+            // the original through the same pass-through detour as original mode (same private stack)
             linha(&format!("motor: {} fica no original (SEM_ROTINAS)", nomes[i]));
-            match ZERADAS.iter().find(|z| z.0.endereco == PROLOGOS[i].endereco) {
-                Some(z) => desvios::desviar_zerando(nomes[i], &PROLOGOS[i], z.1, desvios::PASSAGEM),
-                None => desvios::desviar(nomes[i], &PROLOGOS[i], desvios::PASSAGEM),
-            };
+            detours::desviar(nomes[i], &PROLOGOS[i], detours::PASSAGEM);
             continue;
         }
-        // na comparacao a 0x6f5c30 e a 0x70dfd0 ja tem a porta (instalada antes), que tambem as compara
+        // in comparison 0x6f5c30 and 0x70dfd0 already have the port (installed earlier), which compares them too
         if comparando && (PROLOGOS[i].endereco == 0x6f5c30 || PROLOGOS[i].endereco == 0x70dfd0 || PROLOGOS[i].endereco == 0x867560) {
             continue;
         }
-        if !comparando && SO_NA_COMPARACAO.contains(&PROLOGOS[i].endereco) {
-            linha(&format!("motor: {} roda a original fora da comparacao (SO_NA_COMPARACAO)", nomes[i]));
-            desvios::desviar(nomes[i], &PROLOGOS[i], desvios::PASSAGEM);
-            continue;
-        }
         let destino = if comparando { comp[i] } else { rust[i] };
-        // rotina do original determinizado: o desvio zera a pilha antes (ver ZERADAS)
-        let feito = match ZERADAS.iter().find(|z| z.0.endereco == PROLOGOS[i].endereco) {
-            Some(z) => desvios::desviar_zerando(nomes[i], &PROLOGOS[i], z.1, destino),
-            None => desvios::desviar(nomes[i], &PROLOGOS[i], destino),
-        };
-        // recusado (rotina alterada por outro patch): orig(i) chama o proprio exe, que segue sem desvio
+        let feito = detours::desviar(nomes[i], &PROLOGOS[i], destino);
+        // refused (routine changed by another patch): orig(i) calls the exe itself, which runs without a detour
         ORIGINAIS[i] = feito.unwrap_or(PROLOGOS[i].endereco);
     }
     if comparando {
         linha("motor: modo comparacao (original x Rust)");
     } else if let Some(p) = std::env::var("CM_DIAG_PESSOA").ok().and_then(|v| v.parse::<usize>().ok()) {
-        // diagnóstico (31/10/2026, prova do "Deixar infeliz" do CMRTE): a queixa nova e a marca nova da pessoa P,
-        // com os campos do contrato antes e depois (o pedido 0x4d8610 do clube humano tem a própria linha)
-        DIAG_PESSOA = p;
-        DIAG_CLUBE = std::env::var("CM_DIAG_CLUBE").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(usize::MAX);
-        DIAG_QUEIXA = desvios::desviar("diag queixa 0x867700", &Prologo { endereco: 0x867700, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] }, diag_queixa as *const () as usize).unwrap_or(0);
+        // diagnosis (31/10/2026, test of CMRTE's "Make unhappy"): person P's new complaint and new mark,
+        // with the contract fields before and after (the 0x4d8610 request of the human club has its own line)
+        DIAG_PERSON = p;
+        DIAG_CLUB = std::env::var("CM_DIAG_CLUBE").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(usize::MAX);
+        DIAG_COMPLAINT = detours::desviar("diag queixa 0x867700", &Prologo { endereco: 0x867700, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] }, diag_complaint as *const () as usize).unwrap_or(0);
     }
 }
 
-static mut DIAG_PESSOA: usize = usize::MAX;
-static mut DIAG_QUEIXA: usize = 0;
-/// CM_DIAG_CLUBE=C: também todo contrato do clube C (+4), para achar quem do clube recebe queixa ou marca
-static mut DIAG_CLUBE: usize = usize::MAX;
-static mut DIAG_MARCA: usize = 0;
+static mut DIAG_PERSON: usize = usize::MAX;
+static mut DIAG_COMPLAINT: usize = 0;
+/// CM_DIAG_CLUBE=C: also every contract of club C (+4), to find who in the club receives a complaint or mark.
+///
+/// [pt] CM_DIAG_CLUBE=C: também todo contrato do clube C (+4), para achar quem do clube recebe queixa ou marca
+static mut DIAG_CLUB: usize = usize::MAX;
+static mut DIAG_MARK: usize = 0;
 
-unsafe fn diag_contrato(c: usize) -> String {
+unsafe fn diag_contract(c: usize) -> String {
     let b = |o: usize| *((c + o) as *const u8);
     let d = |o: usize| core::ptr::read_unaligned((c + o) as *const u32);
     format!("+0x44 {} +0x45 {:#x} +0x40 {:#x} +0x49 {} +0x4e {:#x} +0x4f {:#x}", b(0x44) as i8, d(0x45), d(0x40), b(0x49), b(0x4e), b(0x4f))
 }
 
-static mut DIAG_CHAMADAS: u32 = 0;
+static mut DIAG_CALLS: u32 = 0;
 
-/// A cada potência de 2 de chamadas (de qualquer pessoa): a pessoa do contrato da vez e o contrato da pessoa P lido
+/// At every power of 2 of calls (from any person): the person of the current contract and person P's contract
+/// read directly from memory (0x4cf5a0 over [0xae1050], person = [0xae23bc] + id × 110), to check the save's writing.
+///
+/// [pt] A cada potência de 2 de chamadas (de qualquer pessoa): a pessoa do contrato da vez e o contrato da pessoa P lido
 /// direto na memória (0x4cf5a0 sobre [0xae1050], pessoa = [0xae23bc] + id × 110), para conferir a gravação do save.
-unsafe fn diag_amostra(c: usize, qual: &str) {
-    DIAG_CHAMADAS += 1;
-    if !DIAG_CHAMADAS.is_power_of_two() {
+unsafe fn diag_sample(c: usize, qual: &str) {
+    DIAG_CALLS += 1;
+    if !DIAG_CALLS.is_power_of_two() {
         return;
     }
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PESSOA.wrapping_mul(110));
+    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PERSON.wrapping_mul(110));
     let k = achar(*(G_CONTRACT_MANAGER as *const usize), p);
-    linha(&format!("diag {} chamada {}: contrato da vez +0 {} +4 {}; contrato da pessoa {}: {}", qual, DIAG_CHAMADAS,
-        core::ptr::read_unaligned(c as *const i32), core::ptr::read_unaligned((c + 4) as *const i32), DIAG_PESSOA,
-        if k == 0 { "nenhum".to_string() } else { format!("+0 {} +4 {} {}", core::ptr::read_unaligned(k as *const i32), core::ptr::read_unaligned((k + 4) as *const i32), diag_contrato(k)) }));
+    linha(&format!("diag {} chamada {}: contrato da vez +0 {} +4 {}; contrato da pessoa {}: {}", qual, DIAG_CALLS,
+        core::ptr::read_unaligned(c as *const i32), core::ptr::read_unaligned((c + 4) as *const i32), DIAG_PERSON,
+        if k == 0 { "nenhum".to_string() } else { format!("+0 {} +4 {} {}", core::ptr::read_unaligned(k as *const i32), core::ptr::read_unaligned((k + 4) as *const i32), diag_contract(k)) }));
 }
 
-unsafe extern "thiscall" fn diag_queixa(c: usize, f: u32, z: u32) -> u32 {
+unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
     if c != 0 {
-        diag_amostra(c, "queixa");
+        diag_sample(c, "queixa");
     }
-    let alvo = c != 0 && (core::ptr::read_unaligned(c as *const u32) as usize == DIAG_PESSOA || core::ptr::read_unaligned((c + 4) as *const u32) as usize == DIAG_CLUBE);
+    let alvo = c != 0 && (core::ptr::read_unaligned(c as *const u32) as usize == DIAG_PERSON || core::ptr::read_unaligned((c + 4) as *const u32) as usize == DIAG_CLUB);
     if alvo {
-        linha(&format!("diag queixa pessoa {} queixa {:#x} z {} antes: {}", core::ptr::read_unaligned(c as *const u32), f, z, diag_contrato(c)));
+        linha(&format!("diag queixa pessoa {} queixa {:#x} z {} antes: {}", core::ptr::read_unaligned(c as *const u32), f, z, diag_contract(c)));
     }
-    let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_QUEIXA)(c, f, z);
+    let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(c, f, z);
     if alvo {
-        linha(&format!("diag queixa pessoa {} devolveu {} depois: {}", core::ptr::read_unaligned(c as *const u32), r, diag_contrato(c)));
+        linha(&format!("diag queixa pessoa {} devolveu {} depois: {}", core::ptr::read_unaligned(c as *const u32), r, diag_contract(c)));
     }
-    // CM_DIAG_FORCAR=Q: uma queixa sintética Q no contrato da pessoa P, uma vez, logo depois da primeira queixa do jogo
-    // (o mesmo evento nas variantes do save: só o estado do contrato decide se o pedido sai)
-    static mut FORCADA: bool = false;
-    if !FORCADA {
+    // CM_DIAG_FORCAR=Q: a synthetic complaint Q on person P's contract, once, right after the game's first complaint
+    // (the same event in the save variants: only the contract state decides whether the request goes out)
+    static mut FORCED: bool = false;
+    if !FORCED {
         if let Some(q) = std::env::var("CM_DIAG_FORCAR").ok().and_then(|v| u32::from_str_radix(v.trim_start_matches("0x"), 16).ok()) {
-            FORCADA = true;
+            FORCED = true;
             let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-            let k = achar(*(G_CONTRACT_MANAGER as *const usize), (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PESSOA.wrapping_mul(110)));
+            let k = achar(*(G_CONTRACT_MANAGER as *const usize), (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PERSON.wrapping_mul(110)));
             if k != 0 {
-                linha(&format!("diag queixa forcada {:#x} pessoa {} antes: {}", q, DIAG_PESSOA, diag_contrato(k)));
-                let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_QUEIXA)(k, q, 0);
-                linha(&format!("diag queixa forcada devolveu {} depois: {}", r2, diag_contrato(k)));
+                linha(&format!("diag queixa forcada {:#x} pessoa {} antes: {}", q, DIAG_PERSON, diag_contract(k)));
+                let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(k, q, 0);
+                linha(&format!("diag queixa forcada devolveu {} depois: {}", r2, diag_contract(k)));
             }
         }
     }
     r
 }
 
-unsafe extern "thiscall" fn diag_marca(c: usize, f: u32) -> u32 {
+unsafe extern "thiscall" fn diag_mark(c: usize, f: u32) -> u32 {
     if c != 0 {
-        diag_amostra(c, "marca");
+        diag_sample(c, "marca");
     }
-    let alvo = c != 0 && (core::ptr::read_unaligned(c as *const u32) as usize == DIAG_PESSOA || core::ptr::read_unaligned((c + 4) as *const u32) as usize == DIAG_CLUBE);
+    let alvo = c != 0 && (core::ptr::read_unaligned(c as *const u32) as usize == DIAG_PERSON || core::ptr::read_unaligned((c + 4) as *const u32) as usize == DIAG_CLUB);
     if alvo {
-        linha(&format!("diag marca pessoa {} marca {:#x} antes: {}", core::ptr::read_unaligned(c as *const u32), f, diag_contrato(c)));
+        linha(&format!("diag marca pessoa {} marca {:#x} antes: {}", core::ptr::read_unaligned(c as *const u32), f, diag_contract(c)));
     }
-    let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32) -> u32>(DIAG_MARCA)(c, f);
+    let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32) -> u32>(DIAG_MARK)(c, f);
     if alvo {
-        linha(&format!("diag marca pessoa {} devolveu {} depois: {}", core::ptr::read_unaligned(c as *const u32), r, diag_contrato(c)));
+        linha(&format!("diag marca pessoa {} devolveu {} depois: {}", core::ptr::read_unaligned(c as *const u32), r, diag_contract(c)));
     }
     r
 }
 
-/// Original determinizado (15/10/2026, aprovado pelo Lucas): rotinas originais que leem variavel
-/// local sem valor (a sobra da pilha muda com o modo) recebem, em todos os modos, um desvio que zera
-/// a pilha abaixo da entrada antes de rodar. A carreira de referencia passa a ser a da original com
-/// essas zeragens; as copias Rust usam zero. 0x6dbc50: o curto da 1a vaga extra na escalacao;
-/// 0x6d1cc0: a media (double) de um lado sem avaliados; 0x6beeb0: bytes altos dos dwords passados as
-/// escolhas da simulacao rapida; 0x70c040: o rebote e a saida da defesa quando o proprio goleiro
-/// chuta.
-/// Desde 31/10/2026 (Lucas) não há zeragem: o critério passou a ser "resultado que o jogo produz" (a comparação rotina a rotina,
-/// sem fixar valor), e as 8 zeragens (0x6dbc50, 0x6d1cc0, 0x6beeb0, 0x70c040, 0x7109f0, 0x52dad0, 0x82e430, 0x5fb810) saíram.
-const ZERADAS: [(Prologo, u32); 0] = [];
 
-pub unsafe fn instalar_zeradas() {
-    // as que tem copia Rust ja foram desviadas (zerando) junto com o motor
-    for (p, n) in ZERADAS.iter().filter(|z| !PROLOGOS.iter().any(|q| q.endereco == z.0.endereco)) {
-        desvios::desviar_zerando(&format!("zerada {:#x}", p.endereco), p, *n, desvios::PASSAGEM);
-    }
-}
-
-/// Simulacao no modo original: as mesmas rotinas desviadas para a propria original (pilha particular).
+/// Simulation in original mode: the same routines detoured to the original itself (private stack).
+///
+/// [pt] Simulacao no modo original: as mesmas rotinas desviadas para a propria original (pilha particular).
 pub unsafe fn instalar_passagem() {
-    let (sonda, dentro, prologo) = crate::sonda_pilha::alvo();
+    let (sonda, dentro, prologo) = crate::stack_probe::alvo();
     if sonda != 0 && prologo >= 5 && !PROLOGOS.iter().any(|p| p.endereco == sonda) {
-        // rotina fora da tabela: o prólogo vem do próprio exe (o tamanho, da variável)
+        // routine outside the table: the prologue comes from the exe itself (the size, from the variable)
         let bytes: &'static [u8] = Box::leak(core::slice::from_raw_parts(sonda as *const u8, prologo).to_vec().into_boxed_slice());
-        desvios::desviar_sonda("sonda de pilha", &Prologo { endereco: sonda, bytes }, dentro);
+        detours::desviar_sonda("sonda de pilha", &Prologo { endereco: sonda, bytes }, dentro);
     }
     for (i, p) in PROLOGOS.iter().enumerate() {
         if p.endereco == sonda {
-            desvios::desviar_sonda(&format!("motor {} (sonda de pilha)", i), p, dentro);
+            detours::desviar_sonda(&format!("motor {} (sonda de pilha)", i), p, dentro);
             continue;
         }
-        if DESLIGADAS.contains(&p.endereco) {
-            continue;
-        }
-        match ZERADAS.iter().find(|z| z.0.endereco == p.endereco) {
-            Some(z) => desvios::desviar_zerando(&format!("motor {} (original isolada, zerada)", i), p, z.1, desvios::PASSAGEM),
-            None => desvios::desviar(&format!("motor {} (original isolada)", i), p, desvios::PASSAGEM),
-        };
+        detours::desviar(&format!("motor {} (original isolada)", i), p, detours::PASSAGEM);
     }
 }
 
-/// Entradas sinteticas: um objeto do motor e um jogador falsos, com tabelas proprias; posicoes,
-/// lados e coordenadas variando, inclusive fora das faixas validas. Roda pelas funcoes de
-/// comparacao, que chamam a original e a versao Rust com as mesmas entradas.
-/// Diagnostico do autoteste: a grade do motor falso esta consistente (contagens 0..=11, cada
+/// Autotest diagnosis: is the fake engine's grid consistent (counts 0..=11, each entry a player of
+/// the side's block, in the right cell and with the right index at 0x28)?
+///
+/// [pt] Diagnostico do autoteste: a grade do motor falso esta consistente (contagens 0..=11, cada
 /// entrada um jogador do bloco do lado, na casa certa e com o indice certo em 0x28)?
-unsafe fn grade_inconsistente(m: usize) -> Option<String> {
+unsafe fn grid_inconsistent(m: usize) -> Option<String> {
     for x in 0..9i8 {
         for y in 0..12i8 {
             let casa = occupancy_grid_cell(m, x, y) as usize;
@@ -8429,13 +8373,20 @@ unsafe fn grade_inconsistente(m: usize) -> Option<String> {
     None
 }
 
+/// Synthetic inputs: a fake engine object and player, with their own tables; positions, sides and
+/// coordinates varying, including outside the valid ranges. Runs through the comparison functions,
+/// which call the original and the Rust version with the same inputs.
+///
+/// [pt] Entradas sinteticas: um objeto do motor e um jogador falsos, com tabelas proprias; posicoes,
+/// lados e coordenadas variando, inclusive fora das faixas validas. Roda pelas funcoes de
+/// comparacao, que chamam a original e a versao Rust com as mesmas entradas.
 pub unsafe fn autoteste(casos: u64) {
     let mut s = TestRng(0x4d4f544f52);
-    let mut motor = vec![0u8; 0x10000]; // campos ate 0xf5f5 (estado do lado)
+    let mut motor = vec![0u8; 0x10000]; // fields up to 0xf5f5 (side state)
     let mut tabelas = vec![vec![0u16; 11]; 4];
     let mut jogador = vec![0u8; 0x200];
     let outro = vec![0u8; 0x1a4];
-    let mut pessoa = vec![0u8; 0x80]; // campos lidos ate 0x5d
+    let mut pessoa = vec![0u8; 0x80]; // fields read up to 0x5d
     let mut formacoes = vec![vec![0u8; 4800]; 2];
     let mut grupo = vec![0u8; 0x60];
     let mut jogadores = vec![vec![0u8; 0x1a8]; 22];
@@ -8452,7 +8403,7 @@ pub unsafe fn autoteste(casos: u64) {
     let mut tecnicos56 = vec![0u8; 42735 * 16 + 16];
     let mut partida50 = vec![0u8; 0x60];
     SYNTHETIC.store(true, std::sync::atomic::Ordering::Relaxed);
-    PLACAR.autoteste(|| {
+    SCOREBOARD.autoteste(|| {
         for _ in 0..casos {
             for t in tabelas.iter_mut() {
                 for v in t.iter_mut() {
@@ -8481,12 +8432,12 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_limit(lado, ((y >> 48) % 14) as i8 - 2);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((y >> 52) % 4) as usize];
             comparar_condicao(j);
-            // coordenadas com diferencas de -5..=5 (a tabela global e lida do proprio jogo)
+            // coordinates with differences of -5..=5 (the global table is read from the game itself)
             let z = s.next_u64();
             let (a, b) = ((z % 20) as i8, ((z >> 8) % 20) as i8);
             let (c, d) = (a + ((z >> 16) % 11) as i8 - 5, b + ((z >> 24) % 11) as i8 - 5);
             comparar_by_difference(m, a, b, c, d);
-            // rotinas que tiram lado e valores do proprio jogador
+            // routines that take side and values from the player itself
             let w = s.next_u64();
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][(w % 4) as usize];
             *((j + 0x19) as *mut i8) = ((w >> 4) % 15) as i8 - 2;
@@ -8502,13 +8453,13 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_player_difference(m, j);
             comparar_player_limit(j);
             comparar_player_band(j, lado);
-            // as que passam por 0x6c38c0 so recebem lado 0 ou 1 (indice da tabela do lado)
+            // the ones going through 0x6c38c0 only get side 0 or 1 (index of the side table)
             let lado_real = *((j + 0x27) as *const i8);
             *((j + 0x27) as *mut i8) = ((w >> 16) % 2) as i8;
             comparar_player_table(j);
             comparar_side_byte(m, j);
-            // terceira leva (com o lado 0 ou 1 ainda valendo: 0x6f4600 indexa o bloco do lado).
-            // 0x6f4600 sempre tem motor (com 0x19e zerado a original le o endereco 0 e cai).
+            // batch 3 (with side 0 or 1 still holding: 0x6f4600 indexes the side's block).
+            // 0x6f4600 always has an engine (with 0x19e zeroed the original reads address 0 and crashes).
             *((j + 0x19e) as *mut usize) = m;
             let u = s.next_u64();
             for k in 0..16 {
@@ -8524,7 +8475,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_field_by_position(j);
             comparar_can_choose(m, if (u >> 33) % 8 == 0 { 0 } else { j }, ((u >> 36) % 10) as i8 - 1, ((u >> 40) % 15) as i8 - 2);
             *((j + 0x27) as *mut i8) = lado_real;
-            // direcao: coordenadas vizinhas (inclusive o mesmo ponto e os casos fixos), atributos
+            // direction: neighbouring coordinates (including the same point and the fixed cases), attributes
             let v = s.next_u64();
             let pp = pessoa.as_mut_ptr() as usize;
             *((j + 0x6d) as *mut usize) = pp;
@@ -8535,7 +8486,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x19a) as *mut u16) = (v >> 24) as u16;
             let (a, b) = (((v >> 40) % 12) as i8, ((v >> 44) % 12) as i8);
             let (c, d) = if v % 3 == 0 {
-                (a, b) // mesmo ponto
+                (a, b) // same point
             } else if v % 3 == 1 {
                 ([4i8, 4, 3][((v >> 48) % 3) as usize], [0i8, 11, 5][((v >> 50) % 3) as usize])
             } else {
@@ -8543,7 +8494,7 @@ pub unsafe fn autoteste(casos: u64) {
             };
             let (a, b) = if v % 3 == 1 { (c, d) } else { (a, b) };
             comparar_aim_set_facing_direction(j, a, b, c, d);
-            // quarta leva (ponto flutuante): valores em volta das faixas, negativos e zero
+            // batch 4 (floating point): values around the ranges, negative and zero
             let q = s.next_u64();
             let faixas = [9500.0f32, 8750.0, 7750.0, 0.0, 10000.0, 100.0];
             let base = faixas[(q % 6) as usize];
@@ -8555,7 +8506,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x10c) as *mut i8) = ((q >> 50) % 25) as i8 - 2;
             *((j + 0x19a) as *mut i16) = ((q >> 54) % 400) as i16 - 20;
             comparar_facing(j, byte(j, 0x102).wrapping_add(((q >> 58) % 11) as i8 - 5), byte(j, 0x103).wrapping_add(((q >> 61) % 7) as i8 - 3));
-            // quinta leva
+            // batch 5
             let g = s.next_u64();
             let gp = grupo.as_mut_ptr() as usize;
             for (k, jog) in jogadores.iter_mut().enumerate() {
@@ -8575,7 +8526,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x103) as *mut i8) = ((h >> 6) % 14) as i8 - 1;
             comparar_reaches(j, ((h >> 10) % 9) as i8 - 1, ((h >> 14) % 14) as i8 - 1);
             *((j + 0x27) as *mut i8) = lado_real;
-            // lance: angulo pela tabela global (via motor falso), forca e atributos variados
+            // kick: angle by the global table (via fake engine), varied strength and attributes
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x19a) as *mut i16) = ((h >> 18) % 400) as i16 - 20;
             *((j + 0x2c) as *mut u8) = (h >> 27) as u8;
@@ -8584,7 +8535,7 @@ pub unsafe fn autoteste(casos: u64) {
             let (a, b) = (((h >> 43) % 12) as i8, ((h >> 47) % 12) as i8);
             let mut saida = 0xffffu16;
             comparar_classificar(j, codigo, a, b, a + ((h >> 51) % 11) as i8 - 5, b + ((h >> 55) % 11) as i8 - 5, ((h >> 59) % 32) as f32 / 3.0, &mut saida);
-            // sexta leva: distancias e os dois blocos de 20 jogadores no motor
+            // batch 6: distances and the two blocks of 20 players in the engine
             let e = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
@@ -8604,7 +8555,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_distance_to_point(jj, ((e >> 40) % 9) as i8, ((e >> 44) % 12) as i8);
             comparar_distance_to_goal(jj);
             comparar_mais_perto(m, jj);
-            // setima leva: grade com listas validas, linhas em todas as direcoes, passe com sorteio
+            // batch 7: grid with valid lists, lines in all directions, pass with RNG
             let w2 = s.next_u64();
             for cel in 0..108usize {
                 let g = m + 0x215e + 90 * cel;
@@ -8635,7 +8586,7 @@ pub unsafe fn autoteste(casos: u64) {
             let ptr = if (v2 >> 32) % 3 == 0 { core::ptr::null_mut() } else { &mut saida as *mut u8 };
             comparar_consegue(j, a, b, ((v2 >> 34) % 3 != 0) as i8, ((v2 >> 36) % 40) as f32 / 3.0, ((v2 >> 42) % 30) as f32 / 4.0, ptr);
             comparar_in_the_box(j);
-            // oitava leva: posicionamento (formacoes com margem: o indice fica negativo com posicao < 0)
+            // batch 8: positioning (formations with margin: the index goes negative with position < 0)
             let o2 = s.next_u64();
             for (l, f) in formacoes.iter_mut().enumerate() {
                 for (k, b) in f.iter_mut().enumerate() {
@@ -8669,7 +8620,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_papel_defesa(j);
             let (mut sx, mut sy) = (0x55i8, 0x55i8);
             comparar_position_place_players(m, j, &mut sx, &mut sy, 0);
-            // nona leva: linhas defensivas sobre os dois blocos de 20 (ja preenchidos acima), y variado
+            // batch 9: defensive lines over the two blocks of 20 (already filled above), varied y
             let y2 = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
@@ -8677,10 +8628,10 @@ pub unsafe fn autoteste(casos: u64) {
                 *((p + 0x19) as *mut i8) = (y2.rotate_left(k as u32 * 3 + 1) % 13) as i8 - 2;
             }
             comparar_linhas(m);
-            // decima leva: atualizacao do jogador (todos os papeis, atributos e faixas variados)
+            // batch 10: player update (all roles, varied attributes and ranges)
             let z = s.next_u64();
             let z2 = s.next_u64();
-            // cada campo: zero com chance 1/2 (combinacoes "tudo parado"), senao 1..=24; 1 e 2 ate 100
+            // each field: zero with chance 1/2 ("all stopped" combinations), otherwise 1..=24; 1 and 2 up to 100
             for (k, o) in [1usize, 2, 3, 4, 5, 6, 7, 8, 9, 0xb, 0xc, 0xf, 0x10, 0x11].iter().enumerate() {
                 let v = z.rotate_left(k as u32 * 5);
                 let teto = if *o <= 2 { 100 } else { 24 };
@@ -8689,10 +8640,10 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x1f) as *mut i8) = [-1i8, 10, 30, 31, 50][((z2 >> 2) % 5) as usize];
             *((j + 0x2b) as *mut i8) = ((z2 >> 5) % 5) as i8 - 2;
             *((j + 0x1a2) as *mut f32) = ((z2 >> 8) % 140) as f32 + 0.25;
-            // palavra 0x35: metade das vezes exatamente num limiar do codigo (ou vizinho)
-            const LIMIARES: [i16; 14] = [0x1cb5, 0x1cb6, 0x1b57, 0x1676, 0x1675, 0x1a5d, 0x186a, 0x1c52, 0x1c53, 0x1d4c, 0x1d4d, 0x1e46, 0x222e, 0x109a];
+            // word 0x35: half the time exactly at a threshold of the code (or a neighbour)
+            const THRESHOLDS: [i16; 14] = [0x1cb5, 0x1cb6, 0x1b57, 0x1676, 0x1675, 0x1a5d, 0x186a, 0x1c52, 0x1c53, 0x1d4c, 0x1d4d, 0x1e46, 0x222e, 0x109a];
             *((j + 0x35) as *mut i16) = if (z2 >> 15) & 1 == 0 {
-                LIMIARES[((z2 >> 16) % 14) as usize] + ((z2 >> 20) % 3) as i16 - 1
+                THRESHOLDS[((z2 >> 16) % 14) as usize] + ((z2 >> 20) % 3) as i16 - 1
             } else {
                 3500 + ((z2 >> 16) % 6500) as i16
             };
@@ -8708,7 +8659,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8ed0) as *mut i16) = ((z2 >> 52) % 900) as i16 - 100;
             comparar_atualizar(j);
             *((j + 0x19e) as *mut usize) = m;
-            // decima primeira leva
+            // batch 11
             let q1 = s.next_u64();
             let q2 = s.next_u64();
             *((j + 0x4d) as *mut f32) = ((q1 >> 2) % 12000) as f32 / 1.5;
@@ -8716,7 +8667,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((j + o) as *mut i8) = (q1.rotate_left(o as u32) % 30) as i8 - 3;
             }
             comparar_momento(j);
-            // tabelas com varios 1 (posicao 1 e reserva), blocos com posicoes, reservas e 0x20
+            // tables with several 1s (position 1 and substitute), blocks with positions, substitutes and 0x20
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
                     if (q2 >> (k % 50)) & 3 == 0 {
@@ -8742,7 +8693,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_espaco(m, jj);
             comparar_off_centre(((q1 >> 40) % 12) as i8 - 2);
             comparar_alem(m, ((q1 >> 44) % 14) as i8 - 1, ((q1 >> 48) % 3) as i8, ((q1 >> 50) & 1) as i8);
-            // decima segunda leva
+            // batch 12
             let g2 = s.next_u64();
             comparar_ler_8ea7(m);
             comparar_ler_8ea8(m);
@@ -8769,7 +8720,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + 0xf58e + 4 * k) as *mut usize) = jogadores[k].as_ptr() as usize;
             }
             comparar_extremos(m);
-            // decima terceira leva (blocos ja preenchidos; alguns 0x2b zerados; grade com contagens)
+            // batch 13 (blocks already filled; some 0x2b zeroed; grid with counts)
             let h3 = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
@@ -8779,7 +8730,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             for cel in 0..108usize {
                 for l in 0..2usize {
-                    // quase vazia (1 em 8), para a soma da pressao cair perto do limiar (30..44)
+                    // almost empty (1 in 8), so the pressure sum falls near the threshold (30..44)
                     let v = h3.rotate_left((cel * 2 + l) as u32);
                     *((m + 0x21b6 + 90 * cel + l) as *mut i8) = if v % 8 == 0 { 1 + ((v >> 3) % 2) as i8 } else if v % 31 == 1 { -1 } else { 0 };
                 }
@@ -8797,7 +8748,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_mais_proximo(m, jj3, byte(jj3, 0x102), byte(jj3, 0x103));
             comparar_pressao_ponto(m, ((h3 >> 28) % 2) as i8, a3, b3, ((h3 >> 29) & 1) as i8);
             comparar_smallest_distance(m, ((h3 >> 30) % 2) as i8, a3, b3, ((h3 >> 31) & 1) as i8);
-            // decima quarta leva (tabelas com bits de papel variados, inclusive sem nenhum e 0x700)
+            // batch 14 (tables with varied role bits, including none and 0x700)
             let h4 = s.next_u64();
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
@@ -8811,7 +8762,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_split_c(m, ((h4 >> 34) % 2) as i8, delta);
             let alto = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h4 >> 36) % 5) as usize];
             comparar_escolher(m, (alto & !0xff) | ((h4 >> 40) % 2) as u32);
-            // decima quinta leva (acessores; extremos das faixas e lados fora de 0/1)
+            // batch 15 (accessors; range extremes and sides outside 0/1)
             let h5 = s.next_u64();
             let h6 = s.next_u64();
             *((j + 0x19a) as *mut u16) = h5 as u16;
@@ -8842,7 +8793,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_marked_moment(m);
             let v19c = [200i16, 201, -200, -201, i16::MIN, i16::MAX, 0, (h6 >> 30) as i16 % 400][((h6 >> 46) % 8) as usize];
             comparar_write_19c(j, v19c);
-            comparar_bola_parada([12i16, 13, 21, 37, 46, 59, (h6 >> 49) as i16 % 70, (h6 >> 32) as i16][((h6 >> 61) % 8) as usize]);
+            comparar_set_piece_code([12i16, 13, 21, 37, 46, 59, (h6 >> 49) as i16 % 70, (h6 >> 32) as i16][((h6 >> 61) % 8) as usize]);
             for o2 in 0..16 {
                 *((m + 0x475a + o2) as *mut u8) = (h6 >> (o2 * 4)) as u8;
             }
@@ -8852,14 +8803,14 @@ pub unsafe fn autoteste(casos: u64) {
                 *((p + 0x19) as *mut i8) = (h6.rotate_left(k as u32) % 12) as i8 - 1;
             }
             comparar_add_disposition(m, ((h5 >> 60) % 2) as i8, (h6 >> 7) as i16);
-            // decima sexta leva (tabelas de papel da 14a leva ainda valendo)
+            // batch 16 (role tables of the 14th batch still holding)
             let h7 = s.next_u64();
             let h8 = s.next_u64();
             let delta7 = ((h7 >> 20) % 4000) as i16 - 2000;
             comparar_split_d(m, (h7 % 2) as i8, delta7);
             comparar_split_e(m, ((h7 >> 1) % 2) as i8, delta7);
             comparar_split_f(m, ((h7 >> 2) % 2) as i8, delta7);
-            // guarda pelo jogador (0x4761), nao pelo outro (0x4765): os dois variam independentes
+            // guard by the player (0x4761), not by the other (0x4765): the two vary independently
             *((m + 0x4761) as *mut usize) = if (h7 >> 3) % 3 == 0 { j } else { 0 };
             *((m + 0x4765) as *mut usize) = if (h7 >> 4) % 2 == 0 { o } else { 0 };
             comparar_record_move(m, (h8 >> 1) as u16, if (h8 >> 17) % 4 == 0 { 0 } else { j as u32 }, (h8 >> 19) as u32, (h8 >> 2) as u8, (h8 >> 10) as u8, (h8 >> 18) as u8, (h8 >> 26) as u8, (h8 >> 34) as u8, (h8 >> 42) as u8);
@@ -8867,16 +8818,16 @@ pub unsafe fn autoteste(casos: u64) {
             for k in 0..4usize {
                 *((j + 0x1ae + 4 * k) as *mut usize) = (h7 >> (8 + k * 3)) as usize % 5;
             }
-            comparar_remover(j, ((h7 >> 24) % 6) as usize);
+            comparar_remove_from_list(j, ((h7 >> 24) % 6) as usize);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h7 >> 28) % 4) as usize];
             *((m as isize + 0x4592 + byte(j, 0x27) as isize) as *mut i8) = ((h7 >> 30) % 14) as i8 - 2;
-            comparar_entrar(m, j);
+            comparar_take_the_field(m, j);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h7 >> 34) % 4) as usize];
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x102) as *mut i8) = ((h7 >> 36) % 11) as i8 - 1;
             *((j + 0x103) as *mut i8) = ((h7 >> 40) % 14) as i8 - 1;
             comparar_in_danger(j);
-            // decima setima leva
+            // batch 17
             let h9 = s.next_u64();
             let h10 = s.next_u64();
             *((m + 0x475a) as *mut i8) = [0i8, 8, 1, 5][(h9 % 4) as usize];
@@ -8904,15 +8855,15 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x10c) as *mut i8) = ((h9 >> 47) % 25) as i8 - 2;
             let (xa, ya) = if (h9 >> 52) % 6 == 0 { (byte(j, 0x102), byte(j, 0x103)) } else { (((h9 >> 55) % 9) as i8, ((h9 >> 59) % 12) as i8) };
             if (h9 >> 63) == 1 {
-                // no limiar exato: 0x10c + 10 igual a diferenca das palavras
+                // at the exact threshold: 0x10c + 10 equal to the difference of the words
                 let fundo9: i8 = if byte(j, 0x27) != 0 { 11 } else { 0 };
                 let dif = (by_difference(m, xa, ya, 4, fundo9) as i16 as i32 - by_difference(m, xa, ya, byte(j, 0x102), byte(j, 0x103)) as i16 as i32).abs() - 10;
                 if (-128..=127).contains(&dif) {
                     *((j + 0x10c) as *mut i8) = dif as i8;
                 }
             }
-            comparar_alcanca_ponto(j, xa, ya);
-            // decima oitava leva (fichas e pessoas proprias; 0x69 e 0x6d sempre validos no bloco)
+            comparar_reaches_the_point(j, xa, ya);
+            // batch 18 (own records and persons; 0x69 and 0x6d always valid in the block)
             let h11 = s.next_u64();
             let h12 = s.next_u64();
             for (k, f) in fichas.iter_mut().enumerate() {
@@ -8938,15 +8889,15 @@ pub unsafe fn autoteste(casos: u64) {
             let partida11 = jogadores[0].as_mut_ptr() as usize;
             *((partida11 + 0x4d) as *mut u8) = (((h11 >> 40) % 10) as u8) | (((h11 >> 44) as u8) & 0xf0);
             *((m + 0x4792) as *mut usize) = partida11;
-            comparar_destaque(m);
+            comparar_choose_standout(m);
             let alto11 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h11 >> 50) % 5) as usize];
-            comparar_escolher_b(m, (alto11 & !0xff) | ((h11 >> 53) % 2) as u32);
+            comparar_choose_by_role_b(m, (alto11 & !0xff) | ((h11 >> 53) % 2) as u32);
             *((m + 0x8eae) as *mut i8) = [0i8, 1, 2, -1][((h12 >> 54) % 4) as usize];
             *((j + 0x27) as *mut i8) = ((h12 >> 56) % 2) as i8;
             *((j + 0x19) as *mut i8) = ((h12 >> 57) % 17) as i8 - 2;
             let (mut fx, mut fy) = (0u8, 0u8);
-            comparar_casa_formacao(m, j, &mut fx, &mut fy);
-            // decima nona leva: contagens (zeros, negativas e somas que transbordam) e atributos
+            comparar_formation_square(m, j, &mut fx, &mut fy);
+            // batch 19: counts (zeros, negatives and sums that overflow) and attributes
             let h13 = s.next_u64();
             let h14 = s.next_u64();
             for k in 0..30usize {
@@ -8959,7 +8910,7 @@ pub unsafe fn autoteste(casos: u64) {
                 };
                 *((m + 0x8f02 + 4 * k) as *mut i32) = v;
             }
-            comparar_percentuais(m, ((h13 >> 3) % 6) as i8 - 1);
+            comparar_compute_percentages(m, ((h13 >> 3) % 6) as i8 - 1);
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 for (n, o) in [0xc9usize, 0xa1, 0x9d, 0x95, 0xb1, 0x7d, 0x99, 0xd9, 0xad, 0xa9].iter().enumerate() {
@@ -8974,7 +8925,7 @@ pub unsafe fn autoteste(casos: u64) {
                 pe[0x21] = ((r >> 24) % 25) as u8;
             }
             let alto13 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h13 >> 50) % 5) as usize];
-            // vigesima leva: condicao 0x1a2, ficha 0x69 (pessoa com 0x5d) ou nenhuma, byte 0xff, 0x1a6
+            // batch 20: condition 0x1a2, record 0x69 (person with 0x5d) or none, byte 0xff, 0x1a6
             let h15 = s.next_u64();
             let h16 = s.next_u64();
             for (k, pe) in pessoas.iter_mut().enumerate() {
@@ -8992,14 +8943,14 @@ pub unsafe fn autoteste(casos: u64) {
             *((pk + 0x69) as *mut usize) = pessoas[0].as_ptr() as usize;
             let fat = [1.0f32, 0.0, 0.5, 1.5, 2.0, 0.95][((h15 >> 40) % 6) as usize] + ((h15 >> 43) % 9) as f32 / 64.0;
             comparar_apply_factor(pk, fat);
-            comparar_valor_condicao(pk, [0usize, j, o][((h15 >> 47) % 3) as usize]);
-            comparar_valor_condicao(pk, *((pk + 0x1a6) as *const usize));
+            comparar_value_by_condition(pk, [0usize, j, o][((h15 >> 47) % 3) as usize]);
+            comparar_value_by_condition(pk, *((pk + 0x1a6) as *const usize));
             let jt = if (h16 >> 36) % 2 == 0 { pk } else { j };
             *((j + 0x27) as *mut i8) = ((h16 >> 37) % 2) as i8;
-            comparar_aplicar_time(m, jt, fat);
-            comparar_aplicar_lado(m, ((h16 >> 38) % 2) as i8, fat);
-            comparar_escolher_d(m, ((h16 >> 39) % 2) as i8, [2u32, 0, 1, 0x102, (h16 >> 40) as u32][((h16 >> 44) % 5) as usize]);
-            // vigesima primeira leva
+            comparar_apply_to_team(m, jt, fat);
+            comparar_apply_to_side(m, ((h16 >> 38) % 2) as i8, fat);
+            comparar_choose_by_condition(m, ((h16 >> 39) % 2) as i8, [2u32, 0, 1, 0x102, (h16 >> 40) as u32][((h16 >> 44) % 5) as usize]);
+            // batch 21
             let h17 = s.next_u64();
             let h18 = s.next_u64();
             *((j + 0x1bc) as *mut u16) = h17 as u16;
@@ -9013,9 +8964,9 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x103) as *mut i8) = ((h17 >> 49) % 13) as i8 - 1;
             *((m + 0xf582) as *mut usize) = if (h17 >> 53) & 1 == 0 { j } else { o };
             *((j + 0x19e) as *mut usize) = if (h17 >> 54) % 4 == 0 { 0 } else { m };
-            comparar_tabela_a_1a_j(j);
-            comparar_tabela_b_j(j);
-            comparar_diferenca_j(j);
+            comparar_player_table_a_1a(j);
+            comparar_player_table_b(j);
+            comparar_difference_of_player(j);
             comparar_role_880(j);
             *((j + 0x19e) as *mut usize) = m;
             for t in tabelas.iter_mut() {
@@ -9027,26 +8978,26 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x19) as *mut i8) = ((h17 >> 56) % 14) as i8 - 1;
             *((m + 0x9766 + 6371 * byte(j, 0x27) as usize) as *mut u32) = (h18 as u32) & 0x1801000;
             *((m + 6 + byte(j, 0x27) as usize) as *mut u8) = (h18 >> 32) as u8;
-            comparar_marcas_rot(j);
+            comparar_player_marks_rot(j);
             comparar_mark_800000(j);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((h18 >> 40) % 4) as usize];
             *((m + 0x8ea8) as *mut i8) = ((h18 >> 42) % 14) as i8 - 1;
-            comparar_perto_proprio(j);
+            comparar_near_own_goal(j);
             *((m + 0x1a7) as *mut u8) = (h18 >> 8) as u8 | 1;
             comparar_release_ball(j);
             let dono = jogadores[1].as_mut_ptr() as usize;
             *((dono + 0x23) as *mut usize) = m + 0x4796 + 8920 * ((h18 >> 46) % 2) as usize;
             let alvo21 = if (h18 >> 47) % 4 == 0 { 0x1234 } else { *((side_player_slot(m, ((h18 >> 46) % 2) as i8, ((h18 >> 49) % 20) as usize) + 0x69) as *const usize) };
-            comparar_pela_ficha(dono, alvo21);
+            comparar_player_by_record(dono, alvo21);
             let cod = [0x1f40u32 - 1, 0x1f40, 0x1f40 + 0x2a4, 0x1f40 + 0x2a5, 0x1f40 + ((h18 >> 52) % 0x2a5) as u32, (h18 >> 20) as u32][((h18 >> 61) % 6) as usize];
-            // a tabela (0xb68788) fica na area nao inicializada e esta zerada no inicio: valores temporarios
+            // the table (0xb68788) is in the uninitialised area and is zeroed at start: temporary values
             let ic = ((cod & 0x7fff) as i32 - 0x1f40) as i16;
             let alvo_t = (0xb68788 + 18 * ic.clamp(0, 0x2a5) as usize) as *mut u8;
             let antes = *alvo_t;
             *alvo_t = (h17 >> 8) as u8 | 1;
             comparar_code_byte(cod | (((h18 >> 15) as u32 & 1) << 15) | ((h17 as u32) & 0xffff0000));
             *alvo_t = antes;
-            // vigesima segunda leva
+            // batch 22
             let h19 = s.next_u64();
             let h20 = s.next_u64();
             for t in tabelas.iter_mut() {
@@ -9069,7 +9020,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x35) as *mut i16) = [7500i16, 7501, 7499, 9000, 3000, -5, (h20 >> 20) as i16][((h19 >> 34) % 7) as usize];
             *((j + 0x17) as *mut i8) = ((h19 >> 37) % 26) as i8 - 3;
             comparar_adjust_17(j, if (h19 >> 42) % 4 == 0 { 0 } else { ((h19 >> 44) % 25) as i8 - 12 });
-            // vigesima terceira leva: posse (dono anterior, passe do mesmo lado ou nao, zonas, papel 1)
+            // batch 23: possession (previous owner, pass from the same side or not, zones, role 1)
             let h21 = s.next_u64();
             let h22 = s.next_u64();
             for t in tabelas.iter_mut() {
@@ -9080,7 +9031,7 @@ pub unsafe fn autoteste(casos: u64) {
             let o23 = outro.as_ptr() as usize;
             *((o23 + 0x19e) as *mut usize) = m;
             *((j + 0x19e) as *mut usize) = m;
-            // lado so 0, 1 ou 2: com -1 a tabela de papeis do original le antes do motor e cai
+            // side only 0, 1 or 2: with -1 the original's role table reads before the engine and crashes
             *((j + 0x27) as *mut i8) = [0i8, 1, 0, 1, 2][((h21 >> 1) % 5) as usize];
             *((j + 0x19) as *mut i8) = ((h21 >> 4) % 11) as i8;
             *((j + 0x102) as *mut i8) = ((h21 >> 8) % 10) as i8 - 1;
@@ -9098,7 +9049,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             *((m + 0x4782) as *mut u32) = (h22 >> 13) as u32;
             comparar_take_ball(j);
-            // vigesima quarta leva
+            // batch 24
             let h23 = s.next_u64();
             let h24 = s.next_u64();
             let arb = jogadores[2].as_mut_ptr() as usize;
@@ -9107,7 +9058,7 @@ pub unsafe fn autoteste(casos: u64) {
             *pe24.add(0x28) = [0u8, 0xf1, 0xf0, 2, (h23 >> 16) as u8 % 20][((h23 >> 24) % 5) as usize];
             comparar_init_strictness(arb, m as u32, if (h23 >> 27) % 4 == 0 { 0 } else { pe24 as usize });
             *((arb + 4) as *mut usize) = if (h23 >> 29) % 4 == 0 { 0 } else { pe24 as usize };
-            // lance: jogador do lance, dono da bola e a linha
+            // kick: player of the move, ball owner and the line
             let jl = side_player_slot(m, ((h23 >> 31) % 2) as i8, ((h23 >> 32) % 20) as usize);
             let dn = side_player_slot(m, ((h23 >> 37) % 2) as i8, ((h23 >> 38) % 20) as usize);
             *((m + 0x475a) as *mut u8) = if (h23 >> 43) % 5 == 0 { 0 } else { 3 };
@@ -9125,7 +9076,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((arb + 8) as *mut u16) = (h24 >> 28) as u16;
             let (mut t24, mut v24) = (0u8, 0u8);
             comparar_decide_foul(arb, jf, if (h24 >> 44) % 2 == 0 { 0x25 } else { (h24 >> 45) as u16 % 64 }, &mut t24, &mut v24);
-            // vigesima quinta leva: cartoes (tipo 1 na maioria; 7 e outros tambem)
+            // batch 25: cards (type 1 mostly; 7 and others too)
             let h25 = s.next_u64();
             let h26 = s.next_u64();
             let jc = side_player_slot(m, ((h25 >> 1) % 2) as i8, ((h25 >> 2) % 20) as usize);
@@ -9143,19 +9094,19 @@ pub unsafe fn autoteste(casos: u64) {
             let mut tc2 = [1u8, 1, 1, 7, 2, 0][((h26 >> 32) % 6) as usize];
             *((jc + 0x19) as *mut i8) = if (h26 >> 36) % 7 == 0 { -1 } else { ((h26 >> 37) % 11) as i8 };
             comparar_punish_move(arb, jc, oc, &mut tc2, ((h26 >> 41) % 90) as i8, ((h26 >> 48) % 30) as i8 - 5, ((h26 >> 54) % 3 == 0) as u8, &mut pc, ((h26 >> 56) % 2) as u8);
-            // vigesima sexta leva: o arbitro dentro do motor (0xf5b2: motor, pessoa, valor)
+            // batch 26: the referee inside the engine (0xf5b2: engine, person, value)
             let h27 = s.next_u64();
             *((m + 0xf5b2) as *mut usize) = m;
             *((m + 0xf5b6) as *mut usize) = if h27 % 4 == 0 { 0 } else { pe24 as usize };
             *((m + 0xf5ba) as *mut u16) = (h27 >> 8) as u16;
             let (mut t26, mut v26) = (0u8, 0u8);
-            comparar_motor_decidir(m, jf, if (h27 >> 24) % 2 == 0 { 0x25 } else { (h27 >> 25) as u16 % 64 }, &mut t26, &mut v26);
+            comparar_engine_decide_foul(m, jf, if (h27 >> 24) % 2 == 0 { 0x25 } else { (h27 >> 25) as u16 % 64 }, &mut t26, &mut v26);
             let mut tc3 = [1u8, 1, 7, 2][((h27 >> 32) % 4) as usize];
             let mut pc3 = 0f32;
             comparar_engine_punish_foul(m, jc, &mut tc3, ((h27 >> 34) % 90) as i8, ((h27 >> 41) % 30) as i8 - 5, ((h27 >> 46) % 3 == 0) as u8, &mut pc3);
             let mut tc4 = [1u8, 1, 7, 2][((h27 >> 48) % 4) as usize];
             comparar_engine_punish_move(m, jc, oc, &mut tc4, ((h27 >> 50) % 90) as i8, ((h27 >> 56) % 30) as i8 - 5, ((h27 >> 61) % 3 == 0) as u8, &mut pc3, ((h27 >> 63) & 1) as u8);
-            // vigesima setima leva: impedimento (linhas 0x8eaf/0x8eb0, atacantes perto delas)
+            // batch 27: offside (lines 0x8eaf/0x8eb0, attackers close to them)
             let h28 = s.next_u64();
             let h29 = s.next_u64();
             let l27 = [0i8, 1, 0, 1, 2][(h28 % 5) as usize];
@@ -9174,9 +9125,9 @@ pub unsafe fn autoteste(casos: u64) {
             let pas = if (h28 >> 16) % 3 == 0 { 0 } else { side_player_slot(m, l27.max(0).min(1), ((h28 >> 18) % 20) as usize) };
             let linha27 = ((h28 >> 24) % 12) as i8;
             let y27 = if (h28 >> 28) % 2 == 0 { linha27 + if l27 == 0 { 1 } else { -1 } } else { ((h28 >> 29) % 12) as i8 };
-            comparar_impedimento(m + 0xf5b2, l27, linha27, y27, pas);
-            comparar_motor_impedimento(m, l27, linha27, ((h29 >> 50) % 12) as i8, pas);
-            // vigesima oitava leva: cartao pela gravidade (pessoa do arbitro sempre presente aqui)
+            comparar_look_for_offside(m + 0xf5b2, l27, linha27, y27, pas);
+            comparar_engine_look_for_offside(m, l27, linha27, ((h29 >> 50) % 12) as i8, pas);
+            // batch 28: card by severity (the referee's person always present here)
             let h30 = s.next_u64();
             let h31 = s.next_u64();
             pe24.add(0x25).write([0u8, 2, 3, 6, 7, 12, 13, 18, 19, 30][(h30 % 10) as usize]);
@@ -9191,12 +9142,12 @@ pub unsafe fn autoteste(casos: u64) {
             let gv = [1u8, 2, 3, 4, 5, 6, 0, 7][((h30 >> 26) % 8) as usize];
             let fg = ((h30 >> 29) % 4 == 0) as u8;
             if (h30 >> 31) & 1 == 0 {
-                comparar_cartao_gravidade(m + 0xf5b2, jg, &mut tg, gv, fg);
+                comparar_card_by_severity(m + 0xf5b2, jg, &mut tg, gv, fg);
             } else {
-                comparar_motor_cartao(m, jg, &mut tg, gv, fg);
+                comparar_engine_card_by_severity(m, jg, &mut tg, gv, fg);
             }
             let _ = h31;
-            // vigesima nona leva: atributos da pessoa nos limiares (0x37, 0x43, soma de quatro)
+            // batch 29: person attributes at the thresholds (0x37, 0x43, sum of four)
             let h32 = s.next_u64();
             for (k, pe) in pessoas.iter_mut().enumerate() {
                 let r = h32.rotate_left(k as u32 * 13);
@@ -9212,8 +9163,8 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             let alto32 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h32 >> 50) % 5) as usize];
-            comparar_escolher_e(m, (alto32 & !0xff) | ((h32 >> 53) % 2) as u32, if (h32 >> 54) % 3 == 0 { 0x100 } else { (h32 >> 56) as u32 & 0xff });
-            // trigesima leva: janela de 55 instantes (indice perto do fim), zonas, periodos
+            comparar_choose_by_role_e(m, (alto32 & !0xff) | ((h32 >> 53) % 2) as u32, if (h32 >> 54) % 3 == 0 { 0x100 } else { (h32 >> 56) as u32 & 0xff });
+            // batch 30: window of 55 instants (index near the end), zones, periods
             let h33 = s.next_u64();
             *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 0x100, (h33 >> 4) as u16][(h33 % 4) as usize];
             *((m + 0x8ea8) as *mut i8) = [3i8, 4, 7, 8, -1, 11, ((h33 >> 20) % 14) as i8][((h33 >> 2) % 7) as usize];
@@ -9226,8 +9177,8 @@ pub unsafe fn autoteste(casos: u64) {
                     *((m as isize + b + k) as *mut u8) = [0u8, 1, 0, 0xff][(h33.rotate_left((k as u32 + b as u32) % 64) % 4) as usize];
                 }
             }
-            comparar_estatistica_posse(m, [0i8, 1, 2, -1, -2][((h33 >> 30) % 5) as usize], [0u8, 1, 0x80][((h33 >> 32) % 3) as usize]);
-            // trigesima primeira leva: resumo (notas nos limites 1 e 10, somas que transbordam)
+            comparar_possession_statistic(m, [0i8, 1, 2, -1, -2][((h33 >> 30) % 5) as usize], [0u8, 1, 0x80][((h33 >> 32) % 3) as usize]);
+            // batch 31: summary (ratings at the limits 1 and 10, sums that overflow)
             let h34 = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
@@ -9240,8 +9191,8 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0xf5bd) as *mut u8) = [0u8, 3, 200, (h34 >> 10) as u8][((h34 >> 2) % 4) as usize];
             *((m + 0xf5f3) as *mut u8) = [0u8, 2, 100, (h34 >> 18) as u8][((h34 >> 4) % 4) as usize];
             *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 7][((h34 >> 6) % 3) as usize];
-            comparar_resumo(m, [0i16, 1, 0x3de, 2, -1][((h34 >> 8) % 5) as usize]);
-            // trigesima segunda leva: o mais perto no lado (inclusive a propria casa: distancia zero)
+            comparar_match_summary(m, [0i16, 1, 0x3de, 2, -1][((h34 >> 8) % 5) as usize]);
+            // batch 32: the closest on the side (including the own cell: distance zero)
             let h35 = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
@@ -9252,7 +9203,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((p + 0x103) as *mut i8) = ((r >> 12) % 12) as i8;
             }
             comparar_closest_on_side(m, ((h35 >> 40) % 2) as i8, ((h35 >> 41) % 12) as i8, ((h35 >> 45) % 9) as i8, [0u8, 1, 2][((h35 >> 49) % 3) as usize]);
-            // trigesima terceira leva: o goleiro (papel 1 quase sempre), na area ou fora, perto da bola
+            // batch 33: the goalkeeper (role 1 almost always), in the area or outside, close to the ball
             let h36 = s.next_u64();
             let h37 = s.next_u64();
             for t in tabelas.iter_mut() {
@@ -9278,8 +9229,8 @@ pub unsafe fn autoteste(casos: u64) {
             let (mut sd, mut rb) = (0u8, 0u8);
             let cod = [3i8, 4, 5, 26, 27, 0x33, 1, -2, ((h37 >> 52) % 60) as i8][((h37 >> 56) % 9) as usize];
             let alvo_y = yg + ((h37 >> 20) % 5) as i8 - 2;
-            comparar_defesa(j, ((h37 >> 24) % 9) as i8, alvo_y, ((h37 >> 28) % 2) as u8, cod, &mut sd, &mut rb);
-            // trigesima quarta leva: grade consistente nas duas casas (listas com jogadores validos)
+            comparar_goalkeeper_save(j, ((h37 >> 24) % 9) as i8, alvo_y, ((h37 >> 28) % 2) as u8, cod, &mut sd, &mut rb);
+            // batch 34: consistent grid in both cells (lists with valid players)
             let h38 = s.next_u64();
             let lj = ((h38 >> 1) % 2) as i8;
             let jm = side_player_slot(m, lj, ((h38 >> 2) % 20) as usize);
@@ -9303,7 +9254,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             *((m + 0xf582) as *mut usize) = if (h38 >> 50) % 2 == 0 { jm } else { o };
             comparar_move_to(jm, nx, ny);
-            // trigesima quinta leva: escolha da casa (grade com contagens pequenas e listas validas)
+            // batch 35: choice of cell (grid with small counts and valid lists)
             let h39 = s.next_u64();
             let h40 = s.next_u64();
             let lc = ((h39 >> 1) % 2) as i8;
@@ -9341,7 +9292,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             let (mut sxc, mut syc) = (((h39 >> 44) % 10) as i8 - 1, ((h39 >> 48) % 13) as i8 - 1);
             comparar_choose_square(m, jc5, &mut sxc, &mut syc, ((h39 >> 52) % 16) as u32 | if (h39 >> 56) % 4 == 0 { 0xff00 } else { 0 });
-            // trigesima sexta leva: dominio (codigos da tabela, goleiro na area, bola com ou sem dono)
+            // batch 36: control (codes from the table, goalkeeper in the area, ball with or without owner)
             let h41 = s.next_u64();
             let h42 = s.next_u64();
             *((j + 0x19e) as *mut usize) = m;
@@ -9362,12 +9313,12 @@ pub unsafe fn autoteste(casos: u64) {
             let dono36 = [j, o, 0][((h42 >> 20) % 3) as usize];
             *((m + 0xf582) as *mut usize) = dono36;
             *((o + 0x19c) as *mut i16) = ((h42 >> 40) % 90) as i16 + 1;
-            let especiais = [37i8, 42, 43, 44, 45, 46, 47, 49, 50, 0x15, 0x25]; // 48 cairia no erro (caixa de mensagem) do original
+            let especiais = [37i8, 42, 43, 44, 45, 46, 47, 49, 50, 0x15, 0x25]; // 48 would hit the original's error (message box)
             let todos = [1i8, 12, 19, 21, 33, 34, 36, 37, 41, 42, 43, 44, 45, 46, 47, 49, 50, 0x15, 0x25];
             let mut cod36 = if dono36 == 0 { especiais[((h42 >> 24) % especiais.len() as u64) as usize] } else { todos[((h42 >> 24) % todos.len() as u64) as usize] };
             let (mut a36, mut b36) = (7u8, 7u8);
-            comparar_dominio(j, &mut cod36, &mut a36, &mut b36);
-            // trigesima setima leva: tracado (linhas nos quatro sentidos, pontos, saidas do campo)
+            comparar_control_of_move(j, &mut cod36, &mut a36, &mut b36);
+            // batch 37: trace (lines in the four directions, points, exits from the pitch)
             let h43 = s.next_u64();
             let (tx0, ty0) = (((h43 >> 1) % 11) as i8 - 1, ((h43 >> 5) % 14) as i8 - 1);
             let (tx1, ty1) = if (h43 >> 9) % 8 == 0 { (tx0, ty0) } else { (((h43 >> 12) % 11) as i8 - 1, ((h43 >> 16) % 14) as i8 - 1) };
@@ -9381,8 +9332,8 @@ pub unsafe fn autoteste(casos: u64) {
                     *((casa + 44 * l) as *mut usize) = side_player_slot(m, l as i8, ((r >> 5) % 20) as usize);
                 }
             }
-            comparar_tracar(m, tx0, ty0, tx1, ty1, cod37, (h43 >> 26) as u32 & 0x1ff | 0xabcd0000, (h43 >> 40) as u32 & 0x7);
-            // trigesima oitava leva: lista de jogos do dia e placares (normal, prorrogacao, penaltis)
+            comparar_trace_move(m, tx0, ty0, tx1, ty1, cod37, (h43 >> 26) as u32 & 0x1ff | 0xabcd0000, (h43 >> 40) as u32 & 0x7);
+            // batch 38: list of the day's matches and scores (normal, extra time, penalties)
             let h44 = s.next_u64();
             let clubes = [0x1000u32, 0x2000, 0x3000, 0x4000];
             for k in 0..10usize {
@@ -9402,8 +9353,8 @@ pub unsafe fn autoteste(casos: u64) {
             for (k, o) in [0x43usize, 0x44, 0x47, 0x48, 0x49, 0x4a].iter().enumerate() {
                 *((jogo44 + o) as *mut i8) = [-1i8, 0, 1, 2, 3][((h44 >> (20 + k * 3)) % 5) as usize];
             }
-            comparar_venceu(jogo44, [0x1000u32, 0x2000][((h44 >> 40) % 2) as usize]);
-            // quadragesima primeira leva: valor do chute (tipos dados e escolhidos, zonas, goleiro)
+            comparar_won_the_match(jogo44, [0x1000u32, 0x2000][((h44 >> 40) % 2) as usize]);
+            // batch 41: shot value (given and chosen types, zones, goalkeeper)
             let h45 = s.next_u64();
             let h46 = s.next_u64();
             let h47 = s.next_u64();
@@ -9414,7 +9365,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x103) as *mut i8) = [0i8, 1, 2, 9, 10, 11, ((h45 >> 9) % 12) as i8][((h45 >> 13) % 7) as usize];
             *((j + 0x10b) as *mut i8) = ((h45 >> 16) % 22) as i8;
             *((j + 0x109) as *mut i8) = ((h45 >> 21) % 26) as i8 - 5;
-            // palavras por tipo de chute (0x11a + 2 x tipo, ate 0x3a); depois vem 0x19e (motor)
+            // words by shot type (0x11a + 2 x type, up to 0x3a); then comes 0x19e (engine)
             for k in 0..0x3busize {
                 *((j + 0x11a + 2 * k) as *mut i16) = (h46.rotate_left(k as u32 % 64) % 700) as i16;
             }
@@ -9435,8 +9386,8 @@ pub unsafe fn autoteste(casos: u64) {
             }
             let mut tc41 = [-1i8, -1, -1, -1, 0x33, 0x35, 3, 5, 0x16, 0x39, 0x3a, 0x1b][((h47 >> 53) % 12) as usize];
             let mut som41 = 0u16;
-            comparar_valor_chute(j, &mut tc41, &mut som41);
-            // quadragesima segunda leva: forca do time (papeis, atributos nas bordas, competicao, reputacoes)
+            comparar_shot_value(j, &mut tc41, &mut som41);
+            // batch 42: team strength (roles, attributes at the edges, competition, reputations)
             let h48 = s.next_u64();
             let h49 = s.next_u64();
             let l42 = (h48 % 2) as i8;
@@ -9480,7 +9431,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((c42 + 0x53) as *mut usize) = if (h48 >> 49) % 8 == 0 { 0 } else { x42 };
             *((j42 + 0x5d) as *mut usize) = if (h48 >> 52) % 4 == 0 { 0 } else { x42 };
             let ids = [KEY_NATION_GERMANY, KEY_NATION_SCOTLAND, KEY_NATION_BELGIUM, KEY_NATION_SWEDEN, KEY_NATION_NORWAY, KEY_NATION_ENGLAND, KEY_NATION_HOLLAND, KEY_NATION_DENMARK, KEY_NATION_PORTUGAL, KEY_NATION_FRANCE];
-            // as competicoes do jogo podem estar vazias no inicio: valores distintos durante o teste
+            // the game's competitions may be empty at the start: distinct values during the test
             let ids_antes: Vec<u32> = ids.iter().map(|&a| *(a as *const u32)).collect();
             for (i, &a) in ids.iter().enumerate() {
                 *(a as *mut u32) = 0x7000 + i as u32;
@@ -9496,7 +9447,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + 0x1d8 + 2 * o) as *mut u16) = (h49 >> (o * 3)) as u16;
             }
             comparar_team_strength(m, l42);
-            // quadragesima terceira leva: pontape inicial (grade consistente, formacoes com casas distintas)
+            // batch 43: kick-off (consistent grid, formations with distinct cells)
             let h50 = s.next_u64();
             let h51 = s.next_u64();
             core::ptr::write_bytes((m + 0x215e) as *mut u8, 0, 90 * 108);
@@ -9504,10 +9455,10 @@ pub unsafe fn autoteste(casos: u64) {
                 let base = f.as_mut_ptr() as usize + 1200 + if l == 1 { 0xa6 } else { 0x9e };
                 for pos in 0..13usize {
                     let c = (h50.rotate_left((pos * 5 + l * 3) as u32) % 108) as u8;
-                    // casas distintas por posicao no proprio campo (lado 0: y 0..=5; lado 1: 6..=11) e, de
-                    // vez em quando, fora dele (exercita o limite de y sem passar de 11 por casa)
-                    // casa distinta por posicao (com o limite de y, no maximo 4 por casa): uma casa
-                    // com mais de 11 jogadores corrompe as listas e o comparador de 0x6f46b0 le lixo
+                    // distinct cells per position in the own half (side 0: y 0..=5; side 1: 6..=11) and, now
+                    // and then, outside it (exercises the y limit without exceeding 11 per cell)
+                    // distinct cell per position (with the y limit, at most 4 per cell): a cell
+                    // with more than 11 players corrupts the lists and the comparer of 0x6f46b0 reads garbage
                     let _ = c;
                     let x = ((h50 >> 8) % 9) as u8 + pos as u8;
                     let x = x % 9;
@@ -9528,7 +9479,7 @@ pub unsafe fn autoteste(casos: u64) {
                 let r = h51.rotate_left(k as u32 * 3) ^ h50.rotate_right(k as u32);
                 *((p + 0x27) as *mut i8) = l as i8;
                 *((p + 0x19) as *mut i8) = if r % 6 == 0 { -1 } else { ((k + desloc) % 13) as i8 };
-                *((p + 0x19e) as *mut usize) = m; // 0 so cairia no original (a grade e lida pelo motor do jogador)
+                *((p + 0x19e) as *mut usize) = m; // 0 would only crash in the original (the grid is read through the player's engine)
                 *((p + 0x6d) as *mut usize) = pessoas[k % 4].as_ptr() as usize;
                 *((p + 0x10c) as *mut i8) = ((r >> 8) % 21) as i8;
                 *((p + 0x105) as *mut i8) = ((r >> 13) % 21) as i8;
@@ -9541,7 +9492,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((casa + 0x58 + l) as *mut i8) = n + 1;
                 *((p + 0x28) as *mut i8) = n;
             }
-            // as vezes um lado sem ninguem nas posicoes 0..=10 (o pontape sem jogador: byte 0 do motor)
+            // sometimes a side with nobody in positions 0..=10 (the kick-off without a player: byte 0 of the engine)
             if (h51 >> 58) % 4 == 0 {
                 let lv = ((h51 >> 60) % 2) as usize;
                 for k in 0..20usize {
@@ -9554,21 +9505,21 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8eae) as *mut i8) = [0i8, 1, -1, 2][((h51 >> 56) % 4) as usize];
             *((m + 0x8ed8) as *mut u16) = (h51 >> 20) as u16;
             *(m as *mut u8) = 0;
-            static AVISOS47: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-            let avisar = || AVISOS47.fetch_add(1, std::sync::atomic::Ordering::Relaxed) < 6;
-            if let Some(e) = grade_inconsistente(m) {
+            static WARNINGS47: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+            let avisar = || WARNINGS47.fetch_add(1, std::sync::atomic::Ordering::Relaxed) < 6;
+            if let Some(e) = grid_inconsistent(m) {
                 if avisar() {
                     linha(&format!("motor: grade inconsistente antes do pontape: {}", e));
                 }
             }
             comparar_kick_off(m);
-            let grade47 = grade_inconsistente(m);
+            let grade47 = grid_inconsistent(m);
             if let Some(e) = &grade47 {
                 if avisar() {
                     linha(&format!("motor: grade inconsistente depois do pontape: {}", e));
                 }
             }
-            // quadragesima setima leva: posicoes finas (a grade do pontape continua consistente; posicoes 0..=10)
+            // batch 47: fine positions (the kick-off grid stays consistent; positions 0..=10)
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 let v = byte(p, 0x19);
@@ -9581,8 +9532,8 @@ pub unsafe fn autoteste(casos: u64) {
             if grade47.is_none() {
                 comparar_fine_positions(m, saida47.as_mut_ptr());
             }
-            // quinquagesima segunda leva: tirar de campo (grade consistente do pontape, marcacoes, modos,
-            // goleiro guardado, tecnico humano com as globais trocadas durante o teste)
+            // batch 52: take off the pitch (consistent kick-off grid, markings, modes,
+            // goalkeeper kept, human manager with the globals swapped during the test)
             if grade47.is_none() {
                 let h60 = s.next_u64();
                 let h61 = s.next_u64();
@@ -9593,7 +9544,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((p + 0x1aa) as *mut usize) = 0;
                     *((p + 0x101) as *mut i8) = 0;
                 }
-                // jt marca alguem (que o tem na lista) e e marcado por ate 3
+                // jt marks someone (who has it in the list) and is marked by up to 3
                 let alvo = m + 0x4796 + 8920 * (1 - lj) + ((h60 >> 8) % 20) as usize * 0x1be;
                 if (h60 >> 13) % 3 != 0 {
                     *((jt + 0x1aa) as *mut usize) = alvo;
@@ -9609,7 +9560,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
                 *((m + 0xf59e) as *mut usize) = if (h60 >> 34) % 3 == 0 { jt } else { 0 };
                 *((m + 0xf5a2) as *mut usize) = if (h60 >> 36) % 3 == 0 { jt } else { 0 };
-                // tecnico humano
+                // human manager
                 let globais60 = [0xae2364usize, 0xb63c98];
                 let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
                 *(G_STAFF_COUNT as *mut i32) = 1000;
@@ -9637,11 +9588,11 @@ pub unsafe fn autoteste(casos: u64) {
                 *((pa60 + 0x20) as *mut usize) = clubes60[1].as_ptr() as usize;
                 *((m + 0x4792) as *mut usize) = pa60;
                 comparar_take_off_pitch(m, jt, [-1i8, -3, 0, 1, -2][((h61 >> 44) % 5) as usize]);
-                // quinquagesima sexta leva: escolher o cobrador (tipos sem a tatica do clube: o objeto de
-                // 0xde1d08 so existe com o banco carregado; escanteio e falta perto do gol ficam para o jogo real)
+                // batch 56: choose the taker (types without the club's tactics: the object at
+                // 0xde1d08 only exists with the database loaded; corners and free kicks near the goal are left to the real game)
                 {
-                    // fichas contiguas, como o vetor de pessoas do jogo (0xae23bc, 110 bytes cada): a lista de
-                    // penaltis do tecnico humano guarda indices nele
+                    // contiguous records, like the game's person vector (0xae23bc, 110 bytes each): the human manager's
+                    // penalty list keeps indices into it
                     let mut fichas56 = vec![0u8; 110 * 20];
                     let pessoas_antes = *(G_STAFF_TABLE as *const usize);
                     *(G_STAFF_TABLE as *mut usize) = fichas56.as_mut_ptr() as usize;
@@ -9649,8 +9600,8 @@ pub unsafe fn autoteste(casos: u64) {
                     let mut excl56 = [0u8; 40];
                     let r0 = s.next_u64();
                     let lado56 = (r0 % 2) as i8;
-                    // os blocos do lado voltam como estavam no fim (fichas e pessoas daqui sao locais;
-                    // as coordenadas nao mudam, para nao desfazer a grade)
+                    // the side blocks return as they were at the end (records and persons here are local;
+                    // the coordinates do not change, so as not to undo the grid)
                     let bloco56 = side_player_slot(m, lado56, 0);
                     let antes_bloco56 = core::slice::from_raw_parts(bloco56 as *const u8, 20 * 0x1be).to_vec();
                     let tab = *((m + 0x8ebc + 4 * lado56 as usize) as *const usize) as *mut u16;
@@ -9678,7 +9629,7 @@ pub unsafe fn autoteste(casos: u64) {
                         pessoas56[k][0x29] = [0u8, 1, 10, 20, 0xf0][((z >> 36) % 5) as usize];
                         excl56[20 * lado56 as usize + k] = ((z >> 40) % 3 == 0) as u8;
                     }
-                    // sempre um candidato valido (sem tatica e sem excluir: o original da erro fatal sem ninguem)
+                    // always a valid candidate (without tactics and without excluding: the original gives a fatal error with nobody)
                     let q0 = side_player_slot(m, lado56, (r0 >> 1) as usize % 20);
                     *((q0 + 0x19) as *mut i8) = 4;
                     *((q0 + 0x6d) as *mut usize) = pessoas56[0].as_mut_ptr() as usize;
@@ -9697,16 +9648,16 @@ pub unsafe fn autoteste(casos: u64) {
                     let ofs = if lado56 != 0 { 0 } else { 11 };
                     let (cx, ax) = ((a7 as i32 - 4).abs(), (a8 as i32 - ofs).abs());
                     if (tipo == 6 || tipo == 7) && (2..=6).contains(&a7) && cx <= 8 && ax <= 11 && (distance_table_cell(ax, cx) as f64) < read_f64_at(0x96d428) {
-                        tipo = 8; // perto do gol a falta consulta a tatica
+                        tipo = 8; // near the goal the free kick consults the tactics
                     }
                     let excl = if tipo == 5 && (r0 >> 27) % 3 == 0 { excl56.as_ptr() as usize } else { 0 };
-                    // lista de cobradores de penalti do tecnico humano (0x601070: registro + 0x1e05 com 0x9a69 = 0):
-                    // fichas dos jogadores em algumas das 50 vagas
+                    // human manager's penalty takers list (0x601070: record + 0x1e05 with 0x9a69 = 0):
+                    // records of the players in some of the 50 slots
                     let i56 = *(tec60.as_ptr() as *const i32) - 1000 + 16;
                     if (0..16).contains(&i56) {
                         let reg = regs60 + 42735 * i56 as usize;
                         if tipo == 5 && (r0 >> 30) % 2 == 0 {
-                            // metade dos penaltis pelo caminho da lista (tecnico com a marca 0x5f, sem 0x9a01)
+                            // half of the penalties through the list path (manager with mark 0x5f, without 0x9a01)
                             tec60[0x5f] = 1;
                             *((reg + 0x9a01) as *mut u32) = 0;
                             *((m + 0x904d + 208 * lado56 as usize) as *mut usize) = tec60.as_ptr() as usize;
@@ -9727,7 +9678,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *(a as *mut u32) = antes_sel[i];
                 }
             }
-            // quadragesima quarta leva: bola rolando (impulso, direcoes nas bordas, saidas do campo)
+            // batch 44: rolling ball (impulse, directions at the edges, exits from the pitch)
             let h52 = s.next_u64();
             *((m + 0xf582) as *mut usize) = if h52 % 9 == 0 { j } else { 0 };
             *((m + 0xf57a) as *mut usize) = if (h52 >> 4) % 9 == 0 { o } else { 0 };
@@ -9741,7 +9692,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8eab) as *mut i8) = [0i8, 1, 2][((h52 >> 44) % 3) as usize];
             *((m + 0x8eae) as *mut i8) = [0i8, 1, -1][((h52 >> 46) % 3) as usize];
             comparar_roll_ball(m);
-            // sexagesima setima leva: ordem dos jogadores (guarda a lista, a contagem e 0xb67a64)
+            // batch 67: order of the players (keeps the list, the count and 0xb67a64)
             {
                 let mut antes67 = [0u8; 4 * 40];
                 core::ptr::copy_nonoverlapping((m + 0x8f7e) as *const u8, antes67.as_mut_ptr(), antes67.len());
@@ -9751,7 +9702,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + 0x8eb8) as *mut u8) = n67;
                 *(G_ACTION_ORDER_MATCH_ENGINE as *mut u32) = g67;
             }
-            // quadragesima quinta leva: teste de condicao (condicao 0..100, abaixo de 1 divide por zero)
+            // batch 45: condition test (condition 0..100, below 1 divides by zero)
             let h53 = s.next_u64();
             let cond = [0.0f32, 0.5, 0.999, 1.0, 1.5, 100.0, 99.99, 10.0, 31.62, ((h53 >> 8) % 100_001) as f32 / 1000.0][((h53 >> 4) % 10) as usize];
             *((j + 0x1a2) as *mut f32) = cond;
@@ -9759,11 +9710,11 @@ pub unsafe fn autoteste(casos: u64) {
             let alvo53 = [0usize, o, j][((h53 >> 32) % 3) as usize];
             let cod53 = [1i8, 2, 3, 4, 5, 0, 6, -1, 1, 2, 5][((h53 >> 35) % 11) as usize];
             comparar_condition_test(j, cod53, alvo53);
-            // quadragesima sexta leva: preferencias (nulos, cada uma das 3 vagas, ausente) e marca por posicao
+            // batch 46: preferences (nulls, each of the 3 slots, absent) and mark by position
             let h54 = s.next_u64();
             let pf = prefs46.as_mut_ptr() as usize;
             let pe46 = pessoa46.as_mut_ptr() as usize;
-            let cand = [j, o, 0, 0x1234usize]; // 0: vaga vazia (o alvo nulo nao pode casar com ela)
+            let cand = [j, o, 0, 0x1234usize]; // 0: empty slot (the null target cannot match it)
             for k in 0..6usize {
                 *((pf + 0x1c + 4 * k) as *mut usize) = cand[((h54 >> (k * 2)) % 4) as usize];
             }
@@ -9772,18 +9723,18 @@ pub unsafe fn autoteste(casos: u64) {
             let quem54 = if (h54 >> 18) % 7 == 0 { 0 } else { pe46 };
             comparar_likes(alvo54, quem54);
             comparar_dislikes(alvo54, quem54);
-            // septuagesima segunda leva: clubes preferidos (+0x04..+0x0c) e evitados (+0x10..+0x18)
+            // batch 72: preferred clubs (+0x04..+0x0c) and avoided ones (+0x10..+0x18)
             for k in 0..6usize {
                 *((pf + 4 + 4 * k) as *mut usize) = cand[((h54 >> (k * 2 + 22)) % 4) as usize];
             }
             comparar_likes_club(quem54, alvo54);
             comparar_dislikes_club(quem54, alvo54);
-            let base54 = m + 0x91e2; // lado 0: +0x187f ainda dentro do motor falso
+            let base54 = m + 0x91e2; // side 0: +0x187f still inside the fake engine
             *((base54 + 0x187f) as *mut u32) = (h54 >> 8) as u32 | 1;
             let v54 = (h54 >> 20) as u32;
             let ficha54: *const u32 = if (h54 >> 52) % 4 == 0 { core::ptr::null() } else { &v54 };
             comparar_mark_position(base54, ((h54 >> 54) % 17) as i8 - 1, ficha54);
-            // quadragesima oitava leva: folhas de outros modulos (globais do jogo trocadas durante o teste)
+            // batch 48: leaves of other modules (game globals swapped during the test)
             let h55 = s.next_u64();
             let globais = [0xae2378usize, 0xae2364, 0xae2d0c, 0xae235c, 0xae2350];
             let antes55: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
@@ -9811,8 +9762,8 @@ pub unsafe fn autoteste(casos: u64) {
             for (i, &a) in globais.iter().enumerate() {
                 *(a as *mut u32) = antes55[i];
             }
-            // quadragesima nona leva: tecnico humano (indices nas bordas, sem pessoa pelo tecnico atual),
-            // codigos de casa (todos os validos e vizinhos) e mascaras de formacao
+            // batch 49: human manager (indices at the edges, no person for the current manager),
+            // cell codes (all valid ones and neighbours) and formation masks
             let h56 = s.next_u64();
             let globais56 = [0xae2364usize, 0xb77c7a];
             let antes56: Vec<u32> = globais56.iter().map(|&a| *(a as *const u32)).collect();
@@ -9836,7 +9787,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_manager_9a01(obj56.as_ptr() as usize, quem56);
             let dentro56 = id56[0] - npes56 + 16;
             if (0..ntec).contains(&dentro56) {
-                // sexagesima segunda leva: 0x9ace e 0x9a06 (pessoa com clube e nacao de +0x88 nas bordas)
+                // batch 62: 0x9ace and 0x9a06 (person with club and nation of +0x88 at the edges)
                 let mut nacao62 = [0u8; 0x90];
                 *(nacao62.as_mut_ptr().add(0x88) as *mut i32) = [399, 400, 0, -1, 401, 5000][((h56 >> 50) % 6) as usize];
                 let mut clube62 = [0u8; 0x60];
@@ -9850,7 +9801,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((r + 0x9a06) as *mut u8) = if (h56 >> (k + 24)) % 3 == 0 { 0 } else { 0x80 | k as u8 };
                 }
                 *(tab56 as *mut usize) = pessoa62.as_ptr() as usize;
-                // o tecnico 0 com outra pessoa valida: pegar a vaga errada aparece
+                // manager 0 with another valid person: picking the wrong slot shows up
                 let mut outra62 = [0u32; 16];
                 outra62[0] = (npes56 - 16 + (dentro56 + 1) % ntec) as u32;
                 let antes_vaga0 = *(G_SCREEN_RECORDS_MANAGER as *const u32);
@@ -9868,8 +9819,8 @@ pub unsafe fn autoteste(casos: u64) {
                 let mut saida62 = 7u32;
                 let sp = if (h56 >> 55) % 2 == 0 { core::ptr::null_mut() } else { &mut saida62 as *mut u32 };
                 comparar_manager_9a06(obj56.as_ptr() as usize, quem62, sp);
-                // sexagesima terceira leva: clube controlado por humano (clube, selecao e segunda selecao
-                // que volta para a principal; tecnico do clube, outro ou nenhum; com e sem tatica)
+                // batch 63: club controlled by a human (club, national side and second national side
+                // that falls back to the main one; manager of the club, another or none; with and without tactics)
                 let h63 = s.next_u64();
                 let globais63 = [0xb63c98usize, 0xae235c, 0xae2350, 0xae23b4, 0xae23a8];
                 let antes63: Vec<u32> = globais63.iter().map(|&a| *(a as *const u32)).collect();
@@ -9903,15 +9854,15 @@ pub unsafe fn autoteste(casos: u64) {
                     tecnicos63[((h63 >> 42) % 3) as usize],
                     ((h63 >> 44) % 3 == 0) as u32,
                 );
-                // octogesima segunda leva: classe da selecao (o clube_a63 passa pela 0x5409b0 como no 63)
+                // batch 82: class of the national side (clube_a63 goes through 0x5409b0 as in 63)
                 comparar_national_side_class(clube_a63.as_ptr() as usize, ((h63 >> 45) & 1) as u32);
-                // octogesima terceira leva: classe pela selecao da pessoa (sem selecao ou com o clube_a63)
+                // batch 83: class by the person's national side (no national side or with clube_a63)
                 let mut pessoa83 = [0u8; 0x60];
                 *(pessoa83.as_mut_ptr().add(0x24) as *mut usize) = if (h63 >> 47) % 4 == 0 { 0 } else { clube_a63.as_ptr() as usize };
                 pessoa83[0x5e] = (h63 >> 50) as u8;
                 comparar_class_by_national_side(pessoa83.as_ptr() as usize);
-                // octogesima quarta leva: bytes do bloco da selecao, selecoes especiais (0x9d00a4/a8 com os
-                // ids do clube_a63; o 100 nao e selecao, so ele separa o 0x9d00a8) e a pessoa que nao gosta da selecao principal (o clube_b63)
+                // batch 84: bytes of the national side's block, special national sides (0x9d00a4/a8 with the
+                // ids of clube_a63; 100 is not a national side, only it separates 0x9d00a8) and the person who dislikes the main national side (clube_b63)
                 let mut blocos84 = vec![0u8; 110 * 2];
                 for (k, b) in blocos84.iter_mut().enumerate() {
                     *b = (h63.rotate_left(k as u32 % 64) as u8) ^ (k as u8).wrapping_mul(7);
@@ -9931,8 +9882,8 @@ pub unsafe fn autoteste(casos: u64) {
                 *(pessoa84.as_mut_ptr().add(0x1a) as *mut usize) = nacao63.as_ptr() as usize;
                 *(pessoa84.as_mut_ptr().add(0x65) as *mut usize) = pref84.as_ptr() as usize;
                 comparar_dislikes_national_side(pessoa84.as_ptr() as usize);
-                // septuagesima quinta leva: nevoa de guerra (data de hoje, quadro de conhecimento,
-                // pessoas sinteticas; os dois lados com o clube humano sintetico)
+                // batch 75: fog of war (today's date, knowledge table,
+                // synthetic persons; both sides with the synthetic human club)
                 {
                     let h75 = s.next_u64();
                     let globais75 = [0xae2a60usize, 0xae23bc, 0xae2c90, 0xae2c94];
@@ -9967,13 +9918,13 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     let mut partida75 = [0usize; 9];
                     partida75[7] = clube_a63.as_ptr() as usize;
-                    // o lado 1 (+0x1c) com outro tecnico (ou nenhum): trocar os lados aparece
+                    // side 1 (+0x1c) with another manager (or none): swapping the sides shows up
                     let mut clube_1_75 = clube_a63;
                     *(clube_1_75.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h75 >> 1) % 3) as usize];
                     partida75[8] = clube_a63.as_ptr() as usize;
                     partida75[7] = clube_1_75.as_ptr() as usize;
                     comparar_fog_after_match(partida75.as_ptr() as usize, dados75.as_ptr() as usize);
-                    // a pessoa direto, com e sem observador (o sorteio so entra com ele)
+                    // the person directly, with and without a scout (the RNG only comes in with one)
                     let mut obs75 = [0u8; 0x20];
                     *(obs75.as_mut_ptr().add(4) as *mut i16) = if (h75 >> 40) & 1 == 0 { (h75 >> 41) as i16 } else { ((h75 >> 41) % 1200) as i16 - 600 };
                     obs75[0x17] = (h75 >> 57) as u8;
@@ -9982,8 +9933,8 @@ pub unsafe fn autoteste(casos: u64) {
                     let quem75 = [[((h75 >> 20) % npes56 as u64) as i32, npes56, npes56 - 1, 0][((h75 >> 60) % 4) as usize]];
                     comparar_know_person(obj75.as_ptr() as usize, if (h75 >> 62) & 1 == 1 && (h75 >> 61) & 1 == 1 { 0 } else { quem75.as_ptr() as usize }, if (h75 >> 59) % 5 == 0 { 0 } else { fonte75.as_ptr() as usize });
                     comparar_chance_to_know(obs75.as_ptr() as usize, (h75 >> 33) as i8);
-                    // septuagesima sexta leva: lista de observacao (ids repetidos em +0xf e +0x13, tipos
-                    // 11 e outros) e bandeiras do contrato
+                    // batch 76: watch list (repeated ids at +0xf and +0x13, types
+                    // 11 and others) and contract flags
                     let h76 = s.next_u64();
                     let mut entradas76 = [0u8; 40 * 37];
                     for k in 0..40usize {
@@ -10005,8 +9956,8 @@ pub unsafe fn autoteste(casos: u64) {
                         *c = (h76 as u32).rotate_left(k as u32) ^ k as u32;
                     }
                     comparar_contract_flags(contrato76.as_ptr() as usize);
-                    // septuagesima setima leva: lista encadeada (nos de 10 bytes, desalinhados), palavra
-                    // +0xc em registros de 31 bytes, arredondamento e nacoes do grupo
+                    // batch 77: linked list (nodes of 10 bytes, unaligned), word
+                    // +0xc in records of 31 bytes, rounding and nations of the group
                     let h77 = s.next_u64();
                     let mut nos77 = [0u8; 10 * 4 + 1];
                     let base77 = nos77.as_mut_ptr() as usize + 1;
@@ -10028,7 +9979,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let tab77 = [(regs77.as_ptr() as usize).wrapping_sub(31usize.wrapping_mul((n77 - 8) as usize))];
                     comparar_word_0c(tab77.as_ptr() as usize, id77);
                     let v77 = [(h77 >> 10) as i32, 990 + ((h77 >> 20) % 20) as i32, -(((h77 >> 30) % 30000) as i32), ((h77 >> 3) as i32 & !0xffff) | 999][((h77 >> 56) % 4) as usize];
-                    comparar_arredondar(v77);
+                    comparar_round_below_1000(v77);
                     let globais77 = [KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_RESERVE, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION];
                     let antes77: Vec<u32> = globais77.iter().map(|&a| *(a as *const u32)).collect();
                     for (k, &a) in globais77.iter().enumerate() {
@@ -10039,8 +9990,8 @@ pub unsafe fn autoteste(casos: u64) {
                     for (k, &a) in globais77.iter().enumerate() {
                         *(a as *mut u32) = antes77[k];
                     }
-                    // septuagesima oitava leva: competicao que conta (3 globais, tabela de 107 bytes,
-                    // objetos com fase, rodadas e a primeira rodada) e as comparacoes de ordenacao
+                    // batch 78: competition that counts (3 globals, table of 107 bytes,
+                    // objects with stage, rounds and the first round) and the sorting comparisons
                     let h78 = s.next_u64();
                     let globais78 = [KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0xae23d0, 0xadadfc];
                     let antes78: Vec<u32> = globais78.iter().map(|&a| *(a as *const u32)).collect();
@@ -10083,8 +10034,8 @@ pub unsafe fn autoteste(casos: u64) {
                     let qa78 = [fichas78[0].as_ptr() as usize];
                     let qb78 = [fichas78[1].as_ptr() as usize];
                     comparar_order_by_80(qa78.as_ptr(), qb78.as_ptr());
-                    // octogesima leva: quadros da nevoa (16, alguns nulos ou inativos; nevoa ligada ou
-                    // nao) e a formacao (casas das onze mascaras trocadas, ou casas sorteadas)
+                    // batch 80: fog tables (16, some null or inactive; fog on or
+                    // off) and the formation (cells of the eleven masks swapped, or random cells)
                     let h80 = s.next_u64();
                     let antes_nevoa80 = *(G_ATTRIBUTE_MASKING_ENABLED as *const u8);
                     *(G_ATTRIBUTE_MASKING_ENABLED as *mut u8) = ((h80 >> 1) % 4 != 0) as u8;
@@ -10143,13 +10094,13 @@ pub unsafe fn autoteste(casos: u64) {
                         jogadores80[i * 0x1be + 0x19] = [0xfeu8, 0xff, (z % 11) as u8, (z % 13) as u8][((z >> 8) % 4) as usize];
                         jogadores80[i * 0x1be + 0x1a] = ((z >> 12) % 12) as u8;
                     }
-                    // sempre com um bit de setor (1..0x40): sem ele a original mostra a caixa de erro do formation.cpp
+                    // always with a sector bit (1..0x40): without it the original shows formation.cpp's error box
                     let mascara80 = ((h80 >> 13) as u32 & 0xfff) | 0x200 | 1 << ((h80 >> 5) % 7);
                     comparar_sector_slot_taken(f80, mascara80, if (h80 >> 62) == 0 { 0 } else { jogadores80.as_ptr() as usize });
                     comparar_clear_assigned(f80);
-                    // octogesima primeira leva: casa da vaga (so vagas 0..10: fora delas a original mostra a
-                    // caixa de erro) e o criterio pelos bytes do registro (as palavras pedem a configuracao
-                    // de 0xae3138, que ainda nao existe aqui; ficam com o jogo real)
+                    // batch 81: cell of the slot (only slots 0..10: outside them the original shows the
+                    // error box) and the criterion by the record's bytes (the words need the configuration
+                    // of 0xae3138, which does not exist here yet; they are left to the real game)
                     let h81 = s.next_u64();
                     for k in 0..0x30usize {
                         form80[0x12d + k] = (h81 >> (k % 56)) as u8 ^ (k as u8).wrapping_mul(13);
@@ -10160,8 +10111,8 @@ pub unsafe fn autoteste(casos: u64) {
                     registro81[0x52] = (h81 >> 16) as u8;
                     let a81 = ((h81 >> 24) as u32) & 0xffff_0000;
                     let b81 = ((h81 >> 40) as u32) & 0xffff_0000;
-                    // octogesima segunda leva: tipos, marcas por pessoa e o registro livre (tabela sintetica,
-                    // indice guardado ou nao; nunca 0 registros: a 0x90cfc0(0) nao e caso do jogo)
+                    // batch 82: types, marks by person and the free record (synthetic table,
+                    // index kept or not; never 0 records: 0x90cfc0(0) is not a game case)
                     let h82 = s.next_u64();
                     comparar_type_not_11(((h82 >> 1) % 20) as i8 - 2);
                     comparar_type_11_to_15(((h82 >> 6) % 20) as i8 - 2);
@@ -10174,7 +10125,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let k82 = ((h82 >> 15) % 9) as i8 - 2;
                     comparar_read_person_mark(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k82);
                     comparar_clear_person_mark(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h82 >> 19) % 9) as i8 - 2);
-                    // octogesima terceira leva: +0x44 (ligar e ler, com sinal) e o endereco do +0x3a
+                    // batch 83: +0x44 (set and read, signed) and the address of +0x3a
                     let h83 = s.next_u64();
                     for (k, b) in marcas82.iter_mut().enumerate() {
                         *b = (h83.rotate_left(k as u32 % 64) as u8) ^ (k as u8);
@@ -10186,7 +10137,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let antes83 = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
                     *(G_DATABASE_NAMES_LANGUAGE as *mut u32) = (h83 >> 20) as u32;
                     comparar_database_global_9b5984();
-                    // octogesima quarta leva: competicao da pessoa (indice +4 negativo ou nao) e data com marca
+                    // batch 84: the person's competition (index +4 negative or not) and date with mark
                     let h84 = s.next_u64();
                     let antes84 = *(G_CLUB_COMP_TABLE as *const usize);
                     *(G_CLUB_COMP_TABLE as *mut usize) = 0x0200_0000;
@@ -10218,7 +10169,7 @@ pub unsafe fn autoteste(casos: u64) {
                         *(a as *mut u32) = antes75[k];
                     }
                 }
-                // sexagesima quinta leva: linha e byte da tabela tatica (tabela unica, cobre ids e humanos)
+                // batch 65: row and byte of the tactics table (single table, covers ids and humans)
                 if TABELA65.is_empty() {
                     TABELA65 = vec![0u8; 0x91 * 5100];
                 }
@@ -10235,8 +10186,8 @@ pub unsafe fn autoteste(casos: u64) {
                 let mut obj65 = [0u8; 0x608];
                 *(obj65.as_mut_ptr().add(0x601) as *mut usize) = TABELA65.as_ptr() as usize;
                 comparar_tactics_byte(obj65.as_mut_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 56) % 11) as i8, humano65);
-                // sexagesima oitava leva: vagas da linha tatica (indices em +2.., +0x52, +0x56) sobre
-                // 30 pessoas sinteticas de 110 bytes; a tabela e restaurada (mark_slot escreve +0x52)
+                // batch 68: slots of the tactics row (indices at +2.., +0x52, +0x56) over
+                // 30 synthetic persons of 110 bytes; the table is restored (mark_slot writes +0x52)
                 {
                     let h68 = s.next_u64();
                     let mut pessoas68 = [0u8; 110 * 30];
@@ -10271,7 +10222,7 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     *(G_STAFF_TABLE as *mut usize) = antes68;
                 }
-                // sexagesima nona leva: clube na competicao e clube especial
+                // batch 69: club in the competition and special club
                 {
                     let h69 = s.next_u64();
                     let mut cont69 = [[0u8; 0x80]; 2];
@@ -10291,7 +10242,7 @@ pub unsafe fn autoteste(casos: u64) {
                         *(c.as_mut_ptr().add(0x57) as *mut usize) = [0usize, base69.as_ptr() as usize, 0x1234][((z >> 8) % 3) as usize];
                     }
                     let alvo69 = clubes69[((h69 >> 10) % 6) as usize].as_ptr() as usize;
-                    // fases: participantes (6 bytes) e tabelas (0x3b) com alguns dos clubes
+                    // stages: participants (6 bytes) and tables (0x3b) with some of the clubs
                     let mut listas69 = [[0u8; 6 * 4]; 4];
                     let mut tabelas69 = [[0u8; 0x3b * 4]; 4];
                     let mut fases69 = [[0u8; 0xc0]; 4];
@@ -10317,8 +10268,8 @@ pub unsafe fn autoteste(casos: u64) {
                     *(comp69.as_mut_ptr().add(0xa7) as *mut usize) = listas69[3].as_ptr() as usize;
                     *(comp69.as_mut_ptr().add(0xb1) as *mut usize) = tabelas69[3].as_ptr() as usize;
                     comparar_club_in_competition(comp69.as_mut_ptr() as usize, alvo69);
-                    // clube especial: o id de um dos nove guardados, ou outro
-                    // (antes de carregar a base os nove ids sao 0: valores distintos durante o teste)
+                    // special club: the id of one of the nine kept, or another
+                    // (before the database loads the nine ids are 0: distinct values during the test)
                     let guardados = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP];
                     let antes_g69: Vec<u32> = guardados.iter().map(|&a| *(a as *const u32)).collect();
                     for (k, &a) in guardados.iter().enumerate() {
@@ -10327,8 +10278,8 @@ pub unsafe fn autoteste(casos: u64) {
                     let id69 = if (h69 >> 35) % 3 == 0 { 0x7fff_0000u32 } else { *(guardados[((h69 >> 37) % 9) as usize] as *const u32) };
                     let especial69 = [id69, 0];
                     comparar_special_club(if (h69 >> 41) % 7 == 0 { 0 } else { especial69.as_ptr() as usize });
-                    // septuagesima terceira leva: clube parceiro (globais dos 82 pares e das 3 nacoes com
-                    // valores distintos; alguns parceiros -1 e -5 para os dois testes de aceite)
+                    // batch 73: partner club (globals of the 82 pairs and of the 3 nations with
+                    // distinct values; some partners -1 and -5 for the two acceptance tests)
                     {
                         let h73 = s.next_u64();
                         let nac73 = [KEY_NATION_SPAIN, KEY_NATION_GERMANY, KEY_NATION_PORTUGAL];
@@ -10358,14 +10309,14 @@ pub unsafe fn autoteste(casos: u64) {
                         let antes_base73 = *(G_CLUB_TABLE as *const u32);
                         *(G_CLUB_TABLE as *mut u32) = 0x0100_0000;
                         comparar_partner_club(clube73.as_mut_ptr() as usize, ponteiro73, ((h73 >> 25) & 1) as u32);
-                        // septuagesima quarta leva: contrato com o clube e nivel do contrato
+                        // batch 74: contract with the club and contract level
                         if CLUBES74.is_empty() {
                             CLUBES74 = vec![0u8; 581 * 2200];
                             for k in 0..2200usize {
                                 *(CLUBES74.as_mut_ptr().add(581 * k) as *mut i32) = k as i32 - 16;
                             }
                         }
-                        // a partir da vaga 16: parceiros de indice negativo (-5) ainda caem dentro do vetor
+                        // from slot 16: partners with a negative index (-5) still fall inside the vector
                         *(G_CLUB_TABLE as *mut usize) = CLUBES74.as_ptr() as usize + 581 * 16;
                         let h74 = s.next_u64();
                         let id_p74: i32 = [5i32, 40, 99999][((h74 >> 1) % 3) as usize];
@@ -10374,7 +10325,7 @@ pub unsafe fn autoteste(casos: u64) {
                         *(entrada74.as_mut_ptr() as *mut i32) = [0i32, 1, 2, 3, -1][((h74 >> 3) % 5) as usize];
                         *(entrada74.as_mut_ptr().add(4) as *mut i32) = [0i32, 1, 2, 3, -1][((h74 >> 6) % 5) as usize];
                         let antes74 = (*(G_STAFF_STATE_TABLE as *const usize), *(G_CONTRACT_MANAGER as *const usize));
-                        // limite das selecoes (clubes - 2 x nacoes) no meio dos ids dos pares
+                        // limit of the national sides (clubs - 2 x nations) in the middle of the pair ids
                         let limites74 = (*(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
                         *(G_CLUB_COUNT as *mut i32) = 2100;
                         *(G_NATION_COUNT as *mut i32) = 400 + ((h74 >> 20) % 700) as i32;
@@ -10391,8 +10342,8 @@ pub unsafe fn autoteste(casos: u64) {
                         *(G_CONTRACT_MANAGER as *mut usize) = obj74.as_ptr() as usize;
                         comparar_contract_with_club(obj74.as_ptr() as usize, pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
                         comparar_contract_level(pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
-                        // septuagesima nona leva: nota do jogador (motor com o clube73 nos dois lados,
-                        // pessoa com o mesmo id, ficha, data de hoje e de nascimento plausiveis)
+                        // batch 79: player rating (engine with clube73 on both sides,
+                        // person with the same id, record, plausible today's and birth dates)
                         let h79 = s.next_u64();
                         let mut pessoa79 = [0u8; 0x50];
                         *(pessoa79.as_mut_ptr() as *mut i32) = id_p74;
@@ -10403,7 +10354,7 @@ pub unsafe fn autoteste(casos: u64) {
                         *(ficha79.as_mut_ptr().add(0xd) as *mut i16) = ((h79 >> 26) % 6000) as i16 - 1000;
                         ficha79[0x2f] = (h79 >> 40) as u8 % 30;
                         *(clube73.as_mut_ptr().add(0x80) as *mut i16) = ((h79 >> 48) % 4000) as i16;
-                        // lado 0 (+0x1c) com uma copia de outra forma (+0x80): trocar os lados aparece
+                        // side 0 (+0x1c) with a copy of another shape (+0x80): swapping the sides shows up
                         let mut clube79 = clube73;
                         *(clube79.as_mut_ptr().add(0x80) as *mut i16) = ((h79 >> 30) % 4000) as i16 - 2000;
                         let mut tab79 = [0usize; 9];
@@ -10435,7 +10386,7 @@ pub unsafe fn autoteste(casos: u64) {
                         *(a as *mut u32) = antes_g69[k];
                     }
                 }
-                // sexagesima quarta leva: lado sob controle (tipos 1 e 9, clube humano ou nao, modos 2..5)
+                // batch 64: side under control (types 1 and 9, human club or not, modes 2..5)
                 let mut partida64 = [0u8; 0x48];
                 partida64[0x3a] = [0u8, 1, 9, 2][((h63 >> 46) % 4) as usize];
                 partida64[0x40] = ((h63 >> 48) & 1) as u8;
@@ -10448,9 +10399,9 @@ pub unsafe fn autoteste(casos: u64) {
                 *((m + 0x9766) as *mut u32) = (h63 >> 20) as u32 & 0x4400;
                 *((m + 0x9766 + 6371) as *mut u32) = (h63 >> 30) as u32 & 0x4400;
                 comparar_side_under_control(m, ((h63 >> 53) & 1) as i8);
-                // sexagesima sexta leva: ordem dos penaltis pela tabela tatica (os dois lados com tecnico
-                // humano com a marca 0x5f e sem 0x9a01; +0x904b so com selecao, senao o choose_taker
-                // dos blocos do autoteste poderia dar erro fatal)
+                // batch 66: penalty order by the tactics table (both sides with a human
+                // manager with mark 0x5f and without 0x9a01; +0x904b only with a national side, otherwise the choose_taker
+                // of the autotest blocks could give a fatal error)
                 if TABELA65.len() == 0x91 * 5100 {
                     let regs66 = |p: &[u32; 16]| regs56 + 42735 * (p[0] as i32 - npes56 + 16) as usize;
                     let mut tec66 = [pessoa62, outra62];
@@ -10463,7 +10414,7 @@ pub unsafe fn autoteste(casos: u64) {
                     partida64[0x41] = ((h63 >> 57) & 1) as u8;
                     let antes66 = (*(G_TACTICS as *const usize), *((m + 0x904d) as *const usize), *((m + 0x911d) as *const usize),
                         *((m + 0x904b) as *const u8), *((m + 0x911b) as *const u8));
-                    // a marca vai para +0x8eda + 20 x lado + byte da tabela (com sinal): ate 128 bytes em volta
+                    // the mark goes to +0x8eda + 20 x side + table byte (signed): up to 128 bytes around
                     let mut marcas66 = [0u8; 0x140];
                     let mut ordem66 = [0u8; 22];
                     core::ptr::copy_nonoverlapping((m + 0x8eda - 0x80) as *const u8, marcas66.as_mut_ptr(), 0x140);
@@ -10504,7 +10455,7 @@ pub unsafe fn autoteste(casos: u64) {
             let codigos56 = [1i16, 0x82, 0x84, 0x88, 0x90, 0xa0, 0xc0, 0x102, 0x104, 0x108, 0x110, 0x120, 0x140, 0x202, 0x204, 0x208, 0x210, 0x220, 0x240,
                 0x402, 0x404, 0x408, 0x410, 0x420, 0x440, 0x802, 0x804, 0x808, 0x810, 0x820, 0x840];
             let c56 = codigos56[((h56 >> 50) % 31) as usize];
-            // quinquagesima leva: segunda selecao e placar agregado (empates, gols fora, sem ida, bits de +0x38)
+            // batch 50: second national side and aggregate score (draws, away goals, no first leg, bits of +0x38)
             let h57 = s.next_u64();
             let globais57 = [0xae235cusize, 0xae2350];
             let antes57: Vec<u32> = globais57.iter().map(|&a| *(a as *const u32)).collect();
@@ -10512,7 +10463,7 @@ pub unsafe fn autoteste(casos: u64) {
             *(G_NATION_COUNT as *mut i32) = 200;
             let clube57 = [[4800i32, 4799, 4801, 0, 4900][((h57 >> 2) % 5) as usize]];
             comparar_is_second_national_team(clube57.as_ptr() as usize);
-            // sexagesima leva: clube da selecao (so aritmetica; base e 0xae23a8 falsos)
+            // batch 60: club of the national side (arithmetic only; fake base and 0xae23a8)
             let globais60 = [0xae23b4usize, 0xae23a8];
             let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
             *(G_CLUB_TABLE as *mut u32) = 0x0100_0000 + ((h57 >> 53) as u32 & 0xfff) * 4;
@@ -10538,13 +10489,13 @@ pub unsafe fn autoteste(casos: u64) {
             let mut saidas57 = [0x77u8; 5];
             let sp = saidas57.as_mut_ptr();
             comparar_aggregate_score(m, ((h57 >> 54) % 2) as i8, sp as *mut i8, sp.add(1) as *mut i8, sp.add(2), sp.add(3), sp.add(4), [0u8, 1, 0x80][((h57 >> 56) % 3) as usize]);
-            // quinquagesima primeira leva: marcador direto (papeis com setor e lado, goleiros, fora, distancias)
+            // batch 51: direct marker (roles with sector and side, goalkeepers, outside, distances)
             let h58 = s.next_u64();
             let h59 = s.next_u64();
             for (ti, t) in tabelas.iter_mut().enumerate() {
                 for (i, v) in t.iter_mut().enumerate() {
                     let _ = (h59, ti, i);
-                    let r = s.next_u64(); // um sorteio por entrada: rotacoes do mesmo numero saem correlacionadas
+                    let r = s.next_u64(); // one draw per entry: rotations of the same number come out correlated
                     let setor = [1u16, 2, 4, 8, 0x10, 0x20, 0x40, 6, 0x48][(r % 9) as usize];
                     let lado_r = [0x80u16, 0x100, 0x200, 0x400, 0x800, 0x180, 0xa00][((r >> 4) % 7) as usize];
                     *v = setor | lado_r;
@@ -10561,8 +10512,8 @@ pub unsafe fn autoteste(casos: u64) {
                 let k = ((h58 >> (i * 6)) % 40) as i8;
                 comparar_direct_marker(m, k / 20, k % 20);
             }
-            // quinquagesima nona leva: marcado designado (marcas 4 e 0x10, indices no vetor de pessoas falso,
-            // formacao adversaria fechada, 0x106, tabelas A/B do marcado)
+            // batch 59: designated marked player (marks 4 and 0x10, indices in the fake person vector,
+            // opposing formation closed, 0x106, tables A/B of the marked player)
             {
                 let mut pessoas59 = vec![0u8; 110 * 24];
                 let pessoas_antes = *(G_STAFF_TABLE as *const usize);
@@ -10592,7 +10543,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
                 *((form_o + 0x187b) as *mut u32) = if (r0 >> 2) % 3 == 0 { 0x1000_0000 } else { (r0 >> 8) as u32 & 0xefff_ffff };
                 *((m + 0xaf + o59) as *mut u8) = [0u8, 1, 2, 5][((r0 >> 5) % 4) as usize];
-                // as tabelas A/B sao do caso inteiro: voltam no fim (valores daqui travam secoes seguintes)
+                // tables A/B belong to the whole case: they are restored at the end (values from here lock later sections)
                 let antes_tabelas: Vec<Vec<u16>> = tabelas.clone();
                 for (ti, t) in tabelas.iter_mut().enumerate() {
                     for (i, v) in t.iter_mut().enumerate() {
@@ -10608,9 +10559,9 @@ pub unsafe fn autoteste(casos: u64) {
                     *((j + 0x19) as *mut i8) = ((z >> 5) % 11) as i8;
                     *((j + 0x106) as *mut u8) = ((z >> 9) % 2) as u8;
                     let alvo77 = comparar_designated_marked(j);
-                    // septuagesima setima leva: quantos e quem marcam o alvo (ou o proprio jogador)
+                    // batch 77: how many and who mark the target (or the player itself)
                     let alvo77 = if alvo77 != 0 && (z >> 20) % 4 != 0 { alvo77 } else { j };
-                    // os do outro lado com motor e lado validos durante as duas chamadas (0x7160f0 le os dois)
+                    // those of the other side with valid engine and side during both calls (0x7160f0 reads both)
                     let outro77 = (*((alvo77 + 0x27) as *const i8) == 0) as i8;
                     let guardados77: Vec<(usize, u8)> = (0..20).map(|k| {
                         let q = side_player_slot(m, outro77, k);
@@ -10639,8 +10590,8 @@ pub unsafe fn autoteste(casos: u64) {
                     t.copy_from_slice(a);
                 }
             }
-            // quinquagesima oitava leva: casas da formacao (todos os bits validos, posicoes 0..=10; o caso de
-            // erro abre a caixa do jogo, fora do teste) e craques (atributos nas faixas, papeis)
+            // batch 58: formation cells (all valid bits, positions 0..=10; the
+            // error case opens the game's box, outside the test) and stars (attributes in the ranges, roles)
             {
                 let bits: [u64; 34] = [1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000, 0x8000,
                     0x10000, 0x20000, 0x40000, 0x80000, 0x10_0000, 0x20_0000, 0x40_0000, 0x80_0000, 0x100_0000, 0x200_0000,
@@ -10674,7 +10625,7 @@ pub unsafe fn autoteste(casos: u64) {
                 comparar_mark_stars(m, lado58 as i8);
                 core::ptr::copy_nonoverlapping(antes58.as_ptr(), bloco58 as *mut u8, antes58.len());
             }
-            // quinquagesima terceira leva: marcacao individual (marcas por posicao nos dois lados, fichas)
+            // batch 53: individual marking (marks by position on both sides, records)
             for l in 0..2usize {
                 for pos in 0..16usize {
                     let r = s.next_u64();
@@ -10690,7 +10641,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *f = 0x1000 + k as u32;
             }
             comparar_individual_marking(m);
-            // quinquagesima quarta leva: nova reputacao (selecao, tipo 8 com os codigos, partida -2, razao zero)
+            // batch 54: new reputation (national side, type 8 with the codes, match -2, zero ratio)
             {
                 let globais = [0xae235cusize, 0xae2350, 0xb74350];
                 let antes: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
@@ -10722,12 +10673,12 @@ pub unsafe fn autoteste(casos: u64) {
                         *(c.as_mut_ptr() as *mut i32) = [4600i32, 4599, 4800, 0][(z % 4) as usize];
                         *((c.as_mut_ptr() as usize + 0x80) as *mut i16) = [0i16, 499, 500, 999, 1000, 4999, 5000, 9999, 10000, ((z >> 8) % 12000) as i16][((z >> 4) % 10) as usize];
                     }
-                    // nivel 21..=28 com os codigos 0x78.. daria peso 0 (divisao por zero no original): fora do teste
+                    // level 21..=28 with codes 0x78.. would give weight 0 (division by zero in the original): outside the test
                     *((m + 0x4792) as *mut usize) = pp;
                     *((m + 0x1d6) as *mut u32) = 0x55555555;
                     let valor = [0f32, 6.8, 1.0, 3.5, 10.0, 40.0][(r[11] % 6) as usize] + ((r[11] >> 8) % 1000) as f32 / 300.0 - 1.5;
                     comparar_new_reputation(m, ((r[11] >> 20) % 2) as i8, valor, ((r[11] >> 21) % 2) as u8, ((r[11] >> 22) % 2) as u8);
-                    // quinquagesima quinta leva: reputacao do jogador (mesma partida; ficha, clube do jogador)
+                    // batch 55: player's reputation (same match; record, the player's club)
                     let mut reg = [0u8; 0x20];
                     let mut jog = [0u8; 0x70];
                     let mut ficha = [0u8; 0x10];
@@ -10763,7 +10714,7 @@ pub unsafe fn autoteste(casos: u64) {
             for (i, &a) in ids.iter().enumerate() {
                 *(a as *mut u32) = ids_antes[i];
             }
-            comparar_escolher_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
+            comparar_choose_by_role_c(m, (alto13 & !0xff) | ((h13 >> 53) % 2) as u32, if (h13 >> 54) % 3 == 0 { 0x100 | ((h13 >> 56) as u32 & 0xfe00) } else { (h13 >> 57) as u32 & 0xff });
             comparar_distance_between(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
     });

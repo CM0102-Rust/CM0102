@@ -76,7 +76,7 @@ pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mu
         return 0;
     }
     crate::comparison::branch(p.ramo);
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+    let ano = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
     fra_third_write_league_rounds(t, ano, 0, p.tabela);
     t
 }

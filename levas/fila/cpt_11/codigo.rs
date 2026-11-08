@@ -337,5 +337,5 @@ unsafe extern "thiscall" fn comparar_set_preseason_windows(this: usize, ptrs: us
         .map(|&(c, ini, fim, nova)| format!("candidato {:x}: esperado {}..{} lista {} obtido {}..{} lista {:x}", c, ini, fim, nova,
             core::ptr::read_unaligned((c + 0xe) as *const i16), core::ptr::read_unaligned((c + 0x10) as *const i16), cpt11_d(c + 0x12)))
         .collect();
-    PLACAR.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plano.len(), erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plano.len(), erros.join("; ")));
 }

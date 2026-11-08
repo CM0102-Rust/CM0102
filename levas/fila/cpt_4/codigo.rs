@@ -43,7 +43,7 @@ unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
 unsafe extern "C" fn comparar_key_nation_index_of_comp(comp: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(comp);
     let n = key_nation_index_of_comp(comp);
-    PLACAR.record(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", cpt4_d(comp) as i32, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", cpt4_d(comp) as i32, r, n));
     r
 }
 
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn comparar_collect_ranked_order(this: usize, conta: *m
     let v = collect_ranked_order(this, &mut c);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let igual = v != 0 && c == *conta && (0..c as usize).all(|k| cpt4_d(r + k * 4) == cpt4_d(v + k * 4));
-    PLACAR.record(igual, || format!("collect_ranked_order conta original={} rust={}", *conta, c));
+    SCOREBOARD.record(igual, || format!("collect_ranked_order conta original={} rust={}", *conta, c));
     liberar(v);
     r
 }
@@ -107,6 +107,6 @@ unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_ranking_score_desc(a, b);
-    PLACAR.record(r == n, || format!("compare_ranking_score_desc original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("compare_ranking_score_desc original={} rust={}", r, n));
     r
 }

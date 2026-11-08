@@ -83,7 +83,7 @@ unsafe extern "thiscall" fn comparar_shortlist_manager_is_compensation_deal(this
     let reg = [(taxa as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, vaga, contrato, clube, taxa),
         || shortlist_manager_is_compensation_deal(this, vaga, contrato, clube, taxa));
-    PLACAR.record(igual && r == n, || format!("shortlist_manager_is_compensation_deal(vaga {:#x}, contrato {:#x}, clube {:#x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_is_compensation_deal(vaga {:#x}, contrato {:#x}, clube {:#x}) original={} rust={} {:x?} x {:x?}",
         vaga, contrato, clube, r, n, mo, mr));
     r
 }
@@ -101,7 +101,7 @@ unsafe extern "C" fn comparar_shortlist_compare_slots_by_index(a: usize, b: usiz
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
     let n = shortlist_compare_slots_by_index(a, b);
-    PLACAR.record(r == n, || format!("shortlist_compare_slots_by_index({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("shortlist_compare_slots_by_index({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -199,6 +199,6 @@ unsafe extern "thiscall" fn comparar_mark_player_under_offer(this: usize, jogado
     }
     let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogador, comprador, troca),
         || mark_player_under_offer(this, jogador, comprador, troca));
-    PLACAR.record(igual, || format!("mark_player_under_offer(jogador {:#x}, comprador {:#x}, troca {:#x}) {:x?} x {:x?}",
+    SCOREBOARD.record(igual, || format!("mark_player_under_offer(jogador {:#x}, comprador {:#x}, troca {:#x}) {:x?} x {:x?}",
         jogador, comprador, troca, mo, mr));
 }

@@ -98,7 +98,7 @@ unsafe fn comparar_conversor_v1(nome: &str, o: V1Converter, rust: V1Converter, s
             fim_r = ftell(stream);
             r
         });
-    PLACAR.record(igual && r == x && fim_o == fim_r, || {
+    SCOREBOARD.record(igual && r == x && fim_o == fim_r, || {
         let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
         format!("{}(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", nome, n, r, x, fim_o, fim_r, pos, dif)
     });
@@ -127,7 +127,7 @@ pub unsafe fn autoteste_dbj_1() {
     const ARQ: &str = "autoteste_banco_v1.tmp";
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
-    let (t0, d0) = PLACAR.counts();
+    let (t0, d0) = SCOREBOARD.counts();
     let mut s = TestRng(0x5631_4442_4a31);
     let casos: [(V1Converter, &[(usize, u32, usize)], usize); 3] = [(comparar_db_files_read_clubs_v1, &CLUB_V1_LAYOUT, 581),
         (comparar_db_files_read_players_v1, &NON_PLAYER_V1_LAYOUT, 68), (comparar_db_files_read_non_players_v1, &PLAYER_V1_FIELDS, 70)];
@@ -150,6 +150,6 @@ pub unsafe fn autoteste_dbj_1() {
         }
     }
     let _ = std::fs::remove_file(ARQ);
-    let (t1, d1) = PLACAR.counts();
+    let (t1, d1) = SCOREBOARD.counts();
     linha(&format!("banco v1 (conversores): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
 }

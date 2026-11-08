@@ -10,7 +10,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j2_set_up_rules(this: usize)
         j2_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("jap_j2_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("jap_j2_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 

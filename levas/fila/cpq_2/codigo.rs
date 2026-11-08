@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn is_club_in_financial_trouble(this: usize, clube: usi
 unsafe extern "thiscall" fn comparar_is_club_in_financial_trouble(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
     let n = is_club_in_financial_trouble(this, clube);
-    PLACAR.record(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -187,6 +187,6 @@ unsafe extern "thiscall" fn get_board_confidence_band(this: usize, clube: usize)
 unsafe extern "thiscall" fn comparar_get_board_confidence_band(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, clube);
     let n = get_board_confidence_band(this, clube);
-    PLACAR.record(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r
 }

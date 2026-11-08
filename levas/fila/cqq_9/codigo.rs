@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize) {
     let ultima = antes >= (cqq9_d(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqq9_d(this + 0x30) as i32;
-    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    SCOREBOARD.record(depois == if ultima { antes } else { antes + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn comparar_create_championship_final_stage(this: usize
         let (x, y) = (cqq9_d(l), cqq9_d(l + 6));
         cqq9_w(fase + 0x3e) == 2 && cqq9_d(fase + 4) == cqq9_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && cqq9_d(this + 0x30) == 2
     };
-    PLACAR.record(igual, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, cqq9_d(this + 0x30)));
+    SCOREBOARD.record(igual, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, cqq9_d(this + 0x30)));
 }
 
 /// O comparador da virada: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
@@ -192,6 +192,6 @@ unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: usize) -> u32
     let antes = cqq9_w(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let depois = cqq9_w(this + 0x40);
-    PLACAR.record(depois == antes.wrapping_add(1) && cqq9_d(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, cqq9_d(this + 0x2c)));
+    SCOREBOARD.record(depois == antes.wrapping_add(1) && cqq9_d(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, cqq9_d(this + 0x2c)));
     r
 }

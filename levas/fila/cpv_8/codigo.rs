@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize, jogo: usiz
         reg.push((cpv8_d(this + 0x28) as usize + 0xa, 4)); // o cursor da lista das batidas
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo, partida), || crate::rng::without_counting(|| apply_match_effects(this, jogo, partida)));
-    PLACAR.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", jogo, partida, mo, mr));
+    SCOREBOARD.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", jogo, partida, mo, mr));
 }
 
 /// { 0x62bf60 } (thiscall, ret 4, injury.cpp): `Injury::find_match_injury(pessoa)`: o item da lista das batidas da
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn comparar_find_match_injury(this: usize, pessoa: usiz
     let lista = cpv8_d(this + 0x28) as usize;
     let reg: &[(usize, usize)] = if lista == 0 { &[] } else { &[(lista + 0xa, 4)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, pessoa), || find_match_injury(this, pessoa));
-    PLACAR.record(igual && r == n, || format!("find_match_injury({:x}) original={:x} {:x?} rust={:x} {:x?}", pessoa, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_match_injury({:x}) original={:x} {:x?} rust={:x} {:x?}", pessoa, r, mo, n, mr));
     r
 }
 
@@ -209,6 +209,6 @@ unsafe extern "thiscall" fn comparar_is_player_on_holiday(this: usize, pessoa: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let r = o(this, pessoa);
     let n = is_player_on_holiday(this, pessoa);
-    PLACAR.record(r == n, || format!("is_player_on_holiday({:x}) original={} rust={}", pessoa, r, n));
+    SCOREBOARD.record(r == n, || format!("is_player_on_holiday({:x}) original={} rust={}", pessoa, r, n));
     r
 }

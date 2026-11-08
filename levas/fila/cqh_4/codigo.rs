@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn comparar_european_cup_create_round_table(this: usize
     if b != 0 {
         soltar(b);
     }
-    PLACAR.record(igual && saidas && tabela, || format!("european_cup_create_round_table({}): saídas {} tabela {}", f, saidas, tabela));
+    SCOREBOARD.record(igual && saidas && tabela, || format!("european_cup_create_round_table({}): saídas {} tabela {}", f, saidas, tabela));
     a
 }
 
@@ -158,5 +158,5 @@ unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, clube: usize
 unsafe extern "thiscall" fn comparar_relegate_club_to_division(this: usize, clube: usize, divisao: usize, x: u32) {
     let antiga = cqh4l_d(clube + 0x57);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, divisao, x);
-    PLACAR.record(cqh4l_d(clube + 0x57) == divisao && cqh4l_d(clube + 0x5b) == antiga, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", cqh4l_d(clube + 0x57), cqh4l_d(clube + 0x5b)));
+    SCOREBOARD.record(cqh4l_d(clube + 0x57) == divisao && cqh4l_d(clube + 0x5b) == antiga, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", cqh4l_d(clube + 0x57), cqh4l_d(clube + 0x5b)));
 }

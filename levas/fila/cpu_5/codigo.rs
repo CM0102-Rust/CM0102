@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn comparar_get_club_finance(this: usize, clube: usize)
     }
     let r = o(this, clube);
     let n = get_club_finance(this, clube);
-    PLACAR.record(r == n, || format!("get_club_finance(clube {:#x}) original={:#x} rust={:#x}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("get_club_finance(clube {:#x}) original={:#x} rust={:#x}", clube, r, n));
     r
 }
 
@@ -231,6 +231,6 @@ unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = stadium_compare_bookings(a, b);
-    PLACAR.record(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }

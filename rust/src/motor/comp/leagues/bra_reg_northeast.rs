@@ -41,18 +41,18 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: 
     base(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
     core::ptr::write_unaligned(this as *mut usize, e.vtabela);
-    core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
-    *((this + 0x50) as *mut u8) = disciplina;
+    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
+    *((this + league::DISCIPLINE_RULE) as *mut u8) = disciplina;
     if carregar(this, 1) != 0 {
         return this;
     }
     crate::comparison::branch(ramo);
-    *((this + 0x51) as *mut u8) = 0xf;
-    *((this + 0x44) as *mut u8) = 0xff;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    core::ptr::write_unaligned((this + 0x2c) as *mut u32, e.fases);
+    *((this + league::IMPORTANCE) as *mut u8) = 0xf;
+    *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
+    core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, e.fases);
     let v = alocar(e.fases * 4);
-    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
+    core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
     if regras(this) == 0 {
         show_error_at(e.arquivo, e.linhas[0]);
         return this;
@@ -90,12 +90,12 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: 
 /// fases e a importância +0x51 = 0xf.
 pub(crate) unsafe fn bra_reg_northeast_compare_state_league_ctor(name: &str, this: usize, year: u32, record: usize, e: &StateLeague, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
-        && read_usize(this + 4) == record && *((this + 0x50) as *const u8) == 7;
-    if *((this + 0x44) as *const u8) == 0xff && read_usize(this + 8) != 0 {
-        ok = ok && read_usize(this + 0x2c) == e.fases as usize && read_usize(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
+    let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
+        && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 7;
+    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
+        ok = ok && read_usize(this + league::STAGE_COUNT) == e.fases as usize && read_usize(this + league::STAGES) != 0 && *((this + league::IMPORTANCE) as *const u8) == 0xf;
     }
-    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + league::STAGE_COUNT), read_usize(this + league::STAGES), read_usize(this + 8)));
     r
 }
 

@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn comparar_update_staff_status(this: usize, pessoa: us
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, clube, evento, tipo),
         || update_staff_status(this, pessoa, clube, evento, tipo));
-    PLACAR.record(igual && r == n, || format!("update_staff_status(pessoa {:x}, clube {:x}, evento {}, tipo {}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("update_staff_status(pessoa {:x}, clube {:x}, evento {}, tipo {}) original={} rust={} {:x?} x {:x?}",
         pessoa, clube, evento as u8, tipo as u8, r, n, mo, mr));
     r
 }
@@ -264,7 +264,7 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_add_to_loan_list(pessoa: u
     let c = f(cpy2_d(0xae1050), pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa), || shortlist_manager_add_to_loan_list(pessoa));
-    PLACAR.record(igual && r == n, || format!("shortlist_manager_add_to_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_add_to_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -289,6 +289,6 @@ unsafe extern "thiscall" fn comparar_shortlist_manager_max_fee_for_player_status
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32>(%%I2%%);
     let r = o(this, clube, pessoa, estatuto);
     let n = shortlist_manager_max_fee_for_player_status(this, clube, pessoa, estatuto);
-    PLACAR.record(r == n, || format!("shortlist_manager_max_fee_for_player_status(clube {:x}, pessoa {:x}, estatuto {}) original={} rust={}", clube, pessoa, estatuto as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("shortlist_manager_max_fee_for_player_status(clube {:x}, pessoa {:x}, estatuto {}) original={} rust={}", clube, pessoa, estatuto as i8, r, n));
     r
 }

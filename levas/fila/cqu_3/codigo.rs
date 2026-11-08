@@ -51,7 +51,7 @@ unsafe fn cqu3_comparar(nome: &str, this: usize, jogo: usize, segundo: i16, orig
     if marca == 0xff {
         ok = ok && cqu3_d(this + 0x30) as i32 >= fase && cqu3_d(cqu3_d(this + 0xc) + 4 * fase as usize) != 0;
     }
-    PLACAR.record(ok, || format!("{}({:#x}, {:#x}): devolveu {}, marca {:#x} -> {:#x}, +0x30 = {}, fase do jogo {}", nome, this, jogo, r, marca, *((jogo + 0x42) as *const u8), cqu3_d(this + 0x30) as i32, fase));
+    SCOREBOARD.record(ok, || format!("{}({:#x}, {:#x}): devolveu {}, marca {:#x} -> {:#x}, +0x30 = {}, fase do jogo {}", nome, this, jogo, r, marca, *((jogo + 0x42) as *const u8), cqu3_d(this + 0x30) as i32, fase));
     r
 }
 

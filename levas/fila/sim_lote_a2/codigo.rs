@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, tecnico: usiz
     };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(entrada + 8, 4)], || o(noticias, tecnico, categoria),
         || count_unread(noticias, tecnico, categoria));
-    PLACAR.record(igual && r == n, || format!("count_unread(categoria {}) original={} rust={} {:x?} x {:x?}", categoria as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("count_unread(categoria {}) original={} rust={} {:x?} x {:x?}", categoria as u8, r, n, mo, mr));
     r
 }
 
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, tecnico: usi
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(noticias, tecnico, id, vaga, valor, copia),
         || set_item_slot(noticias, tecnico, id, vaga, valor, copia));
-    PLACAR.record(igual && r == n, || format!("set_item_slot(vaga {}) original={} rust={} {:x?} x {:x?}", vaga, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_item_slot(vaga {}) original={} rust={} {:x?} x {:x?}", vaga, r, n, mo, mr));
     r
 }
 
@@ -144,6 +144,6 @@ unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube: usize) ->
     // só consultas: as duas rodam de novo sem efeito
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
     let n = news_club_has_human_manager(clube);
-    PLACAR.record(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
     r
 }

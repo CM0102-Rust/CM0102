@@ -391,7 +391,7 @@ unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
             (ok, format!("nova: vaga {} conta {} (esperava {}), índice {} (antes {})", vaga, cpo11_w(this + 0xa), conta, cpo11_w(this + 0x12), indice))
         }
     };
-    PLACAR.record(ok, || format!("add_ban({}) {}", id, detalhe));
+    SCOREBOARD.record(ok, || format!("add_ban({}) {}", id, detalhe));
 }
 
 /// Comparador: a 0x556270 solta suspensões (índice das nações, órgãos): o plano antes (as vagas que o clube não cobre
@@ -432,7 +432,7 @@ unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pe
             None => *v == antes[k * 5..k * 5 + 5],
         };
     }
-    PLACAR.record(ok, || format!("clear_bans_invalid_for_club({}) plano {:x?} antes {:02x?} depois {:02x?}", id, plano, antes, depois));
+    SCOREBOARD.record(ok, || format!("clear_bans_invalid_for_club({}) plano {:x?} antes {:02x?} depois {:02x?}", id, plano, antes, depois));
 }
 
 /// Comparador: a 0x556570 tira e libera itens da lista (lição 1: o esperado é montado ANTES; nenhum item é lido depois)
@@ -458,5 +458,5 @@ unsafe extern "thiscall" fn comparar_restore_held_bans(this: usize, pessoa: usiz
     }
     esperado[0x1c] = p.resto;
     ok &= depois == esperado;
-    PLACAR.record(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.clube, esperado, depois));
+    SCOREBOARD.record(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.clube, esperado, depois));
 }

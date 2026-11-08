@@ -35,7 +35,7 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
     let r = s.as_mut_ptr() as usize;
     c(r);
     let a = core::slice::from_raw_parts(this as *const u8, 0x19);
-    let campos = a[..4] == s[..4] && a[8..] == s[8..0x19];
+    let fields = a[..4] == s[..4] && a[8..] == s[8..0x19];
     let (ja, jb) = (read_u32(this + 4) as usize, read_u32(r + 4) as usize);
     let n = s[8] as usize * 12;
     let windows = if ja != 0 && jb != 0 {
@@ -46,7 +46,7 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.record(campos && windows, || format!("{}: campos {} janelas {}", name, campos, windows));
+    SCOREBOARD.record(fields && windows, || format!("{}: campos {} janelas {}", name, fields, windows));
 }
 
 /// A janela da Inglaterra: de 2 de junho (andando para a segunda-feira [inferência]) a 26 de março (andando para a quinta-feira [inferência]).
@@ -92,7 +92,7 @@ pub(crate) const AUSTRALIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 ///
 /// [pt] O clube de um contrato: +4 é o índice em [0xae23b4] (registros de 0x245 bytes), como as regras calculam.
 pub(crate) unsafe fn england_rules_club_of_contract(c: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE))
+    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE))
 }
 
 
@@ -100,8 +100,8 @@ pub(crate) unsafe fn england_rules_club_of_contract(c: usize) -> usize {
 ///
 /// [pt] A entrada de 16 bytes do clube na tabela dos empréstimos da temporada ([[0xde1f54] + 0x91c] + id do clube que pega emprestado × 16, o byte +0
 /// é a conta).
-pub(crate) unsafe fn season_loans_entry(clube: usize) -> usize {
-    read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(clube).wrapping_mul(16))
+pub(crate) unsafe fn season_loans_entry(club: usize) -> usize {
+    read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(club).wrapping_mul(16))
 }
 
 /// Decides whether an English loan is allowed: refuses (0, with the message and the reason) between clubs of the same
@@ -121,7 +121,7 @@ pub(crate) unsafe fn season_loans_entry(clube: usize) -> usize {
 /// contrato): pode. O clube que pede e o dono na mesma divisão inglesa ([0x9cf5bc]): motivo 0x1d. Cinco empréstimos na
 /// temporada (a tabela [[0xde1f54] + 0x91c]): 0x1e. Mais de um jogador de outro clube no elenco (as 50 vagas em +0xd7,
 /// contados só com o id do jogador abaixo de [0xae2364]): 0x26. Fora da janela (0x8e8e50): 9, com o adjetivo da nação.
-pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     // 0x66f4e0: the message text (push ...; push format; push destination; add esp, 0x14) -> variadic cdecl
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let c = game_get_contract_and_store(player);
@@ -130,7 +130,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     }
     let c2 = game_get_contract_and_store(player);
     let owner = if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 };
-    let comp = read_usize(clube + club::DIVISION);
+    let comp = read_usize(club + club::DIVISION);
     if comp == read_usize(owner + club::DIVISION) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
         crate::comparison::branch("cqe_5 mesma divisao");
         if msg != 0 {
@@ -144,12 +144,12 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         }
         return 0;
     }
-    if read_u8(season_loans_entry(clube)) as i8 >= 5 {
+    if read_u8(season_loans_entry(club)) as i8 >= 5 {
         // cqe5: cinco na temporada
         crate::comparison::branch("cqe_5 cinco na temporada");
         if msg != 0 {
-            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9c4534, g, g, clube + club::SHORT_NAME);
+            let g = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
+            text(msg, 0x9c4534, g, g, club + club::SHORT_NAME);
         }
         if !reason.is_null() {
             *reason = 0x1e;
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut n: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(clube + club::SQUAD + 4 * k);
+        let p = read_usize(club + club::SQUAD + 4 * k);
         if p == 0 {
             continue;
         }
@@ -172,15 +172,15 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         }
         let cp = game_get_contract_and_store(p);
         let de = if cp != 0 { england_rules_club_of_contract(cp) } else { 0 };
-        if de != clube {
+        if de != club {
             n = n.wrapping_add(1);
         }
     }
     if n > 1 { // cqe5: dois ao mesmo tempo
         crate::comparison::branch("cqe_5 dois ao mesmo tempo");
         if msg != 0 {
-            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9c44d4, g, g, clube + club::SHORT_NAME);
+            let g = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
+            text(msg, 0x9c44d4, g, g, club + club::SHORT_NAME);
         }
         if !reason.is_null() {
             *reason = 0x26;
@@ -213,11 +213,11 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
 /// conclui (0x8c9390): o clube da oferta (+8, índice em [0xae23b4]) da nação inglesa ([0x9cf2e4]) soma 1 na conta da
 /// temporada.
 pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
-    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
-    let nacao = read_usize(clube + club::NATION);
-    if nacao != 0 && read_usize(nacao) == read_usize(KEY_NATION_ENGLAND) {
+    let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
+    let nation = read_usize(club + club::NATION);
+    if nation != 0 && read_usize(nation) == read_usize(KEY_NATION_ENGLAND) {
         crate::comparison::branch("cqe_5 emprestimo contado");
-        let p = season_loans_entry(clube);
+        let p = season_loans_entry(club);
         *(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: a conta da temporada
     }
 }
@@ -240,9 +240,9 @@ pub(crate) unsafe extern "thiscall" fn england_rules_daily_update(this: usize, d
     }
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 {
-        let clube = read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE));
-        if read_usize(clube + club::NATION) == read_usize(this + 0xa) {
-            *(season_loans_entry(clube) as *mut u8) = 0;
+        let club = read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE));
+        if read_usize(club + club::NATION) == read_usize(this + 0xa) {
+            *(season_loans_entry(club) as *mut u8) = 0;
         }
         i += 1;
     }
@@ -272,7 +272,7 @@ pub(crate) unsafe fn message_text(msg: usize) -> Vec<u8> {
 /// [pt] Comparador comum das regras de empréstimo (pode emprestar): lado a lado na devolução, em [0xae1080] e no motivo; a
 /// mensagem, que só é escrita, é conferida pelo texto (antes da cópia o primeiro byte vai a zero, e no fim volta o
 /// texto da original).
-pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, name: &str, this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, name: &str, this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     if !reason.is_null() {
         regions.push((reason as usize, 2));
@@ -280,21 +280,21 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
     let mut to = Vec::new();
     let mut tr = Vec::new();
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regions, || {
-        let x = o(this, clube, player, msg, reason);
+        let x = o(this, club, player, msg, reason);
         to = message_text(msg);
         x
     }, || {
         if msg != 0 {
             *(msg as *mut u8) = 0;
         }
-        let x = r(this, clube, player, msg, reason);
+        let x = r(this, club, player, msg, reason);
         tr = message_text(msg);
         x
     });
     if msg != 0 {
         core::ptr::copy_nonoverlapping(to.as_ptr(), msg as *mut u8, to.len());
     }
-    PLACAR.record(igual && ro == rr && to == tr, || format!("{}(regras {:#x}, clube {:#x}, jogador {:#x}) original={} {:x?} {:?} rust={} {:x?} {:?}", name, this, clube, player, ro, mo, String::from_utf8_lossy(&to), rr, mr, String::from_utf8_lossy(&tr)));
+    SCOREBOARD.record(igual && ro == rr && to == tr, || format!("{}(regras {:#x}, clube {:#x}, jogador {:#x}) original={} {:x?} {:?} rust={} {:x?} {:?}", name, this, club, player, ro, mo, String::from_utf8_lossy(&to), rr, mr, String::from_utf8_lossy(&tr)));
     ro
 }
 
@@ -313,16 +313,16 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
 /// início_ano, fim_mês, fim_ano, jogador)`, pelo período do empréstimo (0x8d0590). Depois de 19 de junho (só o dia do
 /// ano, 0x549f70 com 1998) e com o jogador abaixo de 24 anos (+0x18): o período da regra base (0x8e8bd0). Senão começa
 /// no mês seguinte e acaba três meses depois.
-pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, clube: usize, a2: u32, ini_month: *mut i8, ini_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
+pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, club: usize, a2: u32, ini_month: *mut i8, ini_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     // 0x549f70: push -1; push 0x7ce; push 5; push 0x13; lea ecx, local -> thiscall, ret 0x10
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     data_de(d.as_mut_ptr() as usize, 0x13, 5, 0x7ce, -1);
-    if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && (read_u8(player + staff::YEAR_OF_BIRTH) as i8) < 0x18 { // cqe6: abaixo de 24 anos
+    if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && (read_u8(player + staff::AGE) as i8) < 0x18 { // cqe6: abaixo de 24 anos
         crate::comparison::branch("cqe_6 inglaterra periodo da base");
         // 0x8e8bd0: the same 7 arguments pushed again; mov ecx, esi (this) -> thiscall, ret 0x1c
         let base: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize) = core::mem::transmute(FN_TRANSFER_RULES_GET_LOAN_PERIOD);
-        base(this, clube, a2, ini_month, ini_year, end_month, end_year, player);
+        base(this, club, a2, ini_month, ini_year, end_month, end_year, player);
         return;
     }
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0 (today’s month)

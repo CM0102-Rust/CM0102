@@ -51,7 +51,7 @@ unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, tex
     let n = ((tamanho as u16 as i16).max(1) as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, n)], || o(nacao, texto, tamanho, genero),
         || nation_get_nationality_adjective(nacao, texto, tamanho, genero));
-    PLACAR.record(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
         nacao, tamanho as u16 as i16, genero as u8, r, x, mo, mr));
     r
 }

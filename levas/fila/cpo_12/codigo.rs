@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn comparar_add_language(this: usize, pessoa: usize, id
     if ok {
         ok = if ordenar == 0 { e(n) == novo } else { (0..conta).any(|i| e(i) == novo) };
     }
-    PLACAR.record(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
+    SCOREBOARD.record(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
         novo, ordenar, conta, n.wrapping_add(1), cpo12_d(this + 0x40), cap));
 }
 
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_improve_language(this: usize, pessoa: usize
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 6)],
         || o(this, pessoa, idioma, aumento, ordenar), || improve_language(this, pessoa, idioma, aumento, ordenar));
-    PLACAR.record(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", cpo12_d(pessoa), idioma as u8, aumento as u8, mo, mr));
+    SCOREBOARD.record(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", cpo12_d(pessoa), idioma as u8, aumento as u8, mo, mr));
 }
 
 /// Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
@@ -161,6 +161,6 @@ unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: usize, pess
         }
     }
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa), || player_stats_reset_player(this, pessoa));
-    PLACAR.record(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", cpo12_d(pessoa), mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", cpo12_d(pessoa), mo, mr));
     a
 }

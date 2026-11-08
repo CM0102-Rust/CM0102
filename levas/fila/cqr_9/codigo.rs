@@ -116,7 +116,7 @@ unsafe fn ita_cup_compare_knockout_stage(nome: &str, this: usize, fase: usize, c
     original();
     let f = cqr9_d(cqr9_d(this + 0xc) + fase * 4);
     let ok = f != 0 && vagas.iter().all(|&j| cqr9_d(cqr9_d(this + 0xee) + j * 4) == 0);
-    PLACAR.record(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", nome, this, f, vagas));
+    SCOREBOARD.record(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", nome, this, f, vagas));
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage(this: usize) {

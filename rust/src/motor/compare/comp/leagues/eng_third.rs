@@ -34,9 +34,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_third_create_schedule(this: 
 }
 
 /// Comparer for `eng_third_set_club_progress` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_third_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_eng_third_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_ENG_THIRD_SET_CLUB_PROGRESS);
-    compare_club_stage_status("eng_third_set_club_progress", this, clube, || o(this, clube, stage, current, best, worst), || eng_third_set_club_progress(this, clube, stage, current, best, worst))
+    compare_club_stage_status("eng_third_set_club_progress", this, club, || o(this, club, stage, current, best, worst), || eng_third_set_club_progress(this, club, stage, current, best, worst))
 }
 
 /// Comparer for `eng_third_advance_stage` (comparison mode: see the header of motor.rs).

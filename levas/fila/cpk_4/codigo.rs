@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn comparar_get_fixture_rules_scope(this: usize, partid
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut usize, *mut usize)>(%%I0%%);
     let regioes = [(tipo as usize, 1), (nacao as usize, 4), (continente as usize, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, partida, tipo, nacao, continente), || get_fixture_rules_scope(this, partida, tipo, nacao, continente));
-    PLACAR.record(igual, || format!("get_fixture_rules_scope({:x}) {:x?} x {:x?}", partida, mo, mr));
+    SCOREBOARD.record(igual, || format!("get_fixture_rules_scope({:x}) {:x?} x {:x?}", partida, mo, mr));
 }
 
 /// Comparador: pelo valor. Jogador com a marca de ausente (0x418f60 com 1, que só lê): só a original (com 0 ela tira
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn comparar_get_ineligibility_code(this: usize, jogador
     }
     let r = o(this, jogador, partida);
     let n = get_ineligibility_code(this, jogador, partida);
-    PLACAR.record(r == n, || format!("get_ineligibility_code({:x}, {:x}) original={} rust={}", jogador, partida, r, n));
+    SCOREBOARD.record(r == n, || format!("get_ineligibility_code({:x}, {:x}) original={} rust={}", jogador, partida, r, n));
     r
 }
 
@@ -130,6 +130,6 @@ unsafe extern "thiscall" fn comparar_get_ineligibility_code(this: usize, jogador
 unsafe extern "thiscall" fn comparar_find_scheduled_friendly_slot(this: usize, dia: u32, ano: u32, clube: usize, adversario: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize>(%%I2%%)(this, dia, ano, clube, adversario);
     let n = find_scheduled_friendly_slot(this, dia, ano, clube, adversario);
-    PLACAR.record(r == n, || format!("find_scheduled_friendly_slot({}/{}, {:x}, {:x}) original={:#x} rust={:#x}", dia as u16, ano as u16, clube, adversario, r, n));
+    SCOREBOARD.record(r == n, || format!("find_scheduled_friendly_slot({}/{}, {:x}, {:x}) original={:#x} rust={:#x}", dia as u16, ano as u16, clube, adversario, r, n));
     r
 }

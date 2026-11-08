@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_create_table(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let t = cqs1_d(this + 0xb1);
     let igual = r == (n == 4) as u32 && cqs1_w(this + 0x3e) == 4 && t != 0 && (0..n).all(|k| cqs1_d(t + k * 0x3b) == plano[k]);
-    PLACAR.record(igual, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
+    SCOREBOARD.record(igual, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
     r
 }
 
@@ -170,7 +170,7 @@ unsafe fn compare_division_stage(nome: &str, this: usize, codigo: i16, k: usize,
         b[..n].sort_unstable();
         a[..n] == b[..n]
     };
-    PLACAR.record(igual, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", nome, this, fase, n, plano));
+    SCOREBOARD.record(igual, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", nome, this, fase, n, plano));
 }
 
 unsafe extern "thiscall" fn comparar_create_second_division_stage(this: usize) {

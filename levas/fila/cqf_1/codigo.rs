@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_offer(this: usize, oferta: usi
         return;
     }
     let (v, s, s2) = (cqf1_d(oferta + 0x20) as i32, cqf1_d(oferta + 0x24), cqf1_d(this + 0x85a));
-    PLACAR.record(v == vaga && s == serie && s2 == serie.wrapping_add(1), || format!(
+    SCOREBOARD.record(v == vaga && s == serie && s2 == serie.wrapping_add(1), || format!(
         "add_transfer_offer(alvo {}, comprador {}): vaga original {} plano {}, série {} plano {}, próxima {} plano {}",
         alvo, comprador, v, vaga, s, serie, s2, serie.wrapping_add(1)));
 }

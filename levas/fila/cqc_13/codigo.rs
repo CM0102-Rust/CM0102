@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, res
 /// o vetor e a lista locais, que saem); confere a devolução (1).
 unsafe extern "thiscall" fn comparar_scout_manager_scout_match(this: usize, p: usize, resultado: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, p, resultado);
-    PLACAR.record(r == 1, || format!("scout_manager_scout_match(partida {:x}) original={}", p, r));
+    SCOREBOARD.record(r == 1, || format!("scout_manager_scout_match(partida {:x}) original={}", p, r));
     r
 }
 
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_get_edit_session(this: usize, tecnico: usiz
     }
     let r = o(this, tecnico);
     let n = get_edit_session(this, tecnico);
-    PLACAR.record(r == n, || format!("get_edit_session(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
+    SCOREBOARD.record(r == n, || format!("get_edit_session(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
     r
 }
 
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn comparar_set_edit_session(this: usize, sessao: usize
     let reg = [(this + 0xc, 0x40)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, sessao, tecnico),
         || set_edit_session(this, sessao, tecnico));
-    PLACAR.record(igual && r == n, || format!("set_edit_session(sessao {:x}, tecnico {:x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("set_edit_session(sessao {:x}, tecnico {:x}) original={} rust={} {:x?} x {:x?}",
         sessao, tecnico, r, n, mo, mr));
     r
 }

@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn comparar_cqv4_construir_fase(this: usize, liga: usiz
     if ok && clubes != 0 {
         ok = cqv4_clubes_da_tabela(this) == lista;
     }
-    PLACAR.record(ok, || format!("cqv4_construir_fase({:#x}): devolveu {:#x}, vtable {:#x}, +0x3e {}, +0xc2 {}, +0xb1 {:#x}, +0xba {:#x}", this, r, cqv4_d(this), cqv4_w(this + 0x3e), cqv4_b(this + 0xc2), cqv4_d(this + 0xb1), cqv4_d(this + 0xba)));
+    SCOREBOARD.record(ok, || format!("cqv4_construir_fase({:#x}): devolveu {:#x}, vtable {:#x}, +0x3e {}, +0xc2 {}, +0xb1 {:#x}, +0xba {:#x}", this, r, cqv4_d(this), cqv4_w(this + 0x3e), cqv4_b(this + 0xc2), cqv4_d(this + 0xb1), cqv4_d(this + 0xba)));
     r
 }
 
@@ -178,5 +178,5 @@ unsafe extern "thiscall" fn cqv4_destruir_fase(this: usize) {
 /// O comparador do destrutor: só a original (libera; não roda duas vezes), conferindo o vetor +0x18 zerado.
 unsafe extern "thiscall" fn comparar_cqv4_destruir_fase(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
-    PLACAR.record(cqv4_d(this + 0x18) == 0, || format!("cqv4_destruir_fase({:#x}): +0x18 = {:#x}", this, cqv4_d(this + 0x18)));
+    SCOREBOARD.record(cqv4_d(this + 0x18) == 0, || format!("cqv4_destruir_fase({:#x}): +0x18 = {:#x}", this, cqv4_d(this + 0x18)));
 }

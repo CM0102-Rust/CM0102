@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn comparar_get_international_duty_club(this: usize, jo
     let reg = if comentario != 0 { &regioes[..] } else { &regioes[..1] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg,|| o(this, jogador, data, clube, comentario, adversario),
         || get_international_duty_club(this, jogador, data, clube, comentario, adversario));
-    PLACAR.record(igual && r == n, || format!("get_international_duty_club(jogador {:x}, data {:x}, clube {:x}, adversario {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("get_international_duty_club(jogador {:x}, data {:x}, clube {:x}, adversario {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         jogador, data, clube, adversario, r, n, mo, mr));
     r
 }
@@ -226,7 +226,7 @@ unsafe extern "stdcall" fn national_teams_player_is_eligible(jogador: usize, tec
 unsafe extern "stdcall" fn comparar_national_teams_player_is_eligible(jogador: usize, tecnico: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(jogador, tecnico);
     let n = national_teams_player_is_eligible(jogador, tecnico);
-    PLACAR.record(r == n, || format!("national_teams_player_is_eligible(jogador {:x}, tecnico {:x}) original={} rust={}", jogador, tecnico, r, n));
+    SCOREBOARD.record(r == n, || format!("national_teams_player_is_eligible(jogador {:x}, tecnico {:x}) original={} rust={}", jogador, tecnico, r, n));
     r
 }
 
@@ -284,7 +284,7 @@ unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: usize, said
     let conv = cpz6_d(this);
     if conv == 0 || saida == 0 {
         let r = o(this, saida);
-        PLACAR.record(r == 0, || format!("collect_duty_competitions(saida {:x}) sem lista original={}", saida, r));
+        SCOREBOARD.record(r == 0, || format!("collect_duty_competitions(saida {:x}) sem lista original={}", saida, r));
         return r;
     }
     let mut tem: Vec<usize> = national_teams_list_items(saida).iter().map(|&x| cpz6_d(x)).collect();
@@ -298,6 +298,6 @@ unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: usize, said
     let r = o(this, saida);
     let depois: Vec<usize> = national_teams_list_items(saida).iter().map(|&x| cpz6_d(x)).collect();
     let igual = r == (tem.len() - antes) as u8 && depois == tem;
-    PLACAR.record(igual, || format!("collect_duty_competitions(saida {:x}) original={} plano={:x?} depois={:x?}", saida, r, tem, depois));
+    SCOREBOARD.record(igual, || format!("collect_duty_competitions(saida {:x}) original={} plano={:x?} depois={:x?}", saida, r, tem, depois));
     r
 }

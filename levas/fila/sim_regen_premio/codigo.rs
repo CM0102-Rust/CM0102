@@ -63,13 +63,13 @@ unsafe fn list16_regions(regen: usize, lista: usize, quantos: usize) -> Vec<(usi
 unsafe extern "thiscall" fn comparar_remove_spare_non_player_record(regen: usize, id: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&list16_regions(regen, 0x1c, 0x20), || o(regen, id), || remove_spare_non_player_record(regen, id));
-    PLACAR.record(igual, || format!("remove_spare_non_player_record({}) {:x?} x {:x?}", id, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_spare_non_player_record({}) {:x?} x {:x?}", id, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_remove_player_data_from_pool(regen: usize, id: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&list16_regions(regen, 0x3c, 0x40), || o(regen, id), || remove_player_data_from_pool(regen, id));
-    PLACAR.record(igual, || format!("remove_player_data_from_pool({}) {:x?} x {:x?}", id, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_player_data_from_pool({}) {:x?} x {:x?}", id, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_calc_prize_fund(liga: usize, cota: i32) -> i32 {
@@ -78,6 +78,6 @@ unsafe extern "thiscall" fn comparar_calc_prize_fund(liga: usize, cota: i32) -> 
         return r;
     }
     let n = calc_prize_fund(liga, cota);
-    PLACAR.record(r == n, || format!("calc_prize_fund({}) original={} rust={}", cota, r, n));
+    SCOREBOARD.record(r == n, || format!("calc_prize_fund({}) original={} rust={}", cota, r, n));
     r
 }

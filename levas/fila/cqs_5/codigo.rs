@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && lista, || format!("select_section_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    SCOREBOARD.record(igual && a == b && lista, || format!("select_section_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -285,7 +285,7 @@ unsafe extern "thiscall" fn comparar_create_section_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
     let f = cqs5_d(cqs5_d(this + 0xc));
-    PLACAR.record(f != 0 && cqs5_d(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
+    SCOREBOARD.record(f != 0 && cqs5_d(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
 }
 
 /// { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
@@ -312,5 +312,5 @@ unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this: usize) {
     let ultima = antes >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqs5_d(this + 0x30) as i32;
-    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, antes, depois));
+    SCOREBOARD.record(depois == if ultima { antes } else { antes + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, antes, depois));
 }

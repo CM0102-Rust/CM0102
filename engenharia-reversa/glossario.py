@@ -338,11 +338,11 @@ AUX = [  # auxiliares do motor.rs
 ]
 MODULOS = [
  ('video.rs', 'video', 'DirectDraw próprio', 'own DirectDraw'), ('apresentacao.rs', 'presentation', 'quadro → janela, mouse', 'frame → window, mouse'),
- ('ganchos.rs', 'hooks (IAT)', 'ganchos na tabela de importação', 'import table hooks'),
- ('desvios.rs', 'detours', 'desvios no exe, pilha particular', 'detours in the exe, private stack'),
- ('simulacao.rs', 'simulation', 'simulação reproduzível', 'reproducible simulation'), ('alocador.rs', 'allocator', 'alocador fixo', 'fixed allocator'),
- ('rng.rs', 'random', 'sorteio do jogo', 'the game\'s random generator'), ('data.rs', 'date', 'datas (Date.cpp)', 'dates (Date.cpp)'),
- ('motor.rs', 'engine', 'motor de partidas', 'match engine'), ('espiao.rs', 'spy', 'diagnóstico (CM_ESPIAO=1)', 'diagnostics (CM_ESPIAO=1)'),
+ ('iat_hooks.rs', 'hooks (IAT)', 'ganchos na tabela de importação', 'import table hooks'),
+ ('detours.rs', 'detours', 'desvios no exe, pilha particular', 'detours in the exe, private stack'),
+ ('simulation.rs', 'simulation', 'simulação reproduzível', 'reproducible simulation'), ('allocator.rs', 'allocator', 'alocador fixo', 'fixed allocator'),
+ ('rng.rs', 'random', 'sorteio do jogo', 'the game\'s random generator'), ('date.rs', 'date', 'datas (Date.cpp)', 'dates (Date.cpp)'),
+ ('motor.rs', 'engine', 'motor de partidas', 'match engine'), ('spy.rs', 'spy', 'diagnóstico (CM_ESPIAO=1)', 'diagnostics (CM_ESPIAO=1)'),
  ('comparison.rs', 'comparison', 'comparação lado a lado', 'side-by-side comparison'), ('registro.rs', 'log', 'registro em ddraw.log', 'logging to ddraw.log'),
  ('simular.py', 'simulate', 'carreira automática sem tela', 'headless automatic career'),
  ('laboratorio.py', 'laboratory', 'trava entre sessões e vigia de memória', 'cross-session lock and memory watchdog'),

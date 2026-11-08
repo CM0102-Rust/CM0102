@@ -18,6 +18,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_fa_cup_update_for_date(this:
         && !(is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), today) && *((this + 0xb2) as *const u8) == 0);
     let r = o(this, today, stage);
     let after = read_u32_as_usize(this + 0x45);
-    PLACAR.record(!vira || after == 1, || format!("eng_fa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, before, after));
+    SCOREBOARD.record(!vira || after == 1, || format!("eng_fa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, before, after));
     r
 }

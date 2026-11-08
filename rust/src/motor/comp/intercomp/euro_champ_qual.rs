@@ -15,31 +15,31 @@ use super::*;
 /// tabela das rodadas pela virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) em
 /// +0xba. Devolve 1.
 pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
-    write_u8(this + 0xc2, 3);
+    write_u8(this + league::WIN_POINTS, 3);
     write_u8(this + 0x4a, 3);
-    core::ptr::write_unaligned((this + 0x3c) as *mut i16, 2); // cqs8: dois turnos
-    write_u8(this + 0xc3, 1);
-    write_u8(this + 0xc4, 0xa);
-    write_u8(this + 0x43, 2);
+    core::ptr::write_unaligned((this + league::LEGS) as *mut i16, 2); // cqs8: dois turnos
+    write_u8(this + league::DRAW_POINTS, 1);
+    write_u8(this + league::MATCH_CATEGORY, 0xa);
+    write_u8(this + league::COMP_TYPE, 2);
     for (k, v) in [1u8, 2, 4, 5].into_iter().enumerate() {
-        write_u8(this + 0xc5 + k, v);
+        write_u8(this + league::TIEBREAKS + k, v);
     }
-    write_u8(this + 0xbe, 1);
-    write_u8(this + 0xbf, 1);
-    write_u8(this + 0xc0, 0);
-    write_u8(this + 0xc1, 0);
+    write_u8(this + league::PROMOTED_COUNT, 1);
+    write_u8(this + league::PROMOTION_PLAYOFF_COUNT, 1);
+    write_u8(this + league::RELEGATION_PLAYOFF_COUNT, 0);
+    write_u8(this + league::RELEGATED_COUNT, 0);
     write_u8(this + 0x49, 7);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
+    core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut u16, 0xffff);
     let construct: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut data = [0u32; 2];
     // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word
-    construct(&mut data, 0xa, 2, read_i16(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
+    construct(&mut data, 0xa, 2, read_i16(this + league::YEAR) as u16 as u32, 5); // cqs8: a data do sorteio
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
     crate::comparison::branch("cqs_8 regras da eurocopa");
     let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
-    let t = rounds(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
-    core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
+    let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
+    core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, t as u32);
     1
 }
 
@@ -80,16 +80,16 @@ pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32)
 /// get_qualification_status(clube)`: a estatística 0x12 do clube nas estatísticas da copa (Comp_Stats::get_club_stat
 /// 0x4a2e10: push 0x12; push clube; mov ecx, [this+8] -> thiscall, ret 8, devolve float), truncada (_ftol 0x945640): com o
 /// byte de baixo menor que 14 (com sinal), −2; senão −3 (word).
-pub(crate) unsafe fn qualification_status(this: usize, clube: usize) -> i16 {
+pub(crate) unsafe fn qualification_status(this: usize, club: usize) -> i16 {
     let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(FN_COMP_STATS_GET_CLUB_STAT);
-    let x = match_pl_ftol(estatistica(read_u32_as_usize(this + 8), clube, 0x12));
+    let x = match_pl_ftol(estatistica(read_u32_as_usize(this + 8), club, 0x12));
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: a situação pela estatística 0x12
 }
 
 /// EuroChampQual::get_qualification_status(club): the club's qualification status in the European Championship
 /// qualifiers, from its competition stat 0x12 (Comp_Stats): -2 if that value (low byte, signed) is below 14, else -3.
-pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, clube: usize) -> i16 {
-    qualification_status(this, clube)
+pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, club: usize) -> i16 {
+    qualification_status(this, club)
 }
 
 
@@ -107,16 +107,16 @@ pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, clu
 pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 {
     let size: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_EUROCHAMPQUAL_GET_GROUP_TEAM_COUNT);
     let n = size(this, 0xffff_ffff);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alloc((n as i32 * 0x3b) as u32);
-    core::ptr::write_unaligned((this + 0xb1) as *mut u32, t as u32);
+    core::ptr::write_unaligned((this + league::TABLE) as *mut u32, t as u32);
     if t == 0 {
         show_error_at(0x9c4674, 0x2d2);
         return 0;
     }
-    let n = read_i16(this + 0x3e);
-    core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + 0x3c))); // cqs8: as rodadas do grupo 1
+    let n = read_i16(this + league::CLUB_COUNT);
+    core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + league::LEGS))); // cqs8: as rodadas do grupo 1
     crate::comparison::branch("cqs_8 grupo 1 da eurocopa");
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut i: i8 = 0;
@@ -125,13 +125,13 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
             let c = read_u32_as_usize(read_u32_as_usize(this + 0xf7) + i as isize as usize * 4);
             iniciar(this, i as u8 as u32, c, 0, 0);
             i = i.wrapping_add(1);
-            if (i as i16) >= read_i16(this + 0x3e) {
+            if (i as i16) >= read_i16(this + league::CLUB_COUNT) {
                 break;
             }
         }
     }
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
-    noticia(this);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    news(this);
     1
 }
 

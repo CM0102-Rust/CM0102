@@ -6,18 +6,18 @@ use super::*;
 /// [pt] { 0x6b59a0 } (match_day.cpp): o clube tem jogo na lista do dia ([this + 0x19], quantidade em
 /// 0x21, 0x69 bytes por jogo; mandante em 0x20, visitante em 0x24)? Com `so_marcados`, so os jogos
 /// com 0x5b preenchido. Clube nulo: o original mostra uma caixa de erro e devolve 0 (aqui, so 0).
-pub(crate) unsafe extern "thiscall" fn has_match(this: usize, clube: u32, so_marcados: u32) -> u32 {
-    if clube == 0 {
+pub(crate) unsafe extern "thiscall" fn has_match(this: usize, club: u32, so_marcados: u32) -> u32 {
+    if club == 0 {
         return 0;
     }
     let n = *((this + 0x21) as *const i32);
     let base = *((this + 0x19) as *const usize) + 0x20;
     for k in 0..n.max(0) as usize {
-        let jogo = base + 0x69 * k;
-        if so_marcados != 0 && *((jogo + 0x3b) as *const u32) == 0 {
+        let game = base + 0x69 * k;
+        if so_marcados != 0 && *((game + 0x3b) as *const u32) == 0 {
             continue;
         }
-        if *(jogo as *const u32) == clube || *((jogo + 4) as *const u32) == clube {
+        if *(game as *const u32) == club || *((game + 4) as *const u32) == club {
             return 1;
         }
     }
@@ -31,16 +31,16 @@ pub(crate) unsafe extern "thiscall" fn has_match(this: usize, clube: u32, so_mar
 /// [pt] { 0x6b7cf0 } (match_day.cpp, cdecl): o clube venceu o jogo? Decide pelos penaltis (0x49/0x4a),
 /// senao pela prorrogacao (0x47/0x48), senao pelo tempo normal (0x43/0x44); placar -1 nao conta.
 /// Jogo ou clube nulo, ou clube fora do jogo: o original mostra uma caixa de erro e devolve 0.
-pub(crate) unsafe extern "C" fn won_the_match(jogo: usize, clube: u32) -> u8 {
-    if jogo == 0 || clube == 0 {
+pub(crate) unsafe extern "C" fn won_the_match(game: usize, club: u32) -> u8 {
+    if game == 0 || club == 0 {
         return 0;
     }
-    let home = *((jogo + 0x1c) as *const u32) == clube;
-    if !home && *((jogo + 0x20) as *const u32) != clube {
+    let home = *((game + 0x1c) as *const u32) == club;
+    if !home && *((game + 0x20) as *const u32) != club {
         return 0;
     }
     for (a, b) in [(0x49, 0x4a), (0x47, 0x48), (0x43, 0x44)] {
-        let (pa, pb) = (byte(jogo, a), byte(jogo, b));
+        let (pa, pb) = (byte(game, a), byte(game, b));
         if pa > -1 {
             return (if home { pa > pb } else { pa < pb }) as u8;
         }
@@ -386,29 +386,29 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
         show_error_at(0xa15708, 0x73f);
         return 0;
     }
-    let jogo = u(p, 0);
-    core::ptr::copy((p + 4) as *const u8, jogo as *mut u8, 0x4f);
+    let game = u(p, 0);
+    core::ptr::copy((p + 4) as *const u8, game as *mut u8, 0x4f);
     let summary = u(p, 0x5f);
     let mut round = [0u8; 4];
-    let competicao = |id: i32| *((u(G_COMP_OBJECT_TABLE, 0) as isize + 4 * id as isize) as *const usize);
-    if u(jogo, 0x14) != 0 {
+    let competition = |id: i32| *((u(G_COMP_OBJECT_TABLE, 0) as isize + 4 * id as isize) as *const usize);
+    if u(game, 0x14) != 0 {
         crate::comparison::branch("fechar com competicao");
         let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
         let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
         for k in 0..2 {
-            let c = u(jogo, 0x20);
+            let c = u(game, 0x20);
             if c == 0 || human(c, 0, 1, 0, 0) == 0 || u(c, 0x57) == 0 {
                 continue;
             }
             let id = *(u(c, 0x57) as *const i32);
-            if id != *(jogo as *const i32) {
+            if id != *(game as *const i32) {
                 continue;
             }
-            let comp = competicao(*(u(jogo, 0x14) as *const i32));
+            let comp = competition(*(u(game, 0x14) as *const i32));
             if comp == 0 || u(comp, 8) == 0 {
                 continue;
             }
-            let r = search(u(competicao(id), 8), c);
+            let r = search(u(competition(id), 8), c);
             if r != 0 && *((r + 0x2d) as *const i32) > 1 {
                 round[k] = *((r + 0x2d) as *const u8);
                 crate::comparison::branch("fechar rodada do humano");
@@ -426,24 +426,24 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
             let away: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_WEATHER_POST_ABANDONED_NEWS);
             let write: unsafe extern "thiscall" fn(usize, *mut u8) = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
             let join: unsafe extern "thiscall" fn(usize, *mut u8, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
-            away(u(G_WEATHER, 0), p + 4, ((*((jogo + 0x4d) as *const u16) >> 12) & 3) as u32);
+            away(u(G_WEATHER, 0), p + 4, ((*((game + 0x4d) as *const u16) >> 12) & 3) as u32);
             write(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr());
             join(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr(), 1);
         } else {
-            let c = competicao(*(jogo as *const i32));
+            let c = competition(*(game as *const i32));
             let metodo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(u(u(c, 0), 4));
-            metodo(c, jogo, summary);
+            metodo(c, game, summary);
             crate::comparison::branch("fechar metodo da competicao");
         }
     }
     *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 1;
     let players: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_MATCH_DAY_APPLY_POST_MATCH_PLAYER_CHANGES);
     let events: unsafe extern "C" fn(usize) = core::mem::transmute(FN_MATCH_DAY_PROCESS_PLAYER_INCIDENTS);
-    players(jogo, summary);
-    events(jogo);
+    players(game, summary);
+    events(game);
     let two = |this: usize, f: usize| {
         let g: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(f);
-        g(this, jogo, summary);
+        g(this, game, summary);
     };
     two(u(G_CONTRACT_MANAGER, 0), 0x4ca6d0);
     two(u(G_DISCIPLINE, 0), 0x55ca00);
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     if byte(p, 0x47) == -3 {
         return 1;
     }
-    if *(jogo as *const u32) != *(KEY_CLUB_COMP_RESERVE as *const u32) {
+    if *(game as *const u32) != *(KEY_CLUB_COMP_RESERVE as *const u32) {
         let h = u(G_RESERVE_COMP, 0);
         two(h, u(u(h, 0), 4));
         crate::comparison::branch("fechar historia");
@@ -462,10 +462,10 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     for (this, f) in [(G_PLAYER_STATS, 0x7c0d70), (G_TRANSFER_MANAGER, 0x8c39f0), (G_CLUB_RECORDS, 0x444930), (G_STAFF_RECORDS, 0x868830), (G_AWARD_MANAGER, 0x4134c0), (G_MANAGER_MANAGER, 0x6951e0), (G_FINANCE_TABLE, 0x59a5d0), (G_SCOUT_MANAGER, 0x7f8c00)] {
         two(u(this, 0), f);
     }
-    let clube: unsafe extern "C" fn(usize, usize, usize, u32, usize) = core::mem::transmute(FN_MATCH_DAY_POST_PLAYER_REACTION_NEWS);
+    let club: unsafe extern "C" fn(usize, usize, usize, u32, usize) = core::mem::transmute(FN_MATCH_DAY_POST_PLAYER_REACTION_NEWS);
     // simplification: the round goes as a dword with the high bytes zeroed; the original passes stack leftovers in them (read as a byte)
-    clube(u(jogo, 0x1c), u(jogo, 0x20), jogo, round[0] as u32, summary);
-    clube(u(jogo, 0x20), u(jogo, 0x1c), jogo, round[1] as u32, summary);
+    club(u(game, 0x1c), u(game, 0x20), game, round[0] as u32, summary);
+    club(u(game, 0x20), u(game, 0x1c), game, round[1] as u32, summary);
     1
 }
 
@@ -535,7 +535,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     let f5fd2f0: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SET_ON_HOLIDAY);
     let f727f00: unsafe extern "C" fn(usize) = core::mem::transmute(FN_MATCH_SCREENS_OPEN_WAITING_SCREEN_FOR_SLOT);
     let repassar: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SET_COMMENTARY_SPEED);
-    let indice: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
+    let index: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
     let away_of_day: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_OPEN_LATEST_SCORES_SCREEN);
     let redesenhar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_SCREENMANAGER_MONITOR);
     let laco: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(FN_CM3_MATCH_ENGINE_RUN_MATCH_STEPS);
@@ -654,15 +654,15 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                                     s12 = greater(s12, h);
                                 }
                             }
-                            let x = indice(G_SCREEN_MANAGER, h) as i16 as isize;
+                            let x = index(G_SCREEN_MANAGER, h) as i16 as isize;
                             let placar = u(p, 0x5b);
                             if core::ptr::read_unaligned((placar as isize + 5 + 4 * x) as *const u32) == 0 {
-                                let x = indice(G_SCREEN_MANAGER, h) as i16 as isize;
+                                let x = index(G_SCREEN_MANAGER, h) as i16 as isize;
                                 core::ptr::write_unaligned((u(p, 0x5b) as isize + 5 + 4 * x) as *mut u32, 1);
                                 *((u(p, 0x5b) + 0x105) as *mut u8) += 1;
                             }
                             // simplification: the index is 0 to 15 (the humans); outside that the original would write to the stack
-                            let x = indice(G_SCREEN_MANAGER, h) as i16;
+                            let x = index(G_SCREEN_MANAGER, h) as i16;
                             if (0..16).contains(&x) {
                                 vistos[x as usize] = 1;
                             }
@@ -689,8 +689,8 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         if algum {
             for i in 0..16 {
                 let h = human_b(i);
-                if indice(G_SCREEN_MANAGER, h) != 0xffff {
-                    let x = indice(G_SCREEN_MANAGER, h) as i16;
+                if index(G_SCREEN_MANAGER, h) != 0xffff {
+                    let x = index(G_SCREEN_MANAGER, h) as i16;
                     if (0..16).contains(&x) && vistos[x as usize] == 0 {
                         away_of_day(h, u(u(day, 0x34), 0x63));
                     }
@@ -1098,9 +1098,9 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
                 }
                 for k in 0..16 {
                     let pe = (g(G_STAFF_TABLE) as isize + (read(0xae2364) + k - 16) as isize * 0x6e) as usize;
-                    let clube = g(pe + staff::CLUB_JOB);
+                    let club = g(pe + staff::CLUB_JOB);
                     let other = g(pe + staff::NATIONAL_JOB);
-                    if (clube != 0 && in_competition(objeto, clube) != 0) || (other != 0 && in_competition(objeto, other) != 0) {
+                    if (club != 0 && in_competition(objeto, club) != 0) || (other != 0 && in_competition(objeto, other) != 0) {
                         crate::comparison::branch("interesse humano na competicao");
                         pr(comp + 0xc, 1);
                         pr(d + 0x2b, 1);
@@ -1230,8 +1230,8 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     for k in 0..16isize {
         let pe = (base as isize + (read(0xae2364) as isize - 1 - k) * 0x6e) as usize;
         if pe != 0 && *((pe + staff::CLASSIFICATION) as *const u8) == 1 && g(pe + staff::CLUB_JOB) != 0 {
-            let nacao = read(g(pe + staff::CLUB_JOB) + 0x57);
-            if nacao == read(c1 + club::DIVISION) || nacao == read(c2 + club::DIVISION) {
+            let nation = read(g(pe + staff::CLUB_JOB) + 0x57);
+            if nation == read(c1 + club::DIVISION) || nation == read(c2 + club::DIVISION) {
                 crate::comparison::branch("sem humano tecnico da nacao");
                 return 0;
             }
@@ -1280,8 +1280,8 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
 /// partida da competicao do clube (+0x14 = +0x57, com +0x40/+0x41), o clube nao fora, +0x59 acima
 /// de 15, +0x57 acima de sorteio(5) + 10, +0xb da ficha abaixo de 4250 e 0x7c3a40 zero: 0x589bc0 e,
 /// sem 0x547d60, 0x547d90(pessoa, clube, 1), e fim.
-pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: usize, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: usize, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let teste_547d60: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
     let ch = core::cell::RefCell::new(call);
     let out = |s: usize, c: usize, o: usize, n: i32| (ch.borrow_mut())(0x5896d0, 0, [s as u32, c as u32, o as u32, n as u32, 0]);
@@ -1295,27 +1295,27 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
     let ub = |a: usize| *(a as *const u8);
-    if clube == 0 || partida == 0 || other == 0 {
+    if club == 0 || partida == 0 || other == 0 {
         // simplification: a original mostra a caixa "Error" (match_day.cpp, linhas 0xc45/0xc4a/0xc4f); nao
         // happens in the game
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return;
     }
-    if g(clube + club::MANAGER) == 0 {
+    if g(club + club::MANAGER) == 0 {
         return;
     }
-    if teste_600a50(clube, 0, 1, 0, 0) == 0 && w(clube + club::REPUTATION) < 0x128e && sortear(100) != 0 {
+    if teste_600a50(club, 0, 1, 0, 0) == 0 && w(club + club::REPUTATION) < 0x128e && sortear(100) != 0 {
         return;
     }
     crate::comparison::branch("clube segue");
     let n = n as u8 as i8;
-    if teste_6b7cf0(partida, clube) != 0 && ub(partida + 0x40) != 0 && ub(partida + 0x41) != 0 && away(clube) == 0 {
+    if teste_6b7cf0(partida, club) != 0 && ub(partida + 0x40) != 0 && ub(partida + 0x41) != 0 && away(club) == 0 {
         for k in 0..50 {
-            let s = g(clube + club::SQUAD + 4 * k);
+            let s = g(club + club::SQUAD + 4 * k);
             if s == 0 {
                 continue;
             }
-            let c = contrato(g(G_CONTRACT_MANAGER), s);
+            let c = contract(g(G_CONTRACT_MANAGER), s);
             let free = c != 0 && read(c + 0x45) == 0;
             if free {
                 crate::comparison::branch("clube elenco");
@@ -1330,12 +1330,12 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
                 && sortear(n as i32) != 0
             {
                 crate::comparison::branch("clube 5896d0");
-                out(s, clube, other, n as i32);
+                out(s, club, other, n as i32);
                 return;
             }
         }
     }
-    let side = (read(clube) != read(t)) as usize;
+    let side = (read(club) != read(t)) as usize;
     for k in 0..20 {
         let row = t + 0x625 * side + 0x1ce + k * 0x49;
         let id = read(row - 0x3e);
@@ -1346,11 +1346,11 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
         if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(0xae2364)) || byte(p, 0x18) > 0x14 {
             continue;
         }
-        let c = contrato(g(G_CONTRACT_MANAGER), p);
+        let c = contract(g(G_CONTRACT_MANAGER), p);
         if c == 0 || read(c + 0x45) != 0 || ub(partida + 0x40) == 0 || ub(partida + 0x41) == 0 {
             continue;
         }
-        if read(partida + 0x14) == 0 || read(partida + 0x14) != read(clube + club::DIVISION) || away(clube) != 0 || byte(p, 0x59) <= 0xf {
+        if read(partida + 0x14) == 0 || read(partida + 0x14) != read(club + club::DIVISION) || away(club) != 0 || byte(p, 0x59) <= 0xf {
             continue;
         }
         crate::comparison::branch("clube jovem");
@@ -1358,12 +1358,12 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
         if byte(p, 0x57) <= (r as u8).wrapping_add(10) as i8 || g(p + staff::PLAYER) == 0 || w(g(p + staff::PLAYER) + 0xb) >= 0x109a {
             continue;
         }
-        if teste_7c3a40(g(G_PLAYER_STATS), p, clube) == 0 {
+        if teste_7c3a40(g(G_PLAYER_STATS), p, club) == 0 {
             crate::comparison::branch("clube 589bc0");
-            f589bc0(p, clube);
-            if teste_547d60(p, clube) == 0 {
+            f589bc0(p, club);
+            if teste_547d60(p, club) == 0 {
                 crate::comparison::branch("clube 547d90");
-                f547d90(p, clube, 1);
+                f547d90(p, club, 1);
             }
             return;
         }
@@ -1391,8 +1391,8 @@ pub(crate) unsafe extern "C" fn post_match_players(partida: usize, t: usize) {
 /// pleased youngster favouring the club); calls post_match_club_with with the game's real calls.
 ///
 /// [pt] { 0x6b79a0 }: ver `post_match_club_with`.
-pub(crate) unsafe extern "C" fn post_match_club(clube: usize, other: usize, partida: usize, n: u32, t: usize) {
-    post_match_club_with(clube, other, partida, n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
+pub(crate) unsafe extern "C" fn post_match_club(club: usize, other: usize, partida: usize, n: u32, t: usize) {
+    post_match_club_with(club, other, partida, n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
 
 /// Calls one of the post-match routines with effects by game address, with the right convention and argument count.
@@ -1557,9 +1557,9 @@ pub(crate) fn post_match_gates() -> [usize; 15] {
 /// The flags (+0x40..+0x48) of the person's contract at a club as a comparer region, or None.
 ///
 /// [pt] As flags do contrato (+0x40 a +0x48) de `pessoa` no `clube`, como regiao.
-pub(crate) unsafe fn contract_flags_region(person: usize, clube: usize) -> Option<(usize, usize)> {
-    let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let c = contrato(*(G_CONTRACT_MANAGER as *const usize), person, clube);
+pub(crate) unsafe fn contract_flags_region(person: usize, club: usize) -> Option<(usize, usize)> {
+    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
+    let c = contract(*(G_CONTRACT_MANAGER as *const usize), person, club);
     (c != 0).then_some((c + 0x40, 9))
 }
 
@@ -1594,7 +1594,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     crate::comparison::branch("telas largar a partida assistida");
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let sheet: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
-    let indice: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
+    let index: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
     let construct: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_CM3_MATCH_ENGINE);
@@ -1614,8 +1614,8 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     if a == 0 {
         return;
     }
-    let jogo = u(a, 0xe2);
-    if jogo == 0 {
+    let game = u(a, 0xe2);
+    if game == 0 {
         return;
     }
     let mut sozinho = true;
@@ -1623,15 +1623,15 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         let idx = (*(G_STAFF_COUNT as *const usize)).wrapping_add(i).wrapping_sub(0x10);
         let q = u(G_STAFF_TABLE, 0).wrapping_add(idx.wrapping_mul(110));
         // like the original, without checking the other human’s null record
-        if *((q + staff::CLASSIFICATION) as *const u8) != 0 && q != p && u(sheet(q), 0xe2) == jogo {
+        if *((q + staff::CLASSIFICATION) as *const u8) != 0 && q != p && u(sheet(q), 0xe2) == game {
             let minha = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const u16);
-            if indice(G_SCREEN_MANAGER, q) == minha {
+            if index(G_SCREEN_MANAGER, q) == minha {
                 return;
             }
             sozinho = false;
         }
     }
-    let summary = u(jogo, 0x5b);
+    let summary = u(game, 0x5b);
     if summary == 0 {
         return;
     }
@@ -1646,7 +1646,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     if !sozinho {
         return;
     }
-    let engine = (jogo + 0x57) as *mut usize;
+    let engine = (game + 0x57) as *mut usize;
     if core::ptr::read_unaligned(engine) == 0 {
         let mem = new(0xf63b);
         let m = if mem != 0 { construct(mem) } else { 0 };
@@ -1655,9 +1655,9 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
             show_error_at(0xa15708, 0xa4b);
             return;
         }
-        prepare(m, jogo + 4, 0, 0, 0);
+        prepare(m, game + 4, 0, 0, 0);
     }
-    let state = (jogo + 0x67) as *mut u8;
+    let state = (game + 0x67) as *mut u8;
     while *state != 2 && *state != 8 {
         let e = laco(core::ptr::read_unaligned(engine), -1) as u8;
         *state = e;
@@ -1670,7 +1670,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         if mem != 0 {
             array(mem + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
         }
-        core::ptr::write_unaligned((jogo + 0x5f) as *mut usize, mem);
+        core::ptr::write_unaligned((game + 0x5f) as *mut usize, mem);
         if mem == 0 {
             show_error_at(0xa15708, 0xa68);
             return;
@@ -1683,7 +1683,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         free(m);
     }
     core::ptr::write_unaligned(engine, 0);
-    remove(u(G_VIRTUAL_STAFF, 0), jogo + 4);
+    remove(u(G_VIRTUAL_STAFF, 0), game + 4);
 }
 
 /// Finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture.
@@ -1718,10 +1718,10 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
     games(*(G_FIXTURE_MANAGER as *const usize), d1, d2, d1, d2, *(e as *const u32), l, u32::MAX, 0xffff_fffe, u32::MAX);
     // the cursor (+0xa) starts at the head (+2)
     core::ptr::copy(list.as_ptr().add(2), list.as_mut_ptr().add(0xa), 4);
-    let clube = *((e + 4) as *const u32);
+    let club = *((e + 4) as *const u32);
     let mut f = next(l);
     while f != 0 {
-        if clube == *((f + 0xc) as *const u32) || clube == *((f + 0x10) as *const u32) {
+        if club == *((f + 0xc) as *const u32) || club == *((f + 0x10) as *const u32) {
             core::ptr::copy_nonoverlapping(f as *const u8, out as *mut u8, 0x4f);
             destroy_list(l);
             return 1;
@@ -1773,7 +1773,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     let table: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(FN_MATCH_EVENTS_GET_EVENT_PRIORITY);
     let laco: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(FN_CM3_MATCH_ENGINE_RUN_MATCH_STEPS);
     let register: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
-    let competicao: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_MATCH_DAY_GET_PERIOD_RANK);
+    let competition: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_MATCH_DAY_GET_PERIOD_RANK);
     let seguir = || {
         if andar(day, 0) != 0 {
             iniciar(day);
@@ -1891,8 +1891,8 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     register(u(G_MATCH_STATS, 0), engine, u(p, 0x5f), 1);
     let s = u(u(day, 0x34), 0x5f);
     let swap = if s != 0 {
-        let a = competicao(*((u(p, 0x5f) + 0x4f) as *const u16) as u32, 1) as i8;
-        let b = competicao(*((s + 0x4f) as *const u16) as u32, 1) as i8;
+        let a = competition(*((u(p, 0x5f) + 0x4f) as *const u16) as u32, 1) as i8;
+        let b = competition(*((s + 0x4f) as *const u16) as u32, 1) as i8;
         a > b || *((u(p, 0x5f) + 0x4d) as *const i16) > *((u(u(day, 0x34), 0x5f) + 0x4d) as *const i16)
     } else {
         true

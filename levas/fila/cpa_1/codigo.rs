@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn comparar_sort_table(liga: usize, linhas: usize) -> u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let reg = sort_regions(liga, linhas);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(liga, linhas), || sort_table(liga, linhas));
-    PLACAR.record(igual && r == n, || format!("sort_table({:x}, {:x}) {}/{} {:x?} x {:x?}", liga, linhas, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("sort_table({:x}, {:x}) {}/{} {:x?} x {:x?}", liga, linhas, r, n, mo, mr));
     r
 }
 
@@ -281,7 +281,7 @@ unsafe extern "thiscall" fn comparar_build_h2h_table(liga: usize, linhas: usize)
     }
     let reg = [(linhas, LEAGUE_TABLE_ROW_SIZE * cpa1_w(liga + 0x3e).max(0) as usize)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(liga, linhas), || build_h2h_table(liga, linhas));
-    PLACAR.record(igual, || format!("build_h2h_table({:x}, {:x}) {:x?} x {:x?}", liga, linhas, mo, mr));
+    SCOREBOARD.record(igual, || format!("build_h2h_table({:x}, {:x}) {:x?} x {:x?}", liga, linhas, mo, mr));
 }
 
 /// { 0x687970 } (thiscall, league.cpp): `League::free_table(tabela)`: `tabela` nula = a da liga (+0xb1). Com clubes
@@ -414,6 +414,6 @@ unsafe extern "thiscall" fn comparar_league_check_complete(liga: usize, fases: u
         return o(liga, fases, avisar); // fim de liga (registros, prêmios, fases, aviso): só a original
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(liga + 0xa7, 2)], || o(liga, fases, avisar), || league_check_complete(liga, fases, avisar));
-    PLACAR.record(igual && r == n, || format!("league_check_complete({:x}, {}, {}) {}/{} {:x?} x {:x?}", liga, fases, avisar, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("league_check_complete({:x}, {}, {}) {}/{} {:x?} x {:x?}", liga, fases, avisar, r, n, mo, mr));
     r
 }

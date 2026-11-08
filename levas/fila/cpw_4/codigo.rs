@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, termos: usi
         }
         mo == mr && novo != 0 && core::slice::from_raw_parts(novo as *const u8, 0x63) == &registro[..0x63]
     };
-    PLACAR.record(igual, || format!("add_contract_offer(pessoa {:#x}, clube {:#x}, vaga {}, atualizada {}) original={:x?} rust={:x?}", id, clube, vaga, item != 0, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_contract_offer(pessoa {:#x}, clube {:#x}, vaga {}, atualizada {}) original={:x?} rust={:x?}", id, clube, vaga, item != 0, mo, mr));
 }
 
 /// { 0x4ccb30 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::remove_contract_offer_for_transfer(pessoa,
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn comparar_remove_contract_offer_for_transfer(this: us
     o(this, pessoa, vaga);
     let depois = cpw4_b(contract_offer_counter(pessoa));
     let esperado = if achou { antes.wrapping_sub(1) } else { antes };
-    PLACAR.record(depois == esperado, || format!("remove_contract_offer_for_transfer(pessoa {:#x}, vaga {}) achou {} contador {} -> {}", cpw4_d(pessoa), vaga, achou, antes, depois));
+    SCOREBOARD.record(depois == esperado, || format!("remove_contract_offer_for_transfer(pessoa {:#x}, vaga {}) achou {} contador {} -> {}", cpw4_d(pessoa), vaga, achou, antes, depois));
 }
 
 /// { 0x4ce450 } (stdcall, ret 8, contract_manager.cpp, quadro SEH sem destrutor): o menor salário que a pessoa pede ao
@@ -285,6 +285,6 @@ unsafe extern "stdcall" fn comparar_contract_manager_lowest_wage_demand(pessoa: 
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(pessoa, clube), || crate::rng::without_counting(|| contract_manager_lowest_wage_demand(pessoa, clube)));
-    PLACAR.record(igual && r == n, || format!("contract_manager_lowest_wage_demand(pessoa {:#x}) original={} {:x?} rust={} {:x?}", cpw4_d(pessoa), r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("contract_manager_lowest_wage_demand(pessoa {:#x}) original={} {:x?} rust={} {:x?}", cpw4_d(pessoa), r, mo, n, mr));
     r
 }

@@ -59,12 +59,12 @@ pub(crate) unsafe fn refuse_loan(msg: usize, reason: *mut u16, formato: usize, r
 ///
 /// [pt] { 0x7f6650 } (thiscall, ret 0x10, scotland_rules.cpp): `SCOTLAND_RULES::can_loan_player(clube, jogador, mensagem,
 /// motivo)`: com contrato, o clube que pede e o dono na mesma divisão escocesa ([0x9cf5dc]) não podem (0x1d).
-pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     let owner = match loan_owner_club(player) {
         None => return 1,
         Some(d) => d,
     };
-    let comp = read_usize(clube + club::DIVISION);
+    let comp = read_usize(club + club::DIVISION);
     if comp == read_usize(owner + club::DIVISION) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
         crate::comparison::branch("cqe_6 escocia mesma divisao");
         let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION).wrapping_mul(0x6b));
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
     let month_of_end: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
     let e = month_of_end(read_usize(G_CONTRACT_MANAGER), a1) as i8;
     *end_month = e;
-    if (read_u8(player + staff::YEAR_OF_BIRTH) as i8) < 0x16 {
+    if (read_u8(player + staff::AGE) as i8) < 0x16 {
         crate::comparison::branch("cqe_6 escocia ate o fim da temporada");
         if *ini_month < e {
             *end_year = *ini_year;

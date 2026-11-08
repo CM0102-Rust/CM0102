@@ -51,20 +51,20 @@ unsafe extern "thiscall" fn run_record_assign(this: usize, origem: usize) -> usi
 unsafe extern "thiscall" fn comparar_record_holder_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x18)], || o(this, origem), || record_holder_assign(this, origem));
-    PLACAR.record(igual && r == n, || format!("record_holder_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("record_holder_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_match_record_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1f)], || o(this, origem), || match_record_assign(this, origem));
-    PLACAR.record(igual && r == n, || format!("match_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_run_record_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this, origem), || run_record_assign(this, origem));
-    PLACAR.record(igual && r == n, || format!("run_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("run_record_assign {:x?} x {:x?}", mo, mr));
     r
 }

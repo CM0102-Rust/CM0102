@@ -1,7 +1,7 @@
 r"""Varredura das leitoras de resíduo de pilha: as rotinas originais que leem variável própria antes de gravar.
 
-Cada rotina candidata (do docs/mapa_funcoes.csv, sem desvio próprio: fora do motor.rs e do data.rs, ou nas DESLIGADAS)
-ganha na DLL (CM_SONDA_LISTA=1, rust/src/sonda_pilha.rs) um desvio transparente que, se a rotina estiver marcada,
+Cada rotina candidata (do docs/mapa_funcoes.csv, sem desvio próprio: fora do motor.rs e do date.rs, ou nas DESLIGADAS)
+ganha na DLL (CM_SONDA_LISTA=1, rust/src/stack_probe.rs) um desvio transparente que, se a rotina estiver marcada,
 envenena o próprio quadro na entrada ([entrada − quadro, entrada)). Carreira diferente da base = alguma marcada lê
 variável sem valor. A busca é em grupos: o conjunto que muda é partido ao meio até sobrar a rotina.
 
@@ -24,11 +24,10 @@ md.detail = False
 
 def ja_desviadas():
     src = open(os.path.join(RAIZ, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
-    src_d = open(os.path.join(RAIZ, 'rust', 'src', 'data.rs'), encoding='utf-8').read()
-    desl = re.search(r'const DESLIGADAS: &\[usize\] = &\[(.*?)\];', src).group(1)
-    desligadas = {int(x, 16) for x in re.findall(r'0x[0-9a-f]+', desl)}
+    src_d = open(os.path.join(RAIZ, 'rust', 'src', 'date.rs'), encoding='utf-8').read()
+    desligadas = set()  # DESLIGADAS saiu em 08/11/2026 (vazia desde 31/10)
     # só as tabelas instaladas no modo original (as portas da comparação, PROLOGOS_POS e PROLOGO_*, ficam fora)
-    blocos = [re.search(r'const %s: \[.*?\n\];' % t, src, re.S).group(0) for t in ('PROLOGOS', 'ZERADAS')]
+    blocos = [re.search(r'const PROLOGOS: \[.*?\n\];', src, re.S).group(0)]
     todas = {int(x, 16) for x in re.findall(r'endereco: (0x[0-9a-f]+)', ''.join(blocos) + src_d)}
     # o sorteio e a data têm desvio próprio fora das tabelas
     todas |= {0x90cfc0}

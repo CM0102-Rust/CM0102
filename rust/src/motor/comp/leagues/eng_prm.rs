@@ -46,8 +46,8 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     base(this);
     write_u32_from_usize(this + 4, registro);
     write_u32_from_usize(this, p.vtabela);
-    core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
-    *((this + 0x50) as *mut u8) = 9; // cql6: a regra de disciplina das ligas inglesas
+    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
+    *((this + league::DISCIPLINE_RULE) as *mut u8) = 9; // cql6: a regra de disciplina das ligas inglesas
     if let Some((capacidade, sentados)) = p.estadio {
         core::ptr::write_unaligned((this + 0xe2) as *mut u16, capacidade);
         core::ptr::write_unaligned((this + 0xe4) as *mut u16, sentados);
@@ -56,14 +56,14 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
         return this;
     }
     crate::comparison::branch("cql_6 divisao inglesa nova");
-    *((this + 0x44) as *mut u8) = 0xff;
-    write_u32_from_usize(this + 0x30, 0xffff_ffff);
-    write_u32_from_usize(this + 0x2c, p.fases as usize);
+    *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
+    write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
+    write_u32_from_usize(this + league::STAGE_COUNT, p.fases as usize);
     if p.fases != 0 {
         let v = alocar(4);
-        write_u32_from_usize(this + 0xc, v);
+        write_u32_from_usize(this + league::STAGES, v);
     } else {
-        write_u32_from_usize(this + 0xc, 0);
+        write_u32_from_usize(this + league::STAGES, 0);
     }
     if regras(this) == 0 {
         show_error_at(p.arquivo, p.linhas[0]);
@@ -151,15 +151,15 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 /// fases, a fase atual −1 e as estatísticas em +8.
 pub(crate) unsafe fn compare_english_constructor(name: &str, this: usize, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
-        && read_u32_as_usize(this + 4) == record && *((this + 0x50) as *const u8) == 9;
+    let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
+        && read_u32_as_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 9;
     if let Some((c, s)) = p.estadio {
         ok = ok && core::ptr::read_unaligned((this + 0xe2) as *const u16) == c && core::ptr::read_unaligned((this + 0xe4) as *const u16) == s;
     }
-    if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
-        ok = ok && read_u32_as_usize(this + 0x2c) == p.fases as usize && (read_u32_as_usize(this + 0xc) != 0) == (p.fases != 0);
+    if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
+        ok = ok && read_u32_as_usize(this + league::STAGE_COUNT) == p.fases as usize && (read_u32_as_usize(this + league::STAGES) != 0) == (p.fases != 0);
     }
-    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 0xc), read_u32_as_usize(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + league::STAGE_COUNT), read_u32_as_usize(this + league::STAGES), read_u32_as_usize(this + 8)));
     r
 }
 
@@ -187,8 +187,8 @@ pub(crate) unsafe fn eng_prm_apply_league_rules(this: usize, escritas: &[(usize,
     }
     if !ENG_PRM_RULES_DRY_RUN {
         let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
-        let t = rounds(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
-        core::ptr::write_unaligned((this + 0xba) as *mut usize, t);
+        let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
+        core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, t);
     }
     1
 }
@@ -250,8 +250,8 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
     let mut v = english_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a Third, 2 turnos e 3 pontos
     v.extend_from_slice(&[(0xbe, 1, 3), (0xbf, 1, 4), (0xc0, 1, 0), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) as u32)]);
-    let nacao = read_usize(read_usize(this + 4) + 0x5d);
-    let abaixo = if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) as u32 } else { 0xffff_ffff };
+    let nation = read_usize(read_usize(this + 4) + 0x5d);
+    let abaixo = if *((nation + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 != 0 { read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) as u32 } else { 0xffff_ffff };
     v.extend_from_slice(&[(0x20, 4, abaixo), (0x4a, 1, 3), (0x49, 1, 5)]);
     v
 }
@@ -264,7 +264,7 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
 /// campos que a cópia grava têm de sair iguais aos da original, e a devolução 1; no fim fica a faixa da original
 /// (com a tabela de rodadas dela em +0xba, +0xa9 e +0x3a).
 pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
-    let band = [(this + 0x1c, 0xd0)];
+    let band = [(this + league::UPPER_DIVISION_ID, 0xd0)];
     let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
     let mo = crate::comparison::MemorySnapshot::read(&band);
@@ -283,7 +283,7 @@ pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, escri
         }
     };
     let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    PLACAR.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
+    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
     r
 }
 
@@ -326,10 +326,10 @@ pub(crate) unsafe fn eng_prm_pay_tv_rights(this: usize, value: i32, filtro: usiz
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Sem encher: 0. Cheia: o fundo de prêmios
 /// +0x28 (League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4), +0xe1 = 1, o dinheiro da TV (`pagar`) e 1.
 pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, cota: i32, pay: impl FnOnce()) -> u32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
-    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
+    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -337,30 +337,30 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(G_CLUB_TABLE);
+    let mut club = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        let comp = read_usize(clube + club::DIVISION);
+        let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let row = k; // cqi5: a linha k recebe o k-ésimo clube da divisão
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
-            iniciar(this, row as u32, clube, 0, 0);
+            iniciar(this, row as u32, club, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
             }
         }
         i = i.wrapping_add(1);
-        clube = clube.wrapping_add(0x245);
+        club = club.wrapping_add(0x245);
     }
-    if k as i8 as i16 != read_i16(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }
     crate::comparison::branch("cqi_5 tabela cheia");
     let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
     let f = prize(this, cota);
-    core::ptr::write_unaligned((this + 0x28) as *mut i32, f);
-    *((this + 0xe1) as *mut u8) = 1;
+    core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
+    *((this + league::PRIZE_MODE) as *mut u8) = 1;
     pay();
     1
 }
@@ -391,27 +391,27 @@ pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i1
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        let comp = read_usize(clube + club::DIVISION);
+        let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
+        let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
-            plan.push(clube);
+            plan.push(club);
         }
         i += 1;
     }
     let r = original();
-    let t = read_usize(this + 0xb1);
+    let t = read_usize(this + league::TABLE);
     let expected = (plan.len() as i16 == n) as u32;
-    let mut same = r == expected && read_i16(this + 0x3e) == n && t != 0;
+    let mut same = r == expected && read_i16(this + league::CLUB_COUNT) == n && t != 0;
     let mut found: Vec<usize> = Vec::new();
     if same {
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
         if r == 1 {
             let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-            same = same && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == prize(this, cota);
+            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, cota);
         }
     }
-    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 

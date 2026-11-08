@@ -103,7 +103,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
 pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
     write_u32_from_usize(this + league::TABLE, t);
@@ -118,7 +118,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
         row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
         i = i.wrapping_add(1);
     }
-    noticia(this);
+    news(this);
     1
 }
 
@@ -152,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -208,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
         return 0;
     }
     write_u32_from_usize(this + league::CURRENT_STAGE, 0);
-    noticia(f);
+    news(f);
     1
 }
 
@@ -313,9 +313,9 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
     let mut i = 0i32;
     let mut c = read_u32_as_usize(G_CLUB_TABLE);
     while i < (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2)) {
-        let nacao = read_u32_as_usize(c + 0x53);
-        if nacao != 0 && read_u32_as_usize(nacao + nation::CONTINENT) != 0 && read_u32_as_usize(read_u32_as_usize(nacao + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_OCEANIA) {
-            let id = read_u32_as_usize(nacao);
+        let nation = read_u32_as_usize(c + 0x53);
+        if nation != 0 && read_u32_as_usize(nation + nation::CONTINENT) != 0 && read_u32_as_usize(read_u32_as_usize(nation + nation::CONTINENT)) == read_u32_as_usize(KEY_CONTINENT_OCEANIA) {
+            let id = read_u32_as_usize(nation);
             if id == read_u32_as_usize(KEY_NATION_NEW_ZEALAND) && nz.cabe() {
                 nz.por(c);
             } else if id == read_u32_as_usize(KEY_NATION_AUSTRALIA) && aus.cabe() {
@@ -324,7 +324,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
                 tai.por(c);
             } else if id == read_u32_as_usize(KEY_NATION_FIJI) && fij.cabe() {
                 fij.por(c);
-            } else if melanesia(nacao) != 0 {
+            } else if melanesia(nation) != 0 {
                 if mel.cabe() {
                     mel.por(c);
                 }
@@ -398,8 +398,8 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
 /// [pt] Os 4 das semifinais, na ordem da lista: o 1º do grupo A (a tabela da copa, +0xb1), o 2º do B (a tabela da fase
 /// [+0xc][0]), o 2º do A e o 1º do B (os cruzamentos: as chaves são os pares da lista).
 pub(crate) unsafe fn semifinalists(this: usize) -> [usize; 4] {
-    let a = |l: usize| read_u32_as_usize(read_u32_as_usize(this + 0xb1) + l * 0x3b);
-    let b = |l: usize| read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xb1) + l * 0x3b);
+    let a = |l: usize| read_u32_as_usize(read_u32_as_usize(this + league::TABLE) + l * 0x3b);
+    let b = |l: usize| read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + league::STAGES)) + 0xb1) + l * 0x3b);
     [a(0), b(1), a(1), b(0)] // cqt11: 1º A × 2º B, 2º A × 1º B
 }
 
@@ -530,8 +530,8 @@ pub(crate) unsafe fn build_stage_table(this: usize, f: Option<OceaniaStage>, rod
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo_c: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
-    let ano16 = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let ano16 = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+    let ano = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
         match *op {
             Cqq12D(r, dia, mes, anos, sem, cod, v) => {
@@ -593,7 +593,7 @@ pub(crate) unsafe fn compare_stage_table(name: &str, stage: u32, f: Option<Ocean
         Some(f) => f,
         None => {
             let a = o();
-            PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+            SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
             return a;
         }
     };
@@ -608,7 +608,7 @@ pub(crate) unsafe fn compare_stage_table(name: &str, stage: u32, f: Option<Ocean
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -685,19 +685,19 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: 
 /// `linha` de `arquivo` e −1); a vaga i recebe o clube i dos classificados (+0xb2, ponteiros; `ordem` dá o índice) com
 /// classe e situação 0. Devolve 1.
 pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: &'static str, order: impl Fn(i16) -> i16) -> i32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x10);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x10);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0x60);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(file, row);
         return -1;
     }
     crate::comparison::branch(name);
     let mut i: i16 = 0;
-    while i < core::ptr::read_unaligned((this + 0x3e) as *const i16) {
+    while i < core::ptr::read_unaligned((this + cup::TEAM_COUNT) as *const i16) {
         let c = read_u32_as_usize(read_u32_as_usize(this + 0xb2) + order(i) as usize * 4);
-        let e = read_u32_as_usize(this + 0xa7) + i as usize * 6;
+        let e = read_u32_as_usize(this + cup::TEAM_TABLE) + i as usize * 6;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 4) as *mut u8) = 0;
         *((e + 5) as *mut u8) = 0;
@@ -713,15 +713,15 @@ pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: 
 pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> i32) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
+    let reg = [(this + cup::TEAM_COUNT, 2usize), (0xb67a34, 4)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
-        lo.set(read_u32_as_usize(this + 0xa7));
+        lo.set(read_u32_as_usize(this + cup::TEAM_TABLE));
         r
     }, || {
         let r = c();
-        lr.set(read_u32_as_usize(this + 0xa7));
-        core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
+        lr.set(read_u32_as_usize(this + cup::TEAM_TABLE));
+        core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -735,7 +735,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce(
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
     a
 }
 

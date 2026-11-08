@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_cup_update_staff_records_for_status(copa: u
         && wins_uefa_cup_place(cqa4_d(copa + 4), clube) { cqa4_i(0x9cf6f0) } else { antes };
     let r = o(copa, clube, desfecho, a3, a4, jogo, final_);
     let depois = cqa4_i(estado);
-    PLACAR.record(r == 0 && depois == previsto, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", desfecho as u8, antes, depois, previsto, r));
+    SCOREBOARD.record(r == 0 && depois == previsto, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", desfecho as u8, antes, depois, previsto, r));
     r
 }
 
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn comparar_cup_record_season_honours(copa: usize) {
     o(copa);
     let lido = (cqa4_d(linha + 4), core::ptr::read_unaligned((linha + 8) as *const u16), cqa4_d(linha + 0xa), cqa4_d(linha + 0xe), cqa4_d(linha + 0x12), cqa4_d(linha + 0x16));
     let previsto = (cqa4_d(copa + 4), ano, campeao, vice, terceiro, anfitria);
-    PLACAR.record(lido == previsto, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, previsto));
+    SCOREBOARD.record(lido == previsto, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, previsto));
 }
 
 /// Os dois clubes (ids) que a 0x519fc0 manda à semeadura da UEFA, ou None quando ela sai sem mandar: a rodada 0x82
@@ -322,5 +322,5 @@ unsafe extern "thiscall" fn comparar_register_semi_final_losers_for_uefa(copa: u
         return o(copa); // ponytail: sem a semeadura, só a original
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(s + 0x440, 50 * 12)], || o(copa), || register_semi_final_losers_for_uefa(copa));
-    PLACAR.record(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", copa, semi_final_losers(copa)));
+    SCOREBOARD.record(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", copa, semi_final_losers(copa)));
 }

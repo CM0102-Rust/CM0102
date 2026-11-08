@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn comparar_randomize_round_teams(copa: usize, rodada: 
     reg.extend(all_ties_regions(copa));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada),
         || crate::rng::without_counting(|| randomize_round_teams(copa, rodada)));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("randomize_round_teams(rodada {}) diferencas em {:x?}", rodada as i16, dif)
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(copa: usize, r
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     let reg = all_ties_regions(copa);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada), || separate_shared_stadium_ties(copa, rodada));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("separate_shared_stadium_ties(rodada {}) diferencas em {:x?}", rodada as i16, dif)
@@ -313,7 +313,7 @@ unsafe extern "C" fn comparar_comp_util_scale_by_round(baixo: u32, alto: u32, ro
     }
     let r = o(baixo, alto, rodada, rodadas);
     let n = comp_util_scale_by_round(baixo, alto, rodada, rodadas);
-    PLACAR.record(r == n, || format!("comp_util_scale_by_round({}, {}, {}, {}) original={:x} rust={:x}",
+    SCOREBOARD.record(r == n, || format!("comp_util_scale_by_round({}, {}, {}, {}) original={:x} rust={:x}",
         baixo as u8 as i8, alto as u8 as i8, rodada as u16 as i16, rodadas as u16 as i16, r, n));
     r
 }

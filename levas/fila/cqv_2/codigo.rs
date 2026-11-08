@@ -80,7 +80,7 @@ unsafe fn cqv2_comparar(nome: &str, this: usize, e: &Cqv2Estadual, original: imp
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if r == 0 { -1 } else { *((r + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.record(erros.is_empty(), || format!("{}({:#x}): {}", nome, this, erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("{}({:#x}): {}", nome, this, erros.join("; ")));
 }
 
 const CQV2_PERNAMBUCANO: Cqv2Estadual = Cqv2Estadual { arquivo: 0x98afd8, linhas: [0x307, 0x30f], lugares: &[1, 2, 3, 3], ramo: "cqv_2 pernambucano" }; // cqv2: os lugares do Pernambucano

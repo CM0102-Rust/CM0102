@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn comparar_draw_round(copa: usize, rodada: u32) -> u32
         let (mut dia, mut ano) = (cqa3_w(round_record_by_dword(copa, rodada)), (cqa3_b(round_record_by_dword(copa, rodada) + 2) as i8 as i16).wrapping_add(cqa3_w(copa + 0x40)) as u16);
         // a 0x54c5b0 (mais 1): normalizar para a frente, 365 dias no bissexto (crate::data::bissexto)
         dia = dia.wrapping_add(1);
-        let tam = |y: u16| if crate::data::bissexto(y) == 1 { 365i16 } else { 364 };
+        let tam = |y: u16| if crate::date::bissexto(y) == 1 { 365i16 } else { 364 };
         while dia > tam(ano) {
             dia = dia.wrapping_sub(tam(ano) + 1);
             ano = ano.wrapping_add(1);
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn comparar_draw_round(copa: usize, rodada: u32) -> u32
         }
         let r = o(copa, rodada);
         let ok = plano.iter().all(|&(rk, d, y)| cqa3_w(rk) == d && cqa3_b(rk + 2) == y);
-        PLACAR.record(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", rodada as i32));
+        SCOREBOARD.record(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", rodada as i32));
         return r;
     }
     let antes_ac = cqa3_b(copa + 0xac);
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn comparar_draw_round(copa: usize, rodada: u32) -> u32
     }
     let soma = if !skips_draw_news(copa, rodada) && cqa3_w(reg + 7) != 0x8c { 1 } else { 0 };
     ok &= cqa3_b(copa + 0xac) == antes_ac.wrapping_add(soma);
-    PLACAR.record(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", rodada as i32, antes_ac, cqa3_b(copa + 0xac)));
+    SCOREBOARD.record(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", rodada as i32, antes_ac, cqa3_b(copa + 0xac)));
     r
 }
 
@@ -279,7 +279,7 @@ unsafe extern "C" fn comparar_comp_util_format_stage_round_name(fase: u32, rodad
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(saida as usize, (tamanho as usize).min(0x400))],
         || o(fase, rodada, saida, tamanho, estilo), || comp_util_format_stage_round_name(fase, rodada, saida, tamanho, estilo));
-    PLACAR.record(igual && r == n, || format!("comp_util_format_stage_round_name({}, {}) {} x {} {:x?} x {:x?}", fase as i16, rodada as i16, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("comp_util_format_stage_round_name({}, {}) {} x {} {:x?} x {:x?}", fase as i16, rodada as i16, r, n, mo, mr));
     r
 }
 
@@ -310,6 +310,6 @@ unsafe extern "thiscall" fn club_in_higher_division(_this: usize, a: usize, b: u
 unsafe extern "thiscall" fn comparar_club_in_higher_division(this: usize, a: usize, b: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, a, b);
     let n = club_in_higher_division(this, a, b);
-    PLACAR.record(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
     r
 }

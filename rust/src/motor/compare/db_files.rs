@@ -25,7 +25,7 @@ pub(crate) unsafe fn comparar_conversor_v1(name: &str, o: V1Converter, rust: V1C
             fim_r = ftell(stream);
             r
         });
-    PLACAR.record(igual && r == x && fim_o == fim_r, || {
+    SCOREBOARD.record(igual && r == x && fim_o == fim_r, || {
         let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
         format!("{}(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", name, n, r, x, fim_o, fim_r, pos, dif)
     });
@@ -259,7 +259,7 @@ pub(crate) unsafe extern "C" fn comparar_db_files_read_comps_v1(stream: usize, u
             fim_r = ftell(stream);
             r
         });
-    PLACAR.record(igual && r == x && fim_o == fim_r, || {
+    SCOREBOARD.record(igual && r == x && fim_o == fim_r, || {
         let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
         format!("db_files_read_comps_v1(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", n, r, x, fim_o, fim_r, pos, dif)
     });

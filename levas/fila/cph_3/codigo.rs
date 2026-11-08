@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn remove_talks_records(this: usize, pessoa: usize, tec
 unsafe extern "thiscall" fn comparar_contract_manager_operator(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x50)], || o(this, origem), || contract_manager_operator(this, origem));
-    PLACAR.record(igual && r == n, || format!("contract_manager_operator {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("contract_manager_operator {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -184,5 +184,5 @@ unsafe extern "thiscall" fn comparar_remove_talks_records(this: usize, pessoa: u
     let n = (*((this + 0x2c) as *const i32)).max(0) as usize;
     let reg = [(this + 0x28, 8), (cph3_d(this + 0x28) as usize, n * 21)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, tecnico, clube), || remove_talks_records(this, pessoa, tecnico, clube));
-    PLACAR.record(igual, || format!("remove_talks_records({:x}, {:x}, {:x}) {:x?} x {:x?}", pessoa, tecnico, clube, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_talks_records({:x}, {:x}, {:x}) {:x?} x {:x?}", pessoa, tecnico, clube, mo, mr));
 }

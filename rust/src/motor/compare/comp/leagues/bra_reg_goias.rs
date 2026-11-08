@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_set_up_rules(this:
         goiano_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("bra_reg_goias_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("bra_reg_goias_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 

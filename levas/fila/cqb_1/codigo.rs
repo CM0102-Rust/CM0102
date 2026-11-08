@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn comparar_process_match_income(tabela: usize, partida
     let mut reg = vec![(fm, 0x167), (fv, 0x167)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(tabela, partida, resultado), || crate::rng::without_counting(|| process_match_income(tabela, partida, resultado)));
-    PLACAR.record(igual, || format!("process_match_income(partida {:x}) original={:x?} rust={:x?}", partida, mo, mr));
+    SCOREBOARD.record(igual, || format!("process_match_income(partida {:x}) original={:x?} rust={:x?}", partida, mo, mr));
 }
 
 /// { 0x59af40 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::calc_gate_receipts(partida, publico)`, pelo registro da
@@ -321,7 +321,7 @@ unsafe extern "thiscall" fn comparar_calc_gate_receipts(tabela: usize, partida: 
     }
     let r = o(tabela, partida, publico);
     let n = calc_gate_receipts(tabela, partida, publico);
-    PLACAR.record(r == n, || format!("calc_gate_receipts(partida {:x}, publico {}) original={} rust={}", partida, publico, r, n));
+    SCOREBOARD.record(r == n, || format!("calc_gate_receipts(partida {:x}, publico {}) original={} rust={}", partida, publico, r, n));
     r
 }
 
@@ -337,5 +337,5 @@ unsafe extern "thiscall" fn pay_league_fine(this: usize, valor: i32) {
 unsafe extern "thiscall" fn comparar_pay_league_fine(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_league_fine(this, valor));
-    PLACAR.record(igual, || format!("pay_league_fine(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_league_fine(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }

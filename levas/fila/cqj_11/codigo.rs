@@ -67,7 +67,7 @@ unsafe fn check_cup_rules(nome: &str, this: usize, g: &ContinentalGroupRules, o:
     let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
     let b8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
     let premio = g.premio.map_or(true, |p| core::ptr::read_unaligned((this + 0x28) as *const u32) == p);
-    PLACAR.record(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this, r, &errados[..k], b6, palavra, b8, premio));
+    SCOREBOARD.record(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this, r, &errados[..k], b6, palavra, b8, premio));
     r
 }
 

@@ -11,12 +11,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_automatically(t: usize, o
 /// Comparer for `apply_squad_rule` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn comparar_apply_squad_rule(
-    clube: usize, manager: usize, rule: usize, mode: u32, nt: u32, nb: u32, nr: u32, starters: usize, bench: usize, reserve: usize,
+    club: usize, manager: usize, rule: usize, mode: u32, nt: u32, nb: u32, nr: u32, starters: usize, bench: usize, reserve: usize,
     out: usize, codigos: usize, curtos: usize, marks: usize, bytes: usize, side: usize,
 ) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(IDX_APPLY_SQUAD_RULE);
     if is_recording_top_level() {
-        return o(clube, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side);
+        return o(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side);
     }
     let n = |v: u32| (v as u8 as i8).max(0) as usize;
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -29,17 +29,17 @@ pub(crate) unsafe extern "C" fn comparar_apply_squad_rule(
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
-        || o(clube, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side),
-        || crate::rng::without_counting(|| apply_squad_rule(clube, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side)),
+        || o(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side),
+        || crate::rng::without_counting(|| apply_squad_rule(club, manager, rule, mode, nt, nb, nr, starters, bench, reserve, out, codigos, curtos, marks, bytes, side)),
     );
-    PLACAR.record(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(rule as *const u8, 6), mo, mr));
+    SCOREBOARD.record(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(rule as *const u8, 6), mo, mr));
 }
 
 /// Comparer for `off_match_score` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limit: i32, o: usize) -> i32 {
+pub(crate) unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, club: usize, limit: i32, o: usize) -> i32 {
     let f = original_fn::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(IDX_OFF_MATCH_SCORE);
     if is_recording_top_level() {
-        return f(p, pos, flags, clube, limit, o);
+        return f(p, pos, flags, club, limit, o);
     }
     // simplification: without the draw generator’s regions. The rating does not draw: the only random roll comes from 0x62ed70, which
     // updates the player’s fitness (0x62c680) only on the first query and stores it; the copy, after the
@@ -49,52 +49,52 @@ pub(crate) unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, fla
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
         || {
-            let (r, v) = crate::rng::trace(|| f(p, pos, flags, clube, limit, o));
+            let (r, v) = crate::rng::trace(|| f(p, pos, flags, club, limit, o));
             rastros.borrow_mut().0 = v;
             r
         },
         || {
-            let (r, v) = crate::rng::trace(|| crate::rng::without_counting(|| off_match_score(p, pos, flags, clube, limit, o)));
+            let (r, v) = crate::rng::trace(|| crate::rng::without_counting(|| off_match_score(p, pos, flags, club, limit, o)));
             rastros.borrow_mut().1 = v;
             r
         },
     );
-    PLACAR.record(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limit {}) original={} rust={} sorteios {:?} x {:?} {:x?} x {:x?}", p, pos as u16, flags, limit, r, n, rastros.borrow().0, rastros.borrow().1, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limit {}) original={} rust={} sorteios {:?} x {:?} {:x?} x {:x?}", p, pos as u16, flags, limit, r, n, rastros.borrow().0, rastros.borrow().1, mo, mr));
     r
 }
 
 /// Comparer for `lineup_slot_score` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn comparar_lineup_slot_score(
-    p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, side: usize, manager: usize, limit: i32, mark: u32, marca_alta: u32,
+    p: usize, f: usize, reg: usize, pos: u32, flags: u32, club: usize, side: usize, manager: usize, limit: i32, mark: u32, marca_alta: u32,
     bytes: u32, tactic: u32, pos2: u32, holiday: usize,
 ) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(IDX_LINEUP_SLOT_SCORE);
     if is_recording_top_level() {
-        return o(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday);
+        return o(p, f, reg, pos, flags, club, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday);
     }
     // without the randomizer’s regions, for the same reason as the rating outside the match (0x62ed70 with cache)
     let regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regions,
-        || o(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday),
-        || crate::rng::without_counting(|| lineup_slot_score(p, f, reg, pos, flags, clube, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday)),
+        || o(p, f, reg, pos, flags, club, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday),
+        || crate::rng::without_counting(|| lineup_slot_score(p, f, reg, pos, flags, club, side, manager, limit, mark, marca_alta, bytes, tactic, pos2, holiday)),
     );
-    PLACAR.record(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, mark, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, mark, r, n, mo, mr));
     r
 }
 
 /// Comparer for `select_side` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_select_side(t: usize, m: usize, manager: usize, rows: usize, players: usize, side: u32, clube: usize, other: usize, jogo: usize, slots: *mut i8) -> i8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(IDX_SELECT_SIDE)(t, m, manager, rows, players, side, clube, other, jogo, slots)
+pub(crate) unsafe extern "thiscall" fn comparar_select_side(t: usize, m: usize, manager: usize, rows: usize, players: usize, side: u32, club: usize, other: usize, game: usize, slots: *mut i8) -> i8 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(IDX_SELECT_SIDE)(t, m, manager, rows, players, side, club, other, game, slots)
 }
 
 /// Comparer for `perceived_ability` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c: usize, kind: i8, rep: i16) -> i16 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(IDX_PERCEIVED_ABILITY)(o, p, c, kind, rep);
     let n = perceived_ability(o, p, c, kind, rep);
-    PLACAR.record(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, kind, rep, r, n));
+    SCOREBOARD.record(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, kind, rep, r, n));
     r
 }
 
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "C" fn comparar_pick(
     // Probe (comparison only): 0x6dbc50, in mode 2, never writes the short of the 1st extra slot and passes
     // the stack garbage at the scale (return 0x6dd383). Counts how often it is not zero and whether zeroing it changes
     // the scale (the original twice: with the garbage and with 0).
-    if crate::desvios::RETORNO == 0x6dd383 && a5 as u8 != 0 && a15 != 0 {
+    if crate::detours::RETORNO == 0x6dd383 && a5 as u8 != 0 && a15 != 0 {
         use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
         static CHAMADAS: AtomicU32 = AtomicU32::new(0);
         static NAO_ZERO: AtomicU32 = AtomicU32::new(0);
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "C" fn comparar_pick(
     // the output and the static dates that the rating (0x6e2f20) touches
     let reg = [(a6, 4 * n), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, call, || pick(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15));
-    PLACAR.record(igual && r == rr, || format!("pick(n {} vagas {}+{} modo {:#x}) original={} rust={} {:x?} x {:x?}", a2 as u8 as i8, a4 as u8 as i8, a5 as u8 as i8, a7, r, rr, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("pick(n {} vagas {}+{} modo {:#x}) original={} rust={} {:x?} x {:x?}", a2 as u8 as i8, a4 as u8 as i8, a5 as u8 as i8, a7, r, rr, mo, mr));
     r
 }
 
@@ -163,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_stance(c: usize) -> u8 {
     // table that the league search (0x4a4850) sorts
     let reg = [(m + 4, 2), (m + engine::STANCE_FACTOR, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(c), || stance(c));
-    PLACAR.record(igual && r == rr, || format!("stance(lado {}) original={} rust={} {:x?} x {:x?}", byte(c, 0x18), r, rr, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("stance(lado {}) original={} rust={} {:x?} x {:x?}", byte(c, 0x18), r, rr, mo, mr));
     r
 }
 
@@ -182,15 +182,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_formation(c: usize, ficha
     reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_COMP_STATS_SORT_CONTEXT, 4)]);
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let clube = *((c + 0x2f) as *const usize);
+    let club = *((c + 0x2f) as *const usize);
     for humano in 0..2u32 {
-        let l = if clube == 0 { -1 } else { row(clube, humano) };
+        let l = if club == 0 { -1 } else { row(club, humano) };
         if l != -1 {
             reg.push(((*((taticas + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
     }
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c, fichas, a2, a3, a4), || choose_formation(c, fichas, a2, a3, a4));
-    PLACAR.record(igual && r == rr, || {
+    SCOREBOARD.record(igual && r == rr, || {
         // o primeiro byte diferente (as regioes sao grandes)
         let dif = mo.0.iter().zip(mr.0.iter()).find_map(|(a, b)| {
             a.1.iter().zip(b.1.iter()).position(|(x, y)| x != y).map(|k| format!("{:#x}+{:#x}: {:x?} x {:x?}", a.0, k, &a.1[k..(k + 8).min(a.1.len())], &b.1[k..(k + 8).min(b.1.len())]))
@@ -210,15 +210,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_instructions(c: usize) {
     reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4)]);
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let clube = *((c + 0x2f) as *const usize);
+    let club = *((c + 0x2f) as *const usize);
     for humano in 0..2u32 {
-        let l = if clube == 0 { -1 } else { row(clube, humano) };
+        let l = if club == 0 { -1 } else { row(club, humano) };
         if l != -1 {
             reg.push(((*((taticas + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c), || instructions(c));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let dif = mo.0.iter().zip(mr.0.iter()).find_map(|(a, b)| {
             a.1.iter().zip(b.1.iter()).position(|(x, y)| x != y).map(|k| format!("{:#x}+{:#x}: {:x?} x {:x?}", a.0, k, &a.1[k..(k + 8).min(a.1.len())], &b.1[k..(k + 8).min(b.1.len())]))
         });
@@ -238,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_put_in_place(c: usize, pos: u32,
     let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || o(c, pos, person, extra), |chamar| {
         place_in_slot_with(c, pos, person, extra, &mut |rotina, this, args| chamar(rotina, this, args, [u32::MAX, u32::MAX, 0xff, 0xff, 0xff]))
     });
-    PLACAR.record(igual && sequencia && r == rr, || format!("put_in_place({}, {:#x}) original={} rust={} {} chamadas: {}", pos as u8 as i8, person, r, rr, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == rr, || format!("put_in_place({}, {:#x}) original={} rust={} {} chamadas: {}", pos as u8 as i8, person, r, rr, k, tape_detail()));
     r
 }
 
@@ -246,7 +246,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_put_in_place(c: usize, pos: u32,
 pub(crate) unsafe extern "C" fn comparar_order_by_table(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_ORDER_BY_TABLE)(a, b);
     let n = order_by_table(a, b);
-    PLACAR.record(r == n, || format!("order_by_table({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    SCOREBOARD.record(r == n, || format!("order_by_table({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r
 }
 
@@ -254,7 +254,7 @@ pub(crate) unsafe extern "C" fn comparar_order_by_table(a: *const usize, b: *con
 pub(crate) unsafe extern "C" fn comparar_order_by_condition(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_ORDER_BY_CONDITION)(a, b);
     let n = order_by_condition(a, b);
-    PLACAR.record(r == n, || format!("order_by_condition({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    SCOREBOARD.record(r == n, || format!("order_by_condition({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r
 }
 
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_starters(c: usize) -> u8 {
     let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || o(c), |chamar| {
         starters_with(c, &mut |rotina, this, args| chamar(rotina, this, args, [0xff, u32::MAX, 0xff, 0, 0]))
     });
-    PLACAR.record(igual && sequencia && r == rr, || format!("starters(lado {}) original={} rust={} {} chamadas: {}", byte(c, 0x18), r, rr, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == rr, || format!("starters(lado {}) original={} rust={} {} chamadas: {}", byte(c, 0x18), r, rr, k, tape_detail()));
     r
 }
 
@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_store_tactic(c: usize) {
     let mut reg = linhas_do_clube(*((c + 0x2f) as *const usize));
     reg.push((0xb67a34, 4));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c), || store_tactic(c));
-    PLACAR.record(igual, || format!("store_tactic(humano {}) {}", byte(c, 0x19), primeira_diferenca(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("store_tactic(humano {}) {}", byte(c, 0x19), primeira_diferenca(&mo, &mr)));
 }
 
 /// Comparer for `substitute` (comparison mode: see the header of motor.rs).
@@ -307,7 +307,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_substitute(c: usize, goalkeeper:
             chamar(rotina, this, args, mask)
         })
     });
-    PLACAR.record(igual && sequencia, || format!("substitute(goleiro {}) {} chamadas: {}", goalkeeper as u8, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("substitute(goleiro {}) {} chamadas: {}", goalkeeper as u8, k, tape_detail()));
 }
 
 /// Comparer for `redo_team` (comparison mode: see the header of motor.rs).
@@ -333,7 +333,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_redo_team(c: usize) {
             chamar(rotina, this, args, mask)
         })
     });
-    PLACAR.record(igual && sequencia, || format!("redo_team() {} chamadas: {}", k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("redo_team() {} chamadas: {}", k, tape_detail()));
 }
 
 /// Comparer for `best_in_list` (comparison mode: see the header of motor.rs).
@@ -341,7 +341,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_best_in_list(this: usize, list: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const usize, i8) -> usize>(IDX_BEST_IN_LIST);
     let reg = [crate::rng::STATE_REGIONS[0], crate::rng::STATE_REGIONS[1], (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
     let (r, rr, igual, _, _) = crate::comparison::side_by_side_light(&reg, || o(this, list, n), || best_in_list(this, list, n));
-    PLACAR.record(igual && r == rr, || format!("best_in_list({}) original={:#x} rust={:#x}", n, r, rr));
+    SCOREBOARD.record(igual && r == rr, || format!("best_in_list({}) original={:#x} rust={:#x}", n, r, rr));
     r
 }
 
@@ -350,16 +350,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_best_rated(this: usize) -> i8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i8>(IDX_BEST_RATED);
     let reg = [crate::rng::STATE_REGIONS[0], crate::rng::STATE_REGIONS[1], (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
     let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&reg, || o(this), || best_rated(this));
-    PLACAR.record(igual && r == n, || format!("best_rated() original={} rust={}", r, n));
+    SCOREBOARD.record(igual && r == n, || format!("best_rated() original={} rust={}", r, n));
     r
 }
 
 /// Comparer for `rate_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_rate_player(person: usize, player: usize, clube: usize) -> i16 {
+pub(crate) unsafe extern "C" fn comparar_rate_player(person: usize, player: usize, club: usize) -> i16 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> i16>(IDX_RATE_PLAYER);
     // 0x54cdb0 touches its static date: the comparison restores it
     let reg = [crate::rng::STATE_REGIONS[0], crate::rng::STATE_REGIONS[1], (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, player, clube), || rate_player(person, player, clube));
-    PLACAR.record(igual && r == n, || format!("rate_player() original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, player, club), || rate_player(person, player, club));
+    SCOREBOARD.record(igual && r == n, || format!("rate_player() original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

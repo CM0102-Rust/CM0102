@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_record_match_result(this: usize, p: usize, 
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, m), || record_match_result(this, p, m));
-    PLACAR.record(igual, || format!("record_match_result(jogo {:#x}) original={:x?} rust={:x?}", p, mo, mr));
+    SCOREBOARD.record(igual, || format!("record_match_result(jogo {:#x}) original={:x?} rust={:x?}", p, mo, mr));
 }
 
 /// { 0x86a070 } (thiscall, ret 4, staff_records.cpp, SEH só da data local): `Staff_Records::add_league_finish_records(
@@ -260,5 +260,5 @@ unsafe extern "thiscall" fn comparar_add_supporters_player_of_year_record(this: 
     antes.write_back();
     o(this, pessoa, clube, a, b);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    PLACAR.record(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", pessoa, clube, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", pessoa, clube, mo, mr));
 }

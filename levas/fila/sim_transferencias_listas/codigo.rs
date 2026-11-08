@@ -55,7 +55,7 @@ unsafe fn comparar_lista_de_pagamentos(nome: &str, k: usize, rust: unsafe extern
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(k);
     let reg = payment_list_regions(gerente, id, lista, quantos);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, id), || rust(gerente, id));
-    PLACAR.record(igual, || format!("{}({}) {:x?} x {:x?}", nome, *id, mo, mr));
+    SCOREBOARD.record(igual, || format!("{}({}) {:x?} x {:x?}", nome, *id, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_remove_next_sale_percentage(gerente: usize, id: *const i32) {

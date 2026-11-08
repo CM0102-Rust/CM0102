@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, jogo: us
     reg.push((saida, 2));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo, saida),
         || crate::rng::without_counting(|| choose_match_official(this, jogo, saida)));
-    PLACAR.record(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", jogo, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", jogo, r, mo, n, mr));
     r
 }
 
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn comparar_clear_busy_flags(this: usize) -> u32 {
     let n = cpy8_i(this + 4);
     let reg = if n > 0 && cpy8_d(this + 8) != 0 { vec![(cpy8_d(this + 8), n as usize)] } else { Vec::new() };
     let (r, m, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || clear_busy_flags(this));
-    PLACAR.record(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
+    SCOREBOARD.record(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
     r
 }
 
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn comparar_renew_officials(this: usize, comp: usize) -
     reg.extend([(cpy8_d(0xae23e8), total * 0x2b), (cpy8_d(this), total * 0x11), (0xb67a34, 4)]);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, comp),
         || crate::rng::without_counting(|| renew_officials(this, comp)));
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("renew_officials(comp {:#x}) original={} rust={}, diferencas em {:x?}", comp, r, n, dif)

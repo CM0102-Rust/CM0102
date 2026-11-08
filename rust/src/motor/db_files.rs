@@ -10,12 +10,12 @@ use super::*;
 /// leitura seguinte). A primeira leitura que não vem dá 0 (o que já veio fica no registro); tudo, 1. Os
 /// bytes que o arquivo não traz (buracos do registro) ficam como estavam.
 pub(crate) unsafe fn convert_v1_records(stream: usize, use_zip: i32, records: usize, n: u32, size: usize,
-                       campos: &[(usize, u32, usize)], injury_word_0c: fn(u8) -> u16) -> i32 {
+                       fields: &[(usize, u32, usize)], injury_word_0c: fn(u8) -> u16) -> i32 {
     let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
         core::mem::transmute(if use_zip != 0 { 0x932c30usize } else { 0x945bfeusize });
     for i in 0..n as usize {
         let r = records + i * size;
-        for &(o, t, q) in campos {
+        for &(o, t, q) in fields {
             for k in 0..q {
                 if t == 0 {
                     let mut b = 0u8;
@@ -35,8 +35,8 @@ pub(crate) unsafe fn convert_v1_records(stream: usize, use_zip: i32, records: us
 /// Bytes of one version-1 record in the file, from its field list.
 ///
 /// [pt] Bytes de um registro da versão 1 no arquivo.
-pub(crate) fn v1_record_size(campos: &[(usize, u32, usize)]) -> usize {
-    campos.iter().map(|&(_, t, q)| t.max(1) as usize * q).sum()
+pub(crate) fn v1_record_size(fields: &[(usize, u32, usize)]) -> usize {
+    fields.iter().map(|&(_, t, q)| t.max(1) as usize * q).sum()
 }
 
 /// TClub (581 bytes) no club.dat versão 1 (577 bytes no arquivo): buracos em +0x37, +0x52 e +0x244; a
@@ -108,7 +108,7 @@ pub unsafe fn autoteste_dbj_1() {
     const ARQ: &str = "autoteste_banco_v1.tmp";
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
-    let (t0, d0) = PLACAR.counts();
+    let (t0, d0) = SCOREBOARD.counts();
     let mut s = TestRng(0x5631_4442_4a31);
     let casos: [(V1Converter, &[(usize, u32, usize)], usize); 3] = [(comparar_db_files_read_clubs_v1, &CLUB_V1_LAYOUT, 581),
         (comparar_db_files_read_players_v1, &NON_PLAYER_V1_LAYOUT, 68), (comparar_db_files_read_non_players_v1, &PLAYER_V1_FIELDS, 70)];
@@ -131,7 +131,7 @@ pub unsafe fn autoteste_dbj_1() {
         }
     }
     let _ = std::fs::remove_file(ARQ);
-    let (t1, d1) = PLACAR.counts();
+    let (t1, d1) = SCOREBOARD.counts();
     linha(&format!("banco v1 (conversores): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
 }
 
@@ -329,7 +329,7 @@ pub(crate) unsafe fn check_database_path(routine: &str, folder: usize, name: usi
     let o = core::slice::from_raw_parts(0xde1f64 as *const u8, 0x400);
     let end = |s: &[u8]| s.iter().position(|&b| b == 0).unwrap_or(s.len());
     let (a, b) = (&o[..end(o)], &c[..end(&c)]);
-    PLACAR.record(a == b, || format!("{} caminho {:?} x {:?}", routine, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
+    SCOREBOARD.record(a == b, || format!("{} caminho {:?} x {:?}", routine, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
 }
 
 /// Builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "rb"); the comparer checks the path.

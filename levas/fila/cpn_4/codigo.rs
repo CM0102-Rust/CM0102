@@ -242,7 +242,7 @@ unsafe extern "stdcall" fn comparar_retire_from_playing_staff(p: usize) {
     }
     let (antes_clube, antes_cargo) = (cpn4_d(p + 0x39), cpn4_b(p + 0x3d));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(p), || retire_from_playing_staff(p));
-    PLACAR.record(igual, || format!("retire_from_playing_staff(id {}, clube {:x}, cargo {}) {:x?} x {:x?}", cpn4_d(p), antes_clube, antes_cargo, mo, mr));
+    SCOREBOARD.record(igual, || format!("retire_from_playing_staff(id {}, clube {:x}, cargo {}) {:x?} x {:x?}", cpn4_d(p), antes_clube, antes_cargo, mo, mr));
 }
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x7ad220 sorteia), pelo clube devolvido.
@@ -250,7 +250,7 @@ unsafe extern "thiscall" fn comparar_pick_best_club_for_player(this: usize, joga
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let reg = crate::rng::STATE_REGIONS;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, jogador), || crate::rng::without_counting(|| pick_best_club_for_player(this, jogador)));
-    PLACAR.record(igual && r == n, || format!("pick_best_club_for_player(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("pick_best_club_for_player(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
     r
 }
 
@@ -266,6 +266,6 @@ unsafe extern "thiscall" fn comparar_pick_club_from_nation_list(this: usize, jog
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogador), || crate::rng::without_counting(|| pick_club_from_nation_list(this, jogador)));
-    PLACAR.record(igual && r == n, || format!("pick_club_from_nation_list(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("pick_club_from_nation_list(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
     r
 }

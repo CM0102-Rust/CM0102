@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn comparar_manager_manager_remove(this: usize, dado: u
             && (no == cabeca || cqb10_d(ant + 6) == prox)
             && (no == cauda || cqb10_d(prox + 0xa) == ant)
     };
-    PLACAR.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, dado, r, no, antes, depois));
+    SCOREBOARD.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, dado, r, no, antes, depois));
     r
 }
 
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn manager_manager_clear(this: usize) {
 unsafe extern "thiscall" fn comparar_manager_manager_clear(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let depois: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
-    PLACAR.record(depois == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, depois));
+    SCOREBOARD.record(depois == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, depois));
 }
 
 /// { 0x68d2e0 } (thiscall, ret 0): `LLIST::get_current()`: o item do nó do cursor (+0xa), sem andar; sem cursor, 0.
@@ -126,6 +126,6 @@ unsafe extern "thiscall" fn get_current(this: usize) -> usize {
 unsafe extern "thiscall" fn comparar_get_current(this: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%)(this);
     let n = get_current(this);
-    PLACAR.record(r == n, || format!("get_current({:#x}) original={:#x} rust={:#x}", this, r, n));
+    SCOREBOARD.record(r == n, || format!("get_current({:#x}) original={:#x} rust={:#x}", this, r, n));
     r
 }

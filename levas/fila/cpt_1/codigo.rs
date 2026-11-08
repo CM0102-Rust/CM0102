@@ -41,7 +41,7 @@ unsafe extern "thiscall" fn count_results_in_period(this: usize, nacao: usize, m
 unsafe extern "thiscall" fn comparar_count_results_in_period(this: usize, nacao: usize, mes_de: u32, ano_de: u32, mes_ate: u32, ano_ate: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(%%I0%%)(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
     let n = count_results_in_period(this, nacao, mes_de, ano_de, mes_ate, ano_ate);
-    PLACAR.record(r == n, || format!("count_results_in_period(nação {}, {}/{} a {}/{}) original={} rust={}", cpt1_d(nacao), mes_de as u8, ano_de as u16, mes_ate as u8, ano_ate as u16, r, n));
+    SCOREBOARD.record(r == n, || format!("count_results_in_period(nação {}, {}/{} a {}/{}) original={} rust={}", cpt1_d(nacao), mes_de as u8, ano_de as u16, mes_ate as u8, ano_ate as u16, r, n));
     r
 }
 
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn comparar_update_rankings(this: usize, data: usize) {
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, data), || update_rankings(this, data));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
         format!("update_rankings(dia {}) diferenças em {:x?}", cpt1_w(data), dif)
     });
@@ -141,6 +141,6 @@ unsafe extern "C" fn compare_result_points_desc(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_compare_result_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_result_points_desc(a, b);
-    PLACAR.record(r == n, || format!("compare_result_points_desc({}, {}) original={} rust={}", cpt1_h(a), cpt1_h(b), r, n));
+    SCOREBOARD.record(r == n, || format!("compare_result_points_desc({}, {}) original={} rust={}", cpt1_h(a), cpt1_h(b), r, n));
     r
 }

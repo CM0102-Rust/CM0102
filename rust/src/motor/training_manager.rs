@@ -57,23 +57,23 @@ pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
 /// +0x12 + 21) / 2; 1 (tática, +0x21 e +0x10) (chance + chance + +0x12) / 3; 2 (+0x10) (chance + +0xe + +0x12) / 3;
 /// 3 (+0x10) (chance + +0x12) / 2; 4 (+0x11) a chance (divisões truncadas para zero; a chance 0x544410), o byte com
 /// sinal dividido pelo divisor da quantidade de categorias marcadas (1,0 a 2,0, float), truncado e posto em 1..20.
-pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, tecnico: usize) {
+pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, club: usize, tecnico: usize) {
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if tecnico == 0 && human(clube, 1, 1, 0, 0) == 0 {
+    if tecnico == 0 && human(club, 1, 1, 0, 0) == 0 {
         return;
     }
-    if national_team(clube) != 0 {
+    if national_team(club) != 0 {
         return;
     }
-    let manager = if tecnico == 0 { read_u32_as_usize(clube + club::MANAGER) } else { tecnico };
+    let manager = if tecnico == 0 { read_u32_as_usize(club + club::MANAGER) } else { tecnico };
     let comissao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_COACH_ASSIGNMENTS);
     let auxiliar: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_ASSISTANT);
     let treinadores: unsafe extern "C" fn(usize, *mut usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CLUB_COACHES);
     let t = comissao(this, manager);
-    let aux = auxiliar(clube);
+    let aux = auxiliar(club);
     let mut tr = [0usize; 5];
-    treinadores(clube, tr.as_mut_ptr());
+    treinadores(club, tr.as_mut_ptr());
     let candidate = |k: i32| if k < 0 { aux } else { tr[k as usize] };
     for v in 0..6 {
         let e = t + 9 * v;
@@ -439,8 +439,8 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         // 0x8b41d0 leem o byte
         let lv = level(prog, k as u32) as u8 as i8;
         let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: o peso do nível
-        let clube = training_manager_club_of_contract(training_manager_get_contract_stored(p));
-        let fa = factor(this, clube, k as u32) as u16 as i16 as i32;
+        let club = training_manager_club_of_contract(training_manager_get_contract_stored(p));
+        let fa = factor(this, club, k as u32) as u16 as i16 as i32;
         let x = base.wrapping_add(((fa - 100) / 5) as i16);
         let weight: i16 = if x < 0 { 0 } else if x > 200 { 200 } else { x };
         let floor = ((read_i8(p + staff::PROFESSIONALISM) as i32 / 3) as i8).wrapping_sub(6);
@@ -953,12 +953,12 @@ pub(crate) fn coach_average_divisor(n: i8) -> f64 {
 /// original). Técnico humano: a comissão dele (0x8b4cd0, seis vagas de 9 bytes: id −1 é vaga vazia, a nota da categoria
 /// em +4 + categoria); com n treinadores de nota, a soma (16 bits) dividida pelo n-ésimo divisor e truncada (_ftol
 /// 0x945640), × 40/7 (0x970400) e truncada; abaixo de 50, 50. Quente no ramo do computador: sem contador ali.
-pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, category: i8) -> u32 {
+pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: usize, category: i8) -> u32 {
     let _ = this;
-    if clube == 0 {
+    if club == 0 {
         return 0;
     }
-    let t = read_u32_as_usize(clube + club::MANAGER);
+    let t = read_u32_as_usize(club + club::MANAGER);
     if t == 0 {
         crate::comparison::branch("cpt_8 sem tecnico");
         return 100; // cpt8: sem técnico

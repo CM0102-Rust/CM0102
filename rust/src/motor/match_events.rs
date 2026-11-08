@@ -633,11 +633,11 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                         let two = t(pos + 2) == b'2';
                         let home = b(6) != 0;
                         let id = if two == home { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
-                        let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE));
+                        let club = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE));
                         prefixo(pos, &mut pre);
                         sufixo(pos + 2, &mut suf);
-                        let g = *((clube + club::SHORT_GENDER_NAME) as *const u8) as u32;
-                        let r = compor(clube + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
+                        let g = *((club + club::SHORT_GENDER_NAME) as *const u8) as u32;
+                        let r = compor(club + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
                         if t(pos + 2) == b'C' || t(pos + 2) == b'c' {
                             em_maiusculas(out, r);
                         } else {
@@ -976,11 +976,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             let two = t(pos + 2) == b'2';
                             let home = b(6) != 0;
                             let id = if two == home { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
-                            let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE));
+                            let club = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE));
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
-                            let g = *((clube + club::SHORT_GENDER_NAME) as *const u8) as u32;
-                            let r = compor(clube + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
+                            let g = *((club + club::SHORT_GENDER_NAME) as *const u8) as u32;
+                            let r = compor(club + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
                             if t(pos + 2) == b'C' || t(pos + 2) == b'c' {
                                 em_maiusculas(out, r);
                             } else {
@@ -1304,9 +1304,9 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
     let list: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let textos: unsafe extern "C" fn(*const u8, *const u8, i32, u32) -> i32 = core::mem::transmute(FN_UTILS_STRING_COMPARE);
     for k in 0..2 {
-        let clube = *((pt + 4 * k) as *const u32) as usize;
+        let club = *((pt + 4 * k) as *const u32) as usize;
         let mut l = [0usize; 100];
-        list(*(G_CLUB_TABLE as *const usize) + clube * club::SIZE, l.as_mut_ptr(), 1);
+        list(*(G_CLUB_TABLE as *const usize) + club * club::SIZE, l.as_mut_ptr(), 1);
         for &q in l.iter() {
             if q == 0 {
                 continue;
@@ -1707,11 +1707,11 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
     let today = *(G_CURRENT_DATE as *const [u8; 8]);
     let mut records: Vec<[u8; 0x17]> = Vec::new();
     for o_clube in [0x1c, 0x20] {
-        let clube = *((c + o_clube) as *const usize);
-        if clube == 0 {
+        let club = *((c + o_clube) as *const usize);
+        if club == 0 {
             continue;
         }
-        let id = *(clube as *const i32);
+        let id = *(club as *const i32);
         for sub in [0x3fi16, 0x40, 0x41, 0x5c, 0x5f, 0x60, 0x61, 0x62, 99] {
             let mut r = [0u8; 0x17];
             r[..8].copy_from_slice(&today);
@@ -1726,12 +1726,12 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
     records.sort_by_key(key);
     records.dedup_by_key(|r| key(r));
     let falsa: [usize; 3] = [records.as_ptr() as usize, 0, records.len()];
-    let midia = *(G_MEDIA as *const usize);
+    let media = *(G_MEDIA as *const usize);
     let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| {
         // 0: the real state; 1: with the news; 2: with the news at minute 31
         for cenario in 0..3 {
-            *(G_MEDIA as *mut usize) = if cenario == 0 { midia } else { falsa.as_ptr() as usize };
+            *(G_MEDIA as *mut usize) = if cenario == 0 { media } else { falsa.as_ptr() as usize };
             core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, if cenario == 2 { 31 * 11 } else { minute });
             for lado in 0..2u32 {
                 let notas: Vec<(usize, usize)> = (0..20).map(|k| (m + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
@@ -1748,13 +1748,13 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
                         let mut reg = crate::rng::STATE_REGIONS.to_vec();
                         reg.push((ps as usize, 4));
                         let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m, lado, evento, ps), || context_commentary(m, lado, evento, ps));
-                        PLACAR.record(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, media {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limit, r, n, mo, mr));
+                        SCOREBOARD.record(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, media {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limit, r, n, mo, mr));
                     }
                 }
                 guardadas.write_back();
             }
         }
-        *(G_MEDIA as *mut usize) = midia;
+        *(G_MEDIA as *mut usize) = media;
         core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, minute);
     }));
     state.write_back();

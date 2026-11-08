@@ -1192,7 +1192,7 @@ unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
     let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regioes, || o(data),
         || crate::rng::without_counting(|| database_player_initialisation(data)));
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])));
-    PLACAR.record(igual, || match onde {
+    SCOREBOARD.record(igual, || match onde {
         Some((a, x, y)) => format!("database_player_initialisation: diverge em {:x} original={:02x} rust={:02x}", a, x, y),
         None => "database_player_initialisation: estado do sorteador diferente".to_string(),
     });

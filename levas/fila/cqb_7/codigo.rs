@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn comparar_is_work_permit_granted(this: usize, p: usiz
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, p, nacao, oferta, registro, sorteio),
         || crate::rng::without_counting(|| is_work_permit_granted(this, p, nacao, oferta, registro, sorteio)));
-    PLACAR.record(igual && r == n, || format!("is_work_permit_granted(pessoa {:#x}, oferta {:#x}, registro {:#x}, sorteio {}) original={} {:x?} rust={} {:x?}", p, oferta, registro, sorteio, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("is_work_permit_granted(pessoa {:#x}, oferta {:#x}, registro {:#x}, sorteio {}) original={} {:x?} rust={} {:x?}", p, oferta, registro, sorteio, r, mo, n, mr));
     r
 }
 
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn transfer_manager_get_squad_status_for_reason(_this: 
 unsafe extern "thiscall" fn comparar_transfer_manager_get_squad_status_for_reason(this: usize, p: usize, motivo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, p, motivo), || transfer_manager_get_squad_status_for_reason(this, p, motivo));
-    PLACAR.record(igual && r as u8 == n as u8, || format!("transfer_manager_get_squad_status_for_reason(pessoa {:#x}, motivo {:#x}) original={} {:x?} rust={} {:x?}", p, motivo, r as u8, mo, n as u8, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("transfer_manager_get_squad_status_for_reason(pessoa {:#x}, motivo {:#x}) original={} {:x?} rust={} {:x?}", p, motivo, r as u8, mo, n as u8, mr));
     r
 }
 
@@ -259,6 +259,6 @@ unsafe extern "thiscall" fn get_negotiation_slot(this: usize, i: i32) -> usize {
 unsafe extern "thiscall" fn comparar_get_negotiation_slot(this: usize, i: i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(this, i);
     let n = get_negotiation_slot(this, i);
-    PLACAR.record(r == n, || format!("get_negotiation_slot({}) original={:#x} rust={:#x}", i, r, n));
+    SCOREBOARD.record(r == n, || format!("get_negotiation_slot({}) original={:#x} rust={:#x}", i, r, n));
     r
 }

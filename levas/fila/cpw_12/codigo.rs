@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn comparar_record_international_result(this: usize, p:
     antes.write_back();
     o(this, p, m);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(mo == mr, || format!("record_international_result(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p, m, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("record_international_result(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p, m, mo, mr));
 }
 
 /// { 0x775610 } (thiscall, ret 0x14, national_teams.cpp; `this` não é lido): `NationalTeams::format_squad_label(tipo,
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn comparar_format_squad_label(this: usize, tipo: u32, 
     let reg = [(saida, (tamanho as usize).min(0x40))];
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tipo, sub23, saida, tamanho, minusculo),
         || format_squad_label(this, tipo, sub23, saida, tamanho, minusculo));
-    PLACAR.record(igual && ro == rr, || format!("format_squad_label({}, {}, {}) original={:x} {:x?} rust={:x} {:x?}", tipo as u8, sub23, minusculo as u8, ro, mo, rr, mr));
+    SCOREBOARD.record(igual && ro == rr, || format!("format_squad_label({}, {}, {}) original={:x} {:x?} rust={:x} {:x?}", tipo as u8, sub23, minusculo as u8, ro, mo, rr, mr));
     ro
 }
 
@@ -274,6 +274,6 @@ unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, fase:
     }
     let r = o(this, fase, rodada);
     let n = are_round_fixtures_known(this, fase, rodada);
-    PLACAR.record(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, fase, rodada, r, n));
+    SCOREBOARD.record(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, fase, rodada, r, n));
     r
 }

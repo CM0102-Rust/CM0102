@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn cqw5_supercopa_asiatica(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqw5_supercopa_asiatica(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x9676c8, &CQW5_CAMPOS_SUPERCOPA_ASIATICA, true);
-    PLACAR.record(erro.is_none(), || format!("cqw5_supercopa_asiatica({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqw5_supercopa_asiatica({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn cqw5_copa_interamericana(this: usize, ano: u32, dono
 unsafe extern "thiscall" fn comparar_cqw5_copa_interamericana(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x96bad8, &CQW5_CAMPOS_COPA_INTERAMERICANA, true);
-    PLACAR.record(erro.is_none(), || format!("cqw5_copa_interamericana({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqw5_copa_interamericana({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn cqw5_copa_mercosul(this: usize, ano: u32, dono: usiz
 unsafe extern "thiscall" fn comparar_cqw5_copa_mercosul(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x968b40, &CQW5_CAMPOS_COPA_MERCOSUL, false);
-    PLACAR.record(erro.is_none(), || format!("cqw5_copa_mercosul({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqw5_copa_mercosul({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -299,6 +299,6 @@ unsafe extern "thiscall" fn cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: 
 unsafe extern "thiscall" fn comparar_cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x9708f8, &CQW5_CAMPOS_JOGO_DAS_ESTRELAS, true);
-    PLACAR.record(erro.is_none(), || format!("cqw5_jogo_das_estrelas({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    SCOREBOARD.record(erro.is_none(), || format!("cqw5_jogo_das_estrelas({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

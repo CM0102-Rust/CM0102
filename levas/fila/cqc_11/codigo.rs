@@ -369,7 +369,7 @@ unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usiz
             dif.push((q, depois, esperado));
         }
     }
-    PLACAR.record(igual && dif.is_empty(), || {
+    SCOREBOARD.record(igual && dif.is_empty(), || {
         format!("arrange_international_friendlies(datas {:x}, {}) tape_lock de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
             datas, n as i16, quantos, pos, falhou, dif.iter().take(4).collect::<Vec<_>>())
     });
@@ -458,7 +458,7 @@ unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(this: usize
     let reg = news_text_regions(texto, tamanho);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, a, b, clube, dia, ano, data, texto, tamanho),
         || friendly_check_match_invitation(this, a, b, clube, dia, ano, data, texto, tamanho));
-    PLACAR.record(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
         a, b, clube, data, r, n, mo, mr));
     r
 }
@@ -509,7 +509,7 @@ unsafe extern "thiscall" fn comparar_friendly_check_tournament_invitation(this: 
     let reg = news_text_regions(texto, tamanho);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, torneio, texto, tamanho),
         || friendly_check_tournament_invitation(this, clube, torneio, texto, tamanho));
-    PLACAR.record(igual && r == n, || format!("friendly_check_tournament_invitation(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("friendly_check_tournament_invitation(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",
         clube, torneio, r, n, mo, mr));
     r
 }

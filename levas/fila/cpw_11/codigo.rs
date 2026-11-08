@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn comparar_league_add_result(liga: usize, p: usize, jo
     antes.write_back();
     let ro = o(liga, p, jogo);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(ro == rr && mo == mr, || format!("league_add_result({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", liga, p, ro, mo, rr, mr));
+    SCOREBOARD.record(ro == rr && mo == mr, || format!("league_add_result({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", liga, p, ro, mo, rr, mr));
     ro
 }
 
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_copy_table(liga: usize) -> usize {
             }
         }
     }
-    PLACAR.record(c != 0 && erros.is_empty(), || format!("copy_table({:x}) n {} copia {:x}: {}", liga, n, c, erros.join("; ")));
+    SCOREBOARD.record(c != 0 && erros.is_empty(), || format!("copy_table({:x}) n {} copia {:x}: {}", liga, n, c, erros.join("; ")));
     c
 }
 
@@ -240,5 +240,5 @@ unsafe extern "thiscall" fn comparar_league_set_predicted_positions(liga: usize)
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.record(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubes: {}", liga, n, erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubes: {}", liga, n, erros.join("; ")));
 }

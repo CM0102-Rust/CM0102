@@ -180,7 +180,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
     let construct: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
     let destroy: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
     let erase: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-    let jogo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) = core::mem::transmute(FN_FIXED_FIXTURE_SET_BY_CLUB_NAMES);
+    let game: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) = core::mem::transmute(FN_FIXED_FIXTURE_SET_BY_CLUB_NAMES);
     let n = league_match_count(this);
     let block = new((n as u32).wrapping_mul(16).wrapping_add(4));
     let array = if block != 0 {
@@ -190,20 +190,20 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
     } else {
         0
     };
-    write_u32_from_usize(this + 0xea, array);
+    write_u32_from_usize(this + league::FIXED_FIXTURES, array);
     if array == 0 {
         show_error_at(file, row);
         return;
     }
     for (k, &(dia, mes, ano, casa, fora)) in table.iter().enumerate() {
-        jogo(read_u32_as_usize(this + 0xea) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
+        game(read_u32_as_usize(this + league::FIXED_FIXTURES) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
     }
     crate::comparison::branch("cqn_6 calendario fixo");
     let n = league_match_count(this);
     if n <= 0 {
         return;
     }
-    let v = read_u32_as_usize(this + 0xea);
+    let v = read_u32_as_usize(this + league::FIXED_FIXTURES);
     for i in 0..n as usize {
         let f = v + i * 0x10;
         if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn6: um clube sem achar derruba a lista
@@ -211,7 +211,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
                 destroy(v, 0x10, read_u32_as_usize(v - 4) as u32, 0x5a53c0);
                 erase(v - 4);
             }
-            write_u32_from_usize(this + 0xea, 0);
+            write_u32_from_usize(this + league::FIXED_FIXTURES, 0);
             return;
         }
     }
@@ -224,10 +224,10 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
 /// cada jogo com os dois clubes achados), ou foi derrubada (+0xea = 0).
 pub(crate) unsafe fn fra_first_compare_fixed_fixtures(name: &str, this: usize, original: impl FnOnce()) {
     original();
-    let v = read_u32_as_usize(this + 0xea);
+    let v = read_u32_as_usize(this + league::FIXED_FIXTURES);
     let n = league_match_count(this);
     let ok = v == 0 || (read_u32_as_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_u32_as_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_u32_as_usize(v + i * 0x10 + 0xc) != 0xffff_ffff));
-    PLACAR.record(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", name, this, v));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", name, this, v));
 }
 
 
@@ -892,8 +892,8 @@ pub(crate) unsafe fn fra_first_apply_league_rules(this: usize, escritas: &[(usiz
     }
     if !FRA_FIRST_RULES_DRY_RUN {
         let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
-        let t = rounds(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
-        core::ptr::write_unaligned((this + 0xba) as *mut usize, t);
+        let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
+        core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, t);
     }
     1
 }
@@ -902,7 +902,7 @@ pub(crate) unsafe fn fra_first_apply_league_rules(this: usize, escritas: &[(usiz
 ///
 /// [pt] A temporada 2001 (+0x40, o ano da liga, = 0x7d1): a última com 18 clubes na primeira divisão.
 pub(crate) unsafe fn is_2001_season(this: usize) -> bool {
-    core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1
+    core::ptr::read_unaligned((this + league::YEAR) as *const u16) == 0x7d1
 }
 
 /// Rule writes common to the three French divisions (points, tiebreaks, no play-off, rule bits 0x83, 3 subs).
@@ -964,7 +964,7 @@ pub(crate) unsafe fn national_division_rules(this: usize) -> Vec<(usize, u8, u32
 /// grava as regras sem a virtual +0x3c; os campos que a cópia grava saem iguais aos da original, e a devolução 1; no
 /// fim fica a faixa da original.
 pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
-    let band = [(this + 0x1c, 0xd0)];
+    let band = [(this + league::UPPER_DIVISION_ID, 0xd0)];
     let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
     let mo = crate::comparison::MemorySnapshot::read(&band);
@@ -983,7 +983,7 @@ pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: usize, esc
         }
     };
     let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    PLACAR.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
+    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
     r
 }
 
@@ -1004,8 +1004,8 @@ pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: usize, esc
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve se encheu.
 pub(crate) unsafe fn fra_first_fill_league_table(this: usize, file: usize, row: u32, g: usize) -> Option<bool> {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
-    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
+    let t = alloc((read_i16(this + league::CLUB_COUNT) as i32 as u32).wrapping_mul(0x3b));
+    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
         return None;
@@ -1013,23 +1013,23 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: usize, file: usize, row: 
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(G_CLUB_TABLE);
+    let mut club = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        let comp = read_usize(clube + club::DIVISION);
+        let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let row = k; // cqj6: a linha k recebe o k-ésimo clube da divisão
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
-            iniciar(this, row as u32, clube, 0, 0);
+            iniciar(this, row as u32, club, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
             }
         }
         i = i.wrapping_add(1);
-        clube = clube.wrapping_add(0x245);
+        club = club.wrapping_add(0x245);
     }
-    Some(k as i8 as i16 == read_i16(this + 0x3e))
+    Some(k as i8 as i16 == read_i16(this + league::CLUB_COUNT))
 }
 
 /// Creates the French top-division table: 18 clubs in the 2001 season and 20 afterwards; prize fund of 200,000 per
@@ -1068,23 +1068,23 @@ pub(crate) unsafe fn fra_first_compare_league_table(name: &str, this: usize, n: 
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        let comp = read_usize(clube + club::DIVISION);
+        let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
+        let comp = read_usize(club + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
-            plan.push(clube);
+            plan.push(club);
         }
         i += 1;
     }
     let r = original();
-    let t = read_usize(this + 0xb1);
-    let mut same = r == (plan.len() as i16 == n) as u32 && read_i16(this + 0x3e) == n && t != 0;
+    let t = read_usize(this + league::TABLE);
+    let mut same = r == (plan.len() as i16 == n) as u32 && read_i16(this + league::CLUB_COUNT) == n && t != 0;
     let mut found: Vec<usize> = Vec::new();
     if same {
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
         if r == 1 {
-            let e1 = *((this + 0xe1) as *const u8);
-            let f = core::ptr::read_unaligned((this + 0x28) as *const i32);
+            let e1 = *((this + league::PRIZE_MODE) as *const u8);
+            let f = core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32);
             same = same
                 && match cota {
                     Some(c) => {
@@ -1095,7 +1095,7 @@ pub(crate) unsafe fn fra_first_compare_league_table(name: &str, this: usize, n: 
                 };
         }
     }
-    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 

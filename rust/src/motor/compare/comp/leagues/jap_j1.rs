@@ -12,7 +12,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize
     let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_JAP_J1_ADVANCE_STAGE)(this);
     let after = read_usize(this + 0x30) as i32;
-    PLACAR.record(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `create_championship_final_stage` (comparison mode: see the header of motor.rs).
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_championship_final_stage(
         let (x, y) = (read_usize(l), read_usize(l + 6));
         read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
     };
-    PLACAR.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, stage, read_usize(this + 0x30)));
+    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, stage, read_usize(this + 0x30)));
 }
 
 /// Comparer for `jap_j1_start_new_season` (comparison mode: see the header of motor.rs).
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: us
     let before = read_i16(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_START_NEW_SEASON)(this);
     let after = read_i16(this + 0x40);
-    PLACAR.record(after == before.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, before, after, read_usize(this + 0x2c)));
+    SCOREBOARD.record(after == before.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, before, after, read_usize(this + 0x2c)));
     r
 }
 
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_set_up_rules(this: usize)
         j1_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("jap_j1_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("jap_j1_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 

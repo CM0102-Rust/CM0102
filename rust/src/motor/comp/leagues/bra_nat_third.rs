@@ -6,8 +6,8 @@ use super::*;
 ///
 /// [pt] O clube da primeira linha da tabela (+0xb1) da fase `k` da liga (k = −1: a própria liga).
 pub(crate) unsafe fn stage_leader(this: usize, k: i32) -> usize {
-    let t = if k == -1 { this } else { read_usize(read_usize(this + 0xc) + 4 * k as usize) };
-    read_usize(read_usize(t + 0xb1))
+    let t = if k == -1 { this } else { read_usize(read_usize(this + league::STAGES) + 4 * k as usize) };
+    read_usize(read_usize(t + league::TABLE))
 }
 
 /// Creates the Series C final: the winner of third-round group A against the winner of group B, in a two-club cup stage
@@ -241,7 +241,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g:
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, g, &mut rodadas, &mut extra, 0);
-    let v = alloc(((read_i16(this + 0x3e) as i32) << 2) as u32);
+    let v = alloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
     if v == 0 {
         return show_error_at(0x98aba4, 0x475);
     }
@@ -251,20 +251,20 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g:
     }
     let p = new(0xee);
     let stage = if p != 0 {
-        construct(p, this, 7, v, 2, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + pv) as u32, read_u8(this + 0xc3) as u32,
-                  read_u8(this + 0xc4) as u32, this + 0xc5, this + 0xbe, read_i16(this + 0x40) as u16 as u32, g, extra as u16 as u32,
-                  read_u8(this + 0x51) as u32, 1, 0, read_i16(this + 0xd9) as u16 as u32, -1, 0, 2)
+        construct(p, this, 7, v, 2, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + pv) as u32, read_u8(this + league::DRAW_POINTS) as u32,
+                  read_u8(this + league::MATCH_CATEGORY) as u32, this + league::TIEBREAKS, this + league::PROMOTED_COUNT, read_i16(this + league::YEAR) as u16 as u32, g, extra as u16 as u32,
+                  read_u8(this + league::IMPORTANCE) as u32, 1, 0, read_i16(this + league::LEAGUE_FLAGS) as u16 as u32, -1, 0, 2)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, stage);
-    if read_usize(read_usize(this + 0xc) + 4 * k as usize) == 0 {
+    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 4 * k as usize) as *mut usize, stage);
+    if read_usize(read_usize(this + league::STAGES) + 4 * k as usize) == 0 {
         return show_error_at(0x98aba4, 0x487);
     }
     crate::comparison::branch("cqs_3 grupo");
     soltar(v);
     soltar(t);
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, k);
 }
 
 /// A Series C first-round group: seven clubs of the 56-club list (the first seven slots are the league's own group;
@@ -410,8 +410,8 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let second = read_usize(read_usize(this + league::STAGES) + 0x1c);
     let mut n = 0usize;
     let mut i = 0i32;
-    while i < read_i16(second + 0x3e) as i32 {
-        let e = read_usize(second + 0xa7) + 6 * i as usize;
+    while i < read_i16(second + cup::TEAM_COUNT) as i32 {
+        let e = read_usize(second + cup::TEAM_TABLE) + 6 * i as usize;
         // simplification: the original writes without bounds into a list of 8 on the stack; the stage has 8 winners (the copy stops at the 8th).
         if read_u8(e + 5) == 1 && n < 8 {
             v[n] = read_usize(e);
@@ -488,17 +488,17 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
     }
     let mut k: u8 = 0;
     let mut i: i32 = 0;
-    let mut clube = read_usize(G_CLUB_TABLE);
+    let mut club = read_usize(G_CLUB_TABLE);
     while i < read_usize(G_CLUB_COUNT) as i32 {
         if (k as i8) >= 0x38 {
             break;
         }
-        if read_usize(clube + club::DIVISION) == read_usize(this + 4) {
-            core::ptr::write_unaligned((read_usize(this + bra_nat_third::CLUB_LIST) + (k as i8 as isize as usize) * 4) as *mut usize, clube);
+        if read_usize(club + club::DIVISION) == read_usize(this + 4) {
+            core::ptr::write_unaligned((read_usize(this + bra_nat_third::CLUB_LIST) + (k as i8 as isize as usize) * 4) as *mut usize, club);
             k = k.wrapping_add(1);
         }
         i += 1;
-        clube = clube.wrapping_add(0x245);
+        club = club.wrapping_add(0x245);
     }
     crate::comparison::branch("cql_7 serie c sorteio");
     embaralhar(read_usize(this + bra_nat_third::CLUB_LIST), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
@@ -534,9 +534,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_up_rules(this: usize) -
 /// no quadrangular (fases 8 e 9), os que sobem (0) ganham os registros de acesso e de classificação e o destino 0 na
 /// primeira tabela que os tiver (a liga ou os estágios 0..6); na final (10), o campeão (1) ganha o registro de campeão.
 /// Devolve 0, ou -1 nas situações que a fase não espera.
-pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
-    serie_c_staff_records(this, clube, status, stage, true).0
+    serie_c_staff_records(this, club, status, stage, true).0
 }
 
 
@@ -549,8 +549,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_st
 /// grupos (fase < 7), a e b: 1, 2 → 1, 3 → 0x11 ... 7 → 0x31; c: 1, 2 → 9, depois igual; nas fases 7 em diante, os
 /// códigos como vêm (o trecho das fases 1 a 3 que a original tem depois do teste `fase >= 7` nunca roda). Devolve a
 /// entrada.
-pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usize, clube: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
+pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
+    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, club);
     let (fa, a, b, c) = (stage as u8 as i8, a as u8, b as u8, c as u8);
     if fa < 7 {
         let (a, c) = (serie_c_progress_code(a, 1), serie_c_progress_code(c, 9));

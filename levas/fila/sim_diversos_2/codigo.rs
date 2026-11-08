@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_get_offers_for_player(this: usize, pessoa: 
     let l = if e == 0 { 0 } else { *(e as *const usize) };
     let reg = if l == 0 { vec![] } else { vec![(l, 0xe)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, lista, todas), || get_offers_for_player(this, pessoa, lista, todas));
-    PLACAR.record(igual && r == n, || format!("get_offers_for_player({}, todas {}) original={} rust={} {:x?} x {:x?}", *pessoa, todas, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_offers_for_player({}, todas {}) original={} rust={} {:x?} x {:x?}", *pessoa, todas, r, n, mo, mr));
     r
 }
 
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn comparar_update_club_target_reputation(this: usize, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%);
     let reg = [(shopping_list_entry(this, clube) + 5, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube), || update_club_target_reputation(this, clube));
-    PLACAR.record(igual && r == n, || format!("update_club_target_reputation({}) original={} rust={} {:x?} x {:x?}", *(clube as *const i32), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("update_club_target_reputation({}) original={} rust={} {:x?} x {:x?}", *(clube as *const i32), r, n, mo, mr));
     r
 }
 
@@ -159,6 +159,6 @@ unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(jogo: usize,
     }
     let reg = [(noticia + 5, 200), (cursor as usize, 1)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(jogo, noticia, cursor), || comp_util_write_fixture_to_news_slots(jogo, noticia, cursor));
-    PLACAR.record(igual && r == n, || format!("comp_util_write_fixture_to_news_slots(cursor {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("comp_util_write_fixture_to_news_slots(cursor {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

@@ -152,7 +152,7 @@ unsafe extern "C" fn comparar_cqv3_acesso_dos_estaduais() {
             erros.push(format!("rebaixado {:#x} em {:#x} (esperado {:#x})", c, cqv3_d(c + 0x60), b));
         }
     }
-    PLACAR.record(erros.is_empty(), || format!("cqv3_acesso_dos_estaduais: {}", erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("cqv3_acesso_dos_estaduais: {}", erros.join("; ")));
 }
 
 /// A liga da Série C e o registro dela.
@@ -257,7 +257,7 @@ unsafe extern "C" fn comparar_cqv3_renovar_serie_c() {
     let fora = v.iter().filter(|&&c| cqv3_d(c + 0x57) == 0).count();
     let esperado = if v.len() >= 0x10 { 0x10 } else { 0 };
     let saiu = marcados.iter().all(|&c| cqv3_d(c + 0x57) == 0);
-    PLACAR.record(entraram == esperado && entraram + fora == v.len() && saiu,
+    SCOREBOARD.record(entraram == esperado && entraram + fora == v.len() && saiu,
                      || format!("cqv3_renovar_serie_c: {} sem divisão, entraram {} (esperado {}), ficaram {}, marcados {} todos fora: {}", v.len(), entraram, esperado, fora, marcados.len(), saiu));
 }
 
@@ -329,6 +329,6 @@ unsafe extern "thiscall" fn comparar_cqv3_virada_da_j2(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let igual = depois == antes.wrapping_add(1) && cqv3_d(this + 8) == bloco && cqv3_d(this + 0xb1) != 0;
-    PLACAR.record(igual, || format!("cqv3_virada_da_j2({:#x}) ano antes={} depois={} +8={:#x} +0xb1={:#x}", this, antes, depois, cqv3_d(this + 8), cqv3_d(this + 0xb1)));
+    SCOREBOARD.record(igual, || format!("cqv3_virada_da_j2({:#x}) ano antes={} depois={} +8={:#x} +0xb1={:#x}", this, antes, depois, cqv3_d(this + 8), cqv3_d(this + 0xb1)));
     r
 }

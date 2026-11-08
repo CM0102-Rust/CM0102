@@ -6,7 +6,7 @@ Criado em 17/10/2026 para o jogo de botão do Lucas (um motor 2D em Rust que des
 
 ## O contrato (versão 1)
 
-- A `ddraw.dll` (o núcleo, `rust/src/extensao.rs`) carrega, se existir, a `botao.dll` da pasta do jogo, no primeiro instante de partida.
+- A `ddraw.dll` (o núcleo, `rust/src/extension.rs`) carrega, se existir, a `botao.dll` da pasta do jogo, no primeiro instante de partida.
 - A DLL exporta, em C:
   - `extern "C" fn cm_instante(motor: *const u8)`: chamada no início de cada instante do laço do motor (0x6b98c0, `laco_do_motor` em `motor.rs`);
   - `extern "C" fn cm_versao() -> u32` (opcional): a versão do contrato que ela espera; diferente de `extensao::VERSAO`, a DLL não é usada.

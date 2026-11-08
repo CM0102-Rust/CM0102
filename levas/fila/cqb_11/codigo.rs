@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn comparar_sort_round_teams(copa: usize, rodada: u32) 
     reg.extend(all_ties_regions(copa));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada),
         || crate::rng::without_counting(|| sort_round_teams(copa, rodada)));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("sort_round_teams(rodada {}) diferencas em {:x?}", rodada as i16, dif)
@@ -305,7 +305,7 @@ unsafe extern "thiscall" fn comparar_check_round_teams_for_nation(copa: usize, r
     reg.extend(all_ties_regions(copa));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada),
         || crate::rng::without_counting(|| check_round_teams_for_nation(copa, rodada)));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("check_round_teams_for_nation(rodada {}) diferencas em {:x?}", rodada as i16, dif)
@@ -323,5 +323,5 @@ unsafe extern "thiscall" fn comparar_cup_start_new_season(copa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg = [(copa + 0xb1, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa), || cup_start_new_season(copa));
-    PLACAR.record(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", copa, mo, mr));
+    SCOREBOARD.record(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", copa, mo, mr));
 }

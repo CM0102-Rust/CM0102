@@ -4,8 +4,8 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../transfer/scotland_rules.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `scotland_rules_can_loan_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_scotland_rules_can_loan_player(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
-    england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_SCOTLAND_RULES_CAN_LOAN_PLAYER), scotland_rules_can_loan_player, "scotland_rules_can_loan_player", this, clube, player, msg, reason)
+pub(crate) unsafe extern "thiscall" fn comparar_scotland_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+    england_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_SCOTLAND_RULES_CAN_LOAN_PLAYER), scotland_rules_can_loan_player, "scotland_rules_can_loan_player", this, club, player, msg, reason)
 }
 
 /// Comparer for `scotland_rules_get_loan_period` (comparison mode: see the header of motor.rs).
@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_scotland_rules_get_loan_period(t
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(IDX_SCOTLAND_RULES_GET_LOAN_PERIOD);
     let regions = [(ini_month as usize, 1usize), (ini_year as usize, 2), (end_month as usize, 1), (end_year as usize, 2), (G_CONTRACT_LOOKUP_RESULT, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, a1, a2, ini_month, ini_year, end_month, end_year, player), || scotland_rules_get_loan_period(this, a1, a2, ini_month, ini_year, end_month, end_year, player));
-    PLACAR.record(igual, || format!("scotland_rules_get_loan_period(regras {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, player, mo, mr));
+    SCOREBOARD.record(igual, || format!("scotland_rules_get_loan_period(regras {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, player, mo, mr));
 }
 
 

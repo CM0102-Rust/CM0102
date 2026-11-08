@@ -416,7 +416,7 @@ unsafe extern "thiscall" fn comparar_player_regen_check_initial_retirement(this:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(saida), || o(this, pessoa, saida),
         || crate::rng::without_counting(|| player_regen_check_initial_retirement(this, pessoa, saida)));
-    PLACAR.record(igual && r == n, || format!("player_regen_check_initial_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_regen_check_initial_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -425,7 +425,7 @@ unsafe extern "thiscall" fn comparar_player_regen_check_retirement(this: usize, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(saida), || o(this, pessoa, saida),
         || crate::rng::without_counting(|| player_regen_check_retirement(this, pessoa, saida)));
-    PLACAR.record(igual && r == n, || format!("player_regen_check_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_regen_check_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 

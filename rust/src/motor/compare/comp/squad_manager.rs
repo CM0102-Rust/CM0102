@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_euro_registration(this: 
         let comp = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * id as usize) as usize;
         if comp != 0 {
             for_each_comp_club(comp, etapa, |c| {
-                if c != 0 && read_u32(c + club::EURO_FLAG) == id && human(read_u32(G_NEWS) as usize, c) != 0 {
+                if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == id && human(read_u32(G_NEWS) as usize, c) != 0 {
                     has_human = true;
                 }
             });
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_euro_registration(this: 
     let n = (read_u32(G_STAFF_COUNT) as i32).max(0) as usize;
     let reg = [(this, 2usize), (read_u32(G_STAFF_TABLE) as usize, n * staff::SIZE), (G_CONTRACT_LOOKUP_RESULT, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, etapa), || process_euro_registration(this, etapa));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let base = read_u32(G_STAFF_TABLE) as usize;
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| {
             let a0 = a.0;
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(IDX_GET_SQUAD_NUMBER);
     let r = o(this, p, c);
     let n = get_squad_number(this, p, c);
-    PLACAR.record(r == n, || format!("get_squad_number(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
+    SCOREBOARD.record(r == n, || format!("get_squad_number(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
     r
 }
 
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: us
     }
     let r = o(this, c, other);
     let n = club_uses_squad_numbers(this, c, other);
-    PLACAR.record(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, other, r, n));
+    SCOREBOARD.record(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, other, r, n));
     r
 }
 
@@ -70,19 +70,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: us
 /// sem pessoa ou sem clube: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_SET_SQUAD_NUMBER);
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     if p == 0 || c == 0 || !(-50..=50).contains(&(n as u8 as i8)) {
         return o(this, p, c, n);
     }
     let mut reg = Vec::new();
-    for k in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
+    for k in [contract(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
         if k != 0 {
             reg.push((k + 0x3a, 1));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, c, n), || set_squad_number(this, p, c, n));
-    PLACAR.record(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
 }
 
 /// Comparer for `allocate_squad_number` (comparison mode: see the header of motor.rs).
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usiz
     }
     let reg = squad_number_regions(&[p]);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, p), || allocate_squad_number(this, c, p));
-    PLACAR.record(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
 }
 
 /// Comparer for `assign_club_squad_numbers` (comparison mode: see the header of motor.rs).
@@ -114,7 +114,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: 
     }
     let reg = squad_number_regions(&ps);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, keep), || assign_club_squad_numbers(this, c, keep));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("assign_club_squad_numbers(clube {:x}, manter {}): {}", c, keep, d.join(", "))
     });
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
     o(this);
     let done = SQUAD_NUMBERS_PLAN.take().unwrap_or_default();
     let zerado = *(this as *const u16) == 0;
-    PLACAR.record(done == plan && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plan, done, zerado));
+    SCOREBOARD.record(done == plan && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plan, done, zerado));
 }
 
 /// Comparer for `assign_league_squad_numbers` (comparison mode: see the header of motor.rs).
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
     }
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let clubs: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(league) as usize + 0x58) as usize);
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
                 if p == 0 {
                     continue;
                 }
-                for ct in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
+                for ct in [contract(read_u32(G_CONTRACT_MANAGER) as usize, p), loan(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
                     if ct != 0 && !reg.contains(&(ct + 0x3a, 1)) {
                         reg.push((ct + 0x3a, 1));
                     }
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, league, inicial, automatico), || assign_league_squad_numbers(this, league, inicial, automatico));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("assign_league_squad_numbers(liga {:x}, {} {}): {}", league, inicial, automatico, d.join(", "))
     });
@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_euro_registered_players(t
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, etapa, mark), || select_euro_registered_players(this, c, etapa, mark));
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("select_euro_registered_players(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, etapa as u8, mark, r, n, d.join(", "))
     });

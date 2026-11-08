@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn comparar_move_fixtures_for_tv(this: usize, data: usi
     o(this, data);
     let esperado = if n == 0 { 0 } else { validas.min(n) };
     let movidas = (0..bloco).filter(|k| cqc6_b(e + k * 7 + 0xb) == 0xff).count();
-    PLACAR.record(movidas == esperado, || format!("move_fixtures_for_tv(data {:x}) vagas {} válidas {} jogos {}: movidas {} (esperado {})",
+    SCOREBOARD.record(movidas == esperado, || format!("move_fixtures_for_tv(data {:x}) vagas {} válidas {} jogos {}: movidas {} (esperado {})",
         data, bloco, validas, n, movidas, esperado));
 }
 

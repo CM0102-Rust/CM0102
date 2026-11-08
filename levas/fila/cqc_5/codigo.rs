@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
 fn add_days_to_day_year((ano, dia): (i32, i32), n: i32) -> (i32, i32) {
     let (mut a, mut d) = (ano, dia + n);
     loop {
-        let t = if crate::data::bissexto(a as u16) == 1 { 366 } else { 365 };
+        let t = if crate::date::bissexto(a as u16) == 1 { 366 } else { 365 };
         if d < t {
             return (a, d);
         }
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u3
         }
         if k == -1 {
             let r = o(this, rodada, confronto, adiar);
-            PLACAR.record(r == 0, || format!("create_tie_fixtures(rodada {}) sem confronto marcado: {}", ri, r));
+            SCOREBOARD.record(r == 0, || format!("create_tie_fixtures(rodada {}) sem confronto marcado: {}", ri, r));
             return r;
         }
     }
@@ -321,7 +321,7 @@ unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u3
         depois = club_fixtures_until(ic, id, fim);
         ok = ok && depois == antes + esperado;
     }
-    PLACAR.record(ok, || format!("create_tie_fixtures(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
+    SCOREBOARD.record(ok, || format!("create_tie_fixtures(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
         ri, k, ad, r, marca, antes, depois, esperado));
     r
 }

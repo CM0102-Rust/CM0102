@@ -17,10 +17,10 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
         return 0;
     }
     let c = *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(4)) as *const usize);
-    if c == 0 || byte(c, 0x43) != 2 || *((c + 0x3e) as *const u16) == 0 {
+    if c == 0 || byte(c, 0x43) != 2 || *((c + league::CLUB_COUNT) as *const u16) == 0 {
         return 0;
     }
-    let r = *((c + 0xb1) as *const usize);
+    let r = *((c + league::TABLE) as *const usize);
     if r == 0 {
         return 0;
     }
@@ -130,13 +130,13 @@ pub(crate) unsafe extern "thiscall" fn contract_of(this: usize, person: usize) -
 /// [pt] { 0x53b900 } (Database.cpp): o clube e uma selecao? Os ids das selecoes vem depois dos clubes
 /// (total de clubes em 0xae235c menos 2 x nacoes em 0xae2350). Clube nulo: o original mostra uma
 /// caixa de erro, zera 0xb67a34 e devolve 0 (aqui, sem a caixa).
-pub(crate) unsafe extern "C" fn is_national_team(clube: usize) -> u32 {
-    if clube == 0 {
+pub(crate) unsafe extern "C" fn is_national_team(club: usize) -> u32 {
+    if club == 0 {
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return 0;
     }
     let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
-    (*(clube as *const i32) >= limit) as u32
+    (*(club as *const i32) >= limit) as u32
 }
 
 
@@ -198,16 +198,16 @@ pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i3
 /// [pt] { 0x4a2540 } (thiscall, ret 8, comp_stats.cpp): `Comp_Stats::set_club_final_position(clube, posição)`: acha
 /// (0x4a4850) ou acrescenta (0x4aceb0) o registro do clube na estatística da competição e grava a posição (byte) em
 /// +0x72; devolve o registro. Clube nulo: a caixa (linha 0x680).
-pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
-    if clube == 0 {
+pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club: usize, pos: u32) -> usize {
+    if club == 0 {
         show_error_at(0x99ca94, 0x680);
         return 0; // simplification: the original returns the box’s eax; the caller does not read it
     }
     let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
     let append: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_ADD_CLUB_ENTRY);
-    let mut e = search(this, clube);
+    let mut e = search(this, club);
     if e == 0 {
-        e = append(this, clube);
+        e = append(this, club);
     }
     crate::comparison::branch("cpt_13 posição gravada");
     core::ptr::write_volatile((e + 0x72) as *mut u8, pos as u8); // cpt13: a posição
@@ -227,13 +227,13 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
     let mut s: i16 = 0; // the index into the vector (bp signed)
     let mut b: u8 = 1; // the position counter
     let mut a: u8 = 1; // the pushed position (only the low byte counts; the original pushes the dword with leftovers on top)
-    let mut r = read_i16(this + 0x3c).wrapping_sub(2) as i32;
+    let mut r = read_i16(this + cup::ROUND_COUNT).wrapping_sub(2) as i32;
     while r >= 0 {
         if *v.offset(s as isize) == 0 {
             break;
         }
-        let count = |r: i32| read_i16(read_u32_as_usize(this + 0xa3) + r as usize * 0x68 + 0x1a) as i32;
-        if r == read_i16(this + 0x3c) as i32 - 2 {
+        let count = |r: i32| read_i16(read_u32_as_usize(this + cup::ROUND_TABLE) + r as usize * 0x68 + 0x1a) as i32;
+        if r == read_i16(this + cup::ROUND_COUNT) as i32 - 2 {
             let mut j = 0;
             while j < count(r) {
                 let c = *v.offset(s as isize) as usize;
@@ -287,36 +287,36 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
 /// senão 1 para o mandante e 2 para o outro. Seleção (0x53b900): 1 se a nação do campo (+0x38, +0x1f) é a do clube
 /// (+0x53), 2 se é a do adversário, senão 3. Clube: o campo é o estádio do clube e não o do adversário, 1; dos dois,
 /// 1 para o mandante e 2 para o outro; só do adversário, 2; de nenhum, 3. Quem chama lê só o al.
-pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(clube: usize, jogo: usize) -> u8 {
-    let field = read_u32(jogo + 0x18);
-    let home = read_ptr(jogo + 0x1c);
+pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, game: usize) -> u8 {
+    let field = read_u32(game + 0x18);
+    let home = read_ptr(game + 0x1c);
     if field == 0 {
         if read_u32(home + club::STADIUM) == 0 {
             return 3;
         }
-        return if clube != home { 2 } else { 1 };
+        return if club != home { 2 } else { 1 };
     }
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if national_team(clube) != 0 {
-        let nacao = read_ptr(field as usize + 0x38);
-        if nacao != 0 && read_u32(nacao + city::CITY_NATION) == read_u32(clube + club::NATION) {
+    if national_team(club) != 0 {
+        let nation = read_ptr(field as usize + 0x38);
+        if nation != 0 && read_u32(nation + city::CITY_NATION) == read_u32(club + club::NATION) {
             return 1;
         }
-        let home = read_ptr(jogo + 0x1c);
-        let other = if home == clube { read_ptr(jogo + 0x20) } else { home };
-        if nacao != 0 && read_u32(nacao + city::CITY_NATION) == read_u32(other + club::NATION) {
+        let home = read_ptr(game + 0x1c);
+        let other = if home == club { read_ptr(game + 0x20) } else { home };
+        if nation != 0 && read_u32(nation + city::CITY_NATION) == read_u32(other + club::NATION) {
             return 2;
         }
         return 3;
     }
-    let home = read_ptr(jogo + 0x1c);
-    let other = if home == clube { read_ptr(jogo + 0x20) } else { home };
-    let field = read_u32(jogo + 0x18);
-    if field != read_u32(clube + club::STADIUM) {
+    let home = read_ptr(game + 0x1c);
+    let other = if home == club { read_ptr(game + 0x20) } else { home };
+    let field = read_u32(game + 0x18);
+    if field != read_u32(club + club::STADIUM) {
         return if field != read_u32(other + club::STADIUM) { 3 } else { 2 };
     }
     if field == read_u32(other + club::STADIUM) {
-        return if clube != home { 2 } else { 1 }; // the same stadium for both
+        return if club != home { 2 } else { 1 }; // the same stadium for both
     }
     crate::comparison::branch("cpq_12 em casa");
     1 // the club’s stadium
@@ -545,28 +545,28 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
 /// 3 × 0x204, 0x810, 0x90, 3 × 0x210, 4 × 0x40) entre os jogadores (+0x61) do elenco (0x541f90). Clube nulo:
 /// −10.000.000. Sem SEH, sem sorteio próprio. A original empurra o número de jogadores como dword com só o byte de
 /// baixo gravado (o resto é sobra de pilha); a 0x6e2000 só lê o byte, e a cópia passa o byte estendido.
-pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(clube: usize) -> i32 {
-    if clube == 0 {
+pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -> i32 {
+    if club == 0 {
         return -10_000_000;
     }
     let finances = *(G_FINANCE_TABLE as *const usize);
     let mut strength: i32 = 0;
     if finances == 0 {
-        strength = core::ptr::read_unaligned((clube + club::CASH) as *const i32) / 400;
+        strength = core::ptr::read_unaligned((club + club::CASH) as *const i32) / 400;
     } else {
         let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-        let f = get_club_finance(finances, clube);
+        let f = get_club_finance(finances, club);
         if f != 0 {
             strength = (core::ptr::read_unaligned(f as *const i64) / 300) as i32;
         }
     }
-    strength = strength.wrapping_add((core::ptr::read_unaligned((clube + club::REPUTATION) as *const i16) as i32) << 4); // the reputation
+    strength = strength.wrapping_add((core::ptr::read_unaligned((club + club::REPUTATION) as *const i16) as i32) << 4); // the reputation
     let mut squad = [0usize; 50];
     let mut players = [0usize; 50];
     let mut escalados = [0usize; 15];
     let codigos: [u16; 15] = [1, 0x804, 0x84, 0x204, 0x204, 0x204, 0x810, 0x90, 0x210, 0x210, 0x210, 0x40, 0x40, 0x40, 0x40];
     let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
-    reunir(clube, squad.as_mut_ptr(), 0);
+    reunir(club, squad.as_mut_ptr(), 0);
     let mut k: i8 = 0;
     for &p in squad.iter() {
         if p != 0 && read_usize(p + staff::PLAYER) != 0 {
@@ -575,11 +575,11 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(clube: usize) 
         }
     }
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
-    pick(players.as_ptr() as usize, k as u8 as u32, codigos.as_ptr() as usize, 0xf, 0, escalados.as_mut_ptr() as usize, 0x840, clube, 0, 0, 0, 0, 0, 0, 0);
+    pick(players.as_ptr() as usize, k as u8 as u32, codigos.as_ptr() as usize, 0xf, 0, escalados.as_mut_ptr() as usize, 0x840, club, 0, 0, 0, 0, 0, 0, 0);
     let rating: unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32 = core::mem::transmute(FN_MATCH_MAN_SCORE_PLAYER_FOR_SELECTION);
     for (j, &p) in escalados.iter().enumerate() {
         if p != 0 {
-            strength = strength.wrapping_add(rating(p, codigos[j] as u32, 0x840, clube, -1, 0));
+            strength = strength.wrapping_add(rating(p, codigos[j] as u32, 0x840, club, -1, 0));
         }
     }
     strength
@@ -645,12 +645,12 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
 /// +4 o estádio, +0 a competição, +0x42, +0x32, +0x30, +0x43/+0x44, +0x4b/+0x4c e +0x47/+0x48 os
 /// placares, +0x2a, +0x28 e +8. Depois os ponteiros: clubes (0xae23b4, 0x245 bytes) em +0x1c/+0x20,
 /// estádio (0xae23b0, 0x4e) em +0x18 e competição (0xae23d0, 0x6b) em +0x14; id −1: 0.
-pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(noticia: usize, partida: usize, cursor: *mut u8) {
+pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usize, partida: usize, cursor: *mut u8) {
     // simplification: the original pushes the whole eax (remainder of the previous slot in the high bits); 0x785830 only reads the byte
     let slot: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_SLOT);
     let mut v = *cursor;
     let mut read = || {
-        let r = slot(noticia, v as u32);
+        let r = slot(news, v as u32);
         v = v.wrapping_add(1);
         r
     };
@@ -700,7 +700,7 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(noticia: 
 /// primeiro sem 0xff) do lado do clube (da casa = +0x1c) e as reputações (+0x80 / 500) dos clubes.
 /// 1 goleada, 2 e 3 vitórias contra mais fortes, 4 comum, 5 e 7 derrotas para mais fracos, 6
 /// zebra. Só o al é fiel (quem chama usa al).
-pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(clube: usize, partida: usize) -> u8 {
+pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usize, partida: usize) -> u8 {
     let home = *((partida + 0x1c) as *const usize);
     let away = *((partida + 0x20) as *const usize);
     let h = (core::ptr::read_unaligned((home + club::REPUTATION) as *const i16) as i32 / 500) as i8 as i32;
@@ -715,8 +715,8 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(clube: us
     };
     let m = g1.wrapping_sub(g2) as i8;
     // from the club’s point of view: `eu` and `ele` the reputations, `vitoria` the margin in its favour
-    let (eu, ele) = if clube == home { (h, a) } else { (a, h) };
-    let win = if clube == home { m } else { m.wrapping_neg() };
+    let (eu, ele) = if club == home { (h, a) } else { (a, h) };
+    let win = if club == home { m } else { m.wrapping_neg() };
     if win == 0 {
         if eu < ele - 16 || eu - 15 > ele {
             return 6;
@@ -733,7 +733,7 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(clube: us
         return if eu - 11 <= ele { 4 } else { 7 };
     }
     // the upset: the home side tolerates 8 / 7, the away side 13 / 7 difference in a win by 1 or 2
-    let (z1, z2) = if clube == home { (8, 2) } else { (13, 7) };
+    let (z1, z2) = if club == home { (8, 2) } else { (13, 7) };
     if win > 0 {
         if (win < 3 && eu < ele - z1) || (win > 2 && eu < ele - z2) {
             return 6;
@@ -788,12 +788,12 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(clube: us
 /// +0x4b, +0x4c, +0x47, +0x48, +0x2a, +0x28, +8 (bytes e palavras +0x30/+0x32 com sinal; +0x28 e
 /// +0x2a sem). Devolve o que a última gravação devolveu. A original guarda o índice do 18º dado no
 /// byte baixo do próprio argumento `cursor` (só a parte baixa chega à 0x785790).
-pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
+pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usize, news: usize, cursor: *mut u8) -> u32 {
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let d = |o: usize| core::ptr::read_unaligned((jogo + o) as *const u32);
-    let b = |o: usize| byte(jogo, o) as i32 as u32;
-    let s = |o: usize| core::ptr::read_unaligned((jogo + o) as *const i16) as i32 as u32;
-    let z = |o: usize| core::ptr::read_unaligned((jogo + o) as *const u16) as u32;
+    let d = |o: usize| core::ptr::read_unaligned((game + o) as *const u32);
+    let b = |o: usize| byte(game, o) as i32 as u32;
+    let s = |o: usize| core::ptr::read_unaligned((game + o) as *const i16) as i32 as u32;
+    let z = |o: usize| core::ptr::read_unaligned((game + o) as *const u16) as u32;
     let valores = [
         d(0xc), d(0x10), b(0x3d), b(0x3e), d(4), d(0), b(0x42), s(0x32), s(0x30),
         b(0x43), b(0x44), b(0x4b), b(0x4c), b(0x47), b(0x48), z(0x2a), z(0x28), d(8),
@@ -801,7 +801,7 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(jogo: usiz
     let mut k = *cursor;
     let mut r = 0;
     for v in valores {
-        r = write(noticia, k as i8, v);
+        r = write(news, k as i8, v);
         k = k.wrapping_add(1);
     }
     *cursor = k;

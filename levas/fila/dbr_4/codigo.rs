@@ -39,7 +39,7 @@ unsafe extern "C" fn comparar_database_compare_clubs_by_latitude(a: usize, b: us
     }
     let r = o(a, b);
     let n = database_compare_clubs_by_latitude(a, b);
-    PLACAR.record(r == n, || format!("database_compare_clubs_by_latitude({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("database_compare_clubs_by_latitude({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -61,6 +61,6 @@ unsafe extern "C" fn comparar_database_compare_clubs_by_longitude(a: usize, b: u
     }
     let r = o(a, b);
     let n = database_compare_clubs_by_longitude(a, b);
-    PLACAR.record(r == n, || format!("database_compare_clubs_by_longitude({:x}, {:x}) original={} rust={}", a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("database_compare_clubs_by_longitude({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

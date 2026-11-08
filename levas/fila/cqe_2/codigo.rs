@@ -326,7 +326,7 @@ unsafe extern "thiscall" fn comparar_make_exchange_option(this: usize, comprador
         liberar(s);
     }
     depois.write_back();
-    PLACAR.record(r == n && ao == an && e_o == e_n && fo == fn_, || format!(
+    SCOREBOARD.record(r == n && ao == an && e_o == e_n && fo == fn_, || format!(
         "make_exchange_option(comprador {:#x}, alvo {:#x}, valor {}): original {} rust {}, atração {} x {}, [0xae1080] {:#x} x {:#x}, oferta {:x?} x {:x?}",
         comprador, alvo, valor, r, n, ao, an, e_o, e_n, fo, fn_));
     r

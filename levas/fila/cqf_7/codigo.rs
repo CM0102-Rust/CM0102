@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn comparar_update_coach_assignments(this: usize, clube
         reg.push((this + 0x652d + 54 * cqf7_i(0xae2364).wrapping_sub(cqf7_i(tec)).wrapping_sub(1) as usize, 54));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, tecnico), || update_coach_assignments(this, clube, tecnico));
-    PLACAR.record(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", clube, tecnico, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", clube, tecnico, mo.0, mr.0));
 }
 
 /// O programa `vaga` (0..9; fora disso o 1) do técnico humano `tec`: this + (vaga + 7 + 10 × ([0xae2364] − id − 1)) ×
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: usize, tec: 
         reg.push((this + 0x652d + 54 * k as usize, 54));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tec, antigo, novo), || reassign_squad_schedules(this, tec, antigo, novo));
-    PLACAR.record(igual, || format!("reassign_squad_schedules(tecnico {:x}, {:x} -> {:x}) {:x?} x {:x?}", tec, antigo, novo, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("reassign_squad_schedules(tecnico {:x}, {:x} -> {:x}) {:x?} x {:x?}", tec, antigo, novo, mo.0, mr.0));
 }
 
 /// { 0x8b2230 } (thiscall, ret 0, training_manager.cpp): os nomes padrão dos 167 programas de treino (0x8b50f0 em cada
@@ -288,5 +288,5 @@ unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize) {
 unsafe extern "thiscall" fn comparar_training_manager_cpp_0x8b2230(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(this, 0xa7 * 0x9b)], || o(this), || training_manager_cpp_0x8b2230(this));
-    PLACAR.record(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));
+    SCOREBOARD.record(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));
 }

@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn comparar_cqu12_oceania_dia(this: usize, hoje: usize,
     if monta {
         let fases = cqu12_d(this + 0xc);
         let ok = cqu12_d(this + 0x45) == 1 && fases != 0 && cqu12_d(fases) != 0 && cqu12_d(this + 0x30) == 0;
-        PLACAR.record(ok, || format!("cqu12_oceania_dia({:#x}): a montagem não fez a fase (+0x45 {}, +0x30 {})", this, cqu12_d(this + 0x45), cqu12_d(this + 0x30) as i32));
+        SCOREBOARD.record(ok, || format!("cqu12_oceania_dia({:#x}): a montagem não fez a fase (+0x45 {}, +0x30 {})", this, cqu12_d(this + 0x45), cqu12_d(this + 0x30) as i32));
     }
     r
 }
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn comparar_cqu12_oceania_primeiro_grupo(this: usize) -
         }
     }
     let igual = r == 1 && cqu12_w(this + 0x3e) == 5 && t != 0 && (0..5).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.record(igual, || format!("cqu12_oceania_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    SCOREBOARD.record(igual, || format!("cqu12_oceania_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn comparar_cqu12_oceania_segundo_grupo(this: usize) ->
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqu12_d(this + 0x30) == 0 && cqu12_w(f + 0x3e) as usize == n && cqu12_w(f + 0x40) == cqu12_w(this + 0x40) && a == plano;
-        PLACAR.record(ok, || format!("cqu12_oceania_segundo_grupo: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
+        SCOREBOARD.record(ok, || format!("cqu12_oceania_segundo_grupo: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
     }
     r
 }

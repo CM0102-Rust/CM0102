@@ -304,6 +304,6 @@ unsafe extern "thiscall" fn comparar_cqv7_inscritos_da_copa_da_inglaterra(this: 
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && tabela, || format!("cqv7_inscritos_da_copa_da_inglaterra({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    SCOREBOARD.record(igual && a == b && tabela, || format!("cqv7_inscritos_da_copa_da_inglaterra({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }

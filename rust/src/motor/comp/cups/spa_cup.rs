@@ -16,26 +16,26 @@ use super::*;
 /// dá a caixa (linhas 0x161, 0x168, 0x16f) e 0 — e as posições previstas (virtual +0x5c). Sempre, no fim, a atualização da
 /// copa (0x51f890: push fase; push hoje; mov ecx -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && stage != 0 { // cqt5: o ano da Copa do Rei
+    if read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + cup::YEAR) as i32 && stage != 0 { // cqt5: o ano da Copa do Rei
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         for o in [0xa7usize, 0xa3] {
             if read_u32_as_usize(this + o) != 0 {
                 soltar(read_u32_as_usize(this + o));
             }
         }
-        if read_u32_as_usize(this + 0xad) != 0 {
+        if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
             let mut i = 0i32;
-            while i < read_i16(this + 0x3c) as i32 {
-                let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
+            while i < read_i16(this + cup::ROUND_COUNT) as i32 {
+                let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
                 if p != 0 {
                     soltar(p);
                 }
                 i += 1;
             }
-            soltar(read_u32_as_usize(this + 0xad));
+            soltar(read_u32_as_usize(this + cup::TIE_TABLES));
         }
         crate::comparison::branch("cqt_5 copa do rei refeita");
-        core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
+        core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
         if inscritos(this) < 0 {
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
 /// edx, [ecx]; jmp [edx+0x30]): a virtual +0x30 da fase [+0xc][o/4] (a última fase da copa: a final), com o eax dela.
 pub(crate) unsafe fn record_season_honours(this: usize, o: usize, ramo: &'static str) -> i32 {
     crate::comparison::branch(ramo);
-    let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + o);
+    let stage = read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + o);
     call_cup_virtual(stage, 0x30)
 }
 

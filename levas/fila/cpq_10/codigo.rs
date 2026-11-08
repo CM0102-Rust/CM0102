@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn comparar_get_category_record(this: usize, jogador: u
         return r;
     }
     let n = get_category_record(this, jogador, categoria);
-    PLACAR.record(r == n, || format!("get_category_record({:x}, {:x}, {}) original={:x} rust={:x}", this, jogador, categoria as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_category_record({:x}, {:x}, {}) original={:x} rust={:x}", this, jogador, categoria as u8 as i8, r, n));
     r
 }
 
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_create_stats(this: usize, jogador: usize, c
     let esperado = cpq10_d(this + 4).wrapping_add((indice as usize) << 5);
     let zerado = atual != -1 || (0..0x20).all(|k| *((r + k) as *const u8) == 0);
     let igual = r == esperado && cpq10_d(vaga) as i32 == indice && cpq10_d(this + 0xc) == n2 && cpq10_d(this + 0x38) == soltos2 && zerado;
-    PLACAR.record(igual, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
+    SCOREBOARD.record(igual, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
         this, jogador, categoria as u8 as i8, r, esperado, cpq10_d(vaga) as i32, indice, cpq10_d(this + 0xc), n2, cpq10_d(this + 0x38), soltos2, zerado));
     r
 }

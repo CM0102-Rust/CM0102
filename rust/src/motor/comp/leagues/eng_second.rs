@@ -329,29 +329,29 @@ pub(crate) unsafe fn eng_second_staff_records() -> usize {
 /// rebaixamento (0x86a1c0, thiscall(registros, clube, comp), ret 8). No mata-mata (outra fase), na linha do clube da
 /// tabela (+0xb1, 0x3b bytes, +0x3e linhas): 1 (venceu a final), o acesso com peso 0x32, +0x37 = 0 e saiu = 1; 0
 /// (passou da rodada), a classificação (0xa0, 0x96, 0xf) e segue procurando; 0xff ou 2 (caiu), +0x37 = 0xfe.
-pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, saiu: usize, _a: u32, _b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, saiu: usize, _a: u32, _b: u32) -> u32 {
     let s = status as u8;
     let comp = read_usize(this + 4);
     if stage as u8 == 0xff {
         match s {
             5 => {
                 let title: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-                title(eng_second_staff_records(), clube, comp);
+                title(eng_second_staff_records(), club, comp);
             }
             0 => {
                 crate::comparison::branch("cpz_2 acesso na tabela");
                 let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
-                promotion(eng_second_staff_records(), clube, comp, 0x64); // cpz2: o acesso pela tabela pesa 0x64
+                promotion(eng_second_staff_records(), club, comp, 0x64); // cpz2: o acesso pela tabela pesa 0x64
             }
             1 => {
                 crate::comparison::branch("cpz_2 vaga no mata-mata");
                 let slot: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-                slot(eng_second_staff_records(), clube, comp, 0xa0, 0x82, 0x1e); // cpz2: a vaga no mata-mata pesa 0x1e
+                slot(eng_second_staff_records(), club, comp, 0xa0, 0x82, 0x1e); // cpz2: a vaga no mata-mata pesa 0x1e
             }
             3 => {
                 crate::comparison::branch("cpz_2 rebaixamento na tabela");
                 let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-                cair(eng_second_staff_records(), clube, comp); // cpz2: o rebaixamento pela tabela
+                cair(eng_second_staff_records(), club, comp); // cpz2: o rebaixamento pela tabela
             }
             _ => {}
         }
@@ -360,19 +360,19 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
     let mut i: i32 = 0;
     while i < *((this + league::CLUB_COUNT) as *const i16) as i32 {
         let row = read_usize(this + league::TABLE) + (i as usize) * 0x3b;
-        if read_usize(row) == clube {
+        if read_usize(row) == club {
             match s {
                 1 => {
                     crate::comparison::branch("cpz_2 venceu o mata-mata");
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
-                    promotion(eng_second_staff_records(), clube, comp, 0x32);
+                    promotion(eng_second_staff_records(), club, comp, 0x32);
                     *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
                     *(saiu as *mut u8) = 1;
                     return 0;
                 }
                 0 => {
                     let slot: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-                    slot(eng_second_staff_records(), clube, comp, 0xa0, 0x96, 0xf);
+                    slot(eng_second_staff_records(), club, comp, 0xa0, 0x96, 0xf);
                 }
                 0xff | 2 => {
                     *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
@@ -391,9 +391,9 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
 ///
 /// [pt] A entrada do clube nas estatísticas da competição (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, clube), ret 4;
 /// põe a tabela na ordem dos clubes se precisa e procura).
-pub(crate) unsafe fn eng_second_comp_stats_club_entry(this: usize, clube: usize) -> usize {
+pub(crate) unsafe fn eng_second_comp_stats_club_entry(this: usize, club: usize) -> usize {
     let find: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
-    find(read_usize(this + 8), clube)
+    find(read_usize(this + 8), club)
 }
 
 /// Writes the club's stage, best and worst (+0x73..+0x75) in the competition stats, remapping play-off positions.
@@ -402,8 +402,8 @@ pub(crate) unsafe fn eng_second_comp_stats_club_entry(this: usize, clube: usize)
 /// (fase 0xff) a melhor e a pior de `baixo` a `alto` (as vagas do mata-mata) viram `baixo`, e com a pior nessa faixa a
 /// pior vira `alto`; no mata-mata (fase 0), 1, 2 e 3 viram `baixo`, `baixo` + 1 e `baixo` + 2 (a melhor, a pior e a
 /// fase); noutra fase, como vieram.
-pub(crate) unsafe fn set_club_stage_status(this: usize, clube: usize, stage: u8, current: u8, best: u8, worst: u8, low: u8, high: u8) {
-    let e = eng_second_comp_stats_club_entry(this, clube);
+pub(crate) unsafe fn set_club_stage_status(this: usize, club: usize, stage: u8, current: u8, best: u8, worst: u8, low: u8, high: u8) {
+    let e = eng_second_comp_stats_club_entry(this, club);
     let (mut m, mut p, mut a) = (best, worst, current);
     if stage == 0xff {
         if m >= low && m <= high {
@@ -434,13 +434,13 @@ pub(crate) unsafe fn set_club_stage_status(this: usize, clube: usize, stage: u8,
 ///
 /// [pt] O comparador das duas: a entrada é achada antes (a original e a cópia acham a mesma; a ordem dos clubes já fica
 /// pronta) e as duas rodam lado a lado nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
-pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, clube: usize, original: impl FnOnce(), copy: impl FnOnce()) {
-    let e = eng_second_comp_stats_club_entry(this, clube);
+pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, club: usize, original: impl FnOnce(), copy: impl FnOnce()) {
+    let e = eng_second_comp_stats_club_entry(this, club);
     if e == 0 {
         return original();
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], original, copy);
-    PLACAR.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, clube, mo, mr));
+    SCOREBOARD.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, club, mo, mr));
 }
 
 

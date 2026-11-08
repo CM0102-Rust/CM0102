@@ -168,7 +168,7 @@ unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u32, registr
     if *((this + 0x44) as *const u8) == 0xff && cql6_d(this + 8) != 0 {
         ok = ok && cql6_d(this + 0x2c) == p.fases as usize && (cql6_d(this + 0xc) != 0) == (p.fases != 0);
     }
-    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cql6_d(this), cql6_d(this + 0x2c), cql6_d(this + 0xc), cql6_d(this + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cql6_d(this), cql6_d(this + 0x2c), cql6_d(this + 0xc), cql6_d(this + 8)));
     r
 }
 

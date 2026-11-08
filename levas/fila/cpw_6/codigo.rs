@@ -152,7 +152,7 @@ unsafe fn compare_month_award(nome: &str, regioes: &[(usize, usize)], original: 
     antes.write_back();
     original();
     let mo = crate::comparison::MemorySnapshot::read(regioes);
-    PLACAR.record(mo == mr, || format!("{} original={:x?} rust={:x?}", nome, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("{} original={:x?} rust={:x?}", nome, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_set_winner(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {

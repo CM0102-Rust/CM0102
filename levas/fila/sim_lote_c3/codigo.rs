@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: us
     }
     let r = o(this, partida);
     let n = is_fixture_watched(this, partida);
-    PLACAR.record(r == n, || format!("is_fixture_watched original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("is_fixture_watched original={} rust={}", r, n));
     r
 }
 
@@ -92,13 +92,13 @@ unsafe extern "thiscall" fn comparar_has_nickname(this: usize, pessoa: usize, hu
     }
     let r = o(this, pessoa, humano);
     let n = has_nickname(this, pessoa, humano);
-    PLACAR.record(r == n, || format!("has_nickname original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("has_nickname original={} rust={}", r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_retire_record_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this, origem), || retire_record_assign(this, origem));
-    PLACAR.record(igual && r == n, || format!("retire_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("retire_record_assign {:x?} x {:x?}", mo, mr));
     r
 }

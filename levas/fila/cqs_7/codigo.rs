@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize, pai: usize
             b.sort_unstable();
             a == b
         };
-    PLACAR.record(ok, || format!("construct_cup_stage({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rodadas as u16 as i16, ano as u16));
+    SCOREBOARD.record(ok, || format!("construct_cup_stage({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rodadas as u16 as i16, ano as u16));
     r
 }
 

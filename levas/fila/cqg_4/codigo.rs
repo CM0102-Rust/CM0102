@@ -335,7 +335,7 @@ unsafe extern "thiscall" fn comparar_draw_phase1_groups(this: usize) {
     }
     vistos.sort_unstable();
     ok = ok && vistos == plano;
-    PLACAR.record(ok, || format!("draw_phase1_groups: as fases não têm os 32 clubes do plano (+0x30 = {})", cqg4_d(this + 0x30) as i32));
+    SCOREBOARD.record(ok, || format!("draw_phase1_groups: as fases não têm os 32 clubes do plano (+0x30 = {})", cqg4_d(this + 0x30) as i32));
 }
 
 /// { 0x586f60 } (cdecl, european_cup.cpp): `european_cup_compare_clubs_by_seed(a, b)`, a comparação da qsort dos potes
@@ -354,7 +354,7 @@ unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usize, b: *con
 unsafe extern "C" fn comparar_european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = european_cup_compare_clubs_by_seed(a, b);
-    PLACAR.record(r == n, || format!("european_cup_compare_clubs_by_seed: original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("european_cup_compare_clubs_by_seed: original={} rust={}", r, n));
     r
 }
 
@@ -501,5 +501,5 @@ unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: usize) {
             e == 0 || *((e + 0x72) as *const u8) != p
         }
     });
-    PLACAR.record(errado.is_none(), || format!("european_cup_rank_teams: a posição {:?} não bate", errado));
+    SCOREBOARD.record(errado.is_none(), || format!("european_cup_rank_teams: a posição {:?} não bate", errado));
 }

@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, tecnico: usi
     }
     let r = o(this, tecnico);
     let n = get_active_tactic(this, tecnico);
-    PLACAR.record(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", tecnico, r, n));
+    SCOREBOARD.record(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", tecnico, r, n));
     r
 }
 
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, reserva: u3
     };
     let reg = [(human_manager_record_at(this, k) + 0x9a69, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, reserva, clube, tecnico), || select_tactic_slot(this, reserva, clube, tecnico));
-    PLACAR.record(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
+    SCOREBOARD.record(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
 }
 
 /// { 0x896660 } (thiscall, ret 8, tactics.cpp): `Tactics::get_club_tactic(clube, time)`, pela formação de cada jogo
@@ -158,6 +158,6 @@ unsafe extern "thiscall" fn comparar_get_club_tactic(this: usize, clube: usize, 
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, time), || get_club_tactic(this, clube, time));
-    PLACAR.record(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", clube, time, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", clube, time, r, mo, n, mr));
     r
 }

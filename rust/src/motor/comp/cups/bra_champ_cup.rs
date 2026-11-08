@@ -26,7 +26,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
         BraChampCupStagePlan::Nada => 0,
         BraChampCupStagePlan::Grupos(grupos, id, linha, nome) => {
             let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-            let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
+            let game: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
             if !league.is_null() {
                 *league = 1;
             }
@@ -40,10 +40,10 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
             crate::comparison::branch(nome);
             // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
             // 0x68a160 only uses the low 16 bits: the copy passes the clean year
-            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + cup::YEAR) as *const u16) as u32;
             for (r, &(dia, mes, semana, codigo)) in grupos.iter().enumerate() {
                 data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
-                jogo(t, r as i32, 0, -1, -1, -1, 0);
+                game(t, r as i32, 0, -1, -1, -1, 0);
             }
             t
         }
@@ -59,7 +59,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
                 return 0;
             }
             crate::comparison::branch(nome);
-            let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+            let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
             for (i, r) in mata.iter().enumerate() {
                 eng_cc_cup_write_cup_round(t, i as u32, r, year);
             }
@@ -108,7 +108,7 @@ pub(crate) unsafe fn compare_stage_schedule(name: &str, stage: u32, f: BraChampC
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if let BraChampCupStagePlan::Nada = f {
         let a = o();
-        PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+        SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
@@ -121,7 +121,7 @@ pub(crate) unsafe fn compare_stage_schedule(name: &str, stage: u32, f: BraChampC
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 

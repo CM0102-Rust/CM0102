@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn comparar_add_past_transfer(this: usize, registro: us
     }
     let novo = cpl3_d(this + 0x862).wrapping_add(n.wrapping_mul(0x25));
     let gravado = core::slice::from_raw_parts(novo as *const u8, 0x1d);
-    PLACAR.record(r == novo && cpl3_d(this + 0x86a) == n.wrapping_add(1) && gravado == &fonte[..], || {
+    SCOREBOARD.record(r == novo && cpl3_d(this + 0x86a) == n.wrapping_add(1) && gravado == &fonte[..], || {
         format!("add_past_transfer: conta {} -> {}, devolveu {:x} (esperava {:x}), registro {:x?} x {:x?}", n, cpl3_d(this + 0x86a), r, novo, fonte, gravado)
     });
     r
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn comparar_add_work_permit(this: usize, pessoa: usize,
     let conta = cpl3_d(this + 0x93e);
     let marca = *((cpl3_d(this + 0x86e).wrapping_add(cpl3_d(pessoa).wrapping_mul(8))) as *const u8);
     let ok = conta == n.wrapping_add(1) && marca & 0x20 != 0 && vector_contains_record(cpl3_d(this + 0x93a), conta, 0xe, &alvo);
-    PLACAR.record(ok, || format!("add_work_permit(pessoa {}, nação {}, ano {}): conta {} -> {}, marca {:#x}", cpl3_d(pessoa), cpl3_d(nacao), ano as u16, n, conta, marca));
+    SCOREBOARD.record(ok, || format!("add_work_permit(pessoa {}, nação {}, ano {}): conta {} -> {}, marca {:#x}", cpl3_d(pessoa), cpl3_d(nacao), ano as u16, n, conta, marca));
 }
 
 /// Comparador: o plano antes (a conta e os 13 bytes), a original roda; confere a conta e que o registro está no vetor
@@ -159,5 +159,5 @@ unsafe extern "thiscall" fn comparar_add_first_team_appearance_money(this: usize
     }
     let conta = cpl3_d(this + 0x894);
     let ok = conta == n.wrapping_add(1) && vector_contains_record(cpl3_d(this + 0x88c), conta, 0xd, &alvo);
-    PLACAR.record(ok, || format!("add_first_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
+    SCOREBOARD.record(ok, || format!("add_first_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }

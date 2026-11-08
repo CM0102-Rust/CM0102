@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("select_section_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("select_section_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -57,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_section_stage(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECTION_STAGE);
     o(this);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc));
-    PLACAR.record(f != 0 && read_u32_as_usize(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, read_u32_as_usize(this + 0x30) as i32));
+    SCOREBOARD.record(f != 0 && read_u32_as_usize(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, read_u32_as_usize(this + 0x30) as i32));
 }
 
 /// Comparer for `eng_auto_cup_advance_stage` (comparison mode: see the header of motor.rs).
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this:
     let last = before >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.record(after == if last { before } else { before + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, before, after));
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, before, after));
 }
 
 /// Comparer for `eng_auto_cup_create_final_stage` (comparison mode: see the header of motor.rs).
@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_CREATE_FINAL_STAGE);
     o(this);
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
-    PLACAR.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
+    SCOREBOARD.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
 }
 
 /// Comparer for `eng_auto_cup_rank_teams` (comparison mode: see the header of motor.rs).

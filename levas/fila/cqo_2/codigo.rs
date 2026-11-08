@@ -398,6 +398,6 @@ unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jog
         reg.push((cqo2_d(jogo + 0x18) + 0x3c, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo, saida), || crate::rng::without_counting(|| calculate_match_attendance(this, jogo, saida)));
-    PLACAR.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", cqo2_d(jogo), cqo2_b(jogo + 0x3a), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", cqo2_d(jogo), cqo2_b(jogo + 0x3a), r, n, mo, mr));
     r
 }

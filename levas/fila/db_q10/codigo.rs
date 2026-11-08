@@ -156,7 +156,7 @@ unsafe extern "C" fn comparar_database_count_club_squad(clube: usize, modo: u32,
     // 0x540a50 pode zerar +0x244 do clube; o filtro grava o último contrato em [0xae1080]
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1), (0xae1080, 4)],
         || o(clube, modo, filtro), || database_count_club_squad(clube, modo, filtro));
-    PLACAR.record(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, modo as u8, filtro, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, modo as u8, filtro, r, n, mo, mr));
     r
 }
 
@@ -168,7 +168,7 @@ unsafe extern "C" fn comparar_database_collect_club_squad(clube: usize, vetor: *
     let regioes = [(vetor as usize, if dobro != 0 { 400 } else { 200 }), (clube + 0x244, 1)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(clube, vetor, dobro),
         || database_collect_club_squad(clube, vetor, dobro));
-    PLACAR.record(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
     r
 }
 
@@ -177,6 +177,6 @@ unsafe extern "C" fn comparar_club_can_be_managed(clube: usize) -> u8 {
     let marca = [(clube.wrapping_add(0x244), 1)];
     let regioes = if clube == 0 { &marca[..0] } else { &marca[..] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regioes, || o(clube), || club_can_be_managed(clube));
-    PLACAR.record(igual && r == n, || format!("club_can_be_managed({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("club_can_be_managed({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

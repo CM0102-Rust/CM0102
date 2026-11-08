@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_dia(this: usize, hoje:
     if sorteia {
         let fases = cqv10_d(this + 0xc);
         let ok = cqv10_d(this + 0x45) == 1 && cqv10_d(this + 0xee) == 0 && cqv10_w(this + 0xf2) == 0 && cqv10_d(this + 0xb1) != 0 && fases != 0 && cqv10_d(fases) != 0;
-        PLACAR.record(ok, || format!("cqv10_oceania_nacoes_dia({:#x}): o sorteio não montou os grupos (+0x45 {})", this, cqv10_d(this + 0x45)));
+        SCOREBOARD.record(ok, || format!("cqv10_oceania_nacoes_dia({:#x}): o sorteio não montou os grupos (+0x45 {})", this, cqv10_d(this + 0x45)));
     }
     r
 }
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_sorteio(this: usize) -
         let mut b = [cqv10_selecao(cqv10_nacao(0x9cf224)), cqv10_selecao(cqv10_nacao(0x9cf3f4))];
         a.sort_unstable();
         b.sort_unstable();
-        PLACAR.record(cqv10_w(this + 0xf2) == 6 && a == b, || format!("cqv10_oceania_nacoes_sorteio({:#x}): vagas 0 e 3 {:x?} esperadas {:x?}", this, a, b));
+        SCOREBOARD.record(cqv10_w(this + 0xf2) == 6 && a == b, || format!("cqv10_oceania_nacoes_sorteio({:#x}): vagas 0 e 3 {:x?} esperadas {:x?}", this, a, b));
     }
     r
 }
@@ -235,6 +235,6 @@ unsafe extern "thiscall" fn comparar_cqv10_oceania_nacoes_primeiro_grupo(this: u
         }
     }
     let igual = r == 1 && cqv10_w(this + 0x3e) == 3 && t != 0 && (0..3).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.record(igual, || format!("cqv10_oceania_nacoes_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    SCOREBOARD.record(igual, || format!("cqv10_oceania_nacoes_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }

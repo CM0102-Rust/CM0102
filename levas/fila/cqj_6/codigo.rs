@@ -143,7 +143,7 @@ unsafe fn fra_first_compare_league_table(nome: &str, this: usize, n: i16, g: usi
                 };
         }
     }
-    PLACAR.record(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
+    SCOREBOARD.record(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
     r
 }
 

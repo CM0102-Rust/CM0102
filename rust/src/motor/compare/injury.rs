@@ -16,11 +16,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_highlight(p: usize, code:
     if is_recording_top_level() {
         return o(p, code);
     }
-    let m = *((p + 0x19e) as *const usize);
+    let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4)]);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(p, code), || crate::rng::without_counting(|| player_highlight(p, code)));
-    PLACAR.record(igual && r == n, || format!("player_highlight({:#x}) original={} rust={} {:x?} x {:x?}", code as u16, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_highlight({:#x}) original={} rust={} {:x?} x {:x?}", code as u16, r, n, mo, mr));
     r
 }
 
@@ -50,9 +50,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, 
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     reg.push((physical_record_of_player(this, p), 31));
     reg.push((read_u32_as_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * 0x4f) as usize), 0x4f));
-    let clube = read_u32_as_usize(p + staff::CLUB_JOB);
-    if clube != 0 && read_u32_as_usize(clube + club::MANAGER) != 0 {
-        reg.push((read_u32_as_usize(clube + club::MANAGER), 0x6e));
+    let club = read_u32_as_usize(p + staff::CLUB_JOB);
+    if club != 0 && read_u32_as_usize(club + club::MANAGER) != 0 {
+        reg.push((read_u32_as_usize(club + club::MANAGER), 0x6e));
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
     RECOVERY_NEWS_DRY_RUN = true;
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, 
         return;
     }
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    PLACAR.record(mo == mr, || format!("post_recovery_news(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, kind as u8, mo.0, mr.0));
+    SCOREBOARD.record(mo == mr, || format!("post_recovery_news(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, kind as u8, mo.0, mr.0));
 }
 
 /// Comparer for `injury_get_category_name` (comparison mode: see the header of motor.rs).
@@ -79,7 +79,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_injury_get_category_name(category
         return o(category, text, size);
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(text, (size as usize).min(0x100))], || o(category, text, size), || injury_get_category_name(category, text, size));
-    PLACAR.record(igual && r == n, || format!("injury_get_category_name({}) original={} rust={}", category as u8 as i8, r, n));
+    SCOREBOARD.record(igual && r == n, || format!("injury_get_category_name({}) original={} rust={}", category as u8 as i8, r, n));
     r
 }
 
@@ -91,9 +91,9 @@ pub(crate) unsafe extern "stdcall" fn comparar_injury_get_category_name(category
 /// lesionada (+0xe ≠ −1) ou sem vetor; vaga válida com a pessoa ainda nela (+0xe = vaga, sem recaída que a tenha
 /// trocado): o tipo na vaga e em +0x1d, +0x1c = 0, +0x2c = +0x28, +0x2e = +0x2a e +0x2a = a volta ao treino pela
 /// duração +0x28 (o x87 da cópia).
-pub(crate) unsafe extern "thiscall" fn comparar_add_injury(this: usize, kind_arg: u32, retroativa: u32, p: usize, jogo: usize, surto: u32, noticia: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn comparar_add_injury(this: usize, kind_arg: u32, retroativa: u32, p: usize, game: usize, surto: u32, news: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(IDX_ADD_INJURY);
-    let r = o(this, kind_arg, retroativa, p, jogo, surto, noticia, rec_arg, so_recorrencia);
+    let r = o(this, kind_arg, retroativa, p, game, surto, news, rec_arg, so_recorrencia);
     let kind = kind_arg as u8 as i8;
     let valida = p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 && read_usize(p + staff::PLAYER) != 0 && (0..0x52).contains(&kind);
     let ok = if !valida || so_recorrencia != 0 {
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_injury(this: usize, kind_arg
                 && read_i16(l + 0x2a) == return_to_training_days(kind, read_i16(l + 0x28))
         }
     };
-    PLACAR.record(ok, || format!("add_injury(tipo {:#x}, retroativa {}, pessoa {:#x}, recorrencia {}, so {}) = {}", kind_arg, retroativa, p, rec_arg as u8 as i8, so_recorrencia, r));
+    SCOREBOARD.record(ok, || format!("add_injury(tipo {:#x}, retroativa {}, pessoa {:#x}, recorrencia {}, so {}) = {}", kind_arg, retroativa, p, rec_arg as u8 as i8, so_recorrencia, r));
     r
 }
 
@@ -166,7 +166,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_injury_daily_update(this: usize)
 pub(crate) unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usize) {
     if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS)).take() {
         let mo = crate::comparison::MemorySnapshot::read(&reg);
-        PLACAR.record(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
+        SCOREBOARD.record(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_POST_DUE_RECOVERY_NEWS)(this)
 }
@@ -176,7 +176,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usi
 /// [pt] Comparador: lado a lado no estado do sorteio, no cursor da lista das batidas e na recuperação (+0xa, 4 bytes, do
 /// registro de 31 bytes em [this]) de cada pessoa das vagas. Partida com batida que chega ao tipo da lesão: só a original (a lesão nova aloca e manda a
 /// notícia; a gravidade da primeira batida pode ser sobra de pilha).
-pub(crate) unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize, jogo: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_APPLY_MATCH_EFFECTS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let mut batida = false;
@@ -185,23 +185,23 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize,
             let slot = partida + 0x1c0 + 0x625 * lado + 0x49 * k;
             let Some((id, pessoa)) = staff_of_match_slot(slot) else { continue };
             if pessoa == 0 {
-                return o(this, jogo, partida);
+                return o(this, game, partida);
             }
             reg.push(((read_i32(this) as u32).wrapping_add((id as u32).wrapping_mul(31)).wrapping_add(0xa) as usize, 4));
-            if *((slot - 0x11) as *const u8) != 0 && read_i32(this + 0x28) != 0 && has_injury_hit(this, id, pessoa) {
+            if *((slot - 0x11) as *const u8) != 0 && read_i32(this + injury_fields::MATCH_HIT_LIST) != 0 && has_injury_hit(this, id, pessoa) {
                 batida = true;
             }
         }
     }
     if batida {
         crate::comparison::branch("apply_match_effects com batida");
-        return o(this, jogo, partida);
+        return o(this, game, partida);
     }
-    if read_i32(this + 0x28) != 0 {
-        reg.push((read_i32(this + 0x28) as usize + 0xa, 4)); // the cursor of the kicks list
+    if read_i32(this + injury_fields::MATCH_HIT_LIST) != 0 {
+        reg.push((read_i32(this + injury_fields::MATCH_HIT_LIST) as usize + 0xa, 4)); // the cursor of the kicks list
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo, partida), || crate::rng::without_counting(|| apply_match_effects(this, jogo, partida)));
-    PLACAR.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", jogo, partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, partida), || crate::rng::without_counting(|| apply_match_effects(this, game, partida)));
+    SCOREBOARD.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", game, partida, mo, mr));
 }
 
 /// Comparer for `find_match_injury` (comparison mode: see the header of motor.rs).
@@ -209,10 +209,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize,
 /// [pt] Comparador: lado a lado no cursor da lista e na devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_find_match_injury(this: usize, person: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FIND_MATCH_INJURY);
-    let list = read_i32(this + 0x28) as usize;
+    let list = read_i32(this + injury_fields::MATCH_HIT_LIST) as usize;
     let reg: &[(usize, usize)] = if list == 0 { &[] } else { &[(list + 0xa, 4)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, person), || find_match_injury(this, person));
-    PLACAR.record(igual && r == n, || format!("find_match_injury({:x}) original={:x} {:x?} rust={:x} {:x?}", person, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_match_injury({:x}) original={:x} {:x?} rust={:x} {:x?}", person, r, mo, n, mr));
     r
 }
 
@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_player_on_holiday(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_PLAYER_ON_HOLIDAY);
     let r = o(this, person);
     let n = is_player_on_holiday(this, person);
-    PLACAR.record(r == n, || format!("is_player_on_holiday({:x}) original={} rust={}", person, r, n));
+    SCOREBOARD.record(r == n, || format!("is_player_on_holiday({:x}) original={} rust={}", person, r, n));
     r
 }
 
@@ -232,29 +232,29 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_player_on_holiday(this: usize
 /// [pt] Comparador: lado a lado na entrada (tipo) e no +0xe do registro quando nada sai da rotina (férias e sem notícia);
 /// com o histórico (arquivo) ou a notícia: só a original, conferindo o plano (tipo 0xff e +0xe −1). Sem pessoa: a
 /// original (caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, person: usize, noticia: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, person: usize, news: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_END_PLAYER_INJURY);
     if person == 0 || read_i32(person) >= read_i32(G_STAFF_COUNT) {
-        return o(this, person, noticia);
+        return o(this, person, news);
     }
     let r = physical_record_of_id(this, read_i32(person));
     let i = read_i32(r + 0xe);
     if i == -1 {
-        return o(this, person, noticia);
+        return o(this, person, news);
     }
     let e = (read_i32(this + 4) as u32).wrapping_add((i as u32).wrapping_mul(0x30)) as usize;
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let clube = read_i32(person + staff::CLUB_JOB) as usize;
-    let away = *(e as *const u8) != 0x51 || (noticia != 0 && clube != 0 && human(clube, 0, 1, 0, 0) != 0);
+    let club = read_i32(person + staff::CLUB_JOB) as usize;
+    let away = *(e as *const u8) != 0x51 || (news != 0 && club != 0 && human(club, 0, 1, 0, 0) != 0);
     if away {
-        o(this, person, noticia);
+        o(this, person, news);
         let ok = *(e as *const u8) == 0xff && read_i32(physical_record_of_id(this, read_i32(person)) + 0xe) == -1;
-        PLACAR.record(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", person, noticia, *(e as *const u8), read_i32(physical_record_of_id(this, read_i32(person)) + 0xe)));
+        SCOREBOARD.record(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", person, news, *(e as *const u8), read_i32(physical_record_of_id(this, read_i32(person)) + 0xe)));
         return;
     }
     let reg = [(e, 1), (r + 0xe, 4)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person, noticia), || end_player_injury(this, person, noticia));
-    PLACAR.record(igual, || format!("end_player_injury({:x}, {}) {:x?} x {:x?}", person, noticia, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person, news), || end_player_injury(this, person, news));
+    SCOREBOARD.record(igual, || format!("end_player_injury({:x}, {}) {:x?} x {:x?}", person, news, mo, mr));
 }
 
 /// Comparer for `get_player_injury_status` (comparison mode: see the header of motor.rs).
@@ -265,7 +265,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_player_injury_status(this: u
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_PLAYER_INJURY_STATUS)(this, person);
     if person != 0 && (read_u32_as_usize(person) as i32) < read_u32_as_usize(G_STAFF_COUNT) as i32 {
         let n = injury_status(this, person);
-        PLACAR.record(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", person, r, n));
+        SCOREBOARD.record(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", person, r, n));
     }
     r
 }
@@ -281,7 +281,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize
     let entra = crate::rng::pause_trace(|| crate::rng::without_counting(|| outbreak_takes_hold(kind as u8, club_i)));
     let after_of_plan = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     state.write_back();
-    let n0 = read_i32(this + 0x24);
+    let n0 = read_i32(this + injury_fields::OUTBREAK_COUNT);
     let mut expected = [0u8; OUTBREAK_SIZE];
     expected[..8].copy_from_slice(&*(data as *const [u8; 8]));
     expected[8] = kind as u8;
@@ -289,15 +289,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize
     let id = if partida != 0 { read_i32(partida) } else { -1 };
     expected[13..17].copy_from_slice(&id.to_le_bytes());
     o(this, data, kind, club_i, partida);
-    let n = read_i32(this + 0x24);
+    let n = read_i32(this + injury_fields::OUTBREAK_COUNT);
     let same_draw = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS) == after_of_plan;
-    let v = read_usize(this + 0x1c);
+    let v = read_usize(this + injury_fields::OUTBREAKS);
     let ok = if entra && v != 0 {
         n == n0 + 1 && (0..n.max(0) as usize).any(|k| *((v + k * OUTBREAK_SIZE) as *const [u8; OUTBREAK_SIZE]) == expected)
     } else {
         n == n0
     };
-    PLACAR.record(ok && same_draw, || {
+    SCOREBOARD.record(ok && same_draw, || {
         format!("add_illness_outbreak(tipo {}, clube {}) plano entra={}, conta {} -> {}, mesmo sorteio={}", kind as u8, club_i, entra, n0, n, same_draw)
     });
 }
@@ -310,11 +310,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPREAD_ILLNESS_OUTBREAKS);
     let cinco = five_days_ago();
-    let n0 = read_i32(this + 0x24);
+    let n0 = read_i32(this + injury_fields::OUTBREAK_COUNT);
     let hoje4 = read_usize(G_CURRENT_DATE) as u32;
     let mut saem = 0;
     for k in 0..n0.max(0) as usize {
-        let e = read_usize(this + 0x1c) + k * OUTBREAK_SIZE;
+        let e = read_usize(this + injury_fields::OUTBREAKS) + k * OUTBREAK_SIZE;
         let (ano_e, ano_h) = (read_i16(e + 2) as u16, (hoje4 >> 16) as u16);
         if ano_h < ano_e || (ano_h == ano_e && (hoje4 as u16 as i16) < read_i16(e)) {
             break;
@@ -324,10 +324,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: u
         }
     }
     o(this);
-    let n = read_i32(this + 0x24);
-    let velho = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&cinco, read_usize(this + 0x1c) + k * OUTBREAK_SIZE));
-    PLACAR.record(velho.is_none() && n >= n0 - saem, || {
-        format!("spread_illness_outbreaks: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, velho)
+    let n = read_i32(this + injury_fields::OUTBREAK_COUNT);
+    let old = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&cinco, read_usize(this + injury_fields::OUTBREAKS) + k * OUTBREAK_SIZE));
+    SCOREBOARD.record(old.is_none() && n >= n0 - saem, || {
+        format!("spread_illness_outbreaks: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, old)
     });
 }
 
@@ -337,7 +337,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: u
 pub(crate) unsafe extern "stdcall" fn comparar_injury_player_in_close_season(person: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_INJURY_PLAYER_IN_CLOSE_SEASON)(person);
     let n = injury_player_in_close_season(person);
-    PLACAR.record(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", person, r, n));
+    SCOREBOARD.record(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", person, r, n));
     r
 }
 
@@ -358,7 +358,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) 
         }
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&regions, || o(this), || init_squad_fitness(this));
-    PLACAR.record(igual, || format!("init_squad_fitness: memória difere ({} regiões)", regions.len()));
+    SCOREBOARD.record(igual, || format!("init_squad_fitness: memória difere ({} regiões)", regions.len()));
 }
 
 /// Comparer for `init_records` (comparison mode: see the header of motor.rs).
@@ -372,7 +372,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_records(this: usize) {
         return;
     }
     let errado = (0..read_i32(G_STAFF_COUNT).max(0) as usize).find(|&k| read_u8(v + 31 * k + 0x1e) != 0x32);
-    PLACAR.record(errado.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", errado));
+    SCOREBOARD.record(errado.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", errado));
 }
 
 /// Comparer for `roll_recurring_injury` (comparison mode: see the header of motor.rs).
@@ -380,16 +380,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_records(this: usize) {
 /// [pt] Comparador: a 0x62d250 (tratar) não pode rodar duas vezes: o plano antes, com o estado do sorteio guardado (sem
 /// contar nem rastrear) e as marcas do registro devolvidas; a original roda. Confere as marcas do registro e do
 /// escolhido e, fora do tratar, o estado do sorteio igual ao do plano (os mesmos sorteios).
-pub(crate) unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, record: usize, lesao: *const u8) {
+pub(crate) unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, record: usize, injury: *const u8) {
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let marks = (read_u8(record + 0x12), read_u8(record + 0x13));
-    let plan = crate::rng::pause_trace(|| crate::rng::without_counting(|| plan_recurring_injury(this, record, lesao)));
+    let plan = crate::rng::pause_trace(|| crate::rng::without_counting(|| plan_recurring_injury(this, record, injury)));
     let after_of_plan = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     state.write_back();
     *((record + 0x12) as *mut u8) = marks.0;
     *((record + 0x13) as *mut u8) = marks.1;
-    let kind = *lesao;
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, *const u8)>(IDX_ROLL_RECURRING_INJURY)(this, record, lesao);
+    let kind = *injury;
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, *const u8)>(IDX_ROLL_RECURRING_INJURY)(this, record, injury);
     let now = (read_u8(record + 0x12), read_u8(record + 0x13));
     let same_draw = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS) == after_of_plan;
     let ok = match plan {
@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usiz
         }
         RecurringInjuryOutcome::Tratar(_) => true, // a 0x62d250 sorteia e grava o resto
     };
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         format!("roll_recurring_injury(tipo {}) plano {:x?}, marcas {:?} -> {:?}, mesmo sorteio={}", kind, plan, marks, now, same_draw)
     });
 }
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_reset_player_history(this: usize
     }
     let r = injury_history_record(this, read_usize(person));
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + 0x14, 8)], || o(this, person), || reset_player_history(this, person));
-    PLACAR.record(igual && a == b, || format!("reset_player_history({}) {:x?} x {:x?}", read_usize(person), mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("reset_player_history({}) {:x?} x {:x?}", read_usize(person), mo, mr));
     a
 }
 
@@ -424,7 +424,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_reset_player_history(this: usize
 /// [pt] Comparador: a 0x68d1f0 libera o item tirado e a 0x62e700 grava o histórico no arquivo: o plano antes (os itens
 /// que ficam, o byte do registro de 79 bytes, os bytes do registro que não mudam); a original roda; confere.
 pub(crate) unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize, id: u32) -> usize {
-    let l = read_usize(this + 0x28);
+    let l = read_usize(this + injury_fields::MATCH_HIT_LIST);
     let expected: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().filter(|&e| read_usize(e) as u32 != id).collect() } else { Vec::new() };
     let r = injury_history_record(this, id as usize);
     let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79)) + 0xc;
@@ -437,7 +437,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize,
         && read_usize(r) == read_usize(G_CURRENT_DATE) && read_usize(r + 4) == read_usize(G_CURRENT_DATE_LEAP)
         && w(8) == 10000 && w(0xa) == 10000 && w(0xc) == 0 && dd(0xe) == -1 && read_u8(r + 0x12) == 0xff
         && read_u8(r + 0x13) == nivel && dd(0x14) == -1 && dd(0x18) == -1 && read_u8(r + 0x1c) == b1c && read_u8(r + 0x1d) == 0xff;
-    PLACAR.record(ok, || {
+    SCOREBOARD.record(ok, || {
         let v: Vec<u8> = (0..31).map(|o| read_u8(r + o)).collect();
         format!("injury_reset_player({}) itens {} (esperava {}), byte {:#x} (esperava {:#x}), registro {:02x?}", id, itens.len(), expected.len(), read_u8(g), byte, v)
     });
@@ -452,7 +452,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_recover_injury(t: usize, p: *con
         reg.push(((*(t as *const usize)).wrapping_add((*p as usize).wrapping_mul(31)).wrapping_add(0xa), 4));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, p, mark, ritmo), || crate::rng::without_counting(|| recover_injury(t, p, mark, ritmo)));
-    PLACAR.record(igual, || format!("recover_injury({:#x}, {:p}, {}, {}) {:x?} x {:x?}", t, p, mark, ritmo, mo, mr));
+    SCOREBOARD.record(igual, || format!("recover_injury({:#x}, {:p}, {}, {}) {:x?} x {:x?}", t, p, mark, ritmo, mo, mr));
 }
 
 /// Comparer for `get_condition` (comparison mode: see the header of motor.rs).
@@ -461,7 +461,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_recover_injury(t: usize, p: *con
 pub(crate) unsafe extern "thiscall" fn comparar_get_condition(this: usize, player: usize, em_porcento: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(IDX_GET_CONDITION)(this, player, em_porcento);
     let n = get_condition(this, player, em_porcento);
-    PLACAR.record(r == n, || format!("get_condition({:x}, {}) original={} rust={}", player, em_porcento, r, n));
+    SCOREBOARD.record(r == n, || format!("get_condition({:x}, {}) original={} rust={}", player, em_porcento, r, n));
     r
 }
 
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_training_load(injuries: usiz
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, u8)>(IDX_SET_TRAINING_LOAD);
     let a = training_load_byte(injuries, id) as usize;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 1)], || o(injuries, id, value), || set_training_load(injuries, id, value));
-    PLACAR.record(igual, || format!("set_training_load({}, {}) {:x?} x {:x?}", *id, value, mo, mr));
+    SCOREBOARD.record(igual, || format!("set_training_load({}, {}) {:x?} x {:x?}", *id, value, mo, mr));
 }
 
 /// Comparer for `update_player_fitness` (comparison mode: see the header of motor.rs).
@@ -499,7 +499,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_player_fitness(this: usiz
         crate::comparison::branch("cpw_8 fim da lesao so na original");
         return;
     }
-    PLACAR.record(igual, || format!("update_player_fitness(pessoa {:x}) {:x?} x {:x?}", person, mo, mr));
+    SCOREBOARD.record(igual, || format!("update_player_fitness(pessoa {:x}) {:x?} x {:x?}", person, mo, mr));
 }
 
 /// Comparer for `daily_wear` (comparison mode: see the header of motor.rs).
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_daily_wear(t: usize, id: i32) {
         reg.push(((*(t as *const usize)).wrapping_add((id as usize).wrapping_mul(31)).wrapping_add(0xc), 2));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, id), || crate::rng::without_counting(|| daily_wear(t, id)));
-    PLACAR.record(igual, || format!("daily_wear({:#x}, {}) {:x?} x {:x?}", t, id, mo, mr));
+    SCOREBOARD.record(igual, || format!("daily_wear({:#x}, {}) {:x?} x {:x?}", t, id, mo, mr));
 }
 
 /// Comparer for `choose_injury_type` (comparison mode: see the header of motor.rs).
@@ -527,7 +527,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_injury_type(injuries: usi
     current(injuries, player);
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS,
         || o(injuries, category, severity, player), || crate::rng::without_counting(|| choose_injury_type(injuries, category, severity, player)));
-    PLACAR.record(igual && r == n, || format!("choose_injury_type({}, {}) original={} rust={} sorteio igual={}", category, severity, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("choose_injury_type({}, {}) original={} rust={} sorteio igual={}", category, severity, r, n, igual));
     r
 }
 
@@ -535,7 +535,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_choose_injury_type(injuries: usi
 pub(crate) unsafe extern "C" fn comparar_injury_compare_entry_dates(key: usize, item: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_INJURY_COMPARE_ENTRY_DATES)(key, item);
     let n = injury_compare_entry_dates(key, item);
-    PLACAR.record(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", key, item, r, n));
+    SCOREBOARD.record(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", key, item, r, n));
     r
 }
 
@@ -543,7 +543,7 @@ pub(crate) unsafe extern "C" fn comparar_injury_compare_entry_dates(key: usize, 
 pub(crate) unsafe extern "thiscall" fn comparar_get_recurring_injury_type(this: usize, person: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_RECURRING_INJURY_TYPE)(this, person);
     let n = get_recurring_injury_type(this, person);
-    PLACAR.record(r == n, || format!("get_recurring_injury_type(pessoa {:x}) original={:x} rust={:x}", person, r, n));
+    SCOREBOARD.record(r == n, || format!("get_recurring_injury_type(pessoa {:x}) original={:x} rust={:x}", person, r, n));
     r
 }
 
@@ -551,7 +551,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_recurring_injury_type(this: 
 pub(crate) unsafe extern "thiscall" fn comparar_injury_severity(injuries: usize, kind: i8) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u8>(IDX_INJURY_SEVERITY)(injuries, kind);
     let n = injury_severity(injuries, kind);
-    PLACAR.record(r == n, || format!("injury_severity({}) original={} rust={}", kind, r, n));
+    SCOREBOARD.record(r == n, || format!("injury_severity({}) original={} rust={}", kind, r, n));
     r
 }
 
@@ -559,6 +559,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_injury_severity(injuries: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_injury_grade(injuries: usize, person: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_INJURY_GRADE)(injuries, person);
     let n = injury_grade(injuries, person);
-    PLACAR.record(r == n, || format!("injury_grade() original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("injury_grade() original={} rust={}", r, n));
     r
 }

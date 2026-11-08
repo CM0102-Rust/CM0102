@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn comparar_staff_records_daily_update(this: usize, dat
         }
         ok &= certo;
     }
-    PLACAR.record(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, ano, primeiro));
+    SCOREBOARD.record(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, ano, primeiro));
 }
 
 /// Comparador: os pontos vão ao hall da fama (0x5ef330, soma): roda só a original e confere o plano feito antes: os
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: u
         let s = manager_record_at(this, k) + 0xba;
         plano[k as usize] != (cpo3_d(s), cpo3_d(s + 4), cpo3_i(s + 8), cpo3_i(s + 0xc))
     });
-    PLACAR.record(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
+    SCOREBOARD.record(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
 }
 
 /// Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
@@ -231,6 +231,6 @@ unsafe extern "thiscall" fn comparar_find_manager_of_the_month(this: usize, indi
     }
     let r = o(this, indice);
     let n = find_manager_of_the_month(this, indice);
-    PLACAR.record(r == n, || format!("find_manager_of_the_month({}) original={:x} rust={:x}", indice, r, n));
+    SCOREBOARD.record(r == n, || format!("find_manager_of_the_month({}) original={:x} rust={:x}", indice, r, n));
     r
 }

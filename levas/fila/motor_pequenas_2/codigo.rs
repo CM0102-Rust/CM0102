@@ -26,12 +26,12 @@ comparar_valor!(comparar_side_centre_backs_without_conflict, side_centre_backs_w
 unsafe extern "thiscall" fn comparar_construct_referee(a: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side_light(&[(a, 8)], || o(a), || construct_referee(a));
-    PLACAR.record(igual && r == v, || format!("construct_referee({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
+    SCOREBOARD.record(igual && r == v, || format!("construct_referee({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_destroy_match_player(j: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(j + 0x19e, 4)], || o(j), || destroy_match_player(j));
-    PLACAR.record(igual, || format!("destroy_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));
+    SCOREBOARD.record(igual, || format!("destroy_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));
 }

@@ -2,12 +2,12 @@
 MUTACOES = [
     ('cph_lugar_reservas', 'return if *((person + staff::PLAYING_SQUAD) as *const u8) & 1 != 0 { 2 } else { 1 }; // main or reserves', 'return if *((person + 0x5e) as *const u8) & 1 != 0 { 1 } else { 2 }; // mutacao: trocados'),
     ('cph_lugar_marca', 'if mark == 0 { 4 } else { 3 }', 'if mark == 0 { 3 } else { 4 } // mutacao: trocados'),
-    ('cph_subir', 'toggle_placement_if_in(this, person, clube, [1, 3]) // reserves or B team', 'toggle_placement_if_in(this, person, clube, [1, 1]) // mutacao: sem o time B'),
-    ('cph_descer', 'toggle_placement_if_in(this, person, clube, [2, 4]) // senior team or club with a B team', 'toggle_placement_if_in(this, person, clube, [2, 2]) // mutacao: sem o clube com time B'),
+    ('cph_subir', 'toggle_placement_if_in(this, person, club, [1, 3]) // reserves or B team', 'toggle_placement_if_in(this, person, club, [1, 1]) // mutacao: sem o time B'),
+    ('cph_descer', 'toggle_placement_if_in(this, person, club, [2, 4]) // senior team or club with a B team', 'toggle_placement_if_in(this, person, club, [2, 2]) // mutacao: sem o clube com time B'),
     ('cph_copia_bytes', 'for o in 0x1c..0x21 {\n        b(o); // the five bytes', 'for o in 0x1c..0x20 {\n        b(o); // mutacao: so quatro'),
     ('cph_moral_teto', 'let mut ceiling: i8 = if queixas & 2 != 0 { 50 } else { 100 };', 'let mut ceiling: i8 = if queixas & 2 != 0 { 50 } else { 90 }; // mutacao'),
-    ('cph_moral_ganho', 'let happiness = (read_u8(contrato + 0x3f) as i8 as i32 + 5) as f64; // +0x3f + 5', 'let happiness = (read_u8(contrato + 0x3f) as i8 as i32 + 6) as f64; // mutacao: + 6'),
-    ('cph_conversas_clube', '&& (clube == 0 || read_u32(r + 4) == read_u32(clube)) // o clube', '&& (clube == 0 || true) // mutacao: sem o clube'),
+    ('cph_moral_ganho', 'let happiness = (read_u8(contract + 0x3f) as i8 as i32 + 5) as f64; // +0x3f + 5', 'let happiness = (read_u8(contract + 0x3f) as i8 as i32 + 6) as f64; // mutacao: + 6'),
+    ('cph_conversas_clube', '&& (club == 0 || read_u32(r + 4) == read_u32(club)) // o clube', '&& (club == 0 || true) // mutacao: sem o clube'),
     ('cph_interesse_ordem', 'if *n != 0 {\n        media_crt_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0);', 'if *n < 0 {\n        media_crt_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0); // mutacao: sem reordenar'),
     ('cph_pedido_data', 'copy_data(r + 8, &mut local, r + 0x19);', 'copy_data(r + 8, &mut local, r + 8); // mutacao: a data fica'),
     ('cph_apelido_fim', 'core::ptr::write_unaligned((end - 0x1e) as *mut u32, u32::MAX);', 'core::ptr::write_unaligned((end - 0x1e) as *mut u32, 0); // mutacao: id 0'),
@@ -20,5 +20,5 @@ MUTACOES = [
     ('cph_olheiro_confere', 'return 0; // the slot changed person', 'return person; // mutacao: sem conferir'),
     ('cph_sequencia_dias', '< 10 { // less than 10 days ago', '< 9 { // mutacao: 9 dias'),
     ('cph_recordista_data', 'default(this + 0x10); // the record holder’s date', 'default(this + 0x8); // mutacao: em +8'),
-    ('cph_rival_reputacao', 'if injury_word_0c(clube) + 0x2ee >= injury_word_0c(r) {', 'if injury_word_0c(clube) + 0x1f4 >= injury_word_0c(r) { // mutacao: 500'),
+    ('cph_rival_reputacao', 'if injury_word_0c(club) + 0x2ee >= injury_word_0c(r) {', 'if injury_word_0c(club) + 0x1f4 >= injury_word_0c(r) { // mutacao: 500'),
 ]

@@ -72,9 +72,9 @@ In the match refereeing object (`match_official.cpp`), the pointer at **+0x04**.
 | 0xAE2364 | number of people (the last 16 ids are the human managers) | `contrato_de`, `tecnico_9a01`, `tecnico_9a05` |
 | 0xAE2D0C | contract index table per person (79 bytes per person) | `contrato_de` |
 | 0xAE23A4..0xAE23EC | pointers to the start of each table (clubs at 0xAE23B4, people at 0xAE23BC, players at 0xAE23C4...) | — |
-| 0xAE2C90 / 0xAE2C92 [2] | current day of the year and year | the simulation stops at the requested date by reading it here (`simulacao.rs`) |
+| 0xAE2C90 / 0xAE2C92 [2] | current day of the year and year | the simulation stops at the requested date by reading it here (`simulation.rs`) |
 | 0xDE1F58 | pointer to the UEFA country rankings | next to the random generator state (0xDE1F5C, 8 bytes), which the comparison checks |
-| 0xDE4400 | the game's `HeapCreate` handle | replaced by the simulation's fixed allocator (`alocador.rs`) |
+| 0xDE4400 | the game's `HeapCreate` handle | replaced by the simulation's fixed allocator (`allocator.rs`) |
 | 0xDE4404 | 1 if the game recognised the Windows version | — |
 
 ## Match (match object, `MATCH_DATA`)

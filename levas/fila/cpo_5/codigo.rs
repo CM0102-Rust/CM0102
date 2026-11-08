@@ -297,7 +297,7 @@ unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, 
 unsafe extern "thiscall" fn comparar_construct_news_item(this: usize, tipo: u32, importante: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0xde)], || o(this, tipo, importante), || construct_news_item(this, tipo, importante));
-    PLACAR.record(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
+    SCOREBOARD.record(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
     r
 }
 
@@ -314,7 +314,7 @@ unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, cl
     let esperado = antes.wrapping_add(v).clamp(1, 10000);
     o(this, clube, sujeito, topico, alvo, variante);
     let depois = cpo5_w(manager_manager_row(clube) + 8);
-    PLACAR.record(depois == esperado, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i16, antes, v, esperado, depois));
+    SCOREBOARD.record(depois == esperado, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i16, antes, v, esperado, depois));
 }
 
 /// Comparador: como o da torcida, pela confiança da diretoria nova.
@@ -329,5 +329,5 @@ unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: usize, clube:
     let esperado = antes.wrapping_add(v).clamp(1, 10000);
     o(this, clube, sujeito, topico, alvo, variante, sexto);
     let depois = cpo5_w(manager_manager_row(clube) + 6);
-    PLACAR.record(depois == esperado, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i32, antes, v, esperado, depois));
+    SCOREBOARD.record(depois == esperado, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i32, antes, v, esperado, depois));
 }

@@ -21,7 +21,7 @@ unsafe extern "C" fn comparar_check_saved_game_file(caminho: usize) -> u32 {
         return r;
     }
     let n = check_saved_game_file(caminho);
-    PLACAR.record(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
+    SCOREBOARD.record(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
     r
 }
 

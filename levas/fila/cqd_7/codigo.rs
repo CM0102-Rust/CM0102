@@ -372,7 +372,7 @@ unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) -> i32 {
             }
         }
     }
-    PLACAR.record(erro.is_none(), || format!("map_fixture_tree: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
+    SCOREBOARD.record(erro.is_none(), || format!("map_fixture_tree: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
     r
 }
 
@@ -417,7 +417,7 @@ unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: usize, k: i3
     }
     let r = o(this, k);
     let n = get_first_stage_of_group(this, k);
-    PLACAR.record(r == n, || format!("get_first_stage_of_group({}): original={} rust={}", k, r, n));
+    SCOREBOARD.record(r == n, || format!("get_first_stage_of_group({}): original={} rust={}", k, r, n));
     r
 }
 

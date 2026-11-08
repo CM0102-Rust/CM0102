@@ -154,7 +154,7 @@ unsafe fn cqu2_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &
             ok = ok && cqu2_d(this + 0xee) == 0 && (0..7).all(|g| cqu2_d(cqu2_d(this + 0xc) + 4 * g) != 0);
         }
     }
-    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}, +0x51 = {}", nome, this, r, cqu2_d(this), cqu2_d(this + 0x2c), cqu2_d(this + 0xc), cqu2_d(this + 8), b(0x51)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}, +0x51 = {}", nome, this, r, cqu2_d(this), cqu2_d(this + 0x2c), cqu2_d(this + 0xc), cqu2_d(this + 8), b(0x51)));
     r
 }
 

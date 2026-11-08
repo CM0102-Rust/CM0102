@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn comparar_clear_selection_slot(this: usize, clube: us
         reg.push((tactics_cell(this, k, 2), 20 * 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, vaga, time), || clear_selection_slot(this, clube, vaga, time));
-    PLACAR.record(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, time, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, time, r, n, mo, mr));
     r
 }
 
@@ -109,6 +109,6 @@ unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize, clube: usi
     let reg = if k != -1 { vec![(tactics_cell(this, k, 0x5e), 10 * 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, papel, escolha, pessoa, time),
         || set_set_piece_taker(this, clube, papel, escolha, pessoa, time));
-    PLACAR.record(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, pessoa, r, n, mo, mr));
     r
 }

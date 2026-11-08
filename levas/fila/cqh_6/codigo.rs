@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usize, lista: 
     if l2 != 0 {
         soltar(l2);
     }
-    PLACAR.record(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
+    SCOREBOARD.record(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
     a
 }
 /// { 0x48cc70 } (thiscall, ret 0x10, comp.cpp): `Comp::find_club_progress(clube, &fase, &rodada, &situação)`: das
@@ -157,5 +157,5 @@ unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, clube: usiz
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(%%I2%%)(this, clube, fase_id, rodada, situacao);
     find_club_progress(this, clube, &mut f2, &mut r2, &mut s2);
     let ok = f2 == *fase_id && r2 == *rodada && s2 == *situacao;
-    PLACAR.record(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *fase_id, *rodada, *situacao, f2, r2, s2));
+    SCOREBOARD.record(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *fase_id, *rodada, *situacao, f2, r2, s2));
 }

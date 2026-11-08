@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) ->
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("set_up_team_list({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("set_up_team_list({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(
         let e = if v[k] != 0 { achar(read_u32_as_usize(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + 0x72) as *const u8) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
-    PLACAR.record(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
+    SCOREBOARD.record(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }
 
 /// Comparer for `goldcup_start_new_season` (comparison mode: see the header of motor.rs).
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: u
     let year = read_i16(this + 0x40);
     o(this);
     let ok = read_i16(this + 0x40) == year.wrapping_add(2) && read_u32_as_usize(this + 0x45) == 0 && read_u32_as_usize(this + 0x30) as i32 == -1 && read_u32_as_usize(this + 0x4c) == 0;
-    PLACAR.record(ok, || format!("goldcup_start_new_season({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, year, read_i16(this + 0x40), read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+    SCOREBOARD.record(ok, || format!("goldcup_start_new_season({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, year, read_i16(this + 0x40), read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
 }
 
 /// Comparer for `goldcup_update_for_date` (comparison mode: see the header of motor.rs).
@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: us
             && stages != 0
             && (0..2).all(|g| read_u32_as_usize(stages + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 1;
-        PLACAR.record(ok, || format!("goldcup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        SCOREBOARD.record(ok, || format!("goldcup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this:
         }
     }
     let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    PLACAR.record(same, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    SCOREBOARD.record(same, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this:
         a.sort_unstable();
         plan.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
-        PLACAR.record(ok, || format!("goldcup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("goldcup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
     }
     r
 }
@@ -147,8 +147,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usiz
 }
 
 /// Comparer for `goldcup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, outcome, stage, a4, jogo, a6);
-    PLACAR.record(r == 0, || format!("goldcup_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", clube, outcome as u8, stage as u8, r));
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, a6);
+    SCOREBOARD.record(r == 0, || format!("goldcup_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", club, outcome as u8, stage as u8, r));
     r
 }

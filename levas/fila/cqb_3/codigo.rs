@@ -197,10 +197,10 @@ unsafe extern "thiscall" fn comparar_build_international_date_table(this: usize)
     o(this);
     let t = cqb3_d(this + 0x34ec);
     if t == 0 {
-        return PLACAR.record(false, || "build_international_date_table: a original ficou sem tabela".to_string());
+        return SCOREBOARD.record(false, || "build_international_date_table: a original ficou sem tabela".to_string());
     }
     let mo = crate::comparison::MemorySnapshot::read(&[(t, 0x898), (this + 0x34f0, 6)]);
-    PLACAR.record(mo.0[0].1 == mr.0[0].1 && mo.0[1].1 == mr.0[1].1, || format!("build_international_date_table original={:x?} rust={:x?}", mo, mr));
+    SCOREBOARD.record(mo.0[0].1 == mr.0[0].1 && mo.0[1].1 == mr.0[1].1, || format!("build_international_date_table original={:x?} rust={:x?}", mo, mr));
 }
 
 /// { 0x5cc510 } (thiscall, ret 0, friendly.cpp): `Friendly::resolve_international_dates()`, pela tabela (0x5ca4f0). O
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn comparar_resolve_international_dates(this: usize) {
     let (t, n) = (cqb3_d(this + 0x34ec), cqb3_i(this + 0x34f0));
     let reg = if t != 0 && n > 0 { vec![(t, n as usize * 0x14)] } else { Vec::new() };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || resolve_international_dates(this));
-    PLACAR.record(igual, || format!("resolve_international_dates(conta {}) original={:x?} rust={:x?}", n, mo, mr));
+    SCOREBOARD.record(igual, || format!("resolve_international_dates(conta {}) original={:x?} rust={:x?}", n, mo, mr));
 }
 
 /// { 0x5c6830 } (thiscall, ret 0, friendly.cpp): `Friendly::find_human_club_tournament()`, pelas telas dos amistosos. O

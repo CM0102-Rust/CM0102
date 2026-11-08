@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize, entradas:
     }
     let ordem: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x778e90usize);
     let ordenado = (1..n.max(0) as usize).all(|i| ordem(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
-    PLACAR.record(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
+    SCOREBOARD.record(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
 }
 
 /// O torneio livre: o primeiro dos 127 (0x69 bytes a partir de +0xb1) sem anfitrião (+0), ou 0.
@@ -223,7 +223,7 @@ unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usiz
     }
     let reg = if t != 0 { vec![(t, 0x69usize.max(0x31 + tam + 1))] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome), || add_tournament(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome));
-    PLACAR.record(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", anfitriao, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", anfitriao, r, mo, n, mr));
     r
 }
 
@@ -263,6 +263,6 @@ unsafe extern "thiscall" fn comparar_find_human_club_open_invitation(this: usize
     let lista = cqb4_d(this + 0x34c8);
     let reg = if lista != 0 { vec![(lista + 0xa, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || find_human_club_open_invitation(this));
-    PLACAR.record(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
     r
 }

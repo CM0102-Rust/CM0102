@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn comparar_trigger_relegation_clauses(this: usize, clu
     }
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, clube, liga);
     let fora: Vec<usize> = alvos.iter().copied().filter(|&x| *((x + 0x1f) as *const u8) != 2).collect();
-    PLACAR.record(fora.is_empty(), || format!("trigger_relegation_clauses({:x}) {} contratos, sem acionar {:x?}", clube, alvos.len(), fora));
+    SCOREBOARD.record(fora.is_empty(), || format!("trigger_relegation_clauses({:x}) {} contratos, sem acionar {:x?}", clube, alvos.len(), fora));
 }
 
 /// Comparador: a lista esperada (sem a primeira oferta da pessoa ao clube) e as pendentes antes; a original tira (e
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_remove_contract_offer(this: usize, pessoa: 
     let pendentes = if alvo.is_some() { (*n).wrapping_sub(1) } else { *n };
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(%%I1%%)(this, pessoa, clube);
     let depois = list_items_capped(l);
-    PLACAR.record(depois == esperado && *n == pendentes, || format!("remove_contract_offer({}, {}) itens {} (esperava {}), pendentes {} (esperava {})", *pessoa, *clube, depois.len(), esperado.len(), *n, pendentes));
+    SCOREBOARD.record(depois == esperado && *n == pendentes, || format!("remove_contract_offer({}, {}) itens {} (esperava {}), pendentes {} (esperava {})", *pessoa, *clube, depois.len(), esperado.len(), *n, pendentes));
 }
 
 /// Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
@@ -177,6 +177,6 @@ unsafe extern "thiscall" fn comparar_is_player_suspended(this: usize, jogador: u
     let clube = if jogador != 0 { cpk3_d(jogador + 0x39) } else { 0 };
     let regioes: &[(usize, usize)] = if clube != 0 { &[(clube + 0x1e0, 80)] } else { &[] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regioes, || o(this, jogador, comp, extra, partida), || is_player_suspended(this, jogador, comp, extra, partida));
-    PLACAR.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", jogador, *comp, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", jogador, *comp, r, n, mo, mr));
     r
 }

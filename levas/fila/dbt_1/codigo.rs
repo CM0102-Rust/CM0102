@@ -31,7 +31,7 @@ unsafe extern "C" fn comparar_database_count_club_physios(clube: usize) -> u8 {
         return r; // caixa: só a original
     }
     let n = database_count_club_physios(clube);
-    PLACAR.record(r == n, || format!("database_count_club_physios({:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("database_count_club_physios({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -52,7 +52,7 @@ unsafe extern "C" fn comparar_club_is_b_team(clube: usize) -> u32 {
         return r;
     }
     let n = club_is_b_team(clube);
-    PLACAR.record(r == n, || format!("club_is_b_team({:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("club_is_b_team({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -90,6 +90,6 @@ unsafe extern "C" fn comparar_club_collect_non_playing_staff(clube: usize, saida
     }
     let reg = [(saida as usize, 4 * (max as i8).max(0) as usize)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, saida, max), || club_collect_non_playing_staff(clube, saida, max));
-    PLACAR.record(igual && r == n, || format!("club_collect_non_playing_staff({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, saida as usize, max as i8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("club_collect_non_playing_staff({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, saida as usize, max as i8, r, n, mo, mr));
     r
 }

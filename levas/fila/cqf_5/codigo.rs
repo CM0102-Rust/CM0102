@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn comparar_world_cup_create_group_table(this: usize, l
     if r == 1 {
         let t = cqf5_d(this + 0xb1);
         let ok = cqf5_w(this + 0x3e) == 4 && plano.iter().enumerate().all(|(k, &c)| cqf5_d(t + k * 0x3b) == c);
-        PLACAR.record(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plano));
+        SCOREBOARD.record(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plano));
     }
     r
 }
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(this: usize, g
                 b.sort_unstable();
                 a == b
             });
-        PLACAR.record(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plano));
+        SCOREBOARD.record(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plano));
     }
     r
 }
@@ -256,5 +256,5 @@ unsafe extern "thiscall" fn comparar_world_cup_set_predicted_positions(this: usi
         let e = if v[k] != 0 { achar(cqf5_d(this + 8), v[k]) } else { 0 };
         e == 0 || cqf5_b(e + 0x72) != FAIXAS[k]
     });
-    PLACAR.record(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
+    SCOREBOARD.record(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }

@@ -1,6 +1,6 @@
 # Rotinas migradas para Rust
 
-Cada rotina entra por desvio (`rust/src/desvios.rs`) e só vira oficial depois de:
+Cada rotina entra por desvio (`rust/src/detours.rs`) e só vira oficial depois de:
 1. autoteste (`CM_AUTOTESTE=1`): entradas sintéticas logo que o jogo abre o vídeo, original × Rust, comparando resultado e memória tocada;
 2. mutação de controle: um defeito proposital na versão Rust tem de ser acusado;
 3. jogo real em modo comparação (`CM_COMPARAR=1`): carreira automática de férias (`docs/VERSAO_SEM_TELA.md`) ou partida do Lucas;
@@ -16,7 +16,7 @@ Cada rotina entra por desvio (`rust/src/desvios.rs`) e só vira oficial depois d
 
 Autoteste: 5.000.000 casos, 0 divergências. Mutações acusadas: +4 no ramo de n grande; volta da tabela. Jogo real: >100 milhões de chamadas, 0 divergências.
 
-### Datas — `si/code/Date.cpp` → `rust/src/data.rs` (oficial em 06/10/2026)
+### Datas — `si/code/Date.cpp` → `rust/src/date.rs` (oficial em 06/10/2026)
 
 | Rotina | Original | Convenção |
 |---|---|---|
@@ -1021,7 +1021,7 @@ Mutações: 6 de 9 pegas; sobrevivem d_ramo (ficha +0x2d exatamente 11), d_grau 
 
 | Rotina | Original | Convenção | Observação |
 |---|---|---|---|
-| `dias_ate(outra)` | 0x54cdb0 | thiscall, ret 8 | Date.cpp (`rust/src/data.rs`): this − outra em dias, com `outra` por valor. No mesmo ano é a diferença dos dias; com anos diferentes, a Data estática 0xae2470 recebe *this e anda ano a ano até o de `outra` somando os dias de cada ano (para trás os do ano alcançado; para a frente, como no original, os do ano anterior a cada um), e fica com o ano de `outra`. O `mutacoes.py` passou a aceitar `ARQUIVO = 'data.rs'` na lista |
+| `dias_ate(outra)` | 0x54cdb0 | thiscall, ret 8 | Date.cpp (`rust/src/date.rs`): this − outra em dias, com `outra` por valor. No mesmo ano é a diferença dos dias; com anos diferentes, a Data estática 0xae2470 recebe *this e anda ano a ano até o de `outra` somando os dias de cada ano (para trás os do ano alcançado; para a frente, como no original, os do ano anterior a cada um), e fica com o ano de `outra`. O `mutacoes.py` passou a aceitar `ARQUIVO = 'date.rs'` na lista |
 
 Mutações: 2 de 4 pegas; sobrevivem y_frente e y_dia (o caminho com a outra data depois desta não roda até 2001-08-20: o jogo só conta para trás, hoje menos o nascimento); jogo real até 2002-01-01 com 0 divergências; carreiras Rust ×2 e original iguais com a nova referência db8ee4d7a7e1ef8e (os .lng foram regravados pelo jogo às 08:14 de 11/10, como em 10/10; a original deu a mesma impressão).
 

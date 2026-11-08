@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn comparar_find_hosts(this: usize, comp: u32, ano: u32
     let (oa, ob) = (*a, *b);
     let (mut ca, mut cb) = (va, vb);
     let c = find_hosts(this, comp, ano, &mut ca, &mut cb, padrao);
-    PLACAR.record(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_hosts({:x}, {}): original {} {:x} {:x} rust {} {:x} {:x}", comp, ano as u16, r as u8, oa, ob, c as u8, ca, cb));
+    SCOREBOARD.record(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_hosts({:x}, {}): original {} {:x} {:x} rust {} {:x} {:x}", comp, ano as u16, r as u8, oa, ob, c as u8, ca, cb));
     r
 }
 
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, comp: u32, a: 
     let (oa, ob) = (*a, *b);
     let (mut ca, mut cb) = (va, vb);
     let c = find_next_hosts(this, comp, &mut ca, &mut cb);
-    PLACAR.record(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_next_hosts({:x}): original {} {:x} {:x} rust {} {:x} {:x}", comp, r as u8, oa, ob, c as u8, ca, cb));
+    SCOREBOARD.record(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_next_hosts({:x}): original {} {:x} {:x} rust {} {:x} {:x}", comp, r as u8, oa, ob, c as u8, ca, cb));
     r
 }
 

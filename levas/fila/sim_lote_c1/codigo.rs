@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn get_match_importance(liga: usize, partida: usize, la
 unsafe extern "thiscall" fn comparar_has_relegation(liga: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(liga);
     let n = has_relegation(liga);
-    PLACAR.record(r == n, || format!("has_relegation original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("has_relegation original={} rust={}", r, n));
     r
 }
 
@@ -71,7 +71,7 @@ unsafe extern "C" fn comparar_league_round_set_date(rodadas: usize, i: u32, dia:
     let r = rodadas.wrapping_add((i as i16 as isize * 0x41) as usize);
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 0x41)], || o(rodadas, i, dia, mes, anos, semana, codigo, base, valor),
         || league_round_set_date(rodadas, i, dia, mes, anos, semana, codigo, base, valor));
-    PLACAR.record(igual && a == b, || format!("league_round_set_date({}, {}/{} +{}) {:x?} x {:x?}", i as i16, dia, mes, anos, mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("league_round_set_date({}, {}/{} +{}) {:x?} x {:x?}", i as i16, dia, mes, anos, mo, mr));
     a
 }
 
@@ -80,6 +80,6 @@ unsafe extern "thiscall" fn comparar_get_match_importance(liga: usize, partida: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut u8) -> u8>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(saida as usize, 1)], || o(liga, partida, lado, saida),
         || get_match_importance(liga, partida, lado, saida));
-    PLACAR.record(igual && r == n, || format!("get_match_importance original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_match_importance original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

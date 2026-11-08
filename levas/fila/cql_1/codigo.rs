@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p: usize, c: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(%%I0%%);
     let r = o(this, p, c);
     let n = get_squad_number(this, p, c);
-    PLACAR.record(r == n, || format!("get_squad_number(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
+    SCOREBOARD.record(r == n, || format!("get_squad_number(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
     r
 }
 
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usi
     }
     let r = o(this, c, outra);
     let n = club_uses_squad_numbers(this, c, outra);
-    PLACAR.record(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, outra, r, n));
+    SCOREBOARD.record(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, outra, r, n));
     r
 }
 
@@ -139,5 +139,5 @@ unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: 
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, c, n), || set_squad_number(this, p, c, n));
-    PLACAR.record(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
 }

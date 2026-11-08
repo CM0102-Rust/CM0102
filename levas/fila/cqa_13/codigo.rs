@@ -536,7 +536,7 @@ unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions(this: usiz
     }
     o(this, p, novo, velho, flag);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    PLACAR.record(mo == mr, || {
+    SCOREBOARD.record(mo == mr, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
         format!("process_transfer_squad_reactions(jogador {:#x}, novo {:#x}, velho {:#x}) diferencas em {:x?}", p, novo, velho, dif)
     });

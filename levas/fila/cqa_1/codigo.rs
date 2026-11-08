@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn comparar_pay_round_prize_money(copa: usize, vencedor
     antes.write_back();
     o(copa, vencedor, perdedor, rodada, partida);
     let mo = crate::comparison::MemorySnapshot::read(&regioes);
-    PLACAR.record(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", rodada as i16, cv, cp));
+    SCOREBOARD.record(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", rodada as i16, cv, cp));
 }
 
 /// Os confrontos [início, fim) que a 0x51e870 percorre: um só (`laco`; o fim é a palavra baixa de laco + 1, como o
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn comparar_set_home_teams_for_round(copa: usize, rodad
         reg.push((round_tie(copa, rodada as i16 as i32, ini as i32), (fim as i32 - ini as i32) as usize * 0x35));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada, laco), || set_home_teams_for_round(copa, rodada, laco));
-    PLACAR.record(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", rodada as i16, laco as i16, mo, mr));
+    SCOREBOARD.record(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", rodada as i16, laco as i16, mo, mr));
 }
 
 /// Os argumentos da virtual +0x68 que a 0x521b30 chama para o time `t` na rodada `r`: (p1, p2, p3) ou None.
@@ -306,5 +306,5 @@ unsafe extern "thiscall" fn comparar_record_team_progress(copa: usize, time: u32
         return o(copa, time, rodada); // ponytail: sem registro para olhar, só a original
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(reg + 0x73, 3)], || o(copa, time, rodada), || record_team_progress(copa, time, rodada));
-    PLACAR.record(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", time as i16, rodada as i16, mo, mr));
+    SCOREBOARD.record(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", time as i16, rodada as i16, mo, mr));
 }

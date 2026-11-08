@@ -469,7 +469,7 @@ unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
 unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usize) {
     if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS)).take() {
         let mo = crate::comparison::MemorySnapshot::read(&reg);
-        PLACAR.record(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
+        SCOREBOARD.record(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
@@ -500,6 +500,6 @@ unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pessoa: usize, 
 unsafe extern "thiscall" fn comparar_is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, pessoa, competicao);
     let n = is_one_booking_from_ban(this, pessoa, competicao);
-    PLACAR.record(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", pessoa, competicao, r, n));
+    SCOREBOARD.record(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", pessoa, competicao, r, n));
     r
 }

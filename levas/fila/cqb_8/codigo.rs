@@ -408,5 +408,5 @@ unsafe extern "stdcall" fn comparar_media_format_response_option_label(tipo: u32
     let o = original_fn::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(%%I2%%);
     let reg = if saida != 0 && (tamanho as i16) >= 0xf { vec![(saida, (tamanho as u16 as usize).min(0x50))] } else { Vec::new() };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(tipo, opcao, saida, tamanho), || media_format_response_option_label(tipo, opcao, saida, tamanho));
-    PLACAR.record(igual, || format!("media_format_response_option_label({}, {}) {:x?} x {:x?}", tipo as i16, opcao as i8, mo, mr));
+    SCOREBOARD.record(igual, || format!("media_format_response_option_label({}, {}) {:x?} x {:x?}", tipo as i16, opcao as i8, mo, mr));
 }

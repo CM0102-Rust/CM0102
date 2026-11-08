@@ -42,12 +42,12 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], sem
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, n as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
+        construct(p, this, n as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
-    let stage = read_usize(read_usize(this + 0xc));
+    core::ptr::write_unaligned(read_usize(this + league::STAGES) as *mut usize, stage);
+    let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
         return show_error_at(file, row_without_stage);
     }
@@ -56,7 +56,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], sem
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     free(t);
     free(list);
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
 }
 
 /// Rio Grande do Sul: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed

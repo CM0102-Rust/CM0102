@@ -148,6 +148,6 @@ unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize, ano: u32, 
     if *((this + 0x44) as *const u8) == 0xff && cqq6_d(this + 8) != 0 {
         ok = ok && cqq6_d(this + 0x2c) == 0 && cqq6_d(this + 0xc) == 0;
     }
-    PLACAR.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, cqq6_d(this), cqq6_d(this + 0xee), cqq6_d(this + 0xf2), cqq6_d(this + 8)));
+    SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, cqq6_d(this), cqq6_d(this + 0xee), cqq6_d(this + 0xf2), cqq6_d(this + 8)));
     r
 }

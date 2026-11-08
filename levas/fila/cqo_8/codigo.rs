@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_parana_advance_stage(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqo8_d(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
-    PLACAR.record(igual, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    SCOREBOARD.record(igual, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_parana_create_final_stage(this: usi
             cqo8_w(fase + 0x3e) == 2 && cqo8_d(fase + 4) == cqo8_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && cqo8_d(this + 0x30) == 2
         }
     };
-    PLACAR.record(igual, || format!("bra_reg_parana_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, cqo8_d(this + 0x30), cqo8_d(this + 0x2c)));
+    SCOREBOARD.record(igual, || format!("bra_reg_parana_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, cqo8_d(this + 0x30), cqo8_d(this + 0x2c)));
 }
 
 /// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e

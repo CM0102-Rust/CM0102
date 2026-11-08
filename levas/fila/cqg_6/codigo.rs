@@ -322,7 +322,7 @@ unsafe extern "thiscall" fn comparar_draw_phase2_groups(this: usize, tentativa: 
     }
     vistos.sort_unstable();
     ok = ok && vistos == plano;
-    PLACAR.record(ok, || format!("draw_phase2_groups: as fases não têm os 16 classificados (+0x30 = {})", cqg6_d(this + 0x30) as i32));
+    SCOREBOARD.record(ok, || format!("draw_phase2_groups: as fases não têm os 16 classificados (+0x30 = {})", cqg6_d(this + 0x30) as i32));
 }
 
 /// { 0x5871e0 } (cdecl, european_cup.cpp): `european_cup_compare_phase2_draw_entries(a, b)`, a comparação da qsort dos
@@ -344,7 +344,7 @@ unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usize, b: usize
 unsafe extern "C" fn comparar_european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = european_cup_compare_phase2_draw_entries(a, b);
-    PLACAR.record(r == n, || format!("european_cup_compare_phase2_draw_entries: original={} rust={}", r, n));
+    SCOREBOARD.record(r == n, || format!("european_cup_compare_phase2_draw_entries: original={} rust={}", r, n));
     r
 }
 
@@ -398,6 +398,6 @@ unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
 unsafe extern "C" fn comparar_comp_util_get_parent_stage_id(id: i32) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(%%I2%%)(id);
     let n = comp_util_get_parent_stage_id(id);
-    PLACAR.record(r == n, || format!("comp_util_get_parent_stage_id({:#x}): original={:#x} rust={:#x}", id, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_util_get_parent_stage_id({:#x}): original={:#x} rust={:#x}", id, r, n));
     r
 }

@@ -20,7 +20,7 @@ unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
 unsafe extern "C" fn comparar_key_nation_index_of_nation(nacao: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(nacao);
     let n = key_nation_index_of_nation(nacao);
-    PLACAR.record(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nacao, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -72,7 +72,7 @@ unsafe extern "C" fn comparar_key_nation_index_of_club(clube: usize) -> u8 {
     }
     let r = o(clube);
     let n = key_nation_index_of_club(clube);
-    PLACAR.record(r == n, || format!("key_nation_index_of_club(clube {:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_index_of_club(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -103,6 +103,6 @@ unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: usize) -> u
     }
     let r = o(clube);
     let n = key_nation_get_club_season_year(clube);
-    PLACAR.record(r == n, || format!("key_nation_get_club_season_year(clube {:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_get_club_season_year(clube {:x}) original={} rust={}", clube, r, n));
     r
 }

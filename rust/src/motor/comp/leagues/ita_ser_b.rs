@@ -80,12 +80,12 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
 pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(this: usize, points: u32) {
     let tie: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_RANK_BY_HEAD_TO_HEAD);
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    tie(this, read_u32_as_usize(this + 0xb1));
-    let n = read_i16(this + 0x3e);
+    tie(this, read_u32_as_usize(this + league::TABLE));
+    let n = read_i16(this + league::CLUB_COUNT);
     let mut first = 0usize;
     let mut how_many: u32 = 0;
     if n > 0 {
-        let mut l = read_u32_as_usize(this + 0xb1);
+        let mut l = read_u32_as_usize(this + league::TABLE);
         for _ in 0..n as i32 {
             if read_i16(l + 0x19) == points as u16 as i16 {
                 if first == 0 {
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(thi
     }
     qsort(first, how_many as u16 as i16 as i32, 0x3b, 0x683410); // cql4: o bloco dos empatados
     let mut i: i16 = 0;
-    while i < read_i16(this + 0x3e) {
+    while i < read_i16(this + league::CLUB_COUNT) {
         *((ita_ser_a_table_row(this, i as usize) + 4) as *mut u8) = i as u8;
         i += 1;
     }

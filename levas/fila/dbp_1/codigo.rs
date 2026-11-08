@@ -123,7 +123,7 @@ unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize, pessoa: us
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(clube, pessoa),
         || club_reputation_for_staff(clube, pessoa));
     // os chamadores leem só o ax (movsx)
-    PLACAR.record(igual && r as u16 == n as u16, || format!("club_reputation_for_staff({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r as u16 == n as u16, || format!("club_reputation_for_staff({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
     r
 }
 
@@ -156,7 +156,7 @@ unsafe extern "C" fn staff_count_disliked_staff_at_club(pessoa: usize, clube: us
 unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%)(pessoa, clube);
     let n = staff_count_disliked_staff_at_club(pessoa, clube);
-    PLACAR.record(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }
 
@@ -169,6 +169,6 @@ unsafe extern "C" fn staff_count_favoured_staff_at_club(pessoa: usize, clube: us
 unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(pessoa, clube);
     let n = staff_count_favoured_staff_at_club(pessoa, clube);
-    PLACAR.record(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }

@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn comparar_send_club_international_report_news(this: u
     for k in 0..q {
         *elenco.add(k) = depois_o[k];
     }
-    PLACAR.record(!falhou && k == n && depois_o == depois_r, || format!("send_club_international_report_news(clube {:#x}, jogo {:#x}, conta {}) tape_lock de {} sorteios, ensaio usou {} (n diferente: {}); elenco original {:x?} copia {:x?}",
+    SCOREBOARD.record(!falhou && k == n && depois_o == depois_r, || format!("send_club_international_report_news(clube {:#x}, jogo {:#x}, conta {}) tape_lock de {} sorteios, ensaio usou {} (n diferente: {}); elenco original {:x?} copia {:x?}",
         clube, jogo, q, n, k, falhou, depois_o, depois_r));
 }
 
@@ -438,6 +438,6 @@ unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_opponents(th
     let plano = (*core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN)).take().unwrap_or_default();
     let r = o(this, selecao, jogo);
     let agora = list_item_values(r);
-    PLACAR.record(agora == plano, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));
+    SCOREBOARD.record(agora == plano, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));
     r
 }

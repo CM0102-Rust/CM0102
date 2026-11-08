@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn comparar_fin_prm_end_season_for_nation(this: usize, 
     if let Some(k) = ultimo {
         let f = cqc1_d(this) + k * 0x167 + 0x110;
         let zerado = core::slice::from_raw_parts(f as *const u8, 0x50).iter().all(|&x| x == 0);
-        PLACAR.record(zerado, || format!("fin_prm_end_season_for_nation(entrada {:#x}) clube {} sem zerar os totais do ano", entrada, k));
+        SCOREBOARD.record(zerado, || format!("fin_prm_end_season_for_nation(entrada {:#x}) clube {} sem zerar os totais do ano", entrada, k));
     }
 }
 
@@ -492,7 +492,7 @@ unsafe extern "thiscall" fn comparar_season_end_club_update(this: usize, clube: 
     }
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube), || crate::rng::without_counting(|| season_end_club_update(this, clube)));
-    PLACAR.record(igual, || format!("season_end_club_update(clube {:x}) original={:x?} rust={:x?}", clube, mo, mr));
+    SCOREBOARD.record(igual, || format!("season_end_club_update(clube {:x}) original={:x?} rust={:x?}", clube, mo, mr));
 }
 
 /// { 0x59fe10 } (thiscall, ret 8, fin_prm.cpp; quadro SEH só da notícia local, sem destrutor no caminho normal):

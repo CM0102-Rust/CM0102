@@ -333,7 +333,7 @@ unsafe extern "thiscall" fn comparar_check_squad_limits(this: usize, clube: usiz
         let c = contrato(cqa5_d(0xae1050), liberado);
         c == 0 || cpx1_clube(cqa5_d(c + 4)) != clube
     };
-    PLACAR.record(igual && r == n, || {
+    SCOREBOARD.record(igual && r == n, || {
         format!("check_squad_limits(clube {:x}, oferta {:x}, fila {}) original={} rust={} liberado={:x} {:x?} x {:x?}", clube, o, contar_fila, r, n, liberado, mo, mr)
     });
     r
@@ -372,6 +372,6 @@ unsafe extern "thiscall" fn comparar_find_next_sale_percentage(this: usize, p: u
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa5_d(this + 0x86e).wrapping_add(cqa5_d(p).wrapping_mul(8));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1), (0xae1080, 4)], || f(this, p), || find_next_sale_percentage(this, p));
-    PLACAR.record(igual && r == n, || format!("find_next_sale_percentage(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_next_sale_percentage(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
     r
 }

@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_second_create_schedule(this:
 /// (não rodam duas vezes): só a original. O plano, feito antes, no mata-mata: a primeira linha do clube decide o que a
 /// rotina grava (+0x37 = 0 e saiu = 1 com 1; +0x37 = 0xfe com 0xff ou 2; nada com 0, que segue procurando outra linha
 /// do mesmo clube); depois a linha e `saiu` têm de estar assim. Na liga a rotina não grava nada: a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, saiu: usize, a: u32, b: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, saiu: usize, a: u32, b: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(IDX_ENG_SECOND_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let s = status as u8;
     let mut plan: Option<(usize, u8, bool)> = None;
@@ -26,7 +26,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_
         let mut i: i32 = 0;
         while i < n {
             let row = table + (i as usize) * 0x3b;
-            if read_usize(row) == clube {
+            if read_usize(row) == club {
                 match s {
                     1 => {
                         plan = Some((row, 0, true));
@@ -42,13 +42,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_
             i += 1;
         }
     }
-    let r = o(this, clube, status, stage, saiu, a, b);
+    let r = o(this, club, status, stage, saiu, a, b);
     let same = r == 0
         && match plan {
             Some((row, v, marca)) => read_u8(row + 0x37) == v && (!marca || read_u8(saiu) == 1),
             None => true,
         };
-    PLACAR.record(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, clube, s, stage as u8, r, plan));
+    SCOREBOARD.record(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, club, s, stage as u8, r, plan));
     r
 }
 

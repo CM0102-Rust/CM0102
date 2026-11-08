@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn comparar_handle_transfer_request(this: usize, contra
 unsafe extern "stdcall" fn comparar_is_contract_staff_job(cargo: u32) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32) -> u32>(%%I1%%)(cargo);
     let n = is_contract_staff_job(cargo);
-    PLACAR.record(r == n, || format!("is_contract_staff_job({}) original={} rust={}", cargo as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("is_contract_staff_job({}) original={} rust={}", cargo as u8, r, n));
     r
 }
 
@@ -109,6 +109,6 @@ unsafe extern "stdcall" fn comparar_is_contract_staff_job(cargo: u32) -> u32 {
 unsafe extern "stdcall" fn comparar_staff_is_not_board_member(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
     let n = staff_is_not_board_member(pessoa);
-    PLACAR.record(r == n, || format!("staff_is_not_board_member(pessoa {}, cargo {}) original={} rust={}", cps1_d(pessoa), cps1_b(pessoa + 0x3d), r, n));
+    SCOREBOARD.record(r == n, || format!("staff_is_not_board_member(pessoa {}, cargo {}) original={} rust={}", cps1_d(pessoa), cps1_b(pessoa + 0x3d), r, n));
     r
 }

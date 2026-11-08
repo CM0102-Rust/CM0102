@@ -785,7 +785,7 @@ unsafe extern "C" fn comparar_refresh_possession_bar() {
     }
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || refresh_possession_bar());
-    PLACAR.record(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// A visão geral é comparada de verdade pela lista de exibição, com `*topo`, `*base` e a barra da posse
@@ -813,7 +813,7 @@ unsafe extern "C" fn comparar_draw_match_overview_panel(topo: *mut i32, base: *m
         reg.push((foto, 0xd7a));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(topo, base), || draw_match_overview_panel(topo, base));
-    PLACAR.record(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// A tabela ao vivo é comparada de verdade pela lista de exibição, com a liga (0xee bytes: [+0xad]) e a

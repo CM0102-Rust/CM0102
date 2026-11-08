@@ -79,7 +79,7 @@ pub(crate) unsafe fn eng_cc_cup_create_single_stage_round_table(this: usize, sta
         return 0;
     }
     crate::comparison::branch(name);
-    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
     }
@@ -217,9 +217,9 @@ pub(crate) unsafe fn division_comp_id(c: usize) -> Option<usize> {
 /// Writes entrant k of the cup entrant list (+0xa7, 6 bytes: club, class +4, status +5 = 0).
 ///
 /// [pt] Grava a inscrição `k` da lista (+0xa7, 6 bytes: o clube, +4 a classe, +5 a situação).
-pub(crate) unsafe fn eng_cc_cup_write_entrant(this: usize, k: i32, clube: usize, classe: u8) {
-    let e = read_u32_as_usize(this + 0xa7) + k as usize * 6;
-    core::ptr::write_unaligned(e as *mut u32, clube as u32);
+pub(crate) unsafe fn eng_cc_cup_write_entrant(this: usize, k: i32, club: usize, classe: u8) {
+    let e = read_u32_as_usize(this + cup::TEAM_TABLE) + k as usize * 6;
+    core::ptr::write_unaligned(e as *mut u32, club as u32);
     *((e + 4) as *mut u8) = classe;
     *((e + 5) as *mut u8) = 0;
 }
@@ -234,10 +234,10 @@ pub(crate) unsafe fn eng_cc_cup_enter_division_clubs(this: usize, n: &mut i32, i
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = eng_cc_cup_club_by_index(i);
         if let Some(d) = division_comp_id(c) {
-            if *n != read_i16(this + 0x3e) as i32 && d == read_u32_as_usize(id) && read_u32_as_usize(c + 0x1db) as i32 == -1 {
+            if *n != read_i16(this + cup::TEAM_COUNT) as i32 && d == read_u32_as_usize(id) && read_u32_as_usize(c + 0x1db) as i32 == -1 {
                 eng_cc_cup_write_entrant(this, *n, c, classe(c));
                 *n += 1;
-                if *n == read_i16(this + 0x3e) as i32 {
+                if *n == read_i16(this + cup::TEAM_COUNT) as i32 {
                     return;
                 }
             }
@@ -267,11 +267,11 @@ pub(crate) unsafe fn came_from_division(c: usize, de: usize) -> bool {
 /// reputação) e a classe vira 1 (Premier), 2 (First) ou 3 (os outros). Lista cheia: +0xb2 no máximo 12 (byte com sinal) e
 /// 1; senão 0. Devolve também quantos entraram (para o comparador).
 pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x5c);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x5c);
     *((this + 0xb2) as *mut u8) = 0;
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0x228);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c4224, 0x18f);
         return (-1, 0);
@@ -304,7 +304,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
     while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = eng_cc_cup_club_by_index(i);
         if let Some(d) = division_comp_id(c) {
-            if n != read_i16(this + 0x3e) as i32
+            if n != read_i16(this + cup::TEAM_COUNT) as i32
                 && (d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION))
                 && read_u32_as_usize(c + 0x1db) as i32 != -1
             {
@@ -312,7 +312,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
                 *((this + 0xb2) as *mut u8) = (*((this + 0xb2) as *const u8)).wrapping_add(1);
                 eng_cc_cup_write_entrant(this, n, c, 0x78);
                 n += 1;
-                if n == read_i16(this + 0x3e) as i32 {
+                if n == read_i16(this + cup::TEAM_COUNT) as i32 {
                     break;
                 }
             }
@@ -320,11 +320,11 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
         i = i.wrapping_add(1);
     }
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_u32_as_usize(this + 0xa7), n as u32, 6, 0x5221c0);
+    sort(read_u32_as_usize(this + cup::TEAM_TABLE), n as u32, 6, 0x5221c0);
     crate::comparison::branch("cqm_10 inscritos da copa da liga");
     let mut k: i16 = 0;
     while (k as i32) < n {
-        let e = read_u32_as_usize(this + 0xa7) + k as usize * 6;
+        let e = read_u32_as_usize(this + cup::TEAM_TABLE) + k as usize * 6;
         let c = read_u32_as_usize(e);
         let d = if c != 0 { division_comp_id(c) } else { None };
         *((e + 4) as *mut u8) = match d {
@@ -334,7 +334,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
         };
         k = k.wrapping_add(1);
     }
-    if n != read_i16(this + 0x3e) as i32 {
+    if n != read_i16(this + cup::TEAM_COUNT) as i32 {
         return (0, n);
     }
     if *((this + 0xb2) as *const i8) > 0xc {
@@ -374,13 +374,13 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
     let nr = core::cell::Cell::new(0i32);
     let (a, b, igual, _, _) = crate::comparison::side_by_side(reg, || {
         let r = o();
-        lo.set(read_u32_as_usize(this + 0xa7));
+        lo.set(read_u32_as_usize(this + cup::TEAM_TABLE));
         r
     }, || {
         let (r, n) = c();
-        lr.set(read_u32_as_usize(this + 0xa7));
+        lr.set(read_u32_as_usize(this + cup::TEAM_TABLE));
         nr.set(n);
-        core::ptr::write_unaligned((this + 0xa7) as *mut u32, lo.get() as u32);
+        core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -394,7 +394,7 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
     a
 }
 
@@ -406,22 +406,22 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
 /// 0xa8 em +0xa7; sem memória, a caixa da linha 0x19f e −1) com a segunda metade dos 56 clubes escolhidos (o vetor de
 /// ponteiros em +0xb2, a partir do 28º: +0x70), classe e situação 0. Devolve 1.
 pub(crate) unsafe fn collect_auto_cup_entrants(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x1c);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x1c);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0xa8);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c4180, 0x19f);
         return (-1, 0);
     }
     crate::comparison::branch("cqm_10 segunda chave do trofeu da liga");
     let mut k: i16 = 0;
-    if read_i16(this + 0x3e) > 0 {
+    if read_i16(this + cup::TEAM_COUNT) > 0 {
         loop {
             let c = read_u32_as_usize(read_u32_as_usize(this + 0xb2) + 0x70 + k as usize * 4); // cqm10: o k-ésimo da segunda metade
             eng_cc_cup_write_entrant(this, k as i32, c, 0);
             k = k.wrapping_add(1);
-            if k >= read_i16(this + 0x3e) {
+            if k >= read_i16(this + cup::TEAM_COUNT) {
                 break;
             }
         }
@@ -448,10 +448,10 @@ pub(crate) unsafe fn latest_placed_club(id: usize, place: u32) -> usize {
 /// Copa da Inglaterra ([0x9cf74c]; sem ele, 0xd7 e 0); se é o mesmo clube, o segundo vira o vice da Premier (sem ele,
 /// 0xe3 e 0). Classe e situação 0 nos dois; devolve 1.
 pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let l = alloc(0xc);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u32, l as u32);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c425c, 0xc5);
         return (-1, 0);
@@ -516,22 +516,22 @@ pub(crate) unsafe fn is_date_today(d: u32, today: usize) -> bool {
 /// estão (as rotinas seguintes os refazem).
 pub(crate) unsafe fn free_season_tables(this: usize) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    if read_u32_as_usize(this + 0xa7) != 0 {
-        soltar(read_u32_as_usize(this + 0xa7));
+    if read_u32_as_usize(this + cup::TEAM_TABLE) != 0 {
+        soltar(read_u32_as_usize(this + cup::TEAM_TABLE));
     }
-    if read_u32_as_usize(this + 0xa3) != 0 {
-        soltar(read_u32_as_usize(this + 0xa3));
+    if read_u32_as_usize(this + cup::ROUND_TABLE) != 0 {
+        soltar(read_u32_as_usize(this + cup::ROUND_TABLE));
     }
-    if read_u32_as_usize(this + 0xad) != 0 {
+    if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
         let mut i = 0i32;
-        while i < read_i16(this + 0x3c) as i32 {
-            let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
+        while i < read_i16(this + cup::ROUND_COUNT) as i32 {
+            let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
                 soltar(p);
             }
             i += 1;
         }
-        soltar(read_u32_as_usize(this + 0xad));
+        soltar(read_u32_as_usize(this + cup::TIE_TABLES));
     }
 }
 

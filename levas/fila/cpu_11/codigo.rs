@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%);
     let reg = formation_regions(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, casa, fase, band, coord), || set_slot_coordinate(this, casa, fase, band, coord));
-    PLACAR.record(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, band, coord, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, band, coord, r, n, mo, mr));
     r
 }
 
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, casa:
     let (mut so, mut sr) = (0xdead_u32, 0xbeef_u32);
     let r = o(this, casa, &mut so);
     let n = check_duplicate_position(this, casa, &mut sr);
-    PLACAR.record(r == n && so == sr, || format!("check_duplicate_position({:x}, {}) {}/{} saída {}/{}", this, casa as u8 as i8, r, n, so, sr));
+    SCOREBOARD.record(r == n && so == sr, || format!("check_duplicate_position({:x}, {}) {}/{} saída {}/{}", this, casa as u8 as i8, r, n, so, sr));
     *saida = so;
     r
 }
@@ -240,6 +240,6 @@ unsafe extern "thiscall" fn comparar_set_marking_type(this: usize, casa: u32, ma
     let reg = [(this as isize + casa as u8 as i8 as isize + 0x5b4) as usize, 1usize];
     let reg = [(reg[0], reg[1]), (this + 0x187f, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, casa, marca), || set_marking_type(this, casa, marca));
-    PLACAR.record(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, marca as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, marca as u8, r, n, mo, mr));
     r
 }

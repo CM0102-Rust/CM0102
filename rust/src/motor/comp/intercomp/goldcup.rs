@@ -44,7 +44,7 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
         show_error_at(0x9cd640, 0x37b);
         return 0;
     }
-    let year = read_i16(this + 0x40) as u16;
+    let year = read_i16(this + league::YEAR) as u16;
     if year == 0x7d1 {
         crate::comparison::branch("cqs_12 selecoes de 2001");
         for (k, &g) in COPA_AMERICA_2001_NATIONS.iter().enumerate() {
@@ -63,24 +63,24 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
         k += 1;
     }
     let mut i = 0i16;
-    let mut nacao = read_u32_as_usize(G_NATION_TABLE);
+    let mut nation = read_u32_as_usize(G_NATION_TABLE);
     while (i as i32) < read_u32_as_usize(G_NATION_COUNT) as i32 && (k as i32) < read_u32_as_usize(this + 0xf2) as i32 {
-        let continent = read_u32_as_usize(nacao + nation::CONTINENT);
-        let id = read_u32_as_usize(nacao);
+        let continent = read_u32_as_usize(nation + nation::CONTINENT);
+        let id = read_u32_as_usize(nation);
         let entra = (continent != 0 && read_u32_as_usize(continent) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA))
             || (year == 0x7cf && id == read_u32_as_usize(KEY_NATION_JAPAN))
             || (year != 0x7cf && id == read_u32_as_usize(KEY_NATION_CANADA))
             || id == read_u32_as_usize(KEY_NATION_MEXICO);
         if entra {
             let l = read_u32_as_usize(this + 0xee);
-            let sede = (0..how_many.max(0) as usize).any(|j| read_u32_as_usize(read_u32_as_usize(l + j * 4) + 0x53) == nacao);
+            let sede = (0..how_many.max(0) as usize).any(|j| read_u32_as_usize(read_u32_as_usize(l + j * 4) + 0x53) == nation);
             if !sede {
-                write_u32_from_usize(read_u32_as_usize(this + 0xee) + k as usize * 4, national_team(nacao));
+                write_u32_from_usize(read_u32_as_usize(this + 0xee) + k as usize * 4, national_team(nation));
                 k += 1;
             }
         }
         i = i.wrapping_add(1);
-        nacao += 0x122;
+        nation += 0x122;
     }
     if k as i32 != read_u32_as_usize(this + 0xf2) as i32 {
         show_error_at(0x9cd640, 0x3bc);
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
 pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -> u32 {
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
     write_u32_from_usize(this + league::TABLE, t);
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
         row(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
     }
-    noticia(this);
+    news(this);
     1
 }
 
@@ -368,7 +368,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
+    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -424,7 +424,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
         return 0;
     }
     write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
-    noticia(f);
+    news(f);
     1
 }
 
@@ -498,8 +498,8 @@ pub(crate) unsafe fn build_phase_table(this: usize, f: Option<GoldcupStagePlan>,
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo_c: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
-    let ano16 = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let ano16 = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
+    let ano = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
         match *op {
             Cqp12D(r, dia, mes, anos, sem, cod, v) => {
@@ -561,7 +561,7 @@ pub(crate) unsafe fn compare_phase_table(name: &str, stage: u32, f: Option<Goldc
         Some(f) => f,
         None => {
             let a = o();
-            PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+            SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
             return a;
         }
     };
@@ -576,7 +576,7 @@ pub(crate) unsafe fn compare_phase_table(name: &str, stage: u32, f: Option<Goldc
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -782,8 +782,8 @@ pub(crate) fn confed_cup_phase(fase: u32) -> Option<GoldcupStagePlan> {
 ///
 /// [pt] Os campos de byte e palavra que a virtual +0x8c (set_up_rules) de um torneio de seleções grava na liga do grupo:
 /// (deslocamento, tamanho 1 ou 2, valor). Os pontos da vitória (+0xc2) vêm à parte, para as mutações.
-pub(crate) unsafe fn goldcup_write_rule_fields(this: usize, campos: &[(usize, u8, u32)], win: u8) {
-    for &(o, n, v) in campos {
+pub(crate) unsafe fn goldcup_write_rule_fields(this: usize, fields: &[(usize, u8, u32)], win: u8) {
+    for &(o, n, v) in fields {
         if n == 1 {
             *((this + o) as *mut u8) = if o == 0xc2 { win } else { v as u8 };
         } else {
@@ -800,7 +800,7 @@ pub(crate) unsafe fn competition_date_word(this: usize, day: u32, month: u32, ye
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
-    let a = core::ptr::read_unaligned((this + 0x40) as *const i16).wrapping_add(year) as u16 as u32;
+    let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16).wrapping_add(year) as u16 as u32;
     data(d.as_mut_ptr(), day, month, a, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
@@ -809,12 +809,12 @@ pub(crate) unsafe fn competition_date_word(this: usize, day: u32, month: u32, ye
 /// Runs the original set_up_rules and checks the fields, +0xb6 date, +0xb8 and return value 1.
 ///
 /// [pt] O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
-pub(crate) unsafe fn check_set_up_rules(name: &str, this: usize, campos: &[(usize, u8, u32)], data: (u32, u32, i16, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn check_set_up_rules(name: &str, this: usize, fields: &[(usize, u8, u32)], data: (u32, u32, i16, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
     let word = competition_date_word(this, data.0, data.1, data.2, data.3);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
-    for &(off, n, v) in campos {
+    for &(off, n, v) in fields {
         let (lido, v) = if n == 1 { (*((this + off) as *const u8) as u32, v & 0xff) } else { (core::ptr::read_unaligned((this + off) as *const u16) as u32, v & 0xffff) };
         if lido != v && k < 4 {
             errados[k] = (off, lido);
@@ -823,7 +823,7 @@ pub(crate) unsafe fn check_set_up_rules(name: &str, this: usize, campos: &[(usiz
     }
     let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
     let lido8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
-    PLACAR.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {:#x}", name, this, r, &errados[..k], b6, word, lido8));
+    SCOREBOARD.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {:#x}", name, this, r, &errados[..k], b6, word, lido8));
     r
 }
 
@@ -880,7 +880,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
 /// [pt] { 0x5e13b0 } (thiscall, ret 0x18, goldcup.cpp; a virtual +0x44 da Copa América): `GoldCup::
 /// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: national_tournament_staff_records com 2 fases de grupos (o
 /// mata-mata na fase 2).
-pub(crate) unsafe extern "thiscall" fn goldcup_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, stage: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
-    national_tournament_staff_records(1, this, clube, outcome, stage, jogo, a6, 2)
+pub(crate) unsafe extern "thiscall" fn goldcup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, a6: u32) -> u32 {
+    national_tournament_staff_records(1, this, club, outcome, stage, game, a6, 2)
 }
 

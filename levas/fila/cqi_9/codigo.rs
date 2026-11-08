@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_parana_set_up_rules(this: usize) ->
         parana_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("bra_reg_parana_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("bra_reg_parana_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_pern_set_up_rules(this: usize) -> u
         pernambucano_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("bra_reg_pern_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("bra_reg_pern_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -125,6 +125,6 @@ unsafe extern "thiscall" fn comparar_bra_reg_rio_set_up_rules(this: usize) -> u3
         carioca_rules(this);
         1
     });
-    PLACAR.record(igual && r == n, || format!("bra_reg_rio_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("bra_reg_rio_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

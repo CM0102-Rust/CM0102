@@ -21,17 +21,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(t
     for liga in league_stage_chain(liga0) {
         for i in 0..read_i16(liga + 0x3e).max(0) as usize {
             let row = read_usize(liga + 0xb1) + 0x3b * i;
-            let clube = read_usize(row);
-            if read_u8(row + 0x11) == 0 || clube == 0 {
+            let club = read_usize(row);
+            if read_u8(row + 0x11) == 0 || club == 0 {
                 continue;
             }
-            let (t, s) = (club_season_record(this, clube, 0), club_all_time_record(this, clube, 0));
+            let (t, s) = (club_season_record(this, club, 0), club_all_time_record(this, club, 0));
             if t == 0 || s == 0 {
                 return o(this, liga0, always); // simplification: the record would be created, original only
             }
             regions.push((t, 0xe));
             regions.push((s, 0xe));
-            if human(clube, 0, 1, 0, 0) != 0 || national_team(clube) != 0 {
+            if human(club, 0, 1, 0, 0) != 0 || national_team(club) != 0 {
                 podem_entrar += 2;
             }
         }
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(t
     POSITION_RECORDS_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     mo.write_back();
-    PLACAR.record(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, always, ro, mo, rr, mr));
+    SCOREBOARD.record(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, always, ro, mo, rr, mr));
     ro
 }
 
@@ -71,17 +71,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_send_record_news(this: usize) ->
     before.write_back();
     let ro = o(this);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    PLACAR.record(ro == rr && mo == mr, || format!("send_record_news({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
+    SCOREBOARD.record(ro == rr && mo == mr, || format!("send_record_news({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
     ro
 }
 
 /// Comparer for `pick_fans_player_of_year` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pela referência do escolhido (registro +0x371, 0x18 bytes) e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube: usize, record: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, club: usize, record: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PICK_FANS_PLAYER_OF_YEAR);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(record + 0x371, 0x18)], || o(this, clube, record), || pick_fans_player_of_year(this, clube, record));
-    PLACAR.record(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", read_usize(clube), r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(record + 0x371, 0x18)], || o(this, club, record), || pick_fans_player_of_year(this, club, record));
+    SCOREBOARD.record(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", read_usize(club), r, mo, n, mr));
     r
 }
 
@@ -95,11 +95,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this
     let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + 0xc) as usize).wrapping_mul(staff::SIZE));
     let buyer = injury_club_by_index(read_i32(t + 8));
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let contrato = contract_of(read_usize(G_CONTRACT_MANAGER), person);
-    let seller = if contrato != 0 { injury_club_by_index(read_i32(contrato + 4)) } else { 0 };
+    let contract = contract_of(read_usize(G_CONTRACT_MANAGER), person);
+    let seller = if contract != 0 { injury_club_by_index(read_i32(contract + 4)) } else { 0 };
     if seller == 0 {
         let r = o(this, t);
-        PLACAR.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
+        SCOREBOARD.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
         return r;
     }
     let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this
     let now = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
                  (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
     let queue_now = read_i32(this + 0x2c);
-    PLACAR.record(r == 1 && now == plan && queue_now == queue && read_usize(G_CONTRACT_LOOKUP_RESULT) == contrato, || {
+    SCOREBOARD.record(r == 1 && now == plan && queue_now == queue && read_usize(G_CONTRACT_LOOKUP_RESULT) == contract, || {
         format!("update_transfer_fee_records(valor {}) plano {:x?} fila {} x {:x?} fila {}", value, plan, queue, now, queue_now)
     });
     r
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize,
     let queue = read_usize(this + 0x24).wrapping_add(read_usize(this + 0x2c).wrapping_mul(6));
     let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + 0x2c, 4), (queue, 12)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, value, buyer, seller), || add_transfer_totals(this, value, buyer, seller));
-    PLACAR.record(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", value, read_usize(buyer), read_usize(seller), mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", value, read_usize(buyer), read_usize(seller), mo, mr));
     r
 }
 
@@ -169,62 +169,62 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize,
 ///
 /// [pt] Comparador: o registro de sempre é pedido antes (pode ser criado; a segunda vez só acha); lado a lado pelos dois
 /// recordes e as referências (+0x247 a +0x27b). Nulos ou sem registro: só a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: usize, player: usize, clube: usize, games: u32, goals: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: usize, player: usize, club: usize, games: u32, goals: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_CLUB_RECORDS_UPDATE_CAREER_RECORDS);
-    if player == 0 || clube == 0 {
-        return o(this, player, clube, games, goals);
+    if player == 0 || club == 0 {
+        return o(this, player, club, games, goals);
     }
     let always: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_ALL_TIME_RECORD);
-    let reg = always(this, clube, 1);
+    let reg = always(this, club, 1);
     if reg == 0 {
-        return o(this, player, clube, games, goals);
+        return o(this, player, club, games, goals);
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(reg + 0x247, 0x34)], || o(this, player, clube, games, goals), || club_records_update_career_records(this, player, clube, games, goals));
-    PLACAR.record(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", read_usize(player), read_usize(clube), games as i16, goals as i16, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(reg + 0x247, 0x34)], || o(this, player, club, games, goals), || club_records_update_career_records(this, player, club, games, goals));
+    SCOREBOARD.record(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", read_usize(player), read_usize(club), games as i16, goals as i16, mo, mr));
     r
 }
 
 /// Comparer for `update_season_rating_record` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: lado a lado pelo recorde de nota (+0x1f1 a +0x210 do registro da temporada, pedido antes sem criar).
-pub(crate) unsafe extern "thiscall" fn comparar_update_season_rating_record(this: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_update_season_rating_record(this: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_SEASON_RATING_RECORD);
-    if clube == 0 {
-        return o(this, clube);
+    if club == 0 {
+        return o(this, club);
     }
     let season: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
-    let t = season(this, clube, 0);
+    let t = season(this, club, 0);
     let reg: &[(usize, usize)] = if t == 0 { &[] } else { &[(t + 0x1f1, 0x1f)] };
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, clube), || update_season_rating_record(this, clube));
-    PLACAR.record(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", read_usize(clube), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, club), || update_season_rating_record(this, club));
+    SCOREBOARD.record(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", read_usize(club), r, n, mo, mr));
     r
 }
 
 /// Comparer for `get_all_time_record` (comparison mode: see the header of motor.rs).
 ///
 /// [pt] Comparador: a criação realoca e não pode rodar duas vezes: o plano da cópia antes, a original roda, confere.
-pub(crate) unsafe extern "thiscall" fn comparar_get_all_time_record(this: usize, clube: usize, create: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_get_all_time_record(this: usize, club: usize, create: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_ALL_TIME_RECORD);
-    if clube == 0 {
-        return o(this, clube, create);
+    if club == 0 {
+        return o(this, club, create);
     }
-    let e = club_records_entry(this, clube);
+    let e = club_records_entry(this, club);
     let plan = record_index_plan(e, this + 0xc, create);
-    let r = o(this, clube, create);
-    check_record_plan("get_all_time_record", clube, e, this + 0xc, this + 4, plan, r);
+    let r = o(this, club, create);
+    check_record_plan("get_all_time_record", club, e, this + 0xc, this + 4, plan, r);
     r
 }
 
 /// Comparador: o mesmo pelos recordes da temporada.
-pub(crate) unsafe extern "thiscall" fn comparar_get_season_record(this: usize, clube: usize, create: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_get_season_record(this: usize, club: usize, create: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_SEASON_RECORD);
-    if clube == 0 {
-        return o(this, clube, create);
+    if club == 0 {
+        return o(this, club, create);
     }
-    let e = club_records_entry(this, clube) + 4;
+    let e = club_records_entry(this, club) + 4;
     let plan = record_index_plan(e, this + 0x18, create);
-    let r = o(this, clube, create);
-    check_record_plan("get_season_record", clube, e, this + 0x18, this + 0x10, plan, r);
+    let r = o(this, club, create);
+    check_record_plan("get_season_record", club, e, this + 0x18, this + 0x10, plan, r);
     r
 }
 
@@ -239,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_record_news(this: usize, i
     }
     let item = read_usize(this + 0x24).wrapping_add(n.wrapping_mul(6));
     let (gid, gtipo) = (core::ptr::read_unaligned(item as *const u32), *((item + 4) as *const u8));
-    PLACAR.record(r == 1 && read_usize(this + 0x2c) == n.wrapping_add(1) && gid == id && gtipo == kind as u8, || {
+    SCOREBOARD.record(r == 1 && read_usize(this + 0x2c) == n.wrapping_add(1) && gid == id && gtipo == kind as u8, || {
         format!("queue_record_news({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, kind as u8, r, n, read_usize(this + 0x2c), gid, gtipo)
     });
     r
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_record_news(this: usize, i
 pub(crate) unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, offer: usize, exigir: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_OFFER_BREAKS_FEE_RECORD)(this, offer, exigir);
     let n = offer_breaks_fee_record(this, offer, exigir);
-    PLACAR.record(r == n, || format!("offer_breaks_fee_record({:x}, {}) original={} rust={}", offer, exigir, r, n));
+    SCOREBOARD.record(r == n, || format!("offer_breaks_fee_record({:x}, {}) original={} rust={}", offer, exigir, r, n));
     r
 }
 
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: us
 pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_FEE_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || transfer_fee_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("transfer_fee_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("transfer_fee_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -268,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_construct(th
 pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_construct_2(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_FEE_RECORD_CONSTRUCT_2);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || transfer_fee_record_construct_2(this));
-    PLACAR.record(igual && r == n, || format!("transfer_fee_record_construct_2 {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("transfer_fee_record_construct_2 {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -276,7 +276,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_construct_2(
 pub(crate) unsafe extern "thiscall" fn comparar_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || run_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("run_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -284,7 +284,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_run_record_construct(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_won_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_WON_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || won_run_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("won_run_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("won_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -292,7 +292,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_won_run_record_construct(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_lost_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_LOST_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || lost_run_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("lost_run_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("lost_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_lost_run_record_construct(this: 
 pub(crate) unsafe extern "thiscall" fn comparar_unbeaten_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_UNBEATEN_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || unbeaten_run_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("unbeaten_run_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("unbeaten_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -308,7 +308,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_unbeaten_run_record_construct(th
 pub(crate) unsafe extern "thiscall" fn comparar_winless_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_WINLESS_RUN_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || winless_run_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("winless_run_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("winless_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -316,7 +316,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_winless_run_record_construct(thi
 pub(crate) unsafe extern "thiscall" fn comparar_goals_in_match_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_GOALS_IN_MATCH_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x21)], || o(this), || goals_in_match_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("goals_in_match_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("goals_in_match_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -324,7 +324,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goals_in_match_record_construct(
 pub(crate) unsafe extern "thiscall" fn comparar_youngest_player_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_YOUNGEST_PLAYER_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || youngest_player_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("youngest_player_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("youngest_player_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_youngest_player_record_construct
 pub(crate) unsafe extern "thiscall" fn comparar_oldest_player_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_OLDEST_PLAYER_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || oldest_player_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("oldest_player_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("oldest_player_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -340,7 +340,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oldest_player_record_construct(t
 pub(crate) unsafe extern "thiscall" fn comparar_rating_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RATING_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1f)], || o(this, source), || rating_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("rating_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("rating_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -348,7 +348,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_rating_record_assign(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_man_of_match_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MAN_OF_MATCH_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1b)], || o(this, source), || man_of_match_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("man_of_match_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("man_of_match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -356,7 +356,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_man_of_match_record_assign(this:
 pub(crate) unsafe extern "thiscall" fn comparar_discipline_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_DISCIPLINE_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1c)], || o(this, source), || discipline_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("discipline_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("discipline_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_discipline_record_assign(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_count_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COUNT_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this, source), || count_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("count_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("count_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -372,7 +372,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_count_record_assign(this: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_fans_player_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FANS_PLAYER_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this, source), || fans_player_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("fans_player_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("fans_player_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -380,7 +380,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fans_player_record_assign(this: 
 pub(crate) unsafe extern "thiscall" fn comparar_tally_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TALLY_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x19)], || o(this), || tally_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("tally_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("tally_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -388,7 +388,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tally_record_construct(this: usi
 pub(crate) unsafe extern "thiscall" fn comparar_count_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_COUNT_RECORD_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1a)], || o(this), || count_record_construct(this));
-    PLACAR.record(igual && r == n, || format!("count_record_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("count_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -396,7 +396,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_count_record_construct(this: usi
 pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRANSFER_FEE_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x29)], || o(this, source), || transfer_fee_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("transfer_fee_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("transfer_fee_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_assign(this:
 pub(crate) unsafe extern "thiscall" fn comparar_goals_in_match_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GOALS_IN_MATCH_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x38)], || o(this, source), || goals_in_match_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("goals_in_match_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("goals_in_match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -412,7 +412,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goals_in_match_record_assign(thi
 pub(crate) unsafe extern "thiscall" fn comparar_record_holder_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RECORD_HOLDER_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x18)], || o(this, source), || record_holder_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("record_holder_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("record_holder_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -420,7 +420,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_holder_assign(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_match_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x1f)], || o(this, source), || match_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("match_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -428,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_match_record_assign(this: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_run_record_assign(this: usize, source: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RUN_RECORD_ASSIGN);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this, source), || run_record_assign(this, source));
-    PLACAR.record(igual && r == n, || format!("run_record_assign {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("run_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -437,7 +437,7 @@ pub(crate) unsafe extern "C" fn comparar_reset_records(r: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_RESET_RECORDS);
     let reg = if r == 0 { vec![] } else { vec![(r, 0x381)] };
     let (a, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(r), || reset_records(r));
-    PLACAR.record(igual && a == v, || format!("reset_records({:#x}) original={} {:x?} rust={} {:x?}", r, a, mo, v, mr));
+    SCOREBOARD.record(igual && a == v, || format!("reset_records({:#x}) original={} {:x?} rust={} {:x?}", r, a, mo, v, mr));
     a
 }
 
@@ -445,6 +445,6 @@ pub(crate) unsafe extern "C" fn comparar_reset_records(r: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn comparar_record_holder_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_RECORD_HOLDER_CONSTRUCT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x10, 8)], || o(this), || record_holder_construct(this));
-    PLACAR.record(igual && r == n, || format!("record_holder_construct {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("record_holder_construct {:x?} x {:x?}", mo, mr));
     r
 }

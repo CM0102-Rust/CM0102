@@ -1,4 +1,17 @@
-//! Gerador de numeros aleatorios do jogo: `aleatorio(n)` { 0x90cfc0 }, cdecl, chamado de milhares
+//! The game's random number generator: `aleatorio(n)` { 0x90cfc0 }, cdecl, called from thousands
+//! of places (matches, regens, transfers, injuries...).
+//!
+//! How it works (original listing):
+//! - there is a fixed table of numbers in the exe (0xaa2454..=0xad4130, dwords); `[0xde1f60]` points to the
+//!   current entry and `[0xde1f5c]` holds a 16-bit offset;
+//! - each call advances the pointer one entry; past the end (`[0xde2798]`), it goes back to the start and
+//!   draws a new offset with the CRT's `rand()` (0x946a04) & 0xffff;
+//! - |n| <= 0xffff: (offset + entry) % n (signed division; negative n flips the sign);
+//! - |n| > 0xffff: a floating-point part ((s % 0xffff) * (n * 1/65535), truncated) plus a
+//!   recursive call with n*10/65535 for the low digits, capped at n-1.
+//! The seed (0x90d0a0, option `-seed`) calls srand and picks the starting point in the table.
+//!
+//! [pt] Gerador de numeros aleatorios do jogo: `aleatorio(n)` { 0x90cfc0 }, cdecl, chamado de milhares
 //! de pontos (partidas, regens, transferencias, lesoes...).
 //!
 //! Como funciona (listagem original):
@@ -14,147 +27,171 @@
 use core::cell::Cell;
 
 use crate::comparison::{Scoreboard, TestRng};
-use crate::desvios::{self, Prologo};
+use crate::detours::{self, Prologo};
 use crate::registro::linha;
-use crate::simulacao;
+use crate::simulation;
 
-const PONTEIRO: *mut u32 = 0xde1f60 as *mut u32;
-const DESLOCAMENTO: *mut i32 = 0xde1f5c as *mut i32;
-const FIM_DA_TABELA: *const u32 = 0xde2798 as *const u32;
-const INICIO_DA_TABELA: u32 = 0xaa2454;
-/// Estado do rand() da CRT (versao de uma thread so do Visual C++ 6).
-const ESTADO_RAND: *mut u32 = 0xad6c30 as *mut u32;
-/// 1/65535, double em 0x970a70.
-const UM_SOBRE_65535: f64 = 1.0 / 65535.0;
+const POINTER: *mut u32 = 0xde1f60 as *mut u32;
+const OFFSET: *mut i32 = 0xde1f5c as *mut i32;
+const TABLE_END: *const u32 = 0xde2798 as *const u32;
+const TABLE_START: u32 = 0xaa2454;
+/// State of the CRT's rand() (single-threaded Visual C++ 6 version).
+///
+/// [pt] Estado do rand() da CRT (versao de uma thread so do Visual C++ 6).
+const RAND_STATE: *mut u32 = 0xad6c30 as *mut u32;
+/// 1/65535, double at 0x970a70.
+///
+/// [pt] 1/65535, double em 0x970a70.
+const ONE_OVER_65535: f64 = 1.0 / 65535.0;
 
 // 0x90cfc0: push ecx; push esi; mov esi, dword ptr [esp + 0xc]
-const PROLOGO: Prologo = Prologo { endereco: 0x90cfc0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] };
+const PROLOGUE: Prologo = Prologo { endereco: 0x90cfc0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] };
 
 static mut ORIGINAL: usize = 0;
 
-/// rand() da CRT do proprio jogo (mesmo estado que o jogo usa).
+/// The game's own CRT rand() (same state the game uses).
+///
+/// [pt] rand() da CRT do proprio jogo (mesmo estado que o jogo usa).
 unsafe fn rand_crt() -> i32 {
     let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x946a04usize);
     f()
 }
 
 thread_local! {
-    /// Desligado durante a replica Rust do modo comparacao, para a contagem de sorteios da
+    /// Off during the Rust replica of comparison mode, so the simulation's draw count is
+    /// the same in all three modes (entries into the routine, recursion included).
+    ///
+    /// [pt] Desligado durante a replica Rust do modo comparacao, para a contagem de sorteios da
     /// simulacao ser a mesma nos tres modos (entradas na rotina, recursao incluida).
-    static CONTAR: Cell<bool> = const { Cell::new(true) };
+    static COUNTING: Cell<bool> = const { Cell::new(true) };
 }
 
-/// Roda `f` sem contar os sorteios dela (replica Rust de rotinas que sorteiam, no modo comparacao).
+/// Runs `f` without counting its draws (Rust replica of routines that draw, in comparison mode).
+///
+/// [pt] Roda `f` sem contar os sorteios dela (replica Rust de rotinas que sorteiam, no modo comparacao).
 pub fn without_counting<R>(f: impl FnOnce() -> R) -> R {
-    let antes = CONTAR.with(|c| c.replace(false));
+    let before = COUNTING.with(|c| c.replace(false));
     let r = f();
-    CONTAR.with(|c| c.set(antes));
+    COUNTING.with(|c| c.set(before));
     r
 }
 
-/// Estado do gerador (deslocamento e ponteiro da tabela, rand da CRT): regioes para `lado_a_lado`.
+/// Generator state (table offset and pointer, CRT rand): regions for `side_by_side`.
+///
+/// [pt] Estado do gerador (deslocamento e ponteiro da tabela, rand da CRT): regioes para `lado_a_lado`.
 pub const STATE_REGIONS: [(usize, usize); 2] = [(0xde1f5c, 8), (0xad6c30, 4)];
 
-unsafe fn contar(n: i32) {
-    desvios::reconferir_no_dia();
-    if CONTAR.with(|c| c.get()) {
-        simulacao::sorteio(n, *PONTEIRO, *DESLOCAMENTO, *ESTADO_RAND);
+unsafe fn count_draw(n: i32) {
+    detours::reconferir_no_dia();
+    if COUNTING.with(|c| c.get()) {
+        simulation::sorteio(n, *POINTER, *OFFSET, *RAND_STATE);
     }
 }
 
-/// Versao Rust de { 0x90cfc0 }.
+/// Rust version of { 0x90cfc0 }.
+///
+/// [pt] Versao Rust de { 0x90cfc0 }.
 pub unsafe extern "C" fn aleatorio(n: i32) -> i32 {
-    contar(n);
+    count_draw(n);
     if n == 0 {
         return 0;
     }
-    let mut p = (*PONTEIRO).wrapping_add(4);
-    *PONTEIRO = p;
-    let desloc = if p > *FIM_DA_TABELA {
-        *PONTEIRO = INICIO_DA_TABELA;
-        p = INICIO_DA_TABELA;
+    let mut p = (*POINTER).wrapping_add(4);
+    *POINTER = p;
+    let offset = if p > *TABLE_END {
+        *POINTER = TABLE_START;
+        p = TABLE_START;
         let d = rand_crt() & 0xffff;
-        *DESLOCAMENTO = d;
+        *OFFSET = d;
         d
     } else {
-        *DESLOCAMENTO
+        *OFFSET
     };
-    let entrada = *(p as *const i32);
+    let entry = *(p as *const i32);
     if (-0xffff..=0xffff).contains(&n) {
-        let r = desloc.wrapping_add(entrada).wrapping_rem(n);
+        let r = offset.wrapping_add(entry).wrapping_rem(n);
         return if n > 0 { r } else { r.wrapping_neg() };
     }
-    // n fora de 16 bits: parte alta em ponto flutuante (x87 em precisao dupla, como o Windows
-    // configura), truncada como o _ftol; parte baixa por recursao.
-    let s = desloc.wrapping_add(entrada).wrapping_rem(0xffff);
-    let alta = (s as f64 * (n as f64 * UM_SOBRE_65535)) as i64 as i32;
-    let dez_n = n.wrapping_mul(10);
-    let baixa = aleatorio(dividir_por_65535(dez_n));
-    let mut r = alta.wrapping_add(baixa.wrapping_add(5) / 10);
+    // n outside 16 bits: high part in floating point (x87 in double precision, as Windows
+    // configures it), truncated like _ftol; low part by recursion.
+    let s = offset.wrapping_add(entry).wrapping_rem(0xffff);
+    let high = (s as f64 * (n as f64 * ONE_OVER_65535)) as i64 as i32;
+    let ten_n = n.wrapping_mul(10);
+    let low = aleatorio(div_by_65535(ten_n));
+    let mut r = high.wrapping_add(low.wrapping_add(5) / 10);
     if r > n - 1 {
         r = n - 1;
     }
     r
 }
 
-/// O que o compilador gerou para `x / 65535` (com sinal): imul 0x80008001, add, sar 15, + sinal.
-fn dividir_por_65535(x: i32) -> i32 {
-    let alto = ((x as i64 * 0x8000_8001u32 as i32 as i64) >> 32) as i32;
-    let t = alto.wrapping_add(x) >> 15;
+/// What the compiler generated for `x / 65535` (signed): imul 0x80008001, add, sar 15, + sign.
+///
+/// [pt] O que o compilador gerou para `x / 65535` (com sinal): imul 0x80008001, add, sar 15, + sinal.
+fn div_by_65535(x: i32) -> i32 {
+    let high = ((x as i64 * 0x8000_8001u32 as i32 as i64) >> 32) as i32;
+    let t = high.wrapping_add(x) >> 15;
     t + ((t as u32) >> 31) as i32
 }
 
-// ---------- comparacao com a original ----------
+// ---------- comparison with the original ----------
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-struct Estado {
-    ponteiro: u32,
-    deslocamento: i32,
+struct State {
+    pointer: u32,
+    offset: i32,
     rand: u32,
 }
 
-impl Estado {
-    unsafe fn ler() -> Estado {
-        Estado { ponteiro: *PONTEIRO, deslocamento: *DESLOCAMENTO, rand: *ESTADO_RAND }
+impl State {
+    unsafe fn read() -> State {
+        State { pointer: *POINTER, offset: *OFFSET, rand: *RAND_STATE }
     }
     unsafe fn write_back(self) {
-        *PONTEIRO = self.ponteiro;
-        *DESLOCAMENTO = self.deslocamento;
-        *ESTADO_RAND = self.rand;
+        *POINTER = self.pointer;
+        *OFFSET = self.offset;
+        *RAND_STATE = self.rand;
     }
 }
 
 #[derive(Clone, Copy, PartialEq)]
-enum Rodando {
-    Nada,
+enum Running {
+    Nothing,
     Original,
 }
 
 thread_local! {
-    static RODANDO: Cell<Rodando> = const { Cell::new(Rodando::Nada) };
+    static RUNNING: Cell<Running> = const { Cell::new(Running::Nothing) };
 }
 
-static PLACAR: Scoreboard = Scoreboard::new("aleatorio");
+static SCOREBOARD: Scoreboard = Scoreboard::new("aleatorio");
 
 thread_local! {
-    /// Rastro de sorteios (diagnostico): (n, resposta) de cada chamada de fora, quando ligado.
-    static RASTRO: core::cell::RefCell<Option<Vec<(i32, i32)>>> = const { core::cell::RefCell::new(None) };
+    /// Draw trace (diagnosis): (n, answer) of each outside call, when on.
+    ///
+    /// [pt] Rastro de sorteios (diagnostico): (n, resposta) de cada chamada de fora, quando ligado.
+    static TRACE: core::cell::RefCell<Option<Vec<(i32, i32)>>> = const { core::cell::RefCell::new(None) };
 }
 
-/// Roda `f` guardando os sorteios de fora que ela fizer (n e resposta).
+/// Runs `f` keeping the outside draws it makes (n and answer).
+///
+/// [pt] Roda `f` guardando os sorteios de fora que ela fizer (n e resposta).
 pub fn trace<R>(f: impl FnOnce() -> R) -> (R, Vec<(i32, i32)>) {
-    let antes = RASTRO.with(|t| t.borrow_mut().replace(Vec::new()));
+    let before = TRACE.with(|t| t.borrow_mut().replace(Vec::new()));
     let r = f();
-    let v = RASTRO.with(|t| core::mem::replace(&mut *t.borrow_mut(), antes)).unwrap_or_default();
+    let v = TRACE.with(|t| core::mem::replace(&mut *t.borrow_mut(), before)).unwrap_or_default();
     (r, v)
 }
 
-/// Roda `f` sem guardar sorteios no rastro (os de uma unidade gravada: a copia Rust recebe o resultado
+/// Runs `f` without keeping draws in the trace (those of a recorded unit: the Rust copy gets the result
+/// from the tape and does not redo them, so the original's list only has to hold what the routine itself draws).
+///
+/// [pt] Roda `f` sem guardar sorteios no rastro (os de uma unidade gravada: a copia Rust recebe o resultado
 /// da fita e nao os refaz, entao a lista da original so tem de conter o que a propria rotina sorteia).
 pub fn pause_trace<R>(f: impl FnOnce() -> R) -> R {
-    let guardado = RASTRO.with(|t| t.borrow_mut().take());
+    let saved = TRACE.with(|t| t.borrow_mut().take());
     let r = f();
-    RASTRO.with(|t| *t.borrow_mut() = guardado);
+    TRACE.with(|t| *t.borrow_mut() = saved);
     r
 }
 
@@ -163,38 +200,41 @@ unsafe fn original(n: i32) -> i32 {
     f(n)
 }
 
-/// Roda a original e a versao Rust a partir do mesmo estado e compara resultado e estado final.
+/// Runs the original and the Rust version from the same state and compares result and final state.
+/// The game goes on with the original's result and state.
+///
+/// [pt] Roda a original e a versao Rust a partir do mesmo estado e compara resultado e estado final.
 /// O jogo segue com o resultado e o estado da original.
-unsafe extern "C" fn comparar(n: i32) -> i32 {
-    contar(n);
-    // A original chama a si mesma (recursao para n grande) passando por este desvio.
-    if RODANDO.with(|r| r.get()) == Rodando::Original {
+unsafe extern "C" fn compare(n: i32) -> i32 {
+    count_draw(n);
+    // The original calls itself (recursion for large n) through this detour.
+    if RUNNING.with(|r| r.get()) == Running::Original {
         return original(n);
     }
-    let rastro_ligado = RASTRO.with(|t| t.borrow().is_some());
-    let antes = Estado::ler();
-    RODANDO.with(|r| r.set(Rodando::Original));
+    let tracing = TRACE.with(|t| t.borrow().is_some());
+    let before = State::read();
+    RUNNING.with(|r| r.set(Running::Original));
     let r_orig = original(n);
-    RODANDO.with(|r| r.set(Rodando::Nada));
-    let depois_orig = Estado::ler();
+    RUNNING.with(|r| r.set(Running::Nothing));
+    let after_orig = State::read();
 
-    antes.write_back();
-    // restaura (nao liga): dentro de uma replica Rust (`sem_contar`) que sorteia varias vezes, ligar
-    // aqui fazia os sorteios seguintes da replica entrarem na contagem
-    let contava = CONTAR.with(|c| c.replace(false));
+    before.write_back();
+    // restore (do not switch on): inside a Rust replica (`without_counting`) that draws several times, switching on
+    // here made the replica's following draws enter the count
+    let was_counting = COUNTING.with(|c| c.replace(false));
     let r_rust = aleatorio(n);
-    CONTAR.with(|c| c.set(contava));
-    let depois_rust = Estado::ler();
-    depois_orig.write_back();
+    COUNTING.with(|c| c.set(was_counting));
+    let after_rust = State::read();
+    after_orig.write_back();
 
-    PLACAR.record(r_orig == r_rust && depois_orig == depois_rust, || {
+    SCOREBOARD.record(r_orig == r_rust && after_orig == after_rust, || {
         format!(
             "n={} original={} rust={} estado antes={:x?} original={:x?} rust={:x?}",
-            n, r_orig, r_rust, antes, depois_orig, depois_rust
+            n, r_orig, r_rust, before, after_orig, after_rust
         )
     });
-    if rastro_ligado {
-        RASTRO.with(|t| {
+    if tracing {
+        TRACE.with(|t| {
             if let Some(v) = t.borrow_mut().as_mut() {
                 v.push((n, r_orig));
             }
@@ -203,9 +243,11 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     r_orig
 }
 
-/// Modo observador (`CM_ORIGINAL=1`): roda a original e so conta/verifica a parada da simulacao.
-unsafe extern "C" fn observar(n: i32) -> i32 {
-    contar(n);
+/// Observer mode (`CM_ORIGINAL=1`): runs the original and only counts/checks the simulation stop.
+///
+/// [pt] Modo observador (`CM_ORIGINAL=1`): roda a original e so conta/verifica a parada da simulacao.
+unsafe extern "C" fn observe(n: i32) -> i32 {
+    count_draw(n);
     original(n)
 }
 
@@ -216,15 +258,15 @@ pub enum Modo {
     Observar,
 }
 
-pub unsafe fn instalar(modo: Modo) {
-    let destino = match modo {
+pub unsafe fn instalar(mode: Modo) {
+    let target = match mode {
         Modo::Rust => aleatorio as *const () as usize,
-        Modo::Comparar => comparar as *const () as usize,
-        Modo::Observar => observar as *const () as usize,
+        Modo::Comparar => compare as *const () as usize,
+        Modo::Observar => observe as *const () as usize,
     };
-    if let Some(t) = desvios::desviar("aleatorio", &PROLOGO, destino) {
+    if let Some(t) = detours::desviar("aleatorio", &PROLOGUE, target) {
         ORIGINAL = t;
-        match modo {
+        match mode {
             Modo::Comparar => linha("aleatorio: modo comparacao (original x Rust)"),
             Modo::Observar => linha("aleatorio: modo observador (so a original roda)"),
             Modo::Rust => {}
@@ -232,57 +274,61 @@ pub unsafe fn instalar(modo: Modo) {
     }
 }
 
-/// Compara original e Rust em `casos` entradas sinteticas (estado e n sorteados, cobrindo n
+/// Compares original and Rust on `cases` synthetic inputs (state and n drawn, covering small,
+/// large, negative n, edges and the table wrap). Requires comparison mode installed
+/// (the original's recursion has to land in the original).
+///
+/// [pt] Compara original e Rust em `casos` entradas sinteticas (estado e n sorteados, cobrindo n
 /// pequeno, grande, negativo, bordas e a volta da tabela). Exige o modo comparacao instalado
 /// (a recursao da original tem de cair na original).
-pub unsafe fn autoteste(casos: u64) {
+pub unsafe fn autoteste(cases: u64) {
     if ORIGINAL == 0 {
         return;
     }
-    const FIM_REAL: u32 = 0xad4130; // o que a semente (0x90d0a0) grava em [0xde2798]
-    let fim = FIM_DA_TABELA as *mut u32;
-    let (guardado, fim_guardado) = (Estado::ler(), *fim);
+    const REAL_END: u32 = 0xad4130; // what the seed (0x90d0a0) writes to [0xde2798]
+    let end = TABLE_END as *mut u32;
+    let (saved, saved_end) = (State::read(), *end);
     let mut s = TestRng(0x9e37_79b9_7f4a_7c15);
-    let mut sorteio = || s.next_u64();
-    let entradas = ((FIM_REAL - INICIO_DA_TABELA) / 4 + 1) as u64;
-    let bordas = [1, 2, 3, 7, 10, 100, 0xfffe, 0xffff, 0x10000, 0x10001, 100_000, 1_000_000, i32::MAX];
-    PLACAR.autoteste(|| for i in 0..casos {
-        let a = sorteio();
-        // Ponteiro: qualquer entrada; um em cada oito perto do fim, para exercitar a volta.
-        let entrada = if a % 8 == 0 { entradas - 1 - (a >> 3) % 3 } else { (a >> 3) % entradas };
-        *fim = if a % 97 == 0 { 0 } else { FIM_REAL }; // antes da semente o fim ainda vale 0
-        Estado {
-            ponteiro: INICIO_DA_TABELA + entrada as u32 * 4,
-            deslocamento: ((a >> 20) & 0xffff) as i32,
+    let mut draw = || s.next_u64();
+    let entries = ((REAL_END - TABLE_START) / 4 + 1) as u64;
+    let edges = [1, 2, 3, 7, 10, 100, 0xfffe, 0xffff, 0x10000, 0x10001, 100_000, 1_000_000, i32::MAX];
+    SCOREBOARD.autoteste(|| for i in 0..cases {
+        let a = draw();
+        // Pointer: any entry; one in eight near the end, to exercise the wrap.
+        let entry = if a % 8 == 0 { entries - 1 - (a >> 3) % 3 } else { (a >> 3) % entries };
+        *end = if a % 97 == 0 { 0 } else { REAL_END }; // before the seed the end is still 0
+        State {
+            pointer: TABLE_START + entry as u32 * 4,
+            offset: ((a >> 20) & 0xffff) as i32,
             rand: (a >> 32) as u32,
         }
         .write_back();
-        let b = sorteio();
+        let b = draw();
         let n = match b % 6 {
             0 => (b >> 8) as i32 % 100 + 1,
             1 => ((b >> 8) % 0xffff) as i32 + 1,
             2 => -(((b >> 8) % 0xffff) as i32 + 1),
-            3 => (b >> 8) as u32 as i32, // qualquer, inclusive enormes e negativos
-            4 => bordas[(b >> 8) as usize % bordas.len()],
-            _ => -bordas[(b >> 8) as usize % (bordas.len() - 1)],
+            3 => (b >> 8) as u32 as i32, // any, including huge and negative ones
+            4 => edges[(b >> 8) as usize % edges.len()],
+            _ => -edges[(b >> 8) as usize % (edges.len() - 1)],
         };
-        comparar(n);
+        compare(n);
         if i % 1_000_000 == 999_999 {
             linha(&format!("aleatorio: autoteste {} casos...", i + 1));
         }
     });
-    guardado.write_back();
-    *fim = fim_guardado;
+    saved.write_back();
+    *end = saved_end;
 }
 
 #[cfg(test)]
-mod testes {
+mod tests {
     use super::*;
 
     #[test]
-    fn divisao_por_65535_igual_a_do_compilador() {
+    fn div_by_65535_matches_compiler() {
         for x in [0, 1, 65534, 65535, 65536, 655350, -1, -65535, -65536, i32::MAX, i32::MIN, 123456789, -987654321] {
-            assert_eq!(dividir_por_65535(x), x / 65535, "x={}", x);
+            assert_eq!(div_by_65535(x), x / 65535, "x={}", x);
         }
     }
 }

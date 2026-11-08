@@ -155,6 +155,6 @@ unsafe extern "thiscall" fn comparar_find_record_fixture(estat: usize, k: i32, s
         return o(estat, k, saida);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(saida, 0x4f)], || o(estat, k, saida), || find_record_fixture(estat, k, saida));
-    PLACAR.record(igual && r == n, || format!("find_record_fixture(k {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_record_fixture(k {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

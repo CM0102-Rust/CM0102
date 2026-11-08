@@ -225,20 +225,20 @@ pub(crate) unsafe fn discipline_record(this: usize, id: u32) -> usize {
 ///
 /// [pt] O órgão vale para o clube? Com nação (+0x17 ≠ −1): a nação do clube (+0x53) é ela; sem nação, com continente
 /// (+0x1b ≠ −1): o continente da nação do clube (+0x71) é ele; sem os dois, vale sempre. Clube nulo ou sem nação: não.
-pub(crate) unsafe fn ruling_body_covers_club(body: usize, clube: usize) -> bool {
-    let nacao = read_u32_as_usize(body + 0x17) as u32;
-    if nacao == 0xffff_ffff {
+pub(crate) unsafe fn ruling_body_covers_club(body: usize, club: usize) -> bool {
+    let nation = read_u32_as_usize(body + 0x17) as u32;
+    if nation == 0xffff_ffff {
         let continent = read_u32_as_usize(body + 0x1b) as u32;
         if continent == 0xffff_ffff {
             return true;
         }
-        if clube == 0 || read_u32_as_usize(clube + club::NATION) == 0 {
+        if club == 0 || read_u32_as_usize(club + club::NATION) == 0 {
             return false;
         }
-        let c = read_u32_as_usize(read_u32_as_usize(clube + club::NATION) + 0x71);
+        let c = read_u32_as_usize(read_u32_as_usize(club + club::NATION) + 0x71);
         return c != 0 && read_u32_as_usize(c) as u32 == continent;
     }
-    clube != 0 && read_u32_as_usize(clube + club::NATION) != 0 && read_u32_as_usize(read_u32_as_usize(clube + club::NATION)) as u32 == nacao
+    club != 0 && read_u32_as_usize(club + club::NATION) != 0 && read_u32_as_usize(read_u32_as_usize(club + club::NATION)) as u32 == nation
 }
 
 /// Releases the entry's ban (if +6 > -1) via release_ban with the original's dirty high bits.
@@ -396,7 +396,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
 /// vaga ocupada das 4 do registro da pessoa cujo órgão não vale para o clube novo (`ruling_body_covers_club`) é liberada: a
 /// suspensão solta (0x556d00), a vaga livre e a entrada do órgão livre. Com suspensões guardadas (+0x1c ≠ 0), a caixa
 /// "Error" antes (e segue). Da troca de clube (0x8c9720).
-pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, person: usize, _nada: u32, clube: usize) {
+pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, person: usize, _nada: u32, club: usize) {
     let id = read_u32_as_usize(person) as u32;
     let r = discipline_record(this, id);
     for k in 0..4usize {
@@ -405,7 +405,7 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
             continue;
         }
         let body = ruling_body_of_rule(this, rule);
-        if ruling_body_covers_club(body, clube) {
+        if ruling_body_covers_club(body, club) {
             continue;
         }
         let e = ruling_body_entry(body, id);
@@ -440,7 +440,7 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
     let r = discipline_record(this, id);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contrato = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), person);
-    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(club::SIZE)) };
+    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + contract::CLUB).wrapping_mul(club::SIZE)) };
     let mut p = ContractReturnPlan { contrato, clube, guardadas: Vec::new(), resto: *((r + 0x1c) as *const u8), soltas: Vec::new() };
     let list = this + 0x1c;
     write_u32(list + 0xa, read_u32_as_usize(this + 0x1e) as u32);
@@ -497,9 +497,9 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
     let id = read_u32_as_usize(person) as u32;
     let r = discipline_record(this, id);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let contrato = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), person);
-    write_u32(G_CONTRACT_LOOKUP_RESULT, contrato as u32);
-    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(club::SIZE)) };
+    let contract = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), person);
+    write_u32(G_CONTRACT_LOOKUP_RESULT, contract as u32);
+    let club = if contract == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contract + contract::CLUB).wrapping_mul(club::SIZE)) };
     let list = this + 0x1c;
     write_u32(list + 0xa, read_u32_as_usize(this + 0x1e) as u32);
     let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
@@ -533,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
             continue;
         }
         let body = ruling_body_of_rule(this, rule);
-        if ruling_body_covers_club(body, clube) {
+        if ruling_body_covers_club(body, club) {
             continue;
         }
         let e = ruling_body_entry(body, id);
@@ -729,8 +729,8 @@ pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32,
 /// (0x7e8590); na quarta, o item da pessoa sai do índice das nações (o último vem para o lugar, conta +0x12 − 1, qsort
 /// 0x945333 com 0x55e5f0; sem achar, caixa "Error" e segue). Por fim a suspensão fica livre (+0 = 0xff, +2 = −1).
 /// Devolve a suspensão.
-pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, indice: u32) -> usize {
-    let s = read_usize(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
+pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: u32) -> usize {
+    let s = read_usize(this + 4).wrapping_add((index as u16 as i16 as i32 as usize).wrapping_mul(20));
     let esquecer: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_RULINGBODY_DETACH_BAN);
     for k in 0..4usize {
         let rule = *((s + 0xc + k) as *const u8);
@@ -826,11 +826,11 @@ comparar_valor!(comparar_get_match_condition, get_match_condition, IDX_GET_MATCH
 /// regras da disciplina dela (índice +0x50 da competição em [0xadadfc], 0xff sem) recebem o método 0
 /// da tabela virtual.
 pub(crate) unsafe extern "thiscall" fn discipline_new_season(this: usize, id: *const i32) {
-    let competicao = *((*(G_COMP_OBJECT_TABLE as *const usize) as isize + 4 * *id as isize) as *const usize);
-    if competicao == 0 {
+    let competition = *((*(G_COMP_OBJECT_TABLE as *const usize) as isize + 4 * *id as isize) as *const usize);
+    if competition == 0 {
         return;
     }
-    let k = *((competicao + 0x50) as *const i8);
+    let k = *((competition + league::DISCIPLINE_RULE) as *const i8);
     if k == -1 {
         return;
     }
@@ -903,7 +903,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     if julgar(read_usize(tribunais), player, 1, extra, partida) != 0 {
         return 1; // the general suspension
     }
-    let t = *((c + 0x50) as *const i8);
+    let t = *((c + league::DISCIPLINE_RULE) as *const i8);
     if t == -1 {
         return 0;
     }
@@ -912,11 +912,11 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
         return 0;
     }
     crate::comparison::branch("cpk_3 suspenso pela competicao");
-    let clube = read_usize(player + staff::CLUB_JOB);
-    if clube != 0 {
+    let club = read_usize(player + staff::CLUB_JOB);
+    if club != 0 {
         let human: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-        if human(clube, 0, 1, 0, 0) != 0 {
-            if let Some(s) = (0..20).map(|k| clube + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == player) {
+        if human(club, 0, 1, 0, 0) != 0 {
+            if let Some(s) = (0..20).map(|k| club + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == player) {
                 *(s as *mut usize) = 0; // leaves the slot
             }
         }
@@ -997,11 +997,11 @@ pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: u
 /// [pt] { 0x55d360 } (thiscall, ret 8, discipline.cpp): `Discipline::is_one_booking_from_ban(pessoa, competicao)`: com id
 /// válido, a competição ([[0xadadfc] + 4 × id]) e o órgão dela (+0x50, 0xff sem; [this] + 4 × órgão), a pergunta ao órgão
 /// (0x7e8d60 com o id, 0, 0 e o +4 da competição); senão 0. Pela tela do clube (0x4849f0).
-pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, person: usize, competicao: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, person: usize, competition: usize) -> u32 {
     if person != 0 && read_i32(person) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(competicao) as u32).wrapping_mul(4) as usize));
+    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(competition) as u32).wrapping_mul(4) as usize));
     if comp == 0 || person == 0 {
         return 0;
     }
@@ -1137,9 +1137,9 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
 /// [pt] { 0x55cb60 } (thiscall, ret 8, discipline.cpp): a punição guardada do jogador `id` na vaga `vaga`:
 /// percorre a lista das guardadas (+0x1c, do começo, 0x68d1b0) enquanto o jogador tem alguma
 /// (byte +0x1c do registro de 29 bytes em [+0x14]) e devolve a de mesmo jogador e vaga; 0 se nenhuma.
-pub(crate) unsafe extern "thiscall" fn find_held_ban(disciplina: usize, id: i32, slot: i8) -> usize {
-    let list = disciplina + 0x1c;
-    let record = (*((disciplina + 0x14) as *const usize) as isize + id as isize * 29) as usize;
+pub(crate) unsafe extern "thiscall" fn find_held_ban(discipline: usize, id: i32, slot: i8) -> usize {
+    let list = discipline + 0x1c;
+    let record = (*((discipline + 0x14) as *const usize) as isize + id as isize * 29) as usize;
     core::ptr::write_unaligned((list + 0xa) as *mut u32, core::ptr::read_unaligned((list + 2) as *const u32));
     let proxima: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut p = proxima(list);

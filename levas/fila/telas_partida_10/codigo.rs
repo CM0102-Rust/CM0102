@@ -525,7 +525,7 @@ unsafe fn comparar_pela_lista_com(nome: &str, extra: &[(usize, usize)], original
     // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
     reg.extend_from_slice(&crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, original, || crate::rng::without_counting(rust));
-    PLACAR.record(igual, || {
+    SCOREBOARD.record(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))

@@ -120,7 +120,7 @@ unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, f: Option<S
         Some(f) => f,
         None => {
             let a = o();
-            PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
+            SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
             return a;
         }
     };
@@ -135,7 +135,7 @@ unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, f: Option<S
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
     }
-    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
+    SCOREBOARD.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
     a
 }
 

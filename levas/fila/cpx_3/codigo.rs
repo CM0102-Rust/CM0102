@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
 unsafe extern "thiscall" fn comparar_finalise_transfer(this: usize, o: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, o);
     let e = cpx3_b(o + 0x2c);
-    PLACAR.record(e == 0x14, || format!("finalise_transfer(oferta {:#x}) estado={:#x} (plano 0x14)", o, e));
+    SCOREBOARD.record(e == 0x14, || format!("finalise_transfer(oferta {:#x}) estado={:#x} (plano 0x14)", o, e));
 }
 
 /// A notícia local com a pessoa (o id e as três chaves) nas vagas `k` a `k` + 3.

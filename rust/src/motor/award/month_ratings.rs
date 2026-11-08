@@ -23,8 +23,8 @@ pub(crate) unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
 /// 0x7683a0 a cada partida das ligas com prêmio do mês. Os dois lados da partida (+0x190 e +0x190 + 0x625), 20 vagas de
 /// 0x49 bytes cada: fora a vaga marcada 0xfb em +0x1d e, da 12ª em diante, a reserva que não entrou (+0x32 = 0xff), a
 /// pessoa (id em +0) abaixo da conta de pessoas [0xae2364] vai para as notas do mês (0x767fa0).
-pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: usize, partida: usize) {
-    let _ = jogo;
+pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: usize, partida: usize) {
+    let _ = game;
     let rating: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_MONTH_RATINGS_ADD_PLAYER_RATING);
     let mut side = partida.wrapping_add(0x190);
     for l in 0..2 { // cpw5: os dois lados
@@ -102,10 +102,10 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
         write_u32(this, table as u32);
     }
     let p = month_ratings_staff_by_id(id);
-    let clube = read_usize(p + staff::CLUB_JOB);
+    let club = read_usize(p + staff::CLUB_JOB);
     let mut league = -1i32;
-    if clube != 0 {
-        let l = read_usize(clube + club::DIVISION);
+    if club != 0 {
+        let l = read_usize(club + club::DIVISION);
         if l != 0 {
             league = read_i32(l);
         }
@@ -114,7 +114,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     write_u32(r, id as u32);
     write_u32(r + 4, league as u32);
     core::ptr::write_unaligned((r + 8) as *mut u16, 0);
-    *((r + 0xb) as *mut u8) = read_u8(p + staff::YEAR_OF_BIRTH);
+    *((r + 0xb) as *mut u8) = read_u8(p + staff::AGE);
     crate::comparison::branch("cpw_5 jogador novo no mes");
     *((r + 0xa) as *mut u8) = 0; // cpw5: começa sem jogos
     write_u32(this + 4, n.wrapping_add(1) as u32);

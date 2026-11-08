@@ -374,11 +374,11 @@ pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
     while (i as i32) < n && v.len() < 100 {
         let c = base + (i as u16 as usize) * club::SIZE;
         let comp = read_u32_as_usize(c + club::DIVISION);
-        let nacao = read_u32_as_usize(c + club::NATION);
-        if comp != 0 && nacao != 0 {
+        let nation = read_u32_as_usize(c + club::NATION);
+        if comp != 0 && nation != 0 {
             let id = read_u32_as_usize(comp);
             let group = [KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B3, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4].iter().any(|&g| id == read_u32_as_usize(g));
-            if group || (read_u32_as_usize(nacao) == read_u32_as_usize(KEY_NATION_SPAIN) && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) {
+            if group || (read_u32_as_usize(nation) == read_u32_as_usize(KEY_NATION_SPAIN) && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) {
                 let mut eh_a: u32 = 0;
                 if partner(c, &mut eh_a, 1) == 0 {
                     v.push(c);
@@ -403,8 +403,8 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE;
         let comp = read_u32_as_usize(c + club::DIVISION);
-        let nacao = read_u32_as_usize(c + club::NATION);
-        if comp != 0 && nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(KEY_NATION_SPAIN) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
+        let nation = read_u32_as_usize(c + club::NATION);
+        if comp != 0 && nation != 0 && read_u32_as_usize(nation) == read_u32_as_usize(KEY_NATION_SPAIN) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
             let mut eh_a: u32 = 0;
             let p = partner(c, &mut eh_a, 1);

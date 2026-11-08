@@ -74,7 +74,7 @@ unsafe extern "C" fn comparar_cup_set_round_draw_date(rodadas: usize, rodada: u3
     let r = round_record_from_base(rodadas, rodada);
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 3)], || o(rodadas, rodada, dia, mes, anos, semana, base),
         || cup_set_round_draw_date(rodadas, rodada, dia, mes, anos, semana, base));
-    PLACAR.record(igual && a == b, || format!("cup_set_round_draw_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("cup_set_round_draw_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
     a
 }
 
@@ -83,7 +83,7 @@ unsafe extern "C" fn comparar_cup_set_round_match_date(rodadas: usize, rodada: u
     let r = round_record_from_base(rodadas, rodada);
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + 3, 0x14)], || o(rodadas, rodada, dia, mes, anos, semana, hora, base, mando),
         || cup_set_round_match_date(rodadas, rodada, dia, mes, anos, semana, hora, base, mando));
-    PLACAR.record(igual && a == b, || format!("cup_set_round_match_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("cup_set_round_match_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
     a
 }
 
@@ -112,5 +112,5 @@ unsafe extern "thiscall" fn comparar_remove_club_from_ai_plans(amistosos: usize,
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(amistosos, clube),
         || remove_club_from_ai_plans(amistosos, clube));
-    PLACAR.record(igual, || format!("remove_club_from_ai_plans({:#x}) {:x?} x {:x?}", clube, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_club_from_ai_plans({:#x}) {:x?} x {:x?}", clube, mo, mr));
 }

@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     let regioes = [(r, 0x70)];
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, r, j, por_jogos), || make_points_ban(this, r, j, por_jogos));
-    PLACAR.record(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", cpu10_d(j), por_jogos, a, b, mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", cpu10_d(j), por_jogos, a, b, mo, mr));
     a
 }
 
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
     let n = (esperado.len() / 0xe) as u32;
     let p = cpu10_d(this + 0xb);
     let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, esperado.len()) == &esperado[..];
-    PLACAR.record(cpu10_d(this + 0x13) as u32 == n && cpu10_d(this + 0xf) as u32 == n + 100 && iguais, || {
+    SCOREBOARD.record(cpu10_d(this + 0x13) as u32 == n && cpu10_d(this + 0xf) as u32 == n + 100 && iguais, || {
         format!("compact_entries: conta {} (esperava {}), capacidade {}, entradas iguais {}", cpu10_d(this + 0x13), n, cpu10_d(this + 0xf), iguais)
     });
 }

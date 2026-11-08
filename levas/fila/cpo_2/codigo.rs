@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn comparar_remove_contract(this: usize, pessoa: usize)
     let e = cpo2_d(this).wrapping_add((indice as usize).wrapping_mul(0x50));
     let reg = [(vaga, 4), (e, 8)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa), || remove_contract(this, pessoa));
-    PLACAR.record(igual, || format!("remove_contract(pessoa {:x}, contrato {}) {:x?} x {:x?}", cpo2_d(pessoa), indice, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_contract(pessoa {:x}, contrato {}) {:x?} x {:x?}", cpo2_d(pessoa), indice, mo, mr));
 }
 
 /// Comparador: a original reenvia (0x4cc490, ofertas e transferências) e tira as ofertas da lista (libera): roda só ela
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn comparar_resubmit_held_offers(this: usize, id: usize
         item = proximo(lista);
     }
     let r = o(this, id);
-    PLACAR.record(r == esperado, || format!("resubmit_held_offers(id {:x}) devolveu {}, esperava {}", id, r, esperado));
+    SCOREBOARD.record(r == esperado, || format!("resubmit_held_offers(id {:x}) devolveu {}, esperava {}", id, r, esperado));
     r
 }
 
@@ -144,6 +144,6 @@ unsafe extern "thiscall" fn comparar_resubmit_held_offers(this: usize, id: usize
 unsafe extern "stdcall" fn comparar_contract_manager_season_end_month(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
     let n = contract_manager_season_end_month(clube);
-    PLACAR.record(r == n, || format!("contract_manager_season_end_month({:x}) original={} rust={}", clube, r, n));
+    SCOREBOARD.record(r == n, || format!("contract_manager_season_end_month({:x}) original={} rust={}", clube, r, n));
     r
 }

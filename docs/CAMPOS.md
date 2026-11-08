@@ -72,9 +72,9 @@ No objeto de arbitragem da partida (`match_official.cpp`), o ponteiro em **+0x04
 | 0xAE2364 | quantidade de pessoas (os 16 últimos ids são os técnicos humanos) | `contrato_de`, `tecnico_9a01`, `tecnico_9a05` |
 | 0xAE2D0C | tabela de índices de contrato por pessoa (79 bytes por pessoa) | `contrato_de` |
 | 0xAE23A4..0xAE23EC | ponteiros para o início de cada tabela (clubes em 0xAE23B4, pessoas em 0xAE23BC, jogadores em 0xAE23C4...) | — |
-| 0xAE2C90 / 0xAE2C92 [2] | dia do ano e ano atuais | a simulação para na data pedida lendo daqui (`simulacao.rs`) |
+| 0xAE2C90 / 0xAE2C92 [2] | dia do ano e ano atuais | a simulação para na data pedida lendo daqui (`simulation.rs`) |
 | 0xDE1F58 | ponteiro para o ranking de países da UEFA | vizinho do estado do sorteio (0xDE1F5C, 8 bytes), que a comparação confere |
-| 0xDE4400 | *handle* do `HeapCreate` do jogo | substituído pelo alocador fixo da simulação (`alocador.rs`) |
+| 0xDE4400 | *handle* do `HeapCreate` do jogo | substituído pelo alocador fixo da simulação (`allocator.rs`) |
 | 0xDE4404 | 1 se o jogo reconheceu a versão do Windows | — |
 
 ## Partida (objeto da partida, `MATCH_DATA`)

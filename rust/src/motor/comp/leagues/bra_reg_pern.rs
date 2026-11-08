@@ -62,18 +62,18 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage(this
 pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(name: &str, this: usize, rows: &[usize], original: impl FnOnce()) {
     let mut plan: Vec<usize> = rows.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
     original();
-    let stage = read_usize(read_usize(this + 0xc));
+    let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
-        PLACAR.record(false, || format!("{}({:#x}) sem fase", name, this));
+        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
-    let list = read_usize(stage + 0xa7);
+    let list = read_usize(stage + cup::TEAM_TABLE);
     let mut found: Vec<usize> = (0..rows.len()).map(|k| read_usize(list + 6 * k)).collect();
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + 0x3e) as usize == rows.len() && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
-    PLACAR.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) as usize == rows.len() && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + league::CURRENT_STAGE) == 0;
+    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + cup::TEAM_COUNT)));
 }
 
 

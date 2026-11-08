@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_construct_referee(a: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUCT_REFEREE);
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side_light(&[(a, 8)], || o(a), || construct_referee(a));
-    PLACAR.record(igual && r == v, || format!("construct_referee({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
+    SCOREBOARD.record(igual && r == v, || format!("construct_referee({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
     r
 }
 
@@ -17,14 +17,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_strictness(this: usize, eng
     let mut reg = vec![(this, 10)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, engine, person), || crate::rng::without_counting(|| init_strictness(this, engine, person)));
-    PLACAR.record(igual, || format!("init_strictness original={:x?} rust={:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("init_strictness original={:x?} rust={:x?}", mo, mr));
 }
 
 /// Comparer for `move_counts` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_move_counts(this: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_MOVE_COUNTS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x475a, 16)], || o(this), || move_counts(this));
-    PLACAR.record(igual && r == n, || format!("move_counts original={} {:x?} rust={} {:x?}", r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("move_counts original={} {:x?} rust={} {:x?}", r, mo, n, mr));
     r
 }
 
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_foul(this: usize, j: usiz
     let mut reg = vec![(this + 8, 2), (kind as usize, 1), (value as usize, 1), (engine + 0x475a, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, code, kind, value), || crate::rng::without_counting(|| decide_foul(this, j, code, kind, value)));
-    PLACAR.record(igual && r == n, || format!("decide_foul({:#x}) original={} {:x?} rust={} {:x?}", code, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("decide_foul({:#x}) original={} {:x?} rust={} {:x?}", code, r, mo, n, mr));
     r
 }
 
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_punish_foul(this: usize, j: usiz
     let reg = regioes_do_cartao(*(this as *const usize), j, kind, weight);
     let t0 = *kind;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, kind, x, sev, flag, weight), || crate::rng::without_counting(|| punish_foul(this, j, kind, x, sev, flag, weight)));
-    PLACAR.record(igual, || format!("punish_foul(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
+    SCOREBOARD.record(igual, || format!("punish_foul(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
 }
 
 /// Comparer for `punish_move` (comparison mode: see the header of motor.rs).
@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_punish_move(this: usize, j: usiz
     reg.push((other + 0x15, 1));
     let t0 = *kind;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, other, kind, x, sev, flag, weight, expulsar), || crate::rng::without_counting(|| punish_move(this, j, other, kind, x, sev, flag, weight, expulsar)));
-    PLACAR.record(igual, || format!("punish_move(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
+    SCOREBOARD.record(igual, || format!("punish_move(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
 }
 
 /// Comparer for `foul_decision` (comparison mode: see the header of motor.rs).
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_foul_decision(
         || o(this, j, other, kind, who, card, grav, advantage),
         || crate::rng::without_counting(|| foul_decision(this, j, other, kind, who, card, grav, advantage)),
     );
-    PLACAR.record(igual && r == v, || {
+    SCOREBOARD.record(igual && r == v, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("foul_decision(tipo {:#x}) original={} rust={} diferencas em {:x?}", kind, r, v, dif)

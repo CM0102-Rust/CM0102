@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
     }
     let reg = [(l + 0xa, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || fix_missing_jobs(this));
-    PLACAR.record(igual, || format!("fix_missing_jobs (nenhuma a abrir) {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("fix_missing_jobs (nenhuma a abrir) {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x69d1b0 e a 0x69f810 podem sortear), pela nota e
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn comparar_best_manager_candidate_score(this: usize, c
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((cpn5_d(this + 8) + 0xa, 4));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, atual), || crate::rng::without_counting(|| best_manager_candidate_score(this, clube, atual)));
-    PLACAR.record(igual && r == n, || format!("best_manager_candidate_score(clube {}, atual {:x}) original={} rust={} {:x?} x {:x?}", cpn5_d(clube), atual, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("best_manager_candidate_score(clube {}, atual {:x}) original={} rust={} {:x?} x {:x?}", cpn5_d(clube), atual, r, n, mo, mr));
     r
 }
 
@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn comparar_schedule_offer(this: usize, oferta: usize, 
     let gravada = core::slice::from_raw_parts((oferta + 0x12) as *const u8, 8);
     let base_ok = !sem_base || core::slice::from_raw_parts((this + 0x84d) as *const u8, 8) == core::slice::from_raw_parts(0xae2c90 as *const u8, 8);
     let ok = gravada == &data[..] && *((oferta + 0x1a) as *const i8) == fatia && cpn5_w(balde) == conta.wrapping_add(1) && base_ok;
-    PLACAR.record(ok, || format!("schedule_offer(dias {}, fatias {}): data {:x?} (plano {:x?}), fatia {} (plano {}), balde {:x} conta {} -> {}, base {}",
+    SCOREBOARD.record(ok, || format!("schedule_offer(dias {}, fatias {}): data {:x?} (plano {:x?}), fatia {} (plano {}), balde {:x} conta {} -> {}, base {}",
         dias as u8 as i8, fatias as u8 as i8, gravada, data, *((oferta + 0x1a) as *const i8), fatia, balde, conta, cpn5_w(balde), base_ok));
     r
 }

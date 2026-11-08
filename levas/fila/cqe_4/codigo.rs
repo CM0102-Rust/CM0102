@@ -1258,7 +1258,7 @@ unsafe extern "thiscall" fn comparar_staff_interest_in_joining_club(this: usize,
         regioes.push((p6 as usize, 4));
     }
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, p1, p2, p3, p4, p5, p6), || staff_interest_in_joining_club(this, p1, p2, p3, p4, p5, p6));
-    PLACAR.record(igual && ro.to_bits() == rr.to_bits(), || format!("staff_interest_in_joining_club(pessoa {:#x}, clube {:#x}, {}, {}, {}) original={} {:x?} rust={} {:x?}", p1, p2, p3, p4 as u8, p5 as u8, ro, mo, rr, mr));
+    SCOREBOARD.record(igual && ro.to_bits() == rr.to_bits(), || format!("staff_interest_in_joining_club(pessoa {:#x}, clube {:#x}, {}, {}, {}) original={} {:x?} rust={} {:x?}", p1, p2, p3, p4 as u8, p5 as u8, ro, mo, rr, mr));
     ro
 }
 
@@ -1283,6 +1283,6 @@ unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> usize {
 unsafe extern "thiscall" fn comparar_construct_staff_contract(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
-    PLACAR.record(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    SCOREBOARD.record(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
     ro
 }

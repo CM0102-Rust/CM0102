@@ -251,7 +251,7 @@ unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usize, clubes:
     let mut reg = vec![(this, 0x698), (cqi3_d(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (cqi3_d(0xae23d4) as usize, (cqi3_d(0xae237c) as i32).max(0) as usize * 0x1a)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, conta), || crate::rng::without_counting(|| assign_uefa_cup_places(this, clubes, conta)));
-    PLACAR.record(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", cqi3_dif(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", cqi3_dif(&mo, &mr)));
 }
 
 /// { 0x903890 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::pick_english_intertoto_club`; quadro SEH pela notícia
@@ -350,7 +350,7 @@ unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this: usize) ->
     }
     let r = o(this);
     let c = pick_english_intertoto_club(this);
-    PLACAR.record(r == c, || format!("pick_english_intertoto_club: original {:x} rust {:x}", r, c));
+    SCOREBOARD.record(r == c, || format!("pick_english_intertoto_club: original {:x} rust {:x}", r, c));
     r
 }
 

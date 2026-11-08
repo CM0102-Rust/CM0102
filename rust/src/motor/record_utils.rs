@@ -21,12 +21,12 @@ use super::*;
 /// palavra +0x32, +0xe a +0x30, +0x10 o lado (0x4afa80, cdecl(clube, jogo)), +0x11 o id do clube, +0x1b o dword +8 do
 /// jogo; mandante (+0x1c): +0x15 o +0x10 do jogo e o placar (+0x19 pró, +0x1a contra) pelo da prorrogação (+0x47/+0x48)
 /// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
-pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, out: usize) -> u32 {
-    if jogo == 0 {
+pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club: usize, out: usize) -> u32 {
+    if game == 0 {
         show_error_at(0xa7a088, 0x29);
         return 0;
     }
-    if clube == 0 {
+    if club == 0 {
         show_error_at(0xa7a088, 0x31);
         return 0;
     }
@@ -39,34 +39,34 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, club
     let side: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
     let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
-    let d = data_new(p0, read_u16(jogo + 0x2a) as u32, read_u16(jogo + 0x28) as u32);
+    let d = data_new(p0, read_u16(game + 0x2a) as u32, read_u16(game + 0x28) as u32);
     copy(out, p1, d);
     let s = |o: usize| (out + o) as *mut u8;
-    core::ptr::write_unaligned(s(8) as *mut u32, read_u32(jogo));
-    core::ptr::write_unaligned(s(0xc) as *mut u16, read_u16(jogo + 0x32));
-    core::ptr::write_unaligned(s(0xe) as *mut u16, read_u16(jogo + 0x30));
-    *s(0x10) = side(clube, jogo);
-    core::ptr::write_unaligned(s(0x11) as *mut u32, read_u32(clube));
-    core::ptr::write_unaligned(s(0x1b) as *mut u32, read_u32(jogo + 8));
-    if clube as u32 == read_u32(jogo + 0x1c) { // cpz7: o clube é o mandante
-        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(jogo + 0x10));
-        if read_u8(jogo + 0x47) as i8 > -1 {
-            *s(0x19) = read_u8(jogo + 0x47);
-            *s(0x1a) = read_u8(jogo + 0x48);
+    core::ptr::write_unaligned(s(8) as *mut u32, read_u32(game));
+    core::ptr::write_unaligned(s(0xc) as *mut u16, read_u16(game + 0x32));
+    core::ptr::write_unaligned(s(0xe) as *mut u16, read_u16(game + 0x30));
+    *s(0x10) = side(club, game);
+    core::ptr::write_unaligned(s(0x11) as *mut u32, read_u32(club));
+    core::ptr::write_unaligned(s(0x1b) as *mut u32, read_u32(game + 8));
+    if club as u32 == read_u32(game + 0x1c) { // cpz7: o clube é o mandante
+        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(game + 0x10));
+        if read_u8(game + 0x47) as i8 > -1 {
+            *s(0x19) = read_u8(game + 0x47);
+            *s(0x1a) = read_u8(game + 0x48);
         } else {
             crate::comparison::branch("cpz_7 placar do mandante");
-            *s(0x19) = read_u8(jogo + 0x43); // cpz7: os gols do mandante
-            *s(0x1a) = read_u8(jogo + 0x44);
+            *s(0x19) = read_u8(game + 0x43); // cpz7: os gols do mandante
+            *s(0x1a) = read_u8(game + 0x44);
         }
     } else {
-        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(jogo + 0xc));
-        if read_u8(jogo + 0x48) as i8 > -1 {
-            *s(0x19) = read_u8(jogo + 0x48);
-            *s(0x1a) = read_u8(jogo + 0x47);
+        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(game + 0xc));
+        if read_u8(game + 0x48) as i8 > -1 {
+            *s(0x19) = read_u8(game + 0x48);
+            *s(0x1a) = read_u8(game + 0x47);
         } else {
             crate::comparison::branch("cpz_7 placar do visitante");
-            *s(0x19) = read_u8(jogo + 0x44);
-            *s(0x1a) = read_u8(jogo + 0x43); // cpz7: os gols sofridos pelo visitante
+            *s(0x19) = read_u8(game + 0x44);
+            *s(0x1a) = read_u8(game + 0x43); // cpz7: os gols sofridos pelo visitante
         }
     }
     1
@@ -145,11 +145,11 @@ pub(crate) unsafe extern "C" fn match_record_result_code(record: usize) -> u8 {
 /// entry.
 ///
 /// [pt] O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
-pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, prize: usize, a4: u32, a5: u32, credito: u32, write: bool) {
+pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: usize, a4: u32, a5: u32, credito: u32, write: bool) {
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x34;
-    put_i32(&mut e, 8, if clube != 0 { read_usize(clube) as i32 } else { -1 });
+    put_i32(&mut e, 8, if club != 0 { read_usize(club) as i32 } else { -1 });
     put_i32(&mut e, 0xd, read_usize(prize) as i32);
     put_i32(&mut e, 0x11, (a4 & 0xffff) as i32);
     put_i32(&mut e, 0x15, a5 as u8 as i8 as i32);
@@ -168,8 +168,8 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, prize: 
     if read_usize(p + staff::PLAYER) == 0 {
         return;
     }
-    let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contrato(read_usize(G_CONTRACT_MANAGER), p);
+    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let c = contract(read_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 || read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 5 {
         return;
@@ -213,7 +213,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, prize: 
         return;
     }
     let agradece: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_POST_PLAYER_CREDITS_MANAGER_FOR_AWARD);
-    agradece(p, clube, prize);
+    agradece(p, club, prize);
 }
 
 

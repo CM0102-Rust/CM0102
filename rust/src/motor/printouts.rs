@@ -20,7 +20,7 @@ use super::*;
 /// notícias. Tipo 1 no domingo (0x54a3f0 = 6) vira 7. Tipos 2 e 4 (locais): os da lista [this+4] cujo +0xcb é o id de
 /// [[clube+0x69]+0x38] (sem eles: −1); os outros: os da lista [this] do tipo (+0xca) e da nação (+0xcf; −1 aceita
 /// qualquer). Até 20; nenhum: −1; senão o id (palavra +0, com sinal) de um deles por sorteio(n).
-pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, kind: u32, nacao: i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usize, kind: u32, nation: i32) -> i32 {
     let mut t = kind as i8;
     if t == 1 {
         let week: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
     let mut ids = [0i16; 20];
     let mut n = 0usize;
     if t == 2 || t == 4 {
-        let est = read_usize(clube + club::STADIUM);
+        let est = read_usize(club + club::STADIUM);
         if est == 0 || read_usize(est + stadium::STADIUM_CITY) == 0 {
             return -1;
         }
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
             if p == 0 {
                 break;
             }
-            if read_u32(p + 0xcb) == read_u32(read_usize(read_usize(clube + club::STADIUM) + 0x38)) { // cpz10: o comentarista local
+            if read_u32(p + 0xcb) == read_u32(read_usize(read_usize(club + club::STADIUM) + 0x38)) { // cpz10: o comentarista local
                 crate::comparison::branch("cpz_10 comentarista local");
                 ids[n] = read_i16_as_i32(p) as i16;
                 n += 1;
@@ -72,11 +72,11 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
                 break;
             }
             if *((p + 0xca) as *const i8) == t {
-                let accepted = if nacao == -1 {
+                let accepted = if nation == -1 {
                     crate::comparison::branch("cpz_10 comentarista de qualquer nacao");
                     true // cpz10: qualquer nação
                 } else {
-                    read_u32(p + 0xcf) as i32 == nacao
+                    read_u32(p + 0xcf) as i32 == nation
                 };
                 if accepted {
                     ids[n] = read_i16_as_i32(p) as i16;

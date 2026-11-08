@@ -22,7 +22,7 @@ import mover_rotinas  # noqa: E402
 import renomear_rotinas  # noqa: E402
 
 D = dict(x.split(':') for x in '''clube:club clubes:clubs pessoa:person pessoas:persons fase:stage fases:stages lista:list ano:year anos:years
-nacao:nation nacoes:nations nac:nation tipo:kind jogador:player jogadores:players linha:row linhas:rows vaga:slot vagas:slots
+velho:old nacao:nation nacoes:nations nac:nation tipo:kind jogador:player jogadores:players linha:row linhas:rows vaga:slot vagas:slots
 saida:out saidas:outs tabela:table tab:table nome:name liga:league jogo:game jogos:games lado:side humano:human rodadas:rounds
 rodada:round antes:before construir:construct dia:day dias:days contrato:contract novo:new nova:new soltar:release
 noticia:news noticias:news texto:text fim:end valor:value gravar:write registro:record registros:records partida:match
@@ -111,10 +111,12 @@ def traduzir(nome):
 
 
 def topo_global():
+    # só o espaço de nomes dos valores (fn, const, static; e os `use`): um local pode ter o nome de um módulo ou de um
+    # tipo (`club + club::DIVISION` compila: o caminho `club::` é procurado entre os módulos)
     s = set()
     for p in renomear_rotinas.fontes():
         t = open(p, encoding='utf-8').read()
-        s |= set(re.findall(r'^(?:pub(?:\(crate\))? )?(?:unsafe )?(?:extern "\w+" )?(?:fn|const|static(?: mut)?|struct|enum|type|mod|use) ([A-Za-z_]\w*)', t, re.M))
+        s |= set(re.findall(r'^\s*(?:pub(?:\(crate\))? )?(?:unsafe )?(?:extern "\w+" )?(?:fn|const|static(?: mut)?|use) ([A-Za-z_]\w*)', t, re.M))
     return s
 
 
@@ -193,7 +195,7 @@ def main():
             for nome, a, b in mover_rotinas.blocos(t):
                 bloco = t[a:b]
                 cod = re.sub(r'//[^\n]*|"(?:[^"\\\n]|\\.)*"', ' ', bloco)
-                ids = set(re.findall(r'\b[A-Za-z_]\w*\b', cod))
+                ids = set(re.findall(r'\b[A-Za-z_]\w*\b(?!::)', cod))  # `club::X` does not take the name `club`
                 locais = {m.group(1) or m.group(2) for m in NOME.finditer(cod)} - {None}
                 troca, novos = {}, set()
                 for n in sorted(locais):

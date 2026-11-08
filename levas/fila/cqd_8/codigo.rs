@@ -338,7 +338,7 @@ unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usiz
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, pular),
         || crate::rng::without_counting(|| update_player_training(this, p, pular)));
-    PLACAR.record(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, pular as u16, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, pular as u16, mo.0, mr.0));
 }
 
 /// { 0x8b39f0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_player_schedule(pessoa)`, pelo diário
@@ -381,7 +381,7 @@ unsafe extern "thiscall" fn comparar_get_player_schedule(this: usize, p: usize) 
         return o(this, p);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, p), || get_player_schedule(this, p));
-    PLACAR.record(igual && r == n, || format!("get_player_schedule(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo.0, mr.0));
+    SCOREBOARD.record(igual && r == n, || format!("get_player_schedule(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo.0, mr.0));
     r
 }
 
@@ -398,6 +398,6 @@ unsafe extern "thiscall" fn get_category_level(this: usize, categoria: u32) -> u
 unsafe extern "thiscall" fn comparar_get_category_level(this: usize, categoria: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, categoria);
     let n = get_category_level(this, categoria);
-    PLACAR.record(r == n, || format!("get_category_level({:x}, {}) original={:x} rust={:x}", this, categoria as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_category_level({:x}, {}) original={:x} rust={:x}", this, categoria as u8 as i8, r, n));
     r
 }

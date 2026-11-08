@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_cup_rank_teams(this: usize) {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this, plano.len(), erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this, plano.len(), erros.join("; ")));
 }
 
 /// Comparador: ordena no lugar (aloca e libera o temporário): o esperado sai do núcleo sobre uma cópia (chaves num
@@ -180,7 +180,7 @@ unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usize, n: i32)
     sort_clubs_by_strength(esperado.as_mut_ptr(), k.as_mut_ptr(), n);
     o(v, n);
     let obtido = core::slice::from_raw_parts(v as *const u32, n as usize);
-    PLACAR.record(obtido == &esperado[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, obtido, esperado));
+    SCOREBOARD.record(obtido == &esperado[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, obtido, esperado));
 }
 
 /// Comparador: acha ou acrescenta o registro (não roda duas vezes): o registro visto antes (se havia) tem de ser o
@@ -194,6 +194,6 @@ unsafe extern "thiscall" fn comparar_set_club_final_position(this: usize, clube:
     let antes = buscar(this, clube);
     let r = o(this, clube, pos);
     let igual = r != 0 && (antes == 0 || r == antes) && *((r + 0x72) as *const u8) == pos as u8;
-    PLACAR.record(igual, || format!("set_club_final_position(clube {:x}, {}) antes={:x} original={:x}", clube, pos as u8, antes, r));
+    SCOREBOARD.record(igual, || format!("set_club_final_position(clube {:x}, {}) antes={:x} original={:x}", clube, pos as u8, antes, r));
     r
 }

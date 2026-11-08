@@ -581,7 +581,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_can_loan_player(this: usiz
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regioes[..k], || o(this, clube, jogador, msg),
         || crate::rng::without_counting(|| transfer_manager_can_loan_player(this, clube, jogador, msg)));
-    PLACAR.record(igual && r == n, || format!("transfer_manager_can_loan_player(clube {:#x}, jogador {:#x}): original {} rust {}, memória {}",
+    SCOREBOARD.record(igual && r == n, || format!("transfer_manager_can_loan_player(clube {:#x}, jogador {:#x}): original {} rust {}, memória {}",
         clube, jogador, r, n, if igual { "igual" } else { "diferente" }));
     r
 }

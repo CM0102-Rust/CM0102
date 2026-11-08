@@ -39,7 +39,7 @@ unsafe extern "C" fn comparar_staff_remove_favoured_club(pessoa: usize, clube: u
         return o(pessoa, clube); // não escreve nada
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pref + 4, 12)], || o(pessoa, clube), || staff_remove_favoured_club(pessoa, clube));
-    PLACAR.record(igual && r == n, || format!("staff_remove_favoured_club({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("staff_remove_favoured_club({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -59,7 +59,7 @@ unsafe extern "C" fn comparar_club_remove_favoured_staff(clube: usize, pessoa: u
         return o(clube, pessoa);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x9b, 12)], || o(clube, pessoa), || club_remove_favoured_staff(clube, pessoa));
-    PLACAR.record(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
     r
 }
 
@@ -83,6 +83,6 @@ unsafe extern "C" fn comparar_staff_remove_favoured_staff(pessoa: usize, alvo: u
         return o(pessoa, alvo);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pref + 0x1c, 12)], || o(pessoa, alvo), || staff_remove_favoured_staff(pessoa, alvo));
-    PLACAR.record(igual && r == n, || format!("staff_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("staff_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
     r
 }

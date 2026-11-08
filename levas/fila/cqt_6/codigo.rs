@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn comparar_cqt6_campeoes_tabela_da_preliminar(this: us
     let t = cqt6_d(this + 0xb1);
     let ok = r == 1 && cqt6_w(this + 0x3e) == 3 && t != 0
         && plano.iter().enumerate().all(|(k, &c)| cqt6_d(t + k * 0x3b) == c && cqt6_d(cqt6_d(this + 0x14) + k * 6) == 0);
-    PLACAR.record(ok, || format!("cqt6_campeoes_tabela_da_preliminar({:#x}) devolveu {}; plano {:x?}", this, r, plano));
+    SCOREBOARD.record(ok, || format!("cqt6_campeoes_tabela_da_preliminar({:#x}) devolveu {}; plano {:x?}", this, r, plano));
     r
 }
 
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_preliminar(this: usize) {
 unsafe extern "thiscall" fn comparar_cqt6_campeoes_preliminar(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
-    PLACAR.record(cqt6_d(this + 0x45) == 1 && cqt6_w(this + 0x3e) == 3, || format!("cqt6_campeoes_preliminar({:#x}) +0x45 {} +0x3e {}", this, cqt6_d(this + 0x45), cqt6_w(this + 0x3e)));
+    SCOREBOARD.record(cqt6_d(this + 0x45) == 1 && cqt6_w(this + 0x3e) == 3, || format!("cqt6_campeoes_preliminar({:#x}) +0x45 {} +0x3e {}", this, cqt6_d(this + 0x45), cqt6_w(this + 0x3e)));
 }
 
 /// { 0x4263c0 } (thiscall, ret 0, bra_champ_cup.cpp; a virtual +0x28): `BraChampCup::advance_stage()`: na última fase
@@ -121,5 +121,5 @@ unsafe extern "thiscall" fn comparar_cqt6_campeoes_fase_seguinte(this: usize) {
     let depois = cqt6_d(this + 0x30) as i32;
     // os grupos (fase 0) gravam a fase deles em +0x30 depois (na comparação de 06/11: −1 -> 1): aí só confere que andou
     let ok = if ultima { depois == antes } else if antes + 1 == 0 || antes + 1 == 2 { depois > antes } else { depois == antes + 1 };
-    PLACAR.record(ok, || format!("cqt6_campeoes_fase_seguinte({:#x}) fase {} -> {}", this, antes, depois));
+    SCOREBOARD.record(ok, || format!("cqt6_campeoes_fase_seguinte({:#x}) fase {} -> {}", this, antes, depois));
 }

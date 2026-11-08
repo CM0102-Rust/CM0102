@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_init_work_permits(this: usize) {
 unsafe extern "thiscall" fn comparar_get_clause_count(this: usize, pessoa: usize, tipo: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, pessoa, tipo);
     let n = get_clause_count(this, pessoa, tipo);
-    PLACAR.record(r == n, || format!("get_clause_count(pessoa {}, tipo {}) original={} rust={}", cps2_d(pessoa), tipo as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_clause_count(pessoa {}, tipo {}) original={} rust={}", cps2_d(pessoa), tipo as u8, r, n));
     r
 }
 
@@ -148,6 +148,6 @@ unsafe extern "thiscall" fn comparar_find_first_team_appearance_money(this: usiz
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cps2_d(this + 0x86e).wrapping_add(cps2_d(pessoa).wrapping_mul(8));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1)], || o(this, pessoa), || find_first_team_appearance_money(this, pessoa));
-    PLACAR.record(igual && r == n, || format!("find_first_team_appearance_money(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps2_d(pessoa), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("find_first_team_appearance_money(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps2_d(pessoa), r, n, mo, mr));
     r
 }
