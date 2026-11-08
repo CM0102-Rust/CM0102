@@ -42,7 +42,7 @@ unsafe fn has_too_many_called_up(this: usize, clube: usize, a: usize, b: usize) 
         if b_ano < ano || (b_ano == ano && b_dia < dia) {
             break; // depois da janela: a lista está em ordem
         }
-        crate::comparacao::ramo("cpp_12 convocado na janela");
+        crate::comparison::branch("cpp_12 convocado na janela");
         soma = soma.wrapping_add(*((e + 8) as *const i8));
     }
     soma > 2 // mais de dois convocados
@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, jogo: usize) 
         return 0;
     }
     if has_too_many_called_up(this, cpp12_d(jogo + 0x20), pa, pb) {
-        crate::comparacao::ramo("cpp_12 visitante convocado");
+        crate::comparison::branch("cpp_12 visitante convocado");
         return 0; // o visitante com convocados demais
     }
     1
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn add_qualified_nation(this: usize, nacao: usize, fase
 unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: usize, jogo: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, jogo);
     let n = can_schedule_club_fixture(this, jogo);
-    PLACAR.registrar(r == n, || format!("can_schedule_club_fixture({:x}) original={} rust={}", jogo, r, n));
+    PLACAR.record(r == n, || format!("can_schedule_club_fixture({:x}) original={} rust={}", jogo, r, n));
     r
 }
 
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: usize, jogo
 unsafe extern "C" fn comparar_compare_call_up_records_by_date(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_call_up_records_by_date(a, b);
-    PLACAR.registrar(r == n, || format!("compare_call_up_records_by_date({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_call_up_records_by_date({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -125,5 +125,5 @@ unsafe extern "thiscall" fn comparar_add_qualified_nation(this: usize, nacao: us
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, nacao, fase_final);
     let depois = *((this + 0x28) as *const i16) as i32;
     let esperado = antes + (nacao != 0 && fase_final != 0) as i32;
-    PLACAR.registrar(depois == esperado, || format!("add_qualified_nation({:x}, {:x}) conta {} -> {}", nacao, fase_final, antes, depois));
+    PLACAR.record(depois == esperado, || format!("add_qualified_nation({:x}, {:x}) conta {} -> {}", nacao, fase_final, antes, depois));
 }

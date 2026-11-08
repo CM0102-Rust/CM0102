@@ -10,12 +10,26 @@ pub(crate) unsafe fn conmebol_merc_drawn_club(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqr11: o sorteado k
 }
 
-/// rule: the Mercosur has 20 invited clubs (the clubs the South American rules invite, shuffled) in 5 groups of 4
-/// [inference: six rounds on Tuesdays, from 29 July to 14 October]; the season turns on 1 June; on the draw day group 1
-/// stays in the cup's own table (drawn clubs 0 to 3) and groups 2 to 5 are stages (4g + 4 to 4g + 7); the 5 winners and
-/// the 3 best runners-up go to the quarter-finals; on the draw day: the clubs (0x4c5850 (the 20 invited clubs,
-/// shuffled)), the group 1 table, the fixtures, the sorted table, the other groups' stages and the predicted positions;
-/// then the league day
+/// `update_for_date(today, full)` (virtual +0x14): the Copa Mercosur's day. Rule: the Mercosur has 20 invited clubs
+/// (the clubs the South American rules invite, shuffled) in 5 groups of 4 [inference: six rounds on Tuesdays, from 29
+/// July to 14 October]; the season turns on 1 June; on the draw day group 1 stays in the cup's own table (drawn clubs 0
+/// to 3) and groups 2 to 5 are stages (4g + 4 to 4g + 7); the 5 winners and the 3 best runners-up go to the
+/// quarter-finals.
+///
+/// First the turn of the season: on 1 June of today's year (the date from 0x549f70(1, 5, year, −1): lea ecx, local;
+/// push −1; push year; push 5; push 1 -> thiscall, ret 0x10, pure: the day of the year from the month tables, the month
+/// counted from 0), if the cup's year (+0x40, signed) is not today's, virtual +8 (the new season: mov ecx, this ->
+/// thiscall, ret 0).
+///
+/// When the draw has not been done (+0x45 = 0) and with `full`, on the draw day (the date from 0x549ef0(+0xb6, +0xb8 +
+/// +0x40): the day of the year and the relative year; compared with today's, +0 the day of the year and +2 the year,
+/// unsigned): the clubs (0x4c5850, the 20 invited clubs shuffled: mov ecx, this -> thiscall, ret 0), the group 1 table
+/// (0x4c4e60, thiscall, ret 0; 0: the box of line 0x396), the fixtures (0x6835c0 League::create_fixtures, thiscall, ret
+/// 0; 0: the box of line 0x39b), the sorted table (0x6827d0 push 0; mov ecx -> thiscall, ret 4; 0: the box of line
+/// 0x3a1), the stages of groups 0..3 (0x4c51d0: push g; mov ecx -> thiscall, ret 4), the predicted positions (virtual
+/// +0x5c, thiscall, ret 0), the list +0xee freed (0x9452ca: push; add esp, 4 -> cdecl) and zeroed, and +0x45 = 1. An
+/// error gives the box of its line and goes on. Then the league day (0x6847c0: push full; push today; mov ecx, this ->
+/// thiscall, ret 8), whose return value it passes on.
 /// Original: `ConmebolMerc::update_for_date` (0x4c5c90, conmebol_merc.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x4c5c90 } (thiscall, ret 8, conmebol_merc.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Mercosul.
@@ -53,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
         let day = read_i16(this + 0xb6) as u16; // cqr11: o dia do sorteio
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
-            crate::comparacao::ramo("cqr_11 sorteio da mercosul");
+            crate::comparison::branch("cqr_11 sorteio da mercosul");
             clubs(this);
             if first(this) == 0 {
                 show_error_at(0x9a7e5c, 0x396);
@@ -92,8 +106,14 @@ pub(crate) unsafe fn is_rollover_day(this: usize, today: usize) -> bool {
     core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16) && read_i16(this + 0x40) as i32 != year_of_today as i32
 }
 
-/// rule: group 1 of the Copa Mercosur has 4 clubs, the first 4 drawn, each in the row of its order; human managers get
-/// the group draw news
+/// Builds the table of group 1 of the Copa Mercosur. Rule: group 1 has 4 clubs, the first 4 drawn, each in the row of
+/// its order; human managers get the group draw news.
+///
+/// 4 teams (+0x3e), the table +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; without
+/// memory, the box of line 0x155 and returns 0), each row i with drawn club i (+0xee) (0x687430 League::init_table_row:
+/// push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (0x684230: mov ecx,
+/// this -> thiscall, ret 0), and returns 1. The same body as 0x4019c0 of the African Cup (only the file and the box
+/// line change).
 /// Original: `ConmebolMerc::create_first_group_table` (0x4c4e60, conmebol_merc.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x4c4e60 } (thiscall, ret 0, conmebol_merc.cpp): a tabela do primeiro grupo da Mercosul: 4 times (+0x3e), a tabela +0xb1
@@ -114,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
-        crate::comparacao::ramo("cqr_11 linha do primeiro grupo");
+        crate::comparison::branch("cqr_11 linha do primeiro grupo");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
@@ -126,8 +146,19 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
 // simplification: the table is allocated (and each row allocates the history) and the news goes to the managers: does not run twice. Only the
 // original; the plan: returns 1, 4 teams and in row i (0x3b bytes) the drawn team i with position i (+4).
 
-/// rule: each of the other groups of the Copa Mercosur is a league stage with the next 4 drawn clubs (4g + 4 to 4g +
-/// 7), the cup's rules and year and the cup's round table for the group; human managers get the news
+/// Creates the stage of group g + 1 of the Copa Mercosur (g from 0 to 3, on the draw day). Rule: each of the other
+/// groups is a league stage with the next 4 drawn clubs (4g + 4 to 4g + 7), the cup's rules and year and the cup's
+/// round table for the group; human managers get the news.
+///
+/// SEH frame only for the stage's new: no destructor on the normal path. The teams go into a vector of +0x3e pointers
+/// (0x944e46(+0x3e << 2): push; add esp, 4 -> cdecl; without memory, the box of line 0x1fb and 0): drawn clubs 4g + 4
+/// to 4g + 7 (+0xee); the round table through virtual +0x3c (push 0; push &id; push &rounds; push g; mov ecx, this ->
+/// thiscall, ret 0x10); the stage (0x944cf1(0xee) push; add esp, 4 -> cdecl; the League_Stage constructor 0x68b100,
+/// thiscall, ret 0x58, 22 arguments: the cup, the teams (+0x3e, word), the vector, +0x3c (word), +4, the round table,
+/// the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the year +0x40 (word), g, the id (word), +0x51, 2, 0, +0xd9
+/// (word), −1, 0, 2; the original pushes the words and bytes with garbage in the high bytes, which the constructor does
+/// not read: the port passes clean values) in [+0xc][g]; the vector and the round table freed (0x9452ca). Without a
+/// stage: the box of line 0x211 and 0. With it: the group news (0x684230 on the stage), +0x30 = g and 1.
 /// Original: `ConmebolMerc::create_group_stage` (0x4c51d0, conmebol_merc.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x4c51d0 } (thiscall, ret 4, conmebol_merc.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
@@ -155,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
-        crate::comparacao::ramo("cqr_11 time do grupo");
+        crate::comparison::branch("cqr_11 time do grupo");
         write_u32_from_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: o time na vaga do grupo
         k += 1;
     }
@@ -241,7 +272,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
             show_error_at(file, row_g);
             return 0;
         }
-        crate::comparacao::ramo(name_g);
+        crate::comparison::branch(name_g);
         // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
         // 0x68a160 only uses the low 16 bits: the copy passes the clean year
         let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
@@ -264,7 +295,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: usize, stage: u32, rounds
         show_error_at(file, row_m);
         return 0;
     }
-    crate::comparacao::ramo(name);
+    crate::comparison::branch(name);
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in knockout.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
@@ -288,13 +319,13 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
     if f > limit {
         // simplification: above the knockout neither of the two writes anything; the outputs may not even exist
         let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, f, a));
+        PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, f, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
     let mut l2 = if league.is_null() { 0 } else { *league };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, o, || c(&mut r2, &mut e2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let outs = *rounds == r2 && *extra == e2 && (league.is_null() || *league == l2);
     let mais = |t: usize| more.iter().flat_map(|&(r, o, _)| core::slice::from_raw_parts((t + r * 0x68 + o) as *const u8, 2).to_vec()).collect::<Vec<u8>>();
     let table = if a != 0 && b != 0 {
@@ -310,7 +341,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, f, outs, *rounds, r2, table));
+    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, f, outs, *rounds, r2, table));
     a
 }
 
@@ -388,7 +419,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         }
         i += 1;
     }
-    crate::comparacao::ramo("cqo_13 convidados da mercosul");
+    crate::comparison::branch("cqo_13 convidados da mercosul");
     // simplification: the original pushes the word +0xf2 with garbage in the high 16 bits (the previous eax); 0x4afb40 reads the word
     embaralhar(read_u32_as_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
     (1, k as i32)

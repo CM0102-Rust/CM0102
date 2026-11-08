@@ -17,7 +17,7 @@ MUTACOES = [
     ('dbp_contar_favoritos', '    count_preferred_people_at_club(person, clube, 0x1c) // the favorites', '    count_preferred_people_at_club(person, clube, 0x28) // mutacao: os rejeitados no lugar dos favoritos'),
     ('dbp_tirar_clube_favorito', '        remove_from_list3(pref + 4, clube); // the favorite clubs', '        remove_from_list3(pref + 0x10, clube); // mutacao: dos clubes rejeitados'),
     ('dbp_clube_tirar_favorita', '        remove_from_list3(clube + club::FAV_STAFF1, person); // the club’s favorites', '        remove_from_list3(clube + 0xa7, person); // mutacao: dos rejeitados do clube'),
-    ('dbp_tirar_pessoa_favorita', '        remove_from_list3(pref + 0x1c, target); // the favorite people', '        remove_from_list3(pref + 0x28, target); // mutacao: das pessoas rejeitadas'),
-    ('dbp_tirar_rejeitada', '        let reg = pref + 0x28; // the rejected people', '        let reg = pref + 0x1c; // mutacao: das pessoas favoritas'),
+    ('dbp_tirar_pessoa_favorita', '        remove_from_list3(pref + preferences::STAFF_FAVOURITE_STAFF1, target); // the favorite people', '        remove_from_list3(pref + preferences::STAFF_DISLIKED_STAFF1, target); // mutacao: das pessoas rejeitadas'),
+    ('dbp_tirar_rejeitada', '        let reg = pref + preferences::STAFF_DISLIKED_STAFF1; // the rejected people', '        let reg = pref + preferences::STAFF_FAVOURITE_STAFF1; // mutacao: das pessoas favoritas'),
     ('dbp_pessoas_favoritas', '[0x1cusize, 0x20, 0x24].into_iter().enumerate() { // the three favorites', '[0x1cusize, 0x20, 0x20].into_iter().enumerate() { // mutacao: a segunda no lugar da terceira'),
 ]

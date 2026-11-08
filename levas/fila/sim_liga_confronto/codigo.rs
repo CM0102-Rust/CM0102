@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn note_terms_offered_to_main_player(gerente: usize, k:
 unsafe extern "C" fn comparar_league_compare_h2h_rows(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = league_compare_h2h_rows(a, b);
-    PLACAR.registrar(r == n, || format!("league_compare_h2h_rows original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("league_compare_h2h_rows original={} rust={}", r, n));
     r
 }
 
@@ -88,9 +88,9 @@ unsafe extern "thiscall" fn comparar_update_head_to_head(liga: usize, tabela: us
         return o(liga, tabela, linha, adversario, pro, contra);
     }
     let e = head_to_head_record(tabela, linha, adversario);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e, 14)], || o(liga, tabela, linha, adversario, pro, contra),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(e, 14)], || o(liga, tabela, linha, adversario, pro, contra),
         || update_head_to_head(liga, tabela, linha, adversario, pro, contra));
-    PLACAR.registrar(igual, || format!("update_head_to_head({}, {}, {}x{}) {:x?} x {:x?}", linha, adversario, pro, contra, mo, mr));
+    PLACAR.record(igual, || format!("update_head_to_head({}, {}, {}x{}) {:x?} x {:x?}", linha, adversario, pro, contra, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_note_terms_offered_to_main_player(gerente: usize, k: i32) {
@@ -102,6 +102,6 @@ unsafe extern "thiscall" fn comparar_note_terms_offered_to_main_player(gerente: 
     if oferta == 0 {
         return o(gerente, k);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(oferta + 0x2c, 1)], || o(gerente, k), || note_terms_offered_to_main_player(gerente, k));
-    PLACAR.registrar(igual, || format!("note_terms_offered_to_main_player({}) {:x?} x {:x?}", k, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(oferta + 0x2c, 1)], || o(gerente, k), || note_terms_offered_to_main_player(gerente, k));
+    PLACAR.record(igual, || format!("note_terms_offered_to_main_player({}) {:x?} x {:x?}", k, mo, mr));
 }

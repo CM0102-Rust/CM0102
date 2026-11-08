@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u
         }
         let dados = cqh8_d(this + 4).wrapping_add((id as isize * 0x20) as usize);
         let no = career_history_node(clube, Some(dados), valor, (((cat + 1) as u8) << 3) | tipo); // cqh8: a categoria e o tipo do nó
-        crate::comparacao::ramo("cqh_8 categoria arquivada");
+        crate::comparison::branch("cqh_8 categoria arquivada");
         append_history_node(this, reg, &no);
         if cat == 5 {
             sexta = true;
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u
         };
         if gravar {
             let no = career_history_node(clube, None, valor, 0x30 | tipo); // cqh8: o nó vazio da sexta categoria
-            crate::comparacao::ramo("cqh_8 no vazio");
+            crate::comparison::branch("cqh_8 no vazio");
             append_history_node(this, reg, &no);
         }
     }
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u
             let mut no = proximo(lista);
             while no != 0 {
                 if cqh8_d(no + 2) as u32 == clube_id && *((no + 0x2a) as *const u8) & 0xf8 == 0x10 {
-                    crate::comparacao::ramo("cqh_8 jogos pelo clube");
+                    crate::comparison::branch("cqh_8 jogos pelo clube");
                     let a = (reg + 0x20) as *mut u16;
                     core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(*((no + 6) as *const u8) as u16)); // cqh8: os jogos pelo clube
                     let g = (reg + 0x22) as *mut u16;
@@ -174,17 +174,17 @@ unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize, p: usize,
             regioes.push((cqh8_d(this + 4).wrapping_add((id as isize * 0x20) as usize), 32));
         }
     }
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     ARCHIVE_STATS_DRY_RUN = true;
     ARCHIVE_STATS_PENDING_TOTALS = (0, 0);
     ARCHIVE_STATS_CLUB_ID = clube_id as i32;
-    let n = crate::aleatorio::pausar_rastro(|| archive_player_stats(this, p, valor, emprestimo, fim, clube_id, outro));
+    let n = crate::rng::pause_trace(|| archive_player_stats(this, p, valor, emprestimo, fim, clube_id, outro));
     ARCHIVE_STATS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     let r = o(this, p, valor, emprestimo, fim, clube_id, outro);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
         p, valor as i32, clube_id as i32, r, n, mo.0, mr.0));
     r
 }

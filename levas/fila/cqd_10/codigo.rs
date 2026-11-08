@@ -89,7 +89,7 @@ unsafe fn maybe_become_coach(this: usize, p: usize) {
     if !passa || cqd10_i(this + 0x20) <= 2 {
         return;
     }
-    crate::comparacao::ramo("cqd_10 vira tecnico");
+    crate::comparison::branch("cqd_10 vira tecnico");
     let id = cqd10_i(cqd10_d(this + 0x1c));
     core::ptr::write_unaligned((p + 0x69) as *mut u32, cqd10_d(0xae23c0).wrapping_add((id as isize * 0x44) as usize) as u32);
     let reserva: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x7a82b0usize);
@@ -124,7 +124,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
     let id = cqd10_i(item);
     if cqd10_b(p + 0x18) < 0x1e && cqd10_b(item + 0x18) != 8 // cqd10: o jovem não se aposenta
         && (cqd10_d(p + 0x39) != 0 || *retirement_flags_byte(cqd10_i(p)) & 0xf != 0) {
-        crate::comparacao::ramo("cqd_10 aposentadoria desfeita");
+        crate::comparison::branch("cqd_10 aposentadoria desfeita");
         player_regen_remove_retirement(this, item);
         return;
     }
@@ -146,7 +146,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
             let c = contract_of_uncached(p);
             let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
             if c != 0 && listado(p, 0) == 0 && cqd10_d(c + 0x45) == 0 {
-                crate::comparacao::ramo("cqd_10 mudou de clube e fica");
+                crate::comparison::branch("cqd_10 mudou de clube e fica");
                 *retirement_flags_byte(id) &= 0xcf;
                 player_regen_remove_retirement(this, item);
                 return;
@@ -168,7 +168,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
             limpar(contract_of_uncached(p));
         }
     } else {
-        crate::comparacao::ramo("cqd_10 tira o contrato");
+        crate::comparison::branch("cqd_10 tira o contrato");
         call_on_global_manager(0x4d0b50, 0xae1050, p); // cqd10: tira o contrato
     }
     call_on_global_manager(0x775ba0, 0xb74318, p);
@@ -189,7 +189,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
     let mut banco = false;
     if cqd10_d(p + 0x61) != 0 {
         let elenco: unsafe extern "stdcall" fn(usize) = core::mem::transmute(0x7aace0usize);
-        crate::comparacao::ramo("cqd_10 sai do elenco");
+        crate::comparison::branch("cqd_10 sai do elenco");
         elenco(p); // cqd10: sai do elenco
         if cqd10_d(p + 0x39) == 0 {
             call_on_global_manager(0x4d0b50, 0xae1050, p);
@@ -210,7 +210,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
     }
     if banco {
         // o jogador com registro de não jogador: a ficha vai para o banco dos regens e ele segue como não jogador
-        crate::comparacao::ramo("cqd_10 jogador para o banco");
+        crate::comparison::branch("cqd_10 jogador para o banco");
         call_on_global_manager(0x7c6650, 0xb74350, p);
         call_on_global_manager(0x55e1d0, 0xae28f0, p);
         call_on_global_manager(0x631f90, 0xb63d28, p);
@@ -245,7 +245,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
         (hoje as u16, cqd10_w(0xae2c92) as u16)
     } else {
         let v = (cqd10_sortear(0x41) as u32).wrapping_add(hoje).wrapping_add(1) as u16; // cqd10: o dia do regen
-        crate::comparacao::ramo("cqd_10 dia do regen sorteado");
+        crate::comparison::branch("cqd_10 dia do regen sorteado");
         if v as i16 <= 0x16d {
             (v, cqd10_w(0xae2c92) as u16)
         } else {
@@ -280,7 +280,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
             cargos(p);
             guardar_vaga(this, vaga.as_ptr());
         } else {
-            crate::comparacao::ramo("cqd_10 refeito como nao jogador");
+            crate::comparison::branch("cqd_10 refeito como nao jogador");
             let refazer: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7ab340usize);
             refazer(this, p);
         }
@@ -329,7 +329,7 @@ unsafe extern "thiscall" fn process_retirements(this: usize) {
             if !(ano > aano || (ano == aano && dia > adia)) {
                 break;
             }
-            crate::comparacao::ramo("cqd_10 aposentadoria anunciada");
+            crate::comparison::branch("cqd_10 aposentadoria anunciada");
             let id = cqd10_i(item);
             if *retirement_flags_byte(id) & 0x30 != 0x10 {
                 let anunciar: unsafe extern "stdcall" fn(usize, u32) = core::mem::transmute(0x7aa340usize);
@@ -379,7 +379,7 @@ unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize, motivo: u
     if humano(clube) == 0 {
         return;
     }
-    crate::comparacao::ramo("cqd_10 noticia da aposentadoria");
+    crate::comparison::branch("cqd_10 noticia da aposentadoria");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
@@ -452,7 +452,7 @@ unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize, motivo: u
             if c != 0 {
                 let clube = cqd10_d(0xae23b4).wrapping_add((cqd10_i(c + 4) as isize * 0x245) as usize);
                 if clube != 0 {
-                    crate::comparacao::ramo("cqd_10 seguro da aposentadoria");
+                    crate::comparison::branch("cqd_10 seguro da aposentadoria");
                     let seguro: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x58a980usize);
                     seguro(clube, p, cqd10_d(p + 0x52) as u32);
                 }
@@ -478,7 +478,7 @@ unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: usize, c: u
     if j == 0 || c == 0 {
         return;
     }
-    crate::comparacao::ramo("cqd_10 noticia do jovem promovido");
+    crate::comparison::branch("cqd_10 noticia do jovem promovido");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let vista: unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16 = core::mem::transmute(0x6e86d0usize);

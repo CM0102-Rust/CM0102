@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `eng_first_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_FIRST_CREATE_SCHEDULE);
-    eng_first_compare_round_table("eng_first_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_first_create_schedule(this, stage, r, e, l))
+    compare_league_round_table("eng_first_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_first_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `eng_first_create_playoff_stage` (comparison mode: see the header of motor.rs).
@@ -15,11 +15,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_first_create_playoff_stage(t
     compare_playoff_stage("eng_first_create_playoff_stage", this, [5, 2, 4, 3], || o(this))
 }
 
-/// Comparer for `eng_first_create_play_off_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_first_create_play_off_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_FIRST_CREATE_PLAY_OFF_STAGE);
-    compare_playoff_stage("eng_first_create_play_off_stage", this, [6, 3, 5, 4], || o(this))
-}
 
 /// Comparer for `eng_first_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: usize) {

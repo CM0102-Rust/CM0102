@@ -11,10 +11,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_club_history_save(this: usize, s
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CLUB_HISTORY_SAVE)(this, save)
 }
 
-/// Comparer for `club_history_save_84c680` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x84c680: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_club_history_save_84c680(this: usize, save: usize) {
-    // simplification: writes to the save container (cannot run twice); the copy is proven by the save proof
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLUB_HISTORY_SAVE_84C680)(this, save)
-}

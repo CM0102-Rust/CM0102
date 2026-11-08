@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn reject_transfer_offer(this: usize, vaga: *mut usize,
     if marcar != 0 {
         *((*vaga + 0x2d) as *mut u8) = 1;
     }
-    crate::comparacao::ramo("cpx_1 recusa desassossega");
+    crate::comparison::branch("cpx_1 recusa desassossega");
     call_with_offer(0x8c1290, this, o); // cpx1: o desassossego da recusa
     let atual = *vaga;
     if cpx1_b(atual + 0x2c) == 0x13 {
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn reject_transfer_offer(this: usize, vaga: *mut usize,
     }
     *((o + 0x2c) as *mut u8) = 2;
     let vendedor2 = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
-    crate::comparacao::ramo("cpx_1 recusa desmarca");
+    crate::comparison::branch("cpx_1 recusa desmarca");
     clear_offer_and_exchange_markers(this, o, vendedor2);
     call_with_offer(0x8c6db0, this, o);
     transfer_manager_post_offer_rejected_news(this, o, motivo);
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn withdraw_transfer_offer(this: usize, vaga: *mut usiz
     if motivo as u16 == 2 { // cpx1: só o motivo 2 desassossega
         call_with_offer(0x8c1290, this, o);
     } else {
-        crate::comparacao::ramo("cpx_1 retirada sem desassossego");
+        crate::comparison::branch("cpx_1 retirada sem desassossego");
     }
     update_buyer_shortlist_entry(this, o);
     transfer_manager_post_offer_rejected_news(cpx1_d(0xde1f54), o, motivo);
@@ -295,20 +295,20 @@ unsafe fn compare_reject_withdraw(nome: &str, this: usize, vaga: *mut usize, ori
     for &e in &nos {
         regioes.push((e, 5));
     }
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     OFFER_RESPONSE_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(copia);
+    crate::rng::pause_trace(copia);
     OFFER_RESPONSE_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     original();
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let (a, b) = (&mo.0, &mr.0);
     let mut igual = a[0].1[0x2c] == b[0].1[0x2c] && a[0].1[0x10] == b[0].1[0x10] && a[1].1[0] == b[1].1[0];
     for k in regioes.len() - nos.len()..regioes.len() {
         igual &= a[k].1[4] == b[k].1[4];
     }
-    PLACAR.registrar(igual, || format!("{}(oferta {:#x}) original={:x?} rust={:x?}", nome, o, mo, mr));
+    PLACAR.record(igual, || format!("{}(oferta {:#x}) original={:x?} rust={:x?}", nome, o, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_reject_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
@@ -352,7 +352,7 @@ unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: usize, moti
     if motivo as i16 == 6 && cpx1_b(o + 0x2f) != 0 {
         clube = 0;
     }
-    crate::comparacao::ramo("cpx_1 noticia da recusa");
+    crate::comparison::branch("cpx_1 noticia da recusa");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfa1, 0);

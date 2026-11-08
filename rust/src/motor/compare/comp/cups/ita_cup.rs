@@ -60,26 +60,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule(this: us
         |r, e, l| ita_cup_create_schedule(this, stage, r, e, l), 7)
 }
 
-/// Comparer for `ita_cup_create_schedule_63cf90` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule_63cf90(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_CUP_CREATE_SCHEDULE_63CF90);
-    ita_cup_compare_schedule("ita_cup_create_schedule_63cf90", stage, rounds, extra, league, || o(this, stage, rounds, extra, league),
-        |r, e, l| ita_cup_create_schedule_63cf90(this, stage, r, e, l), 0xf)
-}
 
-/// Comparer for `ita_cup_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_CUP_CREATE_ROUND_TABLE);
-    eng_cc_cup_compare_round_table("ita_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
-        |r, e, s| ita_cup_create_round_table(this, stage, r, e, s))
-}
 
-/// Comparer for `ita_cup_create_round_table_63c890` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_round_table_63c890(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_CUP_CREATE_ROUND_TABLE_63C890);
-    eng_cc_cup_compare_round_table("ita_cup_create_round_table_63c890", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
-        |r, e, s| ita_cup_create_round_table_63c890(this, stage, r, e, s))
-}
 
 /// Comparer for `ita_cup_select_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_select_entrants(this: usize) -> i32 {
@@ -87,17 +69,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_select_entrants(this: us
     compare_select_entrants("ita_cup_select_entrants", this, || o(this), || select_coppa_italia_entrants(this))
 }
 
-/// Comparer for `ita_cup_select_entrants_63dfe0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_select_entrants_63dfe0(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ITA_CUP_SELECT_ENTRANTS_63DFE0);
-    compare_select_entrants("ita_cup_select_entrants_63dfe0", this, || o(this), || select_serie_c_cup_entrants(this))
-}
 
-/// Comparer for `ita_cup_init_team_list` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_init_team_list(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ITA_CUP_INIT_TEAM_LIST);
-    compare_team_list("ita_cup_init_team_list", this, || o(this), || init_supercoppa_teams(this))
-}
 
 /// Comparer for `ita_cup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules(this: usize) -> u32 {
@@ -106,9 +78,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules(this: usize
     r
 }
 
-/// Comparer for `ita_cup_set_up_rules_63d6e0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules_63d6e0(this: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_CUP_SET_UP_RULES_63D6E0)(this);
-    check_cup_league_rules("ita_cup_set_up_rules_63d6e0", this, &SERIE_C_CUP_RULES, r);
-    r
-}

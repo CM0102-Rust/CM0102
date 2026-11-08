@@ -15,8 +15,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize
         return o(this, jogo, partida);
     }
     let regions = [(this, 12), (tab, (n as usize + 40) * 12)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, jogo, partida), || record_match_ratings(this, jogo, partida));
-    PLACAR.registrar(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, jogo, partida), || record_match_ratings(this, jogo, partida));
+    PLACAR.record(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// Comparer for `add_player_rating` (comparison mode: see the header of motor.rs).
@@ -33,8 +33,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e
     }
     let slots = if n < cap { n as usize + 1 } else { n as usize };
     let regions = [(this, 12), (tab, slots * 12)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, e), || add_player_rating(this, e));
-    PLACAR.registrar(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", read_i32(e), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, e), || add_player_rating(this, e));
+    PLACAR.record(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", read_i32(e), mo, mr));
 }
 
 /// Comparer for `find_best_player` (comparison mode: see the header of motor.rs).
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_best_player(this: usize, le
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(IDX_FIND_BEST_PLAYER);
     let (tab, n) = (read_usize(this), read_i32(this + 4));
     let regions: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, league, age), || find_best_player(this, league, age));
-    PLACAR.registrar(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", league, age as u8 as i8, r, mo, m, mr));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, league, age), || find_best_player(this, league, age));
+    PLACAR.record(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", league, age as u8 as i8, r, mo, m, mr));
     r
 }

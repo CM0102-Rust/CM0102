@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubes: usiz
                 }
             } else {
                 if enter_libertadores(cqj1_clube(cqj1_d(0x9d0274)), 2) {
-                    crate::comparacao::ramo("cqj_1 brasil fixo");
+                    crate::comparison::branch("cqj_1 brasil fixo");
                     n = 1; // cqj1: o Palmeiras
                 }
                 if enter_libertadores(cqj1_clube(cqj1_d(0x9d026c)), 2) {
@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubes: usiz
         while (n as i8) < *((e + 8) as *const i8) {
             let c = enesimo(this, clubes, conta, cqj1_d(e), 1, 1, 0);
             if c != 0 && cqj1_d(c + 0x1db) == u32::MAX {
-                crate::comparacao::ramo("cqj_1 cota da nacao");
+                crate::comparison::branch("cqj_1 cota da nacao");
                 enter_libertadores(c, 2); // cqj1: a vaga da cota
             }
             n = n.wrapping_add(1);
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubes: usiz
 }
 
 /// As diferenças entre duas memórias (os 16 primeiros endereços).
-fn cqj1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
+fn cqj1_dif(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> Vec<usize> {
     let (a, b) = (&mo.0, &mr.0);
     (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
 }
@@ -91,8 +91,8 @@ unsafe extern "thiscall" fn comparar_assign_libertadores_places(this: usize, clu
     let n = (cqj1_d(0xae235c) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let reg = [(cqj1_d(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (cqj1_d(0xae23d4) as usize, (cqj1_d(0xae237c) as i32).max(0) as usize * 0x1a)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || assign_libertadores_places(this, clubes, conta));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, conta), || assign_libertadores_places(this, clubes, conta));
+    PLACAR.record(igual, || {
         let base = cqj1_d(0xae23b4) as usize;
         let l: Vec<String> = cqj1_dif(&mo, &mr).iter().map(|&a| {
             if a < base || a - base >= mo.0[0].1.len() {
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this: usize, cl
         loop {
             let c = cqj1_d(p) as usize;
             if sem_vaga != 0 && c != 0 && cqj1_d(c + 0x1db) != u32::MAX {
-                crate::comparacao::ramo("cqj_1 ja com vaga");
+                crate::comparison::branch("cqj_1 ja com vaga");
                 p += 12; // cqj1: pula o clube que já tem vaga
             } else if sem_humano != 0 && c != 0 && humano(c, 0, 1, 0, 0) != 0 {
                 p += 12;
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_find_nth_unqualified_club_of_nation(this: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
     let c = find_nth_unqualified_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
-    PLACAR.registrar(r == c, || format!("find_nth_unqualified_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
+    PLACAR.record(r == c, || format!("find_nth_unqualified_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
     r
 }
 
@@ -198,6 +198,6 @@ unsafe extern "thiscall" fn comparar_is_mercosur_invited_club(this: usize, clube
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let r = o(this, clube);
     let c = is_mercosur_invited_club(this, clube);
-    PLACAR.registrar(r == c, || format!("is_mercosur_invited_club({:x}): original {} rust {}", clube, r, c));
+    PLACAR.record(r == c, || format!("is_mercosur_invited_club({:x}): original {} rust {}", clube, r, c));
     r
 }

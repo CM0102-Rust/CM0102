@@ -9,8 +9,8 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_roll_coefficients(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ROLL_COEFFICIENTS);
     let reg = seeding_regions(this);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || roll_coefficients(this));
-    PLACAR.registrar(igual, || format!("roll_coefficients: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || roll_coefficients(this));
+    PLACAR.record(igual, || format!("roll_coefficients: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `set_place_counts` (comparison mode: see the header of motor.rs).
@@ -19,9 +19,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_roll_coefficients(this: usize) {
 pub(crate) unsafe extern "thiscall" fn comparar_set_place_counts(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_PLACE_COUNTS);
     let mut reg = vec![(this, 0x43b), (0xb67a34, 4)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| set_place_counts(this)));
-    PLACAR.registrar(igual, || format!("set_place_counts: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| set_place_counts(this)));
+    PLACAR.record(igual, || format!("set_place_counts: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `uefa_find_nth_unplaced_club_of_nation` (comparison mode: see the header of motor.rs).
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_find_nth_unplaced_club_of_n
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_UEFA_FIND_NTH_UNPLACED_CLUB_OF_NATION);
     let r = o(this, clubs, count, nacao, n, without_slot, without_human);
     let c = uefa_find_nth_unplaced_club_of_nation(this, clubs, count, nacao, n, without_slot, without_human);
-    PLACAR.registrar(r == c, || format!("uefa_find_nth_unplaced_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, without_slot, without_human, r, c));
+    PLACAR.record(r == c, || format!("uefa_find_nth_unplaced_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, without_slot, without_human, r, c));
     r
 }
 
@@ -44,14 +44,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_european_clubs(this: usi
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut t2 = 0usize;
     let reg = club_regions();
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, out), || collect_european_clubs(this, &mut t2));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, out), || collect_european_clubs(this, &mut t2));
     let (n, m) = (a as u16 as i16, b as u16 as i16);
     let t1 = *out;
     let table = n == m && (n <= 0 || t1 == 0 || t2 == 0 || core::slice::from_raw_parts(t1 as *const u8, n as usize * 12) == core::slice::from_raw_parts(t2 as *const u8, n as usize * 12));
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.registrar(igual && table, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
+    PLACAR.record(igual && table, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
     a
 }
 
@@ -62,8 +62,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_champions_league_places(t
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CHAMPIONS_LEAGUE_PLACES);
     let mut reg = club_regions();
     reg.push((this, 0x440));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubs, count), || assign_champions_league_places(this, clubs, count));
-    PLACAR.registrar(igual, || format!("assign_champions_league_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, count), || assign_champions_league_places(this, clubs, count));
+    PLACAR.record(igual, || format!("assign_champions_league_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `assign_intertoto_places` (comparison mode: see the header of motor.rs).
@@ -78,9 +78,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: us
     }
     let mut reg = club_regions();
     reg.push((this, 0x440));
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubs, count), || crate::aleatorio::sem_contar(|| assign_intertoto_places(this, clubs, count)));
-    PLACAR.registrar(igual, || format!("assign_intertoto_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, count), || crate::rng::without_counting(|| assign_intertoto_places(this, clubs, count)));
+    PLACAR.record(igual, || format!("assign_intertoto_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `assign_uefa_cup_places` (comparison mode: see the header of motor.rs).
@@ -92,9 +92,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usi
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     // the competition history too: 0x4afd80 reorders it (tied rows: the previous order changes the club found)
     let mut reg = vec![(this, 0x698), (read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubs, count), || crate::aleatorio::sem_contar(|| assign_uefa_cup_places(this, clubs, count)));
-    PLACAR.registrar(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, count), || crate::rng::without_counting(|| assign_uefa_cup_places(this, clubs, count)));
+    PLACAR.record(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `pick_english_intertoto_club` (comparison mode: see the header of motor.rs).
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this
     }
     let r = o(this);
     let c = pick_english_intertoto_club(this);
-    PLACAR.registrar(r == c, || format!("pick_english_intertoto_club: original {:x} rust {:x}", r, c));
+    PLACAR.record(r == c, || format!("pick_english_intertoto_club: original {:x} rust {:x}", r, c));
     r
 }
 

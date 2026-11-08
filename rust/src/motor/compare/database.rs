@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "C" fn comparar_favourite_of(a: usize, b: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FAVOURITE_OF)(a, b);
     let n = favourite_of(a, b);
-    PLACAR.registrar(r == n, || format!("favourite_of original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("favourite_of original={} rust={}", r, n));
     r
 }
 
@@ -15,7 +15,7 @@ pub(crate) unsafe extern "C" fn comparar_favourite_of(a: usize, b: usize) -> u32
 pub(crate) unsafe extern "C" fn comparar_rejected_by(a: usize, b: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_REJECTED_BY)(a, b);
     let n = rejected_by(a, b);
-    PLACAR.registrar(r == n, || format!("rejected_by original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("rejected_by original={} rust={}", r, n));
     r
 }
 
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "C" fn comparar_database_player_initialisation(data: us
     if gi(0xae2364) == 0 || rd(G_STAFF_TABLE) == 0 {
         return o(data);
     }
-    let mut regions = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut regions = crate::rng::STATE_REGIONS.to_vec();
     regions.extend_from_slice(&[(0x9b59b4, 4), (0x9b59b8, 2), (0xae2044, 0xbd), (0xae2114, 0xbd), (0xae18bc, 0xbd),
         (0xae2238, 0xbd), (0xde1f64, 0x100), (0xae24aa, 1), (G_SUB_WEEKS_RESULT_DATE, 8)]);
     regions.push((rd(G_STAFF_TABLE), gi(0xae2364) * 110));
@@ -43,10 +43,10 @@ pub(crate) unsafe extern "C" fn comparar_database_player_initialisation(data: us
     if rd(G_NON_PLAYER_TABLE) != 0 {
         regions.push((rd(G_NON_PLAYER_TABLE), gi(0xae2368) * 68));
     }
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regions, || o(data),
-        || crate::aleatorio::sem_contar(|| database_player_initialisation(data)));
+    let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regions, || o(data),
+        || crate::rng::without_counting(|| database_player_initialisation(data)));
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])));
-    PLACAR.registrar(igual, || match onde {
+    PLACAR.record(igual, || match onde {
         Some((a, x, y)) => format!("database_player_initialisation: diverge em {:x} original={:02x} rust={:02x}", a, x, y),
         None => "database_player_initialisation: estado do sorteador diferente".to_string(),
     });
@@ -63,9 +63,9 @@ pub(crate) unsafe extern "C" fn comparar_database_format_name_from_strings(name:
     }
     // the produced text (up to the given size, at most 128 bytes)
     let n = (size as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(name, sobrenome, common, text, size, form),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(name, sobrenome, common, text, size, form),
         || database_format_name_from_strings(name, sobrenome, common, text, size, form));
-    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", form as u8, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", form as u8, r, x, mo, mr));
     r
 }
 
@@ -75,17 +75,17 @@ pub(crate) unsafe extern "C" fn comparar_database_get_job_name(job: u32, curto: 
     // the text [0xae19b4] and the gender byte, if any
     let regions = [(G_JOB_NAME_BUFFER, 100usize), (gender, 1)];
     let reg = if gender != 0 { &regions[..] } else { &regions[..1] };
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(job, curto, maiuscula, gender),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(job, curto, maiuscula, gender),
         || database_get_job_name(job, curto, maiuscula, gender));
-    PLACAR.registrar(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", job as u8 as i8, curto, maiuscula, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", job as u8 as i8, curto, maiuscula, r, x, mo, mr));
     r
 }
 
 /// Comparer for `database_get_language_name` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_database_get_language_name(language: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_DATABASE_GET_LANGUAGE_NAME);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(language), || database_get_language_name(language));
-    PLACAR.registrar(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", language as u8 as i8, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae21d4, 100)], || o(language), || database_get_language_name(language));
+    PLACAR.record(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", language as u8 as i8, r, x, mo, mr));
     r
 }
 
@@ -97,9 +97,9 @@ pub(crate) unsafe extern "C" fn comparar_club_get_national_team_name(clube: usiz
         return o(clube, variant, text, size, form, aspas); // message box: original only
     }
     let n = (size as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(clube, variant, text, size, form, aspas),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(clube, variant, text, size, form, aspas),
         || club_get_national_team_name(clube, variant, text, size, form, aspas));
-    PLACAR.registrar(igual && r == x, || format!("club_get_national_team_name({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variant, f, aspas, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("club_get_national_team_name({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variant, f, aspas, r, x, mo, mr));
     r
 }
 
@@ -111,9 +111,9 @@ pub(crate) unsafe extern "C" fn comparar_database_get_player_attribute_name(attr
         return o(attribute, text, size, abreviado); // message box: original only
     }
     // the first 100 bytes (the minimum accepted size): the names fit in them
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 100)], || o(attribute, text, size, abreviado),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 100)], || o(attribute, text, size, abreviado),
         || database_get_player_attribute_name(attribute, text, size, abreviado));
-    PLACAR.registrar(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
     r
 }
 
@@ -125,10 +125,10 @@ pub(crate) unsafe extern "C" fn comparar_database_format_player_positions(player
     }
     // the text, the player’s ratings (the original may write +0x13) and the start of the global text [0xde1f64]
     let n = (size as u16 as usize).min(128);
-    let reg = [(text, n), (player + 0xf, 12), (0xde1f64, 64)];
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(player, text, size, form),
+    let reg = [(text, n), (player + player_sheet::GOALKEEPER, 12), (0xde1f64, 64)];
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(player, text, size, form),
         || database_format_player_positions(player, text, size, form));
-    PLACAR.registrar(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", player, form as u8, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", player, form as u8, r, x, mo, mr));
     r
 }
 
@@ -140,9 +140,9 @@ pub(crate) unsafe extern "C" fn comparar_database_format_name_from_ids(name: i32
     }
     // the produced text (up to the given size, at most 128 bytes)
     let n = (size as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(name, sobrenome, common, text, size, form, person),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(name, sobrenome, common, text, size, form, person),
         || database_format_name_from_ids(name, sobrenome, common, text, size, form, person));
-    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", name, sobrenome, common, form, person, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", name, sobrenome, common, form, person, r, x, mo, mr));
     r
 }
 
@@ -153,9 +153,9 @@ pub(crate) unsafe extern "C" fn comparar_database_format_official_name(oficial: 
         return o(oficial, text, size, form); // message box: original only
     }
     let n = (size as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(oficial, text, size, form),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(oficial, text, size, form),
         || database_format_official_name(oficial, text, size, form));
-    PLACAR.registrar(igual && r == x, || format!("database_format_official_name({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, form as u8, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_format_official_name({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, form as u8, r, x, mo, mr));
     r
 }
 
@@ -166,9 +166,9 @@ pub(crate) unsafe extern "C" fn comparar_position_mask_get_text(mask: u32, text:
         return o(mask, text, maiuscula);
     }
     // no size: the translated names fit in 128
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 128)], || o(mask, text, maiuscula),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 128)], || o(mask, text, maiuscula),
         || position_mask_get_text(mask, text, maiuscula));
-    PLACAR.registrar(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mask, maiuscula as u8, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mask, maiuscula as u8, r, x, mo, mr));
     r
 }
 
@@ -179,9 +179,9 @@ pub(crate) unsafe extern "C" fn comparar_write_position_name(mask: u32, text: us
         return o(mask, text, size); // message box: original only
     }
     let n = (size as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(mask, text, size),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(mask, text, size),
         || write_position_name(mask, text, size));
-    PLACAR.registrar(igual && r == x, || format!("write_position_name({:x}) original={} rust={} {:x?} x {:x?}", mask, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("write_position_name({:x}) original={} rust={} {:x?} x {:x?}", mask, r, x, mo, mr));
     r
 }
 
@@ -192,9 +192,9 @@ pub(crate) unsafe extern "C" fn comparar_write_player_description(person: i32, p
         return o(person, position, qualidades, text, size, gender); // message box: original only
     }
     let n = (size as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(person, position, qualidades, text, size, gender),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(person, position, qualidades, text, size, gender),
         || write_player_description(person, position, qualidades, text, size, gender));
-    PLACAR.registrar(igual && r == x, || format!("write_player_description({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, position, qualidades, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("write_player_description({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, position, qualidades, r, x, mo, mr));
     r
 }
 
@@ -203,9 +203,9 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(person
     // the calls (contract, average, 0x8cca10) go through the match’s address: the random state goes back between the sides and the
     // the copy does not count, if any of them draws
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u8>(IDX_STAFF_IS_BEST_FAVOURED_CANDIDATE);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(person, clube, candidate),
-        || crate::aleatorio::sem_contar(|| staff_is_best_favoured_candidate(person, clube, candidate)));
-    PLACAR.registrar(igual && r == x, || format!("staff_is_best_favoured_candidate({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, candidate, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(person, clube, candidate),
+        || crate::rng::without_counting(|| staff_is_best_favoured_candidate(person, clube, candidate)));
+    PLACAR.record(igual && r == x, || format!("staff_is_best_favoured_candidate({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, candidate, r, x, mo, mr));
     r
 }
 
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(person
 pub(crate) unsafe extern "C" fn comparar_staff_get_player_strength_flags(person: usize, other: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_GET_PLAYER_STRENGTH_FLAGS);
     let (r, _, igual, d) = compare_with_rng_retry(|| o(person, other), || staff_get_player_strength_flags(person, other));
-    PLACAR.registrar(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", person, other, d));
+    PLACAR.record(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", person, other, d));
     r
 }
 
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_player_strength_flags(person:
 pub(crate) unsafe extern "C" fn comparar_staff_get_player_weakness_flags(person: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_GET_PLAYER_WEAKNESS_FLAGS);
     let (r, _, igual, d) = compare_with_rng_retry(|| o(person, clube), || staff_get_player_weakness_flags(person, clube));
-    PLACAR.registrar(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", person, clube, d));
+    PLACAR.record(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", person, clube, d));
     r
 }
 
@@ -232,7 +232,7 @@ pub(crate) unsafe extern "C" fn comparar_database_count_club_physios(clube: usiz
         return r; // message box: original only
     }
     let n = database_count_club_physios(clube);
-    PLACAR.registrar(r == n, || format!("database_count_club_physios({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("database_count_club_physios({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "C" fn comparar_club_is_b_team(clube: usize) -> u32 {
         return r;
     }
     let n = club_is_b_team(clube);
-    PLACAR.registrar(r == n, || format!("club_is_b_team({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_is_b_team({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -254,8 +254,8 @@ pub(crate) unsafe extern "C" fn comparar_club_collect_non_playing_staff(clube: u
         return o(clube, out, max);
     }
     let reg = [(out as usize, 4 * (max as i8).max(0) as usize)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, out, max), || club_collect_non_playing_staff(clube, out, max));
-    PLACAR.registrar(igual && r == n, || format!("club_collect_non_playing_staff({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, out as usize, max as i8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, out, max), || club_collect_non_playing_staff(clube, out, max));
+    PLACAR.record(igual && r == n, || format!("club_collect_non_playing_staff({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, out as usize, max as i8, r, n, mo, mr));
     r
 }
 
@@ -263,7 +263,7 @@ pub(crate) unsafe extern "C" fn comparar_club_collect_non_playing_staff(clube: u
 pub(crate) unsafe extern "C" fn comparar_staff_is_player_attribute_visible(who_ve: usize, person: usize, attribute: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_IS_PLAYER_ATTRIBUTE_VISIBLE)(who_ve, person, attribute);
     let n = staff_is_player_attribute_visible(who_ve, person, attribute);
-    PLACAR.registrar(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", who_ve, person, attribute as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", who_ve, person, attribute as u8 as i8, r, n));
     r
 }
 
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(w
         return r; // message box: original only
     }
     let n = staff_get_player_attribute_for_viewer(who_ve, person, attribute);
-    PLACAR.registrar(r == n, || format!("staff_get_player_attribute_for_viewer({:x}, {:x}, {}) original={} rust={}", who_ve, person, x, r, n));
+    PLACAR.record(r == n, || format!("staff_get_player_attribute_for_viewer({:x}, {:x}, {}) original={} rust={}", who_ve, person, x, r, n));
     r
 }
 
@@ -288,9 +288,9 @@ pub(crate) unsafe extern "C" fn comparar_database_get_non_player_attribute_name(
     }
     // the first 100 bytes (the minimum accepted size): the names fit in them
     let reg = [(text, 100)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(attribute, text, size, abreviado),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(attribute, text, size, abreviado),
         || database_get_non_player_attribute_name(attribute, text, size, abreviado));
-    PLACAR.registrar(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, text, size as u16 as i16, abreviado, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, text, size as u16 as i16, abreviado, r, n, mo, mr));
     r
 }
 
@@ -298,7 +298,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_non_player_attribute_name(
 pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_SURNAME)(a, b);
     let n = database_compare_staff_by_surname(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_staff_by_surname({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_staff_by_surname({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -306,7 +306,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_surname(a: us
 pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_reputation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_REPUTATION)(a, b);
     let n = database_compare_clubs_by_reputation(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_clubs_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_reputation(a:
 pub(crate) unsafe extern "C" fn comparar_database_club_nation_is_eec(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_NATION_IS_EEC)(clube);
     let n = database_club_nation_is_eec(clube);
-    PLACAR.registrar(r == n, || format!("database_club_nation_is_eec({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("database_club_nation_is_eec({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -322,8 +322,8 @@ pub(crate) unsafe extern "C" fn comparar_database_club_nation_is_eec(clube: usiz
 pub(crate) unsafe extern "C" fn comparar_get_regions_sorted_by_name(language: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_GET_REGIONS_SORTED_BY_NAME);
     let reg = [(G_REGIONS_SORTED_BY_NAME, 14), (0xae232b, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(language), || get_regions_sorted_by_name(language));
-    PLACAR.registrar(igual && r == n, || format!("get_regions_sorted_by_name({}) original={:x} rust={:x} {:x?} x {:x?}", language as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(language), || get_regions_sorted_by_name(language));
+    PLACAR.record(igual && r == n, || format!("get_regions_sorted_by_name({}) original={:x} rust={:x} {:x?} x {:x?}", language as u8, r, n, mo, mr));
     r
 }
 
@@ -331,7 +331,7 @@ pub(crate) unsafe extern "C" fn comparar_get_regions_sorted_by_name(language: u3
 pub(crate) unsafe extern "C" fn comparar_compare_region_names(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_REGION_NAMES)(a, b);
     let n = compare_region_names(a, b);
-    PLACAR.registrar(r == n, || format!("compare_region_names({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_region_names({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -339,7 +339,7 @@ pub(crate) unsafe extern "C" fn comparar_compare_region_names(a: usize, b: usize
 pub(crate) unsafe extern "C" fn comparar_staff_get_opinion_link_staff(person: usize, target: u32) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_GET_OPINION_LINK_STAFF)(person, target);
     let n = staff_get_opinion_link_staff(person, target);
-    PLACAR.registrar(r == n, || format!("staff_get_opinion_link_staff({:x}, {:x}) original={:x} rust={:x}", person, target, r, n));
+    PLACAR.record(r == n, || format!("staff_get_opinion_link_staff({:x}, {:x}) original={:x} rust={:x}", person, target, r, n));
     r
 }
 
@@ -347,28 +347,28 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_opinion_link_staff(person: us
 pub(crate) unsafe extern "C" fn comparar_club_add_favoured_staff(clube: usize, person: usize, force: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_FAVOURED_STAFF);
     let reg = preference_regions(if clube != 0 { clube + club::FAV_STAFF1 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, person, force),
-        || crate::aleatorio::sem_contar(|| club_add_favoured_staff(clube, person, force)));
-    PLACAR.registrar(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, person, force, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, person, force),
+        || crate::rng::without_counting(|| club_add_favoured_staff(clube, person, force)));
+    PLACAR.record(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, person, force, mo, mr));
 }
 
 /// Comparer for `club_add_disliked_staff` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_club_add_disliked_staff(clube: usize, person: usize, force: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_DISLIKED_STAFF);
     let reg = preference_regions(if clube != 0 { clube + club::FAV_STAFF1 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, person, force),
-        || crate::aleatorio::sem_contar(|| club_add_disliked_staff(clube, person, force)));
-    PLACAR.registrar(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, person, force, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, person, force),
+        || crate::rng::without_counting(|| club_add_disliked_staff(clube, person, force)));
+    PLACAR.record(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, person, force, mo, mr));
 }
 
 /// Comparer for `staff_add_favoured_staff` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_staff_add_favoured_staff(person: usize, other: usize, force: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_FAVOURED_STAFF);
     let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
-    let reg = preference_regions(if pref != 0 { pref + 0x1c } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(person, other, force),
-        || crate::aleatorio::sem_contar(|| staff_add_favoured_staff(person, other, force)));
-    PLACAR.registrar(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", person, other, force, mo, mr));
+    let reg = preference_regions(if pref != 0 { pref + preferences::STAFF_FAVOURITE_STAFF1 } else { 0 });
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, other, force),
+        || crate::rng::without_counting(|| staff_add_favoured_staff(person, other, force)));
+    PLACAR.record(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", person, other, force, mo, mr));
 }
 
 /// Comparer for `staff_add_disliked_club` (comparison mode: see the header of motor.rs).
@@ -376,19 +376,19 @@ pub(crate) unsafe extern "C" fn comparar_staff_add_disliked_club(person: usize, 
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_DISLIKED_CLUB);
     let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + 4 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(person, clube, force),
-        || crate::aleatorio::sem_contar(|| staff_add_disliked_club(person, clube, force)));
-    PLACAR.registrar(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", person, clube, force, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, clube, force),
+        || crate::rng::without_counting(|| staff_add_disliked_club(person, clube, force)));
+    PLACAR.record(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", person, clube, force, mo, mr));
 }
 
 /// Comparer for `staff_fade_staff_relationships` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_staff_fade_staff_relationships(person: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_FADE_STAFF_RELATIONSHIPS);
     let pref = if person != 0 { read_usize(person + staff::STAFF_PREFERENCES) } else { 0 };
-    let reg = preference_regions(if pref != 0 { pref + 0x1c } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(person),
-        || crate::aleatorio::sem_contar(|| staff_fade_staff_relationships(person)));
-    PLACAR.registrar(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", person, mo, mr));
+    let reg = preference_regions(if pref != 0 { pref + preferences::STAFF_FAVOURITE_STAFF1 } else { 0 });
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person),
+        || crate::rng::without_counting(|| staff_fade_staff_relationships(person)));
+    PLACAR.record(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", person, mo, mr));
 }
 
 /// Comparer for `staff_get_disliked_staff` (comparison mode: see the header of motor.rs).
@@ -398,8 +398,8 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_disliked_staff(person: usize,
     if out != 0 {
         reg.push((out, 12));
     }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(person, out, n), || staff_get_disliked_staff(person, out, n));
-    PLACAR.registrar(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", person, out, n, r, m, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, out, n), || staff_get_disliked_staff(person, out, n));
+    PLACAR.record(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", person, out, n, r, m, mo, mr));
     r
 }
 
@@ -407,7 +407,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_disliked_staff(person: usize,
 pub(crate) unsafe extern "C" fn comparar_staff_get_natural_position_mask(person: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_STAFF_GET_NATURAL_POSITION_MASK)(person);
     let n = staff_get_natural_position_mask(person);
-    PLACAR.registrar(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", person, r, n));
+    PLACAR.record(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", person, r, n));
     r
 }
 
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_natural_position_mask(person:
 pub(crate) unsafe extern "C" fn comparar_club_count_squad_with_position_mask(clube: usize, mask: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_CLUB_COUNT_SQUAD_WITH_POSITION_MASK)(clube, mask);
     let n = club_count_squad_with_position_mask(clube, mask);
-    PLACAR.registrar(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mask, r, n));
+    PLACAR.record(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mask, r, n));
     r
 }
 
@@ -424,9 +424,9 @@ pub(crate) unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(person: u
     // the calls (contract, average, 0x8cca10) go through the match’s address: the random state goes back between the sides and the
     // the copy does not count, if any of them draws
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_PICK_FAVOURED_TEAM_MATE);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(person, clube),
-        || crate::aleatorio::sem_contar(|| staff_pick_favoured_team_mate(person, clube)));
-    PLACAR.registrar(igual && r == n, || format!("staff_pick_favoured_team_mate({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", person, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(person, clube),
+        || crate::rng::without_counting(|| staff_pick_favoured_team_mate(person, clube)));
+    PLACAR.record(igual && r == n, || format!("staff_pick_favoured_team_mate({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", person, clube, r, n, mo, mr));
     r
 }
 
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(person: u
 pub(crate) unsafe extern "C" fn comparar_club_nation_is_not_argentina(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_NATION_IS_NOT_ARGENTINA)(clube);
     let n = club_nation_is_not_argentina(clube);
-    PLACAR.registrar(r == n, || format!("club_nation_is_not_argentina({:x}) original={:x} rust={:x}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_nation_is_not_argentina({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }
 
@@ -442,7 +442,7 @@ pub(crate) unsafe extern "C" fn comparar_club_nation_is_not_argentina(clube: usi
 pub(crate) unsafe extern "C" fn comparar_club_nation_not_argentina_france_croatia(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_NATION_NOT_ARGENTINA_FRANCE_CROATIA)(clube);
     let n = club_nation_not_argentina_france_croatia(clube);
-    PLACAR.registrar(r == n, || format!("club_nation_not_argentina_france_croatia({:x}) original={:x} rust={:x}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_nation_not_argentina_france_croatia({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }
 
@@ -450,7 +450,7 @@ pub(crate) unsafe extern "C" fn comparar_club_nation_not_argentina_france_croati
 pub(crate) unsafe extern "C" fn comparar_database_is_melanesian_nation(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_MELANESIAN_NATION)(nacao);
     let n = database_is_melanesian_nation(nacao);
-    PLACAR.registrar(r == n, || format!("database_is_melanesian_nation({:x}) original={} rust={}", nacao, r, n));
+    PLACAR.record(r == n, || format!("database_is_melanesian_nation({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -458,7 +458,7 @@ pub(crate) unsafe extern "C" fn comparar_database_is_melanesian_nation(nacao: us
 pub(crate) unsafe extern "C" fn comparar_database_is_polynesian_nation(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_POLYNESIAN_NATION)(nacao);
     let n = database_is_polynesian_nation(nacao);
-    PLACAR.registrar(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nacao, r, n));
+    PLACAR.record(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -468,8 +468,8 @@ pub(crate) unsafe extern "C" fn comparar_database_get_coaching_job_name(job: u32
     // the text (the translated names fit in 64) and the gender byte
     let com = [(G_COACHING_JOB_NAME_BUFFER, 64usize), (gender, 1)];
     let regions = if gender != 0 { &com[..] } else { &com[..1] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regions, || o(job, gender), || database_get_coaching_job_name(job, gender));
-    PLACAR.registrar(igual && r == n, || format!("database_get_coaching_job_name({}) original={:x} rust={:x} {:x?} x {:x?}", job as i8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(job, gender), || database_get_coaching_job_name(job, gender));
+    PLACAR.record(igual && r == n, || format!("database_get_coaching_job_name({}) original={:x} rust={:x} {:x?} x {:x?}", job as i8, r, n, mo, mr));
     r
 }
 
@@ -480,9 +480,9 @@ pub(crate) unsafe extern "C" fn comparar_database_format_years_between_dates(end
         return o(end, start, text, size); // message box: original only
     }
     // ”%d” of a word: up to 6 bytes including the zero
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 6)], || o(end, start, text, size),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 6)], || o(end, start, text, size),
         || database_format_years_between_dates(end, start, text, size));
-    PLACAR.registrar(igual && r == n, || format!("database_format_years_between_dates({:x}, {:x}) original={} rust={} {:x?} x {:x?}", end, start, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_format_years_between_dates({:x}, {:x}) original={} rust={} {:x?} x {:x?}", end, start, r, n, mo, mr));
     r
 }
 
@@ -490,7 +490,7 @@ pub(crate) unsafe extern "C" fn comparar_database_format_years_between_dates(end
 pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_SHORT_NAME)(a, b);
     let n = database_compare_clubs_by_short_name(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -498,7 +498,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a:
 pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_FULL_NAME)(a, b);
     let n = database_compare_staff_by_full_name(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "C" fn comparar_database_staff_matches_names(person: us
     }
     let r = o(person, name, sobrenome, common, data);
     let n = database_staff_matches_names(person, name, sobrenome, common, data);
-    PLACAR.registrar(r == n, || format!("database_staff_matches_names({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", person, name, sobrenome, common, data, r, n));
+    PLACAR.record(r == n, || format!("database_staff_matches_names({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", person, name, sobrenome, common, data, r, n));
     r
 }
 
@@ -522,7 +522,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_latitude(a: u
     }
     let r = o(a, b);
     let n = database_compare_clubs_by_latitude(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_latitude({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_clubs_by_latitude({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -534,7 +534,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_longitude(a: 
     }
     let r = o(a, b);
     let n = database_compare_clubs_by_longitude(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_longitude({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_clubs_by_longitude({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -542,7 +542,7 @@ pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_longitude(a: 
 pub(crate) unsafe extern "C" fn comparar_club_has_enough_defenders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_DEFENDERS)(clube);
     let n = club_has_enough_defenders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_defenders({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_enough_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -550,7 +550,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_enough_defenders(clube: usize)
 pub(crate) unsafe extern "C" fn comparar_club_has_enough_midfielders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_MIDFIELDERS)(clube);
     let n = club_has_enough_midfielders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_midfielders({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_enough_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -558,7 +558,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_enough_midfielders(clube: usiz
 pub(crate) unsafe extern "C" fn comparar_club_has_enough_strikers(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_STRIKERS)(clube);
     let n = club_has_enough_strikers(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_strikers({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_enough_strikers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -566,7 +566,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_enough_strikers(clube: usize) 
 pub(crate) unsafe extern "C" fn comparar_club_has_enough_hard_workers(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_HARD_WORKERS)(clube);
     let n = club_has_enough_hard_workers(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -574,7 +574,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_enough_hard_workers(clube: usi
 pub(crate) unsafe extern "C" fn comparar_club_has_fit_goalkeeper(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_FIT_GOALKEEPER)(clube);
     let n = club_has_fit_goalkeeper(clube);
-    PLACAR.registrar(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -582,7 +582,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_fit_goalkeeper(clube: usize) -
 pub(crate) unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_BALL_WINNING_MIDFIELDERS)(clube);
     let n = club_has_ball_winning_midfielders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -590,7 +590,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(clube
 pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_strikers(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_AERIAL_STRIKERS)(clube);
     let n = club_lacks_aerial_strikers(clube);
-    PLACAR.registrar(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -598,7 +598,7 @@ pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_strikers(clube: usize
 pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_defenders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_AERIAL_DEFENDERS)(clube);
     let n = club_lacks_aerial_defenders(clube);
-    PLACAR.registrar(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -606,7 +606,7 @@ pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_defenders(clube: usiz
 pub(crate) unsafe extern "C" fn comparar_club_lacks_fast_defenders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_FAST_DEFENDERS)(clube);
     let n = club_lacks_fast_defenders(clube);
-    PLACAR.registrar(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -614,7 +614,7 @@ pub(crate) unsafe extern "C" fn comparar_club_lacks_fast_defenders(clube: usize)
 pub(crate) unsafe extern "C" fn comparar_club_has_fast_striker(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_FAST_STRIKER)(clube);
     let n = club_has_fast_striker(clube);
-    PLACAR.registrar(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -622,7 +622,7 @@ pub(crate) unsafe extern "C" fn comparar_club_has_fast_striker(clube: usize) -> 
 pub(crate) unsafe extern "C" fn comparar_club_has_two_creative_midfielders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_TWO_CREATIVE_MIDFIELDERS)(clube);
     let n = club_has_two_creative_midfielders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -630,17 +630,17 @@ pub(crate) unsafe extern "C" fn comparar_club_has_two_creative_midfielders(clube
 pub(crate) unsafe extern "C" fn comparar_club_squad_strength_band(clube: usize, other: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_CLUB_SQUAD_STRENGTH_BAND)(clube, other);
     let n = club_squad_strength_band(clube, other);
-    PLACAR.registrar(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, other, r, n));
+    PLACAR.record(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, other, r, n));
     r
 }
 
 /// Comparer for `club_reputation_for_staff` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_CLUB_REPUTATION_FOR_STAFF);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(clube, person),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(clube, person),
         || club_reputation_for_staff(clube, person));
     // the callers read only ax (movsx)
-    PLACAR.registrar(igual && r as u16 == n as u16, || format!("club_reputation_for_staff({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, person, r, n, mo, mr));
+    PLACAR.record(igual && r as u16 == n as u16, || format!("club_reputation_for_staff({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, person, r, n, mo, mr));
     r
 }
 
@@ -648,7 +648,7 @@ pub(crate) unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize,
 pub(crate) unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(person: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_STAFF_COUNT_DISLIKED_STAFF_AT_CLUB)(person, clube);
     let n = staff_count_disliked_staff_at_club(person, clube);
-    PLACAR.registrar(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", person, clube, r, n));
+    PLACAR.record(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", person, clube, r, n));
     r
 }
 
@@ -656,7 +656,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pers
 pub(crate) unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(person: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_STAFF_COUNT_FAVOURED_STAFF_AT_CLUB)(person, clube);
     let n = staff_count_favoured_staff_at_club(person, clube);
-    PLACAR.registrar(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", person, clube, r, n));
+    PLACAR.record(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", person, clube, r, n));
     r
 }
 
@@ -667,8 +667,8 @@ pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_club(person: usiz
     if pref == 0 {
         return o(person, clube); // writes nothing
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 4, 12)], || o(person, clube), || staff_remove_favoured_club(person, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_remove_favoured_club({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", person, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pref + 4, 12)], || o(person, clube), || staff_remove_favoured_club(person, clube));
+    PLACAR.record(igual && r == n, || format!("staff_remove_favoured_club({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", person, clube, r, n, mo, mr));
     r
 }
 
@@ -678,8 +678,8 @@ pub(crate) unsafe extern "C" fn comparar_club_remove_favoured_staff(clube: usize
     if clube == 0 {
         return o(clube, person);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::FAV_STAFF1, 12)], || o(clube, person), || club_remove_favoured_staff(clube, person));
-    PLACAR.registrar(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, person, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + club::FAV_STAFF1, 12)], || o(clube, person), || club_remove_favoured_staff(clube, person));
+    PLACAR.record(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, person, r, n, mo, mr));
     r
 }
 
@@ -690,8 +690,8 @@ pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_staff(person: usi
     if pref == 0 {
         return o(person, target);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x1c, 12)], || o(person, target), || staff_remove_favoured_staff(person, target));
-    PLACAR.registrar(igual && r == n, || format!("staff_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", person, target, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pref + preferences::STAFF_FAVOURITE_STAFF1, 12)], || o(person, target), || staff_remove_favoured_staff(person, target));
+    PLACAR.record(igual && r == n, || format!("staff_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", person, target, r, n, mo, mr));
     r
 }
 
@@ -702,8 +702,8 @@ pub(crate) unsafe extern "C" fn comparar_staff_remove_disliked_staff(person: usi
     if pref == 0 {
         return o(person, target); // writes nothing
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x28, 12)], || o(person, target), || staff_remove_disliked_staff(person, target));
-    PLACAR.registrar(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", person, target, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pref + preferences::STAFF_DISLIKED_STAFF1, 12)], || o(person, target), || staff_remove_disliked_staff(person, target));
+    PLACAR.record(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", person, target, r, n, mo, mr));
     r
 }
 
@@ -712,8 +712,8 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_favoured_staff(person: usize,
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(IDX_STAFF_GET_FAVOURED_STAFF);
     let with_array = [(array, 12), (n as usize, 1)];
     let regions: &[(usize, usize)] = if array == 0 { &with_array[1..] } else { &with_array };
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regions, || o(person, array, n), || staff_get_favoured_staff(person, array, n));
-    PLACAR.registrar(igual && r == x, || format!("staff_get_favoured_staff({:x}, {:x}) {:x?} x {:x?}", person, array, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(person, array, n), || staff_get_favoured_staff(person, array, n));
+    PLACAR.record(igual && r == x, || format!("staff_get_favoured_staff({:x}, {:x}) {:x?} x {:x?}", person, array, mo, mr));
     r
 }
 
@@ -721,7 +721,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_favoured_staff(person: usize,
 pub(crate) unsafe extern "C" fn comparar_club_is_in_season(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_IN_SEASON)(clube);
     let n = club_is_in_season(clube);
-    PLACAR.registrar(r == n, || format!("club_is_in_season({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_is_in_season({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -729,7 +729,7 @@ pub(crate) unsafe extern "C" fn comparar_club_is_in_season(clube: usize) -> u32 
 pub(crate) unsafe extern "C" fn comparar_club_is_in_major_nation(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_IS_IN_MAJOR_NATION)(clube);
     let n = club_is_in_major_nation(clube);
-    PLACAR.registrar(r == n, || format!("club_is_in_major_nation({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_is_in_major_nation({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -737,7 +737,7 @@ pub(crate) unsafe extern "C" fn comparar_club_is_in_major_nation(clube: usize) -
 pub(crate) unsafe extern "C" fn comparar_nation_is_major_nation(nacao: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_NATION_IS_MAJOR_NATION)(nacao);
     let n = nation_is_major_nation(nacao);
-    PLACAR.registrar(r == n, || format!("nation_is_major_nation({:x}) original={} rust={}", nacao, r, n));
+    PLACAR.record(r == n, || format!("nation_is_major_nation({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -745,25 +745,25 @@ pub(crate) unsafe extern "C" fn comparar_nation_is_major_nation(nacao: usize) ->
 pub(crate) unsafe extern "C" fn comparar_staff_clear_opinion_links(person: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_CLEAR_OPINION_LINKS);
     let Some(c) = database_staff_state_record(person) else { return o(person) }; // writes nothing
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(person), || staff_clear_opinion_links(person));
-    PLACAR.registrar(igual, || format!("staff_clear_opinion_links({:x}) {:x?} x {:x?}", person, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(person), || staff_clear_opinion_links(person));
+    PLACAR.record(igual, || format!("staff_clear_opinion_links({:x}) {:x?} x {:x?}", person, mo, mr));
 }
 
 /// Comparer for `staff_add_opinion_link` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_staff_add_opinion_link(person: usize, other: usize, value: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, i32)>(IDX_STAFF_ADD_OPINION_LINK);
     let Some(c) = database_staff_state_record(person) else { return o(person, other, value) };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(person, other, value),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(person, other, value),
         || staff_add_opinion_link(person, other, value));
-    PLACAR.registrar(igual, || format!("staff_add_opinion_link({:x}, {:x}, {}) {:x?} x {:x?}", person, other, value, mo, mr));
+    PLACAR.record(igual, || format!("staff_add_opinion_link({:x}, {:x}, {}) {:x?} x {:x?}", person, other, value, mo, mr));
 }
 
 /// Comparer for `staff_remove_opinion_link` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_staff_remove_opinion_link(person: usize, value: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i32)>(IDX_STAFF_REMOVE_OPINION_LINK);
     let Some(c) = database_staff_state_record(person) else { return o(person, value) };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(person, value), || staff_remove_opinion_link(person, value));
-    PLACAR.registrar(igual, || format!("staff_remove_opinion_link({:x}, {}) {:x?} x {:x?}", person, value, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 79)], || o(person, value), || staff_remove_opinion_link(person, value));
+    PLACAR.record(igual, || format!("staff_remove_opinion_link({:x}, {}) {:x?} x {:x?}", person, value, mo, mr));
 }
 
 /// Comparer for `database_get_club_assistant` (comparison mode: see the header of motor.rs).
@@ -773,8 +773,8 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_assistant(clube: usiz
         return o(clube); // message box: original only
     }
     // the club’s +0x244 flag, which 0x540a50 clears when it rejects the partner
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || database_get_club_assistant(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || database_get_club_assistant(clube));
+    PLACAR.record(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -785,9 +785,9 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize,
         return o(clube, array); // message box: original only
     }
     // the club’s vector and flag +0x244, which 0x540a50 zeroes when it rejects the partner
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(array as usize, 20), (clube + club::HAS_LINKED_CLUB, 1)],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(array as usize, 20), (clube + club::HAS_LINKED_CLUB, 1)],
         || o(clube, array), || database_get_club_coaches(clube, array));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -797,8 +797,8 @@ pub(crate) unsafe extern "C" fn comparar_database_count_club_coaches(clube: usiz
     if clube == 0 {
         return o(clube); // message box: original only
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || database_count_club_coaches(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || database_count_club_coaches(clube));
+    PLACAR.record(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -814,7 +814,7 @@ pub(crate) unsafe fn comparar_nome_em_ingles(name: &str, x: usize, o: unsafe ext
     }
     let a = o(x);
     let b = r(x);
-    PLACAR.registrar(a == b, || format!("{}({:x}) idioma {} original={:x} rust={:x}", name, x, language, a, b));
+    PLACAR.record(a == b, || format!("{}({:x}) idioma {} original={:x} rust={:x}", name, x, language, a, b));
     a
 }
 
@@ -842,7 +842,7 @@ pub(crate) unsafe extern "C" fn comparar_stadium_get_english_name(estadio: usize
     }
     let r = o(estadio);
     let n = stadium_get_english_name(estadio);
-    PLACAR.registrar(r == n, || format!("stadium_get_english_name({:x}) idioma {} original={:x} rust={:x}", estadio, language, r, n));
+    PLACAR.record(r == n, || format!("stadium_get_english_name({:x}) idioma {} original={:x} rust={:x}", estadio, language, r, n));
     r
 }
 
@@ -850,8 +850,8 @@ pub(crate) unsafe extern "C" fn comparar_stadium_get_english_name(estadio: usize
 /// montado (acusa o nome trocado mesmo sem o arquivo na pasta).
 pub(crate) unsafe extern "C" fn comparar_database_language_file_exists(language: i32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_DATABASE_LANGUAGE_FILE_EXISTS);
-    let (r, x, igual, _, _) = crate::comparacao::lado_a_lado(&[(0xde279c, 0x104)], || o(language), || database_language_file_exists(language));
-    PLACAR.registrar(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", language, r, x, igual));
+    let (r, x, igual, _, _) = crate::comparison::side_by_side(&[(0xde279c, 0x104)], || o(language), || database_language_file_exists(language));
+    PLACAR.record(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", language, r, x, igual));
     r
 }
 
@@ -870,15 +870,15 @@ pub(crate) unsafe extern "C" fn comparar_database_generate_extra_non_playing_sta
     if any_coach_missing_from_club() {
         return o();
     }
-    let mut regions = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut regions = crate::rng::STATE_REGIONS.to_vec();
     regions.push((0x9b59b4, 4));
     regions.push((0xde1f64, 0x40));
     regions.push((read_usize(G_CLUB_TABLE), read_i32(G_CLUB_COUNT).max(0) as usize * 581));
     regions.push((read_usize(G_STAFF_TABLE), read_i32(G_STAFF_COUNT).max(0) as usize * 110));
-    let (r, m, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regions, || o(),
-        || crate::aleatorio::sem_contar(|| database_generate_extra_non_playing_staff()));
+    let (r, m, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regions, || o(),
+        || crate::rng::without_counting(|| database_generate_extra_non_playing_staff()));
     let onde = first_memory_difference(&mo, &mr);
-    PLACAR.registrar(igual && r == m, || match onde {
+    PLACAR.record(igual && r == m, || match onde {
         Some((a, x, y)) => format!("database_generate_extra_non_playing_staff: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
         None => format!("database_generate_extra_non_playing_staff: original={} rust={}", r, m),
     });
@@ -917,9 +917,9 @@ pub(crate) unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32)
             regions.push((rd(p), gi(cont) as usize * tam));
         }
     }
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regions, || o(leniente), || resolve_database_indexes(leniente));
+    let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regions, || o(leniente), || resolve_database_indexes(leniente));
     let onde = first_memory_difference(&mo, &mr);
-    PLACAR.registrar(igual, || match onde {
+    PLACAR.record(igual, || match onde {
         Some((a, x, y)) => format!("resolve_database_indexes({}): diverge em {:x} original={:02x} rust={:02x}", leniente, a, x, y),
         None => format!("resolve_database_indexes({}): diverge", leniente),
     });
@@ -938,9 +938,9 @@ pub(crate) unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(redo:
     if v == 0 || n <= 0 {
         return o(redo);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(v, n as usize * 4)], || o(redo), || database_sort_clubs_by_reputation(redo));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(v, n as usize * 4)], || o(redo), || database_sort_clubs_by_reputation(redo));
     let onde = first_memory_difference(&mo, &mr);
-    PLACAR.registrar(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", redo as u8, onde));
+    PLACAR.record(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", redo as u8, onde));
 }
 
 /// Comparer for `database_free_staff_history_table` (comparison mode: see the header of motor.rs).
@@ -962,7 +962,7 @@ pub(crate) unsafe extern "C" fn comparar_database_grow_comp_history_table(n: i32
 pub(crate) unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_QSORT_COMPARATOR_CLUB_IDS_BY_REPUTATION)(a, b);
     let n = qsort_comparator_club_ids_by_reputation(a, b);
-    PLACAR.registrar(r == n, || format!("qsort_comparator_club_ids_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("qsort_comparator_club_ids_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -970,7 +970,7 @@ pub(crate) unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation
 pub(crate) unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_QSORT_COMPARATOR_SQUAD_BY_PLAYER_0XB)(a, b);
     let n = qsort_comparator_squad_by_player_0xb(a, b);
-    PLACAR.registrar(r == n, || format!("qsort_comparator_squad_by_player_0xb({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("qsort_comparator_squad_by_player_0xb({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -978,7 +978,7 @@ pub(crate) unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a:
 pub(crate) unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_STAFF_BY_PLAYER_ABILITY_DESC)(a, b);
     let n = compare_staff_by_player_ability_desc(a, b);
-    PLACAR.registrar(r == n, || format!("compare_staff_by_player_ability_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_staff_by_player_ability_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -995,13 +995,13 @@ pub(crate) unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(us
     }
     let regions = [(player, 70), (person + staff::DETERMINATION, 1)];
     let manager = *(G_TRAINING_MANAGER as *const usize);
-    let before = crate::comparacao::Memoria::ler(&regions);
+    let before = crate::comparison::MemorySnapshot::read(&regions);
     *(G_TRAINING_MANAGER as *mut usize) = 0;
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regions, || o(person), || rust(person));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(person), || rust(person));
     *(G_TRAINING_MANAGER as *mut usize) = manager;
-    PLACAR.registrar(igual, || format!("{}({:x}) {:x?} x {:x?}", name, person, mo, mr));
+    PLACAR.record(igual, || format!("{}({:x}) {:x?} x {:x?}", name, person, mo, mr));
     if manager != 0 {
-        before.escrever();
+        before.write_back();
         o(person);
     }
 }
@@ -1016,9 +1016,9 @@ pub(crate) unsafe extern "C" fn comparar_staff_normalise_player_physical_attribu
 pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) -> usize {
     // only the CRT rand() changes ([0xad6c30]): the state is restored between the sides and the copy does not count
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_SECOND_NAME_BY_WEIGHT);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_second_name_by_weight(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
+        || crate::rng::without_counting(|| database_pick_second_name_by_weight(nacao)));
+    PLACAR.record(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -1037,7 +1037,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_get_english_name(nacao: usize) -
     }
     let r = o(nacao);
     let n = nation_get_english_name(nacao);
-    PLACAR.registrar(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, language, r, n));
+    PLACAR.record(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, language, r, n));
     r
 }
 
@@ -1050,7 +1050,7 @@ pub(crate) unsafe extern "C" fn comparar_club_get_english_short_name(clube: usiz
     }
     let r = o(clube);
     let n = club_get_english_short_name(clube);
-    PLACAR.registrar(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, language, r, n));
+    PLACAR.record(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, language, r, n));
     r
 }
 
@@ -1060,11 +1060,11 @@ pub(crate) unsafe extern "C" fn comparar_club_get_english_short_name(clube: usiz
 /// tabela de clubes tem 8 MB: as fotos não vão para a mensagem nem voltam às sobras).
 pub(crate) unsafe fn comparar_times_a_e_b(name: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
     let regions = ab_team_regions();
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regions, original, rust);
+    let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regions, original, rust);
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| {
         x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k]))
     });
-    PLACAR.registrar(igual, || match onde {
+    PLACAR.record(igual, || match onde {
         Some((a, x, y)) => format!("{}: diverge em {:x} original={:02x} rust={:02x}", name, a, x, y),
         None => format!("{}: diverge", name),
     });
@@ -1103,7 +1103,7 @@ pub(crate) unsafe extern "C" fn comparar_database_build_nation_name_index() {
     let original = core::slice::from_raw_parts(t as *const u8, n);
     let copy = core::slice::from_raw_parts(r as *const u8, n);
     let onde = original.iter().zip(copy).position(|(a, b)| a != b);
-    PLACAR.registrar(onde.is_none(), || {
+    PLACAR.record(onde.is_none(), || {
         let k = onde.unwrap_or(0) & !3;
         format!("database_build_nation_name_index: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
             core::ptr::read_unaligned((t + k) as *const i32), core::ptr::read_unaligned((r + k) as *const i32))
@@ -1128,9 +1128,9 @@ pub(crate) unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: 
             regions.push((s, 581));
         }
     }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(clube, person, data, desligar, como_jogador),
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(clube, person, data, desligar, como_jogador),
         || database_remove_staff_from_club(clube, person, data, desligar, como_jogador));
-    PLACAR.registrar(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, person, data != 0, desligar, r, m, mo, mr));
     r
 }
@@ -1142,9 +1142,9 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_scouts(clube: usize, 
         return o(clube, array); // message box: original only
     }
     // the club’s vector and flag +0x244, which 0x540a50 zeroes when it rejects the partner
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(array as usize, 28), (clube + club::HAS_LINKED_CLUB, 1)],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(array as usize, 28), (clube + club::HAS_LINKED_CLUB, 1)],
         || o(clube, array), || database_get_club_scouts(clube, array));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -1153,7 +1153,7 @@ pub(crate) unsafe extern "C" fn comparar_get_adjective_form_index(indice: u32, l
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u8>(IDX_GET_ADJECTIVE_FORM_INDEX);
     let r = o(indice, language);
     let n = get_adjective_form_index(indice, language);
-    PLACAR.registrar(r == n, || format!("get_adjective_form_index({}, idioma {}) original={} rust={}", indice as u8 as i8, language, r, n));
+    PLACAR.record(r == n, || format!("get_adjective_form_index({}, idioma {}) original={} rust={}", indice as u8 as i8, language, r, n));
     r
 }
 
@@ -1166,7 +1166,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_non_player_attribute(person: 
         return r; // message box: original only
     }
     let n = staff_get_non_player_attribute(person, attribute);
-    PLACAR.registrar(r == n, || format!("staff_get_non_player_attribute({:x}, {}) original={} rust={}", person, a, r, n));
+    PLACAR.record(r == n, || format!("staff_get_non_player_attribute({:x}, {}) original={} rust={}", person, a, r, n));
     r
 }
 
@@ -1175,7 +1175,7 @@ pub(crate) unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_abi
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_PLAYER_ATTRIBUTE_RATING_WITH_SCALED_ABILITY);
     let r = o(player, value);
     let n = player_attribute_rating_with_scaled_ability(player, value);
-    PLACAR.registrar(r == n, || format!("player_attribute_rating_with_scaled_ability({:x}, {}) original={} rust={}", player, value as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("player_attribute_rating_with_scaled_ability({:x}, {}) original={} rust={}", player, value as u8 as i8, r, n));
     r
 }
 
@@ -1183,9 +1183,9 @@ pub(crate) unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_abi
 pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nacao: usize) -> usize {
     // only the CRT rand() changes ([0xad6c30]): the state is restored between the sides and the copy does not count
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_FIRST_NAME_BY_WEIGHT);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_first_name_by_weight(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
+        || crate::rng::without_counting(|| database_pick_first_name_by_weight(nacao)));
+    PLACAR.record(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -1196,9 +1196,9 @@ pub(crate) unsafe extern "C" fn comparar_database_get_comp_colours(competicao: u
         return o(competicao, frente, bottom); // message box: original only
     }
     let regions = [(frente as usize, 2), (bottom as usize, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regions, || o(competicao, frente, bottom),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(competicao, frente, bottom),
         || database_get_comp_colours(competicao, frente, bottom));
-    PLACAR.registrar(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
     r
 }
 
@@ -1211,7 +1211,7 @@ pub(crate) unsafe extern "C" fn comparar_database_club_has_room_for_job(clube: u
         return r; // message box: original only
     }
     let n = database_club_has_room_for_job(clube, job, person);
-    PLACAR.registrar(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, person, r, n));
+    PLACAR.record(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, person, r, n));
     r
 }
 
@@ -1223,9 +1223,9 @@ pub(crate) unsafe extern "C" fn comparar_database_add_staff_to_club(clube: usize
     }
     // writes only to the club (581 bytes) and the person (110); 0x600a50 only queries
     let regions = [(clube, 0x245), (person, 0x6e)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(clube, person, job, data, write, reduzir),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(clube, person, job, data, write, reduzir),
         || database_add_staff_to_club(clube, person, job, data, write, reduzir));
-    PLACAR.registrar(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, person, job as u8, data, write, reduzir, r, n, mo, mr));
     r
 }
@@ -1237,9 +1237,9 @@ pub(crate) unsafe extern "C" fn comparar_database_count_club_squad(clube: usize,
         return o(clube, mode, filtro); // message box: original only
     }
     // 0x540a50 may zero the club’s +0x244; the filter writes the last contract to [0xae1080]
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1), (G_CONTRACT_LOOKUP_RESULT, 4)],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + club::HAS_LINKED_CLUB, 1), (G_CONTRACT_LOOKUP_RESULT, 4)],
         || o(clube, mode, filtro), || database_count_club_squad(clube, mode, filtro));
-    PLACAR.registrar(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, mode as u8, filtro, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, mode as u8, filtro, r, n, mo, mr));
     r
 }
 
@@ -1250,9 +1250,9 @@ pub(crate) unsafe extern "C" fn comparar_database_collect_club_squad(clube: usiz
         return o(clube, array, dobro); // message box: original only
     }
     let regions = [(array as usize, if dobro != 0 { 400 } else { 200 }), (clube + club::HAS_LINKED_CLUB, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(clube, array, dobro),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(clube, array, dobro),
         || database_collect_club_squad(clube, array, dobro));
-    PLACAR.registrar(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
     r
 }
 
@@ -1261,17 +1261,17 @@ pub(crate) unsafe extern "C" fn comparar_club_can_be_managed(clube: usize) -> u8
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_CAN_BE_MANAGED);
     let mark = [(clube.wrapping_add(0x244), 1)];
     let regions = if clube == 0 { &mark[..0] } else { &mark[..] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regions, || o(clube), || club_can_be_managed(clube));
-    PLACAR.registrar(igual && r == n, || format!("club_can_be_managed({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(clube), || club_can_be_managed(clube));
+    PLACAR.record(igual && r == n, || format!("club_can_be_managed({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
 /// Comparer for `database_vector_to_non_player` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_database_vector_to_non_player(not_player: usize, person: usize, array: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_NON_PLAYER);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(not_player + 0x0e, 21)],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(not_player + non_player::ATTACKING, 21)],
         || o(not_player, person, array), || database_vector_to_non_player(not_player, person, array));
-    PLACAR.registrar(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", not_player, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", not_player, r, n, mo, mr));
     r
 }
 
@@ -1279,9 +1279,9 @@ pub(crate) unsafe extern "C" fn comparar_database_vector_to_non_player(not_playe
 pub(crate) unsafe extern "C" fn comparar_database_vector_to_player(player: usize, person: usize, array: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_PLAYER);
     // the ATTRIBUTE_VECTOR_CELLS offsets are at +0x0f..+0x44
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(player + 0x0f, 0x44 - 0x0f + 1), (person + staff::DETERMINATION, 1)],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(player + player_sheet::GOALKEEPER, 0x44 - 0x0f + 1), (person + staff::DETERMINATION, 1)],
         || o(player, person, array), || database_vector_to_player(player, person, array));
-    PLACAR.registrar(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", player, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", player, r, n, mo, mr));
     r
 }
 
@@ -1292,9 +1292,9 @@ pub(crate) unsafe extern "C" fn comparar_staff_normalise_non_player_attributes(p
     if nj == 0 {
         return o(person); // does nothing: original only
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(nj + 0x0e, 21)], || o(person),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(nj + non_player::ATTACKING, 21)], || o(person),
         || staff_normalise_non_player_attributes(person));
-    PLACAR.registrar(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", person, mo, mr));
+    PLACAR.record(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", person, mo, mr));
 }
 
 /// Comparer for `database_get_colour_family` (comparison mode: see the header of motor.rs).
@@ -1305,7 +1305,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_colour_family(colour: usiz
         return r; // message box: original only
     }
     let n = database_get_colour_family(colour);
-    PLACAR.registrar(r == n, || format!("database_get_colour_family({:x}: id {}) original={} rust={}", colour, *(colour as *const u32), r, n));
+    PLACAR.record(r == n, || format!("database_get_colour_family({:x}: id {}) original={} rust={}", colour, *(colour as *const u32), r, n));
     r
 }
 
@@ -1317,7 +1317,7 @@ pub(crate) unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usi
         return r; // message box: original only
     }
     let n = database_colours_clash(a, b);
-    PLACAR.registrar(r == n, || format!("database_colours_clash({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_colours_clash({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -1330,7 +1330,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_compute_non_player_attribute(pers
         return r; // message box: original only
     }
     let n = staff_compute_non_player_attribute(person, not_player, attribute);
-    PLACAR.registrar(r == n, || format!("staff_compute_non_player_attribute({:x}, {:x}, {}) original={} rust={}", person, not_player, a, r, n));
+    PLACAR.record(r == n, || format!("staff_compute_non_player_attribute({:x}, {:x}, {}) original={} rust={}", person, not_player, a, r, n));
     r
 }
 
@@ -1338,18 +1338,18 @@ pub(crate) unsafe extern "C" fn comparar_staff_compute_non_player_attribute(pers
 pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) -> usize {
     // only the CRT’s rand() changes ([0xad6c30]): the state goes back between the sides
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_FIRST_NAME_FOR_NATION);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_first_name_for_nation(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
+        || crate::rng::without_counting(|| database_pick_first_name_for_nation(nacao)));
+    PLACAR.record(igual && r == n, || format!("database_pick_first_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
 /// Comparer for `database_pick_second_name_for_nation` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_SECOND_NAME_FOR_NATION);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_second_name_for_nation(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
+        || crate::rng::without_counting(|| database_pick_second_name_for_nation(nacao)));
+    PLACAR.record(igual && r == n, || format!("database_pick_second_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -1360,9 +1360,9 @@ pub(crate) unsafe extern "C" fn comparar_database_format_staff_name(person: usiz
         return o(person, target, size, estilo); // message box: original only
     }
     // the destination has at least 0x69 bytes (the routine requires it); 0x600740 and 0x6005e0 only read
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(target, 0x69)], || o(person, target, size, estilo),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(target, 0x69)], || o(person, target, size, estilo),
         || database_format_staff_name(person, target, size, estilo));
-    PLACAR.registrar(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", person, estilo as u8, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", person, estilo as u8, r, n, mo, mr));
     r
 }
 
@@ -1372,9 +1372,9 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: us
     if clube == 0 {
         return o(clube, kit, frente, bottom); // message box: original only
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(frente as usize, 2), (bottom as usize, 2)],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(frente as usize, 2), (bottom as usize, 2)],
         || o(clube, kit, frente, bottom), || database_get_club_kit_colours(clube, kit, frente, bottom));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, kit as u8, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, kit as u8, r, n, mo, mr));
     r
 }
 
@@ -1386,9 +1386,9 @@ pub(crate) unsafe extern "C" fn comparar_database_get_club_manager(clube: usize)
     }
     // 0x540a50 clears the club’s +0x244 flag when it rejects the partner (and the rejection repeats with it cleared):
     // the region is restored between the sides
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube),
         || database_get_club_manager(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -1401,7 +1401,7 @@ pub(crate) unsafe extern "C" fn comparar_club_get_english_name(clube: usize) -> 
     }
     let r = o(clube);
     let n = club_get_english_name(clube);
-    PLACAR.registrar(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", clube, language, r, n));
+    PLACAR.record(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", clube, language, r, n));
     r
 }
 
@@ -1410,15 +1410,15 @@ pub(crate) unsafe extern "C" fn comparar_staff_adjust_morale(person: usize, delt
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_STAFF_ADJUST_MORALE);
     if delta as u8 == 0 {
         let r = o(person, delta, limitar);
-        PLACAR.registrar(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", person, r));
+        PLACAR.record(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", person, r));
         return r;
     }
     // rolls (0x90cfc0): the generator state goes back between the sides and the copy does not count the rolls
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((core::ptr::read_unaligned((person + staff::PLAYER) as *const usize) + 0x45, 1));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(person, delta, limitar),
-        || crate::aleatorio::sem_contar(|| staff_adjust_morale(person, delta, limitar)));
-    PLACAR.registrar(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", person, delta as u8 as i8, limitar, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, delta, limitar),
+        || crate::rng::without_counting(|| staff_adjust_morale(person, delta, limitar)));
+    PLACAR.record(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", person, delta as u8 as i8, limitar, r, n, mo, mr));
     r
 }
 
@@ -1429,18 +1429,18 @@ pub(crate) unsafe extern "C" fn comparar_database_non_player_to_attribute_vector
     if !end.is_null() {
         regions.push((end as usize, 1));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regions, || o(not_player, person, array, end),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(not_player, person, array, end),
         || database_non_player_to_attribute_vector(not_player, person, array, end));
-    PLACAR.registrar(igual && r == n, || format!("database_non_player_to_attribute_vector({:x}) original={:x} rust={:x} {:x?} x {:x?}", not_player, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_non_player_to_attribute_vector({:x}) original={:x} rust={:x} {:x?} x {:x?}", not_player, r, n, mo, mr));
     r
 }
 
 /// Comparer for `staff_set_squad_flags` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_staff_set_squad_flags(person: usize, squad: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_SET_SQUAD_FLAGS);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(person + staff::PLAYING_SQUAD, 1)], || o(person, squad),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(person + staff::PLAYING_SQUAD, 1)], || o(person, squad),
         || staff_set_squad_flags(person, squad));
-    PLACAR.registrar(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", person, squad as u8, mo, mr));
+    PLACAR.record(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", person, squad as u8, mo, mr));
     r
 }
 
@@ -1448,7 +1448,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_set_squad_flags(person: usize, sq
 pub(crate) unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_COMP_HISTORY_ROWS)(a, b);
     let n = database_compare_comp_history_rows(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -1462,10 +1462,10 @@ pub(crate) unsafe extern "C" fn comparar_database_player_to_attribute_vector(pla
             regions.push((p as usize, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regions,
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions,
         || o(player, person, array, fim_dos_lados, end_of_positions, fim_dos_ponderados),
         || database_player_to_attribute_vector(player, person, array, fim_dos_lados, end_of_positions, fim_dos_ponderados));
-    PLACAR.registrar(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", player, person, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", player, person, r, n, mo, mr));
     r
 }
 
@@ -1473,7 +1473,7 @@ pub(crate) unsafe extern "C" fn comparar_database_player_to_attribute_vector(pla
 pub(crate) unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_NATION_IS_UK_OR_IRELAND)(nacao);
     let n = nation_is_uk_or_ireland(nacao);
-    PLACAR.registrar(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));
+    PLACAR.record(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -1481,7 +1481,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nacao: usize) -
 pub(crate) unsafe extern "C" fn comparar_database_is_basque_club(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_BASQUE_CLUB)(clube);
     let n = database_is_basque_club(clube);
-    PLACAR.registrar(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -1490,18 +1490,18 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed(person: usize,
     // without a club, both write the contract to [0xae1080]; 0x4cf5a0, 0x4cf5f0 and 0x600a50 (club not
     // null) only read
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_TRANSFER_LISTED);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, clube),
         || staff_is_transfer_listed(person, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("staff_is_transfer_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, r, n, mo, mr));
     r
 }
 
 /// Comparer for `staff_is_loan_listed` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_staff_is_loan_listed(person: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_LOAN_LISTED);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, clube),
         || staff_is_loan_listed(person, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_loan_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("staff_is_loan_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, r, n, mo, mr));
     r
 }
 
@@ -1509,9 +1509,9 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_loan_listed(person: usize, clu
 pub(crate) unsafe extern "C" fn comparar_staff_is_listed_by_request(person: usize, clube: usize) -> u32 {
     // with no club, both write the contract in [0xae1080]; 0x4cf5a0 and 0x4cf5f0 only read
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_LISTED_BY_REQUEST);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, clube),
         || staff_is_listed_by_request(person, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, r, n, mo, mr));
     r
 }
 
@@ -1519,7 +1519,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_is_listed_by_request(person: usiz
 pub(crate) unsafe extern "C" fn comparar_player_attribute_rating(player: usize, value: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_PLAYER_ATTRIBUTE_RATING)(player, value);
     let n = player_attribute_rating(player, value);
-    PLACAR.registrar(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", player, value as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", player, value as u8 as i8, r, n));
     r
 }
 
@@ -1530,9 +1530,9 @@ pub(crate) unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: 
         return o(clube); // message box: original only
     }
     // 0x540a50 clears the club’s +0x244 mark when it refuses the partner: the region goes back between the sides
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube),
         || database_club_has_reserve_squad(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -1540,7 +1540,7 @@ pub(crate) unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: 
 pub(crate) unsafe extern "C" fn comparar_database_get_reputation_scope(person: usize, who_ve: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_DATABASE_GET_REPUTATION_SCOPE)(person, who_ve);
     let n = database_get_reputation_scope(person, who_ve);
-    PLACAR.registrar(r == n, || format!("database_get_reputation_scope({:x}, {:x}) original={} rust={}", person, who_ve, r, n));
+    PLACAR.record(r == n, || format!("database_get_reputation_scope({:x}, {:x}) original={} rust={}", person, who_ve, r, n));
     r
 }
 
@@ -1548,7 +1548,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_reputation_scope(person: u
 pub(crate) unsafe extern "C" fn comparar_database_get_staff_reputation_for_viewer(person: usize, who_ve: usize, not_player: u32) -> u16 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u16>(IDX_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER)(person, who_ve, not_player);
     let n = database_get_staff_reputation_for_viewer(person, who_ve, not_player);
-    PLACAR.registrar(r == n, || format!("database_get_staff_reputation_for_viewer({:x}, {:x}, {}) original={} rust={}", person, who_ve, not_player, r, n));
+    PLACAR.record(r == n, || format!("database_get_staff_reputation_for_viewer({:x}, {:x}, {}) original={} rust={}", person, who_ve, not_player, r, n));
     r
 }
 
@@ -1557,7 +1557,7 @@ pub(crate) unsafe extern "C" fn comparar_database_is_staff_foreign(person: usize
     // 0x4cf5a0 and the Date (in a local Date) only read: both sides can run
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u32>(IDX_DATABASE_IS_STAFF_FOREIGN)(person, nacao, groups);
     let n = database_is_staff_foreign(person, nacao, groups);
-    PLACAR.registrar(r == n, || format!("database_is_staff_foreign({:x}, {:x}, {}) original={} rust={}", person, nacao, groups, r, n));
+    PLACAR.record(r == n, || format!("database_is_staff_foreign({:x}, {:x}, {}) original={} rust={}", person, nacao, groups, r, n));
     r
 }
 
@@ -1569,7 +1569,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_staff_age(person: usize, d
     }
     let r = o(person, data);
     let n = database_get_staff_age(person, data);
-    PLACAR.registrar(r == n, || format!("database_get_staff_age({:x}) original={} rust={}", person, r, n));
+    PLACAR.record(r == n, || format!("database_get_staff_age({:x}) original={} rust={}", person, r, n));
     r
 }
 
@@ -1577,7 +1577,7 @@ pub(crate) unsafe extern "C" fn comparar_database_get_staff_age(person: usize, d
 pub(crate) unsafe extern "C" fn comparar_nation_allows_free_transfers(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_NATION_ALLOWS_FREE_TRANSFERS)(nacao);
     let n = nation_allows_free_transfers(nacao);
-    PLACAR.registrar(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
+    PLACAR.record(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -1585,7 +1585,7 @@ pub(crate) unsafe extern "C" fn comparar_nation_allows_free_transfers(nacao: usi
 pub(crate) unsafe extern "C" fn comparar_database_is_staff_eu_national(person: usize, nation_of_club: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DATABASE_IS_STAFF_EU_NATIONAL)(person, nation_of_club);
     let n = database_is_staff_eu_national(person, nation_of_club);
-    PLACAR.registrar(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", person, nation_of_club, r, n));
+    PLACAR.record(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", person, nation_of_club, r, n));
     r
 }
 
@@ -1593,9 +1593,9 @@ pub(crate) unsafe extern "C" fn comparar_database_is_staff_eu_national(person: u
 pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(person: usize, clube: usize) -> u32 {
     // with no club, both write the contract in [0xae1080]; 0x4cf5a0 and 0x4cf5f0 only read
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(person, clube),
         || staff_is_transfer_listed_or_requested(person, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed_or_requested({:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("staff_is_transfer_listed_or_requested({:x}, {:x}) original={} rust={} {:x?} x {:x?}", person, clube, r, n, mo, mr));
     r
 }
 
@@ -1608,7 +1608,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_compute_player_attribute(person: 
     }
     let r = o(person, player, attribute);
     let n = staff_compute_player_attribute(person, player, attribute);
-    PLACAR.registrar(r == n, || format!("staff_compute_player_attribute({:x}, {}) original={} rust={}", player, a, r, n));
+    PLACAR.record(r == n, || format!("staff_compute_player_attribute({:x}, {}) original={} rust={}", player, a, r, n));
     r
 }
 
@@ -1621,7 +1621,7 @@ pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute(person: usiz
     }
     let r = o(person, attribute);
     let n = staff_get_player_attribute(person, attribute);
-    PLACAR.registrar(r == n, || format!("staff_get_player_attribute({:x}, {}) original={} rust={}", person, a, r, n));
+    PLACAR.record(r == n, || format!("staff_get_player_attribute({:x}, {}) original={} rust={}", person, a, r, n));
     r
 }
 
@@ -1652,7 +1652,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ball_out(this: usize, l: u8) -> 
     }
     let (r, n) = (core::cell::Cell::new(0u8), core::cell::Cell::new(0u8));
     let (igual, k) = comparar_com_comentarios_em(&extra, || r.set(o(this, l)), |c| n.set(ball_out_with(this, l, c)));
-    PLACAR.registrar(igual && r.get() == n.get(), || format!("ball_out({}) original={} rust={} ({} comentarios)", l, r.get(), n.get(), k));
+    PLACAR.record(igual && r.get() == n.get(), || format!("ball_out({}) original={} rust={} ({} comentarios)", l, r.get(), n.get(), k));
     r.get()
 }
 
@@ -1660,7 +1660,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ball_out(this: usize, l: u8) -> 
 pub(crate) unsafe extern "C" fn comparar_likes(target: usize, person: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_LIKES)(target, person);
     let n = likes(target, person);
-    PLACAR.registrar(r == n, || format!("likes original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("likes original={} rust={}", r, n));
     r
 }
 
@@ -1668,7 +1668,7 @@ pub(crate) unsafe extern "C" fn comparar_likes(target: usize, person: usize) -> 
 pub(crate) unsafe extern "C" fn comparar_dislikes(target: usize, person: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DISLIKES)(target, person);
     let n = dislikes(target, person);
-    PLACAR.registrar(r == n, || format!("dislikes original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("dislikes original={} rust={}", r, n));
     r
 }
 
@@ -1676,8 +1676,8 @@ pub(crate) unsafe extern "C" fn comparar_dislikes(target: usize, person: usize) 
 pub(crate) unsafe extern "thiscall" fn comparar_mark_position(this: usize, position: i8, sheet: *const u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const u32) -> u32>(IDX_MARK_POSITION);
     let reg = [((this as isize + 0x5bf + 4 * position as isize) as usize, 4), (this + 0x187f, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, position, sheet), || mark_position(this, position, sheet));
-    PLACAR.registrar(igual && r == n, || format!("mark_position({}) original={:x?} rust={:x?}", position, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, position, sheet), || mark_position(this, position, sheet));
+    PLACAR.record(igual && r == n, || format!("mark_position({}) original={:x?} rust={:x?}", position, mo, mr));
     r
 }
 
@@ -1695,13 +1695,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_foul_in_engine(
             regions.push((p, 0x1be));
         }
     }
-    regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, v, igual, _, _) = crate::comparacao::lado_a_lado(
+    regions.extend(crate::rng::STATE_REGIONS);
+    let (r, v, igual, _, _) = crate::comparison::side_by_side(
         &regions,
         || o(m, j, other, kind, who, card, grav, advantage),
-        || crate::aleatorio::sem_contar(|| foul_in_engine(m, j, other, kind, who, card, grav, advantage)),
+        || crate::rng::without_counting(|| foul_in_engine(m, j, other, kind, who, card, grav, advantage)),
     );
-    PLACAR.registrar(igual && r == v, || format!("foul_in_engine original={} rust={}", r, v));
+    PLACAR.record(igual && r == v, || format!("foul_in_engine original={} rust={}", r, v));
     r
 }
 
@@ -1709,7 +1709,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_foul_in_engine(
 pub(crate) unsafe extern "C" fn comparar_type_not_11(kind: i8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(i8) -> u32>(IDX_TYPE_NOT_11)(kind);
     let v = type_not_11(kind);
-    PLACAR.registrar(r == v, || format!("type_not_11({}) original={} rust={}", kind, r, v));
+    PLACAR.record(r == v, || format!("type_not_11({}) original={} rust={}", kind, r, v));
     r
 }
 
@@ -1717,7 +1717,7 @@ pub(crate) unsafe extern "C" fn comparar_type_not_11(kind: i8) -> u32 {
 pub(crate) unsafe extern "C" fn comparar_type_11_to_15(kind: i8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(i8) -> u32>(IDX_TYPE_11_TO_15)(kind);
     let v = type_11_to_15(kind);
-    PLACAR.registrar(r == v, || format!("type_11_to_15({}) original={} rust={}", kind, r, v));
+    PLACAR.record(r == v, || format!("type_11_to_15({}) original={} rust={}", kind, r, v));
     r
 }
 
@@ -1725,7 +1725,7 @@ pub(crate) unsafe extern "C" fn comparar_type_11_to_15(kind: i8) -> u32 {
 pub(crate) unsafe extern "stdcall" fn comparar_national_side_class(clube: usize, flag: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(IDX_NATIONAL_SIDE_CLASS)(clube, flag);
     let v = national_side_class(clube, flag);
-    PLACAR.registrar(r == v, || format!("national_side_class({:#x}, {}) original={} rust={}", clube, flag, r, v));
+    PLACAR.record(r == v, || format!("national_side_class({:#x}, {}) original={} rust={}", clube, flag, r, v));
     r
 }
 
@@ -1733,17 +1733,17 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_side_class(clube: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_clear_person_mark(this: usize, person: usize, k: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_CLEAR_PERSON_MARK);
     let reg = [(person_flag_byte(this, person, k) as usize, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, person, k), || clear_person_mark(this, person, k));
-    PLACAR.registrar(igual, || format!("clear_person_mark original={:x?} rust={:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, k), || clear_person_mark(this, person, k));
+    PLACAR.record(igual, || format!("clear_person_mark original={:x?} rust={:x?}", mo, mr));
 }
 
 /// Comparer for `free_record` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_free_record() -> usize {
     let o = original_fn::<unsafe extern "C" fn() -> usize>(IDX_FREE_RECORD);
-    let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
     reg.push((0x9b59b4, 4));
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| free_record()));
-    PLACAR.registrar(igual && r == v, || format!("free_record original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || crate::rng::without_counting(|| free_record()));
+    PLACAR.record(igual && r == v, || format!("free_record original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
     r
 }
 
@@ -1751,7 +1751,7 @@ pub(crate) unsafe extern "C" fn comparar_free_record() -> usize {
 pub(crate) unsafe extern "C" fn comparar_database_global_9b5984() -> u32 {
     let r = original_fn::<unsafe extern "C" fn() -> u32>(IDX_DATABASE_GLOBAL_9B5984)();
     let v = database_global_9b5984();
-    PLACAR.registrar(r == v, || format!("database_global_9b5984 original={:#x} rust={:#x}", r, v));
+    PLACAR.record(r == v, || format!("database_global_9b5984 original={:#x} rust={:#x}", r, v));
     r
 }
 
@@ -1762,8 +1762,8 @@ pub(crate) unsafe extern "C" fn comparar_partner_club(clube: usize, eh_a: *mut u
     if !eh_a.is_null() {
         reg.push((eh_a as usize, 4));
     }
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(clube, eh_a, active), || partner_club(clube, eh_a, active));
-    PLACAR.registrar(igual && r == v, || format!("partner_club original={:x} {:x?} rust={:x} {:x?}", r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(clube, eh_a, active), || partner_club(clube, eh_a, active));
+    PLACAR.record(igual && r == v, || format!("partner_club original={:x} {:x?} rust={:x} {:x?}", r, mo, v, mr));
     r
 }
 
@@ -1771,7 +1771,7 @@ pub(crate) unsafe extern "C" fn comparar_partner_club(clube: usize, eh_a: *mut u
 pub(crate) unsafe extern "C" fn comparar_likes_club(person: usize, clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_LIKES_CLUB)(person, clube);
     let n = likes_club(person, clube);
-    PLACAR.registrar(r == n, || format!("likes_club original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("likes_club original={} rust={}", r, n));
     r
 }
 
@@ -1779,7 +1779,7 @@ pub(crate) unsafe extern "C" fn comparar_likes_club(person: usize, clube: usize)
 pub(crate) unsafe extern "C" fn comparar_dislikes_club(person: usize, clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DISLIKES_CLUB)(person, clube);
     let n = dislikes_club(person, clube);
-    PLACAR.registrar(r == n, || format!("dislikes_club original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("dislikes_club original={} rust={}", r, n));
     r
 }
 
@@ -1787,7 +1787,7 @@ pub(crate) unsafe extern "C" fn comparar_dislikes_club(person: usize, clube: usi
 pub(crate) unsafe extern "C" fn comparar_main_national_team(nacao: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_MAIN_NATIONAL_TEAM)(nacao);
     let v = main_national_team(nacao);
-    PLACAR.registrar(r == v, || format!("main_national_team original={:x} rust={:x}", r, v));
+    PLACAR.record(r == v, || format!("main_national_team original={:x} rust={:x}", r, v));
     r
 }
 
@@ -1795,7 +1795,7 @@ pub(crate) unsafe extern "C" fn comparar_main_national_team(nacao: usize) -> usi
 pub(crate) unsafe extern "C" fn comparar_b_national_team(nacao: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_B_NATIONAL_TEAM)(nacao);
     let v = b_national_team(nacao);
-    PLACAR.registrar(r == v, || format!("b_national_team original={:x} rust={:x}", r, v));
+    PLACAR.record(r == v, || format!("b_national_team original={:x} rust={:x}", r, v));
     r
 }
 
@@ -1803,7 +1803,7 @@ pub(crate) unsafe extern "C" fn comparar_b_national_team(nacao: usize) -> usize 
 pub(crate) unsafe extern "C" fn comparar_is_second_national_team(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_SECOND_NATIONAL_TEAM)(clube);
     let v = is_second_national_team(clube);
-    PLACAR.registrar(r == v, || format!("is_second_national_team original={} rust={}", r, v));
+    PLACAR.record(r == v, || format!("is_second_national_team original={} rust={}", r, v));
     r
 }
 
@@ -1812,7 +1812,7 @@ pub(crate) unsafe extern "C" fn comparar_is_second_national_team(clube: usize) -
 pub(crate) unsafe extern "thiscall" fn comparar_aggregate_score(this: usize, l: i8, home: *mut i8, away: *mut i8, cl: *mut u8, first_leg: *mut u8, f3: *mut u8, bonus: u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> u8>(IDX_AGGREGATE_SCORE);
     let reg = [(home as usize, 1), (away as usize, 1), (cl as usize, 1), (first_leg as usize, 1), (f3 as usize, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, home, away, cl, first_leg, f3, bonus), || aggregate_score(this, l, home, away, cl, first_leg, f3, bonus));
-    PLACAR.registrar(igual && r == n, || format!("aggregate_score({}, {}) original={} {:x?} rust={} {:x?}", l, bonus, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, home, away, cl, first_leg, f3, bonus), || aggregate_score(this, l, home, away, cl, first_leg, f3, bonus));
+    PLACAR.record(igual && r == n, || format!("aggregate_score({}, {}) original={} {:x?} rust={} {:x?}", l, bonus, r, mo, n, mr));
     r
 }

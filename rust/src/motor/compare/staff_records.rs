@@ -10,7 +10,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_league_champions_record(this
         return o(this, clube, comp);
     }
     let t = read_usize(clube + club::MANAGER);
-    let notas = if t != 0 && read_usize(t + 0x69) != 0 { (read_usize(t + 0x69) + 8, 6) } else { (clube + club::REPUTATION, 2) };
+    let notas = if t != 0 && read_usize(t + staff::NON_PLAYER) != 0 { (read_usize(t + staff::NON_PLAYER) + 8, 6) } else { (clube + club::REPUTATION, 2) };
     compare_champion_update("add_league_champions_record", this, clube, notas, true, || o(this, clube, comp),
         || add_league_champions_record(this, clube, comp));
 }
@@ -39,9 +39,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_human_manager_record(this:
     } else {
         person
     };
-    let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, person),
+    let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, person),
         || clear_human_manager_record(this, person));
-    PLACAR.registrar(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", person, mo, mr));
+    PLACAR.record(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", person, mo, mr));
 }
 
 /// Comparer for `record_match_result` (comparison mode: see the header of motor.rs).
@@ -61,8 +61,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_match_result(this: usize,
             reg.push((r, 0xd2));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, m), || record_match_result(this, p, m));
-    PLACAR.registrar(igual, || format!("record_match_result(jogo {:#x}) original={:x?} rust={:x?}", p, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, m), || record_match_result(this, p, m));
+    PLACAR.record(igual, || format!("record_match_result(jogo {:#x}) original={:x?} rust={:x?}", p, mo, mr));
 }
 
 /// Comparer for `add_league_finish_records` (comparison mode: see the header of motor.rs).
@@ -80,21 +80,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_supporters_player_of_year_re
     if person == 0 || clube == 0 {
         return o(this, person, clube, a, b);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((clube + club::FAV_STAFF1, 0x18));
     let pref = read_usize(person + staff::STAFF_PREFERENCES);
     if pref != 0 {
-        reg.push((pref + 4, 0x18));
+        reg.push((pref + preferences::STAFF_FAVOURITE_CLUBS1, 0x18));
     }
-    let before = crate::comparacao::Memoria::ler(&reg);
+    let before = crate::comparison::MemorySnapshot::read(&reg);
     SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_supporters_player_of_year_record(this, person, clube, a, b)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_supporters_player_of_year_record(this, person, clube, a, b)));
     SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    before.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&reg);
+    before.write_back();
     o(this, person, clube, a, b);
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", person, clube, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&reg);
+    PLACAR.record(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", person, clube, mo, mr));
 }
 
 /// Comparer for `add_cup_runners_up_record` (comparison mode: see the header of motor.rs).
@@ -129,15 +129,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_manager_job_change(this: 
             reg.push((r, 0xd2));
         }
     }
-    let before = crate::comparacao::Memoria::ler(&reg);
+    let before = crate::comparison::MemorySnapshot::read(&reg);
     CUP_PLACED_CLUB_DRY_RUN = true;
     record_manager_job_change(this, manager, clube, contratado);
     CUP_PLACED_CLUB_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    before.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&reg);
+    before.write_back();
     o(this, manager, clube, contratado);
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", manager, clube, contratado as u8, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&reg);
+    PLACAR.record(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", manager, clube, contratado as u8, mo, mr));
 }
 
 /// Comparer for `add_team_of_year_record` (comparison mode: see the header of motor.rs).
@@ -149,7 +149,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_team_of_year_record(this: us
 pub(crate) unsafe extern "C" fn comparar_staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STAFF_RECORDS_COMPARE_CLUBS_BY_MANAGER_POINTS)(a, b);
     let n = staff_records_compare_clubs_by_manager_points(a, b);
-    PLACAR.registrar(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", read_u32_as_usize(a), read_u32_as_usize(b), r, n));
+    PLACAR.record(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", read_u32_as_usize(a), read_u32_as_usize(b), r, n));
     r
 }
 
@@ -164,9 +164,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_promotion_record(this: usize
         Some(r) => r,
         None => return o(this, clube, comp, weight),
     };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, comp, weight),
-        || crate::aleatorio::sem_contar(|| apply_promotion(this, clube, comp, weight, false)));
-    PLACAR.registrar(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, weight as u8 as i8, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, comp, weight),
+        || crate::rng::without_counting(|| apply_promotion(this, clube, comp, weight, false)));
+    PLACAR.record(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, weight as u8 as i8, mo, mr));
 }
 
 /// Comparer for `add_relegation_record` (comparison mode: see the header of motor.rs).
@@ -179,9 +179,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_relegation_record(this: usiz
         Some(r) => r,
         None => return o(this, clube, comp),
     };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, comp),
-        || crate::aleatorio::sem_contar(|| apply_relegation(this, clube, comp, false)));
-    PLACAR.registrar(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, comp),
+        || crate::rng::without_counting(|| apply_relegation(this, clube, comp, false)));
+    PLACAR.record(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
 }
 
 /// Comparer for `add_qualified_for_round_record` (comparison mode: see the header of motor.rs).
@@ -198,9 +198,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_qualified_for_round_record(t
     if r == 0 {
         return o(this, clube, comp, stage, round, weight);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, clube, comp, stage, round, weight),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, clube, comp, stage, round, weight),
         || record_qualification(this, clube, comp, stage, round, weight, false));
-    PLACAR.registrar(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, weight as u8 as i8, mo, mr));
+    PLACAR.record(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, weight as u8 as i8, mo, mr));
 }
 
 /// Comparer for `add_transfer_records` (comparison mode: see the header of motor.rs).
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_qualified_for_round_record(t
 pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_records(this: usize, t: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_TRANSFER_RECORDS);
     let (pessoa, _, vendedor, comprador) = transfer_parties(t);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     if read_usize(t + 4) != 0 {
         reg.push((read_usize(t + 4), 0xe));
@@ -224,9 +224,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_records(this: usize
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, t),
-        || crate::aleatorio::sem_contar(|| record_transfer(this, t, false)));
-    PLACAR.registrar(igual, || format!("add_transfer_records(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, t),
+        || crate::rng::without_counting(|| record_transfer(this, t, false)));
+    PLACAR.record(igual, || format!("add_transfer_records(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// Comparer for `add_knocked_out_record` (comparison mode: see the header of motor.rs).
@@ -262,7 +262,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_staff_records_daily_update(this:
         }
         ok &= certo;
     }
-    PLACAR.registrar(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, year, first));
+    PLACAR.record(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, year, first));
 }
 
 /// Comparer for `staff_records_end_season_for_nation` (comparison mode: see the header of motor.rs).
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nat
         let s = manager_record_at(this, k) + 0xba;
         plan[k as usize] != (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc))
     });
-    PLACAR.registrar(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
+    PLACAR.record(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
 }
 
 /// Comparer for `find_manager_of_the_month` (comparison mode: see the header of motor.rs).
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_manager_of_the_month(this: 
     }
     let r = o(this, indice);
     let n = find_manager_of_the_month(this, indice);
-    PLACAR.registrar(r == n, || format!("find_manager_of_the_month({}) original={:x} rust={:x}", indice, r, n));
+    PLACAR.record(r == n, || format!("find_manager_of_the_month({}) original={:x} rust={:x}", indice, r, n));
     r
 }
 
@@ -326,8 +326,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_manager_of_year_candidates(t
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_MANAGER_OF_YEAR_CANDIDATES);
     let k = (n as u16 as i16).max(0) as usize;
     let reg = [(clubs, 4 * k), (G_SUB_WEEKS_RESULT_DATE, 8), (0xae24aa, 1)];
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubs, n), || get_manager_of_year_candidates(this, clubs, n));
-    PLACAR.registrar(igual && r == c, || format!("get_manager_of_year_candidates({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, n), || get_manager_of_year_candidates(this, clubs, n));
+    PLACAR.record(igual && r == c, || format!("get_manager_of_year_candidates({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
     r
 }
 
@@ -351,8 +351,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_manager_record(this: usize, 
             reg.push((z, 0xd2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, person, create), || get_manager_record(this, person, create));
-    PLACAR.registrar(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", person, create, a, b, mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person, create), || get_manager_record(this, person, create));
+    PLACAR.record(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", person, create, a, b, mo, mr));
     a
 }
 
@@ -375,8 +375,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize
         return o(this, person);
     }
     let par = read_usize(this + 0xc).wrapping_add(read_usize(person).wrapping_mul(8));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(par, 8)], || o(this, person), || rewind_staff_history(this, person));
-    PLACAR.registrar(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", read_usize(person), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(par, 8)], || o(this, person), || rewind_staff_history(this, person));
+    PLACAR.record(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", read_usize(person), mo, mr));
 }
 
 /// Comparer for `add_year_award_record` (comparison mode: see the header of motor.rs).
@@ -389,18 +389,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_year_award_record(this: usiz
     if p == 0 || prize == 0 {
         return o(this, p, clube, prize, a4, a5, credito);
     }
-    let (t3d, t28) = (read_u8(p + 0x3d), read_u8(p + 0x28));
+    let (t3d, t28) = (read_u8(p + staff::JOB_FOR_CLUB), read_u8(p + staff::JOB_FOR_NATION));
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("add_year_award_record jogador");
+        crate::comparison::branch("add_year_award_record jogador");
         return o(this, p, clube, prize, a4, a5, credito);
     }
     let r = staff_records_manager_record(this, p);
     if r == 0 {
         return o(this, p, clube, prize, a4, a5, credito);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, prize, a4, a5, credito),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p, clube, prize, a4, a5, credito),
         || add_year_award(this, p, clube, prize, a4, a5, credito, false));
-    PLACAR.registrar(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(prize), mo, mr));
+    PLACAR.record(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(prize), mo, mr));
 }
 
 /// Comparer for `add_first_cap_record` (comparison mode: see the header of motor.rs).
@@ -418,24 +418,24 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_month_award_record(this: usi
     if p == 0 || prize == 0 {
         return o(this, p, clube, prize, a4, a5);
     }
-    let (t3d, t28) = (read_u8(p + 0x3d), read_u8(p + 0x28));
+    let (t3d, t28) = (read_u8(p + staff::JOB_FOR_CLUB), read_u8(p + staff::JOB_FOR_NATION));
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("add_month_award_record jogador");
+        crate::comparison::branch("add_month_award_record jogador");
         return o(this, p, clube, prize, a4, a5);
     }
     let r = staff_records_manager_record(this, p);
     if r == 0 {
         return o(this, p, clube, prize, a4, a5);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, prize, a4, a5),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p, clube, prize, a4, a5),
         || add_month_award_record_body(this, p, clube, prize, a4, a5, false));
-    PLACAR.registrar(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(prize), mo, mr));
+    PLACAR.record(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(prize), mo, mr));
 }
 
 /// Comparer for `clear_manager_record` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_manager_record(records: usize, id: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(IDX_CLEAR_MANAGER_RECORD);
     let r = friendly_manager_record(records, id);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 210)], || o(records, id), || clear_manager_record(records, id));
-    PLACAR.registrar(igual, || format!("clear_manager_record({}) {:x?} x {:x?}", *id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 210)], || o(records, id), || clear_manager_record(records, id));
+    PLACAR.record(igual, || format!("clear_manager_record({}) {:x?} x {:x?}", *id, mo, mr));
 }

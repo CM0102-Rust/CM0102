@@ -108,10 +108,10 @@ unsafe extern "thiscall" fn comparar_find_next_fixture(this: usize, pano: *mut u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(%%I0%%);
     let antes = (*pano, *pdia, *pfatia);
     let reg = [(pano as usize, 2), (pdia as usize, 2), (pfatia as usize, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg,
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg,
         || o(this, pano, pdia, pfatia, adiante, comp, fase, clube_a, clube_b, a9, a10, a11),
         || find_next_fixture(this, pano, pdia, pfatia, adiante, comp, fase, clube_a, clube_b, a9, a10, a11));
-    PLACAR.registrar(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         antes, adiante, comp, fase, clube_a, clube_b, r, n, mo, mr));
     r
 }
@@ -195,9 +195,9 @@ unsafe fn call_original_with_year(o: usize, this: usize, ano: u32) -> u32 {
 
 unsafe extern "thiscall" fn comparar_friendly_international_date_resolve(this: usize, ano: u32) -> u32 {
     let o = original_fn::<usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 11)], || call_original_with_year(o, this, ano),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 11)], || call_original_with_year(o, this, ano),
         || friendly_international_date_resolve(this, ano));
-    PLACAR.registrar(igual /* o eax é lixo de pilha: só a memória */, || format!("friendly_international_date_resolve({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    PLACAR.record(igual /* o eax é lixo de pilha: só a memória */, || format!("friendly_international_date_resolve({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         this, ano, r, n, mo, mr));
     r
 }

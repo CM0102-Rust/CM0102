@@ -1,7 +1,7 @@
 # Mutacoes da leva127 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva127.py --jogo 2001-10-01
 # O quarto campo e o ramo (marca ramo("...") no motor.rs): sem passagem na base, a mutacao e pulada.
 MUTACOES = [
-    ('t_fora', "if x < 0 || y < 0 || x >= 9 || y >= 12 {\n        crate::comparacao::ramo(\"contest fora do campo\");", "if x < 0 || y < 0 || x >= 8 || y >= 12 {\n        crate::comparacao::ramo(\"contest fora do campo\");", "contest fora do campo"),
+    ('t_fora', "if x < 0 || y < 0 || x >= 9 || y >= 12 {\n        crate::comparison::branch(\"contest fora do campo\");", "if x < 0 || y < 0 || x >= 8 || y >= 12 {\n        crate::comparison::branch(\"contest fora do campo\");", "contest fora do campo"),
     ('t_angulo', "            if d as i16 > 0xb4 {\n                d = 0x168 - d;", "            if d as i16 > 0xb3 {\n                d = 0x168 - d;"),
     ('t_vence', "if nota1 as i16 > nota0 as i16 {", "if nota1 as i16 >= nota0 as i16 {"),
     ('t_folego', "*w(wv, 0x35) = (*w(wv, 0x35)).wrapping_add(4);", "*w(wv, 0x35) = (*w(wv, 0x35)).wrapping_add(5);", "contest falta do vencedor"),

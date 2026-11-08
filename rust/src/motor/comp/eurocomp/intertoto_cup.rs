@@ -27,15 +27,6 @@ pub(crate) const INTERCONTINENTAL_CUP_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((0xa, 9, 0, 5), (1, 0xb, 0, 1, 2, 4), 0, (0, 3, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqp13: a Copa Intercontinental
 ];
 
-/// rule: the Intercontinental Cup (the European against the South American champion [inference]) is a single match on 1
-/// December, drawn on 10 October, venue 4 (Tokyo [inference]), category 6, tie-break 3
-/// Original: `WorldClubCup::create_round_table` (0x92b770, world_club_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x92b770 } (thiscall, ret 0x10, world_club_cup.cpp; a virtual +0x3c): `WorldClubCup::create_round_table(...)`:
-/// na fase −1, a rodada única; a caixa da linha 0x9a sem memória.
-pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table_92b770(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &INTERCONTINENTAL_CUP_ROUNDS, 0xad5848, 0x9a, "cqp_13 tabela da intercontinental")
-}
 
 
 /// A Copa Interamericana: ida e volta a partir de 26 de janeiro do ano seguinte (sorteio em 10 de outubro), 7 dias.
@@ -43,15 +34,6 @@ pub(crate) const INTERAMERICAN_CUP: [EngCcCupCupRound; 1] = [
     cql10r((0xa, 9, 0, 5), (0x1a, 0, 1, 2, 2, 0), 0, (0, 0, 3), 8, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)),
 ];
 
-/// rule: the Inter-American Cup is two-legged from 26 January of the following year (7 days), drawn on 10 October,
-/// category 8, two-leg tie-break 3
-/// Original: `InterAmerCup::create_round_table` (0x632340, inter_amer_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x632340 } (thiscall, ret 0x10, inter_amer_cup.cpp; a virtual +0x3c): `InterAmerCup::create_round_table(...)`:
-/// na fase −1, a rodada única; a caixa da linha 0x9a sem memória.
-pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table_632340(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &INTERAMERICAN_CUP, 0x9e9d94, 0x9a, "cqp_13 tabela da interamericana")
-}
 
 
 /// A Copa dos Campeões da CONCACAF: quartas (28/8), semifinal (1/9) e final (4/9) em jogo único, 8 times.
@@ -98,7 +80,7 @@ pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
     u[3].times.3 = (m + 0x89) as u16;
     let mut n = 0;
     if b > 0 {
-        crate::comparacao::ramo("cqq_10 preliminar da uefa");
+        crate::comparison::branch("cqq_10 preliminar da uefa");
         t[0].times = (b as u16, m as u16, b as u16, 0);
         n = 1;
     }
@@ -155,7 +137,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
         show_error_at(F, 0x17c);
         return (-1, 0);
     }
-    crate::comparacao::ramo("cqq_10 inscritos da intertoto");
+    crate::comparison::branch("cqq_10 inscritos da intertoto");
     let mut j: i16 = 0;
     while j < read_i16(this + 0x3e) {
         let c = read_u32_as_usize(v + j as usize * 4);
@@ -201,7 +183,7 @@ pub(crate) unsafe fn collect_club_list(this: usize, out: *mut usize, ativos: u32
         *out = 0;
         return 0;
     }
-    crate::comparacao::ramo("cqq_10 lista da intertoto");
+    crate::comparison::branch("cqq_10 lista da intertoto");
     let mut k: i16 = 0;
     let mut i: i16 = 0;
     while i < read_i16(this + 0x3e) {
@@ -269,10 +251,17 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: usize, uefa: usize) -> ([u
     (v, k)
 }
 
-/// rule: the winners of the Intertoto finals (up to three, in August) enter the UEFA Cup, in the last three places of
-/// its table (from its size minus 27 on) and in its entry book with status 4 [inference: entry through the Intertoto];
-/// then the UEFA predicted positions. Once a season, when the Intertoto ends; without the UEFA Cup, the error box.
-/// Every day, the cup update
+/// Daily Intertoto update: once a season, when the Intertoto ends, its final winners (up to three, in August) enter the
+/// UEFA Cup; every day, the cup update.
+///
+/// `IntertotoCup::update_for_date(today, stage)`, virtual +0x14 of the Intertoto. Once (+0xb2 = 0), when the cup has
+/// ended (virtual +0x10 with 0, 1: push 1; push 0; mov ecx, this -> thiscall, ret 8; the low byte): without the UEFA
+/// Cup, the box for line 0x29e; with it, each Intertoto team with +5 = 1 (the winners of the finals) goes, in order,
+/// into the places from +0x3e − 27 on of the UEFA Cup's table +0xa7 (the last three places; up to three: the club, +4
+/// and +5 zeroed) and into its entry book (+0x14, 6 bytes: the club and status 4 at +4 [inference: entry through the
+/// Intertoto]; +0x36 goes up); then the UEFA predicted positions (virtual +0x5c: mov ecx, uefa -> thiscall, ret 0),
+/// +0xb2 = 1 and the predicted positions once more (the original re-reads the UEFA Cup). Always, at the end, the cup
+/// update (0x51f890: push stage; push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `IntertotoCup::update_for_date` (0x633d40, intertoto_cup.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x633d40 } (thiscall, ret 8, intertoto_cup.cpp; a virtual +0x14 do Intertoto): `IntertotoCup::update_for_date(hoje,
@@ -301,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
                         }
                         let e = read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add((i as isize * 6) as usize);
                         if read_u8(e + 5) == 1 {
-                            crate::comparacao::ramo("cqi_10 vencedor na uefa");
+                            crate::comparison::branch("cqi_10 vencedor na uefa");
                             let s = read_u32_as_usize(uefa + 0xa7).wrapping_add((slot as isize * 6) as usize);
                             core::ptr::write_unaligned(s as *mut u32, read_u32_as_usize(e) as u32);
                             *((s + 4) as *mut u8) = 0;
@@ -338,10 +327,21 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
 // before: if +0xb2 goes from 0 to 1 with the UEFA Cup, its book (+0x14) gets the winners (intertoto_winners_for_uefa), in
 // order and with status 4, and +0x36 goes up as much; otherwise the book does not grow.
 
-/// rule: the winner of an Intertoto final gets the qualification record for the UEFA Cup (round 0xa, weight 60 to 100
-/// by round) and moves to the UEFA Cup; a club going through gets the next round record (weight round × 99 / (rounds −
-/// 1) + 1); a club knocked out (or losing the final) gets the knocked-out record (weight 20 to 80) and leaves European
-/// competition
+/// Records a club's Intertoto outcome in the staff records: the final winner qualifies for the UEFA Cup, a club going
+/// through gets the next round record, a club knocked out leaves European competition.
+///
+/// `IntertotoCup::update_staff_records_for_status(club, outcome, _, _, match, _)`, virtual +0x44 of the Intertoto;
+/// returns 0. Weight = 0x4bf850(low, high, match round +0x34, rounds +0x3c) (cdecl, 4 pushes; add esp, 0x10).
+///
+/// - 1 (won the final): the qualification record (0x86bdd0) for the UEFA Cup (the competition [0xae23d0] + 0x6b ×
+/// [0x9cf6f0]), stage 0, round 0xa, weight(0x3c, 0x64), and the club moves to the UEFA Cup (+0x1db = [0x9cf6f0]).
+///
+/// - 0 (went through a round): if the next round exists (+0x34 + 1 < +0x3c), the qualification record in the Intertoto
+/// (+4) with the match's stage +0x32, the +7 of the next round (+0xa3, 0x68 bytes) and the weight round × 99 / (rounds
+/// − 1) + 1 (only the low byte is incremented: inc al).
+///
+/// - 0xff or 2 (knocked out, or lost the final): the elimination record (0x86c000) in the Intertoto, stage 0, round
+/// +0x30 of the match, weight(0x14, 0x50), and the club leaves European competition (+0x1db = −1).
 /// Original: `IntertotoCup::update_staff_records_for_status` (0x633c10, intertoto_cup.cpp, thiscall, ret 0x18).
 ///
 /// [pt] { 0x633c10 } (thiscall, ret 0x18, intertoto_cup.cpp; a virtual +0x44 do Intertoto): `IntertotoCup::
@@ -360,7 +360,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
             let weight = scale_by_round(0x3c, 0x64, read_i16(jogo + 0x34), read_i16(this + cup::ROUND_COUNT) as u16 as u32);
             let uefa = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
             european_cup_add_qualified_record(clube, uefa, 0, 0xa, weight);
-            crate::comparacao::ramo("cqi_10 vencedor do intertoto");
+            crate::comparison::branch("cqi_10 vencedor do intertoto");
             core::ptr::write_unaligned((clube + club::EURO_FLAG) as *mut u32, read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
         }
         0 => {
@@ -384,7 +384,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
             let weight = scale_by_round(0x14, 0x50, read_i16(jogo + 0x34), read_i16(this + cup::ROUND_COUNT) as u16 as u32);
             // simplification: round +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
             european_cup_add_knocked_out_record(clube, read_u32_as_usize(this + 4), 0, core::ptr::read_unaligned((jogo + 0x30) as *const u16) as u32, weight);
-            crate::comparacao::ramo("cqi_10 caiu no intertoto");
+            crate::comparison::branch("cqi_10 caiu no intertoto");
             leave_euro_competition(clube); // cqi10: quem cai no Intertoto sai da competição europeia
         }
         _ => {}

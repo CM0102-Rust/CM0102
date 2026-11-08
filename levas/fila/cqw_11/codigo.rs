@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_selecoes(this: usize) -> 
             let s = selecao(rec);
             let id = cqw11_d(rec) as i32;
             if id != sede[0] && id != sede[1] && s != campeao {
-                crate::comparacao::ramo("cqw_11 selecao da eliminatoria");
+                crate::comparison::branch("cqw_11 selecao da eliminatoria");
                 cqw11_pd(cqw11_d(this + 0xef) + k as usize * 4, s);
                 k += 1;
             }
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn comparar_cqw11_eliminatoria_oceania_selecoes(this: u
                 cqw11_da_oceania(id) && id != cqw11_d(0x9cf530) && id != cqw11_d(0x9cf41c)
             })
             && v.windows(2).all(|w| cqw11_w(w[0] + 0x80) >= cqw11_w(w[1] + 0x80));
-        PLACAR.registrar(ok, || format!("cqw11_eliminatoria_oceania_selecoes({:#x}): {} seleções {:x?}", this, n, v));
+        PLACAR.record(ok, || format!("cqw11_eliminatoria_oceania_selecoes({:#x}): {} seleções {:x?}", this, n, v));
     }
     r
 }
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn cqw11_eliminatoria_oceania_final(this: usize) {
     if v == 0 {
         return show_error_at(0xad4afc, 0x3ce);
     }
-    crate::comparacao::ramo("cqw_11 final da oceania");
+    crate::comparison::branch("cqw_11 final da oceania");
     cqw11_pd(v, cqw11_d(linha(this, 0))); // cqw11: o campeão do primeiro grupo manda primeiro
     cqw11_pd(v + 4, cqw11_d(linha(cqw11_d(cqw11_d(this + 0xc)), 0)));
     let tabela_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqw11_d(cqw11_d(this) + 0x3c));
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn comparar_cqw11_eliminatoria_oceania_final(this: usiz
     }
     let t = cqw11_d(f + 0xa7);
     let lidos = if t != 0 { [cqw11_d(t), cqw11_d(t + 6)] } else { [0, 0] };
-    PLACAR.registrar(lidos == plano, || format!("cqw11_eliminatoria_oceania_final({:#x}): {:x?} plano {:x?}", this, lidos, plano));
+    PLACAR.record(lidos == plano, || format!("cqw11_eliminatoria_oceania_final({:#x}): {:x?} plano {:x?}", this, lidos, plano));
 }
 
 /// { 0x799a60 } (thiscall, ret 4, oceania_nations.cpp; quadro SEH só para o new da fase): `OceaniaNations::create_group_
@@ -253,7 +253,7 @@ unsafe extern "thiscall" fn comparar_cqw11_oceania_nacoes_segundo_grupo(this: us
         let mut a: Vec<usize> = if t != 0 { (0..3).map(|k| cqw11_d(t + k * 0x3b)).collect() } else { Vec::new() };
         a.sort_unstable();
         plano.sort_unstable();
-        PLACAR.registrar(f != 0 && cqw11_d(this + 0x30) == fase as usize && a == plano, || format!("cqw11_oceania_nacoes_segundo_grupo: {:x?} plano {:x?}", a, plano));
+        PLACAR.record(f != 0 && cqw11_d(this + 0x30) == fase as usize && a == plano, || format!("cqw11_oceania_nacoes_segundo_grupo: {:x?} plano {:x?}", a, plano));
     }
     r
 }

@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
     if cqq9_d(cqq9_d(this + 0xc) + 8) == 0 {
         return show_error_at(0x9eabc8, 0x25c);
     }
-    crate::comparacao::ramo("cqq_9 final");
+    crate::comparison::branch("cqq_9 final");
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
 }
 
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u32 {
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(1)); // cqq9: o ano seguinte da J1
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    crate::comparacao::ramo("cqq_9 virada da j1");
+    crate::comparison::branch("cqq_9 virada da j1");
     let erro = if virtual_(this, 0x8c) == 0 {
         0x1be
     } else if core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize) -> u32>(0x6634e0usize)(this) == 0 {
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize) {
     let ultima = antes >= (cqq9_d(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqq9_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn comparar_create_championship_final_stage(this: usize
         let (x, y) = (cqq9_d(l), cqq9_d(l + 6));
         cqq9_w(fase + 0x3e) == 2 && cqq9_d(fase + 4) == cqq9_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && cqq9_d(this + 0x30) == 2
     };
-    PLACAR.registrar(igual, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, cqq9_d(this + 0x30)));
+    PLACAR.record(igual, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, cqq9_d(this + 0x30)));
 }
 
 /// O comparador da virada: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
@@ -192,6 +192,6 @@ unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: usize) -> u32
     let antes = cqq9_w(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let depois = cqq9_w(this + 0x40);
-    PLACAR.registrar(depois == antes.wrapping_add(1) && cqq9_d(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, cqq9_d(this + 0x2c)));
+    PLACAR.record(depois == antes.wrapping_add(1) && cqq9_d(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, cqq9_d(this + 0x2c)));
     r
 }

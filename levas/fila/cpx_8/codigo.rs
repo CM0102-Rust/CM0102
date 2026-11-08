@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, tecnico: usi
     }
     let r = o(this, tecnico);
     let n = get_active_tactic(this, tecnico);
-    PLACAR.registrar(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", tecnico, r, n));
+    PLACAR.record(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", tecnico, r, n));
     r
 }
 
@@ -103,8 +103,8 @@ unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, reserva: u3
         return o(this, reserva, clube, tecnico);
     };
     let reg = [(human_manager_record_at(this, k) + 0x9a69, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, reserva, clube, tecnico), || select_tactic_slot(this, reserva, clube, tecnico));
-    PLACAR.registrar(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, reserva, clube, tecnico), || select_tactic_slot(this, reserva, clube, tecnico));
+    PLACAR.record(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
 }
 
 /// { 0x896660 } (thiscall, ret 8, tactics.cpp): `Tactics::get_club_tactic(clube, time)`, pela formação de cada jogo
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, time: u32
         if t9a01(gerente, cpx8_d(clube + 0xcf)) == 0 || opcao(gerente, 2, cpx8_d(clube + 0xcf)) != 0 {
             let escolher: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(0x5fbe20usize);
             let ativa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5fbd00usize);
-            crate::comparacao::ramo("cpx_8 tatica do humano");
+            crate::comparison::branch("cpx_8 tatica do humano");
             escolher(gerente, time, clube, cpx8_d(clube + 0xcf)); // cpx8: a vaga pelo time
             return ativa(gerente, cpx8_d(clube + 0xcf));
         }
@@ -134,10 +134,10 @@ unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, time: u32
     let indice = cpx8_w(cpx8_d(this + 0x601).wrapping_add(id.wrapping_mul(0x91) as usize)) as i32;
     let prontas = cpx8_i(this + 0x5fd);
     if indice < prontas { // cpx8: tática pronta ou própria
-        crate::comparacao::ramo("cpx_8 tatica pronta");
+        crate::comparison::branch("cpx_8 tatica pronta");
         cpx8_d(this + 0x5f9).wrapping_add(indice.wrapping_mul(0x18e3) as usize) // cpx8: o bloco pronto
     } else {
-        crate::comparacao::ramo("cpx_8 tatica propria");
+        crate::comparison::branch("cpx_8 tatica propria");
         cpx8_d(this + 0x5f1).wrapping_add(indice.wrapping_sub(prontas).wrapping_mul(0x18e3) as usize) // cpx8: o bloco próprio
     }
 }
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_get_club_tactic(this: usize, clube: usize, 
             reg.push((human_manager_record_at(gerente, k) + 0x9a69, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, time), || get_club_tactic(this, clube, time));
-    PLACAR.registrar(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", clube, time, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, time), || get_club_tactic(this, clube, time));
+    PLACAR.record(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", clube, time, r, mo, n, mr));
     r
 }

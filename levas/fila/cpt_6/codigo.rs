@@ -38,9 +38,9 @@ unsafe fn current_month() -> i32 {
 /// Dezembro na história `h` da nação `na` (`marca` = +0x121): com marca < 12, o ano corrente ganha
 /// reputação (+0x8e) × 0,05 × (12 − marca) × 3; a história anda um ano, o ano corrente e a marca zeram.
 unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], marca: &mut u8) {
-    crate::comparacao::ramo("cpt_6 dezembro");
+    crate::comparison::branch("cpt_6 dezembro");
     if (*marca as i8) < 0xc {
-        crate::comparacao::ramo("cpt_6 bonus de dezembro");
+        crate::comparison::branch("cpt_6 bonus de dezembro");
         h[5] = cpt6_w(na + 0x8e) as i32 as f64 * read_f64_at(0x967888) * (0xc - *marca as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro
     }
     h[0] = h[1];
@@ -158,7 +158,7 @@ unsafe extern "C" fn comparar_game_update_nation_coefficients() {
     if cpt6_b(0x9cd218) != 0 {
         erro = Some(format!("[0x9cd218] = {}", cpt6_b(0x9cd218)));
     }
-    PLACAR.registrar(erro.is_none(), || format!("game_update_nation_coefficients(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("game_update_nation_coefficients(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
 }
 
 /// { 0x5d6250 } (cdecl, game.cpp): `is_player_regen_day(dia)`: 1 nos dias 0, 80, 173 e 250 do ano (a busca das
@@ -173,7 +173,7 @@ unsafe extern "C" fn is_player_regen_day(dia: u32) -> u32 {
 unsafe extern "C" fn comparar_is_player_regen_day(dia: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(%%I1%%)(dia);
     let n = is_player_regen_day(dia);
-    PLACAR.registrar(r as u8 == n as u8, || format!("is_player_regen_day({}) {} x {}", dia as u16, r as u8, n as u8));
+    PLACAR.record(r as u8 == n as u8, || format!("is_player_regen_day({}) {} x {}", dia as u16, r as u8, n as u8));
     r
 }
 
@@ -197,6 +197,6 @@ unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
 unsafe extern "C" fn comparar_clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(a, b, min, max);
     let n = clamp_char_sum(a, b, min, max);
-    PLACAR.registrar(r as u16 == n as u16, || format!("clamp_char_sum({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));
+    PLACAR.record(r as u16 == n as u16, || format!("clamp_char_sum({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));
     r
 }

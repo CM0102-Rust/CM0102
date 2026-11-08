@@ -16,9 +16,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_record_scouted_clu
         return;
     }
     let regions = [(this, 4 + 0x32 * 0x1a2), (0xae24d0, 0x100), (0xb67a34, 4)];
-    let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, jogo, result),
+    let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, jogo, result),
         || player_search_record_scouted_club_match(this, jogo, result));
-    PLACAR.registrar(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", read_usize(this), jogo, mo, mr));
+    PLACAR.record(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", read_usize(this), jogo, mo, mr));
 }
 
 /// Comparer for `player_search_scout_match` (comparison mode: see the header of motor.rs).
@@ -31,14 +31,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_scout_match(this: 
     if jogo == 0 || result == 0 {
         return o(this, jogo, result, out);
     }
-    let state = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let before = (read_usize(this + 0x1a5), read_usize(this + 0x1a9));
     SCOUT_MATCH_DRY_RUN = true;
     SCOUT_MATCH_WOULD_REPORT = false;
-    let n = crate::aleatorio::sem_contar(|| player_search_scout_match(this, jogo, result, out));
+    let n = crate::rng::without_counting(|| player_search_scout_match(this, jogo, result, out));
     SCOUT_MATCH_DRY_RUN = false;
     let relata = SCOUT_MATCH_WOULD_REPORT;
-    state.escrever();
+    state.write_back();
     let previsto = if relata {
         let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
         let mut t = [0u32; 2];
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_scout_match(this: 
     };
     let r = o(this, jogo, result, out);
     let after = (read_i16(this + 0x1a7) as u16, read_i16(this + 0x1a5));
-    PLACAR.registrar(r == n && after == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
+    PLACAR.record(r == n && after == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
         this, jogo, r, n, before, previsto, after));
     r
 }
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_contains_player(this: usize, per
     }
     let r = o(this, person);
     let n = contains_player(this, person);
-    PLACAR.registrar(r == n, || format!("contains_player(busca {:x}, pessoa {:x}) original={} rust={}", this, person, r, n));
+    PLACAR.record(r == n, || format!("contains_player(busca {:x}, pessoa {:x}) original={} rust={}", this, person, r, n));
     r
 }
 
@@ -79,11 +79,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_find_or_claim_play
     if reservar == 0 {
         let r = o(this, person, reservar);
         let n = player_search_find_or_claim_player_slot(this, person, reservar);
-        PLACAR.registrar(r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, person, r, n));
+        PLACAR.record(r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, person, r, n));
         return r;
     }
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this + 4, 0x32 * 0x1a2)], || o(this, person, reservar), || player_search_find_or_claim_player_slot(this, person, reservar));
-    PLACAR.registrar(igual && r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, person, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this + 4, 0x32 * 0x1a2)], || o(this, person, reservar), || player_search_find_or_claim_player_slot(this, person, reservar));
+    PLACAR.record(igual && r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, person, r, n, igual));
     r
 }
 
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "C" fn comparar_player_search_get_club_target_rating(cl
     let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
     let r = o(clube, &mut bo, forcada);
     let n = player_search_get_club_target_rating(clube, &mut br, forcada);
-    PLACAR.registrar(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
+    PLACAR.record(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
     if !base.is_null() {
         *base = bo;
     }
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "C" fn comparar_player_search_get_club_target_rating(cl
 pub(crate) unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_PLAYER_SEARCH_SLOT_GET_MATCH_ENTRY)(this, i);
     let n = player_search_slot_get_match_entry(this, i);
-    PLACAR.registrar(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
     r
 }
 
@@ -118,7 +118,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_search_slot_get_match_ent
 pub(crate) unsafe extern "thiscall" fn comparar_player_search_slot_sum_goals(this: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(IDX_PLAYER_SEARCH_SLOT_SUM_GOALS)(this);
     let n = player_search_slot_sum_goals(this);
-    PLACAR.registrar(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
+    PLACAR.record(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
     r
 }
 
@@ -128,8 +128,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_slot_index(search: usize, sl
     if !(0..=9).contains(&slot) {
         return o(search, slot);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(search + 4, 1)], || o(search, slot), || set_slot_index(search, slot));
-    PLACAR.registrar(igual && ro == rr, || format!("set_slot_index({}) original={} rust={} {:x?} x {:x?}", slot, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(search + 4, 1)], || o(search, slot), || set_slot_index(search, slot));
+    PLACAR.record(igual && ro == rr, || format!("set_slot_index({}) original={} rust={} {:x?} x {:x?}", slot, ro, rr, mo, mr));
     ro
 }
 
@@ -139,8 +139,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_list_type(search: usize, kin
     if !(1..=4).contains(&kind) {
         return o(search, kind);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(search + 0xa, 1)], || o(search, kind), || set_list_type(search, kind));
-    PLACAR.registrar(igual && ro == rr, || format!("set_list_type({}) original={} rust={} {:x?} x {:x?}", kind, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(search + 0xa, 1)], || o(search, kind), || set_list_type(search, kind));
+    PLACAR.record(igual && ro == rr, || format!("set_list_type({}) original={} rust={} {:x?} x {:x?}", kind, ro, rr, mo, mr));
     ro
 }
 
@@ -149,8 +149,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_list_type(search: usize, kin
 /// [pt] Comparador: lado a lado pelo olheiro e as missões (+0x174 a +0x199; a 0x53e990 só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_set_scout(this: usize, scout: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_SCOUT);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x174, 0x25)], || o(this, scout), || set_scout(this, scout));
-    PLACAR.registrar(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", scout, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x174, 0x25)], || o(this, scout), || set_scout(this, scout));
+    PLACAR.record(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", scout, mo, mr));
     r
 }
 
@@ -160,8 +160,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_manager(search: usize, perso
     if person == 0 || *(person as *const i32) < *(G_STAFF_COUNT as *const i32) - 0x10 {
         return o(search, person);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(search, 4)], || o(search, person), || set_manager(search, person));
-    PLACAR.registrar(igual && ro == rr, || format!("set_manager original={} rust={} {:x?} x {:x?}", ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(search, 4)], || o(search, person), || set_manager(search, person));
+    PLACAR.record(igual && ro == rr, || format!("set_manager original={} rust={} {:x?} x {:x?}", ro, rr, mo, mr));
     ro
 }
 
@@ -174,9 +174,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize
         return o(this, clube, nacao, regiao, comp, base, opponent);
     }
     let reg = [(clube as usize, 4), (nacao as usize, 4), (regiao as usize, 1), (comp as usize, 4), (base as usize, 4), (opponent as usize, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, clube, nacao, regiao, comp, base, opponent),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, clube, nacao, regiao, comp, base, opponent),
         || get_scout_assignment(this, clube, nacao, regiao, comp, base, opponent));
-    PLACAR.registrar(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
 
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_scout_covers_nation(this: usize, nacao: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCOUT_COVERS_NATION);
     let reg = [(this + 0x18c, 0x15)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao), || scout_covers_nation(this, nacao));
-    PLACAR.registrar(igual && r == n, || format!("scout_covers_nation(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nacao), || scout_covers_nation(this, nacao));
+    PLACAR.record(igual && r == n, || format!("scout_covers_nation(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }

@@ -86,7 +86,7 @@ unsafe fn cqw5_supercopa_asiatica_corpo(this: usize, ano: u32, dono: usize) -> u
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqw_5 supercopa_asiatica nova");
+    crate::comparison::branch("cqw_5 supercopa_asiatica nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x410a50usize);
     let r = f(this);
     if r < 0 {
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn cqw5_supercopa_asiatica(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqw5_supercopa_asiatica(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x9676c8, &CQW5_CAMPOS_SUPERCOPA_ASIATICA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqw5_supercopa_asiatica({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqw5_supercopa_asiatica({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -150,7 +150,7 @@ unsafe fn cqw5_copa_interamericana_corpo(this: usize, ano: u32, dono: usize) -> 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqw_5 copa_interamericana nova");
+    crate::comparison::branch("cqw_5 copa_interamericana nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x632480usize);
     let r = f(this);
     if r < 0 {
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn cqw5_copa_interamericana(this: usize, ano: u32, dono
 unsafe extern "thiscall" fn comparar_cqw5_copa_interamericana(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x96bad8, &CQW5_CAMPOS_COPA_INTERAMERICANA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqw5_copa_interamericana({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqw5_copa_interamericana({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -207,7 +207,7 @@ unsafe fn cqw5_copa_mercosul_corpo(this: usize, ano: u32, dono: usize) -> usize 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqw_5 copa_mercosul nova");
+    crate::comparison::branch("cqw_5 copa_mercosul nova");
     cqw5_p16(this + 0xd9, 0x28);
     cqw5_p8(this + 0x44, 0xff);
     cqw5_p32(this + 0x30, 0xffffffff);
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn cqw5_copa_mercosul(this: usize, ano: u32, dono: usiz
 unsafe extern "thiscall" fn comparar_cqw5_copa_mercosul(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x968b40, &CQW5_CAMPOS_COPA_MERCOSUL, false);
-    PLACAR.registrar(erro.is_none(), || format!("cqw5_copa_mercosul({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqw5_copa_mercosul({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -268,7 +268,7 @@ unsafe fn cqw5_jogo_das_estrelas_corpo(this: usize, ano: u32, dono: usize) -> us
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqw_5 jogo_das_estrelas nova");
+    crate::comparison::branch("cqw_5 jogo_das_estrelas nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x90a540usize);
     let r = f(this);
     if r < 0 {
@@ -299,6 +299,6 @@ unsafe extern "thiscall" fn cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: 
 unsafe extern "thiscall" fn comparar_cqw5_jogo_das_estrelas(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%)(this, ano, dono);
     let erro = cqw5_plano(this, r, ano, dono, 0x9708f8, &CQW5_CAMPOS_JOGO_DAS_ESTRELAS, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqw5_jogo_das_estrelas({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqw5_jogo_das_estrelas({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

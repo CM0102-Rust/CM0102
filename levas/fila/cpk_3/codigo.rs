@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn trigger_relegation_clauses(this: usize, clube: usize
             let p = cpk3_d(c + 0xd7 + k * 4);
             let contrato = contract_with_relegation_clause(this, c, p);
             if contrato != 0 {
-                crate::comparacao::ramo("cpk_3 clausula de rebaixamento");
+                crate::comparison::branch("cpk_3 clausula de rebaixamento");
                 *((contrato + 0x1f) as *mut u8) = 2; // a cláusula acionada
                 noticia(cpk3_d(0xde1f54), p, liga, 3, contrato);
             }
@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn remove_contract_offer(this: usize, pessoa: *const u3
     if e == 0 {
         return;
     }
-    crate::comparacao::ramo("cpk_3 tirar oferta de contrato");
+    crate::comparison::branch("cpk_3 tirar oferta de contrato");
     let reserva = cpk3_d(e + 0x63);
     if reserva as i32 != -1 {
         let devolver: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x7a81a0usize);
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn is_player_suspended(this: usize, jogador: usize, com
     if b == 0 || julgar(b, jogador, 0, extra, partida) == 0 { // sem a suspensão da competição
         return 0;
     }
-    crate::comparacao::ramo("cpk_3 suspenso pela competicao");
+    crate::comparison::branch("cpk_3 suspenso pela competicao");
     let clube = cpk3_d(jogador + 0x39);
     if clube != 0 {
         let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn comparar_trigger_relegation_clauses(this: usize, clu
     }
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, clube, liga);
     let fora: Vec<usize> = alvos.iter().copied().filter(|&x| *((x + 0x1f) as *const u8) != 2).collect();
-    PLACAR.registrar(fora.is_empty(), || format!("trigger_relegation_clauses({:x}) {} contratos, sem acionar {:x?}", clube, alvos.len(), fora));
+    PLACAR.record(fora.is_empty(), || format!("trigger_relegation_clauses({:x}) {} contratos, sem acionar {:x?}", clube, alvos.len(), fora));
 }
 
 /// Comparador: a lista esperada (sem a primeira oferta da pessoa ao clube) e as pendentes antes; a original tira (e
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_remove_contract_offer(this: usize, pessoa: 
     let pendentes = if alvo.is_some() { (*n).wrapping_sub(1) } else { *n };
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(%%I1%%)(this, pessoa, clube);
     let depois = list_items_capped(l);
-    PLACAR.registrar(depois == esperado && *n == pendentes, || format!("remove_contract_offer({}, {}) itens {} (esperava {}), pendentes {} (esperava {})", *pessoa, *clube, depois.len(), esperado.len(), *n, pendentes));
+    PLACAR.record(depois == esperado && *n == pendentes, || format!("remove_contract_offer({}, {}) itens {} (esperava {}), pendentes {} (esperava {})", *pessoa, *clube, depois.len(), esperado.len(), *n, pendentes));
 }
 
 /// Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_is_player_suspended(this: usize, jogador: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(%%I2%%);
     let clube = if jogador != 0 { cpk3_d(jogador + 0x39) } else { 0 };
     let regioes: &[(usize, usize)] = if clube != 0 { &[(clube + 0x1e0, 80)] } else { &[] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(this, jogador, comp, extra, partida), || is_player_suspended(this, jogador, comp, extra, partida));
-    PLACAR.registrar(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", jogador, *comp, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regioes, || o(this, jogador, comp, extra, partida), || is_player_suspended(this, jogador, comp, extra, partida));
+    PLACAR.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", jogador, *comp, r, n, mo, mr));
     r
 }

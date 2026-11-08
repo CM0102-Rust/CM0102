@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this:
     let last = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == if last { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    PLACAR.record(after == if last { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `con_merc_cup_select_invited_clubs` (comparison mode: see the header of motor.rs).
@@ -28,14 +28,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_club
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_SELECT_INVITED_CLUBS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| select_invited_clubs(this));
+        let r = crate::rng::without_counting(|| select_invited_clubs(this));
         lr.set(read_u32_as_usize(this + 0xee));
         write_u32_from_usize(this + 0xee, lo.get());
         r
@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_club
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    PLACAR.record(igual && a == b && list, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(thi
             && stages != 0
             && (0..3).all(|g| read_u32_as_usize(stages + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 2;
-        PLACAR.registrar(ok, || format!("con_merc_cup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("con_merc_cup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_first_group_
         }
     }
     let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    PLACAR.registrar(same, || format!("con_merc_cup_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    PLACAR.record(same, || format!("con_merc_cup_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_group_stage(
         a.sort_unstable();
         plan.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
-        PLACAR.registrar(ok, || format!("con_merc_cup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        PLACAR.record(ok, || format!("con_merc_cup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
     }
     r
 }

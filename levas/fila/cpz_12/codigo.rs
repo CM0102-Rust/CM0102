@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn add_players_sold(this: usize, baixo: u32, alto: u32)
     fin_prm_add_i64(this + 0x78, v);
     fin_prm_add_i64(this + 0x118, v);
     if v != 0 {
-        crate::comparacao::ramo("cpz_12 venda recebida"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_12 venda recebida"); // só valor diferente de zero muda o saldo
     }
     fin_prm_add_i64(this, v); // cpz12: a venda entra no saldo
 }
@@ -32,8 +32,8 @@ unsafe extern "thiscall" fn add_players_sold(this: usize, baixo: u32, alto: u32)
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_add_players_sold(this: usize, baixo: u32, alto: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I0%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, baixo, alto), || add_players_sold(this, baixo, alto));
-    PLACAR.registrar(igual, || format!("add_players_sold(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, baixo, alto), || add_players_sold(this, baixo, alto));
+    PLACAR.record(igual, || format!("add_players_sold(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
 }
 
 /// { 0x599890 } (thiscall, ret 8, finance.cpp): `Finance::pay_players_bought(valor)` (valor de 64 bits), pelo pagamento
@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn pay_players_bought(this: usize, baixo: u32, alto: u3
     fin_prm_add_i64(this + 0x70, v);
     fin_prm_add_i64(this + 0x110, v);
     if v != 0 {
-        crate::comparacao::ramo("cpz_12 compra paga"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_12 compra paga"); // só valor diferente de zero muda o saldo
     }
     fin_prm_add_i64(this, v.wrapping_neg()); // cpz12: a compra sai do saldo
 }
@@ -52,8 +52,8 @@ unsafe extern "thiscall" fn pay_players_bought(this: usize, baixo: u32, alto: u3
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_players_bought(this: usize, baixo: u32, alto: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I1%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, baixo, alto), || pay_players_bought(this, baixo, alto));
-    PLACAR.registrar(igual, || format!("pay_players_bought(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, baixo, alto), || pay_players_bought(this, baixo, alto));
+    PLACAR.record(igual, || format!("pay_players_bought(fin {:#x}, {}) original={:x?} rust={:x?}", this, i64_from_halves(baixo, alto), mo, mr));
 }
 
 /// { 0x5998e0 } (thiscall, ret 4, finance.cpp): `Finance::pay_sign_on_fee(valor)`, pela oferta de contrato aceita
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, valor: i32) {
     fin_prm_add_i32(this + 0x13c, valor);
     fin_prm_add_i32(this + 0x9c, valor);
     if valor != 0 {
-        crate::comparacao::ramo("cpz_12 luvas pagas"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_12 luvas pagas"); // só valor diferente de zero muda o saldo
     }
     fin_prm_add_i64(this, (valor as i64).wrapping_neg()); // cpz12: as luvas saem do saldo
 }
@@ -71,6 +71,6 @@ unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, valor: i32) {
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_sign_on_fee(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_sign_on_fee(this, valor));
-    PLACAR.registrar(igual, || format!("pay_sign_on_fee(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_sign_on_fee(this, valor));
+    PLACAR.record(igual, || format!("pay_sign_on_fee(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }

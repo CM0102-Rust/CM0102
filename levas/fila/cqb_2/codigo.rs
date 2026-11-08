@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
                 if forte(pres, ficha) && cqb2_c(pres + 0x57) > 0xf && cqb2_c(ficha + 0x20) > 0xf {
                     read_f64_at(0x96a740)
                 } else {
-                    crate::comparacao::ramo("cqb_2 divisor da band 0 baixa");
+                    crate::comparison::branch("cqb_2 divisor da band 0 baixa");
                     read_f64_at(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
                 }
             } else if rep < 0x186a {
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
     let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
     let valor;
     if pres != 0 && ficha != 0 {
-        crate::comparacao::ramo("cqb_2 com a ficha");
+        crate::comparison::branch("cqb_2 com a ficha");
         let r1 = cpv6_sortear(match_pl_ftol(read_f64_at(0x968dd8) / div)); // cqb2: o sorteio com a ficha
         let r2 = cpv6_sortear(cqb2_c(ficha + 0xf) as i32);
         if r2 <= r1 {
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
         }
         valor = v;
     } else {
-        crate::comparacao::ramo("cqb_2 sem a ficha");
+        crate::comparison::branch("cqb_2 sem a ficha");
         let r = cpv6_sortear(match_pl_ftol(read_f64_at(0x96a728) / div)); // cqb2: o sorteio sem a ficha
         if rep as i32 <= r {
             return 0;
@@ -188,16 +188,16 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
 /// tipo da notícia e a marca +0x82 dependem da verba, e os sorteios depois dela também).
 unsafe fn compare_rare_finance_event(nome: &str, fin: usize, extras: &[(usize, usize)], conferir: &[usize], original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let mut regioes = vec![(fin, 0x167)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    regioes.extend(crate::rng::STATE_REGIONS);
     regioes.extend_from_slice(extras);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     RARE_FINANCE_EVENT_DRY_RUN = true;
-    let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(copia));
+    let n = crate::rng::pause_trace(|| crate::rng::without_counting(copia));
     RARE_FINANCE_EVENT_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let igual = if r == 0 && n == 0 {
         mo == mr
     } else {
@@ -205,7 +205,7 @@ unsafe fn compare_rare_finance_event(nome: &str, fin: usize, extras: &[(usize, u
         let campos = r == n && a[..8] == b[..8] && a[0xb4..0xb8] == b[0xb4..0xb8] && a[0x154..0x158] == b[0x154..0x158] && a[0x165] == b[0x165];
         campos && conferir.iter().all(|&k| mo.0[3 + k].1 == mr.0[3 + k].1)
     };
-    PLACAR.registrar(igual, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", nome, fin, r, mo, n, mr));
+    PLACAR.record(igual, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", nome, fin, r, mo, n, mr));
     r
 }
 
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: u
     if r as f64 >= fator {
         return 0;
     }
-    crate::comparacao::ramo("cqb_2 troca do presidente");
+    crate::comparison::branch("cqb_2 troca do presidente");
     let (lo, _) = balance_halves(fin);
     let mut v = (cpv6_w(clube + 0x80) as i32).wrapping_add(1000).wrapping_mul(1000).wrapping_sub(lo as i32);
     if v > 0x2625a00 {
@@ -328,6 +328,6 @@ unsafe extern "thiscall" fn pay_other_costs(this: usize, valor: i32) {
 /// Comparador da 0x5999e0: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_other_costs(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_other_costs(this, valor));
-    PLACAR.registrar(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_other_costs(this, valor));
+    PLACAR.record(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }

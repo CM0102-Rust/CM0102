@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, fase: u
         copia(&mut d, &mut t2, r);
         if f < 10 { 2 } else { 3 }
     };
-    crate::comparacao::ramo("cqh_4 tabela das rodadas");
+    crate::comparison::branch("cqh_4 tabela das rodadas");
     for &(i, dia, mes, anos, semana) in GROUP_STAGE_DATES[metade].iter() {
         data(t, i, dia, mes, anos, semana, 2, ano, 0);
     }
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn comparar_european_cup_create_round_table(this: usize
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(
         &reg,
         || o(this, fase, rodadas, id, liga),
         || european_cup_create_round_table(this, fase, &mut r2, &mut i2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }),
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn comparar_european_cup_create_round_table(this: usize
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("european_cup_create_round_table({}): saídas {} tabela {}", f, saidas, tabela));
+    PLACAR.record(igual && saidas && tabela, || format!("european_cup_create_round_table({}): saídas {} tabela {}", f, saidas, tabela));
     a
 }
 
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn set_club_season_expectations(this: usize) {
     let expectativas: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a3770usize);
     let mut i = 0i16;
     while i < cqh4l_w(this + 0x3e) {
-        crate::comparacao::ramo("cqh_4 expectativa do clube");
+        crate::comparison::branch("cqh_4 expectativa do clube");
         let clube = cqh4l_d(cqh4l_d(this + 0xb1) + i as usize * 0x3b);
         expectativas(cqh4l_d(0xb67a44), clube, 1); // cqh4: com a notícia
         i += 1; // cqh4: o próximo clube
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, clube: usize
         return;
     }
     if humano(clube, 1, 1, 0, 0) != 0 {
-        crate::comparacao::ramo("cqh_4 técnico sai");
+        crate::comparison::branch("cqh_4 técnico sai");
         tirar(cqh4l_d(0xb67a44), clube, 1, 7, 0);
     }
 }
@@ -158,5 +158,5 @@ unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, clube: usize
 unsafe extern "thiscall" fn comparar_relegate_club_to_division(this: usize, clube: usize, divisao: usize, x: u32) {
     let antiga = cqh4l_d(clube + 0x57);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, divisao, x);
-    PLACAR.registrar(cqh4l_d(clube + 0x57) == divisao && cqh4l_d(clube + 0x5b) == antiga, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", cqh4l_d(clube + 0x57), cqh4l_d(clube + 0x5b)));
+    PLACAR.record(cqh4l_d(clube + 0x57) == divisao && cqh4l_d(clube + 0x5b) == antiga, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", cqh4l_d(clube + 0x57), cqh4l_d(clube + 0x5b)));
 }

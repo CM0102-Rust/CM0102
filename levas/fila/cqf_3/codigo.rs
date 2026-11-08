@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
         let fim = |c: usize| core::ptr::read_unaligned((c + 0x2f) as *const u16) as u32;
         if x > read_f64_at(0x968df8) || (atual != 0 && cqf3_b(atual + 0x4f) & 0xf0 == 0x60) {
             if fim(c) > ano as u32 + 1 {
-                crate::comparacao::ramo("cqf_3 fim no ano que vem");
+                crate::comparison::branch("cqf_3 fim no ano que vem");
                 cqf3_pw(c + 0x2f, ano.wrapping_add(1)); // cqf3: o fim no ano que vem
                 cqf3_pd(c + 0xc, match_pl_ftol(cqf3_i(c + 0xc) as f64 * read_f64_at(0x9689c0)) as u32);
             }
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
             if !feito && total > limit {
                 let q = limit / semanas;
                 if (q as f64) < teto {
-                    crate::comparacao::ramo("cqf_3 teto pelo total");
+                    crate::comparison::branch("cqf_3 teto pelo total");
                     teto = q as f64; // cqf3: o teto pelo total
                 }
             }
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
         return 0;
     }
     if w > teto {
-        crate::comparacao::ramo("cqf_3 acima do teto");
+        crate::comparison::branch("cqf_3 acima do teto");
         let den = if read_f64_at(0x967890) > teto { read_f64_at(0x967890) } else { teto };
         let razao = w / den;
         cqf3_pd(c + 8, match_pl_ftol(cqf3_i(c + 8) as f64 * razao) as u32);
@@ -330,15 +330,15 @@ unsafe extern "thiscall" fn comparar_contract_manager_offer_contract(this: usize
     if saida == 0 {
         return o(this, pessoa, clube, saida, vaga, fator, modo); // ponytail: só a original
     }
-    let est = crate::aleatorio::REGIOES_DO_ESTADO;
+    let est = crate::rng::STATE_REGIONS;
     let regioes = [(saida, 0x50usize), (0xae1080usize, 4usize), est[0], est[1]];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes,
         || o(this, pessoa, clube, saida, vaga, fator, modo),
-        || crate::aleatorio::sem_contar(|| contract_manager_offer_contract(this, pessoa, clube, saida, vaga, fator, modo)));
+        || crate::rng::without_counting(|| contract_manager_offer_contract(this, pessoa, clube, saida, vaga, fator, modo)));
     // ponytail: o STAFF_CONTRACT local da original não tem valor em +0x38..+0x39 (do dword +0x36), +0x44 e no nibble
     // baixo de +0x4f (nem a 0x85e410 nem a 0x85fc50 os gravam: sobra de pilha, copiada para a saída); a cópia deixa 0
     // (montada em memória zerada). A comparação ignora esses bits.
-    let sem_sobra = |m: &crate::comparacao::Memoria| {
+    let sem_sobra = |m: &crate::comparison::MemorySnapshot| {
         let mut v = m.0[0].1.clone();
         v[0x38] = 0;
         v[0x39] = 0;
@@ -347,7 +347,7 @@ unsafe extern "thiscall" fn comparar_contract_manager_offer_contract(this: usize
         v
     };
     let igual = igual || (sem_sobra(&mo) == sem_sobra(&mr) && mo.0[1..] == mr.0[1..]);
-    PLACAR.registrar(igual && r == n, || format!(
+    PLACAR.record(igual && r == n, || format!(
         "contract_manager_offer_contract(pessoa {:#x}, clube {:#x}, vaga {}, fator {}, modo {}): original {} rust {}, memória {:x?} x {:x?}",
         pessoa, clube, vaga, fator, modo, r, n, mo, mr));
     r

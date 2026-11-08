@@ -25,20 +25,20 @@ unsafe extern "thiscall" fn offer_slot(tabela: usize, k: i32) -> usize {
 unsafe extern "thiscall" fn comparar_set_agreed_contract_flag(gerente: usize, id: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I0%%);
     let a = staff_flags_ptr(gerente, id) as usize;
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(a, 1)], || o(gerente, id), || set_agreed_contract_flag(gerente, id));
-    PLACAR.registrar(igual, || format!("set_agreed_contract_flag({}) {:x?} x {:x?}", *id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 1)], || o(gerente, id), || set_agreed_contract_flag(gerente, id));
+    PLACAR.record(igual, || format!("set_agreed_contract_flag({}) {:x?} x {:x?}", *id, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_clear_agreed_contract_flag(gerente: usize, id: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(%%I1%%);
     let a = staff_flags_ptr(gerente, id) as usize;
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(a, 1)], || o(gerente, id), || clear_agreed_contract_flag(gerente, id));
-    PLACAR.registrar(igual, || format!("clear_agreed_contract_flag({}) {:x?} x {:x?}", *id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 1)], || o(gerente, id), || clear_agreed_contract_flag(gerente, id));
+    PLACAR.record(igual, || format!("clear_agreed_contract_flag({}) {:x?} x {:x?}", *id, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_offer_slot(tabela: usize, k: i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(tabela, k);
     let n = offer_slot(tabela, k);
-    PLACAR.registrar(r == n, || format!("offer_slot({}) original={:#x} rust={:#x}", k, r, n));
+    PLACAR.record(r == n, || format!("offer_slot({}) original={:#x} rust={:#x}", k, r, n));
     r
 }

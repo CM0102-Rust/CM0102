@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn get_category(noticia: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_get_finable_story_kind(midia: usize, jogador: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(%%I0%%)(midia, jogador);
     let n = get_finable_story_kind(midia, jogador);
-    PLACAR.registrar(r == n, || format!("get_finable_story_kind original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("get_finable_story_kind original={} rust={}", r, n));
     r
 }
 
@@ -123,9 +123,9 @@ unsafe extern "thiscall" fn comparar_choose_injury_type(lesoes: usize, categoria
     // cache na mesma ordem da original, e os dois lados do lado_a_lado acham o cache cheio
     let atual: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     atual(lesoes, jogador);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO,
-        || o(lesoes, categoria, gravidade, jogador), || crate::aleatorio::sem_contar(|| choose_injury_type(lesoes, categoria, gravidade, jogador)));
-    PLACAR.registrar(igual && r == n, || format!("choose_injury_type({}, {}) original={} rust={} sorteio igual={}", categoria, gravidade, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS,
+        || o(lesoes, categoria, gravidade, jogador), || crate::rng::without_counting(|| choose_injury_type(lesoes, categoria, gravidade, jogador)));
+    PLACAR.record(igual && r == n, || format!("choose_injury_type({}, {}) original={} rust={} sorteio igual={}", categoria, gravidade, r, n, igual));
     r
 }
 
@@ -137,6 +137,6 @@ unsafe extern "thiscall" fn comparar_get_category(noticia: usize) -> u32 {
     }
     let r = o(noticia);
     let n = get_category(noticia);
-    PLACAR.registrar(r == n, || format!("get_category({}) original={:x} rust={:x}", t, r, n));
+    PLACAR.record(r == n, || format!("get_category({}) original={:x} rust={:x}", t, r, n));
     r
 }

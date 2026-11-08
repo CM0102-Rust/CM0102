@@ -95,7 +95,7 @@ unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
 unsafe extern "C" fn comparar_comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(a, b);
     let n = comp_util_get_league_clash_type(a, b);
-    PLACAR.registrar(r == n, || format!("comp_util_get_league_clash_type({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("comp_util_get_league_clash_type({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -150,7 +150,7 @@ unsafe extern "C" fn comp_util_get_club_strength_score(clube: usize) -> i32 {
 unsafe extern "C" fn comparar_comp_util_get_club_strength_score(clube: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> i32>(%%I1%%)(clube);
     let n = comp_util_get_club_strength_score(clube);
-    PLACAR.registrar(r == n, || format!("comp_util_get_club_strength_score({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("comp_util_get_club_strength_score({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -193,7 +193,7 @@ unsafe extern "C" fn comparar_comp_util_get_latest_placed_club(comp: usize, luga
     }
     let n = (*(0xae237c as *const i32)).max(0) as usize;
     let reg = [(*(0xae23d4 as *const usize), 0x1a * n)];
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(comp, lugar), || comp_util_get_latest_placed_club(comp, lugar));
-    PLACAR.registrar(igual && r == x, || format!("comp_util_get_latest_placed_club({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, lugar as u8, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(comp, lugar), || comp_util_get_latest_placed_club(comp, lugar));
+    PLACAR.record(igual && r == x, || format!("comp_util_get_latest_placed_club({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, lugar as u8, r, x, mo, mr));
     r
 }

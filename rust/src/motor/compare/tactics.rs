@@ -16,8 +16,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_stored_taker(this: usize, clube:
     if k != -1 {
         reg.push(((*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4), 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, kind, side, human), || stored_taker(this, clube, kind, side, human));
-    PLACAR.registrar(igual && r == n, || format!("stored_taker(tipo {} lado {}) original={:#x} rust={:#x} {:x?} x {:x?}", t, l, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, kind, side, human), || stored_taker(this, clube, kind, side, human));
+    PLACAR.record(igual && r == n, || format!("stored_taker(tipo {} lado {}) original={:#x} rust={:#x} {:x?} x {:x?}", t, l, r, n, mo, mr));
     r
 }
 
@@ -34,8 +34,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_store_instructions(this: usize, 
     if k != -1 {
         reg.push(((*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 2), 80));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, person, usar, volta), || store_instructions(this, clube, person, usar, volta));
-    PLACAR.registrar(igual && r == n, || format!("store_instructions(usar {} volta {}) original={} rust={} {:x?} x {:x?}", usar, volta, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, person, usar, volta), || store_instructions(this, clube, person, usar, volta));
+    PLACAR.record(igual && r == n, || format!("store_instructions(usar {} volta {}) original={} rust={} {:x?} x {:x?}", usar, volta, r, n, mo, mr));
     r
 }
 
@@ -46,8 +46,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_read_tactics_row(this: usize, cl
         return o(this, clube, target, human);
     }
     let reg = tactics_row_regions(this, clube, target as usize, human);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, target, human), || read_tactics_row(this, clube, target, human));
-    PLACAR.registrar(igual && r == n, || format!("read_tactics_row(humano {}) original={} rust={} {:x?} x {:x?}", human, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, target, human), || read_tactics_row(this, clube, target, human));
+    PLACAR.record(igual && r == n, || format!("read_tactics_row(humano {}) original={} rust={} {:x?} x {:x?}", human, r, n, mo, mr));
     r
 }
 
@@ -58,8 +58,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_write_tactics_row(this: usize, c
         return o(this, clube, source, human);
     }
     let reg = tactics_row_regions(this, clube, source as usize, human);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, source, human), || write_tactics_row(this, clube, source, human));
-    PLACAR.registrar(igual && r == n, || format!("write_tactics_row(humano {}) original={} rust={} {:x?} x {:x?}", human, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, source, human), || write_tactics_row(this, clube, source, human));
+    PLACAR.record(igual && r == n, || format!("write_tactics_row(humano {}) original={} rust={} {:x?} x {:x?}", human, r, n, mo, mr));
     r
 }
 
@@ -73,8 +73,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_tactic_result(this: usize
         return o(this, jogo);
     }
     let reg = [(tactic_stats_row(this, read_usize(jogo + 0x1c)), 0x28), (tactic_stats_row(this, read_usize(jogo + 0x20)), 0x28)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || record_tactic_result(this, jogo));
-    PLACAR.registrar(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo), || record_tactic_result(this, jogo));
+    PLACAR.record(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
     r
 }
 
@@ -88,7 +88,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_captain(this: usize, clube: 
     }
     let r = o(this, clube, team);
     let n = get_captain(this, clube, team);
-    PLACAR.registrar(r == n, || format!("get_captain(clube {:x}, time {}) original={:x} rust={:x}", clube, team, r, n));
+    PLACAR.record(r == n, || format!("get_captain(clube {:x}, time {}) original={:x} rust={:x}", clube, team, r, n));
     r
 }
 
@@ -107,8 +107,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_captain(this: usize, clube: 
         return o(this, clube, person, team);
     }
     let p = read_usize(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(p, 4)], || o(this, clube, person, team), || set_captain(this, clube, person, team));
-    PLACAR.registrar(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, team, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(p, 4)], || o(this, clube, person, team), || set_captain(this, clube, person, team));
+    PLACAR.record(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, team, r, n, mo, mr));
     r
 }
 
@@ -122,8 +122,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_player_from_selection(thi
         return o(this, clube, person, team, papeis);
     }
     let reg = lineup_regions(this, clube, team);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, person, team, papeis), || remove_player_from_selection(this, clube, person, team, papeis));
-    PLACAR.registrar(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, person, team, papeis, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, person, team, papeis), || remove_player_from_selection(this, clube, person, team, papeis));
+    PLACAR.record(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, person, team, papeis, r, mo, n, mr));
     r
 }
 
@@ -138,8 +138,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_swap_selection_slots(this: usize
         return o(this, clube, a, b, team);
     }
     let reg = lineup_regions(this, clube, team);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, a, b, team), || swap_selection_slots(this, clube, a, b, team));
-    PLACAR.registrar(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, team, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, a, b, team), || swap_selection_slots(this, clube, a, b, team));
+    PLACAR.record(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, team, r, mo, n, mr));
     r
 }
 
@@ -149,7 +149,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_swap_selection_slots(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_has_selection_undo(this: usize, clube: usize, team: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_HAS_SELECTION_UNDO)(this, clube, team);
     let n = has_selection_undo(this, clube, team);
-    PLACAR.registrar(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, team, r, n));
+    PLACAR.record(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, team, r, n));
     r
 }
 
@@ -168,8 +168,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_selection_slot(this: usize
     if k != -1 {
         reg.push((tactics_cell(this, k, 2), 20 * 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, slot, team), || clear_selection_slot(this, clube, slot, team));
-    PLACAR.registrar(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, team, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, slot, team), || clear_selection_slot(this, clube, slot, team));
+    PLACAR.record(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, team, r, n, mo, mr));
     r
 }
 
@@ -185,9 +185,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize,
     }
     let k = club_tactics_row(clube, team);
     let reg = if k != -1 { vec![(tactics_cell(this, k, 0x5e), 10 * 4)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, role, choice, person, team),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, role, choice, person, team),
         || set_set_piece_taker(this, clube, role, choice, person, team));
-    PLACAR.registrar(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, person, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, person, r, n, mo, mr));
     r
 }
 
@@ -195,8 +195,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_extra_tactic_slot(t: usize, clube: usize, which: i8, person: *const u32, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_EXTRA_TACTIC_SLOT);
     let reg = regioes_da_tabela(t, clube, human);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, clube, which, person, human), || extra_tactic_slot(t, clube, which, person, human));
-    PLACAR.registrar(igual && r == v, || format!("extra_tactic_slot({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, which, human, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, clube, which, person, human), || extra_tactic_slot(t, clube, which, person, human));
+    PLACAR.record(igual && r == v, || format!("extra_tactic_slot({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, which, human, r, mo, v, mr));
     r
 }
 
@@ -217,8 +217,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_club_tactic(this: usize, clu
             reg.push((human_manager_record_at(manager, k) + 0x9a69, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, team), || get_club_tactic(this, clube, team));
-    PLACAR.registrar(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", clube, team, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, team), || get_club_tactic(this, clube, team));
+    PLACAR.record(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", clube, team, r, mo, n, mr));
     r
 }
 
@@ -229,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_selection_slot(tactic: usiz
         return r;
     }
     let n = find_selection_slot(tactic, clube, person, team);
-    PLACAR.registrar(r == n, || format!("find_selection_slot(time {}) original={} rust={}", team, r, n));
+    PLACAR.record(r == n, || format!("find_selection_slot(time {}) original={} rust={}", team, r, n));
     r
 }
 
@@ -237,8 +237,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_selection_slot(tactic: usiz
 pub(crate) unsafe extern "thiscall" fn comparar_set_tactic_slot(t: usize, clube: usize, slot: i8, person: *const u32, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_SET_TACTIC_SLOT);
     let reg = regioes_da_tabela(t, clube, human);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, clube, slot, person, human), || set_tactic_slot(t, clube, slot, person, human));
-    PLACAR.registrar(igual && r == v, || format!("set_tactic_slot({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, slot, human, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, clube, slot, person, human), || set_tactic_slot(t, clube, slot, person, human));
+    PLACAR.record(igual && r == v, || format!("set_tactic_slot({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, slot, human, r, mo, v, mr));
     r
 }
 
@@ -246,8 +246,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_tactic_slot(t: usize, clube:
 pub(crate) unsafe extern "thiscall" fn comparar_tactic_slot_person(t: usize, clube: usize, slot: i8, human: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_TACTIC_SLOT_PERSON);
     let reg = regioes_da_tabela(t, clube, human);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, clube, slot, human), || tactic_slot_person(t, clube, slot, human));
-    PLACAR.registrar(igual && r == v, || format!("tactic_slot_person({:#x}, {:#x}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", t, clube, slot, human, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, clube, slot, human), || tactic_slot_person(t, clube, slot, human));
+    PLACAR.record(igual && r == v, || format!("tactic_slot_person({:#x}, {:#x}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", t, clube, slot, human, r, mo, v, mr));
     r
 }
 
@@ -255,8 +255,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_tactic_slot_person(t: usize, clu
 pub(crate) unsafe extern "thiscall" fn comparar_set_tactic_formation(t: usize, clube: usize, formacao: i16, human: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i16, u32) -> u32>(IDX_SET_TACTIC_FORMATION);
     let reg = regioes_da_tabela(t, clube, human);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, clube, formacao, human), || set_tactic_formation(t, clube, formacao, human));
-    PLACAR.registrar(igual && r == v, || format!("set_tactic_formation({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, formacao, human, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, clube, formacao, human), || set_tactic_formation(t, clube, formacao, human));
+    PLACAR.record(igual && r == v, || format!("set_tactic_formation({:#x}, {:#x}, {}, {}) original={} {:x?} rust={} {:x?}", t, clube, formacao, human, r, mo, v, mr));
     r
 }
 
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_tactic_formation(t: usize, c
 pub(crate) unsafe extern "thiscall" fn comparar_marked_slot(this: usize, clube: usize, human: u32, minus_one: u32) -> i8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(IDX_MARKED_SLOT)(this, clube, human, minus_one);
     let v = marked_slot(this, clube, human, minus_one);
-    PLACAR.registrar(r == v, || format!("marked_slot original={} rust={}", r, v));
+    PLACAR.record(r == v, || format!("marked_slot original={} rust={}", r, v));
     r
 }
 
@@ -279,8 +279,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_slot(this: usize, clube: us
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = row(clube, human);
     let reg: Vec<(usize, usize)> = if l == -1 || clube == 0 { vec![] } else { vec![(table.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4)] };
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, slot, human), || mark_slot(this, clube, slot, human));
-    PLACAR.registrar(igual && r == v, || format!("mark_slot original={} {:x?} rust={} {:x?}", r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, slot, human), || mark_slot(this, clube, slot, human));
+    PLACAR.record(igual && r == v, || format!("mark_slot original={} {:x?} rust={} {:x?}", r, mo, v, mr));
     r
 }
 
@@ -288,6 +288,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_slot(this: usize, clube: us
 pub(crate) unsafe extern "stdcall" fn comparar_tactics_row(clube: usize, human: u32) -> i32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(clube, human);
     let v = tactics_row(clube, human);
-    PLACAR.registrar(r == v, || format!("tactics_row({:#x}, {}) original={} rust={}", clube, human, r, v));
+    PLACAR.record(r == v, || format!("tactics_row({:#x}, {}) original={} rust={}", clube, human, r, v));
     r
 }

@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn build_international_date_table(this: usize) {
     if cqb3_i(this + 0x34f0) < 0x6e {
         return; // ponytail: inalcançável (a conta é a 0xc8 gravada acima); a original dá a caixa da linha 0x15d8
     }
-    crate::comparacao::ramo("cqb_3 tabela montada");
+    crate::comparison::branch("cqb_3 tabela montada");
     *((this + 0x34f0) as *mut i32) = 0x6e;
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
     *((this + 0x34ec) as *mut usize) = realloc(cqb3_d(this + 0x34ec), 0x898);
@@ -183,24 +183,24 @@ unsafe extern "thiscall" fn build_international_date_table(this: usize) {
 /// uma vez, no construtor dos amistosos.
 unsafe extern "thiscall" fn comparar_build_international_date_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    let campos = crate::comparacao::Memoria::ler(&[(this + 0x34ec, 10)]);
+    let campos = crate::comparison::MemorySnapshot::read(&[(this + 0x34ec, 10)]);
     build_international_date_table(this);
     let (t, n) = (cqb3_d(this + 0x34ec), cqb3_i(this + 0x34f0));
     if t == 0 || n != 0x6e {
-        campos.escrever();
+        campos.write_back();
         return o(this); // ponytail: sem memória na cópia, só a original
     }
-    let mr = crate::comparacao::Memoria::ler(&[(t, 0x898), (this + 0x34f0, 6)]);
+    let mr = crate::comparison::MemorySnapshot::read(&[(t, 0x898), (this + 0x34f0, 6)]);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     free(t);
-    campos.escrever();
+    campos.write_back();
     o(this);
     let t = cqb3_d(this + 0x34ec);
     if t == 0 {
-        return PLACAR.registrar(false, || "build_international_date_table: a original ficou sem tabela".to_string());
+        return PLACAR.record(false, || "build_international_date_table: a original ficou sem tabela".to_string());
     }
-    let mo = crate::comparacao::Memoria::ler(&[(t, 0x898), (this + 0x34f0, 6)]);
-    PLACAR.registrar(mo.0[0].1 == mr.0[0].1 && mo.0[1].1 == mr.0[1].1, || format!("build_international_date_table original={:x?} rust={:x?}", mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&[(t, 0x898), (this + 0x34f0, 6)]);
+    PLACAR.record(mo.0[0].1 == mr.0[0].1 && mo.0[1].1 == mr.0[1].1, || format!("build_international_date_table original={:x?} rust={:x?}", mo, mr));
 }
 
 /// { 0x5cc510 } (thiscall, ret 0, friendly.cpp): `Friendly::resolve_international_dates()`, pela tabela (0x5ca4f0). O
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
     let hoje = cqb3_w(0xae2c92);
     let mut ciclo = hoje as u32;
     while ((ciclo & 0xffff) as i32 - 2) % 4 != 0 {
-        crate::comparacao::ramo("cqb_3 ano da copa adiante");
+        crate::comparison::branch("cqb_3 ano da copa adiante");
         ciclo = ciclo.wrapping_add(1); // cqb3: o ano da Copa
     }
     let acertar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x54a130usize);
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
         let e = cqb3_d(this + 0x34ec).wrapping_add((k as usize).wrapping_mul(0x14));
         let mut ano = (cqb3_b(e + 0xb) as i8 as i16 as u16).wrapping_add(ciclo as u16);
         if ano as i32 - hoje as i32 > 3 {
-            crate::comparacao::ramo("cqb_3 ano para tras");
+            crate::comparison::branch("cqb_3 ano para tras");
             ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se passar de 3 anos à frente
         }
         let com_sinal = |o: usize| cqb3_b(e + o) as i8 as i16 as u16 as u32;
@@ -240,8 +240,8 @@ unsafe extern "thiscall" fn comparar_resolve_international_dates(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let (t, n) = (cqb3_d(this + 0x34ec), cqb3_i(this + 0x34f0));
     let reg = if t != 0 && n > 0 { vec![(t, n as usize * 0x14)] } else { Vec::new() };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || resolve_international_dates(this));
-    PLACAR.registrar(igual, || format!("resolve_international_dates(conta {}) original={:x?} rust={:x?}", n, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || resolve_international_dates(this));
+    PLACAR.record(igual, || format!("resolve_international_dates(conta {}) original={:x?} rust={:x?}", n, mo, mr));
 }
 
 /// { 0x5c6830 } (thiscall, ret 0, friendly.cpp): `Friendly::find_human_club_tournament()`, pelas telas dos amistosos. O

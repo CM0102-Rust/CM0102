@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usize, n: u32,
         show_error_at(F, 0x53);
         return this;
     }
-    crate::comparacao::ramo("cqs_7 fase de copa");
+    crate::comparison::branch("cqs_7 fase de copa");
     let m = cqs7_w(this + 0x3e) as i32;
     let mut i = 0i32;
     while i < m {
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize, pai: usize
             b.sort_unstable();
             a == b
         };
-    PLACAR.registrar(ok, || format!("construct_cup_stage({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rodadas as u16 as i16, ano as u16));
+    PLACAR.record(ok, || format!("construct_cup_stage({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rodadas as u16 as i16, ano as u16));
     r
 }
 
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
         }
         soltar(cqs7_d(this + 0xad));
     }
-    crate::comparacao::ramo("cqs_7 fim da fase de copa");
+    crate::comparison::branch("cqs_7 fim da fase de copa");
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518690usize);
     base(this)
 }

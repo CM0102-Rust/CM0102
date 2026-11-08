@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn find_stored_fixture(this: usize, f: usize) -> usize 
     let mut item = cps11_proximo(l);
     while item != 0 {
         if core::slice::from_raw_parts(item as *const u8, 0x4f) == alvo {
-            crate::comparacao::ramo("cps_11 achou o jogo guardado");
+            crate::comparison::branch("cps_11 achou o jogo guardado");
             return item; // cps11: a cópia guardada
         }
         item = cps11_proximo(l);
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn insert_fixture(this: usize, f: usize) {
     if copiar(l, f, 0x4f) == 0 { // cps11: guardar
         return show_error_at(0x9cc208, 0x3eb);
     }
-    crate::comparacao::ramo("cps_11 jogo guardado");
+    crate::comparison::branch("cps_11 jogo guardado");
 }
 
 /// { 0x5abc30 } (thiscall, ret 4, fix_man.cpp): `FIXTURE_MANAGER::remove_fixture(jogo)`: tira da lista do dia, fatia e
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn remove_fixture(this: usize, f: usize) -> u32 {
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
     let r = tirar(fixture_list_in_block(b, f), f); // cps11: tirar
     if r != 0 {
-        crate::comparacao::ramo("cps_11 jogo tirado");
+        crate::comparison::branch("cps_11 jogo tirado");
     }
     (r != 0) as u32
 }
@@ -129,7 +129,7 @@ unsafe fn find_fixture_list(fm: usize, f: usize) -> usize {
 unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize, f: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%)(this, f);
     let n = find_stored_fixture(this, f);
-    PLACAR.registrar(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
+    PLACAR.record(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
     r
 }
 
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: usize) {
     let cauda = cps11_d(l + 6);
     let igual = cps11_w(l) == conta.wrapping_add(1) && cauda != 0
         && core::slice::from_raw_parts(cps11_d(cauda) as *const u8, 0x4f) == core::slice::from_raw_parts(f as *const u8, 0x4f);
-    PLACAR.registrar(igual, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, conta, cps11_w(l)));
+    PLACAR.record(igual, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, conta, cps11_w(l)));
 }
 
 /// Comparador: tira da lista (não roda duas vezes): antes da original, a cópia acha a lista e vê se algum item tem os
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_remove_fixture(this: usize, f: usize) -> u3
     let r = o(this, f);
     let esperado = tem as u32;
     let igual = r == esperado && cps11_w(l) == conta.wrapping_sub(esperado as u16);
-    PLACAR.registrar(igual, || format!("remove_fixture(jogo {:x}) original={} esperado={} conta antes={} depois={}",
+    PLACAR.record(igual, || format!("remove_fixture(jogo {:x}) original={} esperado={} conta antes={} depois={}",
         f, r, esperado, conta, cps11_w(l)));
     r
 }

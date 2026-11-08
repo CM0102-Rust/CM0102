@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_usado: u32) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     // ponytail: a original empurra a vaga num dword com 3 bytes de lixo da pilha acima; a 0x844300 só lê o byte
     let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(0x844300usize);
-    crate::comparacao::ramo("cpo_8 montar listas");
+    crate::comparison::branch("cpo_8 montar listas");
     for k in 0..32usize {
         let v = this + 0x18 + k * 4;
         if cpo8_d(v) != 0 {
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn sort_position_lists(this: usize) {
                 }
             } else {
                 if k != 0 {
-                    crate::comparacao::ramo("cpo_8 band do contrato");
+                    crate::comparison::branch("cpo_8 band do contrato");
                 }
                 cpo8_w(cpo8_d(this + 0x18 + vaga * 4) + o + 8, 0);
             }
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn collect_interested_clubs(this: usize, jogador: usize
         if !(ignorar == 0 && cpo8_b(entrada + 8) >= 100) && valor > cpo8_i(jogador + 0x52) {
             let c = cpo8_d(jogador + 0x39);
             if !(c != 0 && cpo8_d(c) == clube_id) {
-                crate::comparacao::ramo("cpo_8 clube interessado");
+                crate::comparison::branch("cpo_8 clube interessado");
                 acrescentar(saida, e, 8);
             }
         }
@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn comparar_build_position_lists(this: usize, nao_usado
             }
         }
     }
-    PLACAR.registrar(ruim.is_none(), || format!("build_position_lists: vaga e entrada {:?}", ruim));
+    PLACAR.record(ruim.is_none(), || format!("build_position_lists: vaga e entrada {:?}", ruim));
 }
 
 /// Comparador: lado a lado pelos 32 vetores (12 bytes por entrada) e por [0xae1080].
@@ -321,8 +321,8 @@ unsafe extern "thiscall" fn comparar_sort_position_lists(this: usize) {
             reg.push((cpo8_d(this + 0x58 + vaga * 4), n as usize * 12));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || sort_position_lists(this));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || sort_position_lists(this));
+    PLACAR.record(igual, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).map(|(a, _)| a.0).take(8).collect();
         format!("sort_position_lists: vetores diferentes {:x?}", dif)
     });
@@ -343,5 +343,5 @@ unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: usize, jogad
     collect_interested_clubs(this, jogador, l, ignorar, modo, so_humanos);
     let (a, b) = (llist_pairs(saida), llist_pairs(l));
     limpar(l);
-    PLACAR.registrar(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", jogador, a, b));
+    PLACAR.record(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", jogador, a, b));
 }

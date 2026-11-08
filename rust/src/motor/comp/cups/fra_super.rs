@@ -80,7 +80,7 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
         show_error_at(file, row);
         return 0;
     }
-    crate::comparacao::ramo(name);
+    crate::comparison::branch(name);
     let mut t0 = table[0];
     adjust(&mut t0);
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
@@ -91,32 +91,6 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
 }
 
 
-/// Side-by-side comparer for create_round_table: same outputs and same written bytes in both round tables; frees the
-/// copy's table.
-///
-/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
-/// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-pub(crate) unsafe fn fra_super_compare_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
-    o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    if stage as u8 != 0xff {
-        // simplification: outside stage −1 neither of the two writes anything; the outputs may not even exist
-        let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
-        return a;
-    }
-    let (mut r2, mut e2) = (*rounds, *extra);
-    let mut s2 = if out.is_null() { 0 } else { *out };
-    let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if out.is_null() { core::ptr::null_mut() } else { &mut s2 }));
-    let outs = *rounds == r2 && *extra == e2 && (out.is_null() || *out == s2);
-    let table = if a != 0 && b != 0 { eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, r2) } else { a == 0 && b == 0 };
-    if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(b);
-    }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
-    a
-}
 
 /// A Supercopa da França: um jogo em julho; o prêmio de 60 mil por chegar. O mando vem à parte (`french_super_cup_venue`).
 pub(crate) const FRENCH_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
@@ -166,16 +140,6 @@ pub(crate) const JAPAN_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
     cql12r((1, 1, 0, 5), (4, 2, 0, 5, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0x249f0, 0)), // cql12: o jogo da Supercopa do Japão
 ];
 
-/// rule: the Japanese Super Cup (Xerox Super Cup) is a single match between 2 clubs, drawn on 1/2 and played on 4/3
-/// (moved to weekday 5) at a neutral ground [inference: venue 4], decided on penalties [inference: tiebreak 1]; 150
-/// thousand to the winner; category 6
-/// Original: `JapSuper::create_round_table` (0x666020, jap_super.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x666020 } (thiscall, ret 0x10, jap_super.cpp; a virtual +0x3c da Supercopa do Japão): `JapSuper::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
-pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table_666020(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    fra_super_create_single_stage_round_table(this, stage, rounds, extra, out, &JAPAN_SUPER_CUP_ROUNDS, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})
-}
 
 
 /// rule: the French Super Cup is between the First Division champion and the Coupe de France winner; if the same club

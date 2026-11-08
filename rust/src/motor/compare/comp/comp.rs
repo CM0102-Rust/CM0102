@@ -30,12 +30,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usi
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut l2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, list, x), || comp_collect_club_list(this, &mut l2, x));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, list, x), || comp_collect_club_list(this, &mut l2, x));
     let mesmas = a == b && (*list == 0) == (l2 == 0) && (*list == 0 || core::slice::from_raw_parts(*list as *const u32, a as usize) == core::slice::from_raw_parts(l2 as *const u32, b as usize));
     if l2 != 0 {
         soltar(l2);
     }
-    PLACAR.registrar(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
+    PLACAR.record(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
     a
 }
 
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, 
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(IDX_FIND_CLUB_PROGRESS)(this, clube, stage_id, round, status);
     find_club_progress(this, clube, &mut f2, &mut r2, &mut s2);
     let ok = f2 == *stage_id && r2 == *round && s2 == *status;
-    PLACAR.registrar(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *stage_id, *round, *status, f2, r2, s2));
+    PLACAR.record(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *stage_id, *round, *status, f2, r2, s2));
 }
 
 /// Comparer for `get_first_stage_of_group` (comparison mode: see the header of motor.rs).
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: u
     }
     let r = o(this, k);
     let n = get_first_stage_of_group(this, k);
-    PLACAR.registrar(r == n, || format!("get_first_stage_of_group({}): original={} rust={}", k, r, n));
+    PLACAR.record(r == n, || format!("get_first_stage_of_group({}): original={} rust={}", k, r, n));
     r
 }
 
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_current_stage(this: usize) -
 pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_club(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_CLUB)(clube);
     let n = comp_active_key_nation_of_club(clube);
-    PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_club(clube: u
 pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_STADIUM)(estadio);
     let n = comp_active_key_nation_of_stadium(estadio);
-    PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", estadio, r, n));
+    PLACAR.record(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", estadio, r, n));
     r
 }
 
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index
     }
     let r = o(active);
     let n = comp_key_nation_entry_from_active_index(active);
-    PLACAR.registrar(r == n, || format!("comp_key_nation_entry_from_active_index({}) original={} rust={}", active, r, n));
+    PLACAR.record(r == n, || format!("comp_key_nation_entry_from_active_index({}) original={} rust={}", active, r, n));
     r
 }
 
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index
 pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_GET_FIXTURE_MATCH_IMPORTANCE)(this, p, a, b);
     let n = get_fixture_match_importance(this, p, a, b);
-    PLACAR.registrar(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
+    PLACAR.record(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
     r
 }
 
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -
     }
     let r = o(this, k);
     let n = get_stage(this, k);
-    PLACAR.registrar(r == n, || format!("get_stage({:x}, {}) original={:x} rust={:x}", this, k, r, n));
+    PLACAR.record(r == n, || format!("get_stage({:x}, {}) original={:x} rust={:x}", this, k, r, n));
     r
 }
 
@@ -131,7 +131,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -
 pub(crate) unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_FIXTURE)(comp, partida);
     let n = comp_active_key_nation_of_fixture(comp, partida);
-    PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
+    PLACAR.record(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
     r
 }
 
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: u
     }
     let r = o(this, stage, round);
     let n = are_round_fixtures_known(this, stage, round);
-    PLACAR.registrar(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, stage, round, r, n));
+    PLACAR.record(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, stage, round, r, n));
     r
 }
 
@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, other: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, jogo, other);
     let n = counts_for_fixture_clash(this, jogo, other);
-    PLACAR.registrar(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", read_i16(jogo + 0x30), r, n));
+    PLACAR.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", read_i16(jogo + 0x30), r, n));
     r
 }
 
@@ -161,6 +161,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: u
 pub(crate) unsafe extern "stdcall" fn comparar_special_club(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_SPECIAL_CLUB)(clube);
     let v = special_club(clube);
-    PLACAR.registrar(r == v, || format!("special_club({:#x}) original={} rust={}", clube, r, v));
+    PLACAR.record(r == v, || format!("special_club({:#x}) original={} rust={}", clube, r, v));
     r
 }

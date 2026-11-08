@@ -48,7 +48,7 @@ unsafe fn serie_a_staff_records(this: usize, clube: usize, situacao: u32, fase: 
         // a fase de pontos corridos
         if st == 6 {
             if fazer {
-                crate::comparacao::ramo("cqj_9 serie a classificado");
+                crate::comparison::branch("cqj_9 serie a classificado");
                 bra_nat_first_add_qualified_record(clube, comp, 0x41c, 0, 0x28);
             }
         } else if st == 3 && fazer {
@@ -63,7 +63,7 @@ unsafe fn serie_a_staff_records(this: usize, clube: usize, situacao: u32, fase: 
     if st == 1 {
         let l = bra_nat_first_find_club_row(this, clube);
         if fazer {
-            crate::comparacao::ramo("cqj_9 serie a campeao");
+            crate::comparison::branch("cqj_9 serie a campeao");
             add_champions_record(clube, comp); // cqj9: o registro do campeão da Série A
             *((l + 0x37) as *mut u8) = 5;
         }
@@ -132,7 +132,7 @@ unsafe fn serie_c_staff_records(this: usize, clube: usize, situacao: u32, fase: 
             k += 1;
         }
         if achada != 0 && fazer {
-            crate::comparacao::ramo("cqj_9 serie c promovido");
+            crate::comparison::branch("cqj_9 serie c promovido");
             *((achada + 0x37) as *mut u8) = 0; // cqj9: o destino de quem sobe da Série C
         }
         return (0, achada, 0);
@@ -159,7 +159,7 @@ unsafe fn baiano_staff_records(this: usize, clube: usize, situacao: u32, fase: u
                 bra_nat_first_add_qualified_record(clube, comp, 0, 0x82, 0x32);
             }
         } else if st == 3 && fazer {
-            crate::comparacao::ramo("cqj_9 baiano rebaixado");
+            crate::comparison::branch("cqj_9 baiano rebaixado");
             bra_nat_first_add_relegation_record(clube, comp); // cqj9: o rebaixado do Baiano
         }
         return (0, 0, 0);
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_records_for_stat
     let (n, l, dest) = serie_a_staff_records(this, clube, situacao, fase, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.record(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }
 
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_records_for_stat
     let (n, l, dest) = serie_c_staff_records(this, clube, situacao, fase, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I1%%)(this, clube, situacao, fase, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.record(r == n && gravado == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }
 
@@ -256,6 +256,6 @@ unsafe extern "thiscall" fn comparar_bra_reg_bahia_update_staff_records_for_stat
     let (n, l, dest) = baiano_staff_records(this, clube, situacao, fase, jogo, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_bahia_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.record(r == n && gravado == dest, || format!("bra_reg_bahia_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }

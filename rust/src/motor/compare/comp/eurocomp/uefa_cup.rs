@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
     reg.extend((0..read_u32_as_usize(G_CLUB_COUNT)).map(|i| (base + i * club::SIZE + 0x1db, 4)));
     let lo = core::cell::Cell::new((0usize, 0usize));
     let lr = core::cell::Cell::new((0usize, 0usize));
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set((read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14)));
         write_u32_from_usize(this + 0xa7, a0);
@@ -38,14 +38,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i
     if tr != 0 && tr != to && tr != t0 {
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && lists, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, lists));
+    PLACAR.record(igual && a == b && lists, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, lists));
     a
 }
 
 /// Comparer for `uefa_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_UEFA_CUP_CREATE_ROUND_TABLE);
-    eng_cc_cup_compare_round_table("uefa_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
+    compare_cup_round_table("uefa_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
         |r, e, s| uefa_cup_create_round_table(this, stage, r, e, s))
 }
 
@@ -60,6 +60,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_fo
     let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { before };
     let r = o(this, clube, outcome, a3, a4, jogo, a6);
     let after = read_u32_as_usize(clube + club::EURO_FLAG);
-    PLACAR.registrar(r == 0 && after == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, before, after, previsto, r));
+    PLACAR.record(r == 0 && after == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, before, after, previsto, r));
     r
 }

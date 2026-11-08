@@ -51,7 +51,7 @@ unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, s
             *s(0x19) = cpz7_b(jogo + 0x47);
             *s(0x1a) = cpz7_b(jogo + 0x48);
         } else {
-            crate::comparacao::ramo("cpz_7 placar do mandante");
+            crate::comparison::branch("cpz_7 placar do mandante");
             *s(0x19) = cpz7_b(jogo + 0x43); // cpz7: os gols do mandante
             *s(0x1a) = cpz7_b(jogo + 0x44);
         }
@@ -61,7 +61,7 @@ unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, s
             *s(0x19) = cpz7_b(jogo + 0x48);
             *s(0x1a) = cpz7_b(jogo + 0x47);
         } else {
-            crate::comparacao::ramo("cpz_7 placar do visitante");
+            crate::comparison::branch("cpz_7 placar do visitante");
             *s(0x19) = cpz7_b(jogo + 0x44);
             *s(0x1a) = cpz7_b(jogo + 0x43); // cpz7: os gols sofridos pelo visitante
         }
@@ -76,8 +76,8 @@ unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: usize, clube:
     if jogo == 0 || clube == 0 || saida == 0 {
         return o(jogo, clube, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x1f)], || o(jogo, clube, saida), || fill_match_record_from_fixture(jogo, clube, saida));
-    PLACAR.registrar(igual && r == n, || format!("fill_match_record_from_fixture(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", jogo, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(saida, 0x1f)], || o(jogo, clube, saida), || fill_match_record_from_fixture(jogo, clube, saida));
+    PLACAR.record(igual && r == n, || format!("fill_match_record_from_fixture(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", jogo, clube, r, n, mo, mr));
     r
 }
 
@@ -115,8 +115,8 @@ unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, saida: usize) -
     if pessoa == 0 || saida == 0 {
         return o(pessoa, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x18)], || o(pessoa, saida), || fill_staff_name_ref(pessoa, saida));
-    PLACAR.registrar(igual && r == n, || format!("fill_staff_name_ref(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(saida, 0x18)], || o(pessoa, saida), || fill_staff_name_ref(pessoa, saida));
+    PLACAR.record(igual && r == n, || format!("fill_staff_name_ref(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -148,6 +148,6 @@ unsafe extern "C" fn comparar_match_record_result_code(registro: usize) -> u8 {
     }
     let r = o(registro);
     let n = match_record_result_code(registro);
-    PLACAR.registrar(r == n, || format!("match_record_result_code(registro {:x}) original={} rust={}", registro, r as i8, n as i8));
+    PLACAR.record(r == n, || format!("match_record_result_code(registro {:x}) original={} rust={}", registro, r as i8, n as i8));
     r
 }

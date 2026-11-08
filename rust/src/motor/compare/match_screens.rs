@@ -21,9 +21,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_fill_match_record(stats: usize, 
         return o(stats, m, reg, sem_renda);
     }
     // the shirt number given by the original (0x85a470) stays outside the regions: the copy finds it already given
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg, 0xd7a)], || o(stats, m, reg, sem_renda),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(reg, 0xd7a)], || o(stats, m, reg, sem_renda),
         || fill_match_record(stats, m, reg, sem_renda));
-    PLACAR.registrar(igual && r == n, || {
+    PLACAR.record(igual && r == n, || {
         let difs: Vec<usize> = mo.0[0].1.iter().zip(mr.0[0].1.iter()).enumerate().filter(|(_, (a, b))| a != b).map(|(i, _)| i).take(16).collect();
         format!("fill_match_record(sem_renda={}) original={} rust={} bytes diferentes em {:x?}", sem_renda, r, n, difs)
     });
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fill_match_record(stats: usize, 
 pub(crate) unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(IDX_MATCH_STATS_COMPARE_EVENTS)(a, b);
     let n = match_stats_compare_events(a, b);
-    PLACAR.registrar(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
+    PLACAR.record(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
         core::slice::from_raw_parts(a, 4), core::slice::from_raw_parts(b, 4), r, n));
     r
 }
@@ -58,9 +58,9 @@ pub(crate) unsafe fn comparar_montagem_da_partida(name: &str, extra: &[(usize, u
     reg.extend_from_slice(extra);
     // the background photo (0x41c410) rolls: the generator state goes back for the second round (without it the
     // generator advanced twice in comparison mode and the career shifted; 204th)
-    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, || crate::aleatorio::sem_contar(rust));
-    PLACAR.registrar(igual, || format!("{}: diferencas em {:?}", name, first_differences(&mo, &mr)));
+    reg.extend_from_slice(&crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, original, || crate::rng::without_counting(rust));
+    PLACAR.record(igual, || format!("{}: diferencas em {:?}", name, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `build_match_screen` (comparison mode: see the header of motor.rs).
@@ -142,8 +142,8 @@ pub(crate) unsafe extern "C" fn comparar_refresh_possession_bar() {
         reg.push((copy, 0xd7a));
     }
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_possession_bar());
-    PLACAR.registrar(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || refresh_possession_bar());
+    PLACAR.record(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// Comparer for `draw_match_overview_panel` (comparison mode: see the header of motor.rs).
@@ -172,8 +172,8 @@ pub(crate) unsafe extern "C" fn comparar_draw_match_overview_panel(top: *mut i32
     if foto != 0 {
         reg.push((foto, 0xd7a));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(top, base), || draw_match_overview_panel(top, base));
-    PLACAR.registrar(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(top, base), || draw_match_overview_panel(top, base));
+    PLACAR.record(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// Comparer for `match_screens_draw_live_league_table` (comparison mode: see the header of motor.rs).
@@ -243,8 +243,8 @@ pub(crate) unsafe extern "C" fn comparar_fill_team_stats_rows(mode: u32, area: u
     };
     reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(mode, area), || fill_team_stats_rows(mode, area));
-    PLACAR.registrar(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", mode, area, first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(mode, area), || fill_team_stats_rows(mode, area));
+    PLACAR.record(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", mode, area, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `refresh_latest_scores_rows` (comparison mode: see the header of motor.rs).
@@ -265,8 +265,8 @@ pub(crate) unsafe extern "C" fn comparar_refresh_latest_scores_rows() {
         reg.push((block + 0xb8, 0x200 - 0xb8));
     }
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_latest_scores_rows());
-    PLACAR.registrar(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || refresh_latest_scores_rows());
+    PLACAR.record(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// Comparer for `match_screens_handle_waiting_screen` (comparison mode: see the header of motor.rs).
@@ -285,9 +285,9 @@ pub(crate) unsafe fn comparar_pela_lista_com(name: &str, extra: &[(usize, usize)
     reg.extend_from_slice(extra);
     // the background photo (0x41c410) rolls: the generator state goes back for the second round (without it the
     // generator advanced twice in comparison mode and the career shifted; 204th)
-    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, || crate::aleatorio::sem_contar(rust));
-    PLACAR.registrar(igual, || {
+    reg.extend_from_slice(&crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, original, || crate::rng::without_counting(rust));
+    PLACAR.record(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
@@ -352,8 +352,8 @@ pub(crate) unsafe fn comparar_valores_da_partida(name: &str, original: impl FnOn
     reg.extend(screen_param_regions());
     reg.push((copy, 0xd7a));
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, rust);
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, original, rust);
+    PLACAR.record(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
@@ -392,8 +392,8 @@ pub(crate) unsafe fn comparar_painel_pela_lista(name: &str, original: impl FnOnc
     reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
     reg.push((0xae290c, 4));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, rust);
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, original, rust);
+    PLACAR.record(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
@@ -448,16 +448,16 @@ pub(crate) unsafe extern "C" fn comparar_match_screens_handle_team_selection_inp
 /// Comparer for `match_team_block_assign` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_match_team_block_assign(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_TEAM_BLOCK_ASSIGN);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
-    PLACAR.registrar(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
+    PLACAR.record(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
 }
 
 /// Comparer for `match_player_row_assign` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_match_player_row_assign(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_PLAYER_ROW_ASSIGN);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
-    PLACAR.registrar(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
+    PLACAR.record(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
 }
 
@@ -467,8 +467,8 @@ pub(crate) unsafe extern "C" fn comparar_match_screens_tally_live_score(partida:
     if res == 0 {
         return o(partida, indice, res);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(res + 0x43, 0xa)], || o(partida, indice, res), || match_screens_tally_live_score(partida, indice, res));
-    PLACAR.registrar(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, indice, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res + 0x43, 0xa)], || o(partida, indice, res), || match_screens_tally_live_score(partida, indice, res));
+    PLACAR.record(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, indice, mo.0, mr.0));
 }
 
 /// Comparer for `fixture_entry_matches` (comparison mode: see the header of motor.rs).
@@ -479,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fixture_entry_matches(stats: usi
     }
     let r = o(stats, k, a, b, data_a, data_b);
     let n = fixture_entry_matches(stats, k, a, b, data_a, data_b);
-    PLACAR.registrar(r == n, || format!("fixture_entry_matches({}, {}, {}, {}, {}) original={} rust={}", k, a, b, data_a, data_b, r, n));
+    PLACAR.record(r == n, || format!("fixture_entry_matches({}, {}, {}, {}, {}) original={} rust={}", k, a, b, data_a, data_b, r, n));
     r
 }
 
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fixture_entry_matches(stats: usi
 pub(crate) unsafe extern "stdcall" fn comparar_match_stats_get_record_bucket(jogo: usize, record: usize) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(IDX_MATCH_STATS_GET_RECORD_BUCKET)(jogo, record);
     let n = match_stats_get_record_bucket(jogo, record);
-    PLACAR.registrar(r == n, || format!("match_stats_get_record_bucket original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("match_stats_get_record_bucket original={} rust={}", r, n));
     r
 }
 
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "C" fn comparar_match_screens_find_best_rated_starter_s
         return r;
     }
     let n = match_screens_find_best_rated_starter_slot(tactic, contexto);
-    PLACAR.registrar(r == n, || format!("match_screens_find_best_rated_starter_slot({:#x}, {}) {} x {}", tactic, contexto, r as i8, n as i8));
+    PLACAR.record(r == n, || format!("match_screens_find_best_rated_starter_slot({:#x}, {}) {} x {}", tactic, contexto, r as i8, n as i8));
     r
 }
 
@@ -529,8 +529,8 @@ pub(crate) unsafe fn comparar_resposta(name: &str, item: u32, o: unsafe extern "
     if item as u16 == 0xffff || redesenha {
         return o(item);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&screen_param_regions(), || o(item), || r(item));
-    PLACAR.registrar(igual && ro == rr, || format!("{}(item {:#x}) original={} rust={} {:?} x {:?}", name, item, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&screen_param_regions(), || o(item), || r(item));
+    PLACAR.record(igual && ro == rr, || format!("{}(item {:#x}) original={} rust={} {:?} x {:?}", name, item, ro, rr, mo, mr));
     ro
 }
 
@@ -582,9 +582,9 @@ pub(crate) unsafe extern "C" fn comparar_build_latest_scores() {
     reg.push((0xae290c, 4));
     // the background photo (0x41c410) rolls: the generator state goes back for the second round (without it the
     // generator advanced twice in comparison mode and the career shifted; 204th)
-    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| build_latest_scores()));
-    PLACAR.registrar(igual, || {
+    reg.extend_from_slice(&crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || crate::rng::without_counting(|| build_latest_scores()));
+    PLACAR.record(igual, || {
         // only the differences (the list is large): where they start and how many bytes
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
@@ -606,8 +606,8 @@ pub(crate) unsafe extern "C" fn comparar_match_control_label(state: u8, m: usize
         return o(state, m, out, size, marks);
     }
     let reg = [(out as usize, size.min(0x100) as usize), (marks as usize, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(state, m, out, size, marks), || match_control_label(state, m, out, size, marks));
-    PLACAR.registrar(igual && r == n, || format!("match_control_label(estado {}) original={} rust={} {:x?} x {:x?}", state, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(state, m, out, size, marks), || match_control_label(state, m, out, size, marks));
+    PLACAR.record(igual && r == n, || format!("match_control_label(estado {}) original={} rust={} {:x?} x {:x?}", state, r, n, mo, mr));
     r
 }
 
@@ -640,8 +640,8 @@ pub(crate) unsafe extern "C" fn comparar_draw_latest_scores_panel(top: *mut i32,
     // the list (0x55fba0) writes into a network buffer ([0xae2908] at position [0xae290c]): the position is restored
     // for the second round to write in the same place
     reg.push((0xae290c, 4));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(top, base), || draw_latest_scores_panel(top, base));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(top, base), || draw_latest_scores_panel(top, base));
+    PLACAR.record(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))

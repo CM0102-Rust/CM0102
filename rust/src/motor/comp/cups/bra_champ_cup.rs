@@ -37,7 +37,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
                 show_error_at(file, linha);
                 return 0;
             }
-            crate::comparacao::ramo(nome);
+            crate::comparison::branch(nome);
             // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
             // 0x68a160 only uses the low 16 bits: the copy passes the clean year
             let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
@@ -58,7 +58,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
                 show_error_at(file, linha);
                 return 0;
             }
-            crate::comparacao::ramo(nome);
+            crate::comparison::branch(nome);
             let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
             for (i, r) in mata.iter().enumerate() {
                 eng_cc_cup_write_cup_round(t, i as u32, r, year);
@@ -108,20 +108,20 @@ pub(crate) unsafe fn compare_stage_schedule(name: &str, stage: u32, f: BraChampC
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if let BraChampCupStagePlan::Nada = f {
         let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+        PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
     let mut l2 = if league.is_null() { 0 } else { *league };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, o, || c(&mut r2, &mut e2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let outs = *rounds == r2 && *extra == e2 && (league.is_null() || *league == l2);
     let table = if a != 0 && b != 0 { written_schedule_bytes(f, a, *rounds) == written_schedule_bytes(f, b, r2) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -205,15 +205,6 @@ pub(crate) const ASIAN_SUPER_CUP: [EngCcCupCupRound; 1] = [
     cql10r((4, 6, 0, 5), (4, 7, 0, 5, 2, 0), 0, (0, 0, 0x83), 6, (2, 1, 2, 0), (0, 2, 0xe), (0, 0, 0)), // cqp10: a Supercopa Asiática
 ];
 
-/// rule: the Asian Super Cup is two-legged, the first match on 4 August (drawn on 4 July) and the return 14 days later,
-/// category 6, two-leg tie-break 0x83, no prizes
-/// Original: `AsiaSuperCup::create_round_table` (0x410910, asia_super_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x410910 } (thiscall, ret 0x10, asia_super_cup.cpp; a virtual +0x3c da Supercopa Asiática): `AsiaSuperCup::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x97 sem memória.
-pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &ASIAN_SUPER_CUP, 0x987be0, 0x97, "cqp_10 tabela da supercopa asiatica")
-}
 
 
 /// rule: the Brazilian Champions' Cup group is single round robin, 3 points a win and 1 a draw; tiebreak by codes 3, 1,
@@ -226,7 +217,7 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_round_table(this: us
 /// campeões), o desempate (3, 1, 2, 4), dois classificados e os bits de regra 8 (quem garante as vagas vai à fase
 /// seguinte); sem fundo de prêmios. Depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn bra_champ_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_12 regras da copa dos campeoes");
+    crate::comparison::branch("cqi_12 regras da copa dos campeoes");
     set_cup_league_rules(this, &CHAMPIONS_CUP_RULES, 1)
 }
 

@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
         let pedido = cqf12_d(this + 0x5c) + i as usize * 0x11;
         let (tirar, processar, jogador, tecnico, nacao) = judge_scout_request(pedido, catorze);
         if processar && !SCOUT_DAILY_DRY_RUN {
-            crate::comparacao::ramo("cqf_12 pedido processado");
+            crate::comparison::branch("cqf_12 pedido processado");
             let mut feitos: i8 = 0;
             for k in 0..10u32 {
                 if feitos >= 3 { // cqf12: até três relatórios
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
                     relatorio(lo, jogador, reg, -1000, 1, 0, 0, 1);
                     feitos += 1;
                     if (cqf12_b(reg + 0x66) as i8) > -1 {
-                        crate::comparacao::ramo("cqf_12 relatorio do pedido");
+                        crate::comparison::branch("cqf_12 relatorio do pedido");
                         acrescentar(l, reg, 0x67);
                     }
                 }
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
     for k in 0..0x10i32 {
         let p = cqf12_pessoa((cqf12_i(0xae2364) - k - 1) as usize);
         if cqf12_b(p + 0x5f) == 1 {
-            crate::comparacao::ramo("cqf_12 busca do humano");
+            crate::comparison::branch("cqf_12 busca do humano");
             for j in 0..10u32 {
                 buscar(registro_do_olheiro(this, j, p)); // cqf12: a busca de cada lista
             }
@@ -216,12 +216,12 @@ unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> 
     // o ensaio poda a cópia: troca o vetor e a conta do `this` pelos da cópia e devolve depois
     let (b0, c0) = (cqf12_d(this + 0x5c), cqf12_i(this + 0x64));
     core::ptr::write_unaligned((this + 0x5c) as *mut usize, copia.as_mut_ptr() as usize);
-    let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let estado = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let a1080 = cqf12_d(0xae1080);
     SCOUT_DAILY_DRY_RUN = true;
-    crate::aleatorio::sem_contar(|| scout_manager_daily_update(this));
+    crate::rng::without_counting(|| scout_manager_daily_update(this));
     SCOUT_DAILY_DRY_RUN = false;
-    estado.escrever();
+    estado.write_back();
     core::ptr::write_unaligned(0xae1080 as *mut usize, a1080);
     let n1 = cqf12_i(this + 0x64).max(0) as usize;
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> 
     let r = o(this);
     let n2 = cqf12_i(this + 0x64).max(0) as usize;
     let agora: Vec<u8> = (0..n2 * 0x11).map(|k| cqf12_b(cqf12_d(this + 0x5c) + k)).collect();
-    PLACAR.registrar(r == 1 && agora == plano, || format!("scout_manager_daily_update: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
+    PLACAR.record(r == 1 && agora == plano, || format!("scout_manager_daily_update: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
     r
 }
 
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, lista: usiz
     core::ptr::write_unaligned((lista + 0xa) as *mut usize, cursor);
     o(this, lista);
     let feito = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).take().unwrap_or_default();
-    PLACAR.registrar(feito == plano, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
+    PLACAR.record(feito == plano, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
 }
 
 /// { 0x7f9a60 } (thiscall, ret 8, scout_manager.cpp, quadro SEH da notícia local): `SCOUT_MANAGER::

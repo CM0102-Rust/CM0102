@@ -68,7 +68,7 @@ unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
             false
         }
         _ => {
-            crate::comparacao::ramo("cpn_4 jogador aposentado");
+            crate::comparison::branch("cpn_4 jogador aposentado");
             cpn4_por(p + 0x3d, 0x10); // aposentado
             false
         }
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn pick_best_club_for_player(_this: usize, jogador: usi
                 // ponytail: a original empurra o byte do elenco com lixo nos bits altos; a 0x7ad220 só lê o byte
                 let s = nota_de(jogador, clube, elenco as u32) as i16;
                 if s > melhor_nota {
-                    crate::comparacao::ramo("cpn_4 clube melhor para o jovem");
+                    crate::comparison::branch("cpn_4 clube melhor para o jovem");
                     melhor = clube;
                     melhor_nota = s;
                 }
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn pick_club_from_nation_list(this: usize, jogador: usi
                 .wrapping_sub((cpn4_w(ficha + 7) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
                 .wrapping_sub((cpn4_w(ficha + 5) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
                 .wrapping_add(0x1388);
-            crate::comparacao::ramo("cpn_4 sorteio do clube da nacao");
+            crate::comparison::branch("cpn_4 sorteio do clube da nacao");
             let nota = sorteio(c as i16 as i32) as i16;
             if nota > melhor_nota {
                 melhor = clube;
@@ -241,16 +241,16 @@ unsafe extern "stdcall" fn comparar_retire_from_playing_staff(p: usize) {
         }
     }
     let (antes_clube, antes_cargo) = (cpn4_d(p + 0x39), cpn4_b(p + 0x3d));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(p), || retire_from_playing_staff(p));
-    PLACAR.registrar(igual, || format!("retire_from_playing_staff(id {}, clube {:x}, cargo {}) {:x?} x {:x?}", cpn4_d(p), antes_clube, antes_cargo, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(p), || retire_from_playing_staff(p));
+    PLACAR.record(igual, || format!("retire_from_playing_staff(id {}, clube {:x}, cargo {}) {:x?} x {:x?}", cpn4_d(p), antes_clube, antes_cargo, mo, mr));
 }
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x7ad220 sorteia), pelo clube devolvido.
 unsafe extern "thiscall" fn comparar_pick_best_club_for_player(this: usize, jogador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, jogador), || crate::aleatorio::sem_contar(|| pick_best_club_for_player(this, jogador)));
-    PLACAR.registrar(igual && r == n, || format!("pick_best_club_for_player(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
+    let reg = crate::rng::STATE_REGIONS;
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, jogador), || crate::rng::without_counting(|| pick_best_club_for_player(this, jogador)));
+    PLACAR.record(igual && r == n, || format!("pick_best_club_for_player(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
     r
 }
 
@@ -258,14 +258,14 @@ unsafe extern "thiscall" fn comparar_pick_best_club_for_player(this: usize, joga
 /// que podem ser percorridas (a da nação do jovem e a de [0x9cf2e4]).
 unsafe extern "thiscall" fn comparar_pick_club_from_nation_list(this: usize, jogador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for n in [cpn4_d(cpn4_d(jogador + 0x1a)), cpn4_d(0x9cf2e4)] {
         let l = nation_club_list(this, n);
         if l != 0 {
             reg.push((l + 0xa, 4));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogador), || crate::aleatorio::sem_contar(|| pick_club_from_nation_list(this, jogador)));
-    PLACAR.registrar(igual && r == n, || format!("pick_club_from_nation_list(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogador), || crate::rng::without_counting(|| pick_club_from_nation_list(this, jogador)));
+    PLACAR.record(igual && r == n, || format!("pick_club_from_nation_list(id {}) original={:x} rust={:x} {:x?} x {:x?}", cpn4_d(jogador), r, n, mo, mr));
     r
 }

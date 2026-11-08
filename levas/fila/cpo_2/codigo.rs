@@ -30,7 +30,7 @@ unsafe extern "thiscall" fn remove_contract(this: usize, pessoa: usize) {
     let id_clube = cpo2_d(e + 4);
     cpo2_por(e, usize::MAX);
     let clube = cpo2_d(0xae23b4).wrapping_add(id_clube.wrapping_mul(0x245));
-    crate::comparacao::ramo("cpo_2 tirar contrato");
+    crate::comparison::branch("cpo_2 tirar contrato");
     cpo2_por(main_contract_slot(pessoa), usize::MAX); // a pessoa fica sem contrato
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let f = get_club_finance(cpo2_d(0xae2a38), clube);
@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn resubmit_held_offers(this: usize, id: usize) -> u32 
                         if *((q + 0x2c) as *const u8) == 0xf {
                             *((q + 0x2c) as *mut u8) = 8;
                         }
-                        crate::comparacao::ramo("cpo_2 reenviar oferta");
+                        crate::comparison::branch("cpo_2 reenviar oferta");
                         reenviar(this, item, t, cpo2_d(item + 0x5d), (q as u32 & 0xffff_ff00) | byte, 1, 1, 0); // com a transferência
                     }
                 }
@@ -112,8 +112,8 @@ unsafe extern "thiscall" fn comparar_remove_contract(this: usize, pessoa: usize)
     }
     let e = cpo2_d(this).wrapping_add((indice as usize).wrapping_mul(0x50));
     let reg = [(vaga, 4), (e, 8)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa), || remove_contract(this, pessoa));
-    PLACAR.registrar(igual, || format!("remove_contract(pessoa {:x}, contrato {}) {:x?} x {:x?}", cpo2_d(pessoa), indice, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa), || remove_contract(this, pessoa));
+    PLACAR.record(igual, || format!("remove_contract(pessoa {:x}, contrato {}) {:x?} x {:x?}", cpo2_d(pessoa), indice, mo, mr));
 }
 
 /// Comparador: a original reenvia (0x4cc490, ofertas e transferências) e tira as ofertas da lista (libera): roda só ela
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn comparar_resubmit_held_offers(this: usize, id: usize
         item = proximo(lista);
     }
     let r = o(this, id);
-    PLACAR.registrar(r == esperado, || format!("resubmit_held_offers(id {:x}) devolveu {}, esperava {}", id, r, esperado));
+    PLACAR.record(r == esperado, || format!("resubmit_held_offers(id {:x}) devolveu {}, esperava {}", id, r, esperado));
     r
 }
 
@@ -144,6 +144,6 @@ unsafe extern "thiscall" fn comparar_resubmit_held_offers(this: usize, id: usize
 unsafe extern "stdcall" fn comparar_contract_manager_season_end_month(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
     let n = contract_manager_season_end_month(clube);
-    PLACAR.registrar(r == n, || format!("contract_manager_season_end_month({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("contract_manager_season_end_month({:x}) original={} rust={}", clube, r, n));
     r
 }

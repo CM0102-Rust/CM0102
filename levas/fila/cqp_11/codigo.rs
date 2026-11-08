@@ -55,7 +55,7 @@ unsafe fn create_round_table(this: usize, f: Option<ScheduleStage>, rodadas: *mu
         show_error_at(arquivo, f.linha);
         return 0;
     }
-    crate::comparacao::ramo(f.nome);
+    crate::comparison::branch(f.nome);
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(0x68a160usize);
     let jogo_l: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
@@ -120,14 +120,14 @@ unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, f: Option<S
         Some(f) => f,
         None => {
             let a = o();
-            PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
+            PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
             return a;
         }
     };
     let (mut r2, mut e2) = (*rodadas, if extra.is_null() { 0 } else { *extra });
     let mut l2 = if liga.is_null() { 0 } else { *liga };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
         if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let saidas = *rodadas == r2 && (extra.is_null() || *extra == e2) && (liga.is_null() || *liga == l2);
     let tabela = if a != 0 && b != 0 { written_round_table_bytes(f.ops, a) == written_round_table_bytes(f.ops, b) } else { a == 0 && b == 0 };
@@ -135,7 +135,7 @@ unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, f: Option<S
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
+    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
     a
 }
 

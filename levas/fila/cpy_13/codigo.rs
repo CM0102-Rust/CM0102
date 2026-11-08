@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
     if so_registro != 0 {
         return;
     }
-    crate::comparacao::ramo("cpy_13 liberado");
+    crate::comparison::branch("cpy_13 liberado");
     if cpy13_d(p + 0x61) != 0 {
         let historico: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, u32, u32) = core::mem::transmute(0x7c5fe0usize);
         historico(cpy13_d(0xb74350), p, 0, 0, -1, motivo, 0);
@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
         let pagar: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x599920usize);
         let fin = financas(cpy13_d(0xae2a38), clube);
         if comp != 0 {
-            crate::comparacao::ramo("cpy_13 compensacao paga");
+            crate::comparison::branch("cpy_13 compensacao paga");
         }
         pagar(fin, comp); // cpy13: a compensação ao clube
         let listas: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x843e10usize);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize, clube: us
         if cpy13_d(p + 0x39) != 0 {
             let escalacao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x896c60usize);
             let elenco: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x53c190usize);
-            crate::comparacao::ramo("cpy_13 sai do clube atual");
+            crate::comparison::branch("cpy_13 sai do clube atual");
             escalacao(cpy13_d(0xde1d08), cpy13_d(p + 0x39), p, 1, 1); // cpy13: as escalações
             escalacao(cpy13_d(0xde1d08), cpy13_d(p + 0x39), p, 0, 1);
             elenco(cpy13_d(p + 0x39), p, 0, 1, 0);
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn comparar_free_transfer_staff(this: usize, p: usize, 
     let n = cpy13_d(this + 0x86a);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32)>(%%I0%%)(this, p, clube, motivo, compensacao, so_registro);
     if emprestada {
-        PLACAR.registrar(cpy13_d(this + 0x86a) == n, || format!("free_transfer_staff(pessoa {}) emprestada: conta {} -> {}", cpy13_d(p), n, cpy13_d(this + 0x86a)));
+        PLACAR.record(cpy13_d(this + 0x86a) == n, || format!("free_transfer_staff(pessoa {}) emprestada: conta {} -> {}", cpy13_d(p), n, cpy13_d(this + 0x86a)));
         return;
     }
     if cpy13_d(this + 0x862) == 0 {
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn comparar_free_transfer_staff(this: usize, p: usize, 
     if so_registro == 0 {
         ok = ok && get_contract_unstored(p) == 0 && cpy13_d(p + 0x52) == 0 && cpy13_b(p + 0x6d) == 0;
     }
-    PLACAR.registrar(ok, || format!("free_transfer_staff(pessoa {}, clube {:x}, só registro {}): conta {} -> {}, registro {:x?}", cpy13_d(p), clube, so_registro,
+    PLACAR.record(ok, || format!("free_transfer_staff(pessoa {}, clube {:x}, só registro {}): conta {} -> {}, registro {:x?}", cpy13_d(p), clube, so_registro,
         n, cpy13_d(this + 0x86a), core::slice::from_raw_parts(r as *const u8, 0x1d)));
 }
 
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn set_on_holiday(this: usize, ferias: u32, tecnico: us
         *conta = (*conta).wrapping_sub(1);
     }
     core::ptr::write_unaligned(marca as *mut u32, ferias);
-    crate::comparacao::ramo("cpy_13 ferias do humano");
+    crate::comparison::branch("cpy_13 ferias do humano");
     if ferias != 0 {
         let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7874b0usize);
         if cpy13_d(t + 0x39) != 0 {
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, ferias: u32, te
     let esperada = conta + if ferias != 0 && antes == 0 { 1 } else if ferias == 0 && antes != 0 { -1 } else { 0 };
     o(this, ferias, tecnico);
     let (depois, conta2) = (cpy13_d(marca) as u32, cpy13_d(this + 0xc) as i32);
-    PLACAR.registrar(depois == ferias && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", ferias, t, antes, depois, conta, conta2, esperada));
+    PLACAR.record(depois == ferias && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", ferias, t, antes, depois, conta, conta2, esperada));
 }
 
 /// { 0x8d7cd0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH das notícias locais): `TRANSFER_MANAGER::
@@ -243,7 +243,7 @@ unsafe extern "thiscall" fn post_contract_talks_news(_this: usize, o: usize) {
         gravar(nt, 3, cpy13_d(cpy13_d(q + 0xc) + 0x33) as u32);
     };
     if humano(cpy13_d(0xb7431c), comprador) != 0 {
-        crate::comparacao::ramo("cpy_13 noticia ao comprador");
+        crate::comparison::branch("cpy_13 noticia ao comprador");
         let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
         let nt = local.as_mut_ptr() as usize;
         construir(nt, 0xfac, 0);
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn post_contract_talks_news(_this: usize, o: usize) {
     let nt = local.as_mut_ptr() as usize;
     while e != 0 {
         let q = cpy13_pessoa(cpy13_d(e));
-        crate::comparacao::ramo("cpy_13 noticia ao vendedor");
+        crate::comparison::branch("cpy_13 noticia ao vendedor");
         construir(nt, 0xfac, 0);
         chaves(nt, q);
         gravar(nt, 4, cpy13_d(o + 8) as u32);

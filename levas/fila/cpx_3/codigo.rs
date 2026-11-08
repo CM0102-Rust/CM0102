@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
     let comprador = cpx3_clube(cpx3_d(o + 8));
     let vendedor = contract_club_not_type5(p);
     let confianca: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x6978f0usize);
-    crate::comparacao::ramo("cpx_3 confianca das diretorias");
+    crate::comparison::branch("cpx_3 confianca das diretorias");
     confianca(cpx3_d(0xb67a44), o); // cpx3: a confiança das diretorias
     let nacao = cpx3_d(cpx3_clube(cpx3_d(o + 8)) + 0x53);
     for k in 0..0x1c {
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
     };
     com_a_oferta(0x8c91e0, this);
     if vendedor != 0 {
-        crate::comparacao::ramo("cpx_3 paga a transferencia");
+        crate::comparison::branch("cpx_3 paga a transferencia");
         com_a_oferta(0x8ca8a0, this); // cpx3: o pagamento da transferência
     }
     if cpx3_b(o + 0x1f) != 1 {
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
         }
     }
     if cpx3_d(o + 0x1b) != 0 && cpx3_d(p + 0x69) == 0 {
-        crate::comparacao::ramo("cpx_3 parte dos clubes anteriores");
+        crate::comparison::branch("cpx_3 parte dos clubes anteriores");
         com_a_oferta(0x8e4f20, this); // cpx3: a parte dos clubes anteriores
     }
     let mudar: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x8c9720usize);
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
 unsafe extern "thiscall" fn comparar_finalise_transfer(this: usize, o: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, o);
     let e = cpx3_b(o + 0x2c);
-    PLACAR.registrar(e == 0x14, || format!("finalise_transfer(oferta {:#x}) estado={:#x} (plano 0x14)", o, e));
+    PLACAR.record(e == 0x14, || format!("finalise_transfer(oferta {:#x}) estado={:#x} (plano 0x14)", o, e));
 }
 
 /// A notícia local com a pessoa (o id e as três chaves) nas vagas `k` a `k` + 3.
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn post_transfer_completed_news(this: usize, o: usize) 
     if n == 0 {
         return;
     }
-    crate::comparacao::ramo("cpx_3 noticia da transferencia concluida");
+    crate::comparison::branch("cpx_3 noticia da transferencia concluida");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfa8, 0);
@@ -326,7 +326,7 @@ unsafe extern "thiscall" fn post_transfer_agreed_news(this: usize, o: usize, dat
     if n == 0 {
         return;
     }
-    crate::comparacao::ramo("cpx_3 noticia da transferencia acertada");
+    crate::comparison::branch("cpx_3 noticia da transferencia acertada");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfb3, 0);

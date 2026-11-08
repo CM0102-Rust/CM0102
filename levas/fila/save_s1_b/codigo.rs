@@ -29,7 +29,7 @@ unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize, padrao: u
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let gravar: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932e10usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparacao::ramo("save empacotar");
+    crate::comparison::branch("save empacotar");
     // a busca (alça +0, nome +0x10, filtro +0x110) e o caminho montado
     let mut achado = [0u8; 0x114];
     let mut busca = [0u8; 0x104];
@@ -95,7 +95,7 @@ unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: usize, padra
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932c30usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparacao::ramo("save desempacotar");
+    crate::comparison::branch("save desempacotar");
     let mut z = 0usize;
     let mut resposta = 0u32;
     let erro = |nomes: usize, z: &mut usize| {
@@ -193,7 +193,7 @@ unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
     let proximo: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(0x4c0b50usize);
     let encerrar: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(0x4c0c10usize);
     let apagar: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(0x94643ausize);
-    crate::comparacao::ramo("save limpar temporarios");
+    crate::comparison::branch("save limpar temporarios");
     let global = 0xde279c as *mut u8;
     *global = 0;
     let variavel = ambiente(0x987da0);

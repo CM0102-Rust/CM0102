@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn cqu13_intercontinental_clubes(this: usize) -> i32 {
     let (europa, pelo_campeao, reserva) = cqu13_vaga(this, 0x9cfa10, 0x1388, 0x9cf6e8, 0, 0xad5848, 0xea); // cqu13: o campeão europeu
     cqu13_pd(t + if reserva { 6 } else { 0 }, europa);
     if pelo_campeao {
-        crate::comparacao::ramo("cqu_13 clube europeu");
+        crate::comparison::branch("cqu_13 clube europeu");
         if europa == 0 {
             show_error_at(0xad5848, 0xd1);
             return 0;
@@ -133,7 +133,7 @@ unsafe fn cqu13_comparar_clubes(nome: &str, this: usize, continentes: (usize, us
         let (a, b) = (cqu13_d(t), cqu13_d(t + 6));
         let bytes = [4usize, 5, 0xa, 0xb].iter().all(|&k| *((t + k) as *const u8) == 0);
         let ok = cqu13_w(this + 0x3e) == 2 && a != 0 && b != 0 && cqu13_do_continente(a, continentes.0) && cqu13_do_continente(b, continentes.1) && bytes;
-        PLACAR.registrar(ok, || format!("{}({:#x}): clubes {:#x} {:#x} estado zerado {}", nome, this, a, b, bytes));
+        PLACAR.record(ok, || format!("{}({:#x}): clubes {:#x} {:#x} estado zerado {}", nome, this, a, b, bytes));
     }
     r
 }
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn cqu13_interamericana_clubes(this: usize) -> i32 {
     let (norte, pelo_campeao, reserva) = cqu13_vaga(this, 0x9cfa14, 0x3e8, 0x9cf72c, 0, 0x9e9d94, 0xea); // cqu13: o campeão da CONCACAF
     cqu13_pd(t + if reserva { 6 } else { 0 }, norte);
     if pelo_campeao {
-        crate::comparacao::ramo("cqu_13 clube norte-americano");
+        crate::comparison::branch("cqu_13 clube norte-americano");
         if norte == 0 {
             show_error_at(0x9e9d94, 0xd1);
             return 0;
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn cqu13_interamericana_clubes(this: usize) -> i32 {
     let (sul, pelo_campeao, _) = cqu13_vaga(this, 0x9cfa1c, 0x1388, 0x9cf63c, 0, 0x9e9d94, 0x118); // cqu13: o campeão da Libertadores na Interamericana
     cqu13_pd(cqu13_d(this + 0xa7) + 6, sul);
     if pelo_campeao {
-        crate::comparacao::ramo("cqu_13 clube sul-americano da interamericana");
+        crate::comparison::branch("cqu_13 clube sul-americano da interamericana");
         if sul == 0 {
             show_error_at(0x9e9d94, 0xff);
             return 0;
@@ -273,7 +273,7 @@ unsafe fn cqu13_comparar_previstas(nome: &str, this: usize, _fase: u32, _grupo: 
         lidas.push(if e != 0 { *((e + 0x72) as *const u8) as i32 } else { -1 });
     }
     let ok = lidas[0] == 1 && lidas.iter().all(|&x| x >= 1) && lidas.windows(2).all(|w| w[0] <= w[1]);
-    PLACAR.registrar(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
+    PLACAR.record(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
 }
 
 unsafe extern "thiscall" fn comparar_cqu13_merconorte_previstas(this: usize) {

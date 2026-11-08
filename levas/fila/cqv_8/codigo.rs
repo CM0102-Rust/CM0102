@@ -81,7 +81,7 @@ unsafe fn cqv8_copa_da_italia_corpo(this: usize, ano: u32, dono: usize) -> usize
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqv_8 copa_da_italia nova");
+    crate::comparison::branch("cqv_8 copa_da_italia nova");
     cqv8_p16(this + 0xd9, 0x28);
     cqv8_p8(this + 0x44, 0xff);
     cqv8_p32(this + 0x30, 0xffffffff);
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn cqv8_copa_da_italia(this: usize, ano: u32, dono: usi
 unsafe extern "thiscall" fn comparar_cqv8_copa_da_italia(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv8_plano(this, r, ano, dono, 0x96c318, &CQV8_CAMPOS_COPA_DA_ITALIA, false);
-    PLACAR.registrar(erro.is_none(), || format!("cqv8_copa_da_italia({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqv8_copa_da_italia({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -162,7 +162,7 @@ unsafe fn cqv8_copa_da_serie_c_corpo(this: usize, ano: u32, dono: usize) -> usiz
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqv_8 copa_da_serie_c nova");
+    crate::comparison::branch("cqv_8 copa_da_serie_c nova");
     cqv8_p16(this + 0xd9, 0x28);
     cqv8_p8(this + 0x44, 0xff);
     cqv8_p32(this + 0x30, 0xffffffff);
@@ -218,6 +218,6 @@ unsafe extern "thiscall" fn cqv8_copa_da_serie_c(this: usize, ano: u32, dono: us
 unsafe extern "thiscall" fn comparar_cqv8_copa_da_serie_c(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqv8_plano(this, r, ano, dono, 0x96c264, &CQV8_CAMPOS_COPA_DA_SERIE_C, false);
-    PLACAR.registrar(erro.is_none(), || format!("cqv8_copa_da_serie_c({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqv8_copa_da_serie_c({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

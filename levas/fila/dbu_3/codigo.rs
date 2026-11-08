@@ -97,9 +97,9 @@ unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho
         return o(regiao, texto, tamanho, forma); // caixa: só a original
     }
     // os 100 primeiros bytes (o tamanho mínimo aceito)
-    let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(regiao, texto, tamanho, forma),
+    let (x, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, 100)], || o(regiao, texto, tamanho, forma),
         || get_region_name(regiao, texto, tamanho, forma));
-    PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
+    PLACAR.record(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
     x
 }
 
@@ -174,8 +174,8 @@ unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: 
         return o(continente, texto, tamanho, forma);
     }
     // os 50 primeiros bytes (o tamanho mínimo aceito)
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 50)], || o(continente, texto, tamanho, forma),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, 50)], || o(continente, texto, tamanho, forma),
         || get_continent_adjective(continente, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
     r
 }

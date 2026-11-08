@@ -27,8 +27,8 @@ unsafe extern "C" fn comparar_database_get_club_assistant(clube: usize) -> usize
         return o(clube); // caixa: só a original
     }
     // a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube), || database_get_club_assistant(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1)], || o(clube), || database_get_club_assistant(clube));
+    PLACAR.record(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -80,9 +80,9 @@ unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize, vetor: *mu
         return o(clube, vetor); // caixa: só a original
     }
     // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(vetor as usize, 20), (clube + 0x244, 1)],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(vetor as usize, 20), (clube + 0x244, 1)],
         || o(clube, vetor), || database_get_club_coaches(clube, vetor));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -115,7 +115,7 @@ unsafe extern "C" fn comparar_database_count_club_coaches(clube: usize) -> u8 {
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube), || database_count_club_coaches(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1)], || o(clube), || database_count_club_coaches(clube));
+    PLACAR.record(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

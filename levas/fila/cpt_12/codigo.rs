@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: usize, adv:
     if ini >= fim {
         return 0;
     }
-    crate::comparacao::ramo("cpt_12 janela da excursão");
+    crate::comparison::branch("cpt_12 janela da excursão");
     let (mut d1, mut d2, mut t, mut u) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
     data_padrao(&mut d1);
     data_padrao(&mut d2);
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: usize, adv:
         if livre(this, &mut d1, outro, 0) != 0 {
             let m = acrescentar(this, clube, &mut d1, outro, 0); // cpt12: o clube em casa
             if m != 0 {
-                crate::comparacao::ramo("cpt_12 jogo da excursão marcado");
+                crate::comparison::branch("cpt_12 jogo da excursão marcado");
                 pedir(this, m);
                 if cpt12_d(cand + 0x12) == 0 {
                     let l = alloc_list();
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: usize, adv:
         }
         p += 4;
         if k + 1 < n as i32 {
-            crate::comparacao::ramo("cpt_12 data do jogo seguinte");
+            crate::comparison::branch("cpt_12 data do jogo seguinte");
         }
         let r = mais_dias(d1.as_ptr() as usize, &mut t, 2); // cpt12: o próximo jogo
         copiar(&mut d1, &mut u, r);
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn comparar_schedule_tour_matches(this: usize, cand: us
 unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_friendly_candidates_by_band(a, b);
-    PLACAR.registrar(r == n, || format!("compare_friendly_candidates_by_band({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_friendly_candidates_by_band({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -172,6 +172,6 @@ unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: u
 unsafe extern "C" fn comparar_compare_friendly_candidate_ptrs_by_nation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_friendly_candidate_ptrs_by_nation(a, b);
-    PLACAR.registrar(r == n, || format!("compare_friendly_candidate_ptrs_by_nation({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_friendly_candidate_ptrs_by_nation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

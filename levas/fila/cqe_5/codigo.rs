@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
     let dono = if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 };
     let comp = cqe5_d(clube + 0x57);
     if comp == cqe5_d(dono + 0x57) && comp != 0 && cqe5_d(comp) == cqe5_d(0x9cf5bc) {
-        crate::comparacao::ramo("cqe_5 mesma divisao");
+        crate::comparison::branch("cqe_5 mesma divisao");
         if msg != 0 {
             let id = cqe5_d(0x9cf5bc);
             let r = cqe5_d(0xae23d0).wrapping_add(id.wrapping_mul(0x6b));
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
     }
     if cqe5_b(season_loans_entry(clube)) as i8 >= 5 {
         // cqe5: cinco na temporada
-        crate::comparacao::ramo("cqe_5 cinco na temporada");
+        crate::comparison::branch("cqe_5 cinco na temporada");
         if msg != 0 {
             let g = cqe5_b(clube + 0x52) as i8 as i32;
             texto(msg, 0x9c4534, g, g, clube + 0x38);
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
         }
     }
     if n > 1 { // cqe5: dois ao mesmo tempo
-        crate::comparacao::ramo("cqe_5 dois ao mesmo tempo");
+        crate::comparison::branch("cqe_5 dois ao mesmo tempo");
         if msg != 0 {
             let g = cqe5_b(clube + 0x52) as i8 as i32;
             texto(msg, 0x9c44d4, g, g, clube + 0x38);
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
     if janela(this, 0xae2c90, 0) != 0 {
         return 1;
     }
-    crate::comparacao::ramo("cqe_5 fora da janela");
+    crate::comparison::branch("cqe_5 fora da janela");
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nação; add esp, 0x10 -> cdecl (o adjetivo da nação)
         let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x6181d0usize);
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn record_loan(_this: usize, oferta: usize) {
     let clube = cqe5_d(0xae23b4).wrapping_add(cqe5_d(oferta + 8).wrapping_mul(0x245));
     let nacao = cqe5_d(clube + 0x53);
     if nacao != 0 && cqe5_d(nacao) == cqe5_d(0x9cf2e4) {
-        crate::comparacao::ramo("cqe_5 emprestimo contado");
+        crate::comparison::branch("cqe_5 emprestimo contado");
         let p = season_loans_entry(clube);
         *(p as *mut u8) = cqe5_b(p).wrapping_add(1); // cqe5: a conta da temporada
     }
@@ -181,7 +181,7 @@ unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, u
     }
     let mut to = Vec::new();
     let mut tr = Vec::new();
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || {
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || {
         let x = o(this, clube, jogador, msg, motivo);
         to = message_text(msg);
         x
@@ -196,7 +196,7 @@ unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, u
     if msg != 0 {
         core::ptr::copy_nonoverlapping(to.as_ptr(), msg as *mut u8, to.len());
     }
-    PLACAR.registrar(igual && ro == rr && to == tr, || format!("{}(regras {:#x}, clube {:#x}, jogador {:#x}) original={} {:x?} {:?} rust={} {:x?} {:?}", nome, this, clube, jogador, ro, mo, String::from_utf8_lossy(&to), rr, mr, String::from_utf8_lossy(&tr)));
+    PLACAR.record(igual && ro == rr && to == tr, || format!("{}(regras {:#x}, clube {:#x}, jogador {:#x}) original={} {:x?} {:?} rust={} {:x?} {:?}", nome, this, clube, jogador, ro, mo, String::from_utf8_lossy(&to), rr, mr, String::from_utf8_lossy(&tr)));
     ro
 }
 
@@ -209,8 +209,8 @@ unsafe extern "thiscall" fn comparar_record_loan(this: usize, oferta: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let clube = cqe5_d(0xae23b4).wrapping_add(cqe5_d(oferta + 8).wrapping_mul(0x245));
     let regioes = [(season_loans_entry(clube), 1usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || record_loan(this, oferta));
-    PLACAR.registrar(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, oferta), || record_loan(this, oferta));
+    PLACAR.record(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
 }
 
 /// Comparador: lado a lado na tabela das contas inteira ([0xae235c] clubes × 16 bytes) só no dia em que ela muda (20
@@ -226,6 +226,6 @@ unsafe extern "thiscall" fn comparar_england_rules_daily_update(this: usize, dat
     }
     let n = (cqe5_d(0xae235c) as i32).max(0) as usize;
     let regioes = [(cqe5_d(cqe5_d(0xde1f54) + 0x91c), n * 16)];
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(this, data), || england_rules_daily_update(this, data));
-    PLACAR.registrar(igual, || format!("england_rules_daily_update(regras {:#x}) tabela diverge", this));
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&regioes, || o(this, data), || england_rules_daily_update(this, data));
+    PLACAR.record(igual, || format!("england_rules_daily_update(regras {:#x}) tabela diverge", this));
 }

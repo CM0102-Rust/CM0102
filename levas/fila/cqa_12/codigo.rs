@@ -64,9 +64,9 @@ unsafe fn update_cup_placed_club(this: usize, clube: usize, jogo: usize, partida
         let v = cqa12_w(clube + 0x80).wrapping_add(soma as i16);
         let v = if v < 1 { 1 } else if v > 10000 { 10000 } else { v };
         if tipo == 1 {
-            crate::comparacao::ramo("cqa_12 injury_word_0c do vice");
+            crate::comparison::branch("cqa_12 injury_word_0c do vice");
         } else {
-            crate::comparacao::ramo("cqa_12 injury_word_0c do terceiro");
+            crate::comparison::branch("cqa_12 injury_word_0c do terceiro");
         }
         cqa12_pw(clube + 0x80, v); // cqa12: a reputação do colocado
     }
@@ -157,15 +157,15 @@ unsafe fn compare_cup_placed(nome: &str, clube: usize, jogo: usize, partida: usi
         return original();
     }
     let reg = [(clube + 0x80, 2), (partida + 0x188 + 0x625 * (cqa12_d(jogo + 0x20) == clube) as usize, 6)];
-    let antes = crate::comparacao::Memoria::ler(&reg);
+    let antes = crate::comparison::MemorySnapshot::read(&reg);
     CUP_PLACED_CLUB_DRY_RUN = true;
     copia();
     CUP_PLACED_CLUB_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&reg);
+    antes.write_back();
     original();
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", nome, clube, jogo, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&reg);
+    PLACAR.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", nome, clube, jogo, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_add_cup_runners_up_record(this: usize, clube: usize, jogo: usize, partida: usize) {
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn record_manager_job_change(this: usize, tecnico: usiz
             let (ai, ah) = (*((0xdd6ec8 + 2) as *const u16), *((hoje + 2) as *const u16));
             let depois = ai > ah || (ai == ah && cqa12_w(0xdd6ec8) > cqa12_w(hoje));
             if !depois {
-                crate::comparacao::ramo("cqa_12 passagem fechada");
+                crate::comparison::branch("cqa_12 passagem fechada");
                 if cqa12_i(r + 0x72) != -1 && cqa12_i(r + 0x4a) != -1 {
                     if cqa12_i(r + 0x72) == cqa12_i(r + 0x4a) && cqa12_w(r + 0x50) == cqa12_w(r + 0x78) && cqa12_w(r + 0x4e) == cqa12_w(r + 0x76) {
                         staff_records_copy_date(r + 0x7e, hoje);
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn record_manager_job_change(this: usize, tecnico: usiz
             }
             cqa12_pi(r + 0x4a, -1);
             if contratado == 1 {
-                crate::comparacao::ramo("cqa_12 passagem nova");
+                crate::comparison::branch("cqa_12 passagem nova");
                 cqa12_pi(r + 0x4a, cqa12_i(clube));
                 staff_records_copy_date(r + 0x4e, hoje);
                 let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
@@ -303,13 +303,13 @@ unsafe extern "thiscall" fn comparar_record_manager_job_change(this: usize, tecn
             reg.push((r, 0xd2));
         }
     }
-    let antes = crate::comparacao::Memoria::ler(&reg);
+    let antes = crate::comparison::MemorySnapshot::read(&reg);
     CUP_PLACED_CLUB_DRY_RUN = true;
     record_manager_job_change(this, tecnico, clube, contratado);
     CUP_PLACED_CLUB_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&reg);
+    antes.write_back();
     o(this, tecnico, clube, contratado);
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", tecnico, clube, contratado as u8, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&reg);
+    PLACAR.record(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", tecnico, clube, contratado as u8, mo, mr));
 }

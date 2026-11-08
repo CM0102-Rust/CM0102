@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize) {
     if fase == 0 {
         return show_error_at(0xaa1fb4, 0x5c4);
     }
-    crate::comparacao::ramo("cqr_4 play-off");
+    crate::comparison::branch("cqr_4 play-off");
     montar(fase, 0);
 }
 
@@ -170,7 +170,7 @@ unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     if fase == 0 {
         return show_error_at(0xaa1fb4, 0x5fe);
     }
-    crate::comparacao::ramo("cqr_4 final");
+    crate::comparison::branch("cqr_4 final");
     montar(fase, 0);
     soltar(lista);
 }
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_advance_stage(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqr4_d(this + 0x30) as i32;
     let esperado = if ultima { antes } else if antes == 1 || antes == 2 { antes + 1 } else { antes };
-    PLACAR.registrar(depois == esperado, || format!("usa_mls_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.record(depois == esperado, || format!("usa_mls_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador do play-off: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_create_playoff_stage(this: usize) {
         nela.sort_unstable();
         p == nela
     };
-    PLACAR.registrar(igual, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
+    PLACAR.record(igual, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
@@ -249,5 +249,5 @@ unsafe extern "thiscall" fn comparar_usa_mls_create_final_stage(this: usize) {
         let (x, y) = (cqr4_d(l), cqr4_d(l + 6));
         cqr4_w(fase + 0x3e) == 2 && cqr4_d(fase + 4) == cqr4_d(this + 4) && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
     };
-    PLACAR.registrar(igual, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this, v, n, fase));
+    PLACAR.record(igual, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this, v, n, fase));
 }

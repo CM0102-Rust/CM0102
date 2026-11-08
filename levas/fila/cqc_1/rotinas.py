@@ -25,7 +25,7 @@
 #   valor; push índice -> thiscall, ret 8; três vezes) e 0x7861e0 (mov ecx, [0xb7431c]; push clube; push &local ->
 #   thiscall, ret 8).
 # Comparadores: a 0x59cfa0 lado a lado (finanças do parceiro e do próprio clube, clube, estádio de 78 bytes, linha dos
-# pedidos de 0x49 bytes, estado do sorteio; a cópia em sem_contar), só a original com técnico humano ou na compra do
+# pedidos de 0x49 bytes, estado do sorteio; a cópia em without_counting), só a original com técnico humano ou na compra do
 # estádio sem dono (mexe no dono); a 0x59cdd0 só a original (chama a 0x59cfa0 de cada clube), conferindo os totais do
 # ano zerados no último clube da entrada; a 0x59fe10 só a original (entrega a notícia ao humano).
 SAVE = False

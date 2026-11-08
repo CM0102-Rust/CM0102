@@ -85,8 +85,8 @@ unsafe extern "thiscall" fn set_scout(this: usize, olheiro: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let reg: Vec<(usize, usize)> = (0..0x10).map(|i| (human_manager_watched_match_record(this, i), 79)).collect();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this), || clear_invalid_watched_fixtures(this));
-    PLACAR.registrar(igual && r == n, || format!("clear_invalid_watched_fixtures {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || clear_invalid_watched_fixtures(this));
+    PLACAR.record(igual && r == n, || format!("clear_invalid_watched_fixtures {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -101,14 +101,14 @@ unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this: usize, clu
         igual &= itens.len() == alvos.len()
             && itens.iter().zip(&alvos).all(|(&i, &p)| core::slice::from_raw_parts(i as *const u8, 0x6e) == core::slice::from_raw_parts(p as *const u8, 0x6e));
     }
-    PLACAR.registrar(igual, || format!("collect_club_scout_targets original={} alvos {}", r, alvos.len()));
+    PLACAR.record(igual, || format!("collect_club_scout_targets original={} alvos {}", r, alvos.len()));
     r
 }
 
 /// Comparador: lado a lado pelo olheiro e as missões (+0x174 a +0x199; a 0x53e990 só lê).
 unsafe extern "thiscall" fn comparar_set_scout(this: usize, olheiro: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x174, 0x25)], || o(this, olheiro), || set_scout(this, olheiro));
-    PLACAR.registrar(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", olheiro, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x174, 0x25)], || o(this, olheiro), || set_scout(this, olheiro));
+    PLACAR.record(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", olheiro, mo, mr));
     r
 }

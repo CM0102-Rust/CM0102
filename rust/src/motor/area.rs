@@ -35,8 +35,15 @@ pub(crate) unsafe fn write_i32_at(area: usize, desl: isize, v: i32) {
     core::ptr::write_unaligned((area as isize).wrapping_add(desl) as *mut i32, v)
 }
 
-/// splits the area width and height by the column and row weights (up to 30 each; more raises the Area.cpp 497/507 box)
-/// and sets up the scrollbar
+/// Lays out the area grid: splits the area width and height by the column and row weights and sets up the scrollbar.
+///
+/// It writes the area index into the owner widget (`+0x7c`, if there is one; and clears `+0xbe9`) and clears the first
+/// visible widget. Outside grid-only areas (flag `0x80000`), when there are columns and rows, it computes the margins
+/// (flag 1: 0; otherwise 2 at the sides and, at top and bottom, 2 with flag `0x10` or a single row, 8 for the others),
+/// turns on the scrollbar (`0x403600`) when the widgets exceed the rows, and splits the width and the height by the
+/// weights.
+///
+/// More than 30 columns or rows: the original routine runs (error box, `Area.cpp 497` and `507`).
 /// Original: `Area::layout` (0x403350, Area.cpp, thiscall).
 ///
 /// [pt] { 0x403350 } (thiscall, Area.cpp): organiza a grade da área. Grava o índice da área no item dono
@@ -53,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
         // simplification: the original writes the owner and +0xb76 before the error; repeating is harmless (same values)
         return original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT)(area);
     }
-    crate::comparacao::ramo("telas organizar a area");
+    crate::comparison::branch("telas organizar a area");
     let owner = core::ptr::read_unaligned((area + 0x20e) as *const i16);
     if owner != -1 {
         *((area + 0xbe9) as *mut u32) = 0;
@@ -127,8 +134,15 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
 }
 
 
-/// initialises the area: rectangle clamped to the screen, fields, cleared scrollbar and the column and row weights; the
-/// visible rows clamped at 30 (the grid size), the rest goes to the scroll bar
+/// Initialises the area: rectangle clamped to the screen, fields, cleared scrollbar and the column and row weights.
+///
+/// An area that opens on top of a widget (`dono` ≠ -1): weight 1 in all 30 columns and rows, zero rectangle, 1 column
+/// and 0 rows. For the others: it orders x1/x2 and y1/y2 (swap `0x90ba90`), x1/y1 at least 0 and x2/y2 at most the
+/// screen (`0x31f`/`0x257` in the 800x600 exe; the 1920x1080 exe replaces these immediates, which are read here from
+/// the exe itself). It writes the fields, clears the scrollbar and, outside grid-only areas (`0x80000`), copies the
+/// weights (with 1..29 columns/rows and a pointer) or fills them with 1 (also with 30 or more: in that case the
+/// original overruns the 30-entry array, and so does this code). The visible rows are clamped at 30 (the grid size);
+/// the rest goes to the scrollbar.
 /// Original: `Area::init` (0x402ac0, Area.cpp, thiscall).
 ///
 /// [pt] { 0x402ac0 } (thiscall, Area.cpp): inicia a área. Área que abre por cima de um item (`dono` ≠ -1):
@@ -142,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn init(
     area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
     pesos_colunas: usize, rows: u32, pesos_linhas: usize, marks: u32, colour: u32, owner: u32,
 ) {
-    crate::comparacao::ramo("telas iniciar a area");
+    crate::comparison::branch("telas iniciar a area");
     let rows = cap_area_rows(rows);
     let (mut x1, mut y1, mut x2, mut y2) = (x1, y1, x2, y2);
     let (mut columns, mut pesos_colunas, mut rows, mut pesos_linhas) = (columns as u8, pesos_colunas, rows as u8, pesos_linhas);
@@ -219,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn init(
 /// Caps an area grid's row count (low byte) at 30, the fixed array size; extra rows go to the scroll bar.
 pub(crate) fn cap_area_rows(rows: u32) -> u32 {
     if rows & 0xff > 30 {
-        crate::comparacao::ramo("telas linhas da area travadas em 30");
+        crate::comparison::branch("telas linhas da area travadas em 30");
         (rows & !0xff) | 30
     } else {
         rows
@@ -227,7 +241,16 @@ pub(crate) fn cap_area_rows(rows: u32) -> u32 {
 }
 
 
-/// draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar
+/// Draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar.
+///
+/// With `redesenhar`, it frees the saved image (`0x5e42b0`); an area that opens on top of a widget saves the background
+/// (`0x5e3dd0`); it draws the panel (`0x5e5df0`). Grid-only area (`0x80000`): the grid lines (`0x5e3730`, colour
+/// `[0xae317e]`) and that is all. For the others: it saves the scrollbar background, places each visible widget in its
+/// cell (the grids `+0x1c`/`+0x10c` and `+0x94`/`+0x184`, when the widget has no rectangle of its own at
+/// `+0x28`/`+0x30`) and draws it (`0x5ee590`) until it passes the last row; then the scrollbar (`0x403c80`).
+///
+/// Without a first visible widget (`+0xb76` = -1): the original routine runs (error box `Area.cpp 245` and the layout
+/// `0x403350`).
 /// Original: `Area::draw` (0x402e70, Area.cpp, thiscall).
 ///
 /// [pt] { 0x402e70 } (thiscall, Area.cpp): desenha a área. Com `redesenhar`, libera a imagem guardada
@@ -241,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
     if core::ptr::read_unaligned((area + 0xb76) as *const i16) == -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redesenhar);
     }
-    crate::comparacao::ramo("telas desenhar a area");
+    crate::comparison::branch("telas desenhar a area");
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GUI_FREE_IMAGE);
     let store: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(FN_GUI_SAVE_SCREEN_IMAGE);
     let imagem = (area + 0x200) as *mut usize;

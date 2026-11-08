@@ -36,14 +36,14 @@ unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize, origem: us
 
 unsafe extern "thiscall" fn comparar_transfer_fee_record_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x29)], || o(this, origem), || transfer_fee_record_assign(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("transfer_fee_record_assign {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x29)], || o(this, origem), || transfer_fee_record_assign(this, origem));
+    PLACAR.record(igual && r == n, || format!("transfer_fee_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_goals_in_match_record_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x38)], || o(this, origem), || goals_in_match_record_assign(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("goals_in_match_record_assign {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x38)], || o(this, origem), || goals_in_match_record_assign(this, origem));
+    PLACAR.record(igual && r == n, || format!("goals_in_match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }

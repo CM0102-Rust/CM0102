@@ -54,7 +54,7 @@ unsafe extern "thiscall" fn player_regen_pick_staff_for_non_player_data(this: us
     if escolhida != 0 {
         return escolhida;
     }
-    crate::comparacao::ramo("doador de qualquer nação");
+    crate::comparison::branch("doador de qualquer nação");
     melhor = -15000;
     let base = cpg2_d(0xae23bc); // relida, como na original
     i = 0;
@@ -72,8 +72,8 @@ unsafe extern "thiscall" fn player_regen_pick_staff_for_non_player_data(this: us
 
 unsafe extern "thiscall" fn comparar_regen_queue_entry_assign(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0xc)], || o(this, origem), || regen_queue_entry_assign(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("regen_queue_entry_assign {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0xc)], || o(this, origem), || regen_queue_entry_assign(this, origem));
+    PLACAR.record(igual && r == n, || format!("regen_queue_entry_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -82,9 +82,9 @@ comparar_valor!(comparar_is_on_shortlist, is_on_shortlist, %%I1%%, (jogador: usi
 /// Comparador: a 0x7a7150 sorteia (0x90cfc0) a cada pessoa; lado a lado pelo estado do sorteio, a cópia sem contar.
 unsafe extern "thiscall" fn comparar_player_regen_pick_staff_for_non_player_data(this: usize, nacao: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, nacao),
-        || crate::aleatorio::sem_contar(|| player_regen_pick_staff_for_non_player_data(this, nacao)));
-    PLACAR.registrar(igual && r == n, || format!("player_regen_pick_staff_for_non_player_data({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let reg = crate::rng::STATE_REGIONS.to_vec();
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nacao),
+        || crate::rng::without_counting(|| player_regen_pick_staff_for_non_player_data(this, nacao)));
+    PLACAR.record(igual && r == n, || format!("player_regen_pick_staff_for_non_player_data({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }

@@ -229,12 +229,12 @@ unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tecnico: usize
             if x <= y { 3 } else { 1 }
         }
         0 | 0xd | 0x11 | 0x52 | 0x23 | 0xe | 2 | 0x21 | 0x22 | 9 | 0xc => {
-            crate::comparacao::ramo("cpo_6 tipos comuns");
+            crate::comparison::branch("cpo_6 tipos comuns");
             let t = contract_squad_status(contrato);
             if t == 0x30 || t == 0x10 || t == 0x20 {
                 let e = entrada(cpo6_d(cpo6_d(0xde1f54) + 0x856), clube, jogador, 0, 0);
                 if e != 0 && cpo6_d(e + 0xf) == cpo6_d(jogador) && nota > -10 {
-                    crate::comparacao::ramo("cpo_6 sorteio descartado");
+                    crate::comparison::branch("cpo_6 sorteio descartado");
                     sorteio(cpo6_c(tecnico + 0x59)); // o original descarta o resultado
                 }
             }
@@ -483,7 +483,7 @@ unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usize, id: u32,
         if cpo6_d(v + 0xd6) as u32 == id && cpo6_d(v + 0xda) == 0 {
             let mut tratador = 0u32;
             if botao(v, tecnico, 0xde1f64, 0x7d0, &mut tratador) != 2 {
-                crate::comparacao::ramo("cpo_6 noticia lida");
+                crate::comparison::branch("cpo_6 noticia lida");
                 core::ptr::write_unaligned((v + 0xda) as *mut u32, 1);
                 core::ptr::write_unaligned((e + 8) as *mut i32, cpo6_i(e + 8) - 1);
                 break;
@@ -549,16 +549,16 @@ unsafe extern "thiscall" fn find_item_by_id(this: usize, tecnico: usize, id: u32
 /// estado do gerador e no bloco das preferências do técnico (+0x65, +0x1c..+0x34), a cópia sem contar os sorteios.
 unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, tecnico: usize, jogador: usize, tipo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
-    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut regioes = crate::rng::STATE_REGIONS.to_vec();
     if tecnico != 0 && cpo6_d(tecnico + 0x65) != 0 {
         regioes.push((cpo6_d(tecnico + 0x65) + 0x1c, 0x18));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regioes,
         || o(this, tecnico, jogador, tipo),
-        || crate::aleatorio::sem_contar(|| pick_ai_manager_response(this, tecnico, jogador, tipo)),
+        || crate::rng::without_counting(|| pick_ai_manager_response(this, tecnico, jogador, tipo)),
     );
-    PLACAR.registrar(igual && r == n, || format!("pick_ai_manager_response(tipo {:#x}) original={} rust={} {:x?} x {:x?}", tipo as i16, r, n, mo.0, mr.0));
+    PLACAR.record(igual && r == n, || format!("pick_ai_manager_response(tipo {:#x}) original={} rust={} {:x?} x {:x?}", tipo as i16, r, n, mo.0, mr.0));
     r
 }
 
@@ -574,8 +574,8 @@ unsafe extern "thiscall" fn comparar_mark_item_read(this: usize, tecnico: usize,
         (cpo6_d(this + 8), 0x10 * 12),
         (0xde1f64, 0x7d0),
     ];
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(this, tecnico, id, sincronizar), || mark_item_read(this, tecnico, id, sincronizar));
-    PLACAR.registrar(igual && r == n, || format!("mark_item_read(id {}, sincronizar {}) original={} rust={} memoria igual {}", id, sincronizar, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&regioes, || o(this, tecnico, id, sincronizar), || mark_item_read(this, tecnico, id, sincronizar));
+    PLACAR.record(igual && r == n, || format!("mark_item_read(id {}, sincronizar {}) original={} rust={} memoria igual {}", id, sincronizar, r, n, igual));
     r
 }
 
@@ -585,7 +585,7 @@ unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tecnico: usize
     if id == 0 || saida == 0 || (tecnico != 0 && cpo6_i(tecnico).wrapping_sub(cpo6_i(0xae2364)).wrapping_add(0x10) < 0) {
         return o(this, tecnico, id, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, STORED_NEWS_SIZE)], || o(this, tecnico, id, saida), || find_item_by_id(this, tecnico, id, saida));
-    PLACAR.registrar(igual && r == n, || format!("find_item_by_id(id {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo.0[0].1, mr.0[0].1));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(saida, STORED_NEWS_SIZE)], || o(this, tecnico, id, saida), || find_item_by_id(this, tecnico, id, saida));
+    PLACAR.record(igual && r == n, || format!("find_item_by_id(id {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo.0[0].1, mr.0[0].1));
     r
 }

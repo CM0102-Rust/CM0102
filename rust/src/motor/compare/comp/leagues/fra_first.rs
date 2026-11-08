@@ -18,15 +18,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize,
     if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
         ok = ok && read_u32_as_usize(this + 0x2c) == 0 && read_u32_as_usize(this + 0xc) == 0;
     }
-    PLACAR.registrar(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0xee), read_u32_as_usize(this + 0xf2), read_u32_as_usize(this + 8)));
+    PLACAR.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0xee), read_u32_as_usize(this + 0xf2), read_u32_as_usize(this + 8)));
     r
 }
 
-/// Comparer for `fra_first_set_up_fixed_fixtures` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_first_set_up_fixed_fixtures(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_FRA_FIRST_SET_UP_FIXED_FIXTURES);
-    fra_first_compare_fixed_fixtures("fra_first_set_up_fixed_fixtures", this, || o(this))
-}
 
 /// Comparer for `stub_return_one_ret8` (comparison mode: see the header of motor.rs).
 ///
@@ -34,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_first_set_up_fixed_fixtures(
 pub(crate) unsafe extern "thiscall" fn comparar_stub_return_one_ret8(this: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_STUB_RETURN_ONE_RET8)(this, a, b);
     let n = stub_return_one_ret8(this, a, b);
-    PLACAR.registrar(r == n, || format!("stub_return_one_ret8: original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("stub_return_one_ret8: original={} rust={}", r, n));
     r
 }
 
@@ -42,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_stub_return_one_ret8(this: usize
 pub(crate) unsafe extern "thiscall" fn comparar_stub_return_one_ret4(this: usize, a: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_STUB_RETURN_ONE_RET4)(this, a);
     let n = stub_return_one_ret4(this, a);
-    PLACAR.registrar(r == n, || format!("stub_return_one_ret4: original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("stub_return_one_ret4: original={} rust={}", r, n));
     r
 }
 
@@ -62,5 +57,5 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_first_create_table(this: usi
 /// Comparer for `fra_first_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_FIRST_CREATE_SCHEDULE);
-    ita_ser_a_compare_schedule("fra_first_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_first_create_schedule(this, stage, r, e, l))
+    compare_cfa_schedule("fra_first_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_first_create_schedule(this, stage, r, e, l))
 }

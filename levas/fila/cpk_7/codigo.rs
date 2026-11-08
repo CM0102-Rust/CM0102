@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn rewind_staff_history(this: usize, pessoa: usize) {
     if pessoa == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, pessoa); // caixa fatal: só a original
     }
-    crate::comparacao::ramo("cpk_7 recomecar historico");
+    crate::comparison::branch("cpk_7 recomecar historico");
     let par = cpk7_d(this + 0xc).wrapping_add(cpk7_d(pessoa).wrapping_mul(8));
     let sem_ultimo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x58f110usize);
     sem_ultimo(cpk7_d(this), par, par + 4); // o último deslocamento
@@ -113,9 +113,9 @@ unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u
     // logo na primeira: zero aqui)
     let (mut setor_geral, mut setor_extra, mut lado, mut saida) = (0u16, 0u16, 0u16, 0u32);
     if cpk7_w(geral) == cpk7_w(extra_da_casa) {
-        crate::comparacao::ramo("cpk_7 formacao mesma posicao");
+        crate::comparison::branch("cpk_7 formacao mesma posicao");
     } else {
-        crate::comparacao::ramo("cpk_7 formacao posicao extra");
+        crate::comparison::branch("cpk_7 formacao posicao extra");
     }
     for band in 0..3usize {
         for altura in 0..4usize {
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u
 unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%)(this, pessoa, clube, idioma, pelo_contrato);
     let n = get_language_fluency(this, pessoa, clube, idioma, pelo_contrato);
-    PLACAR.registrar(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
+    PLACAR.record(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
     r
 }
 
@@ -159,8 +159,8 @@ unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize, pessoa: u
         return o(this, pessoa);
     }
     let par = cpk7_d(this + 0xc).wrapping_add(cpk7_d(pessoa).wrapping_mul(8));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(par, 8)], || o(this, pessoa), || rewind_staff_history(this, pessoa));
-    PLACAR.registrar(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", cpk7_d(pessoa), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(par, 8)], || o(this, pessoa), || rewind_staff_history(this, pessoa));
+    PLACAR.record(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", cpk7_d(pessoa), mo, mr));
 }
 
 /// Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn comparar_set_slot_position(this: usize, casa: u32, p
         return o(this, casa, posicao, extra);
     }
     let reg = [(this + 0x12d, 0x584 - 0x12d), (this + 0x187b, 8), (0xb67a34, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, posicao, extra), || set_slot_position(this, casa, posicao, extra));
-    PLACAR.registrar(igual && r == n, || format!("set_slot_position({}, {:#x}, {}) {:x?} x {:x?}", casa as u8 as i8, posicao as u16, extra, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, casa, posicao, extra), || set_slot_position(this, casa, posicao, extra));
+    PLACAR.record(igual && r == n, || format!("set_slot_position({}, {:#x}, {}) {:x?} x {:x?}", casa as u8 as i8, posicao as u16, extra, mo, mr));
     r
 }

@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize,
             b.sort_unstable();
             a == b
         };
-    PLACAR.registrar(ok, || format!("construct_cup_stage({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rounds as u16 as i16, year as u16));
+    PLACAR.record(ok, || format!("construct_cup_stage({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rounds as u16 as i16, year as u16));
     r
 }
 

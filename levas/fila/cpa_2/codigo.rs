@@ -14,7 +14,7 @@ unsafe fn pay_tv_money(liga: usize, valor: i32, filtro: usize, noticia: bool) {
     if financas == 0 || cpa2_w(liga + 0x3e) <= 0 {
         return;
     }
-    crate::comparacao::ramo("liga direitos de tv");
+    crate::comparison::branch("liga direitos de tv");
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let somar_tv: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x5987c0usize);
     let mut i: i16 = 0;
@@ -55,8 +55,8 @@ unsafe extern "thiscall" fn comparar_pay_tv_rights(liga: usize, valor: i32, filt
     }
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let reg: Vec<(usize, usize)> = clubes.iter().map(|&c| (get_club_finance(financas, c), 0x167)).collect();
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(liga, valor, filtro), || pay_tv_money(liga, valor, filtro, false));
-    PLACAR.registrar(igual, || format!("pay_tv_rights({:x}, {}, {:x}) {:x?} x {:x?}", liga, valor, filtro, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(liga, valor, filtro), || pay_tv_money(liga, valor, filtro, false));
+    PLACAR.record(igual, || format!("pay_tv_rights({:x}, {}, {:x}) {:x?} x {:x?}", liga, valor, filtro, mo, mr));
 }
 
 /// { 0x684640 } (thiscall, league.cpp): `League::record_season_honours()`: campeão, vice e (com mais de 2 clubes)
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn comparar_pay_tv_rights(liga: usize, valor: i32, filt
 /// +0x40): com duas sedes, a de maior +0x8e (empate: a primeira). Grava no histórico (0x4afce0) e devolve o que ela
 /// devolve. Sem SEH, sem sorteio; as duas locais das sedes só são lidas quando a 0x5fa730 as grava.
 unsafe extern "thiscall" fn league_record_season_honours(liga: usize) -> usize {
-    crate::comparacao::ramo("liga honras da temporada");
+    crate::comparison::branch("liga honras da temporada");
     let tab = cpa2_d(liga + 0xb1);
     let vice = cpa2_d(tab + 0x3b);
     let campeao = cpa2_d(tab);
@@ -118,8 +118,8 @@ unsafe extern "thiscall" fn comparar_league_record_season_honours(liga: usize) -
     let mut reg = comp_history_regions();
     let quantos = (*(0xae235c as *const i32)).wrapping_sub(*(0xae2350 as *const i32)).max(0) as usize;
     reg.push((*(0xae23b4 as *const usize), 0x245 * quantos));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(liga), || league_record_season_honours(liga));
-    PLACAR.registrar(igual && r == n, || format!("league_record_season_honours({:x}) {:x}/{:x} {:x?} x {:x?}", liga, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(liga), || league_record_season_honours(liga));
+    PLACAR.record(igual && r == n, || format!("league_record_season_honours({:x}) {:x}/{:x} {:x?} x {:x?}", liga, r, n, mo, mr));
     r
 }
 
@@ -148,7 +148,7 @@ unsafe fn free_comp_history_row() -> usize {
 unsafe extern "C" fn comp_util_add_history_record(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
     let mut r = free_comp_history_row();
     if r == 0 {
-        crate::comparacao::ramo("histórico de competições crescer");
+        crate::comparison::branch("histórico de competições crescer");
         let crescer: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(0x527f60usize);
         if crescer(0x14) == 0 {
             return 0;
@@ -169,7 +169,7 @@ unsafe extern "C" fn comparar_comp_util_add_history_record(liga: usize, a: u32, 
     if free_comp_history_row() == 0 {
         return o(liga, a, b, c, d); // cresce (realloc): só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&comp_history_regions(), || o(liga, a, b, c, d), || comp_util_add_history_record(liga, a, b, c, d));
-    PLACAR.registrar(igual && r == n, || format!("comp_util_add_history_record({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", liga, a, b, c, d, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&comp_history_regions(), || o(liga, a, b, c, d), || comp_util_add_history_record(liga, a, b, c, d));
+    PLACAR.record(igual && r == n, || format!("comp_util_add_history_record({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", liga, a, b, c, d, r, n, mo, mr));
     r
 }

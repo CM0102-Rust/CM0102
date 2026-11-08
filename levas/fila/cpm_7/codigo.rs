@@ -66,11 +66,11 @@ unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, clube: usize
             return 1;
         }
         if item == antes {
-            crate::comparacao::ramo("cpm_7 amistoso no dia antes");
+            crate::comparison::branch("cpm_7 amistoso no dia antes");
             return 1;
         }
         if item == depois {
-            crate::comparacao::ramo("cpm_7 amistoso no dia depois");
+            crate::comparison::branch("cpm_7 amistoso no dia depois");
             return 1;
         }
         e = proximo(l);
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, clube: usize
 /// devolvida fica na pilha) e os ids (o dword apontado por cada argumento) em +8, +0xc e +0x10; a conta sobe.
 unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
     if cpm7_d(this + 0x34e0) == cpm7_d(this + 0x34e4) {
-        crate::comparacao::ramo("cpm_7 amistosos crescem");
+        crate::comparison::branch("cpm_7 amistosos crescem");
         let cap = cpm7_d(this + 0x34e4).wrapping_add(100);
         cpm7_por(this + 0x34e4, cap);
         let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, 
             return;
         }
     }
-    crate::comparacao::ramo("cpm_7 amistoso planejado");
+    crate::comparison::branch("cpm_7 amistoso planejado");
     let n = cpm7_d(this + 0x34e0);
     let item = cpm7_d(this + 0x34d8).wrapping_add(n.wrapping_mul(0x14));
     cpm7_por(item + 8, cpm7_d(anfitriao));
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, 
 unsafe extern "thiscall" fn comparar_is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, comp, data);
     let n = is_comp_current_on_date(this, comp, data);
-    PLACAR.registrar(r == n, || format!("is_comp_current_on_date({}, {:?}) original={} rust={}", cpm7_d(comp), friendly_date_day_year(data), r, n));
+    PLACAR.record(r == n, || format!("is_comp_current_on_date({}, {:?}) original={} rust={}", cpm7_d(comp), friendly_date_day_year(data), r, n));
     r
 }
 
@@ -120,8 +120,8 @@ unsafe extern "thiscall" fn comparar_candidate_has_nearby_date(this: usize, club
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let l = cpm7_d(clube + 0x12);
     let reg: &[(usize, usize)] = if l == 0 { &[] } else { &[(l + 0xa, 4)] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube, data), || candidate_has_nearby_date(this, clube, data));
-    PLACAR.registrar(igual && r == n, || format!("candidate_has_nearby_date({:?}) original={} rust={} {:x?} x {:x?}", friendly_date_day_year(data), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, clube, data), || candidate_has_nearby_date(this, clube, data));
+    PLACAR.record(igual && r == n, || format!("candidate_has_nearby_date({:?}) original={} rust={} {:x?} x {:x?}", friendly_date_day_year(data), r, n, mo, mr));
     r
 }
 
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn comparar_add_planned_friendly(this: usize, anfitriao
     }
     let item = v.wrapping_add(n.wrapping_mul(0x14));
     let feito = [cpm7_d(item), cpm7_d(item + 4), 0, cpm7_d(item + 8), cpm7_d(item + 0xc), cpm7_d(item + 0x10)];
-    PLACAR.registrar(feito == esperado && cpm7_d(this + 0x34e0) == n.wrapping_add(1), || {
+    PLACAR.record(feito == esperado && cpm7_d(this + 0x34e0) == n.wrapping_add(1), || {
         format!("add_planned_friendly conta {} -> {}, item {:x?} (esperava {:x?})", n, cpm7_d(this + 0x34e0), feito, esperado)
     });
 }

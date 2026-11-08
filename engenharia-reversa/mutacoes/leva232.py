@@ -1,7 +1,7 @@
 # Mutações da 232a leva (itens dbi_1, dbi_2, dbi_3, dbj_1, dbj_2, dbk_1, dbk_2). Uso: python mutacoes.py mutacoes\leva232.py --prova-save 232
 MUTACOES = [
-    ('dbi_liberar_historico_de_pessoas', '    crate::comparacao::ramo("banco liberar histórico de pessoas");', '    crate::comparacao::ramo("banco liberar histórico de pessoas");\n    if true { return; } // mutacao: não libera (a tabela fica e vai para o save)'),
-    ('dbi_liberar_historico_de_premios', '    crate::comparacao::ramo("banco liberar histórico de prêmios");', '    crate::comparacao::ramo("banco liberar histórico de prêmios");\n    if true { return; } // mutacao: não libera (a tabela fica e vai para o save)'),
+    ('dbi_liberar_historico_de_pessoas', '    crate::comparison::branch("banco liberar histórico de pessoas");', '    crate::comparison::branch("banco liberar histórico de pessoas");\n    if true { return; } // mutacao: não libera (a tabela fica e vai para o save)'),
+    ('dbi_liberar_historico_de_premios', '    crate::comparison::branch("banco liberar histórico de prêmios");', '    crate::comparison::branch("banco liberar histórico de prêmios");\n    if true { return; } // mutacao: não libera (a tabela fica e vai para o save)'),
     ('dbi_crescer_historico_de_competicoes', '        core::ptr::write_unaligned(row as *mut i32, i); // the new row stores its own index', '        core::ptr::write_unaligned(row as *mut i32, i + 1); // mutacao: o índice + 1'),
     ('dbi_ordem_dos_clubes_pela_reputacao', '        1 // the lowest reputation afterwards', '        -1 // mutacao: a de menor reputação antes'),
     ('dbi_ordem_do_elenco_pela_habilidade', '    ability(pb) as i32 - ability(pa) as i32 // a maior primeiro', '    ability(pa) as i32 - ability(pb) as i32 // mutacao: a menor primeiro'),
@@ -19,5 +19,5 @@ MUTACOES = [
     ('dbk1_juntar_comissao', '                        if n < k as i32 { // the B team’s staff go to the A team', '                        if n < 0 { // mutacao: a comissao do B nao vai para o A'),
     ('dbk1_indice_de_nomes', '                        *((e + d_quantos) as *mut i32) = quantos; // group size', '                        *((e + d_quantos) as *mut i32) = quantos + 1; // mutacao: a quantidade do grupo + 1'),
     ('dbk2_tirar_pessoa', '            core::ptr::write_unaligned((person + staff::CLUB_JOB) as *mut usize, 0); // detaches the person from the club', '            // mutacao: a pessoa fica com o clube (+0x39) depois de sair'),
-    ('dbk2_olheiros', '        let o = rd(p + 0x1b3 + 4 * j); // the partner’s scouts', '        let o = rd(clube + 0x1b3 + 4 * j); // mutacao: os olheiros do proprio clube no lugar dos do parceiro'),
+    ('dbk2_olheiros', '        let o = rd(p + club::SCOUTS + 4 * j); // the partner’s scouts', '        let o = rd(clube + 0x1b3 + 4 * j); // mutacao: os olheiros do proprio clube no lugar dos do parceiro'),
 ]

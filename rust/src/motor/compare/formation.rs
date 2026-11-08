@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "C" fn comparar_position_mask(p: usize) -> u16 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_POSITION_MASK)(p);
     let n = position_mask(p);
-    PLACAR.registrar(r == n, || format!("position_mask({:#x}) original={:#x} rust={:#x}", p, r, n));
+    PLACAR.record(r == n, || format!("position_mask({:#x}) original={:#x} rust={:#x}", p, r, n));
     r
 }
 
@@ -15,8 +15,8 @@ pub(crate) unsafe extern "C" fn comparar_position_mask(p: usize) -> u16 {
 pub(crate) unsafe extern "C" fn comparar_pitch_cell(mask: u32, attack: i8, band: u32, out: *mut i16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(IDX_PITCH_CELL);
     let reg = [(out as usize, 4)];
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(mask, attack, band, out), || pitch_cell(mask, attack, band, out));
-    PLACAR.registrar(igual && r == v, || format!("pitch_cell({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", mask, attack, band, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(mask, attack, band, out), || pitch_cell(mask, attack, band, out));
+    PLACAR.record(igual && r == v, || format!("pitch_cell({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", mask, attack, band, r, mo, v, mr));
     r
 }
 
@@ -26,8 +26,8 @@ pub(crate) unsafe extern "C" fn comparar_pitch_cell(mask: u32, attack: i8, band:
 pub(crate) unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, home: u32, stage: u32, band: u32, coord: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(IDX_SET_SLOT_COORDINATE);
     let reg = formation_regions(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, home, stage, band, coord), || set_slot_coordinate(this, home, stage, band, coord));
-    PLACAR.registrar(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, home as u8 as i8, stage as u8 as i8, band, coord, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, home, stage, band, coord), || set_slot_coordinate(this, home, stage, band, coord));
+    PLACAR.record(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, home as u8 as i8, stage as u8 as i8, band, coord, r, n, mo, mr));
     r
 }
 
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_duplicate_position(this: u
     let (mut so, mut sr) = (0xdead_u32, 0xbeef_u32);
     let r = o(this, home, &mut so);
     let n = check_duplicate_position(this, home, &mut sr);
-    PLACAR.registrar(r == n && so == sr, || format!("check_duplicate_position({:x}, {}) {}/{} saída {}/{}", this, home as u8 as i8, r, n, so, sr));
+    PLACAR.record(r == n && so == sr, || format!("check_duplicate_position({:x}, {}) {}/{} saída {}/{}", this, home as u8 as i8, r, n, so, sr));
     *out = so;
     r
 }
@@ -55,16 +55,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_marking_type(this: usize, ho
     }
     let reg = [(this as isize + home as u8 as i8 as isize + 0x5b4) as usize, 1usize];
     let reg = [(reg[0], reg[1]), (this + 0x187f, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, home, mark), || set_marking_type(this, home, mark));
-    PLACAR.registrar(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, home as u8 as i8, mark as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, home, mark), || set_marking_type(this, home, mark));
+    PLACAR.record(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, home as u8 as i8, mark as u8, r, n, mo, mr));
     r
 }
 
 /// Comparer for `build_position_lookup` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_build_position_lookup(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BUILD_POSITION_LOOKUP);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || build_position_lookup(this));
-    PLACAR.registrar(igual && r == n, || format!("build_position_lookup {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || build_position_lookup(this));
+    PLACAR.record(igual && r == n, || format!("build_position_lookup {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -72,8 +72,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_position_lookup(this: usiz
 pub(crate) unsafe extern "thiscall" fn comparar_stored_cell(t: usize, slot: i8, attack: i8, band: u32, out: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_STORED_CELL);
     let reg = [(out as usize, 4)];
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, slot, attack, band, out), || stored_cell(t, slot, attack, band, out));
-    PLACAR.registrar(igual && r == v, || format!("stored_cell({:#x}, {}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, slot, attack, band, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(t, slot, attack, band, out), || stored_cell(t, slot, attack, band, out));
+    PLACAR.record(igual && r == v, || format!("stored_cell({:#x}, {}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, slot, attack, band, r, mo, v, mr));
     r
 }
 
@@ -81,8 +81,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_stored_cell(t: usize, slot: i8, 
 pub(crate) unsafe extern "thiscall" fn comparar_set_formation_flag(t: usize, m: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_SET_FORMATION_FLAG);
     let reg = [(t + 0x584, 4), (t + 0x187f, 4)];
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, m), || set_formation_flag(t, m));
-    PLACAR.registrar(igual && r == v, || format!("set_formation_flag({:#x}, {:#x}) original={} {:x?} rust={} {:x?}", t, m, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(t, m), || set_formation_flag(t, m));
+    PLACAR.record(igual && r == v, || format!("set_formation_flag({:#x}, {:#x}) original={} {:x?} rust={} {:x?}", t, m, r, mo, v, mr));
     r
 }
 
@@ -95,9 +95,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_load_from_disk(this: usize, path
     if this == 0 {
         return o(this, path, quieto, ofuscado);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x18e3)], || o(this, path, quieto, ofuscado),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x18e3)], || o(this, path, quieto, ofuscado),
         || load_from_disk(this, path, quieto, ofuscado));
-    PLACAR.registrar(igual && r == n, || {
+    PLACAR.record(igual && r == n, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&k| a[k] != b[k]).take(8).collect();
         format!("load_from_disk(this {:x}) original={} rust={}, bytes diferentes {:x?}", this, r, n, dif)
@@ -115,8 +115,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_slot_position(this: usize, h
         return o(this, home, position, extra);
     }
     let reg = [(this + 0x12d, 0x584 - 0x12d), (this + 0x187b, 8), (0xb67a34, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, home, position, extra), || set_slot_position(this, home, position, extra));
-    PLACAR.registrar(igual && r == n, || format!("set_slot_position({}, {:#x}, {}) {:x?} x {:x?}", home as u8 as i8, position as u16, extra, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, home, position, extra), || set_slot_position(this, home, position, extra));
+    PLACAR.record(igual && r == n, || format!("set_slot_position({}, {:#x}, {}) {:x?} x {:x?}", home as u8 as i8, position as u16, extra, mo, mr));
     r
 }
 
@@ -132,15 +132,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_forget_person(this: usize, perso
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, person), || forget_person(this, person));
-    PLACAR.registrar(igual, || format!("forget_person original={:x?} rust={:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person), || forget_person(this, person));
+    PLACAR.record(igual, || format!("forget_person original={:x?} rust={:x?}", mo, mr));
 }
 
 /// Comparer for `clear_assigned` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_assigned(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLEAR_ASSIGNED);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5b4, 11), (this + 0x5bf, 44)], || o(this), || clear_assigned(this));
-    PLACAR.registrar(igual && r == v, || format!("clear_assigned original={} {:x?} rust={} {:x?}", r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x5b4, 11), (this + 0x5bf, 44)], || o(this), || clear_assigned(this));
+    PLACAR.record(igual && r == v, || format!("clear_assigned original={} {:x?} rust={} {:x?}", r, mo, v, mr));
     r
 }
 
@@ -148,15 +148,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_assigned(this: usize) -> u
 pub(crate) unsafe extern "C" fn comparar_competition_criterion(record: usize, a: u32, b: u32, kind: u8) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32, u32, u8) -> u8>(IDX_COMPETITION_CRITERION)(record, a, b, kind);
     let v = competition_criterion(record, a, b, kind);
-    PLACAR.registrar(r == v, || format!("competition_criterion({:#x}, {:#x}, {:#x}, {}) original={} rust={}", record, a, b, kind, r, v));
+    PLACAR.record(r == v, || format!("competition_criterion({:#x}, {:#x}, {:#x}, {}) original={} rust={}", record, a, b, kind, r, v));
     r
 }
 
 /// Comparer for `formation_mask` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_formation_mask(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FORMATION_MASK);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || formation_mask(this));
-    PLACAR.registrar(igual && r == v, || format!("formation_mask original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x187b, 4)], || o(this), || formation_mask(this));
+    PLACAR.record(igual && r == v, || format!("formation_mask original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
     r
 }
 
@@ -164,8 +164,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_formation_mask(this: usize) -> u
 pub(crate) unsafe extern "thiscall" fn comparar_set_square(this: usize, position: i8, mask: u64) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u64) -> u32>(IDX_SET_SQUARE);
     let regions = [(this + 0x187f, 0x64), (0xb67a34, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, position, mask), || set_square(this, position, mask));
-    PLACAR.registrar(igual && r == n, || format!("set_square({}, {:x}) original={} rust={} {:x?} x {:x?}", position, mask, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, position, mask), || set_square(this, position, mask));
+    PLACAR.record(igual && r == n, || format!("set_square({}, {:x}) original={} rust={} {:x?} x {:x?}", position, mask, r, n, mo, mr));
     r
 }
 
@@ -173,8 +173,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_square(this: usize, position
 pub(crate) unsafe extern "thiscall" fn comparar_mark_stars(this: usize, side: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_MARK_STARS);
     let regions = [(this, MOTOR), (0xb67a34, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, side), || mark_stars(this, side));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, side), || mark_stars(this, side));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("mark_stars({}) diferencas em {:x?}", side, dif)
@@ -185,6 +185,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_stars(this: usize, side: i8
 pub(crate) unsafe extern "thiscall" fn comparar_designated_for_position(this: usize, position: i8) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> usize>(IDX_DESIGNATED_FOR_POSITION)(this, position);
     let n = designated_for_position(this, position);
-    PLACAR.registrar(r == n, || format!("designated_for_position({}) original={:x} rust={:x}", position, r, n));
+    PLACAR.record(r == n, || format!("designated_for_position({}) original={:x} rust={:x}", position, r, n));
     r
 }

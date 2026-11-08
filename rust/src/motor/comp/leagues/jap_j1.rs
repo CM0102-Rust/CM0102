@@ -23,9 +23,18 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
     }
 }
 
-/// The J1 championship final: the first-stage winner against the second-stage winner, over two games [inference: home
-/// and away], with no seeds; unlike the Brazilian state leagues, it does not check for the same club (the final is
-/// built anyway)
+/// The J1 championship final: the first-stage winner against the second-stage winner (the club in the first row of each
+/// stage's table), over two games [inference: home and away], with no seeds; unlike the Brazilian state leagues, it
+/// never checks for the same club (the final is built anyway).
+///
+/// `JapJ1::create_championship_final_stage()`: the list of 2 (malloc `0x944e46` of 8; out of memory: the box of line
+/// `0x245` and it returns); virtual `+0x3c` (create_round_table: thiscall(this, stage 2, &rounds, &extra, 0), ret
+/// `0x10`); the new stage (operator new `0x944cf1` of `0xb2`; Cup_Stage::Cup_Stage `0x522e00`, thiscall, ret `0x3c`:
+/// the league, 2, the list, the rounds, `+4`, the table, the year `+0x40`, 2, 1, the extra, `0x14`, 0, 0, 0 and no
+/// seed) in the third stage slot (`[+0xc]+8`); the list and the table freed (free `0x9452ca`, in that order);
+/// Cup::set_up_round (`0x51c800`, thiscall(stage, 0), ret 4) called with the third slot's stage even when null (as in
+/// the original); with no stage, the box of line `0x25c`; with it, `+0x30` = 2. The original's SEH frame only covers
+/// the constructor (no destructor).
 /// Original: `JapJ1::create_championship_final_stage` (0x663a50, jap_j1.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x663a50 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::create_championship_final_stage()`, a final da J1 entre os
@@ -69,13 +78,27 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
     if read_usize(read_usize(this + league::STAGES) + 8) == 0 {
         return show_error_at(0x9eabc8, 0x25c);
     }
-    crate::comparacao::ramo("cqq_9 final");
+    crate::comparison::branch("cqq_9 final");
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);
 }
 
-/// The Japanese turnover, led by the J1: first promotion and relegation with the J2; then the J1 is rebuilt with three
-/// stages (the two halves and the final), next year, rules, the table and the fixtures; then the J2 turns over,
-/// followed by the predicted positions, the board expectations and the referee renewal
+/// The Japanese season turnover, led by the J1: first promotion and relegation with the J2; then the J1 is rebuilt with
+/// three stages (the two halves and the final), next year, rules, the table and the fixtures; then the J2 turns over,
+/// followed by the predicted positions, the board expectations and the referee renewal.
+///
+/// `JapJ1::start_new_season()`: `+0x4c` = 0; promotion and relegation (virtual `+0xb0`, thiscall(this, 1), ret 4); the
+/// table freed (League::free_table `0x687970`, thiscall(this, 0), ret 4); the list at `+0xba` freed and cleared; with
+/// statistics (`+8`), Comp_Stats::archive_season_and_reset (`0x4a1c50`, thiscall(`+8`, 1), ret 4); with a current stage
+/// ≥ 0, the existing stages 0..=`+0x30` destroyed (virtual 0 with 1); the stage array freed and a new one of 3 (malloc
+/// `0x944e46` of `0xc`, `+0x2c` = 3; out of memory: the box of line `0x1b4`, the clean-up `0x5cc7d0`, `0x5a8f60` and
+/// exit(−1) `0x945934`, all cdecl); the year (`+0x40`) goes up by one and `+0x30` = −1.
+///
+/// Then, each with its own box if it returns 0: the rules (virtual `+0x8c`, `0x1be`), the table (`0x6634e0`, `0x1c5`),
+/// the fixtures (League::create_fixtures `0x6835c0`, `0x1cb`) and the order (League::sort_table `0x6827d0`,
+/// thiscall(this, 0), `0x1d2`); then the J2 turnover (virtual `+8` of the competition with id `[0x9cf768]`), the
+/// predicted positions (virtual `+0x5c`), the board expectations (League::set_club_season_expectations `0x68aa80`) and
+/// the referee renewal (OfficialsManager::renew_officials `0x79cee0`, thiscall(`[0xb74340]`, `+4`), ret 4), whose eax
+/// it returns.
 /// Original: `JapJ1::start_new_season` (0x6636d0, jap_j1.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x6636d0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::start_new_season()`, a virada do futebol japonês (a J1 comanda):
@@ -141,7 +164,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16);
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1)); // cqq9: o ano seguinte da J1
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
-    crate::comparacao::ramo("cqq_9 virada da j1");
+    crate::comparison::branch("cqq_9 virada da j1");
     let error = if virtual_(this, 0x8c) == 0 {
         0x1be
     } else if core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize) -> u32>(0x6634e0usize)(this) == 0 {
@@ -228,12 +251,17 @@ pub(crate) unsafe fn fill_japanese_table(this: usize, g: usize, girar: u8, ramo:
     if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     1
 }
 
-/// J1 has 16 clubs, those of the division in database order; those beyond 16 lose their division (left with no league);
-/// when full, the prize fund starts at 100,000 per place and TV pays 3,000,000 to each club
+/// Creates the J1 table: 16 clubs, those of the division in database order; those beyond 16 lose their division (left
+/// with no league); when full, the prize fund starts at 100,000 per place and TV pays 3,000,000 to each club.
+///
+/// `JapJ1::create_table()`: J1 has 16 clubs (`+0x57` = `[0x9cf65c]`; the rest lose the division); once full, the prize
+/// fund with the 100,000 share (League::calc_prize_fund `0x682f70`: push `0x186a0`; mov ecx, edi -> thiscall, ret 4) at
+/// `+0x28`, `+0xe1` = 1, the TV money of 3,000,000 to each club (League::pay_tv_rights `0x683010`: push 0; push
+/// `0x2dc6c0`; mov ecx, edi -> thiscall, ret 8; it sends the TV news) and returns 1. Source `0x9eabc8`, line `0x148`.
 /// Original: `JapJ1::create_table` (0x6634e0, jap_j1.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x6634e0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::create_table()`: a J1 tem 16 clubes (+0x57 = [0x9cf65c]; os que
@@ -257,18 +285,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_create_table(this: usize) -> u32 {
     1
 }
 
-/// J2 has 12 clubs, those of the division in database order; those beyond 12 lose their division; no prize fund nor TV
-/// money
-/// Original: `JapJ2::create_table` (0x665030, jap_j2.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x665030 } (thiscall, ret 0, jap_j2.cpp): `JapJ2::create_table()`: a J2 tem 12 clubes (+0x57 = [0x9cf768]; os que
-/// sobram perdem a divisão), sem fundo de prêmios nem TV. Fonte 0x9eaedc, linha 0x13a. Devolve 1 se encheu.
-pub(crate) unsafe extern "thiscall" fn jap_j1_create_table_665030(this: usize) -> u32 {
-    if alloc_league_table(this, 0xc, 0x9eaedc, 0x13a) == 0 {
-        return 0;
-    }
-    fill_japanese_table(this, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, 0, "cqm_9 j2 cheia")
-}
 
 
 /// Comparer: plans the division's clubs, runs only the original and checks count, return value, rows, cleared divisions
@@ -298,14 +314,14 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: 
         found = (0..cabem).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found[..] == plan[..cabem];
         if clear {
-            same = same && plan[cabem..].iter().all(|&c| read_usize(c + 0x57) == 0);
+            same = same && plan[cabem..].iter().all(|&c| read_usize(c + club::DIVISION) == 0);
         }
         if r == 1 && cota != 0 {
             let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
             same = same && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == prize(this, cota);
         }
     }
-    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 
@@ -321,7 +337,7 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: 
 /// [pt] { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
 pub(crate) unsafe extern "thiscall" fn jap_j1_set_up_rules(this: usize) -> u32 {
     j1_rules(this);
-    crate::comparacao::ramo("cqj_7 regras da j1");
+    crate::comparison::branch("cqj_7 regras da j1");
     create_main_schedule(this);
     1
 }

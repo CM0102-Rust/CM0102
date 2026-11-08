@@ -13,7 +13,7 @@ MUTACOES = [
     ('cph_conversas_clube', '&& (clube == 0 || read_u32(r + 4) == read_u32(clube)) // o clube', '&& (clube == 0 || true) // mutacao: sem o clube'),
     ('cph_interesse_ordem', 'if *n != 0 {\n        media_crt_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0);', 'if *n < 0 {\n        media_crt_qsort(read_u32(this + 0xc) as usize, *n, 0x19, 0x757ea0); // mutacao: sem reordenar'),
     ('cph_pedido_data', 'copy_data(r + 8, &mut local, r + 0x19);', 'copy_data(r + 8, &mut local, r + 8); // mutacao: a data fica'),
-    ('cph_desempregado_tecnico', '*((manager + 0xa) as *const i16) < 50 && friendly_random(5) == 0 // the weak manager', '*((manager + 0xa) as *const i16) < 49 && friendly_random(5) == 0 // mutacao: 49'),
+    ('cph_desempregado_tecnico', '*((manager + non_player::CURRENT_REPUTATION) as *const i16) < 50 && friendly_random(5) == 0 // the weak manager', '*((manager + non_player::CURRENT_REPUTATION) as *const i16) < 49 && friendly_random(5) == 0 // mutacao: 49'),
     ('cph_permissao_marca', '*mark(person) = 0; // the mark without permission', '*mark(person) &= 0xfe; // mutacao: so o bit 0'),
     ('cph_olheiro_confere', 'return 0; // the slot changed person', 'return person; // mutacao: sem conferir'),
     ('cph_sequencia_dias', '< 10 { // less than 10 days ago', '< 9 { // mutacao: 9 dias'),

@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
         reservas(cqd6_d(0xb74434), pa);
         if dia == 3 {
             mais(0xae2c90, pb, 1);
-            crate::comparacao::ramo("cqd_6 reservas de amanha");
+            crate::comparison::branch("cqd_6 reservas de amanha");
             reservas(cqd6_d(0xb74434), pb); // cqd6: as reservas de amanhã
         }
     }
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                         }
                         if !fix_man_is_human_club(cqd6_d(f + 0x1c)) && !fix_man_is_human_club(cqd6_d(f + 0x20)) {
                             anterior(lista);
-                            crate::comparacao::ramo("cqd_6 amistoso descartado");
+                            crate::comparison::branch("cqd_6 amistoso descartado");
                             tirar(lista, no); // cqd6: o amistoso de ontem sai da lista
                         } else {
                             anterior(lista);
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_fix_man_daily_update(this: usize) {
     o(this);
     let fila = cqd6_d(this + 0x1128);
     let depois = cqd6_w(0xae2a48);
-    PLACAR.registrar((havia == 0 || fila == 0) && (antes == 0 || depois == 0),
+    PLACAR.record((havia == 0 || fila == 0) && (antes == 0 || depois == 0),
         || format!("fix_man_daily_update: fila das notícias {:x} -> {:x}, conferências {} -> {}", havia, fila, antes, depois));
 }
 
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn comparar_get_fixture_list(this: usize, ano: u32, dia
     }
     let r = o(this, ano, dia, fatia, tipo);
     let n = get_fixture_list(this, ano, dia, fatia, tipo);
-    PLACAR.registrar(r == n, || format!("get_fixture_list(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
+    PLACAR.record(r == n, || format!("get_fixture_list(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
         ano as u16, dia as u16, fatia as u8, tipo as u8 as i8, r, n));
     r
 }
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn load_fixtures(this: usize) {
         let k = nacao(comp, j) as i8;
         let dia = cqd6_w(j + 0x2a) as u16 as usize; // cqd6: o dia do jogo carregado
         let lista = cqd6_d(cqd6_d(this + (dia * 3 + cqd6_b(j + 0x3f) as usize) * 4) + k as isize as usize * 4);
-        crate::comparacao::ramo("cqd_6 jogo carregado");
+        crate::comparison::branch("cqd_6 jogo carregado");
         if acrescentar(lista, j, 0x4f) == 0 {
             fatal_error_at(0x9cc208, 0x785);
         }
@@ -290,6 +290,6 @@ unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let esperado = format!("fixtures_{}.tmp", cqd6_w(this + 0x1130) as u16);
     let s = core::slice::from_raw_parts((this + 0x1133) as *const u8, esperado.len() + 1);
-    PLACAR.registrar(&s[..esperado.len()] == esperado.as_bytes() && s[esperado.len()] == 0,
+    PLACAR.record(&s[..esperado.len()] == esperado.as_bytes() && s[esperado.len()] == 0,
         || format!("load_fixtures: nome {:?} (esperado {})", s, esperado));
 }

@@ -46,40 +46,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_first_create_table(this: usi
             same = same && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == prize(this, 0x3d090);
         }
     }
-    PLACAR.registrar(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, found));
+    PLACAR.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, found));
     r
 }
 
-/// Comparer for `spa_first_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x654180: os registros vão ao histórico das pessoas e mexem nas reputações e no moral (não rodam duas
-/// vezes): só a original. O plano, feito antes, nas fases 0 e 1: a primeira linha do clube com situação 1, 2 ou 0xff
-/// decide o +0x37 que a rotina grava (fase 0: 0 com 1, 0xfe com 2/0xff; fase 1: 0xfe com 1, 3 com 2/0xff); depois a
-/// linha tem de estar assim. Na liga ela só registra: a devolução 0.
-pub(crate) unsafe extern "thiscall" fn comparar_spa_first_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_SPA_FIRST_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    let (s, f) = (status as u8, stage as u8);
-    let mut plan: Option<(usize, u8)> = None;
-    if f <= 1 {
-        let n = read_i16(this + 0x3e) as i32;
-        for i in 0..n.max(0) as usize {
-            let l = read_usize(this + 0xb1) + i * 0x3b;
-            if read_usize(l) == clube && (s == 1 || s == 2 || s == 0xff) {
-                plan = Some((l, match (f, s) {
-                    (0, 1) => 0,
-                    (0, _) => 0xfe,
-                    (_, 1) => 0xfe,
-                    _ => 3,
-                }));
-                break;
-            }
-        }
-    }
-    let r = o(this, clube, status, stage, a4, jogo, a6);
-    let same = r == 0 && plan.map_or(true, |(l, v)| *((l + 0x37) as *const u8) == v);
-    PLACAR.registrar(same, || format!("spa_first_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, clube, s, f, r, plan));
-    r
-}
 
 /// Comparer for `spa_first_set_club_progress` (comparison mode: see the header of motor.rs).
 ///
@@ -92,8 +62,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_first_set_club_progress(this
     if e == 0 {
         return o(this, clube, stage, current, best, worst);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x73, 3)], || o(this, clube, stage, current, best, worst), || spa_first_set_club_progress(this, clube, stage, current, best, worst));
-    PLACAR.registrar(igual, || format!("spa_first_set_club_progress({:#x}, {:#x}) original={:x?} rust={:x?}", this, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], || o(this, clube, stage, current, best, worst), || spa_first_set_club_progress(this, clube, stage, current, best, worst));
+    PLACAR.record(igual, || format!("spa_first_set_club_progress({:#x}, {:#x}) original={:x?} rust={:x?}", this, clube, mo, mr));
 }
 
 /// Comparer for `construct_spa_first` (comparison mode: see the header of motor.rs).

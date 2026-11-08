@@ -1,0 +1,18 @@
+Leitor de fora, rodada 4 (08/11/2026, madrugada). Português nos locais/parâmetros: ~6-10% das ocorrências (~15% dos
+nomes descritivos; eram ~85% na rodada 3). Veredito: "ainda um disassembly anotado traduzido para Rust: o fluxo é
+legível, mas os dados ainda são deslocamentos, endereços e hex, e metade dos nomes que existem não são usados".
+Os 10 maiores obstáculos, na ordem dele:
+1. Campos com nome que existem mas não são aplicados (p + 0x1e onde staff::SECOND_NATION existe): falta saber o tipo
+   das variáveis de uma letra em cada função.
+2. Endereços do exe usados como valor (doubles, textos de formato, funções): constantes com o valor e nomes FN_/STR_.
+3. Códigos mágicos sem enum (situação da oferta, motivos, tipo de reinício, tuplas de regras): enums e uma struct de regras.
+4. Português na infraestrutura: PLACAR.registrar, ramo, lado_a_lado, Memoria::ler, comparar_*, instalar.
+5. O detalhe mora só no parágrafo [pt]: o inglês deve ser o completo.
+6. Arquivos enormes (motor.rs com o autoteste, transfer_manager.rs, match_pl.rs > 10 mil linhas): separar.
+7. Rotinas no arquivo errado (EUA e Austrália em england_rules.rs, EngThird em eng_prm.rs).
+8. Auxiliares repetidos por módulo (13 cópias de *_club_by_id / *_club_of_contract).
+9. Locais de uma ou duas letras (44% das ocorrências) e nomes de endereço (f70dfa0, l121).
+10. Aritmética crua de ponteiro e 6.478 transmute(FN_..): visões tipadas e uma declaração por função do exe.
+Outros: nomes dos módulos de fields.rs inconsistentes (league x transfer_manager_fields); player_sheet sem os campos
+mais usados (CA +5, PA +7, reputação +9); a maioria dos comparadores só roda a original (o README exagera "cada uma
+comparada").

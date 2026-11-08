@@ -21,7 +21,7 @@ unsafe fn cpl5_por_b(a: usize, v: u8) {
 /// põe 4 em +0x4e, zera a felicidade (+0x3f) e +0x3e; com o clube e a nação dele (+0x53), o nível do idioma da nação
 /// (+0x77) para a pessoa (0x7c6830 em [0xb74350], sem o contrato; no máximo 10) nos 4 bits baixos de +0x4f.
 unsafe fn reset_contract_morale(this: usize, pessoa: usize, clube: usize) {
-    crate::comparacao::ramo("cpl_5 moral zerada");
+    crate::comparison::branch("cpl_5 moral zerada");
     cpl5_por_b(this + 0x44, 0);
     cpl5_por_b(this + 0x4e, 0);
     cpl5_por(this + 0x45, 0);
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn init_from_current_contract(this: usize, pessoa: usiz
         show_error_at(0xa8360c, 0xf5);
         return;
     }
-    crate::comparacao::ramo("cpl_5 contrato pelo atual");
+    crate::comparison::branch("cpl_5 contrato pelo atual");
     cpl5_por(this, cpl5_d(pessoa));
     cpl5_por(this + 8, 0);
     cpl5_por(this + 4, cpl5_d(clube));
@@ -149,8 +149,8 @@ unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize, usize)> {
 unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, pessoa: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let regioes = morale_reset_regions(this, cpl5_d(this));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, pessoa, clube), || reset_morale_state(this, pessoa, clube));
-    PLACAR.registrar(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", cpl5_d(pessoa), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, pessoa, clube), || reset_morale_state(this, pessoa, clube));
+    PLACAR.record(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", cpl5_d(pessoa), mo, mr));
 }
 
 /// Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
@@ -162,10 +162,10 @@ unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pes
         return o(this, pessoa, clube, fim, write_percent_pair, sem_acesso, multa);
     }
     let regioes = morale_reset_regions(this, cpl5_d(pessoa));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes,
         || o(this, pessoa, clube, fim, write_percent_pair, sem_acesso, multa),
         || init_from_current_contract(this, pessoa, clube, fim, write_percent_pair, sem_acesso, multa));
-    PLACAR.registrar(igual, || {
+    PLACAR.record(igual, || {
         format!("init_from_current_contract(pessoa {}, write_percent_pair {}, {}, {}) {:x?} x {:x?}", cpl5_d(pessoa), write_percent_pair as u8 as i8, sem_acesso as u8, multa as u8, mo, mr)
     });
 }
@@ -174,6 +174,6 @@ unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pes
 unsafe extern "thiscall" fn comparar_get_expiry_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(%%I2%%)(this);
     let n = get_expiry_band(this);
-    PLACAR.registrar(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", cpl5_d(this), r, n));
+    PLACAR.record(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", cpl5_d(this), r, n));
     r
 }

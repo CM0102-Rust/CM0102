@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
         }
     }
     let preco = if k > piso { // cqe1: o preço pelo valor k
-        crate::comparacao::ramo("cqe_1 preço pelo k");
+        crate::comparison::branch("cqe_1 preço pelo k");
         k
     } else {
         piso
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
             }
             let v = valor(opcoes[i], 0, 0, 1, 1, 1);
             if v as f64 * read_f64_at(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido
-                crate::comparacao::ramo("cqe_1 aceita");
+                crate::comparison::branch("cqe_1 aceita");
                 if ensaio == 0 {
                     aceitar(this, vaga, 0);
                 }
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: 
         let v = valor(melhor, 0, 0, 0, 0, 1);
         let tipo = cqe1_d(o + 0x31) & 0xf;
         if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta
-            crate::comparacao::ramo("cqe_1 contraproposta");
+            crate::comparison::branch("cqe_1 contraproposta");
             cqe1_pb(melhor + 0x30, (cqe1_b(melhor + 0x30) & 0xf0) | (cqe1_b(o + 0x30) & 0xf));
             negociar(this, o, melhor, 0);
         } else {

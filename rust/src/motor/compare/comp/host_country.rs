@@ -13,10 +13,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_default_table(this: usize) 
     if read_u32_as_usize(this) == 0 || n <= 0 {
         return o(this);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(read_u32_as_usize(this), n as usize * 0x22), (0xb67a34, 4)]);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| init_default_table(this)));
-    PLACAR.registrar(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| init_default_table(this)));
+    PLACAR.record(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
 }
 
 /// Comparer for `post_host_news` (comparison mode: see the header of motor.rs).
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_hosts(this: usize, comp: u3
     let (oa, ob) = (*a, *b);
     let (mut ca, mut cb) = (va, vb);
     let c = find_hosts(this, comp, year, &mut ca, &mut cb, default);
-    PLACAR.registrar(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_hosts({:x}, {}): original {} {:x} {:x} rust {} {:x} {:x}", comp, year as u16, r as u8, oa, ob, c as u8, ca, cb));
+    PLACAR.record(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_hosts({:x}, {}): original {} {:x} {:x} rust {} {:x} {:x}", comp, year as u16, r as u8, oa, ob, c as u8, ca, cb));
     r
 }
 
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, com
     let (oa, ob) = (*a, *b);
     let (mut ca, mut cb) = (va, vb);
     let c = find_next_hosts(this, comp, &mut ca, &mut cb);
-    PLACAR.registrar(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_next_hosts({:x}): original {} {:x} {:x} rust {} {:x} {:x}", comp, r as u8, oa, ob, c as u8, ca, cb));
+    PLACAR.record(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_next_hosts({:x}): original {} {:x} {:x} rust {} {:x} {:x}", comp, r as u8, oa, ob, c as u8, ca, cb));
     r
 }
 

@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usize) {
     let b = cqo9_campeao_do_turno(this, 1);
     core::ptr::write_unaligned((lista + 4) as *mut usize, b);
     if a == b {
-        crate::comparacao::ramo("cqo_9 mesmo campeao");
+        crate::comparison::branch("cqo_9 mesmo campeao");
         core::ptr::write_unaligned((this + 0x30) as *mut u32, 1);
         core::ptr::write_unaligned((this + 0x2c) as *mut u32, 2);
         for k in 0..2 {
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usize) {
     if fase == 0 {
         return show_error_at(0x98b014, 0x250);
     }
-    crate::comparacao::ramo("cqo_9 final");
+    crate::comparison::branch("cqo_9 final");
     let montar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c800usize);
     montar(fase, 0);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: usize) -> u3
         let f = cqo9_d(cqo9_d(this + 0xc) + 8);
         let historico: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqo9_d(cqo9_d(f) + 0x30));
         historico(f);
-        crate::comparacao::ramo("cqo_9 historico da final");
+        crate::comparison::branch("cqo_9 historico da final");
         return campeoes();
     }
     let historico: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684640usize);
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: usize) -> u3
         premio(financas(cqo9_d(0xae2a38), c), valor);
         noticia(this, cqo9_d(cqo9_d(this + 0xb1) + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparacao::ramo("cqo_9 premios");
+    crate::comparison::branch("cqo_9 premios");
     campeoes()
 }
 
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_rio_advance_stage(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqo9_d(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
-    PLACAR.registrar(igual, || format!("bra_reg_rio_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.record(igual, || format!("bra_reg_rio_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn comparar_bra_reg_rio_create_final_stage(this: usize)
             cqo9_w(fase + 0x3e) == 2 && cqo9_d(fase + 4) == cqo9_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && cqo9_d(this + 0x30) == 2
         }
     };
-    PLACAR.registrar(igual, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, cqo9_d(this + 0x30), cqo9_d(this + 0x2c)));
+    PLACAR.record(igual, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, cqo9_d(this + 0x30), cqo9_d(this + 0x2c)));
 }
 
 /// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e

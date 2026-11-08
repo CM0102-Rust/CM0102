@@ -61,12 +61,12 @@ pub(crate) unsafe fn select_spanish_super_cup_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparacao::ramo("cqm_12 dobradinha espanhola");
+        crate::comparison::branch("cqm_12 dobradinha espanhola");
         if !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_SPANISH_CUP, 1), F, 0xe0) {
             return (0, 0);
         }
     }
-    crate::comparacao::ramo("cqm_12 clubes da supercopa da espanha");
+    crate::comparison::branch("cqm_12 clubes da supercopa da espanha");
     finish_two_team_list(l)
 }
 
@@ -89,7 +89,7 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce()
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
         lo.set(read_u32_as_usize(this + 0xa7));
         r
@@ -110,7 +110,7 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce()
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
+    PLACAR.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
     a
 }
 
@@ -144,7 +144,7 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
         return (0, 0);
     }
     if read_u32_as_usize(l) == read_u32_as_usize(l + 6) {
-        crate::comparacao::ramo("cqm_12 dobradinha japonesa");
+        crate::comparison::branch("cqm_12 dobradinha japonesa");
         if !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xf9) {
             return (0, 0);
         }
@@ -152,21 +152,10 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
             return (0, 0);
         }
     }
-    crate::comparacao::ramo("cqm_12 clubes da supercopa do japao");
+    crate::comparison::branch("cqm_12 clubes da supercopa do japao");
     finish_two_team_list(l)
 }
 
-/// rule: the Japanese Super Cup is between the J1 champion and the Emperor's Cup winner; a winner with no nation (+0x53
-/// = 0, a club that no longer exists [inference]) gives the place to the runner-up; if it is the same club, the
-/// Emperor's Cup runner-up comes in and, if they still coincide, the J1 runner-up; if one is missing, the error box
-/// Original: `JapSuper::select_teams` (0x666160, jap_super.cpp, thiscall, ret 0).
-///
-/// [pt] regra: a Supercopa do Japão é entre o campeão da J1 e o da Copa do Imperador; um campeão sem nação (+0x53 = 0, clube
-/// que não existe mais [inferência]) dá a vaga ao vice; se é o mesmo clube, entra o vice da Copa do Imperador e, se
-/// ainda coincidir, o vice da J1; sem algum deles, a caixa de erro
-pub(crate) unsafe extern "thiscall" fn spa_super_select_teams_666160(this: usize) -> i32 {
-    select_japanese_super_cup_teams(this).0
-}
 
 
 

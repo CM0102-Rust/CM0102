@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn get_slot(noticia: usize, vaga: i8) -> u32 {
 unsafe extern "thiscall" fn comparar_find_retirement_entry(regen: usize, id: *const i32, por_lesao: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, u32) -> usize>(%%I0%%)(regen, id, por_lesao);
     let n = find_retirement_entry(regen, id, por_lesao);
-    PLACAR.registrar(r == n, || format!("find_retirement_entry({}, {}) original={:#x} rust={:#x}", *id, por_lesao, r, n));
+    PLACAR.record(r == n, || format!("find_retirement_entry({}, {}) original={:#x} rust={:#x}", *id, por_lesao, r, n));
     r
 }
 
@@ -53,8 +53,8 @@ unsafe extern "thiscall" fn comparar_register_comp_objects(amistoso: usize) {
     let tabela = *(0xadadfc as *const usize) as isize;
     let base = core::ptr::read_unaligned((amistoso + 0xaf) as *const i16) as isize;
     let reg = [((tabela + *(0x9cf668 as *const i32) as isize * 4) as usize, 4), ((tabela + base * 4) as usize, 0x7f * 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(amistoso), || register_comp_objects(amistoso));
-    PLACAR.registrar(igual, || format!("register_comp_objects {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(amistoso), || register_comp_objects(amistoso));
+    PLACAR.record(igual, || format!("register_comp_objects {:x?} x {:x?}", mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_get_slot(noticia: usize, vaga: i8) -> u32 {
@@ -63,6 +63,6 @@ unsafe extern "thiscall" fn comparar_get_slot(noticia: usize, vaga: i8) -> u32 {
         return r;
     }
     let n = get_slot(noticia, vaga);
-    PLACAR.registrar(r == n, || format!("get_slot({}) original={:#x} rust={:#x}", vaga, r, n));
+    PLACAR.record(r == n, || format!("get_slot({}) original={:#x} rust={:#x}", vaga, r, n));
     r
 }

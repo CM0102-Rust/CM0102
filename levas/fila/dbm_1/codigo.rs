@@ -10,7 +10,7 @@ unsafe fn comparar_nome_em_ingles(nome: &str, x: usize, o: unsafe extern "C" fn(
     }
     let a = o(x);
     let b = r(x);
-    PLACAR.registrar(a == b, || format!("{}({:x}) idioma {} original={:x} rust={:x}", nome, x, idioma, a, b));
+    PLACAR.record(a == b, || format!("{}({:x}) idioma {} original={:x} rust={:x}", nome, x, idioma, a, b));
     a
 }
 
@@ -86,14 +86,14 @@ unsafe extern "C" fn comparar_staff_comp_get_english_name(comp: usize) -> usize 
 /// nula: o primeiro uso carregaria o arquivo de verdade), quantas de clube de 0 a 9, ids de −2 a 13; as globais
 /// voltam no fim.
 pub unsafe fn autoteste_dbm_1() {
-    let (t0, d0) = PLACAR.contagem();
-    let mut s = Sorteio(0x4442_4d31_6964_696f);
+    let (t0, d0) = PLACAR.counts();
+    let mut s = TestRng(0x4442_4d31_6964_696f);
     let globais = [0x9b5984usize, 0xae2408];
     let antes: Vec<usize> = globais.iter().map(|&a| *(a as *const usize)).collect();
     let mut tabela = [0usize; 16]; // a tabela do eng.lng (new 0x40): +0 .. +0x1c quantos, +0x20 .. +0x3c linhas
     let mut registro = [0u8; 0x60];
     for _ in 0..512 {
-        let z = s.proximo();
+        let z = s.next_u64();
         *(0x9b5984 as *mut u32) = (z % 14) as u32;
         tabela[5] = ((z >> 4) % 10) as usize;
         for k in 8..16 {
@@ -109,6 +109,6 @@ pub unsafe fn autoteste_dbm_1() {
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
     }
-    let (t1, d1) = PLACAR.contagem();
+    let (t1, d1) = PLACAR.counts();
     linha(&format!("banco idioma (nomes em inglês 1): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
 }

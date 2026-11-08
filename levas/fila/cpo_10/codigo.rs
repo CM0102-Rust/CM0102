@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn get_offer_response_delay(this: usize, oferta: usize,
     let v = match valor {
         Some(v) => v,
         None => {
-            crate::comparacao::ramo("cpo_10 prazo sorteado");
+            crate::comparison::branch("cpo_10 prazo sorteado");
             let s = sortear(estatuto as i32 / 10 + 0xc) as i8;
             if sortear(3) + 1 > s as i32 {
                 (sortear(3) as u8).wrapping_add(1)
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn pay_transfer_instalments(this: usize) {
             cpo10_w(fr + 0x1c, cpo10_i(fr + 0x1c).wrapping_add(match_pl_ftol(cpo10_i(e) as f64 * read_f64_at(b))) as u32);
         }
         if cpo10_b(e + 0xc) == 0 {
-            crate::comparacao::ramo("cpo_10 prestacao acabada");
+            crate::comparison::branch("cpo_10 prestacao acabada");
             tirar(lista, e);
         } else {
             *((recebe + cpo10_d(cpo10_clube(cpo10_d(e + 8)))) as *mut u8) = 1;
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn remove_offer(this: usize, oferta: usize) {
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8e5710usize);
     let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    crate::comparacao::ramo("cpo_10 tirar oferta");
+    crate::comparison::branch("cpo_10 tirar oferta");
     if cpo10_i(oferta + 0x28) != -1 {
         let x = cpo10_d(cpo10_d(this + 0xc).wrapping_add((cpo10_i(oferta + 0x28) as usize).wrapping_mul(4)));
         if x != 0 {
@@ -272,13 +272,13 @@ unsafe fn cpo10_itens(lista: usize) -> Vec<usize> {
 unsafe extern "thiscall" fn comparar_get_offer_response_delay(this: usize, oferta: usize, dias: *mut u8, fatias: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I0%%);
     let mut reg = vec![(dias as usize, 1usize), (fatias as usize, 1), (0xae1080, 4), (0xb67a34, 4)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(
         &reg,
         || o(this, oferta, dias, fatias),
-        || crate::aleatorio::sem_contar(|| get_offer_response_delay(this, oferta, dias, fatias)),
+        || crate::rng::without_counting(|| get_offer_response_delay(this, oferta, dias, fatias)),
     );
-    PLACAR.registrar(igual, || format!("get_offer_response_delay({:#x}) {:x?} x {:x?}", oferta, mo, mr));
+    PLACAR.record(igual, || format!("get_offer_response_delay({:#x}) {:x?} x {:x?}", oferta, mo, mr));
 }
 
 /// Comparador: só a original, conferindo o plano (feito antes): saem da lista as prestações que tinham 1 a pagar.
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn comparar_pay_transfer_instalments(this: usize) {
     let acabam = antes.iter().filter(|&&e| cpo10_b(e + 0xc) == 1).count();
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let depois = cpo10_itens(lista).len();
-    PLACAR.registrar(depois + acabam == antes.len(), || format!("pay_transfer_instalments: {} prestações, {} acabando, {} depois", antes.len(), acabam, depois));
+    PLACAR.record(depois + acabam == antes.len(), || format!("pay_transfer_instalments: {} prestações, {} acabando, {} depois", antes.len(), acabam, depois));
 }
 
 /// Comparador: só a original, conferindo o plano (feito antes): a vaga zerada, as contas +8 e +0x14, a menor vaga livre
@@ -308,6 +308,6 @@ unsafe extern "thiscall" fn comparar_remove_offer(this: usize, oferta: usize) {
         && cpo10_i(this + 0x14) == n14 - ligada as i32
         && cpo10_i(this + 0x85e) == livre.min(vaga)
         && cpo10_b(q) == ofertas.wrapping_sub(1);
-    PLACAR.registrar(ok, || format!("remove_offer: vaga {} contas {}/{} -> {}/{} livre {} -> {} ofertas {} -> {}",
+    PLACAR.record(ok, || format!("remove_offer: vaga {} contas {}/{} -> {}/{} livre {} -> {} ofertas {} -> {}",
         vaga, n8, n14, cpo10_i(this + 8), cpo10_i(this + 0x14), livre, cpo10_i(this + 0x85e), ofertas, cpo10_b(q)));
 }

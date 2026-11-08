@@ -116,9 +116,9 @@ unsafe extern "C" fn comparar_database_add_staff_to_club(clube: usize, pessoa: u
     }
     // grava só no clube (581 bytes) e na pessoa (110); 0x600a50 só consulta
     let regioes = [(clube, 0x245), (pessoa, 0x6e)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, pessoa, cargo, data, gravar, reduzir),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(clube, pessoa, cargo, data, gravar, reduzir),
         || database_add_staff_to_club(clube, pessoa, cargo, data, gravar, reduzir));
-    PLACAR.registrar(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, pessoa, cargo as u8, data, gravar, reduzir, r, n, mo, mr));
     r
 }

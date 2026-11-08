@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
     }
     let tipo6 = cpw4_b(termos + 0x35) & 0x3f == 6;
     if item != 0 {
-        crate::comparacao::ramo("cpw_4 oferta atualizada");
+        crate::comparison::branch("cpw_4 oferta atualizada");
         // ponytail: a original embute o operator= (0x4cc810) aqui; a cópia chama a versão Rust dele, as mesmas gravações
         contract_manager_operator(item, termos);
         *((item + 0x50) as *mut u8) = if acertado != 0 { 2 } else { 0 };
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
             let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x68d0d0usize);
             acrescentar(cpw4_d(this + 0x34), r, 0x6f);
         }
-        crate::comparacao::ramo("cpw_4 oferta nova");
+        crate::comparison::branch("cpw_4 oferta nova");
         let c = contract_offer_counter(termos) as *mut u8;
         *c = (*c).wrapping_add(1); // cpw4: o contador de ofertas da pessoa
     }
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
         let tm = cpw4_d(0xde1f54);
         let v = vaga_da(tm, vaga);
         if cpw4_d(cpw4_d(v) + 0xc) == cpw4_d(termos) {
-            crate::comparacao::ramo("cpw_4 termos ao jogador");
+            crate::comparison::branch("cpw_4 termos ao jogador");
             let marcar: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x8c1f80usize);
             marcar(cpw4_d(0xde1f54), vaga); // cpw4: os termos oferecidos ao jogador
         } else {
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
         }
     }
     if decidir != 0 {
-        crate::comparacao::ramo("cpw_4 agendar decisao");
+        crate::comparison::branch("cpw_4 agendar decisao");
         let decisao: unsafe extern "thiscall" fn(usize, u32, i32) = core::mem::transmute(0x4cd230usize);
         decisao(this, cpw4_d(termos) as u32, vaga); // cpw4: a decisão agendada
     }
@@ -164,16 +164,16 @@ unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, termos: usi
     }
     let n_cmp = todas.len();
     todas.extend(TRANSFER_MANAGER_DATE_STATICS);
-    todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&todas);
+    todas.extend(crate::rng::STATE_REGIONS);
+    let antes = crate::comparison::MemorySnapshot::read(&todas);
     CONTRACT_OFFER_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_contract_offer(this, termos, vaga, valor, marca, a5, decidir, acertado)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, termos, vaga, valor, marca, a5, decidir, acertado)));
     CONTRACT_OFFER_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&todas[..n_cmp]);
+    let mr = crate::comparison::MemorySnapshot::read(&todas[..n_cmp]);
     let registro = DRY_RUN_CONTRACT_OFFER_RECORD;
-    antes.escrever();
+    antes.write_back();
     o(this, termos, vaga, valor, marca, a5, decidir, acertado);
-    let mo = crate::comparacao::Memoria::ler(&todas[..n_cmp]);
+    let mo = crate::comparison::MemorySnapshot::read(&todas[..n_cmp]);
     let igual = if item != 0 {
         mo == mr
     } else {
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, termos: usi
         }
         mo == mr && novo != 0 && core::slice::from_raw_parts(novo as *const u8, 0x63) == &registro[..0x63]
     };
-    PLACAR.registrar(igual, || format!("add_contract_offer(pessoa {:#x}, clube {:#x}, vaga {}, atualizada {}) original={:x?} rust={:x?}", id, clube, vaga, item != 0, mo, mr));
+    PLACAR.record(igual, || format!("add_contract_offer(pessoa {:#x}, clube {:#x}, vaga {}, atualizada {}) original={:x?} rust={:x?}", id, clube, vaga, item != 0, mo, mr));
 }
 
 /// { 0x4ccb30 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::remove_contract_offer_for_transfer(pessoa,
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn remove_contract_offer_for_transfer(this: usize, pess
     if x == 0 {
         return;
     }
-    crate::comparacao::ramo("cpw_4 oferta tirada pela vaga");
+    crate::comparison::branch("cpw_4 oferta tirada pela vaga");
     if cpw4_d(x + 0x63) as i32 != -1 {
         let f: unsafe extern "thiscall" fn(usize, u32, u32, u32) = core::mem::transmute(0x7a81a0usize);
         f(cpw4_d(0xb7434c), cpw4_d(x + 0x63) as u32, cpw4_d(x + 0x67) as u32, cpw4_d(x + 0x6b) as u32);
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn comparar_remove_contract_offer_for_transfer(this: us
     o(this, pessoa, vaga);
     let depois = cpw4_b(contract_offer_counter(pessoa));
     let esperado = if achou { antes.wrapping_sub(1) } else { antes };
-    PLACAR.registrar(depois == esperado, || format!("remove_contract_offer_for_transfer(pessoa {:#x}, vaga {}) achou {} contador {} -> {}", cpw4_d(pessoa), vaga, achou, antes, depois));
+    PLACAR.record(depois == esperado, || format!("remove_contract_offer_for_transfer(pessoa {:#x}, vaga {}) achou {} contador {} -> {}", cpw4_d(pessoa), vaga, achou, antes, depois));
 }
 
 /// { 0x4ce450 } (stdcall, ret 8, contract_manager.cpp, quadro SEH sem destrutor): o menor salário que a pessoa pede ao
@@ -283,8 +283,8 @@ unsafe extern "stdcall" fn contract_manager_lowest_wage_demand(pessoa: usize, cl
 unsafe extern "stdcall" fn comparar_contract_manager_lowest_wage_demand(pessoa: usize, clube: usize) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i32>(%%I2%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(pessoa, clube), || crate::aleatorio::sem_contar(|| contract_manager_lowest_wage_demand(pessoa, clube)));
-    PLACAR.registrar(igual && r == n, || format!("contract_manager_lowest_wage_demand(pessoa {:#x}) original={} {:x?} rust={} {:x?}", cpw4_d(pessoa), r, mo, n, mr));
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(pessoa, clube), || crate::rng::without_counting(|| contract_manager_lowest_wage_demand(pessoa, clube)));
+    PLACAR.record(igual && r == n, || format!("contract_manager_lowest_wage_demand(pessoa {:#x}) original={} {:x?} rust={} {:x?}", cpw4_d(pessoa), r, mo, n, mr));
     r
 }

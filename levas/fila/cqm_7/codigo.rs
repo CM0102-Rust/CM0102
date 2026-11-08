@@ -50,7 +50,7 @@ unsafe fn build_state_league_table(this: usize, n: i16, arquivo: usize, linha: u
     if k as i8 as i16 != cqm7_w(this + 0x3e) {
         return 0;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     1
 }
 
@@ -94,7 +94,7 @@ unsafe fn bra_reg_northeast_compare_state_league_table(nome: &str, this: usize, 
         achou = (0..plano.len()).map(|k| cqm7_d(t + k * 0x3b)).collect();
         igual = achou == plano;
     }
-    PLACAR.registrar(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
+    PLACAR.record(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
     r
 }
 

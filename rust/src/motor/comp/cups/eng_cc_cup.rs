@@ -78,7 +78,7 @@ pub(crate) unsafe fn eng_cc_cup_create_single_stage_round_table(this: usize, sta
         show_error_at(file, row);
         return 0;
     }
-    crate::comparacao::ramo(name);
+    crate::comparison::branch(name);
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
@@ -101,32 +101,6 @@ pub(crate) unsafe fn eng_cc_cup_written_round_bytes(t: usize, n: i16) -> Vec<u8>
     v
 }
 
-/// Side-by-side comparer for create_round_table: same outputs and same written bytes in both round tables; frees the
-/// copy's table.
-///
-/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
-/// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-pub(crate) unsafe fn eng_cc_cup_compare_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
-    o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    if stage as u8 != 0xff {
-        // simplification: outside stage −1 neither of the two writes anything; the outputs may not even exist
-        let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
-        return a;
-    }
-    let (mut r2, mut e2) = (*rounds, *extra);
-    let mut s2 = if out.is_null() { 0 } else { *out };
-    let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if out.is_null() { core::ptr::null_mut() } else { &mut s2 }));
-    let outs = *rounds == r2 && *extra == e2 && (out.is_null() || *out == s2);
-    let table = if a != 0 && b != 0 { eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, r2) } else { a == 0 && b == 0 };
-    if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(b);
-    }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
-    a
-}
 
 /// A Copa da Liga inglesa (EngCcCup): sete rodadas de agosto a março do ano seguinte; as três primeiras dependem de
 /// +0xb2 (os clubes nas copas europeias, que entram mais tarde) e vêm à parte (`league_cup_rounds`).
@@ -214,22 +188,6 @@ pub(crate) fn fa_cup_rounds(b: i16, entry: u8, inscritos: i16) -> [EngCcCupCupRo
     t
 }
 
-/// rule: the FA Cup has 9 single-leg rounds with replays (+0x20 = 1, 10 days later) up to the quarter-finals:
-/// preliminary (code 0xdc) drawn 9/10, played 16/10, 56 teams; 1st round 17/10 and 18/11; 2nd 19/11 and 9/12; 3rd 10/12
-/// and 6/1; 4th 7/1 and 27/1; 5th 28/1 and 17/2; quarter-finals 18/2 and 10/3; semi-final 11/3 and 8/4 at its own
-/// ground (venue 0x2a, no replay); final 9/4 and 12/5 at a neutral ground; the team counts from the 2nd to the 5th
-/// round depend on the exemptions (+0xb3) and on the choice of entering at the 5th round (+0xb4 = 1); prize for winning
-/// a round from 10 thousand to 400 thousand, and the final 2 million to the winner and 1 million to the runner-up;
-/// category 4 up to the 5th round and 6 from the quarter-finals
-/// Original: `EngFaCup::create_round_table` (0x56f320, eng_fa_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x56f320 } (thiscall, ret 0x10, eng_fa_cup.cpp; a virtual +0x3c da Copa da Inglaterra): `EngFaCup::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas (`fa_cup_rounds`);
-/// a caixa da linha 0xb6 sem memória.
-pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table_56f320(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let t = fa_cup_rounds(*((this + eng_fa_cup::EXEMPTION_COUNT) as *const i8) as i16, *((this + eng_fa_cup::FIFTH_ROUND_ENTRY) as *const u8), core::ptr::read_unaligned((this + cup::TEAM_COUNT) as *const i16));
-    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &t, 0x9c42cc, 0xb6, "cql_10 tabela da copa da inglaterra")
-}
 
 
 /// A Supercopa inglesa (Charity Shield): uma rodada, um jogo em agosto.
@@ -237,15 +195,6 @@ pub(crate) const CHARITY_SHIELD_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((5, 6, 0, 5), (0xd, 7, 0, 6, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cql10: o jogo da Supercopa inglesa
 ];
 
-/// rule: the Charity Shield is a single match between 2 clubs, drawn on 5/7 and played on 13/8 (moved to weekday 6) at
-/// a neutral ground [inference: venue 4], decided on penalties [inference: tiebreak 1]; category 6; no prize
-/// Original: `EngCharity::create_round_table` (0x56d640, eng_charity.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x56d640 } (thiscall, ret 0x10, eng_charity.cpp; a virtual +0x3c da Supercopa): `EngCharity::create_round_table(
-/// fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x9c sem memória.
-pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table_56d640(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &CHARITY_SHIELD_ROUNDS, 0x9c425c, 0x9c, "cql_10 tabela da supercopa inglesa")
-}
 
 
 
@@ -333,7 +282,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
     eng_cc_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, |c| {
         let pos = *((c + 0x5f) as *const u8);
         if came_from_division(c, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
-            crate::comparacao::ramo("cqm_10 caiu da premier");
+            crate::comparison::branch("cqm_10 caiu da premier");
             0x46u8.wrapping_sub(pos) // cqm10: quem caiu da Premier
         } else if came_from_division(c, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) {
             0x28u8.wrapping_sub(pos)
@@ -359,7 +308,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
                 && (d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) || d == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION))
                 && read_u32_as_usize(c + 0x1db) as i32 != -1
             {
-                crate::comparacao::ramo("cqm_10 clube nas copas europeias");
+                crate::comparison::branch("cqm_10 clube nas copas europeias");
                 *((this + 0xb2) as *mut u8) = (*((this + 0xb2) as *const u8)).wrapping_add(1);
                 eng_cc_cup_write_entrant(this, n, c, 0x78);
                 n += 1;
@@ -372,7 +321,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
     }
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     sort(read_u32_as_usize(this + 0xa7), n as u32, 6, 0x5221c0);
-    crate::comparacao::ramo("cqm_10 inscritos da copa da liga");
+    crate::comparison::branch("cqm_10 inscritos da copa da liga");
     let mut k: i16 = 0;
     while (k as i32) < n {
         let e = read_u32_as_usize(this + 0xa7) + k as usize * 6;
@@ -423,7 +372,7 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(reg, || {
         let r = o();
         lo.set(read_u32_as_usize(this + 0xa7));
         r
@@ -445,7 +394,7 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
+    PLACAR.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this, a, b, igual, list, k));
     a
 }
 
@@ -465,7 +414,7 @@ pub(crate) unsafe fn collect_auto_cup_entrants(this: usize) -> (i32, i32) {
         show_error_at(0x9c4180, 0x19f);
         return (-1, 0);
     }
-    crate::comparacao::ramo("cqm_10 segunda chave do trofeu da liga");
+    crate::comparison::branch("cqm_10 segunda chave do trofeu da liga");
     let mut k: i16 = 0;
     if read_i16(this + 0x3e) > 0 {
         loop {
@@ -520,7 +469,7 @@ pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparacao::ramo("cqm_10 dobradinha inglesa");
+        crate::comparison::branch("cqm_10 dobradinha inglesa");
         let b = latest_placed_club(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 1);
         core::ptr::write_unaligned((l + 6) as *mut u32, b as u32);
         if b == 0 {
@@ -528,7 +477,7 @@ pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
             return (0, 0);
         }
     }
-    crate::comparacao::ramo("cqm_10 clubes da supercopa inglesa");
+    crate::comparison::branch("cqm_10 clubes da supercopa inglesa");
     *((l + 4) as *mut u8) = 0;
     *((l + 5) as *mut u8) = 0;
     *((l + 0xa) as *mut u8) = 0;
@@ -536,15 +485,6 @@ pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
     (1, 2)
 }
 
-/// rule: the Charity Shield is between the Premier champion and the FA Cup winner; if the same club won both, the
-/// Premier runner-up takes its place; if one is missing, the error box
-/// Original: `EngCharity::select_teams` (0x56d780, eng_charity.cpp, thiscall, ret 0).
-///
-/// [pt] regra: a Supercopa inglesa (Charity Shield) é entre o campeão da Premier e o da Copa da Inglaterra; se o mesmo clube
-/// ganhou as duas, entra o vice da Premier; sem algum deles, a caixa de erro
-pub(crate) unsafe extern "thiscall" fn eng_cc_cup_select_teams(this: usize) -> i32 {
-    select_charity_shield_teams(this).0
-}
 
 
 
@@ -617,7 +557,7 @@ pub(crate) unsafe fn eng_cc_cup_cup_update_for_date(this: usize, today: usize, s
 pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     if read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + cup::YEAR) as i32 && stage != 0 {
         free_season_tables(this);
-        crate::comparacao::ramo("cqn_10 virada da copa da liga");
+        crate::comparison::branch("cqn_10 virada da copa da liga");
         core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqn10: a Copa da Liga refeita uma vez
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCCCUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
@@ -641,50 +581,6 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
 // simplification: the season turn frees and rebuilds the tables and the cup update plays and draws: they do not run twice. Only the
 // original; the plan: +0x45 goes to 1 when the condition holds, otherwise it stays.
 
-/// rule: the FA Cup gathers its entrants on 3 October each year (Date(3, 9): month 9 is October; the community map says
-/// September), rebuilds the rounds and the tree and draws the preliminary round, once per season (+0x45); on 1 October
-/// 1999 it asked the human manager whether the club enters at the 5th round (+0xb2 marks the question); then, every
-/// day, the cup update
-/// Original: `EngFaCup::update_for_date` (0x570550, eng_fa_cup.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x570550 } (thiscall, ret 8, eng_fa_cup.cpp; a virtual +0x14 da Copa da Inglaterra; quadro SEH pela notícia do
-/// caminho de 1999, sem destrutor no caminho normal): `EngFaCup::update_for_date(hoje, fase)`. Com +0x45 = 0 e a fase
-/// diferente de 0: em Date(1, 9, 1999) (o mês 9 é outubro) com +0xb2 = 0, a pergunta ao técnico humano sobre a entrada na
-/// 5ª rodada (só em 1999: a original pelo trampolim); em Date(3, 9, ano de hoje) (3 de outubro), libera as tabelas, +0x45
-/// = 1, os inscritos (0x56fab0, thiscall), as rodadas (virtual +0x8c), a árvore (virtual +0x94) — uma devolução negativa
-/// dá a caixa (linhas 0x3d6, 0x3dd, 0x3e4) e 1 —, a ordem prevista (virtual +0x5c) e o sorteio da 1ª rodada (0x51c800:
-/// push 0; mov ecx, copa -> thiscall, ret 4). Sempre, no fim, a atualização da copa.
-pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date_570550(this: usize, today: usize, stage: u32) -> u32 {
-    if read_u32_as_usize(this + cup::SEASON_SET_UP) == 0 && stage != 0 {
-        if is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), today) && *((this + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED) as *const u8) == 0 {
-            // simplification: the 1999 question builds and delivers a news item (only on that day, outside any new career)
-            return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_CC_CUP_UPDATE_FOR_DATE_570550)(this, today, stage);
-        }
-        // simplification: the year goes in ax with the rest of eax in the high bytes; 0x549f70 reads it as a word
-        if is_date_today(make_date_dword(3, 9, read_i16(today + 2) as u16 as u32, 0xffff_ffff), today) { // cqn10: as inscrições da Copa da Inglaterra em 3/10
-            free_season_tables(this);
-            crate::comparacao::ramo("cqn_10 inscricoes da copa da inglaterra");
-            core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1);
-            let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGFACUP_COLLECT_ENTRANTS);
-            if inscritos(this) < 0 {
-                show_error_at(0x9c42cc, 0x3d6);
-                return 1;
-            }
-            if call_cup_virtual(this, 0x8c) < 0 {
-                show_error_at(0x9c42cc, 0x3dd);
-                return 1;
-            }
-            if call_cup_virtual(this, 0x94) < 0 {
-                show_error_at(0x9c42cc, 0x3e4);
-                return 1;
-            }
-            call_cup_virtual(this, 0x5c);
-            let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-            sortear(this, 0);
-        }
-    }
-    eng_cc_cup_cup_update_for_date(this, today, stage)
-}
 
 // simplification: like the League Cup one, original only; the plan: +0x45 goes to 1 on 3 October (with +0x45 = 0 and the stage), outside
 // of the 1999 path.

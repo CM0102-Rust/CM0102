@@ -12,7 +12,7 @@ MUTACOES = [
     ('cph_pedido_data', 'copy_data(r + 8, &mut local, r + 0x19);', 'copy_data(r + 8, &mut local, r + 8); // mutacao: a data fica'),
     ('cph_apelido_fim', 'core::ptr::write_unaligned((end - 0x1e) as *mut u32, u32::MAX);', 'core::ptr::write_unaligned((end - 0x1e) as *mut u32, 0); // mutacao: id 0'),
     ('cph_pendente_fim', 'core::ptr::write_unaligned(end as *mut u32, u32::MAX); // the last one without a person', 'core::ptr::write_unaligned(end as *mut u32, 0); // mutacao: pessoa 0'),
-    ('cph_desempregado_tecnico', '*((manager + 0xa) as *const i16) < 50 && friendly_random(5) == 0 // the weak manager', '*((manager + 0xa) as *const i16) < 49 && friendly_random(5) == 0 // mutacao: 49'),
+    ('cph_desempregado_tecnico', '*((manager + non_player::CURRENT_REPUTATION) as *const i16) < 50 && friendly_random(5) == 0 // the weak manager', '*((manager + non_player::CURRENT_REPUTATION) as *const i16) < 49 && friendly_random(5) == 0 // mutacao: 49'),
     ('cph_desempregado_sorteio', 'friendly_random(rating) < 0x2ee // the roll by the rating', 'friendly_random(rating) < 700 // mutacao: 700'),
     ('cph_permissao_oferta', 'return 1; // the offer’s player', 'return 0; // mutacao: nunca precisa'),
     ('cph_permissao_anos', 'if years > 4 {', 'if years > 5 { // mutacao: 6 anos'),

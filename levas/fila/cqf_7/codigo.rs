@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, 
             };
             // o byte de baixo, com sinal, em float dividido pelo float da quantidade (precisão dupla do x87)
             let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
-            crate::comparacao::ramo("cqf_7 nota do treinador");
+            crate::comparison::branch("cqf_7 nota do treinador");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
         }
     }
@@ -148,8 +148,8 @@ unsafe extern "thiscall" fn comparar_update_coach_assignments(this: usize, clube
         }
         reg.push((this + 0x652d + 54 * cqf7_i(0xae2364).wrapping_sub(cqf7_i(tec)).wrapping_sub(1) as usize, 54));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, tecnico), || update_coach_assignments(this, clube, tecnico));
-    PLACAR.registrar(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", clube, tecnico, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, tecnico), || update_coach_assignments(this, clube, tecnico));
+    PLACAR.record(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", clube, tecnico, mo.0, mr.0));
 }
 
 /// O programa `vaga` (0..9; fora disso o 1) do técnico humano `tec`: this + (vaga + 7 + 10 × ([0xae2364] − id − 1)) ×
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec: usize, an
         } else {
             1
         };
-        crate::comparacao::ramo("cqf_7 programa do elenco novo");
+        crate::comparison::branch("cqf_7 programa do elenco novo");
         let c = carga(human_training_schedule(this, tec, *e));
         gravar_carga(cqf7_d(0xb63d28), p, c as u32);
     }
@@ -271,8 +271,8 @@ unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: usize, tec: 
     if novo != 0 {
         reg.push((this + 0x652d + 54 * k as usize, 54));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tec, antigo, novo), || reassign_squad_schedules(this, tec, antigo, novo));
-    PLACAR.registrar(igual, || format!("reassign_squad_schedules(tecnico {:x}, {:x} -> {:x}) {:x?} x {:x?}", tec, antigo, novo, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tec, antigo, novo), || reassign_squad_schedules(this, tec, antigo, novo));
+    PLACAR.record(igual, || format!("reassign_squad_schedules(tecnico {:x}, {:x} -> {:x}) {:x?} x {:x?}", tec, antigo, novo, mo.0, mr.0));
 }
 
 /// { 0x8b2230 } (thiscall, ret 0, training_manager.cpp): os nomes padrão dos 167 programas de treino (0x8b50f0 em cada
@@ -287,6 +287,6 @@ unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize) {
 /// Comparador: lado a lado nos 167 programas (0x9b bytes cada).
 unsafe extern "thiscall" fn comparar_training_manager_cpp_0x8b2230(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0xa7 * 0x9b)], || o(this), || training_manager_cpp_0x8b2230(this));
-    PLACAR.registrar(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(this, 0xa7 * 0x9b)], || o(this), || training_manager_cpp_0x8b2230(this));
+    PLACAR.record(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));
 }

@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_has_active_release_clause(c: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_HAS_ACTIVE_RELEASE_CLAUSE)(c);
     let n = has_active_release_clause(c);
-    PLACAR.registrar(r == n, || format!("has_active_release_clause({:x}) original={} rust={}", c, r, n));
+    PLACAR.record(r == n, || format!("has_active_release_clause({:x}) original={} rust={}", c, r, n));
     r
 }
 
@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: u
         if years.is_null() { core::ptr::null_mut() } else { &mut na },
     );
     let ok = r == n && (no_limite.is_null() || ol == nl) && (years.is_null() || oa == na);
-    PLACAR.registrar(ok, || format!("check_fifa_protected_period({:x}) original={} {} {} rust={} {} {}", c, r, ol, oa, n, nl, na));
+    PLACAR.record(ok, || format!("check_fifa_protected_period({:x}) original={} {} {} rust={} {} {}", c, r, ol, oa, n, nl, na));
     r
 }
 
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: u
 pub(crate) unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(person: usize, kind: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_STAFF_CONTRACT_IS_BONUS_TYPE_ALLOWED)(person, kind);
     let n = staff_contract_is_bonus_type_allowed(person, kind);
-    PLACAR.registrar(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", person, kind as u8, r, n));
+    PLACAR.record(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", person, kind as u8, r, n));
     r
 }
 
@@ -42,8 +42,8 @@ pub(crate) unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(pe
 pub(crate) unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, person: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RESET_MORALE_STATE);
     let regions = morale_reset_regions(this, read_usize(this));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, person, clube), || reset_morale_state(this, person, clube));
-    PLACAR.registrar(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", read_usize(person), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, person, clube), || reset_morale_state(this, person, clube));
+    PLACAR.record(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", read_usize(person), mo, mr));
 }
 
 /// Comparer for `init_from_current_contract` (comparison mode: see the header of motor.rs).
@@ -57,10 +57,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_from_current_contract(this:
         return o(this, person, clube, end, write_percent_pair, without_promotion, multa);
     }
     let regions = morale_reset_regions(this, read_usize(person));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions,
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions,
         || o(this, person, clube, end, write_percent_pair, without_promotion, multa),
         || init_from_current_contract(this, person, clube, end, write_percent_pair, without_promotion, multa));
-    PLACAR.registrar(igual, || {
+    PLACAR.record(igual, || {
         format!("init_from_current_contract(pessoa {}, write_percent_pair {}, {}, {}) {:x?} x {:x?}", read_usize(person), write_percent_pair as u8 as i8, without_promotion as u8, multa as u8, mo, mr)
     });
 }
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_from_current_contract(this:
 pub(crate) unsafe extern "thiscall" fn comparar_get_expiry_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_GET_EXPIRY_BAND)(this);
     let n = get_expiry_band(this);
-    PLACAR.registrar(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", read_usize(this), r, n));
+    PLACAR.record(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", read_usize(this), r, n));
     r
 }
 
@@ -89,8 +89,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize
     if let Some(c) = database_staff_state_record(staff_of_contract(this)) {
         reg.push((c, 79));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, check), || clear_all_grievances(this, check));
-    PLACAR.registrar(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, check), || clear_all_grievances(this, check));
+    PLACAR.record(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this, mo, mr));
 }
 
 /// Comparer for `check_transfer_request_withdrawal` (comparison mode: see the header of motor.rs).
@@ -105,8 +105,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_transfer_request_withdrawa
     if retira {
         return o(this, ctx);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4), (this, 0x50)], || o(this, ctx), || check_transfer_request_withdrawal(this, ctx));
-    PLACAR.registrar(igual, || format!("check_transfer_request_withdrawal({:x}, {}) {:x?} x {:x?}", this, ctx, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4), (this, 0x50)], || o(this, ctx), || check_transfer_request_withdrawal(this, ctx));
+    PLACAR.record(igual, || format!("check_transfer_request_withdrawal({:x}, {}) {:x?} x {:x?}", this, ctx, mo, mr));
 }
 
 /// Comparer for `set_flags` (comparison mode: see the header of motor.rs).
@@ -119,19 +119,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_flags(c: usize, marks: u32) 
         return o(c, marks);
     }
     let mut regions = vec![(c + 0x40, 4)];
-    regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let before = crate::comparacao::Memoria::ler(&regions);
+    regions.extend(crate::rng::STATE_REGIONS);
+    let before = crate::comparison::MemorySnapshot::read(&regions);
     MISS_TRAINING_DRY_RUN = true;
     MISS_TRAINING_DECISION = 0;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| set_flags(c, marks)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| set_flags(c, marks)));
     MISS_TRAINING_DRY_RUN = false;
     let pediu = MISS_TRAINING_DECISION != 0;
-    let mr = crate::comparacao::Memoria::ler(&regions);
-    before.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regions);
+    before.write_back();
     o(c, marks);
-    let mo = crate::comparacao::Memoria::ler(&regions);
+    let mo = crate::comparison::MemorySnapshot::read(&regions);
     let same = if pediu { mo.0[0] == mr.0[0] } else { mo == mr };
-    PLACAR.registrar(same, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marks, pediu, mo, mr));
+    PLACAR.record(same, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marks, pediu, mo, mr));
 }
 
 /// Comparer for `get_contract_satisfaction` (comparison mode: see the header of motor.rs).
@@ -141,13 +141,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_flags(c: usize, marks: u32) 
 pub(crate) unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, person: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_CONTRACT_SATISFACTION);
     let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize), (this, 0x50)];
-    regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    regions.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regions,
         || o(this, person),
-        || crate::aleatorio::sem_contar(|| get_contract_satisfaction(this, person)),
+        || crate::rng::without_counting(|| get_contract_satisfaction(this, person)),
     );
-    PLACAR.registrar(igual && r == n, || {
+    PLACAR.record(igual && r == n, || {
         format!("get_contract_satisfaction(pessoa {:#x}) original={} {:x?} rust={} {:x?}", if person != 0 { read_usize(person) } else { 0 }, r, mo, n, mr)
     });
     r
@@ -158,8 +158,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: 
 /// [pt] Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
 pub(crate) unsafe extern "thiscall" fn comparar_set_default_wage(this: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_DEFAULT_WAGE);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 4)], || o(this, person), || set_default_wage(this, person));
-    PLACAR.registrar(igual && r == n, || format!("set_default_wage({:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0xc, 4)], || o(this, person), || set_default_wage(this, person));
+    PLACAR.record(igual && r == n, || format!("set_default_wage({:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_default_wage(this: usize, pe
 /// [pt] Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_construct_staff_contract(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUCT_STAFF_CONTRACT);
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
-    PLACAR.registrar(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
+    PLACAR.record(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
     ro
 }

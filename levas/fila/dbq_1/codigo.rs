@@ -36,7 +36,7 @@ unsafe fn database_add_to_preference_list(lista: usize, outra: usize, quem: usiz
 /// O estado do sorteio e as 6 pessoas (favoritas e rejeitadas) a partir de `base` (o clube +0x9b ou as preferências
 /// +0x1c); `base` nulo: só o sorteio.
 unsafe fn preference_regions(base: usize) -> Vec<(usize, usize)> {
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if base != 0 {
         reg.push((base, 24));
     }
@@ -57,9 +57,9 @@ unsafe extern "C" fn club_add_favoured_staff(clube: usize, pessoa: usize, forcar
 unsafe extern "C" fn comparar_club_add_favoured_staff(clube: usize, pessoa: usize, forcar: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
     let reg = preference_regions(if clube != 0 { clube + 0x9b } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, pessoa, forcar),
-        || crate::aleatorio::sem_contar(|| club_add_favoured_staff(clube, pessoa, forcar)));
-    PLACAR.registrar(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, pessoa, forcar),
+        || crate::rng::without_counting(|| club_add_favoured_staff(clube, pessoa, forcar)));
+    PLACAR.record(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
 }
 
 /// { 0x547940 } (cdecl, Database.cpp): `club_add_disliked_staff(clube, pessoa, forcar)`: põe a pessoa entre as três
@@ -76,9 +76,9 @@ unsafe extern "C" fn club_add_disliked_staff(clube: usize, pessoa: usize, forcar
 unsafe extern "C" fn comparar_club_add_disliked_staff(clube: usize, pessoa: usize, forcar: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I1%%);
     let reg = preference_regions(if clube != 0 { clube + 0x9b } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, pessoa, forcar),
-        || crate::aleatorio::sem_contar(|| club_add_disliked_staff(clube, pessoa, forcar)));
-    PLACAR.registrar(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clube, pessoa, forcar),
+        || crate::rng::without_counting(|| club_add_disliked_staff(clube, pessoa, forcar)));
+    PLACAR.record(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
 }
 
 /// { 0x547a10 } (cdecl, Database.cpp): `staff_add_favoured_staff(pessoa, outra, forcar)`: põe `outra` entre as três
@@ -101,7 +101,7 @@ unsafe extern "C" fn comparar_staff_add_favoured_staff(pessoa: usize, outra: usi
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I2%%);
     let pref = if pessoa != 0 { dbq1_u32(pessoa + 0x65) } else { 0 };
     let reg = preference_regions(if pref != 0 { pref + 0x1c } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, outra, forcar),
-        || crate::aleatorio::sem_contar(|| staff_add_favoured_staff(pessoa, outra, forcar)));
-    PLACAR.registrar(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, forcar, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa, outra, forcar),
+        || crate::rng::without_counting(|| staff_add_favoured_staff(pessoa, outra, forcar)));
+    PLACAR.record(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, forcar, mo, mr));
 }

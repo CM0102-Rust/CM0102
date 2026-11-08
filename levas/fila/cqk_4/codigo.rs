@@ -39,7 +39,7 @@ fn spanish_common_rules() -> Vec<(usize, u8, u32)> {
 /// (+0xbe = +0xbf = 0), 3 caem (+0xc1), nenhuma liga acima (+0x1c = −1), a Segunda abaixo (+0x20 = [0x9cf628]) e
 /// +0x52 = 2 [sem nome].
 unsafe extern "thiscall" fn spa_first_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_4 regras da primera");
+    crate::comparison::branch("cqk_4 regras da primera");
     core::ptr::write_unaligned((this + 0xa9) as *mut u16, 0x26);
     spa_first_apply_league_rules(this, &primera_rules())
 }
@@ -57,7 +57,7 @@ unsafe fn primera_rules() -> Vec<(usize, u8, u32)> {
 /// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
 /// da nação [inferência]), senão −1; +0x52 = 2.
 unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_4 regras da segunda");
+    crate::comparison::branch("cqk_4 regras da segunda");
     spa_first_apply_league_rules(this, &segunda_rules(this))
 }
 
@@ -75,7 +75,7 @@ unsafe fn segunda_rules(this: usize) -> Vec<(usize, u8, u32)> {
 /// melhores das divisões menores): as comuns, 2 turnos, 3 pontos, 2 sobem direto (+0xbe) e 2 vão ao play-off de
 /// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
 unsafe extern "thiscall" fn spa_lower_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_4 regras da divisao de baixo");
+    crate::comparison::branch("cqk_4 regras da divisao de baixo");
     spa_first_apply_league_rules(this, &lower_division_rules())
 }
 
@@ -91,16 +91,16 @@ unsafe fn lower_division_rules() -> Vec<(usize, u8, u32)> {
 /// virtual reescreve, fica de fora), e a devolução 1; no fim fica a faixa da original.
 unsafe fn spa_first_compare_league_rules(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let band = [(this + 0x1c, 0xd0)];
-    let antes = crate::comparacao::Memoria::ler(&band);
+    let antes = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&band);
-    antes.escrever();
+    let mo = crate::comparison::MemorySnapshot::read(&band);
+    antes.write_back();
     SPA_FIRST_RULES_DRY_RUN = true;
-    let rr = crate::aleatorio::pausar_rastro(copia);
+    let rr = crate::rng::pause_trace(copia);
     SPA_FIRST_RULES_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&band);
-    mo.escrever();
-    let campo = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {
+    let mr = crate::comparison::MemorySnapshot::read(&band);
+    mo.write_back();
+    let campo = |m: &crate::comparison::MemorySnapshot, d: usize, t: u8| -> u32 {
         let b = &m.0[0].1[d - 0x1c..];
         match t {
             1 => b[0] as u32,
@@ -109,7 +109,7 @@ unsafe fn spa_first_compare_league_rules(nome: &str, this: usize, escritas: Vec<
         }
     };
     let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| campo(&mo, e.0, e.1) != campo(&mr, e.0, e.1)).map(|e| (e.0, campo(&mo, e.0, e.1), campo(&mr, e.0, e.1))).collect();
-    PLACAR.registrar(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", nome, this, r, rr, difs));
+    PLACAR.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", nome, this, r, rr, difs));
     r
 }
 

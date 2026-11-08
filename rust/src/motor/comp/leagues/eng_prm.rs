@@ -55,7 +55,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cql_6 divisao inglesa nova");
+    crate::comparison::branch("cql_6 divisao inglesa nova");
     *((this + 0x44) as *mut u8) = 0xff;
     write_u32_from_usize(this + 0x30, 0xffff_ffff);
     write_u32_from_usize(this + 0x2c, p.fases as usize);
@@ -142,14 +142,6 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 
 
 
-/// the Third Division: discipline 9, minimum ground of 6,000 with 1,000 seated, the league and the play-off
-/// Original: `EngThird::EngThird` (0x576dd0, eng_third.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x576dd0 } (thiscall, ret 8, eng_third.cpp): `EngThird::EngThird(ano, registro)`. A Third Division: 1 fase além da
-/// liga (o play-off) e o estádio mínimo de 6.000 lugares, 1.000 sentados.
-pub(crate) unsafe extern "thiscall" fn construct_eng_third(this: usize, year: u32, record: usize) -> usize {
-    construct_english_division(this, year, record, &THIRD_DIVISION)
-}
 
 /// Comparer of the four constructors: runs only the original and checks return value, vtable, year, record, discipline,
 /// stadium and, for a new league, stages and stats.
@@ -167,7 +159,7 @@ pub(crate) unsafe fn compare_english_constructor(name: &str, this: usize, year: 
     if *((this + 0x44) as *const u8) == 0xff && read_u32_as_usize(this + 8) != 0 {
         ok = ok && read_u32_as_usize(this + 0x2c) == p.fases as usize && (read_u32_as_usize(this + 0xc) != 0) == (p.fases != 0);
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 0xc), read_u32_as_usize(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 0xc), read_u32_as_usize(this + 8)));
     r
 }
 
@@ -220,7 +212,7 @@ pub(crate) fn english_common_rules() -> Vec<(usize, u8, u32)> {
 /// (as palavras copiadas em cada partida), ninguém sobe (+0xbe = 0, +0xbf = 0, +0xc0 = 0), 3 caem direto (+0xc1),
 /// nenhuma liga acima (+0x1c = −1) e a First abaixo (+0x20 = [0x9cf5c0]).
 pub(crate) unsafe extern "thiscall" fn eng_prm_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_4 regras da premier");
+    crate::comparison::branch("cqi_4 regras da premier");
     eng_prm_apply_league_rules(this, &premier_rules())
 }
 
@@ -252,18 +244,6 @@ pub(crate) unsafe fn eng_prm_second_division_rules() -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// the Third (24): 3 go up directly, 4th to 7th to the play-offs, the bottom club goes down to the Conference when the
-/// nation has its lower divisions loaded [inference from nation bit 4] (otherwise there is no league below)
-/// Original: `EngThird::set_up_rules` (0x5780c0, eng_third.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x5780c0 } (thiscall, ret 0, eng_third.cpp): `EngThird::set_up_rules()`. A Third: as comuns, 3 sobem direto
-/// (+0xbe), 4 ao mata-mata (+0xbf, do 4º ao 7º), 1 cai (+0xc1), a Second acima ([0x9cf5c4]) e abaixo a Conference
-/// ([0x9cf69c]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c da nação, [[+4]+0x5d]
-/// [inferência]), senão −1; 5 reservas e 3 substituições.
-pub(crate) unsafe extern "thiscall" fn eng_prm_set_up_rules_5780c0(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_4 regras da third");
-    eng_prm_apply_league_rules(this, &third_division_rules(this))
-}
 
 /// Rule writes for the Third Division (lower division Conference only when selected).
 pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> {
@@ -285,16 +265,16 @@ pub(crate) unsafe fn third_division_rules(this: usize) -> Vec<(usize, u8, u32)> 
 /// (com a tabela de rodadas dela em +0xba, +0xa9 e +0x3a).
 pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let band = [(this + 0x1c, 0xd0)];
-    let before = crate::comparacao::Memoria::ler(&band);
+    let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&band);
-    before.escrever();
+    let mo = crate::comparison::MemorySnapshot::read(&band);
+    before.write_back();
     ENG_PRM_RULES_DRY_RUN = true;
-    let rr = crate::aleatorio::pausar_rastro(copy);
+    let rr = crate::rng::pause_trace(copy);
     ENG_PRM_RULES_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&band);
-    mo.escrever();
-    let field = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {
+    let mr = crate::comparison::MemorySnapshot::read(&band);
+    mo.write_back();
+    let field = |m: &crate::comparison::MemorySnapshot, d: usize, t: u8| -> u32 {
         let b = &m.0[0].1[d - 0x1c..];
         match t {
             1 => b[0] as u32,
@@ -303,7 +283,7 @@ pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: usize, escri
         }
     };
     let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    PLACAR.registrar(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
+    PLACAR.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
     r
 }
 
@@ -376,7 +356,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
     if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
-    crate::comparacao::ramo("cqi_5 tabela cheia");
+    crate::comparison::branch("cqi_5 tabela cheia");
     let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
     let f = prize(this, cota);
     core::ptr::write_unaligned((this + 0x28) as *mut i32, f);
@@ -399,14 +379,6 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_table(this: usize) -> u32 
 }
 
 
-/// the Third has 24 clubs; prize fund of 10,000 per place; TV pays 1,000,000 to each club (200,000 up to 1999)
-/// Original: `EngThird::create_table` (0x577f70, eng_third.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x577f70 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_table()`: 24 clubes ([0x9cf5c8]), cota 10.000
-/// e a TV: 1.000.000 depois de 1999 (200.000 antes). Fonte 0x9c4424, linha 0x1fa.
-pub(crate) unsafe extern "thiscall" fn eng_prm_create_table_577f70(this: usize) -> u32 {
-    eng_prm_fill_league_table(this, 0x18, 0x9c4424, 0x1fa, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || eng_prm_pay_tv_rights(this, if is_after_1999() { 0xf4240 } else { 0x30d40 }, 0))
-}
 
 
 /// Comparer: plans the division's clubs beforehand, runs only the original and checks count, return value, rows and
@@ -439,7 +411,7 @@ pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i1
             same = same && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == prize(this, cota);
         }
     }
-    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 
@@ -466,7 +438,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stag
                 show_error_at(0x9c43b0, 0xa7);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_5 calendario da premiership");
+            crate::comparison::branch("cqp_5 calendario da premiership");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, year, &PREMIERSHIP_CHRISTMAS, 0x9c43b0);
             t

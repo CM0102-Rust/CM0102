@@ -36,8 +36,21 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
 }
 
 /// The NSL finals series: the top six of the regular season play their own round-robin stage (with the league points
-/// and tie-breakers) and its top two go to the grand final; sends the draw news. [inference] The real NSL used a
-/// double-chance knockout; here it is a short league of the six
+/// and tie-breakers) and its top two go to the grand final; sends the draw news.
+///
+/// `AusNsl::create_finals_series_stage()` (SEH frame only for the new), called at the end of the regular season. 1) The
+/// top six of the league table (rows 0 to 5, in order) in a local vector of 6. 2) The round table through virtual +0x3c
+/// (create_round_table: thiscall(this, 0, &rounds, &extra, 0), ret 0x10). 3) The stage: operator new 0x944cf1(0xee) and
+/// the League_Stage constructor 0x68b100 (thiscall, ret 0x58, 22 arguments, in the original's order: the league, 6, the
+/// vector, 1, +4, the round table, the rounds (word), the points +0xc2 and +0xc3, the category +0xc4, &+0xc5,
+/// &{2,0,0,0} (two top places: the two who go to the grand final), the year +0x40 (word), 0, the extra (word), +0x51,
+/// 1, 0, +0xd9 (word), −1, 0, 2; the original pushes the words and bytes with garbage in the high bytes, which the
+/// constructor does not read: the copy passes clean values). Out of memory: 0. 4) [+0xc][0] = the stage and the round
+/// table freed (free 0x9452ca). No stage: the error box at line 0x328 and 0. With it: the draw news (0x684230 on the
+/// stage, thiscall, ret 0), +0x30 = 0 and 1.
+///
+/// [inference] The finals series is a short league of the six; its top two go to the grand final. The real NSL used a
+/// double-chance knockout.
 /// Original: `AusNsl::create_finals_series_stage` (0x412010, aus_nsl.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x412010 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_finals_series_stage()`, a
@@ -82,14 +95,25 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
         show_error_at(0x987c20, 0x328);
         return 0;
     }
-    crate::comparacao::ramo("cqr_3 serie final");
+    crate::comparison::branch("cqr_3 serie final");
     noticia(stage);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
     1
 }
 
-/// The NSL grand final: the top two of the finals series in a two-club cup stage [inference: a single game, the first
-/// as home side]; the winner is the Australian champion
+/// The NSL grand final: the top two of the finals series in a two-club cup stage; the winner is the Australian
+/// champion.
+///
+/// `AusNsl::create_grand_final_stage()` (SEH frame only for the new), called at the end of the finals series: the top
+/// two of the finals series table ([+0xc][0], rows 0 and 1, in that order) in a list of 2 (malloc 0x944e46 of 8; out of
+/// memory: the error box at line 0x348 and return); the round table through virtual +0x3c (thiscall(this, 1, &rounds,
+/// &extra, 0), ret 0x10); the stage (operator new 0x944cf1(0xb2) and the Cup_Stage constructor 0x522e00, thiscall, ret
+/// 0x3c: the league, 2, the list, the rounds, +4, the table, the year +0x40, 1, 1, the extra, 0x14, 0, 0, 0 and null
+/// seeds; the copy passes clean words) into [+0xc][1] and the table freed (free 0x9452ca). No stage: the error box at
+/// line 0x35c and return (without freeing the list). With it: Cup::set_up_round (0x51c800, thiscall(stage, 0), ret 4)
+/// and the list freed. The current stage (+0x30 = 1) was already written by the next stage.
+///
+/// [inference] The grand final is a single game, with the finals series winner as the home side.
 /// Original: `AusNsl::create_grand_final_stage` (0x4121c0, aus_nsl.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x4121c0 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_grand_final_stage()`, a grande
@@ -132,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     if stage == 0 {
         return show_error_at(0x987c20, 0x35c);
     }
-    crate::comparacao::ramo("cqr_3 grande final");
+    crate::comparison::branch("cqr_3 grande final");
     build(stage, 0);
     soltar(list);
 }
@@ -203,7 +227,7 @@ pub(crate) unsafe fn set_mls_rules(o: usize) {
 /// a marca; o ponteiro vai para +0xba); devolve 1.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 {
     set_nsl_rules(this);
-    crate::comparacao::ramo("cqj_8 regras da nsl");
+    crate::comparison::branch("cqj_8 regras da nsl");
     let vt = *(this as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(this, -1, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
@@ -227,16 +251,6 @@ pub(crate) unsafe fn record_first_stage_honours(this: usize) -> u32 {
 
 
 
-/// end of the Argentine second division and Series A and B: the honours come from the first stage, not the overall
-/// table
-/// Original: `ArgSecond::record_season_honours` (0x408eb0, arg_second.cpp, thiscall).
-///
-/// [pt] { 0x408eb0 } (thiscall, arg_second.cpp): `ArgSecond::record_season_honours` (slot 13 da segunda divisão argentina e
-/// das Séries A e B): só o histórico do primeiro estágio, em salto final; devolve o eax dele.
-pub(crate) unsafe extern "thiscall" fn aus_nsl_record_season_honours(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_8 historico do primeiro estagio");
-    record_first_stage_honours(this)
-}
 
 
 /// NSL: at the end of the regular season, the six clubs through to the finals series get the qualification record
@@ -254,8 +268,11 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(t
 }
 
 
-/// the Australian NSL has 13 clubs, those of the division in database order; with fewer, the game shows the error box;
-/// no prize fund nor TV money
+/// `AusNsl::create_table()`: the Australian NSL has 13 clubs (+0x57 = [0x9cf89c]), those of the division in database
+/// order, until it is full (the counter in an int, compared as a word).
+///
+/// Not full: the error box at line 0x252 and 0; full: 1, with no prize fund nor TV money. Source 0x987c20 (the
+/// out-of-memory box at line 0x241).
 /// Original: `AusNsl::create_table` (0x411b70, aus_nsl.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x411b70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::create_table()`: a NSL tem 13 clubes (+0x57 = [0x9cf89c]), na
@@ -283,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
         show_error_at(0x987c20, 0x252);
         return 0;
     }
-    crate::comparacao::ramo("cqm_9 nsl cheia");
+    crate::comparison::branch("cqm_9 nsl cheia");
     1
 }
 

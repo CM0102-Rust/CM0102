@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
     // neles (o float A e a conta das linhas na escala pela reputação, o que resta de jogos do clube no terceiro)
     let (mut normal, mut melhor, mut pior) = (0u32, 0u32, 0u32);
     if (*((linha + 0x11) as *const i8) as i32) * 3 < cpr11_w(this + 0xa7) as i32 {
-        crate::comparacao::ramo("cpr_11 projecao pela injury_word_0c");
+        crate::comparison::branch("cpr_11 projecao pela injury_word_0c");
         let n = cpr11_w(this + 0x3e);
         qsort(buf, n as i32 as u32, 0xe, 0x68afb0);
         let c = *((this + 0xc2) as *const i8) as f64;
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
         }
     }
     liberar(buf);
-    crate::comparacao::ramo("cpr_11 projecao");
+    crate::comparison::branch("cpr_11 projecao");
     // ponytail: os bytes altos que a original deixa nos três locais fora da escala pela reputação são sobra de pilha
     // (aqui, zero); as 69 versões da virtual +0x68 só leem o byte baixo de cada argumento (ou repassam os dwords a
     // outra que lê)
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
 unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_projection_by_reputation_desc(a, b);
-    PLACAR.registrar(r == n, || format!("compare_projection_by_reputation_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_projection_by_reputation_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -145,7 +145,7 @@ unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b:
 unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_projection_by_points_desc(a, b);
-    PLACAR.registrar(r == n, || format!("compare_projection_by_points_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_projection_by_points_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -161,9 +161,9 @@ unsafe extern "thiscall" fn comparar_update_projected_positions(this: usize, clu
     if reg == 0 {
         return o(this, clube); // ponytail: sem registro para olhar, só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg + 0x73, 3)], || o(this, clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(reg + 0x73, 3)], || o(this, clube),
         || update_projected_positions(this, clube));
-    PLACAR.registrar(igual && r == n, || format!("update_projected_positions(liga {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("update_projected_positions(liga {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}",
         this, clube, r, n, mo, mr));
     r
 }

@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn cup_check_complete(this: usize, fases: u32, _x: u32)
 /// Comparador: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
 unsafe extern "thiscall" fn comparar_send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
-    crate::comparacao::ramo("send_to_nation_club_managers");
+    crate::comparison::branch("send_to_nation_club_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, nacao)
 }
 
@@ -107,9 +107,9 @@ unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, clube: *m
         return o(this, clube, nacao, regiao, comp, base, adversario);
     }
     let reg = [(clube as usize, 4), (nacao as usize, 4), (regiao as usize, 1), (comp as usize, 4), (base as usize, 4), (adversario as usize, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, clube, nacao, regiao, comp, base, adversario),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, clube, nacao, regiao, comp, base, adversario),
         || get_scout_assignment(this, clube, nacao, regiao, comp, base, adversario));
-    PLACAR.registrar(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
 
@@ -117,6 +117,6 @@ unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, clube: *m
 unsafe extern "thiscall" fn comparar_cup_check_complete(this: usize, fases: u32, x: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I2%%)(this, fases, x);
     let n = cup_check_complete(this, fases, x);
-    PLACAR.registrar(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, fases, r, n));
+    PLACAR.record(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, fases, r, n));
     r
 }

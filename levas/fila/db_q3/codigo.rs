@@ -113,9 +113,9 @@ unsafe extern "C" fn staff_get_player_attribute(pessoa: usize, atributo: u32) ->
 unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa, clube),
         || staff_is_transfer_listed_or_requested(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed_or_requested({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("staff_is_transfer_listed_or_requested({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -127,7 +127,7 @@ unsafe extern "C" fn comparar_staff_compute_player_attribute(pessoa: usize, joga
     }
     let r = o(pessoa, jogador, atributo);
     let n = staff_compute_player_attribute(pessoa, jogador, atributo);
-    PLACAR.registrar(r == n, || format!("staff_compute_player_attribute({:x}, {}) original={} rust={}", jogador, a, r, n));
+    PLACAR.record(r == n, || format!("staff_compute_player_attribute({:x}, {}) original={} rust={}", jogador, a, r, n));
     r
 }
 
@@ -139,6 +139,6 @@ unsafe extern "C" fn comparar_staff_get_player_attribute(pessoa: usize, atributo
     }
     let r = o(pessoa, atributo);
     let n = staff_get_player_attribute(pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("staff_get_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
+    PLACAR.record(r == n, || format!("staff_get_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
     r
 }

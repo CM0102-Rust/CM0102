@@ -37,7 +37,7 @@ unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, ano: u32, a: *mut
                     return host_pair(e, k, a, b) as u32;
                 }
                 if k == -3 || k == -1 || padrao != 0 {
-                    crate::comparacao::ramo("cqj_3 sede padrao");
+                    crate::comparison::branch("cqj_3 sede padrao");
                     return host_pair(e, -1, a, b) as u32; // cqj3: a sede padrão
                 }
             }
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn comparar_find_hosts(this: usize, comp: u32, ano: u32
     let (oa, ob) = (*a, *b);
     let (mut ca, mut cb) = (va, vb);
     let c = find_hosts(this, comp, ano, &mut ca, &mut cb, padrao);
-    PLACAR.registrar(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_hosts({:x}, {}): original {} {:x} {:x} rust {} {:x} {:x}", comp, ano as u16, r as u8, oa, ob, c as u8, ca, cb));
+    PLACAR.record(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_hosts({:x}, {}): original {} {:x} {:x} rust {} {:x} {:x}", comp, ano as u16, r as u8, oa, ob, c as u8, ca, cb));
     r
 }
 
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, comp: u32, a: 
     let (oa, ob) = (*a, *b);
     let (mut ca, mut cb) = (va, vb);
     let c = find_next_hosts(this, comp, &mut ca, &mut cb);
-    PLACAR.registrar(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_next_hosts({:x}): original {} {:x} {:x} rust {} {:x} {:x}", comp, r as u8, oa, ob, c as u8, ca, cb));
+    PLACAR.record(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_next_hosts({:x}): original {} {:x} {:x} rust {} {:x} {:x}", comp, r as u8, oa, ob, c as u8, ca, cb));
     r
 }
 
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) 
                 *k = 0xff; // cqj3: a votação abre
             }
             if *k == 0xff {
-                crate::comparacao::ramo("cqj_3 votacao aberta");
+                crate::comparison::branch("cqj_3 votacao aberta");
                 por(l, &p, 4);
             }
             p += 0x22;
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) 
             por(l, &p, 4);
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xff || *k == 0xfe {
-                crate::comparacao::ramo("cqj_3 sede sorteada");
+                crate::comparison::branch("cqj_3 sede sorteada");
                 *k = sorteio(3) as u8; // cqj3: a candidatura vencedora
             }
             p += 0x22;
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) 
             let e = (cqj3_d(this) as usize).wrapping_add(i as i32 as usize * 0x22);
             let ae = cqj3_w(e + 4);
             if ae < ano && ae != 0 {
-                crate::comparacao::ramo("cqj_3 edicao seguinte");
+                crate::comparison::branch("cqj_3 edicao seguinte");
                 core::ptr::write_unaligned((e + 4) as *mut u16, ae.wrapping_add(*((e + 0x21) as *const i8) as i16 as u16)); // cqj3: o intervalo
                 if *((e + 0x1e) as *const u8) != 0xfd {
                     *((e + 0x1e) as *mut u8) = 0xfe;

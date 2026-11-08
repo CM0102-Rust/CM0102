@@ -73,7 +73,7 @@ unsafe fn young_player_adjustment(this: usize, clube: usize, p: usize, saida: *m
         d1 = d1 * x;
     }
     if d1 > cqa7_k(0x967890) {
-        crate::comparacao::ramo("cqa_7 jovem valorizado");
+        crate::comparison::branch("cqa_7 jovem valorizado");
         *frac = d1 * *frac;
         let h = (d1 + cqa7_k(0x967890)) * cqa7_k(0x968968);
         *e = match_pl_ftol(*e as f64 * h) as u32;
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         *saida = nota(p, pos, flags, clube, v, obs);
         let transferencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
         if clube != cqa7_d(p + 0x39) && transferencia(p, 0) != 0 {
-            crate::comparacao::ramo("cqa_7 listado para transferencia");
+            crate::comparison::branch("cqa_7 listado para transferencia");
             *saida = match_pl_ftol(*saida as f64 * cqa7_k(0x9689b8)); // cqa7: o listado de outro clube × 1,05
         }
     }
@@ -256,7 +256,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         let v = r as f64;
         match_pl_ftol(((v * cqa7_k(0x96d238) - cqa7_k(0x967890)) * v + bv as f64 * cqa7_k(0x9689e0)) * cqa7_k(0x96f918)) as u32
     } else {
-        crate::comparacao::ramo("cqa_7 valor base");
+        crate::comparison::branch("cqa_7 valor base");
         match_pl_ftol((bv as f64 * cqa7_k(0x9689e0) + r as f64 * cqa7_k(0x969040)) * cqa7_k(0x96f918)) as u32 // cqa7: o valor base
     };
     if e < 1 {
@@ -294,7 +294,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         } else {
             f
         };
-        crate::comparacao::ramo("cqa_7 idade");
+        crate::comparison::branch("cqa_7 idade");
         let um = cqa7_k(0x967890);
         if tipo == 0xa {
             *saida = match_pl_ftol(((um - g) * y + g) * *saida as f64);
@@ -432,8 +432,8 @@ unsafe extern "thiscall" fn comparar_value_player_for_club(this: usize, clube: u
     if obs != 0 && cqa7_d(obs + 0x69) == 0 {
         return o(this, clube, p, vaga, saida, minimo, teto);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida as usize, 4)], || o(this, clube, p, vaga, saida, minimo, teto), || value_player_for_club(this, clube, p, vaga, saida, minimo, teto));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(saida as usize, 4)], || o(this, clube, p, vaga, saida, minimo, teto), || value_player_for_club(this, clube, p, vaga, saida, minimo, teto));
+    PLACAR.record(igual && r == n, || {
         format!("value_player_for_club(clube {:x}, pessoa {:x}, vaga {:x}, mínimo {}, teto {}) original={} rust={} {:x?} x {:x?}", clube, p, vaga, minimo, teto, r, n, mo, mr)
     });
     r
@@ -472,7 +472,7 @@ unsafe extern "thiscall" fn comparar_find_club_search_entry(this: usize, p: usiz
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let r = o(this, p);
     let n = find_club_search_entry(this, p);
-    PLACAR.registrar(r == n, || format!("find_club_search_entry(pessoa {:x}) original={:x} rust={:x}", p, r, n));
+    PLACAR.record(r == n, || format!("find_club_search_entry(pessoa {:x}) original={:x} rust={:x}", p, r, n));
     r
 }
 
@@ -499,7 +499,7 @@ unsafe extern "thiscall" fn find_international_appearance_money(this: usize, p: 
 unsafe extern "thiscall" fn comparar_find_international_appearance_money(this: usize, p: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa7_d(this + 0x86e).wrapping_add(cqa7_d(p).wrapping_mul(8));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1)], || o(this, p), || find_international_appearance_money(this, p));
-    PLACAR.registrar(igual && r == n, || format!("find_international_appearance_money(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1)], || o(this, p), || find_international_appearance_money(this, p));
+    PLACAR.record(igual && r == n, || format!("find_international_appearance_money(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
     r
 }

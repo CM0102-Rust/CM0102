@@ -6,5 +6,5 @@ MUTACOES = [
     ('c_k0', "                if v > 0x4b { 1 } else if v >= 0x28 { 2 } else if v >= 10 { 3 } else { low(-30) }", "                if v > 0x4b { 1 } else if v >= 0x29 { 2 } else if v >= 10 { 3 } else { low(-30) }"),
     ('c_k4', "            } else if v > -30 {\n                4", "            } else if v > -31 {\n                4"),
     ('c_k5', "            } else if ambicao > 5 && rep(0xb) > 0x4e2 {", "            } else if ambicao > 4 && rep(0xb) > 0x4e2 {"),
-    ('c_tipo5', "    if *((c + 0x35) as *const u8) & 0x3f == 5 {", "    if *((c + 0x35) as *const u8) & 0x3f == 6 {"),
+    ('c_tipo5', "    if *((c + contract::CONTRACT_TYPE) as *const u8) & 0x3f == 5 {", "    if *((c + contract::CONTRACT_TYPE) as *const u8) & 0x3f == 6 {"),
 ]

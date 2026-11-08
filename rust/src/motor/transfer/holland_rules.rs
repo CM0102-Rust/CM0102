@@ -2,17 +2,6 @@ use super::*;
 
 
 
-/// Constructor of a nation's transfer rules: TransferRules base with the caller's 5 arguments, the nation's vtable and
-/// its transfer windows.
-///
-/// [pt] O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
-/// vtable da nação e as janelas.
-pub(crate) unsafe fn holland_rules_construct_nation_transfer_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], file: usize, row: u32) {
-    let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_TRANSFER_RULES_TRANSFER_RULES);
-    base(this, a[0], a[1], a[2], a[3], a[4]);
-    core::ptr::write_unaligned(this as *mut u32, vtable);
-    set_transfer_windows(this, n, t, file, row);
-}
 
 
 /// As janelas da Holanda: uma janela, de 8 de junho (andando para o sábado [inferência]) a 4 de abril (andando para a sexta-feira [inferência]).
@@ -27,8 +16,8 @@ pub(crate) const HOLLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 ///
 /// [pt] { 0x5f9690 } (thiscall, ret 0x14, holland_rules.cpp, `HOLLAND_RULES::HOLLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Holanda (regra 12): a base (0x8e84a0), a vtable 0x96ba88, 1 janela(s) de `HOLLAND_TRANSFER_WINDOWS`; o +0x13 = 50 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 50 (o padrão é 30). Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_holland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_1 holanda");
-    holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96ba88, 1, &HOLLAND_TRANSFER_WINDOWS, 0x9cf04c, 0x52);
+    crate::comparison::branch("cqm_1 holanda");
+    construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96ba88, 1, &HOLLAND_TRANSFER_WINDOWS, 0x9cf04c, 0x52);
     *((this + 0x13) as *mut u8) = 50;
     *((this + 0x14) as *mut u8) = 50;
     this
@@ -41,15 +30,6 @@ pub(crate) const CROATIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x05, 0x00, 0xff, 0x1e, 0x02, 0x00],
 ];
 
-/// the Croatia rule (5): one window, from 1 June to 30 March
-/// Original: `CROATIA_RULES::CROATIA_RULES` (0x518500, croatia_rules.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x518500 } (thiscall, ret 0x14, croatia_rules.cpp, `CROATIA_RULES::CROATIA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Croácia (regra 5): a base (0x8e84a0), a vtable 0x969394, 1 janela(s) de `CROATIA_TRANSFER_WINDOWS`. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn construct_croatia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_1 croacia");
-    holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x969394, 1, &CROATIA_TRANSFER_WINDOWS, 0x9b5570, 0x4e);
-    this
-}
 
 
 /// As janelas da Irlanda: uma janela, de 10 de maio a 31 de janeiro.
@@ -58,14 +38,5 @@ pub(crate) const IRELAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x0d, 0x00, 0xff, 0x1f, 0x00, 0x00],
 ];
 
-/// the Ireland rule (13): one window, from 10 May to 31 January
-/// Original: `IRELAND_RULES::IRELAND_RULES` (0x63c210, ireland_rules.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x63c210 } (thiscall, ret 0x14, ireland_rules.cpp, `IRELAND_RULES::IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda (regra 13): a base (0x8e84a0), a vtable 0x96c190, 1 janela(s) de `IRELAND_TRANSFER_WINDOWS`. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_1 irlanda");
-    holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96c190, 1, &IRELAND_TRANSFER_WINDOWS, 0x9ea12c, 0x4e);
-    this
-}
 
 

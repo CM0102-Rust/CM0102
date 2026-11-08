@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: usize, parti
                 continue;
             }
             if l == 1 {
-                crate::comparacao::ramo("cpw_5 notas do visitante");
+                crate::comparison::branch("cpw_5 notas do visitante");
             }
             nota(this, e);
         }
@@ -61,8 +61,8 @@ unsafe extern "thiscall" fn comparar_record_match_ratings(this: usize, jogo: usi
         return o(this, jogo, partida);
     }
     let regioes = [(this, 12), (tab, (n as usize + 40) * 12)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogo, partida), || record_match_ratings(this, jogo, partida));
-    PLACAR.registrar(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, jogo, partida), || record_match_ratings(this, jogo, partida));
+    PLACAR.record(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// A nota da partida (+0x35 da vaga, sem sinal) soma na palavra +8 do registro de 12 bytes e o byte +0xa conta mais um
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
     cpw5_pd(r + 4, liga as u32);
     core::ptr::write_unaligned((r + 8) as *mut u16, 0);
     *((r + 0xb) as *mut u8) = cpw5_b(p + 0x18);
-    crate::comparacao::ramo("cpw_5 jogador novo no mes");
+    crate::comparison::branch("cpw_5 jogador novo no mes");
     *((r + 0xa) as *mut u8) = 0; // cpw5: começa sem jogos
     cpw5_pd(this + 4, n.wrapping_add(1) as u32);
     add_match_rating(r, e);
@@ -138,8 +138,8 @@ unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e: usize) {
     }
     let vagas = if n < cap { n as usize + 1 } else { n as usize };
     let regioes = [(this, 12), (tab, vagas * 12)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, e), || add_player_rating(this, e));
-    PLACAR.registrar(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", cpw5_i(e), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, e), || add_player_rating(this, e));
+    PLACAR.record(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", cpw5_i(e), mo, mr));
 }
 
 /// { 0x768130 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::find_best_player(liga, idade)`, pelo prêmio do
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn comparar_add_player_rating(this: usize, e: usize) {
 /// +0x57) também tem de ser a pedida. Nenhum: 0.
 unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, idade: u32) -> usize {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    crate::comparacao::ramo("cpw_5 ordenou as notas");
+    crate::comparison::branch("cpw_5 ordenou as notas");
     ordenar(cpw5_d(this), cpw5_d(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
     let tab = cpw5_d(this);
     let n = cpw5_i(this + 4);
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn comparar_find_best_player(this: usize, liga: i32, id
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(%%I2%%);
     let (tab, n) = (cpw5_d(this), cpw5_i(this + 4));
     let regioes: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, liga, idade), || find_best_player(this, liga, idade));
-    PLACAR.registrar(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", liga, idade as u8 as i8, r, mo, m, mr));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, liga, idade), || find_best_player(this, liga, idade));
+    PLACAR.record(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", liga, idade as u8 as i8, r, mo, m, mr));
     r
 }

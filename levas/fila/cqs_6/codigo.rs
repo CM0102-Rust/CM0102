@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
     if f == 0 {
         return show_error_at(0x9c4180, 0x35a);
     }
-    crate::comparacao::ramo("cqs_6 final do trofeu");
+    crate::comparison::branch("cqs_6 final do trofeu");
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
     sortear(f, 0); // cqs6: o sorteio da final
     soltar(l);
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     o(this);
     let f = cqs6_d(cqs6_d(this + 0xc) + 4);
-    PLACAR.registrar(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
+    PLACAR.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
 }
 
 /// { 0x56c010 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual da classificação final, n = 1 até 2002-06-01): `EngAutoCup::
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
     let a = cqs6_d(v);
     let b = cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4);
-    crate::comparacao::ramo("cqs_6 classificacao do trofeu");
+    crate::comparison::branch("cqs_6 classificacao do trofeu");
     if cqs6_w(a + 0x80) > cqs6_w(b + 0x80) {
         posicao(cqs6_d(this + 8), a, 1);
         posicao(cqs6_d(this + 8), cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4), 2);

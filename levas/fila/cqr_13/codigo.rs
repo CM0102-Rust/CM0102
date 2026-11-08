@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje: usize, co
         return 0;
     }
     if ano_de_hoje == ano && dia_de_hoje == dia && cqr13_d(this + 0x45) == 0 && completo == 0 {
-        crate::comparacao::ramo("cqr_13 sorteio da copa america");
+        crate::comparison::branch("cqr_13 sorteio da copa america");
         selecoes(this);
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x5c));
         previstas(this);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, hoje: 
             && fases != 0
             && (0..2).all(|g| cqr13_d(fases + g * 4) != 0)
             && cqr13_d(this + 0x30) == 1;
-        PLACAR.registrar(ok, || format!("goldcup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr13_d(this + 0x45), cqr13_d(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("goldcup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr13_d(this + 0x45), cqr13_d(this + 0x30) as i32));
     }
     r
 }
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -> u32 {
     }
     let mut i = 0i8;
     while (i as i16) < cqr13_w(this + 0x3e) {
-        crate::comparacao::ramo("cqr_13 linha do primeiro grupo");
+        crate::comparison::branch("cqr_13 linha do primeiro grupo");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this: usize) -> 
         }
     }
     let igual = r == 1 && cqr13_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    PLACAR.record(igual, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u
         return 0;
     }
     for n in 0..4usize {
-        crate::comparacao::ramo("cqr_13 time do grupo");
+        crate::comparison::branch("cqr_13 time do grupo");
         cqr13_pd(times + n * 4, drawn_team(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x3c));
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this: usize, g: 
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqr13_d(this + 0x30) as i32 == g && cqr13_w(f + 0x3e) == 4 && cqr13_w(f + 0x40) == cqr13_w(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("goldcup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        PLACAR.record(ok, || format!("goldcup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }

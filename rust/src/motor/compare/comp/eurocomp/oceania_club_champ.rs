@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_update_for_da
             && stages != 0
             && read_u32_as_usize(stages) != 0
             && read_u32_as_usize(this + 0x30) == 0;
-        PLACAR.registrar(ok, || format!("oceania_club_champ_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("oceania_club_champ_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_a_table(this: usize
         }
     }
     let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    PLACAR.registrar(same, || format!("create_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    PLACAR.record(same, || format!("create_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize
         a.sort_unstable();
         plan.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) == 0 && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
-        PLACAR.registrar(ok, || format!("create_group_b_stage: a fase não bate com o plano ({:x?} lidos {:x?})", plan, a));
+        PLACAR.record(ok, || format!("create_group_b_stage: a fase não bate com o plano ({:x?} lidos {:x?})", plan, a));
     }
     r
 }
@@ -75,14 +75,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualif
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_SELECT_QUALIFIED_CLUBS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| select_qualified_clubs(this));
+        let r = crate::rng::without_counting(|| select_qualified_clubs(this));
         lr.set(read_u32_as_usize(this + 0xee));
         write_u32_from_usize(this + 0xee, lo.get());
         r
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualif
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    PLACAR.record(igual && a == b && list, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage
     let last = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == if last { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    PLACAR.record(after == if last { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `oceania_club_champ_create_knockout_stage` (comparison mode: see the header of motor.rs).
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knocko
     o(this);
     let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
     if stage == 0 {
-        PLACAR.registrar(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this));
+        PLACAR.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this));
         return;
     }
     let list = read_u32_as_usize(stage + 0xa7);
@@ -130,7 +130,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knocko
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && read_i16(stage + 0x3e) == 4 && read_u32_as_usize(stage + 4) == read_u32_as_usize(this + 4);
-    PLACAR.registrar(same, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.record(same, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 
 /// Comparer for `oceania_club_champ_create_schedule` (comparison mode: see the header of motor.rs).

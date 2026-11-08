@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
                         }
                         let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5abc30usize);
                         tirar(cqc7_d(0xae2a58), r);
-                        crate::comparacao::ramo("cqc_7 jogo levado a data");
+                        crate::comparison::branch("cqc_7 jogo levado a data");
                         cqc7_pw(r + 0x2a, cqc7_w(pt) as u16); // cqc7: o dia marcado
                         cqc7_pw(r + 0x28, cqc7_w(pt + 2) as u16);
                         let v = cup_round_entry(this, rodada) + j;
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates(this: usiz
     }
     let e = cup_round_entry(this, rodada);
     let depois: [u8; 8] = core::array::from_fn(|k| cqc7_b(e + k * 7 + 0x29));
-    PLACAR.registrar(depois == esperado, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
+    PLACAR.record(depois == esperado, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
         rodada, depois, esperado));
 }
 
@@ -318,7 +318,7 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
                     return;
                 }
             }
-            crate::comparacao::ramo("cqc_7 sai da troca da oferta");
+            crate::comparison::branch("cqc_7 sai da troca da oferta");
             cqc7_pd(oferta + 0x1b, v);
             seguir(this, oferta);
         }
@@ -349,7 +349,7 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
                         free_empty_offer_list(o);
                     }
                     if achou {
-                        crate::comparacao::ramo("cqc_7 sai da troca das outras");
+                        crate::comparison::branch("cqc_7 sai da troca das outras");
                         let v = cqc7_d(pessoa + 0x52).wrapping_add(cqc7_d(o + 0x1b));
                         noticia(this, o, pessoa, v, 0);
                         cqc7_pd(o + 0x1b, v);
@@ -408,7 +408,7 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
     let (precisa, proposta, concedida) = check_work_permit(this, alvo, comprador);
     if precisa {
         if proposta != 0 && !concedida {
-            crate::comparacao::ramo("cqc_7 permissao recusada");
+            crate::comparison::branch("cqc_7 permissao recusada");
             let desfeita: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x8de790usize);
             let fechar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c6db0usize);
             let desmarcar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
@@ -445,7 +445,7 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
             let (precisa, proposta, concedida) = check_work_permit(this, x, dono);
             if precisa {
                 if proposta != 0 && !concedida {
-                    crate::comparacao::ramo("cqc_7 troca recusada pela permissao");
+                    crate::comparison::branch("cqc_7 troca recusada pela permissao");
                     let v = cqc7_d(x + 0x52).wrapping_add(cqc7_d(oferta + 0x1b));
                     let recusada: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x8e35a0usize);
                     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
@@ -478,6 +478,6 @@ unsafe extern "thiscall" fn comparar_check_offer_work_permits(this: usize, ofert
     let recusada = precisa && proposta != 0 && !concedida;
     let r = o(this, oferta, quieto);
     let ok = if recusada { r == 0 && cqc7_b(oferta + 0x2c) == 0x10 } else { r == 1 };
-    PLACAR.registrar(ok, || format!("check_offer_work_permits(oferta {:x}) recusada prevista {} devolveu {}", oferta, recusada, r));
+    PLACAR.record(ok, || format!("check_offer_work_permits(oferta {:x}) recusada prevista {} devolveu {}", oferta, recusada, r));
     r
 }

@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usize, p: usiz
         if usado[k as i8 as usize] == 0 {
             gravar(this, p, c, sinal(k));
             usado[k as usize] = 1;
-            crate::comparacao::ramo("cql_2 numero da posicao");
+            crate::comparison::branch("cql_2 numero da posicao");
             return; // cql2: o número da posição
         }
         b += 1;
@@ -120,8 +120,8 @@ unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usize, c: usize
         return o(this, c, p);
     }
     let reg = squad_number_regions(&[p]);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, p), || allocate_squad_number(this, c, p));
-    PLACAR.registrar(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, p), || allocate_squad_number(this, c, p));
+    PLACAR.record(igual, || format!("allocate_squad_number(clube {:x}, pessoa {:x}): original {:?} rust {:?}", c, p, mo.0, mr.0));
 }
 
 /// O +0x3a dos contratos (o do clube e o de empréstimo) das pessoas `ps` e a marca da caixa [0xb67a34].
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
         }
     }
     let vagas = SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS;
-    crate::comparacao::ramo("cql_2 escala");
+    crate::comparison::branch("cql_2 escala");
     pick(todos.as_ptr() as usize, n as u32, vagas.as_ptr() as usize, 0xb, 9, ordem.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
     let mut livre = 0usize;
     for &x in todos[..n].iter() {
@@ -255,7 +255,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
         if manter != 0 {
             gravar(this, x, c, nb.wrapping_neg() as u8 as u32);
         } else if (nb < 12 && vez < -11) || (nb >= 12 && vez > -12) {
-            crate::comparacao::ramo("cql_2 perde o numero");
+            crate::comparison::branch("cql_2 perde o numero");
             gravar(this, x, c, 0); // cql2: o número fora do lugar
             continue;
         }
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
         let mut v = -1i8;
         for &x in guardado.iter() {
             if x != 0 {
-                crate::comparacao::ramo("cql_2 regrava negativo");
+                crate::comparison::branch("cql_2 regrava negativo");
                 gravar(this, x, c, v as u8 as u32); // cql2: regrava negativo
             }
             v = v.wrapping_sub(1);
@@ -309,8 +309,8 @@ unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: u
         ps.extend((0..50).map(|k| cql2_d(l + 0xd7 + 4 * k) as usize));
     }
     let reg = squad_number_regions(&ps);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, manter), || assign_club_squad_numbers(this, c, manter));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, manter), || assign_club_squad_numbers(this, c, manter));
+    PLACAR.record(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("assign_club_squad_numbers(clube {:x}, manter {}): {}", c, manter, d.join(", "))
     });

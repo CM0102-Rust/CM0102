@@ -57,7 +57,7 @@ unsafe fn panel_competition_name(c: usize, rodadas: usize) {
 /// com as linhas que cabem (0x5e5cd0, a altura da fonte 3; quantas no parâmetro 0xf, o primeiro item no 0x10),
 /// os três botões do alto (0x804030, 6 a 8) e o redesenho dos placares (0x724520).
 unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
-    crate::comparacao::ramo("telas painel dos ultimos placares");
+    crate::comparison::branch("telas painel dos ultimos placares");
     type T9 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T11 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T12 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
@@ -192,14 +192,14 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
 unsafe extern "thiscall" fn comparar_is_forward_unavailable(gerente: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(gerente);
     let n = is_forward_unavailable(gerente);
-    PLACAR.registrar(r == n, || format!("is_forward_unavailable original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("is_forward_unavailable original={} rust={}", r, n));
     r
 }
 
 unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(%%I2%%)(x);
     let n = get_heading_colour(x);
-    PLACAR.registrar(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
+    PLACAR.record(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
     r
 }
 
@@ -217,8 +217,8 @@ unsafe extern "C" fn comparar_draw_latest_scores_panel(topo: *mut i32, base: *mu
     }
     reg.push((topo as usize, 4));
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(topo, base), || draw_latest_scores_panel(topo, base));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(topo, base), || draw_latest_scores_panel(topo, base));
+    PLACAR.record(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))

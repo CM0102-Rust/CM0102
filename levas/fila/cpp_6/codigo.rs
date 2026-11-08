@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize, jogador: 
             return;
         }
         if selecao(clube) == 0 && transfer_manager_contract_club != clube && cpp6_d(jogador + 0x39) != clube && acrescentar(this, jogador, clube, m) != 0 {
-            crate::comparacao::ramo("cpp_6 clube acrescentou");
+            crate::comparison::branch("cpp_6 clube acrescentou");
             conta = conta.wrapping_add(1); // mais um clube com ele na lista
         }
         i += 1;
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn transfer_list_player(this: usize, jogador: usize, no
     let a = cpp6_b(c + 0x4f);
     let b = cpp6_b(c + 0x4e);
     *((c + 0x4e) as *mut u8) = b | 1;
-    crate::comparacao::ramo("cpp_6 por a venda");
+    crate::comparison::branch("cpp_6 por a venda");
     *((c + 0x4f) as *mut u8) = (a & 0xf) | 0x70; // à venda
     let fora: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8cca10usize);
     if fora(cpp6_d(0xde1f54), jogador, 0) != 0 {
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn pay_appearance_money(this: usize, jogador: usize, jo
     let atual = if c != 0 { cpp6_clube(cpp6_d(c + 4)) } else { 0 };
     let valor = core::ptr::read_unaligned((r + 4) as *const i32);
     somar(cpp6_d(0xad9dac), valor, atual, cpp6_clube(cpp6_d(r + 9)));
-    crate::comparacao::ramo("cpp_6 premio por jogos");
+    crate::comparison::branch("cpp_6 premio por jogos");
     receber(f_antigo, valor as u32, (valor >> 31) as u32); // o clube antigo recebe
     pagar(f_atual, valor as u32, (valor >> 31) as u32);
     1
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn comparar_transfer_list_player(this: usize, jogador: 
     if marca {
         let c = get_contract(jogador);
         let ok = c != 0 && cpp6_b(c + 0x4e) & 1 != 0 && cpp6_b(c + 0x4f) & 0xf0 == 0x70;
-        PLACAR.registrar(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", cpp6_d(jogador), c));
+        PLACAR.record(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", cpp6_d(jogador), c));
     }
 }
 
@@ -247,6 +247,6 @@ unsafe extern "thiscall" fn comparar_pay_appearance_money(this: usize, jogador: 
         (r != 0 && cpp6_b(r + 8) as i8 as i32 == jogos && jogos > 0) as u32
     };
     let r = o(this, jogador, jogos, tipo, arg);
-    PLACAR.registrar(r == esperado, || format!("pay_appearance_money(jogador {:x}, jogos {}, tipo {}) devolveu {}, esperava {}", cpp6_d(jogador), jogos, tipo as u8, r, esperado));
+    PLACAR.record(r == esperado, || format!("pay_appearance_money(jogador {:x}, jogos {}, tipo {}) devolveu {}, esperava {}", cpp6_d(jogador), jogos, tipo as u8, r, esperado));
     r
 }

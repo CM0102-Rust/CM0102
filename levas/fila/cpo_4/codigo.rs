@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn process_pending_departures(this: usize) {
                 let b = (id.wrapping_mul(145) & 0xffff_ff00) | cpo4_b(item + 1) as u32;
                 sair(this, clube, a, b, 0);
                 if abre_vaga(clube) as u8 != 0 {
-                    crate::comparacao::ramo("cpo_4 abrir a vaga");
+                    crate::comparison::branch("cpo_4 abrir a vaga");
                     vaga(this, clube, tecnico); // a vaga do clube
                 }
             }
@@ -80,7 +80,7 @@ unsafe fn remove_from_squad(clube: usize, pessoa: usize) {
     for k in 0..0x32usize {
         let v = clube + 0xd7 + 4 * k;
         if cpo4_d(v) == pessoa {
-            crate::comparacao::ramo("cpo_4 tirar do elenco");
+            crate::comparison::branch("cpo_4 tirar do elenco");
             cpo4_por(v, 0); // a vaga do elenco
             return;
         }
@@ -155,7 +155,7 @@ unsafe fn detach_staff_from_club(pessoa: usize, s: usize, clube: usize, c: usize
             }
             4 => {
                 if cpo4_d(c + 0xcf) == pessoa {
-                    crate::comparacao::ramo("cpo_4 tirar o tecnico");
+                    crate::comparison::branch("cpo_4 tirar o tecnico");
                     cpo4_por(c + 0xcf, 0); // o técnico do clube
                 }
                 cpo4_por(s + 0x39, 0);
@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn comparar_manager_manager_remove_player_from_squad(th
     let r = o(this, pessoa, clube);
     let fora = !(no_clube || na_selecao) || (0..0x32usize).all(|k| cpo4_d(clube + 0xd7 + 4 * k) != pessoa);
     let ok = fora && cpo4_b(pessoa + 0x3d) == f39 && cpo4_d(pessoa + 0x39) == c39 && cpo4_b(pessoa + 0x28) == f28 && cpo4_d(pessoa + 0x24) == c24;
-    PLACAR.registrar(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
+    PLACAR.record(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
         cpo4_d(pessoa), cpo4_d(clube), cpo4_b(pessoa + 0x3d), cpo4_b(pessoa + 0x28), cpo4_d(pessoa + 0x39), cpo4_d(pessoa + 0x24), f39, f28, c39, c24, fora));
     r
 }
@@ -310,7 +310,7 @@ unsafe extern "thiscall" fn comparar_remove_staff_from_club(this: usize, pessoa:
     let esperado = staff_job_fields(s.as_ptr() as usize, c.as_ptr() as usize);
     let r = o(this, pessoa, clube);
     let depois = staff_job_fields(pessoa, clube);
-    PLACAR.registrar(depois == esperado, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
+    PLACAR.record(depois == esperado, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
         cpo4_d(pessoa), cpo4_b(pessoa + 0x3d) as i8, cpo4_d(clube), depois.0, depois.1, esperado.0, esperado.1));
     r
 }

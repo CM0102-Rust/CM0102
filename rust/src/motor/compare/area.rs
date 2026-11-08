@@ -20,8 +20,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_area_layout(area: usize) {
     if owner != -1 {
         reg.push((area_item_at(*((area + 0x208) as *const usize), owner) + 0x7c, 2));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(area), || area_layout(area));
-    PLACAR.registrar(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(area), || area_layout(area));
+    PLACAR.record(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `init` (comparison mode: see the header of motor.rs).
@@ -31,12 +31,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_init(
 ) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(IDX_INIT);
     let reg = [(area, 0xbcb + 0xff)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
         || o(area, areas, itens, indice, x1, y1, x2, y2, columns, pesos_colunas, cap_area_rows(rows), pesos_linhas, marks, colour, owner),
         || init(area, areas, itens, indice, x1, y1, x2, y2, columns, pesos_colunas, rows, pesos_linhas, marks, colour, owner),
     );
-    PLACAR.registrar(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
+    PLACAR.record(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `draw` (comparison mode: see the header of motor.rs).

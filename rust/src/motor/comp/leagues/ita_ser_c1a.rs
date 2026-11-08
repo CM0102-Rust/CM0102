@@ -24,7 +24,7 @@ pub(crate) unsafe fn ita_ser_c1a_advance_stage_cql5_passar_de_fase(this: usize, 
     let new = stage.wrapping_add(1);
     write_u32_from_usize(this + 0x30, new as usize);
     if new == 0 {
-        crate::comparacao::ramo("cql_5 fases do fim da liga");
+        crate::comparison::branch("cql_5 fases do fim da liga");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(create);
         f(this); // cql5: as fases do fim da liga
     }
@@ -40,24 +40,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_advance_stage(this: usize) {
     ita_ser_c1a_advance_stage_cql5_passar_de_fase(this, 0x9ea474, 0x250, 0x64ba70)
 }
 
-/// the same as C1/A
-/// Original: `ItaSerC1b::advance_stage` (0x64fba0, ita_ser_c1b.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x64fba0 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::advance_stage()`; pela 0x64fc30. Fonte 0x9ea558, linha
-/// 0x255.
-pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_advance_stage_64fba0(this: usize) {
-    ita_ser_c1a_advance_stage_cql5_passar_de_fase(this, 0x9ea558, 0x255, 0x64fc30)
-}
 
-/// after the Third Division league, the current stage goes up and, on the first, the promotion play-off is created
-/// (0x5783c0)
-/// Original: `EngThird::advance_stage` (0x578330, eng_third.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x578330 } (thiscall, ret 0, eng_third.cpp): `EngThird::advance_stage()`; cria o play-off da Third Division pela
-/// 0x5783c0 (já em Rust). Fonte 0x9c4424, linha 0x29c.
-pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_advance_stage_578330(this: usize) {
-    ita_ser_c1a_advance_stage_cql5_passar_de_fase(this, 0x9c4424, 0x29c, 0x5783c0)
-}
 
 /// Comparer of advance_stage: side by side on +0x30 when no stage is created; else only the original.
 ///
@@ -68,8 +51,8 @@ pub(crate) unsafe fn ita_ser_c1a_compare_advance_stage(name: &str, this: usize, 
     if stage >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) || stage.wrapping_add(1) == 0 {
         return original();
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x30, 4)], original, copy);
-    PLACAR.registrar(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", name, this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x30, 4)], original, copy);
+    PLACAR.record(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", name, this, mo, mr));
 }
 
 
@@ -184,14 +167,6 @@ pub(crate) unsafe extern "thiscall" fn create_playoff_stages(this: usize) {
     create_end_of_league_stages(this, 0x9ea474, [0x27c, 0x290, 0x2b3], true)
 }
 
-/// the same rule in C1/B
-/// Original: `ItaSerC1b::create_play_off_stages` (0x64fc30, ita_ser_c1b.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x64fc30 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_play_off_stages()`, a mesma regra na C1/B.
-/// Fonte 0x9ea558, linhas 0x281, 0x295, 0x2b8; no fim solta o gabarito antes da lista.
-pub(crate) unsafe extern "thiscall" fn create_play_off_stages(this: usize) {
-    create_end_of_league_stages(this, 0x9ea558, [0x281, 0x295, 0x2b8], false)
-}
 
 /// Comparer of the end-of-league stages: runs only the original and checks the Super Cup slot, both stages and +0x30 =
 /// 1.
@@ -206,7 +181,7 @@ pub(crate) unsafe fn compare_end_of_league_stages(name: &str, this: usize, origi
     original();
     let stages = read_u32_as_usize(this + 0xc);
     let ok = read_u32_as_usize(slot) == champion && stages != 0 && read_u32_as_usize(stages) != 0 && read_u32_as_usize(stages + 4) != 0 && read_u32_as_usize(this + 0x30) == 1;
-    PLACAR.registrar(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", name, this, read_u32_as_usize(slot), champion, stages, read_u32_as_usize(this + 0x30) as i32));
+    PLACAR.record(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", name, this, read_u32_as_usize(slot), champion, stages, read_u32_as_usize(this + 0x30) as i32));
 }
 
 
@@ -267,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1a(this: usize, year: 
 /// (+0xbf = 4), do 14º ao 17º ao play-out de permanência (+0xc0 = 4), o último cai (+0xc1 = 1), a Série B acima
 /// ([0x9cf574]) e abaixo o id de [0x9cf57c] (o da C1/B, o outro grupo: assim no original).
 pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_6 regras da c1a");
+    crate::comparison::branch("cqi_6 regras da c1a");
     ita_ser_a_apply_league_rules(this, &serie_c1a_rules(this))
 }
 

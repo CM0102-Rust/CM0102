@@ -25,7 +25,8 @@ An item is a package of up to 3 ported routines, written ahead of time in `levas
 ## Names and header (since 2026-11-08)
 
 - Code in English: the routine with the original method name (maxevans60's map, as in `docs/NOMES.csv`), helpers with English names and no work-item prefix, constants in English UPPER_CASE.
-- A bilingual header on every routine: the English summary, the line `Original: Class::method (address, file.cpp, convention)`, a `///` line and the Portuguese notes with `[pt]`.
+- A bilingual header on every routine: the English summary, the line `Original: Class::method (address, file.cpp, convention)`, a `///` line and the Portuguese notes with `[pt]`. The English is the complete text (everything the `[pt]` says: conditions, offsets, defects of the original), not a summary: readers of the public code do not read Portuguese.
+- Named fields on one-letter variables too: `p + staff::NATION`, not `p + 0x..`, when the variable holds a record of docs/FORMATOS.en.md for the whole function (`aplicar_tipos_variaveis.py` does it later, but the item can already come that way).
 - Use what already has a name: `read_u32`/`write_u8` (`mem.rs`), `KEY_*` (`keys.rs`), `G_*` (`globals.rs`), `club::DIVISION` and `club::SIZE` (`fields.rs`), `FN_*` (`exe_fns.rs`) and `original_fn::<F>(IDX_<NAME>)`; a float constant read from the exe with its value in a comment.
 - The `DOCS` in `rotinas.py` stays in Portuguese and English (it is the source of ROTINAS and the glossary).
 

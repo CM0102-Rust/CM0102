@@ -122,7 +122,7 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
     let hall_da_fama: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5f00c0usize);
     let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(0x8395b0usize);
     let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
-    crate::comparacao::ramo("save gravar jogo");
+    crate::comparison::branch("save gravar jogo");
     let opcoes = || *((*(0xae3138 as *const usize) + 4) as *const u32);
     let tipo = || if opcoes() & 0x8000 != 0 { 3u32 } else { 4 };
     let sem_memoria = || *(0x9cd1fc as *const u32) != 0 && memoria() < 1;

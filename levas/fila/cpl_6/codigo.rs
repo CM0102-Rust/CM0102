@@ -49,7 +49,7 @@ unsafe fn sort_news_log(base: usize, n: usize) {
 /// palavra +0x11) e a `resposta` (+0x10); a conta sobe e o registro é reordenado (qsort 0x945333 com 0x757ee0). Sem
 /// registro, aloca 20 (0x944e46; sem memória, caixa 0x6e11 e fim); cheio, cresce 20 (realloc 0x945667; caixa 0x6e1c).
 unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
-    crate::comparacao::ramo("cpl_6 registrar historia");
+    crate::comparison::branch("cpl_6 registrar historia");
     if cpl6_d(this) == 0 {
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
         let p = alocar(0x1cc);
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn expire_story_log(this: usize) {
     while i < cpl6_d(this + 8) as i32 {
         let r = cpl6_d(this).wrapping_add((i as usize).wrapping_mul(0x17));
         let dias = if cpl6_d(r + 0x13) == 0xbdf {
-            crate::comparacao::ramo("cpl_6 expirar historia do time");
+            crate::comparison::branch("cpl_6 expirar historia do time");
             let s = sorteio(0x28); // o sorteio da história do time
             (s + 0x28) as u32
         } else {
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b: usize, ti
     padrao(chave.as_mut_ptr() as usize);
     let s = subtipo as u16;
     if tipo == 0xbdf {
-        crate::comparacao::ramo("cpl_6 historia do time ja contada");
+        crate::comparison::branch("cpl_6 historia do time ja contada");
         let n = cpl6_d(this + 8) as i32;
         for k in 0..n.max(0) as usize {
             let r = cpl6_d(this).wrapping_add(k * 0x17);
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, 
     let achou = (0..m).any(|k| {
         core::slice::from_raw_parts(cpl6_d(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &esperado[..]
     });
-    PLACAR.registrar(m == n.wrapping_add(1) && achou, || {
+    PLACAR.record(m == n.wrapping_add(1) && achou, || {
         format!("log_story(tipo {:#x}, subtipo {}) conta {} -> {}, esperado {:x?} achou {}", tipo, subtipo as u8 as i8, n, m, esperado, achou)
     });
 }
@@ -177,18 +177,18 @@ unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
     if cpl6_d(this) == 0 {
         return o(this);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((this, 0xc));
     reg.push((cpl6_d(this), (cpl6_d(this + 8) as i32).max(0) as usize * 0x17));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| expire_story_log(this)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| expire_story_log(this)));
     // mo.0[2] e mr.0[2]: ponteiro, capacidade e conta depois de cada lado
-    PLACAR.registrar(igual, || format!("expire_story_log {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
+    PLACAR.record(igual, || format!("expire_story_log {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
 }
 
 /// Comparador: pelo valor (a busca e a data padrão da chave só leem).
 unsafe extern "thiscall" fn comparar_has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(%%I2%%)(this, a, b, tipo, subtipo, desde);
     let n = has_logged_story(this, a, b, tipo, subtipo, desde);
-    PLACAR.registrar(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
+    PLACAR.record(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
     r
 }

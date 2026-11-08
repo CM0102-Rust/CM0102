@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
         return (cqb7_w(np + 0xc) > 0xa0) as u32;
     }
     if cqb7_w(0xae2c92) == 0x7d1 && (is_falkirk_name_exception(p, 0x9b5ac0, oferta) || cqb7_w(0xae2c92) == 0x7d1 && is_falkirk_name_exception(p, 0x9b5ab0, oferta)) {
-        crate::comparacao::ramo("cqb_7 excecao de 2001");
+        crate::comparison::branch("cqb_7 excecao de 2001");
         return 1;
     }
     let ficha = cqb7_d(p + 0x61);
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
             return 1;
         }
     } else if ficha != 0 {
-        crate::comparacao::ramo("cqb_7 confere o potencial");
+        crate::comparison::branch("cqb_7 confere o potencial");
         if cqb7_w(ficha + 0xd) > 0x2134 { // cqb7: o potencial acima de 8500
             return 1;
         }
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
     }
     let idade = cqb7_b(p + 0x18) as i8;
     if idade < 0x18 && ficha != 0 {
-        crate::comparacao::ramo("cqb_7 confere o jovem");
+        crate::comparison::branch("cqb_7 confere o jovem");
         if cqb7_w(ficha + 7) > 0xbe { // cqb7: o jovem acima de 190
             return 1;
         }
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
         let limit = 0x46 - b + cqb7_sorteio(10);
         return ((marcados as i32 * 100) / janela as i32 > limit) as u32;
     }
-    crate::comparacao::ramo("cqb_7 jogos pela selecao");
+    crate::comparison::branch("cqb_7 jogos pela selecao");
     if marcados > 0xb { // cqb7: mais de 11 jogos marcados
         return 1;
     }
@@ -205,13 +205,13 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
 /// sem_contar).
 unsafe extern "thiscall" fn comparar_is_work_permit_granted(this: usize, p: usize, nacao: usize, oferta: usize, registro: usize, sorteio: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%);
-    let mut regioes = vec![crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1]];
+    let mut regioes = vec![crate::rng::STATE_REGIONS[0], crate::rng::STATE_REGIONS[1]];
     if p != 0 && (cqb7_d(p) as i32) < cqb7_d(0xae2364) as i32 {
         regioes.push((cqb7_marcas(this, p), 8));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, p, nacao, oferta, registro, sorteio),
-        || crate::aleatorio::sem_contar(|| is_work_permit_granted(this, p, nacao, oferta, registro, sorteio)));
-    PLACAR.registrar(igual && r == n, || format!("is_work_permit_granted(pessoa {:#x}, oferta {:#x}, registro {:#x}, sorteio {}) original={} {:x?} rust={} {:x?}", p, oferta, registro, sorteio, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, p, nacao, oferta, registro, sorteio),
+        || crate::rng::without_counting(|| is_work_permit_granted(this, p, nacao, oferta, registro, sorteio)));
+    PLACAR.record(igual && r == n, || format!("is_work_permit_granted(pessoa {:#x}, oferta {:#x}, registro {:#x}, sorteio {}) original={} {:x?} rust={} {:x?}", p, oferta, registro, sorteio, r, mo, n, mr));
     r
 }
 
@@ -239,8 +239,8 @@ unsafe extern "thiscall" fn transfer_manager_get_squad_status_for_reason(_this: 
 /// Comparador da 0x8c5800: lado a lado em [0xae1080] e no al devolvido.
 unsafe extern "thiscall" fn comparar_transfer_manager_get_squad_status_for_reason(this: usize, p: usize, motivo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p, motivo), || transfer_manager_get_squad_status_for_reason(this, p, motivo));
-    PLACAR.registrar(igual && r as u8 == n as u8, || format!("transfer_manager_get_squad_status_for_reason(pessoa {:#x}, motivo {:#x}) original={} {:x?} rust={} {:x?}", p, motivo, r as u8, mo, n as u8, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, p, motivo), || transfer_manager_get_squad_status_for_reason(this, p, motivo));
+    PLACAR.record(igual && r as u8 == n as u8, || format!("transfer_manager_get_squad_status_for_reason(pessoa {:#x}, motivo {:#x}) original={} {:x?} rust={} {:x?}", p, motivo, r as u8, mo, n as u8, mr));
     r
 }
 
@@ -259,6 +259,6 @@ unsafe extern "thiscall" fn get_negotiation_slot(this: usize, i: i32) -> usize {
 unsafe extern "thiscall" fn comparar_get_negotiation_slot(this: usize, i: i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(this, i);
     let n = get_negotiation_slot(this, i);
-    PLACAR.registrar(r == n, || format!("get_negotiation_slot({}) original={:#x} rust={:#x}", i, r, n));
+    PLACAR.record(r == n, || format!("get_negotiation_slot({}) original={:#x} rust={:#x}", i, r, n));
     r
 }

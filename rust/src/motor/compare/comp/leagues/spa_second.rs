@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `spa_second_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_SECOND_CREATE_SCHEDULE);
-    spa_second_compare_schedule_all_stages("spa_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| spa_second_create_schedule(this, stage, r, e, l))
+    compare_league_round_table("spa_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| spa_second_create_schedule(this, stage, r, e, l))
 }
 
 /// Comparer for `construct_spa_second` (comparison mode: see the header of motor.rs).
@@ -48,6 +48,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_table(this: us
             ok = ok && read_u32_as_usize(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
         }
     }
-    PLACAR.registrar(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plan));
+    PLACAR.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plan));
     r
 }

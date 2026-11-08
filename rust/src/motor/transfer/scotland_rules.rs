@@ -65,15 +65,20 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
         Some(d) => d,
     };
     let comp = read_usize(clube + club::DIVISION);
-    if comp == read_usize(owner + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
-        crate::comparacao::ramo("cqe_6 escocia mesma divisao");
+    if comp == read_usize(owner + club::DIVISION) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
+        crate::comparison::branch("cqe_6 escocia mesma divisao");
         let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION).wrapping_mul(0x6b));
         return refuse_loan(msg, reason, 0x9c4590, r, 0x1d);
     }
     1
 }
 
-/// starts next month; under 22 it ends in the season end month (this year or next), otherwise three months later
+/// Returns the Scottish loan period: it starts next month; under 22 it ends in the season end month (this year or
+/// next), otherwise three months later.
+///
+/// `SCOTLAND_RULES::get_loan_period(a1, a2, start_month, start_year, end_month, end_year, player)`: it starts in the
+/// following month; the end is the season end month of nation a1 (0x4d45f0) for those under 22 (+0x18), this year if
+/// the start comes before it, otherwise the following year; for the others, three months after the start.
 /// Original: `SCOTLAND_RULES::get_loan_period` (0x7f6530, scotland_rules.cpp, thiscall, ret 0x1c).
 ///
 /// [pt] { 0x7f6530 } (thiscall, ret 0x1c, scotland_rules.cpp): `SCOTLAND_RULES::get_loan_period(a1, a2, início_mês,
@@ -93,8 +98,8 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
     let month_of_end: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
     let e = month_of_end(read_usize(G_CONTRACT_MANAGER), a1) as i8;
     *end_month = e;
-    if (read_u8(player + 0x18) as i8) < 0x16 {
-        crate::comparacao::ramo("cqe_6 escocia ate o fim da temporada");
+    if (read_u8(player + staff::YEAR_OF_BIRTH) as i8) < 0x16 {
+        crate::comparison::branch("cqe_6 escocia ate o fim da temporada");
         if *ini_month < e {
             *end_year = *ini_year;
         } else {
@@ -110,136 +115,29 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
     }
 }
 
-/// refuses outside the first two windows (9) and, in the five listed divisions, with four players on loan from other
-/// clubs (0x25)
-/// Original: `ITALY_RULES::can_loan_player` (0x661770, italy_rules.cpp, thiscall, ret 0x10).
+
+
+
+
+
+
+
+
+
+
+/// Constructs the Scottish transfer rules (rule 21): one window, from 30 May (moved to the Saturday [inference]) to 30
+/// March (moved to the Thursday [inference]); dword +0x15 = 1.
 ///
-/// [pt] { 0x661770 } (thiscall, ret 0x10, italy_rules.cpp): `ITALY_RULES::can_loan_player(clube, jogador, mensagem,
-/// motivo)`: fora das duas primeiras janelas (0x8e8c40 com [this+4] e [this+4] + 0xc): motivo 9. Um clube de uma das
-/// cinco divisões ([0x9cf578] a [0x9cf588]) com quatro jogadores emprestados de outros clubes (ids abaixo de
-/// [0xae2364], contrato de empréstimo 0x4cf6d0) não pode (0x25).
-pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player_661770(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
-    // 0x8e8c40: push janela; push 0xae2c90; ecx = this -> thiscall, ret 8
-    let in_window: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_WINDOW_CONTAINS_DATE);
-    if in_window(this, G_CURRENT_DATE, read_usize(this + 4)) == 0 && in_window(this, G_CURRENT_DATE, read_usize(this + 4) + 0xc) == 0 {
-        crate::comparacao::ramo("cqe_6 italia fora da janela");
-        return refuse_outside_window(this, msg, reason);
-    }
-    let comp = read_usize(clube + club::DIVISION);
-    if comp == 0 {
-        return 1;
-    }
-    let id = read_usize(comp);
-    if ![KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B, KEY_CLUB_COMP_ITALIAN_SERIE_C2_A, KEY_CLUB_COMP_ITALIAN_SERIE_C2_B, KEY_CLUB_COMP_ITALIAN_SERIE_C2_C].iter().any(|&g| read_usize(g) == id) {
-        return 1;
-    }
-    // 0x4cf6d0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4
-    let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let mut n: i8 = 0;
-    for k in 0..50usize {
-        let p = read_usize(clube + club::SQUAD + 4 * k);
-        if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || loan(read_usize(G_CONTRACT_MANAGER), p) == 0 {
-            continue;
-        }
-        let cp = game_get_contract_and_store(p);
-        let de = if cp != 0 { england_rules_club_of_contract(cp) } else { 0 };
-        if de != clube {
-            n = n.wrapping_add(1);
-        }
-    }
-    if n >= 4 {
-        crate::comparacao::ramo("cqe_6 italia quatro emprestados");
-        if msg != 0 {
-            let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9ea9dc, g, g, clube + club::SHORT_NAME);
-        }
-        if !reason.is_null() {
-            *reason = 0x25;
-        }
-        return 0;
-    }
-    1
-}
-
-/// refuses with five loans this season (0x1e) and between clubs of the same division (0x1d)
-/// Original: `IRELAND_RULES::can_loan_player` (0x63c3d0, ireland_rules.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x63c3d0 } (thiscall, ret 0x10, ireland_rules.cpp): `IRELAND_RULES::can_loan_player(clube, jogador, mensagem,
-/// motivo)`: cinco empréstimos na temporada (a conta de 16 bytes em [[0xde1f54] + 0x91c]): 0x1e; com contrato, o
-/// clube que pede e o dono na mesma divisão (+0x57, sem conferir o nulo, como a original): 0x1d, com o nome da nação.
-pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player_63c3d0(this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
-    let count = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(clube).wrapping_mul(16));
-    if read_u8(count) as i8 >= 5 {
-        crate::comparacao::ramo("cqe_6 irlanda cinco na temporada");
-        if msg != 0 {
-            let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-            let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9c4534, g, g, clube + club::SHORT_NAME);
-        }
-        if !reason.is_null() {
-            *reason = 0x1e;
-        }
-        return 0;
-    }
-    let owner = match loan_owner_club(player) {
-        None => return 1,
-        Some(d) => d,
-    };
-    if read_usize(clube + club::DIVISION) == read_usize(owner + 0x57) {
-        crate::comparacao::ramo("cqe_6 irlanda mesma divisao");
-        return refuse_loan(msg, reason, 0x9ea168, read_usize(this + 0xa), 0x1d);
-    }
-    1
-}
-
-
-
-/// Common can_loan_player comparer: side by side on the return, 0xae1080 and the reason; the written message is checked
-/// by text.
-///
-/// [pt] Comparador comum (pode emprestar): lado a lado na devolução, em [0xae1080] e no motivo; a mensagem, que só é
-/// escrita, é conferida pelo texto (antes da cópia o primeiro byte vai a zero, e no fim volta o texto da original).
-pub(crate) unsafe fn scotland_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, name: &str, this: usize, clube: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
-    let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
-    if !reason.is_null() {
-        regions.push((reason as usize, 2));
-    }
-    let mut to = Vec::new();
-    let mut tr = Vec::new();
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || {
-        let x = o(this, clube, player, msg, reason);
-        to = message_text(msg);
-        x
-    }, || {
-        if msg != 0 {
-            *(msg as *mut u8) = 0;
-        }
-        let x = r(this, clube, player, msg, reason);
-        tr = message_text(msg);
-        x
-    });
-    if msg != 0 {
-        core::ptr::copy_nonoverlapping(to.as_ptr(), msg as *mut u8, to.len());
-    }
-    PLACAR.registrar(igual && ro == rr && to == tr, || format!("{}(regras {:#x}, clube {:#x}, jogador {:#x}) original={} {:x?} {:?} rust={} {:x?} {:?}", name, this, clube, player, ro, mo, String::from_utf8_lossy(&to), rr, mr, String::from_utf8_lossy(&tr)));
-    ro
-}
-
-
-
-
-
-
-/// the Scottish rule (21): one window, from 30 May (moved to the Saturday [inference]) to 30 March (moved to the
-/// Thursday [inference]); dword +0x15 = 1
+/// `SCOTLAND_RULES::SCOTLAND_RULES`; SEH frame only for the `new`, no destructor on the normal path. The Scotland
+/// transfer rules (rule 21): the base (0x8e84a0), the vtable 0x96f838, 1 window from `SCOTLAND_TRANSFER_WINDOWS` and
+/// dword +0x15 = 1. Returns the object.
 /// Original: `SCOTLAND_RULES::SCOTLAND_RULES` (0x7f6390, scotland_rules.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x7f6390 } (thiscall, ret 0x14, scotland_rules.cpp, `SCOTLAND_RULES::SCOTLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Escócia (regra 21): a base (0x8e84a0), a vtable 0x96f838, 1 janela(s) de `SCOTLAND_TRANSFER_WINDOWS` e o dword +0x15 = 1. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqk_3 escocia");
-    brazil_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96f838, 1, &SCOTLAND_TRANSFER_WINDOWS, 0xa7b058, 0x50);
+    crate::comparison::branch("cqk_3 escocia");
+    construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96f838, 1, &SCOTLAND_TRANSFER_WINDOWS, 0xa7b058, 0x50);
     core::ptr::write_unaligned((this + 0x15) as *mut u32, 1);
     this
 }

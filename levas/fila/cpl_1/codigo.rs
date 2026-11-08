@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn club_has_offer_for_player(this: usize, pessoa: usize
             return 0;
         }
         if cpl1_d(offer_at(this, cpl1_d(no)) + 8) == cpl1_d(clube) { // a oferta é do clube
-            crate::comparacao::ramo("cpl_1 clube tem oferta");
+            crate::comparison::branch("cpl_1 clube tem oferta");
             return 1;
         }
     })
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn find_club_offer_for_player(this: usize, pessoa: usiz
         }
         let o = offer_at(this, cpl1_d(no));
         if cpl1_d(o + 8) == cpl1_d(clube) { // a oferta do clube
-            crate::comparacao::ramo("cpl_1 oferta do clube");
+            crate::comparison::branch("cpl_1 oferta do clube");
             return o;
         }
     })
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn player_has_pending_offer(this: usize, pessoa: usize)
         let k = cpl1_d(no) as i32;
         let o = if k < cpl1_d(this + 4) as i32 { offer_at(this, k as usize) } else { cpl1_d(cpl1_d(this)) };
         if matches!(*((o + 0x2c) as *const u8), 0 | 1 | 5 | 6) { // a situação pendente
-            crate::comparacao::ramo("cpl_1 oferta pendente");
+            crate::comparison::branch("cpl_1 oferta pendente");
             return 1;
         }
     })
@@ -118,8 +118,8 @@ unsafe extern "thiscall" fn comparar_club_has_offer_for_player(this: usize, pess
         return o(this, pessoa, clube);
     }
     let reg = offer_cursor_region(this, pessoa);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube), || club_has_offer_for_player(this, pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("club_has_offer_for_player({}, clube {}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, clube), || club_has_offer_for_player(this, pessoa, clube));
+    PLACAR.record(igual && r == n, || format!("club_has_offer_for_player({}, clube {}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), r, n, mo, mr));
     r
 }
 
@@ -129,8 +129,8 @@ unsafe extern "thiscall" fn comparar_find_club_offer_for_player(this: usize, pes
         return o(this, pessoa, clube, todas);
     }
     let reg = offer_cursor_region(this, pessoa);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube, todas), || find_club_offer_for_player(this, pessoa, clube, todas));
-    PLACAR.registrar(igual && r == n, || format!("find_club_offer_for_player({}, clube {}, todas {}) original={:x} rust={:x} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), todas, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, clube, todas), || find_club_offer_for_player(this, pessoa, clube, todas));
+    PLACAR.record(igual && r == n, || format!("find_club_offer_for_player({}, clube {}, todas {}) original={:x} rust={:x} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), todas, r, n, mo, mr));
     r
 }
 
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn comparar_player_has_pending_offer(this: usize, pesso
         return o(this, pessoa);
     }
     let reg = offer_cursor_region(this, pessoa);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa), || player_has_pending_offer(this, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("player_has_pending_offer({}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa), || player_has_pending_offer(this, pessoa));
+    PLACAR.record(igual && r == n, || format!("player_has_pending_offer({}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), r, n, mo, mr));
     r
 }

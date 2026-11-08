@@ -29,7 +29,7 @@ unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categ
     }
     let t = cpt8_d(clube + 0xcf);
     if t == 0 {
-        crate::comparacao::ramo("cpt_8 sem tecnico");
+        crate::comparison::branch("cpt_8 sem tecnico");
         return 100; // cpt8: sem técnico
     }
     if cpt8_i(t) < cpt8_i(0xae2364).wrapping_sub(0x10) {
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categ
         }
     }
     if n != 0 {
-        crate::comparacao::ramo("cpt_8 treinadores");
+        crate::comparison::branch("cpt_8 treinadores");
         soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: a média dos treinadores
     }
     let r = match_pl_ftol(soma as f64 * read_f64_at(0x970400));
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categ
 unsafe extern "thiscall" fn comparar_get_coaching_factor(this: usize, clube: usize, categoria: i8) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> u32>(%%I0%%)(this, clube, categoria);
     let n = get_coaching_factor(this, clube, categoria);
-    PLACAR.registrar(r == n, || format!("get_coaching_factor(clube {:x}, categoria {}) original={:x} rust={:x}", clube, categoria, r, n));
+    PLACAR.record(r == n, || format!("get_coaching_factor(clube {:x}, categoria {}) original={:x} rust={:x}", clube, categoria, r, n));
     r
 }
 
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn comparar_get_coach_assignments(this: usize, tecnico:
     }
     let r = o(this, tecnico);
     let n = get_coach_assignments(this, tecnico);
-    PLACAR.registrar(r == n, || format!("get_coach_assignments(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
+    PLACAR.record(r == n, || format!("get_coach_assignments(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
     r
 }
 
@@ -119,6 +119,6 @@ unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
 unsafe extern "thiscall" fn comparar_get_training_load(this: usize) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%)(this);
     let n = get_training_load(this);
-    PLACAR.registrar(r == n, || format!("get_training_load({:x}) original={} rust={}", this, r, n));
+    PLACAR.record(r == n, || format!("get_training_load({:x}) original={} rust={}", this, r, n));
     r
 }

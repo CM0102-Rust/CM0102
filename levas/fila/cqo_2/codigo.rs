@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
                     let n = cqo2_w(comp + 0x69) as i32;
                     let v = cqo2_i(p + 0x19);
                     if v > 1 {
-                        crate::comparacao::ramo("cqo_2 posicao de cima");
+                        crate::comparison::branch("cqo_2 posicao de cima");
                         pc = pc.wrapping_add(if v < 4 || n < 0xc {
                             n * 50
                         } else if v < 7 {
@@ -291,7 +291,7 @@ unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize,
     let (casa, fora) = (cqo2_d(jogo + 0x1c), cqo2_d(jogo + 0x20));
     let rival = |a: usize, b: usize| cqo2_d(a + 0xb3) == b || cqo2_d(a + 0xb7) == b || cqo2_d(a + 0xbb) == b;
     if rival(casa, fora) {
-        crate::comparacao::ramo("cqo_2 classico");
+        crate::comparison::branch("cqo_2 classico");
         pc = match_pl_ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico
     } else if cqo2_d(casa + 0x69) != 0 && cqo2_d(fora + 0x69) != 0 && cqo2_d(cqo2_d(casa + 0x69) + 0x38) == cqo2_d(cqo2_d(fora + 0x69) + 0x38) {
         pc = match_pl_ftol(pc as f64 * read_f64_at(0x969588));
@@ -390,14 +390,14 @@ unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jog
     if jogo == 0 {
         return o(this, jogo, saida);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if !saida.is_null() {
         reg.push((saida as usize, 12));
     }
     if cqo2_d(jogo + 0x18) != 0 {
         reg.push((cqo2_d(jogo + 0x18) + 0x3c, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida), || crate::aleatorio::sem_contar(|| calculate_match_attendance(this, jogo, saida)));
-    PLACAR.registrar(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", cqo2_d(jogo), cqo2_b(jogo + 0x3a), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo, saida), || crate::rng::without_counting(|| calculate_match_attendance(this, jogo, saida)));
+    PLACAR.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", cqo2_d(jogo), cqo2_b(jogo + 0x3a), r, n, mo, mr));
     r
 }

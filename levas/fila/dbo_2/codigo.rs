@@ -48,7 +48,7 @@ unsafe extern "C" fn club_has_enough_hard_workers(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_club_has_enough_hard_workers(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_has_enough_hard_workers(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -80,7 +80,7 @@ unsafe extern "C" fn club_has_fit_goalkeeper(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_club_has_fit_goalkeeper(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_has_fit_goalkeeper(clube);
-    PLACAR.registrar(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -103,6 +103,6 @@ unsafe extern "C" fn club_has_ball_winning_midfielders(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     let n = club_has_ball_winning_midfielders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }

@@ -1,7 +1,13 @@
 use super::*;
 
-/// statistic `qual` 1..22 of the record (bytes, percentages ×100.0f, per-match averages, the two ratings completed with
-/// under 20 matches ×0.05f), in x87 like the original
+/// Returns statistic `qual` 1..22 of the record (bytes, percentages ×100.0f, per-match averages, the two ratings
+/// completed with under 20 matches ×0.05f), in x87 like the original.
+///
+/// Statistic `qual` of record `r` (matches at +0, bytes +2..+0xd, words +0xe..+0x1a, +0x1c integer), as the original
+/// leaves it in x87: 1..12 the bytes; 13 and 16 the percentages (+0x12/+0x10 and +0x1a/+0x18, times 100.0f); 14, 15, 17
+/// and 21 the per-match averages; 18 the average of +0xe with fewer than 20 matches completed by `peso` (weight; times
+/// 0.05f); 20 the rating (2×+9 − +0xa + matches, completed by 1.5 with fewer than 20 matches; 1.5f with no matches); 22
+/// the integer. No divisor: 0.0. Null `r`, 19 or outside 1..22: the original (error box).
 /// Original: `player_statistic` (0x7c2150, player_stats.cpp, stdcall).
 ///
 /// [pt] { 0x7c2150 } (stdcall, ret 0xc, player_stats.cpp): a estatística `qual` do registro `r` (jogos
@@ -57,7 +63,11 @@ pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, which: i8, 
     }
 }
 
-/// the average of the record's five 4-bit ratings (zero counts 27), 16-bit, divided by 4
+/// Returns the average of the record's five 4-bit ratings (zero counts as 27), 16-bit, divided by 4.
+///
+/// The average of the five 4-bit ratings of record `*indice` (0x27 bytes each, starting at `[this+0x30]`): the two
+/// halves of +0x24 and of +0x25 and the low half of +0x26, each ×4 (zero counts as 27), summed in 16 bits and divided
+/// by 4 (truncating). Null `indice`: the original (error box).
 /// Original: `ratings_average` (0x7c1950, player_stats.cpp, thiscall).
 ///
 /// [pt] { 0x7c1950 } (thiscall, ret 4, player_stats.cpp): a média das cinco notas de 4 bits do registro
@@ -127,9 +137,19 @@ pub(crate) unsafe fn append_history_node(this: usize, reg: usize, no: &[u8; 0x2b
     f(read_u32_as_usize(this), reg + 0x18, reg + 0x1c, no.as_ptr());
 }
 
-/// when the player leaves a club: the stats of each category of the season go to the history file (with the year, the
-/// club, the fee and the kind of exit) and are cleared; an empty node when the last category is missing; and the games
-/// and goals for the club recounted from the history
+/// When the player leaves a club: the season's stats of each category go to the history file (with the year, the club,
+/// the fee and the kind of exit) and are cleared; an empty node when the last category is missing; and the games and
+/// goals for the club are recounted from the history.
+///
+/// `PlayerStats::archive_player_stats(person, fee, loan, end, club, other)`, called from club exits (contracts
+/// 0x4c7ac0/0x4cbd20/0x4d01e0/0x4d07e0, 0x690730 the squad, 0x7c1350 the national teams). The node type: 2 with `loan`,
+/// 1 with `end`, 3 with `other`, otherwise 0. Null person: the error box (line 0xf28) and 0; without a record: 0. Each
+/// of the six categories with a record (the record's 39-byte entry in `[this+0x30]`) goes to the history (the current
+/// year and club, the record's 32 bytes in `[this+4]`, `fee`, the category and the type) and the record is cleared.
+/// Without the sixth category, an empty category 6 node with `fee` when: `fee` ≥ 0 or `end`; or `club` ≥ 0 and: outside
+/// the season of the club's nation (table 0xb63d8a); or, without the nation or in its season, less than 365 days since
+/// joining the club (+0x3e/+0x42, 0x54cdb0). With `club` ≥ 0 or `fee` ≥ 0: the games (+0x20) and goals (+0x22) for
+/// `club` are recounted from the category 2 nodes of the history (0x58f120). Returns 1.
 /// Original: `PlayerStats::archive_player_stats` (0x7c5fe0, player_stats.cpp, thiscall).
 ///
 /// [pt] { 0x7c5fe0 } (thiscall, ret 0x18, player_stats.cpp): `PlayerStats::archive_player_stats(pessoa, valor, empréstimo,
@@ -155,8 +175,8 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         show_error_at(0xa78310, 0xf28);
         return 0;
     }
-    let clube = read_u32_as_usize(p + 0x39);
-    let f = read_u32_as_usize(p + 0x61);
+    let clube = read_u32_as_usize(p + staff::CLUB_JOB);
+    let f = read_u32_as_usize(p + staff::PLAYER);
     if f == 0 {
         return 0;
     }
@@ -169,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         }
         let dados = read_u32_as_usize(this + 4).wrapping_add((id as isize * 0x20) as usize);
         let no = career_history_node(clube, Some(dados), value, (((cat + 1) as u8) << 3) | kind); // cqh8: a categoria e o tipo do nó
-        crate::comparacao::ramo("cqh_8 categoria arquivada");
+        crate::comparison::branch("cqh_8 categoria arquivada");
         append_history_node(this, reg, &no);
         if cat == 5 {
             sexta = true;
@@ -203,11 +223,11 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             true
         } else {
             let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-            days(G_CURRENT_DATE, read_u32_as_usize(p + 0x3e) as u32, read_u32_as_usize(p + 0x42) as u32) < 0x16d
+            days(G_CURRENT_DATE, read_u32_as_usize(p + staff::DATE_JOINED_CLUB) as u32, read_u32_as_usize(p + 0x42) as u32) < 0x16d
         };
         if write {
             let no = career_history_node(clube, None, value, 0x30 | kind); // cqh8: o nó vazio da sexta categoria
-            crate::comparacao::ramo("cqh_8 no vazio");
+            crate::comparison::branch("cqh_8 no vazio");
             append_history_node(this, reg, &no);
         }
     }
@@ -222,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             let mut no = next(list);
             while no != 0 {
                 if read_u32_as_usize(no + 2) as u32 == club_id && *((no + 0x2a) as *const u8) & 0xf8 == 0x10 {
-                    crate::comparacao::ramo("cqh_8 jogos pelo clube");
+                    crate::comparison::branch("cqh_8 jogos pelo clube");
                     let a = (reg + 0x20) as *mut u16;
                     core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(*((no + 6) as *const u8) as u16)); // cqh8: os jogos pelo clube
                     let g = (reg + 0x22) as *mut u16;
@@ -288,9 +308,29 @@ pub(crate) fn history_entry_at(buf: usize, n: i32, k: i32) -> usize {
     buf.wrapping_add(((n + k) as isize * HISTORY_ENTRY_SIZE as isize - HISTORY_ENTRY_SIZE as isize) as usize)
 }
 
-/// the player career table, six entries (categories) per season and club: the current season, the ones from the history
-/// file from newest to oldest with the empty years filled, the repeated entries of the same season and club summed and
-/// the empty groups removed
+/// Builds the player's career table, six entries (categories) per season and club: the current season, then those from
+/// the history file from newest to oldest with the empty years filled, the repeated entries of the same season and club
+/// summed and the empty groups removed.
+///
+/// `PlayerStats::build_career_history(person, &count)`: the table (malloc 0x944e46 of 500 entries, realloc 0x945667 in
+/// steps of 500; the caller frees it with 0x9452ca) with six entries per season and club, and the count in `*count`.
+/// Null person (line 0xb98) or without a record (0xbaa): the error box and 0; id from `[0xae2364]` on: 0; out of
+/// memory: the error box (0xbb2, 0xc00, 0xc26, 0xc41) and 0.
+///
+/// (1) The current season: the six categories with the year of the club's season (0x669950), the club (+0x39; −1
+/// without one), transfer −1 and the category's 32 bytes (0x7c3920) when present. (2) The history from the file
+/// (FILE_LLIST::get_nodes 0x58f120 of `[this]` by the positions +0x18/+0x1c of the record's 0x27-byte entry in
+/// `[this+0x30]`), from end to start (0x68d1d0): each node of another season, club or type opens a group: the count
+/// moves on by 6; empty years between the two (until the count exceeds 500) become empty groups (club −1, transfer −1);
+/// the node's group takes the year, the club, the transfer and the node's type; the node goes into the entry for its
+/// category (+0x2a / 8) in the group. The list is destroyed (0x68d040 and 0x944c94). (3) The count moves on by 6; each
+/// entry takes the transfer and the type of the entry six ahead (those of the last group, −1 and 0). (4) A group
+/// followed by one of the same year and club, with no transfer in either, the following one's type other than 1 and the
+/// word +0x14 other than −1 in both, adds bytes +6..+0x13 and the word +0x14 into the following one and disappears
+/// (year 0). (5) A group without matches (+6, +7 of the first and the last entry), with a year, without a transfer and
+/// of type 0 disappears when it has no club or when another group has its year and the next group is of the same club;
+/// one with matches whose last entry has no club (+0xd9) also disappears. (6) The year-0 groups leave the table (the
+/// following ones move down) and the count drops by 6 per group.
 /// Original: `PlayerStats::build_career_history` (0x7c3e40, player_stats.cpp, thiscall).
 ///
 /// [pt] { 0x7c3e40 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::build_career_history(pessoa, &conta)`: a tabela
@@ -323,7 +363,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     if read_i32(p) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    let f = read_u32_as_usize(p + 0x61);
+    let f = read_u32_as_usize(p + staff::PLAYER);
     if f == 0 {
         show_player_stats_error(0xbaa);
         return 0;
@@ -334,12 +374,12 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         return 0;
     }
     let mut cap: i32 = 500;
-    let clube = read_u32_as_usize(p + 0x39);
+    let clube = read_u32_as_usize(p + staff::CLUB_JOB);
     let mut last = PlayerStatsEntry::nova(0, 0, 0, 0);
     for cat in 1..=6u8 {
         let year = year_of_club(clube);
         let id = if clube == 0 { 0xffff_ffff } else { read_u32_as_usize(clube) as u32 }; // cqf8: o clube da temporada atual
-        crate::comparacao::ramo("cqf_8 temporada atual");
+        crate::comparison::branch("cqf_8 temporada atual");
         let mut r = PlayerStatsEntry::nova(year, id, cat, 0xffff_ffff);
         let c = category(this, f, cat as u32);
         if c != 0 {
@@ -396,7 +436,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                 for cat in 1..=6u8 {
                     let mut r = PlayerStatsEntry::nova(year_in, club_in, cat, read_u32_as_usize(no + 0x26) as u32);
                     r.0[0x2a] = (cat << 3) | (kind & 7);
-                    crate::comparacao::ramo("cqf_8 temporada do historico");
+                    crate::comparison::branch("cqf_8 temporada do historico");
                     if *count + cat as i32 - 1 >= cap {
                         size += 0x53fc;
                         cap += 500;
@@ -532,7 +572,14 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
 }
 
 
-/// how many years since the person played for the club: 0 when he is there, −1 when never
+/// Returns how many years since the person played for the club: 0 when they are there, −1 when never.
+///
+/// `player_stats_years_since_at_club(person, club)`: how many years since the person played for the club: 0 if they are
+/// in it (+0x39), −1 if never; otherwise today's year (0xae2c92) minus the highest year among the history groups
+/// (0x7c3e40 on `[0xb74350]`; the last entry of each group, +0xd7 the year, +0xd9 the club) with the club. Null person
+/// (line 0x133f), null club (0x1347) or without a record (0x135f): the error box and −1; id from `[0xae2364]` on: −1.
+/// The caller calls it with the PlayerStats in ecx, which it does not use. Called from 0x5b03e0 (does not run in the
+/// automatic career: it passes through untested).
 /// Original: `player_stats_years_since_at_club` (0x7c6e30, player_stats.cpp, stdcall).
 ///
 /// [pt] { 0x7c6e30 } (stdcall, ret 8, player_stats.cpp): `player_stats_years_since_at_club(pessoa, clube)`: quantos anos
@@ -553,10 +600,10 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
     if read_i32(p) >= read_i32(G_STAFF_COUNT) {
         return -1;
     }
-    if read_u32_as_usize(p + 0x39) == clube {
+    if read_u32_as_usize(p + staff::CLUB_JOB) == clube {
         return 0;
     }
-    if read_u32_as_usize(p + 0x61) == 0 {
+    if read_u32_as_usize(p + staff::PLAYER) == 0 {
         show_player_stats_error(0x135f);
         return -1;
     }
@@ -585,7 +632,11 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
 }
 
 
-/// the qsort order of the history records: by person, by year and by the first field
+/// The qsort order of the history records: by person, by year and by the first field.
+///
+/// `player_stats_compare_history_by_staff(a, b)`, the qsort order of the staff_history.dat records when the statistics
+/// are created (0x7bfd50, pointer at 0x7c05ad): null `a` 1, null `b` −1; by person (+4, unsigned), then by year (+8,
+/// signed word), then the difference of the first dword.
 /// Original: `player_stats_compare_history_by_staff` (0x7c6de0, player_stats.cpp, cdecl).
 ///
 /// [pt] { 0x7c6de0 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_staff(a, b)`, a ordem do qsort dos
@@ -618,8 +669,19 @@ pub(crate) unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, 
 
 
 
-/// the requested statistic of the category record (without a record, the default for the rating and the average), or
-/// the combined ratings of categories 2 to 5
+/// Returns the requested statistic of the category record (without a record, the default for the rating and the
+/// average), or the combined ratings of categories 2 to 5.
+///
+/// `PlayerStats::get_stat(player, category, qual, default)`, as the original leaves it in x87. No player: the "Error"
+/// box (line 0x659) and 0.0; id (+0) outside the table (`[0xae236c]`): 0.0. With `qual` ≠ 0x13 and the category (signed
+/// byte) up to 6: the category record (0x7c3920) gives the statistic (0x7c2150 with `qual` and `default`); without a
+/// record, `default` for 0x12 and 0x14 and 0.0 for the others. Otherwise the combined ratings from categories 2+3
+/// (matches n and total t of +0xe: n < 20, ((20 − n)·5 + t)·0.05f; otherwise t/n; stored as f32), 4 (n < 8, ((8 − n)·3
+/// + t)·0.125; otherwise t/n; f32) and 5 (n < 5, ((5 − n) + t)·0.2f; otherwise t/n; in x87): category 100, (c5·1.5 +
+/// c4·2.5 + c23·6)·0.1; 101, (c5·3 + c4·5 + 2·c23)·0.1; 102, (c5·5 + c4·4 + c23)·0.1; the others 0.0. Without record 4
+/// or 5 the original reads uninitialised locals (the copy uses zero; the comparer leaves those cases to the original).
+/// Called from the line-up choice 0x6e2f20, MATCH_PLAYER::setup 0x6eaea0, the club reputation 0x545e90, the player
+/// strength 0x546ab0, the staff's daily pass 0x5ce2d0 and others. Hot: no counter.
 /// Original: `PlayerStats::get_stat` (0x7c1e30, player_stats.cpp, thiscall).
 ///
 /// [pt] { 0x7c1e30 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::get_stat(jogador, categoria, qual, padrão)`, como
@@ -693,7 +755,12 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
 }
 
 
-/// the order of the language records: by person id and by language, with 0xff matching any language
+/// The order of the language records: by person id and by language, with 0xff matching any language.
+///
+/// `player_stats_compare_language_entries(a, b)` (the qsort and bsearch of the languages, 6-byte records {id, language,
+/// fluency}): null a, −1; null b, 1; different ids (+0), the difference; language 0xff in either one, 0; otherwise the
+/// difference of the languages (+4, signed). Used by the language fluency 0x7c6830 and by the languages added, removed
+/// and improved.
 /// Original: `player_stats_compare_language_entries` (0x7c6d40, player_stats.cpp, cdecl).
 ///
 /// [pt] { 0x7c6d40 } (cdecl, player_stats.cpp): `player_stats_compare_language_entries(a, b)` (o qsort e o bsearch dos
@@ -749,7 +816,14 @@ pub(crate) unsafe extern "C" fn player_stats_compare_history_by_club(a: usize, b
 
 
 
-/// sums the goals of every season and club of the player's career table (0x7c3e40), in 16 bits
+/// Sums the goals of every season and club of the player's career table (0x7c3e40), in 16 bits.
+///
+/// The original receives the PlayerStats in ecx and does not read it. `player_stats_get_career_goals(person)` (called
+/// from MATCH_PLAYER::setup 0x6eaea0, which writes it into +0x43 of the match player): null person, the "Error" box
+/// (line 0xb4b) and 0; id from `[0xae2364]` on, 0; without the player record (+0x61), the error box (line 0xb5d) and 0.
+/// Otherwise the career table (0x7c3e40 of `[0xb74350]`: 0x2b-byte entries, six per season and club) and the sum, in 16
+/// bits, of byte +8 of the sixth entry of each group (+0xdf); the table is freed (0x9452ca, also when null). Hot (every
+/// player of every match): no counter.
 /// Original: `player_stats_get_career_goals` (0x7c3d20, player_stats.cpp, stdcall, ret 4).
 ///
 /// [pt] { 0x7c3d20 } (stdcall, ret 4, player_stats.cpp; a original recebe o PlayerStats no ecx e não o lê):
@@ -828,8 +902,13 @@ pub(crate) unsafe fn show_stats_memory_error(row: u32, text: usize) {
     caixa(0xae28bc, 0xae26c4, 0);
 }
 
-/// the 0x20-byte record of the player's category (1..6), through the index in the 39-byte entry of his id; 0 without an
-/// index
+/// Returns the 0x20-byte record of the player's category (1..6), through the index in the 39-byte entry of his id; 0
+/// without an index.
+///
+/// `PlayerStats::get_category_record(player, category)`: the 0x20-byte record (`[this+4]` + 32 × index) of the player's
+/// category (category_slot), or 0 when the index is −1 or lower. No player or outside 1..6: the "Error" box and 0: the
+/// original. Called from PlayerStats::record_match 0x7c10e6 and PlayerStats::get_stat 0x7c1e30 (the match engine's
+/// averages). Hot: no counter.
 /// Original: `PlayerStats::get_category_record` (0x7c3920, player_stats.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x7c3920 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::get_category_record(jogador, categoria)`: o
@@ -848,8 +927,14 @@ pub(crate) unsafe extern "thiscall" fn get_category_record(this: usize, player: 
     read_usize(this + 4).wrapping_add((i as usize) << 5)
 }
 
-/// the player's category record; without an index, the first free record (+0xe = 0xffff) or a new one at the end (grows
-/// by 100), zeroed
+/// Returns the player's category record; without an index, the first free record (+0xe = 0xffff) or a new one at the
+/// end (grows by 100), zeroed.
+///
+/// `PlayerStats::create_stats(player, category)`: the player's category record (category_slot); without an index (−1),
+/// with loose records (`[this+0x38]`), the first record of `[this+4]` (count +0xc) with +0xe = 0xffff becomes his
+/// (cleared; the loose count goes down); otherwise one at the end (cleared; the count goes up): when full (capacity
+/// +8), it grows in steps of 100 (realloc 0x945667; out of memory, the error box 0xef4 and 0). No player or outside
+/// 1..6: the "Error" box and 0: the original. Called from PlayerStats::record_match 0x7c10f9.
 /// Original: `PlayerStats::create_stats` (0x7c5d80, player_stats.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x7c5d80 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::create_stats(jogador, categoria)`: o registro da
@@ -871,7 +956,7 @@ pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, player: usize, 
         while i < n {
             let r = read_usize(this + 4).wrapping_add((i as usize) << 5);
             if core::ptr::read_unaligned((r + 0xe) as *const u16) == 0xffff {
-                crate::comparacao::ramo("cpq_10 registro solto");
+                crate::comparison::branch("cpq_10 registro solto");
                 core::ptr::write_bytes(r as *mut u8, 0, 0x20);
                 write_usize(slot, i as usize);
                 write_usize(this + 0x38, read_usize(this + 0x38).wrapping_sub(1));
@@ -892,7 +977,7 @@ pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, player: usize, 
             return 0;
         }
     }
-    crate::comparacao::ramo("cpq_10 registro novo");
+    crate::comparison::branch("cpq_10 registro novo");
     write_usize(slot, read_usize(this + 0xc)); // the new index
     write_usize(this + 0xc, read_usize(this + 0xc).wrapping_add(1));
     let r = read_usize(this + 4).wrapping_add(read_usize(slot) << 5);
@@ -919,8 +1004,13 @@ pub(crate) unsafe fn find_language_record(this: usize, person: usize, language: 
     bsearch(key.as_ptr(), read_u32_as_usize(this + 0x3c), read_u32_as_usize(this + 0x44) as u32, 6, 0x7c6d40)
 }
 
-/// appends the new entry to the language table (6 bytes: id, language, fluency up to 10; starts at 100, grows by 100)
-/// and sorts it when asked (qsort)
+/// Appends the new entry to the language table (6 bytes: id, language, fluency up to 10; starts at 100, grows by 100)
+/// and sorts it when asked (qsort).
+///
+/// `PlayerStats::add_language(person, language, fluency, sort)`: the language table (6 bytes per record in
+/// `[this+0x3c]`, capacity +0x40, count +0x44) starts with 100 (malloc 0x258) and grows by 100 (realloc) when full; the
+/// new record at the end: the person's id, the language and the fluency (at most 10, signed); with `sort`, qsort with
+/// the comparison 0x7c6d40. Out of memory: fatal error box.
 /// Original: `PlayerStats::add_language` (0x7c6a30, player_stats.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x7c6a30 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::add_language(pessoa, idioma, fluencia,
@@ -949,7 +1039,7 @@ pub(crate) unsafe extern "thiscall" fn add_language(this: usize, person: usize, 
         }
         write_u32(this + 0x40, (read_u32_as_usize(this + 0x40) as u32).wrapping_add(0x64));
     }
-    crate::comparacao::ramo("cpo_12 idioma novo");
+    crate::comparison::branch("cpo_12 idioma novo");
     let n = read_u32_as_usize(this + 0x44);
     let r = read_u32_as_usize(this + 0x3c).wrapping_add(n.wrapping_mul(6));
     write_u32(r, read_u32_as_usize(person) as u32);
@@ -958,7 +1048,7 @@ pub(crate) unsafe extern "thiscall" fn add_language(this: usize, person: usize, 
     *((r + 5) as *mut u8) = if (f as i8) > 10 { 10 } else { f };
     write_u32(this + 0x44, (n as u32).wrapping_add(1));
     if sort != 0 {
-        crate::comparacao::ramo("cpo_12 idiomas ordenados");
+        crate::comparison::branch("cpo_12 idiomas ordenados");
         let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
         qsort(read_u32_as_usize(this + 0x3c), read_u32_as_usize(this + 0x44) as u32, 6, 0x7c6d40);
     }
@@ -982,7 +1072,7 @@ pub(crate) unsafe extern "thiscall" fn improve_language(this: usize, person: usi
         append(this, person, language, aumento, sort);
         return;
     }
-    crate::comparacao::ramo("cpo_12 idioma melhorado");
+    crate::comparison::branch("cpo_12 idioma melhorado");
     let f = (*((r + 5) as *const u8)).wrapping_add(aumento as u8);
     *((r + 5) as *mut u8) = f;
     if (f as i8) > 10 {
@@ -991,7 +1081,7 @@ pub(crate) unsafe extern "thiscall" fn improve_language(this: usize, person: usi
 }
 
 /// frees the player's 6 category records (+0xe = −1, +1 to the free count), clears the league totals and recent ratings
-/// and empties the history; in DESLIGADAS since 2026-10-29: with the detour the career in Rust mode left the reference
+/// and empties the history; turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied: with the detour the career in Rust mode left the reference
 /// be54a138 (bisection of batch 251's 39 routines; with 0x77bbe0, the news constructor, the game later crashed in
 /// 0x7c6650 on a broken index); the cause (stack residue or a difference in the copy) is not isolated yet; the copy
 /// stays in the code and does not run
@@ -1031,8 +1121,16 @@ pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pe
 
 
 
-/// from 0 to 10: the contract level, 10 for a nation (or the second one) speaking the language, or the learned language
-/// (binary search)
+/// Returns from 0 to 10 how well the person speaks the language: the contract level, 10 for a nation (or the second
+/// one) speaking the language, or the learned language (binary search).
+///
+/// `PlayerStats::get_language_fluency(person, club, language, by_contract)`: how well the person speaks `language` (0
+/// to 10). Human manager (id ≥ `[0xae2364]`): 10 if it is the language (+0x77) of their nation (+0x1a), otherwise 0.
+/// With `by_contract`, the contract with the club (0x4cf5f0) of someone playing at a club (+0x39) of the same nation as
+/// `club` (+0x53): the contract level (+0x4f & 0xf). 10 if the nation (+0x1a) or the second one (+0x1e) speaks the
+/// language of `club`'s nation or `language`. Otherwise the learned language: the binary search (bsearch 0x946464,
+/// comparison 0x7c6d40, 6-byte records at `[+0x3c]`, `[+0x44]` of them) for the key {id, language}, byte +5; without
+/// the table or the record, 0. The callers read only `al`.
 /// Original: `PlayerStats::get_language_fluency` (0x7c6830, player_stats.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x7c6830 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::get_language_fluency(pessoa, clube, idioma,
@@ -1052,8 +1150,8 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         let c = contrato(read_usize(G_CONTRACT_MANAGER), person, clube);
         if c != 0 {
             let cp = read_usize(person + staff::CLUB_JOB);
-            if cp != 0 && read_usize(clube + club::NATION) == read_usize(cp + 0x53) {
-                return read_u8(c + 0x4f) & 0xf;
+            if cp != 0 && read_usize(clube + club::NATION) == read_usize(cp + club::NATION) {
+                return read_u8(c + contract::SQUAD_STATUS) & 0xf;
             }
         }
     }
@@ -1062,11 +1160,11 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
             return true;
         }
         let s = read_usize(person + staff::SECOND_NATION);
-        s != 0 && read_u8(s + 0x77) == l // the second nation
+        s != 0 && read_u8(s + nation::FIRST_LANGUAGE) == l // the second nation
     };
     if clube != 0 {
         let n = read_usize(clube + club::NATION);
-        if n != 0 && fala(read_u8(n + 0x77)) {
+        if n != 0 && fala(read_u8(n + nation::FIRST_LANGUAGE)) {
             return 10;
         }
     }
@@ -1091,9 +1189,21 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
 
 
 
-/// by each side's category (friendly, reserves, competition type; a draw in a simulated match), adds the rating and the
-/// match to the double sums and each player who played to the category records (games, goals, score, rating,
-/// minutes...), to the player's games and goals and to contract +0x3b; shifts the form half a byte
+/// Records a match in the statistics: by each side's category (friendly, reserves, competition type; a random draw in a
+/// simulated match), adds the rating and the match to the double sums and each player who played to the category
+/// records (games, goals, score, rating, minutes...), to the player's games and goals and to contract +0x3b; shifts the
+/// form by half a byte.
+///
+/// `PlayerStats::record_match(fixture, match)`: null fixture or match, the error boxes and 0. Competition −2 (simulated
+/// match): the category is random(9) ≠ 0 ? 2 : 3 for both sides; otherwise each side's own (match_stats_category). In
+/// each row that counts (match_lineup_row): the rating (+0x35) and one match into the double sums of `this`
+/// (+0x20/+0x28 with the match's flag +0x4c, otherwise +0x10/+0x18); into the 0x20-byte category records (0x7c3920, or
+/// created by 0x7c5d80): matches, appearances, goals/assists and the rest of the row (+0x21..+0x2d), goals for (the
+/// side's +0x11f) and against (+0x744 − side), win and defeat, man of the match (+0x3c), the words (+0x35, +0x3e,
+/// +0x3f, +0x42, +0x28, +0x25, +0x26) and the minutes (+0x34, +0x30 or the match duration +0x4d; a substitute subtracts
+/// the entry time +0x32). In category 2 or with the competition counting (0x4b0700): +1 match and the goals in the
+/// player's record (`[this+0x30]`, 0x27 bytes) and, without a record (0x4cf6d0), +1 on the contract's +0x3b (0x4cf5a0).
+/// Finally the form (+0x24..+0x26) shifts by half a byte and receives the rating. Returns 1.
 /// Original: `PlayerStats::record_match` (0x7c0d70, player_stats.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x7c0d70 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::record_match(partida, jogo)`: partida ou jogo nulos,
@@ -1139,7 +1249,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
             }
             if !contou {
                 contou = true;
-                crate::comparacao::ramo("cpx_12 jogo registrado");
+                crate::comparison::branch("cpx_12 jogo registrado");
             }
             for c in stats_categories_for(cat).into_iter().flatten() {
                 let mut r = player_category_record(this, dados, c);
@@ -1212,8 +1322,14 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
 }
 
 
-/// for the nation's clubs (up to the first national team), archives (0x7c5fe0) the statistics of every squad player not
-/// on loan elsewhere; 1 (0 and the "Error" box without a nation)
+/// For the nation's clubs (up to the first national team), archives (0x7c5fe0) the statistics of every squad player not
+/// on loan elsewhere; 1 (0 and the "Error" box without a nation).
+///
+/// `PlayerStats::end_season_for_key_nation(nation)`: without a nation, the "Error" box at line 0x396 and 0. Walks the
+/// clubs of `[0xae235c]` up to the first national team (0x53b900: it stops there); a club of the nation (0x669360,
+/// 72-byte record at 0xb63d60): each player (+0x61, id below `[0xae2364]`) of the 50 slots (+0xd7) without a loan
+/// (0x4cf6d0 on `[0xae1050]`) or on loan to the club itself (+0x39) has his statistics archived (0x7c5fe0 with −1, 0,
+/// 0, −1, 0). Returns 1.
 /// Original: `PlayerStats::end_season_for_key_nation` (0x7c1350, player_stats.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x7c1350 } (thiscall, ret 4, player_stats.cpp): `PlayerStats::end_season_for_key_nation(nacao)`: sem nação, a
@@ -1239,11 +1355,11 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nacao {
             for s in 0..50usize {
                 let p = read_usize(clube + club::SQUAD + 4 * s);
-                if p == 0 || read_usize(p + 0x61) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
+                if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                     continue;
                 }
-                if loan(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + 0x39) == clube {
-                    crate::comparacao::ramo("cpp_10 arquivar");
+                if loan(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + staff::CLUB_JOB) == clube {
+                    crate::comparison::branch("cpp_10 arquivar");
                     archive(this, p, -1, 0, 0, -1, 0);
                 }
             }
@@ -1254,7 +1370,12 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
 }
 
 
-/// removes a language from the player's language table (binary search) and shifts the later entries down
+/// Removes a language from the player's language table (binary search) and shifts the later entries down.
+///
+/// Removes language `idioma` of player `ficha` from the language table (`[this+0x3c]`, `[this+0x44]` entries of 6
+/// bytes: id, language, fluency), found by binary search (0x946464 with 0x7c6d40): the following entries move down one
+/// place, the last one becomes id −1 and language 0, and the count drops. Without a table or without the entry:
+/// nothing.
 /// Original: `PlayerStats::remove_language` (0x7c6bf0, player_stats.cpp, thiscall).
 ///
 /// [pt] { 0x7c6bf0 } (thiscall, ret 8, player_stats.cpp): tira o idioma `idioma` do jogador `ficha` da
@@ -1290,7 +1411,11 @@ pub(crate) unsafe extern "thiscall" fn remove_language(stats: usize, sheet: usiz
 }
 
 
-/// the player's league appearances (field 1) or league goals (field 2) at the club, as a float
+/// Returns the player's league appearances (field 1) or league goals (field 2) at the club, as a float.
+///
+/// The player's league statistic at the club, as a float (fild): field 1 the matches (word +0x20) and field 2 the goals
+/// (word +0x22) of the 39-byte record at `[this+0x30]` + id × 39. Null player or any other field: the original (error
+/// box).
 /// Original: `PlayerStats::get_club_league_stat` (0x7c47b0, player_stats.cpp, thiscall).
 ///
 /// [pt] { 0x7c47b0 } (thiscall, ret 8, player_stats.cpp): a estatística de liga do jogador no clube, como
@@ -1306,7 +1431,10 @@ pub(crate) unsafe extern "thiscall" fn get_club_league_stat(stats: usize, player
 }
 
 
-/// the player's last match rating (6.5 with none)
+/// Returns the player's last match rating (6.5 with none).
+///
+/// The last match rating of player `*id` (the low 4 bits of byte +0x26 of the 39-byte record at `[estatisticas+0x30]`,
+/// the statistics); with no rating, 6.5 (`[0x96e2b8]`). Null player: the original (error box). Returns in st0.
 /// Original: `PlayerStats::get_last_match_rating` (0x7c1a60, player_stats.cpp, thiscall).
 ///
 /// [pt] { 0x7c1a60 } (thiscall, ret 4, player_stats.cpp): a nota da última partida do jogador `*id` (os 4
@@ -1322,7 +1450,15 @@ pub(crate) unsafe extern "thiscall" fn get_last_match_rating(stats: usize, id: *
 }
 
 
-/// sums the goals of the player's seasons for the club in the career table (0x7c3e40), in 16 bits
+/// Sums the goals of the player's seasons for the club in the career table (0x7c3e40), in 16 bits.
+///
+/// The original receives the PlayerStats in ecx and does not read it. `player_stats_get_goals_for_club(person, club)`
+/// (called from MATCH_PLAYER::setup 0x6eaea0, which writes it into +0x3d of the match player): null person, the "Error"
+/// box (line 0xb04) and 0; null club, the one at line 0xb0c and 0; id from `[0xae2364]` on, 0; without the player
+/// record (+0x61), the one at line 0xb1e and 0. Otherwise the career table (0x7c3e40 of `[0xb74350]`: 0x2b-byte
+/// entries, six per season and club) and the sum, in 16 bits, of byte +0xdf of the groups whose club (+0xd9, signed,
+/// non-negative) is the id of `club`; the table is freed (0x9452ca, also when null). Hot (every player of every match):
+/// no counter.
 /// Original: `player_stats_get_goals_for_club` (0x7c3bb0, player_stats.cpp, stdcall, ret 8).
 ///
 /// [pt] { 0x7c3bb0 } (stdcall, ret 8, player_stats.cpp; a original recebe o PlayerStats no ecx e não o lê):
@@ -1369,7 +1505,12 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
 }
 
 
-/// the competition weight by the club's two competitions (500/1000/300/100)
+/// Returns the competition weight by the club's two competitions (500/1000/300/100).
+///
+/// The weight of competition `cod` for player `p` by the club's two competitions (+0x1a and +0x1e): in the four special
+/// competitions (`[0x9cf4a8]` with 0x16/0x20, `[0x9cf408]` with 0x1e/0x20, `[0x9cf2c0]` with 0x16/0x1e, `[0x9cf244]`
+/// with 7) and in the competition's codes +0x78/+0x79: 500/1000/500/300 by the first, 300/500/300/100 by the second; no
+/// competition, 0. Returns only `ax`.
 /// Original: `competition_weight` (0x7c6930, player_stats.cpp, stdcall).
 ///
 /// [pt] { 0x7c6930 } (stdcall, ret 8, player_stats.cpp): o peso da competição `cod` para o jogador `p`

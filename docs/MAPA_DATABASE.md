@@ -213,26 +213,26 @@ Tipo novo de item (**banco**), ao lado de telas, simulação e save. 33 itens (�
 | B2 | L4 leitores | 0x54fd60, 0x54feb0, 0x550230 | idem |
 | B2 | L5 leitores | 0x550380, 0x5504d0, 0x5505c0 | idem |
 | B2 | L6 leitores | 0x550710, 0x550860, 0x54e630 (pessoas 110) | idem; 0x54e630 por autoteste e, depois, pelo `.qst` |
-| B3 | V1 conversores da versão 1 | 0x54dc90 clubes, 0x54e9a0, 0x54f150 | `lado_a_lado` sobre bytes sintéticos de versão 1 (sementes fixas, registros de 1 a N, leitura que falha no meio); a carreira não passa (base de fábrica é versão 2) |
+| B3 | V1 conversores da versão 1 | 0x54dc90 clubes, 0x54e9a0, 0x54f150 | `side_by_side` sobre bytes sintéticos de versão 1 (sementes fixas, registros de 1 a N, leitura que falha no meio); a carreira não passa (base de fábrica é versão 2) |
 | B3 | V2 | 0x54ffd0 competições v1, 0x54d580 abrir, 0x54d5b0 criar | conversor: idem; abrir/criar: resposta e caminho em 0xde1f64 |
 | B3 | G1 gravadores | 0x54d6e0, 0x54d840, 0x54d9a0 | **arquivo**: grava em dois temporários, compara bytes e resposta; também por `zwrite` num contêiner de teste |
 | B4 | G2, G3, G4 | 0x54daf0, 0x54e5d0, 0x54e720; 0x54efd0, 0x54fbb0, 0x54fd00; 0x54fe50, 0x5501d0, 0x550320 | idem |
 | B5 | G5 | 0x550470, 0x5506b0, 0x550800 | idem |
 | B5 | G6 liberar | 0x550950 (60 bytes, lê ou grava), 0x527ee0, 0x527f20 | 0x550950: arquivo; liberações: efeito único, pela carreira (impressão do banco) e autoteste numa tabela de teste |
-| B5 | K1 chaves | 0x60d810 nações, 0x60efd0 competições, 0x6115e0 prêmios | `lado_a_lado`: região = as chaves 0x9cf178..0x9d0528 (~5 KB) + resposta. Cadeias geradas por script do exe (cada par é `push texto; push edi; call 0x951c50; …; mov [chave], esi`). Autoteste: cada nome da cadeia, maiúsculas e minúsculas, nomes ausentes. Carreira: 1.208× |
+| B5 | K1 chaves | 0x60d810 nações, 0x60efd0 competições, 0x6115e0 prêmios | `side_by_side`: região = as chaves 0x9cf178..0x9d0528 (~5 KB) + resposta. Cadeias geradas por script do exe (cada par é `push texto; push edi; call 0x951c50; …; mov [chave], esi`). Autoteste: cada nome da cadeia, maiúsculas e minúsculas, nomes ausentes. Carreira: 1.208× |
 | B6 | K2 chaves | 0x6146b0 clubes, 0x60ba80 remapear, 0x60d780 relatar | idem (13.640× cada na carreira); 0x60d780 só por autoteste com a caixa desviada |
-| B6 | T1 tabelas | 0x527f60 crescer histórico, 0x539ae0 podar, 0x53db40 ordenar | `lado_a_lado` com as tabelas e o vetor 0xae2d1c; `qsort` 0x945333 e `realloc` 0x945667 chamados do jogo (mesma ordem de iguais, mesmo endereço) |
-| B6 | T2 ordens | 0x540020, 0x540780, 0x5402f0 | `lado_a_lado` puro (dois ponteiros → −1/0/1) com autoteste exaustivo |
-| B7 | C1 criação | 0x541e60, 0x544970, 0x539750 | `lado_a_lado` de uma vez: região = o banco inteiro (ponteiros normalizados, abaixo) + fita de sorteios; carreira |
+| B6 | T1 tabelas | 0x527f60 crescer histórico, 0x539ae0 podar, 0x53db40 ordenar | `side_by_side` com as tabelas e o vetor 0xae2d1c; `qsort` 0x945333 e `realloc` 0x945667 chamados do jogo (mesma ordem de iguais, mesmo endereço) |
+| B6 | T2 ordens | 0x540020, 0x540780, 0x5402f0 | `side_by_side` puro (dois ponteiros → −1/0/1) com autoteste exaustivo |
+| B7 | C1 criação | 0x541e60, 0x544970, 0x539750 | `side_by_side` de uma vez: região = o banco inteiro (ponteiros normalizados, abaixo) + fita de sorteios; carreira |
 | B7 | C2 cortes | 0x524d70 (6,7 KB, SEH), 0x5267c0, 0x527240 | idem; risco de `realloc` e `rand` direto (§5) |
-| B7 | C3 vetores | 0x53a610, 0x53aa10, 0x53a8b0 | `lado_a_lado`: registro + vetor de saída (189 bytes); autoteste com registros reais |
+| B7 | C3 vetores | 0x53a610, 0x53aa10, 0x53a8b0 | `side_by_side`: registro + vetor de saída (189 bytes); autoteste com registros reais |
 | B8 | C4 normalizar | 0x53a980, 0x538bc0, 0x539490 | idem |
 | B8 | C5 inicialização | 0x538ec0, 0x535a80 (12,6 KB) | 0x538ec0: lado a lado; 0x535a80: orquestrador de uma vez, banco inteiro + fita (milhares de sorteios); carreira |
-| B8 | N1 nomes | 0x539b90, 0x539c60, 0x53a0e0 | `lado_a_lado` + fita (sorteiam); autoteste por nação |
+| B8 | N1 nomes | 0x539b90, 0x539c60, 0x53a0e0 | `side_by_side` + fita (sorteiam); autoteste por nação |
 | B9 | N2 nomes | 0x53a1b0, 0x5335f0, 0x53ab90 | idem |
 | B9 | C6 jogadores falsos | 0x532e00, 0x533080 (SEH), 0x533710 | banco inteiro + fita; só com "Use Real Players: No" (a conferir se o `auto_setup.cfg` tem a opção; senão `quick_start.cfg` montado pelo `save_grande.py`) |
 | B9 | I1 idioma | 0x535930, 0x544fc0, 0x544f30 | autoteste com cada `.lng` numa cópia de `CM3_TEMP`; compara tabelas em inglês e respostas |
-| B10 | I2, I3 nomes em inglês | 0x5453f0, 0x5454c0, 0x5455a0; 0x5456a0, 0x545770, 0x545880 | `lado_a_lado` com os nomes traduzidos carregados (idioma ≠ 0 numa pasta de preferências isolada, `CM3_PREFS`) |
+| B10 | I2, I3 nomes em inglês | 0x5453f0, 0x5454c0, 0x5455a0; 0x5456a0, 0x545770, 0x545880 | `side_by_side` com os nomes traduzidos carregados (idioma ≠ 0 numa pasta de preferências isolada, `CM3_PREFS`) |
 | B10 | I4 | 0x545990, 0x5339a0 (8 KB, SEH) | idem; 0x5339a0 = tabelas inteiras antes e depois |
 | B11 | O1 orquestradores | 0x5315a0 resolver, 0x601a40 chaves, 0x528080 liberar tudo | resolver: banco inteiro de uma vez (ids antes, ponteiros normalizados depois); chaves: as globais; liberar: carreira |
 | B11 | O2 carga | 0x528540, 0x524d50, 0x524d10 | **carga** (novo): na criação, a original carrega e tira a foto normalizada (tabelas, contagens 0xae2340..0xae2408, chaves, `index` em 0xae1a80, sorteios); a Rust carrega por cima (a carga começa liberando tudo) e tira a mesma foto; carreira com a impressão do banco no 1º dia |
@@ -248,7 +248,7 @@ Tipo novo de item (**banco**), ao lado de telas, simulação e save. 33 itens (�
 |---|---|---|
 | Efeito único | `load_database` (libera tudo, copia `.lng`, apaga `duff.out`), cortes (`realloc` no lugar), `database_free_*`, `save_database`, `database_player_initialisation` | comparar com foto de uma vez; o resto pela carreira |
 | Alocação e endereço | bloco único `GlobalAlloc` no modo compartilhado; `realloc` com `assert` de mesmo endereço (Database.cpp linhas 0x18e..0x191; a conferir como isso convive com o bloco compartilhado) | chamar as rotinas de alocação do jogo, mesma ordem e tamanho |
-| Sorteios | passe das pessoas (nação sorteada, nome comum sorteado: não disparam na base de fábrica), cortes (0x90cfc0 e `rand` 0x946a04 direto), criação de pessoal, inicialização, nomes, jogadores falsos | fita de sorteios; `aleatorio.rs` já chama o `rand` da CRT |
+| Sorteios | passe das pessoas (nação sorteada, nome comum sorteado: não disparam na base de fábrica), cortes (0x90cfc0 e `rand` 0x946a04 direto), criação de pessoal, inicialização, nomes, jogadores falsos | fita de sorteios; `rng.rs` já chama o `rand` da CRT |
 | `qsort` da CRT | 0x539ae0, 0x53db40, 0x541e60, `prune` (0x945333) | instável: a Rust chama o mesmo `qsort` com o comparador portado |
 | Caixas de erro | versão inválida nos leitores, `resolve` (pessoa → jogador/preferências/não jogador fora da faixa), chave ausente, `assert` de ponteiro nulo em quase todas as consultas | autoteste nunca nos caminhos de erro |
 | Lixo de pilha | quadros grandes: `load_database` (0x7d0), `save_database` (0xa10), `resolve` (0x604), `create_game` (0xb58), `database_player_initialisation` | sonda de zeragem (`ZERADAS`) antes de comparar; o byte extra do `index.dat` é zerado na entrada (0x528556) |

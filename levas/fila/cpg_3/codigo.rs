@@ -54,16 +54,16 @@ unsafe extern "thiscall" fn get_match_condition(this: usize, jogador: usize, em_
 
 unsafe extern "thiscall" fn comparar_discipline_operator(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this, origem), || discipline_operator(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("discipline_operator {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this, origem), || discipline_operator(this, origem));
+    PLACAR.record(igual && r == n, || format!("discipline_operator {:x?} x {:x?}", mo, mr));
     r
 }
 
 /// Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
 unsafe extern "thiscall" fn comparar_set_default_wage(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 4)], || o(this, pessoa), || set_default_wage(this, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("set_default_wage({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0xc, 4)], || o(this, pessoa), || set_default_wage(this, pessoa));
+    PLACAR.record(igual && r == n, || format!("set_default_wage({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 

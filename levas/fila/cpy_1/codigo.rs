@@ -47,11 +47,11 @@ unsafe extern "thiscall" fn count_slots_with_bids(this: usize, clube: usize, pos
             continue;
         }
         if (cpy1_d(v + 0x17) as i32) <= -1 {
-            crate::comparacao::ramo("cpy_1 alvo sem lance");
+            crate::comparison::branch("cpy_1 alvo sem lance");
             continue; // cpy1: alvo sem lance não conta
         }
         if posicao as u8 != 0xff && cpy1_b(v) != posicao as u8 {
-            crate::comparacao::ramo("cpy_1 outra posicao");
+            crate::comparison::branch("cpy_1 outra posicao");
             continue; // cpy1: lance de outra posição não conta
         }
         if cpy1_b(entrada + 4) == 2 && humano(clube, 1, 1, 0, 0) != 0 {
@@ -65,14 +65,14 @@ unsafe extern "thiscall" fn count_slots_with_bids(this: usize, clube: usize, pos
             if velho {
                 let alvo = cpy1_d(0xae23bc).wrapping_add(cpy1_d(v + 0xf).wrapping_mul(0x6e));
                 if ofertas(cpy1_d(0xde1f54), alvo, 0, 0) == 0 {
-                    crate::comparacao::ramo("cpy_1 lance vencido");
+                    crate::comparison::branch("cpy_1 lance vencido");
                     *((v + 0xf) as *mut i32) = -1; // cpy1: a vaga perde o alvo
                     *((v + 0x17) as *mut i32) = -1;
                     continue;
                 }
             }
         }
-        crate::comparacao::ramo("cpy_1 vaga com lance");
+        crate::comparison::branch("cpy_1 vaga com lance");
         n = n.wrapping_add(1); // cpy1: conta a vaga com lance
     }
     n
@@ -83,8 +83,8 @@ unsafe extern "thiscall" fn comparar_count_slots_with_bids(this: usize, clube: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%);
     let mut reg = SHORTLIST_MANAGER_DATE_STATICS.to_vec();
     reg.push((cpy1_d(cpy1_entrada(this, clube)), 40 * 0x25));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, posicao), || count_slots_with_bids(this, clube, posicao));
-    PLACAR.registrar(igual && r == n, || format!("count_slots_with_bids(clube {:x}, posicao {}) original={} rust={} {:x?} x {:x?}", clube, posicao as i8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, posicao), || count_slots_with_bids(this, clube, posicao));
+    PLACAR.record(igual && r == n, || format!("count_slots_with_bids(clube {:x}, posicao {}) original={} rust={} {:x?} x {:x?}", clube, posicao as i8, r, n, mo, mr));
     r
 }
 
@@ -105,8 +105,8 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_transfer_list(
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%);
     let c = contract_of_staff(pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || shortlist_manager_remove_from_transfer_list(pessoa));
-    PLACAR.registrar(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa), || shortlist_manager_remove_from_transfer_list(pessoa));
+    PLACAR.record(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -127,7 +127,7 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_remove_from_loan_list(pess
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%);
     let c = contract_of_staff(pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || shortlist_manager_remove_from_loan_list(pessoa));
-    PLACAR.registrar(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa), || shortlist_manager_remove_from_loan_list(pessoa));
+    PLACAR.record(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }

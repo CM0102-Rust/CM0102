@@ -3,7 +3,7 @@
 # de opinião (0x549dd0: aba de transferências do perfil da pessoa, staff_screens 0x87dd80). Simulação (SAVE = False),
 # rotinas só de tela. Sem SEH, sem sorteio; as locais de 0xc8 da 0x545e00 têm o primeiro byte zerado pela 0x616f20
 # antes de tudo. A 0x545dc0 escreve o vetor global 0xae2104 (14 bytes) e o idioma em [0xae232b]: comparação pela
-# memória (lado_a_lado_leve). As chamadas (0x945333, 0x545e00, 0x616f20) são pelo endereço do jogo.
+# memória (side_by_side_light). As chamadas (0x945333, 0x545e00, 0x616f20) são pelo endereço do jogo.
 SAVE = False
 ROTINAS = [('regioes_pelo_nome', 0x545dc0, [0xb0, 0x01, 0xb9, 0x04, 0x21, 0xae, 0x00]),
            ('ordem_das_regioes_pelo_nome', 0x545e00, [0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x90, 0x01, 0x00, 0x00]),

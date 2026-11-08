@@ -52,7 +52,7 @@ unsafe fn refresh_or_select_squad(this: usize, p: usize, clube: usize, reg: usiz
         return;
     }
     let escolher: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32) = core::mem::transmute(0x76c120usize);
-    crate::comparacao::ramo("cpx_13 elenco pedido");
+    crate::comparison::branch("cpx_13 elenco pedido");
     escolher(this, cpx13_d(clube + 0x53), tipo, 0xae2c90, p, 0); // cpx13: o elenco
 }
 
@@ -136,18 +136,18 @@ unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p: usize) {
 unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let regioes = [(cpx13_registro(this, cpx13_d(p + 0x1c)) + 0x32, 0x3a), (cpx13_registro(this, cpx13_d(p + 0x20)) + 0x32, 0x3a)];
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     o(this, p);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     SELECT_SQUADS_DRY_RUN = true;
     SELECT_SQUADS_REQUESTED_SQUAD = false;
-    crate::aleatorio::pausar_rastro(|| select_squads_for_fixture(this, p));
+    crate::rng::pause_trace(|| select_squads_for_fixture(this, p));
     SELECT_SQUADS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    mo.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    mo.write_back();
     if !SELECT_SQUADS_REQUESTED_SQUAD {
-        PLACAR.registrar(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
+        PLACAR.record(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
     }
 }
 
@@ -187,7 +187,7 @@ unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: us
             return;
         }
     }
-    crate::comparacao::ramo("cpx_13 noticia do convocado");
+    crate::comparison::branch("cpx_13 noticia do convocado");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x21, 0);
@@ -228,15 +228,15 @@ unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: us
 unsafe extern "stdcall" fn comparar_national_teams_post_player_called_up_news(jogador: usize, nacao: usize, vaga: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I1%%);
     let regioes = [(0xae1080usize, 4usize)];
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     CALLED_UP_NEWS_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| national_teams_post_player_called_up_news(jogador, nacao, vaga));
+    crate::rng::pause_trace(|| national_teams_post_player_called_up_news(jogador, nacao, vaga));
     CALLED_UP_NEWS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(jogador, nacao, vaga);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("national_teams_post_player_called_up_news({:x}, {:x}, {}) original={:x?} rust={:x?}", jogador, nacao, vaga, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(mo == mr, || format!("national_teams_post_player_called_up_news({:x}, {:x}, {}) original={:x?} rust={:x?}", jogador, nacao, vaga, mo, mr));
 }
 
 /// { 0x519690 } (thiscall, ret 0x14, Cup.cpp, quadro SEH sem destrutor): `Cup::add_team_result_news(clube, desfecho,
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn add_team_result_news(copa: usize, clube: usize, desf
     if r == -1 || p == 0 {
         return 0;
     }
-    crate::comparacao::ramo("cpx_13 noticia do desfecho");
+    crate::comparison::branch("cpx_13 noticia do desfecho");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x10, 0);

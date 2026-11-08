@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u3
         let l = tactic_stats_row(this, c);
         registro(jogo, c, pr);
         let m = |o: usize| (l + o) as *mut i16;
-        crate::comparacao::ramo("cpz_5 linha da tatica");
+        crate::comparison::branch("cpz_5 linha da tatica");
         *m(2) = (*m(2)).wrapping_add(1);
         let (pro, contra) = (reg[0x19] as i8, reg[0x1a] as i8);
         if pro > contra {
@@ -95,8 +95,8 @@ unsafe extern "thiscall" fn comparar_record_tactic_result(this: usize, jogo: usi
         return o(this, jogo);
     }
     let reg = [(tactic_stats_row(this, cpz5_d(jogo + 0x1c)), 0x28), (tactic_stats_row(this, cpz5_d(jogo + 0x20)), 0x28)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || record_tactic_result(this, jogo));
-    PLACAR.registrar(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo), || record_tactic_result(this, jogo));
+    PLACAR.record(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
     r
 }
 
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn comparar_get_captain(this: usize, clube: usize, time
     }
     let r = o(this, clube, time);
     let n = get_captain(this, clube, time);
-    PLACAR.registrar(r == n, || format!("get_captain(clube {:x}, time {}) original={:x} rust={:x}", clube, time, r, n));
+    PLACAR.record(r == n, || format!("get_captain(clube {:x}, time {}) original={:x} rust={:x}", clube, time, r, n));
     r
 }
 
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_set_captain(this: usize, clube: usize, pess
         return o(this, clube, pessoa, time);
     }
     let p = cpz5_d(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(p, 4)], || o(this, clube, pessoa, time), || set_captain(this, clube, pessoa, time));
-    PLACAR.registrar(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, time, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(p, 4)], || o(this, clube, pessoa, time), || set_captain(this, clube, pessoa, time));
+    PLACAR.record(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, time, r, n, mo, mr));
     r
 }

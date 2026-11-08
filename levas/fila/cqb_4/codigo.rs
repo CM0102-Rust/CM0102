@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
             if lg == 0 || cqb4_d(cqb4_d(0xadadfc) + (cqb4_i(lg) as usize).wrapping_mul(4)) == 0 {
                 continue;
             }
-            crate::comparacao::ramo("cqb_4 clube planejado");
+            crate::comparison::branch("cqb_4 clube planejado");
             let mut b = (cqb4_sortear(3) as u8).wrapping_add(1); // cqb4: o acréscimo da faixa
             if b == 3 && cqb4_sortear(4) == 0 {
                 b = 2;
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
                 // ponytail: a original empurra o dword do local da faixa (os bytes altos são sobra); a 0x5c4cb0 só lê o byte
                 let opp = adversario(this, cand, entradas, conta, band as u32, 0);
                 let marcado = if opp != 0 {
-                    crate::comparacao::ramo("cqb_4 adversario achado");
+                    crate::comparison::branch("cqb_4 adversario achado");
                     if cqb4_c(cand + 5) > cqb4_c(opp + 5) { // cqb4: o de faixa maior em casa
                         planejar(this, cand, opp, cand)
                     } else {
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize, entradas:
     }
     let ordem: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x778e90usize);
     let ordenado = (1..n.max(0) as usize).all(|i| ordem(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
-    PLACAR.registrar(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
+    PLACAR.record(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
 }
 
 /// O torneio livre: o primeiro dos 127 (0x69 bytes a partir de +0xb1) sem anfitrião (+0), ou 0.
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: usize, tipo: 
         }
         k += 1;
     }
-    crate::comparacao::ramo("cqb_4 torneio acrescentado");
+    crate::comparison::branch("cqb_4 torneio acrescentado");
     for k in 0..4usize {
         core::ptr::write_unaligned((t + 0x15 + 4 * k) as *mut u32, cqb4_d(convidados + 4 * k) as u32);
         *((t + 0x25 + k) as *mut u8) = 1;
@@ -222,8 +222,8 @@ unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usiz
         tam += 1;
     }
     let reg = if t != 0 { vec![(t, 0x69usize.max(0x31 + tam + 1))] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome), || add_tournament(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome));
-    PLACAR.registrar(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", anfitriao, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome), || add_tournament(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome));
+    PLACAR.record(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", anfitriao, r, mo, n, mr));
     r
 }
 
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn comparar_find_human_club_open_invitation(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let lista = cqb4_d(this + 0x34c8);
     let reg = if lista != 0 { vec![(lista + 0xa, 4)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || find_human_club_open_invitation(this));
-    PLACAR.registrar(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || find_human_club_open_invitation(this));
+    PLACAR.record(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
     r
 }

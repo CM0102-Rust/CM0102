@@ -42,7 +42,7 @@ unsafe fn set_up_rules(this: usize) -> u32 {
     construir(&mut data, 0xa, 2, cqs8_w(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
-    crate::comparacao::ramo("cqs_8 regras da eurocopa");
+    crate::comparison::branch("cqs_8 regras da eurocopa");
     let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(cqs8_d(cqs8_d(this) + 0x3c));
     let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
     core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(this: usize) -
     let reg = [(this + 0x3a, 0x80usize), (this + 0xbe, 0xb)];
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         to.set(cqs8_d(this + 0xba));
         core::ptr::write_unaligned((this + 0xba) as *mut u32, antes as u32);
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(this: usize) -
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && tabela, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    PLACAR.record(igual && a == b && tabela, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }
 
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn comparar_get_group_team_count(this: usize, g: u32) -
         return r; // ponytail: o formato desconhecido mostra a caixa: só a original
     }
     let n = group_team_count(this, g);
-    PLACAR.registrar(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
+    PLACAR.record(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
     r
 }
 
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn comparar_get_qualification_status(this: usize, clube
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i16>(%%I2%%);
     let r = o(this, clube);
     let n = qualification_status(this, clube);
-    PLACAR.registrar(r == n, || format!("get_qualification_status({:#x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("get_qualification_status({:#x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 {
     }
     let n = cqs8_w(this + 0x3e);
     core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_sub(1).wrapping_mul(cqs8_w(this + 0x3c))); // cqs8: as rodadas do grupo 1
-    crate::comparacao::ramo("cqs_8 grupo 1 da eurocopa");
+    crate::comparison::branch("cqs_8 grupo 1 da eurocopa");
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut i: i8 = 0;
     if n > 0 {
@@ -184,6 +184,6 @@ unsafe extern "thiscall" fn comparar_init_group_one_table(this: usize) -> u32 {
     let t = cqs8_d(this + 0xb1);
     let ok = r == 1 && cqs8_w(this + 0x3e) == n && cqs8_w(this + 0xa7) == (n - 1).wrapping_mul(cqs8_w(this + 0x3c)) && t != 0
         && plano.iter().enumerate().all(|(k, &c)| cqs8_d(t + k * 0x3b) == c);
-    PLACAR.registrar(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plano));
+    PLACAR.record(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plano));
     r
 }

@@ -10,7 +10,7 @@
 /// registro local nasce e morre pelos iteradores de vetor do runtime (0x9463af/0x9462bb) como na
 /// original. Devolve `this`.
 unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: usize, n: i32) -> usize {
-    crate::comparacao::ramo("estatisticas montar");
+    crate::comparison::branch("estatisticas montar");
     let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
     let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(0x9462bbusize);
     let units_digit: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: usize, n: i
 /// { 0x7293c0 } (thiscall, match_stats.cpp): o destrutor das estatísticas da partida: libera o índice
 /// ([this]) e zera o ponteiro e a quantidade (+4).
 unsafe extern "thiscall" fn destroy_match_stats(estat: usize) {
-    crate::comparacao::ramo("estatisticas desmontar");
+    crate::comparison::branch("estatisticas desmontar");
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let t = *(estat as *const usize);
     if t != 0 {

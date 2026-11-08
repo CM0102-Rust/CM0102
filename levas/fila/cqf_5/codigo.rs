@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn world_cup_create_group_table(this: usize, lista: usi
     while linha < 4 {
         let e = i as usize; // cqf5: a entrada da lista
         if cqf5_b(lista + e * 5 + 4) == 1 {
-            crate::comparacao::ramo("cqf_5 time do grupo um");
+            crate::comparison::branch("cqf_5 time do grupo um");
             let clube = draw_list_club(lista, e);
             linha_da_tabela(this, linha as u8 as u32, clube, 0, 0);
             linha += 1;
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn comparar_world_cup_create_group_table(this: usize, l
     if r == 1 {
         let t = cqf5_d(this + 0xb1);
         let ok = cqf5_w(this + 0x3e) == 4 && plano.iter().enumerate().all(|(k, &c)| cqf5_d(t + k * 0x3b) == c);
-        PLACAR.registrar(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plano));
+        PLACAR.record(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plano));
     }
     r
 }
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, li
     while n < 4 {
         let e = lista + i as usize * 5;
         if cqf5_b(e + 4) as i8 as i32 == g + 2 {
-            crate::comparacao::ramo("cqf_5 time do grupo");
+            crate::comparison::branch("cqf_5 time do grupo");
             cqf5_pd(times + n as usize * 4, draw_list_club(lista, i as usize)); // cqf5: o time na vaga do grupo
             n += 1;
         }
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(this: usize, g
                 b.sort_unstable();
                 a == b
             });
-        PLACAR.registrar(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plano));
+        PLACAR.record(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plano));
     }
     r
 }
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
     }
     let mut i = 0i16;
     while i < cqf5_w(this + 0x36) {
-        crate::comparacao::ramo("cqf_5 competição da nação");
+        crate::comparison::branch("cqf_5 competição da nação");
         competicao(cqf5_d(0xb74318), cqf5_d(cqf5_d(v + i as usize * 4) + 0x53), cqf5_d(this + 4));
         i += 1; // cqf5: a próxima nação
     }
@@ -256,5 +256,5 @@ unsafe extern "thiscall" fn comparar_world_cup_set_predicted_positions(this: usi
         let e = if v[k] != 0 { achar(cqf5_d(this + 8), v[k]) } else { 0 };
         e == 0 || cqf5_b(e + 0x72) != FAIXAS[k]
     });
-    PLACAR.registrar(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
+    PLACAR.record(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }

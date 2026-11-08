@@ -43,8 +43,15 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
     })
 }
 
-/// builds the red card ban: the matches or days from the offence code (9 to 12) and the body scale, today's date and
-/// the player; 0 when there is no ban
+/// Builds the red card ban: the matches or days from the offence code (9 to 12) and the body's scale, today's date and
+/// the player; 0 when there is no ban.
+///
+/// Ret 0xc: `RulingBody::make_points_ban(record, player, by_matches)`, from each country's bodies (rb_*.cpp, when
+/// processing a match's red card): the offence code (+0x2e with +0x2c = 0, +0x2f with +0x2c = 1; another type: 0)
+/// gives, through the body's scale (+6), the matches (by_matches ≠ 0; the days stay 0xffff) or the days (the matches
+/// stay 0xff) of the ban. In the record: +0 matches, +1 = 0, +2 days, +4 today's date (`[0xae2c90]`, 0x417c10), +0x10 =
+/// 3, +0x1c the player's id (+0), +0x6f = (+0x48 of the player == 0). Returns 1; with no ban, 0 without writing
+/// anything.
 /// Original: `RulingBody::make_points_ban` (0x7e8e10, ruling_body.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x7e8e10 } (thiscall, ret 0xc, ruling_body.cpp): `RulingBody::make_points_ban(registro, jogador, por_jogos)`, pelos
@@ -71,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
             None => return 0,
         }
     };
-    crate::comparacao::ramo("cpu_10 punicao");
+    crate::comparison::branch("cpu_10 punicao");
     *(r as *mut u8) = jogos; // cpu10: os jogos da suspensão
     *((r + 1) as *mut u8) = 0;
     *((r + 2) as *mut u16) = dias;
@@ -85,8 +92,16 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
 }
 
 
-/// at the new season, releases bans 2 (or 4) years old, frees the entries without a ban, clears the bookings of the
-/// others and compacts the table
+/// At the new season, releases bans 2 (or 4) years old, frees the entries without a ban, clears the bookings of the
+/// others and compacts the table.
+///
+/// Ret 0: `RulingBody::start_new_season()`: for each occupied disciplinary entry (14 bytes in `[this+0xb]`, count
+/// +0x13; id −1 is a free slot): with a ban (+6, signed index into the 20-byte discipline table `[[0xae28f0]+4]`) 2 or
+/// more years old (4 if the body has neither +0x17 nor +0x1b; the ban year in +6 against today's `[0xae2c92]`),
+/// releases the ban (0x556d00) and frees the entry; without a ban, frees the entry; otherwise zeroes the bookings (+4,
+/// +5, +8 and the low 6 bits of +0xd). Freeing: the player's stored slot in the body (0x55cb60 through slot +4) with
+/// the same +5 gets −1 in +6; without it, writes the slot (0x55cb20, type +5, −1); the entry's id becomes −1. At the
+/// end compacts the entries (0x7e9050, in this batch).
 /// Original: `RulingBody::start_new_season` (0x7e7ed0, ruling_body.cpp, thiscall).
 ///
 /// [pt] { 0x7e7ed0 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::start_new_season()`: para cada entrada disciplinar
@@ -100,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
     let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(FN_DISCIPLINE_FIND_HELD_BAN);
     let write: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(FN_DISCIPLINE_SET_SLOT);
     let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DISCIPLINE_RELEASE_BAN);
-    crate::comparacao::ramo("cpu_10 nova temporada");
+    crate::comparison::branch("cpu_10 nova temporada");
     let mut e = read_u32_as_usize(this + 0xb);
     let mut i = 0i32;
     while i < read_i32(this + 0x13) {
@@ -114,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
                 let years = if read_i32(this + 0x17) == -1 && read_i32(this + 0x1b) == -1 { 4 } else { 2 };
                 let year = *((ban + 6) as *const u16) as i32;
                 if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - year >= years {
-                    crate::comparacao::ramo("cpu_10 suspensao velha");
+                    crate::comparison::branch("cpu_10 suspensao velha");
                     // simplification: the original pushes the index with the high 16 bits of the previous edx; 0x556d00 reads only the word.
                     soltar(read_u32_as_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
                     true
@@ -149,8 +164,14 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
 // simplification: the copy carries the ”cpu_10 nova temporada” counter to prove in Rust mode; the compaction (compared) checks the end.
 
-/// removes the free entries from the body's discipline table, fixes the stored index of each moved player and
-/// reallocates with 100 spare rows
+/// Removes the free entries from the body's discipline table, fixes the stored index of each moved player and
+/// reallocates with 100 spare rows.
+///
+/// Ret 0: `RulingBody::compact_entries()`: removes the free entries (id −1) from the 14-byte table `[this+0xb]`,
+/// bringing the occupied ones to the front; each one that moves fixes the player's stored index (0x55cb60 through slot
+/// +4: with the same +5, the new index in +6; without it, 0x55cb20 with type +5 and the index). Count +0x13 = n,
+/// capacity +0xf = n + 100 and reallocates (0x945667) with (n + 100) × 14 bytes; out of memory, the box (line 0x594)
+/// and continues.
 /// Original: `RulingBody::compact_entries` (0x7e9050, ruling_body.cpp, thiscall).
 ///
 /// [pt] { 0x7e9050 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::compact_entries()`: tira as entradas livres (id −1)

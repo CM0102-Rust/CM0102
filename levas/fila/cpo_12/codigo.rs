@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn add_language(this: usize, pessoa: usize, idioma: u32
         }
         cpo12_por(this + 0x40, (cpo12_d(this + 0x40) as u32).wrapping_add(0x64));
     }
-    crate::comparacao::ramo("cpo_12 idioma novo");
+    crate::comparison::branch("cpo_12 idioma novo");
     let n = cpo12_d(this + 0x44);
     let r = cpo12_d(this + 0x3c).wrapping_add(n.wrapping_mul(6));
     cpo12_por(r, cpo12_d(pessoa) as u32);
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn add_language(this: usize, pessoa: usize, idioma: u32
     *((r + 5) as *mut u8) = if (f as i8) > 10 { 10 } else { f };
     cpo12_por(this + 0x44, (n as u32).wrapping_add(1));
     if ordenar != 0 {
-        crate::comparacao::ramo("cpo_12 idiomas ordenados");
+        crate::comparison::branch("cpo_12 idiomas ordenados");
         let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
         qsort(cpo12_d(this + 0x3c), cpo12_d(this + 0x44) as u32, 6, 0x7c6d40);
     }
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn improve_language(this: usize, pessoa: usize, idioma:
         acrescentar(this, pessoa, idioma, aumento, ordenar);
         return;
     }
-    crate::comparacao::ramo("cpo_12 idioma melhorado");
+    crate::comparison::branch("cpo_12 idioma melhorado");
     let f = (*((r + 5) as *const u8)).wrapping_add(aumento as u8);
     *((r + 5) as *mut u8) = f;
     if (f as i8) > 10 {
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn comparar_add_language(this: usize, pessoa: usize, id
     if ok {
         ok = if ordenar == 0 { e(n) == novo } else { (0..conta).any(|i| e(i) == novo) };
     }
-    PLACAR.registrar(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
+    PLACAR.record(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
         novo, ordenar, conta, n.wrapping_add(1), cpo12_d(this + 0x40), cap));
 }
 
@@ -140,9 +140,9 @@ unsafe extern "thiscall" fn comparar_improve_language(this: usize, pessoa: usize
     if r == 0 {
         return o(this, pessoa, idioma, aumento, ordenar);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 6)],
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 6)],
         || o(this, pessoa, idioma, aumento, ordenar), || improve_language(this, pessoa, idioma, aumento, ordenar));
-    PLACAR.registrar(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", cpo12_d(pessoa), idioma as u8, aumento as u8, mo, mr));
+    PLACAR.record(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", cpo12_d(pessoa), idioma as u8, aumento as u8, mo, mr));
 }
 
 /// Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: usize, pess
             reg.push((cpo12_d(this + 4).wrapping_add(i << 5) + 0xe, 2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || player_stats_reset_player(this, pessoa));
-    PLACAR.registrar(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", cpo12_d(pessoa), mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa), || player_stats_reset_player(this, pessoa));
+    PLACAR.record(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", cpo12_d(pessoa), mo, mr));
     a
 }

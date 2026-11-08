@@ -21,7 +21,7 @@ unsafe extern "C" fn database_compare_staff_by_surname(a: usize, b: usize) -> i3
 unsafe extern "C" fn comparar_database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = database_compare_staff_by_surname(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_staff_by_surname({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_staff_by_surname({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -47,7 +47,7 @@ unsafe extern "C" fn database_compare_clubs_by_reputation(a: usize, b: usize) ->
 unsafe extern "C" fn comparar_database_compare_clubs_by_reputation(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = database_compare_clubs_by_reputation(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("database_compare_clubs_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -62,6 +62,6 @@ unsafe extern "C" fn database_club_nation_is_eec(clube: usize) -> u32 {
 unsafe extern "C" fn comparar_database_club_nation_is_eec(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(clube);
     let n = database_club_nation_is_eec(clube);
-    PLACAR.registrar(r == n, || format!("database_club_nation_is_eec({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("database_club_nation_is_eec({:x}) original={} rust={}", clube, r, n));
     r
 }

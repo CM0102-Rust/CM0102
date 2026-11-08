@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprad
     if (cpm6_d(s + 0x36b) as i32) < cpm6_d(t + 0x36b) as i32 {
         let minimo = (cpm6_w(vendedor + 0x80) as i32 + 500).wrapping_mul(1000);
         if cpm6_d(t + 0x36b) as i32 >= minimo && ano != cpm6_w(s + 0x36f) && !is_record_news_queued(this, cpm6_d(vendedor), 0x1f) {
-            crate::comparacao::ramo("cpm_6 noticia de recorde recebido");
+            crate::comparison::branch("cpm_6 noticia de recorde recebido");
             noticia(this, cpm6_d(vendedor) as u32, 0x1f); // recorde de valor recebido
         }
         cpm6_por(s + 0x36b, cpm6_d(t + 0x36b));
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprad
         let minimo = (cpm6_w(comprador + 0x80) as i32 + 500).wrapping_mul(1000);
         // a original confere o mínimo com o recorde antigo (o ecx que ainda tem o de sempre)
         if cpm6_d(s + 0x365) as i32 >= minimo && !is_record_news_queued(this, cpm6_d(comprador), 0x1e) {
-            crate::comparacao::ramo("cpm_6 noticia de recorde pago");
+            crate::comparison::branch("cpm_6 noticia de recorde pago");
             noticia(this, cpm6_d(comprador) as u32, 0x1e); // recorde de valor pago
         }
         cpm6_por(s + 0x365, cpm6_d(t + 0x365));
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usiz
         let media = estatistica(reg, 0x11, 6.5);
         // fcomp com o −1.0 (double) e fcom com o float guardado: passa só com a média maior
         if *nota as f64 == read_f64_at(0x968948) || media > *nota as f64 {
-            crate::comparacao::ramo("cpm_6 recorde de nota da temporada");
+            crate::comparison::branch("cpm_6 recorde de nota da temporada");
             *nota = media as f32;
             *((r + 0x20d) as *mut u8) = jogou;
             referencia(p, r + 0x1f5);
@@ -182,8 +182,8 @@ unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, valor: i32
     let regs = [temporada(this, vendedor, 1), sempre(this, vendedor, 1), temporada(this, comprador, 1), sempre(this, comprador, 1)];
     let fila = cpm6_d(this + 0x24).wrapping_add(cpm6_d(this + 0x2c).wrapping_mul(6));
     let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + 0x2c, 4), (fila, 12)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, valor, comprador, vendedor), || add_transfer_totals(this, valor, comprador, vendedor));
-    PLACAR.registrar(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", valor, cpm6_d(comprador), cpm6_d(vendedor), mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, valor, comprador, vendedor), || add_transfer_totals(this, valor, comprador, vendedor));
+    PLACAR.record(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", valor, cpm6_d(comprador), cpm6_d(vendedor), mo, mr));
     r
 }
 
@@ -199,8 +199,8 @@ unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: us
     if reg == 0 {
         return o(this, jogador, clube, jogos, gols);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(reg + 0x247, 0x34)], || o(this, jogador, clube, jogos, gols), || club_records_update_career_records(this, jogador, clube, jogos, gols));
-    PLACAR.registrar(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", cpm6_d(jogador), cpm6_d(clube), jogos as i16, gols as i16, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(reg + 0x247, 0x34)], || o(this, jogador, clube, jogos, gols), || club_records_update_career_records(this, jogador, clube, jogos, gols));
+    PLACAR.record(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", cpm6_d(jogador), cpm6_d(clube), jogos as i16, gols as i16, mo, mr));
     r
 }
 
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn comparar_update_season_rating_record(this: usize, cl
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4528d0usize);
     let t = temporada(this, clube, 0);
     let reg: &[(usize, usize)] = if t == 0 { &[] } else { &[(t + 0x1f1, 0x1f)] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube), || update_season_rating_record(this, clube));
-    PLACAR.registrar(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", cpm6_d(clube), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, clube), || update_season_rating_record(this, clube));
+    PLACAR.record(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", cpm6_d(clube), r, n, mo, mr));
     r
 }

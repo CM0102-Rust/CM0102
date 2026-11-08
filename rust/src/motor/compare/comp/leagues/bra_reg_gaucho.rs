@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `bra_reg_gaucho_create_knockout_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GAUCHO_CREATE_KNOCKOUT_STAGE);
-    bra_reg_gaucho_compare_knockout_from_table("bra_reg_gaucho_create_knockout_stage", this, &[0, 3, 1, 2], || o(this))
+    bra_reg_pern_compare_knockout_from_table("bra_reg_gaucho_create_knockout_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
 /// Comparer for `bra_reg_gaucho_record_season_honours` (comparison mode: see the header of motor.rs).
@@ -39,16 +39,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_advance_stage(thi
 /// Comparer for `bra_reg_gaucho_load_region_clubs` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_LOAD_REGION_CLUBS);
-    bra_reg_bahia_compare_state_league_table("bra_reg_gaucho_load_region_clubs", this, 0x11, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, || o(this))
+    bra_reg_rio_compare_state_league_table("bra_reg_gaucho_load_region_clubs", this, 0x11, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// Comparador: como o do Centro-Oeste.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_SET_UP_RULES)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_SET_UP_RULES)(this), || {
         gaucho_rules(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("bra_reg_gaucho_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("bra_reg_gaucho_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

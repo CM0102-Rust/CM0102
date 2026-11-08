@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
             if *aperto > 10 {
                 *aperto -= 1;
             }
-            crate::comparacao::ramo("cpv_6 impulso na band 0");
+            crate::comparison::branch("cpv_6 impulso na band 0");
             let ok = run_weekly_event(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na faixa 0
             if !ok && run_weekly_event(0x59dd40, this, clube, fin) == 0 {
                 run_weekly_event(0x59e5a0, this, clube, fin);
@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fi
         }
         _ => return 0,
     };
-    crate::comparacao::ramo("cpv_6 sorteio da divida");
+    crate::comparison::branch("cpv_6 sorteio da divida");
     let r = cpv6_sortear(7000); // cpv6: o sorteio da dívida
     if rep >= r.wrapping_add(0xdac) {
         return 0;
@@ -351,22 +351,22 @@ unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fi
 /// grava (saldo, +0xb4, +0x154, +0x165), porque a notícia e a verba da original podem sortear e gravar.
 unsafe fn compare_finance_event(nome: &str, fin: usize, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
     let mut regioes = vec![(fin, 0x167)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     RARE_FINANCE_EVENT_DRY_RUN = true;
-    let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(copia));
+    let n = crate::rng::pause_trace(|| crate::rng::without_counting(copia));
     RARE_FINANCE_EVENT_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let igual = if r == 0 && n == 0 {
         mo == mr
     } else {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         r == n && a[..8] == b[..8] && a[0xb4..0xb8] == b[0xb4..0xb8] && a[0x154..0x158] == b[0x154..0x158] && a[0x165] == b[0x165]
     };
-    PLACAR.registrar(igual, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", nome, fin, r, mo, n, mr));
+    PLACAR.record(igual, || format!("{}(fin {:#x}) original={} {:x?} rust={} {:x?}", nome, fin, r, mo, n, mr));
     r
 }
 
@@ -398,7 +398,7 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
             }
         }
     }
-    crate::comparacao::ramo("cpv_6 injecao avaliada");
+    crate::comparison::branch("cpv_6 injecao avaliada");
     let div = match wealth_band(fin) {
         -2 => read_f64_at(0x9689e0),
         -1 => read_f64_at(0x967880),

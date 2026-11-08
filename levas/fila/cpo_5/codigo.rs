@@ -119,7 +119,7 @@ unsafe fn cpo5_dados_da_pessoa(gravar: unsafe extern "thiscall" fn(usize, i8, u3
 /// confiança nova e 0.
 unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
     let v = fan_confidence_change(clube, alvo);
-    crate::comparacao::ramo("cpo_5 goal_crowd_reaction");
+    crate::comparison::branch("cpo_5 goal_crowd_reaction");
     if clube != 0 {
         add_clamped_confidence(manager_manager_row(clube) + 8, v);
     }
@@ -177,14 +177,14 @@ unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize, clube: usi
 /// acima de 4.500.000 e reputação (+5 da ficha) acima de 140.
 unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
     let v = board_confidence_change(clube, alvo);
-    crate::comparacao::ramo("cpo_5 diretoria");
+    crate::comparison::branch("cpo_5 diretoria");
     if clube != 0 {
         add_clamped_confidence(manager_manager_row(clube) + 6, v);
     }
     if (-500..=500).contains(&v) {
         return;
     }
-    crate::comparacao::ramo("cpo_5 diretoria noticia");
+    crate::comparison::branch("cpo_5 diretoria noticia");
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -296,8 +296,8 @@ unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, 
 /// Comparador: pela memória da notícia (0xde bytes; a original usa só uma temporária na pilha) e pela devolução.
 unsafe extern "thiscall" fn comparar_construct_news_item(this: usize, tipo: u32, importante: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xde)], || o(this, tipo, importante), || construct_news_item(this, tipo, importante));
-    PLACAR.registrar(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0xde)], || o(this, tipo, importante), || construct_news_item(this, tipo, importante));
+    PLACAR.record(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
     r
 }
 
@@ -314,7 +314,7 @@ unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, cl
     let esperado = antes.wrapping_add(v).clamp(1, 10000);
     o(this, clube, sujeito, topico, alvo, variante);
     let depois = cpo5_w(manager_manager_row(clube) + 8);
-    PLACAR.registrar(depois == esperado, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i16, antes, v, esperado, depois));
+    PLACAR.record(depois == esperado, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i16, antes, v, esperado, depois));
 }
 
 /// Comparador: como o da torcida, pela confiança da diretoria nova.
@@ -329,5 +329,5 @@ unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: usize, clube:
     let esperado = antes.wrapping_add(v).clamp(1, 10000);
     o(this, clube, sujeito, topico, alvo, variante, sexto);
     let depois = cpo5_w(manager_manager_row(clube) + 6);
-    PLACAR.registrar(depois == esperado, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i32, antes, v, esperado, depois));
+    PLACAR.record(depois == esperado, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i32, antes, v, esperado, depois));
 }

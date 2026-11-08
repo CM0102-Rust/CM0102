@@ -23,6 +23,6 @@ comparar_valor!(comparar_league_record, league_record, %%I2%%, (i: i32) -> usize
 unsafe extern "stdcall" fn comparar_record_bits(p: *const i32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(*const i32) -> u8>(%%I0%%)(p);
     let n = record_bits(p);
-    PLACAR.registrar(r == n, || format!("record_bits({:p}) original={} rust={}", p, r, n));
+    PLACAR.record(r == n, || format!("record_bits({:p}) original={} rust={}", p, r, n));
     r
 }

@@ -14,13 +14,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, 
             regions.push((l, 0xe));
         }
     }
-    regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    regions.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regions,
         || o(this, clube, kind, nacao),
-        || crate::aleatorio::sem_contar(|| pick_random_pundit(this, clube, kind, nacao)),
+        || crate::rng::without_counting(|| pick_random_pundit(this, clube, kind, nacao)),
     );
-    PLACAR.registrar(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", clube, kind as i8, nacao, r, mo, n, mr));
+    PLACAR.record(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", clube, kind as i8, nacao, r, mo, n, mr));
     r
 }
 
@@ -39,6 +39,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, kin
             regions.push((l, 0xe));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, kind, id, name, mark), || get_pundit_name(this, kind, id, name, mark));
-    PLACAR.registrar(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", kind as i8, id as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, kind, id, name, mark), || get_pundit_name(this, kind, id, name, mark));
+    PLACAR.record(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", kind as i8, id as i16, mo, mr));
 }

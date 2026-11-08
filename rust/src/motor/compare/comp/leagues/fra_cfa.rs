@@ -9,11 +9,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule(this: us
     compare_cfa_schedule("fra_cfa_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_cfa_create_schedule(this, stage, r, e, l))
 }
 
-/// Comparer for `fra_cfa_create_schedule_64ef30` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule_64ef30(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CFA_CREATE_SCHEDULE_64EF30);
-    compare_c1_schedule("fra_cfa_create_schedule_64ef30", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_cfa_create_schedule_64ef30(this, stage, r, e, l))
-}
 
 /// Comparer for `fra_cfa_set_up_rules` (comparison mode: see the header of motor.rs).
 ///
@@ -26,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize
         && b(0xc5) == 4 && b(0xc6) == 1 && b(0xc7) == 2 && b(0x42) == 1 && b(0xbe) == 0 && b(0xbf) == 0 && b(0xc0) == 0 && b(0xc1) == 0
         && read_u32_as_usize(this + 0x1c) == read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_u32_as_usize(this + 0x20) == 0xffff_ffff
         && core::ptr::read_unaligned((this + 0xd9) as *const u16) == 0x43;
-    PLACAR.registrar(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this, r));
+    PLACAR.record(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this, r));
     r
 }
 
@@ -36,11 +31,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, y
     compare_construct_group_league("construct_fra_cfa", this, year, &FRA_CFA_CFA_LEAGUE, || o(this, year))
 }
 
-/// Comparer for `construct_fra_lower` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, year: u32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_LOWER);
-    compare_construct_group_league("construct_fra_lower", this, year, &FRENCH_LOWER_DIVISION, || o(this, year))
-}
 
 /// Comparer for `destroy_fra_cfa` (comparison mode: see the header of motor.rs).
 ///
@@ -49,10 +39,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_destroy_fra_cfa(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_FRA_CFA)(this)
 }
 
-/// Comparer for `destroy_fra_lower` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_destroy_fra_lower(this: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_FRA_LOWER)(this)
-}
 
 /// Comparer for `fra_cfa_create_group_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_group_table(this: usize, clubs: usize) -> u32 {
@@ -60,14 +46,4 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_group_table(this:
     compare_french_table("fra_cfa_create_group_table", this, clubs, 0x12, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], || o(this, clubs))
 }
 
-/// Comparer for `fra_cfa_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_table(this: usize, clubs: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FRA_CFA_CREATE_TABLE);
-    compare_french_table("fra_cfa_create_table", this, clubs, 0x14, &[KEY_CLUB_COMP_FRENCH_NATIONAL], || o(this, clubs))
-}
 
-/// Comparer for `fra_cfa_set_club_progress` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_FRA_CFA_SET_CLUB_PROGRESS);
-    compare_c1_club_progress("fra_cfa_set_club_progress", this, clube, || o(this, clube, stage, current, best, worst), || fra_cfa_set_club_progress(this, clube, stage, current, best, worst))
-}

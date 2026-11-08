@@ -78,7 +78,7 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *
         show_error_at(file, row);
         return 0;
     }
-    crate::comparacao::ramo(name);
+    crate::comparison::branch(name);
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         fra_cup_write_cup_round(t, i as u32, r, year);
@@ -87,32 +87,6 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *
 }
 
 
-/// Side-by-side comparer for single-stage cup round tables: outputs and written bytes must match; frees the copy's
-/// table.
-///
-/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
-/// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada).
-pub(crate) unsafe fn compare_single_stage_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32,
-    o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    if stage as u8 != 0xff {
-        // simplification: outside stage −1 neither of the two writes anything; the outputs may not even exist
-        let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
-        return a;
-    }
-    let (mut r2, mut e2) = (*rounds, *extra);
-    let mut s2 = if out.is_null() { 0 } else { *out };
-    let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if out.is_null() { core::ptr::null_mut() } else { &mut s2 }));
-    let outs = *rounds == r2 && *extra == e2 && (out.is_null() || *out == s2);
-    let table = if a != 0 && b != 0 { eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, r2) } else { a == 0 && b == 0 };
-    if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(b);
-    }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
-    a
-}
 
 /// A Copa da França (FraCup): nove rodadas de outubro a maio do ano seguinte, a partir da 6ª rodada nacional (código
 /// 0x3c); o clube da divisão mais baixa joga em casa (+0xb = 1) da 7ª rodada à semifinal.
@@ -155,17 +129,6 @@ pub(crate) const FRENCH_LEAGUE_CUP_ROUNDS: [FraCupCupRound; 7] = [
     cql11r((2, 3, 1, 6), (0x16, 3, 1, 5, 2, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0x16e360, 0)),
 ];
 
-/// rule: the French League Cup has 7 single-leg rounds: preliminary (code 0xe6, 16 teams) drawn 1/9, played 5/10; 1st
-/// round 15/10 and 16/11 (28 teams, 20 new); 2nd 26/11 and 8/1 (32 teams, 18 new); 3rd 14/1 and 29/1; quarter-finals
-/// 3/2 and 19/2; semi-final 4/3 and 1/4; final 2/4 and 22/4 at a neutral ground [inference: venue 4]; 300 thousand for
-/// winning each round and 1.5 million to the winner; category 4 up to the quarter-finals and 6 after
-/// Original: `FraLgeCup::create_round_table` (0x5bcc40, fra_lge_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x5bcc40 } (thiscall, ret 0x10, fra_lge_cup.cpp; a virtual +0x3c da Copa da Liga francesa): `FraLgeCup::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa2 sem memória.
-pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table_5bcc40(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    single_stage_round_table(this, stage, rounds, extra, out, &FRENCH_LEAGUE_CUP_ROUNDS, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
-}
 
 
 /// A Copa do Rei (SpaCup): sete rodadas de agosto a maio do ano seguinte; o clube da divisão mais baixa joga em casa e
@@ -268,7 +231,7 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
         read_u32_as_usize(c + 0x53) != 0 && national_team(c) == 0 && read_u32_as_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_u32_as_usize(KEY_NATION_FRANCE))
             && n < french_cup_amateur_limit(this)
     });
-    crate::comparacao::ramo("cqm_11 inscritos da copa da franca");
+    crate::comparison::branch("cqm_11 inscritos da copa da franca");
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: a Segunda francesa na Copa da França
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: a Primeira francesa na Copa da França
     ((n == read_i16(this + 0x3e) as i32) as i32, n)
@@ -328,25 +291,12 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
         }
         i = i.wrapping_add(1);
     }
-    crate::comparacao::ramo("cqm_11 inscritos da copa da liga francesa");
+    crate::comparison::branch("cqm_11 inscritos da copa da liga francesa");
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: a Segunda francesa na Copa da Liga
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: a Primeira francesa na Copa da Liga
     ((n == read_i16(this + 0x3e) as i32) as i32, n)
 }
 
-/// rule: the French League Cup takes 54 clubs, in this order (the first 16 in the preliminary round, the next 20 in the
-/// 1st round and the last 18 in the 2nd): those of division [0x9cf5d4] that did not come from [0x9cf5d8] (up to 16 in
-/// 2001 and 14 in other years), topped up to 16 with those of [0x9cf5d4] that came from [0x9cf5d8] (the promoted ones
-/// [inference]); the Second and the First Division; with an incomplete list it returns 0
-/// Original: `FraLgeCup::collect_entrants` (0x5bd160, fra_lge_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: entram na Copa da Liga francesa 54 clubes, nesta ordem (os 16 primeiros na preliminar, os 20 seguintes na 1ª
-/// rodada e os 18 últimos na 2ª): os da divisão [0x9cf5d4] que não vieram da [0x9cf5d8] (até 16 em 2001 e 14 nos outros
-/// anos), completados até 16 com os da [0x9cf5d4] que vieram da [0x9cf5d8] (os promovidos [inferência]); a Segunda e a
-/// Primeira; com a lista incompleta, devolve 0
-pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants_5bd160(this: usize) -> i32 {
-    french_league_cup_collect_entrants(this).0
-}
 
 
 
@@ -379,7 +329,7 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparacao::ramo("cqm_11 dobradinha francesa");
+        crate::comparison::branch("cqm_11 dobradinha francesa");
         let b = latest_placed_club(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, 1);
         core::ptr::write_unaligned((l + 6) as *mut u32, b as u32);
         if b == 0 {
@@ -387,7 +337,7 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: usize) -> (i32, i32) {
             return (0, 0);
         }
     }
-    crate::comparacao::ramo("cqm_11 clubes da supercopa francesa");
+    crate::comparison::branch("cqm_11 clubes da supercopa francesa");
     *((l + 4) as *mut u8) = 0;
     *((l + 5) as *mut u8) = 0;
     *((l + 0xa) as *mut u8) = 0;

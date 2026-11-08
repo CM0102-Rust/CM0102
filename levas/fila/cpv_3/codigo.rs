@@ -140,12 +140,12 @@ unsafe extern "thiscall" fn hold_offers_at_window_close(this: usize, nacao: usiz
             if humano(cpv3_d(0xb7431c), cpv3_clube(cpv3_d(o + 8))) != 0 || humano_vende() {
                 noticia_da_espera(this, o, nacao);
             } else {
-                crate::comparacao::ramo("cpv_3 retirada na janela");
+                crate::comparison::branch("cpv_3 retirada na janela");
                 // a vaga relida de [this] como na original
                 retirar(this, cpv3_d(this).wrapping_add((i - 1) * 4), 0, 0); // cpv3: o comprador retira
             }
             if human_club(cpv3_clube(cpv3_d(o + 8)), 0, 1, 0, 0) == 0 {
-                crate::comparacao::ramo("cpv_3 reagendada na janela");
+                crate::comparison::branch("cpv_3 reagendada na janela");
                 cpv3_pb(o + 0x2c, 3); // cpv3: status 3
                 agendar(this, o, 1, 0); // cpv3: de volta amanhã
             }
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn hold_offers_at_window_close(this: usize, nacao: usiz
         if humano(cpv3_d(0xb7431c), cpv3_clube(cpv3_d(o + 8))) != 0 || humano_vende() {
             noticia_da_espera(this, o, nacao);
         } else {
-            crate::comparacao::ramo("cpv_3 recusada na janela");
+            crate::comparison::branch("cpv_3 recusada na janela");
             recusar(this, cpv3_d(this).wrapping_add((i - 1) * 4), 0, 0); // cpv3: o vendedor recusa
         }
         if human_club(cpv3_clube(cpv3_d(o + 8)), 0, 1, 0, 0) == 0 {
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn post_fa_expectations_news(_this: usize, selecao: usi
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let por_alcance: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x786090usize);
-    crate::comparacao::ramo("cpv_3 noticia da federacao");
+    crate::comparison::branch("cpv_3 noticia da federacao");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x177e, 0);
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn post_supporter_protest_news(_this: usize, clube: usi
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let por_alcance: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x786090usize);
-    crate::comparacao::ramo("cpv_3 noticia do protesto");
+    crate::comparison::branch("cpv_3 noticia do protesto");
     let mut local = [0u32; 0x3a]; // a notícia local (0xe8 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x1782, 0);

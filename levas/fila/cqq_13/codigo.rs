@@ -33,7 +33,7 @@ unsafe fn cqq13_italia(this: usize, clube: usize, desfecho: u32, fase: u32, jogo
     let comp = cqq13_d(this + 4);
     if f < limit {
         if d == 6 {
-            crate::comparacao::ramo(nome);
+            crate::comparison::branch(nome);
             european_cup_add_qualified_record(clube, comp, 0, rodada_g, peso_g);
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(clube, comp, 0x41c, 0x28); // cqq13: não passou dos grupos
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn cqq13_copa_da_italia_registros(this: usize, clube: u
 // ponytail: os registros (histórico, reputação, moral) não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_copa_da_italia_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, desfecho, fase, a4, jogo, a6);
-    PLACAR.registrar(r == 0, || format!("cqq13_copa_da_italia_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
+    PLACAR.record(r == 0, || format!("cqq13_copa_da_italia_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }
 
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn cqq13_copa_c_registros(this: usize, clube: usize, de
 // ponytail: os registros não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_copa_c_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, desfecho, fase, a4, jogo, a6);
-    PLACAR.registrar(r == 0, || format!("cqq13_copa_c_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
+    PLACAR.record(r == 0, || format!("cqq13_copa_c_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }
 
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn cqq13_trofeu_registros(this: usize, clube: usize, de
     if f <= 0 {
         match d {
             0xff | 2 => {
-                crate::comparacao::ramo("cqq_13 eliminado no trofeu");
+                crate::comparison::branch("cqq_13 eliminado no trofeu");
                 let peso = scale_by_round(1, 0x50, cqq13_w(jogo + 0x34), 5); // cqq13: o peso da eliminação no LDV
                 european_cup_add_knocked_out_record(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, cqq13_w(jogo + 0x30) as u16 as u32, peso);
             }
@@ -122,6 +122,6 @@ unsafe extern "thiscall" fn cqq13_trofeu_registros(this: usize, clube: usize, de
 // ponytail: os registros não rodam duas vezes. Só a original; o plano: a devolução 0.
 unsafe extern "thiscall" fn comparar_cqq13_trofeu_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%)(this, clube, desfecho, fase, a4, jogo, a6);
-    PLACAR.registrar(r == 0, || format!("cqq13_trofeu_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
+    PLACAR.record(r == 0, || format!("cqq13_trofeu_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }

@@ -84,7 +84,7 @@ unsafe fn cqv6_copa_do_brasil_corpo(this: usize, ano: u32, dono: usize) -> usize
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqv_6 copa_do_brasil nova");
+    crate::comparison::branch("cqv_6 copa_do_brasil nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x427f00usize);
     f(this);
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x427c20usize);
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn cqv6_copa_do_brasil(this: usize, ano: u32, dono: usi
 unsafe extern "thiscall" fn comparar_cqv6_copa_do_brasil(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv6_plano(this, r, ano, dono, 0x967cf8, &CQV6_CAMPOS_COPA_DO_BRASIL, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqv6_copa_do_brasil({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqv6_copa_do_brasil({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -211,10 +211,10 @@ unsafe fn cqv6_selecao(this: usize) {
         k += 1;
     }
     if k == 0x47 {
-        crate::comparacao::ramo("cqv_6 os 71 nomes");
+        crate::comparison::branch("cqv_6 os 71 nomes");
         return;
     }
-    crate::comparacao::ramo("cqv_6 completar pelos estaduais");
+    crate::comparison::branch("cqv_6 completar pelos estaduais");
     // os contadores da original (bytes da pilha, zerados no começo): [0] a próxima vaga dos outros, [1..3] a conta de
     // cada grupo (0x3d, 0x42, 0x36), [4..0xf] a marca e a conta de cada estadual, [0x10] os da divisão [0x9cf9ec]
     let mut b = [0i8; 0x11];
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn comparar_cqv6_inscritos_da_copa_do_brasil(this: usiz
     let antes = cqv6_d(this + 0x14);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(this + 0x36, 4usize), (this + 0x4b, 1), (0xb67a34, 4)], || {
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(this + 0x36, 4usize), (this + 0x4b, 1), (0xb67a34, 4)], || {
         o(this);
         lo.set(cqv6_d(this + 0x14));
         cqv6_p32(this + 0x14, antes as u32);
@@ -302,5 +302,5 @@ unsafe extern "thiscall" fn comparar_cqv6_inscritos_da_copa_do_brasil(this: usiz
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && livro, || format!("cqv6_inscritos_da_copa_do_brasil({:#x}) memória {} livro {}", this, igual, livro));
+    PLACAR.record(igual && livro, || format!("cqv6_inscritos_da_copa_do_brasil({:#x}) memória {} livro {}", this, igual, livro));
 }

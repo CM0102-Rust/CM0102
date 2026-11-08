@@ -59,37 +59,6 @@ pub(crate) unsafe fn set_rounds_with_christmas(t: usize, year: u32, n: &SpaSecon
     spa_second_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
 
-/// Side-by-side comparer of create_schedule for every stage: outputs and written bytes (league rounds for -1, cup
-/// rounds otherwise) must match; frees the port's table.
-///
-/// [pt] Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
-pub(crate) unsafe fn spa_second_compare_schedule_all_stages(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
-                       original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
-    let reg = [(0xb67a34usize, 4usize)];
-    let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
-    let gravou = a != 0 || b != 0;
-    let outs = !gravou || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
-    let table = if a != 0 && b != 0 {
-        if stage as u8 == 0xff {
-            let n = *rounds as usize;
-            written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
-        } else {
-            eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, *rounds)
-        }
-    } else {
-        a == 0 && b == 0
-    };
-    if b != 0 {
-        soltar(b);
-    }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
-    a
-}
 
 /// a Segunda espanhola: as rodadas antes do Natal (ano par)
 pub(crate) const SEGUNDA_EVEN_YEAR_EARLY_ROUNDS: [SpaSecondScheduleRound; 17] = [
@@ -250,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
                 show_error_at(0xa828bc, 0xa9);
                 return 0;
             }
-            crate::comparacao::ramo("cqq_4 calendario da segunda espanhola");
+            crate::comparison::branch("cqq_4 calendario da segunda espanhola");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             if (year as i16) % 2 != 0 {
                 spa_second_set_league_rounds(t, year, 0, &SEGUNDA_ODD_ALL_ROUNDS);
@@ -274,8 +243,12 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u
 }
 
 
-/// La Segunda (22): the top 3 go up directly, the bottom 4 go down to Segunda B when it is loaded [inference from
-/// nation bit 4]; B teams cannot go up (marked by the table, 0x855b40)
+/// `SpaSecond::set_up_rules()`: La Segunda (22 clubs).
+///
+/// The common rules, 2 legs, 3 points, the 4th tie-breaker 3, 3 go up directly (+0xbe), no promotion play-off, 4 go
+/// down (+0xc1), the Primera above ([0x9cf624]) and Segunda B below ([0x9cf7b8]) when the nation has its lower
+/// divisions loaded (bit 4 of the nation's +0x11c [inference]), otherwise −1; +0x52 = 2. B teams cannot go up (marked
+/// by the table, 0x855b40).
 /// Original: `SpaSecond::set_up_rules` (0x855cc0, spa_second.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x855cc0 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::set_up_rules()`. A Segunda: as comuns, 2 turnos, 3
@@ -283,13 +256,19 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u
 /// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
 /// da nação [inferência]), senão −1; +0x52 = 2.
 pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_4 regras da segunda");
+    crate::comparison::branch("cqk_4 regras da segunda");
     spa_first_apply_league_rules(this, &segunda_rules(this))
 }
 
 
-/// the Segunda has 22 clubs (the competition's, in database order); the B team of a Primera club is marked as not
-/// promotable (fate −4); the prize fund starts from 50,000
+/// `SpaSecond::create_table()`: the Segunda has 22 clubs (+0x3e), those of the competition in database order.
+///
+/// The table (malloc 0x944e46 of 0x512: push; add esp, 4 -> cdecl; out of memory, the error box at line 0x298 and 0)
+/// receives, in database order ([0xae23b4], [0xae235c] clubs of 0x245 bytes), the clubs of the competition of id
+/// [0x9cf628] until it is full (League::init_table_row 0x687430: push 0; push 0; push club; push row (the pushed word
+/// has the row byte with stack garbage above it; 0x687430 reads only the byte); mov ecx, this -> thiscall, ret 0x10);
+/// the B team of a Primera club ([0x9cf624]) gets fate −4 (+0x37 = 0xfc: cannot go up). Full: the prize fund (+0x28 =
+/// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 and 1; otherwise 0.
 /// Original: `SpaSecond::create_table` (0x855b40, spa_second.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x855b40 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::create_table()`: a Segunda tem 22 clubes (+0x3e),
@@ -319,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             iniciar(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
-                crate::comparacao::ramo("cqm_6 time b na segunda");
+                crate::comparison::branch("cqm_6 time b na segunda");
                 *((read_u32_as_usize(this + league::TABLE) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
             k = k.wrapping_add(1);
@@ -329,7 +308,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
         }
         i = i.wrapping_add(1);
     }
-    crate::comparacao::ramo("cqm_6 tabela da segunda");
+    crate::comparison::branch("cqm_6 tabela da segunda");
     if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }

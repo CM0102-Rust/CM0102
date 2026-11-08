@@ -87,9 +87,16 @@ pub(crate) unsafe fn finalize_league_table(league: usize) {
 // original. The copy takes the branch.
 
 
-/// the prize money news to the club's human manager, only when the prize exceeds 50 × the club reputation: the
-/// competition, the amount, the position, the round, the kind and, with the fixture, the opponent and whether the club
-/// won
+/// Sends the prize money news to the club's human manager, only when the prize is at least 50 × the club reputation:
+/// the competition, the amount, the position, the round, the kind and, with the fixture, the opponent and whether the
+/// club won.
+///
+/// `Comp::send_prize_money_news(club, amount (i64), position, round, fixture, kind)`, ret 0x1c; SEH frame only for the
+/// local news item. To the club's human manager (0x7875e0), with an amount of at least 50 × the reputation (+0x80),
+/// news 0x1a (0x77bbe0): 0 the competition (`[this+4]`), 1 the amount, 2 the club, 3 the position, 4 the round, 7 the
+/// kind; with the fixture, 5 the opponent and 6 whether the club won (+0x3d/+0x3e the penalty shoot-out winner
+/// [inference], otherwise +0x4b/+0x4c, otherwise +0x43/+0x44 the score); without it, −1 and 0. Delivered to him
+/// (0x7861e0).
 /// Original: `Comp::send_prize_money_news` (0x48e3e0, comp.cpp, thiscall, ret 0x1c).
 ///
 /// [pt] { 0x48e3e0 } (thiscall, ret 0x1c, comp.cpp, `Comp::send_prize_money_news(clube, valor (i64), posição, rodada, partida,
@@ -106,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube:
     if value < minimum {
         return;
     }
-    crate::comparacao::ramo("cqp_1 noticia do premio");
+    crate::comparison::branch("cqp_1 noticia do premio");
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
@@ -138,7 +145,11 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube:
 
 // simplification: delivers the news (allocates); original only. The copy takes the branch.
 
-/// the TV rights news to the club's human manager: the club, the competition, the amount and the year
+/// Sends the TV rights news to the club's human manager: the club, the competition, the amount and the year.
+///
+/// `Comp::send_tv_rights_news(club, amount)`, ret 8; SEH frame only for the local news item. To the club's human
+/// manager (0x7875e0), news 0x1f (0x77bbe0): 0 the club, 1 the competition (`[this+4]`), 2 the amount, 3 the
+/// competition year (+0x40), delivered to him (0x7861e0).
 /// Original: `Comp::send_tv_rights_news` (0x48ea40, comp.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x48ea40 } (thiscall, ret 8, comp.cpp, `Comp::send_tv_rights_news(clube, valor)`; quadro SEH só pela notícia local):
@@ -148,7 +159,7 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: u
     if !club_has_human_manager(clube) {
         return;
     }
-    crate::comparacao::ramo("cqp_1 noticia da tv");
+    crate::comparison::branch("cqp_1 noticia da tv");
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
@@ -167,7 +178,11 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: u
 
 
 
-/// in the top competition, whether it and every one down the chain are complete
+/// In the top competition, tells whether it and every competition down the chain are complete.
+///
+/// Ret 0, method +0xc of the competitions: `Comp::all_stages_complete()`: only in the top competition (+0x1c ≤ −1), it
+/// and each one in the chain below (+0x20, the index into `[0xadadfc]`) must be complete (method +0x10 with 1, 1: push
+/// 1; push 1; mov ecx -> thiscall, ret 8); returns 1 or 0 (in al).
 /// Original: `Comp::all_stages_complete` (0x48ce10, comp.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x48ce10 } (thiscall, ret 0, comp.cpp, método +0xc das competições): `Comp::all_stages_complete()`: só na
@@ -190,14 +205,20 @@ pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
         if completa(c) == 0 {
             return 0;
         }
-        crate::comparacao::ramo("cqh_6 liga de baixo completa");
+        crate::comparison::branch("cqh_6 liga de baixo completa");
         i = read_u32_as_usize(c + 0x20) as i32; // cqh6: a liga de baixo
     }
     1
 }
 
 
-/// the vector of the distinct clubs of all stages (up to 200) and the count
+/// Builds the vector of the distinct clubs of all stages (up to 200) and returns the count.
+///
+/// Ret 8, method +0x58 of the competitions: `Comp::collect_club_list(&list, _)`: a vector of 200 pointers
+/// (0x944e46(0x320); out of memory: the box at line 0x681, a null list and 0) with the distinct clubs of all stages (−1
+/// the competition itself up to +0x30; the others in `[+0xc]`): in a league (+0x43 = 2) those of table +0xb1 (rows of
+/// 0x3b bytes), otherwise those of +0xa7 (6 bytes), skipping null and repeated ones, up to 200; stores the vector in
+/// `list` and returns the count (word, in ax).
 /// Original: `Comp::collect_club_list` (0x48e1c0, comp.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x48e1c0 } (thiscall, ret 8, comp.cpp, método +0x58 das competições): `Comp::collect_club_list(&lista, _)`: um
@@ -222,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
         while i < read_i16(f + 0x3e) {
             let clube = if league { read_u32_as_usize(read_u32_as_usize(f + 0xb1) + i as usize * 0x3b) } else { read_u32_as_usize(read_u32_as_usize(f + 0xa7) + i as usize * 6) };
             if clube != 0 && !(0..n).any(|k| read_u32_as_usize(v + k as usize * 4) == clube) && n < 0xc8 { // cqh6: até 200 clubes
-                crate::comparacao::ramo("cqh_6 clube na lista");
+                crate::comparison::branch("cqh_6 clube na lista");
                 core::ptr::write_unaligned((v + n as usize * 4) as *mut u32, clube as u32); // cqh6: o clube na lista
                 n += 1;
             }
@@ -234,7 +255,14 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
     n as u16
 }
 
-/// the stage id, the status and the round the club reached, from the last stage back
+/// Finds the stage id, the status and the round the club reached, searching from the last stage back.
+///
+/// Ret 0x10: `Comp::find_club_progress(club, &stage, &round, &status)`: over the stages from the last (+0x30) to the
+/// first (−1 the competition itself; the others in `[+0xc]`), skipping those with id 0x3fc: in a league (+0x43 = 2),
+/// the club's table row (0x6826d0 push i; mov ecx, stage -> thiscall, ret 4): stage = the id (+0x3a) and status = +0x37
+/// of the row, and returns; in a cup, the last team of table +0xa7 (6 bytes) that is the club gives stage = the id and
+/// status = +5, and the round is the first round (from +0xab − 1 backwards, +0xa3 with 0x68 bytes, the ties of +0xad
+/// with 0x35 bytes) with a tie in which the team plays (+0 or +2): round = +7 of the round, and returns.
 /// Original: `Comp::find_club_progress` (0x48cc70, comp.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x48cc70 } (thiscall, ret 0x10, comp.cpp): `Comp::find_club_progress(clube, &fase, &rodada, &situação)`: das
@@ -266,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, clube: us
                     let t = read_u32_as_usize(s + 0xa7) + k as usize * 6;
                     if read_u32_as_usize(t) == clube {
                         *stage_id = read_i16(s + 0x3a);
-                        crate::comparacao::ramo("cqh_6 progresso na copa");
+                        crate::comparison::branch("cqh_6 progresso na copa");
                         *status = read_u8(t + 5); // cqh6: a situação do time
                         team = k;
                     }
@@ -331,7 +359,11 @@ pub(crate) unsafe fn comp_stage(comp: usize, k: i32) -> usize {
     if k == -1 { comp } else { read_u32_as_usize(read_u32_as_usize(comp + 0xc) + k as usize * 4) }
 }
 
-/// from the given stage backwards, the index of the first stage of the same group
+/// From the given stage backwards, returns the index of the first stage of the same group.
+///
+/// Ret 4: `Comp::get_first_stage_of_group(k)`, used by the competition screens (0x4947a0): from stage `k` backwards,
+/// while the stages have the same group (0x4b01d0 of the id +0x3a: push id; add esp, 4 -> cdecl) and the index is
+/// greater than −1, the index of the first of them (k itself when it has no group).
 /// Original: `Comp::get_first_stage_of_group` (0x48d2b0, comp.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x48d2b0 } (thiscall, ret 4, comp.cpp): `Comp::get_first_stage_of_group(k)`, das telas das competições
@@ -357,8 +389,14 @@ pub(crate) unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: 
 }
 
 
-/// the first stage not finished (in a cup not yet started, the start of its group); all finished, the start of the last
-/// one's group
+/// Returns the first stage not finished (for a cup not yet started, the start of its group); with all finished, the
+/// start of the last one's group.
+///
+/// Ret 0: `Comp::get_current_stage()`, used by the competition screens (0x48f8e0): the first stage (−1 the competition
+/// itself, up to +0x30) that has not finished (method 0x10 with (0, 1) = 0); if it is a cup (+0x43 = 1) that has not
+/// started (+0xab = 0), goes back to the start of its group through the previous stage (0x4b01d0 and 0x48d200: push k;
+/// mov ecx, this -> thiscall, ret 4). All finished: the start of the last one's group. Invalid stage at the end: the
+/// box at line 0x36e and the competition itself; null stage: the competition itself.
 /// Original: `Comp::get_current_stage` (0x48cec0, comp.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x48cec0 } (thiscall, ret 0, comp.cpp): `Comp::get_current_stage()`, das telas das competições (0x48f8e0): a
@@ -432,7 +470,7 @@ pub(crate) unsafe fn find_key_nation_index(nacao: usize) -> Option<i8> {
     let mut k: i8 = 0;
     while k < 0x23 {
         let e = *(key_nation_entry(k) as *const usize);
-        if e != 0 && *((e + 0x11c) as *const u8) != 0 && e == nacao {
+        if e != 0 && *((e + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && e == nacao {
             return Some(k);
         }
         k += 1;
@@ -451,7 +489,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> 
     let nacao = core::ptr::read_unaligned((clube + club::NATION) as *const usize);
     if nacao != 0 {
         if let Some(k) = find_key_nation_index(nacao) {
-            crate::comparacao::ramo("cqb_12 nacao chave do clube");
+            crate::comparison::branch("cqb_12 nacao chave do clube");
             return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: o índice ativo da nação do clube
         }
     }
@@ -460,7 +498,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> 
     if national_team(clube) != 0 {
         return 0;
     }
-    crate::comparacao::ramo("cqb_12 clube sem nacao chave");
+    crate::comparison::branch("cqb_12 clube sem nacao chave");
     3 // cqb12: clube fora das nações-chave
 }
 
@@ -478,7 +516,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(estadio: usize
     }
     match find_key_nation_index(u(u(estadio + stadium::STADIUM_CITY) + 0x1f)) {
         Some(k) => {
-            crate::comparacao::ramo("cqb_12 nacao chave do estadio");
+            crate::comparison::branch("cqb_12 nacao chave do estadio");
             *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio
         }
         None => 3,
@@ -522,7 +560,7 @@ pub(crate) unsafe fn club_callup_record(this: usize, c: usize) -> Option<usize> 
     if id >= n || id < 0 {
         return None;
     }
-    let nacao = read_usize(c + 0x53);
+    let nacao = read_usize(c + club::NATION);
     if nacao == 0 || *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 || read_usize(nacao) == read_usize(KEY_NATION_BRAZIL) {
         return None;
     }
@@ -546,7 +584,7 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
     while k < how_many {
         let e = read_usize(rec).wrapping_add(9 * k as i32 as usize);
         if core::ptr::read_unaligned((e + 2) as *const u16) == ano && core::ptr::read_unaligned(e as *const u16) == dia {
-            crate::comparacao::ramo("cpw_13 soma na data");
+            crate::comparison::branch("cpw_13 soma na data");
             *((e + 8) as *mut u8) = (*((e + 8) as *const u8)).wrapping_add(count); // cpw13: soma na data
             return true;
         }
@@ -569,7 +607,7 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
     let e = read_usize(rec).wrapping_add(9 * q as usize);
     let mut t = [0u8; 8];
     copy(e, t.as_mut_ptr(), d);
-    crate::comparacao::ramo("cpw_13 registro novo");
+    crate::comparison::branch("cpw_13 registro novo");
     *((e + 8) as *mut u8) = count; // cpw13: a conta do registro novo
     let q = (*((rec + 5) as *const i8)).wrapping_add(1);
     *((rec + 5) as *mut i8) = q;
@@ -584,11 +622,11 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
 /// vetor)? Então ela pode realocar.
 pub(crate) unsafe fn callup_array_full(this: usize, team: usize) -> bool {
     (0..0x32usize).any(|i| {
-        let s = read_usize(team + 0xd7 + 4 * i);
-        if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 || read_usize(s + 0x39) == 0 {
+        let s = read_usize(team + club::SQUAD + 4 * i);
+        if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 || read_usize(s + staff::CLUB_JOB) == 0 {
             return false;
         }
-        match club_callup_record(this, read_usize(s + 0x39)) {
+        match club_callup_record(this, read_usize(s + staff::CLUB_JOB)) {
             Some(rec) => *((rec + 4) as *const i8) == *((rec + 5) as *const i8),
             None => false,
         }
@@ -625,8 +663,18 @@ pub(crate) unsafe extern "thiscall" fn get_stage(this: usize, k: i32) -> usize {
 }
 
 
-/// the active key of the key nation that owns the fixture: by the competition nation, by the nations of the friendly
-/// clubs, 0 for the World Cup, 1 for national side tournaments
+/// Returns the active key of the key nation that owns the fixture: by the competition's nation, by the nations of the
+/// clubs in a friendly, 0 for the World Cup, 1 for national side tournaments.
+///
+/// `comp_active_key_nation_of_fixture(competition, fixture)`, the key of the FIXTURE_MANAGER match lists (add_fixture
+/// 0x5aa680, find_fixtures 0x5acbe0, ...), of the quick simulation (0x6b66a0) and of the FIFA ranking weight
+/// (0x58cf70). Friendly (0x5c6710 over `[0xae2c74]`) or reserves (`[0x9cf684]`) with the given fixture and its
+/// competition being the friendly one (`[0xae2c74]`+4) or the reserves one: with either side a national side (0x53b900
+/// of the clubs +0x1c/+0x20), 1; different nations (+0x53) or outside the selection (+0x11c), 3; the nation in the
+/// table of the 35 key nations (0xb63d60, 72 bytes each, selected in +0x11c), byte +0x14 of the row; otherwise 0 with
+/// the home side a national side and 3 without. Otherwise, a nation's competition (+0x5d): byte +0x14 of its row, or 3.
+/// Without a nation: World Cup and qualifiers (0x669a10), 0; international tournament (0x669ae0), 1; otherwise the key
+/// nation index (0x669470). TapeCall on every fixture searched: no counter.
 /// Original: `comp_active_key_nation_of_fixture` (0x48dd70, comp.cpp, cdecl).
 ///
 /// [pt] { 0x48dd70 } (cdecl, comp.cpp): `comp_active_key_nation_of_fixture(competição, partida)`, a chave das listas de jogos
@@ -642,7 +690,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let row = |nacao: usize| (0..0x23usize).find(|&k| {
         let n = read_usize(G_LEAGUE_TABLE + 72 * k);
-        n != 0 && *((n + 0x11c) as *const u8) != 0 && n == nacao
+        n != 0 && *((n + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && n == nacao
     });
     let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
@@ -653,8 +701,8 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
                 return 1;
             }
             let home = read_usize(partida + 0x1c);
-            let a = read_usize(home + 0x53);
-            if a != read_usize(read_usize(partida + 0x20) + 0x53) || *((a + 0x11c) as *const u8) == 0 {
+            let a = read_usize(home + club::NATION);
+            if a != read_usize(read_usize(partida + 0x20) + 0x53) || *((a + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
                 return 3;
             }
             if let Some(k) = row(a) {
@@ -682,7 +730,13 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
 }
 
 
-/// the stage is a league, or the round is before the current one, or is the current last round with code 0x8c
+/// Tells whether a round's fixtures are known: the stage is a league, or the round is before the current one, or it is
+/// the current last round with code 0x8c.
+///
+/// Ret 8: `Comp::are_round_fixtures_known(stage, round)`: the stage (−1 = the competition itself; above +0x30: 0; below
+/// −1: the box at line 0x36e, as in the original) is a league (+0x43 = 2): 1. Otherwise 1 if the round is before the
+/// current one (+0xab, byte) or is the current one, the last (+0x3c − 1) and with code 0x8c (+7 of its 0x68-byte record
+/// in +0xa3); otherwise 0.
 /// Original: `Comp::are_round_fixtures_known` (0x48d410, comp.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x48d410 } (thiscall, ret 8, comp.cpp): `Comp::are_round_fixtures_known(fase, rodada)`: a fase (−1 = a própria
@@ -716,7 +770,11 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, sta
 }
 
 
-/// 1 when the match round (+0x30) ends in 0 or is above 999, else 0
+/// Returns 1 when the match round (+0x30) ends in 0 or is 1000 or above, else 0.
+///
+/// Ret 8: `Comp::counts_for_fixture_clash(match, other)` (virtual +0x60 of the competitions, used by the date clash
+/// check 0x5adba0): 1 if the units digit (0x4b0850) of the round (+0x30, signed) is 0 (a round of 1000 or more also
+/// gives 0), otherwise 0. `other` is not read.
 /// Original: `Comp::counts_for_fixture_clash` (0x48e360, comp.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das

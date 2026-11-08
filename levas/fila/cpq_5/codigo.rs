@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn transfer_manager_get_offer_completion_date(this: usi
     let vendedor = offer_seller_club(oferta);
     match cpq5_b(oferta + 0x30) & 0xf {
         0 => {
-            crate::comparacao::ramo("cpq_5 conclusao imediata");
+            crate::comparison::branch("cpq_5 conclusao imediata");
             copia(saida, &mut t, hoje); // tipo 0: hoje
         }
         5 => {
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn find_next_allowed_transfer_date(this: usize, oferta:
     }
     let regra_c = nation_transfer_rules_or_zero(this, cpq5_d(comprador + 0x53));
     let regra_v = if vendedor != 0 && cpq5_d(oferta + 4) != 0 { nation_transfer_rules_or_zero(this, cpq5_d(vendedor + 0x53)) } else { 0 };
-    crate::comparacao::ramo("cpq_5 dia permitido");
+    crate::comparison::branch("cpq_5 dia permitido");
     copia(&mut dia, &mut t, &inicio); // o primeiro dia testado é o início
     while date_pair_before(&dia, &limit) {
         let mut ve_vendedor = true;
@@ -230,7 +230,7 @@ unsafe extern "stdcall" fn transfer_manager_get_next_window_dates(inicio: *mut [
             copia(fim, &mut t, &d);
         }
     } else if h < dia(&a) {
-        crate::comparacao::ramo("cpq_5 janela de julho");
+        crate::comparison::branch("cpq_5 janela de julho");
         copia(inicio, &mut t, &a);
         if !fim.is_null() {
             copia(fim, &mut t, &b);
@@ -257,8 +257,8 @@ fn date_comparer_regions(saidas: &[usize]) -> Vec<(usize, usize)> {
 unsafe extern "thiscall" fn comparar_transfer_manager_get_offer_completion_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut [u32; 2]) -> u16>(%%I0%%);
     let reg = date_comparer_regions(&[saida as usize]);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, oferta, saida), || transfer_manager_get_offer_completion_date(this, oferta, saida));
-    PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_get_offer_completion_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
+    let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, oferta, saida), || transfer_manager_get_offer_completion_date(this, oferta, saida));
+    PLACAR.record(igual && ro == rr, || format!("transfer_manager_get_offer_completion_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
     ro
 }
 
@@ -266,8 +266,8 @@ unsafe extern "thiscall" fn comparar_transfer_manager_get_offer_completion_date(
 unsafe extern "thiscall" fn comparar_find_next_allowed_transfer_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut [u32; 2]) -> u16>(%%I1%%);
     let reg = date_comparer_regions(&[saida as usize]);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, oferta, saida), || find_next_allowed_transfer_date(this, oferta, saida));
-    PLACAR.registrar(igual && ro == rr, || format!("find_next_allowed_transfer_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
+    let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, oferta, saida), || find_next_allowed_transfer_date(this, oferta, saida));
+    PLACAR.record(igual && ro == rr, || format!("find_next_allowed_transfer_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
     ro
 }
 
@@ -275,6 +275,6 @@ unsafe extern "thiscall" fn comparar_find_next_allowed_transfer_date(this: usize
 unsafe extern "stdcall" fn comparar_transfer_manager_get_next_window_dates(inicio: *mut [u32; 2], fim: *mut [u32; 2]) {
     let o = original_fn::<unsafe extern "stdcall" fn(*mut [u32; 2], *mut [u32; 2])>(%%I2%%);
     let reg = date_comparer_regions(&[inicio as usize, fim as usize]);
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(inicio, fim), || transfer_manager_get_next_window_dates(inicio, fim));
-    PLACAR.registrar(igual, || format!("transfer_manager_get_next_window_dates(hoje {:x}, fim {}) diferente", *(TODAY as *const u32), !fim.is_null()));
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(inicio, fim), || transfer_manager_get_next_window_dates(inicio, fim));
+    PLACAR.record(igual, || format!("transfer_manager_get_next_window_dates(hoje {:x}, fim {}) diferente", *(TODAY as *const u32), !fim.is_null()));
 }

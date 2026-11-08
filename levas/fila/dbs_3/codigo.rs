@@ -289,30 +289,30 @@ unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize
 /// seguintes saem diferentes. Então, divergindo, refaz uma vez a comparação a partir do mesmo estado (agora quente, a
 /// original sem contar) e devolve o estado do sorteio da primeira, a que o jogo segue.
 unsafe fn compare_with_rng_retry(o: impl Fn() -> u32, n: impl Fn() -> u32) -> (u32, u32, bool, String) {
-    let antes = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, x, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(),
-        || crate::aleatorio::sem_contar(|| n()));
+    let antes = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    let (r, x, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(),
+        || crate::rng::without_counting(|| n()));
     if igual && r == x {
         return (r, x, true, String::new());
     }
-    let depois = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    antes.escrever();
-    let (r2, x2, igual2, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || crate::aleatorio::sem_contar(|| o()),
-        || crate::aleatorio::sem_contar(|| n()));
-    depois.escrever();
+    let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    antes.write_back();
+    let (r2, x2, igual2, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || crate::rng::without_counting(|| o()),
+        || crate::rng::without_counting(|| n()));
+    depois.write_back();
     (r, x, igual2 && r2 == x2, format!("1a {:x} x {:x}; 2a {:x} x {:x} {:x?} x {:x?}", r, x, r2, x2, mo, mr))
 }
 
 unsafe extern "C" fn comparar_staff_get_player_strength_flags(pessoa: usize, outro: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, _, igual, d) = compare_with_rng_retry(|| o(pessoa, outro), || staff_get_player_strength_flags(pessoa, outro));
-    PLACAR.registrar(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", pessoa, outro, d));
+    PLACAR.record(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", pessoa, outro, d));
     r
 }
 
 unsafe extern "C" fn comparar_staff_get_player_weakness_flags(pessoa: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
     let (r, _, igual, d) = compare_with_rng_retry(|| o(pessoa, clube), || staff_get_player_weakness_flags(pessoa, clube));
-    PLACAR.registrar(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", pessoa, clube, d));
+    PLACAR.record(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", pessoa, clube, d));
     r
 }

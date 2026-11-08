@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
                 semear((cpy12_d(j) as u32).wrapping_add(1).wrapping_mul((cpy12_d(f) as u32).wrapping_add(1)));
                 semeou = true;
                 BOARD_VETO_SEEDED_RAND = true;
-                crate::comparacao::ramo("cpy_12 fisioterapeuta avalia");
+                crate::comparison::branch("cpy_12 fisioterapeuta avalia");
                 let np = cpy12_d(f + 0x69);
                 // a original empurra o registrador inteiro com o byte +0x1e no baixo; a 0x544410 só lê o byte
                 let n = || nota(np, cpy12_b(np + 0x1e) as u32) as i32;
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
         }
         let (p, v) = (pedido as f64, valor as f64);
         let mais = cpy12_b(c + 0x3d) as i8;
-        crate::comparacao::ramo("cpy_12 diretoria vendendo");
+        crate::comparison::branch("cpy_12 diretoria vendendo");
         if p > v + v && mais > 0x19 {
             add_board_confidence(this, clube, 6, -0x4e2);
             add_board_confidence(this, clube, 0x14, -0x4e2);
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     let verba: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> i64 = core::mem::transmute(0x598800usize);
     let orcamento = verba(financas(cpy12_d(0xae2a38), clube), j, 0, 0, 1, 0);
     if valor as i64 > orcamento.wrapping_mul(12) / 10 { // cpy12: a verba da diretoria
-        crate::comparacao::ramo("cpy_12 diretoria sem verba");
+        crate::comparison::branch("cpy_12 diretoria sem verba");
         return 0x800;
     }
     if valor <= limit {
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     if !(valor as f64 * read_f64_at(0x96d1e8) > teto as f64) {
         return 0;
     }
-    crate::comparacao::ramo("cpy_12 diretoria acha caro");
+    crate::comparison::branch("cpy_12 diretoria acha caro");
     add_board_confidence(this, clube, 6, -0xfa);
     add_board_confidence(this, clube, 0x14, -500);
     add_board_confidence(this, clube, 0x16, -500);
@@ -236,11 +236,11 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
 unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: usize, j: usize, clube: usize, valor: i32, comprando: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32) -> u32>(%%I0%%);
     let regioes = [(cpy12_diretoria(this, clube), 0x49), (0xae1080, 4), (0xde1f5c, 8), (0xad6c30, 4)];
-    let (r, n, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, j, clube, valor, comprando),
-        || crate::aleatorio::sem_contar(|| check_board_transfer_veto(this, j, clube, valor, comprando)));
+    let (r, n, _, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, j, clube, valor, comprando),
+        || crate::rng::without_counting(|| check_board_transfer_veto(this, j, clube, valor, comprando)));
     let partes = if BOARD_VETO_SEEDED_RAND { 3 } else { 4 };
     let igual = (0..partes).all(|i| mo.0[i] == mr.0[i]);
-    PLACAR.registrar(igual && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, valor, comprando as u8, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, valor, comprando as u8, r, n, mo, mr));
     r
 }
 
@@ -270,7 +270,7 @@ unsafe extern "thiscall" fn post_board_ultimatum_news(_this: usize, clube: usize
     gravar(nt, 4, cpy12_d(clube) as u32);
     gravar(nt, 5, cpy12_d(adversario) as u32);
     gravar(nt, 6, cpy12_d(comp) as u32);
-    crate::comparacao::ramo("cpy_12 noticia do ultimato");
+    crate::comparison::branch("cpy_12 noticia do ultimato");
     gravar(nt, 7, sorteio(5) as u32); // cpy12: o sorteio do ultimato
     if cpy12_w(clube + 0x80) < 0x1676 {
         ao_clube(cpy12_d(0xb7431c), nt, clube);
@@ -299,7 +299,7 @@ unsafe extern "stdcall" fn news_board_ultimatum_text(noticia: usize, corpo: u32,
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let por_texto: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4ae660usize);
     let ligar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x4ae8a0usize);
-    crate::comparacao::ramo("cpy_12 texto do ultimato");
+    crate::comparison::branch("cpy_12 texto do ultimato");
     let v: [u32; 7] = core::array::from_fn(|k| campo(noticia, k as i8));
     campo(noticia, 7);
     let pessoa = cpy12_d(0xae23bc).wrapping_add((v[0] as usize).wrapping_mul(0x6e));

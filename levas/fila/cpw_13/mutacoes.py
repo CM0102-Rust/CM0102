@@ -14,7 +14,7 @@ MUTACOES = [
      'let _ = conta; // mutacao: sem somar na data',
      'cpw_13 soma na data'),
     ('cpw13_ultimo_clube',
-     'crate::comparacao::ramo("cpw_13 último clube sem registro"); // cpw13: o último clube fica sem registro',
-     'crate::comparacao::ramo("cpw_13 último clube sem registro"); add_club_callups(this, anterior, conta, d.as_mut_ptr()); // mutacao: o ultimo clube registrado',
+     'crate::comparison::branch("cpw_13 último clube sem registro"); // cpw13: o último clube fica sem registro',
+     'crate::comparison::branch("cpw_13 último clube sem registro"); add_club_callups(this, anterior, conta, d.as_mut_ptr()); // mutacao: o ultimo clube registrado',
      'cpw_13 último clube sem registro'),
 ]

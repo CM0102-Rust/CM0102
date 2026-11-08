@@ -58,37 +58,6 @@ pub(crate) unsafe fn set_rounds_around_christmas(t: usize, year: u32, n: &SpaLow
     spa_lower_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
 
-/// Side-by-side comparer for round tables in all stages (league rounds at -1, cup rounds otherwise); outputs and
-/// written bytes must match.
-///
-/// [pt] Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
-pub(crate) unsafe fn compare_round_table_any_stage(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
-                       original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
-    let reg = [(0xb67a34usize, 4usize)];
-    let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
-    let gravou = a != 0 || b != 0;
-    let outs = !gravou || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
-    let table = if a != 0 && b != 0 {
-        if stage as u8 == 0xff {
-            let n = *rounds as usize;
-            written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
-        } else {
-            eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, *rounds)
-        }
-    } else {
-        a == 0 && b == 0
-    };
-    if b != 0 {
-        soltar(b);
-    }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
-    a
-}
 
 /// a divisão de baixo espanhola: as rodadas antes do Natal (ano par)
 pub(crate) const LOWER_EVEN_YEAR_START: [SpaLowerLeagueRound; 17] = [
@@ -293,7 +262,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
                 show_error_at(0xa82880, 0x8b);
                 return 0;
             }
-            crate::comparacao::ramo("cqq_5 calendario da divisao de baixo espanhola");
+            crate::comparison::branch("cqq_5 calendario da divisao de baixo espanhola");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             if (year as i16) % 2 != 0 {
                 set_rounds_around_christmas(t, year, &LOWER_ODD_YEAR_CHRISTMAS, 0xa82880);
@@ -321,12 +290,19 @@ pub(crate) unsafe fn comp_record_of_key(g: usize) -> usize {
 ///
 /// [pt] A competição do clube (+0x57, o id no +0) é a de id [g]?
 pub(crate) unsafe fn spa_lower_is_in_comp(c: usize, g: usize) -> bool {
-    let comp = read_u32_as_usize(c + 0x57);
+    let comp = read_u32_as_usize(c + club::DIVISION);
     comp != 0 && read_u32_as_usize(comp) == read_u32_as_usize(g)
 }
 
-/// the Spanish lower division is a background league with no discipline (0xff), in the competition of id [0x9cf6b0];
-/// with no saved state, the rules, the table and the fixtures (no stats nor predicted positions)
+/// `SpaLower::SpaLower(year)` (SEH frame only on the exception path): the Spanish lower division, a background league
+/// with no discipline (created by the Primera when the nation does not have bit 4 of +0x11c).
+///
+/// The base (League::League 0x682200: mov ecx -> thiscall, ret 0), the vtable 0x96fb1c, the year (+0x40), discipline
+/// rule 0xff (none) and the record of the competition of id [0x9cf6b0] (+4). Tries to load the saved state (0x687b10:
+/// push 1 -> thiscall, ret 4); otherwise, just the league (+0x44 = 0xff, +0x30 = −1, +0x2c = 0), the rules (0x853790),
+/// the table (0x8533d0) and the fixtures (League::create_fixtures 0x6835c0), all mov ecx -> thiscall, ret 0 (no stats
+/// nor predicted positions); each failure, the error box of its line (0x3f, 0x46, 0x4d of source 0xa82880) and the end.
+/// Returns this.
 /// Original: `SpaLower::SpaLower` (0x851020, spa_lower.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x851020 } (thiscall, ret 4, spa_lower.cpp, quadro SEH só no caminho de exceção): `SpaLower::SpaLower(ano)`, a
@@ -350,7 +326,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
     if load(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqm_6 divisao de baixo nova");
+    crate::comparison::branch("cqm_6 divisao de baixo nova");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_u32_from_usize(this + league::STAGE_COUNT, 0);
@@ -397,8 +373,8 @@ pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
     let mut i: i16 = 0;
     while (i as i32) < n && v.len() < 100 {
         let c = base + (i as u16 as usize) * club::SIZE;
-        let comp = read_u32_as_usize(c + 0x57);
-        let nacao = read_u32_as_usize(c + 0x53);
+        let comp = read_u32_as_usize(c + club::DIVISION);
+        let nacao = read_u32_as_usize(c + club::NATION);
         if comp != 0 && nacao != 0 {
             let id = read_u32_as_usize(comp);
             let group = [KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B3, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4].iter().any(|&g| id == read_u32_as_usize(g));
@@ -426,13 +402,13 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE;
-        let comp = read_u32_as_usize(c + 0x57);
-        let nacao = read_u32_as_usize(c + 0x53);
+        let comp = read_u32_as_usize(c + club::DIVISION);
+        let nacao = read_u32_as_usize(c + club::NATION);
         if comp != 0 && nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(KEY_NATION_SPAIN) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
             let mut eh_a: u32 = 0;
             let p = partner(c, &mut eh_a, 1);
-            let entra = p != 0 && eh_a == 0 && read_u32_as_usize(p + 0x57) != 0 && (*k as i8 as i16) < rows && read_u32_as_usize(read_u32_as_usize(p + 0x57)) == read_u32_as_usize(g);
+            let entra = p != 0 && eh_a == 0 && read_u32_as_usize(p + club::DIVISION) != 0 && (*k as i8 as i16) < rows && read_u32_as_usize(read_u32_as_usize(p + club::DIVISION)) == read_u32_as_usize(g);
             if entra {
                 *k = k.wrapping_add(1);
             }
@@ -477,7 +453,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE;
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
-            write_u32_from_usize(c + 0x57, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
+            write_u32_from_usize(c + club::DIVISION, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
         }
         i = i.wrapping_add(1);
     }
@@ -490,13 +466,13 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
             if entra {
                 iniciar(this, k as u32, c, 0, 0);
                 k = k.wrapping_add(1);
-                write_u32_from_usize(c + 0x60, read_u32_as_usize(this + 4));
+                write_u32_from_usize(c + club::RESERVE_DIVISION, read_u32_as_usize(this + 4));
             } else {
-                write_u32_from_usize(c + 0x60, 0);
+                write_u32_from_usize(c + club::RESERVE_DIVISION, 0);
             }
         });
     }
-    crate::comparacao::ramo("cqm_6 tabela da divisao de baixo");
+    crate::comparison::branch("cqm_6 tabela da divisao de baixo");
     let mut list = spanish_lower_candidates();
     let how_many = list.len() as u16 as u32;
     let missing = (read_i16(this + league::CLUB_COUNT) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
@@ -507,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
         let c = list[j as usize];
         iniciar(this, k as u32, c, 0, 0);
         k = k.wrapping_add(1);
-        write_u32_from_usize(c + 0x60, read_u32_as_usize(this + 4));
+        write_u32_from_usize(c + club::RESERVE_DIVISION, read_u32_as_usize(this + 4));
         j += 1;
     }
     (k as i8 as i16 == read_i16(this + league::CLUB_COUNT)) as u32
@@ -522,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
 /// melhores das divisões menores): as comuns, 2 turnos, 3 pontos, 2 sobem direto (+0xbe) e 2 vão ao play-off de
 /// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
 pub(crate) unsafe extern "thiscall" fn spa_lower_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_4 regras da divisao de baixo");
+    crate::comparison::branch("cqk_4 regras da divisao de baixo");
     spa_first_apply_league_rules(this, &lower_division_rules())
 }
 

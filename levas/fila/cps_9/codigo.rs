@@ -50,7 +50,7 @@ unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize)
     }
     let r = o(pessoa);
     let n = player_stats_get_career_goals(pessoa);
-    PLACAR.registrar(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", pessoa, r, n));
+    PLACAR.record(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", pessoa, r, n));
     r
 }
 
@@ -60,7 +60,7 @@ unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize)
 /// de `de`); depois, na mesma entrada, o da pessoa (tipo 0x6a: o clube e o id de `de`), no arquivo (0x58e340). O clube
 /// é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
 unsafe extern "thiscall" fn add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
-    crate::comparacao::ramo("cps_9 emprestimo");
+    crate::comparison::branch("cps_9 emprestimo");
     let mut e = history_entry();
     if clube != 0 && cps9_d(clube + 0xcf) != 0 {
         let tecnico = cps9_d(clube + 0xcf);
@@ -100,13 +100,13 @@ unsafe extern "C" fn injury_compare_entry_dates(chave: usize, item: usize) -> i3
     if depois(chave + 8, cps9_d(item + 8) as u32, cps9_d(item + 0xc) as u32) != 0 {
         return 1;
     }
-    crate::comparacao::ramo("cps_9 data igual");
+    crate::comparison::branch("cps_9 data igual");
     0 // cps9: a volta de hoje achada
 }
 
 unsafe extern "C" fn comparar_injury_compare_entry_dates(chave: usize, item: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(chave, item);
     let n = injury_compare_entry_dates(chave, item);
-    PLACAR.registrar(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", chave, item, r, n));
+    PLACAR.record(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", chave, item, r, n));
     r
 }

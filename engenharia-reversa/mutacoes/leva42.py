@@ -12,7 +12,7 @@ MUTACOES = [
     ('f_250', "} else if dif > -250 {", "} else if dif >= -250 {"),
     ('f_750', "} else if side_b == 1 && dif < -750", "} else if side_b == 1 && dif <= -750"),
     ('f_f5bd', "if byte(this, 0xf5bd) == 0 {", "if byte(this, 0xf5bd) != 0 {"),
-    ('f_9c4', "*((casa + 0x80) as *const i16) < 0x9c4", "*((casa + 0x80) as *const i16) <= 0x9c4"),
+    ('f_9c4', "*((casa + club::REPUTATION) as *const i16) < 0x9c4", "*((casa + club::REPUTATION) as *const i16) <= 0x9c4"),
     ('f_sorte', "    if a < sortear(0x14) {", "    if a <= sortear(0x14) {"),
     ('f_somaS', "let sum = byte(person, 0x36).wrapping_add(byte(person, 0x1b));", "let sum = byte(person, 0x36).wrapping_add(byte(person, 0x1c));"),
     ('f_faixa', "('>', 0x32, 0x96d3b0), ('>', 0x23, 0),", "('>', 0x32, 0x96d3b0), ('>', 0x24, 0),"),

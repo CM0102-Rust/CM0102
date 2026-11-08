@@ -21,7 +21,7 @@ pub(crate) unsafe fn create_first_group_table(this: usize, n: i16, file: usize, 
         show_error_at(file, row);
         return 0;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut i: i8 = 0;
     while (i as i16) < read_i16(this + 0x3e) {
@@ -47,7 +47,7 @@ pub(crate) unsafe fn compare_first_group_table(name: &str, this: usize, n: i16, 
     let t = read_u32_as_usize(this + 0xb1);
     let ok = r == 1 && read_i16(this + 0x3e) == n && t != 0
         && plan.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c && read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) == 0);
-    PLACAR.registrar(ok, || format!("{}({:#x}) devolveu {}; plano {:x?}", name, this, r, plan));
+    PLACAR.record(ok, || format!("{}({:#x}) devolveu {}; plano {:x?}", name, this, r, plan));
     r
 }
 
@@ -85,7 +85,7 @@ pub(crate) unsafe fn advance_cup_stage(this: usize, file: usize, row: u32, end_o
     let stage = stage + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, stage);
     if stage == end_of_groups {
-        crate::comparacao::ramo("cqr_7 mata-mata das copas italianas");
+        crate::comparison::branch("cqr_7 mata-mata das copas italianas");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(knockout_knockout);
         f(this); // cqr7: monta o mata-mata
     }
@@ -100,7 +100,7 @@ pub(crate) unsafe fn ita_cup_compare_advance_stage(name: &str, this: usize, orig
     let last = before >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == if last { before } else { before + 1 }, || format!("{}({:#x}) fase {} -> {}", name, this, before, after));
+    PLACAR.record(after == if last { before } else { before + 1 }, || format!("{}({:#x}) fase {} -> {}", name, this, before, after));
 }
 
 /// ItaCup::advance_stage: moves the Italian Cup to its next stage (shared `advance_cup_stage`, error box at ita_cup.cpp
@@ -167,7 +167,7 @@ pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: usize, 
         loop {
             let c = read_u32_as_usize(read_u32_as_usize(this + 0xee) + o);
             if c != 0 {
-                crate::comparacao::ramo(ramo);
+                crate::comparison::branch(ramo);
                 write_u32_from_usize(teams + k as usize * 4, c); // cqr8: o time na vaga k do grupo
                 write_u32_from_usize(read_u32_as_usize(this + 0xee) + o, 0);
                 k += 1;
@@ -256,7 +256,7 @@ pub(crate) unsafe fn compare_group_stage(name: &str, this: usize, g: u32, origin
                 a == b
             });
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}, {}) devolveu {}; plano {:x?}", name, this, g, r, plan));
+    PLACAR.record(ok, || format!("{}({:#x}, {}) devolveu {}; plano {:x?}", name, this, g, r, plan));
     r
 }
 
@@ -378,7 +378,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize
     if teams == 0 {
         return show_error_at(0x9ea23c, 0x29c);
     }
-    crate::comparacao::ramo("cqr_9 mata-mata da copa da italia");
+    crate::comparison::branch("cqr_9 mata-mata da copa da italia");
     for i in 0..8usize {
         write_u32_from_usize(teams + i * 4, read_u32_as_usize(group_table(this, i))); // cqr9: o campeão do grupo i
     }
@@ -403,7 +403,7 @@ pub(crate) unsafe fn ita_cup_compare_knockout_stage(name: &str, this: usize, sta
     original();
     let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + stage * 4);
     let ok = f != 0 && slots.iter().all(|&j| read_u32_as_usize(read_u32_as_usize(this + 0xee) + j * 4) == 0);
-    PLACAR.registrar(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", name, this, f, slots));
+    PLACAR.record(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", name, this, f, slots));
 }
 
 
@@ -449,7 +449,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
     if teams == 0 {
         return show_error_at(0x9ea204, 0x2ba);
     }
-    crate::comparacao::ramo("cqr_9 mata-mata da copa da serie c");
+    crate::comparison::branch("cqr_9 mata-mata da copa da serie c");
     for i in 0..16usize {
         write_u32_from_usize(teams + i * 4, read_u32_as_usize(group_table(this, i)));
     }
@@ -514,7 +514,7 @@ pub(crate) unsafe fn create_schedule(this: usize, stage: u32, rounds: *mut i16, 
             show_error_at(file, row_g);
             return 0;
         }
-        crate::comparacao::ramo(name_g);
+        crate::comparison::branch(name_g);
         // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
         // 0x68a160 only uses the low 16 bits: the copy passes the clean year
         let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
@@ -537,7 +537,7 @@ pub(crate) unsafe fn create_schedule(this: usize, stage: u32, rounds: *mut i16, 
         show_error_at(file, row_m);
         return 0;
     }
-    crate::comparacao::ramo(name);
+    crate::comparison::branch(name);
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in knockout.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
@@ -570,13 +570,13 @@ pub(crate) unsafe fn ita_cup_compare_schedule(name: &str, stage: u32, rounds: *m
     if stage as u8 as i8 > limit {
         // simplification: above the knockout neither of the two writes anything; the outputs may not even exist
         let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+        PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
     let mut l2 = if league.is_null() { 0 } else { *league };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, o, || c(&mut r2, &mut e2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let outs = *rounds == r2 && *extra == e2 && (league.is_null() || *league == l2);
     let groups = (stage as u8 as i8) < limit;
     let table = if a != 0 && b != 0 {
@@ -588,7 +588,7 @@ pub(crate) unsafe fn ita_cup_compare_schedule(name: &str, stage: u32, rounds: *m
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -633,19 +633,6 @@ pub(crate) const SERIE_C_CUP_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 5] = [
     cql10r((0x1a, 3, 1, 3), (9, 4, 1, 2, 2, 0), 0x96, (0, 0, 3), 6, (2, 1, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
 ];
 
-/// rule: the Serie C Cup starts with five-round groups in August (12, 19, 22, 26 and 29; id 0x420 + stage); the
-/// knockout (stage 0xf) over two legs: 1st round drawn on 30/8 and played on 11/10 (32 teams), 2nd 26/10 and 1/11,
-/// quarter-finals 9/11 and 15/11, semi-final 30/11 and 11 April, final draw 26/4 and match on 9 May; 14 days between
-/// legs, 7 in the 2nd round and the final; category 4 up to the 2nd round and 6 after
-/// Original: `ItaCCup::create_schedule` (0x63cf90, ita_c_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x63cf90 } (thiscall, ret 0x10, ita_c_cup.cpp; a virtual +0x3c da Copa da Série C): `ItaCCup::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: grupos abaixo da fase 0xf (extra = fase + 0x420; a caixa da linha 0xbc), o mata-mata na
-/// fase 0xf (a caixa da linha 0xe3).
-pub(crate) unsafe extern "thiscall" fn ita_cup_create_schedule_63cf90(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    create_schedule(this, stage, rounds, extra, league, 0xf, 0x420, &SERIE_C_CUP_GROUP_ROUNDS, &SERIE_C_CUP_KNOCKOUT_ROUNDS, 0x9ea204, 0xbc, 0xe3,
-        "cqo_10 grupos da copa da serie c", "cqo_10 mata-mata da copa da serie c")
-}
 
 
 /// A Supercopa da Itália: um jogo único em 19 de agosto (sorteio em 5 de julho), mando neutro [inferência: o +0x13 da
@@ -654,15 +641,6 @@ pub(crate) const ITALIAN_SUPER_CUP: [EngCcCupCupRound; 1] = [
     cql10r((5, 6, 0, 5), (0x13, 7, 0, 6, 1, 0), 0, (0, 0x203, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqo10: a Supercopa da Itália
 ];
 
-/// rule: the Italian Super Cup is a single match (2 teams) on 19 August, drawn on 5 July, category 6, tie-break 0x203,
-/// no prizes
-/// Original: `ItaSuper::create_round_table` (0x65f920, ita_super.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x65f920 } (thiscall, ret 0x10, ita_super.cpp; a virtual +0x3c da Supercopa da Itália): `ItaSuper::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
-pub(crate) unsafe extern "thiscall" fn ita_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &ITALIAN_SUPER_CUP, 0x9eac34, 0x99, "cqo_10 tabela da supercopa")
-}
 
 
 /// A Supercopa da Série C1: um jogo único em 21 de maio do ano seguinte (sorteio em 15 de maio), sem prêmios.
@@ -670,15 +648,6 @@ pub(crate) const SERIE_C1_SUPER_CUP_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((0xf, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0, (0, 0x203, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)),
 ];
 
-/// rule: the Serie C1 Super Cup is a single match on 21 May of the following year, drawn on 15 May, category 6, no
-/// prizes
-/// Original: `ItaC1Super::create_round_table` (0x63c890, ita_c1_super.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x63c890 } (thiscall, ret 0x10, ita_c1_super.cpp; a virtual +0x3c da Supercopa da Série C1): `ItaC1Super::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
-pub(crate) unsafe extern "thiscall" fn ita_cup_create_round_table_63c890(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &SERIE_C1_SUPER_CUP_ROUNDS, 0x9ea1c8, 0x99, "cqo_10 tabela da supercopa c1")
-}
 
 
 
@@ -818,7 +787,7 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
                 }
                 let before = comp_id_at(c, 0x5b);
                 if (before == Some(c1a) || before == Some(c1b)) && last_season_position(c) == place {
-                    crate::comparacao::ramo("cqo_11 completar com a c1");
+                    crate::comparison::branch("cqo_11 completar com a c1");
                     v[k] = c;
                     k += 1;
                     if k == 32 {
@@ -834,7 +803,7 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
     for _ in 0..8 {
         let mut pote = 0usize;
         while pote < 32 {
-            crate::comparacao::ramo("cqo_11 potes da copa da italia");
+            crate::comparison::branch("cqo_11 potes da copa da italia");
             let mut r = jap_j_cup_random(8) as i8 as i32; // cqo11: o clube sorteado de cada pote
             while v[pote + r as usize] == 0 {
                 r += 1;
@@ -906,14 +875,14 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || {
         let r = o();
         lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
-        let (r, n) = crate::aleatorio::sem_contar(c);
+        let (r, n) = crate::rng::without_counting(c);
         lr.set(read_u32_as_usize(this + 0xee));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xee) as *mut u32, lo.get() as u32);
@@ -932,7 +901,7 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} {:x?} x {:x?} lista {} ({} bytes) {:x?} x {:x?}", name, this, a, b, igual, mo, mr, list, k, vo, vr));
+    PLACAR.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} {:x?} x {:x?} lista {} ({} bytes) {:x?} x {:x?}", name, this, a, b, igual, mo, mr, list, k, vo, vr));
     a
 }
 
@@ -979,7 +948,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
         };
         let p = last_season_position(c);
         if before == serie_b || (before == c1a || before == c1b) && (p == 3 || p == 4 || p == 5) {
-            crate::comparacao::ramo("cqo_11 vagas do fim da copa da serie c");
+            crate::comparison::branch("cqo_11 vagas do fim da copa da serie c");
             let e = l + (j as i16 as isize * 4) as usize;
             let t = read_u32_as_usize(e);
             core::ptr::write_unaligned(e as *mut u32, c as u32);
@@ -992,26 +961,13 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
     }
     shuffle_pointers(l, 0x50);
     sort_pointers(l, 0x50, 0x53fe50);
-    crate::comparacao::ramo("cqo_11 dezenas da copa da serie c");
+    crate::comparison::branch("cqo_11 dezenas da copa da serie c");
     for k in 0..8usize {
         shuffle_pointers(l + k * 0x28, 0xa); // cqo11: as dezenas da Copa da Série C
     }
     (1, m)
 }
 
-/// rule: the Serie C Cup takes the 90 Italian clubs of C1 and C2 (the two C1 groups and the three C2 ones). Those that
-/// came down from Serie B and those that came from C1 in 4th, 5th or 6th go to the last places (from the 81st); the
-/// first 80 are shuffled, sorted by the city's longitude and each of their 8 tens shuffled (the last 10 places stay in
-/// order): the groups are regional [inference]
-/// Original: `ItaCCup::select_entrants` (0x63dfe0, ita_c_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: entram na Copa da Série C os 90 clubes italianos da C1 e da C2 (as duas chaves da C1 e as três da C2). Os que
-/// vieram da Série B (rebaixados) e os que vieram da C1 em 4º, 5º ou 6º vão para as últimas vagas (a partir da 81ª); os
-/// 80 primeiros são embaralhados, ordenados pela longitude da cidade e cada uma das suas 8 dezenas embaralhada (as 10
-/// últimas vagas ficam na ordem): os grupos são regionais [inferência]
-pub(crate) unsafe extern "thiscall" fn ita_cup_select_entrants_63dfe0(this: usize) -> i32 {
-    select_serie_c_cup_entrants(this).0
-}
 
 
 /// ItaSuper::init_team_list: the two Supercoppa teams (Serie A champion and Coppa Italia winner, or the cup runner-up
@@ -1036,24 +992,15 @@ pub(crate) unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparacao::ramo("cqo_11 dobradinha italiana");
+        crate::comparison::branch("cqo_11 dobradinha italiana");
         if !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_ITALIAN_CUP, 1), F, 0xe0) {
             return (0, 0);
         }
     }
-    crate::comparacao::ramo("cqo_11 clubes da supercopa da italia");
+    crate::comparison::branch("cqo_11 clubes da supercopa da italia");
     finish_two_team_list(l)
 }
 
-/// rule: the Italian Super Cup is between the Serie A champion (the home side) and the Coppa Italia winner; if the same
-/// club won both, the Cup runner-up plays
-/// Original: `ItaSuper::init_team_list` (0x65fa60, ita_super.cpp, thiscall, ret 0).
-///
-/// [pt] regra: a Supercopa da Itália é entre o campeão da Série A (o mandante) e o campeão da Copa da Itália; se o mesmo
-/// clube ganhou as duas, entra o vice da Copa
-pub(crate) unsafe extern "thiscall" fn ita_cup_init_team_list(this: usize) -> i32 {
-    init_supercoppa_teams(this).0
-}
 
 
 /// As regras que a virtual +0x8c (set_up_rules) de uma copa com fase de grupos grava na liga do grupo, antes da tabela
@@ -1119,7 +1066,7 @@ pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &GroupSt
     let previsto = (g.vitoria, g.empate, g.categoria, g.desempate, g.vagas, [0u8; 3], 1u8, -1i32, -1i32, 1i16);
     let premio = g.premio.map_or(true, |p| core::ptr::read_unaligned((this + 0x28) as *const u32) == p);
     let bits = g.bits.map_or(true, |w| core::ptr::read_unaligned((this + 0xd9) as *const u16) == w);
-    PLACAR.registrar(r == 1 && lido == previsto && premio && bits, || format!("{}({:#x}) devolveu {} regras {:?} previstas {:?} prêmio ok {} bits ok {}", nome, this, r, lido, previsto, premio, bits));
+    PLACAR.record(r == 1 && lido == previsto && premio && bits, || format!("{}({:#x}) devolveu {} regras {:?} previstas {:?} prêmio ok {} bits ok {}", nome, this, r, lido, previsto, premio, bits));
 }
 
 /// rule: the Italian Cup groups are single round robin, 3 points a win and 1 a draw; tiebreak by codes 4, 1 and 2
@@ -1131,7 +1078,7 @@ pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &GroupSt
 /// em turno único, 3 pontos a vitória e 1 o empate, a categoria 4 (copa nacional), o desempate (4, 1, 2), um
 /// classificado por grupo e o fundo de prêmios de 800.000; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_12 regras da copa da italia");
+    crate::comparison::branch("cqi_12 regras da copa da italia");
     let mut g = ITALIAN_CUP_GROUP_RULES;
     g.vitoria = 3; // cqi12: a vitória nos grupos da Copa da Itália
     g.categoria = 4; // cqi12: a categoria dos jogos da Copa da Itália
@@ -1140,17 +1087,6 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 
 
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
-/// rule: the Serie C Italian Cup groups follow the Italian Cup rules (single round robin, 3/1, tiebreak 4, 1, 2, one
-/// qualifier per group); prize fund of 300,000
-/// Original: `ItaCCup::set_up_rules` (0x63d6e0, ita_c_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x63d6e0 } (thiscall, ret 0, ita_c_cup.cpp; a virtual +0x8c): `ItaCCup::set_up_rules()`: os grupos da Copa da
-/// Itália da Série C, com as mesmas regras da Copa da Itália e o fundo de prêmios de 300.000.
-pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules_63d6e0(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_12 regras da copa da serie c");
-    let turnos = 1i16; // cqi12: o turno único dos grupos da Série C
-    set_cup_league_rules(this, &SERIE_C_CUP_RULES, turnos)
-}
 
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 

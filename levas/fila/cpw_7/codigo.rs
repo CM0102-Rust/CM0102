@@ -66,7 +66,7 @@ unsafe fn close_awol_case(this: usize, r: usize) {
     }
     *m ^= 2;
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
-    crate::comparacao::ramo("cpw_7 falta tirada da lista");
+    crate::comparison::branch("cpw_7 falta tirada da lista");
     tirar(cpw7_d(this + 4), r); // cpw7: tira o caso da lista
 }
 
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                     return;
                 }
                 if weeks_after_have_passed(r + 4, 1) { // cpw7: uma semana depois
-                    crate::comparacao::ramo("cpw_7 falta vencida");
+                    crate::comparison::branch("cpw_7 falta vencida");
                     resolve_awol_case(this, r);
                     break;
                 }
@@ -192,7 +192,7 @@ unsafe fn resolve_awol_case(this: usize, r: usize) {
     if cpw7_b(r + 0xc) != 0 {
         // o caso repetido
         if cpw7_d(pessoa + 0x61) != 0 {
-            crate::comparacao::ramo("cpw_7 caso repetido");
+            crate::comparison::branch("cpw_7 caso repetido");
             if cpw7_sortear(cpw7_b(pessoa + 0x5b) as i8 as i32) == 0 && cpw7_sortear(cpw7_b(pessoa + 0x5d) as i8 as i32) == 0 { // cpw7: os sorteios do caso repetido
                 maybe_drop_attribute(pessoa + 0x5b, true);
                 maybe_drop_attribute(pessoa + 0x5d, true);
@@ -204,7 +204,7 @@ unsafe fn resolve_awol_case(this: usize, r: usize) {
         return close_awol_case(this, r);
     }
     // o caso novo: os colegas do clube
-    crate::comparacao::ramo("cpw_7 caso novo");
+    crate::comparison::branch("cpw_7 caso novo");
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let k = contract_of(cpw7_d(0xae1050), pessoa);
     cpw7_pd(0xae1080, k as u32);
@@ -302,8 +302,8 @@ unsafe extern "thiscall" fn comparar_has_missed_training(this: usize, pessoa: us
             return o(this, pessoa);
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(0xae1080, 4)], || o(this, pessoa), || has_missed_training(this, pessoa));
-    PLACAR.registrar(igual && r as u8 == n as u8, || format!("has_missed_training(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(0xae1080, 4)], || o(this, pessoa), || has_missed_training(this, pessoa));
+    PLACAR.record(igual && r as u8 == n as u8, || format!("has_missed_training(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
     r
 }
 
@@ -348,8 +348,8 @@ unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize, pessoa: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let l = cpw7_d(this + 8);
     let regioes: Vec<(usize, usize)> = if l != 0 { vec![(l + 0xa, 4)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, pessoa), || has_fitness_incident(this, pessoa));
-    PLACAR.registrar(igual && r as u8 == n as u8, || format!("has_fitness_incident(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, pessoa), || has_fitness_incident(this, pessoa));
+    PLACAR.record(igual && r as u8 == n as u8, || format!("has_fitness_incident(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
     r
 }
 
@@ -407,7 +407,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
                 && cpw7_sortear(cpw7_b(pessoa + 0x5b) as i8 as i32 + 10) == 0
                 && cpw7_sortear(cpw7_b(pessoa + 0x59) as i8 as i32 + 10) == 0
             {
-                crate::comparacao::ramo("cpw_7 sumiu em vez de faltar");
+                crate::comparison::branch("cpw_7 sumiu em vez de faltar");
                 if MISS_TRAINING_DRY_RUN {
                     MISS_TRAINING_DECISION = 1;
                     return;
@@ -418,7 +418,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
             }
         }
     }
-    crate::comparacao::ramo("cpw_7 marcou a falta");
+    crate::comparison::branch("cpw_7 marcou a falta");
     if MISS_TRAINING_DRY_RUN {
         MISS_TRAINING_DECISION = 2;
         return;
@@ -461,7 +461,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
     let nota: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
     let a = cpw7_sortear(nota(np, cpw7_b(np + 0x19) as u32) as i32);
     let b = cpw7_sortear(5);
-    crate::comparacao::ramo("cpw_7 multa pela falta");
+    crate::comparison::branch("cpw_7 multa pela falta");
     let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x5a5980usize);
     multar(cpw7_d(0xae2a3c), pessoa, if a > b { 1 } else { 2 }, 1);
 }
@@ -477,22 +477,22 @@ unsafe extern "thiscall" fn comparar_miss_training(this: usize, pessoa: usize) {
     }
     let m = cpw7_d(this + 0xc).wrapping_add(cpw7_i(pessoa) as usize);
     let mut regioes = vec![(m, 1), (0xae1080, 4)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     MISS_TRAINING_DRY_RUN = true;
     MISS_TRAINING_DECISION = 0;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| miss_training(this, pessoa)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| miss_training(this, pessoa)));
     MISS_TRAINING_DRY_RUN = false;
     let n = MISS_TRAINING_DECISION;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     let b0 = cpw7_b(m);
     o(this, pessoa);
     let novo = cpw7_b(m) & !b0;
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let r = if novo & 2 != 0 { 2 } else if novo & 1 != 0 { 1 } else { 0 };
     let igual = (r == n || (n == 1 && b0 & 1 != 0)) && (n != 0 || mo == mr);
-    PLACAR.registrar(igual, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", pessoa, r, mo, n, mr));
+    PLACAR.record(igual, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", pessoa, r, mo, n, mr));
 }
 
 /// { 0x419710 } (thiscall, ret 4, awol.cpp): `AWOL::end_absence(registro)`, pela awol_daily_update. Registro com a marca
@@ -507,7 +507,7 @@ unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     if *m == 0 {
         return;
     }
-    crate::comparacao::ramo("cpw_7 fim da ausencia");
+    crate::comparison::branch("cpw_7 fim da ausencia");
     let pessoa = cpw7_d(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let k = contract_of(cpw7_d(0xae1050), pessoa);
@@ -539,18 +539,18 @@ unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usize) {
     }
     let m = cpw7_d(this + 0xc).wrapping_add(cpw7_i(r) as usize);
     let regioes = [(m, 1), (0xae1080, 4)];
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     MISS_TRAINING_DRY_RUN = true;
     MISS_TRAINING_DECISION = 0;
-    crate::aleatorio::pausar_rastro(|| end_absence(this, r));
+    crate::rng::pause_trace(|| end_absence(this, r));
     MISS_TRAINING_DRY_RUN = false;
     let noticia = MISS_TRAINING_DECISION != 0;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(this, r);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let igual = mo.0[0] == mr.0[0] && (noticia || mo.0[1] == mr.0[1]);
-    PLACAR.registrar(igual, || format!("end_absence(marca {:#x}) original={:x?} rust={:x?}", m, mo, mr));
+    PLACAR.record(igual, || format!("end_absence(marca {:#x}) original={:x?} rust={:x?}", m, mo, mr));
 }
 
 /// { 0x867560 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_flags(marcas)`, chamada por muitas rotinas
@@ -590,7 +590,7 @@ unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
     if cpw7_b(pessoa + 0x18) as i8 <= 0x14 && cpw7_w(cpw7_d(pessoa + 0x61) + 0xb) <= 0x109a {
         return;
     }
-    crate::comparacao::ramo("cpw_7 pedido de saida");
+    crate::comparison::branch("cpw_7 pedido de saida");
     if MISS_TRAINING_DRY_RUN {
         MISS_TRAINING_DECISION = 1;
         return;
@@ -607,17 +607,17 @@ unsafe extern "thiscall" fn comparar_set_flags(c: usize, marcas: u32) {
         return o(c, marcas);
     }
     let mut regioes = vec![(c + 0x40, 4)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     MISS_TRAINING_DRY_RUN = true;
     MISS_TRAINING_DECISION = 0;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| set_flags(c, marcas)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| set_flags(c, marcas)));
     MISS_TRAINING_DRY_RUN = false;
     let pediu = MISS_TRAINING_DECISION != 0;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(c, marcas);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let igual = if pediu { mo.0[0] == mr.0[0] } else { mo == mr };
-    PLACAR.registrar(igual, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marcas, pediu, mo, mr));
+    PLACAR.record(igual, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marcas, pediu, mo, mr));
 }

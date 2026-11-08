@@ -31,7 +31,7 @@ unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u3
     let mascara: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5b59a0usize);
     let su = s as usize;
     let cel = this + 0x164 + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
-    crate::comparacao::ramo("cpu_11 coordenada gravada");
+    crate::comparison::branch("cpu_11 coordenada gravada");
     core::ptr::write_unaligned(cel as *mut u32, coord); // cpu11: a coordenada
     // a saída da 0x5b7e60 é o próprio argumento coord na original (uma vaga só, para a função inteira)
     let mut saida: [i16; 2] = [cx, cy];
@@ -59,14 +59,14 @@ unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u3
                 }
             }
             if pos & 2 != 0 {
-                crate::comparacao::ramo("cpu_11 distância dobrada");
+                crate::comparison::branch("cpu_11 distância dobrada");
                 dist = dist.wrapping_add(dist); // cpu11: o dobro
             }
             if dist <= melhor[p] { // cpu11: o empate entra na lista
                 if dist < melhor[p] {
                     conta[p] = 0;
                 } else {
-                    crate::comparacao::ramo("cpu_11 empate na lista");
+                    crate::comparison::branch("cpu_11 empate na lista");
                 }
                 melhor[p] = dist;
                 cand[(conta[p] as i32 + p as i32 * 11) as usize] = pos;
@@ -212,8 +212,8 @@ fn formation_regions(this: usize) -> [(usize, usize); 3] {
 unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32, fase: u32, band: u32, coord: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%);
     let reg = formation_regions(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, fase, band, coord), || set_slot_coordinate(this, casa, fase, band, coord));
-    PLACAR.registrar(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, band, coord, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, casa, fase, band, coord), || set_slot_coordinate(this, casa, fase, band, coord));
+    PLACAR.record(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, band, coord, r, n, mo, mr));
     r
 }
 
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, casa:
     let (mut so, mut sr) = (0xdead_u32, 0xbeef_u32);
     let r = o(this, casa, &mut so);
     let n = check_duplicate_position(this, casa, &mut sr);
-    PLACAR.registrar(r == n && so == sr, || format!("check_duplicate_position({:x}, {}) {}/{} saída {}/{}", this, casa as u8 as i8, r, n, so, sr));
+    PLACAR.record(r == n && so == sr, || format!("check_duplicate_position({:x}, {}) {}/{} saída {}/{}", this, casa as u8 as i8, r, n, so, sr));
     *saida = so;
     r
 }
@@ -239,7 +239,7 @@ unsafe extern "thiscall" fn comparar_set_marking_type(this: usize, casa: u32, ma
     }
     let reg = [(this as isize + casa as u8 as i8 as isize + 0x5b4) as usize, 1usize];
     let reg = [(reg[0], reg[1]), (this + 0x187f, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, marca), || set_marking_type(this, casa, marca));
-    PLACAR.registrar(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, marca as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, casa, marca), || set_marking_type(this, casa, marca));
+    PLACAR.record(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, marca as u8, r, n, mo, mr));
     r
 }

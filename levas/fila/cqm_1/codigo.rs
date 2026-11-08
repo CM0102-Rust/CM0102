@@ -52,7 +52,7 @@ unsafe fn cqm1_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnc
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.registrar(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
+    PLACAR.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
 }
 
 /// As janelas da Holanda: uma janela, de 8 de junho (andando para o sábado [inferência]) a 4 de abril (andando para a sexta-feira [inferência]).
@@ -63,7 +63,7 @@ const HOLLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x5f9690 } (thiscall, ret 0x14, holland_rules.cpp, `HOLLAND_RULES::HOLLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Holanda (regra 12): a base (0x8e84a0), a vtable 0x96ba88, 1 janela(s) de `HOLLAND_TRANSFER_WINDOWS`; o +0x13 = 50 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 50 (o padrão é 30). Devolve o objeto.
 unsafe extern "thiscall" fn construct_holland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_1 holanda");
+    crate::comparison::branch("cqm_1 holanda");
     holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96ba88, 1, &HOLLAND_TRANSFER_WINDOWS, 0x9cf04c, 0x52);
     *((this + 0x13) as *mut u8) = 50;
     *((this + 0x14) as *mut u8) = 50;
@@ -88,7 +88,7 @@ const CROATIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x518500 } (thiscall, ret 0x14, croatia_rules.cpp, `CROATIA_RULES::CROATIA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Croácia (regra 5): a base (0x8e84a0), a vtable 0x969394, 1 janela(s) de `CROATIA_TRANSFER_WINDOWS`. Devolve o objeto.
 unsafe extern "thiscall" fn construct_croatia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_1 croacia");
+    crate::comparison::branch("cqm_1 croacia");
     holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x969394, 1, &CROATIA_TRANSFER_WINDOWS, 0x9b5570, 0x4e);
     this
 }
@@ -111,7 +111,7 @@ const IRELAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x63c210 } (thiscall, ret 0x14, ireland_rules.cpp, `IRELAND_RULES::IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda (regra 13): a base (0x8e84a0), a vtable 0x96c190, 1 janela(s) de `IRELAND_TRANSFER_WINDOWS`. Devolve o objeto.
 unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_1 irlanda");
+    crate::comparison::branch("cqm_1 irlanda");
     holland_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96c190, 1, &IRELAND_TRANSFER_WINDOWS, 0x9ea12c, 0x4e);
     this
 }

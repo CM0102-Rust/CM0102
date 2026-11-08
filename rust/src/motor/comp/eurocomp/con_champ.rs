@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
     sort(l.mls.as_mut_ptr() as usize, l.n[3], 1);
     let t = |k: usize| read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add(k * 6);
     let pd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut u32, v as u32);
-    crate::comparacao::ramo("cqi_11 classificados");
+    crate::comparison::branch("cqi_11 classificados");
     pd(t(2), l.mex[0]);
     pd(t(3), l.mex[1]); // cqi11: o segundo mexicano
     pd(t(4), l.centro[0]);
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
         pd(t(0), l.mls[0]);
         pd(t(1), l.mls[1]);
     } else {
-        crate::comparacao::ramo("cqi_11 campeao da mls");
+        crate::comparison::branch("cqi_11 campeao da mls");
         let mls = club_comp_record(read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
         pd(t(0), colocado(mls, 0));
         pd(t(1), colocado(read_u32_as_usize(other + 4), 0));
@@ -124,8 +124,13 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
 }
 
 
-/// rule: on the first day of the cup season (empty team table), picks the qualified clubs and the predicted positions;
-/// every day, the cup update (draws and matches)
+/// Daily update of the CONCACAF Champions' Cup. Rule: on the first day of the cup season (empty team table), picks the
+/// qualified clubs and the predicted positions; every day, the cup update (draws and matches).
+///
+/// Ret 8; virtual +0x14 of the cup: `ConChamp::update_for_date(today, stage)`. With the team table empty (the club of
+/// team 0 = 0) and stage ≠ 0: the qualified clubs (0x4c11a0: mov ecx, this -> thiscall, ret 0; negative: the box at
+/// line 0x1ba and returns 0) and the predicted positions (virtual +0x5c). Then the cup update (0x51f890: push stage;
+/// push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `ConChamp::update_for_date` (0x4c1620, con_champ.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x4c1620 } (thiscall, ret 8, con_champ.cpp; a virtual +0x14 da copa): `ConChamp::update_for_date(hoje, fase)`.
@@ -140,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
             show_error_at(0x9a7d30, 0x1ba);
             return 0;
         }
-        crate::comparacao::ramo("cqi_11 dia da selecao");
+        crate::comparison::branch("cqi_11 dia da selecao");
         let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
         prever(this);
     }
@@ -152,7 +157,11 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
 // empty table and stage ≠ 0, the cup comes out with 8 teams and team 0 filled (0x4c11a0 has its own comparer); otherwise +0x3e
 // does not change.
 
-/// rule: the cup prize fund is 2,000,000; the round table (three-round knockout) comes from virtual +0x3c
+/// Sets up the rounds of the CONCACAF Champions' Cup. Rule: the cup prize fund is 2,000,000; the round table
+/// (three-round knockout) comes from virtual +0x3c.
+///
+/// Ret 0; virtual +0x8c: `ConChamp::set_up_rounds()`; returns 1. The prize fund (+0x28) of 2,000,000 and the round
+/// table (+0xa3) from virtual +0x3c (push 0; push &+0x3a; push &+0x3c; push −1; mov ecx, this -> thiscall, ret 0x10).
 /// Original: `ConChamp::set_up_rounds` (0x4c15f0, con_champ.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x4c15f0 } (thiscall, ret 0, con_champ.cpp; a virtual +0x8c): `ConChamp::set_up_rounds()`; devolve 1. O fundo de
@@ -169,8 +178,13 @@ pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u
 // simplification: virtual +0x3c allocates the rounds table: does not run twice. Original only; the plan checks the bottom of
 // prizes (+0x28 = 2,000,000) and return value 1.
 
-/// rule: the CONCACAF Champions' Cup has 8 teams in single matches: quarter-finals drawn on 1/8 and played on 28/8,
-/// semi-final on 1/9 and final on 4/9; category 8, tie-break 3; no per-round prize (−1)
+/// Creates the round table of the CONCACAF Champions' Cup. Rule: 8 teams in single matches: quarter-finals drawn on 1/8
+/// and played on 28/8, semi-final on 1/9 and final on 4/9; category 8, tie-break 3; no per-round prize (−1).
+///
+/// Ret 0x10; virtual +0x3c: `ConChamp::create_round_table(stage, &rounds, &extra, &out)`: at stage −1, out (if
+/// requested) = 0, rounds = 3, extra = 0; the table (0x944e46 of 0x138; out of memory: the box at line 0x97 and 0) with
+/// the 3 rounds and, in the first two, day 0 of the empty tie (0x521f10 with −1, −1, −1 and home 0; the original calls
+/// it between the match and the fields, which do not overlap). Outside −1, 0.
 /// Original: `ConChamp::create_round_table` (0x4c0f00, con_champ.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x4c0f00 } (thiscall, ret 0x10, con_champ.cpp; a virtual +0x3c): `ConChamp::create_round_table(fase, &rodadas,
@@ -192,7 +206,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
         show_error_at(0x9a7d30, 0x97);
         return 0;
     }
-    crate::comparacao::ramo("cqp_13 tabela da concacaf");
+    crate::comparison::branch("cqp_13 tabela da concacaf");
     let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
     let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     for (i, r) in CONCACAF_CHAMPIONS_CUP_ROUNDS.iter().enumerate() {

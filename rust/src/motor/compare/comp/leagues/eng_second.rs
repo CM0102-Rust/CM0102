@@ -6,14 +6,9 @@ use super::*;
 /// Comparer for `eng_second_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_SECOND_CREATE_SCHEDULE);
-    eng_second_compare_round_table("eng_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_second_create_schedule(this, stage, r, e, l))
+    compare_league_round_table("eng_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_second_create_schedule(this, stage, r, e, l))
 }
 
-/// Comparer for `eng_second_create_schedule_5770e0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_create_schedule_5770e0(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_SECOND_CREATE_SCHEDULE_5770E0);
-    eng_second_compare_round_table("eng_second_create_schedule_5770e0", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| eng_second_create_schedule_5770e0(this, stage, r, e, l))
-}
 
 /// Comparer for `eng_second_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
@@ -53,15 +48,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_second_update_staff_records_
             Some((row, v, marca)) => read_u8(row + 0x37) == v && (!marca || read_u8(saiu) == 1),
             None => true,
         };
-    PLACAR.registrar(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, clube, s, stage as u8, r, plan));
+    PLACAR.record(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, clube, s, stage as u8, r, plan));
     r
 }
 
-/// Comparer for `eng_second_set_club_progress` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_second_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_ENG_SECOND_SET_CLUB_PROGRESS);
-    compare_club_stage_status("eng_second_set_club_progress", this, clube, || o(this, clube, stage, current, best, worst), || eng_second_set_club_progress(this, clube, stage, current, best, worst))
-}
 
 /// Comparer for `eng_second_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_second_advance_stage(this: usize) {

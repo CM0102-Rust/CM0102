@@ -72,18 +72,18 @@ unsafe extern "thiscall" fn remove_club_from_ai_plans(amistosos: usize, clube: u
 unsafe extern "C" fn comparar_cup_set_round_draw_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize>(%%I0%%);
     let r = round_record_from_base(rodadas, rodada);
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 3)], || o(rodadas, rodada, dia, mes, anos, semana, base),
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 3)], || o(rodadas, rodada, dia, mes, anos, semana, base),
         || cup_set_round_draw_date(rodadas, rodada, dia, mes, anos, semana, base));
-    PLACAR.registrar(igual && a == b, || format!("cup_set_round_draw_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
+    PLACAR.record(igual && a == b, || format!("cup_set_round_draw_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
     a
 }
 
 unsafe extern "C" fn comparar_cup_set_round_match_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let r = round_record_from_base(rodadas, rodada);
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 3, 0x14)], || o(rodadas, rodada, dia, mes, anos, semana, hora, base, mando),
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + 3, 0x14)], || o(rodadas, rodada, dia, mes, anos, semana, hora, base, mando),
         || cup_set_round_match_date(rodadas, rodada, dia, mes, anos, semana, hora, base, mando));
-    PLACAR.registrar(igual && a == b, || format!("cup_set_round_match_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
+    PLACAR.record(igual && a == b, || format!("cup_set_round_match_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
     a
 }
 
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn comparar_remove_club_from_ai_plans(amistosos: usize,
             regioes.push((e + 0xc, 4));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(amistosos, clube),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(amistosos, clube),
         || remove_club_from_ai_plans(amistosos, clube));
-    PLACAR.registrar(igual, || format!("remove_club_from_ai_plans({:#x}) {:x?} x {:x?}", clube, mo, mr));
+    PLACAR.record(igual, || format!("remove_club_from_ai_plans({:#x}) {:x?} x {:x?}", clube, mo, mr));
 }

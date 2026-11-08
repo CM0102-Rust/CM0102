@@ -23,7 +23,7 @@ unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4:
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
         let r = staff_records_manager_record(this, p);
         if r != 0 {
-            crate::comparacao::ramo("cpy_10 prêmio do técnico");
+            crate::comparison::branch("cpy_10 prêmio do técnico");
             let a = (r + 0x9e) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1));
         }
@@ -53,13 +53,13 @@ unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4:
             let dono = contract_club_except_type5(p);
             let x = entrada(cpy10_d(cpy10_d(0xde1f54) + 0x856), dono, p, 0, 0);
             if x != 0 && cpy10_d(x + 0xf) == cpy10_d(p) {
-                crate::comparacao::ramo("cpy_10 renovação");
+                crate::comparison::branch("cpy_10 renovação");
                 offer_renewal(p);
             }
         }
     }
     if credito as u8 != 1 {
-        crate::comparacao::ramo("cpy_10 sem crédito");
+        crate::comparison::branch("cpy_10 sem crédito");
         return; // cpy10: só o creditado
     }
     if cpy10_d(k + 0x45) != 0 {
@@ -72,7 +72,7 @@ unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4:
     if cpy10_b(p + 0x5b) as i8 <= 0xa {
         return;
     }
-    crate::comparacao::ramo("cpy_10 sorteio do agradecimento");
+    crate::comparison::branch("cpy_10 sorteio do agradecimento");
     if sortear(v59 as i32) <= 5 {
         return;
     }
@@ -106,16 +106,16 @@ unsafe extern "thiscall" fn comparar_add_year_award_record(this: usize, p: usize
     }
     let (t3d, t28) = (cpy10_b(p + 0x3d), cpy10_b(p + 0x28));
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("add_year_award_record jogador");
+        crate::comparison::branch("add_year_award_record jogador");
         return o(this, p, clube, premio, a4, a5, credito);
     }
     let r = staff_records_manager_record(this, p);
     if r == 0 {
         return o(this, p, clube, premio, a4, a5, credito);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5, credito),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5, credito),
         || add_year_award(this, p, clube, premio, a4, a5, credito, false));
-    PLACAR.registrar(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpy10_d(premio), mo, mr));
+    PLACAR.record(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpy10_d(premio), mo, mr));
 }
 
 /// { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
@@ -140,7 +140,7 @@ unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> 
         return r;
     }
     let n = match_record_is_bigger_win(a, b);
-    PLACAR.registrar(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -166,6 +166,6 @@ unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) 
         return r;
     }
     let n = match_record_is_bigger_defeat(a, b);
-    PLACAR.registrar(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

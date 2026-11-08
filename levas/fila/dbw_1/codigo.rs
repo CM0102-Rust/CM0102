@@ -203,20 +203,20 @@ const FIXED_KEY_REGIONS: [(usize, usize); 3] = [(0x9cf178, 0x13b0), (0xb63c9c, 0
 
 unsafe extern "C" fn comparar_set_key_ids() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_globals();
         set_fixed_key_ids(u32::MAX, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
+    PLACAR.record(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }
 
 unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_ranges_1080();
         set_fixed_key_ids(MARCA_DAS_CHAVES_1080, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
+    PLACAR.record(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }

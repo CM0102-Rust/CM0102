@@ -266,9 +266,9 @@ unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, r
         return o(estat, m, reg, sem_renda);
     }
     // o número da camisa dado pela original (0x85a470) fica fora das regiões: a cópia já o acha dado
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg, 0xd7a)], || o(estat, m, reg, sem_renda),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(reg, 0xd7a)], || o(estat, m, reg, sem_renda),
         || fill_match_record(estat, m, reg, sem_renda));
-    PLACAR.registrar(igual && r == n, || {
+    PLACAR.record(igual && r == n, || {
         let difs: Vec<usize> = mo.0[0].1.iter().zip(mr.0[0].1.iter()).enumerate().filter(|(_, (a, b))| a != b).map(|(i, _)| i).take(16).collect();
         format!("fill_match_record(sem_renda={}) original={} rust={} bytes diferentes em {:x?}", sem_renda, r, n, difs)
     });
@@ -278,7 +278,7 @@ unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, r
 unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(%%I1%%)(a, b);
     let n = match_stats_compare_events(a, b);
-    PLACAR.registrar(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
+    PLACAR.record(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
         core::slice::from_raw_parts(a, 4), core::slice::from_raw_parts(b, 4), r, n));
     r
 }
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn comparar_remove_language(estat: usize, ficha: usize,
     if tabela == 0 || contagem <= 0 {
         return o(estat, ficha, idioma);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(estat + 0x44, 4), (tabela, contagem as usize * 6)],
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(estat + 0x44, 4), (tabela, contagem as usize * 6)],
         || o(estat, ficha, idioma), || remove_language(estat, ficha, idioma));
-    PLACAR.registrar(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
+    PLACAR.record(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
 }

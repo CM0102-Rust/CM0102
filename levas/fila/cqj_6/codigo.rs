@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u32 {
     if fra_first_fill_league_table(this, 0x9ccb5c, 0x1d3, 0x9cf5cc) != Some(true) {
         return 0;
     }
-    crate::comparacao::ramo("cqj_6 tabela da primeira");
+    crate::comparison::branch("cqj_6 tabela da primeira");
     cqj6_fundo(this, 0x30d40);
     cqj6_pagar(this, 0x5b8d80, 0); // cqj6: a TV da primeira
     1
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u32 {
     if fra_first_fill_league_table(this, 0x9ccc0c, 0x171, 0x9cf5d0) != Some(true) {
         return 0;
     }
-    crate::comparacao::ramo("cqj_6 tabela da segunda");
+    crate::comparison::branch("cqj_6 tabela da segunda");
     core::ptr::write_unaligned((this + 0x28) as *mut i32, 0);
     *((this + 0xe1) as *mut u8) = 2;
     cqj6_pagar(this, 0x1e8480, cqj6_registro(0x9cf5cc)); // cqj6: a TV de quem caiu da primeira
@@ -143,7 +143,7 @@ unsafe fn fra_first_compare_league_table(nome: &str, this: usize, n: i16, g: usi
                 };
         }
     }
-    PLACAR.registrar(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
+    PLACAR.record(igual, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", nome, this, r, plano, achou));
     r
 }
 

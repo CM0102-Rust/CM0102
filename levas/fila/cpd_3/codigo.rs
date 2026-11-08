@@ -28,7 +28,7 @@ unsafe extern "thiscall" fn clear_current_competition(this: usize, nacao: usize)
     let seguinte = cpd3_d(this + 8).wrapping_add((id as usize).wrapping_mul(4));
     let v = *(seguinte as *const i32);
     if v != -1 {
-        crate::comparacao::ramo("seleção a competição seguinte");
+        crate::comparison::branch("seleção a competição seguinte");
         core::ptr::write_unaligned(atual as *mut i32, v); // a seguinte vira a atual
         *(seguinte as *mut i32) = -1;
         notify_manager_manager(nacao); // o aviso da competição seguinte
@@ -45,8 +45,8 @@ unsafe extern "thiscall" fn comparar_clear_current_competition(this: usize, naca
         return o(this, nacao);
     }
     let reg = [(cpd3_d(this + 4).wrapping_add(id.wrapping_mul(0x6e) as usize) + 4, 4), (seguinte, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao), || clear_current_competition(this, nacao));
-    PLACAR.registrar(igual, || format!("clear_current_competition({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nacao), || clear_current_competition(this, nacao));
+    PLACAR.record(igual, || format!("clear_current_competition({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
 }
 
 /// A competição `v` (−1: nenhuma) acabou para a 0x775070? Sem `fim_de_fase`, quando +0x59 da competição
@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, conti
             }
             let v = *((cpd3_d(this + 8) + 4 * i as usize) as *const i32);
             if v != -1 && *((cpd3_d(this + 4) + 0x6e * i as usize + 4) as *const i32) == -1 {
-                crate::comparacao::ramo("seleção continente a seguinte vira a atual");
+                crate::comparison::branch("seleção continente a seguinte vira a atual");
                 *((cpd3_d(this + 4) + 0x6e * i as usize + 4) as *mut i32) = v;
                 *((cpd3_d(this + 8) + 4 * i as usize) as *mut i32) = -1;
                 notify_manager_manager(nacao); // o aviso do continente
@@ -180,10 +180,10 @@ unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: usize, tipo:
             if outro == 0 && humano(time, 0, 1, 0, 0) == 0 {
                 continue;
             }
-            crate::comparacao::ramo("substituto sai do outro elenco");
+            crate::comparison::branch("substituto sai do outro elenco");
             tirar(this, nacao, outro as u8 as u32, q);
         }
-        crate::comparacao::ramo("substituto convocado");
+        crate::comparison::branch("substituto convocado");
         por(this, nacao, tipo, q);
         *(vaga as *mut u8) = cpd3_b(vaga).wrapping_sub(1); // uma vaga a menos
         noticia(this, q, nacao, tipo);

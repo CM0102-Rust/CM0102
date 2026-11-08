@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize,
         }
         if k == -1 {
             let r = o(this, round, tie, adiar);
-            PLACAR.registrar(r == 0, || format!("create_tie_fixtures(rodada {}) sem confronto marcado: {}", ri, r));
+            PLACAR.record(r == 0, || format!("create_tie_fixtures(rodada {}) sem confronto marcado: {}", ri, r));
             return r;
         }
     }
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize,
         after = club_fixtures_until(ic, id, end);
         ok = ok && after == before + expected;
     }
-    PLACAR.registrar(ok, || format!("create_tie_fixtures(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
+    PLACAR.record(ok, || format!("create_tie_fixtures(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
         ri, k, ad, r, mark, before, after, expected));
     r
 }
@@ -80,11 +80,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_draw_news(this: usize, roun
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
 pub(crate) unsafe extern "thiscall" fn comparar_sort_round_teams(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SORT_ROUND_TEAMS);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(cup));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(cup, round),
-        || crate::aleatorio::sem_contar(|| sort_round_teams(cup, round)));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round),
+        || crate::rng::without_counting(|| sort_round_teams(cup, round)));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("sort_round_teams(rodada {}) diferencas em {:x?}", round as i16, dif)
@@ -96,11 +96,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_sort_round_teams(cup: usize, rou
 /// [pt] Comparador: como o da 0x51d2d0 (sorteia; as contas e o vetor são temporários).
 pub(crate) unsafe extern "thiscall" fn comparar_check_round_teams_for_nation(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CHECK_ROUND_TEAMS_FOR_NATION);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(cup));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(cup, round),
-        || crate::aleatorio::sem_contar(|| check_round_teams_for_nation(cup, round)));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round),
+        || crate::rng::without_counting(|| check_round_teams_for_nation(cup, round)));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("check_round_teams_for_nation(rodada {}) diferencas em {:x?}", round as i16, dif)
@@ -111,8 +111,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_round_teams_for_nation(cup
 pub(crate) unsafe extern "thiscall" fn comparar_cup_start_new_season(cup: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_START_NEW_SEASON);
     let reg = [(cup + cup::RUN_BY_STAGES, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(cup), || cup_start_new_season(cup));
-    PLACAR.registrar(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", cup, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup), || cup_start_new_season(cup));
+    PLACAR.record(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", cup, mo, mr));
 }
 
 /// Comparer for `pay_round_prize_money` (comparison mode: see the header of motor.rs).
@@ -131,15 +131,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_pay_round_prize_money(cup: usize
         return o(cup, winner, loser, round, partida); // simplification: without finances, original only
     }
     let regions = [(cup + cup::PRIZE_FUND, 4), (fv, 0x167), (fp, 0x167)];
-    let before = crate::comparacao::Memoria::ler(&regions);
+    let before = crate::comparison::MemorySnapshot::read(&regions);
     ROUND_PRIZE_MONEY_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pay_round_prize_money(cup, winner, loser, round, partida)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_round_prize_money(cup, winner, loser, round, partida)));
     ROUND_PRIZE_MONEY_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regions);
-    before.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regions);
+    before.write_back();
     o(cup, winner, loser, round, partida);
-    let mo = crate::comparacao::Memoria::ler(&regions);
-    PLACAR.registrar(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", round as i16, cv, cp));
+    let mo = crate::comparison::MemorySnapshot::read(&regions);
+    PLACAR.record(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", round as i16, cv, cp));
 }
 
 /// Comparer for `set_home_teams_for_round` (comparison mode: see the header of motor.rs).
@@ -152,8 +152,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_home_teams_for_round(cup: us
     if ini < fim {
         reg.push((round_tie(cup, round as i16 as i32, ini as i32), (fim as i32 - ini as i32) as usize * 0x35));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(cup, round, laco), || set_home_teams_for_round(cup, round, laco));
-    PLACAR.registrar(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", round as i16, laco as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round, laco), || set_home_teams_for_round(cup, round, laco));
+    PLACAR.record(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", round as i16, laco as i16, mo, mr));
 }
 
 /// Comparer for `record_team_progress` (comparison mode: see the header of motor.rs).
@@ -171,8 +171,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_team_progress(cup: usize,
     if reg == 0 {
         return o(cup, team, round); // simplification: no record to look at, original only
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg + 0x73, 3)], || o(cup, team, round), || record_team_progress(cup, team, round));
-    PLACAR.registrar(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", team as i16, round as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(reg + 0x73, 3)], || o(cup, team, round), || record_team_progress(cup, team, round));
+    PLACAR.record(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", team as i16, round as i16, mo, mr));
 }
 
 /// Comparer for `draw_round` (comparison mode: see the header of motor.rs).
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_round(cup: usize, round: u3
         }
         let r = o(cup, round);
         let ok = plan.iter().all(|&(rk, d, y)| read_i16(rk) == d && read_u8(rk + 2) == y);
-        PLACAR.registrar(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", round as i32));
+        PLACAR.record(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", round as i32));
         return r;
     }
     let before_ac = read_u8(cup + cup::NEXT_DRAW_ROUND);
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_round(cup: usize, round: u3
     }
     let sum = if !skips_draw_news(cup, round) && read_i16(reg + 7) != 0x8c { 1 } else { 0 };
     ok &= read_u8(cup + cup::NEXT_DRAW_ROUND) == before_ac.wrapping_add(sum);
-    PLACAR.registrar(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", round as i32, before_ac, read_u8(cup + cup::NEXT_DRAW_ROUND)));
+    PLACAR.record(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", round as i32, before_ac, read_u8(cup + cup::NEXT_DRAW_ROUND)));
     r
 }
 
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_round(cup: usize, round: u3
 pub(crate) unsafe extern "thiscall" fn comparar_club_in_higher_division(this: usize, a: usize, b: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_CLUB_IN_HIGHER_DIVISION)(this, a, b);
     let n = club_in_higher_division(this, a, b);
-    PLACAR.registrar(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
+    PLACAR.record(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
     r
 }
 
@@ -255,7 +255,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cup_update_staff_records_for_sta
         && wins_uefa_cup_place(read_usize(cup + 4), clube) { read_i32(KEY_CLUB_COMP_UEFA_CUP) } else { before };
     let r = o(cup, clube, outcome, a3, a4, jogo, final_);
     let after = read_i32(state);
-    PLACAR.registrar(r == 0 && after == previsto, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", outcome as u8, before, after, previsto, r));
+    PLACAR.record(r == 0 && after == previsto, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", outcome as u8, before, after, previsto, r));
     r
 }
 
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cup_record_season_honours(cup: u
     o(cup);
     let lido = (read_usize(row + 4), core::ptr::read_unaligned((row + 8) as *const u16), read_usize(row + 0xa), read_usize(row + 0xe), read_usize(row + 0x12), read_usize(row + 0x16));
     let previsto = (read_usize(cup + 4), year, campeao, vice, terceiro, anfitria);
-    PLACAR.registrar(lido == previsto, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, previsto));
+    PLACAR.record(lido == previsto, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, previsto));
 }
 
 /// Comparer for `register_semi_final_losers_for_uefa` (comparison mode: see the header of motor.rs).
@@ -288,8 +288,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_register_semi_final_losers_for_u
     if s == 0 {
         return o(cup); // simplification: without the seeding, original only
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(s + 0x440, 50 * 12)], || o(cup), || register_semi_final_losers_for_uefa(cup));
-    PLACAR.registrar(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", cup, semi_final_losers(cup)));
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(s + 0x440, 50 * 12)], || o(cup), || register_semi_final_losers_for_uefa(cup));
+    PLACAR.record(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", cup, semi_final_losers(cup)));
 }
 
 /// Comparer for `get_fixture_side_teams` (comparison mode: see the header of motor.rs).
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_side_teams(this: usi
     let res = o(this, round, jogo, side, out);
     let obtido = core::slice::from_raw_parts(out, res.clamp(0, 0x100) as usize);
     let global = *(G_CUP_POSSIBLE_TEAM_COUNT as *const i32);
-    PLACAR.registrar(res == n && global == n && obtido == &expected[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, round, jogo, side as u8, res, n, global, obtido, &expected[..n.clamp(0, 0x100) as usize]));
+    PLACAR.record(res == n && global == n && obtido == &expected[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, round, jogo, side as u8, res, n, global, obtido, &expected[..n.clamp(0, 0x100) as usize]));
     res
 }
 
@@ -335,7 +335,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_possible_teams(this: usi
     let end = (*count).clamp(c0, 0x200);
     let obtido = core::slice::from_raw_parts(out.offset(c0 as isize), (end - c0) as usize);
     let ok = res == n && *count == n && obtido == &expected[c0 as usize..n.clamp(c0, 0x200) as usize];
-    PLACAR.registrar(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, round, jogo, res, n, *count, obtido, &expected[c0 as usize..n.clamp(c0, 0x200) as usize]));
+    PLACAR.record(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, round, jogo, res, n, *count, obtido, &expected[c0 as usize..n.clamp(c0, 0x200) as usize]));
     res
 }
 
@@ -355,11 +355,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_round(this: usize, round:
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
 pub(crate) unsafe extern "thiscall" fn comparar_randomize_round_teams(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_RANDOMIZE_ROUND_TEAMS);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(cup));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(cup, round),
-        || crate::aleatorio::sem_contar(|| randomize_round_teams(cup, round)));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round),
+        || crate::rng::without_counting(|| randomize_round_teams(cup, round)));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("randomize_round_teams(rodada {}) diferencas em {:x?}", round as i16, dif)
@@ -372,8 +372,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_randomize_round_teams(cup: usize
 pub(crate) unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SEPARATE_SHARED_STADIUM_TIES);
     let reg = all_ties_regions(cup);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(cup, round), || separate_shared_stadium_ties(cup, round));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round), || separate_shared_stadium_ties(cup, round));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("separate_shared_stadium_ties(rodada {}) diferencas em {:x?}", round as i16, dif)
@@ -386,7 +386,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(cup
 pub(crate) unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_ENTRIES_BY_LEVEL_DESC)(a, b);
     let n = cup_compare_entries_by_level_desc(a, b);
-    PLACAR.registrar(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -396,7 +396,7 @@ pub(crate) unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: us
 pub(crate) unsafe extern "C" fn comparar_cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_ENTRIES_BY_LEVEL_ASC)(a, b);
     let n = cup_compare_entries_by_level_asc(a, b);
-    PLACAR.registrar(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -410,10 +410,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usiz
         return o(this, jogo);
     }
     let reg = [(jogo + 0x3d, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, jogo)), || fixture_winner_side(this, jogo));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, jogo)), || fixture_winner_side(this, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        PLACAR.registrar(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", read_i16(jogo + 0x38) as u16, r, n, mo, mr));
+        PLACAR.record(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", read_i16(jogo + 0x38) as u16, r, n, mo, mr));
     }
     r
 }
@@ -425,10 +425,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usiz
 pub(crate) unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, tie: usize, jogo: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_DECIDE_TIE_WINNER);
     let reg = [(jogo + 0x3d, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, tie, jogo)), || tie_winner_side(tie, jogo));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, tie, jogo)), || tie_winner_side(tie, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        PLACAR.registrar(igual && r == n, || format!("decide_tie_winner(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
+        PLACAR.record(igual && r == n, || format!("decide_tie_winner(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
             read_i16(jogo + 0x38) as u16, read_i8(tie + 0x33), r, n, mo, mr));
     }
     r
@@ -440,7 +440,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, t
 pub(crate) unsafe extern "C" fn comparar_cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_DRAW_ENTRIES_BY_SEED)(a, b);
     let n = cup_compare_draw_entries_by_seed(a, b);
-    PLACAR.registrar(r == n, || format!("cup_compare_draw_entries_by_seed({}, {}) original={} rust={}", read_i8(a + 6), read_i8(b + 6), r, n));
+    PLACAR.record(r == n, || format!("cup_compare_draw_entries_by_seed({}, {}) original={} rust={}", read_i8(a + 6), read_i8(b + 6), r, n));
     r
 }
 
@@ -448,9 +448,9 @@ pub(crate) unsafe extern "C" fn comparar_cup_compare_draw_entries_by_seed(a: usi
 pub(crate) unsafe extern "C" fn comparar_cup_set_round_draw_date(rounds: usize, round: u32, day: u32, month: u32, years: u32, week: u32, base: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize>(IDX_CUP_SET_ROUND_DRAW_DATE);
     let r = round_record_from_base(rounds, round);
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 3)], || o(rounds, round, day, month, years, week, base),
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 3)], || o(rounds, round, day, month, years, week, base),
         || cup_set_round_draw_date(rounds, round, day, month, years, week, base));
-    PLACAR.registrar(igual && a == b, || format!("cup_set_round_draw_date({}, {}/{} +{}) {:x?} x {:x?}", round as i16, day, month, years, mo, mr));
+    PLACAR.record(igual && a == b, || format!("cup_set_round_draw_date({}, {}/{} +{}) {:x?} x {:x?}", round as i16, day, month, years, mo, mr));
     a
 }
 
@@ -458,18 +458,18 @@ pub(crate) unsafe extern "C" fn comparar_cup_set_round_draw_date(rounds: usize, 
 pub(crate) unsafe extern "C" fn comparar_cup_set_round_match_date(rounds: usize, round: u32, day: u32, month: u32, years: u32, week: u32, hora: u32, base: u32, mando: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(IDX_CUP_SET_ROUND_MATCH_DATE);
     let r = round_record_from_base(rounds, round);
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 3, 0x14)], || o(rounds, round, day, month, years, week, hora, base, mando),
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + 3, 0x14)], || o(rounds, round, day, month, years, week, hora, base, mando),
         || cup_set_round_match_date(rounds, round, day, month, years, week, hora, base, mando));
-    PLACAR.registrar(igual && a == b, || format!("cup_set_round_match_date({}, {}/{} +{}) {:x?} x {:x?}", round as i16, day, month, years, mo, mr));
+    PLACAR.record(igual && a == b, || format!("cup_set_round_match_date({}, {}/{} +{}) {:x?} x {:x?}", round as i16, day, month, years, mo, mr));
     a
 }
 
 /// Comparer for `apply_round_rules_to_match` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_apply_round_rules_to_match(cup: usize, jogo: usize, key: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_APPLY_ROUND_RULES_TO_MATCH);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(jogo + 0x38, 2)], || o(cup, jogo, key),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(jogo + 0x38, 2)], || o(cup, jogo, key),
         || apply_round_rules_to_match(cup, jogo, key));
-    PLACAR.registrar(igual, || format!("apply_round_rules_to_match(chave {}) {:x?} x {:x?}", key, mo, mr));
+    PLACAR.record(igual, || format!("apply_round_rules_to_match(chave {}) {:x?} x {:x?}", key, mo, mr));
 }
 
 /// Comparer for `find_tree_slot_for_fixture` (comparison mode: see the header of motor.rs).
@@ -479,15 +479,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_tree_slot_for_fixture(cup: 
         return r;
     }
     let n = find_tree_slot_for_fixture(cup, jogo);
-    PLACAR.registrar(r == n, || format!("find_tree_slot_for_fixture original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("find_tree_slot_for_fixture original={} rust={}", r, n));
     r
 }
 
 /// Comparer for `cup_match_importance` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_cup_match_importance(cup: usize, partida: usize, second: u8, margem: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(IDX_CUP_MATCH_IMPORTANCE);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(margem as usize, 1)], || o(cup, partida, second, margem), || cup_match_importance(cup, partida, second, margem));
-    PLACAR.registrar(igual && r == n, || format!("cup_match_importance(lado {}) original={} rust={} {:x?} x {:x?}", second, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(margem as usize, 1)], || o(cup, partida, second, margem), || cup_match_importance(cup, partida, second, margem));
+    PLACAR.record(igual && r == n, || format!("cup_match_importance(lado {}) original={} rust={} {:x?} x {:x?}", second, r, n, mo, mr));
     r
 }
 
@@ -502,7 +502,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_team_result_news(cup: usize,
 pub(crate) unsafe extern "thiscall" fn comparar_cup_check_complete(this: usize, stages: u32, x: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CUP_CHECK_COMPLETE)(this, stages, x);
     let n = cup_check_complete(this, stages, x);
-    PLACAR.registrar(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, stages, r, n));
+    PLACAR.record(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, stages, r, n));
     r
 }
 
@@ -551,7 +551,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates
     }
     let e = cup_round_entry(this, round);
     let after: [u8; 8] = core::array::from_fn(|k| read_u8(e + k * 7 + 0x29));
-    PLACAR.registrar(after == expected, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
+    PLACAR.record(after == expected, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
         round, after, expected));
 }
 
@@ -585,7 +585,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) ->
             }
         }
     }
-    PLACAR.registrar(error.is_none(), || format!("map_fixture_tree: o confronto (rodada, índice) {:?} sem a vaga de volta", error));
+    PLACAR.record(error.is_none(), || format!("map_fixture_tree: o confronto (rodada, índice) {:?} sem a vaga de volta", error));
     r
 }
 
@@ -618,7 +618,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cup_rank_teams(this: usize) {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.registrar(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this, plan.len(), erros.join("; ")));
+    PLACAR.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this, plan.len(), erros.join("; ")));
 }
 
 /// Comparer for `cup_set_round_match_day` (comparison mode: see the header of motor.rs).
@@ -628,9 +628,9 @@ pub(crate) unsafe extern "C" fn comparar_cup_set_round_match_day(rounds: usize, 
         return o(rounds, round, slot, week, hora, code, mando);
     }
     let e = rounds.wrapping_add((round as isize * 104 + slot as isize * 7) as usize);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x23, 7)], || o(rounds, round, slot, week, hora, code, mando),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x23, 7)], || o(rounds, round, slot, week, hora, code, mando),
         || cup_set_round_match_day(rounds, round, slot, week, hora, code, mando));
-    PLACAR.registrar(igual && r == n, || format!("cup_set_round_match_day({}, {}) {:x?} x {:x?}", round, slot, mo, mr));
+    PLACAR.record(igual && r == n, || format!("cup_set_round_match_day({}, {}) {:x?} x {:x?}", round, slot, mo, mr));
     r
 }
 
@@ -640,6 +640,6 @@ pub(crate) unsafe extern "C" fn comparar_cup_set_round_match_day(rounds: usize, 
 pub(crate) unsafe extern "thiscall" fn comparar_has_club(this: usize, clube: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_HAS_CLUB)(this, clube);
     let n = has_club(this, clube);
-    PLACAR.registrar(r == n, || format!("has_club(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
+    PLACAR.record(r == n, || format!("has_club(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
     r
 }

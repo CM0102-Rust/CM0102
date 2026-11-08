@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
         if completa(c) == 0 {
             return 0;
         }
-        crate::comparacao::ramo("cqh_6 liga de baixo completa");
+        crate::comparison::branch("cqh_6 liga de baixo completa");
         i = cqh6_d(c + 0x20) as i32; // cqh6: a liga de baixo
     }
     1
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn comp_collect_club_list(this: usize, lista: *mut usiz
         while i < cqh6_w(f + 0x3e) {
             let clube = if liga { cqh6_d(cqh6_d(f + 0xb1) + i as usize * 0x3b) } else { cqh6_d(cqh6_d(f + 0xa7) + i as usize * 6) };
             if clube != 0 && !(0..n).any(|k| cqh6_d(v + k as usize * 4) == clube) && n < 0xc8 { // cqh6: até 200 clubes
-                crate::comparacao::ramo("cqh_6 clube na lista");
+                crate::comparison::branch("cqh_6 clube na lista");
                 core::ptr::write_unaligned((v + n as usize * 4) as *mut u32, clube as u32); // cqh6: o clube na lista
                 n += 1;
             }
@@ -85,12 +85,12 @@ unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usize, lista: 
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut l2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, lista, x), || comp_collect_club_list(this, &mut l2, x));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, lista, x), || comp_collect_club_list(this, &mut l2, x));
     let mesmas = a == b && (*lista == 0) == (l2 == 0) && (*lista == 0 || core::slice::from_raw_parts(*lista as *const u32, a as usize) == core::slice::from_raw_parts(l2 as *const u32, b as usize));
     if l2 != 0 {
         soltar(l2);
     }
-    PLACAR.registrar(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
+    PLACAR.record(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
     a
 }
 /// { 0x48cc70 } (thiscall, ret 0x10, comp.cpp): `Comp::find_club_progress(clube, &fase, &rodada, &situação)`: das
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn find_club_progress(this: usize, clube: usize, fase_i
                     let t = cqh6_d(s + 0xa7) + k as usize * 6;
                     if cqh6_d(t) == clube {
                         *fase_id = cqh6_w(s + 0x3a);
-                        crate::comparacao::ramo("cqh_6 progresso na copa");
+                        crate::comparison::branch("cqh_6 progresso na copa");
                         *situacao = cqh6_b(t + 5); // cqh6: a situação do time
                         time = k;
                     }
@@ -157,5 +157,5 @@ unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, clube: usiz
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(%%I2%%)(this, clube, fase_id, rodada, situacao);
     find_club_progress(this, clube, &mut f2, &mut r2, &mut s2);
     let ok = f2 == *fase_id && r2 == *rodada && s2 == *situacao;
-    PLACAR.registrar(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *fase_id, *rodada, *situacao, f2, r2, s2));
+    PLACAR.record(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *fase_id, *rodada, *situacao, f2, r2, s2));
 }

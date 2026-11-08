@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
         }
         let a = d16 as f64;
         let t = match_pl_ftol(a * a * a * f / q10 as f64);
-        crate::comparacao::ramo("cqc_2 teto pela tabela");
+        crate::comparison::branch("cqc_2 teto pela tabela");
         let menos = cqc2_i(fin + 0xc).wrapping_sub(t.wrapping_add(verba) / 52); // cqc2: a folha e a verba por semana
         let idx = ((d16 / 10) * 8) as isize as usize;
         let vv = read_i64(tabela.wrapping_add(idx)).wrapping_sub(menos as i64) as f64 * f;
@@ -305,7 +305,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
         let t = repf * repf * fator * read_f64_at(0x96a5c0) + cqc2_i(fin + 0x10) as f64;
         let v = contract_wage(pessoa);
         s = if (v as f64) < t {
-            crate::comparacao::ramo("cqc_2 teto pela injury_word_0c");
+            crate::comparison::branch("cqc_2 teto pela injury_word_0c");
             match_pl_ftol(repf * repf * fator * read_f64_at(0x96a5c0) + cqc2_i(fin + 0x10) as f64) // cqc2: a reputação ao quadrado
         } else {
             contract_wage(pessoa)
@@ -415,7 +415,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
             }
             let pres = cqc2_d(clube + 0xbf);
             if pres != 0 && cqc2_d(pres + 0x69) != 0 && (cqc2_w(clube + 0x80) as i32) < cqc2_w(cqc2_d(pessoa + 0x61) + 0xb) as i32 + 0x4e2 {
-                crate::comparacao::ramo("cqc_2 presidente");
+                crate::comparison::branch("cqc_2 presidente");
                 s = match_pl_ftol(((cqc2_b(pres + 0x57) as i8 as i32) as f64 * read_f64_at(0x967898) + read_f64_at(0x9689d8)) * s as f64); // cqc2: o presidente
                 // 0x547810 (push pres; push pessoa; add esp, 8 -> cdecl), 0x547790 (push clube; push pessoa; add esp, 8 -> cdecl)
                 let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
@@ -550,7 +550,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
 unsafe extern "thiscall" fn comparar_get_max_wage(fin: usize, pessoa: usize, cargo: u32) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%)(fin, pessoa, cargo);
     let n = get_max_wage(fin, pessoa, cargo);
-    PLACAR.registrar(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, pessoa, cargo as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, pessoa, cargo as u8 as i8, r, n));
     r
 }
 

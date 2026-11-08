@@ -18,7 +18,7 @@ pub(crate) const GREECE_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
 /// [pt] { 0x5ecf20 } (thiscall, ret 0, greece_rules.cpp, `GREECE_RULES::init_transfer_windows`; chamada pelo construtor das regras da Grécia (regra 11), depois da base e da vtable): as
 /// 2 janelas de transferência de `GREECE_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows(this: usize) {
-    crate::comparacao::ramo("cqn_2 grecia");
+    crate::comparison::branch("cqn_2 grecia");
     set_transfer_windows(this, 2, &GREECE_TRANSFER_WINDOWS, 0x9cdbc8, 0x51);
 }
 
@@ -31,16 +31,6 @@ pub(crate) const RUSSIA_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
     [0x14, 0x01, 0xff, 0x04, 0x07, 0x00], // cqn2: a Rússia
 ];
 
-/// the Russia rule (20): two windows, from 15 December to 24 March (moved to the Thursday [inference]); from 28 June
-/// (moved to the Tuesday [inference]) to 4 August
-/// Original: `RUSSIA_RULES::init_transfer_windows` (0x7ec7e0, russia_rules.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x7ec7e0 } (thiscall, ret 0, russia_rules.cpp, `RUSSIA_RULES::init_transfer_windows`; chamada pelo construtor das regras da Rússia (regra 20), depois da base e da vtable): as
-/// 2 janelas de transferência de `RUSSIA_TRANSFER_WINDOWS`.
-pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows_7ec7e0(this: usize) {
-    crate::comparacao::ramo("cqn_2 russia");
-    set_transfer_windows(this, 2, &RUSSIA_TRANSFER_WINDOWS, 0xa7ad38, 0x4d);
-}
 
 
 /// As janelas da Bélgica: três janelas, de 1º de junho a 30 de junho; de 1º de junho a 31 de dezembro; de 1º de junho a 31 de março.
@@ -53,14 +43,5 @@ pub(crate) const BELGIUM_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
     [0x03, 0x02, 0xff, 0x1f, 0x02, 0x00],
 ];
 
-/// the Belgium rule (3): three windows, from 1 June to 30 June; from 1 June to 31 December; from 1 June to 31 March
-/// Original: `BELGIUM_RULES::init_transfer_windows` (0x424c00, belgium_rules.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x424c00 } (thiscall, ret 0, belgium_rules.cpp, `BELGIUM_RULES::init_transfer_windows`; chamada pelo construtor das regras da Bélgica (regra 3), depois da base e da vtable): as
-/// 3 janelas de transferência de `BELGIUM_TRANSFER_WINDOWS`.
-pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows_424c00(this: usize) {
-    crate::comparacao::ramo("cqn_2 belgica");
-    set_transfer_windows(this, 3, &BELGIUM_TRANSFER_WINDOWS, 0x989e34, 0x53);
-}
 
 

@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     while k < n {
         let o = (k as i32 * 0x22) as usize;
         let p = read_u32_as_usize(this) + o + 0x1f;
-        crate::comparacao::ramo("cqo_3 sorteio do dia");
+        crate::comparison::branch("cqo_3 sorteio do dia");
         let r = sortear(0x46); // cqo3: o sorteio do dia da decisão
         write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
         let e = read_u32_as_usize(this) + o;
@@ -148,9 +148,15 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
 }
 
 
-/// the news of changed hosts: with open voting, the bids (news 4); with a chosen bid, the hosts (news 5); to the
-/// managers of the competition's continent or to everyone; except the Olympics, the 2006 World Cup in Germany and the
-/// chosen bid of the edition 8 years ahead
+/// `HostCountry::post_host_news(list)`: posts the news of changed hosts. Called by the hosts calendar 0x5fa850; SEH
+/// frame only for the local news, no destructor.
+///
+/// For each entry of the list (cursor reset, 0x68d1b0), except the chosen bid (or the fixed default) of the edition 8
+/// years ahead ([0xae2c92] + 8), the Olympics ([0x9cf7a0]) and the 2006 World Cup in Germany ([0x9cf79c], 0x7d6,
+/// [0x9cf314]): with voting open (−1), news 4 (the bids: competition, year and the six nations); otherwise news 5 (the
+/// chosen bid: competition, year and its two hosts, the first one in the fixed default), built by 0x77bbe0/0x785790 and
+/// delivered to the managers of the competition's continent (table [0xae23d0], 0x6b bytes, +0x59; 0x786640) or to
+/// everyone (0x786780).
 /// Original: `HostCountry::post_host_news` (0x5faec0, host_country.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x5faec0 } (thiscall, ret 4, host_country.cpp, `HostCountry::post_host_news(lista)`; pelo calendário das sedes
@@ -166,7 +172,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let continent: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
     let all: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
-    crate::comparacao::ramo("cqo_3 noticia das sedes");
+    crate::comparison::branch("cqo_3 noticia das sedes");
     write_u32(list + 0xa, read_u32_as_usize(list + 2) as u32);
     let mut it = next(list);
     while it != 0 {
@@ -212,8 +218,12 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
 
 // simplification: delivers news items (allocates); original only. The copy takes the branch.
 
-/// reads HostCountry.tmp (the count and the 0x22-byte entries into a new block); without the file 0 (a new game builds
-/// the default table); read errors with the error box
+/// `HostCountry::load_temp_file`: reads HostCountry.tmp. Called by the constructor 0x5f97c0.
+///
+/// Reads HostCountry.tmp from the CM3_TEMP folder (0x90bde0, fopen 0x945b00 "rb"): the count (word, +4) and the
+/// 0x22-byte entries into a new block ([this], 0x944e46); if the read fails, the error box (lines 0x448/0x452/0x45c),
+/// closes the file (0x945a09) and, if the block exists, frees it (0x9452ca). Returns 1 with everything read, 0 without
+/// the file (a new game builds the default table) or on error.
 /// Original: `HostCountry::load_temp_file` (0x5fb160, host_country.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5fb160 } (thiscall, ret 0, host_country.cpp, `HostCountry::load_temp_file`; pelo construtor 0x5f97c0): lê o
@@ -229,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let f = open(path(0x987da0, 0x9cf10c), 0x98f928);
     if f == 0 {
-        crate::comparacao::ramo("cqo_3 sem o arquivo");
+        crate::comparison::branch("cqo_3 sem o arquivo");
         return 0;
     }
     if read(this + 4, 2, 1, f) != 1 {
@@ -274,8 +284,12 @@ pub(crate) unsafe fn host_pair(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 
     (*a != u32::MAX) as u8 + (second != u32::MAX) as u8
 }
 
-/// the host (and the second host, for co-hosted editions) of a competition in a year: the winning bid, or the default
-/// host when the host is fixed or the bidding is open (or closed, on request)
+/// `HostCountry::find_hosts`: the host (and the second host, for co-hosted editions) of competition `comp` in year
+/// `year` (short).
+///
+/// The first entry of the competition with that year (or year 0) that already has the chosen bid (its two hosts), the
+/// fixed default or open voting (the default host), or, with `default`, voting still closed (the default). Writes both
+/// and returns how many are valid; with no entry, 0 without writing.
 /// Original: `HostCountry::find_hosts` (0x5fa730, host_country.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x5fa730 } (thiscall, ret 0x14, host_country.cpp, `HostCountry::find_hosts`): as sedes da competição `comp` no ano
@@ -295,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
                     return host_pair(e, k, a, b) as u32;
                 }
                 if k == -3 || k == -1 || default != 0 {
-                    crate::comparacao::ramo("cqj_3 sede padrao");
+                    crate::comparison::branch("cqj_3 sede padrao");
                     return host_pair(e, -1, a, b) as u32; // cqj3: a sede padrão
                 }
             }
@@ -308,7 +322,10 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
 }
 
 
-/// the hosts of the competition's next already decided edition (the winning bid or the fixed host)
+/// `HostCountry::find_next_hosts`: the hosts of the next already decided edition of competition `comp`.
+///
+/// The first entry of it with the chosen bid (the two hosts) or with the fixed default (the default). Writes both and
+/// returns how many are valid; with no entry, 0 without writing.
 /// Original: `HostCountry::find_next_hosts` (0x5fa7d0, host_country.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x5fa7d0 } (thiscall, ret 0xc, host_country.cpp, `HostCountry::find_next_hosts`): as sedes da próxima edição da
@@ -414,7 +431,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
                 *k = 0xff; // cqj3: a votação abre
             }
             if *k == 0xff {
-                crate::comparacao::ramo("cqj_3 votacao aberta");
+                crate::comparison::branch("cqj_3 votacao aberta");
                 por(l, &p, 4);
             }
             p += 0x22;
@@ -426,7 +443,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             por(l, &p, 4);
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xff || *k == 0xfe {
-                crate::comparacao::ramo("cqj_3 sede sorteada");
+                crate::comparison::branch("cqj_3 sede sorteada");
                 *k = sorteio(3) as u8; // cqj3: a candidatura vencedora
             }
             p += 0x22;
@@ -438,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             let e = (read_u32(this) as usize).wrapping_add(i as i32 as usize * 0x22);
             let ae = read_u16(e + 4);
             if ae < year && ae != 0 {
-                crate::comparacao::ramo("cqj_3 edicao seguinte");
+                crate::comparison::branch("cqj_3 edicao seguinte");
                 core::ptr::write_unaligned((e + 4) as *mut u16, ae.wrapping_add(*((e + 0x21) as *const i8) as i16 as u16)); // cqj3: o intervalo
                 if *((e + 0x1e) as *const u8) != 0xfd {
                     *((e + 0x1e) as *mut u8) = 0xfe;
@@ -461,7 +478,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
 /// a quantidade (+4, i16) e os registros de 0x22 bytes de [+0], sem conferir a gravação. Erro ao abrir: a caixa
 /// "Error" (host_country.cpp 0x475).
 pub(crate) unsafe extern "thiscall" fn save_temp_file(this: usize) {
-    crate::comparacao::ramo("cpx_6 gravar paises anfitrioes");
+    crate::comparison::branch("cpx_6 gravar paises anfitrioes");
     let f = open_temp_file_for_write(0x9cf10c);
     if f == 0 {
         show_error_at(0x9cf0d8, 0x475);

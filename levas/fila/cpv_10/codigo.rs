@@ -25,7 +25,7 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
         return;
     }
     if id >= cpv10_d(0xae2364) / 2 {
-        crate::comparacao::ramo("cpv_10 metade de cima");
+        crate::comparison::branch("cpv_10 metade de cima");
     }
     let r = physical_record_of_id(this, id);
     let i = cpv10_d(r + 0xe);
@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
         return;
     }
     if i == 0 {
-        crate::comparacao::ramo("cpv_10 entrada zero");
+        crate::comparison::branch("cpv_10 entrada zero");
     }
     let e = (cpv10_d(this + 4) as u32).wrapping_add((i as u32).wrapping_mul(0x30)) as usize;
     if *(e as *const u8) != 0x51 {
@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
             volta(this, pessoa, 1, *(e as *const u8) as u32, 0, 0);
         }
     }
-    crate::comparacao::ramo("cpv_10 fim da lesao");
+    crate::comparison::branch("cpv_10 fim da lesao");
     *(e as *mut u8) = 0xff; // cpv10: a entrada fica livre
     core::ptr::write_unaligned((physical_record_of_id(this, cpv10_d(pessoa)) + 0xe) as *mut i32, -1); // cpv10: sem lesão atual
 }
@@ -74,12 +74,12 @@ unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, pessoa: usiz
     if fora {
         o(this, pessoa, noticia);
         let ok = *(e as *const u8) == 0xff && cpv10_d(physical_record_of_id(this, cpv10_d(pessoa)) + 0xe) == -1;
-        PLACAR.registrar(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", pessoa, noticia, *(e as *const u8), cpv10_d(physical_record_of_id(this, cpv10_d(pessoa)) + 0xe)));
+        PLACAR.record(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", pessoa, noticia, *(e as *const u8), cpv10_d(physical_record_of_id(this, cpv10_d(pessoa)) + 0xe)));
         return;
     }
     let reg = [(e, 1), (r + 0xe, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, noticia), || end_player_injury(this, pessoa, noticia));
-    PLACAR.registrar(igual, || format!("end_player_injury({:x}, {}) {:x?} x {:x?}", pessoa, noticia, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, noticia), || end_player_injury(this, pessoa, noticia));
+    PLACAR.record(igual, || format!("end_player_injury({:x}, {}) {:x?} x {:x?}", pessoa, noticia, mo, mr));
 }
 
 /// { 0x72bbf0 } (stdcall, ret 0xc, media.cpp, quadro SEH sem destrutor): `media_queue_player_apology_news(jogador,
@@ -92,7 +92,7 @@ unsafe extern "stdcall" fn media_queue_player_apology_news(jogador: usize, clube
     if jogador == 0 || cpv10_d(jogador + 0x61) == 0 || clube == 0 {
         return;
     }
-    crate::comparacao::ramo("media_queue_player_apology_news");
+    crate::comparison::branch("media_queue_player_apology_news");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn clear_inbox(this: usize, tecnico: usize) {
     core::ptr::write_unaligned((caixa + 8) as *mut i32, 0);
     core::ptr::write_unaligned((caixa + 4) as *mut i32, primeira);
     if primeira != -1 {
-        crate::comparacao::ramo("clear_inbox");
+        crate::comparison::branch("clear_inbox");
         for k in 0..0x64u32 {
             let n = (cpv10_d(this) as u32).wrapping_add(k.wrapping_add(cpv10_d(caixa) as u32).wrapping_mul(0xdf)) as usize;
             core::ptr::write_unaligned((n + 0xd6) as *mut i32, 0);
@@ -185,10 +185,10 @@ unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, tecnico: usize) {
         let noticias = news_box_regions(this, caixa);
         let ok = cpv10_d(caixa + 4) == primeira && cpv10_d(caixa + 8) == 0
             && noticias[1..].iter().all(|&(n, _)| cpv10_d(n) == 0 && cpv10_d(n + 4) == 1);
-        PLACAR.registrar(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", tecnico, (primeira, cpv10_d(caixa + 4), cpv10_d(caixa + 8))));
+        PLACAR.record(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", tecnico, (primeira, cpv10_d(caixa + 4), cpv10_d(caixa + 8))));
         return;
     }
     let reg = news_box_regions(this, caixa);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tecnico), || clear_inbox(this, tecnico));
-    PLACAR.registrar(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", tecnico, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tecnico), || clear_inbox(this, tecnico));
+    PLACAR.record(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", tecnico, mo, mr));
 }

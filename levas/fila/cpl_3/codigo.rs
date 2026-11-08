@@ -54,7 +54,7 @@ unsafe fn grow_record_vector(this: usize, v: usize, c: usize, step_towards: usiz
 /// a transferência passada (0x25 bytes, cópia 0x8cb940) ao vetor [this+0x862] (capacidade +0x866, conta +0x86a, que
 /// sobe antes da cópia); cheio, cresce de 100 em 100 (sem memória: caixa 0x2794 e nada). Devolve o registro novo.
 unsafe extern "thiscall" fn add_past_transfer(this: usize, registro: usize) -> usize {
-    crate::comparacao::ramo("cpl_3 transferencia passada");
+    crate::comparison::branch("cpl_3 transferencia passada");
     // ponytail: sem memória a original devolve o que a caixa deixou em eax; aqui 0 (o jogo não lê)
     if !grow_record_vector(this, 0x862, 4, 100, 0x25, 0x2794, 0xa8ec34) {
         return 0;
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn add_past_transfer(this: usize, registro: usize) -> u
 /// 0x1b1b e nada). Liga a marca da permissão (bit 0x20 de [this+0x86e] + id × 8) e, com `ordenar`, reordena (qsort
 /// 0x945333 com 0x8e55c0, a ordem da busca 0x8c7560).
 unsafe extern "thiscall" fn add_work_permit(this: usize, pessoa: usize, nacao: usize, ano: u32, _nao_usado: u32, ordenar: u32) {
-    crate::comparacao::ramo("cpl_3 permissao de trabalho");
+    crate::comparison::branch("cpl_3 permissao de trabalho");
     if !grow_record_vector(this, 0x93a, 8, 30, 0xe, 0x1b1b, 0xa8eb04) {
         return;
     }
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn add_work_permit(this: usize, pessoa: usize, nacao: u
 /// +0x890, conta +0x894); cheio, cresce de 50 em 50 (sem memória: caixa 0x2581 e nada). Reordena pela pessoa (qsort
 /// 0x945333 com 0x8b4e00).
 unsafe extern "thiscall" fn add_first_team_appearance_money(this: usize, registro: usize) {
-    crate::comparacao::ramo("cpl_3 premio por jogo");
+    crate::comparison::branch("cpl_3 premio por jogo");
     if !grow_record_vector(this, 0x88c, 4, 50, 0xd, 0x2581, 0xa8eb94) {
         return;
     }
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn comparar_add_past_transfer(this: usize, registro: us
     }
     let novo = cpl3_d(this + 0x862).wrapping_add(n.wrapping_mul(0x25));
     let gravado = core::slice::from_raw_parts(novo as *const u8, 0x1d);
-    PLACAR.registrar(r == novo && cpl3_d(this + 0x86a) == n.wrapping_add(1) && gravado == &fonte[..], || {
+    PLACAR.record(r == novo && cpl3_d(this + 0x86a) == n.wrapping_add(1) && gravado == &fonte[..], || {
         format!("add_past_transfer: conta {} -> {}, devolveu {:x} (esperava {:x}), registro {:x?} x {:x?}", n, cpl3_d(this + 0x86a), r, novo, fonte, gravado)
     });
     r
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn comparar_add_work_permit(this: usize, pessoa: usize,
     let conta = cpl3_d(this + 0x93e);
     let marca = *((cpl3_d(this + 0x86e).wrapping_add(cpl3_d(pessoa).wrapping_mul(8))) as *const u8);
     let ok = conta == n.wrapping_add(1) && marca & 0x20 != 0 && vector_contains_record(cpl3_d(this + 0x93a), conta, 0xe, &alvo);
-    PLACAR.registrar(ok, || format!("add_work_permit(pessoa {}, nação {}, ano {}): conta {} -> {}, marca {:#x}", cpl3_d(pessoa), cpl3_d(nacao), ano as u16, n, conta, marca));
+    PLACAR.record(ok, || format!("add_work_permit(pessoa {}, nação {}, ano {}): conta {} -> {}, marca {:#x}", cpl3_d(pessoa), cpl3_d(nacao), ano as u16, n, conta, marca));
 }
 
 /// Comparador: o plano antes (a conta e os 13 bytes), a original roda; confere a conta e que o registro está no vetor
@@ -159,5 +159,5 @@ unsafe extern "thiscall" fn comparar_add_first_team_appearance_money(this: usize
     }
     let conta = cpl3_d(this + 0x894);
     let ok = conta == n.wrapping_add(1) && vector_contains_record(cpl3_d(this + 0x88c), conta, 0xd, &alvo);
-    PLACAR.registrar(ok, || format!("add_first_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
+    PLACAR.record(ok, || format!("add_first_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }

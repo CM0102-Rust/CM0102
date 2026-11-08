@@ -26,7 +26,7 @@ unsafe extern "thiscall" fn contains_player(this: usize, pessoa: usize) -> u32 {
         return 0;
     }
     if cqa6_d(this + 0x1f6) == 0 {
-        crate::comparacao::ramo("cqa_6 busca vazia");
+        crate::comparison::branch("cqa_6 busca vazia");
         return 0; // cqa6: sem resultados, não está
     }
     let referencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x7e4920usize);
@@ -37,10 +37,10 @@ unsafe extern "thiscall" fn contains_player(this: usize, pessoa: usize) -> u32 {
         return 0;
     }
     if cqa6_b(r + 0x20) & 1 != 0 { // cqa6: a removida não conta
-        crate::comparacao::ramo("cqa_6 removido");
+        crate::comparison::branch("cqa_6 removido");
         return 0;
     }
-    crate::comparacao::ramo("cqa_6 achado");
+    crate::comparison::branch("cqa_6 achado");
     1 // cqa6: achado
 }
 
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn comparar_contains_player(this: usize, pessoa: usize)
     }
     let r = o(this, pessoa);
     let n = contains_player(this, pessoa);
-    PLACAR.registrar(r == n, || format!("contains_player(busca {:x}, pessoa {:x}) original={} rust={}", this, pessoa, r, n));
+    PLACAR.record(r == n, || format!("contains_player(busca {:x}, pessoa {:x}) original={} rust={}", this, pessoa, r, n));
     r
 }
 
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32
                 continue;
             }
         }
-        crate::comparacao::ramo("cqa_6 lista sem olheiro");
+        crate::comparison::branch("cqa_6 lista sem olheiro");
         set_search_scout(l, 0);
     }
     if clube != 0 {
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32
                 }
             }
             if !tem && livre > -1 {
-                crate::comparacao::ramo("cqa_6 olheiro na lista livre");
+                crate::comparison::branch("cqa_6 olheiro na lista livre");
                 set_search_scout(get_search(this, livre as u8, m), s);
             }
         }
@@ -164,8 +164,8 @@ unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, tecnico: usiz
             regioes.push((l, 0x2b0usize));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, tecnico), || sync_scout_lists(this, tecnico));
-    PLACAR.registrar(igual && r == n, || format!("sync_scout_lists(técnico {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, tecnico), || sync_scout_lists(this, tecnico));
+    PLACAR.record(igual && r == n, || format!("sync_scout_lists(técnico {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
     r
 }
 
@@ -215,10 +215,10 @@ unsafe extern "thiscall" fn comparar_player_search_find_or_claim_player_slot(thi
     if reservar == 0 {
         let r = o(this, pessoa, reservar);
         let n = player_search_find_or_claim_player_slot(this, pessoa, reservar);
-        PLACAR.registrar(r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, pessoa, r, n));
+        PLACAR.record(r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, pessoa, r, n));
         return r;
     }
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this + 4, 0x32 * 0x1a2)], || o(this, pessoa, reservar), || player_search_find_or_claim_player_slot(this, pessoa, reservar));
-    PLACAR.registrar(igual && r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, pessoa, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this + 4, 0x32 * 0x1a2)], || o(this, pessoa, reservar), || player_search_find_or_claim_player_slot(this, pessoa, reservar));
+    PLACAR.record(igual && r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, pessoa, r, n, igual));
     r
 }

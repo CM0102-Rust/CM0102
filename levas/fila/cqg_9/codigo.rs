@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
             if grupo <= limit {
                 ficam += 1;
                 *m = 1;
-                crate::comparacao::ramo("cqg_9 arbitro mantido");
+                crate::comparison::branch("cqg_9 arbitro mantido");
             } else {
                 *m = 0;
             }
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let v = b.wrapping_add((cqg9_w(b + 0x10) as isize * 0x10) as usize);
         cqg9_pd(v + 0x1e, k as u32);
         let pedido = cqg9_w(cqg9_d(cqg9_d(0xadadfc) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: o pedido da vaga
-        crate::comparacao::ramo("cqg_9 vaga de competicao");
+        crate::comparison::branch("cqg_9 vaga de competicao");
         cqg9_pd(v + 0x1a, pedido as u32);
         if cqg9_i(v + 0x1a) > cqg9_i(b + 0xc) {
             cqg9_pd(b + 0xc, cqg9_d(v + 0x1a) as u32);
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let mut j = 0i32;
         while j < cqg9_w(b + 0x10) as i32 {
             let c = cqg9_w(b + 0x10) as i32;
-            crate::comparacao::ramo("cqg_9 parte da vaga");
+            crate::comparison::branch("cqg_9 parte da vaga");
             cqg9_pd(b + 0x16 + 16 * j as usize, (cqg9_i(b + 4) / c) as u32); // cqg9: a parte de cada vaga
             let c = cqg9_w(b + 0x10) as i32;
             cqg9_pd(b + 0x12 + 16 * j as usize, (cqg9_i(b + 4).wrapping_mul(j) / c).wrapping_add(cqg9_i(b + 8)) as u32);
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
 unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
-    PLACAR.registrar(cqg9_d(this + 0xc) != 0 && cqg9_i(this + 4) == cqg9_i(0xae2390) && cqg9_d(this + 8) != 0,
+    PLACAR.record(cqg9_d(this + 0xc) != 0 && cqg9_i(this + 4) == cqg9_i(0xae2390) && cqg9_d(this + 8) != 0,
         || format!("set_up_officials: blocos {:x}, conta {} x {}", cqg9_d(this + 0xc), cqg9_i(this + 4), cqg9_i(0xae2390)));
 }
 
@@ -265,6 +265,6 @@ unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b: usize) ->
 unsafe extern "C" fn comparar_officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = officials_manager_compare_comp_level(a, b);
-    PLACAR.registrar(r == n, || format!("officials_manager_compare_comp_level({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("officials_manager_compare_comp_level({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

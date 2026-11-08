@@ -23,7 +23,7 @@ unsafe extern "thiscall" fn update_city_weather(this: usize) {
     if cpt5_d(this + 4) == 0 || cpt5_d(0xae2354) as i32 <= 0 {
         return;
     }
-    crate::comparacao::ramo("cpt_5 tempo do dia");
+    crate::comparison::branch("cpt_5 tempo do dia");
     let mut i = 0usize;
     loop {
         for k in 0..3usize { // cpt5: as três medidas
@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn update_city_weather(this: usize) {
             }
         }
         if cpt5_sortear(10) == 0 { // cpt5: um em dez muda o vento
-            crate::comparacao::ramo("cpt_5 vento novo");
+            crate::comparison::branch("cpt_5 vento novo");
             let r = cpt5_sortear(3); // cpt5: o vento novo
             *((cpt5_d(this + 4) + i * 4 + 3) as *mut u8) = r as u8;
         }
@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn comparar_update_city_weather(this: usize) {
 unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao: usize) -> u8 {
     let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(0x946fd8usize);
     let periodo: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x922d20usize);
-    crate::comparacao::ramo("cpt_5 regiao do clima");
+    crate::comparison::branch("cpt_5 regiao do clima");
     let mut linha = [0u8; 2000];
     if read_config_line(f, linha.as_mut_ptr()) == 0 {
         return 0;
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize, periodo: 
         show_error_at(0xad4dec, 0xea);
         return 0;
     }
-    crate::comparacao::ramo("cpt_5 periodo do clima");
+    crate::comparison::branch("cpt_5 periodo do clima");
     let mut linha = [0u8; 2000];
     if read_config_line(f, linha.as_mut_ptr()) == 0 {
         return 0;

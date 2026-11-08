@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn init_default_table(this: usize) {
     while k < n {
         let o = (k as i32 * 0x22) as usize;
         let p = cqo3_d(this) + o + 0x1f;
-        crate::comparacao::ramo("cqo_3 sorteio do dia");
+        crate::comparison::branch("cqo_3 sorteio do dia");
         let r = sortear(0x46); // cqo3: o sorteio do dia da decisão
         cqo3_pw(p, cqo3_w(p).wrapping_add((r - 0x23) as u16));
         let e = cqo3_d(this) + o;
@@ -160,10 +160,10 @@ unsafe extern "thiscall" fn comparar_init_default_table(this: usize) {
     if cqo3_d(this) == 0 || n <= 0 {
         return o(this);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(cqo3_d(this), n as usize * 0x22), (0xb67a34, 4)]);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| init_default_table(this)));
-    PLACAR.registrar(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| init_default_table(this)));
+    PLACAR.record(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
 }
 
 /// { 0x5faec0 } (thiscall, ret 4, host_country.cpp, `HostCountry::post_host_news(lista)`; pelo calendário das sedes
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn post_host_news(_this: usize, lista: usize) {
     let dado: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x785790usize);
     let continente: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x786640usize);
     let todos: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x786780usize);
-    crate::comparacao::ramo("cqo_3 noticia das sedes");
+    crate::comparison::branch("cqo_3 noticia das sedes");
     cqo3_pd(lista + 0xa, cqo3_d(lista + 2) as u32);
     let mut it = proximo(lista);
     while it != 0 {
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let f = abrir(caminho(0x987da0, 0x9cf10c), 0x98f928);
     if f == 0 {
-        crate::comparacao::ramo("cqo_3 sem o arquivo");
+        crate::comparison::branch("cqo_3 sem o arquivo");
         return 0;
     }
     if ler(this + 4, 2, 1, f) != 1 {

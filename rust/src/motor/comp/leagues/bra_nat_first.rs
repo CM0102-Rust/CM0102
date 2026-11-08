@@ -48,7 +48,7 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
         free(list);
         return;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
     free(list);
@@ -94,25 +94,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage(this:
     create_play_off_stage(this, &[0, 3, 1, 2], 0x98aa30, 0x286, 0x29d, "cqq_7 serie a"); // cqq7: 1º × 4º, 2º × 3º Série A
 }
 
-/// Series B has the round robin (stage −1) and the play-off (stage 0): when the round robin ends, the stage becomes 0
-/// and the play-off is built; past the last stage it is an error (the box)
-/// Original: `BraNatSecond::advance_stage` (0x42cdd0, bra_nat_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x42cdd0 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::advance_stage()`, a fase seguinte da Série B: no fim
-/// dos pontos corridos, o play-off (0x42ce60); a caixa da linha 0x23d.
-pub(crate) unsafe extern "thiscall" fn bra_nat_first_advance_stage_42cdd0(this: usize) {
-    advance_series_stage(this, 0x98ab64, 0x23d, 0x42ce60);
-}
 
-/// The Series B play-off: the top 4 of the round robin, 1st v 4th and 2nd v 3rd, in a knockout (no seeds) that decides
-/// the Series B champion [inference: the promotions to Series A come from it]
-/// Original: `BraNatSecond::create_play_off_stage` (0x42ce60, bra_nat_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x42ce60 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_play_off_stage()`, o play-off da Série B:
-/// 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2); caixas nas linhas 0x25f (sem lista) e 0x276 (sem fase).
-pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage_42ce60(this: usize) {
-    create_play_off_stage(this, &[0, 3, 1, 2], 0x98ab64, 0x25f, 0x276, "cqq_7 serie b"); // cqq7: 1º × 4º, 2º × 3º Série B
-}
 
 
 /// Comparer of the play-off creation: original only, then checks the stage exists with 4 teams, the league's +4, the
@@ -127,7 +109,7 @@ pub(crate) unsafe fn compare_play_off_stage(name: &str, this: usize, rows: &[usi
     original();
     let stage = read_usize(read_usize(this + 0xc));
     if stage == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
+        PLACAR.record(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
     let list = read_usize(stage + 0xa7);
@@ -136,7 +118,7 @@ pub(crate) unsafe fn compare_play_off_stage(name: &str, this: usize, rows: &[usi
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && read_i16(stage + 0x3e) == 4 && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
-    PLACAR.registrar(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
+    PLACAR.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
 
@@ -273,7 +255,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usiz
     }
     for (k, g) in BRAZIL_TURNOVER_COMPS.iter().enumerate() {
         if k == 13 {
-            crate::comparacao::ramo("cqq_8 virada do paulista");
+            crate::comparison::branch("cqq_8 virada do paulista");
         }
         bra_nat_first_call_virtual_no_args(comp_by_global(*g), 8); // cqq8: a virada de cada uma
     }
@@ -300,7 +282,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegatio
         bra_nat_first_call_virtual_no_args(read_usize(read_usize(comp_by_global(c) + 0xc) + 4 * k), 0xa4);
     }
     let swap: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, i32, i32) -> u32 = core::mem::transmute(FN_LEAGUE_PROMOTE_AND_RELEGATE);
-    crate::comparacao::ramo("cqq_8 acesso e rebaixamento");
+    crate::comparison::branch("cqq_8 acesso e rebaixamento");
     swap(this, comp_by_global(a), comp_by_global(b), 1, 1, -1, -1); // cqq8: A e B
     let mut r = swap(this, comp_by_global(b), comp_by_global(c), 1, 1, -1, -1); // cqq8: B e C
     for k in 0..7 {
@@ -309,22 +291,6 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegatio
     r
 }
 
-/// The Series B turnover: archives the season in the statistics, clears the table and stages, moves to the next year
-/// and rebuilds the rules, the table with the 28 Series B clubs, the fixtures and the order; then the predicted
-/// positions, the board expectations and the referee renewal
-/// Original: `BraNatSecond::start_new_season` (0x42cc10, bra_nat_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x42cc10 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::start_new_season()`, a virada da Série B (da
-/// virada da Série A): +0x4c = 0, o corpo comum (a tabela 0x42ca70, caixas nas linhas 0x20c, 0x213, 0x219 e 0x220), as
-/// expectativas e os árbitros.
-pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
-    if !rebuild_season(this, 0x42ca70, 0x98ab64, [0x20c, 0x213, 0x219, 0x220], 1) {
-        return 0;
-    }
-    crate::comparacao::ramo("cqq_8 virada da serie b");
-    set_expectations_and_renew_officials(this)
-}
 
 
 
@@ -379,12 +345,16 @@ pub(crate) unsafe fn create_division_table(this: usize, n: i16, file: usize, row
     if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     1
 }
 
-/// Series A has 28 clubs: those whose national division is Series A, in database order; when full, TV pays 150,000 to
-/// each club (no prize fund)
+/// Builds the Series A table: 28 clubs, those whose national division is Series A, in database order; when full, TV
+/// pays 150,000 to each club (no prize fund).
+///
+/// `BraNatFirst::create_table()`: Series A has 28 clubs (those with national division +0x57 = `[0x9cf9ec]`); when full,
+/// TV pays 150,000 to each club (League::pay_tv_rights 0x683010: push 0; push 0x249f0; mov ecx, edi -> thiscall(league,
+/// amount, filter), ret 8; it sends the TV news) and returns 1. Source 0x98aa30, line 0x1a1.
 /// Original: `BraNatFirst::create_table` (0x42a480, bra_nat_first.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x42a480 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::create_table()`: a Série A tem 28 clubes (os de
@@ -400,14 +370,6 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_table(this: usize) -
     1
 }
 
-/// Series B has 28 clubs, those of the division in database order; no TV money nor prize fund
-/// Original: `BraNatSecond::create_table` (0x42ca70, bra_nat_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x42ca70 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_table()`: a Série B tem 28 clubes (+0x57 =
-/// [0x9cf9e0]), sem dinheiro da TV. Fonte 0x98ab64, linha 0x1aa.
-pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_table_42ca70(this: usize) -> u32 {
-    create_division_table(this, 0x1c, 0x98ab64, 0x1aa, 0x57, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, 0, "cql_7 serie b cheia")
-}
 
 
 /// The clubs of global g's competition (pointer at campo) in database order, up to n.
@@ -443,7 +405,7 @@ pub(crate) unsafe fn compare_division_table(name: &str, this: usize, n: i16, g: 
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
     }
-    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 
@@ -557,24 +519,12 @@ pub(crate) unsafe fn set_serie_c_rules(o: usize) {
 /// calendário da fase principal; devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -> u32 {
     set_serie_a_rules(this);
-    crate::comparacao::ramo("cqi_7 regras da serie a");
+    crate::comparison::branch("cqi_7 regras da serie a");
     create_main_schedule(this);
     1
 }
 
 
-/// Series B: single round robin; win 3, draw 1; head-to-head and goal difference; promotes to Series A and relegates to
-/// Series C; 4 go up (rule word 2: the top places are promotion) and 4 go down; 7 substitutes, 3 substitutions, fixed
-/// numbers. Then the schedule
-/// Original: `BraNatSecond::set_up_rules` (0x42cb70, bra_nat_second.cpp, thiscall).
-///
-/// [pt] { 0x42cb70 } (thiscall, bra_nat_second.cpp): `BraNatSecond::set_up_rules`, as regras da Série B e o calendário.
-pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules_42cb70(this: usize) -> u32 {
-    set_serie_b_rules(this);
-    crate::comparacao::ramo("cqi_7 regras da serie b");
-    create_main_schedule(this);
-    1
-}
 
 
 
@@ -634,7 +584,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, clube: usize, status: u3
         // the round-robin stage
         if st == 6 {
             if fazer {
-                crate::comparacao::ramo("cqj_9 serie a classificado");
+                crate::comparison::branch("cqj_9 serie a classificado");
                 bra_nat_first_add_qualified_record(clube, comp, 0x41c, 0, 0x28);
             }
         } else if st == 3 && fazer {
@@ -649,7 +599,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, clube: usize, status: u3
     if st == 1 {
         let l = bra_nat_first_find_club_row(this, clube);
         if fazer {
-            crate::comparacao::ramo("cqj_9 serie a campeao");
+            crate::comparison::branch("cqj_9 serie a campeao");
             add_champions_record(clube, comp); // cqj9: o registro do campeão da Série A
             *((l + 0x37) as *mut u8) = 5;
         }
@@ -720,7 +670,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, clube: usize, status: u3
             k += 1;
         }
         if achada != 0 && fazer {
-            crate::comparacao::ramo("cqj_9 serie c promovido");
+            crate::comparison::branch("cqj_9 serie c promovido");
             *((achada + 0x37) as *mut u8) = 0; // cqj9: o destino de quem sobe da Série C
         }
         return (0, achada, 0);
@@ -749,7 +699,7 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, clube: usize, status: u32
                 bra_nat_first_add_qualified_record(clube, comp, 0, 0x82, 0x32);
             }
         } else if st == 3 && fazer {
-            crate::comparacao::ramo("cqj_9 baiano rebaixado");
+            crate::comparison::branch("cqj_9 baiano rebaixado");
             bra_nat_first_add_relegation_record(clube, comp); // cqj9: o rebaixado do Baiano
         }
         return (0, 0, 0);

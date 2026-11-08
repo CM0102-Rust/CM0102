@@ -123,7 +123,7 @@ unsafe fn select_qualified_clubs(this: usize) -> u32 {
         i += 1;
         c += 0x245;
     }
-    crate::comparacao::ramo("cqt_11 clubes da oceania");
+    crate::comparison::branch("cqt_11 clubes da oceania");
     if campeao == 0 {
         aus.ordenar(1);
         campeao = aus.clubes[0];
@@ -152,14 +152,14 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(t
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqt11_d(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| select_qualified_clubs(this));
+        let r = crate::rng::without_counting(|| select_qualified_clubs(this));
         lr.set(cqt11_d(this + 0xee));
         cqt11_pd(this + 0xee, lo.get());
         r
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(t
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.record(igual && a == b && lista, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: usize) {
     let f = f + 1;
     cqt11_pd(this + 0x30, f as usize);
     if f == 1 {
-        crate::comparacao::ramo("cqt_11 semifinais da oceania");
+        crate::comparison::branch("cqt_11 semifinais da oceania");
         let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x798050usize);
         semifinais(this);
     }
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage(this: usiz
     let ultima = f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqt11_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.record(depois == if ultima { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// Os 4 das semifinais, na ordem da lista: o 1º do grupo A (a tabela da copa, +0xb1), o 2º do B (a tabela da fase
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize
     if lista == 0 {
         return show_error_at(0xa6a068, 0x2cb);
     }
-    crate::comparacao::ramo("cqt_11 cruzamentos da oceania");
+    crate::comparison::branch("cqt_11 cruzamentos da oceania");
     for (k, &c) in semifinalists(this).iter().enumerate() {
         cqt11_pd(lista + k * 4, c);
     }
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(th
     o(this);
     let fase = cqt11_d(cqt11_d(this + 0xc) + 4);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this));
+        PLACAR.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt11_d(fase + 0xa7);
@@ -278,5 +278,5 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(th
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt11_w(fase + 0x3e) == 4 && cqt11_d(fase + 4) == cqt11_d(this + 4);
-    PLACAR.registrar(igual, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.record(igual, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }

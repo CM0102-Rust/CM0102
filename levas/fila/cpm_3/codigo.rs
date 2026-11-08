@@ -17,7 +17,7 @@ unsafe fn cpm3_sorteio(n: i32) -> i32 {
 /// do estádio (+0x69), a obra do estádio (0x599e00 nas finanças 0x5a0590 de [0xae2a38], lugares +0xe4 e +0xe2); e,
 /// com a competição carregada, a situação +0x64 = 3 passa a 2.
 unsafe extern "thiscall" fn move_club_to_division(_this: usize, clube: usize, divisao: usize, vaga: u32) {
-    crate::comparacao::ramo("cpm_3 mudar de divisao");
+    crate::comparison::branch("cpm_3 mudar de divisao");
     let usa_numeros: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x85add0usize);
     let limpar_clausulas: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x4cd120usize);
     let antes = usa_numeros(cpm3_d(0xdd7ef0), clube, 0);
@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn move_club_to_division(_this: usize, clube: usize, di
         if comp != 0 && cpm3_d(clube + 0x69) != 0 && *((comp + 0x43) as *const u8) == 2 {
             let lugares = core::ptr::read_unaligned((comp + 0xe2) as *const i16);
             if lugares != -1 {
-                crate::comparacao::ramo("cpm_3 estadio da divisao");
+                crate::comparison::branch("cpm_3 estadio da divisao");
                 let capacidade = core::ptr::read_unaligned((comp + 0xe4) as *const i16);
                 let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
                 let obra: unsafe extern "thiscall" fn(usize, i32, i32, usize, u32) -> u32 = core::mem::transmute(0x599e00usize);
@@ -77,7 +77,7 @@ unsafe extern "C" fn comp_util_shuffle_pointer_array(itens: usize, n: u32) {
     if 3 * n <= 0 {
         return;
     }
-    crate::comparacao::ramo("cpm_3 embaralhar ponteiros");
+    crate::comparison::branch("cpm_3 embaralhar ponteiros");
     let mut k = 0i16;
     loop {
         swap_random_pair(itens, n);
@@ -109,7 +109,7 @@ unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32,
     if m <= 0 {
         return;
     }
-    crate::comparacao::ramo("cpm_3 embaralhar os melhores");
+    crate::comparison::branch("cpm_3 embaralhar os melhores");
     for _ in 0..m as i32 { // m trocas
         swap_random_pair(clubes, m as i32);
     }
@@ -118,7 +118,7 @@ unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32,
 /// Comparador: a mudança chama as notícias, a vaga de técnico e a obra (não podem rodar duas vezes): só a original (a
 /// prova é a carreira e o modo Rust).
 unsafe extern "thiscall" fn comparar_move_club_to_division(this: usize, clube: usize, divisao: usize, vaga: u32) {
-    crate::comparacao::ramo("move_club_to_division");
+    crate::comparison::branch("move_club_to_division");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, clube, divisao, vaga)
 }
 
@@ -126,13 +126,13 @@ unsafe extern "thiscall" fn comparar_move_club_to_division(this: usize, clube: u
 unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(itens: usize, n: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32)>(%%I1%%);
     let k = (n as u16 as i16).max(0) as usize;
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if k > 0 {
         reg.push((itens, 4 * k));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(itens, n),
-        || crate::aleatorio::sem_contar(|| comp_util_shuffle_pointer_array(itens, n)));
-    PLACAR.registrar(igual, || format!("comp_util_shuffle_pointer_array({}) {:x?} x {:x?}", k, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(itens, n),
+        || crate::rng::without_counting(|| comp_util_shuffle_pointer_array(itens, n)));
+    PLACAR.record(igual, || format!("comp_util_shuffle_pointer_array({}) {:x?} x {:x?}", k, mo, mr));
 }
 
 /// Comparador: ordena (qsort, determinístico) e sorteia: lado a lado pelo estado do sorteio e pelos `n` clubes, a cópia
@@ -143,11 +143,11 @@ unsafe extern "C" fn comparar_comp_util_sort_and_shuffle_top_clubs(clubes: usize
     if nn < 0 || nn < e {
         return o(clubes, n, escolhas);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if nn > 0 {
         reg.push((clubes, 4 * nn as usize));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clubes, n, escolhas),
-        || crate::aleatorio::sem_contar(|| comp_util_sort_and_shuffle_top_clubs(clubes, n, escolhas)));
-    PLACAR.registrar(igual, || format!("comp_util_sort_and_shuffle_top_clubs({}, {}) {:x?} x {:x?}", nn, e, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(clubes, n, escolhas),
+        || crate::rng::without_counting(|| comp_util_sort_and_shuffle_top_clubs(clubes, n, escolhas)));
+    PLACAR.record(igual, || format!("comp_util_sort_and_shuffle_top_clubs({}, {}) {:x?} x {:x?}", nn, e, mo, mr));
 }

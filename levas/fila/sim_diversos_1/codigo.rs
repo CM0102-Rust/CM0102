@@ -112,20 +112,20 @@ unsafe extern "thiscall" fn comparar_national_teams_remove_player(this: usize, j
     if u(jogador + 0x24) != 0 {
         regioes[3] = (u(jogador + 0x24) + 0xd7, 200);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogador), || national_teams_remove_player(this, jogador));
-    PLACAR.registrar(igual, || format!("national_teams_remove_player(nivel {}) {:x?} x {:x?}", n, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, jogador), || national_teams_remove_player(this, jogador));
+    PLACAR.record(igual, || format!("national_teams_remove_player(nivel {}) {:x?} x {:x?}", n, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_get_time_slice(this: usize, comp: usize, dia: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, comp, dia);
     let n = get_time_slice(this, comp, dia);
-    PLACAR.registrar(r == n, || format!("get_time_slice(dia {}) original={} rust={}", dia as i16, r, n));
+    PLACAR.record(r == n, || format!("get_time_slice(dia {}) original={} rust={}", dia as i16, r, n));
     r
 }
 
 unsafe extern "stdcall" fn comparar_shortlist_manager_max_fee_for_squad_status(clube: usize, posicoes: u32, tipo: u32) -> i32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> i32>(%%I2%%)(clube, posicoes, tipo);
     let n = shortlist_manager_max_fee_for_squad_status(clube, posicoes, tipo);
-    PLACAR.registrar(r == n, || format!("shortlist_manager_max_fee_for_squad_status(tipo {}) original={} rust={}", tipo as i8, r, n));
+    PLACAR.record(r == n, || format!("shortlist_manager_max_fee_for_squad_status(tipo {}) original={} rust={}", tipo as i8, r, n));
     r
 }

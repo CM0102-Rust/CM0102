@@ -208,9 +208,9 @@ unsafe fn result_update_regions(p: usize, tab: usize, n: u32, pts_casa: *mut i16
 unsafe extern "thiscall" fn comparar_apply_result_to_table(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16)>(%%I0%%);
     let reg = result_update_regions(p, tab, n, pts_casa, pts_fora);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(liga, p, tab, n, marcar, pts_casa, pts_fora),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(liga, p, tab, n, marcar, pts_casa, pts_fora),
         || apply_result_to_table(liga, p, tab, n, marcar, pts_casa, pts_fora));
-    PLACAR.registrar(igual, || format!("apply_result_to_table({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",
+    PLACAR.record(igual, || format!("apply_result_to_table({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",
         liga, p, tab, n as i16, marcar, mo, mr));
 }
 

@@ -62,7 +62,8 @@ def main():
             if not cpp:
                 continue
             alvo = partir_motor.destino(cpp)
-            if alvo != rel and alvo in arquivos:
+            # o arquivo do .cpp ainda não existe: nasce aqui (o modulos_motor.py o declara)
+            if alvo != rel and not rel.startswith('compare/'):
                 mover.append((rel, alvo, n))
     print('%d rotinas fora do lugar' % len(mover))
     if '--gravar' not in sys.argv:
@@ -71,19 +72,28 @@ def main():
         return
     acrescimos = {}
     for rel, alvo, n in mover:
-        for nome in (n, 'comparar_' + n):
-            t = arquivos[rel]
+        # a rotina no módulo dela; o comparador (motor/compare/, mesmo caminho) no comparador do módulo novo
+        for nome, de, para in ((n, rel, alvo), ('comparar_' + n, rel, alvo), ('comparar_' + n, 'compare/' + rel, 'compare/' + alvo)):
+            if de not in arquivos:
+                continue
+            if para not in arquivos:
+                arquivos[para] = ('use super::*;\n' if not para.startswith('compare/') else
+                                  'use super::*;\n\n// The comparers of the routines in ../%s (comparison mode: see the header of motor.rs).\n'
+                                  '// [pt] Os comparadores das rotinas de ../%s (modo comparação: ver o cabeçalho do motor.rs).\n'
+                                  % (para[len('compare/'):], para[len('compare/'):]))
+            t = arquivos[de]
             achado = [(a, b) for x, a, b in blocos(t) if x == nome]
             if not achado:
                 continue
             a, b = achado[0]
-            acrescimos.setdefault(alvo, []).append(t[a:b])
-            arquivos[rel] = t[:a] + t[b:]
+            acrescimos.setdefault(para, []).append(t[a:b])
+            arquivos[de] = t[:a] + t[b:]
     for alvo, partes in acrescimos.items():
         arquivos[alvo] = arquivos[alvo].rstrip('\n') + '\n\n' + '\n'.join(partes)
     for rel, t in arquivos.items():
         p = os.path.join(BASE, rel)
-        if open(p, encoding='utf-8').read() != t:
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        if not os.path.exists(p) or open(p, encoding='utf-8').read() != t:
             open(p, 'w', encoding='utf-8').write(t)
     print('gravado')
 

@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_update_for_date(th
             && stages != 0
             && (0..4).all(|g| read_u32_as_usize(stages + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 3;
-        PLACAR.registrar(ok, || format!("conmebol_merc_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("conmebol_merc_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_first_group
         }
     }
     let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    PLACAR.registrar(same, || format!("conmebol_merc_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    PLACAR.record(same, || format!("conmebol_merc_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_group_stage
         a.sort_unstable();
         plan.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
-        PLACAR.registrar(ok, || format!("conmebol_merc_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        PLACAR.record(ok, || format!("conmebol_merc_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
     }
     r
 }
@@ -82,14 +82,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clu
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
-        let (r, n) = crate::aleatorio::sem_contar(|| mercosur_select_invited_clubs(this));
+        let (r, n) = crate::rng::without_counting(|| mercosur_select_invited_clubs(this));
         lr.set(read_u32_as_usize(this + 0xee));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xee) as *mut u32, lo.get() as u32);
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clu
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, list, k));
+    PLACAR.record(igual && a == b && list, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, list, k));
     a
 }
 

@@ -51,7 +51,7 @@ pub(crate) unsafe fn start_new_cup_season(this: usize, inscritos: usize, file: u
     }
     let a = read_i16(this + 0x40);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     *((this + 0xab) as *mut u8) = 0;
     *((this + 0xb1) as *mut u8) = 0;
     let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(inscritos);
@@ -79,7 +79,7 @@ pub(crate) unsafe fn compare_cup_new_season(name: &str, this: usize, original: i
     let before = read_i16(this + 0x40);
     let r = original();
     let after = read_i16(this + 0x40);
-    PLACAR.registrar(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this, before, after));
+    PLACAR.record(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this, before, after));
     r
 }
 
@@ -96,16 +96,6 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> 
 }
 
 
-/// rule: the same turn in the Emperor's Cup (Japan): tables freed, history archived, year +1, the entrants
-/// (JapEmpCup::collect_entrants), the rounds, the tree and the predicted positions
-/// Original: `JapEmpCup::start_new_season` (0x662950, jap_emp_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x662950 } (thiscall, ret 0, jap_emp_cup.cpp; a virtual +0x08 da Copa do Imperador): `JapEmpCup::start_new_season()`,
-/// a virada (`start_new_cup_season`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
-/// linhas 0x217, 0x21e e 0x225.
-pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season_662950(this: usize) -> u32 {
-    start_new_cup_season(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: a Copa do Imperador
-}
 
 
 
@@ -155,7 +145,7 @@ pub(crate) unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
         show_error_at(0x98a3bc, 0x143);
         return -1;
     }
-    crate::comparacao::ramo("cqo_12 times da copa do brasil");
+    crate::comparison::branch("cqo_12 times da copa do brasil");
     let mut i = 0i16;
     while i < read_i16(this + 0x3e) {
         let o = i as usize * 6;
@@ -188,7 +178,7 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> 
 /// substituições (+0x4a), o fundo de prêmios de 500 mil (+0x28) e a tabela das rodadas (a virtual +0x3c com a fase −1,
 /// as rodadas em +0x3c e o extra em +0x3a, sem saída) em +0xa3. Devolve 1.
 pub(crate) unsafe fn set_up_brazil_cup_rounds(this: usize) -> i32 {
-    crate::comparacao::ramo("cqo_12 regras da copa do brasil");
+    crate::comparison::branch("cqo_12 regras da copa do brasil");
     *((this + 0x49) as *mut u8) = 7;
     *((this + 0x4a) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
     core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x7a120);

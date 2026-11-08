@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, ma
     } else if m & 4 != 0 {
         nota = cpt7_sortear(lugares);
     }
-    crate::comparacao::ramo("cpt_7 nota do estadio");
+    crate::comparison::branch("cpt_7 nota do estadio");
     let r = cpt7_sortear(100); // cpt7: o sorteio da nota
     match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * nota as f64)
 }
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, jogo: usize
 unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(%%I1%%)(this, jogo, cid_est, cid_clube, base);
     let n = get_travel_distance_factor(this, jogo, cid_est, cid_clube, base);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
+    PLACAR.record(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
     r
 }
 
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn load_config(this: usize) {
     }
     let mut k = 0usize;
     while (k as i32) < cpt7_i(0xae2354) {
-        crate::comparacao::ramo("cpt_7 clima inicial");
+        crate::comparison::branch("cpt_7 clima inicial");
         for j in 0..3usize {
             let a = cpt7_sortear(100);
             let b = cpt7_sortear(100); // cpt7: o segundo sorteio da medida

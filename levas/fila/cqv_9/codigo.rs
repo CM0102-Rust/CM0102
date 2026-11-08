@@ -88,7 +88,7 @@ unsafe fn cqv9_trofeu_da_liga_corpo(this: usize, ano: u32, dono: usize) -> usize
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqv_9 trofeu_da_liga nova");
+    crate::comparison::branch("cqv_9 trofeu_da_liga nova");
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let fases = cqv9_d(this + 0x2c) as i32;
     cqv9_p32(this + 0xc, if fases > 0 { alocar((fases << 2) as u32) as u32 } else { 0 });
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn cqv9_trofeu_da_liga(this: usize, ano: u32, dono: usi
 unsafe extern "thiscall" fn comparar_cqv9_trofeu_da_liga(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqv9_plano(this, r, ano, dono, 0x969894, &CQV9_CAMPOS_TROFEU_DA_LIGA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqv9_trofeu_da_liga({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqv9_trofeu_da_liga({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -178,7 +178,7 @@ unsafe fn cqv9_liga_dos_campeoes_corpo(this: usize, ano: u32, dono: usize) -> us
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqv_9 liga_dos_campeoes nova");
+    crate::comparison::branch("cqv_9 liga_dos_campeoes nova");
     // a semeadura europeia do ano (UefaSeeding::update_season 0x9035a0: push 0; mov ecx, [0xde1f58] -> thiscall, ret 4)
     let s = cqv9_d(0xde1f58);
     if s != 0 {
@@ -219,6 +219,6 @@ unsafe extern "thiscall" fn cqv9_liga_dos_campeoes(this: usize, ano: u32, dono: 
 unsafe extern "thiscall" fn comparar_cqv9_liga_dos_campeoes(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqv9_plano(this, r, ano, dono, 0x96a1d0, &CQV9_CAMPOS_LIGA_DOS_CAMPEOES, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqv9_liga_dos_campeoes({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqv9_liga_dos_campeoes({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

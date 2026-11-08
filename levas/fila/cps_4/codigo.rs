@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, clube: usize
     // a reputação da ficha (+0xb) / 500, com o sinal (a multiplicação mágica da original)
     let fama = || (cps4_w(cps4_d(jogador + 0x61) + 0xb) as i16 as i32) / 500;
     if rep < 0xf && fama() - (rep as i32) > 2 {
-        crate::comparacao::ramo("cps_4 write_percent_pair da venda");
+        crate::comparison::branch("cps_4 write_percent_pair da venda");
         let o = *saida;
         cps4_por(o + 0x1b, offer_value_times(o, 0.8)); // cps4: o valor do percentual
         *((*saida + 0x3f) as *mut u8) = 0x14;
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, clube: usize
     }
     let nacao = cps4_d(jogador + 0x1a);
     if nacao != 0 && cps4_w(nacao + 0x8e) as i16 > 0x1388 && cps4_b(jogador + 0x22) == 0 {
-        crate::comparacao::ramo("cps_4 premio na selecao");
+        crate::comparison::branch("cps_4 premio na selecao");
         let o = *saida;
         cps4_por(o + 0x3a, offer_value_times(o, 0.3));
         *((*saida + 0x3e) as *mut u8) = 0xa;
@@ -83,7 +83,7 @@ unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, clube: usize
         return 1;
     }
     if fama() - (rep as i32) < -3 {
-        crate::comparacao::ramo("cps_4 premio no time");
+        crate::comparison::branch("cps_4 premio no time");
         let o = *saida;
         cps4_por(o + 0x35, offer_value_times(o, 0.3));
         *((*saida + 0x39) as *mut u8) = 0x14;
@@ -159,15 +159,15 @@ unsafe extern "thiscall" fn comparar_build_clause_offer_option(this: usize, club
 /// Comparador: lado a lado pelo contrato da vez ([0xae1080]), e pela devolução.
 unsafe extern "stdcall" fn comparar_transfer_manager_is_rejection_reason_valid(motivo: u32, oferta: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(u32, usize) -> u32>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(0xae1080, 4)], || o(motivo, oferta), || transfer_manager_is_rejection_reason_valid(motivo, oferta));
-    PLACAR.registrar(igual && r == n, || format!("transfer_manager_is_rejection_reason_valid({:x}, pessoa {}) original={} rust={} {:x?} x {:x?}", motivo as u16, cps4_d(oferta + 0xc), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(0xae1080, 4)], || o(motivo, oferta), || transfer_manager_is_rejection_reason_valid(motivo, oferta));
+    PLACAR.record(igual && r == n, || format!("transfer_manager_is_rejection_reason_valid({:x}, pessoa {}) original={} rust={} {:x?} x {:x?}", motivo as u16, cps4_d(oferta + 0xc), r, n, mo, mr));
     r
 }
 
 /// Comparador: lado a lado pelo contrato da vez ([0xae1080]), e pela devolução.
 unsafe extern "stdcall" fn comparar_transfer_manager_get_squad_status_reason(oferta: usize) -> u16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(0xae1080, 4)], || o(oferta), || transfer_manager_get_squad_status_reason(oferta));
-    PLACAR.registrar(igual && r == n, || format!("transfer_manager_get_squad_status_reason(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps4_d(oferta + 0xc), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(0xae1080, 4)], || o(oferta), || transfer_manager_get_squad_status_reason(oferta));
+    PLACAR.record(igual && r == n, || format!("transfer_manager_get_squad_status_reason(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps4_d(oferta + 0xc), r, n, mo, mr));
     r
 }

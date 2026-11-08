@@ -54,7 +54,7 @@ unsafe fn construct_italian_division(this: usize, ano: u32, registro: usize, p: 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqm_4 divisao italiana nova");
+    crate::comparison::branch("cqm_4 divisao italiana nova");
     if p.serie {
         *((this + 0xee) as *mut u8) = 0;
         cqm4_pd(this + 0x4c, 1); // cqm4: a marca do histórico da A e da B
@@ -172,7 +172,7 @@ unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u32, registr
             ok = ok && *((this + 0xee) as *const u8) == 0;
         }
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqm4_d(this), cqm4_d(this + 0x2c), cqm4_d(this + 0xc), cqm4_d(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqm4_d(this), cqm4_d(this + 0x2c), cqm4_d(this + 0xc), cqm4_d(this + 8)));
     r
 }
 

@@ -8,7 +8,7 @@ MUTACOES = [
     ('s_duelo3', "let r = sortear((word(0x1f2, other) + 100) / 7);", "let r = sortear((word(0x1f2, other) + 100) / 8);"),
     ('s_desgaste', "add(p, -0xf);\n                more(b(0xf5ca", "add(p, -0xe);\n                more(b(0xf5ca"),
     ('s_expulsao', "add(jog(other, c as i8), -0xfa);", "add(jog(other, c as i8), -0xf9);", "simulacao rapida expulsao"),
-    ('s_amarelo', "if byte(p, 0x24) == 2 {\n                        crate::comparacao::ramo(\"simulacao rapida segundo give_yellow_card\");", "if byte(p, 0x24) == 3 {\n                        crate::comparacao::ramo(\"simulacao rapida segundo give_yellow_card\");", "simulacao rapida give_yellow_card"),
+    ('s_amarelo', "if byte(p, 0x24) == 2 {\n                        crate::comparison::branch(\"simulacao rapida segundo give_yellow_card\");", "if byte(p, 0x24) == 3 {\n                        crate::comparison::branch(\"simulacao rapida segundo give_yellow_card\");", "simulacao rapida give_yellow_card"),
     ('s_abandono', "if *((mo + 0xf5cb) as *const u8) > 4 {", "if *((mo + 0xf5cb) as *const u8) > 5 {", "simulacao rapida abandono"),
     ('s_fator', "} else if *w(0x8ed0) > 0x3c {\n                read_f32_at(0x96d320) as f64", "} else if *w(0x8ed0) > 0x3d {\n                read_f32_at(0x96d320) as f64"),
     ('s_chute', "if us + 0xa5 > sortear(0x172)", "if us + 0xa6 > sortear(0x172)"),

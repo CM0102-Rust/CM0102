@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoje: usize, a
             return 1;
         }
         copiar(this + 0xa7, &mut t, hoje);
-        crate::comparacao::ramo("cpt_11 planejou a pré-temporada");
+        crate::comparison::branch("cpt_11 planejou a pré-temporada");
         planejar(this); // cpt11: planejar
         let mut ha_um_ano = [0u8; 8];
         menos_semanas(0xae2c90, &mut ha_um_ano, 0x34);
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize) {
             if is_national_team(clube) == 0 && cpt11_d(clube + 0x53) != 0 {
                 let r = v + n as usize * 0x16;
                 let rep = cpt11_w(clube + 0x80) as i16 as i32;
-                crate::comparacao::ramo("cpt_11 candidato da pré-temporada");
+                crate::comparison::branch("cpt_11 candidato da pré-temporada");
                 let band = (rep / 500) as u8; // cpt11: a faixa
                 cpt11_pd(r, cpt11_d(clube));
                 *((r + 4) as *mut u8) = 0;
@@ -294,7 +294,7 @@ unsafe fn set_friendly_windows(ptrs: usize, n: i32, gravar: bool) -> Vec<(usize,
                     let m = novo(0xe);
                     cpt11_pd(c + 0x12, if m != 0 { lista_nova(m) } else { 0 });
                 }
-                crate::comparacao::ramo("cpt_11 janela gravada");
+                crate::comparison::branch("cpt_11 janela gravada");
                 core::ptr::write_unaligned((c + 0xe) as *mut i16, ini);
                 core::ptr::write_unaligned((c + 0x10) as *mut i16, fim);
             }
@@ -337,5 +337,5 @@ unsafe extern "thiscall" fn comparar_set_preseason_windows(this: usize, ptrs: us
         .map(|&(c, ini, fim, nova)| format!("candidato {:x}: esperado {}..{} lista {} obtido {}..{} lista {:x}", c, ini, fim, nova,
             core::ptr::read_unaligned((c + 0xe) as *const i16), core::ptr::read_unaligned((c + 0x10) as *const i16), cpt11_d(c + 0x12)))
         .collect();
-    PLACAR.registrar(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plano.len(), erros.join("; ")));
+    PLACAR.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plano.len(), erros.join("; ")));
 }

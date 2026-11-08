@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pessoa: usize
         if !cargo.is_null() {
             *cargo = cpn6_b(e);
         }
-        crate::comparacao::ramo("cpn_6 estatuto pela lista");
+        crate::comparison::branch("cpn_6 estatuto pela lista");
         return (cpn6_b(e + 0x24) >> 1) & 0xf; // os bits 1..4 da entrada
     }
     if !cargo.is_null() {
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pessoa: usize
     if k == 0 {
         return 7;
     }
-    crate::comparacao::ramo("cpn_6 estatuto pelo contrato");
+    crate::comparison::branch("cpn_6 estatuto pelo contrato");
     cpn6_b(k + 0x4f) >> 4 // o nibble alto do contrato
 }
 
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targets(this: us
         }
         // setne al sobre o endereço da vaga: os 24 bits altos são os dele
         let tipo = ((s & !0xff) | (cpn6_b(s) != 0xb) as usize) as u32;
-        crate::comparacao::ramo("cpn_6 alvo fora do clube");
+        crate::comparison::branch("cpn_6 alvo fora do clube");
         atualizar(this, p, clube, 3, tipo);
     }
 }
@@ -157,8 +157,8 @@ unsafe extern "thiscall" fn comparar_get_squad_status_for_club(this: usize, pess
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8) -> u8>(%%I0%%);
     let saida = if cargo.is_null() { 0xae1080 } else { cargo as usize };
     let reg = [(0xae1080usize, 4usize), (saida, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube, cargo), || get_squad_status_for_club(this, pessoa, clube, cargo));
-    PLACAR.registrar(igual && r == n, || format!("get_squad_status_for_club({:#x}, {:#x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, clube, cargo), || get_squad_status_for_club(this, pessoa, clube, cargo));
+    PLACAR.record(igual && r == n, || format!("get_squad_status_for_club({:#x}, {:#x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn comparar_get_squad_status_for_club(this: usize, pess
 unsafe extern "stdcall" fn comparar_shortlist_manager_estimate_squad_status(pessoa: usize, clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(pessoa, clube);
     let n = shortlist_manager_estimate_squad_status(pessoa, clube);
-    PLACAR.registrar(r as u8 == n as u8, || format!("shortlist_manager_estimate_squad_status({:#x}, {:#x}) original={:#x} rust={}", pessoa, clube, r, n));
+    PLACAR.record(r as u8 == n as u8, || format!("shortlist_manager_estimate_squad_status({:#x}, {:#x}) original={:#x} rust={}", pessoa, clube, r, n));
     r
 }
 

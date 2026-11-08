@@ -2,7 +2,7 @@
 # 0x744240, 0x72c1f0, olheiros, busca e transferências 0x8dbef0, que a carreira percorre 750 vezes) e os defeitos
 # (0x5470d0: mídia 0x72c1f0 e 0x487c70). Simulação: as mutações pela carreira até 2002-06-01 e a confirmação no jogo
 # real comparando. Sem SEH; sorteiam (19 e até 19 vezes, 0x90cfc0 pelo endereço do jogo, alguns com n = −50): os
-# comparadores voltam o estado do sorteio (REGIOES_DO_ESTADO) e a cópia roda em sem_contar. Sem variável local lida sem
+# comparadores voltam o estado do sorteio (STATE_REGIONS) e a cópia roda em without_counting. Sem variável local lida sem
 # valor: as locais e os próprios argumentos que as duas usam de rascunho (floats e bytes) são gravados antes de lidos;
 # a cópia não escreve nos argumentos. A 0x5470d0 chama a nota 0x6e6340, que pela 0x62ed70 pode sortear só na primeira
 # consulta do jogador (memória fria): divergindo, o comparador refaz uma vez a comparação do mesmo estado e devolve o

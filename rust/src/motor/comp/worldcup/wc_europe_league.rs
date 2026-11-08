@@ -57,7 +57,7 @@ pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, campos: &[(u
     }
     let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
     let lido8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
-    PLACAR.registrar(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {}", name, this, r, &errados[..k], b6, word, lido8));
+    PLACAR.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {}", name, this, r, &errados[..k], b6, word, lido8));
     r
 }
 
@@ -75,7 +75,7 @@ pub(crate) const EUROPE_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 /// 0xa (seleções), os desempates (1, 2, 4, 5), um classificado direto por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_12 regras da europa");
+    crate::comparison::branch("cqj_12 regras da europa");
     wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
     *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias europeias
     *((this + league::MATCH_CATEGORY) as *mut u8) = 0xa; // cqj12: a categoria dos jogos das eliminatórias europeias
@@ -89,33 +89,6 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize
 pub(crate) const SOUTH_AMERICA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
     (0xdb, 2, 0), (0xc5, 1, 1), (0xc7, 1, 3), (0xbf, 1, 1), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7), (0x4a, 1, 3), (0xa7, 2, 0xffff)];
 
-/// rule: the South American qualifier is a single home and away league, 3/1 points, tiebreak 1, 2 and 3; the direct
-/// places are four minus the exempt nations (the world champion and South American hosts, counted in +0xee and +0xef
-/// [inference]); the fifth goes to the play-off (+0xbf = 1); category 10, 7 substitutes and 3 changes; starts on 25 of
-/// month 0 on weekday 5
-/// Original: `WcSouthAmericanLeague::set_up_rules` (0x921040, wc_south_american_league.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x921040 } (thiscall, ret 0, wc_south_american_league.cpp; a virtual +0x8c; quadro SEH só da data local):
-/// `WcSouthAmericanLeague::set_up_rules()`: com o objeto da competição [0x9cf76c], +0xef recebe o +0xee dele [inferência:
-/// as nações isentas por serem a campeã]; a liga única sul-americana em dois turnos, 3/1 pontos, a categoria 0xa, os
-/// desempates (1, 2, 3), vagas diretas 4 − +0xef − +0xee (as isentas saem das quatro), uma de repescagem, seleções, 7 no
-/// banco e 3 substituições, +0xa7 = −1, +0xab = +0xdb = 0, começo em 25 do mês 0 num dia da semana 5.
-pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this: usize) -> u32 {
-    let list = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
-    if list != 0 {
-        let o = core::ptr::read_unaligned((list + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);
-        if o != 0 {
-            *((this + 0xef) as *mut u8) = *((o + 0xee) as *const u8);
-        }
-    }
-    crate::comparacao::ramo("cqj_12 regras da america do sul");
-    wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
-    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias sul-americanas
-    *((this + league::PROMOTED_COUNT) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: as vagas diretas da América do Sul
-    let day = 0x19; // cqj12: o dia do começo da eliminatória sul-americana
-    let word = comp_date_word(this, day, 0, 5);
-    finish_rules_setup(this, word, 0)
-}
 
 // simplification: virtual +0x3c allocates the round table: does not run twice. Original only; the plan checks the rules and
 // the direct places (4 − +0xef − +0xee, with the +0xef the routine itself copies, computed before).
@@ -123,20 +96,6 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this
 pub(crate) const ASIA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
     (0xc6, 1, 2), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0)];
 
-/// rule: the Asian groups are home and away, 3/1 points, tiebreak 1, 2 and 3, each group winner goes on, category 10,
-/// starts on 25 of month 2 on weekday 5, +0xb8 = 1 [inference: the stage starts the following year]
-/// Original: `WcAsiaLeague::set_up_rules` (0x912eb0, wc_asia_league.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x912eb0 } (thiscall, ret 0, wc_asia_league.cpp; a virtual +0x8c; quadro SEH só da data local):
-/// `WcAsiaLeague::set_up_rules()`: os grupos asiáticos em dois turnos, 3/1 pontos, a categoria 0xa, os desempates (1, 2,
-/// 3), um classificado por grupo, seleções, começo em 25 do mês 2 num dia da semana 5, +0xb8 = 1.
-pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_12 regras da asia");
-    wc_europe_league_write_rule_fields(this, &ASIA_QUALIFIER_RULE_FIELDS);
-    let day = 0x19; // cqj12: o dia do começo das eliminatórias asiáticas
-    let word = comp_date_word(this, day, 2, 5);
-    finish_rules_setup(this, word, 1)
-}
 
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 

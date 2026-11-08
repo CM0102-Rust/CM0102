@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn collapse_offer(this: usize, oferta: usize, clube: us
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let desmarcar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
     let marca = |id: usize| (cpq8_d(this + 0x86e) + id * 8) as *mut u8;
-    crate::comparacao::ramo("cpq_8 desfazer oferta");
+    crate::comparison::branch("cpq_8 desfazer oferta");
     if cpq8_b(oferta + 0x2c) == 0x13 {
         *marca(cpq8_d(oferta + 0xc)) &= 0xef;
         if cpq8_d(oferta + 4) != 0 {
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn make_loan_offer(this: usize, jogador: usize, clube: 
     emprestimo(o.as_mut_ptr(), jogador, clube);
     let mut c = [0u8; 0x50];
     construir_contrato(c.as_mut_ptr());
-    crate::comparacao::ramo("cpq_8 oferta de emprestimo");
+    crate::comparison::branch("cpq_8 oferta de emprestimo");
     pelo_atual(c.as_mut_ptr(), jogador, clube, fim, write_percent_pair, a5, a6); // o salário pela porcentagem
     acrescentar(this, o.as_mut_ptr(), c.as_mut_ptr());
     acrescentar_contrato(cpq8_d(0xae1050), c.as_mut_ptr(), campo(&o, 0x20), campo(&o, 0x24), 0xb, 0, 1, 0);
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn process_due_future_transfers(this: usize) {
             }
             if !segura {
                 noticia(this, oferta);
-                crate::comparacao::ramo("cpq_8 transferencia futura");
+                crate::comparison::branch("cpq_8 transferencia futura");
                 concluir(this, oferta); // a transferência acontece
                 *((oferta + 0x2c) as *mut u8) = 0x14;
                 agendar(this, oferta, 0xa, 0);

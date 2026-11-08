@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn sort_round_teams(copa: usize, rodada: u32) {
     }
     let mut nacao = cqb11_b(round_entry(copa, r) + 0xb) & 4 != 0; // a regra 4 (+0xb) da rodada
     let n = take_round_teams(copa, r, vetor, |_| {}) as i16;
-    crate::comparacao::ramo("cqb_11 ordena pela semente");
+    crate::comparison::branch("cqb_11 ordena pela semente");
     ordenar(vetor, n as i32, 7, 0x51ebc0); // cqb11: pela semente, a maior primeiro
     let mut segunda = false;
     let mut j: i16 = 0;
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn sort_round_teams(copa: usize, rodada: u32) {
             } else if casa < 0 && fora < 0 {
                 if fora == -2 {
                     if casa == -2 && sorteio(2) != 0 {
-                        crate::comparacao::ramo("cqb_11 semente lado sorteado");
+                        crate::comparison::branch("cqb_11 semente lado sorteado");
                         lado = Some(true); // cqb11: o lado sorteado
                     } else {
                         lado = Some(false);
@@ -165,11 +165,11 @@ unsafe extern "thiscall" fn sort_round_teams(copa: usize, rodada: u32) {
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
 unsafe extern "thiscall" fn comparar_sort_round_teams(copa: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(copa));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada),
-        || crate::aleatorio::sem_contar(|| sort_round_teams(copa, rodada)));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada),
+        || crate::rng::without_counting(|| sort_round_teams(copa, rodada)));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("sort_round_teams(rodada {}) diferencas em {:x?}", rodada as i16, dif)
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn check_round_teams_for_nation(copa: usize, rodada: u3
                 // ponytail: sem conferir o clube nulo, como a original (que leria o +0x53 dele)
                 let nacao = read_ptr(read_ptr(cup_team_entry(copa, cpq11_w(e))) + 0x53);
                 if nacao != 0 {
-                    crate::comparacao::ramo("cqb_11 conta da nacao");
+                    crate::comparison::branch("cqb_11 conta da nacao");
                     *((e + 6) as *mut u8) = cqb11_b(read_ptr(nacao).wrapping_add(contas)); // cqb11: o nível vira a conta da nação
                 }
             }
@@ -301,11 +301,11 @@ unsafe extern "thiscall" fn check_round_teams_for_nation(copa: usize, rodada: u3
 /// Comparador: como o da 0x51d2d0 (sorteia; as contas e o vetor são temporários).
 unsafe extern "thiscall" fn comparar_check_round_teams_for_nation(copa: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(copa));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada),
-        || crate::aleatorio::sem_contar(|| check_round_teams_for_nation(copa, rodada)));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada),
+        || crate::rng::without_counting(|| check_round_teams_for_nation(copa, rodada)));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("check_round_teams_for_nation(rodada {}) diferencas em {:x?}", rodada as i16, dif)
@@ -322,6 +322,6 @@ unsafe extern "thiscall" fn cup_start_new_season(copa: usize) {
 unsafe extern "thiscall" fn comparar_cup_start_new_season(copa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg = [(copa + 0xb1, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa), || cup_start_new_season(copa));
-    PLACAR.registrar(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", copa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa), || cup_start_new_season(copa));
+    PLACAR.record(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", copa, mo, mr));
 }

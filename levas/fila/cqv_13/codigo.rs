@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn cqv13_oceania_clubes_previstas(this: usize) {
     let lista = cqv13_d(this + 0xee);
     cqv13_ordenar(lista, cqv13_d(this + 0xf2) as u32); // cqv13: os 8 pela reputação
     cqv13_gravar(this, cqv13_d(this + 0xee), &CQV13_OCEANIA_CLUBES);
-    crate::comparacao::ramo("cqv_13 sorteio dos grupos da oceania");
+    crate::comparison::branch("cqv_13 sorteio dos grupos da oceania");
     let n = cqv13_w(this + 0xf2) as u16 as u32;
     embaralhar(cqv13_d(this + 0xee), n); // cqv13: os 8 embaralhados
 }
@@ -61,7 +61,7 @@ unsafe fn cqv13_conferir(nome: &str, this: usize, clubes: &[usize], posicoes: &[
         .collect();
     v.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
     let lidas: Vec<u32> = v.iter().map(|x| x.1 as u32).collect();
-    PLACAR.registrar(lidas == posicoes, || format!("{}({:#x}): posições pela reputação {:?}", nome, this, lidas));
+    PLACAR.record(lidas == posicoes, || format!("{}({:#x}): posições pela reputação {:?}", nome, this, lidas));
 }
 
 // ponytail: Comp_Stats::set_club_final_position acrescenta registros e o embaralhamento sorteia: não roda duas vezes.
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn comparar_cqv13_oceania_clubes_previstas(this: usize)
     cqv13_conferir("cqv13_oceania_clubes_previstas", this, &antes, &CQV13_OCEANIA_CLUBES);
     antes.sort_unstable();
     depois.sort_unstable();
-    PLACAR.registrar(antes == depois, || format!("cqv13_oceania_clubes_previstas({:#x}): a lista embaralhada não é a mesma", this));
+    PLACAR.record(antes == depois, || format!("cqv13_oceania_clubes_previstas({:#x}): a lista embaralhada não é a mesma", this));
 }
 
 /// O corpo das previstas com cópia (0x4027d0 e 0x91ff30): sem estatísticas (+8), a caixa `linhas.0`; uma cópia dos `n`

@@ -81,7 +81,7 @@ unsafe fn eng_first_compare_round_table(nome: &str, fase: u32, rodadas: *mut i16
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if liga.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copia(&mut r2, &mut e2, pl2));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, original, || copia(&mut r2, &mut e2, pl2));
     let gravou = a != 0 || b != 0;
     let saidas = !gravou || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
     let tabela = if a != 0 && b != 0 {
@@ -97,7 +97,7 @@ unsafe fn eng_first_compare_round_table(nome: &str, fase: u32, rodadas: *mut i16
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
+    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
     a
 }
 
@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fase: u32, ro
                 show_error_at(0x9c4374, 0xae);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_5 calendario da primeira inglesa");
+            crate::comparison::branch("cqp_5 calendario da primeira inglesa");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, ano, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
@@ -359,7 +359,7 @@ unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fase: u32, ro
                 show_error_at(0x9c4374, 0x1ed);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_5 play-offs da primeira inglesa");
+            crate::comparison::branch("cqp_5 play-offs da primeira inglesa");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, ano);
             eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, ano);
@@ -390,7 +390,7 @@ unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, fase: u32, roda
                 show_error_at(0x9c43b0, 0xa7);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_5 calendario da premiership");
+            crate::comparison::branch("cqp_5 calendario da premiership");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, ano, &PREMIERSHIP_CHRISTMAS, 0x9c43b0);
             t

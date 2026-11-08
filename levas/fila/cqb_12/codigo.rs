@@ -25,7 +25,7 @@ unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> u8 {
     let nacao = core::ptr::read_unaligned((clube + 0x53) as *const usize);
     if nacao != 0 {
         if let Some(k) = find_key_nation_index(nacao) {
-            crate::comparacao::ramo("cqb_12 nacao chave do clube");
+            crate::comparison::branch("cqb_12 nacao chave do clube");
             return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: o índice ativo da nação do clube
         }
     }
@@ -34,7 +34,7 @@ unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> u8 {
     if selecao(clube) != 0 {
         return 0;
     }
-    crate::comparacao::ramo("cqb_12 clube sem nacao chave");
+    crate::comparison::branch("cqb_12 clube sem nacao chave");
     3 // cqb12: clube fora das nações-chave
 }
 
@@ -42,7 +42,7 @@ unsafe extern "C" fn comp_active_key_nation_of_club(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_comp_active_key_nation_of_club(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = comp_active_key_nation_of_club(clube);
-    PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("comp_active_key_nation_of_club({:#x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -56,7 +56,7 @@ unsafe extern "C" fn comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
     }
     match find_key_nation_index(u(u(estadio + 0x38) + 0x1f)) {
         Some(k) => {
-            crate::comparacao::ramo("cqb_12 nacao chave do estadio");
+            crate::comparison::branch("cqb_12 nacao chave do estadio");
             *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio
         }
         None => 3,
@@ -67,7 +67,7 @@ unsafe extern "C" fn comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
 unsafe extern "C" fn comparar_comp_active_key_nation_of_stadium(estadio: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(estadio);
     let n = comp_active_key_nation_of_stadium(estadio);
-    PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", estadio, r, n));
+    PLACAR.record(r == n, || format!("comp_active_key_nation_of_stadium({:#x}) original={} rust={}", estadio, r, n));
     r
 }
 
@@ -96,6 +96,6 @@ unsafe extern "C" fn comparar_comp_key_nation_entry_from_active_index(ativo: i8)
     }
     let r = o(ativo);
     let n = comp_key_nation_entry_from_active_index(ativo);
-    PLACAR.registrar(r == n, || format!("comp_key_nation_entry_from_active_index({}) original={} rust={}", ativo, r, n));
+    PLACAR.record(r == n, || format!("comp_key_nation_entry_from_active_index({}) original={} rust={}", ativo, r, n));
     r
 }

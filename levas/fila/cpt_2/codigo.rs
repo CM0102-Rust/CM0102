@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, pontos: u32
     let (mes, ano) = match_month_year(partida);
     *((p + 2) as *mut u8) = mes; // cpt2: o mes do jogo
     core::ptr::write_unaligned((p + 3) as *mut u16, ano); // cpt2: o ano do jogo
-    crate::comparacao::ramo("cpt_2 resultado");
+    crate::comparison::branch("cpt_2 resultado");
 }
 
 // ponytail: a original pode realocar o histórico (não roda duas vezes): o plano antes (conta, capacidade, pontos, mês e
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn comparar_append_result(this: usize, nacao: usize, po
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };
     let lido = (cpt2_h(e + 0xa), cpt2_h(e + 8), cpt2_w(p), *((p + 2) as *const u8), cpt2_w(p + 3));
     let plano = (conta.wrapping_add(1), cap_n, pontos as u16, mes, ano);
-    PLACAR.registrar(lido == plano, || format!("append_result(nação {}, pontos {}) original={:?} plano={:?}", cpt2_d(nacao), pontos as u16, lido, plano));
+    PLACAR.record(lido == plano, || format!("append_result(nação {}, pontos {}) original={:?} plano={:?}", cpt2_d(nacao), pontos as u16, lido, plano));
 }
 
 /// { 0x58e190 } (thiscall, ret 4, fifa_rankings.cpp): `FIFA_RANKINGS::get_nation_strength_tier(nação)` (duas vezes por
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nacao: usize) 
 unsafe extern "thiscall" fn comparar_get_nation_strength_tier(this: usize, nacao: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, nacao);
     let n = get_nation_strength_tier(this, nacao);
-    PLACAR.registrar(r == n, || format!("get_nation_strength_tier(nação {}) original={} rust={}", cpt2_d(nacao), r, n));
+    PLACAR.record(r == n, || format!("get_nation_strength_tier(nação {}) original={} rust={}", cpt2_d(nacao), r, n));
     r
 }
 
@@ -167,8 +167,8 @@ unsafe extern "thiscall" fn recalculate_scores(this: usize) {
 unsafe extern "thiscall" fn comparar_recalculate_scores(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg = [(cpt2_d(this), cpt2_d(0xae2350) * 0x2c)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || recalculate_scores(this));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || recalculate_scores(this));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).collect();
         format!("recalculate_scores diferenças nos deslocamentos {:x?}", dif)

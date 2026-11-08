@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -
         show_error_at(0x9a7de4, 0x297);
         return 0;
     }
-    crate::comparacao::ramo("cqk_11 classificados da libertadores");
+    crate::comparison::branch("cqk_11 classificados da libertadores");
     embaralhar(lista, cqk11_w(this + 0xf2) as u16 as u32); // cqk11: os 32 da Libertadores embaralhados
     1
 }
@@ -71,25 +71,25 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_select_qualified_clubs(this:
         return o(this); // ponytail: as caixas de erro: só a original
     }
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let estado = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let (ee, f2) = (cqk11_d(this + 0xee), cqk11_d(this + 0xf2));
     let r = o(this);
-    let (la, depois) = (cqk11_d(this + 0xee), crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO));
+    let (la, depois) = (cqk11_d(this + 0xee), crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS));
     let a: [u32; 32] = if la != 0 { core::ptr::read_unaligned(la as *const [u32; 32]) } else { [0; 32] };
-    estado.escrever();
+    estado.write_back();
     core::ptr::write_unaligned((this + 0xee) as *mut u32, ee as u32);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, f2 as u32);
-    let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| conmebol_liber_select_qualified_clubs(this)));
+    let rr = crate::rng::pause_trace(|| crate::rng::without_counting(|| conmebol_liber_select_qualified_clubs(this)));
     let lb = cqk11_d(this + 0xee);
     let b: [u32; 32] = if lb != 0 { core::ptr::read_unaligned(lb as *const [u32; 32]) } else { [0; 32] };
-    let igual_estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO) == depois;
+    let igual_estado = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS) == depois;
     if lb != 0 && lb != la {
         soltar(lb);
     }
     core::ptr::write_unaligned((this + 0xee) as *mut u32, la as u32);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
-    depois.escrever();
-    PLACAR.registrar(r == rr && a == b && igual_estado, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, igual_estado, a, b));
+    depois.write_back();
+    PLACAR.record(r == rr && a == b && igual_estado, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, igual_estado, a, b));
     r
 }
 
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this:
                 let mundial = cqk11_d(cqk11_d(0xadadfc).wrapping_add(cqk11_d(0x9cf6e4).wrapping_mul(4)));
                 let t = cqk11_d(mundial + 0xa7);
                 let nacao = cqk11_d(cqk11_d(t) + 0x53);
-                crate::comparacao::ramo("cqk_11 campeao da libertadores");
+                crate::comparison::branch("cqk_11 campeao da libertadores");
                 if nacao != 0 && cqk11_d(cqk11_d(nacao + 0x71)) == cqk11_d(0x9cfa1c) {
                     core::ptr::write_unaligned(t as *mut u32, clube as u32); // cqk11: o campeão na vaga sul-americana
                 } else {
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_update_staff_records_for_sta
     }
     let r = o(this, clube, desfecho, fase, a4, jogo, a6);
     let igual = r == 0 && (!titulo || cqk11_d(vaga) == clube);
-    PLACAR.registrar(igual, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, desfecho as u8, fase as u8, r, titulo, vaga));
+    PLACAR.record(igual, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, desfecho as u8, fase as u8, r, titulo, vaga));
     r
 }
 
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn conmebol_liber_advance_stage(this: usize) {
     let f = f + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
     if f == 7 { // cqk11: o mata-mata depois dos sete grupos
-        crate::comparacao::ramo("cqk_11 mata-mata da libertadores");
+        crate::comparison::branch("cqk_11 mata-mata da libertadores");
         let mata: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c3d10usize);
         mata(this);
     }
@@ -200,5 +200,5 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_advance_stage(this: usize) {
     }
     o(this);
     let depois = cqk11_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.record(depois == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }

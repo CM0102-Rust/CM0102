@@ -32,9 +32,19 @@ pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
     c(f, read_i8(f + k)) as i8 as i32 // a original estende o al (movsx)
 }
 
-/// the six training staff slots of the human manager: drops who left the club, adds the new assistant and coaches with
-/// all five categories and recomputes each category rating (the chance from the coaching attributes, divided by the
-/// coach category count, 1 to 20)
+/// `TRAINING_MANAGER::update_coach_assignments(club, manager)`, called by the coach hirings and departures (0x4ce4e0,
+/// 0x4cf720, 0x8c9720, the regen 0x7aaeb0) and by the club change (0x8b2470): updates the six training staff slots of
+/// the human manager and recomputes each category rating.
+///
+/// Without a manager and with a club without a human (0x600a50 with 1, 1, 0, 0), or a national side club (0x53b900):
+/// nothing. A null manager: the club's (+0xcf). The human's staff (0x8b4cd0, six 9-byte slots): (1) the slot whose
+/// coach has no non-player sheet (+0x69) or is neither the assistant (0x53cb80) nor one of the 5 coaches (0x53cc30) is
+/// emptied; (2) the assistant and the coaches with a sheet that are not in the slots go into the first empty one with
+/// all five categories (0x01010101 and 1); (3) each flagged category gets its rating: 0 (goalkeepers, sheet +0x10)
+/// (chance − sheet +0x12 + 21) / 2; 1 (tactics, +0x21 and +0x10) (chance + chance + +0x12) / 3; 2 (+0x10) (chance +
+/// +0xe + +0x12) / 3; 3 (+0x10) (chance + +0x12) / 2; 4 (+0x11) the chance (divisions truncated toward zero; the chance
+/// from 0x544410), the signed byte divided by the divisor for the number of flagged categories (1.0 to 2.0, float),
+/// truncated and clamped to 1..20.
 /// Original: `TRAINING_MANAGER::update_coach_assignments` (0x8b2880, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b2880 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::update_coach_assignments(clube, técnico)`,
@@ -84,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
     }
     for k in -1..5 {
         let p = candidate(k);
-        if p == 0 || read_u32_as_usize(p + 0x69) == 0 {
+        if p == 0 || read_u32_as_usize(p + staff::NON_PLAYER) == 0 {
             continue;
         }
         if (0..6).any(|v| read_i32(t + 9 * v) == read_i32(p)) {
@@ -126,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
             };
             // the low byte, signed, as float divided by the float of the quantity (x87 double precision)
             let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
-            crate::comparacao::ramo("cqf_7 nota do treinador");
+            crate::comparison::branch("cqf_7 nota do treinador");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
         }
     }
@@ -155,9 +165,15 @@ pub(crate) unsafe fn training_entry_of_player_data(this: usize, f: usize) -> usi
     read_u32_as_usize(this + 0x651d).wrapping_add((read_i32(f) as isize * 6) as usize)
 }
 
-/// on the human manager club change: the old squad goes back to the default schedules (goalkeeper or general) with load
-/// 50; the new one goes to the manager goalkeeper or general schedule, with the schedule load; and the new club
-/// training staff
+/// `TRAINING_MANAGER::reassign_squad_schedules(manager, old, new)`, when the human manager changes club (0x690890 and
+/// 0x68f9c0/0x69ebc0, manager_manager.cpp): reassigns the training schedules of the old and new squads.
+///
+/// The old club's squad (0x541f90, 50): each valid person (id below [0xae2364]) gets load 50 (0x62c660) and slot 6
+/// (goalkeeper with 15 or more, sheet +0xf) or 1 in the training entry; without a sheet, the box (line 0x34c). With a
+/// new club: of the manager's ten schedules, the last one of type 6 (+0x15) is the goalkeepers' and the last one of
+/// type 1 the general one; each player of the new squad with a sheet goes to the goalkeepers' schedule (goalkeeper with
+/// 15 or more, if there is one), otherwise the general one (if there is one), otherwise slot 1, with the schedule's
+/// load (0x8b4f60) on the fitness sheet; finally the training staff (0x8b2880 with the new club and the manager).
 /// Original: `TRAINING_MANAGER::reassign_squad_schedules` (0x8b2470, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b2470 } (thiscall, ret 0xc, training_manager.cpp): `TRAINING_MANAGER::reassign_squad_schedules(técnico, antigo,
@@ -180,12 +196,12 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
                 continue;
             }
             gravar_carga(read_u32_as_usize(G_INJURY), p, 0x32);
-            let f = read_u32_as_usize(p + 0x61);
+            let f = read_u32_as_usize(p + staff::PLAYER);
             if f == 0 {
                 show_error_at(0xa8ccd0, 0x34c);
                 continue;
             }
-            *(training_entry_of_player_data(this, f) as *mut u8) = if read_i8(f + 0xf) >= 0xf { 6 } else { 1 };
+            *(training_entry_of_player_data(this, f) as *mut u8) = if read_i8(f + player_sheet::GOALKEEPER) >= 0xf { 6 } else { 1 };
         }
     }
     if new == 0 {
@@ -205,19 +221,19 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
         if p == 0 {
             continue;
         }
-        let f = read_u32_as_usize(p + 0x61);
+        let f = read_u32_as_usize(p + staff::PLAYER);
         if f == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
         let e = training_entry_of_player_data(this, f) as *mut i8;
-        *e = if read_i8(f + 0xf) >= 0xf && gol != -1 {
+        *e = if read_i8(f + player_sheet::GOALKEEPER) >= 0xf && gol != -1 {
             gol // cqf7: o programa dos goleiros
         } else if geral != -1 {
             geral
         } else {
             1
         };
-        crate::comparacao::ramo("cqf_7 programa do elenco novo");
+        crate::comparison::branch("cqf_7 programa do elenco novo");
         let c = carga(human_training_schedule(this, manager, *e));
         gravar_carga(read_u32_as_usize(G_INJURY), p, c as u32);
     }
@@ -248,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize
 ///
 /// [pt] A entrada de 6 bytes do treino do jogador: [this+0x651d] + 6 × id da ficha (+0x61).
 pub(crate) unsafe fn training_entry_of_staff(this: usize, p: usize) -> usize {
-    read_u32_as_usize(this + 0x651d).wrapping_add((read_i32(read_u32_as_usize(p + 0x61)) as isize * 6) as usize)
+    read_u32_as_usize(this + 0x651d).wrapping_add((read_i32(read_u32_as_usize(p + staff::PLAYER)) as isize * 6) as usize)
 }
 
 /// Person -> contract (get_contract), stored in G_CONTRACT_LOOKUP_RESULT.
@@ -282,9 +298,30 @@ pub(crate) unsafe fn is_human_manager_id(manager: usize) -> bool {
 
 
 
-/// brings the player training weeks up to date (up to 30): the human club schedule, the progress rolls of each category
-/// by the schedule and coach weight, the position training (the rating, the end and the player complaint) and the
-/// progress on the attributes
+/// `TRAINING_MANAGER::update_player_training(person, skip)`, called by the player initialisation for the match
+/// (0x6eaea0, match_man.cpp, with 0: every player of every match), by a new injury (0x62d250) and by the screens:
+/// brings the player's training weeks up to date (up to 30).
+///
+/// A null person (line 0x18a), without the sheet (0x195) or without a schedule (0x8b39f0 null, 0x1a3): the "Error" box;
+/// an id from [0xae2364] on: nothing. A player of a human manager's club without flag 0x20 in +5 of the training entry:
+/// the flag, the schedule slot (the goalkeepers' one, type 6, for a goalkeeper with 15 or more; otherwise the general
+/// one, type 1; otherwise 1) and its load (0x8b4f60) on the fitness sheet (0x62c660). Weeks = training week (+0x688d) −
+/// the entry's (+1); none and without `skip`: nothing. With the flag and the club no longer with a human manager:
+/// clears the flag, load 50, slot 6 or 1 and the position training stops (0x8b4450 with 0).
+///
+/// Up to 30 weeks: brings the entry up to date; each category (0..4) has the weight level × 2 + 60 + (coach factor −
+/// 100) / 5 (0..200) and, per week, progress rolls: up 1 with weight above 100, draw(210 − weight) < 20, value below
+/// (+0x58) / 3 and draw(|value| × 2 + 14) < 10; otherwise down 1 with weight below 110, draw(weight + 60) < 20, value
+/// above −7 and above (+0x5b) / 3 − 6 and the same last draw (goalkeeper with 19 or more: only with draw(4), or draw(2)
+/// in category 4, at zero).
+///
+/// The position training items (0x8b4b20, 8-byte items: +4 the mask, +6 the rating, +7 the rate) advance per week (or
+/// once, with `skip` in the mask): with a positive rate, draw(rate) < 5 gives rating + 2 (up to 20) and the player may
+/// complain (club contract 0x4cf5f0 without 0x8000 in +0x45: by a rate above 50 or an aptitude 0x8b4770 below 12, with
+/// +0x5b below 15, draw(+0x5b) < 10 and no injury 0x62c400: flag 0x8000 (0x867700), −5 on +0x44 (−100..100) and
+/// 0x5885c0); with a negative rate, draw(−rate) < 5 gives rating − 2 and, below 1, the item ends (rate 0, rating 1). It
+/// applies the progress (0x8b2be0) and, with finished items, removes them from the list (the last one into the gap) and
+/// re-sorts (qsort 0x945333 with 0x8b4e00).
 /// Original: `TRAINING_MANAGER::update_player_training` (0x8b1750, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b1750 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::update_player_training(pessoa, pular)`,
@@ -313,7 +350,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     if read_i32(p) >= read_i32(G_STAFF_COUNT) {
         return;
     }
-    if read_u32_as_usize(p + 0x61) == 0 {
+    if read_u32_as_usize(p + staff::PLAYER) == 0 {
         show_error_at(0xa8ccd0, 0x195);
         return;
     }
@@ -342,7 +379,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                     geral = k;
                 }
             }
-            let slot = if read_i8(read_u32_as_usize(p + 0x61) + 0xf) >= 0xf && goleiro != -1 {
+            let slot = if read_i8(read_u32_as_usize(p + staff::PLAYER) + 0xf) >= 0xf && goleiro != -1 {
                 goleiro
             } else if geral != -1 {
                 geral
@@ -352,7 +389,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             *(e as *mut i8) = slot;
             let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_TRAINING_SCHEDULE_GET_TRAINING_LOAD);
             let v = carga(human_training_schedule(this, manager, slot));
-            crate::comparacao::ramo("cqd_8 programa do humano");
+            crate::comparison::branch("cqd_8 programa do humano");
             gravar_carga(read_u32_as_usize(G_INJURY), p, v as u32);
         }
     }
@@ -366,11 +403,11 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         let ainda = c != 0 && training_manager_club_of_contract(c) != 0 && read_u32_as_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
             && is_human_manager_id(read_u32_as_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf));
         if !ainda {
-            crate::comparacao::ramo("cqd_8 saiu do clube humano");
+            crate::comparison::branch("cqd_8 saiu do clube humano");
             *mark &= 0xdf;
             gravar_carga(read_u32_as_usize(G_INJURY), p, 0x32);
-            let f = read_u32_as_usize(p + 0x61);
-            *(training_entry_of_staff(this, p) as *mut u8) = if read_i8(f + 0xf) >= 0xf { 6 } else { 1 };
+            let f = read_u32_as_usize(p + staff::PLAYER);
+            *(training_entry_of_staff(this, p) as *mut u8) = if read_i8(f + player_sheet::GOALKEEPER) >= 0xf { 6 } else { 1 };
             let mut q = 0usize;
             let n = find(this, p, &mut q);
             let parar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_TRAINING_MANAGER_SET_POSITION_TRAINING_RATE);
@@ -406,12 +443,12 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         let fa = factor(this, clube, k as u32) as u16 as i16 as i32;
         let x = base.wrapping_add(((fa - 100) / 5) as i16);
         let weight: i16 = if x < 0 { 0 } else if x > 200 { 200 } else { x };
-        let floor = ((read_i8(p + 0x5b) as i32 / 3) as i8).wrapping_sub(6);
-        let ceiling = (read_i8(p + 0x58) as i32 / 3) as i8;
+        let floor = ((read_i8(p + staff::PROFESSIONALISM) as i32 / 3) as i8).wrapping_sub(6);
+        let ceiling = (read_i8(p + staff::DETERMINATION) as i32 / 3) as i8;
         let middle = training_nibble(e, k);
         for _ in 0..weeks {
             let v = middle.wrapping_add(d[k]);
-            if read_i8(read_u32_as_usize(p + 0x61) + 0xf) > 0x12 {
+            if read_i8(read_u32_as_usize(p + staff::PLAYER) + 0xf) > 0x12 {
                 let r = if k == 4 { friendly_random(2) } else { friendly_random(4) };
                 if r != 0 {
                     continue; // goalkeeper: the category barely moves
@@ -420,7 +457,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             if weight > 0x64 {
                 if friendly_random(0xd2 - weight as i32) < 0x14 && v < ceiling { // cqd8: o sorteio da subida
                     if friendly_random((v as i32).abs() * 2 + 0xe) < 10 {
-                        crate::comparacao::ramo("cqd_8 progresso sobe");
+                        crate::comparison::branch("cqd_8 progresso sobe");
                         d[k] = d[k].wrapping_add(1); // cqd8: o progresso sobe
                     }
                     continue;
@@ -433,7 +470,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                 continue;
             }
             if friendly_random((v as i32).abs() * 2 + 0xe) < 10 {
-                crate::comparacao::ramo("cqd_8 progresso desce");
+                crate::comparison::branch("cqd_8 progresso desce");
                 d[k] = d[k].wrapping_sub(1); // cqd8: o progresso desce
             }
         }
@@ -445,7 +482,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             voltas = 1;
         }
         let sheet: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-        contract_of_club = sheet(read_u32_as_usize(G_CONTRACT_MANAGER), p, read_u32_as_usize(p + 0x39) as u32);
+        contract_of_club = sheet(read_u32_as_usize(G_CONTRACT_MANAGER), p, read_u32_as_usize(p + staff::CLUB_JOB) as u32);
     }
     let mut acabou = false;
     if npos > 0 {
@@ -470,10 +507,10 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                         let apt = aptidao(this, p, read_u16(it - 3) as u32) as u8 as i8;
                         let t = read_i8(it);
                         let quer = (t > 0x32 && friendly_random(100 - t as i32) < 10) || (apt < 0xc && friendly_random(apt as i32) < 2);
-                        let a = read_i8(p + 0x5b);
+                        let a = read_i8(p + staff::PROFESSIONALISM);
                         if quer && a < 0xf && friendly_random(a as i32) < 10 && read_u32_as_usize(G_INJURY) != 0
                             && state(read_u32_as_usize(G_INJURY), p) == 0 {
-                            crate::comparacao::ramo("cqd_8 reclama do treino de posicao");
+                            crate::comparison::branch("cqd_8 reclama do treino de posicao");
                             reclamar(c, 0x8000, 0);
                             let m = (c + 0x44) as *mut i8;
                             let v = *m as i32 - 5;
@@ -502,7 +539,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     let aplicar: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(FN_TRAINING_MANAGER_APPLY_TRAINING_PROGRESS);
     aplicar(this, p, d.as_ptr());
     if acabou {
-        crate::comparacao::ramo("cqd_8 treino de posicao acabou");
+        crate::comparison::branch("cqd_8 treino de posicao acabou");
         let n0 = read_i32(this + 0x6525);
         let mut i = 0i32;
         if n0 > 0 {
@@ -530,8 +567,14 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
 }
 
 
-/// the player training schedule: the club human manager one by the entry slot (the rest one when injured) or the
-/// default schedule of the slot
+/// `TRAINING_MANAGER::get_player_schedule(person)`, called by the people's daily update (game_daily_staff_update
+/// 0x5ce2d0), by 0x5d6aa0 and by update_player_training (0x8b1750): returns the player's training schedule.
+///
+/// A null person or one without the sheet: the "Error" box (line 0x6ad) and 0. At a human manager's club (contract
+/// 0x4cf5a0, kept in [0xae1080]; manager +0xcf among the last 16 ids): injured (0x62c400 = 2), the human's schedule 1,
+/// this + 0x4d8 + 0x60e × ([0xae2364] − id − 1); otherwise the one of the training entry's slot (+0, outside 0..9 slot
+/// 1); outside the 16, the box (line 0x68f) and 0. Otherwise: injured, schedule 0 (this); otherwise this + 0x9b × slot
+/// (signed).
 /// Original: `TRAINING_MANAGER::get_player_schedule` (0x8b39f0, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b39f0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_player_schedule(pessoa)`, pelo diário
@@ -541,7 +584,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
 /// 0x60e × ([0xae2364] − id − 1); senão o da vaga da entrada do treino (+0, fora de 0..9 a 1); fora dos 16, a caixa
 /// (linha 0x68f) e 0. Senão: lesionado, o programa 0 (this); senão this + 0x9b × vaga (com sinal).
 pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize) -> usize {
-    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
         show_error_at(0xa8ccd0, 0x6ad);
         return 0;
     }
@@ -568,7 +611,9 @@ pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize
 }
 
 
-/// the level of one of the five training schedule categories
+/// `TRAINING_SCHEDULE::get_category_level(category)`: returns the level of the schedule's category (+4 + category,
+/// signed), in al; the upper bytes of eax keep the sign-extended category (movsx), as in the original. Called by
+/// update_player_training (0x8b1750, the five categories of each update).
 /// Original: `TRAINING_SCHEDULE::get_category_level` (0x8b4f50, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b4f50 } (thiscall, ret 4, training_manager.cpp): `TRAINING_SCHEDULE::get_category_level(categoria)`: o nível da
@@ -587,7 +632,7 @@ pub(crate) unsafe extern "thiscall" fn get_category_level(this: usize, category:
 ///
 /// [pt] A entrada de 6 bytes do treino do jogador: [this+0x651d] + 6 × id da ficha (+0x61).
 pub(crate) unsafe fn player_training_entry(this: usize, p: usize) -> usize {
-    read_u32_as_usize(this + 0x651d).wrapping_add((*(read_u32_as_usize(p + 0x61) as *const i32) as isize * 6) as usize)
+    read_u32_as_usize(this + 0x651d).wrapping_add((*(read_u32_as_usize(p + staff::PLAYER) as *const i32) as isize * 6) as usize)
 }
 
 /// Signed nibble of category k in a training entry (low/high of +3, +4, low of +5).
@@ -609,8 +654,14 @@ pub(crate) unsafe fn training_manager_apply_training_progress(this: usize, p: us
     f(this, p, d.as_ptr());
 }
 
-/// takes the progress stored in the training entry off the attributes (keeping the five nibbles) or puts it back,
-/// around the player attribute normalisations
+/// `TRAINING_MANAGER::remove_or_restore_training_progress(person, restore)`: takes the progress stored in the training
+/// entry off the attributes or puts it back, around the player attribute normalisations (0x538bc0 and 0x538ec0: on
+/// ageing in the people's daily update 0x5ce2d0, in the young regen 0x7abac0 and on load), which take the progress off
+/// before and put it back after.
+///
+/// A null person or one without the sheet: the "Error" box (line 0x621). Taking off (`restore` = 0): keeps the five
+/// progress nibbles of the training entry in 0xde1f3c..0xde1f40 (category 3, 2, 4, 0, 1) and applies the negated
+/// progress (0x8b2be0); restoring: applies the kept one.
 /// Original: `TRAINING_MANAGER::remove_or_restore_training_progress` (0x8b3640, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b3640 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::remove_or_restore_training_progress(pessoa,
@@ -620,7 +671,7 @@ pub(crate) unsafe fn training_manager_apply_training_progress(this: usize, p: us
 /// entrada do treino em 0xde1f3c..0xde1f40 (categoria 3, 2, 4, 0, 1) e aplica o progresso negado (0x8b2be0); devolver:
 /// aplica o guardado.
 pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
-    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
         show_error_at(0xa8ccd0, 0x621);
         return;
     }
@@ -628,14 +679,14 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
     let mut d = [0i8; 8];
     let g = |a: usize| *(a as *const i8);
     if devolver != 0 {
-        crate::comparacao::ramo("cqd_9 devolver");
+        crate::comparison::branch("cqd_9 devolver");
         d[0] = g(0xde1f3f); // cqd9: devolve a categoria 0
         d[1] = g(0xde1f40);
         d[2] = g(0xde1f3d);
         d[3] = g(0xde1f3c);
         d[4] = g(0xde1f3e); // cqd9: devolve a categoria 4
     } else {
-        crate::comparacao::ramo("cqd_9 tirar");
+        crate::comparison::branch("cqd_9 tirar");
         *(G_TRAINING_PROGRESS_SAVED_DELTA_0 as *mut i8) = training_nibble(e, 0);
         *(G_TRAINING_PROGRESS_SAVED_DELTA_1 as *mut i8) = training_nibble(e, 1); // cqd9: guarda a categoria 1
         *(G_TRAINING_PROGRESS_SAVED_DELTA_2 as *mut i8) = training_nibble(e, 2);
@@ -649,7 +700,10 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
 }
 
 
-/// how much the training progress adds to an attribute: the attribute minus the same attribute without the progress
+/// `TRAINING_MANAGER::get_training_attribute_change(person, attribute)`, called by the training screen (0x8b8184): how
+/// much the training progress adds to an attribute: the attribute (0x5431e0) minus the same attribute without the
+/// training progress (it applies the negated progress, reads, and reapplies the progress), in al. A null person or one
+/// without the sheet: the "Error" box (line 0x657) and 0.
 /// Original: `TRAINING_MANAGER::get_training_attribute_change` (0x8b37c0, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b37c0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_training_attribute_change(pessoa,
@@ -657,7 +711,7 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
 /// (aplica o progresso negado, lê e reaplica o progresso), no al. Pessoa nula ou sem a ficha: a caixa "Error" (linha
 /// 0x657) e 0.
 pub(crate) unsafe extern "thiscall" fn get_training_attribute_change(this: usize, p: usize, attribute: u32) -> u8 {
-    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
         show_error_at(0xa8ccd0, 0x657);
         return 0;
     }
@@ -686,8 +740,15 @@ pub(crate) fn is_valid_position_mask(m: i32) -> bool {
     matches!(m, 1 | 2 | 4 | 8 | 0x10 | 0x20 | 0x40 | 0x80 | 0x200 | 0x800)
 }
 
-/// the player aptitude to learn a position or side: the average of the adaptability and the attributes the position
-/// needs
+/// `TRAINING_MANAGER::get_position_aptitude(person, mask)` (`this` not used), called by update_player_training
+/// (0x8b1750, the position training complaint) and by set_position_training_rate (0x8b4450): the player's aptitude to
+/// learn a position or side: the average of the adaptability (person's +0x56) and the attributes the position needs
+/// (ratings 1 to 20 through 0x544380 over the sheet +0x61).
+///
+/// Goalkeeper (1) +0x39, +0x2a and +0x35, over 4; defence (2, 4) +0x3e, +0x39 and +0x32, over 4; midfield and attack
+/// (8, 0x10, 0x20) +0x37, +0x32, +0x40 and +0x3f, over 5; 0x40 +0x33, +0x27, +0x40 and +0x36, over 5; 0x80 +0x30, over
+/// 2; 0x200 only the adaptability (in al, the upper bytes with the mask); 0x800 +0x3b, over 2 (truncated divisions).
+/// Any other mask: the "Error" box (line 0x945) and 0.
 /// Original: `TRAINING_MANAGER::get_position_aptitude` (0x8b4770, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b4770 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_position_aptitude(pessoa, mascara)`
@@ -704,13 +765,13 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
         show_error_at(0xa8ccd0, 0x945);
         return 0;
     }
-    let f = read_u32_as_usize(p + 0x61);
+    let f = read_u32_as_usize(p + staff::PLAYER);
     let rating_of: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING);
     // simplification: the original pushes the attribute byte in a register with leftover upper bytes; 0x544380 reads
     // o byte
     let rating = |o: usize| rating_of(f, *((f + o) as *const u8) as u32) as u8 as i8 as i32;
     let b = |o: usize| read_i8(f + o) as i32;
-    let adapt = read_i8(p + 0x56) as i32;
+    let adapt = read_i8(p + staff::ADAPTABILITY) as i32;
     let r = match m {
         1 => {
             let x = rating(0x39);
@@ -734,7 +795,7 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
             (x + y + adapt + b(0x40) + b(0x36)) / 5
         }
         0x80 => (adapt + b(0x30)) / 2,
-        0x200 => return (m as u32 & 0xffff_ff00) | *((p + 0x56) as *const u8) as u32,
+        0x200 => return (m as u32 & 0xffff_ff00) | *((p + staff::ADAPTABILITY) as *const u8) as u32,
         _ => (adapt + b(0x3b)) / 2,
     };
     r as u32
@@ -751,8 +812,14 @@ pub(crate) unsafe fn set_schedule_levels(this: usize, n: [u8; 5]) {
     }
 }
 
-/// stores the schedule's slot and type and its five category levels from the type's mix (general, one strong category,
-/// goalkeepers or no training)
+/// `TRAINING_SCHEDULE::set_type(slot, type)`: stores the schedule's slot and type and its five category levels from the
+/// type's mix.
+///
+/// The slot (signed, as a dword) at +0, the type at +0x15 and the five category levels (+4..+8) by the type's mix (jump
+/// table 0x8b4f08): 1 general (25 in the first four), 2 to 5 one category at 50 and the others at 10, 6 goalkeepers (50
+/// in the fifth, 0 in the third), 0 and 7 no training (all 0); outside 0..=7 (the −1 of the human's first slot) only
+/// the slot and the type. Called by set_default_schedules (0x8b3d40, 167 times at the start of the game) and by the
+/// training screens.
 /// Original: `TRAINING_SCHEDULE::set_type` (0x8b4e50, training_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x8b4e50 } (thiscall, ret 8, training_manager.cpp): `TRAINING_SCHEDULE::set_type(vaga, tipo)`: a vaga (com sinal,
@@ -765,7 +832,7 @@ pub(crate) unsafe extern "thiscall" fn set_type(this: usize, slot: i8, kind: i8)
     *((this + 0x15) as *mut i8) = kind;
     match kind {
         1 => {
-            crate::comparacao::ramo("cpu_8 geral");
+            crate::comparison::branch("cpu_8 geral");
             set_schedule_levels(this, [0x19, 0x19, 0x19, 0x19, 0]); // cpu8: o treino geral
         }
         2 => set_schedule_levels(this, [0x32, 0xa, 0xa, 0xa, 0]),
@@ -773,7 +840,7 @@ pub(crate) unsafe extern "thiscall" fn set_type(this: usize, slot: i8, kind: i8)
         4 => set_schedule_levels(this, [0xa, 0xa, 0xa, 0x32, 0]),
         5 => set_schedule_levels(this, [0xa, 0x32, 0xa, 0xa, 0]),
         6 => {
-            crate::comparacao::ramo("cpu_8 goleiros");
+            crate::comparison::branch("cpu_8 goleiros");
             set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: o treino dos goleiros
         }
         0 | 7 => set_schedule_levels(this, [0; 5]),
@@ -796,8 +863,15 @@ pub(crate) unsafe fn human_schedule_slot(this: usize, person: usize, slot: usize
     this + 0x43d + 0x9b * slot + 0x60e * v as usize
 }
 
-/// sets up the computer's seven schedules (type k in slot k) and the ten schedules of each of the 16 human managers,
-/// then gives the default names
+/// `TRAINING_MANAGER::set_default_schedules()`, called by the constructor (0x8b0ec0) in a new game (without
+/// training.dat): sets up the computer's seven schedules and the ten schedules of each of the 16 human managers, then
+/// gives the default names.
+///
+/// The computer's seven schedules (0x9b bytes each from this; type k in slot k: the computer trains through slot 1,
+/// general, and slot 6, goalkeepers, according to the player's training entry) and, for each of the 16 human managers
+/// (person [0xae2364] − h − 1, 0x6e-byte record in [0xae23bc]), the ten schedules: slots 0 to 5 computed here (types
+/// −1, 0, 1, 2, 3, 4), 6 to 9 through 0x8b3930 (types 5, 6, 7, 7). At the end the default names (0x8b2230). Called by
+/// address (0x8b4e50 and 0x8b3930 in this batch).
 /// Original: `TRAINING_MANAGER::set_default_schedules` (0x8b3d40, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b3d40 } (thiscall, ret 0, training_manager.cpp): `TRAINING_MANAGER::set_default_schedules()`, pelo construtor
@@ -810,7 +884,7 @@ pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
     let kind: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(FN_TRAINING_SCHEDULE_SET_TYPE);
     let human: unsafe extern "thiscall" fn(usize, usize, i8) -> usize = core::mem::transmute(FN_TRAINING_MANAGER_GET_MANAGER_SCHEDULE);
     kind(this, 0, 0);
-    crate::comparacao::ramo("cpu_8 programas padrao");
+    crate::comparison::branch("cpu_8 programas padrao");
     kind(this + 0x9b, 1, 1); // cpu8: o programa geral do computador
     for k in 2..7i8 {
         kind(this + 0x9b * k as usize, k, k);
@@ -831,7 +905,9 @@ pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
 }
 
 
-/// a human manager's schedule for slot 0 to 9 (otherwise 1); outside the 16 human managers, the error box and 0
+/// `TRAINING_MANAGER::get_manager_schedule(manager, slot)`: returns the human manager's schedule for the slot (0..=9;
+/// outside that, 1): this + 0x9b × (slot + 10 × human + 7), human = [0xae2364] − id − 1. Outside the 16 human managers:
+/// the box (line 0x68f) and 0. Called by 0x8b3d40 (slots 6 to 9) and by the screens.
 /// Original: `TRAINING_MANAGER::get_manager_schedule` (0x8b3930, training_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x8b3930 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_manager_schedule(tecnico, vaga)`: o
@@ -859,8 +935,15 @@ pub(crate) fn coach_average_divisor(n: i8) -> f64 {
     f32::from_bits(T[(n - 1) as usize]) as f64
 }
 
-/// the coaching factor of a training category: 100 without a manager or with a computer manager; at a human club, the
-/// average rating of the coach assignments (divided by the divisor for their number) × 40/7, at least 50
+/// `TRAINING_MANAGER::get_coaching_factor(club, category)`, called by TRAINING_MANAGER::update_player_training
+/// (0x8b1750, five times per player in each training update; the value goes in as (factor − 100) / 5 into the weight of
+/// the progress roll): the coaching factor of a training category.
+///
+/// A null club: 0. Without a manager (+0xcf) or with a computer manager (id below [0xae2364] − 16): 100 (eax carries
+/// the upper 16 bits of the manager pointer, as in the original). A human manager: his staff (0x8b4cd0, six 9-byte
+/// slots: id −1 is an empty slot, the category rating at +4 + category); with n coaches with a rating, the sum (16
+/// bits) divided by the nth divisor and truncated (_ftol 0x945640), × 40/7 (0x970400) and truncated; below 50, 50. Hot
+/// on the computer branch: no counter there.
 /// Original: `TRAINING_MANAGER::get_coaching_factor` (0x8b41d0, training_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x8b41d0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_coaching_factor(clube, categoria)`,
@@ -877,7 +960,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: u
     }
     let t = read_u32_as_usize(clube + club::MANAGER);
     if t == 0 {
-        crate::comparacao::ramo("cpt_8 sem tecnico");
+        crate::comparison::branch("cpt_8 sem tecnico");
         return 100; // cpt8: sem técnico
     }
     if read_i32(t) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
@@ -898,7 +981,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: u
         }
     }
     if n != 0 {
-        crate::comparacao::ramo("cpt_8 treinadores");
+        crate::comparison::branch("cpt_8 treinadores");
         soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: a média dos treinadores
     }
     let r = match_pl_ftol(soma as f64 * read_f64_at(0x970400)); // 0x970400 = 5.714285714
@@ -909,7 +992,10 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: u
 }
 
 
-/// the coach assignment table (six 9-byte slots) of one of the 16 human managers; otherwise the error box and 0
+/// `TRAINING_MANAGER::get_coach_assignments(manager)`: returns the training staff table (six 9-byte slots) of one of
+/// the 16 human managers, at this + 0x652d + 54 × ([0xae2364] − id − 1).
+///
+/// A null manager: the "Error" box (line 0xa20) and 0; outside the 16 human managers: the box (line 0xa2a) and 0.
 /// Original: `TRAINING_MANAGER::get_coach_assignments` (0x8b4cd0, training_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x8b4cd0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_coach_assignments(tecnico)`: a comissão
@@ -929,7 +1015,13 @@ pub(crate) unsafe extern "thiscall" fn get_coach_assignments(this: usize, manage
 }
 
 
-/// the training schedule load from its five category levels with fixed weights, up to 100
+/// `TRAINING_SCHEDULE::get_training_load()`: the schedule's load from its five category levels (+4..+8, signed) with
+/// fixed weights, up to 100.
+///
+/// trunc(+8 × 0.5) − trunc(+4 × −1.3) − trunc(+7 × −0.5) − trunc(+6 × −0.5) − trunc(+5 × −0.5) (constants 0x968968,
+/// 0x96f878, 0x969540; _ftol 0x945640), in 16 bits; from 100 up, 100. Called by update_player_training (0x8b1750, the
+/// human club's player), by set_player_schedule (0x8b2250) and by reassign_squad_schedules (0x8b2470); it goes to the
+/// fitness sheet (Injury::set_training_load 0x62c660).
 /// Original: `TRAINING_SCHEDULE::get_training_load` (0x8b4f60, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b4f60 } (thiscall, ret 0, training_manager.cpp): `TRAINING_SCHEDULE::get_training_load()`: a carga do
@@ -993,9 +1085,19 @@ pub(crate) unsafe fn add_low_nibble(a: usize, d: i8) {
     *(a as *mut u8) = (v & 0xf0) | (v.wrapping_add(d as u8) & 0x0f);
 }
 
-/// adds each category's progress to the player's stored nibble; every two steps the category attributes move (1 to 20
-/// ones by one, −125 to 125 ones by six); then the trained position or side goes to 20 when learnt, or back to 1 when
-/// the training stops
+/// `TRAINING_MANAGER::apply_training_progress(person, d)`, called by update_player_training (0x8b1750, each player on
+/// each training update) and by 0x8b3640 and 0x8b37c0: adds each category's progress to the player's stored nibble,
+/// moving the category attributes, then handles the trained position or side.
+///
+/// A null person: the "Error" box (line 0x4b3); without the sheet (+0x61): the box (line 0x4ba); an id from [0xae2364]
+/// on: nothing. With the player's 6-byte entry (this +0x651d + 6 × sheet id), each category with progress `d[k]` other
+/// than zero moves its step (progress_step over the stored nibble) on its sheet attributes (those from 1 to 20 by the
+/// step, those from −125 to 125 by six times the step; every two steps the attributes move) and stores the nibble plus
+/// `d[k]`: 3 (+4 high), 0 (+3 low), 2 (+4 low), 1 (+3 high) and 4 (+5 low).
+///
+/// Then the position training (0x8b4b20): with the learning entry at 15 or more, the position or side of the mask goes
+/// to 20 (learnt); below that, it goes back to 1 (training stopped) if more than one position (+0xf..+0x15) or side
+/// (+0x17..+0x19) at 15 or more is still left. Hot: no counter.
 /// Original: `TRAINING_MANAGER::apply_training_progress` (0x8b2be0, training_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x8b2be0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::apply_training_progress(pessoa, d)`, pela
@@ -1027,15 +1129,15 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         let dd = progress_step(k, (read_i8(e + 4) >> 4) as i32);
         if dd != 0 {
             let seis = dd * 6;
-            add_clamped_1_20(f + 0x22, dd);
-            add_clamped_125(f + 0x23, seis);
-            add_clamped_125(f + 0x26, seis);
-            add_clamped_1_20(f + 0x29, dd);
-            add_clamped_125(f + 0x2b, seis);
-            add_clamped_125(f + 0x37, seis);
-            add_clamped_125(f + 0x3e, seis);
-            add_clamped_1_20(f + 0x40, dd);
-            add_clamped_125(f + 0x41, seis);
+            add_clamped_1_20(f + player_sheet::CORNERS, dd);
+            add_clamped_125(f + player_sheet::CROSSING, seis);
+            add_clamped_125(f + player_sheet::DRIBBLING, seis);
+            add_clamped_1_20(f + player_sheet::FREE_KICKS, dd);
+            add_clamped_125(f + player_sheet::HEADING, seis);
+            add_clamped_125(f + player_sheet::PASSING, seis);
+            add_clamped_125(f + player_sheet::TACKLING, seis);
+            add_clamped_1_20(f + player_sheet::TECHNIQUE, dd);
+            add_clamped_125(f + player_sheet::THROW_INS, seis);
         }
         add_high_nibble(e + 4, k); // cpt9: guarda o progresso da categoria 3
     }
@@ -1044,14 +1146,14 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 3) << 4 >> 4) as i32);
         if dd != 0 {
-            add_clamped_1_20(f + 0x1b, dd); // cpt9: o primeiro atributo da categoria 0
-            add_clamped_1_20(f + 0x1d, dd);
-            add_clamped_1_20(f + 0x2e, dd);
-            add_clamped_1_20(f + 0x34, dd);
-            add_clamped_1_20(f + 0x36, dd);
-            add_clamped_125(f + 0x3a, dd * 6);
-            add_clamped_1_20(f + 0x3c, dd);
-            add_clamped_1_20(f + 0x3d, dd);
+            add_clamped_1_20(f + player_sheet::ACCELERATION, dd); // cpt9: o primeiro atributo da categoria 0
+            add_clamped_1_20(f + player_sheet::AGILITY, dd);
+            add_clamped_1_20(f + player_sheet::JUMPING, dd);
+            add_clamped_1_20(f + player_sheet::NATURAL_FITNESS, dd);
+            add_clamped_1_20(f + player_sheet::PLAYER_PACE, dd);
+            add_clamped_125(f + player_sheet::REFLEXES, dd * 6);
+            add_clamped_1_20(f + player_sheet::STAMINA, dd);
+            add_clamped_1_20(f + player_sheet::STRENGTH, dd);
         }
         add_low_nibble(e + 3, k);
     }
@@ -1061,9 +1163,9 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         let dd = progress_step(k, (read_i8(e + 4) << 4 >> 4) as i32);
         if dd != 0 {
             let seis = dd * 6;
-            add_clamped_125(f + 0x27, seis);
-            add_clamped_125(f + 0x31, seis);
-            add_clamped_125(f + 0x38, seis);
+            add_clamped_125(f + player_sheet::FINISHING, seis);
+            add_clamped_125(f + player_sheet::LONG_SHOTS, seis);
+            add_clamped_125(f + player_sheet::PENALTIES, seis);
         }
         add_low_nibble(e + 4, k);
     }
@@ -1073,11 +1175,11 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         let dd = progress_step(k, (read_i8(e + 3) >> 4) as i32);
         if dd != 0 {
             let seis = dd * 6; // cpt9: a categoria 1, seis vezes o passo
-            add_clamped_125(f + 0x24, seis);
-            add_clamped_125(f + 0x32, seis);
-            add_clamped_125(f + 0x33, seis);
-            add_clamped_1_20(f + 0x3f, dd);
-            add_clamped_125(f + 0x39, seis);
+            add_clamped_125(f + player_sheet::DECISIONS, seis);
+            add_clamped_125(f + player_sheet::MARKING, seis);
+            add_clamped_125(f + player_sheet::MOVEMENT, seis);
+            add_clamped_1_20(f + player_sheet::TEAMWORK, dd);
+            add_clamped_125(f + player_sheet::POSITIONING, seis);
         }
         add_high_nibble(e + 3, k);
     }
@@ -1087,8 +1189,8 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         let dd = progress_step(k, (read_i8(e + 5) << 4 >> 4) as i32);
         if dd != 0 {
             let seis = dd * 6;
-            add_clamped_125(f + 0x2a, seis);
-            add_clamped_125(f + 0x35, seis);
+            add_clamped_125(f + player_sheet::HANDLING, seis);
+            add_clamped_125(f + player_sheet::ONE_ON_ONES, seis);
         }
         add_low_nibble(e + 5, k);
     }
@@ -1132,8 +1234,14 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
 }
 
 
-/// finds the player's first entry in the sorted position training list and returns how many are his (0 without the
-/// position training mark)
+/// `TRAINING_MANAGER::find_position_training(person, &first)`: finds the player's first entry in the sorted position
+/// training list and returns how many are his.
+///
+/// A null person, the "Error" box (line 0x995); a null output, the box (line 0x99c); without the sheet (+0x61), the box
+/// (line 0x9a3): 0. Without flag 0x10 in +5 of the player's training entry (this +0x651d + 6 × sheet id), the position
+/// training mark: 0. Otherwise the binary search (0x946464, order 0x8b4e00) of the person's id in the position training
+/// list (this +0x6521, count +0x6525, 8-byte items); not found: 0; found: steps back to the person's first item, stores
+/// it in the output and returns how many consecutive ones are hers.
 /// Original: `TRAINING_MANAGER::find_position_training` (0x8b4b20, training_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x8b4b20 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::find_position_training(pessoa, &primeira)`:
@@ -1183,7 +1291,9 @@ pub(crate) unsafe extern "thiscall" fn find_position_training(this: usize, perso
 }
 
 
-/// 1 when one of the player position training entries has a learning rate above 50
+/// `TRAINING_MANAGER::has_fast_position_training(person)`, called by the people's daily update (game_daily_staff_update
+/// 0x5ce2d0): returns 1 if some item of the person's position training (0x8b4b20) has a learning rate (+7) above 50;
+/// otherwise 0.
 /// Original: `TRAINING_MANAGER::has_fast_position_training` (0x8b4db0, training_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x8b4db0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::has_fast_position_training(pessoa)`, pelo
@@ -1203,8 +1313,10 @@ pub(crate) unsafe extern "thiscall" fn has_fast_position_training(this: usize, p
 
 
 
-/// on a day of the year that is a multiple of 7 the training week goes up by 1 (each player training is caught up by
-/// the missing weeks); returns the day / 7
+/// `TRAINING_MANAGER::advance_week_counter(&day)`, every day from the day loop (game_main_day_loop 0x5cccd0, with the
+/// day of the year of the game date 0xae2c90): on a day that is a multiple of 7 (signed remainder), the training week
+/// (+0x688d, 16 bits) goes up by 1; update_player_training (0x8b1750) catches up each player with the missing weeks.
+/// Returns day / 7 (the caller does not read it).
 /// Original: `TRAINING_MANAGER::advance_week_counter` (0x8b1730, training_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x8b1730 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::advance_week_counter(&dia)`, todo dia pelo
@@ -1215,7 +1327,7 @@ pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *c
     let v = *day as i32;
     let rest = v % 7; // cpt10: a semana de 7 dias
     if rest == 0 { // cpt10: o sétimo dia
-        crate::comparacao::ramo("cpt_10 semana");
+        crate::comparison::branch("cpt_10 semana");
         let s = (this + 0x688d) as *mut u16;
         *s = (*s).wrapping_add(1); // cpt10: mais uma semana
     }
@@ -1226,8 +1338,14 @@ pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *c
 
 // simplification: the reserve loses the item (does not run twice): original only; the copy takes the branch.
 
-/// allocates the 6-byte training entry of every player data record and puts goalkeepers (goalkeeping rating 15 or more)
-/// on schedule 6 and the others on 1
+/// `TRAINING_MANAGER::init_player_entries()`, called by the constructor (0x8b0ec0) in a new game: allocates the 6-byte
+/// training entry of every player sheet and puts goalkeepers on schedule 6 and the others on 1.
+///
+/// Allocates (calloc 0x945501) the 6-byte training entries, one per player sheet ([0xae236c] sheets of 0x46 bytes in
+/// [0xae23c4], the sheet by its id +0), at this + 0x651d; without memory, the box (line 0x6e3) and it returns. In each
+/// entry it clears bit 0x20 of +5 and sets the schedule slot (+0): 6 (goalkeepers) with a goalkeeping rating (+0xf,
+/// signed) of 15 or more, otherwise 1 (general). Each player's first training update (0x8b1750, which only afterwards
+/// redoes the slot of the computer's players) and all of the human club's training use this slot.
 /// Original: `TRAINING_MANAGER::init_player_entries` (0x8b3c50, training_manager.cpp, thiscall).
 ///
 /// [pt] { 0x8b3c50 } (thiscall, ret 0, training_manager.cpp): `TRAINING_MANAGER::init_player_entries()`, pelo construtor
@@ -1249,12 +1367,12 @@ pub(crate) unsafe extern "thiscall" fn init_player_entries(this: usize) {
     while i < read_i32(G_PLAYER_DATA_COUNT) {
         let sheet = || read_u32_as_usize(this + 0x651d).wrapping_add((read_i32(f) as usize).wrapping_mul(6));
         *((sheet() + 5) as *mut u8) &= 0xdf;
-        let goal = *((f + 0xf) as *const i8);
+        let goal = *((f + player_sheet::GOALKEEPER) as *const i8);
         if goal >= 0xf { // cpu9: goleiro de 15 para cima
-            crate::comparacao::ramo("cpu_9 goleiro");
+            crate::comparison::branch("cpu_9 goleiro");
             *(sheet() as *mut u8) = 6; // cpu9: o programa dos goleiros
         } else {
-            crate::comparacao::ramo("cpu_9 linha");
+            crate::comparison::branch("cpu_9 linha");
             *(sheet() as *mut u8) = 1; // cpu9: o programa geral
         }
         i += 1;

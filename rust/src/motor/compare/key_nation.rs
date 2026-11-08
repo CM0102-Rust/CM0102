@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_nation(nacao: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_NATION)(nacao);
     let n = key_nation_index_of_nation(nacao);
-    PLACAR.registrar(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nacao, r, n));
+    PLACAR.record(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -19,7 +19,7 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_club(clube: usize) 
     }
     let r = o(clube);
     let n = key_nation_index_of_club(clube);
-    PLACAR.registrar(r == n, || format!("key_nation_index_of_club(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("key_nation_index_of_club(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: 
     }
     let r = o(clube);
     let n = key_nation_get_club_season_year(clube);
-    PLACAR.registrar(r == n, || format!("key_nation_get_club_season_year(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("key_nation_get_club_season_year(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize,
     let read = |p: usize| if p != 0 { *(p as *const [u8; 8]) } else { [0u8; 8] };
     let (oi, of) = (read(start), read(end));
     let ok = r == n && (start == 0 || oi == i) && (end == 0 || of == f);
-    PLACAR.registrar(ok, || {
+    PLACAR.record(ok, || {
         format!("key_nation_club_in_season(clube {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", clube, r, oi, of, n, i, f)
     });
     r
@@ -57,7 +57,7 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize,
 pub(crate) unsafe extern "C" fn comparar_key_nation_get_main_continent() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(IDX_KEY_NATION_GET_MAIN_CONTINENT)();
     let n = key_nation_get_main_continent();
-    PLACAR.registrar(r == n, || format!("key_nation_get_main_continent() original={:x} rust={:x}", r, n));
+    PLACAR.record(r == n, || format!("key_nation_get_main_continent() original={:x} rust={:x}", r, n));
     r
 }
 
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_get_main_continent() -> usiz
 pub(crate) unsafe extern "C" fn comparar_key_nation_get_main_nation() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(IDX_KEY_NATION_GET_MAIN_NATION)();
     let n = key_nation_get_main_nation();
-    PLACAR.registrar(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));
+    PLACAR.record(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));
     r
 }
 
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usiz
     }
     let r = o(comp);
     let n = key_nation_is_world_cup_comp(comp);
-    PLACAR.registrar(r == n, || format!("key_nation_is_world_cup_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+    PLACAR.record(r == n, || format!("key_nation_is_world_cup_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }
 
@@ -89,7 +89,7 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: 
     }
     let r = o(comp);
     let n = key_nation_is_international_comp(comp);
-    PLACAR.registrar(r == n, || format!("key_nation_is_international_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+    PLACAR.record(r == n, || format!("key_nation_is_international_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }
 
@@ -97,6 +97,6 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: 
 pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_comp(comp: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_COMP)(comp);
     let n = key_nation_index_of_comp(comp);
-    PLACAR.registrar(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+    PLACAR.record(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }

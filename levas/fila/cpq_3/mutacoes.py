@@ -10,7 +10,7 @@ MUTACOES = [
     ('cpq3_rebaixamento_sem_moral', '        adjust_morale(p, -0xf);',
      '        // mutacao: sem o moral',
      'cpq_3 rebaixamento'),
-    ('cpq3_classificado_na_copa', '        crate::comparacao::ramo("cpq_3 classificado clube");\n        staff_records_add_i32(r + 0xba, pontos);',
-     '        crate::comparacao::ramo("cpq_3 classificado clube");\n        staff_records_add_i32(r + 0xbe, pontos); // mutacao: na copa',
+    ('cpq3_classificado_na_copa', '        crate::comparison::branch("cpq_3 classificado clube");\n        staff_records_add_i32(r + 0xba, pontos);',
+     '        crate::comparison::branch("cpq_3 classificado clube");\n        staff_records_add_i32(r + 0xbe, pontos); // mutacao: na copa',
      'cpq_3 classificado clube'),
 ]

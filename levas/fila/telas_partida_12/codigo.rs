@@ -28,7 +28,7 @@ unsafe fn screen_update_regions(montagem: bool) -> Option<Vec<(usize, usize)>> {
 }
 
 /// O primeiro byte diferente de cada região (para a mensagem do comparador).
-fn first_differences(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<String> {
+fn first_differences(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> Vec<String> {
     mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
         let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
         Some(format!("{:#x}+{:#x}", a, k))
@@ -704,7 +704,7 @@ unsafe extern "C" fn refresh_latest_scores_rows() {
 /// (0x803d80; bloqueado: −11), mostra "Waiting for other players..." (0x802f80) e abre a tela da
 /// partida (0x718aa0) na vaga do humano: −4.
 unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
-    crate::comparacao::ramo("telas espera dos outros jogadores");
+    crate::comparison::branch("telas espera dos outros jogadores");
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
     let humanos: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, i32) = core::mem::transmute(0x7ffd80usize);
     let ausente: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7ffdd0usize);
@@ -755,8 +755,8 @@ unsafe extern "C" fn comparar_fill_team_stats_rows(modo: u32, area: usize) {
     };
     reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(modo, area), || fill_team_stats_rows(modo, area));
-    PLACAR.registrar(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", modo, area, first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(modo, area), || fill_team_stats_rows(modo, area));
+    PLACAR.record(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", modo, area, first_differences(&mo, &mr)));
 }
 
 /// O redesenho é comparado de verdade (atualização local): o `Display` do gerente, os parâmetros (menos
@@ -775,8 +775,8 @@ unsafe extern "C" fn comparar_refresh_latest_scores_rows() {
         reg.push((bloco + 0xb8, 0x200 - 0xb8));
     }
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_latest_scores_rows());
-    PLACAR.registrar(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || refresh_latest_scores_rows());
+    PLACAR.record(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 // ponytail: a espera fecha as telas, mostra a mensagem e abre a tela da partida (rede); não roda duas

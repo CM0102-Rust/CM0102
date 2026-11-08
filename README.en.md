@@ -28,7 +28,7 @@ published; `levas/N/` keeps each batch's test results. Docs: `DESCOMPILACAO` = w
 `COMO_CONTINUAR` = how to continue, `PLACAR` = scoreboard, `CAMPOS` = record fields, `FORMATOS` = file formats,
 `GLOSSARIO` = glossary, `CREDITOS` = credits; every document has an `.en.md` English version.
 
-**State:** 283 batches, 2065 routines in Rust, each one compared with the original (the match engine without the screens is 100% in Rust; saves go beyond 2 GB, up to 4 GB); how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md).
+**State:** 283 batches, 2065 routines in Rust, each one compared with the original, directly or through the routine that calls it (the match engine without the screens is 100% in Rust; saves go beyond 2 GB, up to 4 GB); how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md).
 
 The game files do not go into git: the game is free to download, but the code and the brand still belong to SI and Eidos.
 

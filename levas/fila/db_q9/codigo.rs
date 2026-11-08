@@ -76,15 +76,15 @@ unsafe extern "C" fn comparar_staff_adjust_morale(pessoa: usize, delta: u32, lim
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(%%I0%%);
     if delta as u8 == 0 {
         let r = o(pessoa, delta, limitar);
-        PLACAR.registrar(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", pessoa, r));
+        PLACAR.record(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", pessoa, r));
         return r;
     }
     // sorteia (0x90cfc0): o estado do gerador volta entre os lados e a cópia não conta os sorteios
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((core::ptr::read_unaligned((pessoa + 0x61) as *const usize) + 0x45, 1));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, delta, limitar),
-        || crate::aleatorio::sem_contar(|| staff_adjust_morale(pessoa, delta, limitar)));
-    PLACAR.registrar(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", pessoa, delta as u8 as i8, limitar, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa, delta, limitar),
+        || crate::rng::without_counting(|| staff_adjust_morale(pessoa, delta, limitar)));
+    PLACAR.record(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", pessoa, delta as u8 as i8, limitar, r, n, mo, mr));
     r
 }
 
@@ -94,16 +94,16 @@ unsafe extern "C" fn comparar_database_non_player_to_attribute_vector(nao_jogado
     if !fim.is_null() {
         regioes.push((fim as usize, 1));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(nao_jogador, pessoa, vetor, fim),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(nao_jogador, pessoa, vetor, fim),
         || database_non_player_to_attribute_vector(nao_jogador, pessoa, vetor, fim));
-    PLACAR.registrar(igual && r == n, || format!("database_non_player_to_attribute_vector({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_non_player_to_attribute_vector({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
     r
 }
 
 unsafe extern "C" fn comparar_staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pessoa + 0x5e, 1)], || o(pessoa, elenco),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pessoa + 0x5e, 1)], || o(pessoa, elenco),
         || staff_set_squad_flags(pessoa, elenco));
-    PLACAR.registrar(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", pessoa, elenco as u8, mo, mr));
+    PLACAR.record(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", pessoa, elenco as u8, mo, mr));
     r
 }

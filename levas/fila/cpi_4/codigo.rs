@@ -51,7 +51,7 @@ unsafe extern "C" fn pow_double(base: f64, expoente: f64) -> f64 {
 /// Comparador: o método das regras pode escrever o texto e sortear: só a original; a escolha das regras da cópia é a
 /// mesma conta (a prova é a carreira e o modo Rust).
 unsafe extern "thiscall" fn comparar_write_deadline_news_text(this: usize, noticia: usize, completo: u32, texto: usize) -> u32 {
-    crate::comparacao::ramo("write_deadline_news_text");
+    crate::comparison::branch("write_deadline_news_text");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32>(%%I0%%)(this, noticia, completo, texto)
 }
 
@@ -59,16 +59,16 @@ unsafe extern "thiscall" fn comparar_write_deadline_news_text(this: usize, notic
 unsafe extern "thiscall" fn comparar_can_end_loan(this: usize, clube: usize, jogador: usize, a: u32, b: u32, c: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32>(%%I1%%)(this, clube, jogador, a, b, c);
     if loan_transfer_rules(this, clube, jogador).is_some() {
-        crate::comparacao::ramo("can_end_loan pelas regras");
+        crate::comparison::branch("can_end_loan pelas regras");
         return r;
     }
-    PLACAR.registrar(r == 1, || format!("can_end_loan({:x}, {:x}) original={} rust=1", clube, jogador, r));
+    PLACAR.record(r == 1, || format!("can_end_loan({:x}, {:x}) original={} rust=1", clube, jogador, r));
     r
 }
 
 unsafe extern "C" fn comparar_pow_double(base: f64, expoente: f64) -> f64 {
     let r = original_fn::<unsafe extern "C" fn(f64, f64) -> f64>(%%I2%%)(base, expoente);
     let n = pow_double(base, expoente);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("pow_double({}, {}) original={} rust={}", base, expoente, r, n));
+    PLACAR.record(r.to_bits() == n.to_bits(), || format!("pow_double({}, {}) original={} rust={}", base, expoente, r, n));
     r
 }

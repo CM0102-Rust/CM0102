@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: 
     let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(0x5fd6b0usize);
     if p != 0 {
         if aposentado(p, principal(cpv12_d(p + 0x1a))) != 0 { // cpv12: aposentado
-            crate::comparacao::ramo("cpv_12 aposentado");
+            crate::comparison::branch("cpv_12 aposentado");
             if msg != 0 {
                 let mut nome = [0u8; 0x12c];
                 nome_do_jogador(p, nome.as_mut_ptr(), 0x12c, 1);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: 
         return 1;
     }
     if cpv12_b(e + 0x44) == 0 {
-        crate::comparacao::ramo("cpv_12 sem janela");
+        crate::comparison::branch("cpv_12 sem janela");
         return 1; // cpv12: sem janela
     }
     let hoje = cpv12_d(0xae2c90) as u32;
@@ -124,11 +124,11 @@ unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: 
     let d = cpv12_d(e + 0x3a) as u32;
     let (a, dd) = ((d >> 16) as u16, d as u16 as i16);
     if a < ano || (a == ano && dd < dia) {
-        crate::comparacao::ramo("cpv_12 data passada");
+        crate::comparison::branch("cpv_12 data passada");
         return 1; // cpv12: data passada
     }
     if a == ano && dd as u16 == dia as u16 {
-        crate::comparacao::ramo("cpv_12 jogo hoje");
+        crate::comparison::branch("cpv_12 jogo hoje");
         let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
         let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
         let buscar: unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, u32, i32, i32, i32, u32, i32, u32, u32, u32, u32, usize, u32, i32, u32, u32) -> u16 =
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize
     let n = national_teams_can_change_squad(this, nacao, tipo, p, entrando, if msg != 0 { meu.as_mut_ptr() as usize } else { 0 }, tam);
     let texto = |a: *const u8, m: usize| -> Vec<u8> { (0..m).map(|i| *a.add(i)).take_while(|&c| c != 0).collect() };
     let (to, tr) = if msg != 0 { (texto(msg as *const u8, tam as usize), texto(meu.as_ptr(), tam as usize)) } else { (Vec::new(), Vec::new()) };
-    PLACAR.registrar(r == n && to == tr, || format!("national_teams_can_change_squad({:x}, {}, {:x}, {}) {}/{} {:?} x {:?}", nacao, tipo as u8, p, entrando, r, n,
+    PLACAR.record(r == n && to == tr, || format!("national_teams_can_change_squad({:x}, {}, {:x}, {}) {}/{} {:?} x {:?}", nacao, tipo as u8, p, entrando, r, n,
         String::from_utf8_lossy(&to), String::from_utf8_lossy(&tr)));
     r
 }
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize
 unsafe extern "stdcall" fn comparar_national_teams_player_in_squad(p: usize, nacao: usize, tipo: u32) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I1%%)(p, nacao, tipo);
     let n = national_teams_player_in_squad(p, nacao, tipo);
-    PLACAR.registrar(r == n, || format!("national_teams_player_in_squad({:x}, {:x}, {}) original={} rust={}", p, nacao, tipo as u8, r, n));
+    PLACAR.record(r == n, || format!("national_teams_player_in_squad({:x}, {:x}, {}) original={} rust={}", p, nacao, tipo as u8, r, n));
     r
 }
 
@@ -224,6 +224,6 @@ unsafe extern "thiscall" fn comparar_schedule_assign_opponent(this: usize, agend
         return o(this, agenda, adversario);
     }
     let reg = [(agenda, 25 * (n as usize + 1) + 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, agenda, adversario), || schedule_assign_opponent(this, agenda, adversario));
-    PLACAR.registrar(igual, || format!("schedule_assign_opponent({:x}, {:x}) {:x?} x {:x?}", agenda, adversario, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, agenda, adversario), || schedule_assign_opponent(this, agenda, adversario));
+    PLACAR.record(igual, || format!("schedule_assign_opponent({:x}, {:x}) {:x?} x {:x?}", agenda, adversario, mo, mr));
 }

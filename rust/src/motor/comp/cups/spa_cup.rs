@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
             }
             soltar(read_u32_as_usize(this + 0xad));
         }
-        crate::comparacao::ramo("cqt_5 copa do rei refeita");
+        crate::comparison::branch("cqt_5 copa do rei refeita");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
 /// [pt] O histórico da temporada de uma copa (`record_season_honours`, 11 bytes: mov eax, [ecx+0xc]; mov ecx, [eax+o]; mov
 /// edx, [ecx]; jmp [edx+0x30]): a virtual +0x30 da fase [+0xc][o/4] (a última fase da copa: a final), com o eax dela.
 pub(crate) unsafe fn record_season_honours(this: usize, o: usize, ramo: &'static str) -> i32 {
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + o);
     call_cup_virtual(stage, 0x30)
 }

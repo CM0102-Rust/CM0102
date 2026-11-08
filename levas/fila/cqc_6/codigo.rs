@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: usize) {
                                 cqc6_d(clube) as u32, 0, u32::MAX, 0xffff_fffe, u32::MAX) as u16 != 0
                         };
                         if janela(cqc6_d(f + 0x1c)) || janela(cqc6_d(f + 0x20)) {
-                            crate::comparacao::ramo("cqc_6 conflito na janela");
+                            crate::comparison::branch("cqc_6 conflito na janela");
                             s = 0; // cqc6: conflito na janela
                         }
                     }
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: usize) {
             }
             let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5abc30usize);
             tirar(cqc6_d(0xae2a58), r);
-            crate::comparacao::ramo("cqc_6 jogo para a TV");
+            crate::comparison::branch("cqc_6 jogo para a TV");
             cqc6_pw(r + 0x28, cqc6_w(pa + 2) as u16);
             cqc6_pw(r + 0x2a, cqc6_w(pa) as u16); // cqc6: o dia da TV
             cqc6_pb(r + 0x3f, cqc6_b(v + 0xa));
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn comparar_move_fixtures_for_tv(this: usize, data: usi
     o(this, data);
     let esperado = if n == 0 { 0 } else { validas.min(n) };
     let movidas = (0..bloco).filter(|k| cqc6_b(e + k * 7 + 0xb) == 0xff).count();
-    PLACAR.registrar(movidas == esperado, || format!("move_fixtures_for_tv(data {:x}) vagas {} válidas {} jogos {}: movidas {} (esperado {})",
+    PLACAR.record(movidas == esperado, || format!("move_fixtures_for_tv(data {:x}) vagas {} válidas {} jogos {}: movidas {} (esperado {})",
         data, bloco, validas, n, movidas, esperado));
 }
 
@@ -328,7 +328,7 @@ unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
                 }
                 j = j.wrapping_add(1);
             }
-            crate::comparacao::ramo("cqc_6 noticia do grupo");
+            crate::comparison::branch("cqc_6 noticia do grupo");
             entregar(cqc6_d(0xb7431c), noticia, time(i));
         }
         i = i.wrapping_add(1);
@@ -409,7 +409,7 @@ unsafe extern "thiscall" fn send_fixture_list_news(this: usize, lista: usize) {
                     let achou = buscar(cqc6_d(0xae2a58), &mut v_ano, &mut v_dia, &mut fatia, 1, cqc6_d(cqc6_d(this + 4)) as u32, -1, -1,
                         cqc6_d(time(i)) as u32, -1, -1, -1, -1, 3, p2, 0, cqc6_b(this + 0x44) as u32, -1, 1) as u16;
                     if achou == 3 {
-                        crate::comparacao::ramo("cqc_6 noticia da tabela");
+                        crate::comparison::branch("cqc_6 noticia da tabela");
                         let mut noticia = [0u32; 0x38];
                         let n = noticia.as_mut_ptr() as usize;
                         let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);

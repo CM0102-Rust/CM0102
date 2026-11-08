@@ -6,7 +6,7 @@ unsafe fn dbq2_u32(a: usize) -> usize {
 
 /// O estado do sorteio e 24 bytes a partir de `base` (nulo: só o sorteio).
 unsafe fn dbq2_regioes(base: usize) -> Vec<(usize, usize)> {
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if base != 0 {
         reg.push((base, 24));
     }
@@ -52,9 +52,9 @@ unsafe extern "C" fn comparar_staff_add_disliked_club(pessoa: usize, clube: usiz
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
     let pref = if pessoa != 0 { dbq2_u32(pessoa + 0x65) } else { 0 };
     let reg = dbq2_regioes(if pref != 0 { pref + 4 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, clube, forcar),
-        || crate::aleatorio::sem_contar(|| staff_add_disliked_club(pessoa, clube, forcar)));
-    PLACAR.registrar(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa, clube, forcar),
+        || crate::rng::without_counting(|| staff_add_disliked_club(pessoa, clube, forcar)));
+    PLACAR.record(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
 }
 
 /// { 0x547f90 } (cdecl, Database.cpp): `staff_fade_staff_relationships(pessoa)`: cada uma das três pessoas favoritas
@@ -84,9 +84,9 @@ unsafe extern "C" fn comparar_staff_fade_staff_relationships(pessoa: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(%%I1%%);
     let pref = if pessoa != 0 { dbq2_u32(pessoa + 0x65) } else { 0 };
     let reg = dbq2_regioes(if pref != 0 { pref + 0x1c } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa),
-        || crate::aleatorio::sem_contar(|| staff_fade_staff_relationships(pessoa)));
-    PLACAR.registrar(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa),
+        || crate::rng::without_counting(|| staff_fade_staff_relationships(pessoa)));
+    PLACAR.record(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// { 0x5480f0 } (cdecl, Database.cpp): `staff_get_disliked_staff(pessoa, saida, n)`: zera o byte `*n` (sempre, antes
@@ -117,7 +117,7 @@ unsafe extern "C" fn comparar_staff_get_disliked_staff(pessoa: usize, saida: usi
     if saida != 0 {
         reg.push((saida, 12));
     }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida, n), || staff_get_disliked_staff(pessoa, saida, n));
-    PLACAR.registrar(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa, saida, n), || staff_get_disliked_staff(pessoa, saida, n));
+    PLACAR.record(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
     r
 }

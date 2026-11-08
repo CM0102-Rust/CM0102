@@ -58,10 +58,28 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_advance_stage(this: usize) {
     }
 }
 
-/// The MLS play-off: eight clubs. The three division winners, ordered by points, and the five best of the rest (second
-/// to fourth of each division, by points; ties with no own rule). The pairs: the best winner against the fifth best of
-/// the rest, the second winner against the fourth, the third winner against the third and the best of the rest against
-/// the second [inference: pairs follow the list]; the winners go to the final
+/// Creates the MLS play-off with eight clubs: the three division winners, ordered by points, and the five best of the
+/// rest; the winners go to the final.
+///
+/// `UsaMls::create_playoff_stage()`, the MLS play-off, from the next stage; SEH frame only for the new.
+///
+/// 1) A list of 8 (malloc 0x944e46 of 0x20; out of memory: the box for line 0x58d and it returns).
+///
+/// 2) The three division winners (the first of the league table, of stage 0 and of stage 1), in 6-byte records (the
+/// club and the points, +0x19 of the row), sorted by points (qsort 0x945333 with 0x90a130: more points first), go to
+/// slots 1, 3 and 5 of the list.
+///
+/// 3) The others: the second, third and fourth of each table (in the order: league, stage 0, stage 1, row by row), nine
+/// records sorted by points in the same way (ties with no rule of their own); the five best go to slots 7, 6, 4, 2 and
+/// 0 (the best in 7). The play-off pairs: the best winner against the fifth best of the rest, the second winner against
+/// the fourth, the third winner against the third, and the best of the rest against the second [inference: the pairs
+/// follow the list].
+///
+/// 4) The round table through virtual +0x3c (thiscall(this, 2, &rounds, &extra, 0), ret 0x10); the stage (operator new
+/// 0x944cf1(0xb2) and the Cup_Stage constructor 0x522e00, thiscall, ret 0x3c: the league, 8, the list, the rounds, +4,
+/// the table, the year +0x40, 2, 1, the extra, 0x12, 1, 0, 0 and null seeds; the port passes clean words) into
+/// [+0xc][2] and the table freed (free 0x9452ca). Without a stage: the box for line 0x5c4. With it: Cup::set_up_round
+/// (0x51c800, thiscall(stage, 0), ret 4). The list is not freed (the stage keeps it; the original leaves it so).
 /// Original: `UsaMls::create_playoff_stage` (0x9094c0, usa_mls.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x9094c0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_playoff_stage()`, o play-off
@@ -131,12 +149,20 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     if stage == 0 {
         return show_error_at(0xaa1fb4, 0x5c4);
     }
-    crate::comparacao::ramo("cqr_4 play-off");
+    crate::comparison::branch("cqr_4 play-off");
     build(stage, 0);
 }
 
-/// The MLS Cup final: the two play-off winners (the first two with the winner mark, in play-off list order) in a
-/// two-club cup stage [inference: a single game]; the winner is the MLS champion
+/// Creates the MLS Cup final: the two play-off winners in a two-club cup stage [inference: a single game]; the winner
+/// is the MLS champion.
+///
+/// `UsaMls::create_final_stage()`, the MLS Cup final, from the next stage; SEH frame only for the new. The first two
+/// play-off teams ([+0xc][2], the 6-byte records of +0xa7, in order) with the winner mark (+5 = 1) in a list of 2
+/// (malloc 0x944e46 of 8; out of memory: the box for line 0x5e5 and it returns); the round table through virtual +0x3c
+/// (thiscall(this, 3, &rounds, &extra, 0), ret 0x10); the stage (operator new 0x944cf1(0xb2) and the Cup_Stage
+/// constructor 0x522e00: the league, 2, the list, the rounds, +4, the table, the year, 3, 1, the extra, 0x14, 0, 0, 0
+/// and null seeds) into [+0xc][3] and the table freed. Without a stage: the box for line 0x5fe and it returns (without
+/// freeing the list). With it: Cup::set_up_round (thiscall(stage, 0)) and the list freed (free 0x9452ca).
 /// Original: `UsaMls::create_final_stage` (0x9097d0, usa_mls.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x9097d0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_final_stage()`, a final da MLS
@@ -185,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     if stage == 0 {
         return show_error_at(0xaa1fb4, 0x5fe);
     }
-    crate::comparacao::ramo("cqr_4 final");
+    crate::comparison::branch("cqr_4 final");
     build(stage, 0);
     soltar(list);
 }
@@ -202,11 +228,17 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
 /// palavra baixa do eax: 0x413, 0x47b ou 0x414), se ele é da competição da liga (+0x57 do clube = +4 da liga).
 pub(crate) unsafe fn is_in_mls_division(this: usize, c: usize, code: i16) -> bool {
     let division: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
-    read_usize(c + 0x57) == read_usize(this + 4) && division(c) as u16 as i16 == code
+    read_usize(c + club::DIVISION) == read_usize(this + 4) && division(c) as u16 as i16 == code
 }
 
-/// The MLS table is the first division one: the four clubs of the competition with division code 0x413, in database
-/// order; succeeds if it found all four
+/// Creates the MLS table (the first division, code 0x413): the four clubs of the competition with that division code,
+/// in database order; succeeds if it found all four.
+///
+/// `UsaMls::create_table()`: +0x3e = 4; the table (malloc 0x944e46 of 0xec, 4 rows of 0x3b; out of memory: the box for
+/// line 0x2fe and 0) at +0xb1; in database order ([0xae23b4], [0xae235c] clubs of 0x245 bytes, i16 counter), while rows
+/// are missing, each club of the competition with code 0x413 goes to the next row (League::init_table_row 0x687430:
+/// push 0; push 0; push club; push eax with the row in the low byte and the code's garbage above, which it does not
+/// read; mov ecx -> thiscall, ret 0x10). Returns 1 if it filled the 4 rows.
 /// Original: `UsaMls::create_table` (0x908560, usa_mls.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x908560 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::create_table()`, a tabela da MLS (a primeira divisão, código
@@ -236,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
         }
         i = i.wrapping_add(1);
     }
-    crate::comparacao::ramo("cqs_1 tabela da mls");
+    crate::comparison::branch("cqs_1 tabela da mls");
     (n == read_i16(this + league::CLUB_COUNT)) as u32
 }
 
@@ -297,7 +329,7 @@ pub(crate) unsafe fn create_division_stage(this: usize, code: i16, k: u32, curre
         return show_error_at(0xaa1fb4, rows[1]);
     }
     core::ptr::write_unaligned((this + 0x30) as *mut u32, current);
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     core::ptr::write_unaligned((stage + 0x3a) as *mut i16, code);
 }
 
@@ -354,7 +386,7 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: usize, code: i16, 
         b[..n].sort_unstable();
         a[..n] == b[..n]
     };
-    PLACAR.registrar(same, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", name, this, stage, n, plan));
+    PLACAR.record(same, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", name, this, stage, n, plan));
 }
 
 
@@ -409,7 +441,7 @@ pub(crate) unsafe fn mls_start_new_season(this: usize, year: i16) -> u32 {
     }
     let a = read_i16(this + 0x40);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
-    crate::comparacao::ramo("cqs_2 virada da mls");
+    crate::comparison::branch("cqs_2 virada da mls");
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
     if rules(this) == 0 {
         show_error_at(0xaa1fb4, 0x4af);
@@ -449,9 +481,17 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_start_new_season(this: usize) -> 
     mls_start_new_season(this, 1) // cqs2: o ano seguinte da MLS
 }
 
-/// The MLS predicted positions: in each division the four clubs are ordered by reputation and get positions 1, 4, 7 and
-/// 10 (each division favourite is predicted 1st, the second 4th, the third 7th and the last 10th), one scale shared by
-/// the three divisions
+/// Sets the MLS predicted positions: in each division the four clubs are ordered by reputation and get positions 1, 4,
+/// 7 and 10, one scale shared by the three divisions.
+///
+/// `UsaMls::set_predicted_positions()`. Without statistics (+8): the box for line 0x675 and it returns. A vector of 3 ×
+/// +0x3e clubs (malloc 0x944e46; out of memory: the box for line 0x67d and it returns): those of the league table,
+/// those of stage 0 and those of stage 1 (the three divisions, row by row), each block of +0x3e sorted by reputation
+/// (qsort 0x945333 with 0x4b07d0, highest first, nulls at the end). The first twelve of the vector get, in each
+/// division, positions 1, 4, 7 and 10 (Comp_Stats::set_club_final_position 0x4a2540, thiscall(+8, club, position), ret
+/// 8; the order of the twelve calls is the vector's); the vector is freed (free 0x9452ca). [inference] The three
+/// divisions are mixed in the prediction: each division's favourite is predicted 1st, the second 4th, the third 7th and
+/// the last 10th.
 /// Original: `UsaMls::set_predicted_positions` (0x909bb0, usa_mls.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x909bb0 } (thiscall, ret 0, usa_mls.cpp): `UsaMls::set_predicted_positions()`, as posições previstas da MLS. Sem
@@ -493,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
     for (k, p) in lugares.iter().enumerate() {
         position(read_usize(this + 8), read_usize(v + 4 * k), *p);
     }
-    crate::comparacao::ramo("cqs_2 posicoes previstas");
+    crate::comparison::branch("cqs_2 posicoes previstas");
     soltar(v);
 }
 
@@ -531,7 +571,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list:
         core::ptr::write_unaligned((*list + 4 * k as usize) as *mut usize, aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES) + 4), i as usize));
         i += 1;
     }
-    crate::comparacao::ramo("cqs_2 clubes da mls");
+    crate::comparison::branch("cqs_2 clubes da mls");
 }
 
 
@@ -567,7 +607,7 @@ pub(crate) unsafe fn mls_stage_outcome(this: usize, clube: usize, status: u32, s
         // the season (-1) and the first two play-off rounds
         if st == 6 {
             if fazer {
-                crate::comparacao::ramo("cqk_9 mls classificado");
+                crate::comparison::branch("cqk_9 mls classificado");
                 bra_nat_first_add_qualified_record(clube, comp, 0xa0, 0x78, 0x28); // cqk9: o classificado da MLS
             }
             return 0;
@@ -626,8 +666,13 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(t
 }
 
 
-/// MLS: each game goes to the overall table and, in the regular season, also to the two conference tables (East and
-/// West [inference]), without counting the statistics twice
+/// MLS result: each game goes to the overall table and, in the regular season, also to the two conference tables (East
+/// and West [inference]), without counting the statistics twice.
+///
+/// `UsaMls::add_result(match, statistics)` (slot 2): the match goes to the overall table (`League::add_result`
+/// 0x685d30) with the match's mark +0x42 set to -1 when below 2; in stage 1 (the regular season), it also goes to the
+/// tables of the two conferences (stages 0 and 1, through their slot 2, with mark 0 and 1 and without the statistics
+/// block +8, which is saved and restored). Returns 1.
 /// Original: `UsaMls::add_result` (0x9099d0, usa_mls.cpp, thiscall).
 ///
 /// [pt] { 0x9099d0 } (thiscall, ret 8, usa_mls.cpp): `UsaMls::add_result(jogo, estatisticas)` (slot 2): o jogo vai para a
@@ -654,15 +699,20 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, jogo: usi
     f0(e0, jogo, stats);
     *((jogo + 0x42) as *mut u8) = 1;
     let (e1, f1) = estagio(1);
-    crate::comparacao::ramo("cqk_9 mls segunda conferencia");
+    crate::comparison::branch("cqk_9 mls segunda conferencia");
     f1(e1, jogo, stats); // cqk9: o jogo na tabela da segunda conferência
     *((this + 8) as *mut u32) = stored as u32;
     1
 }
 
 
-/// MLS All-Star game: East (0x413) for New England, MetroStars, Tampa Bay, D.C. United, Columbus and Miami; West
-/// (0x414) for Colorado, Dallas, Kansas City, Los Angeles, San Jose and Chicago; clubs outside the MLS, none
+/// Returns the club's conference in the MLS All-Star game: East (0x413) or West (0x414); clubs outside the MLS, none.
+///
+/// `usa_mls_get_club_all_star_conference(club)` (cdecl): the club's conference in the All-Star game: 0x413 (East) for
+/// New England, MetroStars, Tampa Bay, D.C. United, Columbus and Miami (the keys 0x9d0390, 0x9d0394, 0x9d0388,
+/// 0x9d0384, 0x9d03a4, 0x9d0380), 0x414 (West) for Colorado, Dallas, Kansas City, Los Angeles, San Jose and Chicago
+/// (0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c); 0 for a club whose league (+0x57) is not the MLS (key
+/// 0x9cf590); an MLS club outside the twelve: the "Error" box (as in the original).
 /// Original: `usa_mls_get_club_all_star_conference` (0x90a000, usa_mls.cpp, cdecl).
 ///
 /// [pt] { 0x90a000 } (cdecl, usa_mls.cpp): `usa_mls_get_club_all_star_conference(clube)`: a conferência do clube no Jogo das
@@ -679,7 +729,7 @@ pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(clube: usiz
     const LESTE: [usize; 6] = [0x9d0390, 0x9d0394, 0x9d0388, 0x9d0384, 0x9d03a4, 0x9d0380];
     const OESTE: [usize; 6] = [0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c];
     if LESTE.iter().any(|&k| read_u32_as_usize(k) == id) {
-        crate::comparacao::ramo("cqk_9 conferencia 0x413");
+        crate::comparison::branch("cqk_9 conferencia 0x413");
         return 0x413; // cqk9: a primeira conferência
     }
     if OESTE.iter().any(|&k| read_u32_as_usize(k) == id) {
@@ -699,7 +749,7 @@ pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(clube: usiz
 /// valor).
 pub(crate) unsafe extern "thiscall" fn usa_mls_set_up_rules(this: usize) -> u32 {
     set_mls_rules(this);
-    crate::comparacao::ramo("cqj_8 regras da mls");
+    crate::comparison::branch("cqj_8 regras da mls");
     1
 }
 
@@ -720,7 +770,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_club_progress(this: usize, cl
         let a = match a {
             1 => 1,
             2 => {
-                crate::comparacao::ramo("cqk_8 mls segundo");
+                crate::comparison::branch("cqk_8 mls segundo");
                 3 // cqk8: o código 2 da MLS
             }
             3 => 7,

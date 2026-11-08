@@ -20,7 +20,7 @@ unsafe fn item_id_or_default(item: i16) -> u16 {
 /// (+0xd, 0x54 bytes; primeiro as de +0x10, depois as de +0xc) que o humano ainda não marcou (0x717cc0,
 /// −4) ou devolve −8; sem ela, com ficha e clube, abre a escalação se 0x474e00 negar e devolve −4.
 unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
-    crate::comparacao::ramo("telas respond ao continuar");
+    crate::comparison::branch("telas respond ao continuar");
     let g = |a: usize| *(a as *const u32);
     let humano = || *(0xb77c7a as *const i16);
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
@@ -119,7 +119,7 @@ unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
 /// ou +0x20 sem a +0x41). Sem ficha, clube ou partida: a caixa de erro (linhas 0x1e1c, 0x1e24, 0x1e2c),
 /// como a original (a tela já ficou aberta).
 unsafe extern "C" fn match_screens_open_team_selection() {
-    crate::comparacao::ramo("telas abrir a escalacao");
+    crate::comparison::branch("telas abrir a escalacao");
     let abrir: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe600usize);
     if abrir(SCREEN_MANAGER, 0x7260f0, 0x727c30, 1, 0, 0) == 0 {
         return;
@@ -152,7 +152,7 @@ unsafe extern "C" fn match_screens_open_team_selection() {
 /// (0x897590 com 0 ≥ 11), nomeia o melhor titular (0x727e20) por 0x897760. Para 1, 2 e 3 deixa o
 /// comando pendente 1 ([0xdd6be0]) com a escolha (o id, [0xdd6be4]) e devolve −9.
 unsafe extern "C" fn match_screens_handle_team_selection_input(item: u32) -> i32 {
-    crate::comparacao::ramo("telas respond a escalacao");
+    crate::comparison::branch("telas respond a escalacao");
     let clube = get_screen_param(0);
     let p2 = get_screen_param(2);
     let item16 = item as u16 as i16;

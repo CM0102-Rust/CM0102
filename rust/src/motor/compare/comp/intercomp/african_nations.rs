@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_for_date(
             && stages != 0
             && (0..3).all(|g| read_u32_as_usize(stages + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 2;
-        PLACAR.registrar(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -34,14 +34,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_DRAW_FINALISTS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 2usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(read_u32_as_usize(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| draw_african_nations_finalists(this));
+        let r = crate::rng::without_counting(|| draw_african_nations_finalists(this));
         lr.set(read_u32_as_usize(this + 0xee));
         write_u32_from_usize(this + 0xee, lo.get());
         r
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    PLACAR.record(igual && a == b && list, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_create_group_sta
         a.sort_unstable();
         plan.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
-        PLACAR.registrar(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        PLACAR.record(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
     }
     r
 }
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_advance_stage(th
     }
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == f + 1, || format!("african_nations_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    PLACAR.record(after == f + 1, || format!("african_nations_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `init_group_a_table` (comparison mode: see the header of motor.rs).
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_group_a_table(this: usize) 
         }
     }
     let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    PLACAR.registrar(same, || format!("init_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    PLACAR.record(same, || format!("init_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
@@ -122,25 +122,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_record_season_ho
 /// Comparer for `african_nations_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_staff_records_for_status(this: usize, clube: usize, outcome: u32, stage: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, outcome, stage, a4, jogo, a6);
-    PLACAR.registrar(r == 0, || format!("african_nations_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", clube, outcome as u8, stage as u8, r));
+    PLACAR.record(r == 0, || format!("african_nations_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", clube, outcome as u8, stage as u8, r));
     r
 }
 
-/// Comparer for `african_nations_update_staff_records_for_status_91e840` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_staff_records_for_status_91e840(this: usize, clube: usize, outcome: u32, stage: u32, out: usize, jogo: usize, a6: u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_STAFF_RECORDS_FOR_STATUS_91E840);
-    let slot = stage as u8 == 2 && outcome as u8 == 1 && out != 0;
-    let mundial = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP).wrapping_mul(4)));
-    if slot && mundial == 0 {
-        return o(this, clube, outcome, stage, out, jogo, a6);
-    }
-    let n = if slot { read_i16(mundial + 0x36) } else { 0 };
-    let cabe = slot && n < read_i16(mundial + 0x38);
-    let r = o(this, clube, outcome, stage, out, jogo, a6);
-    let same = r == 0 && (!slot || (*(out as *const u8) == 4 && read_i16(mundial + 0x36) == if cabe { n + 1 } else { n }));
-    PLACAR.registrar(same, || format!("african_nations_update_staff_records_for_status_91e840({:#x}, {}, {}) devolveu {} vaga={} lista {}", clube, outcome as u8, stage as u8, r, slot, n));
-    r
-}
 
 /// Comparer for `african_nations_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {

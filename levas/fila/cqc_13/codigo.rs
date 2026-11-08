@@ -35,7 +35,7 @@ unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, res
         if *((pessoa + 0x5f) as *const u8) != 1 {
             continue;
         }
-        crate::comparacao::ramo("cqc_13 olheiros do humano");
+        crate::comparison::branch("cqc_13 olheiros do humano");
         let marcas = zerado(10, 4);
         for _ in 0..10 { // cqc13: os 10 observadores
             let q = loop {
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, res
 /// o vetor e a lista locais, que saem); confere a devolução (1).
 unsafe extern "thiscall" fn comparar_scout_manager_scout_match(this: usize, p: usize, resultado: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, p, resultado);
-    PLACAR.registrar(r == 1, || format!("scout_manager_scout_match(partida {:x}) original={}", p, r));
+    PLACAR.record(r == 1, || format!("scout_manager_scout_match(partida {:x}) original={}", p, r));
     r
 }
 
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_get_edit_session(this: usize, tecnico: usiz
     }
     let r = o(this, tecnico);
     let n = get_edit_session(this, tecnico);
-    PLACAR.registrar(r == n, || format!("get_edit_session(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
+    PLACAR.record(r == n, || format!("get_edit_session(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
     r
 }
 
@@ -127,9 +127,9 @@ unsafe extern "thiscall" fn comparar_set_edit_session(this: usize, sessao: usize
         return o(this, sessao, tecnico);
     }
     let reg = [(this + 0xc, 0x40)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, sessao, tecnico),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, sessao, tecnico),
         || set_edit_session(this, sessao, tecnico));
-    PLACAR.registrar(igual && r == n, || format!("set_edit_session(sessao {:x}, tecnico {:x}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("set_edit_session(sessao {:x}, tecnico {:x}) original={} rust={} {:x?} x {:x?}",
         sessao, tecnico, r, n, mo, mr));
     r
 }

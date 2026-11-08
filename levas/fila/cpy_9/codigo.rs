@@ -77,14 +77,14 @@ unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize,
     }
     let mut r = t.wrapping_add(antes.wrapping_mul(0x2b) as usize);
     for _ in 0..conta.max(0) {
-        crate::comparacao::ramo("cpy_9 arbitro novo");
+        crate::comparison::branch("cpy_9 arbitro novo");
         generate_official(r, nacao);
         r += 0x2b;
     }
     let n = cpy9_i(0xae2390).wrapping_add(conta);
     *(0xae2390 as *mut i32) = n;
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
-    crate::comparacao::ramo("cpy_9 ordenar");
+    crate::comparison::branch("cpy_9 ordenar");
     ordenar(cpy9_d(0xae23e8), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela
 }
 
@@ -104,18 +104,18 @@ unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this
     if conta <= 0 || (nacao != 0 && cpy9_d(nacao + 0x71) == 0) {
         return o(this, conta, nacao);
     }
-    let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let estado = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let mut novas = vec![[0u8; 0x2b]; conta as usize];
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| {
         for g in novas.iter_mut() {
             generate_official(g.as_mut_ptr() as usize, nacao);
         }
     }));
-    let estado_rust = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    estado.escrever();
+    let estado_rust = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    estado.write_back();
     let antes = cpy9_i(0xae2390);
     o(this, conta, nacao);
-    let estado_orig = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let estado_orig = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let total = cpy9_i(0xae2390);
     let t = cpy9_d(0xae23e8);
     let mut usada = vec![false; total.max(0) as usize];
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this
         }
     }
     let igual = estado_orig == estado_rust && total == antes.wrapping_add(conta) && faltam.is_empty();
-    PLACAR.registrar(igual, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
+    PLACAR.record(igual, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
         conta, nacao, total, antes, estado_orig == estado_rust, faltam));
 }
 
@@ -178,7 +178,7 @@ unsafe extern "C" fn officials_manager_validate_officials() {
         }
         for o in [0x1eusize, 0x20] {
             if fora(o) {
-                crate::comparacao::ramo("cpy_9 nota consertada");
+                crate::comparison::branch("cpy_9 nota consertada");
                 let nac = cpy9_d(e + 0x16);
                 let v = if nac != 0 {
                     let s = sortear(0x50) as u8;
@@ -224,10 +224,10 @@ unsafe extern "C" fn comparar_officials_manager_validate_officials() {
     if cpy9_d(0xae23e8) == 0 {
         return o();
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((cpy9_d(0xae23e8), total * 0x2b));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| officials_manager_validate_officials()));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || crate::rng::without_counting(|| officials_manager_validate_officials()));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("officials_manager_validate_officials ({} fichas) diferencas em {:x?}", total, dif)
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn officials_manager_operator(this: usize, src: usize) 
 /// Comparador: lado a lado pela ficha de destino e pela devolução.
 unsafe extern "thiscall" fn comparar_officials_manager_operator(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x2b)], || o(this, src), || officials_manager_operator(this, src));
-    PLACAR.registrar(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x2b)], || o(this, src), || officials_manager_operator(this, src));
+    PLACAR.record(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
     r
 }

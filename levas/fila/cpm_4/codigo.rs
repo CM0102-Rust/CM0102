@@ -71,13 +71,13 @@ unsafe fn serve_ban_match_plan(this: usize, id: u32, regra: u32, conta: u32) -> 
     if jogos != 0xff {
         let (dia0, ano0) = (cpm4_w(s + 4), cpm4_w(s + 6) as u16);
         if ano < ano0 || (ano == ano0 && dia < dia0) { // ainda não começou
-            crate::comparacao::ramo("cpm_4 antes do inicio");
+            crate::comparison::branch("cpm_4 antes do inicio");
             return j;
         }
         if conta == 0 {
             return j;
         }
-        crate::comparacao::ramo("cpm_4 jogo cumprido");
+        crate::comparison::branch("cpm_4 jogo cumprido");
         let n = (*((s + 1) as *const u8)).wrapping_add(1); // mais um jogo cumprido
         j.contador = Some(n);
         j.cumprida = n == jogos;
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn release_ban(this: usize, id: u32, indice: u32) -> us
         if regra == 0xff {
             continue;
         }
-        crate::comparacao::ramo("cpm_4 soltar do orgao");
+        crate::comparison::branch("cpm_4 soltar do orgao");
         esquecer(ruling_body_for_rule(this, regra), id); // o órgão esquece a suspensão
         if k != 3 {
             continue;
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize, id: u32, r
     } else {
         contador == j.contador.unwrap_or(antes)
     };
-    PLACAR.registrar(ok, || {
+    PLACAR.record(ok, || {
         format!("update_ban_progress({}, {}, {}) contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{} entrada {}",
             id, regra as u8, conta, contador, j.contador, antes, j.cumprida, jogos, dias, cpm4_w(j.entrada + 6))
     });
@@ -207,8 +207,8 @@ unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32, indice: u
             }
         }
     }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id, indice), || release_ban(this, id, indice));
-    PLACAR.registrar(igual && r == m, || format!("release_ban({}, {}) {:x?} x {:x?}", id, indice as u16 as i16, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id, indice), || release_ban(this, id, indice));
+    PLACAR.record(igual && r == m, || format!("release_ban({}, {}) {:x?} x {:x?}", id, indice as u16 as i16, mo, mr));
     r
 }
 
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn comparar_clear_ban_history(this: usize, pessoa: usiz
         return o(this, pessoa);
     }
     let r = person_discipline_record(this, cpm4_d(pessoa));
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 0x14, 8)], || o(this, pessoa), || clear_ban_history(this, pessoa));
-    PLACAR.registrar(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", cpm4_d(pessoa), mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r + 0x14, 8)], || o(this, pessoa), || clear_ban_history(this, pessoa));
+    PLACAR.record(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", cpm4_d(pessoa), mo, mr));
     a
 }

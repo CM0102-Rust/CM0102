@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
             if parceiro_de(clube, &mut parceiro, 1) != 0 && parceiro != 0 {
                 continue;
             }
-            crate::comparacao::ramo("cpr_5 diretoria sem tecnico");
+            crate::comparison::branch("cpr_5 diretoria sem tecnico");
             for c in [6usize, 8, 0xa, 0xc] {
                 cpr5_pw(l + c, 0x1388);
             }
@@ -230,12 +230,12 @@ unsafe extern "thiscall" fn init_club_board_records(this: usize) {
         } else if g < 500.0 {
             g = (cpr5_sortear(0x2ee) + 0xfa) as f64;
         }
-        crate::comparacao::ramo("cpr_5 diretoria com tecnico");
+        crate::comparison::branch("cpr_5 diretoria com tecnico");
         let h = ((f as f64 / g) * 7500.0) as f32;
         roll_confidence(l + 6, 0x1f4, h);
         let c = cpr5_w(l + 6);
         if c < 0x1676 {
-            crate::comparacao::ramo("cpr_5 confianca baixa");
+            crate::comparison::branch("cpr_5 confianca baixa");
             cpr5_pw(l + 6, (cpr5_sortear(0x2ee) + 0x1676) as i16);
         } else if c > 0x251c {
             cpr5_pw(l + 6, (0x2710 - cpr5_sortear(0x1f4)) as i16);
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn process_ban_appeals(this: usize) {
             return show_error_at(0x9f18a4, 0x57f5);
         }
         if depois(item + 5, cpr5_d(0xae2c90) as u32, cpr5_d(0xae2c94) as u32) == 0 {
-            crate::comparacao::ramo("cpr_5 apelacao decidida");
+            crate::comparison::branch("cpr_5 apelacao decidida");
             let p = cpr5_d(0xae23bc).wrapping_add(cpr5_d(item).wrapping_mul(0x6e));
             if cpr5_b(item + 4) != 0 {
                 for j in 0..4usize {
@@ -365,6 +365,6 @@ unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, partida: usi
         return r;
     }
     let n = can_watch_fixture(this, partida, humano);
-    PLACAR.registrar(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, humano, r, n));
+    PLACAR.record(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, humano, r, n));
     r
 }

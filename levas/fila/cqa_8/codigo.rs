@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
             if selecao(clube) == 0 && (cqa8_i(jogo) < 0 || amistoso(cqa8_d(0xae2c74), cqa8_d(jogo + 0x14)) == 0) {
                 let testa = k >= 11 || !(minutos > 0x1e || cqa8_b(vaga + 0x1f) != 0 || cqa8_b(vaga + 0x20) < 0x46);
                 let mal = testa && {
-                    crate::comparacao::ramo("cqa_8 testa a moral");
+                    crate::comparison::branch("cqa_8 testa a moral");
                     let m = cqa8_b(contrato + 0x44) as i32;
                     let r1 = sorteio(0x1e); // cqa8: o primeiro sorteio da moral
                     let v = r1 as f64 + (read_f64_at(0x968d68) - m as f64 * read_f64_at(0x968d70));
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
                 }
             }
             if venceu[lado] != 0 {
-                crate::comparacao::ramo("cqa_8 moral do vencedor");
+                crate::comparison::branch("cqa_8 moral do vencedor");
                 let r = sorteio(0x15 - cqa8_b(pessoa + 0x57) as i32); // cqa8: o sorteio do vencedor
                 if r < 4 && contrato != 0 {
                     add_clamped_100(contrato + 0x44, 3);
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
             let c = read_f64_at(0x9689a0);
             // fcomp + C3: igual ou desordenado vai para a constante
             let nota = if !(x < c || x > c) { read_f64_at(0x968998) } else { core::ptr::read_unaligned((m + 0x10) as *const f64) / x };
-            crate::comparacao::ramo("cqa_8 evolui quem ficou de fora");
+            crate::comparison::branch("cqa_8 evolui quem ficou de fora");
             evoluir(0, pessoa, clube, outro, jogo, (nota - read_f64_at(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora
             let p = contrato as *mut u8;
             *p.add(0x3f) = 0;
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn comparar_update_after_match(this: usize, jogo: usize
     for &(fin, antes, total) in &plano {
         if fin != 0 {
             let pago = cqa8_i(fin + 0x138).wrapping_sub(antes);
-            PLACAR.registrar(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", jogo, fin, pago, total));
+            PLACAR.record(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", jogo, fin, pago, total));
         }
     }
 }
@@ -331,7 +331,7 @@ unsafe extern "stdcall" fn contract_manager_get_player_morale(pessoa: usize) -> 
 unsafe extern "stdcall" fn comparar_contract_manager_get_player_morale(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%)(pessoa);
     let n = contract_manager_get_player_morale(pessoa);
-    PLACAR.registrar(r == n, || format!("contract_manager_get_player_morale({:x}) original={:#x} rust={:#x}", pessoa, r, n));
+    PLACAR.record(r == n, || format!("contract_manager_get_player_morale({:x}) original={:#x} rust={:#x}", pessoa, r, n));
     r
 }
 
@@ -372,5 +372,5 @@ unsafe extern "stdcall" fn comparar_contract_manager_write_morale_text(pessoa: u
     let n = c_string_bytes(saida);
     core::ptr::copy_nonoverlapping(r.as_ptr(), saida as *mut u8, r.len());
     *((saida + r.len()) as *mut u8) = 0;
-    PLACAR.registrar(r == n, || format!("contract_manager_write_morale_text({:x}) original={:?} rust={:?}", pessoa, String::from_utf8_lossy(&r), String::from_utf8_lossy(&n)));
+    PLACAR.record(r == n, || format!("contract_manager_write_morale_text({:x}) original={:?} rust={:?}", pessoa, String::from_utf8_lossy(&r), String::from_utf8_lossy(&n)));
 }

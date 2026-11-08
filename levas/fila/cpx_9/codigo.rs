@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usi
     for k in 0..20usize { // cpx9: as vagas da escalação
         let vaga = tactics_row_start(this, l) + 2 + 4 * k;
         if cpx9_i(vaga) == cpx9_i(pessoa) {
-            crate::comparacao::ramo(if k < 11 { "cpx_9 tirou titular" } else { "cpx_9 tirou reserva" });
+            crate::comparison::branch(if k < 11 { "cpx_9 tirou titular" } else { "cpx_9 tirou reserva" });
             cpx9_pd(vaga, u32::MAX); // cpx9: a vaga fica vazia
             achou = 1;
         }
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usi
         for tipo in 0..5u32 {
             for lado in 0..2u32 {
                 if batedor(this, clube, tipo, lado, time) == pessoa {
-                    crate::comparacao::ramo("cpx_9 batedor tirado");
+                    crate::comparison::branch("cpx_9 batedor tirado");
                     marcar(this, clube, tipo, lado, 0, time);
                     achou = 1;
                 }
@@ -114,8 +114,8 @@ unsafe extern "thiscall" fn comparar_remove_player_from_selection(this: usize, c
         return o(this, clube, pessoa, time, papeis);
     }
     let reg = lineup_regions(this, clube, time);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, pessoa, time, papeis), || remove_player_from_selection(this, clube, pessoa, time, papeis));
-    PLACAR.registrar(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, pessoa, time, papeis, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, pessoa, time, papeis), || remove_player_from_selection(this, clube, pessoa, time, papeis));
+    PLACAR.record(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, pessoa, time, papeis, r, mo, n, mr));
     r
 }
 
@@ -148,8 +148,8 @@ unsafe extern "thiscall" fn comparar_swap_selection_slots(this: usize, clube: us
         return o(this, clube, a, b, time);
     }
     let reg = lineup_regions(this, clube, time);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, a, b, time), || swap_selection_slots(this, clube, a, b, time));
-    PLACAR.registrar(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, time, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, a, b, time), || swap_selection_slots(this, clube, a, b, time));
+    PLACAR.record(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, time, r, mo, n, mr));
     r
 }
 
@@ -176,6 +176,6 @@ unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: usize, time: 
 unsafe extern "thiscall" fn comparar_has_selection_undo(this: usize, clube: usize, time: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%)(this, clube, time);
     let n = has_selection_undo(this, clube, time);
-    PLACAR.registrar(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));
+    PLACAR.record(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));
     r
 }

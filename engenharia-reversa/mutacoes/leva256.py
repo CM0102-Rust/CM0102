@@ -24,7 +24,7 @@ MUTACOES = [
     ('cpt8_computador_110', 'return (t as u32 & 0xffff_0000) | 100; // cpt8: técnico do computador', 'return (t as u32 & 0xffff_0000) | 110; // mutacao: tecnico do computador 110'),
     ('cpt8_sem_tecnico_110', 'return 100; // cpt8: sem técnico', 'return 110; // mutacao: sem tecnico 110', 'cpt_8 sem tecnico'),
     ('cpt8_media_sem_divisor', 'soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: a média dos treinadores', 'soma = ftol(soma as f64 / 0.5) as i16; // mutacao: a media sem o divisor', 'cpt_8 treinadores'),
-    ('cpt9_categoria0_dobro', 'add_clamped_1_20(f + 0x1b, dd); // cpt9: o primeiro atributo da categoria 0', 'add_clamped_1_20(f + 0x1b, dd * 2); // mutacao: o dobro do passo'),
+    ('cpt9_categoria0_dobro', 'add_clamped_1_20(f + player_sheet::ACCELERATION, dd); // cpt9: o primeiro atributo da categoria 0', 'add_clamped_1_20(f + player_sheet::ACCELERATION, dd * 2); // mutacao: o dobro do passo'),
     ('cpt9_categoria3_sem_guardar', 'add_high_nibble(e + 4, k); // cpt9: guarda o progresso da categoria 3', 'let _ = k; // mutacao: nao guarda o progresso da categoria 3'),
     ('cpt9_categoria1_cinco', 'let seis = dd * 6; // cpt9: a categoria 1, seis vezes o passo', 'let seis = dd * 5; // mutacao: cinco vezes o passo'),
     ('cpt10_virada_um_dia_depois', 'if rest == 0 { // cpt10: o sétimo dia', 'if rest == 1 { // mutacao: a virada um dia depois', 'cpt_10 semana'),

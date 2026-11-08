@@ -47,7 +47,7 @@ unsafe fn is_recurring_category(this: usize, idx: i32, categoria: u8) -> bool {
 static mut INJURY_DAILY_DRY_RUN: bool = false;
 static mut INJURY_DAILY_STOPPED: bool = false;
 /// O que a cópia deixou nas regiões da fase do treino, à espera de a original chegar às notícias da volta (0x62e010).
-static mut INJURY_DAILY_PENDING_REGIONS: Option<(Vec<(usize, usize)>, crate::comparacao::Memoria)> = None;
+static mut INJURY_DAILY_PENDING_REGIONS: Option<(Vec<(usize, usize)>, crate::comparison::MemorySnapshot)> = None;
 
 /// O switch dos tipos de lesão (tipo − 0xc, byte da tabela 0x62bcd8): 0 os do +0x1b/+0x36, 1 nenhuma lesão (0x14), 2 o
 /// 0x1c, 3 o 0x2d, 4 os 0x3b e 0x3c, 5 só a lesão.
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     }
     let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x54a3f0usize);
     if semana(0xae2c90) as i16 != 6 && semana(0xae2c90) as i16 != 5 { // cpw9: sábado e domingo sem treino
-        crate::comparacao::ramo("cpw_9 dia de treino");
+        crate::comparison::branch("cpw_9 dia de treino");
         roll_training_injuries(this);
     }
     if INJURY_DAILY_DRY_RUN {
@@ -166,7 +166,7 @@ unsafe fn roll_training_injuries(this: usize) {
                 if r > lim {
                     break 'proximo;
                 }
-                crate::comparacao::ramo("cpw_9 risco sem recorrencia");
+                crate::comparison::branch("cpw_9 risco sem recorrencia");
             }
             if cpw9_sortear(3) != 0 {
                 break 'proximo;
@@ -295,16 +295,16 @@ unsafe extern "thiscall" fn comparar_injury_daily_update(this: usize) {
     if n > 0 && cpw9_d(this + 4) != 0 {
         reg.push((cpw9_d(this + 4), n as usize * 0x30));
     }
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&reg);
+    reg.extend(crate::rng::STATE_REGIONS);
+    let antes = crate::comparison::MemorySnapshot::read(&reg);
     INJURY_DAILY_DRY_RUN = true;
     INJURY_DAILY_STOPPED = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| injury_daily_update(this)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| injury_daily_update(this)));
     INJURY_DAILY_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&reg);
+    antes.write_back();
     if INJURY_DAILY_STOPPED {
-        crate::comparacao::ramo("cpw_9 lesao nova so na original");
+        crate::comparison::branch("cpw_9 lesao nova so na original");
         return o(this);
     }
     *core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS) = Some((reg, mr));
@@ -322,7 +322,7 @@ unsafe extern "thiscall" fn comparar_injury_daily_update(this: usize) {
 /// 0x456740) dão a notícia com os dias entre B e A (0x54cc30); as de data B hoje (bsearch com 0x632040) a notícia da volta
 /// completa; as de data B já passada saem do começo da fila.
 unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
-    crate::comparacao::ramo("cpw_9 noticias de volta");
+    crate::comparison::branch("cpw_9 noticias de volta");
     let volta: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(0x630ee0usize);
     let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x62c680usize);
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
@@ -468,8 +468,8 @@ unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
 // ramo. É também o ponto de conferência da fase do treino do dia das lesões (comparar_injury_daily_update).
 unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usize) {
     if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS)).take() {
-        let mo = crate::comparacao::Memoria::ler(&reg);
-        PLACAR.registrar(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
+        let mo = crate::comparison::MemorySnapshot::read(&reg);
+        PLACAR.record(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
@@ -500,6 +500,6 @@ unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pessoa: usize, 
 unsafe extern "thiscall" fn comparar_is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, pessoa, competicao);
     let n = is_one_booking_from_ban(this, pessoa, competicao);
-    PLACAR.registrar(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", pessoa, competicao, r, n));
+    PLACAR.record(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", pessoa, competicao, r, n));
     r
 }

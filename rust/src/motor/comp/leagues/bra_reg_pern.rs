@@ -26,47 +26,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage(this: usize) {
     state_league_advance_stage(this, 0x98afd8, 0x1f8, 0x439710);
 }
 
-/// The Santa Catarina turnover: archives the season in the statistics, clears the previous table and stages, moves to
-/// the next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table
-/// order; then the predicted positions and the renewal of the state referees
-/// Original: `BraRegSanta::start_new_season` (0x43bd10, bra_reg_santa.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43bd10 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::start_new_season()`, a virada da temporada do Catarinense (a tabela:
-/// 0x43bb70; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
-pub(crate) unsafe extern "thiscall" fn bra_reg_pern_start_new_season_43bd10(this: usize) -> u32 {
-    state_league_new_season(this, 0x43bb70, 0x98b050, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do catarinense") // cqp9: o ano seguinte do Catarinense
-}
-
-/// The Santa Catarina next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to
-/// the semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
-/// Original: `BraRegSanta::advance_stage` (0x43bec0, bra_reg_santa.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43bec0 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::advance_stage()`, a fase seguinte do Catarinense: no fim dos pontos corridos,
-/// o mata-mata de 4 (0x43bf50); a caixa da linha 0x1f8.
-pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage_43bec0(this: usize) {
-    state_league_advance_stage(this, 0x98b050, 0x1f8, 0x43bf50);
-}
-
-/// The Sao Paulo turnover: archives the season in the statistics, clears the previous table and stages, moves to the
-/// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
-/// then the predicted positions and the renewal of the state referees
-/// Original: `BraRegSp::start_new_season` (0x43cd40, bra_reg_sp.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43cd40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::start_new_season()`, a virada da temporada do Paulista (a tabela:
-/// 0x43cc40; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
-pub(crate) unsafe extern "thiscall" fn bra_reg_pern_start_new_season_43cd40(this: usize) -> u32 {
-    state_league_new_season(this, 0x43cc40, 0x98b090, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_9 virada do paulista") // cqp9: o ano seguinte do Paulista
-}
-
-/// The Sao Paulo next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
-/// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
-/// Original: `BraRegSp::advance_stage` (0x43cef0, bra_reg_sp.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43cef0 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::advance_stage()`, a fase seguinte do Paulista: no fim dos pontos corridos,
-/// o mata-mata de 4 (0x43cf80); a caixa da linha 0x1ea.
-pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage_43cef0(this: usize) {
-    state_league_advance_stage(this, 0x98b090, 0x1ea, 0x43cf80);
-}
 
 
 
@@ -77,61 +36,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage_43cef0(this: u
 
 
 
-/// Builds a knockout stage from table rows: allocates the team list, creates the round table (virtual +0x3c),
-/// constructs a Cup_Stage in the first stage slot, sets up the round and frees the temporaries.
-///
-/// [pt] O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
-/// linhas da caixa e o arranjo): a lista dos `linhas.len()` times (malloc 0x944e46 de 4 × n; sem memória: a caixa
-/// `linha_sem_lista` e nada mais) com os clubes das `linhas` da tabela, nesta ordem (as chaves: 0 × 1, 2 × 3...); a
-/// virtual +0x3c (create_round_table: thiscall(this, fase 0, &rodadas, &extra, nulo), ret 0x10) monta a tabela de
-/// rodadas; a fase nova (operator new 0x944cf1 de 0xb2 bytes; Cup_Stage::Cup_Stage 0x522e00, thiscall com 15
-/// argumentos, ret 0x3c: a liga, n, a lista, as rodadas, +4, a tabela de rodadas, o ano +0x40, 0, 1, o extra da
-/// virtual, 0x14, 0, 1, 0 e as sementes, um byte por time, que o construtor grava no +4 da lista da fase: na original,
-/// a linha de cada time) vai para a
-/// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
-/// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
-/// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn bra_reg_pern_build_knockout_from_table(this: usize, rows: &[usize], sementes: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
-    let n = rows.len();
-    // the seeds: the original writes the bytes on the stack before allocating (same as the rows, but separate constants)
-    let mut s = [0u8; 8];
-    s[..sementes.len()].copy_from_slice(sementes);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alocar((n * 4) as u32);
-    if list == 0 {
-        return show_error_at(file, row_without_list);
-    }
-    for (k, &l) in rows.iter().enumerate() {
-        core::ptr::write_unaligned((list + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
-    }
-    crate::comparacao::ramo(ramo);
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
-    let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = table(this, 0, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
-    // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
-    // virtual are words on the stack; the year goes in cx); the constructor only reads the words.
-    let stage = if p != 0 {
-        #[allow(clippy::type_complexity)]
-        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
-            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, n as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
-    } else {
-        0
-    };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
-    let stage = read_usize(read_usize(this + 0xc));
-    if stage == 0 {
-        return show_error_at(file, row_without_stage);
-    }
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(stage, 0);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    free(t);
-    free(list);
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
-}
+
+
+
 
 /// Pernambuco: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
 /// seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
@@ -140,28 +47,10 @@ pub(crate) unsafe fn bra_reg_pern_build_knockout_from_table(this: usize, rows: &
 /// [pt] { 0x439710 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98afd8, linhas 0x21b (sem lista) e 0x22f (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage(this: usize) {
-    bra_reg_pern_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98afd8, 0x21b, 0x22f, "cqn_8 pernambucano"); // cqn8: 1º × 4º, 2º × 3º Pernambucano
+    create_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98afd8, 0x21b, 0x22f, "cqn_8 pernambucano"); // cqn8: 1º × 4º, 2º × 3º Pernambucano
 }
 
-/// Santa Catarina: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is
-/// the seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
-/// Original: `BraRegSanta::create_semi_final_stage` (0x43bf50, bra_reg_santa.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43bf50 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
-/// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b050, linhas 0x21b (sem lista) e 0x22f (sem fase).
-pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage_43bf50(this: usize) {
-    bra_reg_pern_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b050, 0x21b, 0x22f, "cqn_8 catarinense"); // cqn8: 1º × 4º, 2º × 3º Catarinense
-}
 
-/// Sao Paulo: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
-/// seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
-/// Original: `BraRegSp::create_semi_final_stage` (0x43cf80, bra_reg_sp.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43cf80 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
-/// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b090, linhas 0x20d (sem lista) e 0x221 (sem fase).
-pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage_43cf80(this: usize) {
-    bra_reg_pern_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b090, 0x20d, 0x221, "cqn_8 paulista"); // cqn8: 1º × 4º, 2º × 3º Paulista
-}
 
 /// Comparer: runs only the original and checks the new stage exists with n teams, the competition record and the
 /// planned clubs (as a set), and +0x30 = 0.
@@ -175,7 +64,7 @@ pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(name: &str, this: 
     original();
     let stage = read_usize(read_usize(this + 0xc));
     if stage == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
+        PLACAR.record(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
     let list = read_usize(stage + 0xa7);
@@ -184,7 +73,7 @@ pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(name: &str, this: 
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && read_i16(stage + 0x3e) as usize == rows.len() && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
-    PLACAR.registrar(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
+    PLACAR.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
 
@@ -208,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_pern(this: usize, year:
 /// [pt] { 0x439330 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_table()`: o Pernambucano tem 10 clubes (divisão reserva +0x60 = [0x9cf9bc]).
 /// Fonte 0x98afd8, linha 0x167.
 pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_table(this: usize) -> u32 {
-    build_state_league_table(this, 0xa, 0x98afd8, 0x167, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, 0, "cqm_7 pernambucano cheio")
+    fill_state_league_table(this, 0xa, 0x98afd8, 0x167, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, 0, "cqm_7 pernambucano cheio")
 }
 
 
@@ -223,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_table(this: usize) ->
 /// Pernambucano (0x968554); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_pern_set_up_rules(this: usize) -> u32 {
     pernambucano_rules(this);
-    crate::comparacao::ramo("cqi_9 regras do pernambucano");
+    crate::comparison::branch("cqi_9 regras do pernambucano");
     create_main_schedule(this);
     1
 }

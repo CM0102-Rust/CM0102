@@ -218,11 +218,11 @@ unsafe fn ab_team_regions() -> Vec<(usize, usize)> {
 /// tabela de clubes tem 8 MB: as fotos não vão para a mensagem nem voltam às sobras).
 unsafe fn comparar_times_a_e_b(nome: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
     let regioes = ab_team_regions();
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, original, rust);
+    let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regioes, original, rust);
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| {
         x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k]))
     });
-    PLACAR.registrar(igual, || match onde {
+    PLACAR.record(igual, || match onde {
         Some((a, x, y)) => format!("{}: diverge em {:x} original={:02x} rust={:02x}", nome, a, x, y),
         None => format!("{}: diverge", nome),
     });
@@ -255,7 +255,7 @@ unsafe extern "C" fn comparar_database_build_nation_name_index() {
     let original = core::slice::from_raw_parts(t as *const u8, n);
     let copia = core::slice::from_raw_parts(r as *const u8, n);
     let onde = original.iter().zip(copia).position(|(a, b)| a != b);
-    PLACAR.registrar(onde.is_none(), || {
+    PLACAR.record(onde.is_none(), || {
         let k = onde.unwrap_or(0) & !3;
         format!("database_build_nation_name_index: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
             core::ptr::read_unaligned((t + k) as *const i32), core::ptr::read_unaligned((r + k) as *const i32))

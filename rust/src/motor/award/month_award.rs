@@ -18,8 +18,14 @@ pub(crate) unsafe fn month_award_club_by_id(id: i32) -> usize {
 /// listas dos clubes (0x842c00), que alocam e não podem rodar duas vezes.
 pub(crate) static mut MONTH_AWARD_DRY_RUN: bool = false;
 
-/// the best of the month ratings (0x768130) in the award league and with the requested age becomes the month winner,
-/// with his club
+/// Picks the best player of the month ratings with the requested age and records him as the month winner, with his
+/// club.
+///
+/// `MONTH_AWARD::award_best_rated_player(ratings, age)`, called at the turn of the month by the nations' awards
+/// (England's at 0x579a37..0x579adc). It takes the best of the ratings (0x768130) in the award's league (`[+9]`, or −1)
+/// and with the requested age; when one is found, it records the winner (0x7671c0) with the person's club (+0x39, or
+/// −1), and the month (+0xc) and year (+0xd) of the ratings. The high bytes of the month and the year are passed
+/// exactly as the original pushes them (taken from the person table in the register).
 /// Original: `MONTH_AWARD::award_best_rated_player` (0x767150, month_award.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x767150 } (thiscall, ret 8, month_award.cpp): `MONTH_AWARD::award_best_rated_player(notas, idade)`, na virada do
@@ -41,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, nota
     if r == 0 {
         return;
     }
-    crate::comparacao::ramo("cpw_6 premiou o melhor do mes");
+    crate::comparison::branch("cpw_6 premiou o melhor do mes");
     let id = read_i32(r);
     let table = read_usize(G_STAFF_TABLE) as u32;
     let clube = read_usize(month_ratings_staff_by_id(id) + 0x39);
@@ -69,8 +75,13 @@ pub(crate) unsafe fn raise_winner_reputation(person: usize, clube: usize, nac: u
     f(person, clube, nac, mundo, player);
 }
 
-/// finds the month slot, stores the person and the club, raises the winner reputation, sends the news and records the
-/// award in the history
+/// Finds the month slot, stores the person and the club, raises the winner's reputation, sends the news and records the
+/// award in the history.
+///
+/// `MONTH_AWARD::set_winner(person, club, month, year)`. It looks for the month's slot (12 slots of 11 bytes: month at
+/// +0x25, year at +0x26); without one, it does nothing. It stores the person (+0x1d) and the club (+0x21); when there
+/// is a person, it raises the award winner's reputation (0x412f00, with the award's reputations +0x15 and +0x17 and the
+/// player flag +0x19); then the news (0x767330) and the award record (0x86c8c0 on `[0xdd7f00]`, with the award's +5).
 /// Original: `MONTH_AWARD::set_winner` (0x7671c0, month_award.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x7671c0 } (thiscall, ret 0x10, month_award.cpp): `MONTH_AWARD::set_winner(pessoa, clube, mês, ano)`. Acha a vaga
@@ -98,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
         // the high bytes of the reputations come from dword +0x19 in the register, as the original pushes
         let mark = read_usize(this + 0x19) as u32;
         let high = mark & 0xffff0000;
-        crate::comparacao::ramo("cpw_6 vencedor do mes");
+        crate::comparison::branch("cpw_6 vencedor do mes");
         raise_winner_reputation(month_ratings_staff_by_id(id), clube, high | read_i16(this + 0x15) as u16 as u32, high | read_i16(this + 0x17) as u16 as u32, mark);
     }
     if MONTH_AWARD_DRY_RUN {
@@ -137,15 +148,15 @@ pub(crate) unsafe fn winner_reputation_regions(regions: &mut Vec<(usize, usize)>
 ///
 /// [pt] O comparador em ensaio: a cópia sem as chamadas que alocam e a original a partir do mesmo estado das `regioes`.
 pub(crate) unsafe fn compare_month_award(name: &str, regions: &[(usize, usize)], original: impl FnOnce(), copy: impl FnOnce()) {
-    let before = crate::comparacao::Memoria::ler(regions);
+    let before = crate::comparison::MemorySnapshot::read(regions);
     MONTH_AWARD_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(copy);
+    crate::rng::pause_trace(copy);
     MONTH_AWARD_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(regions);
-    before.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(regions);
+    before.write_back();
     original();
-    let mo = crate::comparacao::Memoria::ler(regions);
-    PLACAR.registrar(mo == mr, || format!("{} original={:x?} rust={:x?}", name, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(regions);
+    PLACAR.record(mo == mr, || format!("{} original={:x?} rust={:x?}", name, mo, mr));
 }
 
 
@@ -168,86 +179,5 @@ pub(crate) unsafe fn clamp_word(a: usize, floor: i16) {
     }
 }
 
-/// player: the world, home and current reputations rise by a fraction of the award ones, up to 10000 and at least them;
-/// non-player: they rise up to them and the board confidence gains 1000 (between 6500 and 10000)
-/// Original: `award_raise_winner_reputation` (0x412f00, award_manager.cpp, cdecl).
-///
-/// [pt] { 0x412f00 } (cdecl, award_manager.cpp): `award_raise_winner_reputation(pessoa, clube, rep_nacional, rep_mundial,
-/// de_jogador)`, pela vaga do vencedor do mês (0x7671c0) e pelos prêmios do ano e das seleções. Jogador (+0x61) num
-/// prêmio de jogador: mundial (+0xd) + 5% da mundial do prêmio, até 10000 e pelo menos ela; nacional (+9): do clube da
-/// nação dele (+0x53 = +0x1a da pessoa), + 10% da nacional e pelo menos ela; senão + 2,5% da soma e pelo menos a média;
-/// atual (+0xb) + 10% da nacional, pelo menos ela; põe o jogador nas listas dos clubes (0x842c00, com 1) se houver o
-/// gerente das listas. Não jogador (+0x69) num prêmio que não é de jogador: as três sobem até os pisos (+0xc mundial,
-/// +8 pela nação do clube, +0xa nacional) e, com clube, a confiança da diretoria (+6 da linha de 73 bytes) + 1000, entre
-/// 6500 e 10000. Só as palavras baixas das reputações valem.
-pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clube: usize, nac: u32, mundo: u32, player: u32) {
-    let nac = nac as u16 as i16;
-    let mundo = mundo as u16 as i16;
-    let p = read_usize(person + staff::PLAYER);
-    if p != 0 && player != 0 {
-        crate::comparacao::ramo("cpw_6 premio de jogador");
-        add_to_word(p + 0xd, match_pl_ftol(mundo as i32 as f64 * read_f64_at(0x967888))); // cpw6: o aumento mundial; 0x967888 = 0.05
-        if read_i16(p + 0xd) > 10000 {
-            write_i16(p + 0xd, 10000);
-        }
-        if read_i16(p + 0xd) <= mundo { // cpw6: o piso mundial
-            write_i16(p + 0xd, mundo);
-        }
-        if clube != 0 && read_usize(clube + club::NATION) == read_usize(person + staff::NATION) { // cpw6: o clube da nação do jogador
-            add_to_word(p + 9, match_pl_ftol(nac as i32 as f64 * read_f64_at(0x967880))); // 0x967880 = 0.1
-            clamp_word(p + 9, nac);
-        } else {
-            add_to_word(p + 9, match_pl_ftol((nac as i32 + mundo as i32) as f64 * read_f64_at(0x967878))); // 0x967878 = 0.025
-            if read_i16(p + 9) > 10000 {
-                write_i16(p + 9, 10000);
-            }
-            let floor = nac as i32 / 2 + mundo as i32 / 2;
-            if (read_i16(p + 9) as i32) <= floor {
-                write_i16(p + 9, floor as i16);
-            }
-        }
-        add_to_word(p + 0xb, match_pl_ftol(nac as i32 as f64 * read_f64_at(0x967880))); // 0x967880 = 0.1
-        clamp_word(p + 0xb, nac);
-        let lists = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856);
-        if lists != 0 && !MONTH_AWARD_DRY_RUN {
-            let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_PLAYER_TO_CLUB_SHORTLISTS);
-            f(lists, person, 1);
-        }
-        return;
-    }
-    let np = read_usize(person + staff::NON_PLAYER);
-    if np == 0 || player != 0 {
-        return;
-    }
-    if read_i16(np + 0xc) <= mundo {
-        write_i16(np + 0xc, mundo);
-    }
-    if clube != 0 && read_usize(clube + club::NATION) == read_usize(person + staff::NATION) {
-        if read_i16(np + 8) <= nac {
-            write_i16(np + 8, nac);
-        }
-    } else {
-        let floor = nac as i32 / 2 + mundo as i32 / 2;
-        if (read_i16(np + 8) as i32) <= floor {
-            write_i16(np + 8, floor as i16);
-        }
-    }
-    if read_i16(np + 0xa) <= nac {
-        write_i16(np + 0xa, nac);
-    }
-    if clube == 0 {
-        return;
-    }
-    let row = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(clube) as usize).wrapping_mul(73)).wrapping_add(6);
-    let v = read_i16(row).wrapping_add(1000);
-    let v = if v < 1 {
-        1
-    } else if v > 10000 {
-        10000
-    } else {
-        v
-    };
-    write_i16(row, if v < 6500 { 6500 } else { v });
-}
 
 

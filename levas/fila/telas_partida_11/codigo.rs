@@ -6,7 +6,7 @@
 /// aloca (0x944cf1), constrói os dois blocos (0x9463af com 0x453c30) e grava no parâmetro 0x1d.
 unsafe fn save_match_snapshot(mut copia: usize, estado: usize) {
     if copia == 0 {
-        crate::comparacao::ramo("telas cria a copia do estado da partida");
+        crate::comparison::branch("telas cria a copia do estado da partida");
         let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
         let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
         copia = novo(0xd7a);
@@ -356,8 +356,8 @@ unsafe fn comparar_valores_da_partida(nome: &str, original: impl FnOnce(), rust:
     reg.extend(screen_param_regions());
     reg.push((copia, 0xd7a));
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, rust);
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, original, rust);
+    PLACAR.record(igual, || {
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))

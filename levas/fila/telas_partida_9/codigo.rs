@@ -33,8 +33,8 @@ unsafe extern "thiscall" fn match_team_block_assign(this: usize, src: usize) -> 
 
 unsafe extern "thiscall" fn comparar_match_team_block_assign(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
-    PLACAR.registrar(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
+    PLACAR.record(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
 }
 
@@ -54,8 +54,8 @@ unsafe extern "thiscall" fn match_player_row_assign(this: usize, src: usize) -> 
 
 unsafe extern "thiscall" fn comparar_match_player_row_assign(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
-    PLACAR.registrar(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
+    PLACAR.record(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
 }
 
@@ -116,6 +116,6 @@ unsafe extern "C" fn comparar_match_screens_tally_live_score(partida: usize, ind
     if res == 0 {
         return o(partida, indice, res);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(res + 0x43, 0xa)], || o(partida, indice, res), || match_screens_tally_live_score(partida, indice, res));
-    PLACAR.registrar(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, indice, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res + 0x43, 0xa)], || o(partida, indice, res), || match_screens_tally_live_score(partida, indice, res));
+    PLACAR.record(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, indice, mo.0, mr.0));
 }

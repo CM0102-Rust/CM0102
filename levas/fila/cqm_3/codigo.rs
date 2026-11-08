@@ -52,7 +52,7 @@ unsafe fn cqm3_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnc
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.registrar(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
+    PLACAR.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
 }
 
 /// As janelas da Turquia: uma janela, de 1º de junho a 31 de janeiro.
@@ -63,7 +63,7 @@ const TURKEY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x9020a0 } (thiscall, ret 0x14, turkey_rules.cpp, `TURKEY_RULES::TURKEY_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Turquia (regra 24): a base (0x8e84a0), a vtable 0x97075c, 1 janela(s) de `TURKEY_TRANSFER_WINDOWS`; o +0x13 = 8 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 8 (o padrão é 30). Devolve o objeto.
 unsafe extern "thiscall" fn construct_turkey_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_3 turquia");
+    crate::comparison::branch("cqm_3 turquia");
     turkey_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x97075c, 1, &TURKEY_TRANSFER_WINDOWS, 0xaa19a8, 0x52);
     *((this + 0x13) as *mut u8) = 8;
     *((this + 0x14) as *mut u8) = 8;
@@ -88,7 +88,7 @@ const POLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x7cd830 } (thiscall, ret 0x14, poland_rules.cpp, `POLAND_RULES::POLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Polônia (regra 18): a base (0x8e84a0), a vtable 0x96e61c, 1 janela(s) de `POLAND_TRANSFER_WINDOWS`; o +0x13 = 5 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 5 (o padrão é 30). Devolve o objeto.
 unsafe extern "thiscall" fn construct_poland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_3 polonia");
+    crate::comparison::branch("cqm_3 polonia");
     turkey_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96e61c, 1, &POLAND_TRANSFER_WINDOWS, 0xa786b8, 0x51);
     *((this + 0x13) as *mut u8) = 5;
     *((this + 0x14) as *mut u8) = 5;
@@ -113,7 +113,7 @@ const FINLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x5a9950 } (thiscall, ret 0x14, finland_rules.cpp, `FINLAND_RULES::FINLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Finlândia (regra 8): a base (0x8e84a0), a vtable 0x96a75c, 1 janela(s) de `FINLAND_TRANSFER_WINDOWS`; o dword +0x15 = 1. Devolve o objeto.
 unsafe extern "thiscall" fn construct_finland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_3 finlandia");
+    crate::comparison::branch("cqm_3 finlandia");
     turkey_rules_construct_nation_transfer_rules(this, [a1, a2, a3, a4, a5], 0x96a75c, 1, &FINLAND_TRANSFER_WINDOWS, 0x9cc134, 0x50);
     core::ptr::write_unaligned((this + 0x15) as *mut u32, 1);
     this

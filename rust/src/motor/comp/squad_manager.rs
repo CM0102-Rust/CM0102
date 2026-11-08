@@ -22,9 +22,18 @@ pub(crate) unsafe fn for_each_comp_club(comp: usize, etapa: u32, mut cada: impl 
     }
 }
 
-/// the rule: at the first stage everyone's registration is cleared; at each stage each club in the Champions League,
-/// the UEFA Cup or the third cup [inference: the Cup Winners' Cup] picks its registered players (human-managed clubs
-/// get the news and pick themselves); in the career, stage 3 runs in 2002 (not in 2001)
+/// `SQUAD_MANAGER::process_euro_registration`: stage `stage` (byte) of the European cup registration. At the first
+/// stage everyone's registration is cleared; at each stage each club in the Champions League, the UEFA Cup or the third
+/// cup [inference: the Cup Winners' Cup] picks its registered players; human-managed clubs get the news and pick
+/// themselves. In the career, stage 3 runs in 2002 (not in 2001).
+///
+/// At stage 1, the registration year (+0, word) becomes the game year and the registration mark (+0x6d) of every person
+/// with a contract (0x6e-byte records in [0xae23bc]) is zeroed.
+///
+/// Then, in each of the three cups (`EUROPEAN_REGISTRATION_CUPS`; the competition through table [0xadadfc]), each club
+/// of the list (method +0x58 with the stage) that is in it (+0x1db = the id): with a human manager (0x7875e0, ecx =
+/// [0xb7431c]) gets the registration news (0x85b020(this, club, id, stage), original); otherwise the registration is
+/// done (0x85aae0(club, stage, 0), with ecx = [0xdd7ef0]).
 /// Original: `SQUAD_MANAGER::process_euro_registration` (0x85a9b0, squad_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x85a9b0 } (thiscall, ret 4, squad_manager.cpp, `SQUAD_MANAGER::process_euro_registration`): a etapa `etapa`
@@ -56,13 +65,13 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, et
             continue;
         }
         for_each_comp_club(comp, etapa, |c| {
-            if c == 0 || read_u32(c + 0x1db) != id {
+            if c == 0 || read_u32(c + club::EURO_FLAG) != id {
                 return;
             }
             if human(read_u32(G_NEWS) as usize, c) != 0 {
                 noticia(this, c, id, etapa);
             } else {
-                crate::comparacao::ramo("cqn_3 inscreve o clube");
+                crate::comparison::branch("cqn_3 inscreve o clube");
                 inscrever(read_u32(G_SQUAD_MANAGER) as usize, c, etapa, 0); // cqn3: inscreve o clube
             }
         });
@@ -91,9 +100,14 @@ pub(crate) unsafe fn contract_valid_for_club(k: usize, c: usize) -> bool {
     (read_u32(G_CLUB_TABLE) as usize).wrapping_add(id.wrapping_mul(club::SIZE)) == p
 }
 
-/// the rule: the squad number lives in the contract (+0x3a), positive at human-managed clubs and negative elsewhere;
-/// the club's contract counts (or the parent club's [inference: B team]) and, failing it, the loan contract; a person
-/// outside the contracted-people table has the number in the player record
+/// `SQUAD_MANAGER::get_squad_number` (this is not read): the squad number (char, negative at clubs without a human
+/// manager) of person `p` at club `c`. The number lives in the contract (+0x3a); the club's contract counts (or the
+/// parent club's [inference: B team]) and, failing it, the loan contract.
+///
+/// Missing either, 0. A person outside the table of contracted people (id ≥ [0xae2364]): byte +4 of the player sheet
+/// (+0x61). Otherwise the contract (0x4cf5a0, thiscall on [0xae1050], push person), if the person is a player (0x53b620
+/// with +0x3d, cdecl of 1) and the contract is valid at the club: the contract's +0x3a; otherwise the loan contract
+/// (0x4cf6d0, thiscall on [0xae1050], push person), if valid at the club: its +0x3a; otherwise 0.
 /// Original: `SQUAD_MANAGER::get_squad_number` (0x85a760, squad_manager.cpp, thiscall, ret 8 (this não lido)).
 ///
 /// [pt] { 0x85a760 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::get_squad_number`; o this não é lido): o número
@@ -110,11 +124,11 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
         return 0;
     }
     if read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
-        return *((read_u32(p + 0x61) as usize + 4) as *const i8);
+        return *((read_u32(p + staff::PLAYER) as usize + 4) as *const i8);
     }
     let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
-    if k != 0 && player(*((p + 0x3d) as *const i8)) != 0 && contract_valid_for_club(k, c) {
-        crate::comparacao::ramo("cql_1 numero do contrato");
+    if k != 0 && player(*((p + staff::JOB_FOR_CLUB) as *const i8)) != 0 && contract_valid_for_club(k, c) {
+        crate::comparison::branch("cql_1 numero do contrato");
         return *((k + 0x3a) as *const i8); // cql1: o número do contrato
     }
     let k = loan(read_u32(G_CONTRACT_MANAGER) as usize, p);
@@ -125,8 +139,11 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
 }
 
 
-/// the rule: a club uses fixed squad numbers when its division's league has bit 2 of its options (+0x52); with a second
-/// competition (e.g. a cup), it needs the bit too
+/// `SQUAD_MANAGER::club_uses_squad_numbers` (this is not read): 1 if the club uses fixed squad numbers.
+///
+/// The competition of the club's division (the id in [[c+0x57]], the object in table [0xadadfc]) exists and has bit 2
+/// of +0x52 and, with `other` (Comp*, e.g. a cup), the other competition (the one in the table by id [other]) also has
+/// the bit. No division or no competition, 0; no club, the error box at line 0x4b0 and 0.
 /// Original: `SQUAD_MANAGER::club_uses_squad_numbers` (0x85add0, squad_manager.cpp, thiscall, ret 8 (this não lido)).
 ///
 /// [pt] { 0x85add0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::club_uses_squad_numbers`; o this não é lido):
@@ -138,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: 
         show_error_at(0xa82b88, 0x4b0);
         return 0;
     }
-    let div = read_u32(c + 0x57) as usize;
+    let div = read_u32(c + club::DIVISION) as usize;
     if div == 0 {
         return 0;
     }
@@ -156,13 +173,16 @@ pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: 
             return 0;
         }
     }
-    crate::comparacao::ramo("cql_1 usa numeros");
+    crate::comparison::branch("cql_1 usa numeros");
     1 // cql1: usa números
 }
 
 
-/// the rule: numbers go from −50 to 50 (otherwise the error box); written to the contract valid at the club, or to the
-/// loan contract
+/// `SQUAD_MANAGER::set_squad_number` (this is not read): writes the squad number `n` (char from −50 to 50; outside
+/// that, the error box at line 0x332).
+///
+/// Written to +0x3a of person `p`'s contract (0x4cf5a0) if it is valid at club `c`, otherwise to that of the loan
+/// contract (0x4cf6d0) if it is valid at the club. No person or no club, nothing.
 /// Original: `SQUAD_MANAGER::set_squad_number` (0x85a850, squad_manager.cpp, thiscall, ret 0xc (this não lido)).
 ///
 /// [pt] { 0x85a850 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::set_squad_number`; o this não é lido): grava o
@@ -181,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, 
     }
     let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
-        crate::comparacao::ramo("cql_1 grava no contrato");
+        crate::comparison::branch("cql_1 grava no contrato");
         *((k + 0x3a) as *mut i8) = n; // cql1: grava no contrato
         return;
     }
@@ -231,10 +251,16 @@ pub(crate) unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
     None
 }
 
-/// the rule: a new arrival gets the first free number for his position: goalkeeper 1; defender 2 (right back), 3 (left)
-/// or 4 to 6; defensive, central and attacking midfielder 6 to 8; striker 8 to 11 (good position = rating 15 or more);
-/// otherwise the first free from 12 to 50, and lastly the highest free from 11 down; positive with a human manager,
-/// negative without
+/// `SQUAD_MANAGER::allocate_squad_number`: gives a squad number to person `p` arriving at club `c`: the first free
+/// number for his position; goalkeeper 1; defender 2 (right back), 3 (left) or 4 to 6; defensive, central and attacking
+/// midfielder 6 to 8; striker 8 to 11 (good position = rating 15 or more).
+///
+/// Marks the numbers taken by the squad (0x541f90(c, list, 0), cdecl of 3; the list sorted by age with qsort 0x945333
+/// and 0x540130; anyone outside the table of contracted people or without a player sheet does not count) with each
+/// one's number (0x85a760, absolute value). If `p` is in the table and has no number yet: the first free number among
+/// the position's preferred ones (`preferred_squad_numbers`); otherwise the first free one from 12 to 50; and, if still
+/// without a number, the highest free one from 11 down. The number goes positive for a club with a human manager
+/// (0x600a50(c, 0, 1, 0, 0), cdecl of 5) and negative for the others (0x85a850). No person, nothing.
 /// Original: `SQUAD_MANAGER::allocate_squad_number` (0x85a470, squad_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x85a470 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::allocate_squad_number`): dá um número de camisa
@@ -262,7 +288,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
         if x == 0 {
             continue;
         }
-        if read_u32(x + 0x61) == 0 {
+        if read_u32(x + staff::PLAYER) == 0 {
             *q = 0;
             continue;
         }
@@ -276,7 +302,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
     if !is_contracted_staff(p) || number(this, p, c) != 0 {
         return;
     }
-    let pref = preferred_squad_numbers(read_u32(p + 0x61) as usize).unwrap_or([0xff; 5]);
+    let pref = preferred_squad_numbers(read_u32(p + staff::PLAYER) as usize).unwrap_or([0xff; 5]);
     // the number with the club’s sign: positive with a human manager, negative without
     let sinal = |k: u8| -> u32 {
         if human(c, 0, 1, 0, 0) != 0 {
@@ -291,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
         if used[k as i8 as usize] == 0 {
             write(this, p, c, sinal(k));
             used[k as usize] = 1;
-            crate::comparacao::ramo("cql_2 numero da posicao");
+            crate::comparison::branch("cql_2 numero da posicao");
             return; // cql2: o número da posição
         }
         b += 1;
@@ -372,7 +398,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
     let mut all = [0usize; 50];
     let mut n = 0usize;
     for k in 0..50 {
-        let x = read_u32(c + 0xd7 + 4 * k) as usize;
+        let x = read_u32(c + club::SQUAD + 4 * k) as usize;
         if x != 0 && is_contracted_staff(x) {
             all[n] = x;
             n += 1;
@@ -384,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
             if n >= 50 {
                 break;
             }
-            let x = read_u32(l + 0xd7 + 4 * k) as usize;
+            let x = read_u32(l + club::SQUAD + 4 * k) as usize;
             if x != 0 && is_contracted_staff(x) {
                 all[n] = x;
                 n += 1;
@@ -392,7 +418,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         }
     }
     let slots = SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS;
-    crate::comparacao::ramo("cql_2 escala");
+    crate::comparison::branch("cql_2 escala");
     pick(all.as_ptr() as usize, n as u32, slots.as_ptr() as usize, 0xb, 9, order.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
     let mut free = 0usize;
     for &x in all[..n].iter() {
@@ -431,7 +457,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         }
         if vez < -21 {
             let ct = of_club(read_u32(G_CONTRACT_MANAGER) as usize, x, c);
-            let t = if ct != 0 { *((ct + 0x4f) as *const u8) & 0xf0 } else { 0 };
+            let t = if ct != 0 { *((ct + contract::SQUAD_STATUS) as *const u8) & 0xf0 } else { 0 };
             if ct == 0 || t == 0x60 || t == 0x70 {
                 write(this, x, c, 0);
                 continue;
@@ -453,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         if keep != 0 {
             write(this, x, c, nb.wrapping_neg() as u8 as u32);
         } else if (nb < 12 && vez < -11) || (nb >= 12 && vez > -12) {
-            crate::comparacao::ramo("cql_2 perde o numero");
+            crate::comparison::branch("cql_2 perde o numero");
             write(this, x, c, 0); // cql2: o número fora do lugar
             continue;
         }
@@ -470,7 +496,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         if ct == 0 {
             continue;
         }
-        let t = *((ct + 0x4f) as *const u8) & 0xf0;
+        let t = *((ct + contract::SQUAD_STATUS) as *const u8) & 0xf0;
         if t == 0x60 || t == 0x70 {
             continue;
         }
@@ -488,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         let mut v = -1i8;
         for &x in stored.iter() {
             if x != 0 {
-                crate::comparacao::ramo("cql_2 regrava negativo");
+                crate::comparison::branch("cql_2 regrava negativo");
                 write(this, x, c, v as u8 as u32); // cql2: regrava negativo
             }
             v = v.wrapping_sub(1);
@@ -513,7 +539,7 @@ pub(crate) unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
     while i < read_u32(G_COMP_OBJECT_COUNT) as i32 {
         let c = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * i as usize) as usize;
         if c != 0 && division(read_u32(read_u32(c + 4) as usize) as i32) != 0 && *((c + 0x52) as *const u8) & 2 != 0 {
-            crate::comparacao::ramo("cql_3 numera a liga");
+            crate::comparison::branch("cql_3 numera a liga");
             cada(c); // cql3: numera a liga
         }
         i += 1;
@@ -533,9 +559,16 @@ pub(crate) unsafe extern "thiscall" fn init_new_game(this: usize) {
 }
 
 
-/// the rule: each club of the league (except B teams) is numbered; at the start each player first gets the database
-/// number (0 to 50); a human-managed club is not numbered by the game: its numbers become positive and the manager gets
-/// the squad numbers request
+/// `SQUAD_MANAGER::assign_league_squad_numbers`: numbers the clubs of league `league` (except B teams); a human-managed
+/// club is not numbered by the game.
+///
+/// The list comes from the competition's method +0x58, thiscall(league, &list, 0), returning the count in ax; the list
+/// is freed at the end by 0x9452ca. In 1998 `initial` always applies. Skips the B team (0x540a50(club, &parent, 1) with
+/// the club linked and parent = 0). A club with a human manager (0x7875e0, with ecx = [0xb7431c]) without `automatic`:
+/// the squad's negative numbers (0x541f90(club, list, 0)) become positive and the manager gets the squad numbers
+/// request (0x85aec0, original). Otherwise: with `initial`, each player of the squad (from the table of contracted
+/// people and with a player sheet) first gets the database number (+4 of the player sheet, between 0 and 50); and the
+/// squad is numbered (0x859fe0(club, 1)).
 /// Original: `SQUAD_MANAGER::assign_league_squad_numbers` (0x859e20, squad_manager.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x859e20 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::assign_league_squad_numbers`): numera os clubes
@@ -582,13 +615,13 @@ pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, 
                 if p == 0 || read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
                     continue;
                 }
-                let f = read_u32(p + 0x61) as usize;
+                let f = read_u32(p + staff::PLAYER) as usize;
                 if f == 0 {
                     continue;
                 }
                 let b = *((f + 4) as *const i8);
                 let k = if b < 0 { 0 } else if b > 0x32 { 0x32 } else { b as i32 };
-                crate::comparacao::ramo("cql_3 numero do banco");
+                crate::comparison::branch("cql_3 numero do banco");
                 write(this, p, c, k as u32); // cql3: o número do banco
             }
         }
@@ -607,10 +640,19 @@ pub(crate) const EURO_REFERENCE_LINEUP_SLOTS: [u16; 25] = [
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, // the reserves
 ];
 
-/// the European cup registration rule: the best of the reference line-up are registered (11 starters and 14
-/// substitutes, or 9 at the first stage without the mark [inference: list B]); loaned players, type-5 contracts and
-/// those already marked 8 or 0x10 cannot be registered; at stage 3 up to 2 registered players outside the line-up drop
-/// out (minimum of 21 registered); after the first stage only those who fit the places get in
+/// `SQUAD_MANAGER::select_euro_registered_players` (this is not read): the registration of club `c` for the European
+/// cups at stage `stage` (1 is the first; `mark` [inference: list A or B]), through the person's registration mark
+/// (+0x6d: 1 or 2 registered, 4 and 8 other marks).
+///
+/// From the squad (0x541f90(c, list, 0)), the candidates are those in the table of contracted people, without a type-5
+/// contract (+0x35 & 0x3f; the contract found stays in [0xae1080]), without a loan contract and without marks 8 and
+/// 0x10 (+0x6d & 0x18); outside stage 1, mark 1 drops to 0 and 4 becomes 2, and the 2s are counted. The reference
+/// line-up (0x6e2000 with `EURO_REFERENCE_LINEUP_SLOTS`, the 11 starters and 14 substitutes, or 9 at stage 1 without
+/// `mark`) picks the best. At stage 3, up to 2 registered players (2) left out of the line-up lose the registration
+/// (they go to 4 with `mark`, otherwise 0) and the count drops (to a minimum of 21). Then each selected player: at
+/// stage 1, is registered (1 with `mark`, otherwise 2) and counted; at the others, anyone not yet 2 and without mark 8
+/// is registered the same way while the count is below the line-up's places. Returns the count of registered players
+/// (char).
 /// Original: `SQUAD_MANAGER::select_euro_registered_players` (0x85aae0, squad_manager.cpp, thiscall, ret 0xc (this não lido)).
 ///
 /// [pt] { 0x85aae0 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::select_euro_registered_players`; o this não é
@@ -637,14 +679,14 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
     let mut n = 0u8;
     let mut count = 0i8;
     let mut tirados = 0i8;
-    let m6d = |p: usize| (p + 0x6d) as *mut u8;
+    let m6d = |p: usize| (p + staff::SQUAD_SELECTED_FOR) as *mut u8;
     for &p in sq.iter() {
         if p == 0 || read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
             continue;
         }
         let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
         *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = k as u32;
-        if k != 0 && *((k + 0x35) as *const u8) & 0x3f == 5 {
+        if k != 0 && *((k + contract::CONTRACT_TYPE) as *const u8) & 0x3f == 5 {
             continue;
         }
         if loan(read_u32(G_CONTRACT_MANAGER) as usize, p) != 0 || *m6d(p) & 0x18 != 0 {
@@ -690,13 +732,13 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
         if p != 0 {
             let v = if mark != 0 { 1 } else { 2 };
             if etapa == 1 {
-                crate::comparacao::ramo("cql_3 inscreve na etapa 1");
+                crate::comparison::branch("cql_3 inscreve na etapa 1");
                 *m6d(p) = v; // cql3: inscreve
                 count = count.wrapping_add(1);
             } else {
                 let a = *m6d(p);
                 if a != 2 && a & 8 == 0 && (count as i32) < total {
-                    crate::comparacao::ramo("cql_3 inscreve depois");
+                    crate::comparison::branch("cql_3 inscreve depois");
                     *m6d(p) = v; // cql3: inscreve depois
                     count = count.wrapping_add(1);
                 }
@@ -708,8 +750,11 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
 }
 
 
-/// writes the u16 at +0, widened to 4 bytes, into the squad_manager.dat item and returns 1; on error the "Error" box
-/// (squad_manager.cpp 0x68, 0x6f) and 0
+/// `SQUAD_MANAGER::save(save)`: writes the squad manager's u16 at +0 into the `squad_manager.dat` item, widened to 4
+/// bytes (the original zeroes eax before the `mov ax`), and returns 1.
+///
+/// Error on opening or writing: the "Error" box (squad_manager.cpp 0x68, 0x6f) and 0, without closing the item. Does
+/// not check for a null container (0x9326e0 receives it as it comes).
 /// Original: `SQUAD_MANAGER::save` (0x859cc0, squad_manager.cpp, thiscall).
 ///
 /// [pt] { 0x859cc0 } (thiscall, ret 4, squad_manager.cpp): `SQUAD_MANAGER::save(save)`: grava no item `squad_manager.dat`
@@ -720,7 +765,7 @@ pub(crate) unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usi
     let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     let write_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
     let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
-    crate::comparacao::ramo("cpx_5 gravar gerente de elencos");
+    crate::comparison::branch("cpx_5 gravar gerente de elencos");
     let mut v = *(this as *const u16) as u32; // cpx5: o valor do gerente de elencos
     let mut z = open_item(save, 0xa82bc0, 1, 0x16, 4);
     if z == 0 {

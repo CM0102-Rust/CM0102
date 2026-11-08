@@ -47,7 +47,7 @@ unsafe fn find_offer_slot_and_rival(v: usize, lidas: i32, cap: i32, conta: i32, 
             contadas += 1;
             if cqf1_d(e + 0xc) == alvo {
                 if cqf1_d(e + 8) == comprador {
-                    crate::comparacao::ramo("cqf_1 mesma vaga");
+                    crate::comparison::branch("cqf_1 mesma vaga");
                     vaga = i; // cqf1: a vaga da oferta do mesmo comprador
                 } else if rival == -1 {
                     rival = i;
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn add_transfer_offer(this: usize, oferta: usize, termo
     if rival != -1 { // cqf1: a rival liga as ofertas
         // as listas copiam os 4 bytes do índice (a original passa o endereço das variáveis da pilha)
         let (vaga_l, rival_l) = (vaga, rival);
-        crate::comparacao::ramo("cqf_1 ofertas rivais ligadas");
+        crate::comparison::branch("cqf_1 ofertas rivais ligadas");
         let lista = cqf1_d(cqf1_d(slot(rival)));
         if lista != 0 {
             acrescentar(lista, &vaga_l, 4); // cqf1: a vaga na lista da rival
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn add_transfer_offer(this: usize, oferta: usize, termo
         dias != 0 || fatias != 0
     };
     if agenda {
-        crate::comparacao::ramo("cqf_1 agenda pelo prazo");
+        crate::comparison::branch("cqf_1 agenda pelo prazo");
         agendar(this, cqf1_d(slot(vaga)), dias as u32, fatias as u32); // cqf1: o prazo da oferta
     }
     let o = cqf1_d(slot(vaga));
@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn comparar_add_transfer_offer(this: usize, oferta: usi
         return;
     }
     let (v, s, s2) = (cqf1_d(oferta + 0x20) as i32, cqf1_d(oferta + 0x24), cqf1_d(this + 0x85a));
-    PLACAR.registrar(v == vaga && s == serie && s2 == serie.wrapping_add(1), || format!(
+    PLACAR.record(v == vaga && s == serie && s2 == serie.wrapping_add(1), || format!(
         "add_transfer_offer(alvo {}, comprador {}): vaga original {} plano {}, série {} plano {}, próxima {} plano {}",
         alvo, comprador, v, vaga, s, serie, s2, serie.wrapping_add(1)));
 }
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn accept_loan_offer(this: usize, vaga: *mut usize, mar
     let desmarcar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
-    crate::comparacao::ramo("cqf_1 aceitar empréstimo");
+    crate::comparison::branch("cqf_1 aceitar empréstimo");
     if marcar != 0 {
         cqf1_pb(*vaga + 0x2d, 1);
     }

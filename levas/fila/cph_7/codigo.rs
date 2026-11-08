@@ -139,13 +139,13 @@ unsafe extern "thiscall" fn comparar_get_current_run(this: usize, clube: usize, 
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I1%%)(this, clube, tipo, tamanho);
     let (mut t, mut n) = (0u8, 0u8);
     get_current_run(this, clube, &mut t, &mut n);
-    PLACAR.registrar(*tipo == t && *tamanho == n, || format!("get_current_run({:x}) original={}/{} rust={}/{}", clube, *tipo, *tamanho, t, n));
+    PLACAR.record(*tipo == t && *tamanho == n, || format!("get_current_run({:x}) original={}/{} rust={}/{}", clube, *tipo, *tamanho, t, n));
 }
 
 unsafe extern "thiscall" fn comparar_record_holder_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x10, 8)], || o(this), || record_holder_construct(this));
-    PLACAR.registrar(igual && r == n, || format!("record_holder_construct {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x10, 8)], || o(this), || record_holder_construct(this));
+    PLACAR.record(igual && r == n, || format!("record_holder_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -153,8 +153,8 @@ unsafe extern "thiscall" fn comparar_record_holder_construct(this: usize) -> usi
 /// locais da pilha de cada uma).
 unsafe extern "thiscall" fn comparar_pick_rival_manager_id(this: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I3%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, clube),
-        || crate::aleatorio::sem_contar(|| pick_rival_manager_id(this, clube)));
-    PLACAR.registrar(igual && r == n, || format!("pick_rival_manager_id({:x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(this, clube),
+        || crate::rng::without_counting(|| pick_rival_manager_id(this, clube)));
+    PLACAR.record(igual && r == n, || format!("pick_rival_manager_id({:x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

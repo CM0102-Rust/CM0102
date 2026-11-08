@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn construct_spa_lower(this: usize, ano: u32) -> usize 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqm_6 divisao de baixo nova");
+    crate::comparison::branch("cqm_6 divisao de baixo nova");
     *((this + 0x44) as *mut u8) = 0xff;
     cqm6_pd(this + 0x30, 0xffff_ffff);
     cqm6_pd(this + 0x2c, 0);
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize, ano: u32) 
     let r = o(this, ano);
     let ok = r == this && cqm6_d(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && *((this + 0x50) as *const u8) == 0xff && cqm6_d(this + 4) == comp_record_of_key(0x9cf6b0);
-    PLACAR.registrar(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, cqm6_d(this), cqm6_d(this + 4)));
+    PLACAR.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, cqm6_d(this), cqm6_d(this + 4)));
     r
 }
 
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
         if spa_lower_is_in_comp(c, 0x9cf628) {
             iniciar(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, 0x9cf624) {
-                crate::comparacao::ramo("cqm_6 time b na segunda");
+                crate::comparison::branch("cqm_6 time b na segunda");
                 *((cqm6_d(this + 0xb1) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
             k = k.wrapping_add(1);
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
         }
         i = i.wrapping_add(1);
     }
-    crate::comparacao::ramo("cqm_6 tabela da segunda");
+    crate::comparison::branch("cqm_6 tabela da segunda");
     if k as i8 as i16 != cqm6_w(this + 0x3e) {
         return 0;
     }
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32
             ok = ok && cqm6_d(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
         }
     }
-    PLACAR.registrar(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plano));
+    PLACAR.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plano));
     r
 }
 
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
             }
         });
     }
-    crate::comparacao::ramo("cqm_6 tabela da divisao de baixo");
+    crate::comparison::branch("cqm_6 tabela da divisao de baixo");
     let mut lista = spanish_lower_candidates();
     let quantos = lista.len() as u16 as u32;
     let faltam = (cqm6_w(this + 0x3e) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn comparar_spa_lower_create_table(this: usize) -> u32 
             ok = ok && cqm6_d(t + i * 0x3b) == c;
         }
     }
-    PLACAR.registrar(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plano,
+    PLACAR.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plano,
         (0..plano.len()).map(|i| if t != 0 { cqm6_d(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
     r
 }

@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                     None
                 };
                 if let Some(a) = lado {
-                    crate::comparacao::ramo("cqd_7 vaga na rodada seguinte");
+                    crate::comparison::branch("cqd_7 vaga na rodada seguinte");
                     cqd7_pw(v + if a { 0xa } else { 0xc }, p as u16);
                     cqd7_pw(v + if a { 0xe } else { 0x10 }, r as u16);
                     cqd7_pw(c + 6, s as u16);
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                         None
                     };
                     if let Some(o) = lado {
-                        crate::comparacao::ramo("cqd_7 time na primeira rodada");
+                        crate::comparison::branch("cqd_7 time na primeira rodada");
                         cqd7_pw(c + o, (cqd7_w(comp_cup_round(this, r) + 0x1e) as u16).wrapping_add(q as u16));
                         break;
                     }
@@ -372,7 +372,7 @@ unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) -> i32 {
             }
         }
     }
-    PLACAR.registrar(erro.is_none(), || format!("map_fixture_tree: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
+    PLACAR.record(erro.is_none(), || format!("map_fixture_tree: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
     r
 }
 
@@ -417,7 +417,7 @@ unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: usize, k: i3
     }
     let r = o(this, k);
     let n = get_first_stage_of_group(this, k);
-    PLACAR.registrar(r == n, || format!("get_first_stage_of_group({}): original={} rust={}", k, r, n));
+    PLACAR.record(r == n, || format!("get_first_stage_of_group({}): original={} rust={}", k, r, n));
     r
 }
 

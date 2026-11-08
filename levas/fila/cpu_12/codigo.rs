@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
     }
     let semente = sorteio(30000).wrapping_add(1);
     semear((cpu12_w(this + 0x40) as i32).wrapping_add(*(0xdd7120 as *const i32)) as u32); // cpu12: a semente
-    crate::comparacao::ramo("cpu_12 ordem sorteada");
+    crate::comparison::branch("cpu_12 ordem sorteada");
     let mut i = 0;
     while i < n() {
         let a = ((rand() as i64 * n() as i64) / 0x8000) as i32 as usize;
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
         while (i as i32) < n() {
             if *usado.add(i) == 0 {
                 if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: a primeira vaga livre
-                    crate::comparacao::ramo("cpu_12 clube na vaga livre");
+                    crate::comparison::branch("cpu_12 clube na vaga livre");
                     copy_row_59(grade + j * CUP_LEAGUE_TABLE_ROW_SIZE, tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE);
                     *posto.add(j) = 1;
                     *usado.add(i) = 1;
@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn comparar_get_fixture_side_teams(this: usize, rodada:
     let res = o(this, rodada, jogo, lado, saida);
     let obtido = core::slice::from_raw_parts(saida, res.clamp(0, 0x100) as usize);
     let global = *(0xae1880 as *const i32);
-    PLACAR.registrar(res == n && global == n && obtido == &esperado[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, rodada, jogo, lado as u8, res, n, global, obtido, &esperado[..n.clamp(0, 0x100) as usize]));
+    PLACAR.record(res == n && global == n && obtido == &esperado[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, rodada, jogo, lado as u8, res, n, global, obtido, &esperado[..n.clamp(0, 0x100) as usize]));
     res
 }
 
@@ -326,6 +326,6 @@ unsafe extern "thiscall" fn comparar_collect_possible_teams(this: usize, rodada:
     let fim = (*conta).clamp(c0, 0x200);
     let obtido = core::slice::from_raw_parts(saida.offset(c0 as isize), (fim - c0) as usize);
     let ok = res == n && *conta == n && obtido == &esperado[c0 as usize..n.clamp(c0, 0x200) as usize];
-    PLACAR.registrar(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, rodada, jogo, res, n, *conta, obtido, &esperado[c0 as usize..n.clamp(c0, 0x200) as usize]));
+    PLACAR.record(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, rodada, jogo, res, n, *conta, obtido, &esperado[c0 as usize..n.clamp(c0, 0x200) as usize]));
     res
 }

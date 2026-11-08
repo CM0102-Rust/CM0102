@@ -1178,7 +1178,7 @@ unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
     if gi(0xae2364) == 0 || rd(0xae23bc) == 0 {
         return o(data);
     }
-    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut regioes = crate::rng::STATE_REGIONS.to_vec();
     regioes.extend_from_slice(&[(0x9b59b4, 4), (0x9b59b8, 2), (0xae2044, 0xbd), (0xae2114, 0xbd), (0xae18bc, 0xbd),
         (0xae2238, 0xbd), (0xde1f64, 0x100), (0xae24aa, 1), (0xae24c8, 8)]);
     regioes.push((rd(0xae23bc), gi(0xae2364) * 110));
@@ -1189,10 +1189,10 @@ unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
     if rd(0xae23c0) != 0 {
         regioes.push((rd(0xae23c0), gi(0xae2368) * 68));
     }
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(data),
-        || crate::aleatorio::sem_contar(|| database_player_initialisation(data)));
+    let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regioes, || o(data),
+        || crate::rng::without_counting(|| database_player_initialisation(data)));
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])));
-    PLACAR.registrar(igual, || match onde {
+    PLACAR.record(igual, || match onde {
         Some((a, x, y)) => format!("database_player_initialisation: diverge em {:x} original={:02x} rust={:02x}", a, x, y),
         None => "database_player_initialisation: estado do sorteador diferente".to_string(),
     });

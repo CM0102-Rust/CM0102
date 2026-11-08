@@ -11,6 +11,8 @@ pub(crate) mod city {
     pub(crate) const CITY_NATION: usize = 0x1f; // 4 byte(s), int
     pub(crate) const CITY_ATTRACTION: usize = 0x33; // 1 byte(s), char
     pub(crate) const CITY_WEATHER: usize = 0x34; // 4 byte(s), int
+    pub(crate) const CITY_LATITUDE: usize = 0x23; // 8 byte(s), double
+    pub(crate) const CITY_LONGITUDE: usize = 0x2b; // 8 byte(s), double
 }
 
 /// `TClub` record. [pt] Registro `TClub`.
@@ -51,6 +53,9 @@ pub(crate) mod club {
     pub(crate) const EURO_FLAG: usize = 0x1db; // 4 byte(s), int
     pub(crate) const TEAM_SELECTED: usize = 0x1e0; // 80 byte(s), int[][20]
     pub(crate) const HAS_LINKED_CLUB: usize = 0x244; // 1 byte(s), byte
+    pub(crate) const MATCH_DAY: usize = 0x72; // 1 byte(s), byte
+    pub(crate) const EURO_SEEDING: usize = 0x1df; // 1 byte(s), byte
+    pub(crate) const NAME: usize = 0x4; // 51 byte(s), byte[][51]
 }
 
 /// `TComp` record. [pt] Registro `TComp`.
@@ -62,6 +67,8 @@ pub(crate) mod competition {
     pub(crate) const CLUB_COMP_NATION: usize = 0x5d; // 4 byte(s), int
     pub(crate) const CLUB_COMP_FOREGROUND_COLOUR: usize = 0x61; // 4 byte(s), int
     pub(crate) const CLUB_COMP_REPUTATION: usize = 0x69; // 2 byte(s), Int16
+    pub(crate) const GENDER_NAME: usize = 0x37; // 1 byte(s), byte
+    pub(crate) const NAME: usize = 0x4; // 51 byte(s), byte[][51]
 }
 
 /// `TContract` record. [pt] Registro `TContract`.
@@ -80,6 +87,14 @@ pub(crate) mod contract {
     pub(crate) const LEAVING_ON_BOSMAN: usize = 0x49; // 1 byte(s), byte
     pub(crate) const TRANSFER_STATUS: usize = 0x4e; // 1 byte(s), byte
     pub(crate) const SQUAD_STATUS: usize = 0x4f; // 1 byte(s), byte
+    pub(crate) const NON_PROMOTION_RC: usize = 0x1c; // 1 byte(s), byte
+    pub(crate) const MINIMUM_FEE_RC: usize = 0x1d; // 1 byte(s), byte
+    pub(crate) const MANAGER_JOB_RC: usize = 0x20; // 1 byte(s), byte
+    pub(crate) const UNKNOWN18_1: usize = 0x36; // 8 byte(s), UInt64
+    pub(crate) const UNKNOWN18_3: usize = 0x46; // 2 byte(s), short
+    pub(crate) const TRANSFER_ARRANGED_FOR: usize = 0x4a; // 4 byte(s), int
+    pub(crate) const CLUB: usize = 0x4; // 4 byte(s), int
+    pub(crate) const UNKNOWN: usize = 0x8; // 4 byte(s), int
 }
 
 /// `TNation` record. [pt] Registro `TNation`.
@@ -99,6 +114,23 @@ pub(crate) mod nation {
     pub(crate) const LEAGUE_STANDARD: usize = 0x85; // 1 byte(s), sbyte
     pub(crate) const REPUTATION: usize = 0x8e; // 2 byte(s), Int16
     pub(crate) const NATION_LEAGUE_SELECTED: usize = 0x11c; // 1 byte(s), sbyte
+    pub(crate) const SHORT_GENDER_NAME: usize = 0x52; // 1 byte(s), byte
+    pub(crate) const GAME_IMPORTANCE: usize = 0x84; // 1 byte(s), sbyte
+    pub(crate) const NUMBER_CLUBS: usize = 0x86; // 2 byte(s), Int16
+    pub(crate) const NUMBER_STAFF: usize = 0x88; // 4 byte(s), int
+    pub(crate) const FIFACOEFFICIENT91: usize = 0xb0; // 8 byte(s), double
+    pub(crate) const FIFACOEFFICIENT92: usize = 0xb8; // 8 byte(s), double
+    pub(crate) const FIFACOEFFICIENT93: usize = 0xc0; // 8 byte(s), double
+    pub(crate) const FIFACOEFFICIENT94: usize = 0xc8; // 8 byte(s), double
+    pub(crate) const FIFACOEFFICIENT95: usize = 0xd0; // 8 byte(s), double
+    pub(crate) const FIFACOEFFICIENT96: usize = 0xd8; // 8 byte(s), double
+    pub(crate) const UEFACOEFFICIENT91: usize = 0xe0; // 8 byte(s), double
+    pub(crate) const UEFACOEFFICIENT92: usize = 0xe8; // 8 byte(s), double
+    pub(crate) const UEFACOEFFICIENT93: usize = 0xf0; // 8 byte(s), double
+    pub(crate) const UEFACOEFFICIENT94: usize = 0xf8; // 8 byte(s), double
+    pub(crate) const UEFACOEFFICIENT95: usize = 0x100; // 8 byte(s), double
+    pub(crate) const UEFACOEFFICIENT96: usize = 0x108; // 8 byte(s), double
+    pub(crate) const NATION_GAMES_PLAYED: usize = 0x121; // 1 byte(s), sbyte
 }
 
 /// `TStadiums` record. [pt] Registro `TStadiums`.
@@ -106,6 +138,13 @@ pub(crate) mod nation {
 pub(crate) mod stadium {
     pub(crate) const STADIUM_GENDER_NAME: usize = 0x37; // 1 byte(s), byte
     pub(crate) const STADIUM_CITY: usize = 0x38; // 4 byte(s), int
+    pub(crate) const STADIUM_CAPACITY: usize = 0x3c; // 4 byte(s), int
+    pub(crate) const STADIUM_SEATING_CAPACITY: usize = 0x40; // 4 byte(s), int
+    pub(crate) const STADIUM_EXPANSION_CAPACITY: usize = 0x44; // 4 byte(s), int
+    pub(crate) const STADIUM_NEARBY_STADIUM: usize = 0x48; // 4 byte(s), int
+    pub(crate) const STADIUM_COVERED: usize = 0x4c; // 1 byte(s), byte
+    pub(crate) const STADIUM_UNDER_SOIL_HEATING: usize = 0x4d; // 1 byte(s), byte
+    pub(crate) const NAME: usize = 0x4; // 51 byte(s), byte[][51]
 }
 
 /// `TStaff` record. [pt] Registro `TStaff`.
@@ -142,6 +181,8 @@ pub(crate) mod staff {
     pub(crate) const NON_PLAYER: usize = 0x69; // 4 byte(s), int
     pub(crate) const SQUAD_SELECTED_FOR: usize = 0x6d; // 1 byte(s), byte
     pub(crate) const SPORTSMANSHIP: usize = 0x5c; // 1 byte(s), byte
+    pub(crate) const FIRST_NAME: usize = 0x4; // 4 byte(s), int
+    pub(crate) const SECOND_NAME: usize = 0x8; // 4 byte(s), int
 }
 
 /// Fields of the `bra_nat_third` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `bra_nat_third`.
@@ -467,6 +508,37 @@ pub(crate) mod player_sheet {
     pub(crate) const VERSATILITY: usize = 0x42; // 1 byte(s), sbyte
     pub(crate) const VISION: usize = 0x43; // 1 byte(s), sbyte
     pub(crate) const WORK_RATE: usize = 0x44; // 1 byte(s), sbyte
+    pub(crate) const DEFENDER: usize = 0x11; // 1 byte(s), sbyte
+    pub(crate) const CENTRAL: usize = 0x19; // 1 byte(s), sbyte
+    pub(crate) const ACCELERATION: usize = 0x1b; // 1 byte(s), sbyte
+    pub(crate) const AGILITY: usize = 0x1d; // 1 byte(s), sbyte
+    pub(crate) const ANTICIPATION: usize = 0x1e; // 1 byte(s), sbyte
+    pub(crate) const CONSISTENCY: usize = 0x21; // 1 byte(s), sbyte
+    pub(crate) const CORNERS: usize = 0x22; // 1 byte(s), sbyte
+    pub(crate) const CROSSING: usize = 0x23; // 1 byte(s), sbyte
+    pub(crate) const DECISIONS: usize = 0x24; // 1 byte(s), sbyte
+    pub(crate) const DRIBBLING: usize = 0x26; // 1 byte(s), sbyte
+    pub(crate) const FREE_KICKS: usize = 0x29; // 1 byte(s), sbyte
+    pub(crate) const HANDLING: usize = 0x2a; // 1 byte(s), sbyte
+    pub(crate) const HEADING: usize = 0x2b; // 1 byte(s), sbyte
+    pub(crate) const IMPORTANT_MATCHES: usize = 0x2c; // 1 byte(s), sbyte
+    pub(crate) const JUMPING: usize = 0x2e; // 1 byte(s), sbyte
+    pub(crate) const LONG_SHOTS: usize = 0x31; // 1 byte(s), sbyte
+    pub(crate) const MARKING: usize = 0x32; // 1 byte(s), sbyte
+    pub(crate) const MOVEMENT: usize = 0x33; // 1 byte(s), sbyte
+    pub(crate) const ONE_ON_ONES: usize = 0x35; // 1 byte(s), sbyte
+    pub(crate) const PLAYER_PACE: usize = 0x36; // 1 byte(s), sbyte
+    pub(crate) const PASSING: usize = 0x37; // 1 byte(s), sbyte
+    pub(crate) const POSITIONING: usize = 0x39; // 1 byte(s), sbyte
+    pub(crate) const REFLEXES: usize = 0x3a; // 1 byte(s), sbyte
+    pub(crate) const STRENGTH: usize = 0x3d; // 1 byte(s), sbyte
+    pub(crate) const TEAMWORK: usize = 0x3f; // 1 byte(s), sbyte
+    pub(crate) const TECHNIQUE: usize = 0x40; // 1 byte(s), sbyte
+    pub(crate) const THROW_INS: usize = 0x41; // 1 byte(s), sbyte
+    pub(crate) const PLAYER_MORALE: usize = 0x45; // 1 byte(s), byte
+    pub(crate) const CURRENT_ABILITY: usize = 0x5; // 2 byte(s), UInt16
+    pub(crate) const POTENTIAL_ABILITY: usize = 0x7; // 2 byte(s), Int16
+    pub(crate) const HOME_REPUTATION: usize = 0x9; // 2 byte(s), UInt16
 }
 
 /// Fields of the match `engine` object, named from how the engine uses them. [pt] Campos do objeto `engine` do motor.
@@ -580,4 +652,43 @@ pub(crate) mod match_player {
     pub(crate) const CONFIDENCE: usize = 0x1a2; // 4 byte(s): f32 0..100 (docs: condition), floor 2 x (25 - temperament) [inference]
     pub(crate) const MARKING_TARGET: usize = 0x1aa; // 4 byte(s): match player he man-marks (0 none)
     pub(crate) const MARKERS: usize = 0x1ae; // 12 byte(s): match players marking him (up to 3 pointers, count in MARKER_COUNT)
+}
+
+/// `TNonPlayer` record. [pt] Registro `TNonPlayer`.
+#[allow(dead_code)]
+pub(crate) mod non_player {
+    pub(crate) const CURRENT_REPUTATION: usize = 0xa; // 2 byte(s), UInt16
+    pub(crate) const WORLD_REPUTATION: usize = 0xc; // 2 byte(s), UInt16
+    pub(crate) const ATTACKING: usize = 0xe; // 1 byte(s), sbyte
+    pub(crate) const BUSINESS: usize = 0xf; // 1 byte(s), sbyte
+    pub(crate) const COACHING: usize = 0x10; // 1 byte(s), sbyte
+    pub(crate) const COACHING_GKS: usize = 0x11; // 1 byte(s), sbyte
+    pub(crate) const DIRECTNESS: usize = 0x13; // 1 byte(s), sbyte
+    pub(crate) const DISCIPLINE: usize = 0x14; // 1 byte(s), sbyte
+    pub(crate) const JUDGEMENT: usize = 0x17; // 1 byte(s), sbyte
+    pub(crate) const JUDGING_POTENTIAL: usize = 0x18; // 1 byte(s), sbyte
+    pub(crate) const MAN_HANDLING: usize = 0x19; // 1 byte(s), sbyte
+    pub(crate) const MOTIVATING: usize = 0x1b; // 1 byte(s), sbyte
+    pub(crate) const PATIENCE: usize = 0x1d; // 1 byte(s), sbyte
+    pub(crate) const PHYSIOTHERAPY: usize = 0x1e; // 1 byte(s), sbyte
+    pub(crate) const PRESSING: usize = 0x1f; // 1 byte(s), sbyte
+    pub(crate) const RESOURCES: usize = 0x20; // 1 byte(s), sbyte
+    pub(crate) const TACTICS: usize = 0x21; // 1 byte(s), sbyte
+    pub(crate) const GOALKEEPER: usize = 0x23; // 4 byte(s), int
+    pub(crate) const FORMATION: usize = 0x43; // 1 byte(s), sbyte
+    pub(crate) const CURRENT_ABILITY: usize = 0x4; // 2 byte(s), UInt16
+    pub(crate) const POTENTIAL_ABILITY: usize = 0x6; // 2 byte(s), UInt16
+    pub(crate) const HOME_REPUTATION: usize = 0x8; // 2 byte(s), UInt16
+}
+
+/// `TPreferences` record. [pt] Registro `TPreferences`.
+#[allow(dead_code)]
+pub(crate) mod preferences {
+    pub(crate) const STAFF_DISLIKED_CLUBS1: usize = 0x10; // 4 byte(s), int
+    pub(crate) const STAFF_DISLIKED_CLUBS2: usize = 0x14; // 4 byte(s), int
+    pub(crate) const STAFF_DISLIKED_CLUBS3: usize = 0x18; // 4 byte(s), int
+    pub(crate) const STAFF_FAVOURITE_STAFF1: usize = 0x1c; // 4 byte(s), int
+    pub(crate) const STAFF_FAVOURITE_STAFF2: usize = 0x20; // 4 byte(s), int
+    pub(crate) const STAFF_DISLIKED_STAFF1: usize = 0x28; // 4 byte(s), int
+    pub(crate) const STAFF_FAVOURITE_CLUBS1: usize = 0x4; // 4 byte(s), int
 }

@@ -5,7 +5,7 @@
 # Simulação: as mutações pela carreira até 2002-06-01 e a confirmação no jogo real comparando. Sem SEH, sem caixa, sem
 # local lida sem valor (a data local é gravada pela 0x417c10; a chave do bsearch é toda gravada). Comparadores: a
 # cópia lado a lado pela entrada; a busca pelo valor (o eax inteiro: os 3 bytes altos são os do ponteiro achado); a
-# escolha lado a lado pelo estado do sorteio, a cópia em sem_contar. Mais chamadas: a cópia e a busca (~80 por dia de
+# escolha lado a lado pelo estado do sorteio, a cópia em without_counting. Mais chamadas: a cópia e a busca (~80 por dia de
 # jogo), sem laço por dentro; correm o risco da 0x689ad0 (241ª), de o desvio mudar o resíduo de pilha.
 SAVE = False
 ROTINAS = [('copiar_entrada_da_fila_de_regens', 0x7a8b70, [0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x08]),

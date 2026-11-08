@@ -17,7 +17,7 @@ unsafe extern "thiscall" fn add_prize_money(this: usize, valor: i32) {
     cpz13_somar32(this + 0x148, valor);
     cpz13_somar32(this + 0xa8, valor);
     if valor != 0 {
-        crate::comparacao::ramo("cpz_13 premio recebido"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_13 premio recebido"); // só valor diferente de zero muda o saldo
     }
     add_to_balance(this, valor as i64); // cpz13: o prêmio entra no saldo
 }
@@ -25,8 +25,8 @@ unsafe extern "thiscall" fn add_prize_money(this: usize, valor: i32) {
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_add_prize_money(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || add_prize_money(this, valor));
-    PLACAR.registrar(igual, || format!("add_prize_money(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || add_prize_money(this, valor));
+    PLACAR.record(igual, || format!("add_prize_money(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
 
 /// { 0x5987c0 } (thiscall, ret 4, finance.cpp): `Finance::add_tv_revenue(valor)`, só pelos direitos de TV da liga
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn add_tv_revenue(this: usize, valor: i32) {
     cpz13_somar32(this + 0x158, valor);
     cpz13_somar32(this + 0xb8, valor);
     if valor != 0 {
-        crate::comparacao::ramo("cpz_13 tv recebida"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_13 tv recebida"); // só valor diferente de zero muda o saldo
     }
     add_to_balance(this, valor as i64); // cpz13: a TV entra no saldo
 }
@@ -44,8 +44,8 @@ unsafe extern "thiscall" fn add_tv_revenue(this: usize, valor: i32) {
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_add_tv_revenue(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || add_tv_revenue(this, valor));
-    PLACAR.registrar(igual, || format!("add_tv_revenue(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || add_tv_revenue(this, valor));
+    PLACAR.record(igual, || format!("add_tv_revenue(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
 
 /// { 0x599920 } (thiscall, ret 4, finance.cpp): `Finance::pay_wages(valor)`, só pela liberação sem custo
@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn pay_wages(this: usize, valor: i32) {
     cpz13_somar32(this + 0x130, valor);
     cpz13_somar32(this + 0x90, valor);
     if valor != 0 {
-        crate::comparacao::ramo("cpz_13 salario pago"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_13 salario pago"); // só valor diferente de zero muda o saldo
     }
     add_to_balance(this, (valor as i64).wrapping_neg()); // cpz13: o salário sai do saldo
 }
@@ -63,6 +63,6 @@ unsafe extern "thiscall" fn pay_wages(this: usize, valor: i32) {
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_wages(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_wages(this, valor));
-    PLACAR.registrar(igual, || format!("pay_wages(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_wages(this, valor));
+    PLACAR.record(igual, || format!("pay_wages(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }

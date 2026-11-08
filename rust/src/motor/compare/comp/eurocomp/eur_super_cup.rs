@@ -9,21 +9,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_select_teams(this:
     compare_team_list("eur_super_cup_select_teams", this, || o(this), || select_european_super_cup_teams(this))
 }
 
-/// Comparer for `eur_super_cup_select_teams_410a50` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_select_teams_410a50(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_SELECT_TEAMS_410A50);
-    compare_team_list("eur_super_cup_select_teams_410a50", this, || o(this), || select_asian_super_cup_teams(this))
-}
 
-/// Comparer for `eur_super_cup_init_team_list` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_init_team_list(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_INIT_TEAM_LIST);
-    compare_team_list("eur_super_cup_init_team_list", this, || o(this), || init_c1_super_cup_list(this))
-}
 
 /// Comparer for `eur_super_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_EUR_SUPER_CUP_CREATE_ROUND_TABLE);
-    eng_cc_cup_compare_round_table("eur_super_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
+    compare_cup_round_table("eur_super_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
         |r, e, s| eur_super_cup_create_round_table(this, stage, r, e, s))
 }

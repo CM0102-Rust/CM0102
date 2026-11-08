@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn accept_transfer_bid(this: usize, vaga: usize, marcar
         let dw = (marcar & 0xffff_ff00) | e as u32;
         let mut motivo: u32 = 0;
         let r = interesse(cqd2_d(this + 0x856), alvo, comprador, 0, 0, dw, &mut motivo);
-        crate::comparacao::ramo("cqd_2 empréstimo");
+        crate::comparison::branch("cqd_2 empréstimo");
         if !(r >= 0.75) { // cqd2: o alvo não quer se mudar
             recusa_mudar(this, o, motivo);
             cqd2_pb(o + 0x2c, 0xf);
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn accept_transfer_bid(this: usize, vaga: usize, marcar
             // só lê o byte (mov cl, [esp+0x284])
             let salario = desejado(pc, pessoa, vendedor, u32::MAX, cargo as u32, 0xb, 0, 0);
             let t = teto(financas(cqd2_d(0xae2a38), vendedor), pessoa, cargo as u32);
-            crate::comparacao::ramo("cqd_2 troca cara");
+            crate::comparison::branch("cqd_2 troca cara");
             if (t as f64 * 1.5) < salario as f64 { // cqd2: o jogador da troca caro demais
                 let v = valor(cqd2_d(0xae1050), pessoa, comprador, 0, u32::MAX, 0).wrapping_add(cqd2_d(o + 0x1b) as i32);
                 noticia_troca(this, o, pessoa, v);
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn accept_transfer_bid(this: usize, vaga: usize, marcar
     if humanos != 0 {
         conversa(this, o);
     }
-    crate::comparacao::ramo("cqd_2 lance aceito");
+    crate::comparison::branch("cqd_2 lance aceito");
     agendar(this, o, 0, 1); // cqd2: a próxima fatia
     if cqd2_d(o + 4) == 0 || cqd2_humano(vendedor) {
         return;
@@ -451,7 +451,7 @@ unsafe extern "thiscall" fn transfer_manager_can_loan_player(this: usize, clube:
         return 0;
     }
     let mut motivo: u16 = 0;
-    crate::comparacao::ramo("cqd_2 clube chega");
+    crate::comparison::branch("cqd_2 clube chega");
     if chegar(this, jogador, clube, &mut motivo, 0) == 0 { // cqd2: o clube não chega ao jogador
         if msg == 0 {
             return 0;
@@ -579,9 +579,9 @@ unsafe extern "thiscall" fn comparar_transfer_manager_can_loan_player(this: usiz
         regioes[k] = (cqd2_d(gm + 0x86e).wrapping_add(cqd2_d(jogador).wrapping_mul(8)), 1);
         k += 1;
     }
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&regioes[..k], || o(this, clube, jogador, msg),
-        || crate::aleatorio::sem_contar(|| transfer_manager_can_loan_player(this, clube, jogador, msg)));
-    PLACAR.registrar(igual && r == n, || format!("transfer_manager_can_loan_player(clube {:#x}, jogador {:#x}): original {} rust {}, memória {}",
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&regioes[..k], || o(this, clube, jogador, msg),
+        || crate::rng::without_counting(|| transfer_manager_can_loan_player(this, clube, jogador, msg)));
+    PLACAR.record(igual && r == n, || format!("transfer_manager_can_loan_player(clube {:#x}, jogador {:#x}): original {} rust {}, memória {}",
         clube, jogador, r, n, if igual { "igual" } else { "diferente" }));
     r
 }

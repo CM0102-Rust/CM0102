@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn confirm_offer_by_club(this: usize, oferta: usize, cl
         if !antes { // cpw2: a data de conclusão ainda por vir
             break 'futura;
         }
-        crate::comparacao::ramo("cpw_2 transferencia futura");
+        crate::comparison::branch("cpw_2 transferencia futura");
         let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
         let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
         let desfazer: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c47d0usize);
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn confirm_offer_by_club(this: usize, oferta: usize, cl
         futura(this, oferta, &mut data);
         return;
     }
-    crate::comparacao::ramo("cpw_2 agendar conclusao");
+    crate::comparison::branch("cpw_2 agendar conclusao");
     schedule_offer_with_slices(this, oferta, 0, 1); // cpw2: a conclusão agendada para hoje
 }
 
@@ -128,8 +128,8 @@ unsafe extern "thiscall" fn comparar_confirm_offer_by_club(this: usize, oferta: 
         return o(this, oferta, clube);
     }
     let regioes = [(oferta, 0x31usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta, clube), || confirm_offer_by_club(this, oferta, clube));
-    PLACAR.registrar(igual, || format!("confirm_offer_by_club(oferta {:#x}, clube {:#x}) original={:x?} rust={:x?}", oferta, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, oferta, clube), || confirm_offer_by_club(this, oferta, clube));
+    PLACAR.record(igual, || format!("confirm_offer_by_club(oferta {:#x}, clube {:#x}) original={:x?} rust={:x?}", oferta, clube, mo, mr));
 }
 
 /// { 0x8c34e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::try_complete_offer(oferta, no_prazo)`, pela
@@ -181,13 +181,13 @@ unsafe extern "thiscall" fn try_complete_offer(this: usize, oferta: usize, no_pr
     if cpw2_b(oferta + 0x2f) != 0 && vendedor != 0 && cpw2_b(oferta + 0x30) & 0xf == 3 {
         let c = contract_of(cpw2_d(0xae1050), p);
         if c != 0 {
-            crate::comparacao::ramo("cpw_2 futura no fim do contrato");
+            crate::comparison::branch("cpw_2 futura no fim do contrato");
             let futura: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8cb9a0usize);
             return futura(this, oferta, c + 0x2d);
         }
     }
     let concluir: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c9390usize);
-    crate::comparacao::ramo("cpw_2 concluir agora");
+    crate::comparison::branch("cpw_2 concluir agora");
     concluir(this, oferta); // cpw2: a transferência se conclui
 }
 
@@ -208,12 +208,12 @@ unsafe fn settle_old_clauses(this: usize, pessoa: usize, tirar: usize, oferta: u
     let tirar_jogos: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb590usize);
     let tirar_selecao: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cb630usize);
     if marca(pessoa) & 8 != 0 {
-        crate::comparacao::ramo("cpw_2 write_percent_pair da venda anterior");
+        crate::comparison::branch("cpw_2 write_percent_pair da venda anterior");
         pagar_venda(this, pessoa, oferta);
         tirar_venda(this, tirar);
     }
     if marca(pessoa) & 2 != 0 {
-        crate::comparacao::ramo("cpw_2 premio por jogo anterior");
+        crate::comparison::branch("cpw_2 premio por jogo anterior");
         pagar_jogos(this, pessoa, -1, 2, oferta);
         tirar_jogos(this, pessoa);
     }
@@ -270,6 +270,6 @@ unsafe extern "thiscall" fn comparar_settle_previous_transfer_clauses(this: usiz
     if alguma {
         return o(this, oferta);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || settle_previous_transfer_clauses(this, oferta));
-    PLACAR.registrar(igual, || format!("settle_previous_transfer_clauses(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, oferta), || settle_previous_transfer_clauses(this, oferta));
+    PLACAR.record(igual, || format!("settle_previous_transfer_clauses(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
 }

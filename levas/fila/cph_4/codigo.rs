@@ -145,16 +145,16 @@ unsafe extern "thiscall" fn comparar_remove_transfer_interest(this: usize, pesso
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let n = (*((this + 0x14) as *const i32)).max(0) as usize;
     let reg = [(this + 0xc, 0xc), (cph4_d(this + 0xc) as usize, n * 25)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || remove_transfer_interest(this, pessoa));
-    PLACAR.registrar(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa), || remove_transfer_interest(this, pessoa));
+    PLACAR.record(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize, pessoa: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let n = (*((this + 0x64) as *const i32)).max(0) as usize;
     let reg = [(this + 0x5c, 0xc), (cph4_d(this + 0x5c) as usize, n * 17)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, clube), || remove_scout_request(this, pessoa, clube));
-    PLACAR.registrar(igual, || format!("remove_scout_request({:x}, {:x}) {:x?} x {:x?}", pessoa, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, clube), || remove_scout_request(this, pessoa, clube));
+    PLACAR.record(igual, || format!("remove_scout_request({:x}, {:x}) {:x?} x {:x?}", pessoa, clube, mo, mr));
 }
 
 /// Comparador: lado a lado pelos vetores de apelidos e contagens de todos os técnicos humanos; sem técnicos (o qsort
@@ -173,6 +173,6 @@ unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: usize, id: u
             reg.push((cph4_d(g + 0xa6e3) as usize, (cph4_d(g + 0xa6eb) as i32).max(0) as usize * 30));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id), || remove_nickname_from_all(this, id));
-    PLACAR.registrar(igual, || format!("remove_nickname_from_all({:x}) {:x?} x {:x?}", id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id), || remove_nickname_from_all(this, id));
+    PLACAR.record(igual, || format!("remove_nickname_from_all({:x}) {:x?} x {:x?}", id, mo, mr));
 }

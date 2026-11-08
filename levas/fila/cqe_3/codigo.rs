@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                             v = v.wrapping_mul(2);
                         }
                     } else if conta < 0x19 {
-                        crate::comparacao::ramo("cqe_3 dobro pela liga");
+                        crate::comparison::branch("cqe_3 dobro pela liga");
                         v = v.wrapping_mul(2); // cqe3: o dobro pela liga ativa
                     }
                 }
@@ -253,7 +253,7 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
                     }
                 }
             }
-            crate::comparacao::ramo("cqe_3 sorteio do lance");
+            crate::comparison::branch("cqe_3 sorteio do lance");
             let r1 = sorteio((cqe3_w(clube + 0x80) as i32).wrapping_mul(2).wrapping_add(1000)); // cqe3: o sorteio do lance
             let r2 = sorteio(v);
             if r2 <= r1 {
@@ -328,7 +328,7 @@ unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
             if tem_oferta(gm, p, clube) != 0 || trocas(gm, p, 0) != 0 {
                 continue;
             }
-            crate::comparacao::ramo("cqe_3 sorteio do empréstimo");
+            crate::comparison::branch("cqe_3 sorteio do empréstimo");
             let r1 = sorteio(cqe3_w(clube + 0x80) as i32 / 10); // cqe3: o sorteio do empréstimo
             let r2 = sorteio(cqe3_d(vaga(0xb)) as i32);
             if r2 <= r1 {

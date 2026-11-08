@@ -76,7 +76,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             let c = base + i as u16 as usize * club::SIZE;
             let before = read_u32_as_usize(c + 0x5b);
             if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && before != 0 && read_u32_as_usize(before) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
-                crate::comparacao::ramo("cqs_5 rebaixado para a conference");
+                crate::comparison::branch("cqs_5 rebaixado para a conference");
                 push_section_club(this, &mut k, c); // cqs5: o rebaixado entra
                 found = c;
                 break;
@@ -176,7 +176,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     if k != read_u32_as_usize(this + 0xb6) as i32 {
         return 0;
     }
-    crate::comparacao::ramo("cqs_5 chaves do trofeu da liga");
+    crate::comparison::branch("cqs_5 chaves do trofeu da liga");
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     sort(read_u32_as_usize(this + 0xb2), read_u32_as_usize(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
     let half = (read_u32_as_usize(this + 0xb6) as i32) / 2;
@@ -203,8 +203,17 @@ pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 
 }
 
 
-/// rule: the Trophy section stage is a knockout (Cup_Stage) with the 56 in list order (North, then South), with the
-/// rounds of stage 0 of the cup table, no seeding
+/// Creates the Trophy section stage: a knockout (Cup_Stage) with the 56 clubs in list order (North, then South), using
+/// the rounds of stage 0 of the cup table, no seeding.
+///
+/// `EngAutoCup::create_section_stage()`; SEH frame only for the new, no destructor. The section stage (North and South)
+/// with the +0x3e clubs of list +0xb2, in order: a vector (0x944e46 of 4 × +0x3e; out of memory, the box for line
+/// 0x2e9) holding them; the rounds through method +0x3c (push 0; push &extra; push &rounds; push 0; mov ecx ->
+/// thiscall, ret 0x10); the stage (0x944cf1(0xb2); Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the cup, +0x3e
+/// (word), the vector, the rounds (word), +4, the table, the year +0x40 (word), 0, 1, the extra (word), +0x51 (byte),
+/// 0, 0, 0, no seeds; the words and bytes are pushed with garbage in the upper bits, which the constructor does not
+/// read) into [+0xc][0]; the vector and the table are freed (0x9452ca). Without a stage, the box for line 0x300; with
+/// it, +0x30 = 0.
 /// Original: `EngAutoCup::create_section_stage` (0x56bab0, eng_auto_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x56bab0 } (thiscall, ret 0, eng_auto_cup.cpp; quadro SEH só para o new, sem destrutor): `EngAutoCup::
@@ -246,13 +255,17 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     if read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) == 0 {
         return show_error_at(0x9c4180, 0x300);
     }
-    crate::comparacao::ramo("cqs_5 fase das chaves do trofeu");
+    crate::comparison::branch("cqs_5 fase das chaves do trofeu");
     write_u32_from_usize(this + cup::CURRENT_STAGE, 0);
 }
 
 
-/// rule: the Trophy stage moves on by one; when the sections end (stage 1), it builds the final between the North and
-/// South winners; at the last stage, the error box
+/// Moves the Trophy on by one stage; when the sections end (stage 1) it builds the final between the North and South
+/// winners; at the last stage, the error box.
+///
+/// `EngAutoCup::advance_stage()`, virtual +0x28. At the last stage (+0x30 ≥ +0x2c − 1, signed), the box for line 0x314
+/// and nothing else; otherwise +0x30 goes up by one and, on reaching 1 (the end of the sections), it builds the final
+/// (EngAutoCup::create_final_stage 0x56bce0, direct call with the cup's ecx -> thiscall, ret 0).
 /// Original: `EngAutoCup::advance_stage` (0x56bc50, eng_auto_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
@@ -266,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     let stage = stage + 1;
     write_u32_from_usize(this + cup::CURRENT_STAGE, stage as usize);
     if stage == 1 {
-        crate::comparacao::ramo("cqs_5 final do trofeu");
+        crate::comparison::branch("cqs_5 final do trofeu");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ENGAUTOCUP_CREATE_FINAL_STAGE);
         f(this);
     }
@@ -284,9 +297,18 @@ pub(crate) unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Optio
     (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| read_u32_as_usize(l + i * 6))
 }
 
-/// rule: when the sections end, the Trophy final is a single tie (2-team Cup_Stage, stage 1) between the one still
-/// alive in the cup list (status 1) and the one still alive in the section stage; the round is drawn at once (home
-/// side)
+/// Builds the Trophy final when the sections end: a single tie (2-team Cup_Stage, stage 1) between the club still alive
+/// in the cup list and the one still alive in the section stage, and draws the round at once (home side).
+///
+/// `EngAutoCup::create_final_stage()`; from the next stage, SEH frame only for the new, no destructor. The Trophy
+/// final: a vector of 2 (0x944e46 of 8; out of memory, the box for line 0x337) with the first club of status 1 (the one
+/// still alive [inference]) in the cup list (+0xa7) and the first of status 1 in the section stage list ([+0xc][0]
+/// +0xa7), both among the first +0x3e (of the cup); the rounds through method +0x3c (push 0; push &extra; push &rounds;
+/// push 1; mov ecx -> thiscall, ret 0x10); the stage (0x944cf1(0xb2); Cup_Stage::Cup_Stage 0x522e00, thiscall, ret
+/// 0x3c: the cup, 2, the vector, the rounds (word), +4, the table, the year +0x40 (word), 1, 1, the extra (word), 0x14,
+/// 0, 0, 0, no seeds) into [+0xc][1]; the round table is freed (0x9452ca). Without a stage, the box for line 0x35a (the
+/// vector is left allocated, as in the original). With it, the round draw (Cup::draw_round 0x51c410: push 0; mov ecx,
+/// stage -> thiscall, ret 4) and the vector is freed.
 /// Original: `EngAutoCup::create_final_stage` (0x56bce0, eng_auto_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x56bce0 } (thiscall, ret 0, eng_auto_cup.cpp; da fase seguinte, quadro SEH só para o new, sem destrutor):
@@ -331,16 +353,27 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     if f == 0 {
         return show_error_at(0x9c4180, 0x35a);
     }
-    crate::comparacao::ramo("cqs_6 final do trofeu");
+    crate::comparison::branch("cqs_6 final do trofeu");
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     sortear(f, 0); // cqs6: o sorteio da final
     soltar(l);
 }
 
 
-/// rule: the Trophy final ranking in the statistics: the highest-reputation club of each half takes 1st and 2nd (the
-/// one with the higher reputation is 1st); the others, round by round from the last to the first, share one position
-/// per round (3, then 3 + 2 × those already placed...)
+/// Writes the Trophy final ranking into the cup statistics: the highest-reputation club of each half takes 1st and 2nd;
+/// the others share one position per round, from the last round to the first.
+///
+/// `EngAutoCup::rank_teams()`, the virtual for the final ranking (n = 1 up to 2002-06-01). The final position of each
+/// club in the cup statistics (+8, Comp_Stats; without them, the box for line 0x3bb). A vector of 2 × +0x3e pointers
+/// (0x944e46; out of memory, the box for line 0x3c3): in the first half the clubs of the cup list (+0xa7, 6-byte
+/// entries), in the second those of the section stage ([+0xc][0] +0xa7); each half sorted by reputation (+0x80, word),
+/// highest first (qsort 0x945333 with 0x4b07d0). The first two (the highest-reputation club of each half): the one with
+/// the higher reputation (signed, strictly) is 1st and the other 2nd (Comp_Stats::set_club_final_position 0x4a2540:
+/// push position; push club; mov ecx, +8 -> thiscall, ret 8). Then, for each half, from the last round (+0x3c − 1) to
+/// the first, as many clubs (the next ones of the half, from the 2nd on) as the round has in +0x1a of the round table
+/// (+0xa3, 0x68 bytes per round), with positions 3, 5, 7... (3, then 3 + 2 × those already placed). The original pushes
+/// the dword of the position byte with stack garbage in the upper bits; 0x4a2540 only reads the byte. The vector is
+/// freed.
 /// Original: `EngAutoCup::rank_teams` (0x56c010, eng_auto_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x56c010 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual da classificação final, n = 1 até 2002-06-01): `EngAutoCup::
@@ -378,7 +411,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let a = read_u32_as_usize(v);
     let b = read_u32_as_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4);
-    crate::comparacao::ramo("cqs_6 classificacao do trofeu");
+    crate::comparison::branch("cqs_6 classificacao do trofeu");
     if read_i16(a + 0x80) > read_i16(b + 0x80) {
         position(read_u32_as_usize(this + 8), a, 1);
         position(read_u32_as_usize(this + 8), read_u32_as_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4), 2);

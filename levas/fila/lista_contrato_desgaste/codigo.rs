@@ -79,10 +79,10 @@ comparar_valor!(comparar_contract_record, contract_record, %%I1%%, (p: *const i3
 
 unsafe extern "thiscall" fn comparar_daily_wear(t: usize, id: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if id < *(0xae2364 as *const i32) {
         reg.push(((*(t as *const usize)).wrapping_add((id as usize).wrapping_mul(31)).wrapping_add(0xc), 2));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, id), || crate::aleatorio::sem_contar(|| daily_wear(t, id)));
-    PLACAR.registrar(igual, || format!("daily_wear({:#x}, {}) {:x?} x {:x?}", t, id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, id), || crate::rng::without_counting(|| daily_wear(t, id)));
+    PLACAR.record(igual, || format!("daily_wear({:#x}, {}) {:x?} x {:x?}", t, id, mo, mr));
 }

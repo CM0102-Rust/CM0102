@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube:
 /// As estáticas das datas (DATE_OP_STATICS) e o contrato guardado em [0xae1080]: o que a original e as chamadas dela
 /// gravam, com o estado do sorteador (na pilha: a rotina é quente).
 fn player_value_regions() -> [(usize, usize); 11] {
-    let (e, c) = (crate::aleatorio::REGIOES_DO_ESTADO, DATE_OP_STATICS);
+    let (e, c) = (crate::rng::STATE_REGIONS, DATE_OP_STATICS);
     [e[0], e[1], (0xae1080, 4), c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]]
 }
 
@@ -296,9 +296,9 @@ fn player_value_regions() -> [(usize, usize); 11] {
 unsafe extern "thiscall" fn comparar_calc_player_value(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, x: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32>(%%I0%%);
     let regioes = player_value_regions();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, pessoa, clube, modo, habilidade, x),
-        || crate::aleatorio::sem_contar(|| calc_player_value(this, pessoa, clube, modo, habilidade, x)));
-    PLACAR.registrar(igual && r == n, || format!("calc_player_value(pessoa {:x}, clube {:x}, modo {}, hab {}) original={} rust={} {:x?} x {:x?}", pessoa, clube, modo as u8, habilidade as i16, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, pessoa, clube, modo, habilidade, x),
+        || crate::rng::without_counting(|| calc_player_value(this, pessoa, clube, modo, habilidade, x)));
+    PLACAR.record(igual && r == n, || format!("calc_player_value(pessoa {:x}, clube {:x}, modo {}, hab {}) original={} rust={} {:x?} x {:x?}", pessoa, clube, modo as u8, habilidade as i16, r, n, mo, mr));
     r
 }
 
@@ -343,7 +343,7 @@ unsafe extern "stdcall" fn comparar_contract_manager_write_morale_comparison_tex
     let tn = cqa9_texto(saida);
     core::ptr::copy_nonoverlapping(tr.as_ptr(), saida as *mut u8, tr.len());
     *((saida + tr.len()) as *mut u8) = 0;
-    PLACAR.registrar(r == n && tr == tn, || format!("contract_manager_write_morale_comparison_text original={} {:?} rust={} {:?}", r as i8, String::from_utf8_lossy(&tr), n as i8, String::from_utf8_lossy(&tn)));
+    PLACAR.record(r == n && tr == tn, || format!("contract_manager_write_morale_comparison_text original={} {:?} rust={} {:?}", r as i8, String::from_utf8_lossy(&tr), n as i8, String::from_utf8_lossy(&tn)));
     r
 }
 
@@ -394,6 +394,6 @@ unsafe extern "thiscall" fn comparar_get_squad_flags_for_club(this: usize, pesso
     }
     let r = o(this, pessoa, clube);
     let n = get_squad_flags_for_club(this, pessoa, clube);
-    PLACAR.registrar(r == n, || format!("get_squad_flags_for_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+    PLACAR.record(r == n, || format!("get_squad_flags_for_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }

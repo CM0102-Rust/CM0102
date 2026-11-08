@@ -295,8 +295,18 @@ pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
     (0x9e1fa0, 0x9e1f1c), // UK & Irish / UK & Ireland
 ];
 
-/// the region name (1..14): from the language 4, 5 and 9 tables with the adjective form, else the translated adjective
-/// or noun by form
+/// Writes the region name (1..14): from the language 4, 5 and 9 tables with the adjective form, otherwise the
+/// translated adjective or noun by form.
+///
+/// `get_region_name(region, text, size, form)`: clears the text and writes the name of the region (1..14, signed byte).
+/// Form (byte) other than 0xff with language (0x66f4d0) 4, 5 or 9: the text from the language's table, read by address
+/// (`[0x9d0518 + 4 × (4 × region + f)]`, `[0x9d06d4 + 4 × (5 × region + f)]`, `[0x9d05f8 + 4 × (4 × region + f)]`, with
+/// f the adjective form from 0x545a60, already in Rust, called through the game's address), copied. Otherwise, through
+/// 0x66f4e0: in languages 2, 4, 5 and 9 the adjective with form 0xff and the noun with the others; in the rest the
+/// opposite; the Caribbean: "Caribbean" in languages 2, 4, 5 and 9, otherwise the region texts (form 0xff) or
+/// regionality texts, with the empty string 0xad9c64. Returns 1. Null text, region out of range or size (signed short)
+/// < 100: the original (error box). Used in the region order (0x545dc0, in Rust), in the player search (player_search,
+/// search_screens) and in screens without a module (0x7db360, 0x7e13d0, 0x7e29e0).
 /// Original: `get_region_name` (0x616f20, index.cpp, cdecl).
 ///
 /// [pt] { 0x616f20 } (cdecl, index.cpp): `get_region_name(regiao, texto, tamanho, forma)`: zera o texto e escreve o nome da
@@ -382,8 +392,15 @@ pub(crate) const CONTINENT_NAMES_LANGUAGE_4: [[usize; 5]; 6] = [
     [0x9d0e10, 0x9d0e00, 0x9d0df0, 0x9d0de0, 0x9d0de0],
 ];
 
-/// the continent adjective: the record one (+0x23) or, in languages 9, 5 and 4, the text by continent and adjective
-/// form
+/// Writes the continent adjective: the record's own (+0x23) or, in languages 9, 5 and 4, the text by continent and
+/// adjective form.
+///
+/// The community map gives 629 bytes; the routine runs to 0x6181c5: 2518. `get_continent_adjective(continent, text,
+/// size, form)`: clears the text and copies the continent's adjective. Form (byte) 0 or language (0x66f4d0) other than
+/// 9, 5 and 4: the record's own adjective (+0x23). Otherwise the language's text by continent (id +0 compared with the
+/// keys `[0x9cfa08..0x9cfa18]`, in that order) and by the adjective form (0x545a60, already in Rust, through the game's
+/// address). Returns 1. Null continent or text, or size (signed short) < 50: the original (0). Used in the search
+/// (find_screens), the Menubar, the day's matches (0x717cc0, in Rust) and 0x7dd400.
 /// Original: `get_continent_adjective` (0x6177f0, index.cpp, cdecl).
 ///
 /// [pt] { 0x6177f0 } (cdecl, index.cpp; o mapa dá 629 bytes, a rotina vai até 0x6181c5: 2518): `get_continent_adjective(
@@ -1356,8 +1373,12 @@ pub(crate) static CLUB_KEYS_SWAP_ORDER: &[u32] = &[
     0x9d0524, // stuttgarter kickers ii
 ];
 
-/// matches the database club name with the 313 fixed club keys (372 names in 4 chains, _stricmp): the first hit of each
-/// chain stores the row in the key global
+/// Matches the database club name with the 313 fixed club keys (372 names in 4 chains, _stricmp): the first hit of each
+/// chain stores the row in the key's global.
+///
+/// Matches the database's club name with the game's fixed keys (CLUB_KEYS): in each chain, the first text equal to the
+/// name (_stricmp 0x951c50, case-insensitive) stores the `row` in the key's global and the chain ends; with no hit, it
+/// moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if the last chain hit).
 /// Original: `match_club_key_id` (0x6146b0, index.cpp, cdecl).
 ///
 /// [pt] { 0x6146b0 } (cdecl, index.cpp, match_club_key_id): casa o nome de clube da base com as chaves fixas
@@ -1380,7 +1401,10 @@ pub(crate) unsafe extern "C" fn match_club_key_id(name: usize, row: u32) -> u32 
     r as u32 // the eax of the last _stricmp (club key)
 }
 
-/// after the club table trim, the first club key holding the old id gets the new one (returns 1; none: 0)
+/// After the club table trim, the first club key holding the old id gets the new one (returns 1; none: 0).
+///
+/// After the club table is trimmed to the database size (0x5267c0), the first club key (in CLUB_KEYS_SWAP_ORDER order)
+/// that holds the id `old` is set to `new` and the routine returns 1; none: 0.
 /// Original: `remap_club_key_id` (0x60ba80, index.cpp, cdecl).
 ///
 /// [pt] { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
@@ -1396,7 +1420,11 @@ pub(crate) unsafe extern "C" fn remap_club_key_id(old: u32, new: u32) -> u32 {
     0
 }
 
-/// matches the database nation name with the 209 fixed nation keys (217 names in 2 chains, _stricmp)
+/// Matches the database nation name with the 209 fixed nation keys (217 names in 2 chains, _stricmp).
+///
+/// Matches the database's nation name with the game's fixed keys (NATION_KEYS): in each chain, the first text equal to
+/// the name (_stricmp 0x951c50, case-insensitive) stores the `row` in the key's global and the chain ends; with no hit,
+/// it moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if the last chain hit).
 /// Original: `match_nation_key_id` (0x60d810, index.cpp, cdecl).
 ///
 /// [pt] { 0x60d810 } (cdecl, index.cpp, match_nation_key_id): casa o nome de nação da base com as chaves fixas
@@ -1422,7 +1450,7 @@ pub(crate) unsafe extern "C" fn match_nation_key_id(name: usize, row: u32) -> u3
 /// Text listing the dword globals that differ between original and copy snapshots.
 ///
 /// [pt] As globais (dword) que ficaram diferentes entre a original e a cópia: "[end] original x rust".
-pub(crate) fn describe_key_diffs(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> String {
+pub(crate) fn describe_key_diffs(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
     let mut s = String::new();
     for ((a, x), (_, y)) in mo.0.iter().zip(mr.0.iter()) {
         for i in (0..x.len()).step_by(4) {
@@ -2265,8 +2293,13 @@ pub(crate) static PERSON_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     ],
 ];
 
-/// matches the club competition long name with the 301 fixed keys (351 names in 3 chains, _stricmp; the two Croatian
-/// divisions also store 0x9cf8a4)
+/// Matches the club competition long name with the 301 fixed keys (351 names in 3 chains, _stricmp; the two Croatian
+/// divisions also store 0x9cf8a4).
+///
+/// Matches the database's club competition name with the game's fixed keys (CLUB_COMPETITION_KEYS): in each chain, the
+/// first text equal to the name (_stricmp 0x951c50, case-insensitive) stores the `row` in the key's global and the
+/// chain ends; with no hit, it moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if
+/// the last chain hit).
 /// Original: `match_club_comp_key_id` (0x60efd0, index.cpp, cdecl).
 ///
 /// [pt] { 0x60efd0 } (cdecl, index.cpp, match_club_comp_key_id): casa o nome de competição de clube da base com as chaves fixas
@@ -2300,7 +2333,12 @@ pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) ->
     r as u32 // the eax of the last _stricmp (club competition key)
 }
 
-/// matches the staff competition or award name with the 417 fixed keys (442 names in 5 chains, _stricmp)
+/// Matches the staff competition or award name with the 417 fixed keys (442 names in 5 chains, _stricmp).
+///
+/// Matches the database's person competition or award name with the game's fixed keys (PERSON_COMPETITION_KEYS): in
+/// each chain, the first text equal to the name (_stricmp 0x951c50, case-insensitive) stores the `row` in the key's
+/// global and the chain ends; with no hit, it moves on to the next. Returns the original's eax: the result of the last
+/// _stricmp (0 if the last chain hit).
 /// Original: `match_staff_comp_key_id` (0x6115e0, index.cpp, cdecl).
 ///
 /// [pt] { 0x6115e0 } (cdecl, index.cpp, match_staff_comp_key_id): casa o nome de competição ou prêmio de pessoa da base com as chaves fixas
@@ -2330,9 +2368,9 @@ pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao:
     }
     // the produced text (up to the given size, 1 to 128 bytes; below 50 only the leading zero)
     let n = ((size as u16 as i16).max(1) as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, n)], || o(nacao, text, size, gender),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(nacao, text, size, gender),
         || nation_get_nationality_adjective(nacao, text, size, gender));
-    PLACAR.registrar(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
         nacao, size as u16 as i16, gender as u8, r, x, mo, mr));
     r
 }
@@ -2340,22 +2378,22 @@ pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao:
 /// Comparer for `set_key_ids` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_globals();
         set_fixed_key_ids(u32::MAX, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
+    PLACAR.record(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }
 
 /// Comparer for `set_key_ids_1080` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS_1080);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_ranges_1080();
         set_fixed_key_ids(MARCA_DAS_CHAVES_1080, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
+    PLACAR.record(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }
 
@@ -2367,9 +2405,9 @@ pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, text: usiz
         return o(regiao, text, size, form); // message box: original only
     }
     // the first 100 bytes (the minimum size accepted)
-    let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 100)], || o(regiao, text, size, form),
+    let (x, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 100)], || o(regiao, text, size, form),
         || get_region_name(regiao, text, size, form));
-    PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, form as u8, x, n, mo, mr));
+    PLACAR.record(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, form as u8, x, n, mo, mr));
     x
 }
 
@@ -2380,9 +2418,9 @@ pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continent: usiz
         return o(continent, text, size, form);
     }
     // the first 50 bytes (the minimum accepted size)
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(text, 50)], || o(continent, text, size, form),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 50)], || o(continent, text, size, form),
         || get_continent_adjective(continent, text, size, form));
-    PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continent, form as u8, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continent, form as u8, r, n, mo, mr));
     r
 }
 
@@ -2390,8 +2428,8 @@ pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continent: usiz
 pub(crate) unsafe extern "C" fn comparar_match_club_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(name, row), || match_club_key_id(name, row));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_club_key_id(name, row));
+    PLACAR.record(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
         format!("match_club_key_id(\"{}\", {}) original={} rust={} {}", t, row, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });
@@ -2402,8 +2440,8 @@ pub(crate) unsafe extern "C" fn comparar_match_club_key_id(name: usize, row: u32
 pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(old: u32, new: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(old, new), || remap_club_key_id(old, new));
-    PLACAR.registrar(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", old as i32, new as i32, r, n, describe_key_diffs(&mo, &mr)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(old, new), || remap_club_key_id(old, new));
+    PLACAR.record(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", old as i32, new as i32, r, n, describe_key_diffs(&mo, &mr)));
     r
 }
 
@@ -2411,8 +2449,8 @@ pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(old: u32, new: u32) -
 pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_NATION_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(name, row), || match_nation_key_id(name, row));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_nation_key_id(name, row));
+    PLACAR.record(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
         format!("match_nation_key_id(\"{}\", {}) original={} rust={} {}", t, row, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });
@@ -2423,8 +2461,8 @@ pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(name: usize, row: u
 pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0x4c0)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(name, row), || match_club_comp_key_id(name, row));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_club_comp_key_id(name, row));
+    PLACAR.record(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
         format!("match_club_comp_key_id(\"{}\", {}) original={} rust={} {}", t, row, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });
@@ -2435,8 +2473,8 @@ pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(name: usize, row
 pub(crate) unsafe extern "C" fn comparar_match_staff_comp_key_id(name: usize, row: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_STAFF_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_STAFF_COMP_FIFA_WORLD_PLAYER_OF_THE_YEAR, 0x684)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(name, row), || match_staff_comp_key_id(name, row));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(name, row), || match_staff_comp_key_id(name, row));
+    PLACAR.record(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(name as *const std::os::raw::c_char).to_string_lossy();
         format!("match_staff_comp_key_id(\"{}\", {}) original={} rust={} {}", t, row, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });

@@ -44,14 +44,14 @@ unsafe extern "thiscall" fn remove_or_restore_training_progress(this: usize, p: 
     let mut d = [0i8; 8];
     let g = |a: usize| *(a as *const i8);
     if devolver != 0 {
-        crate::comparacao::ramo("cqd_9 devolver");
+        crate::comparison::branch("cqd_9 devolver");
         d[0] = g(0xde1f3f); // cqd9: devolve a categoria 0
         d[1] = g(0xde1f40);
         d[2] = g(0xde1f3d);
         d[3] = g(0xde1f3c);
         d[4] = g(0xde1f3e); // cqd9: devolve a categoria 4
     } else {
-        crate::comparacao::ramo("cqd_9 tirar");
+        crate::comparison::branch("cqd_9 tirar");
         *(0xde1f3f as *mut i8) = training_nibble(e, 0);
         *(0xde1f40 as *mut i8) = training_nibble(e, 1); // cqd9: guarda a categoria 1
         *(0xde1f3d as *mut i8) = training_nibble(e, 2);
@@ -73,8 +73,8 @@ unsafe extern "thiscall" fn comparar_remove_or_restore_training_progress(this: u
     }
     let f = cqd9_d(p + 0x61);
     let reg = [(f + 0xf, 0x33), (player_training_entry(this, p), 6), (0xde1f3c, 5)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, p, devolver), || remove_or_restore_training_progress(this, p, devolver));
-    PLACAR.registrar(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p, devolver), || remove_or_restore_training_progress(this, p, devolver));
+    PLACAR.record(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
 }
 
 /// { 0x8b37c0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_training_attribute_change(pessoa,
@@ -111,8 +111,8 @@ unsafe extern "thiscall" fn comparar_get_training_attribute_change(this: usize, 
     }
     let f = cqd9_d(p + 0x61);
     let reg = [(f + 0xf, 0x33), (player_training_entry(this, p), 6)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, p, atributo), || get_training_attribute_change(this, p, atributo));
-    PLACAR.registrar(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p, atributo as u8 as i8, r as i8, n as i8, mo.0, mr.0));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p, atributo), || get_training_attribute_change(this, p, atributo));
+    PLACAR.record(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p, atributo as u8 as i8, r as i8, n as i8, mo.0, mr.0));
     r
 }
 
@@ -179,6 +179,6 @@ unsafe extern "thiscall" fn comparar_get_position_aptitude(this: usize, p: usize
     }
     let r = o(this, p, mascara);
     let n = get_position_aptitude(this, p, mascara);
-    PLACAR.registrar(r == n, || format!("get_position_aptitude(pessoa {:x}, mascara {:x}) original={:x} rust={:x}", p, mascara as u16, r, n));
+    PLACAR.record(r == n, || format!("get_position_aptitude(pessoa {:x}, mascara {:x}) original={:x} rust={:x}", p, mascara as u16, r, n));
     r
 }

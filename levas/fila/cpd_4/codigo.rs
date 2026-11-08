@@ -49,7 +49,7 @@ unsafe fn add_to_reserves(this: usize, p: usize, rec: usize, sub: u32) {
             core::ptr::write_unaligned((c + 0xf) as *mut i16, nota); // a menor nota
         }
     } else if nota > cpd4_w(c + 0xf) {
-        crate::comparacao::ramo("reservas cheias entra pela nota");
+        crate::comparison::branch("reservas cheias entra pela nota");
         let ini = reserve_level_start(rec, o, nivel);
         let ultimo = (cpd4_b(c + 0xe) as i32).wrapping_add(ini).wrapping_sub(2);
         let mut pos = ini;
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn build_selection_pools(this: usize) {
                     if n2 == 0 || cpd4_b(p + 0x22) != 0 || n2 == cpd4_d(p + 0x1a) || *(n2 as *const i32) == *(0x9cf434 as *const i32) {
                         continue;
                     }
-                    crate::comparacao::ramo("reservas segunda nacionalidade");
+                    crate::comparison::branch("reservas segunda nacionalidade");
                     *(n2 as *const i32)
                 };
                 let rec = cpd4_d(this + 4).wrapping_add(id.wrapping_mul(0x6e) as usize);
@@ -147,8 +147,8 @@ unsafe extern "thiscall" fn comparar_build_selection_pools(this: usize) {
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || build_selection_pools(this));
-    PLACAR.registrar(igual, || format!("build_selection_pools({:x}) {:x?} x {:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || build_selection_pools(this));
+    PLACAR.record(igual, || format!("build_selection_pools({:x}) {:x?} x {:x?}", this, mo, mr));
 }
 
 /// { 0x778ed0 } (cdecl, national_teams.cpp): a ordem das reservas para o qsort da 0x76abf0: pela nota (+9 da ficha
@@ -160,7 +160,7 @@ unsafe extern "C" fn compare_by_rating(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_compare_by_rating(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_by_rating(a, b);
-    PLACAR.registrar(r == n, || format!("compare_by_rating({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_by_rating({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -193,6 +193,6 @@ unsafe extern "C" fn compare_by_club(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_compare_by_club(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_by_club(a, b);
-    PLACAR.registrar(r == n, || format!("compare_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

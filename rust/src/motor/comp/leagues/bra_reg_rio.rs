@@ -46,7 +46,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, r
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     *((this + 0x51) as *mut u8) = 0xf;
     *((this + 0x44) as *mut u8) = 0xff;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
@@ -95,7 +95,7 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_ctor(name: &str, this: usi
     if *((this + 0x44) as *const u8) == 0xff && read_usize(this + 8) != 0 {
         ok = ok && read_usize(this + 0x2c) == e.fases as usize && read_usize(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
     r
 }
 
@@ -139,25 +139,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_rio(this: usize, year: 
     bra_reg_rio_construct_state_league(this, year, record, &CARIOCA_CHAMPIONSHIP, 7, true, "cqt_4 carioca novo") // cqt4: a disciplina e as posições previstas do Carioca
 }
 
-/// The Santa Catarina state league at career creation: the year and the database competition, disciplinary rule 7 and,
-/// with no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the
-/// table with the state clubs, the fixtures, the order, the statistics and the predicted positions
-/// Original: `BraRegSanta::BraRegSanta` (0x43b130, bra_reg_santa.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x43b130 } (thiscall, ret 8, bra_reg_santa.cpp): `BraRegSanta::BraRegSanta(ano, registro)`: o Catarinense (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn construct_bra_reg_santa(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_rio_construct_state_league(this, year, record, &CATARINENSE_STATE_CHAMPIONSHIP, 7, true, "cqt_4 catarinense novo") // cqt4: a disciplina e as posições previstas do Catarinense
-}
 
-/// The Sao Paulo state league at career creation: the year and the database competition, disciplinary rule 7 and, with
-/// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
-/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
-/// Original: `BraRegSp::BraRegSp` (0x43c280, bra_reg_sp.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x43c280 } (thiscall, ret 8, bra_reg_sp.cpp): `BraRegSp::BraRegSp(ano, registro)`: o Paulista (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn construct_bra_reg_sp(this: usize, year: u32, record: usize) -> usize {
-    bra_reg_rio_construct_state_league(this, year, record, &PAULISTA_STATE_LEAGUE, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
-}
 
 
 
@@ -180,20 +162,20 @@ pub(crate) unsafe fn league_comp_reputation(league: usize) -> i32 {
 pub(crate) unsafe fn raise_attendance_floor(c: usize, r: i32, f: f64) {
     let lim = if r < 5 {
         let lim = match_pl_ftol((r.wrapping_mul(250)) as f64 * f);
-        if read_i32(c + 0x73) >= lim {
+        if read_i32(c + club::ATTENDANCE) >= lim {
             return;
         }
         lim
     } else {
         let x = (r.wrapping_sub(4).wrapping_mul(750)) as f64 * f;
-        if read_i32(c + 0x73) >= match_pl_ftol(x).wrapping_add(1000) {
+        if read_i32(c + club::ATTENDANCE) >= match_pl_ftol(x).wrapping_add(1000) {
             return;
         }
         match_pl_ftol(x + 1000.0)
     };
-    write_i32(c + 0x73, lim);
-    if lim > read_i32(c + 0x7b) {
-        write_i32(c + 0x7b, lim);
+    write_i32(c + club::ATTENDANCE, lim);
+    if lim > read_i32(c + club::MAX_ATTENDANCE) {
+        write_i32(c + club::MAX_ATTENDANCE, lim);
     }
 }
 
@@ -201,22 +183,50 @@ pub(crate) unsafe fn raise_attendance_floor(c: usize, r: i32, f: f64) {
 ///
 /// [pt] O teto `lim` do público: acima dele, o público cai a ele e o mínimo (+0x77) desce até ele.
 pub(crate) unsafe fn cap_attendance(c: usize, lim: i32) {
-    if read_i32(c + 0x73) > lim {
-        write_i32(c + 0x73, lim);
-        if lim < read_i32(c + 0x77) {
-            write_i32(c + 0x77, lim);
+    if read_i32(c + club::ATTENDANCE) > lim {
+        write_i32(c + club::ATTENDANCE, lim);
+        if lim < read_i32(c + club::MIN_ATTENDANCE) {
+            write_i32(c + club::MIN_ATTENDANCE, lim);
         }
     }
 }
 
-/// The clubs average attendance at the end of each league season: it moves with the final position against the
-/// predicted one and with the competition reputation, with a weight by nation (0.1, 0.25 or 0.5 in some, 1 in the
-/// others): the champion and runner-up without promotion gain (reputation + places above the prediction) × 200/100 or
-/// 125/65 (stadium owner or not); promoted clubs gain by club reputation and the reputation gap to the league above,
-/// with that league floor; relegated clubs lose by the gap to the league below, with its ceiling; promotion play-off
-/// and mid-table clubs gain or lose by a draw, mixed with the season real attendance (1/5 of the average home crowd +
-/// 4/5 of the average) and reputation floors and ceilings (2000, 3000 or 5000 times); at the end, at least 500 and
-/// between the club minimum and record
+/// `atualizar_media_de_publico(league)` (cdecl, game.cpp, unnamed in the map): updates the clubs' average attendance at
+/// the end of each league season. Called by the seasons loop (0x5d5ae0, at 0x5d5cfb: push league; call; add esp, 4), at
+/// the end of the season of each league of the nation (the top one and those below, through +0x20).
+///
+/// The club's average attendance (+0x73, Attendance) moves with the season result, between the minimum (+0x77) and the
+/// record (+0x7b). The weight `f` comes from the competition's nation (the first dword of [+4]+0x5d): 0.1 in
+/// [0x9cf510], [0x9cf2dc], [0x9cf3e4], [0x9cf224]; 0.25 in [0x9cf2c0], [0x9cf2fc], [0x9cf408], [0x9cf4a8], [0x9cf4f8];
+/// 0.5 in [0x9cf45c]; 1 in the others. `r` = the competition's reputation (+0x69 of the record, word). The final table
+/// comes from the statistics (Comp_Stats::get_sorted_team_table 0x4a4b20, thiscall(+8, 1, &n, 1000), ret 0xc: 0x76-byte
+/// records, +0 the club id, +0x72 the predicted position, +0x73 the final one, +5 the home games [inference], +6 the
+/// summed attendance [inference]).
+///
+/// For each club (the branches in the original's order, with the same calls to virtuals +0x98 "has promotion" and +0x9c
+/// "has relegation"; d = predicted − final + 1, word):
+///
+/// - champion without promotion: + (r + max(d, 0)) × 200 × f (stadium owner, +0x6d) or × 100 × f;
+///
+/// - 2nd (or position 0) without promotion: + (r + max(d, 0)) × 125 × f or × 65 × f;
+///
+/// - promoted (position ≤ +0xbe): by the league above ([0xadadfc][+0x1c]; without it, nothing): v = the club's +0x80
+/// (reputation, word) × max(r above − r, 1) × f × 0.1, at least 100; + v + draw(v) (owner) or + v; and the floor by the
+/// reputation of the league above;
+///
+/// - promotion play-off (+0xbf ≠ 0 and position ≤ +0xbf): with d − 1 > 0: + draw(r(d − 1) × 75 × f) + r(d − 1) × 75 × f
+/// (owner) or + draw(r(d − 1) × 25 × f) + r(d − 1) × 10 × f; otherwise + draw(r × 50 × f or r × 25 × f); with home
+/// games, the mix with the real attendance: (summed attendance / games + 4 × average) × f × 0.2;
+///
+/// - relegated (position > +0x3e − +0xc1): by the league below (without it, nothing): v = +0x80 × min(r below − r, −1)
+/// × f × 0.2, at most −100 (with no relegation in the league below, +0x20 = −1: v = 2v − 250 − draw(750)); + v +
+/// draw(v); and the ceiling of 2000 (r below ≤ 7) or 3000 times r below, × f;
+///
+/// - the others: + draw(r × d × 5 × f), × 10 for the owner with d > 0 or with +0x80 above 500 × r; the mix with the
+/// real attendance (without the weight f); the floor by reputation; and the ceiling of 2000 r (r ≤ 7), 3000 r (r ≤ 12)
+/// or 5000 r.
+///
+/// At the end of each: at least 500, and within [+0x77, +0x7b]. The table is freed (free 0x9452ca).
 /// Original: `atualizar_media_de_publico (sem nome no mapa)` (0x5d6280, game.cpp, cdecl).
 ///
 /// [pt] { 0x5d6280 } (cdecl, game.cpp, sem nome no mapa): `atualizar_media_de_publico(liga)`, do laço das temporadas
@@ -283,8 +293,8 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
         let c = read_usize(G_CLUB_TABLE) + 0x245 * read_usize(e);
         let pos = *((e + 0x73) as *const u8);
         let prevista = *((e + 0x72) as *const u8);
-        let owner = *((c + 0x6d) as *const u8) != 0;
-        let add = |v: i32| write_i32(c + 0x73, read_i32(c + 0x73).wrapping_add(v));
+        let owner = *((c + club::OWN_STADIUM) as *const u8) != 0;
+        let add = |v: i32| write_i32(c + club::ATTENDANCE, read_i32(c + club::ATTENDANCE).wrapping_add(v));
         let d = (prevista as i16).wrapping_sub(pos as i16).wrapping_add(1);
         if pos == 1 && promotion() == 0 {
             let k = league_comp_reputation(league) + d.max(0) as i32;
@@ -300,7 +310,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 if a < 1 {
                     a = 1;
                 }
-                let v = match_pl_ftol(read_i16(c + 0x80) as f64 * a as f64 * f * 0.1).max(100);
+                let v = match_pl_ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.1).max(100);
                 if owner {
                     let r = sorteio(v);
                     add(r.wrapping_add(v));
@@ -308,7 +318,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                     add(v);
                 }
                 raise_attendance_floor(c, league_comp_reputation(cima), f);
-                crate::comparacao::ramo("cqt_4 publico de quem subiu");
+                crate::comparison::branch("cqt_4 publico de quem subiu");
             }
         } else if *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) != 0 && pos as i32 <= *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) as i32 {
             let a = (prevista as i16).wrapping_sub(pos as i16);
@@ -333,8 +343,8 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             }
             let games = *((e + 5) as *const u8);
             if games != 0 {
-                let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + 0x73).wrapping_mul(4));
-                write_i32(c + 0x73, match_pl_ftol(val as f64 * f * 0.2));
+                let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
+                write_i32(c + club::ATTENDANCE, match_pl_ftol(val as f64 * f * 0.2));
             }
         } else if relegation() != 0
             && pos as i32 > read_i16(league + league::CLUB_COUNT) as i32 - *((league + league::RELEGATED_COUNT) as *const i8) as i32
@@ -344,7 +354,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 if a > -1 {
                     a = -1;
                 }
-                let mut v = match_pl_ftol(read_i16(c + 0x80) as f64 * a as f64 * f * 0.2).min(-100);
+                let mut v = match_pl_ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.2).min(-100);
                 if read_i32(low + 0x20) == -1 {
                     let r = sorteio(0x2ee);
                     v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
@@ -354,12 +364,12 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 let rb = league_comp_reputation(low);
                 let lim = if rb > 7 { match_pl_ftol(rb.wrapping_mul(3000) as f64 * f) } else { match_pl_ftol(rb.wrapping_mul(2000) as f64 * f) };
                 cap_attendance(c, lim);
-                crate::comparacao::ramo("cqt_4 publico de quem caiu");
+                crate::comparison::branch("cqt_4 publico de quem caiu");
             }
         } else {
             let r16 = read_i16(read_usize(league + 4) + 0x69);
             let r = r16 as i32;
-            let val = if d <= 0 && read_i16(c + 0x80) <= r16.wrapping_mul(500) {
+            let val = if d <= 0 && read_i16(c + club::REPUTATION) <= r16.wrapping_mul(500) {
                 r.wrapping_mul(d as i32).wrapping_mul(5)
             } else if owner {
                 r.wrapping_mul(d as i32).wrapping_mul(10)
@@ -370,23 +380,23 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             add(sorteio(v));
             let games = *((e + 5) as *const u8);
             if games != 0 {
-                let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + 0x73).wrapping_mul(4));
-                write_i32(c + 0x73, match_pl_ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
+                let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
+                write_i32(c + club::ATTENDANCE, match_pl_ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
             }
-            crate::comparacao::ramo("cqt_4 publico do meio da tabela");
+            crate::comparison::branch("cqt_4 publico do meio da tabela");
             raise_attendance_floor(c, league_comp_reputation(league), f);
             let r = league_comp_reputation(league);
             let ceiling = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
             cap_attendance(c, ceiling);
         }
-        if read_i32(c + 0x73) < 500 {
-            write_i32(c + 0x73, 500);
+        if read_i32(c + club::ATTENDANCE) < 500 {
+            write_i32(c + club::ATTENDANCE, 500);
         }
-        let a = read_i32(c + 0x73);
-        if a < read_i32(c + 0x77) {
-            write_i32(c + 0x73, read_i32(c + 0x77));
-        } else if a > read_i32(c + 0x7b) {
-            write_i32(c + 0x73, read_i32(c + 0x7b));
+        let a = read_i32(c + club::ATTENDANCE);
+        if a < read_i32(c + club::MIN_ATTENDANCE) {
+            write_i32(c + club::ATTENDANCE, read_i32(c + club::MIN_ATTENDANCE));
+        } else if a > read_i32(c + club::MAX_ATTENDANCE) {
+            write_i32(c + club::ATTENDANCE, read_i32(c + club::MAX_ATTENDANCE));
         }
         i += 1;
     }
@@ -445,7 +455,7 @@ pub(crate) unsafe fn create_half_season_stage(this: usize, k: u32, file: usize, 
     let k = k as u8 as i8 as i32;
     core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, stage);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     soltar(clubs);
 }
 
@@ -459,7 +469,7 @@ pub(crate) unsafe fn compare_half_season_stage(name: &str, this: usize, k: u32, 
     let kk = k as u8 as i8 as i32;
     let stage = read_usize(read_usize(this + 0xc) + 4 * kk as usize);
     let same = stage != 0 && read_usize(this + 0x30) as i32 == kk && read_i16(stage + 0x3e) == read_i16(this + 0x3e);
-    PLACAR.registrar(same, || format!("{}({:#x}, {}) fase={:#x} +0x30={}", name, this, kk, stage, read_usize(this + 0x30) as i32));
+    PLACAR.record(same, || format!("{}({:#x}, {}) fase={:#x} +0x30={}", name, this, kk, stage, read_usize(this + 0x30) as i32));
 }
 
 /// One half of the Rio state league: when the first game of a half is processed, it builds that half's round-robin
@@ -533,7 +543,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file
     let v = alocar(0xc);
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
@@ -571,7 +581,7 @@ pub(crate) unsafe fn compare_new_season(name: &str, this: usize, original: impl 
     let r = original();
     let after = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let same = after == before.wrapping_add(1) && read_usize(this + 0x2c) == 3 && read_usize(this + 0x30) as i32 == -1;
-    PLACAR.registrar(same, || format!("{}({:#x}) ano antes={} depois={} +0x2c={} +0x30={}", name, this, before, after, read_usize(this + 0x2c), read_usize(this + 0x30) as i32));
+    PLACAR.record(same, || format!("{}({:#x}) ano antes={} depois={} +0x2c={} +0x30={}", name, this, before, after, read_usize(this + 0x2c), read_usize(this + 0x30) as i32));
     r
 }
 
@@ -617,8 +627,23 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
 }
 
 /// The Rio de Janeiro final: the winners of the first and second halves meet over two games [inference: home and away],
-/// the first-half winner as seed 0; if the same club wins both halves, it is champion without a final (the season ends
-/// with the two stages and it gets status 5, champion, in the three tables)
+/// the first-half winner as seed 0; if the same club wins both halves, it is champion without a final.
+///
+/// `BraRegRio::create_final_stage()`, called from the next stage when the second half ends. The two half winners (the
+/// club in the first row of each League_Stage's table) go into a list of 2 (malloc 0x944e46 of 8; out of memory: the
+/// error box at line 0x226 and return).
+///
+/// - The same club in both halves: it is champion without a final. +0x30 = 1, +0x2c = 2 (the season ends with the two
+/// stages), status 5 (+0x37, champion) in the first row of each half's table and in its row of the league table (+0xb1,
+/// the +0x3e rows). The list is not freed (the original leaks it; so does the copy).
+///
+/// - Different winners: the final, over two games [inference: home and away]. Virtual +0x3c (create_round_table:
+/// thiscall(this, stage 2, &rounds, &extra, 0), ret 0x10) builds the round table; the new stage (operator new 0x944cf1
+/// of 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the league, 2, the list, the rounds, +4, the table, the
+/// year +0x40, 2, 1, the extra, 0x14, 0, 1, 0 and the seeds {0, 1}: the first-half winner is seed 0) goes into the
+/// third stage slot ([+0xc]+8; no stage: the error box at line 0x250 and return, without freeing). With it:
+/// Cup::set_up_round (0x51c800, thiscall(stage, 0), ret 4), the table and the list freed (free 0x9452ca, in that order)
+/// and +0x30 = 2. The original's SEH frame covers only the constructor (no destructor).
 /// Original: `BraRegRio::create_final_stage` (0x43a900, bra_reg_rio.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x43a900 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_final_stage()`, da fase seguinte quando o segundo turno
@@ -646,7 +671,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     let b = half_champion(this, 1);
     core::ptr::write_unaligned((list + 4) as *mut usize, b);
     if a == b {
-        crate::comparacao::ramo("cqo_9 mesmo campeao");
+        crate::comparison::branch("cqo_9 mesmo campeao");
         core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 1);
         core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 2);
         for k in 0..2 {
@@ -683,7 +708,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     if stage == 0 {
         return show_error_at(0x98b014, 0x250);
     }
-    crate::comparacao::ramo("cqo_9 final");
+    crate::comparison::branch("cqo_9 final");
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -692,9 +717,21 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);
 }
 
-/// The end of the Rio de Janeiro season: with a final, the honours come from the final; without one, from the league,
-/// and the champion gets 675,000 and the runner-up 250,000 in prize money (to the balance, with the prize money news).
-/// Then, once the twelve state leagues are over, the champions go into the Champions Cup
+/// The end of the Rio de Janeiro (Carioca) season: with a final, the honours come from the final; without one, from the
+/// league, and the champion gets 675,000 and the runner-up 250,000 in prize money. Then, once the twelve state leagues
+/// are over, the champions go into the Champions Cup.
+///
+/// `BraRegRio::record_season_honours()` (slot 13).
+///
+/// - With a final (+0x30 = 2): the history of the final (slot 13, +0x30, of stage [+0xc]+8) and then, as a tail jump,
+/// 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl with no arguments: when the twelve state leagues are
+/// over, it puts the champions into the Champions Cup); returns its eax.
+///
+/// - Without a final (the same champion in both halves): the league history (League::record_season_honours 0x684640,
+/// thiscall, ret 0); the prizes, 675,000 to the champion (first row of table +0xb1) and 250,000 to the runner-up
+/// (second row), each one to the balance (0x5a0590 on [0xae2a38] -> the club's finances, thiscall, ret 4; 0x5999a0
+/// Finance::add_prize_money, thiscall, ret 4) and in the prize money news (0x48e3e0 Comp::send_prize_money_news:
+/// thiscall(this, club, 64-bit amount, position 1 or 2, round 0, match 0, type −2), ret 0x1c); then 0x42bba0, as above.
 /// Original: `BraRegRio::record_season_honours` (0x43ad20, bra_reg_rio.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x43ad20 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::record_season_honours()` (slot 13), o fim da temporada do Carioca.
@@ -712,7 +749,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
         let f = read_usize(read_usize(this + league::STAGES) + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
-        crate::comparacao::ramo("cqo_9 historico da final");
+        crate::comparison::branch("cqo_9 historico da final");
         return campeoes();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
@@ -725,7 +762,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
         prize(finances(read_usize(G_FINANCE_TABLE), c), valor);
         noticia(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparacao::ramo("cqo_9 premios");
+    crate::comparison::branch("cqo_9 premios");
     campeoes()
 }
 
@@ -735,47 +772,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
 
 
 
-/// Common table body of the state leagues: allocates n rows and fills them with the clubs of state global g in database
-/// order (League::init_table_row); returns 1 if filled.
-///
-/// [pt] O corpo comum dos estaduais (o mesmo molde nos doze, só mudam as constantes): +0x3e = `n` clubes; a tabela
-/// (malloc 0x944e46 de n × 0x3b; sem memória: a caixa do fonte `arquivo` na linha `linha` e devolve 0); os clubes de
-/// [0xae23b4] (0x245 bytes, [0xae235c] deles) do estadual do global `g`, na ordem do banco, cada um na linha seguinte
-/// (League::init_table_row 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve 1 se encheu.
-/// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada estadual.
-pub(crate) unsafe fn bra_reg_rio_create_state_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, girar: u8, ramo: &'static str) -> u32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
-    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
-    if t == 0 {
-        show_error_at(file, row);
-        return 0;
-    }
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let mut k: u8 = 0;
-    let mut i: i16 = 0;
-    let mut clube = read_usize(G_CLUB_TABLE);
-    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if is_in_state_league(clube, g) {
-            // simplification: the original pushes the row in eax with the high bits of the state league’s id; 0x687430 only reads the
-            // byte. With girar = 0, (k + 0) % n = k.
-            let l = ((k as u32 + girar as u32) % n as u32) as u8;
-            iniciar(this, l as u32, clube, 0, 0);
-            k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + 0x3e) {
-                break;
-            }
-        }
-        i = i.wrapping_add(1);
-        clube = clube.wrapping_add(0x245);
-    }
-    if k as i8 as i16 != read_i16(this + 0x3e) {
-        return 0;
-    }
-    crate::comparacao::ramo(ramo);
-    1
-}
 
 /// the Rio league has 12 clubs: those with it as their reserve division in the database (the field that holds the state
 /// or regional league), in database order; the table only counts when full; no TV money nor prize fund
@@ -784,28 +780,10 @@ pub(crate) unsafe fn bra_reg_rio_create_state_league_table(this: usize, n: i16, 
 /// [pt] { 0x43a500 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_table()`: o Carioca tem 12 clubes (divisão reserva +0x60 = [0x9cf9dc]).
 /// Fonte 0x98b014, linha 0x169.
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_table(this: usize) -> u32 {
-    bra_reg_rio_create_state_league_table(this, 0xc, 0x98b014, 0x169, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, 0, "cqm_8 carioca cheio")
+    fill_state_league_table(this, 0xc, 0x98b014, 0x169, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, 0, "cqm_8 carioca cheio")
 }
 
-/// the Santa Catarina league has 10 clubs: those with it as their reserve division in the database (the field that
-/// holds the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
-/// Original: `BraRegSanta::create_table` (0x43bb70, bra_reg_santa.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43bb70 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_table()`: o Catarinense tem 10 clubes (divisão reserva +0x60 = [0x9cf9b0]).
-/// Fonte 0x98b050, linha 0x167.
-pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_table_43bb70(this: usize) -> u32 {
-    bra_reg_rio_create_state_league_table(this, 0xa, 0x98b050, 0x167, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, 0, "cqm_8 catarinense cheio")
-}
 
-/// the Sao Paulo league has 16 clubs: those with it as their reserve division in the database (the field that holds the
-/// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
-/// Original: `BraRegSp::create_table` (0x43cc40, bra_reg_sp.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43cc40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_table()`: o Paulista tem 16 clubes (divisão reserva +0x60 = [0x9cf9e4]).
-/// Fonte 0x98b090, linha 0x159.
-pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_table_43cc40(this: usize) -> u32 {
-    bra_reg_rio_create_state_league_table(this, 0x10, 0x98b090, 0x159, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, 0, "cqm_8 paulista cheio")
-}
 
 /// Comparer for state league tables: only the original runs; checks n, the return and the row clubs against the planned
 /// clubs in database order.
@@ -832,7 +810,7 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(name: &str, this: us
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
     }
-    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 
@@ -851,7 +829,7 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(name: &str, this: us
 /// Carioca (0x968608); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> u32 {
     carioca_rules(this);
-    crate::comparacao::ramo("cqi_9 regras do carioca");
+    crate::comparison::branch("cqi_9 regras do carioca");
     create_main_schedule(this);
     1
 }

@@ -5,7 +5,7 @@
 # criar: "ab" no lugar de "wb"; ESCAPA da prova do save: criar so roda em save_database(..., 0, ...), a
 # base gravada na pasta, e o .qst vai por zopen. Fica como lacuna (PENDENCIAS).
 MUTACOES = [
-    ('dbh_gravar_nomes', '    crate::comparacao::ramo("banco gravar nomes");', '    crate::comparacao::ramo("banco gravar nomes");\n    for i in 0..n as usize { let r = registros + i * 60; *((r + 0x3b) as *mut u8) = (*((r + 0x3b) as *const u8)).wrapping_add(1); } // mutacao: a contagem (+0x3b) + 1 antes de gravar'),
+    ('dbh_gravar_nomes', '    crate::comparison::branch("banco gravar nomes");', '    crate::comparison::branch("banco gravar nomes");\n    for i in 0..n as usize { let r = registros + i * 60; *((r + 0x3b) as *mut u8) = (*((r + 0x3b) as *const u8)).wrapping_add(1); } // mutacao: a contagem (+0x3b) + 1 antes de gravar'),
     ('dbh_abrir', '    database_path(0xde1f64, pasta, nome); // abrir (rb)', '    let nome = if core::slice::from_raw_parts(nome as *const u8, 16) == b"first_names.dat\\0" { b"second_names.dat\\0".as_ptr() as usize } else { nome }; // mutacao: first_names.dat abre o second_names.dat\n    database_path(0xde1f64, pasta, nome); // abrir (rb)'),
     ('dbh_criar', '    fopen(0xde1f64, 0x9a7f28) // criar (wb)', '    fopen(0xde1f64, b"ab\\0".as_ptr() as usize) // mutacao: "ab" (acrescenta sem truncar) no lugar de "wb"'),
 ]

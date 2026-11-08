@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_update_for_date(t
             && stages != 0
             && (0..7).all(|g| read_u32_as_usize(stages + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 6;
-        PLACAR.registrar(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_first_group_table(this: us
         }
     }
     let same = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| read[i] == (previstos[i], i as u8));
-    PLACAR.registrar(same, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
+    PLACAR.record(same, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, read, previstos));
     r
 }
 
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_create_group_stag
         a.sort_unstable();
         plan.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plan;
-        PLACAR.registrar(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        PLACAR.record(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
     }
     r
 }
@@ -84,25 +84,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_select_qualified_
         return o(this); // simplification: the error boxes: original only
     }
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let state = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let (ee, f2) = (read_u32_as_usize(this + 0xee), read_u32_as_usize(this + 0xf2));
     let r = o(this);
-    let (la, depois) = (read_u32_as_usize(this + 0xee), crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO));
+    let (la, depois) = (read_u32_as_usize(this + 0xee), crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS));
     let a: [u32; 32] = if la != 0 { core::ptr::read_unaligned(la as *const [u32; 32]) } else { [0; 32] };
-    state.escrever();
+    state.write_back();
     core::ptr::write_unaligned((this + 0xee) as *mut u32, ee as u32);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, f2 as u32);
-    let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| conmebol_liber_select_qualified_clubs(this)));
+    let rr = crate::rng::pause_trace(|| crate::rng::without_counting(|| conmebol_liber_select_qualified_clubs(this)));
     let lb = read_u32_as_usize(this + 0xee);
     let b: [u32; 32] = if lb != 0 { core::ptr::read_unaligned(lb as *const [u32; 32]) } else { [0; 32] };
-    let same_state = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO) == depois;
+    let same_state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS) == depois;
     if lb != 0 && lb != la {
         soltar(lb);
     }
     core::ptr::write_unaligned((this + 0xee) as *mut u32, la as u32);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
-    depois.escrever();
-    PLACAR.registrar(r == rr && a == b && same_state, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, same_state, a, b));
+    depois.write_back();
+    PLACAR.record(r == rr && a == b && same_state, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, same_state, a, b));
     r
 }
 
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_update_staff_reco
     }
     let r = o(this, clube, outcome, stage, a4, jogo, a6);
     let same = r == 0 && (!title || read_u32_as_usize(slot) == clube);
-    PLACAR.registrar(same, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, outcome as u8, stage as u8, r, title, slot));
+    PLACAR.record(same, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, outcome as u8, stage as u8, r, title, slot));
     r
 }
 
@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_advance_stage(thi
     }
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    PLACAR.record(after == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `conmebol_liber_create_schedule` (comparison mode: see the header of motor.rs).

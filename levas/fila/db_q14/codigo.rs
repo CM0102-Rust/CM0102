@@ -92,9 +92,9 @@ unsafe extern "C" fn database_club_has_room_for_job(clube: usize, cargo: u32, pe
 unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_first_name_by_weight(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
+        || crate::rng::without_counting(|| database_pick_first_name_by_weight(nacao)));
+    PLACAR.record(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -104,9 +104,9 @@ unsafe extern "C" fn comparar_database_get_comp_colours(competicao: usize, frent
         return o(competicao, frente, fundo); // caixa: só a original
     }
     let regioes = [(frente as usize, 2), (fundo as usize, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(competicao, frente, fundo),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(competicao, frente, fundo),
         || database_get_comp_colours(competicao, frente, fundo));
-    PLACAR.registrar(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
     r
 }
 
@@ -118,6 +118,6 @@ unsafe extern "C" fn comparar_database_club_has_room_for_job(clube: usize, cargo
         return r; // caixa: só a original
     }
     let n = database_club_has_room_for_job(clube, cargo, pessoa);
-    PLACAR.registrar(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
+    PLACAR.record(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
     r
 }

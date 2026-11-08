@@ -39,7 +39,7 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
         return;
     }
     if foul {
-        crate::comparacao::ramo("cqd_11 falta tirada");
+        crate::comparison::branch("cqd_11 falta tirada");
     }
     *(p as *mut u8) = m ^ bit;
     let l = read_usize(this + list);
@@ -61,7 +61,7 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
         }
         if read_usize(item) == read_usize(person) {
             if foul {
-                crate::comparacao::ramo("cqd_11 registro da falta tirado");
+                crate::comparison::branch("cqd_11 registro da falta tirado");
             }
             remove(read_usize(this + list), item);
             return;
@@ -73,7 +73,11 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
     }
 }
 
-/// the absence ends: with bit 1 of the person's flag, the bit flips and her record leaves the absence list
+/// `AWOL::clear_awol(person)`: ends the absence. Called by the end of the absence without a contract (0x418f60), by
+/// retirements (0x7a59e0) and by transfers (0x8c1af0, 0x8c2180, 0x8c9720).
+///
+/// With the person and the flag table ([this+0xc]) not null and bit 1 of the person's flag set: flips the bit and
+/// removes the person's record from the absence list ([this]).
 /// Original: `AWOL::clear_awol` (0x4196a0, awol.cpp, thiscall).
 ///
 /// [pt] { 0x4196a0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_awol(pessoa)`, pelo fim da ausência sem contrato (0x418f60),
@@ -83,8 +87,11 @@ pub(crate) unsafe extern "thiscall" fn clear_awol(this: usize, person: usize) {
     toggle_mark_and_unlist(this, person, 1, 0, false);
 }
 
-/// the missed training ends: with bit 2 of the person's flag, the bit flips and her record leaves the missed training
-/// list
+/// `AWOL::clear_missed_training(person)`: ends the missed training. Called by the missed-training check for someone
+/// left without a contract (0x418ff0, which the daily player update consults) and by retirements (0x7a59e0).
+///
+/// With the person and the flag table not null and bit 2 of the flag set: flips the bit and removes the person's record
+/// from the missed training list ([this+4]).
 /// Original: `AWOL::clear_missed_training` (0x4197c0, awol.cpp, thiscall).
 ///
 /// [pt] { 0x4197c0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_missed_training(pessoa)`, pela falta ao treino de quem ficou
@@ -129,7 +136,7 @@ pub(crate) unsafe fn compare_toggle_mark_and_unlist(this: usize, person: usize, 
     o(this, person);
     let after = llist_items(l);
     let mark_ok = marca.map_or(true, |(p, m)| *(p as *const u8) == m);
-    PLACAR.registrar(mark_ok && after == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
+    PLACAR.record(mark_ok && after == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
         name, person, marca, marca.map(|(p, _)| *(p as *const u8)), fica, after));
 }
 
@@ -161,9 +168,17 @@ pub(crate) unsafe fn taped_random(n: i32) -> i32 {
     }
 }
 
-/// the 0xbc9 missed training news: the player, the club, a draw of 3, whether the club is human-run and who reports it
-/// (the AI club's manager, or by draw one of the 5 coaches or the assistant); to the player's club if it is human-run,
-/// else to the nation when the player's reputation is above 7250
+/// `awol_post_missed_training_news(player, club)`: posts the 0xbc9 missed training news. Called by the missed training
+/// (0x41a360). SEH frame for the local news, no destructor.
+///
+/// With a player who has a player sheet (+0x61) and a club with a manager (+0xcf): the news 0xbc9 (0x77bbe0) with the
+/// player (id and the +0x33 keys of +4, +8, +0xc), the club id, draw(3), whether the club is human-run (0x600a50 with
+/// 0, 1) and who reports it: the manager, if the club has a manager and is not human-run (0x600a50 with 1, 1; id and
+/// keys); otherwise, with draw(2), one of the 5 coaches (+0x19f, draw(5) until one is found or a thousand tries), and
+/// without the draw the assistant (+0xd3); with nobody (or id −1), −1 in all four.
+///
+/// Human-run club (0x7875e0): sent to the player's club (+0x39, 0x7861e0); otherwise, if the player has a nation
+/// (+0x53) and his reputation (+0x61, +0xb) is above 7250, to the nation's inboxes (0x7863f0).
 /// Original: `awol_post_missed_training_news` (0x41a630, awol.cpp, thiscall).
 ///
 /// [pt] { 0x41a630 } (thiscall, ret 8, awol.cpp, SEH da notícia local, sem destrutor): `awol_post_missed_training_news(jogador,
@@ -176,7 +191,7 @@ pub(crate) unsafe fn taped_random(n: i32) -> i32 {
 /// (0x7863f0).
 pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, player: usize, clube: usize) {
     let _ = this;
-    if player == 0 || read_usize(player + 0x61) == 0 || clube == 0 || read_usize(clube + club::MANAGER) == 0 { // cqd11: sem jogador ou técnico
+    if player == 0 || read_usize(player + staff::PLAYER) == 0 || clube == 0 || read_usize(clube + club::MANAGER) == 0 { // cqd11: sem jogador ou técnico
         return;
     }
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
@@ -188,22 +203,22 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     let nt = local.as_mut_ptr() as usize;
     construct(nt, 0xbc9, 0);
     write(nt, 0, read_usize(player) as u32);
-    write(nt, 1, read_usize(read_usize(player + 4) + 0x33) as u32);
-    write(nt, 2, read_usize(read_usize(player + 8) + 0x33) as u32);
-    write(nt, 3, read_usize(read_usize(player + 0xc) + 0x33) as u32);
+    write(nt, 1, read_usize(read_usize(player + staff::FIRST_NAME) + 0x33) as u32);
+    write(nt, 2, read_usize(read_usize(player + staff::SECOND_NAME) + 0x33) as u32);
+    write(nt, 3, read_usize(read_usize(player + staff::COMMON_NAME) + 0x33) as u32);
     write(nt, 4, read_usize(clube) as u32);
-    crate::comparacao::ramo("cqd_11 noticia da falta");
+    crate::comparison::branch("cqd_11 noticia da falta");
     let r = taped_random(3); // cqd11: o sorteio da notícia
     write(nt, 5, r as u32);
     write(nt, 6, human(clube, 0, 1, 0, 0));
     let manager = read_usize(clube + club::MANAGER);
     if manager != 0 && human(clube, 1, 1, 0, 0) == 0 { // cqd11: o técnico da IA relata
-        crate::comparacao::ramo("cqd_11 relator tecnico");
+        crate::comparison::branch("cqd_11 relator tecnico");
         let t = read_usize(clube + club::MANAGER);
         write(nt, 7, read_usize(t) as u32);
-        write(nt, 8, read_usize(read_usize(t + 4) + 0x33) as u32);
-        write(nt, 9, read_usize(read_usize(t + 8) + 0x33) as u32);
-        write(nt, 0xa, read_usize(read_usize(t + 0xc) + 0x33) as u32);
+        write(nt, 8, read_usize(read_usize(t + staff::FIRST_NAME) + 0x33) as u32);
+        write(nt, 9, read_usize(read_usize(t + staff::SECOND_NAME) + 0x33) as u32);
+        write(nt, 0xa, read_usize(read_usize(t + staff::COMMON_NAME) + 0x33) as u32);
     } else {
         let who = if taped_random(2) != 0 {
             let mut k;
@@ -227,9 +242,9 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
         } else {
             let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
             write(nt, 7, id as u32);
-            write(nt, 8, read_usize(read_usize(p + 4) + 0x33) as u32);
-            write(nt, 9, read_usize(read_usize(p + 8) + 0x33) as u32);
-            write(nt, 0xa, read_usize(read_usize(p + 0xc) + 0x33) as u32);
+            write(nt, 8, read_usize(read_usize(p + staff::FIRST_NAME) + 0x33) as u32);
+            write(nt, 9, read_usize(read_usize(p + staff::SECOND_NAME) + 0x33) as u32);
+            write(nt, 0xa, read_usize(read_usize(p + staff::COMMON_NAME) + 0x33) as u32);
         }
     }
     let noticias = read_usize(G_NEWS);
@@ -239,15 +254,15 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     let ensaio = (*core::ptr::addr_of!(AWOL_NEWS_TAPE)).is_some();
     if of_human(noticias, clube) != 0 {
         if ensaio {
-            AWOL_NEWS_DESTINATION = (1, read_usize(player + 0x39));
+            AWOL_NEWS_DESTINATION = (1, read_usize(player + staff::CLUB_JOB));
         } else {
             let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-            deliver(noticias, nt, read_usize(player + 0x39));
+            deliver(noticias, nt, read_usize(player + staff::CLUB_JOB));
         }
         return;
     }
     let nacao = read_usize(clube + club::NATION);
-    if nacao == 0 || read_i16(read_usize(player + 0x61) + 0xb) <= 0x1c52 {
+    if nacao == 0 || read_i16(read_usize(player + staff::PLAYER) + 0xb) <= 0x1c52 {
         return;
     }
     if ensaio {
@@ -317,7 +332,7 @@ pub(crate) unsafe fn close_awol_case(this: usize, r: usize) {
     }
     *m ^= 2;
     let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LLIST_REMOVE);
-    crate::comparacao::ramo("cpw_7 falta tirada da lista");
+    crate::comparison::branch("cpw_7 falta tirada da lista");
     remove(read_usize(this + 4), r); // cpw7: tira o caso da lista
 }
 
@@ -327,9 +342,23 @@ pub(crate) unsafe fn awol_miss_training(this: usize, person: usize) {
     f(this, person);
 }
 
-/// ends the first expired AWOL; resolves the first missed training from a week ago (repeat case: draws and a new miss;
-/// new case: teammates who ask to leave or lose professionalism, morale and temperament, and the offender who loses
-/// professionalism and morale and falls out with the club); resolves the first expired late arrival by the draws
+/// `AWOL::daily_update()`: resolves the day's AWOL cases, missed trainings and late arrivals. Called every day by the
+/// game loop (0x5cccd0). Three lists, each with its cursor at +0xa.
+///
+/// (1) Absences ([this]): the first one whose return date (+4) has passed ends (0x419710).
+///
+/// (2) Missed trainings ([this+4]): the first one a week past its date (+4) is resolved. Repeat case (byte +0xc), with
+/// two draws coming out zero, by the person's professionalism (+0x5b) and temperament (+0x5d): both drop by a draw and
+/// the person misses training again (0x41a360). New case: the teammates at the club (50 slots at +0xd7) under the
+/// offender's contract may ask to leave (0x867560 with 2) or lose professionalism, morale (+0x44 of the player) and
+/// temperament; and the offender, when draw(professionalism) is below draw(15) + 1, loses professionalism and morale,
+/// misses training again and falls out with the club (0x72c1f0 with 8).
+///
+/// (3) Late arrivals ([this+8]): the first one a week past (+8) that wins the draws loses professionalism and
+/// temperament or morale.
+///
+/// Each resolved case leaves its list (0x68d1f0) and bit 2 of the flag flips. A list that ends before the count ends
+/// the day.
 /// Original: `AWOL::daily_update` (0x4190d0, awol.cpp, thiscall).
 ///
 /// [pt] { 0x4190d0 } (thiscall, awol.cpp): `AWOL::daily_update()`, todo dia pelo laço do jogo (0x5cccd0). Três listas com o
@@ -378,7 +407,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                     return;
                 }
                 if weeks_after_have_passed(r + 4, 1) { // cpw7: uma semana depois
-                    crate::comparacao::ramo("cpw_7 falta vencida");
+                    crate::comparison::branch("cpw_7 falta vencida");
                     resolve_awol_case(this, r);
                     break;
                 }
@@ -423,7 +452,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                     maybe_drop_attribute(person + staff::PROFESSIONALISM, true);
                     let j = read_usize(person + staff::PLAYER);
                     if j != 0 {
-                        maybe_drop_attribute(j + 0x44, true);
+                        maybe_drop_attribute(j + player_sheet::WORK_RATE, true);
                     }
                     true
                 } else {
@@ -452,7 +481,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     if read_u8(r + 0xc) != 0 {
         // o caso repetido
         if read_usize(person + staff::PLAYER) != 0 {
-            crate::comparacao::ramo("cpw_7 caso repetido");
+            crate::comparison::branch("cpw_7 caso repetido");
             if friendly_random(read_u8(person + staff::PROFESSIONALISM) as i8 as i32) == 0 && friendly_random(read_u8(person + staff::TEMPERAMENT) as i8 as i32) == 0 { // cpw7: os sorteios do caso repetido
                 maybe_drop_attribute(person + staff::PROFESSIONALISM, true);
                 maybe_drop_attribute(person + staff::TEMPERAMENT, true);
@@ -464,7 +493,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
         return close_awol_case(this, r);
     }
     // the new case: the club’s teammates
-    crate::comparacao::ramo("cpw_7 caso novo");
+    crate::comparison::branch("cpw_7 caso novo");
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let k = contract_of(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
@@ -475,30 +504,30 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
         let pedir: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_STAFF_CONTRACT_SET_FLAGS);
         for v in 0..0x32usize {
             let s = read_usize(clube + club::SQUAD + v * 4);
-            if s == 0 || s == person || read_usize(s + 0x61) == 0 {
+            if s == 0 || s == person || read_usize(s + staff::PLAYER) == 0 {
                 continue;
             }
             let ct = contrato(read_usize(G_CONTRACT_MANAGER), person, clube);
             if ct == 0 {
                 continue;
             }
-            if marks(ct) & 2 == 0 && read_u8(s + 0x5b) as i8 > 0xf && read_u8(s + 0x57) as i8 > 0xa {
-                let a = friendly_random(read_u8(s + 0x5b) as i8 as i32);
+            if marks(ct) & 2 == 0 && read_u8(s + staff::PROFESSIONALISM) as i8 > 0xf && read_u8(s + staff::AMBITION) as i8 > 0xa {
+                let a = friendly_random(read_u8(s + staff::PROFESSIONALISM) as i8 as i32);
                 let b = friendly_random(0x1e);
-                let f = read_u8(ct + 0x4f) & 0xf0;
-                if a > b && (f == 0x10 || f == 0x20) && read_u8(s + 0x18) as i8 > 0x17 && read_i16(read_usize(s + 0x61) + 0xb) > 0x1482 {
+                let f = read_u8(ct + contract::SQUAD_STATUS) & 0xf0;
+                if a > b && (f == 0x10 || f == 0x20) && read_u8(s + staff::YEAR_OF_BIRTH) as i8 > 0x17 && read_i16(read_usize(s + staff::PLAYER) + 0xb) > 0x1482 {
                     pedir(ct, 2);
                 }
             }
-            if read_u8(s + 0x18) as i8 >= 0x15 || read_i16(read_usize(s + 0x61) + 0xb) <= 0x1482 {
+            if read_u8(s + staff::YEAR_OF_BIRTH) as i8 >= 0x15 || read_i16(read_usize(s + staff::PLAYER) + 0xb) <= 0x1482 {
                 continue;
             }
-            maybe_drop_attribute(s + 0x5b, true);
-            let j = read_usize(s + 0x61);
-            if read_u8(j + 0x44) as i8 > 1 && friendly_random(read_u8(s + 0x5b) as i8 as i32) == 0 {
-                *((j + 0x44) as *mut i8) -= 1;
+            maybe_drop_attribute(s + staff::PROFESSIONALISM, true);
+            let j = read_usize(s + staff::PLAYER);
+            if read_u8(j + player_sheet::WORK_RATE) as i8 > 1 && friendly_random(read_u8(s + staff::PROFESSIONALISM) as i8 as i32) == 0 {
+                *((j + player_sheet::WORK_RATE) as *mut i8) -= 1;
             }
-            maybe_drop_attribute(s + 0x5d, true);
+            maybe_drop_attribute(s + staff::TEMPERAMENT, true);
         }
     }
     // o faltoso
@@ -524,7 +553,11 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
 // simplification: rolls random numbers, removes and frees list nodes (0x68d1f0), gives return news (0x419710) and absence news (0x41a360): only
 // the original; the copy takes the branches.
 
-/// bit 2 of the person flag; without a contract, clears the miss first
+/// `AWOL::has_missed_training(person)`: returns bit 2 of the person's flag; without a contract, clears the miss first.
+/// Called by the daily player update (0x5a69b0) and by the screens.
+///
+/// Null person or beyond the count [0xae2364]: false. With bit 2 of her flag ([this+0xc] + id) set and no contract
+/// (0x4cf5a0, stored in [0xae1080]), clears the miss (0x4197c0) first. Returns bit 2 of the flag.
 /// Original: `AWOL::has_missed_training` (0x418ff0, awol.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x418ff0 } (thiscall, ret 4, awol.cpp): `AWOL::has_missed_training(pessoa)`, pelos jogadores do dia (0x5a69b0) e
@@ -551,7 +584,12 @@ pub(crate) unsafe extern "thiscall" fn has_missed_training(this: usize, person: 
 }
 
 
-/// true when the person has a record in the late arrival list
+/// `AWOL::has_fitness_incident(person)`: true when the person has a record in the late arrival list. Called by the
+/// daily player update (0x5a69b0).
+///
+/// Null person, beyond the count [0xae2364] or no late arrival list ([this+8]): false; otherwise walks the list (cursor
+/// at +0xa) looking for the person's record (id at +0). True in the low byte; the high bytes as the original leaves
+/// them in the register.
 /// Original: `AWOL::has_fitness_incident` (0x419070, awol.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x419070 } (thiscall, ret 4, awol.cpp): `AWOL::has_fitness_incident(pessoa)`, pelos jogadores do dia (0x5a69b0).
@@ -615,8 +653,18 @@ pub(crate) unsafe fn awol_club_of_contract(k: usize) -> usize {
 /// repetido); o comparador não o compara (o da original é resíduo de verdade).
 pub(crate) const AWOL_RESIDUE_BYTE: u8 = 0x90;
 
-/// the very unhappy player may go AWOL (0x419840); otherwise marks the miss, posts the news, lowers the condition,
-/// joins the missed training list (the case byte, unset in the original, goes 0x90) and the AI manager may fine him
+/// `AWOL::miss_training(person)`: the player misses training (or, if very unhappy, may go AWOL). Called by the day's
+/// missed trainings (0x5d6aa0) and by awol_daily_update. SEH frame only for the local date, no destructor.
+///
+/// Player (+0x61) within the count, with a contract (0x4cf5a0, in [0xae1080]) at a club and without flag 2: if the
+/// contract has morale (+0x44) at or below −100 and bit 0x2000 (then 0x800) in +0x45, and draw(professionalism + 10)
+/// and draw(+0x59 + 10) both come out zero, he goes AWOL (0x419840 with 0, 0).
+///
+/// Otherwise: sets bit 2, posts the missed training news (0x41a630, with the contract's club), byte +0xa of the 79-byte
+/// row ([0xae2d0c]) adds draw(10), the condition (0x62c590) drops by 25 × (21 − the player's +0x34) + draw + 100
+/// (0x62bd10), and the record (person, today, case) joins the missed training list ([this+4], 0x68d0d0); the case byte,
+/// unset in the original, goes 0x90. AI club (0x600a50) with a manager (+0xcf, +0x69) and draw(his +0x14) not zero: the
+/// fine (0x5a5980, period 1 if draw(manager rating 0x544410 with +0x19) beats draw(5), else 2; reason 1).
 /// Original: `AWOL::miss_training` (0x41a360, awol.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x41a360 } (thiscall, ret 4, awol.cpp, SEH só com a data local, sem destrutor): `AWOL::miss_training(pessoa)`,
@@ -651,7 +699,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
                 && friendly_random(read_u8(person + staff::PROFESSIONALISM) as i8 as i32 + 10) == 0
                 && friendly_random(read_u8(person + staff::LOYALITY) as i8 as i32 + 10) == 0
             {
-                crate::comparacao::ramo("cpw_7 sumiu em vez de faltar");
+                crate::comparison::branch("cpw_7 sumiu em vez de faltar");
                 if MISS_TRAINING_DRY_RUN {
                     MISS_TRAINING_DECISION = 1;
                     return;
@@ -662,7 +710,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
             }
         }
     }
-    crate::comparacao::ramo("cpw_7 marcou a falta");
+    crate::comparison::branch("cpw_7 marcou a falta");
     if MISS_TRAINING_DRY_RUN {
         MISS_TRAINING_DECISION = 2;
         return;
@@ -699,19 +747,23 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
         return;
     }
     let np = read_usize(manager + staff::NON_PLAYER);
-    if np == 0 || friendly_random(read_u8(np + 0x14) as i8 as i32) == 0 {
+    if np == 0 || friendly_random(read_u8(np + non_player::DISCIPLINE) as i8 as i32) == 0 {
         return;
     }
     let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    let a = friendly_random(rating(np, read_u8(np + 0x19) as u32) as i32);
+    let a = friendly_random(rating(np, read_u8(np + non_player::MAN_HANDLING) as u32) as i32);
     let b = friendly_random(5);
-    crate::comparacao::ramo("cpw_7 multa pela falta");
+    crate::comparison::branch("cpw_7 multa pela falta");
     let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_FINE_FINE_PLAYER);
     multar(read_usize(G_FINE), person, if a > b { 1 } else { 2 }, 1);
 }
 
 
-/// with a contract at a club, the return news; toggles bit 1 of the flag and removes the record from the absence list
+/// `AWOL::end_absence(record)`: ends an absence. Called by awol_daily_update.
+///
+/// With the person's flag (+0 id; [this+0xc] + id) not zero: if she has a contract (0x4cf5a0, in [0xae1080]) at a club,
+/// the return news (0x419ad0 with the person's club +0x39, 0 and −1); flips bit 1 of the flag (the original's `or 1`
+/// never gives zero) and removes the record from the absence list ([this], 0x68d1f0). Does not read an unset local.
 /// Original: `AWOL::end_absence` (0x419710, awol.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x419710 } (thiscall, ret 4, awol.cpp): `AWOL::end_absence(registro)`, pela awol_daily_update. Registro com a marca
@@ -726,7 +778,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     if *m == 0 {
         return;
     }
-    crate::comparacao::ramo("cpw_7 fim da ausencia");
+    crate::comparison::branch("cpw_7 fim da ausencia");
     let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let k = contract_of(read_usize(G_CONTRACT_MANAGER), person);
@@ -737,7 +789,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
         } else {
             let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
             let noticia: unsafe extern "stdcall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_AWOL_POST_NEWS);
-            noticia(p, read_usize(p + 0x39), 0, 0xffffffff);
+            noticia(p, read_usize(p + staff::CLUB_JOB), 0, 0xffffffff);
         }
     }
     let m = read_usize(this + 0xc).wrapping_add(read_i32(r) as usize) as *mut u8;
@@ -750,8 +802,17 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
 }
 
 
-/// the record (player, club, today) in the incident list; human club: a random coach and news 0x138f; AI club with a
-/// manager: draw(+0x14) above draw(10) leads to the fine, period by the manager's rating
+/// `AWOL::report_poor_fitness(player, club)`: records a fitness incident and handles the reaction. Called by the daily
+/// person update (0x5ce2d0: the day's big drop in condition). SEH frame for the date and the local news, no destructor.
+///
+/// The record (player, club, today and a byte that in the original is stack leftover) joins the incident list
+/// ([this+8], 0x68d0d0, 0x11 bytes).
+///
+/// Human-run club (0x7875e0): one coach from the 5 slots (+0x19f, draw(5), until one is found or draw(20) comes out
+/// zero) and the news 0x138f to the club (the player, draw(2), his keys and the coach's, or −1).
+///
+/// AI club (0x600a50) with a manager (+0xcf, +0x69): draw(his +0x14) above draw(10) leads to the fine (0x5a5980, period
+/// 1 if draw(rating 0x544410 with +0x19) beats draw(5), else 2; reason 1).
 /// Original: `AWOL::report_poor_fitness` (0x41add0, awol.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x41add0 } (thiscall, ret 8, awol.cpp, SEH da data e da notícia local, sem destrutor): `AWOL::
@@ -794,9 +855,9 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
         set_news_slot(nt, 1, read_u32(clube));
         let r = friendly_random(2);
         set_news_slot(nt, 2, r as u32);
-        set_news_slot(nt, 3, read_u32(read_usize(player + 4) + 0x33));
-        set_news_slot(nt, 4, read_u32(read_usize(player + 8) + 0x33));
-        set_news_slot(nt, 5, read_u32(read_usize(player + 0xc) + 0x33));
+        set_news_slot(nt, 3, read_u32(read_usize(player + staff::FIRST_NAME) + 0x33));
+        set_news_slot(nt, 4, read_u32(read_usize(player + staff::SECOND_NAME) + 0x33));
+        set_news_slot(nt, 5, read_u32(read_usize(player + staff::COMMON_NAME) + 0x33));
         if coach != 0 {
             set_news_person_slots(nt, 6, coach);
         } else {
@@ -818,17 +879,17 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     if np == 0 {
         return;
     }
-    crate::comparacao::ramo("cpz_9 multa avaliada");
-    let a = friendly_random(read_i8_as_i32(np + 0x14));
+    crate::comparison::branch("cpz_9 multa avaliada");
+    let a = friendly_random(read_i8_as_i32(np + non_player::DISCIPLINE));
     let b = friendly_random(10); // cpz9: o sorteio da multa
     if a <= b {
         return;
     }
     let np = read_usize(read_usize(clube + club::MANAGER) + 0x69);
-    crate::comparacao::ramo("cpz_9 multa pela forma");
+    crate::comparison::branch("cpz_9 multa pela forma");
     let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     // simplification: the original pushes ecx with byte +0x19 only in cl (the high ones are leftover); 0x544410 only reads the byte
-    let c =friendly_random(rating(np, *((np + 0x19) as *const u8) as u32) as i32);
+    let c =friendly_random(rating(np, *((np + non_player::MAN_HANDLING) as *const u8) as u32) as i32);
     let e = friendly_random(5); // cpz9: o sorteio do prazo
     let prazo = if c > e { 1 } else { 2 }; // cpz9: o prazo da multa
     let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_FINE_FINE_PLAYER);
@@ -836,7 +897,13 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
 }
 
 
-/// bit 0 of the person's flag; without read-only and without a contract or club, the absence ends first (0x4196a0)
+/// `AWOL::is_player_awol(person, read_only)`: returns bit 0 of the person's flag; without `read_only` and without a
+/// contract or club, the absence ends first. Called by the squad selection, training, asking price, the staff day and
+/// transfers.
+///
+/// Null person or id beyond [0xae2364]: 0 (only al). With `read_only`, bit 0 of the person's flag ([this+0xc] + id).
+/// Otherwise, with the bit set and no contract (0x4cf5a0, stored in [0xae1080]) or no club on the contract, the absence
+/// ends (0x4196a0); returns the bit read again.
 /// Original: `AWOL::is_player_awol` (0x418f60, awol.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x418f60 } (thiscall, ret 8, awol.cpp): `AWOL::is_player_awol(pessoa, só_ler)`, pela seleção, pelo treino, pelo
@@ -851,7 +918,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_
     if so_read == 0 && mark() != 0 {
         let c = injury_main_contract_stored(p);
         if c == 0 || injury_club_of_contract(c) == 0 {
-            crate::comparacao::ramo("cqb_5 ausencia acaba sem clube");
+            crate::comparison::branch("cqb_5 ausencia acaba sem clube");
             let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWOL_CLEAR_AWOL);
             acabar(this, p);
         }

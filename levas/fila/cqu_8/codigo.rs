@@ -86,7 +86,7 @@ unsafe fn cqu8_copa_do_imperador_corpo(this: usize, ano: u32, dono: usize) -> us
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_8 copa_do_imperador nova");
+    crate::comparison::branch("cqu_8 copa_do_imperador nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x6624f0usize);
     let r = f(this);
     if r == 0 {
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn cqu8_copa_do_imperador(this: usize, ano: u32, dono: 
 unsafe extern "thiscall" fn comparar_cqu8_copa_do_imperador(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu8_plano(this, r, ano, dono, 0x96c9a0, &CQU8_CAMPOS_COPA_DO_IMPERADOR, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu8_copa_do_imperador({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu8_copa_do_imperador({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -150,7 +150,7 @@ unsafe fn cqu8_copa_da_liga_japonesa_corpo(this: usize, ano: u32, dono: usize) -
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_8 copa_da_liga_japonesa nova");
+    crate::comparison::branch("cqu_8 copa_da_liga_japonesa nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x665a00usize);
     let r = f(this);
     if r == 0 {
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn cqu8_copa_da_liga_japonesa(this: usize, ano: u32, do
 unsafe extern "thiscall" fn comparar_cqu8_copa_da_liga_japonesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu8_plano(this, r, ano, dono, 0x96cba8, &CQU8_CAMPOS_COPA_DA_LIGA_JAPONESA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu8_copa_da_liga_japonesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu8_copa_da_liga_japonesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -212,7 +212,7 @@ unsafe fn cqu8_supercopa_japonesa_corpo(this: usize, ano: u32, dono: usize) -> u
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_8 supercopa_japonesa nova");
+    crate::comparison::branch("cqu_8 supercopa_japonesa nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x666160usize);
     let r = f(this);
     if r < 0 {
@@ -245,6 +245,6 @@ unsafe extern "thiscall" fn cqu8_supercopa_japonesa(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqu8_supercopa_japonesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqu8_plano(this, r, ano, dono, 0x96cc48, &CQU8_CAMPOS_SUPERCOPA_JAPONESA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu8_supercopa_japonesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu8_supercopa_japonesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

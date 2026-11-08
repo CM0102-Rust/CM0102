@@ -58,36 +58,6 @@ pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, year: u32, n: &Eng
     eng_first_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
 
-/// Side-by-side comparer of a round table: outputs and written bytes must match; frees the copy's table.
-///
-/// [pt] Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
-pub(crate) unsafe fn eng_first_compare_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
-                       original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
-    let reg = [(0xb67a34usize, 4usize)];
-    let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
-    let gravou = a != 0 || b != 0;
-    let outs = !gravou || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
-    let table = if a != 0 && b != 0 {
-        if stage as u8 == 0xff {
-            let n = *rounds as usize;
-            written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
-        } else {
-            eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, *rounds)
-        }
-    } else {
-        a == 0 && b == 0
-    };
-    if b != 0 {
-        soltar(b);
-    }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
-    a
-}
 
 /// a primeira divisão inglesa: as rodadas antes do Natal
 pub(crate) const FIRST_DIVISION_START: [EngFirstScheduleRound; 23] = [
@@ -337,7 +307,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 show_error_at(0x9c4374, 0xae);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_5 calendario da primeira inglesa");
+            crate::comparison::branch("cqp_5 calendario da primeira inglesa");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, year, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
@@ -353,7 +323,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 show_error_at(0x9c4374, 0x1ed);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_5 play-offs da primeira inglesa");
+            crate::comparison::branch("cqp_5 play-offs da primeira inglesa");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, year);
@@ -398,7 +368,7 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
     for (k, &l) in rows.iter().enumerate() {
         core::ptr::write_unaligned((list + 4 * k) as *mut usize, eng_first_league_row_club(this, l));
     }
-    crate::comparacao::ramo(name);
+    crate::comparison::branch(name);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
@@ -439,15 +409,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_playoff_stage(this: usiz
 }
 
 
-/// like the Second one, with the 7th, 4th, 6th and 5th (ties 7th v 4th and 6th v 5th; lines 0x2be and 0x2d5)
-/// Original: `EngThird::create_play_off_stage` (0x5783c0, eng_third.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x5783c0 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_play_off_stage()` (de 0x578330). As chaves: o 7º
-/// contra o 4º e o 6º contra o 5º (linhas 6, 3, 5 e 4); +0x3a = o extra da virtual. Fonte 0x9c4424, linhas 0x2be e
-/// 0x2d5.
-pub(crate) unsafe extern "thiscall" fn eng_first_create_play_off_stage(this: usize) {
-    create_playoff_stage(this, [6, 3, 5, 4], 0x9c4424, 0x2be, 0x2d5, None, "cpz_1 mata-mata da third"); // cpz1: 7º × 4º e 6º × 5º da Third
-}
 
 /// Comparer of the play-off stage: runs only the original and checks the stage, count and the 4 clubs (as a set).
 ///
@@ -464,7 +425,7 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize
     original();
     let stage = read_usize(read_usize(this + 0xc));
     if stage == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
+        PLACAR.record(false, || format!("{}({:#x}) sem fase", name, this));
         return;
     }
     let list = read_usize(stage + 0xa7);
@@ -476,7 +437,7 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: usize, rows: [usize
     x.sort_unstable();
     y.sort_unstable();
     let same = x == y && read_i16(stage + 0x3e) == n && read_usize(stage + 4) == read_usize(this + 4);
-    PLACAR.registrar(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this, plan, stage, found, read_i16(stage + 0x3e), n));
+    PLACAR.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this, plan, stage, found, read_i16(stage + 0x3e), n));
 }
 
 
@@ -503,8 +464,12 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u3
 }
 
 
-/// the First (24): the top 2 go up directly, 3rd to 6th go to the promotion play-offs, the bottom 3 go down to the
-/// Second; 5 substitutes and 3 substitutions; 2 rounds, 3 points
+/// Sets up the rules of the English First Division (24 clubs): the top 2 go up directly, 3rd to 6th go to the promotion
+/// play-offs, the bottom 3 go down to the Second; 5 substitutes and 3 substitutions; 2 rounds, 3 points.
+///
+/// `EngFirst::set_up_rules()`: the common rules, 2 promoted directly (`+0xbe`), 4 to the promotion play-off (`+0xbf`,
+/// 3rd to 6th), no relegation play-off (`+0xc0`), 3 relegated (`+0xc1`), the Premier above (`+0x1c` = `[0x9cf5bc]`) and
+/// the Second below (`+0x20` = `[0x9cf5c4]`), 5 substitutes on the bench (`+0x49`) and 3 substitutions (`+0x4a`).
 /// Original: `EngFirst::set_up_rules` (0x572d90, eng_first.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x572d90 } (thiscall, ret 0, eng_first.cpp): `EngFirst::set_up_rules()`. A First: as comuns, 2 sobem direto
@@ -512,7 +477,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u3
 /// (+0xc1), a Premier acima (+0x1c = [0x9cf5bc]) e a Second abaixo (+0x20 = [0x9cf5c4]), 5 reservas no banco
 /// (+0x49) e 3 substituições (+0x4a).
 pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_4 regras da first");
+    crate::comparison::branch("cqi_4 regras da first");
     eng_prm_apply_league_rules(this, &eng_prm_first_division_rules())
 }
 

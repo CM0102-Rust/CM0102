@@ -117,11 +117,11 @@ New item type (**save**), next to screens and simulation. 21 routines in 7 items
 
 | Batch | Item | Routines | Expected comparator |
 |---|---|---|---|
-| S1 | C1 container: queries | 0x933a00 pattern, 0x9331c0 id, 0x933860 size | pattern: pure `lado_a_lado` (+ self-test with names, `*`, case); id and size: both on the same file (read only), compare the result |
+| S1 | C1 container: queries | 0x933a00 pattern, 0x9331c0 id, 0x933860 size | pattern: pure `side_by_side` (+ self-test with names, `*`, case); id and size: both on the same file (read only), compare the result |
 | S1 | C2 pack/unpack | 0x933320 `zextract`, 0x933610 `zadd`, 0x90cd50 clear `CM3_TEMP` | **file** (new): original and Rust on copies (folders A and B in `jogo_testes`), compare result, file list and bytes of the files produced |
 | S1 | R1 RLE | 0x932c30 `zread`, 0x932e10 `zwrite`, 0x932b00 `zclose` | **file**: two `ZFILE`s on copies of the same container; compare buffer, result, the structure without the `FILE*` (+0) and, on `zclose`, the whole file. Self-test with types 3 and 4, runs of 1 to 300, bytes > 0x80, 0x30d40 buffer wraps, runs spanning calls; reading a real compressed save (copy of `TesteTelasComprimido.sav`) comparing every item |
-| S2 | S1 checks | 0x838e10, 0x839290, 0x838eb0 | `lado_a_lado` on a fixed `.sav`/`.qst` (read only); self-test, since only the file dialog calls them |
-| S2 | S2 single items | 0x8395b0, 0x839760 FIFA rules; 0x591f80 summary | rules: **file**; summary: `lado_a_lado` of the block (masking play time if it is wall clock) |
+| S2 | S1 checks | 0x838e10, 0x839290, 0x838eb0 | `side_by_side` on a fixed `.sav`/`.qst` (read only); self-test, since only the file dialog calls them |
+| S2 | S2 single items | 0x8395b0, 0x839760 FIFA rules; 0x591f80 summary | rules: **file**; summary: `side_by_side` of the block (masking play time if it is wall clock) |
 | S2 | S3 glue and cleanup | 0x524d30, 0x524d10, 0x82ff40 `free_game_data` | glue: pass-through (validated by save and load); `free_game_data`: orchestrator, career |
 | S3 | S4 save | 0x82e430 `save_game_data`, 0x827110 `create_game_from_setup_file` | orchestrator without comparator: `.qst` written by the original and by Rust from the same state, compared byte for byte (types 3 and 4); `create_game_from_setup_file` also by the career |
 | S4 | S5 load | 0x82a9c0 `load_game_data` | orchestrator: `-load <qst>` + holiday career, Rust print = original; mutations through the chain |

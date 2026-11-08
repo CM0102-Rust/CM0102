@@ -11,7 +11,7 @@ unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip: i32, regis
     if versao != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler continentes");
+    crate::comparison::branch("banco ler continentes");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 198, n, stream)
@@ -39,7 +39,7 @@ unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i32, registro
     if versao != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler nações");
+    crate::comparison::branch("banco ler nações");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 290, n, stream)
@@ -67,7 +67,7 @@ unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32, registros
     if versao <= 0 || versao > 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler cidades");
+    crate::comparison::branch("banco ler cidades");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 56, n, stream)

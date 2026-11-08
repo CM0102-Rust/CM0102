@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo:
     if !outbreak_takes_hold(tipo, clube_i) {
         return;
     }
-    crate::comparacao::ramo("cpp_8 surto novo");
+    crate::comparison::branch("cpp_8 surto novo");
     let cap = cpp8_i(this + 0x20);
     if cpp8_i(this + 0x24) >= cap {
         let cap = cap.wrapping_add(30);
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
             break; // o primeiro surto depois de hoje
         }
         if is_after_outbreak(&cinco, e) {
-            crate::comparacao::ramo("cpp_8 surto antigo");
+            crate::comparison::branch("cpp_8 surto antigo");
             removidos += 1;
         } else {
             let tipo = cpp8_b(e + 8);
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
                 Some(cpp8_sorteio(3) as u8) // 0 a 2 doentes
             };
             if let Some(mut quantos) = quantos {
-                crate::comparacao::ramo("cpp_8 espalhar");
+                crate::comparison::branch("cpp_8 espalhar");
                 let clube = injury_club_by_index(cpp8_i(cpp8_d(this + 0x1c).wrapping_add(off) + 9));
                 if !injury_is_national_team(clube) {
                     let mut t = 0;
@@ -219,10 +219,10 @@ unsafe extern "stdcall" fn injury_player_in_close_season(pessoa: usize) -> u32 {
 /// (data, tipo, clube, partida) no vetor; senão a conta igual.
 unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, usize)>(%%I0%%);
-    let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let entra = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| outbreak_takes_hold(tipo as u8, clube_i)));
-    let depois_do_plano = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    estado.escrever();
+    let estado = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    let entra = crate::rng::pause_trace(|| crate::rng::without_counting(|| outbreak_takes_hold(tipo as u8, clube_i)));
+    let depois_do_plano = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    estado.write_back();
     let n0 = cpp8_i(this + 0x24);
     let mut esperado = [0u8; OUTBREAK_SIZE];
     esperado[..8].copy_from_slice(&*(data as *const [u8; 8]));
@@ -232,14 +232,14 @@ unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usi
     esperado[13..17].copy_from_slice(&id.to_le_bytes());
     o(this, data, tipo, clube_i, partida);
     let n = cpp8_i(this + 0x24);
-    let mesmo_sorteio = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO) == depois_do_plano;
+    let mesmo_sorteio = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS) == depois_do_plano;
     let v = cpp8_d(this + 0x1c);
     let ok = if entra && v != 0 {
         n == n0 + 1 && (0..n.max(0) as usize).any(|k| *((v + k * OUTBREAK_SIZE) as *const [u8; OUTBREAK_SIZE]) == esperado)
     } else {
         n == n0
     };
-    PLACAR.registrar(ok && mesmo_sorteio, || {
+    PLACAR.record(ok && mesmo_sorteio, || {
         format!("add_illness_outbreak(tipo {}, clube {}) plano entra={}, conta {} -> {}, mesmo sorteio={}", tipo as u8, clube_i, entra, n0, n, mesmo_sorteio)
     });
 }
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
     o(this);
     let n = cpp8_i(this + 0x24);
     let velho = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&cinco, cpp8_d(this + 0x1c) + k * OUTBREAK_SIZE));
-    PLACAR.registrar(velho.is_none() && n >= n0 - saem, || {
+    PLACAR.record(velho.is_none() && n >= n0 - saem, || {
         format!("spread_illness_outbreaks: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, velho)
     });
 }
@@ -275,6 +275,6 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
 unsafe extern "stdcall" fn comparar_injury_player_in_close_season(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
     let n = injury_player_in_close_season(pessoa);
-    PLACAR.registrar(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", pessoa, r, n));
+    PLACAR.record(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", pessoa, r, n));
     r
 }

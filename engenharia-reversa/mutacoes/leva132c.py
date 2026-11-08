@@ -8,7 +8,7 @@ MUTACOES = [
     ('e_0a_limite', "let r = sortear(2000) + 0x1194;", "let r = sortear(2000) + 0x1000;", "eventos 0x0a"),
     ('j_n34', "if r as f64 * 0.1 + m + 0.5 < nota11 {", "if r as f64 * 0.1 + m + 0.4 < nota11 {", "jogadores noticia 0x34"),
     ('c_57', "if byte(p, 0x57) <= (r as u8).wrapping_add(10) as i8", "if byte(p, 0x57) <= (r as u8).wrapping_add(0) as i8", "clube jovem"),
-    ('c_ficha', "|| w(g(p + 0x61) + 0xb) >= 0x109a {", "|| w(g(p + 0x61) + 0xb) >= 0x2000 {", "clube jovem"),
+    ('c_ficha', "|| w(g(p + staff::PLAYER) + 0xb) >= 0x109a {", "|| w(g(p + staff::PLAYER) + 0xb) >= 0x2000 {", "clube jovem"),
     ('c_n', "                && n > 2\n", "                && n > 0\n", "clube elenco"),
     ('c_elenco57', "&& byte(s, 0x57) > 0xf", "&& byte(s, 0x57) > 0x5", "clube elenco"),
 ]

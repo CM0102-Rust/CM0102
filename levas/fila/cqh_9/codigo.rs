@@ -33,7 +33,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
                 || (*(segundo as *const u8) != 0 && cqh9_d(p + 8) != 0 && cqh9_strncmp(cqh9_d(p + 8), segundo, 0x1a) != 0) // cqh9: o segundo nome
                 || (*(comum as *const u8) != 0 && cqh9_d(p + 0xc) != 0 && cqh9_strncmp(cqh9_d(p + 0xc), comum, 0x1a) != 0);
             if !falha {
-                crate::comparacao::ramo("cqh_9 pessoa pelo nome");
+                crate::comparison::branch("cqh_9 pessoa pelo nome");
                 return p;
             }
             p += 0x6e;
@@ -57,7 +57,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
         for k in 0..0x32usize {
             let q = cqh9_d(c + 0xd7 + 4 * k);
             if q != 0 && name_matches(q, 4, primeiro) && name_matches(q, 8, segundo) && name_matches(q, 0xc, comum) {
-                crate::comparacao::ramo("cqh_9 jogador do clube pelo nome");
+                crate::comparison::branch("cqh_9 jogador do clube pelo nome");
                 return q; // cqh9: o do elenco pelo nome
             }
         }
@@ -76,7 +76,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
 unsafe extern "C" fn comparar_player_setup_find_staff(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(%%I0%%)(primeiro, comum, segundo, clube, no_elenco);
     let n = player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco);
-    PLACAR.registrar(r == n, || format!("player_setup_find_staff(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
+    PLACAR.record(r == n, || format!("player_setup_find_staff(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
     r
 }
 
@@ -106,7 +106,7 @@ unsafe extern "C" fn player_setup_read_quoted_token(origem: usize, destino: usiz
             break;
         }
         if aberto {
-            crate::comparacao::ramo("cqh_9 texto entre aspas");
+            crate::comparison::branch("cqh_9 texto entre aspas");
             *((destino + n) as *mut u8) = c; // cqh9: o caractere do texto
             n += 1;
         }
@@ -121,8 +121,8 @@ unsafe extern "C" fn comparar_player_setup_read_quoted_token(origem: usize, dest
     if origem == 0 || destino == 0 {
         return o(origem, destino);
     }
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(destino, 0x100)], || o(origem, destino), || player_setup_read_quoted_token(origem, destino));
-    PLACAR.registrar(igual && r == n, || format!("player_setup_read_quoted_token({:x}) original={:x} rust={:x}", origem, r, n));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(destino, 0x100)], || o(origem, destino), || player_setup_read_quoted_token(origem, destino));
+    PLACAR.record(igual && r == n, || format!("player_setup_read_quoted_token({:x}) original={:x} rust={:x}", origem, r, n));
     r
 }
 
@@ -152,7 +152,7 @@ const PLAYER_SETUP_LINE_TYPES: [(usize, u32); 14] = [
 unsafe extern "C" fn player_setup_type_from_name(nome: usize) -> u32 {
     for &(texto, bit) in PLAYER_SETUP_LINE_TYPES.iter() {
         if cqh9_strncmp(nome, texto, 100) == 0 {
-            crate::comparacao::ramo("cqh_9 tipo da linha");
+            crate::comparison::branch("cqh_9 tipo da linha");
             return bit;
         }
     }
@@ -163,6 +163,6 @@ unsafe extern "C" fn player_setup_type_from_name(nome: usize) -> u32 {
 unsafe extern "C" fn comparar_player_setup_type_from_name(nome: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nome);
     let n = player_setup_type_from_name(nome);
-    PLACAR.registrar(r == n, || format!("player_setup_type_from_name({:x}) original={:x} rust={:x}", nome, r, n));
+    PLACAR.record(r == n, || format!("player_setup_type_from_name({:x}) original={:x} rust={:x}", nome, r, n));
     r
 }

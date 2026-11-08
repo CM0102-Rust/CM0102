@@ -84,7 +84,7 @@ unsafe extern "C" fn cqv3_acesso_dos_estaduais() {
             None => continue, // ponytail: todo clube da lista é de uma das doze
         };
         if vagas[e] > 0 { // cqv3: as vagas de acesso do estadual
-            crate::comparacao::ramo("cqv_3 acesso ao estadual");
+            crate::comparison::branch("cqv_3 acesso ao estadual");
             core::ptr::write_unaligned((c + 0x60) as *mut usize, cqv3_d(ligas[e] + 4));
             if cqv3_d(c + 0x57) != 0 && cqv3_d(c + 0xcf) == 0 {
                 vaga(cqv3_d(0xb67a44), c, 0);
@@ -99,7 +99,7 @@ unsafe extern "C" fn cqv3_acesso_dos_estaduais() {
         while s < core::ptr::read_unaligned((l + 0x3e) as *const i16) as i32 {
             let c = cqv3_d(linha(l, s));
             core::ptr::write_unaligned((c + 0x60) as *mut usize, baixo[e]); // cqv3: o rebaixado vai à divisão de baixo
-            crate::comparacao::ramo("cqv_3 rebaixado do estadual");
+            crate::comparison::branch("cqv_3 rebaixado do estadual");
             cqv3_saiu(c, cqv3_d(l + 4));
             s += 1;
         }
@@ -152,7 +152,7 @@ unsafe extern "C" fn comparar_cqv3_acesso_dos_estaduais() {
             erros.push(format!("rebaixado {:#x} em {:#x} (esperado {:#x})", c, cqv3_d(c + 0x60), b));
         }
     }
-    PLACAR.registrar(erros.is_empty(), || format!("cqv3_acesso_dos_estaduais: {}", erros.join("; ")));
+    PLACAR.record(erros.is_empty(), || format!("cqv3_acesso_dos_estaduais: {}", erros.join("; ")));
 }
 
 /// A liga da Série C e o registro dela.
@@ -214,7 +214,7 @@ unsafe extern "C" fn cqv3_renovar_serie_c() {
             vaga(cqv3_d(0xb67a44), c, 0);
         }
     }
-    crate::comparacao::ramo("cqv_3 serie c renovada");
+    crate::comparison::branch("cqv_3 serie c renovada");
     for g in -1i32..7 {
         let s = if g == -1 { t } else { cqv3_d(cqv3_d(t + 0xc) + 4 * g as usize) };
         let mut e = 0i32;
@@ -257,7 +257,7 @@ unsafe extern "C" fn comparar_cqv3_renovar_serie_c() {
     let fora = v.iter().filter(|&&c| cqv3_d(c + 0x57) == 0).count();
     let esperado = if v.len() >= 0x10 { 0x10 } else { 0 };
     let saiu = marcados.iter().all(|&c| cqv3_d(c + 0x57) == 0);
-    PLACAR.registrar(entraram == esperado && entraram + fora == v.len() && saiu,
+    PLACAR.record(entraram == esperado && entraram + fora == v.len() && saiu,
                      || format!("cqv3_renovar_serie_c: {} sem divisão, entraram {} (esperado {}), ficaram {}, marcados {} todos fora: {}", v.len(), entraram, esperado, fora, marcados.len(), saiu));
 }
 
@@ -291,7 +291,7 @@ unsafe fn cqv3_virada_j2(this: usize, anos: i16) -> u32 {
     }
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(anos));
-    crate::comparacao::ramo("cqv_3 virada da j2");
+    crate::comparison::branch("cqv_3 virada da j2");
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqv3_d(cqv3_d(this) + 0x8c));
     if regras(this) == 0 {
         show_error_at(0x9eaedc, 0x196);
@@ -329,6 +329,6 @@ unsafe extern "thiscall" fn comparar_cqv3_virada_da_j2(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let igual = depois == antes.wrapping_add(1) && cqv3_d(this + 8) == bloco && cqv3_d(this + 0xb1) != 0;
-    PLACAR.registrar(igual, || format!("cqv3_virada_da_j2({:#x}) ano antes={} depois={} +8={:#x} +0xb1={:#x}", this, antes, depois, cqv3_d(this + 8), cqv3_d(this + 0xb1)));
+    PLACAR.record(igual, || format!("cqv3_virada_da_j2({:#x}) ano antes={} depois={} +8={:#x} +0xb1={:#x}", this, antes, depois, cqv3_d(this + 8), cqv3_d(this + 0xb1)));
     r
 }

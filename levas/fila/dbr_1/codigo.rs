@@ -26,7 +26,7 @@ unsafe extern "C" fn club_nation_is_not_argentina(clube: usize) -> u32 {
 unsafe extern "C" fn comparar_club_nation_is_not_argentina(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(clube);
     let n = club_nation_is_not_argentina(clube);
-    PLACAR.registrar(r == n, || format!("club_nation_is_not_argentina({:x}) original={:x} rust={:x}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_nation_is_not_argentina({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }
 
@@ -46,7 +46,7 @@ unsafe extern "C" fn club_nation_not_argentina_france_croatia(clube: usize) -> u
 unsafe extern "C" fn comparar_club_nation_not_argentina_france_croatia(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(clube);
     let n = club_nation_not_argentina_france_croatia(clube);
-    PLACAR.registrar(r == n, || format!("club_nation_not_argentina_france_croatia({:x}) original={:x} rust={:x}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_nation_not_argentina_france_croatia({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }
 
@@ -66,6 +66,6 @@ unsafe extern "C" fn database_is_melanesian_nation(nacao: usize) -> u32 {
 unsafe extern "C" fn comparar_database_is_melanesian_nation(nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nacao);
     let n = database_is_melanesian_nation(nacao);
-    PLACAR.registrar(r == n, || format!("database_is_melanesian_nation({:x}) original={} rust={}", nacao, r, n));
+    PLACAR.record(r == n, || format!("database_is_melanesian_nation({:x}) original={} rust={}", nacao, r, n));
     r
 }

@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, jogo: usize
     let aplicar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16) = core::mem::transmute(0x685f60usize);
     let (mut pts_casa, mut pts_fora) = (0i16, 0i16);
     // ponytail: a original empurra o +0x3e com o alto do ecx (sobra da chamada anterior); a 0x685f60 lê só o curto
-    crate::comparacao::ramo("cpw_11 resultado aplicado");
+    crate::comparison::branch("cpw_11 resultado aplicado");
     aplicar(liga, p, cpw11_d(liga + 0xb1), cpw11_w(liga + 0x3e) as u16 as u32, 1, &mut pts_casa, &mut pts_fora); // cpw11: a tabela
     if *((liga + 0x44) as *const u8) == 0xfe || cpw11_d(0xadadfc) == 0 {
         return 1;
@@ -72,15 +72,15 @@ unsafe extern "thiscall" fn comparar_league_add_result(liga: usize, p: usize, jo
     let n = cpw11_w(liga + 0x3e) as u16 as u32;
     let mut regioes = vec![(liga + 0xc9, 8)];
     regioes.extend(result_update_regions(p, cpw11_d(liga + 0xb1), n, core::ptr::null_mut(), core::ptr::null_mut()));
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     LEAGUE_ADD_RESULT_DRY_RUN = true;
-    let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| league_add_result(liga, p, jogo)));
+    let rr = crate::rng::pause_trace(|| crate::rng::without_counting(|| league_add_result(liga, p, jogo)));
     LEAGUE_ADD_RESULT_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     let ro = o(liga, p, jogo);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(ro == rr && mo == mr, || format!("league_add_result({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", liga, p, ro, mo, rr, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(ro == rr && mo == mr, || format!("league_add_result({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", liga, p, ro, mo, rr, mr));
     ro
 }
 
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_copy_table(liga: usize) -> usize {
             }
         }
     }
-    PLACAR.registrar(c != 0 && erros.is_empty(), || format!("copy_table({:x}) n {} copia {:x}: {}", liga, n, c, erros.join("; ")));
+    PLACAR.record(c != 0 && erros.is_empty(), || format!("copy_table({:x}) n {} copia {:x}: {}", liga, n, c, erros.join("; ")));
     c
 }
 
@@ -240,5 +240,5 @@ unsafe extern "thiscall" fn comparar_league_set_predicted_positions(liga: usize)
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.registrar(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubes: {}", liga, n, erros.join("; ")));
+    PLACAR.record(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubes: {}", liga, n, erros.join("; ")));
 }

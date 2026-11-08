@@ -239,7 +239,12 @@ pub(crate) unsafe fn human_manager_record_at(this: usize, k: usize) -> usize {
     read_usize(this).wrapping_add(k.wrapping_mul(0xa6ef))
 }
 
-/// the tactic block (0x1ecd bytes) of the active slot of the human manager record
+/// Returns the tactic block (`0x1ecd` bytes) of the active slot of the human manager's record.
+///
+/// `HUMAN_MANAGER::get_active_tactic(tecnico)` (manager), called by the team selection (`0x6db500`), the formation
+/// (`0x6e0230`), the match day (`0x6b4360`), the club tactic (`0x896660`) and the screens. The tactic block of the
+/// active slot (signed byte at `+0x9a69` of the record) of the manager (null: the current human). No manager or out of
+/// range: the original routine runs ("Error" box, 0).
 /// Original: `HUMAN_MANAGER::get_active_tactic` (0x5fbd00, human_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x5fbd00 } (thiscall, ret 4, human_manager.cpp): `HUMAN_MANAGER::get_active_tactic(tecnico)`, pela escalação
@@ -256,8 +261,14 @@ pub(crate) unsafe extern "thiscall" fn get_active_tactic(this: usize, manager: u
 }
 
 
-/// the human manager active slot: 4 for the second national team, 3 with reserve in a national team, 2 in a national
-/// team, 1 with reserve, 0 for the first team
+/// Selects the human manager's active tactic slot: 4 for the second national team, 3 with reserve in a national team, 2
+/// in a national team, 1 with reserve, 0 for the first team.
+///
+/// `HUMAN_MANAGER::select_tactic_slot(reserva, clube, tecnico)` (reserve, club, manager), by the same callers as
+/// `0x5fbd00`. Null manager: the current human (with none, nothing); null club: the manager's (`+0x39`). The active
+/// slot (`+0x9a69` of the record): 4 in the second national team (`0x5409b0`), 3 with `reserva` in a national team
+/// (`0x53b900`), 2 in a national team, 1 with `reserva`, 0 in the first team. Out of range: the original routine runs
+/// ("Error" box).
 /// Original: `HUMAN_MANAGER::select_tactic_slot` (0x5fbe20, human_manager.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x5fbe20 } (thiscall, ret 0xc, human_manager.cpp): `HUMAN_MANAGER::select_tactic_slot(reserva, clube, tecnico)`,
@@ -272,7 +283,7 @@ pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: 
     let Some(k) = human_manager_human_manager_index(this, t) else {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserve, clube, manager); // message box: original only
     };
-    let clube = if clube != 0 { clube } else { read_usize(t + 0x39) };
+    let clube = if clube != 0 { clube } else { read_usize(t + staff::CLUB_JOB) };
     let second: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let slot: u8 = if clube != 0 && second(clube) != 0 {
@@ -300,7 +311,10 @@ pub(crate) unsafe fn human_manager_watched_match_record(this: usize, i: usize) -
     read_usize(this).wrapping_add(0x9ad4).wrapping_add(i.wrapping_mul(0xa6ef))
 }
 
-/// clears (79 bytes) the watched fixture of each active human manager who may no longer watch it (0x5fe700); returns 1
+/// Clears (79 bytes) the watched fixture of each active human manager who may no longer watch it. Returns 1.
+///
+/// `HUMAN_MANAGER::clear_invalid_watched_fixtures()`: for each of the 16 human managers (the last 16 of `[0xae23bc]`)
+/// that is active (`+0x5f` ≠ 0) and can no longer watch his watched fixture (`0x5fe700`), it zeroes its 79 bytes.
 /// Original: `HUMAN_MANAGER::clear_invalid_watched_fixtures` (0x5fe8d0, human_manager.cpp, thiscall).
 ///
 /// [pt] { 0x5fe8d0 } (thiscall, human_manager.cpp): `HUMAN_MANAGER::clear_invalid_watched_fixtures()`: para cada um dos 16
@@ -310,7 +324,7 @@ pub(crate) unsafe extern "thiscall" fn clear_invalid_watched_fixtures(this: usiz
     let can_ver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CAN_WATCH_FIXTURE);
     for i in 0..0x10usize {
         let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE));
-        if *((p + 0x5f) as *const u8) == 0 {
+        if *((p + staff::CLASSIFICATION) as *const u8) == 0 {
             continue;
         }
         let f = human_manager_watched_match_record(this, i);
@@ -342,7 +356,10 @@ pub(crate) unsafe fn scouting_targets_of_club(this: usize, id: u32) -> Vec<usize
 
 
 
-/// whether any of the active human managers chose to watch the fixture
+/// Tells whether any of the active human managers chose to watch the fixture.
+///
+/// 1 if any of the 16 active human managers (110-byte records in `[0xae23bc]`, from `[0xae2364]` − 16, `+0x5f` not
+/// zero) chose to watch `partida` (`0x5fe290`); otherwise 0. Null fixture: the original routine runs (error box and 0).
 /// Original: `HUMAN_MANAGER::is_fixture_watched` (0x5fe420, human_manager.cpp, thiscall).
 ///
 /// [pt] { 0x5fe420 } (thiscall, ret 4, human_manager.cpp): 1 se algum dos 16 técnicos humanos ativos
@@ -356,7 +373,7 @@ pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: 
     for k in 0..16i32 {
         let i = k.wrapping_add(*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x10);
         let h = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as isize * 110) as usize);
-        if *((h + 0x5f) as *const u8) != 0 && assiste(this, partida, h) != 0 {
+        if *((h + staff::CLASSIFICATION) as *const u8) != 0 && assiste(this, partida, h) != 0 {
             return 1;
         }
     }
@@ -383,7 +400,12 @@ pub(crate) unsafe fn human_index_for_nickname(this: usize, human: usize) -> Opti
     Some(Some(i as usize))
 }
 
-/// whether the human manager (or the current one) gave the person a nickname, by binary search in his list
+/// Tells whether the human manager (or the current one) gave the person a nickname, by binary search in his list.
+///
+/// 1 if human manager `humano` (0 = the current one) gave a nickname to the person with id [`pessoa`]: binary search
+/// (`0x946464` with `0x601a10`, items of `0x1e` bytes) in list `+0xa6e3` (count at `+0xa6eb`) of his record (`0xa6ef`
+/// bytes in `[this]`). Null person or human, or empty list: 0. Human out of range: the original routine runs (error box
+/// and 0).
 /// Original: `HUMAN_MANAGER::has_nickname` (0x600740, human_manager.cpp, thiscall).
 ///
 /// [pt] { 0x600740 } (thiscall, ret 8, human_manager.cpp): 1 se o técnico humano `humano` (0 = o da vez)
@@ -471,7 +493,7 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(clube: usize)
     let mut best = 0usize;
     for k in 0..5 {
         let c = core::ptr::read_unaligned((clube + club::COACHES + k * 4) as *const usize);
-        if c == 0 || core::ptr::read_unaligned((c + 0x69) as *const usize) == 0 {
+        if c == 0 || core::ptr::read_unaligned((c + staff::NON_PLAYER) as *const usize) == 0 {
             continue;
         }
         if best == 0 || injury_word_0c(c) > injury_word_0c(best) {
@@ -482,7 +504,11 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(clube: usize)
 }
 
 
-/// whether the fixture is the one the human manager chose to watch
+/// Tells whether the fixture is the one the human manager chose to watch.
+///
+/// Whether `partida` is the one the human chose to watch: his record (`+0x9ad4..`) with the same competition (`+0x3f`),
+/// dates (`+0x2a`, `+0x28`), club (`+0`), `+0x34` and both sides (`+0xc`, `+0x10`). Null fixture or human out of range:
+/// the original routine runs (error box and 0).
 /// Original: `HUMAN_MANAGER::is_watching_fixture` (0x5fe290, human_manager.cpp, thiscall).
 ///
 /// [pt] { 0x5fe290 } (thiscall, ret 8, human_manager.cpp): se a `partida` é a que o humano escolheu
@@ -510,8 +536,17 @@ pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida:
 }
 
 
-/// 1 when the fixture has a negative +0x43 and neither it nor the fixtures of that day (each key nation group) have a
-/// club of the human; else 0
+/// Tells whether the human may watch the fixture: 1 when the fixture has a negative `+0x43` and neither it nor the
+/// fixtures of that day (in each key-nation group) have a club of the human; otherwise 0.
+///
+/// `HUMAN_MANAGER::can_watch_fixture(partida, humano)` (fixture, human): the human (or, if null, the one of the current
+/// screen `[0xb74c26 + 0x300 × [0xb77c7a]]`) can watch the fixture if it has a negative `+0x43`, neither of the two
+/// clubs (`+0x1c`, `+0x20`, with flags `+0x40`, `+0x41`) is his (`0x600a50`) and, in each group of the key nations
+/// (`[0xb64738]`), no fixture in the list of its day (date `+0x28`/`+0x2a`, time slot `+0x3f`; `0x5ae6a0`) has a club
+/// of his.
+///
+/// Null fixture: the "Error" box (`0x707`) and 0. Called by the clean-up of watched fixtures (`0x5fe8d0`) and by the
+/// choice of the fixture (`0x5fe500`).
 /// Original: `HUMAN_MANAGER::can_watch_fixture` (0x5fe700, human_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5fe700 } (thiscall, ret 8, human_manager.cpp): `HUMAN_MANAGER::can_watch_fixture(partida, humano)`: o humano
@@ -566,8 +601,17 @@ pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: u
 }
 
 
-/// in each human manager, finds the person nickname (30 bytes), pulls the next ones up, blanks the last one and lowers
-/// the count; sorts the last manager array
+/// Removes the person's nickname from every human manager: in each one, finds the nickname (30 bytes), pulls the next
+/// ones up, blanks the last one and lowers the count; then sorts the last manager's array.
+///
+/// `HUMAN_MANAGER::remove_nickname_from_all(id)`: in each non-null human manager (`[this]`, `[this+4]` records of
+/// `0xa6ef` bytes; counter in a signed byte), with no nickname array (`+0xa6e3`) it exits for good; otherwise it
+/// searches (bsearch with `0x601a10`, which reads only the id at `+0`; the key has byte `+4` zeroed and the rest
+/// undefined, the port uses zero) for the nickname of person `*id` among the `[+0xa6eb]` 30-byte ones; if found: pulls
+/// the following ones up one place, the last one gets id −1 and `+4` = 0 and the count goes down.
+///
+/// At the end it re-sorts (qsort) only the array of the last manager seen (with no managers, `id` stands in for the
+/// manager, as in the original).
 /// Original: `HUMAN_MANAGER::remove_nickname_from_all` (0x5fff30, human_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x5fff30 } (thiscall, ret 4, human_manager.cpp): `HUMAN_MANAGER::remove_nickname_from_all(id)`: em cada técnico
@@ -618,7 +662,13 @@ pub(crate) unsafe extern "thiscall" fn remove_nickname_from_all(this: usize, id:
 }
 
 
-/// does the current human manager run the club (or the nation's main team)?
+/// Tells whether the current human manager runs the club (or, for second national teams, the nation's main team).
+///
+/// Does the current human manager run `clube` (or, for second national teams, the nation's main national team,
+/// `0x53b3d0`)? He must be the club's manager (`+0xcf`); without `qualquer` (any), he must not have flags `+0x9ace`
+/// (`0x5fe040`) or `+0x9a01` in the human record `[0xb63c98]`; and then it is enough that `forcar` (force) is set, that
+/// the club is a national team (`0x53b900`) or flag `+0x9a05` (`0x5fd480`). Null club: the original routine runs (error
+/// box and 0).
 /// Original: `human_runs_club` (0x600c90, human_manager.cpp, cdecl).
 ///
 /// [pt] { 0x600c90 } (cdecl, human_manager.cpp): o técnico humano da vez manda no `clube` (ou, nas
@@ -639,7 +689,7 @@ pub(crate) unsafe extern "C" fn human_runs_club(clube: usize, qualquer: u32, for
         }
         let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         let human = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const usize);
-        let manager = core::ptr::read_unaligned((c + 0xcf) as *const usize);
+        let manager = core::ptr::read_unaligned((c + club::MANAGER) as *const usize);
         'proximo: {
             if manager == 0 || human != manager {
                 break 'proximo;
@@ -658,19 +708,23 @@ pub(crate) unsafe extern "C" fn human_runs_club(clube: usize, qualquer: u32, for
                 }
             }
             if force != 0 || is_national_team(c) != 0 || manager_9a05(humanos, human) != 0 {
-                crate::comparacao::ramo("humano manda no clube");
+                crate::comparison::branch("humano manda no clube");
                 return 1;
             }
         }
         if is_second_national_team(c) == 0 {
             return 0;
         }
-        c = main_national_team(core::ptr::read_unaligned((c + 0x53) as *const usize));
+        c = main_national_team(core::ptr::read_unaligned((c + club::NATION) as *const usize));
     }
 }
 
 
-/// stores +0x9a65 of the human manager record (0xa6ef bytes)
+/// Stores `valor` at `+0x9a65` of the human manager record (`0xa6ef` bytes). Returns 1.
+///
+/// Writes `valor` (value) at `+0x9a65` of the record of human manager `tecnico` (without one, the current one at
+/// `[0xb74c26 + 0x300 × [0xb77c7a]]`) among the humans `this` (`[this]`, `0xa6ef` bytes each; the index is id −
+/// `[0xae2364]` + 16, up to `[this+4]` − 1). No manager or index out of range: the original routine runs (error box).
 /// Original: `set_human_field` (0x5fdd30, human_manager.cpp, thiscall).
 ///
 /// [pt] { 0x5fdd30 } (thiscall, ret 8, human_manager.cpp): grava `valor` em +0x9a65 do registro do técnico
@@ -690,14 +744,21 @@ pub(crate) unsafe extern "thiscall" fn set_human_field(t: usize, value: u32, man
     if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD)(t, value, manager);
     }
-    crate::comparacao::ramo("dado do humano gravado");
+    crate::comparison::branch("dado do humano gravado");
     core::ptr::write_unaligned((*(t as *const usize) + i as usize * 0xa6ef + 0x9a65) as *mut u32, value);
     1
 }
 
 
-/// turns the human manager's holiday on or off, keeping the count of humans on holiday; when turning on, answers
-/// pending news
+/// Turns the human manager's holiday on or off, keeping the count of humans on holiday; when turning it on, answers
+/// pending news.
+///
+/// `HUMAN_MANAGER::set_on_holiday(férias, técnico)` (holiday, manager): with no manager, the current human (`[0xb74c26
+/// + 0x300 × [0xb77c7a]]`); none: the box of line `0x41c`. The manager's index (id − `[0xae2364]` + 16) outside
+/// 0..`[this+4]`: the box of line `0x428`. The holiday flag (`+0x9a01` of the `0xa6ef`-byte record in `[this]`) becomes
+/// `férias`, with the count of humans on holiday (`+0xc`) going up when turned on and down when turned off; when turned
+/// on, the manager's pending news with the club (`+0x39`) and with the national team (`+0x24`) are answered
+/// (`0x7874b0`); with the day in `[0xb67a50]`, the day's interest (`0x6b5040`).
 /// Original: `set_on_holiday` (0x5fd2f0, human_manager.cpp, thiscall).
 ///
 /// [pt] { 0x5fd2f0 } (thiscall, ret 8, human_manager.cpp): `HUMAN_MANAGER::set_on_holiday(férias, técnico)`: sem técnico, o
@@ -731,14 +792,14 @@ pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, holiday: u32,
         *count = (*count).wrapping_sub(1);
     }
     core::ptr::write_unaligned(mark as *mut u32, holiday);
-    crate::comparacao::ramo("cpy_13 ferias do humano");
+    crate::comparison::branch("cpy_13 ferias do humano");
     if holiday != 0 {
         let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
-        if read_usize(t + 0x39) != 0 {
-            respond(read_usize(G_NEWS), t, read_usize(t + 0x39));
+        if read_usize(t + staff::CLUB_JOB) != 0 {
+            respond(read_usize(G_NEWS), t, read_usize(t + staff::CLUB_JOB));
         }
-        if read_usize(t + 0x24) != 0 {
-            respond(read_usize(G_NEWS), t, read_usize(t + 0x24));
+        if read_usize(t + staff::NATIONAL_JOB) != 0 {
+            respond(read_usize(G_NEWS), t, read_usize(t + staff::NATIONAL_JOB));
         }
     }
     let day = read_usize(G_MATCH_DAY);

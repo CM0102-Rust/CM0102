@@ -52,7 +52,7 @@ unsafe fn compare_transfer_rules_ctor(nome: &str, this: usize, o: impl FnOnce(),
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.registrar(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
+    PLACAR.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
 }
 
 /// A janela da Inglaterra: de 2 de junho (andando para a segunda-feira [inferência]) a 26 de março (andando para a quinta-feira [inferência]).
@@ -64,7 +64,7 @@ const ENGLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 /// { 0x579b30 } (thiscall, ret 0x14, england_rules.cpp, `ENGLAND_RULES::ENGLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Inglaterra (regra 7): a base (0x8e84a0), a vtable 0x969f4c, 1 janela(s) de `ENGLAND_TRANSFER_WINDOWS`. Devolve o objeto.
 unsafe extern "thiscall" fn construct_england_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqk_1 inglaterra");
+    crate::comparison::branch("cqk_1 inglaterra");
     england_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x969f4c, 1, &ENGLAND_TRANSFER_WINDOWS, 0x9c4498, 0x4f);
     this
 }
@@ -88,7 +88,7 @@ const USA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 /// { 0x90b940 } (thiscall, ret 0x14, usa_rules.cpp, `USA_RULES::USA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência dos EUA (regra 25): a base (0x8e84a0), a vtable 0x970a38, 1 janela(s) de `USA_TRANSFER_WINDOWS` e o +0x13 = 4 (o padrão da base é 50) [inferência: o limite de estrangeiros]. Devolve o objeto.
 unsafe extern "thiscall" fn construct_usa_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqk_1 eua");
+    crate::comparison::branch("cqk_1 eua");
     england_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x970a38, 1, &USA_TRANSFER_WINDOWS, 0xaa211c, 0x54);
     *((this + 0x13) as *mut u8) = 4;
     this
@@ -113,7 +113,7 @@ const AUSTRALIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 /// { 0x412c80 } (thiscall, ret 0x14, australia_rules.cpp, `AUSTRALIA_RULES::Australia_rules`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Austrália (regra 2): a base (0x8e84a0), a vtable 0x967830, 1 janela(s) de `AUSTRALIA_TRANSFER_WINDOWS` e o +0x13 = 6 [inferência: o limite de estrangeiros]. Devolve o objeto.
 unsafe extern "thiscall" fn australia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqk_1 australia");
+    crate::comparison::branch("cqk_1 australia");
     england_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x967830, 1, &AUSTRALIA_TRANSFER_WINDOWS, 0x987cfc, 0x51);
     *((this + 0x13) as *mut u8) = 6;
     this

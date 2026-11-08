@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_advance_stage(thi
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_ADVANCE_STAGE)(this);
     let after = read_usize(this + 0x30) as i32;
     let same = if last { after == before } else if before + 1 == 2 { after == 2 || after == 1 } else { after == before + 1 };
-    PLACAR.registrar(same, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    PLACAR.record(same, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `bra_reg_parana_create_final_stage` (comparison mode: see the header of motor.rs).
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_create_final_stag
             read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
         }
     };
-    PLACAR.registrar(same, || format!("bra_reg_parana_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
+    PLACAR.record(same, || format!("bra_reg_parana_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
 /// Comparer for `bra_reg_parana_record_season_honours` (comparison mode: see the header of motor.rs).
@@ -61,11 +61,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_record_season_hon
 /// saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_SET_UP_RULES)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_SET_UP_RULES)(this), || {
         parana_rules(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("bra_reg_parana_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("bra_reg_parana_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_parana(this: u
 /// Comparer for `bra_reg_parana_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_CREATE_TABLE);
-    bra_reg_northeast_compare_state_league_table("bra_reg_parana_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
+    bra_reg_rio_compare_state_league_table("bra_reg_parana_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// Comparer for `create_half_stage` (comparison mode: see the header of motor.rs).

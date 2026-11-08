@@ -88,7 +88,7 @@ unsafe fn select_invited_clubs(this: usize) -> u32 {
         i += 1;
         c += 0x245;
     }
-    crate::comparacao::ramo("cqs_11 convidados da merconorte");
+    crate::comparison::branch("cqs_11 convidados da merconorte");
     ordenar(mexico.clubes.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: os 4 do México
     ordenar(colombia.clubes.as_mut_ptr() as usize, colombia.n as u32, 5);
     ordenar(peru.clubes.as_mut_ptr() as usize, peru.n as u32, 3);
@@ -112,7 +112,7 @@ unsafe fn select_invited_clubs(this: usize) -> u32 {
         vaga(1, mls[1]);
     } else {
         let registro = cqs11_d(0xae23d0) + cqs11_d(0x9cf590) * 0x6b;
-        crate::comparacao::ramo("cqs_11 campeao da liga americana");
+        crate::comparison::branch("cqs_11 campeao da liga americana");
         vaga(0, colocado(registro, 0)); // cqs11: o campeão da liga americana
         vaga(1, colocado(cqs11_d(americana + 4), 0));
         let l = cqs11_d(this + 0xee);
@@ -135,14 +135,14 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usi
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqs11_d(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| select_invited_clubs(this));
+        let r = crate::rng::without_counting(|| select_invited_clubs(this));
         lr.set(cqs11_d(this + 0xee));
         cqs11_pd(this + 0xee, lo.get());
         r
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usi
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.record(igual && a == b && lista, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -172,7 +172,7 @@ unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: usize, arquivo: u
     let f = f + 1;
     cqs11_pd(this + 0x30, f as usize);
     if f == mata {
-        crate::comparacao::ramo(ramo);
+        crate::comparison::branch(ramo);
         let m: unsafe extern "thiscall" fn(usize) = core::mem::transmute(rotina);
         m(this);
     }
@@ -185,7 +185,7 @@ unsafe fn con_merc_cup_compare_advance_stage(nome: &str, this: usize, original: 
     let ultima = f >= (cqs11_d(this + 0x2c) as i32).wrapping_sub(1);
     original();
     let depois = cqs11_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, f, depois));
+    PLACAR.record(depois == if ultima { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, f, depois));
 }
 
 /// { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte

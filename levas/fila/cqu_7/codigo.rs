@@ -86,7 +86,7 @@ unsafe fn cqu7_copa_da_franca_corpo(this: usize, ano: u32, dono: usize) -> usize
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_7 copa_da_franca nova");
+    crate::comparison::branch("cqu_7 copa_da_franca nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5baa50usize);
     let r = f(this);
     if r == 0 {
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn cqu7_copa_da_franca(this: usize, ano: u32, dono: usi
 unsafe extern "thiscall" fn comparar_cqu7_copa_da_franca(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu7_plano(this, r, ano, dono, 0x96a864, &CQU7_CAMPOS_COPA_DA_FRANCA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu7_copa_da_franca({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu7_copa_da_franca({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -150,7 +150,7 @@ unsafe fn cqu7_copa_da_liga_francesa_corpo(this: usize, ano: u32, dono: usize) -
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_7 copa_da_liga_francesa nova");
+    crate::comparison::branch("cqu_7 copa_da_liga_francesa nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bd160usize);
     let r = f(this);
     if r == 0 {
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn cqu7_copa_da_liga_francesa(this: usize, ano: u32, do
 unsafe extern "thiscall" fn comparar_cqu7_copa_da_liga_francesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu7_plano(this, r, ano, dono, 0x96aad8, &CQU7_CAMPOS_COPA_DA_LIGA_FRANCESA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu7_copa_da_liga_francesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu7_copa_da_liga_francesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -212,7 +212,7 @@ unsafe fn cqu7_supercopa_francesa_corpo(this: usize, ano: u32, dono: usize) -> u
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_7 supercopa_francesa nova");
+    crate::comparison::branch("cqu_7 supercopa_francesa nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bf770usize);
     let r = f(this);
     if r < 0 {
@@ -243,6 +243,6 @@ unsafe extern "thiscall" fn cqu7_supercopa_francesa(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqu7_supercopa_francesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqu7_plano(this, r, ano, dono, 0x96ace0, &CQU7_CAMPOS_SUPERCOPA_FRANCESA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu7_supercopa_francesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu7_supercopa_francesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

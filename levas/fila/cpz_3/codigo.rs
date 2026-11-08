@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
         let s = cpz3_b(li + 0x37);
         if pior == um_depois {
             if s != 3 && s != 0xfe && s != 0xfc && s != 5 {
-                crate::comparacao::ramo("cpz_3 titulo");
+                crate::comparison::branch("cpz_3 titulo");
                 set_row_status(this, ii, 5, alto_linha); // cpz3: o título na pior posição = o primeiro + 1
             }
         } else {
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                 }
             } else if f == 1 {
                 if s == 0xff {
-                    crate::comparacao::ramo("cpz_3 vaga no mata-mata");
+                    crate::comparison::branch("cpz_3 vaga no mata-mata");
                     set_row_status(this, ii, 1, alto_linha); // cpz3: a vaga no mata-mata (situação 1)
                 }
             } else {
@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                 if g == 3 {
                     let mut alto = alto_linha;
                     if !POSITIONS_STATUS_DRY_RUN {
-                        crate::comparacao::ramo("cpz_3 clausulas de rebaixamento");
+                        crate::comparison::branch("cpz_3 clausulas de rebaixamento");
                         let clausulas: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x4cd030usize);
                         alto = clausulas(cpz3_d(0xae1050), cpz3_d(li), cpz3_d(this + 4)) & !0xff; // cpz3: as cláusulas de rebaixamento
                     }
@@ -364,15 +364,15 @@ unsafe extern "thiscall" fn comparar_update_positions_and_status(this: usize) {
         return o(this);
     }
     let regioes = table_status_regions(this);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     POSITIONS_STATUS_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| update_positions_and_status(this));
+    crate::rng::pause_trace(|| update_positions_and_status(this));
     POSITIONS_STATUS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(this);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("update_positions_and_status({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(mo == mr, || format!("update_positions_and_status({:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// A fase seguinte das ligas com mata-mata (o corpo de 0x572ff0 e 0x5769e0): na última fase (+0x30 ≥ +0x2c − 1, com
@@ -385,7 +385,7 @@ unsafe fn advance_league_stage(this: usize, arquivo: usize, linha: u32, mata_mat
     let f = f.wrapping_add(1);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
     if f == 0 {
-        crate::comparacao::ramo(nome);
+        crate::comparison::branch(nome);
         let criar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(mata_mata);
         criar(this);
     }
@@ -410,8 +410,8 @@ unsafe fn compare_stage_advance(nome: &str, this: usize, original: impl FnOnce()
     if f >= cpz3_i(this + 0x2c).wrapping_sub(1) || f.wrapping_add(1) == 0 {
         return original();
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x30, 4)], original, copia);
-    PLACAR.registrar(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x30, 4)], original, copia);
+    PLACAR.record(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: usize) {

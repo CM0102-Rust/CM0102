@@ -1,7 +1,13 @@
 use super::*;
 
-/// matches a container item name against a pattern with `*` (`*.` goes to the last dot), case-insensitively; the "{
-/// Empty }" slot never matches
+/// Matches a container item name against a pattern with `*` (`*.` goes to the last dot), case-insensitively; the "{
+/// Empty }" slot never matches.
+///
+/// `zipdir_match_filename_pattern(pattern, name)`: 1 if the item's name matches the pattern. "{ Empty }" (0xad6ad8, the
+/// empty slot of the unpack list) never matches; a name equal to the pattern, or an empty pattern, matches; otherwise
+/// letter by letter, case-insensitively (0x90c2f0, only the low byte). `*.` skips the name up to the last dot; `*`
+/// followed by anything else only matches if it is the end of the pattern. As in the original, the pattern ending
+/// before the name also matches ("abc" matches "abcdef").
 /// Original: `zipdir_match_filename_pattern` (0x933a00, zipdir.cpp, cdecl).
 ///
 /// [pt] { 0x933a00 } (cdecl, zipdir.cpp): `zipdir_match_filename_pattern(padrao, nome)`: 1 se o nome do
@@ -113,8 +119,13 @@ pub(crate) unsafe extern "C" fn zget_archive_id(path: usize) -> u32 {
 
 // The id and the size only read the file and free what they allocate: both run side by side.
 
-/// adds up the uncompressed sizes of the items matching the pattern (signed int: negative above 2 GB, as in the
-/// original)
+/// Adds up the uncompressed sizes of the items matching the pattern (signed int: negative above 2 GB, as in the
+/// original).
+///
+/// `zget_matching_size(path, pattern)`: the sum of the (uncompressed) sizes of the items whose name matches the pattern
+/// (0x933a00). The sum is a signed `int`, as in the original: above 2 GB it goes negative and the space check of
+/// `load_game_data` always passes (fixing it is a separate decision, like the save above 2 GB). Out of memory, the
+/// error box (zipdir.cpp 849) and 0; a container that does not open or is of an unknown type, 0.
 /// Original: `zget_matching_size` (0x933860, zipdir.cpp, cdecl).
 ///
 /// [pt] { 0x933860 } (cdecl, zipdir.cpp): `zget_matching_size(caminho, padrao)`: a soma dos tamanhos
@@ -175,8 +186,15 @@ pub(crate) unsafe fn zipdir_c_strcat(target: *mut u8, source: *const u8) {
     zipdir_c_strcpy(target.add(n), source);
 }
 
-/// each folder file matching the pattern (FindFirstFile) becomes a container item: zopen for writing, fread/zwrite in
-/// 0x30d40 blocks, zclose
+/// Turns each folder file matching the pattern (FindFirstFile) into a container item: zopen for writing, fread/zwrite
+/// in 0x30d40-byte blocks, zclose.
+///
+/// `zadd_matching_files(path, folder, pattern, a4, kind)`: each file in the folder that `FindFirstFile` finds with the
+/// pattern (0x4c0aa0/0x4c0b50, files only, in the system's order) becomes a container item: `zopen` for writing
+/// (0x9326e0, creates the container with `a4`/`kind` if it does not exist) + `fread` in blocks of 0x30d40 into the
+/// item's read buffer (+0x41705) + `zwrite` (0x932e10) + `zclose` (0x932b00). 1 at the end; 0 if nothing matches. A
+/// file that does not open or an item refused: the error box (zipdir.cpp 797 / 805) and 0, without closing the search
+/// (as the original).
 /// Original: `zadd_matching_files` (0x933610, zipdir.cpp, cdecl).
 ///
 /// [pt] { 0x933610 } (cdecl, zipdir.cpp): `zadd_matching_files(caminho, pasta, padrao, a4, tipo)`: cada
@@ -196,7 +214,7 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
     let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     let write: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZWRITE);
     let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
-    crate::comparacao::ramo("save empacotar");
+    crate::comparison::branch("save empacotar");
     // the search (handle +0, name +0x10, filter +0x110) and the built path
     let mut found = [0u8; 0x114];
     let mut search = [0u8; 0x104];
@@ -236,8 +254,19 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
 // simplification: creates items in the container (and the file, if it does not exist); does not run twice. The proof of the
 // save compares the .qst saved with and without the batch.
 
-/// each container item whose name matches the pattern becomes a folder file (zopen for reading, zread in 0x30d40
-/// blocks, fwrite)
+/// Turns each container item whose name matches the pattern into a folder file (zopen for reading, zread in
+/// 0x30d40-byte blocks, fwrite).
+///
+/// `zextract_matching_files(path, folder, pattern)`: copies the names of the index's 1000 slots (the empty ones as "{
+/// Empty }") into a list of 0x104 bytes per name (malloc 0x944e46); each name that matches the pattern (0x933a00) and
+/// opens (`zopen` reading, a4 0x15, kind 4) becomes a file in the folder ("wb"), in blocks of 0x30d40 read by `zread`
+/// (0x932c30) into the item's write buffer (+0x72445). 1 if it extracted any. A file that cannot be created: 0 (closes
+/// the item).
+///
+/// Stack garbage in the original: on the error paths (out of memory for the list, a container that does not open or is
+/// of an unknown type) it closes the item from a local variable that was never written; here it starts at 0. Out of
+/// memory for the index, the error box (zipdir.cpp 642) writes the name "zipdir" over the answer (the same stack slot)
+/// and the list carries on without the names (memory from the allocation).
 /// Original: `zextract_matching_files` (0x933320, zipdir.cpp, cdecl).
 ///
 /// [pt] { 0x933320 } (cdecl, zipdir.cpp): `zextract_matching_files(caminho, pasta, padrao)`: copia os nomes
@@ -263,7 +292,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
     let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     let read_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
     let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
-    crate::comparacao::ramo("save desempacotar");
+    crate::comparison::branch("save desempacotar");
     let mut z = 0usize;
     let mut reply = 0u32;
     let error = |nomes: usize, z: &mut usize| {
@@ -346,59 +375,6 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
 // simplification: creates files in the temporary folder and allocates; does not run twice. The load in the save proof
 // (--sav) goes through here; saving does not.
 
-/// builds the CM3_TEMP folder path in [0xde279c] and deletes its files matching the pattern, in groups of 100
-/// Original: `utils_clear_temp_folder` (0x90cd50, utils.cpp, cdecl).
-///
-/// [pt] { 0x90cd50 } (cdecl, utils.cpp): `utils_clear_temp_folder(padrao)`: monta em [0xde279c] a pasta
-/// temporária (a variável `CM3_TEMP` pela 0x90bc50 + "\", se houver, e o texto de [0xad9c64], copiado
-/// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
-/// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
-pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
-    let ambiente: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_UTILS_GET_FOLDER_FOR_KEY);
-    let copiar_limitado: unsafe extern "C" fn(usize, *mut u8) = core::mem::transmute(FN_UTILS_COPY_PATH_LIMITED);
-    let join_path: unsafe extern "C" fn(*mut u8, usize, *const u8, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
-    let first: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
-    let next: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
-    let encerrar: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
-    let erase: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_CRT_REMOVE);
-    crate::comparacao::ramo("save limpar temporarios");
-    let global = 0xde279c as *mut u8;
-    *global = 0;
-    let variavel = ambiente(0x987da0);
-    let mut sufixo = [0u8; 0x100];
-    copiar_limitado(0xad9c64, sufixo.as_mut_ptr());
-    if variavel != 0 && *(variavel as *const u8) != 0 {
-        zipdir_c_strcpy(global, variavel as *const u8);
-        zipdir_c_strcat(global, 0x9c3730 as *const u8);
-    }
-    zipdir_c_strcat(global, sufixo.as_ptr());
-    let mut folder = [0u8; 0x104];
-    zipdir_c_strcpy(folder.as_mut_ptr(), global);
-    let mut search = [0u8; 0x104];
-    let mut found = [0u8; 0x114];
-    let mut nomes = [0u8; 0x6400];
-    loop {
-        join_path(search.as_mut_ptr(), 0, folder.as_ptr(), default, 0);
-        let mut n = 0usize;
-        if first(search.as_mut_ptr(), found.as_mut_ptr(), 0) == 0 {
-            loop {
-                zipdir_c_strcpy(nomes.as_mut_ptr().add(0x100 * n), found.as_ptr().add(0x10));
-                n += 1;
-                if n == 100 || next(found.as_mut_ptr()) != 0 {
-                    break;
-                }
-            }
-        }
-        encerrar(found.as_mut_ptr());
-        for k in 0..n {
-            join_path(search.as_mut_ptr(), 0, folder.as_ptr(), nomes.as_ptr().add(0x100 * k) as usize, 0);
-            erase(search.as_mut_ptr());
-        }
-        if n != 100 {
-            break;
-        }
-    }
-}
 
 // simplification: deletes files; does not run twice. Saving the .qst goes through here (create_game).
 
@@ -437,14 +413,19 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
         return b;
     }
     // simplification: the branch marks the block, not each call (zread runs millions of times during loading)
-    crate::comparacao::ramo("save zread bloco");
+    crate::comparison::branch("save zread bloco");
     zf_write_i32(z, 0xa318d, read(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
     let b = *((z + 0x41705) as *const u8);
     zf_write_i32(z, 0xa3185, 1);
     b
 }
 
-/// reads from the item like fread, clipped at the item end; on type 4 decodes the RLE (a run may span calls)
+/// Reads from the item like fread, clipped at the item end; on type 4 decodes the RLE (a run may span calls).
+///
+/// `zread(buf, size, count, z)` like `fread`, inside the item opened for reading (otherwise 0): the request (`size ×
+/// count`, int) is clipped at the end of the item and added to the logical position. Type 3: a direct `fread` of
+/// `request / size` items. Type 4: decodes the RLE; a run can span calls (+0x10 of +0x14). Returns `request / size`
+/// (signed division, as the original: `size` 0 crashes both).
 /// Original: `zread` (0x932c30, zipdir.cpp, cdecl).
 ///
 /// [pt] { 0x932c30 } (cdecl, zipdir.cpp): `zread(buf, tam, quantos, z)` como o `fread`, dentro do item
@@ -469,7 +450,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
     let end = zf_read_i32(z, 8).wrapping_add(request);
     zf_write_i32(z, 8, end);
     if zf_read_i32(z, 0x19) != 4 {
-        crate::comparacao::ramo("save zread tipo 3");
+        crate::comparison::branch("save zread tipo 3");
         let q = request / size;
         zf_write_i32(z, 8, size.wrapping_mul(q).wrapping_sub(request).wrapping_add(end));
         return read(buf, size, q, zf_read_i32(z, 0) as usize);
@@ -539,14 +520,20 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
         return;
     }
     // simplification: the branch flags the block, not each call (zwrite runs millions of times in the save)
-    crate::comparacao::ramo("save zwrite bloco");
+    crate::comparison::branch("save zwrite bloco");
     write(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
     *((z + 0x72445) as *mut u8) = b;
 }
 
-/// writes to the item like fwrite and adds to the size in the index; on type 4 encodes the RLE (runs of up to 0x7f kept
-/// across calls)
+/// Writes to the item like fwrite and adds to the size in the index; on type 4 encodes the RLE (runs of up to 0x7f kept
+/// across calls).
+///
+/// `zwrite(buf, size, count, z)` like `fwrite`, in the item opened for writing (otherwise 0): adds `size × count` to
+/// the item's size in the index and to the logical position. Type 3: a direct `fwrite` (returns whatever it returns).
+/// Type 4: encodes the RLE byte by byte, keeping the run in +0x18/+0x14 between calls; a different byte closes the run
+/// (1 with byte <= 0x80 goes out as a literal, otherwise the pair 0x80 + n, byte); at 0x7f the pair goes out and the
+/// run restarts. Returns `count`.
 /// Original: `zwrite` (0x932e10, zipdir.cpp, cdecl).
 ///
 /// [pt] { 0x932e10 } (cdecl, zipdir.cpp): `zwrite(buf, tam, quantos, z)` como o `fwrite`, no item aberto
@@ -564,7 +551,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
     zf_write_i32(z, item, zf_read_i32(z, item).wrapping_add(total));
     zf_write_i32(z, 8, zf_read_i32(z, 8).wrapping_add(total));
     if zf_read_i32(z, 0x19) != 4 {
-        crate::comparacao::ramo("save zwrite tipo 3");
+        crate::comparison::branch("save zwrite tipo 3");
         return write(buf, size, how_many, zf_read_i32(z, 0) as usize);
     }
     let repetido = (z + 0x18) as *mut u8;
@@ -580,7 +567,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
                     continue;
                 }
                 // 0x7f copies: emit the pair and start over
-                crate::comparacao::ramo("save zwrite par 0x7f");
+                crate::comparison::branch("save zwrite par 0x7f");
                 zf_put_byte(z, (n as u8).wrapping_add(0x80));
                 zf_put_byte(z, *repetido);
             } else if n <= 1 && c <= 0x80 {
@@ -601,8 +588,12 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
 // simplification: writes to the file (buffer and fwrite) and changes the index; does not run twice. The save proof
 // compares the type-4 .qst saved with and without the batch.
 
-/// when writing: flushes the buffer, closes the pending RLE run and rewrites header and index at the start; closes the
-/// file and frees the item
+/// Closes a container item: when writing, flushes the buffer, closes the pending RLE run and rewrites header and index
+/// at the start; closes the file and frees the item.
+///
+/// `zclose(&z)`. Writing: flushes the write buffer; if the item has a size, on type 4 it closes the pending run
+/// directly in the file (literal or pair, as in zwrite) and rewrites the whole header + index (0x416ec bytes) at the
+/// start (`fseek` 0). Reading: clears the read cursors. Closes the FILE, frees the ZFILE and clears the pointer.
 /// Original: `zclose` (0x932b00, zipdir.cpp, cdecl).
 ///
 /// [pt] { 0x932b00 } (cdecl, zipdir.cpp): `zclose(&z)`. Gravando: esvazia o buffer de escrita; se o item
@@ -618,7 +609,7 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
     if z == 0 {
         return;
     }
-    crate::comparacao::ramo("save zclose");
+    crate::comparison::branch("save zclose");
     let f = || zf_read_i32(z, 0) as usize;
     if zf_read_i32(z, 4) == 1 {
         let n = zf_read_i32(z, 0xa3189);

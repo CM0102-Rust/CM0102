@@ -10,9 +10,21 @@ pub(crate) unsafe fn selected_club(this: usize, k: usize) -> usize {
     read_u32_as_usize(read_u32_as_usize(this + 0xee) + k * 4) // cqt10: o escolhido k
 }
 
-/// rule: the Oceania Club Championship is drawn on the start day (+0xb6/+0xb8) and only on the call without `completo`:
+/// Rule: the Oceania Club Championship is drawn on the start day (+0xb6/+0xb8) and only on the call without `completo`:
 /// the 8 clubs, the predicted positions, group A in the cup's own table, the fixtures and group B as a stage; before
-/// that day the cup does not even run the league day; an error while building returns 1 without the league day
+/// that day the cup does not even run the league day; an error while building returns 1 without the league day.
+///
+/// `OceaniaClubChamp::update_for_date(today, completo)` (virtual +0x14; SEH frame only for the local dates, no
+/// destructor): the Oceania Club Championship's day. The draw date is that of 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx,
+/// local; push year; push day -> thiscall, ret 8, pure). Before it (today's year lower, unsigned; or the same year and
+/// today's day lower, signed) the routine returns 0 without the league day. On the draw day, if the draw is not done
+/// (+0x45 = 0) and WITHOUT `completo`: the 8 clubs (0x798220: mov ecx -> thiscall, ret 0), the predicted positions
+/// (virtual +0x5c, thiscall, ret 0), the group A table (0x7978c0, thiscall, ret 0; 0: the error box at line 0x21d), the
+/// fixtures (0x6835c0 League::create_fixtures, thiscall, ret 0; 0: the error box at line 0x224), the sorted table
+/// (0x6827d0 push 0; mov ecx -> thiscall, ret 4; 0: the error box at line 0x22b) (an error returns 1, without the
+/// league day), the group B stage (0x797e80, thiscall, ret 0), the list +0xee freed (0x9452ca: push; add esp, 4 ->
+/// cdecl) and zeroed, +0xf2 = 0 and +0x45 = 1. Then the league day (0x6847c0: push completo; push today; mov ecx, this
+/// -> thiscall, ret 8), whose return value it passes on.
 /// Original: `OceaniaClubChamp::update_for_date` (0x797b40, oceania_club_champ.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x797b40 } (thiscall, ret 8, oceania_club_champ.cpp; a virtual +0x14; quadro SEH só das datas locais, sem
@@ -44,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
         return 0;
     }
     if year_of_today == year && day_of_today == day && read_u32_as_usize(this + league::ACTIVE) == 0 && full == 0 {
-        crate::comparacao::ramo("cqt_10 sorteio da oceania");
+        crate::comparison::branch("cqt_10 sorteio da oceania");
         clubs(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
         predicted(this);
@@ -73,8 +85,14 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
 // on the draw day (the copy’s condition): +0x45 = 1, the list +0xee and +0xf2 zeroed, the group A table and the stage of
 // grupo B criadas e a fase atual (+0x30) = 0.
 
-/// rule: group A of the Oceania Club Championship has the first 4 chosen clubs, each in the row of its order; human
-/// managers get the group draw news
+/// Rule: group A of the Oceania Club Championship has the first 4 chosen clubs, each in the row of its order; human
+/// managers get the group draw news.
+///
+/// `OceaniaClubChamp::create_group_a_table()`: 4 teams (+0x3e), the table +0xb1 (0x944e46(0xec): push 0xec; add esp, 4
+/// -> cdecl; 4 rows of 0x3b bytes; out of memory, the error box at line 0x182 and returns 0), each row i with chosen
+/// club i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret
+/// 0x10), the group draw news (0x684230: mov ecx, this -> thiscall, ret 0) and returns 1. The same body as 0x4019c0 of
+/// the African Cup (only the file and the error box line change).
 /// Original: `OceaniaClubChamp::create_group_a_table` (0x7978c0, oceania_club_champ.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x7978c0 } (thiscall, ret 0, oceania_club_champ.cpp): `OceaniaClubChamp::create_group_a_table()`: 4 times (+0x3e), a
@@ -95,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
-        crate::comparacao::ramo("cqt_10 linha do grupo a");
+        crate::comparison::branch("cqt_10 linha do grupo a");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
         i = i.wrapping_add(1);
@@ -107,8 +125,18 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
 // simplification: the table is allocated (and each row allocates the history) and the news goes to the managers: does not run twice. Only the
 // original; the plan: returns 1, 4 teams and in row i (0x3b bytes) the chosen i with position i (+4).
 
-/// rule: group B of the Oceania Club Championship is a league stage with chosen clubs 4 to 7, the cup's rules and year
-/// and the cup's round table for stage 0 (10, 12 and 14 January); human managers get the news
+/// Rule: group B of the Oceania Club Championship is a league stage with chosen clubs 4 to 7, the cup's rules and year
+/// and the cup's round table for stage 0 (10, 12 and 14 January); human managers get the news.
+///
+/// `OceaniaClubChamp::create_group_b_stage()` (SEH frame only for the stage's new: no destructor on the normal path):
+/// the teams in a vector of 4 pointers (0x944e46(0x10): push; add esp, 4 -> cdecl; out of memory, the error box at line
+/// 0x296 and 0): chosen clubs 4 to 7 (+0xee); the round table through virtual +0x3c (push 0; push &id; push &rounds;
+/// push 0; mov ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xee) push; add esp, 4 -> cdecl; the League_Stage
+/// constructor 0x68b100, thiscall, ret 0x58, 22 arguments: the cup, 4, the vector, 1, +4, the round table, the rounds
+/// (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the year +0x40 (word), 0, the id (word), +0x51, 2, 0, +0xd9 (word), −1,
+/// 0, 2; the original pushes the words and bytes with garbage in the high bytes, which the constructor does not read:
+/// the copy passes clean values) into [+0xc][0]; the vector and the round table freed (0x9452ca). No stage: the error
+/// box at line 0x2ad and 0. With it: +0x30 = 0, the group news (0x684230 on the stage) and 1.
 /// Original: `OceaniaClubChamp::create_group_b_stage` (0x797e80, oceania_club_champ.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x797e80 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
@@ -134,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
         return 0;
     }
     for n in 0..4usize {
-        crate::comparacao::ramo("cqt_10 time do grupo b");
+        crate::comparison::branch("cqt_10 time do grupo b");
         write_u32_from_usize(teams + n * 4, selected_club(this, 4 + n)); // cqt10: o time na vaga do grupo B
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -307,7 +335,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
         i += 1;
         c += 0x245;
     }
-    crate::comparacao::ramo("cqt_11 clubes da oceania");
+    crate::comparison::branch("cqt_11 clubes da oceania");
     if champion == 0 {
         aus.ordenar(1);
         champion = aus.clubes[0];
@@ -356,7 +384,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
     let f = f + 1;
     write_u32_from_usize(this + league::CURRENT_STAGE, f as usize);
     if f == 1 {
-        crate::comparacao::ramo("cqt_11 semifinais da oceania");
+        crate::comparison::branch("cqt_11 semifinais da oceania");
         let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_OCEANIACLUBCHAMP_CREATE_KNOCKOUT_STAGE);
         semifinais(this);
     }
@@ -375,8 +403,18 @@ pub(crate) unsafe fn semifinalists(this: usize) -> [usize; 4] {
     [a(0), b(1), a(1), b(0)] // cqt11: 1º A × 2º B, 2º A × 1º B
 }
 
-/// rule: the Oceania Club Championship semi-finals cross the groups: A winner × B runner-up and A runner-up × B winner,
-/// in a cup stage (stage 1) with the first round set up at once
+/// Rule: the Oceania Club Championship semi-finals cross the groups: A winner × B runner-up and A runner-up × B winner,
+/// in a cup stage (stage 1) with the first round set up at once.
+///
+/// `OceaniaClubChamp::create_knockout_stage()` (SEH frame only for the stage's new: no destructor on the normal path),
+/// the semi-finals: the list of the 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; out of memory, the error box at line
+/// 0x2cb and return), the semi-finalist pairings; the round table through virtual +0x3c (push 0; push &id; push
+/// &rounds; push 1; mov ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xb2) push; add esp, 4 -> cdecl;
+/// Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the cup, 4, the list, the rounds, +4, the table, the year +0x40,
+/// 1, 2, the id, 0x14, 0, 0, 0 and no seed; the original pushes the rounds, the id and the year with garbage in the
+/// high 16 bits, which the constructor does not read) into [+0xc][1]; the table and the list freed (0x9452ca). No
+/// stage: the error box at line 0x2e3 and return. With it: the round set up (0x51c800 Cup::set_up_round: push 0; mov
+/// ecx, stage -> thiscall, ret 4).
 /// Original: `OceaniaClubChamp::create_knockout_stage` (0x798050, oceania_club_champ.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x798050 } (thiscall, ret 0, oceania_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
@@ -397,7 +435,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
     if list == 0 {
         return show_error_at(0xa6a068, 0x2cb);
     }
-    crate::comparacao::ramo("cqt_11 cruzamentos da oceania");
+    crate::comparison::branch("cqt_11 cruzamentos da oceania");
     for (k, &c) in semifinalists(this).iter().enumerate() {
         write_u32_from_usize(list + k * 4, c);
     }
@@ -486,7 +524,7 @@ pub(crate) unsafe fn build_stage_table(this: usize, f: Option<OceaniaStage>, rod
         show_error_at(arquivo, f.linha);
         return 0;
     }
-    crate::comparacao::ramo(f.nome);
+    crate::comparison::branch(f.nome);
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let jogo_l: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
@@ -555,14 +593,14 @@ pub(crate) unsafe fn compare_stage_table(name: &str, stage: u32, f: Option<Ocean
         Some(f) => f,
         None => {
             let a = o();
-            PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+            PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
             return a;
         }
     };
     let (mut r2, mut e2) = (*rounds, if extra.is_null() { 0 } else { *extra });
     let mut l2 = if league.is_null() { 0 } else { *league };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
         if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let outs = *rounds == r2 && (extra.is_null() || *extra == e2) && (league.is_null() || *league == l2);
     let table = if a != 0 && b != 0 { oceania_club_champ_written_table_bytes(f.ops, f.ops2, a) == oceania_club_champ_written_table_bytes(f.ops, f.ops2, b) } else { a == 0 && b == 0 };
@@ -570,7 +608,7 @@ pub(crate) unsafe fn compare_stage_table(name: &str, stage: u32, f: Option<Ocean
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -655,7 +693,7 @@ pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: 
         show_error_at(file, row);
         return -1;
     }
-    crate::comparacao::ramo(name);
+    crate::comparison::branch(name);
     let mut i: i16 = 0;
     while i < core::ptr::read_unaligned((this + 0x3e) as *const i16) {
         let c = read_u32_as_usize(read_u32_as_usize(this + 0xb2) + order(i) as usize * 4);
@@ -676,7 +714,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce(
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
         lo.set(read_u32_as_usize(this + 0xa7));
         r
@@ -697,7 +735,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce(
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
+    PLACAR.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
     a
 }
 
@@ -711,7 +749,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce(
 /// desempates (1, 2, 4, 0), dois classificados, categoria 8, 3 no banco e 3 substituições, +0x43 = 2, os bits de regra
 /// 0x28 (os de cima classificados, os outros eliminados), começo no dia 20 do mês 7 num dia da semana 5; sem prêmio.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_11 regras da oceania");
+    crate::comparison::branch("cqj_11 regras da oceania");
     let day = 0x14; // cqj11: o dia do começo na Oceania
     apply_cup_rules(this, &OCEANIA_RULES, day, 3)
 }

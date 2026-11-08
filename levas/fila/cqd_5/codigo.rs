@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
         }
         if cqd5_d(this + 0xdd) == 0 {
             semanas(pd0, px, 4); // cqd5: a TV quatro semanas adiante
-            crate::comparacao::ramo("cqd_5 jogos para a tv");
+            crate::comparison::branch("cqd_5 jogos para a tv");
             tv(this, px);
         }
     }
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn comparar_league_update_for_date(this: usize, data: u
     let parada = cqd5_b(this + 0xb5) != 0 || cqd5_d(this + 0x45) == 0;
     let r = o(this, data, completo);
     let ok = if parada { r as u8 == 0 } else { r as u8 == 1 && (completo == 0 || same_date(this + 0xd1, data)) };
-    PLACAR.registrar(ok, || format!("league_update_for_date(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
+    PLACAR.record(ok, || format!("league_update_for_date(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
         completo, parada, r as u8, cqd5_d(this + 0xd1), cqd5_d(data)));
     r
 }
@@ -237,7 +237,7 @@ unsafe fn add_league_fixture(this: usize, r: usize, ea: usize, eb: usize, off: u
     } else {
         cqd5_pw(r + 0x4d, cqd5_w(r + 0x4d) as u16 & 0xf7ff);
     }
-    crate::comparacao::ramo("cqd_5 jogo da tabela");
+    crate::comparison::branch("cqd_5 jogo da tabela");
     calendario(cqd5_d(0xae2a58), r, 1);
 }
 
@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     montar(grade, n);
     let c = cqd5_d(this + 4);
     if c == 0 || (cqd5_d(c) != cqd5_d(0x9cf79c) && cqd5_d(c) != cqd5_d(0x9cf7a4)) {
-        crate::comparacao::ramo("cqd_5 ordem sorteada");
+        crate::comparison::branch("cqd_5 ordem sorteada");
         sortear(this, n as u32); // cqd5: a ordem dos clubes
     }
     // o registro do jogo; os bytes que a original não grava (+4..+7, +0x18, +0x2e, +0x39, +0x4d e os bits altos de
@@ -442,7 +442,7 @@ unsafe extern "thiscall" fn comparar_create_fixtures(this: usize) -> u32 {
     let propria = lista != 0 && cqd5_w(this + 0x40) as i32 == cqd5_w(lista + 2) as u16 as i32;
     let r = o(this);
     let ok = !(propria && r == 1) || cqd5_d(this + 0xea) == 0;
-    PLACAR.registrar(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", propria, r, cqd5_d(this + 0xea)));
+    PLACAR.record(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", propria, r, cqd5_d(this + 0xea)));
     r
 }
 

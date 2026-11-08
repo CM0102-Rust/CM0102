@@ -75,36 +75,12 @@ pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mu
         show_error_at(p.arquivo, p.linha);
         return 0;
     }
-    crate::comparacao::ramo(p.ramo);
+    crate::comparison::branch(p.ramo);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
     fra_third_write_league_rounds(t, ano, 0, p.tabela);
     t
 }
 
-/// Side-by-side comparer for create_schedule: same outputs and same written round bytes; frees the copy's table.
-///
-/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do mesmo [0xb67a34]; as
-/// saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada: 0x9452ca, cdecl).
-pub(crate) unsafe fn compare_league_schedule(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
-                       original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
-    let reg = [(0xb67a34usize, 4usize)];
-    let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
-    let outs = stage as u8 != 0xff || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
-    let table = if a != 0 && b != 0 {
-        let n = *rounds as usize;
-        written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
-    } else {
-        a == 0 && b == 0
-    };
-    if b != 0 {
-        soltar(b);
-    }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
-    a
-}
 
 /// a terceira divisão (o National), 38 rodadas de 7/ago a 20/mai, sem faixas de TV
 pub(crate) const FRENCH_THIRD_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
@@ -249,26 +225,21 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, st
 
 
 
-/// the lower division (background) schedule: the same 38 dates as the second division, with the TV slot also in the
-/// last two rounds
-/// Original: `FraLower::create_schedule` (0x5bd920, fra_lower.cpp, thiscall, ret 0x10).
+
+
+/// Sets up the rules of the French National: 4 go up in 2001 and 3 afterwards, 4 go down (no league below in the game);
+/// 3 substitutes and 3 substitutions.
 ///
-/// [pt] { 0x5bd920 } (thiscall, ret 0x10, fra_lower.cpp, 2.311 bytes, método +0x3c): `FraLower::create_schedule`: a divisão de
-/// baixo, 38 rodadas (`LOWER_DIVISION_ROUNDS`). Fonte 0x9ccbd0, linha 0xa9.
-pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule_5bd920(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    create_league_schedule(this, stage, rounds, extra, league, &LOWER_DIVISION_LEAGUE)
-}
-
-
-/// the National: 4 go up in 2001 and 3 afterwards, 4 go down (no league below in the game); 3 substitutes and 3
-/// substitutions
+/// `FraThird::set_up_rules()`: the common rules, 2 rounds, 3 points; 4 promoted in 2001 and 3 afterwards (`+0xbe`), 4
+/// relegated (`+0xc1`); the second division above (`[0x9cf5d0]`), none below (`+0x20` = −1), `+0xa7` (the season's
+/// matches) = −1 (recomputed by `0x687430`) and 3 substitutes (`+0x49`).
 /// Original: `FraThird::set_up_rules` (0x5c0700, fra_third.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5c0700 } (thiscall, ret 0, fra_third.cpp): `FraThird::set_up_rules()`. O National: as comuns, 2 turnos, 3
 /// pontos; sobem 4 em 2001 e 3 depois (+0xbe), caem 4 (+0xc1); a segunda acima ([0x9cf5d0]), nenhuma abaixo (+0x20
 /// = −1), +0xa7 (os jogos da temporada) = −1 (recalculado pela 0x687430) e 3 reservas (+0x49).
 pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_5 regras do national");
+    crate::comparison::branch("cqj_5 regras do national");
     fra_first_apply_league_rules(this, &national_division_rules(this))
 }
 

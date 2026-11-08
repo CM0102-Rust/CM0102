@@ -181,7 +181,7 @@ unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, tipo: i8, r
 unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(%%I2%%)(o, p, c, tipo, rep);
     let n = perceived_ability(o, p, c, tipo, rep);
-    PLACAR.registrar(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
+    PLACAR.record(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
     r
 }
 
@@ -191,8 +191,8 @@ unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> 
     if !saida.is_null() {
         reg.push((saida as usize, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, saida), || next_event(t, saida));
-    PLACAR.registrar(igual && r == n, || format!("next_event({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, saida), || next_event(t, saida));
+    PLACAR.record(igual && r == n, || format!("next_event({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
     r
 }
 
@@ -200,8 +200,8 @@ unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> 
 #[allow(clippy::too_many_arguments)]
 unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(%%I1%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((buf as usize, tam as usize));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::aleatorio::sem_contar(|| commentary_player_name(pt, jogador, lado, buf, tam, curto, x, longa)));
-    PLACAR.registrar(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::rng::without_counting(|| commentary_player_name(pt, jogador, lado, buf, tam, curto, x, longa)));
+    PLACAR.record(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
 }

@@ -50,7 +50,7 @@ unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     }
     let ano = cqs12_w(this + 0x40) as u16;
     if ano == 0x7d1 {
-        crate::comparacao::ramo("cqs_12 selecoes de 2001");
+        crate::comparison::branch("cqs_12 selecoes de 2001");
         for (k, &g) in COPA_AMERICA_2001_NATIONS.iter().enumerate() {
             cqs12_pd(cqs12_d(this + 0xee) + k * 4, national_team_of_nation_id(cqs12_d(g)));
         }
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqs12_d(this + 0xee));
         r
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("set_up_team_list({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.record(igual && a == b && lista, || format!("set_up_team_list({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
     let n = cqs12_d(this + 0xf2) << 2;
     core::ptr::copy_nonoverlapping(cqs12_d(this + 0xee) as *const u8, v as *mut u8, n);
     ordenar(v, cqs12_d(this + 0xf2) as u32, 4, 0x4b07d0);
-    crate::comparacao::ramo("cqs_12 previstas da copa america");
+    crate::comparison::branch("cqs_12 previstas da copa america");
     for (k, &p) in COPA_AMERICA_PREDICTED_PLACES.iter().enumerate() {
         posicao(cqs12_d(this + 8), cqs12_d(v + k * 4), p);
     }
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize
         let e = if v[k] != 0 { achar(cqs12_d(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + 0x72) as *const u8) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
-    PLACAR.registrar(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
+    PLACAR.record(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }
 
 /// { 0x5e1530 } (thiscall, ret 0, goldcup.cpp; a virtual +8): `GoldCup::start_new_season()`, a Copa América seguinte:
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
             }
         }
     }
-    crate::comparacao::ramo("cqs_12 temporada nova da copa america");
+    crate::comparison::branch("cqs_12 temporada nova da copa america");
     core::ptr::write_unaligned((this + 0x40) as *mut i16, cqs12_w(this + 0x40).wrapping_add(2)); // cqs12: a Copa América a cada 2 anos
     cqs12_pd(this + 0x45, 0);
     cqs12_pd(this + 0x30, usize::MAX);
@@ -230,5 +230,5 @@ unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: usize) {
     let ano = cqs12_w(this + 0x40);
     o(this);
     let ok = cqs12_w(this + 0x40) == ano.wrapping_add(2) && cqs12_d(this + 0x45) == 0 && cqs12_d(this + 0x30) as i32 == -1 && cqs12_d(this + 0x4c) == 0;
-    PLACAR.registrar(ok, || format!("goldcup_start_new_season({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, cqs12_w(this + 0x40), cqs12_d(this + 0x45), cqs12_d(this + 0x30) as i32));
+    PLACAR.record(ok, || format!("goldcup_start_new_season({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, cqs12_w(this + 0x40), cqs12_d(this + 0x45), cqs12_d(this + 0x30) as i32));
 }

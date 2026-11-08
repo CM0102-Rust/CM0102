@@ -44,7 +44,7 @@ unsafe extern "C" fn comp_util_get_fixture_venue_side(clube: usize, jogo: usize)
     if campo == cpq12_d(outro + 0x69) {
         return if clube != casa { 2 } else { 1 }; // o mesmo estádio dos dois
     }
-    crate::comparacao::ramo("cpq_12 em casa");
+    crate::comparison::branch("cpq_12 em casa");
     1 // o estádio do clube
 }
 
@@ -53,7 +53,7 @@ unsafe extern "C" fn comparar_comp_util_get_fixture_venue_side(clube: usize, jog
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%);
     let r = o(clube, jogo);
     let n = comp_util_get_fixture_venue_side(clube, jogo);
-    PLACAR.registrar(r == n, || format!("comp_util_get_fixture_venue_side(clube {:x}, jogo {:x}) original={} rust={}", clube, jogo, r, n));
+    PLACAR.record(r == n, || format!("comp_util_get_fixture_venue_side(clube {:x}, jogo {:x}) original={} rust={}", clube, jogo, r, n));
     r
 }
 
@@ -77,7 +77,7 @@ unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usize, b: usiz
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
     let n = compare_nation_coefficients_desc(a, b);
-    PLACAR.registrar(r == n, || format!("compare_nation_coefficients_desc original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("compare_nation_coefficients_desc original={} rust={}", r, n));
     r
 }
 
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn has_scout_request(this: usize, jogador: usize, clube
         buscar(chave.as_ptr(), lista, cpq12_d(this + 0x64), 0x11, 0x7fc270)
     };
     if achado == 0 {
-        crate::comparacao::ramo("cpq_12 sem pedido");
+        crate::comparison::branch("cpq_12 sem pedido");
         return 0; // sem pedido
     }
     if *((achado + 0x10) as *const i8) >= 3 {
@@ -142,6 +142,6 @@ unsafe extern "thiscall" fn comparar_has_scout_request(this: usize, jogador: usi
     }
     let r = o(this, jogador, clube, so_vencidos);
     let n = has_scout_request(this, jogador, clube, so_vencidos);
-    PLACAR.registrar(r == n, || format!("has_scout_request(jogador {:x}, clube {:x}, {}) original={} rust={}", jogador, clube, so_vencidos, r, n));
+    PLACAR.record(r == n, || format!("has_scout_request(jogador {:x}, clube {:x}, {}) original={} rust={}", jogador, clube, so_vencidos, r, n));
     r
 }

@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
             return 0;
         }
         if quantos < 0x9c4 {
-            crate::comparacao::ramo("eventos arquivo com espaco");
+            crate::comparison::branch("eventos arquivo com espaco");
             aberto = f;
             break;
         }
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
             return 0;
         }
         versao = 1;
-        crate::comparacao::ramo("eventos arquivo novo");
+        crate::comparison::branch("eventos arquivo novo");
         quantos = 0;
         let r = *(G_MATCH_STATS as *const usize) + 0x18;
         numero = *(r as *const i32) + 1;
@@ -88,7 +88,11 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
     (r != 0) as u8
 }
 
-/// reads back the events described in `desc` from the file with the right number
+/// Reads back the events described in `desc` from the file with the right number.
+///
+/// Ret 4: reads back the events described in `desc` (position, count, number, human) into +0x720 of record `e` (+6 =
+/// count): looks for the file with the number (version 1, otherwise error 0xbf6/0xc11, with the file left open as in
+/// the original). Returns whether it read them.
 /// Original: `read_events` (0x6d9c40, match_events.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x6d9c40 } (thiscall, ret 4, match_events.cpp): le de volta os eventos descritos em `desc`
@@ -122,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
             return 0;
         }
         if numero as u32 == *desc.add(2) {
-            crate::comparacao::ramo("eventos lidos");
+            crate::comparison::branch("eventos lidos");
             search(f, *desc as i32, 0);
             let r = read(e + 0x720, 0xe, *desc.add(1), f);
             *((e + 6) as *mut u16) = *desc.add(1) as u16;
@@ -151,10 +155,19 @@ pub(crate) unsafe fn fatal_error_at(file: usize, row: u32) -> ! {
     exit(-1)
 }
 
-/// reads the `events_<language>.cfg` (or `events_eng.cfg`) into the table of the 677 event codes at [0xb68788] (7
-/// option bytes, the 0x110-byte sounds with weight, type, name and the two texts `G`/`R`); checks `<X` tokens, events
-/// without text and, with `-verifysounds`, the sound files; at the end converts the weights and gives the default sound
-/// to those without one
+/// Reads `events_<language>.cfg` (or `events_eng.cfg`) into the table of the 677 event codes at `[0xb68788]` (7 option
+/// bytes, the 0x110-byte sounds with weight, type, name and the two texts `G`/`R`); checks `<X` tokens, events without
+/// text and, with `-verifysounds`, the sound files; at the end converts the weights and gives the default sound to
+/// those without one.
+///
+/// About 5.2 KB: reads `events_<language>.cfg` (CM3_DATA; without it, `events_eng.cfg`, and without that the game
+/// stops, error 0xcc4) into the table of the 677 event codes at `[0xb68788]` (0x12 bytes: 7 option bytes, +8 the
+/// 0x110-byte sounds, +0xc count, +0xe the weight). With a different language since the last read, 0x6d5b50 clears
+/// first; already read (`[0xb6b723]`), nothing. Lines: `=id,o0..o6` opens an event (o4 between 0 and 11; o2 without o0
+/// warns 0xd40), `>weight,type,name` adds a sound (with `-verifysounds` on the command line, checks the file in
+/// CM3_SOUNDS), `G`/`R` the two texts of the last sound (allocated; unknown `<X` tokens warn). At the end, the weights
+/// become (largest × 10) / weight and +0xe the sum; an event without a sound gets the default sound (0xb68670). Reads
+/// through the game's `fgetc` and uses buffer `[0xde1f64]`, as the original.
 /// Original: `read_events_cfg` (0x6d9e50, match_events.cpp (~5.2 KB), cdecl).
 ///
 /// [pt] { 0x6d9e50 } (match_events.cpp, ~5,2 KB): le o `events_<idioma>.cfg` (CM3_DATA; sem ele, o
@@ -434,9 +447,20 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 // simplification: reads a file, allocates the texts and writes the global table; no comparison of its own, validated
 // by the career (Rust x original) and by the comparison of the table at the end of the read.
 
-/// the event sound's `R` text with the tokens replaced (`<P1>` player, `<T1>`/`<T2>` club, `<C>` competition, `<F>`
-/// stage, `<D>`/`<N>` number, `<rf>`/`<Rf>` referee), `{...}` prefix and suffix (0x6701f0) and upper case; writes to
-/// [0xb67ea0]
+/// Builds the event sound's `R` text with the tokens replaced (`<P1>` player, `<T1>`/`<T2>` club, `<C>` competition,
+/// `<F>` stage, `<D>`/`<N>` number, `<rf>`/`<Rf>` referee), `{...}` prefix and suffix (0x6701f0) and upper case; writes
+/// to `[0xb67ea0]`.
+///
+/// Stdcall, ret 0x10: the text of event `ev` (+0 code, +2 which sound, +5/+6 and +7/+8 the two players (side, index),
+/// +9 a number) of match `ctx` (+0/+4 the clubs, +0x40 the referee), with `comp` the competition (-1 none) and
+/// `variant` the segment between `|` (0 the first). Reads the `R` text (+0x10c) of the chosen sound (at most the last)
+/// and replaces the tokens: `<P1>`/`<P>` player (0x6db2d0), `<T1>`/`<T2>` club, `<C>` competition, `<F>` its stage
+/// (0x4bfa30/0x4bff70), `<D>`/`<D1>` the number (+1), `<N>` the number in words (0x90c310), `<rf>`/`<Rf>` the referee
+/// ("Mr ..." or "the referee" depending on the language and a remainder of division by 5), `<O>`/`<Y>` nothing. `{...}`
+/// before or after the token are prefix and suffix (0x6701f0, which applies article and gender); a following letter `C`
+/// puts it in upper case (0x90c2d0). Writes into `[0xb67ea0]` (and returns it), recounting the length with `strlen`
+/// after each token, as the original; without an event, without text or without the requested segment, 0. An unknown
+/// token warns 0xb10.
 /// Original: `event_text` (0x6d8d10, match_events.cpp, stdcall, ret 0x10).
 ///
 /// [pt] { 0x6d8d10 } (stdcall, ret 0x10, match_events.cpp): o texto do evento `ev` (+0 codigo, +2 qual
@@ -505,7 +529,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
             return 0;
         }
     }
-    crate::comparacao::ramo("texto do evento");
+    crate::comparison::branch("texto do evento");
     let t = |i: i16| *((s as isize + i as isize) as *const u8);
     let dest = |o: i16| (BUF as isize + o as isize) as usize;
     let b = |o: usize| *((ev + o) as *const u8);
@@ -626,8 +650,8 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
                             let r = if x as u8 == b'C' || x as u8 == b'c' {
-                                let g = *((cp + 0x52) as *const u8) as u32;
-                                compor(cp + 0x38, pre.as_ptr(), suf.as_ptr(), g, g)
+                                let g = *((cp + competition::SHORT_GENDER_NAME) as *const u8) as u32;
+                                compor(cp + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
                             } else {
                                 stage(cp, 0, 0x96, 3, text_stage.as_mut_ptr(), 0x7d0);
                                 let g = criterio(0, 0, 0x96, 3) as u32;
@@ -719,9 +743,22 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 
 // simplification: only runs in network games (creates and frees engine and summary); no comparison of its own.
 
-/// restores the crowd sound, builds the event's `G` text (like 0x6d8d10) into a line with the club colours (`<O>` the
-/// other's, `<Y>`/`<R>` the default ones), wraps or cuts with "..." by the width (0x5e5ad0, 0x90cb20), draws on the
-/// panel (0x801040…0x800580), plays the event sound (0x8025e0) and marks the time and duration (+0x2d6c, +0x2dac)
+/// The commentator writes the event on the panel and plays its sound: restores the crowd sound, builds the event's `G`
+/// text (like 0x6d8d10) into a line with the club colours (`<O>` the other's, `<Y>`/`<R>` the default ones), wraps or
+/// cuts with "..." by the width (0x5e5ad0, 0x90cb20), draws on the panel (0x801040…0x800580), plays the event sound
+/// (0x8025e0) and marks the time and duration (+0x2d6c, +0x2dac).
+///
+/// Ret 0x20, about 4.4 KB: commentator `nar` writes event `ev` of match `ctx` on `panel` (0xb74450) and plays its
+/// sound. First, the crowd noise of the human whose turn it is (`[0xb77c7a]`; channel +0x20, "fxloop2.wav") is restored
+/// if it stopped. With a valid code and option 1 zeroed, builds the `G` text (+0x108) of the chosen sound (segment +0xd
+/// between `|`) as 0x6d8d10 does, but in its own line and with colours: it starts with those of the club in the
+/// incident (0x53b640 with the side's kit), `<O>` switches to the other's, `<Y>` and `<R>`/`<r>` without `f` the
+/// default ones (`[0xaebdea]`/`[0xaebdec]` or `[0xae31a8]`); `<N>` is the number, `<n>` in words; the player name is
+/// the short one if the whole text fits in less than 300 (0x5e5ad0 with the `font`). Too wide for `width` - 16: wraps
+/// (0x90cb20) or cuts at a word with "...". Draws (0x801040, 0x801660, 0x801960, 0x801c70, 0x800d30, 0x800580 with
+/// option 3). Finally, without a segment (+0xd) and with volume (+0x2db0 >= 101), plays the event sound (0x8025e0 on
+/// the channel from option 6, side from option 5), and marks the time and the sound duration (+0x2d6c, +0x2dac = weight
+/// × volume / 100).
 /// Original: `commentate_on_panel` (0x6d7b00, match_events.cpp (~4.4 KB), thiscall, ret 0x20).
 ///
 /// [pt] { 0x6d7b00 } (thiscall, ret 0x20, match_events.cpp, ~4,4 KB): o narrador `nar` escreve o evento `ev`
@@ -788,7 +825,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
 
     let valido = (0..0x2a5).contains(&k) && *((e + 1) as *const u8) == 0;
     if valido {
-        crate::comparacao::ramo("narracao no painel");
+        crate::comparison::branch("narracao no painel");
         if sons() == 0 {
             return 0;
         }
@@ -956,8 +993,8 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 prefixo(pos, &mut pre);
                                 sufixo(pos + 2, &mut suf);
                                 let r = if x == b'C' || x == b'c' {
-                                    let g = *((cp + 0x52) as *const u8) as u32;
-                                    compor(cp + 0x38, pre.as_ptr(), suf.as_ptr(), g, g)
+                                    let g = *((cp + competition::SHORT_GENDER_NAME) as *const u8) as u32;
+                                    compor(cp + competition::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g)
                                 } else {
                                     stage(cp, 0, 0x96, 3, text_stage.as_mut_ptr(), 0x7d0);
                                     let g = criterio(0, 0, 0x96, 3) as u32;
@@ -1168,7 +1205,12 @@ pub(crate) unsafe fn advance_commentary_read(t: usize) -> bool {
     desligou
 }
 
-/// the next commentary event to show, part by part of the text (split by |), advancing the queue reading
+/// Returns the next commentary event to show, part by part of the text (split by `|`), advancing the queue reading.
+///
+/// Ret 4: the next commentary event to show (0 with the queue switched off, +5): skips the empty slots; in the event's
+/// text (table `[0xb68790 + 0x12 × (event − 8000)]`, 0x110-byte record +2, +0x108) moves to the next part separated by
+/// `|` (the current part in +0xd; bit 0x8000 marks that there is more) and, when the text is finished, advances the
+/// reading. In `out`, the slot's 0x86-byte record (+0xd8).
 /// Original: `next_event` (0x6d78b0, match_events.cpp, thiscall).
 ///
 /// [pt] { 0x6d78b0 } (thiscall, ret 4, match_events.cpp): o próximo evento da narração a mostrar (0 com a
@@ -1180,7 +1222,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
     if *((t + 5) as *const u8) == 0 {
         return 0;
     }
-    crate::comparacao::ramo("narracao proximo evento");
+    crate::comparison::branch("narracao proximo evento");
     if !out.is_null() {
         *out = (t as isize + 0xd8 + *((t + 0xc) as *const i16) as isize * 0x86) as usize;
     }
@@ -1215,7 +1257,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
             c = c.wrapping_sub(1);
             if c < 0 {
                 s += 1;
-                crate::comparacao::ramo("narracao texto em partes");
+                crate::comparison::branch("narracao texto em partes");
                 *(p as *mut u16) |= 0x8000;
                 *parte = (*parte).wrapping_add(1);
                 break;
@@ -1234,8 +1276,13 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
     p
 }
 
-/// the player name in the commentary: the short form, or the long one when another player of either club has the same
-/// short name
+/// The player name in the commentary: the short form, or the long one when another player of either club has the same
+/// short name.
+///
+/// Writes into `buf` (`size` bytes) the name of player `player` on side `side` of match `pt` (0x49-byte record at
+/// +0x190: id and the three names +0x198..+0x1a0, sides of 0x625 bytes) through 0x53e140: with `short` and random(5) =
+/// 0, form 1; otherwise form 5, and if any of the 100 players of either club (+0, +4; list from 0x541f90) with another
+/// id or another name has the same form 5, the `long` form.
 /// Original: `commentary_player_name` (0x6db2d0, match_events.cpp, cdecl).
 ///
 /// [pt] { 0x6db2d0 } (cdecl, match_events.cpp): escreve em `buf` (`tam` bytes) o nome do jogador `jogador`
@@ -1252,7 +1299,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
         name(d(0x198), d(0x19c), d(0x1a0), buf, size, 1, d(0x190));
         return;
     }
-    crate::comparacao::ramo("narracao nome curto");
+    crate::comparison::branch("narracao nome curto");
     name(d(0x198), d(0x19c), d(0x1a0), buf, size, 5, d(0x190));
     let list: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let textos: unsafe extern "C" fn(*const u8, *const u8, i32, u32) -> i32 = core::mem::transmute(FN_UTILS_STRING_COMPARE);
@@ -1271,7 +1318,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
             let mut other = [0u8; 200];
             name(n(1), n(2), n(3), other.as_mut_ptr(), 200, 5, d(0x190));
             if textos(buf, other.as_ptr(), 1, 0) == 0 {
-                crate::comparacao::ramo("narracao nome forma longa");
+                crate::comparison::branch("narracao nome forma longa");
                 name(d(0x198), d(0x19c), d(0x1a0), buf, size, longa, d(0x190));
                 return;
             }
@@ -1296,8 +1343,15 @@ pub(crate) enum BranchLabel {
     Copiar,
 }
 
-/// combines the new commentary event with the last queued one (returns the combined event and copies the previous
-/// player, side and value)
+/// Combines the new commentary event with the last queued one (returns the combined event and copies the previous
+/// player, side and value).
+///
+/// Ret 8: combines the new event `e` (14 bytes: event word; +5, +6 player and side; +7, +8 the other; +9 integer) with
+/// the last one in the queue (position +8 − 1 in the ring of 12, 14-byte records at +0x30): returns the combined event
+/// (negative = replaces the previous one; 0 = no combination) and, in combinations, copies the player, the side, the
+/// other and the integer of the previous one into `e`. `m` is the engine (0 outside the match): it gives the side in
+/// possession (+0x8eab) and the ball in the area (0x6d58f0). The original's two calls to 0x6cb960 have no effect and
+/// their value is discarded (they are left out).
 /// Original: `combine_with_previous` (0x6d60b0, match_events.cpp, thiscall).
 ///
 /// [pt] { 0x6d60b0 } (thiscall, ret 8, match_events.cpp): combina o evento novo `e` (14 bytes: palavra do
@@ -1645,7 +1699,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
 /// sorteios não contam nem entram no rastro de uma comparação pela fita em curso (o chute, 0x702050,
 /// chama esta rotina por dentro): a trajetória do jogo comparando não muda.
 pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32) {
-    let state = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     // the fake media: in the news log (0x757da0 searches by subject -1, club id, type -1 and
     // subtype, records of 0x17 bytes in order), one of today’s news items of each subtype that the
     // the comments query, for both clubs
@@ -1674,14 +1728,14 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
     let falsa: [usize; 3] = [records.as_ptr() as usize, 0, records.len()];
     let midia = *(G_MEDIA as *const usize);
     let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16);
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| {
         // 0: the real state; 1: with the news; 2: with the news at minute 31
         for cenario in 0..3 {
             *(G_MEDIA as *mut usize) = if cenario == 0 { midia } else { falsa.as_ptr() as usize };
             core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, if cenario == 2 { 31 * 11 } else { minute });
             for lado in 0..2u32 {
                 let notas: Vec<(usize, usize)> = (0..20).map(|k| (m + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
-                let guardadas = crate::comparacao::Memoria::ler(&notas);
+                let guardadas = crate::comparison::MemorySnapshot::read(&notas);
                 for limit in [None, Some(0x1d4di16), Some(0x1b59), Some(8000), Some(0x1e46), Some(0x1a2b)] {
                     if let Some(v) = limit {
                         for &(a, _) in &notas {
@@ -1691,25 +1745,29 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
                     for evento in 0x21a3..=0x21afu32 {
                         let mut out = 0i32;
                         let ps = &mut out as *mut i32;
-                        let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+                        let mut reg = crate::rng::STATE_REGIONS.to_vec();
                         reg.push((ps as usize, 4));
-                        let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, lado, evento, ps), || context_commentary(m, lado, evento, ps));
-                        PLACAR.registrar(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, media {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limit, r, n, mo, mr));
+                        let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m, lado, evento, ps), || context_commentary(m, lado, evento, ps));
+                        PLACAR.record(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, media {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limit, r, n, mo, mr));
                     }
                 }
-                guardadas.escrever();
+                guardadas.write_back();
             }
         }
         *(G_MEDIA as *mut usize) = midia;
         core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, minute);
     }));
-    state.escrever();
+    state.write_back();
 }
 
 
 
-/// puts an event at the front of the commentary queue (steps the 12-slot ring back, drops the repeat) and queues it via
-/// 0x6d6f70
+/// Puts an event at the front of the commentary queue (steps the 12-slot ring back, drops the repeat) and queues it via
+/// 0x6d6f70.
+///
+/// Ret 0x1c: the write position (+8, ring of 12) steps back one slot (from 0 it goes to 11); if the last one in the
+/// queue (+6 items, word +0x712 of 14 bytes) is the same event as at the new position (+0x30), the queue loses one;
+/// then queues through 0x6d6f70 with the same 7 arguments.
 /// Original: `event_at_front` (0x6d5d00, match_events.cpp, thiscall).
 ///
 /// [pt] { 0x6d5d00 } (thiscall, ret 0x1c, match_events.cpp): põe um evento na frente da fila da narração:
@@ -1729,7 +1787,12 @@ pub(crate) unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, 
     enfileirar(t, a, b, c, d, e, f, g)
 }
 
-/// the commentary queue constructor: clears the queue, reads the events and, if asked, plays the crowd loop
+/// The commentary queue constructor: clears the queue, reads the events and, if asked, plays the crowd loop.
+///
+/// Ret 4: zeroes the queue and the fields (+0x2db0 = 125, +1 and +0xa = −1, +0x2d68 = −1), the event globals
+/// (0xb68670..), reads the events (0x6d9e50), marks the 16 slots (+0x10, +0x20) with −1 and zeroes the 16 times
+/// (+0x2d6c); with `crowd`, plays the crowd loop of the side whose turn it is (`[0xb77c7a]`) through 0x8025e0. Returns
+/// `this`.
 /// Original: `construct_commentary_queue` (0x6d5bf0, match_events.cpp, thiscall).
 ///
 /// [pt] { 0x6d5bf0 } (thiscall, ret 4, match_events.cpp): o construtor da fila da narração: zera a fila e
@@ -1774,7 +1837,11 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
     t
 }
 
-/// frees the loaded event tables and each record's texts
+/// Frees the loaded event tables and each record's texts.
+///
+/// In each of the 0x12-byte entries from 0xb68790 to 0xb6b72a with its own table (neither null nor the default
+/// 0xb68670), the two texts (+0x108, +0x10c) of each 0x110-byte record and the table; then zeroes 0xb6b723 and puts −1
+/// in 0xa1599c.
 /// Original: `free_event_tables` (0x6d5b50, match_events.cpp, cdecl).
 ///
 /// [pt] { 0x6d5b50 } (cdecl, match_events.cpp): libera as tabelas de eventos carregadas: em cada uma das
@@ -1812,8 +1879,13 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 
 
 
-/// have the sounds of the 16 marked events played and passed their window (clock 0x90c510; stops the finished channels,
-/// 0x802a50)?
+/// Tells whether the sounds of the 16 marked events have played and passed their window (clock 0x90c510; stops the
+/// finished channels, 0x802a50).
+///
+/// Ret 4: have the sounds of the `active` events (16 marks) played? For each marked one, a channel (+0x10 + k; -1 free,
+/// -2 waiting) that is still playing (0x8029f0 on 0xb74450) holds; one that has finished is stopped (0x802a50) and
+/// freed. Returns 1 only if all marked ones have passed their window (+0x2d6c + 4k up to + `[+0x2dac]`, by clock
+/// 0x90c510).
 /// Original: `sounds_finished` (0x6d8c70, match_events.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x6d8c70 } (thiscall, ret 4, match_events.cpp): os sons dos eventos `ativos` (16 marcas) ja
@@ -1825,7 +1897,7 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
     let tocando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_SOUND_PLAYING);
     let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
     let now = relogio();
-    crate::comparacao::ramo("sons dos eventos");
+    crate::comparison::branch("sons dos eventos");
     for k in 0..16usize {
         if *ativos.add(k) == 0 {
             continue;
@@ -1852,7 +1924,11 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
 }
 
 
-/// swaps the commentary event for a variant, by a draw and by the play type
+/// Swaps the commentary event for a variant, by a random draw and by the play type.
+///
+/// Stdcall, ret 0xc: with random(3) ≠ 0 it stays the same; otherwise, by the play type `type` (1, 2, 8, 0x10, 0x20, the
+/// last with another random(3)) there are swap tables; plays 2..4 (low byte of `sides`) have their own, and the upper
+/// byte 3..5 swaps 0x1f4b for 0x217e.
 /// Original: `event_variant` (0x6d5d80, match_events.cpp, stdcall).
 ///
 /// [pt] { 0x6d5d80 } (stdcall, ret 0xc, match_events.cpp): troca o evento da narração por uma variante:

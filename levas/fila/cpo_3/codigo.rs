@@ -46,7 +46,7 @@ unsafe fn date_month(data: usize) -> i16 {
 /// registro com pessoa (+0x86) ao hall da fama (0x5ef270 em [0xb5ded8]) e os zera.
 unsafe extern "thiscall" fn staff_records_daily_update(this: usize, data: usize) {
     if date_month(data) as i32 != cpo3_w(this + 0x14) as u16 as i32 || cpo3_w(data + 2) != cpo3_w(this + 0x16) {
-        crate::comparacao::ramo("cpo_3 virada do mes");
+        crate::comparison::branch("cpo_3 virada do mes");
         let base = cpo3_d(this + 8);
         let n = manager_record_count();
         for k in 0..n.max(0) as usize {
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn staff_records_end_season_for_nation(this: usize, ent
         let s = base.wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE)) + 0xba;
         let copa = cpo3_i(s + 0xc);
         if cpo3_i(s + 8) == id {
-            crate::comparacao::ramo("cpo_3 fim da liga");
+            crate::comparison::branch("cpo_3 fim da liga");
             if copa == id {
                 cpo3_por(s, cpo3_d(s).wrapping_add(cpo3_d(s + 4)));
                 cpo3_por(s + 0xc, usize::MAX);
@@ -144,13 +144,13 @@ unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, indice: i32) 
             let ano_tecnico = cpo3_w(tecnico + 0x40) as u16;
             let recente = ano < ano_tecnico || (ano == ano_tecnico && (lo as u16 as i16) < cpo3_w(tecnico + 0x3e));
             if recente {
-                crate::comparacao::ramo("cpo_3 tecnico recente");
+                crate::comparison::branch("cpo_3 tecnico recente");
             } else {
                 let r = registro(this, tecnico, 1);
                 if r != 0 {
                     let pontos = cpo3_i(r + 0xce);
                     if pontos > melhor_pontos { // o melhor do mês
-                        crate::comparacao::ramo("cpo_3 melhor do mes");
+                        crate::comparison::branch("cpo_3 melhor do mes");
                         melhor_pontos = pontos;
                         melhor = cpo3_d(clube + 0xcf);
                     }
@@ -183,7 +183,7 @@ unsafe extern "thiscall" fn comparar_staff_records_daily_update(this: usize, dat
         }
         ok &= certo;
     }
-    PLACAR.registrar(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, ano, primeiro));
+    PLACAR.record(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, ano, primeiro));
 }
 
 /// Comparador: os pontos vão ao hall da fama (0x5ef330, soma): roda só a original e confere o plano feito antes: os
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: u
         let s = manager_record_at(this, k) + 0xba;
         plano[k as usize] != (cpo3_d(s), cpo3_d(s + 4), cpo3_i(s + 8), cpo3_i(s + 0xc))
     });
-    PLACAR.registrar(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
+    PLACAR.record(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
 }
 
 /// Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
@@ -231,6 +231,6 @@ unsafe extern "thiscall" fn comparar_find_manager_of_the_month(this: usize, indi
     }
     let r = o(this, indice);
     let n = find_manager_of_the_month(this, indice);
-    PLACAR.registrar(r == n, || format!("find_manager_of_the_month({}) original={:x} rust={:x}", indice, r, n));
+    PLACAR.record(r == n, || format!("find_manager_of_the_month({}) original={:x} rust={:x}", indice, r, n));
     r
 }

@@ -47,7 +47,7 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
             }
         }
         let soma = if n < 8000 {
-            crate::comparacao::ramo("cpu_13 base pela reputação");
+            crate::comparison::branch("cpu_13 base pela reputação");
             n.wrapping_mul(3).wrapping_add(ebx).wrapping_add(l.wrapping_add(rep.wrapping_mul(2)).wrapping_mul(4))
         } else {
             ebx.wrapping_add(rep.wrapping_mul(7)).wrapping_add(n.wrapping_add(l).wrapping_mul(4))
@@ -64,7 +64,7 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
     } else if esi > 5000 {
         match_pl_ftol(esi as f64 * read_f64_at(0x968e18) + read_f64_at(0x9690b8))
     } else if esi > 3000 {
-        crate::comparacao::ramo("cpu_13 band de 3000 a 5000");
+        crate::comparison::branch("cpu_13 band de 3000 a 5000");
         esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: a faixa do meio
     } else {
         match_pl_ftol(esi as f64 * read_f64_at(0x969018) + read_f64_at(0x9688e8))
@@ -110,7 +110,7 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
                         edi = match_pl_ftol(if x > y { x } else { y });
                     }
                     2 => {
-                        crate::comparacao::ramo("cpu_13 clube rico");
+                        crate::comparison::branch("cpu_13 clube rico");
                         let (x, y) = (v * read_f64_at(0x968fa0), edi.wrapping_add(250) as f64); // cpu13: o rico
                         edi = match_pl_ftol(if x > y { x } else { y });
                     }
@@ -165,7 +165,7 @@ unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize,
     let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
     let r = o(clube, &mut bo, forcada);
     let n = player_search_get_club_target_rating(clube, &mut br, forcada);
-    PLACAR.registrar(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
+    PLACAR.record(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
     if !base.is_null() {
         *base = bo;
     }
@@ -176,7 +176,7 @@ unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize,
 unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%)(this, i);
     let n = player_search_slot_get_match_entry(this, i);
-    PLACAR.registrar(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
     r
 }
 
@@ -184,6 +184,6 @@ unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: us
 unsafe extern "thiscall" fn comparar_player_search_slot_sum_goals(this: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(%%I2%%)(this);
     let n = player_search_slot_sum_goals(this);
-    PLACAR.registrar(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
+    PLACAR.record(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
     r
 }

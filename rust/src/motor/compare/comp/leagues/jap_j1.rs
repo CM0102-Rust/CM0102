@@ -12,7 +12,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize
     let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_JAP_J1_ADVANCE_STAGE)(this);
     let after = read_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    PLACAR.record(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `create_championship_final_stage` (comparison mode: see the header of motor.rs).
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_championship_final_stage(
         let (x, y) = (read_usize(l), read_usize(l + 6));
         read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
     };
-    PLACAR.registrar(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, stage, read_usize(this + 0x30)));
+    PLACAR.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, stage, read_usize(this + 0x30)));
 }
 
 /// Comparer for `jap_j1_start_new_season` (comparison mode: see the header of motor.rs).
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: us
     let before = read_i16(this + 0x40);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_START_NEW_SEASON)(this);
     let after = read_i16(this + 0x40);
-    PLACAR.registrar(after == before.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, before, after, read_usize(this + 0x2c)));
+    PLACAR.record(after == before.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, before, after, read_usize(this + 0x2c)));
     r
 }
 
@@ -50,20 +50,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_create_table(this: usize)
     compare_japanese_table("jap_j1_create_table", this, 0x10, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, true, 0x186a0, || o(this))
 }
 
-/// Comparer for `jap_j1_create_table_665030` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_create_table_665030(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_CREATE_TABLE_665030);
-    compare_japanese_table("jap_j1_create_table_665030", this, 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))
-}
 
 /// Comparador: como o do Goiano.
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_SET_UP_RULES)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_SET_UP_RULES)(this), || {
         j1_rules(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("jap_j1_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("jap_j1_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 

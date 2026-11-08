@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
     };
     let mut q = ((atual as f64 / divisor) * read_f32_at(0x96d1a4) as f64) as f32; // fstp dword
     if q as f64 > read_f64_at(0x96d1b0) {
-        crate::comparacao::ramo("cpp_3 base no teto");
+        crate::comparison::branch("cpp_3 base no teto");
         q = 10000.0;
     } else if !(q as f64 >= read_f32_at(0x96d1ac) as f64) {
         q = 6500.0;
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
         return 0;
     }
     let em_temporada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547770usize);
-    crate::comparacao::ramo("cpp_3 motivo da saida");
+    crate::comparison::branch("cpp_3 motivo da saida");
     let temporada = em_temporada(clube, 0xae2c90);
     let (mut tipo, mut tamanho) = (0u8, 0u8);
     let sequencia: unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x690c30usize);
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
     }
     let e = board_row_by_id(this, id);
     if cpp3_w(e + 0x12) < -750 && tipo != 1 && sortear(3) == 0 {
-        crate::comparacao::ramo("cpp_3 motivo 2");
+        crate::comparison::branch("cpp_3 motivo 2");
         return 2;
     }
     if temporada != 0 && cpp3_b(e + 2) & 8 != 0 {
@@ -287,9 +287,9 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
 /// a cópia sem contar os sorteios.
 unsafe extern "thiscall" fn comparar_get_departure_reason(this: usize, id: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, id),
-        || crate::aleatorio::sem_contar(|| get_departure_reason(this, id)));
-    PLACAR.registrar(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, id),
+        || crate::rng::without_counting(|| get_departure_reason(this, id)));
+    PLACAR.record(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
     r
 }
 
@@ -351,7 +351,7 @@ unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: usize, criar
             if criar == 0 {
                 return 0;
             }
-            crate::comparacao::ramo("cpp_3 criar registro");
+            crate::comparison::branch("cpp_3 criar registro");
             cpp3_por(r + 0x86, cpp3_d(pessoa)); // a vaga fica com ele
             break r;
         }
@@ -389,7 +389,7 @@ unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: usize, criar
     if cpp3_d(r + 0x4a) as i32 == -1 {
         let clube = cpp3_d(pessoa + 0x39) as usize;
         if clube != 0 {
-            crate::comparacao::ramo("cpp_3 abrir passagem");
+            crate::comparison::branch("cpp_3 abrir passagem");
             cpp3_por(r + 0x4a, cpp3_d(clube));
             cpp3_data(r + 0x4e, pessoa + 0x3e);
             let mut local = [0u8; 8];
@@ -454,7 +454,7 @@ unsafe extern "thiscall" fn comparar_get_manager_record(this: usize, pessoa: usi
             reg.push((z, 0xd2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, criar), || get_manager_record(this, pessoa, criar));
-    PLACAR.registrar(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, criar, a, b, mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa, criar), || get_manager_record(this, pessoa, criar));
+    PLACAR.record(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, criar, a, b, mo, mr));
     a
 }

@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             show_error_at(0xa6bf9c, 0x36e);
             return;
         }
-        crate::comparacao::ramo("cpw_10 regen da fila");
+        crate::comparison::branch("cpw_10 regen da fila");
         regen(this, cpw10_d(0xae23bc).wrapping_add((id as u32).wrapping_mul(0x6e) as usize));
         let mut j = 0i32;
         while j < cpw10_i(this + 0x14) - 1 {
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
         if s == 0 {
             return;
         }
-        crate::comparacao::ramo("cpw_10 tecnico de reserva");
+        crate::comparison::branch("cpw_10 tecnico de reserva");
         let nj = cpw10_d(0xae23c0).wrapping_add((cpw10_d(cpw10_d(this + 0x1c)) as u32).wrapping_mul(0x44) as usize);
         core::ptr::write_unaligned((s + 0x69) as *mut usize, nj);
         let ficha = cpw10_d(s + 0x61);
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
 unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpw10_i(this + 0x20) > 2 {
-        crate::comparacao::ramo("cpw_10 reservas so na original");
+        crate::comparison::branch("cpw_10 reservas so na original");
         return o(this);
     }
     let c0 = cpw10_i(this + 0x14);
@@ -208,8 +208,8 @@ unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
         }
     }
     if k == 0 {
-        let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x44)], || o(this), || process_regen_queue(this));
-        PLACAR.registrar(igual, || format!("process_regen_queue({:x}) sem vencidas {:x?} x {:x?}", this, mo, mr));
+        let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x44)], || o(this), || process_regen_queue(this));
+        PLACAR.record(igual, || format!("process_regen_queue({:x}) sem vencidas {:x?} x {:x?}", this, mo, mr));
         return;
     }
     let antes = core::slice::from_raw_parts(base as *const u8, c0 as usize * 0xc).to_vec();
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
             igual &= cpw10_i(e) == -1 && cpw10_w(e + 4) == 0 && cpw10_w(e + 6) == 0;
         }
     }
-    PLACAR.registrar(igual, || format!("process_regen_queue({:x}) {} vencidas de {}: conta {} base {:x}/{:x}", this, k, c0, n, base, b2));
+    PLACAR.record(igual, || format!("process_regen_queue({:x}) {} vencidas de {}: conta {} base {:x}/{:x}", this, k, c0, n, base, b2));
 }
 
 /// O veículo pelo sorteio(100) dos grandes (0x757f30/0x757fa0): 0 → 6; até 7 → 3; até 14 → 5; até 39 → 2; até 59 → 0;
@@ -267,8 +267,8 @@ unsafe extern "C" fn media_pick_outlet_type_for_club(clube: usize) -> u32 {
 
 unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(clube), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_club(clube)));
-    PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(clube), || crate::rng::without_counting(|| media_pick_outlet_type_for_club(clube)));
+    PLACAR.record(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
     r
 }
 
@@ -285,7 +285,7 @@ unsafe extern "C" fn media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
 
 unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_person(pessoa)));
-    PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(pessoa), || crate::rng::without_counting(|| media_pick_outlet_type_for_person(pessoa)));
+    PLACAR.record(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
     r
 }

@@ -46,7 +46,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32,
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     *((this + 0x51) as *mut u8) = 0xf;
     *((this + 0x44) as *mut u8) = 0xff;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
@@ -95,7 +95,7 @@ pub(crate) unsafe fn bra_reg_bahia_compare_state_league_ctor(name: &str, this: u
     if *((this + 0x44) as *const u8) == 0xff && read_usize(this + 8) != 0 {
         ok = ok && read_usize(this + 0x2c) == e.fases as usize && read_usize(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + 0x2c), read_usize(this + 0xc), read_usize(this + 8)));
     r
 }
 
@@ -189,7 +189,7 @@ pub(crate) unsafe fn state_league_new_season(this: usize, table: usize, file: us
     }
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(year));
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
     if rules(this) == 0 {
@@ -244,7 +244,7 @@ pub(crate) unsafe fn compare_state_league_new_season(name: &str, this: usize, or
     let before = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let r = original();
     let after = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    PLACAR.registrar(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this, before, after));
+    PLACAR.record(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this, before, after));
     r
 }
 
@@ -257,7 +257,7 @@ pub(crate) unsafe fn compare_state_league_advance_stage(name: &str, this: usize,
     let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original();
     let after = read_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == if last { before } else { before + 1 }, || format!("{}({:#x}) antes={} depois={}", name, this, before, after));
+    PLACAR.record(after == if last { before } else { before + 1 }, || format!("{}({:#x}) antes={} depois={}", name, this, before, after));
 }
 
 /// The Bahia turnover: archives the season in the statistics, clears the previous table and stages, moves to the next
@@ -340,7 +340,7 @@ pub(crate) unsafe fn fill_state_league_table(this: usize, n: i16, file: usize, r
     if k as i8 as i16 != read_i16(this + 0x3e) {
         return 0;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     1
 }
 
@@ -356,34 +356,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_table(this: usize) -
 
 
 
-/// Comparer for the state league table: plans the clubs in database order, runs the original and checks count, return
-/// and table rows.
-///
-/// [pt] O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
-/// estadual na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0) e as linhas
-/// da tabela (+0 o clube, 0x3b bytes) com os clubes do plano, na ordem.
-pub(crate) unsafe fn bra_reg_bahia_compare_state_league_table(name: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
-    let mut plan: Vec<usize> = Vec::new();
-    let mut i: i32 = 0;
-    while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        if is_in_state_league(clube, g) {
-            plan.push(clube);
-        }
-        i += 1;
-    }
-    let r = original();
-    let t = read_usize(this + 0xb1);
-    let expected = (plan.len() as i16 == n) as u32;
-    let mut same = r == expected && read_i16(this + 0x3e) == n && t != 0;
-    let mut found: Vec<usize> = Vec::new();
-    if same {
-        found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
-        same = found == plan;
-    }
-    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
-    r
-}
 
 
 
@@ -397,61 +369,6 @@ pub(crate) unsafe fn bra_reg_bahia_table_row_club(league: usize, l: usize) -> us
     read_usize(read_usize(league + league::TABLE) + l * 0x3b)
 }
 
-/// Builds the knockout stage from given table rows: entrant list, round table (virtual +0x3c), Cup_Stage with seeds,
-/// set_up_round, frees, +0x30 = 0.
-///
-/// [pt] O mata-mata montado da tabela (o mesmo molde nas semifinais e nos mata-matas dos estaduais; só mudam o fonte, as
-/// linhas da caixa e o arranjo): a lista dos `linhas.len()` times (malloc 0x944e46 de 4 × n; sem memória: a caixa
-/// `linha_sem_lista` e nada mais) com os clubes das `linhas` da tabela, nesta ordem (as chaves: 0 × 1, 2 × 3...); a
-/// virtual +0x3c (create_round_table: thiscall(this, fase 0, &rodadas, &extra, nulo), ret 0x10) monta a tabela de
-/// rodadas; a fase nova (operator new 0x944cf1 de 0xb2 bytes; Cup_Stage::Cup_Stage 0x522e00, thiscall com 15
-/// argumentos, ret 0x3c: a liga, n, a lista, as rodadas, +4, a tabela de rodadas, o ano +0x40, 0, 1, o extra da
-/// virtual, 0x14, 0, 1, 0 e as sementes, um byte por time, que o construtor grava no +4 da lista da fase: na original,
-/// a linha de cada time) vai para a
-/// primeira vaga de fases ([+0xc]). Sem fase: a caixa `linha_sem_fase` e volta (sem liberar). Com ela:
-/// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela de rodadas e a lista liberadas (free 0x9452ca,
-/// nessa ordem) e +0x30 = 0. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe fn bra_reg_bahia_build_knockout_from_table(this: usize, rows: &[usize], sementes: &[u8], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
-    let n = rows.len();
-    // the seeds: the original writes the bytes on the stack before allocating (same as the rows, but separate constants)
-    let mut s = [0u8; 8];
-    s[..sementes.len()].copy_from_slice(sementes);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alocar((n * 4) as u32);
-    if list == 0 {
-        return show_error_at(file, row_without_list);
-    }
-    for (k, &l) in rows.iter().enumerate() {
-        core::ptr::write_unaligned((list + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
-    }
-    crate::comparacao::ramo(ramo);
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
-    let (mut rodadas, mut extra) = (0i16, 0i16);
-    let t = table(this, 0, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
-    // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
-    // virtual are words on the stack; the year goes in cx); the constructor only reads the words.
-    let stage = if p != 0 {
-        #[allow(clippy::type_complexity)]
-        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
-            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, n as u32, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 1, 0, s.as_ptr())
-    } else {
-        0
-    };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
-    let stage = read_usize(read_usize(this + 0xc));
-    if stage == 0 {
-        return show_error_at(file, row_without_stage);
-    }
-    let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    build(stage, 0);
-    let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    free(t);
-    free(list);
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
-}
 
 /// Bahia: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the seed;
 /// the ties follow the seeds [inference: two legs, the decider at the better placed club])
@@ -460,43 +377,11 @@ pub(crate) unsafe fn bra_reg_bahia_build_knockout_from_table(this: usize, rows: 
 /// [pt] { 0x430050 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98acac, linhas 0x21b (sem lista) e 0x22f (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage(this: usize) {
-    bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
-}
-
-/// North: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the seed;
-/// the ties follow the seeds [inference: two legs, the decider at the better placed club])
-/// Original: `BraRegNorth::create_semi_final_stage` (0x4360c0, bra_reg_north.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4360c0 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
-/// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af14, linhas 0x21b (sem lista) e 0x22f (sem fase).
-pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
-    bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af14, 0x21b, 0x22f, "cqn_7 norte"); // cqn7: 1º × 4º, 2º × 3º Norte
+    create_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
 }
 
 
-/// Comparer for the knockout build: runs only the original and checks the stage exists with the planned clubs (as a
-/// set), size and +0x30 = 0.
-///
-/// [pt] O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
-/// plano, feito antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = n, +4 = o +4 da
-/// liga e os n primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada
-/// 0x51c800 pode reordenar as chaves), e +0x30 = 0.
-pub(crate) unsafe fn bra_reg_bahia_compare_knockout_from_table(name: &str, this: usize, rows: &[usize], original: impl FnOnce()) {
-    let mut plan: Vec<usize> = rows.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
-    original();
-    let stage = read_usize(read_usize(this + 0xc));
-    if stage == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
-        return;
-    }
-    let list = read_usize(stage + 0xa7);
-    let mut found: Vec<usize> = (0..rows.len()).map(|k| read_usize(list + 6 * k)).collect();
-    let (pl, ac) = (plan.clone(), found.clone());
-    plan.sort_unstable();
-    found.sort_unstable();
-    let same = plan == found && read_i16(stage + 0x3e) as usize == rows.len() && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
-    PLACAR.registrar(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
-}
+
 
 
 

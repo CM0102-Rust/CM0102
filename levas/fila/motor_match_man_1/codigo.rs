@@ -283,7 +283,7 @@ unsafe extern "C" fn comparar_apply_squad_rule(
         return o(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado);
     }
     let n = |v: u32| (v as u8 as i8).max(0) as usize;
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((saida, 4 * (n(nt) + n(nb))));
     if banco != 0 {
         reg.push((banco, 4 * n(nb)));
@@ -291,12 +291,12 @@ unsafe extern "C" fn comparar_apply_squad_rule(
     if reserva != 0 {
         reg.push((reserva, 4 * n(nr)));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
         || o(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado),
-        || crate::aleatorio::sem_contar(|| apply_squad_rule(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado)),
+        || crate::rng::without_counting(|| apply_squad_rule(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado)),
     );
-    PLACAR.registrar(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(regra as *const u8, 6), mo, mr));
+    PLACAR.record(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(regra as *const u8, 6), mo, mr));
 }
 // ---- as notas do jogador do match_man.cpp (0x6e6340 fora da partida, 0x6e2f20 para uma vaga): partes comuns ----
 
@@ -1557,10 +1557,10 @@ unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, cl
     if is_recording_top_level() {
         return f(p, pos, flags, clube, limit, o);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((0xae1080, 4));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(p, pos, flags, clube, limit, o), || crate::aleatorio::sem_contar(|| off_match_score(p, pos, flags, clube, limit, o)));
-    PLACAR.registrar(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limit {}) original={} rust={} {:x?} x {:x?}", p, pos as u16, flags, limit, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(p, pos, flags, clube, limit, o), || crate::rng::without_counting(|| off_match_score(p, pos, flags, clube, limit, o)));
+    PLACAR.record(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limit {}) original={} rust={} {:x?} x {:x?}", p, pos as u16, flags, limit, r, n, mo, mr));
     r
 }
 
@@ -1573,13 +1573,13 @@ unsafe extern "C" fn comparar_lineup_slot_score(
     if is_recording_top_level() {
         return o(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias);
     }
-    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut regioes = crate::rng::STATE_REGIONS.to_vec();
     regioes.push((0xae1080, 4));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regioes,
         || o(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias),
-        || crate::aleatorio::sem_contar(|| lineup_slot_score(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias)),
+        || crate::rng::without_counting(|| lineup_slot_score(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias)),
     );
-    PLACAR.registrar(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
     r
 }

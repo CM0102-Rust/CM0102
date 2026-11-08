@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn cqv11_mercosul_quartas(this: usize) {
         }
     }
     for s in 0..3i32 {
-        crate::comparacao::ramo("cqv_11 melhores segundos");
+        crate::comparison::branch("cqv_11 melhores segundos");
         cqv11_pd(v + (k + s as usize) * 4, cqv11_d(cqv11_linha(segundos, s))); // cqv11: o segundo s das quartas
         for g in -1i8..4 {
             let grupo = cqv11_grupo(this, g);
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_cqv11_mercosul_quartas(this: usize) {
             lidos.sort_unstable();
             lidos.windows(2).all(|w| w[0] != w[1])
         };
-    PLACAR.registrar(ok, || format!("cqv11_mercosul_quartas({:#x}): quartas {:x?} primeiros {:x?} segundos {:x?}", this, lidos, primeiros, segundos));
+    PLACAR.record(ok, || format!("cqv11_mercosul_quartas({:#x}): quartas {:x?} primeiros {:x?} segundos {:x?}", this, lidos, primeiros, segundos));
 }
 
 /// { 0x4c4210 } (thiscall, ret 0, conmebol_liber.cpp; a virtual +0x5c): `ConmebolLiber::set_predicted_positions()`: as
@@ -292,6 +292,6 @@ unsafe fn cqv11_comparar_previstas(nome: &str, this: usize, _fase: u32, _grupo: 
         lidas.push(if e != 0 { *((e + 0x72) as *const u8) as i32 } else { -1 });
     }
     let ok = lidas[0] == 1 && lidas.iter().all(|&x| x >= 1) && lidas.windows(2).all(|w| w[0] <= w[1]);
-    PLACAR.registrar(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
+    PLACAR.record(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
 }
 

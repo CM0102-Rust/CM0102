@@ -87,9 +87,9 @@ unsafe extern "C" fn comparar_database_format_name_from_strings(nome: usize, sob
     }
     // o texto produzido (até o tamanho dado, no máximo 128 bytes)
     let n = (tamanho as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma),
         || database_format_name_from_strings(nome, sobrenome, comum, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
     r
 }
 
@@ -149,9 +149,9 @@ unsafe extern "C" fn comparar_database_get_job_name(cargo: u32, curto: u32, maiu
     // o texto [0xae19b4] e o byte do gênero, se houver
     let regioes = [(0xae19b4usize, 100usize), (genero, 1)];
     let reg = if genero != 0 { &regioes[..] } else { &regioes[..1] };
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(cargo, curto, maiuscula, genero),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(cargo, curto, maiuscula, genero),
         || database_get_job_name(cargo, curto, maiuscula, genero));
-    PLACAR.registrar(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
     r
 }
 
@@ -181,7 +181,7 @@ unsafe extern "C" fn database_get_language_name(idioma: u32) -> usize {
 
 unsafe extern "C" fn comparar_database_get_language_name(idioma: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(%%I2%%);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(idioma), || database_get_language_name(idioma));
-    PLACAR.registrar(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae21d4, 100)], || o(idioma), || database_get_language_name(idioma));
+    PLACAR.record(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
     r
 }

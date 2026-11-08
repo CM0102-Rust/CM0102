@@ -45,7 +45,7 @@ unsafe extern "C" fn club_has_fast_striker(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_club_has_fast_striker(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     let n = club_has_fast_striker(clube);
-    PLACAR.registrar(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -64,7 +64,7 @@ unsafe extern "C" fn club_has_two_creative_midfielders(clube: usize) -> u8 {
 unsafe extern "C" fn comparar_club_has_two_creative_midfielders(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
     let n = club_has_two_creative_midfielders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -150,6 +150,6 @@ unsafe extern "C" fn club_squad_strength_band(clube: usize, outro: usize) -> u8 
 unsafe extern "C" fn comparar_club_squad_strength_band(clube: usize, outro: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(clube, outro);
     let n = club_squad_strength_band(clube, outro);
-    PLACAR.registrar(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, outro, r, n));
+    PLACAR.record(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, outro, r, n));
     r
 }

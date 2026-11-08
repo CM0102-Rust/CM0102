@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                     }
                     let b = nation_officials_block(this, k);
                     let conta = cpy8_i(b + 4) as f64;
-                    crate::comparacao::ramo("cpy_8 arbitro neutro");
+                    crate::comparison::branch("cpy_8 arbitro neutro");
                     (cpy8_i(b + 8).wrapping_sub(match_pl_ftol(conta * -0.75)), match_pl_ftol(conta * 0.25)) // cpy8: o quarto de cima
                 } else {
                     let nacao = if cpy8_d(comp + 0x5d) != 0 {
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                     }
                     match achou {
                         Some(band) => {
-                            crate::comparacao::ramo("cpy_8 band da liga");
+                            crate::comparison::branch("cpy_8 band da liga");
                             band // cpy8: a faixa da liga
                         }
                         None => (cpy8_i(b + 8), cpy8_i(b + 4)),
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
     let sorteado = if n == 1 {
         ini
     } else {
-        crate::comparacao::ramo("cpy_8 arbitro sorteado");
+        crate::comparison::branch("cpy_8 arbitro sorteado");
         ini.wrapping_add(sortear(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
     };
     let ocupado = |k: i32| {
@@ -159,11 +159,11 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
 /// Comparador: lado a lado pela palavra de saída e pelo estado do sorteio, e pela devolução.
 unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, jogo: usize, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((saida, 2));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida),
-        || crate::aleatorio::sem_contar(|| choose_match_official(this, jogo, saida)));
-    PLACAR.registrar(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", jogo, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo, saida),
+        || crate::rng::without_counting(|| choose_match_official(this, jogo, saida)));
+    PLACAR.record(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", jogo, r, mo, n, mr));
     r
 }
 
@@ -184,8 +184,8 @@ unsafe extern "thiscall" fn comparar_clear_busy_flags(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let n = cpy8_i(this + 4);
     let reg = if n > 0 && cpy8_d(this + 8) != 0 { vec![(cpy8_d(this + 8), n as usize)] } else { Vec::new() };
-    let (r, m, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || clear_busy_flags(this));
-    PLACAR.registrar(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
+    let (r, m, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || clear_busy_flags(this));
+    PLACAR.record(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
     r
 }
 
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
         if idade <= 0x28 || (idade <= 0x2d && sortear(3) != 0) {
             continue;
         }
-        crate::comparacao::ramo("cpy_8 arbitro renovado");
+        crate::comparison::branch("cpy_8 arbitro renovado");
         let nac = cpy8_d(ficha + 0x16);
         let n1 = nome(nac);
         core::ptr::write_unaligned((ficha + 4) as *mut usize, n1);
@@ -271,11 +271,11 @@ unsafe extern "thiscall" fn comparar_renew_officials(this: usize, comp: usize) -
     if cpy8_d(0xae23e8) == 0 || cpy8_d(this) == 0 {
         return o(this, comp);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(cpy8_d(0xae23e8), total * 0x2b), (cpy8_d(this), total * 0x11), (0xb67a34, 4)]);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, comp),
-        || crate::aleatorio::sem_contar(|| renew_officials(this, comp)));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, comp),
+        || crate::rng::without_counting(|| renew_officials(this, comp)));
+    PLACAR.record(igual && r == n, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("renew_officials(comp {:#x}) original={} rust={}, diferencas em {:x?}", comp, r, n, dif)

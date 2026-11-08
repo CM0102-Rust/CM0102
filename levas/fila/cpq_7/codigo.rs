@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn update_work_permit_on_move(this: usize, pessoa: usiz
             let dar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x8c7070usize);
             let mut t = [0u32; 2];
             semanas(0xae2c90, &mut t, 0x34);
-            crate::comparacao::ramo("cpq_7 permissao nova");
+            crate::comparison::branch("cpq_7 permissao nova");
             // ponytail: a original empurra o ano com lixo nos 16 bits altos; a 0x8c7070 só grava a palavra
             let ano = *((0xae2c92) as *const u16) as u32;
             dar(this, pessoa, cpq7_d(clube + 0x53), ano, 0, 1); // a permissão nova
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn complete_accepted_contract_offer(this: usize, oferta
     let luvas: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x5998e0usize);
     let valor = cpq7_d(oferta + 8) as u32;
     let fin = financas(cpq7_d(0xae2a38), clube);
-    crate::comparacao::ramo("cpq_7 luvas");
+    crate::comparison::branch("cpq_7 luvas");
     luvas(fin, valor); // as luvas
     1
 }
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn offer_contract_to_offer_player(this: usize, clube: u
     let oferecer: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, usize, f64, u32) -> u32 = core::mem::transmute(0x4cda70usize);
     let mut c = [0u8; 0x50];
     construir(c.as_mut_ptr());
-    crate::comparacao::ramo("cpq_7 contrato da oferta");
+    crate::comparison::branch("cpq_7 contrato da oferta");
     if oferecer(cpq7_d(0xae1050), pessoa, clube, c.as_mut_ptr(), cpq7_d(oferta + 0x20), 1.0f64, 2) != 0 {
         let acrescentar: unsafe extern "thiscall" fn(usize, *mut u8, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x4cc490usize);
         return acrescentar(cpq7_d(0xae1050), c.as_mut_ptr(), cpq7_d(oferta + 0x20), cpq7_d(oferta + 0x24), 0xb, 0, 1, 0);

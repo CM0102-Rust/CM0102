@@ -67,7 +67,7 @@ unsafe fn check_cup_rules(nome: &str, this: usize, g: &ContinentalGroupRules, o:
     let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
     let b8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
     let premio = g.premio.map_or(true, |p| core::ptr::read_unaligned((this + 0x28) as *const u32) == p);
-    PLACAR.registrar(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this, r, &errados[..k], b6, palavra, b8, premio));
+    PLACAR.record(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this, r, &errados[..k], b6, palavra, b8, premio));
     r
 }
 
@@ -94,7 +94,7 @@ const OCEANIA_RULES: ContinentalGroupRules = ContinentalGroupRules {
 /// desempates (1, 2, 3, 0), dois classificados por grupo, clubes internacionais (+0x42 = 2), categoria 7, 7 no banco e 3
 /// substituições, começo no dia 15 do mês 0 do ano da competição, prêmios de 2.000.000; depois a tabela das rodadas.
 unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_11 regras da libertadores");
+    crate::comparison::branch("cqj_11 regras da libertadores");
     let dia = 0xf; // cqj11: o dia do começo da Libertadores
     let vitoria = 3; // cqj11: a vitória nos grupos da Libertadores
     apply_cup_rules(this, &LIBERTADORES_RULES, dia, vitoria)
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_set_up_rules(this: usize) ->
 /// set_up_rules()`: os grupos da Copa Merconorte em dois turnos, 3/1 pontos, desempates (1, 2, 3, 0), um classificado
 /// por grupo, clubes internacionais, categoria 7, começo no dia 1 do mês 7, prêmios de 2.000.000.
 unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_11 regras da merconorte");
+    crate::comparison::branch("cqj_11 regras da merconorte");
     apply_cup_rules(this, &MERCONORTE_RULES, MERCONORTE_RULES.dia, 3)
 }
 
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u
 /// desempates (1, 2, 4, 0), dois classificados, categoria 8, 3 no banco e 3 substituições, +0x43 = 2, os bits de regra
 /// 0x28 (os de cima classificados, os outros eliminados), começo no dia 20 do mês 7 num dia da semana 5; sem prêmio.
 unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_11 regras da oceania");
+    crate::comparison::branch("cqj_11 regras da oceania");
     let dia = 0x14; // cqj11: o dia do começo na Oceania
     apply_cup_rules(this, &OCEANIA_RULES, dia, 3)
 }

@@ -21,7 +21,7 @@ unsafe extern "C" fn database_free_staff_history_table() {
     if tabela == 0 {
         return;
     }
-    crate::comparacao::ramo("banco liberar histórico de pessoas");
+    crate::comparison::branch("banco liberar histórico de pessoas");
     free_database_table(tabela);
     *(0xae23cc as *mut usize) = 0;
     *(0xae2374 as *mut u32) = 0;
@@ -40,7 +40,7 @@ unsafe extern "C" fn database_free_staff_comp_history_table() {
     if tabela == 0 {
         return;
     }
-    crate::comparacao::ramo("banco liberar histórico de prêmios");
+    crate::comparison::branch("banco liberar histórico de prêmios");
     free_database_table(tabela);
     *(0xae23e4 as *mut usize) = 0;
     *(0xae238c as *mut u32) = 0;
@@ -58,7 +58,7 @@ unsafe extern "C" fn comparar_database_free_staff_comp_history_table() {
 /// e limpa as `n` linhas novas (+0 = o índice da linha, o resto zero); devolve 1. TapeCall por
 /// comp_util_add_history_record (0x4afd2c), no fim de competição. Sem quadro de pilha.
 unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 {
-    crate::comparacao::ramo("banco crescer histórico de competições");
+    crate::comparison::branch("banco crescer histórico de competições");
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
     let total = (*(0xae237c as *const i32)).wrapping_add(n);
     let nova = realloc(*(0xae23d4 as *const usize), (total as u32).wrapping_mul(26));

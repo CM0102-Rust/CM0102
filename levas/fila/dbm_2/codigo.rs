@@ -25,7 +25,7 @@ unsafe extern "C" fn comparar_stadium_get_english_name(estadio: usize) -> usize 
     }
     let r = o(estadio);
     let n = stadium_get_english_name(estadio);
-    PLACAR.registrar(r == n, || format!("stadium_get_english_name({:x}) idioma {} original={:x} rust={:x}", estadio, idioma, r, n));
+    PLACAR.record(r == n, || format!("stadium_get_english_name({:x}) idioma {} original={:x} rust={:x}", estadio, idioma, r, n));
     r
 }
 
@@ -50,8 +50,8 @@ unsafe extern "C" fn database_language_file_exists(idioma: i32) -> i32 {
 /// montado (acusa o nome trocado mesmo sem o arquivo na pasta).
 unsafe extern "C" fn comparar_database_language_file_exists(idioma: i32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i32) -> i32>(%%I1%%);
-    let (r, x, igual, _, _) = crate::comparacao::lado_a_lado(&[(0xde279c, 0x104)], || o(idioma), || database_language_file_exists(idioma));
-    PLACAR.registrar(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", idioma, r, x, igual));
+    let (r, x, igual, _, _) = crate::comparison::side_by_side(&[(0xde279c, 0x104)], || o(idioma), || database_language_file_exists(idioma));
+    PLACAR.record(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", idioma, r, x, igual));
     r
 }
 
@@ -85,14 +85,14 @@ unsafe extern "thiscall" fn comparar_eng_lng_free_tables(t: usize) {
 /// sorteadas; a cópia entrega a uma lista (sem soltar nada), que tem de ser as não nulas de +0x20 a +0x3c, na
 /// ordem da original (a original solta de verdade e não dá para rodar as duas). As globais voltam no fim.
 pub unsafe fn autoteste_dbm_2() {
-    let (t0, d0) = PLACAR.contagem();
-    let mut s = Sorteio(0x4442_4d32_6573_7461);
+    let (t0, d0) = PLACAR.counts();
+    let mut s = TestRng(0x4442_4d32_6573_7461);
     let globais = [0x9b5984usize, 0xae2408];
     let antes: Vec<usize> = globais.iter().map(|&a| *(a as *const usize)).collect();
     let mut tabela = [0usize; 16];
     let mut registro = [0u8; 0x40];
     for _ in 0..256 {
-        let z = s.proximo();
+        let z = s.next_u64();
         *(0x9b5984 as *mut u32) = (z % 14) as u32;
         tabela[13] = 0x3000_0000 + ((z >> 8) as usize & 0xffff0);
         *(0xae2408 as *mut usize) = tabela.as_mut_ptr() as usize;
@@ -106,15 +106,15 @@ pub unsafe fn autoteste_dbm_2() {
         comparar_database_language_file_exists(idioma);
     }
     for _ in 0..64 {
-        let z = s.proximo();
+        let z = s.next_u64();
         for k in 0..8 {
             tabela[8 + k] = if (z >> k) & 1 == 0 { 0 } else { 0x1000_0000 * (k + 1) + ((z >> (8 + k)) as usize & 0xffff0) };
         }
         let esperado: Vec<usize> = tabela[8..].iter().copied().filter(|&p| p != 0).collect();
         let mut soltos = Vec::new();
         for_each_english_table(tabela.as_ptr() as usize, |p| soltos.push(p));
-        PLACAR.registrar(soltos == esperado, || format!("eng_lng_free_tables: soltos {:x?} esperados {:x?}", soltos, esperado));
+        PLACAR.record(soltos == esperado, || format!("eng_lng_free_tables: soltos {:x?} esperados {:x?}", soltos, esperado));
     }
-    let (t1, d1) = PLACAR.contagem();
+    let (t1, d1) = PLACAR.counts();
     linha(&format!("banco idioma (estádio, .lng, soltar): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
 }

@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize) {
     if times == 0 {
         return show_error_at(0x9ea23c, 0x29c);
     }
-    crate::comparacao::ramo("cqr_9 mata-mata da copa da italia");
+    crate::comparison::branch("cqr_9 mata-mata da copa da italia");
     for i in 0..8usize {
         cqr9_pd(times + i * 4, cqr9_d(group_table(this, i))); // cqr9: o campeão do grupo i
     }
@@ -116,7 +116,7 @@ unsafe fn ita_cup_compare_knockout_stage(nome: &str, this: usize, fase: usize, c
     original();
     let f = cqr9_d(cqr9_d(this + 0xc) + fase * 4);
     let ok = f != 0 && vagas.iter().all(|&j| cqr9_d(cqr9_d(this + 0xee) + j * 4) == 0);
-    PLACAR.registrar(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", nome, this, f, vagas));
+    PLACAR.record(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", nome, this, f, vagas));
 }
 
 unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage(this: usize) {
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
     if times == 0 {
         return show_error_at(0x9ea204, 0x2ba);
     }
-    crate::comparacao::ramo("cqr_9 mata-mata da copa da serie c");
+    crate::comparison::branch("cqr_9 mata-mata da copa da serie c");
     for i in 0..16usize {
         cqr9_pd(times + i * 4, cqr9_d(group_table(this, i)));
     }

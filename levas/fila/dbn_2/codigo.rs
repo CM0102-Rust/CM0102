@@ -241,7 +241,7 @@ unsafe extern "C" fn database_sort_clubs_by_reputation(refazer: u32) {
 }
 
 /// O primeiro byte que difere entre as fotos da original e da cópia (endereço, original, cópia).
-fn diferenca_dbn2(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Option<(usize, u8, u8)> {
+fn diferenca_dbn2(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> Option<(usize, u8, u8)> {
     mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])))
 }
 
@@ -262,9 +262,9 @@ unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
             regioes.push((rd(p), gi(cont) as usize * tam));
         }
     }
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(leniente), || resolve_database_indexes(leniente));
+    let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regioes, || o(leniente), || resolve_database_indexes(leniente));
     let onde = diferenca_dbn2(&mo, &mr);
-    PLACAR.registrar(igual, || match onde {
+    PLACAR.record(igual, || match onde {
         Some((a, x, y)) => format!("resolve_database_indexes({}): diverge em {:x} original={:02x} rust={:02x}", leniente, a, x, y),
         None => format!("resolve_database_indexes({}): diverge", leniente),
     });
@@ -281,7 +281,7 @@ unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(refazer: u32) {
     if v == 0 || n <= 0 {
         return o(refazer);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(v, n as usize * 4)], || o(refazer), || database_sort_clubs_by_reputation(refazer));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(v, n as usize * 4)], || o(refazer), || database_sort_clubs_by_reputation(refazer));
     let onde = diferenca_dbn2(&mo, &mr);
-    PLACAR.registrar(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", refazer as u8, onde));
+    PLACAR.record(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", refazer as u8, onde));
 }

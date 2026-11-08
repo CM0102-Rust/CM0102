@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: usize, dias_
     let tipo = call_up_type(clube, p);
     let inj = lesao(cpv11_d(0xb63d28), p);
     if inj != 0 && cpv11_b(inj) == 0x51 {
-        crate::comparacao::ramo("cpv_11 doença");
+        crate::comparison::branch("cpv_11 doença");
         marcar(cpv11_d(0xde1d08), clube, p, 1, 1);
         marcar(cpv11_d(0xde1d08), clube, p, 0, 1);
         tirar(this, nacao, tipo as u32, p);
@@ -120,13 +120,13 @@ unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: usize, dias_
         }
     }
     if dias < 0x1c {
-        crate::comparacao::ramo("cpv_11 lesão de 14 a 27 dias");
+        crate::comparison::branch("cpv_11 lesão de 14 a 27 dias");
     }
     noticia(this, p, nacao, tipo as u32);
     marcar(cpv11_d(0xde1d08), clube, p, 1, 1);
     marcar(cpv11_d(0xde1d08), clube, p, 0, 1);
     if tipo != 2 {
-        crate::comparacao::ramo("cpv_11 tipo pelas marcas");
+        crate::comparison::branch("cpv_11 tipo pelas marcas");
     }
     tirar(this, nacao, tipo as u32, p);
     let a = (vaga + 0x45) as *mut u8;
@@ -145,11 +145,11 @@ unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: usize, dias_
         tipo == 0 || t9a06(cpv11_d(0xb63c98), t, core::ptr::null_mut()) != 0
     };
     if pede {
-        crate::comparacao::ramo("cpv_11 pedido de substituto");
+        crate::comparison::branch("cpv_11 pedido de substituto");
         pedido(this, p, nacao, tipo as u32, nivel);
         return;
     }
-    crate::comparacao::ramo("cpv_11 substituto");
+    crate::comparison::branch("cpv_11 substituto");
     substituto(this, nacao, tipo as u32, nivel, p); // cpv11: o substituto
     repetidos(nacao);
 }
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news(_this: usi
             return;
         }
     }
-    crate::comparacao::ramo("cpv_11 notícia da saída");
+    crate::comparison::branch("cpv_11 notícia da saída");
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x20, 0);
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn national_teams_post_replacement_needed_news(_this: u
     let b_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     let contar: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    crate::comparacao::ramo("cpv_11 notícia do pedido");
+    crate::comparison::branch("cpv_11 notícia do pedido");
     let (time, um, marca) = match tipo as u8 {
         0 => (principal(nacao), 0u32, 4u32),
         1 => (principal(nacao), 1, 8),
@@ -291,17 +291,17 @@ unsafe extern "thiscall" fn comparar_withdraw_injured_player(this: usize, p: usi
         0 => depois == antes,
         _ => !estava || depois.0 == 0,
     };
-    PLACAR.registrar(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p, dias as u16 as i16, plano, estava, antes, depois));
+    PLACAR.record(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p, dias as u16 as i16, plano, estava, antes, depois));
 }
 
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
 unsafe extern "thiscall" fn comparar_national_teams_post_player_withdrawn_news(this: usize, p: usize, nacao: usize, tipo: u32) {
-    crate::comparacao::ramo("national_teams_post_player_withdrawn_news");
+    crate::comparison::branch("national_teams_post_player_withdrawn_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, p, nacao, tipo)
 }
 
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
 unsafe extern "thiscall" fn comparar_national_teams_post_replacement_needed_news(this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
-    crate::comparacao::ramo("national_teams_post_replacement_needed_news");
+    crate::comparison::branch("national_teams_post_replacement_needed_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, p, nacao, tipo, nivel)
 }

@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, partida: usize
         0 | 1 => 4,
         3..=7 => 2,
         _ => {
-            crate::comparacao::ramo("cpk_4 escopo da nacao");
+            crate::comparison::branch("cpk_4 escopo da nacao");
             1 // a nação da competição
         }
     };
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn get_ineligibility_code(this: usize, jogador: usize, 
             cpk4_d(r + 0xa) == nacao && *((r + 0x12) as *const u8) == tipo // a regra da nação
         };
         if casa {
-            crate::comparacao::ramo("cpk_4 regra da partida");
+            crate::comparison::branch("cpk_4 regra da partida");
             let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(cpk4_d(cpk4_d(r) + 0x18));
             return respond(r, jogador, partida);
         }
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn find_scheduled_friendly_slot(this: usize, dia: u32, 
             for i in 0..(*((e + 8) as *const i8)).max(0) as usize {
                 let v = e + 25 * i + 9;
                 if *((v + 2) as *const u16) == ano && *(v as *const u16) == dia && cpk4_d(v + 0x10) == adversario {
-                    crate::comparacao::ramo("cpk_4 vaga do amistoso");
+                    crate::comparison::branch("cpk_4 vaga do amistoso");
                     return e + 25 * i + 9; // a vaga i
                 }
             }
@@ -108,8 +108,8 @@ unsafe extern "thiscall" fn find_scheduled_friendly_slot(this: usize, dia: u32, 
 unsafe extern "thiscall" fn comparar_get_fixture_rules_scope(this: usize, partida: usize, tipo: *mut u8, nacao: *mut usize, continente: *mut usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut usize, *mut usize)>(%%I0%%);
     let regioes = [(tipo as usize, 1), (nacao as usize, 4), (continente as usize, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, partida, tipo, nacao, continente), || get_fixture_rules_scope(this, partida, tipo, nacao, continente));
-    PLACAR.registrar(igual, || format!("get_fixture_rules_scope({:x}) {:x?} x {:x?}", partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(this, partida, tipo, nacao, continente), || get_fixture_rules_scope(this, partida, tipo, nacao, continente));
+    PLACAR.record(igual, || format!("get_fixture_rules_scope({:x}) {:x?} x {:x?}", partida, mo, mr));
 }
 
 /// Comparador: pelo valor. Jogador com a marca de ausente (0x418f60 com 1, que só lê): só a original (com 0 ela tira
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn comparar_get_ineligibility_code(this: usize, jogador
     }
     let r = o(this, jogador, partida);
     let n = get_ineligibility_code(this, jogador, partida);
-    PLACAR.registrar(r == n, || format!("get_ineligibility_code({:x}, {:x}) original={} rust={}", jogador, partida, r, n));
+    PLACAR.record(r == n, || format!("get_ineligibility_code({:x}, {:x}) original={} rust={}", jogador, partida, r, n));
     r
 }
 
@@ -130,6 +130,6 @@ unsafe extern "thiscall" fn comparar_get_ineligibility_code(this: usize, jogador
 unsafe extern "thiscall" fn comparar_find_scheduled_friendly_slot(this: usize, dia: u32, ano: u32, clube: usize, adversario: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize>(%%I2%%)(this, dia, ano, clube, adversario);
     let n = find_scheduled_friendly_slot(this, dia, ano, clube, adversario);
-    PLACAR.registrar(r == n, || format!("find_scheduled_friendly_slot({}/{}, {:x}, {:x}) original={:#x} rust={:#x}", dia as u16, ano as u16, clube, adversario, r, n));
+    PLACAR.record(r == n, || format!("find_scheduled_friendly_slot({}/{}, {:x}, {:x}) original={:#x} rust={:#x}", dia as u16, ano as u16, clube, adversario, r, n));
     r
 }

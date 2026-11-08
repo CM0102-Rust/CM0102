@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn create_stats(this: usize, jogador: usize, categoria:
         while i < n {
             let r = cpq10_d(this + 4).wrapping_add((i as usize) << 5);
             if core::ptr::read_unaligned((r + 0xe) as *const u16) == 0xffff {
-                crate::comparacao::ramo("cpq_10 registro solto");
+                crate::comparison::branch("cpq_10 registro solto");
                 core::ptr::write_bytes(r as *mut u8, 0, 0x20);
                 cpq10_por(vaga, i as usize);
                 cpq10_por(this + 0x38, cpq10_d(this + 0x38).wrapping_sub(1));
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn create_stats(this: usize, jogador: usize, categoria:
             return 0;
         }
     }
-    crate::comparacao::ramo("cpq_10 registro novo");
+    crate::comparison::branch("cpq_10 registro novo");
     cpq10_por(vaga, cpq10_d(this + 0xc)); // o índice novo
     cpq10_por(this + 0xc, cpq10_d(this + 0xc).wrapping_add(1));
     let r = cpq10_d(this + 4).wrapping_add(cpq10_d(vaga) << 5);
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn is_retirement_pending(this: usize, pessoa: usize) ->
     let mut i = 0i32;
     while i < n {
         if cpq10_d(cpq10_d(this + 4) + 0x1a * i as usize) == id {
-            crate::comparacao::ramo("cpq_10 aposentadoria marcada");
+            crate::comparison::branch("cpq_10 aposentadoria marcada");
             return 1; // está na lista
         }
         i += 1;
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn comparar_get_category_record(this: usize, jogador: u
         return r;
     }
     let n = get_category_record(this, jogador, categoria);
-    PLACAR.registrar(r == n, || format!("get_category_record({:x}, {:x}, {}) original={:x} rust={:x}", this, jogador, categoria as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("get_category_record({:x}, {:x}, {}) original={:x} rust={:x}", this, jogador, categoria as u8 as i8, r, n));
     r
 }
 
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_create_stats(this: usize, jogador: usize, c
     let esperado = cpq10_d(this + 4).wrapping_add((indice as usize) << 5);
     let zerado = atual != -1 || (0..0x20).all(|k| *((r + k) as *const u8) == 0);
     let igual = r == esperado && cpq10_d(vaga) as i32 == indice && cpq10_d(this + 0xc) == n2 && cpq10_d(this + 0x38) == soltos2 && zerado;
-    PLACAR.registrar(igual, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
+    PLACAR.record(igual, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
         this, jogador, categoria as u8 as i8, r, esperado, cpq10_d(vaga) as i32, indice, cpq10_d(this + 0xc), n2, cpq10_d(this + 0x38), soltos2, zerado));
     r
 }

@@ -9,17 +9,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage(this: 
     ita_ser_c1a_compare_advance_stage("ita_ser_c1a_advance_stage", this, || o(this), || ita_ser_c1a_advance_stage(this))
 }
 
-/// Comparer for `ita_ser_c1a_advance_stage_64fba0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_64fba0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE_64FBA0);
-    ita_ser_c1a_compare_advance_stage("ita_ser_c1a_advance_stage_64fba0", this, || o(this), || ita_ser_c1a_advance_stage_64fba0(this))
-}
 
-/// Comparer for `ita_ser_c1a_advance_stage_578330` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_578330(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE_578330);
-    ita_ser_c1a_compare_advance_stage("ita_ser_c1a_advance_stage_578330", this, || o(this), || ita_ser_c1a_advance_stage_578330(this))
-}
 
 /// Comparer for `create_playoff_stages` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_create_playoff_stages(this: usize) {
@@ -27,11 +17,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_playoff_stages(this: usiz
     compare_end_of_league_stages("create_playoff_stages", this, || o(this))
 }
 
-/// Comparer for `create_play_off_stages` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_create_play_off_stages(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_PLAY_OFF_STAGES);
-    compare_end_of_league_stages("create_play_off_stages", this, || o(this))
-}
 
 /// Comparer for `ita_ser_c1a_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {

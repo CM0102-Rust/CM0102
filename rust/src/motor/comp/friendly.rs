@@ -10,9 +10,15 @@ pub(crate) fn replace_low_word(d: usize, a: i16) -> u32 {
     ((d as u32) & 0xffff_0000) | a as u16 as u32
 }
 
-/// a friendly of this competition: news 8 to the managers of both clubs that did not cancel and the friendly slot
-/// freed; of another competition, its tournament is cancelled; a fixture without a round leaves the calendar (the
-/// national team one through 0x5cb9e0)
+/// `Friendly::on_friendly_fixture_cancelled(fixture, cancelling_club)` (SEH frame for the local news item), called by
+/// the calendar (0x5aa680) and by the club screen: handles a cancelled friendly fixture.
+///
+/// A friendly of this competition (+0x14 = +4): news item 8 (0x77bbe0) with +0xc, +0x10, the day and the year, to the
+/// managers of the home and away clubs that did not cancel (0x7861e0); of another competition: that competition's
+/// tournament among those at +0xb1 (0x69 bytes; index = competition byte − +0xaf), if flagged, is cancelled (0x5c8260
+/// with 0). A friendly of this competition with the slot list (+0x34cc): the fixture's slot (0x5c6740) is freed (+0x10
+/// = 0, +0x18 = 0). A fixture without a round (+0x43 = 0xff): the national team one goes through 0x5cb9e0, the club one
+/// only leaves the calendar (0x5abc30).
 /// Original: `Friendly::on_friendly_fixture_cancelled` (0x5c6570, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5c6570 } (thiscall, ret 8, friendly.cpp, quadro SEH da notícia local): `Friendly::on_friendly_fixture_cancelled(
@@ -25,7 +31,7 @@ pub(crate) fn replace_low_word(d: usize, a: i16) -> u32 {
 pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize, jogo: usize, who: usize) {
     let comp = read_usize(jogo + 0x14);
     if comp == read_usize(this + 4) {
-        crate::comparacao::ramo("cqg_10 noticia do amistoso cancelado");
+        crate::comparison::branch("cqg_10 noticia do amistoso cancelado");
         let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
         let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
         let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
@@ -50,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
         let k = read_u8(comp).wrapping_sub(read_u8(this + friendly::FIRST_TOURNAMENT_COMP_ID)) as i8 as isize;
         let tournament = (this + friendly::TOURNAMENT_SLOTS).wrapping_add((k * 0x69) as usize);
         if read_usize(tournament) != 0 && tournament != 0 {
-            crate::comparacao::ramo("cqg_10 torneio cancelado");
+            crate::comparison::branch("cqg_10 torneio cancelado");
             let cancelar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_FRIENDLY_CANCEL_TOURNAMENT);
             // 0x5c8260: push 0; push torneio; mov ecx, this -> thiscall, ret 8
             cancelar(this, tournament, 0);
@@ -63,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
         let v = slot_of(this, replace_low_word(read_usize(jogo + 0x1c), read_i16(jogo + 0x2a)), replace_low_word(read_usize(jogo + 0x14), read_i16(jogo + 0x28)),
             read_usize(jogo + 0x20) as u32, read_usize(jogo + 0x1c) as u32);
         if v != 0 {
-            crate::comparacao::ramo("cqg_10 vaga do amistoso livre");
+            crate::comparison::branch("cqg_10 vaga do amistoso livre");
             core::ptr::write_unaligned((v + 0x10) as *mut u32, 0); // cqg10: a vaga fica livre
             *((v + 0x18) as *mut u8) = 0;
         }
@@ -77,15 +83,19 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
             of_national_team(this, jogo);
         } else {
             let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
-            crate::comparacao::ramo("cqg_10 amistoso fora do calendario");
+            crate::comparison::branch("cqg_10 amistoso fora do calendario");
             remove(read_usize(G_FIXTURE_MANAGER), jogo); // cqg10: o amistoso sai do calendário
         }
     }
 }
 
 
-/// by the fixture flag, the home national team (or its nation's first team): its fixture on the previous day leaves the
-/// calendar; then the fixture itself leaves
+/// Cancels a national team friendly (from 0x5c6570; SEH frame for the local list and dates): the national team's
+/// fixture on the previous day leaves the calendar, then the fixture itself leaves.
+///
+/// By the fixture flag (+0x4d & 0x300): 0x100 the national team is the home side (+0x1c), 0x200 the first national team
+/// of its nation (0x53b4f0); with a valid id, its fixture on the previous day (0x549ef0, 0x54c8e0 with 1, 0x417c10;
+/// 0x5acbe0 with the previous day at both ends) leaves the calendar (0x5abc30). Then the fixture itself leaves.
 /// Original: `friendly_cancel_national_fixture` (0x5cb9e0, friendly.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x5cb9e0 } (thiscall, ret 4, friendly.cpp, quadro SEH da lista local e das datas): o amistoso de seleção cancelado
@@ -114,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: us
         0
     };
     if who != 0 && read_usize(who) as i32 != -1 {
-        crate::comparacao::ramo("cqg_10 jogo da selecao na vespera");
+        crate::comparison::branch("cqg_10 jogo da selecao na vespera");
         let id = read_usize(who) as u32;
         let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
         let minus: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
@@ -140,9 +150,17 @@ pub(crate) unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: us
 }
 
 
-/// news 0xb to the invited clubs (a tournament starting after a week ago); the tournament leaves the pending list; the
-/// created competition fixtures become friendlies again or leave; the competition is destroyed and its slot and owner
-/// are cleared
+/// `Friendly::cancel_tournament(tournament, without_owner)` (SEH frame for the local news item, dates and list), called
+/// by the cancelled friendly (0x5c6570) and by the friendlies' day: cancels a friendly tournament.
+///
+/// Without a tournament, the box of line 0x10ad. If the tournament starts after a week ago (0x54c8e0 with 7), news item
+/// 0xb (the owner, the start day and year +4/+6) goes to the invited clubs (+0x15, 4) that did not refuse (+0x25 = 1,
+/// except the owner) and to the owner if `without_owner` is 0. The tournament leaves the pending list (+0x34d0,
+/// 0x68d1f0). With the competition created (+0x65): its fixtures from a week before to 10 days after the start
+/// (0x5acbe0): today's one becomes a friendly again (0x5ac7a0: +0x42 = 0xff, +0x14 = the friendlies competition, +0 =
+/// [0x9cf668]); the others leave the calendar (0x5abc30) and, those with a round, come back as friendlies (0x5ab230).
+/// The competition is destroyed (virtual +0 with 1) and +0x65 = 0. The slot in the competitions table (+0xaf + byte
+/// +0x64) and the owner (+0) are zeroed.
 /// Original: `Friendly::cancel_tournament` (0x5c8260, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5c8260 } (thiscall, ret 8, friendly.cpp, quadro SEH da notícia, das datas e da lista locais): `Friendly::
@@ -173,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
     let start = tournament + 4;
     let (dia_i, ano_i) = (read_i16(start), read_i16(tournament + 6) as u16);
     if ano7 < ano_i || (ano7 == ano_i && dia7 < dia_i) {
-        crate::comparacao::ramo("cqg_10 noticia do torneio cancelado");
+        crate::comparison::branch("cqg_10 noticia do torneio cancelado");
         let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
         let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
         let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
@@ -222,7 +240,7 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
     new(l);
     let competicao = read_usize(tournament + 0x65);
     if competicao != 0 {
-        crate::comparacao::ramo("cqg_10 competicao do torneio desfeita");
+        crate::comparison::branch("cqg_10 competicao do torneio desfeita");
         let find: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, i32, usize, u32, i32, i32) -> i16 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
         let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
         let of_return: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_STORED_FIXTURE);
@@ -384,7 +402,7 @@ pub(crate) unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, 
         None => {
             let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
             *((usadas.wrapping_add(a as usize)) as *mut u8) = 1;
-            crate::comparacao::ramo("cqc_11 nacoes com jogo");
+            crate::comparison::branch("cqc_11 nacoes com jogo");
             *((usadas.wrapping_add(b as usize)) as *mut u8) = 1; // cqc11: as nações com jogo perto da data
             let (va, vb) = (a, b);
             por(nation_friendly_list(this, a as usize), &vb as *const u32 as usize, 4);
@@ -447,7 +465,7 @@ pub(crate) unsafe fn nation_in_date_confederations(datas: usize, how_many: i32, 
     let mut k = 0;
     while k < how_many {
         let c = read_usize(datas + 0xc + k as usize * 0x14) as i32;
-        if c == -1 || read_usize(read_usize(n + 0x71)) as i32 == c {
+        if c == -1 || read_usize(read_usize(n + nation::CONTINENT)) as i32 == c {
             return true;
         }
         k += 1;
@@ -513,10 +531,10 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
                 if free_b {
                     let mut v = sortear(500);
                     if nation_in_date_confederations(datas, how_many, b) && !is_african_excluded(datas, b)
-                        && (read_usize(a + 0x88) as i32 >= 5 || read_usize(b + 0x88) as i32 >= 5)
+                        && (read_usize(a + nation::NUMBER_STAFF) as i32 >= 5 || read_usize(b + nation::NUMBER_STAFF) as i32 >= 5)
                         && proibido(this, first_leg as i32, idb as i32) == 0
                     {
-                        if read_usize(a + 0x71) == read_usize(b + 0x71) {
+                        if read_usize(a + nation::CONTINENT) == read_usize(b + nation::CONTINENT) {
                             v = v.wrapping_add(sortear(1000)); // cqc11: o mesmo continente
                         }
                         if v > 400 { // cqc11: a soma acima de 400
@@ -538,7 +556,7 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
                                 }
                             };
                             if !ja {
-                                crate::comparacao::ramo("cqc_11 amistoso entre selecoes");
+                                crate::comparison::branch("cqc_11 amistoso entre selecoes");
                                 let home = sortear(2) as u32; // cqc11: o mando sorteado
                                 match ens.as_deref_mut() {
                                     Some(e) => {
@@ -621,9 +639,15 @@ pub(crate) unsafe extern "thiscall" fn arrange_international_friendlies(this: us
 }
 
 
-/// the friendly invitation still holds: without a date, the text says whether the match was arranged or cancelled (the
-/// club's matches on the day); with a date, before the day after tomorrow it is cancelled, the club free on the date
-/// holds (1), else the text says the club is unavailable
+/// `friendly_check_match_invitation(a, b, club, day, year, date, text, size)` (SEH frame for the local LLIST
+/// 0x68d020/0x68d040), called by the invitation news item (0x77bc80, 0x782b70): tells whether the friendly invitation
+/// still holds.
+///
+/// With a text and a size (word) below 100: the box of line 0x1527 and 1 (the original). Without the date: with a text,
+/// club `a`'s fixtures (+0 id) on the day (day, year; 0x5acbe0 into a local list) say whether the friendly was arranged
+/// (the first fixture is `a` against `b`) or cancelled (0x66f4e0 into the text); returns 0. With the date: before today
+/// + 2 days (0x54c5b0), cancelled (with text) and 0; the club free on the date (0x5c6b70 with type 0): 1; otherwise,
+/// with text, "{} ... are unavailable" (byte +0x52 twice and the name +0x38) and 0.
 /// Original: `friendly_check_match_invitation` (0x5ca090, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5ca090 } (thiscall, ret 0x20, friendly.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
@@ -700,8 +724,12 @@ pub(crate) fn news_text_regions(text: usize, size: u32) -> Vec<(usize, usize)> {
 }
 
 
-/// the tournament invitation still holds: without a tournament or with its date before the day after tomorrow,
-/// cancelled; the club free on the date (by the tournament type) holds (1), else the text says the club is unavailable
+/// `friendly_check_tournament_invitation(club, tournament, text, size)`, called by the tournament invitation news item:
+/// tells whether the tournament invitation still holds.
+///
+/// With a text and a size below 100: the box of line 0x1575 and 1 (the original). Without a tournament or with its date
+/// (+4) before today + 2 days: "This competition has been cancelled" (with text) and 0. The club free on the date
+/// (0x5c6b70 with type +0xc): 1; otherwise, with text, "{} ... are unavailable for this competition." and 0.
 /// Original: `friendly_check_tournament_invitation` (0x5ca290, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5ca290 } (thiscall, ret 0x10, friendly.cpp): `friendly_check_tournament_invitation(clube, torneio, texto,
@@ -862,9 +890,16 @@ pub(crate) const INTERNATIONAL_DATES: [(u8, u8, u8, u8, usize, usize); 110] = [
     (5, 13, 8, 3, KEY_CONTINENT_ASIA, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION),
 ];
 
-/// allocates the table (+0x34ec) and writes the 110 international dates of 20 bytes (weekday, day, month, year offset
-/// from the World Cup year, confederation and qualifying competition), shrinks the table to 110, resolves the dates
-/// (0x5cc510) and marks the last day done (+0x34f4 = 400)
+/// `Friendly::build_international_date_table()`, called by the friendlies competition constructor (0x5c1f80, at game
+/// creation): builds the table of the 110 international dates.
+///
+/// Count 0xc8 in +0x34f0 and the 0xfa0-byte table (malloc 0x944e46: push n; add esp, 4 -> cdecl) in +0x34ec (without
+/// memory: the box of line 0x15d5, count 0: the original); writes the 110 dates of 20 bytes (weekday, day, month, year
+/// offset from the World Cup year, confederation and qualifying competition; the first 105 directly, the last 5 through
+/// 0x5cb9b0: mov ecx, entry; 6 pushes; no add esp -> thiscall, ret 0x18); with the count below 110 (never: it is the
+/// 0xc8 above) the box of line 0x15d8; count 110, the table shrunk to 0x898 bytes (realloc 0x945667: 2 pushes; add esp,
+/// 8 -> cdecl), the dates resolved in the World Cup cycle (0x5cc510: mov ecx, esi; no push -> thiscall) and the last
+/// day done (+0x34f4) = 400.
 /// Original: `Friendly::build_international_date_table` (0x5ca4f0, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5ca4f0 } (thiscall, ret 0, friendly.cpp): `Friendly::build_international_date_table()`, pelo construtor da
@@ -904,7 +939,7 @@ pub(crate) unsafe extern "thiscall" fn build_international_date_table(this: usiz
     if read_i32(this + friendly::INTL_DATE_COUNT) < 0x6e {
         return; // simplification: unreachable (the count is the 0xc8 written above); the original shows the box of line 0x15d8
     }
-    crate::comparacao::ramo("cqb_3 tabela montada");
+    crate::comparison::branch("cqb_3 tabela montada");
     *((this + friendly::INTL_DATE_COUNT) as *mut i32) = 0x6e;
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     *((this + friendly::INTL_DATE_TABLE) as *mut usize) = realloc(read_usize(this + friendly::INTL_DATE_TABLE), 0x898);
@@ -914,8 +949,14 @@ pub(crate) unsafe extern "thiscall" fn build_international_date_table(this: usiz
 }
 
 
-/// gives each entry its date in the World Cup cycle (the first year with (year - 2) a multiple of 4, plus the offset,
-/// less 4 when more than 3 years ahead) through 0x54a130 and sorts the table by date
+/// `Friendly::resolve_international_dates()`, called by the table builder (0x5ca4f0): gives each entry its date in the
+/// World Cup cycle and sorts the table by date.
+///
+/// The World Cup year: the first one from today's year ([0xae2c92]) on with (year − 2) a multiple of 4. Each date
+/// (+0x34ec, count +0x34f0) gets its date at +3 through 0x54a130 (lea ecx, entry + 3; 4 pushes; no add esp ->
+/// thiscall(date, day, month, year, weekday), ret 0x10) with the day (+1) and the weekday (+0) as signed bytes, the
+/// month (+2) and the World Cup year plus +0xb (signed), less 4 if it is more than 3 years ahead of today (words). Then
+/// the qsort by date (0x945333: 4 pushes; add esp, 0x10 -> cdecl(table, count, 0x14, 0x5cc610)).
 /// Original: `Friendly::resolve_international_dates` (0x5cc510, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5cc510 } (thiscall, ret 0, friendly.cpp): `Friendly::resolve_international_dates()`, pela tabela (0x5ca4f0). O
@@ -928,7 +969,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_international_dates(this: usize) 
     let today = read_u16(G_CURRENT_DATE_YEAR);
     let mut ciclo = today as u32;
     while ((ciclo & 0xffff) as i32 - 2) % 4 != 0 {
-        crate::comparacao::ramo("cqb_3 ano da copa adiante");
+        crate::comparison::branch("cqb_3 ano da copa adiante");
         ciclo = ciclo.wrapping_add(1); // cqb3: o ano da Copa
     }
     let acertar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_DATE_SET);
@@ -937,7 +978,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_international_dates(this: usize) 
         let e = read_usize(this + friendly::INTL_DATE_TABLE).wrapping_add((k as usize).wrapping_mul(0x14));
         let mut year = (read_u8(e + 0xb) as i8 as i16 as u16).wrapping_add(ciclo as u16);
         if year as i32 - today as i32 > 3 {
-            crate::comparacao::ramo("cqb_3 ano para tras");
+            crate::comparison::branch("cqb_3 ano para tras");
             year = year.wrapping_add(0xfffc); // cqb3: menos 4 se passar de 3 anos à frente
         }
         let com_sinal = |o: usize| read_u8(e + o) as i8 as i16 as u16 as u32;
@@ -951,7 +992,11 @@ pub(crate) unsafe extern "thiscall" fn resolve_international_dates(this: usize) 
 }
 
 
-/// the tournament in use (of 127, 0x69 bytes from +0xb1) that the current human manager club hosts, or 0
+/// `Friendly::find_human_club_tournament()`, called by the friendlies screens: returns the tournament in use that the
+/// current human manager's club hosts, or 0.
+///
+/// The club (+0x39) of the current human manager ([0xb74c26 + 0x300 × [0xb77c7a]]); among the 127 tournaments (0x69
+/// bytes from +0xb1), the first with that host (+0) and in use (+0x29 ≠ 0): its pointer; otherwise 0.
 /// Original: `Friendly::find_human_club_tournament` (0x5c6830, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5c6830 } (thiscall, ret 0, friendly.cpp): `Friendly::find_human_club_tournament()`, pelas telas dos amistosos. O
@@ -1002,9 +1047,22 @@ pub(crate) unsafe fn is_after_today(a: usize) -> bool {
     y > ano || (y == ano && read_i16(a) > hoje)
 }
 
-/// rebuilds the friendly plan (+0x34d8); for each league in pre-season, the AI clubs of the nation (by searching the
-/// sorted candidates) get a band by reputation and a draw, and up to draw(3) + 4 friendlies with opponents found
-/// (0x5c4cb0) on free dates (0x5c4380), the band falling 20% each time; at the end, the plan sorted by date
+/// `Friendly::plan_club_friendlies(entries, sorted, count)`, called by the AI pre-season plan (0x5c27a0): rebuilds the
+/// friendly plan (+0x34d8), giving the AI clubs of each league in pre-season friendlies on free dates; at the end the
+/// plan is sorted by date.
+///
+/// Frees the old plan (+0x34d8; free 0x9452ca, cdecl), allocates the new one (malloc 0x944e46 of 2000 bytes, cdecl;
+/// without memory the box of line 0x6f1), capacity +0x34e4 = 100, count +0x34e0 and +0x34dc zeroed. For each of the 35
+/// active leagues (0xb63d60, 0x48 bytes) of a nation with +0x11c, whose season (+0x2a) has not started and whose date
+/// +0x39 minus 0x34 (0x54cab0: lea ecx, [league + 0x39]; 2 pushes; no add esp -> thiscall) has already arrived: the
+/// nation's candidates (bsearch 0x946464: 5 pushes; add esp, 0x14 -> cdecl, through 0x5c5290; it steps back to the
+/// nation's first one; the last one in the list never gets in) up to the first one of another nation. Each club that is
+/// not human (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(club, 1, 1, 0, 0)), is not the one with +0x1db = [0x9cf6f8]
+/// and has a league (+0x57) registered in [0xadadfc]: band = reputation / 500 + (draw(3) + 1, where 3 becomes 2 when
+/// draw(4) is zero); up to draw(3) + 4 friendlies (by the candidate's count +4): the opponent (0x5c4cb0: 5 pushes; ecx
+/// = this -> thiscall) and, when found, the friendly on a free date (0x5c4380: 3 pushes; ecx = this -> thiscall) with
+/// the one of higher band (+5) as host and home side; with no opponent or with the friendly booked, the band × 0.8 (at
+/// least 1). At the end, the qsort of the plan by date (0x945333: 4 pushes; add esp, 0x10 -> cdecl, through 0x778e90).
 /// Original: `Friendly::plan_club_friendlies` (0x5c4770, friendly.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x5c4770 } (thiscall, ret 0xc, friendly.cpp): `Friendly::plan_club_friendlies(entradas, ordenados, conta)`, pelo
@@ -1088,7 +1146,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
             if lg == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE) + (read_i32(lg) as usize).wrapping_mul(4)) == 0 {
                 continue;
             }
-            crate::comparacao::ramo("cqb_4 clube planejado");
+            crate::comparison::branch("cqb_4 clube planejado");
             let mut b = (friendly_random(3) as u8).wrapping_add(1); // cqb4: o acréscimo da faixa
             if b == 3 && friendly_random(4) == 0 {
                 b = 2;
@@ -1100,7 +1158,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
                 // simplification: the original pushes the dword of the band’s local (the high bytes are leftovers); 0x5c4cb0 only reads the byte
                 let opp = opponent(this, cand, entradas, count, band as u32, 0);
                 let marcado = if opp != 0 {
-                    crate::comparacao::ramo("cqb_4 adversario achado");
+                    crate::comparison::branch("cqb_4 adversario achado");
                     if read_i8(cand + 5) > read_i8(opp + 5) { // cqb4: o de faixa maior em casa
                         planejar(this, cand, opp, cand)
                     } else {
@@ -1129,8 +1187,13 @@ pub(crate) unsafe fn free_tournament_slot(this: usize) -> usize {
     (0..0x7fusize).map(|i| this + 0x69 * i + 0xb1).find(|&t| read_usize(t) == 0).unwrap_or(0)
 }
 
-/// fills the first of the 127 free tournaments with the host, the type, the start date, the rule bytes and words, the
-/// name and the 4 invited clubs (flagged), or 0 with no free slot
+/// `Friendly::add_tournament(host, type, start, a, b, c, d, e, invited, name)`, called by the AI tournament (0x5c3be0)
+/// and by the club screens (0x4701f0): fills the first free tournament of the 127, or returns 0 with no free slot.
+///
+/// The tournament gets the host (+0), the type (+0xc), bytes a and b (+0xd, +0xe), the start date (+4, through
+/// 0x417c10: lea ecx, [t + 4]; 2 pushes; no add esp -> thiscall), words c, d, e (+0xf, +0x11, +0x13), +0x29, +0x2d and
+/// +0x65 zeroed, the name (+0x31, with the terminating zero) and the 4 invited clubs (+0x15, dwords) with the flags
+/// +0x25..+0x28 set to 1.
 /// Original: `Friendly::add_tournament` (0x5c6e00, friendly.cpp, thiscall, ret 0x28).
 ///
 /// [pt] { 0x5c6e00 } (thiscall, ret 0x28, friendly.cpp): `Friendly::add_tournament(anfitrião, tipo, início, a, b, c, d, e,
@@ -1165,7 +1228,7 @@ pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: us
         }
         k += 1;
     }
-    crate::comparacao::ramo("cqb_4 torneio acrescentado");
+    crate::comparison::branch("cqb_4 torneio acrescentado");
     for k in 0..4usize {
         core::ptr::write_unaligned((t + 0x15 + 4 * k) as *mut u32, read_usize(convidados + 4 * k) as u32);
         *((t + 0x25 + k) as *mut u8) = 1;
@@ -1174,8 +1237,12 @@ pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: us
 }
 
 
-/// the friendly in the list (+0x34c8) that the current human manager club requested and that still waits for an
-/// opponent, or 0
+/// `Friendly::find_human_club_open_invitation()`, called by the friendlies screens: returns the friendly in the list
+/// (+0x34c8) that the current human manager's club requested and that still waits for an opponent, or 0.
+///
+/// With the friendlies list (+0x34c8) and the club (+0x39) of the current human manager ([0xb74c26 + 0x300 ×
+/// [0xb77c7a]]): the list cursor (+0xa) goes back to the start (+2) and, walking with the list's next (0x68d1b0: ecx =
+/// the list; no push -> thiscall), the first friendly of that club (+0xc) still without a date (+8 ≠ 0); otherwise 0.
 /// Original: `Friendly::find_human_club_open_invitation` (0x5c68b0, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5c68b0 } (thiscall, ret 0, friendly.cpp): `Friendly::find_human_club_open_invitation()`, pelas telas dos
@@ -1283,46 +1350,55 @@ pub(crate) unsafe fn friendly_needs_decision(m: usize, force: u32) -> bool {
 pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
     let a = read_usize(m + 0xc);
     let o = other_friendly_club(m);
-    let (na, no) = (read_usize(a + 0x53), read_usize(o + 0x53));
+    let (na, no) = (read_usize(a + club::NATION), read_usize(o + club::NATION));
     let second = o == read_usize(m + 0x10);
     let mut f = if second { read_f64_at(0x96af38) } else { read_f64_at(0x96af20) }; // 0x96af38 = 1.32, 0x96af20 = 1.65
     if no != na {
         f *= read_f64_at(0x96af30); // 0x96af30 = 0.925
     }
-    if read_u8(no + 0x76) != read_u8(na + 0x76) {
+    if read_u8(no + nation::ACTUAL_REGION) != read_u8(na + nation::ACTUAL_REGION) {
         f *= read_f64_at(0x969520); // 0x969520 = 0.85
     }
-    if read_i32(no + 0x71) != read_i32(na + 0x71) {
+    if read_i32(no + nation::CONTINENT) != read_i32(na + nation::CONTINENT) {
         f *= read_f64_at(0x969520); // 0x969520 = 0.85
     }
     if second {
-        let (fa, fo) = (read_usize(a + 0x69), read_usize(o + 0x69));
-        let sa = if fa != 0 { read_usize(fa + 0x38) } else { 0 };
-        let so = if sa != 0 && fo != 0 { read_usize(fo + 0x38) } else { 0 };
+        let (fa, fo) = (read_usize(a + club::STADIUM), read_usize(o + club::STADIUM));
+        let sa = if fa != 0 { read_usize(fa + stadium::STADIUM_CITY) } else { 0 };
+        let so = if sa != 0 && fo != 0 { read_usize(fo + stadium::STADIUM_CITY) } else { 0 };
         if sa != 0 && so != 0 {
             if count {
-                crate::comparacao::ramo("cqa_2 distancia do amistoso");
+                crate::comparison::branch("cqa_2 distancia do amistoso");
             }
-            let dx = read_f64_at(sa + 0x2b) - read_f64_at(so + 0x2b);
-            let dy = read_f64_at(sa + 0x23) - read_f64_at(so + 0x23);
-            let i = read_i32(a + 0x77) as f64;
+            let dx = read_f64_at(sa + city::CITY_LONGITUDE) - read_f64_at(so + city::CITY_LONGITUDE);
+            let dy = read_f64_at(sa + city::CITY_LATITUDE) - read_f64_at(so + city::CITY_LATITUDE);
+            let i = read_i32(a + club::MIN_ATTENDANCE) as f64;
             let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(0x96a5d8) + read_f64_at(0x967890)) * read_f64_at(0x96af28)) + read_f64_at(0x967890); // 0x96a5d8 = 0.55, 0x967890 = 1, 0x96af28 = 40000
             f *= v; // cqa2: o fator da distância
         }
     }
-    let (ro, ra) = (read_i16(o + 0x80) as i32, read_i16(a + 0x80) as i32);
+    let (ro, ra) = (read_i16(o + club::REPUTATION) as i32, read_i16(a + club::REPUTATION) as i32);
     if count {
-        crate::comparacao::ramo("cqa_2 decisao do amistoso");
+        crate::comparison::branch("cqa_2 decisao do amistoso");
     }
     // fcompp/test ah, 1: C0 holds for ”less” and for ”unordered” (NaN): the >= below take the same path
     let accepted = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação; 0x96a690 = 600
     if accepted { 3 } else { 4 }
 }
 
-/// the invited club (without a human manager, or when forced) accepts or refuses by reputation, with the nation,
-/// region, continent and stadium city distance factor; tells the requester (news 7); an accepted one goes to the
-/// fixture list (0x5aa680) and marks the friendly slot; with 3 or 4 the request is removed (0x5c87b0); otherwise it
-/// only leaves the reply list
+/// `Friendly::process_friendly_reply(request, force)` (SEH frame with no destructor on the normal path): the invited
+/// club decides on a friendly request and the requester is told.
+///
+/// Without a requester (+0xc): nothing. With the other club (+0x10, or +0x14 if +0x10 is the requester) in status 1 and
+/// without a human manager (0x600a50), or with `force`: if either has no nation, status 4 (overwritten right after);
+/// the decision (friendly_reply: by reputation, with the nation, region, continent and stadium city distance factor)
+/// writes 3 or 4 into +0x18 and news item 7 goes to the requester. Accepted (3): the friendly's match in a 0x4f-byte
+/// local (the competition [+4] and its id, the stadium of club +0x10 (+0x69) and its id, clubs +0x10 and +0x14 and
+/// their ids, the request date, today's year, 9 for a national side (0x53b900) or 1, kick-off time 1 on Saturday and
+/// Sunday (0x54a3f0 = 5 or 6) or 2, the flags, −1 in the scores) goes to the calendar (0x5aa680: push 1; push &local;
+/// ecx = [0xae2a58] -> thiscall, ret 8). With 3 or 4: the booked friendly's slot (0x5c6740) gets +0x18 = 3, or +0x10 =
+/// 0 and +0x18 = 0, and the request is removed (0x5c87b0 with 0). In any other status, the request only leaves the
+/// reply list (+0x34d4; 0x68d1f0, with the cursor +0xa reset to the start before, after each one and at the end).
 /// Original: `Friendly::process_friendly_reply` (0x5c5f40, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5c5f40 } (thiscall, ret 8, friendly.cpp, quadro SEH sem destrutor no caminho normal):
@@ -1342,7 +1418,7 @@ pub(crate) unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: us
     }
     let o = other_friendly_club(m);
     if friendly_needs_decision(m, force) {
-        if read_usize(a + 0x53) == 0 || read_usize(o + 0x53) == 0 {
+        if read_usize(a + club::NATION) == 0 || read_usize(o + club::NATION) == 0 {
             *((m + 0x18) as *mut u8) = 4; // like the original (which crashes right after, reading the null nation)
         }
         let s = friendly_reply(m, true);
@@ -1351,12 +1427,12 @@ pub(crate) unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: us
     }
     let s = read_u8(m + 0x18);
     if s == 3 {
-        crate::comparacao::ramo("cqa_2 amistoso aceito");
+        crate::comparison::branch("cqa_2 amistoso aceito");
         let mut p = [0u8; 0x50];
         let pp = p.as_mut_ptr() as usize;
         let comp = read_usize(this + 4);
         let (c2, c3) = (read_usize(m + 0x10), read_usize(m + 0x14));
-        let estadio = read_usize(c2 + 0x69);
+        let estadio = read_usize(c2 + club::STADIUM);
         write_usize(pp, read_usize(comp));
         write_usize(pp + 0x14, comp);
         write_usize(pp + 0x18, estadio);
@@ -1445,8 +1521,13 @@ pub(crate) unsafe fn list_holds(l: usize, m: usize) -> bool {
 }
 
 
-/// stores the request on the reply list (+0x34d4, created when missing); an invited club with a human manager: status 2
-/// and news 6
+/// `Friendly::send_friendly_request(request)` (SEH frame with no destructor on the normal path): stores the request on
+/// the reply list and notifies a human invited club.
+///
+/// Without the reply list (+0x34d4), creates it (0x944cf1(0xe): push 0xe; add esp, 4 -> cdecl; 0x68d020: ecx = the
+/// block -> thiscall, ret 0); without memory, the box (line 0x982) and nothing more. Stores the request pointer in the
+/// list (0x68d0d0: push 4; push &request; ecx = the list -> thiscall, ret 8). With the other club in status 1 and with
+/// a human manager: status 2 and, if +0x10 or +0x14 has a human manager, news item 6 to the other one.
 /// Original: `Friendly::send_friendly_request` (0x5c5570, friendly.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x5c5570 } (thiscall, ret 4, friendly.cpp, quadro SEH sem destrutor no caminho normal):
@@ -1477,7 +1558,7 @@ pub(crate) unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usi
     if o == 0 || read_u8(m + 0x18) != 1 || !club_has_human_manager(o) {
         return;
     }
-    crate::comparacao::ramo("cqa_2 pedido ao humano");
+    crate::comparison::branch("cqa_2 pedido ao humano");
     *((m + 0x18) as *mut u8) = 2;
     if !club_has_human_manager(read_usize(m + 0x10)) && !club_has_human_manager(read_usize(m + 0x14)) {
         return;
@@ -1511,7 +1592,7 @@ pub(crate) unsafe fn nations_with_continent() -> Vec<usize> {
     let mut i = 0;
     while i < read_i32(G_NATION_COUNT) {
         let n = t.wrapping_add(i as usize * 0x122);
-        if read_usize(n + 0x71) != 0 {
+        if read_usize(n + nation::CONTINENT) != 0 {
             v.push(n);
         }
         i += 1;
@@ -1528,7 +1609,11 @@ pub(crate) unsafe fn sort_by_reputation(base: usize, n: u32) {
     qsort(base, n, 4, 0x5cc5f0);
 }
 
-/// allocates the list (+0x34fa) of nations with a continent, counts it in +0x34fe and sorts it by reputation (0x5cc5f0)
+/// `Friendly::build_nation_list()`: builds the list (+0x34fa) of nations with a continent, sorted by reputation.
+///
+/// +0x34fe = 0; allocates [0xae2350] × 4 bytes (0x944e46: push n; add esp, 4 -> cdecl) at +0x34fa (without memory, the
+/// box, line 0x15af); puts into it the nations with a continent (+0x71), counting in +0x34fe, and sorts them by
+/// reputation (0x945333 with 0x5cc5f0).
 /// Original: `Friendly::build_nation_list` (0x5ca3e0, friendly.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5ca3e0 } (thiscall, ret 0, friendly.cpp): `Friendly::build_nation_list()`: +0x34fe = 0; aloca [0xae2350] × 4
@@ -1562,10 +1647,10 @@ pub(crate) unsafe fn contract_club_except_type5(p: usize) -> usize {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato(read_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    if c == 0 || read_u8(c + 0x35) & 0x3f == 5 {
+    if c == 0 || read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 5 {
         0
     } else {
-        read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE))
+        read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE))
     }
 }
 
@@ -1582,26 +1667,26 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, clube: u
     put_i32(&mut e, 0x11, (a4 & 0xff) as i32);
     put_i32(&mut e, 0x15, (a5 & 0xffff) as i32);
     append_person_history_by_id(write, this, read_usize(p), &e);
-    let (t3d, t28) = (read_u8(p + 0x3d), read_u8(p + 0x28));
+    let (t3d, t28) = (read_u8(p + staff::JOB_FOR_CLUB), read_u8(p + staff::JOB_FOR_NATION));
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
         let r = staff_records_manager_record(this, p);
         if r != 0 {
-            crate::comparacao::ramo("cpv_13 prêmio do técnico");
+            crate::comparison::branch("cpv_13 prêmio do técnico");
             let a = (r + 0x9e) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1)); // cpv13: conta o prêmio
         }
         return;
     }
-    if read_usize(p + 0x61) == 0 {
+    if read_usize(p + staff::PLAYER) == 0 {
         return;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let c = contrato(read_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    if c == 0 || read_u8(c + 0x35) & 0x3f == 5 {
+    if c == 0 || read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 5 {
         return;
     }
-    if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE)) == 0 {
+    if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) == 0 {
         return;
     }
     let of_club: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
@@ -1612,11 +1697,11 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, clube: u
     let gt = read_usize(G_TRANSFER_MANAGER);
     if gt != 0 {
         let days: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-        if days(G_CURRENT_DATE, read_usize(k + 0x25), read_usize(k + 0x29)) > 0x12c {
+        if days(G_CURRENT_DATE, read_usize(k + contract::DATE_STARTED), read_usize(k + 0x29)) > 0x12c {
             let entry: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
             let x = entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), contract_club_except_type5(p), p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p) {
-                crate::comparacao::ramo("cpv_13 renovação");
+                crate::comparison::branch("cpv_13 renovação");
                 offer_renewal(p);
             }
         }
@@ -1624,14 +1709,14 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, clube: u
     if read_usize(k + 0x45) != 0 {
         return;
     }
-    let v59 = read_u8(p + 0x59) as i8;
+    let v59 = read_u8(p + staff::LOYALITY) as i8;
     if v59 <= 0xf { // cpv13: o +0x59
         return;
     }
-    if read_u8(p + 0x5b) as i8 <= 0xa { // cpv13: o +0x5b
+    if read_u8(p + staff::PROFESSIONALISM) as i8 <= 0xa { // cpv13: o +0x5b
         return;
     }
-    crate::comparacao::ramo("cpv_13 sorteio do agradecimento");
+    crate::comparison::branch("cpv_13 sorteio do agradecimento");
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     if sorteio(v59 as i32) <= 5 {
         return;
@@ -1687,8 +1772,18 @@ pub(crate) unsafe fn friendly_date_after(a: usize, b: usize) -> bool {
     aa > ab || (aa == ab && read_u16(a) as i16 > read_u16(b) as i16)
 }
 
-/// on the pre-season days plans the AI friendlies and cancels old tournaments; every day creates the planned
-/// friendlies, answers requests and expires tournaments, requests and invitations
+/// `Friendly::update_for_date(today, active)`: the friendlies' day: on the pre-season days plans the AI friendlies and
+/// cancels old tournaments; every day creates the planned friendlies, answers requests and expires tournaments,
+/// requests and invitations.
+///
+/// With `active`, on the two pre-season days (+0x34ea, +0x34e8) and with the game start [0xdd6ec8] up to today + 8
+/// weeks (0x54c770; after that, nothing more on the day): stores today in +0xa7, plans the AI pre-season (0x5c27a0) and
+/// cancels (0x5c8260) the tournaments in use (+0x65) dated more than a year ago (0x54cab0, 0x456770). Every day:
+/// creates the planned friendlies (0x5c2ae0), updates the national teams' friendlies (0x5cbb00), takes out and answers
+/// the tournament replies (+0x34d0, 0x5c5820) and answers the friendly replies (+0x34d4, 0x5c5f40), removes the
+/// requests without clubs or expired (+0x34c8), cancels the tournaments not in use whose date − 2 days (0x54c8e0) has
+/// passed and zeroes the expired invitations (+0x34cc, 10 items of 0x19 bytes, the date at +9, the flag at +0x15).
+/// Returns 1.
 /// Original: `Friendly::update_for_date` (0x5c2460, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5c2460 } (thiscall, ret 8, friendly.cpp): `Friendly::update_for_date(hoje, ativo)`: com `ativo`, nos dois dias
@@ -1724,7 +1819,7 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
             return 1;
         }
         copy(this + friendly::PRESEASON_BASE_DATE, &mut t, today);
-        crate::comparacao::ramo("cpt_11 planejou a pré-temporada");
+        crate::comparison::branch("cpt_11 planejou a pré-temporada");
         planejar(this); // cpt11: planejar
         let mut ha_one_year = [0u8; 8];
         minus_weeks(G_CURRENT_DATE, &mut ha_one_year, 0x34);
@@ -1815,8 +1910,15 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
     1
 }
 
-/// builds one candidate per club with a nation (band = reputation / 500), sorts by band and by nation, sets the windows
-/// and plans tournaments, tours and friendlies
+/// `Friendly::plan_ai_preseason_friendlies()`: builds one candidate per club with a nation, sorts them, sets the
+/// windows and plans tournaments, tours and friendlies.
+///
+/// Builds a 0x16-byte candidate (+0 the club id, +4 zero, +5 the band = reputation +0x80 / 500, +6 the nation id, +0xa
+/// and +0x12 null lists, +0xe/+0x10 the window −1) for each club ([0xae23b4], 0x245 bytes, [0xae235c] of them) that is
+/// not a national side (0x53b900) and has a nation; sorts the candidates by band (qsort 0x945333 with 0x5c5270) and a
+/// pointer vector by nation and band (0x5c5290); sets the windows (0x5c2d40), plans tournaments and tours (0x5c3040)
+/// and the friendlies (0x5c4770); frees the candidates' lists (0x68d040 + 0x944c94) and the two vectors (0x9452ca).
+/// Without memory for the candidates: the box (line 0x18a).
 /// Original: `Friendly::plan_ai_preseason_friendlies` (0x5c27a0, friendly.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5c27a0 } (thiscall, ret 0, friendly.cpp): `Friendly::plan_ai_preseason_friendlies()`: monta um candidato de
@@ -1848,7 +1950,7 @@ pub(crate) unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize)
             if is_national_team(clube) == 0 && read_u32_as_usize(clube + club::NATION) != 0 {
                 let r = v + n as usize * 0x16;
                 let rep = read_u16(clube + club::REPUTATION) as i16 as i32;
-                crate::comparacao::ramo("cpt_11 candidato da pré-temporada");
+                crate::comparison::branch("cpt_11 candidato da pré-temporada");
                 let band = (rep / 500) as u8; // cpt11: a faixa
                 write_u32_from_usize(r, read_u32_as_usize(clube));
                 *((r + 4) as *mut u8) = 0;
@@ -1912,7 +2014,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
     for k in 0..0x23 {
         let ent = 0xb63d60 + k * 0x48;
         let nac = read_u32_as_usize(ent);
-        if nac == 0 || *((nac + 0x11c) as *const u8) == 0 {
+        if nac == 0 || *((nac + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
         let (mut prim, mut ult) = (u32::MAX as usize, u32::MAX as usize);
@@ -1975,7 +2077,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
                     let m = novo(0xe);
                     write_u32_from_usize(c + 0x12, if m != 0 { list_new(m) } else { 0 });
                 }
-                crate::comparacao::ramo("cpt_11 janela gravada");
+                crate::comparison::branch("cpt_11 janela gravada");
                 core::ptr::write_unaligned((c + 0xe) as *mut i16, ini);
                 core::ptr::write_unaligned((c + 0x10) as *mut i16, end);
             }
@@ -2024,8 +2126,17 @@ pub(crate) unsafe fn alloc_list() -> usize {
     if m != 0 { list_new(m) } else { 0 }
 }
 
-/// trims the window by the first opponent, draws the start (up to 5 tries) and books one friendly per opponent, 2 days
-/// apart, storing the dates in both lists
+/// `Friendly::schedule_tour_matches(candidate, opponents, n)`: schedules a tour: trims the window, draws the start (up
+/// to 5 tries) and books one friendly per opponent, 2 days apart, storing the dates in both lists.
+///
+/// The window is the candidate's (+0xe..+0x10) cut by the first opponent's (if he has one) and shortened by 2n + 1
+/// days; without room, 0. Up to 5 tries: the start moves by a draw (0x90cfc0) of the width (the start stays moved
+/// between tries, as in the original), the first match is the season start (+0xa7) + start and the last one that + 2n +
+/// 1 (0x54c5b0); a date already stored in the candidate's list (+0x12) after the first − 2 days or before the last + 2
+/// spoils the try (with any date stored, all of them fail; on the fifth it goes on anyway). Then, for each opponent,
+/// with the date free for him (0x5c6b70) and the friendly built (0x5c6f00, the club at home), it sends the request
+/// (0x5c5570) and stores the date in both lists (created when missing; 0x68d0d0); the date moves 2 days per opponent.
+/// Returns 1.
 /// Original: `Friendly::schedule_tour_matches` (0x5c4040, friendly.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x5c4040 } (thiscall, ret 0xc, friendly.cpp): `Friendly::schedule_tour_matches(candidato, adversários, n)`: a
@@ -2067,7 +2178,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
     if ini >= end {
         return 0;
     }
-    crate::comparacao::ramo("cpt_12 janela da excursão");
+    crate::comparison::branch("cpt_12 janela da excursão");
     let (mut d1, mut d2, mut t, mut u) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
     data_default(&mut d1);
     data_default(&mut d2);
@@ -2111,7 +2222,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
         if free(this, &mut d1, other, 0) != 0 {
             let m = append(this, clube, &mut d1, other, 0); // cpt12: o clube em casa
             if m != 0 {
-                crate::comparacao::ramo("cpt_12 jogo da excursão marcado");
+                crate::comparison::branch("cpt_12 jogo da excursão marcado");
                 pedir(this, m);
                 if read_u32_as_usize(cand + 0x12) == 0 {
                     let l = alloc_list();
@@ -2127,7 +2238,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
         }
         p += 4;
         if k + 1 < n as i32 {
-            crate::comparacao::ramo("cpt_12 data do jogo seguinte");
+            crate::comparison::branch("cpt_12 data do jogo seguinte");
         }
         let r = more_days(d1.as_ptr() as usize, &mut t, 2); // cpt12: o próximo jogo
         copy(&mut d1, &mut u, r);
@@ -2198,8 +2309,14 @@ pub(crate) unsafe fn club_date_status(this: usize, clube: usize, data: usize) ->
     status(this, clube, data, &mut t, &mut m, &mut q, 0, 0, 0, 1)
 }
 
-/// walks the AI friendly plan up to today + 1 week: on the date, with the clubs free, creates the friendly and sends
-/// the request; when the plan is used up, frees the array
+/// `Friendly::create_due_planned_friendlies()`: walks the AI friendly plan up to today + 1 week, creating the
+/// friendlies that are due and sending the requests; when the plan is used up, frees the array.
+///
+/// With the AI friendly plan (+0x34d8, 20-byte entries: +0 the date, +8 club A, +0xc B, +0x10 C; the index at +0x34dc
+/// and the count at +0x34e0), it advances the index: an entry dated before today + 1 week (0x54c770) is skipped; a
+/// later date stops; on the date, with A, B and C valid and B and C free on the date (0x5c75a0 = 1), it creates the
+/// friendly (0x5c6f00: A against C at home if A = B; otherwise A against B away) and sends the request (0x5c5570). Plan
+/// used up: frees the array (0x9452ca) and zeroes +0x34d8, +0x34e0 and +0x34e4.
 /// Original: `Friendly::create_due_planned_friendlies` (0x5c2ae0, friendly.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5c2ae0 } (thiscall, ret 0, friendly.cpp): `Friendly::create_due_planned_friendlies()`: com o plano dos amistosos
@@ -2233,7 +2350,7 @@ pub(crate) unsafe extern "thiscall" fn create_due_planned_friendlies(this: usize
             let pdata = data.as_mut_ptr() as usize;
             if club_date_status(this, usa_mls_all_stars_club_by_index(b), pdata) == 1 && club_date_status(this, usa_mls_all_stars_club_by_index(c), pdata) == 1 {
                 let e = read_u32_as_usize(this + friendly::PLANNED_FRIENDLIES).wrapping_add(read_u32_as_usize(this + friendly::PLANNED_NEXT_INDEX).wrapping_mul(20));
-                crate::comparacao::ramo("cps_12 amistoso planejado");
+                crate::comparison::branch("cps_12 amistoso planejado");
                 let m = if a == b { append(this, usa_mls_all_stars_club_by_index(a), e, usa_mls_all_stars_club_by_index(c), 1) } else { append(this, usa_mls_all_stars_club_by_index(a), e, usa_mls_all_stars_club_by_index(b), 0) }; // cps12: criar
                 if m != 0 {
                     pedir(this, m);
@@ -2282,8 +2399,15 @@ pub(crate) unsafe fn home_stadium_busy_on(clube: usize, data: usize, opponent: u
     }
 }
 
-/// reuses the club's open invitation or builds a new friendly; with the home side's stadium free, stores date, clubs
-/// and venue and puts it in the list
+/// `Friendly::add_friendly_match(club, date, opponent, at_home)`: reuses the club's open invitation or builds a new
+/// friendly; with the home side's stadium free, stores the date, the clubs and the venue and puts it in the list.
+///
+/// Reuses the club's open invitation (0x5c88f0 without a date) or builds a new 0x19-byte friendly (0x944cf1; 0x54a110;
+/// without memory: the box, line 0xe6b, and 0). If the stadium of the home side is busy on the date (0x5ae870): 0 (the
+/// new one is not freed, as in the original). Stores the date (0x417c10), +0xc the club, +0x18 = 1, +8 = 0 and the home
+/// (+0x10) and away (+0x14) sides. Without the friendlies list (+0x34c8), creates it (0x68d020; without memory: the
+/// box, line 0xe9f, frees the friendly and 0). The reused one is returned; the new one goes as a copy into the list
+/// (0x68d0d0; on failure: the box, line 0xeac, and 0), is freed (0x944c94) and the copy is returned.
 /// Original: `Friendly::add_friendly_match` (0x5c6f00, friendly.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x5c6f00 } (thiscall, ret 0x10, friendly.cpp): `Friendly::add_friendly_match(clube, data, adversario, em_casa)`:
@@ -2320,7 +2444,7 @@ pub(crate) unsafe extern "thiscall" fn add_friendly_match(this: usize, clube: us
     *((m + 0x18) as *mut u8) = 1;
     write_u32_from_usize(m + 8, 0);
     let (mandante, visitante) = if in_home != 0 {
-        crate::comparacao::ramo("cps_12 amistoso em casa");
+        crate::comparison::branch("cps_12 amistoso em casa");
         (clube, opponent) // cps12: o clube em casa
     } else {
         (opponent, clube)
@@ -2349,7 +2473,15 @@ pub(crate) unsafe extern "thiscall" fn add_friendly_match(this: usize, clube: us
     c
 }
 
-/// draws a date in both clubs' window and, with both free, books the friendly and links both clubs' dates and opponents
+/// `Friendly::plan_friendly_on_free_date(host, home, away)`: draws a date in both clubs' window and, with both free,
+/// books the friendly and links both clubs' dates and opponents.
+///
+/// The window is the home club's (+0xe..+0x10, signed words) cut by the away club's (if +0xe ≠ −1); empty: 0. Draws an
+/// offset (0x90cfc0) and the date = season start (+0xa7) + window start + draw (0x54c5b0). Up to 5 times, both being
+/// free on the date (0x5c45a0 = 0 for both) marks it found; the flag starts in the slot of the away argument, which the
+/// original zeroes beforehand. Not found: 0. Found: the friendly goes in (0x5c4b60), the date goes into both clubs'
+/// date lists (+0x12, created when missing; 8 bytes), each one goes into the other's opponent list (+0xa; the first 4
+/// bytes of the candidate) and the counts (+4) go up. Returns 1.
 /// Original: `Friendly::plan_friendly_on_free_date` (0x5c4380, friendly.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x5c4380 } (thiscall, ret 0xc, friendly.cpp): `Friendly::plan_friendly_on_free_date(anfitriao, casa, fora)`: a janela
@@ -2402,7 +2534,7 @@ pub(crate) unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, a
         }
     }
     let mark: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_ADD_PLANNED_FRIENDLY);
-    crate::comparacao::ramo("cps_12 data livre");
+    crate::comparison::branch("cps_12 data livre");
     mark(this, anfitriao, home, away, pdata);
     if read_u32_as_usize(home + 0x12) == 0 {
         write_u32_from_usize(home + 0x12, alloc_empty_list());
@@ -2432,8 +2564,16 @@ pub(crate) unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, a
 // simplification: rolls the date and appends to the lists: it does not run twice. Original only; the copy takes the branch.
 
 
-/// tells whether the club is free for a friendly on the date: no fixture from the day before to the kind rest days and,
-/// outside national sides, outside the key-nation season
+/// `friendly_is_club_free_on_date(date, club, type)` (stdcall, ret 0xc; from the friendly scheduling: tours,
+/// tournaments, invitation replies and the club's dates status): tells whether the club is free for a friendly on the
+/// date: no fixture from the day before to the kind's rest days and, outside national sides, outside the key nation's
+/// season.
+///
+/// The window goes from the day before (0x54c8e0) to `rest` days later (0x54c5b0; rest 2 for types 1 and 10, 3 for type
+/// 2, 1 for types 0, 3, 4 and 11; any other type: the box, line 0xf18, and rest 1). With type ≠ 0, a club that is not a
+/// national side and an active key nation, a window falling in the nation's season (start at 0xb63d8a, end at 0xb63d99,
+/// the 72-byte record from 0x669340) does not do. Otherwise, free if 0x5acbe0 finds no fixture of the club (+0 id) in
+/// the window (with a temporary list, destroyed at the end). A null club or date: 0.
 /// Original: `friendly_is_club_free_on_date` (0x5c6b70, friendly.cpp, stdcall, ret 0xc).
 ///
 /// [pt] { 0x5c6b70 } (stdcall, ret 0xc, friendly.cpp): `friendly_is_club_free_on_date(data, clube, tipo)` (da marcação dos
@@ -2474,7 +2614,7 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
             1
         }
     };
-    crate::comparacao::ramo("cpr_13 clube livre");
+    crate::comparison::branch("cpr_13 clube livre");
     let r = minus_days(data, p0, 1); // the day before
     copy(pa, p1, r);
     // simplification: the original pushes the slack with the high 16 bits of the pointer that 0x417c10 returned; 0x54c5b0 only reads
@@ -2503,7 +2643,7 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
     let n = games(read_u32(G_FIXTURE_MANAGER) as usize, read_u32(pa), read_u32(pa + 2), read_u32(pb), read_u32(pb + 2), read_u32(clube),
         pl, u32::MAX, 0xffff_fffe, u32::MAX);
     if n as u16 != 0 {
-        crate::comparacao::ramo("cpr_13 ocupado");
+        crate::comparison::branch("cpr_13 ocupado");
         return sai(0); // there is a match in the window
     }
     sai(1)
@@ -2516,7 +2656,12 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
 
 
 
-/// returns 1 when (a, b), (a, −1) or (−1, b) is among the banned pairs (+0x3502, count +0x3506), else 0
+/// `Friendly::is_banned_nation_pair(a, b)`: returns 1 when (a, b), (a, −1) or (−1, b) is among the banned pairs, else
+/// 0.
+///
+/// It walks the banned pairs (8-byte vector at +0x3502, count as a signed byte at +0x3506). Otherwise 0: the rest of
+/// the original (Australia, New Zealand and Oceania, 0x9cf224/0x9cf3f4/0x9cfa18, through the nations table) only reads
+/// and always falls into the `xor eax, eax`.
 /// Original: `Friendly::is_banned_nation_pair` (0x5cc3e0, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5cc3e0 } (thiscall, ret 8, friendly.cpp): `Friendly::is_banned_nation_pair(a, b)`: percorre os pares proibidos
@@ -2530,7 +2675,7 @@ pub(crate) unsafe extern "thiscall" fn is_banned_nation_pair(this: usize, a: i32
         let p = read_usize(this + friendly::BANNED_NATION_PAIRS).wrapping_add(k as isize as usize * 8);
         let (x, y) = (read_i32(p), read_i32(p + 4));
         if (x == a && (y == b || y == -1)) || (x == -1 && y == b) {
-            crate::comparacao::ramo("cpp_11 par proibido");
+            crate::comparison::branch("cpp_11 par proibido");
             return 1; // o par proibido
         }
         k = k.wrapping_add(1);
@@ -2571,8 +2716,13 @@ pub(crate) unsafe extern "C" fn compare_fixture_records_by_date(a: usize, b: usi
 
 
 
-/// removes the match's items from the +0x34d4 list, clears the scheduled slot (with clear_linked) and removes the match
-/// from the +0x34c8 list (freeing it)
+/// `Friendly::remove_friendly_match(fixture, clear_slot)`: removes the fixture's items from the [+0x34d4] list, clears
+/// the booked slot and removes the fixture from the [+0x34c8] list.
+///
+/// Removes from the [+0x34d4] list each item pointing to `fixture` (0x68d1f0; the cursor +0xa goes back to the start
+/// before, after each one and at the end); with `clear_slot` it zeroes the booked friendly's slot (0x5c6740 by the
+/// fixture's day +0, year +2, club +0x14 and opponent +0x10: +0x10 = 0 and +0x18 = 0) and removes the fixture from the
+/// [+0x34c8] list (0x68d1f0, which frees it). A null fixture or no +0x34c8 list: the original routine ("Error" box).
 /// Original: `Friendly::remove_friendly_match` (0x5c87b0, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5c87b0 } (thiscall, ret 8, friendly.cpp): `Friendly::remove_friendly_match(jogo, limpar_vaga)`: tira da lista
@@ -2612,12 +2762,16 @@ pub(crate) unsafe extern "thiscall" fn remove_friendly_match(this: usize, jogo: 
             *((v + 0x18) as *mut u8) = 0;
         }
     }
-    crate::comparacao::ramo("cpn_7 tirar o amistoso");
+    crate::comparison::branch("cpn_7 tirar o amistoso");
     remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), jogo) // removes the match from the friendlies list
 }
 
-/// allocates the 4 nation pairs that play no friendlies with each other (Iran and USA, Iraq and anyone, Vietnam and
-/// USA, the Koreas) at +0x3502, count at +0x3506
+/// `Friendly::init_banned_nation_pairs()`: allocates the 4 nation pairs that play no friendlies with each other.
+///
+/// +0x3506 = 4 pairs and +0x3502 a new 0x20-byte vector (malloc 0x944e46) with the pairs of nations that do not play
+/// friendlies with each other: Iran and USA, Iraq and anyone (−1), Vietnam and USA, the two Koreas (keys [0x9cf354],
+/// [0x9cf4f8], [0x9cf358], [0x9cf508], [0x9cf404], [0x9cf484]). Without memory: the "Error" box (line 0x1800) and
+/// +0x3506 = 0.
 /// Original: `Friendly::init_banned_nation_pairs` (0x5cc2d0, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5cc2d0 } (thiscall, friendly.cpp): `Friendly::init_banned_nation_pairs()`: +0x3506 = 4 pares e +0x3502 um vetor
@@ -2651,8 +2805,13 @@ pub(crate) unsafe fn friendly_date_day_year(a: usize) -> (i16, u16) {
     (core::ptr::read_unaligned(a as *const i16), core::ptr::read_unaligned((a + 2) as *const u16))
 }
 
-/// returns 1 for an ordinary competition; for a friendly tournament, only when the date is within 7 days of the slot
-/// date
+/// `Friendly::is_comp_current_on_date(comp, date)`: returns 1 for an ordinary competition; for a friendly tournament,
+/// only when the date is within 7 days of the slot date.
+///
+/// A competition that is not the friendlies one ([this+4]) and with an id below [0xae2378] − 0x7f: 1. Otherwise, the
+/// tournament slot (this + 0x69 × (id byte − byte +0xaf), +0xb1 occupied, +0xb5 the date): 1 if `date` is after the
+/// slot date − 7 days (0x54c8e0) and before it + 7 (0x54c5b0), by the year (unsigned) and then the day (signed); empty
+/// slot: 0. The SEH frame only guards the local dates (the destructors are empty).
 /// Original: `Friendly::is_comp_current_on_date` (0x5c29b0, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5c29b0 } (thiscall, ret 8, friendly.cpp): `Friendly::is_comp_current_on_date(comp, data)`: competição que não
@@ -2683,7 +2842,12 @@ pub(crate) unsafe extern "thiscall" fn is_comp_current_on_date(this: usize, comp
     (ano < bano || (ano == bano && dia < bdia)) as u32
 }
 
-/// returns 1 when the club already has a planned friendly on the date, the day before or the day after
+/// `Friendly::candidate_has_nearby_date(club, date)` (thiscall without using `this`): returns 1 when the candidate's
+/// list of planned friendlies (+0x12; items with day +0 and year +2) has the `date`, the day before (0x54c8e0) or the
+/// day after (0x54c5b0).
+///
+/// It walks from the start (cursor +0xa = head +2; 0x68d1b0). Without a list: 0. The local dates come first (as in the
+/// original); the SEH frame is theirs (empty destructors).
 /// Original: `Friendly::candidate_has_nearby_date` (0x5c45a0, friendly.cpp, thiscall (this sem uso), ret 8).
 ///
 /// [pt] { 0x5c45a0 } (thiscall sem usar o this, ret 8, friendly.cpp): `Friendly::candidate_has_nearby_date(clube, data)`:
@@ -2711,11 +2875,11 @@ pub(crate) unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, c
             return 1;
         }
         if item == before {
-            crate::comparacao::ramo("cpm_7 amistoso no dia antes");
+            crate::comparison::branch("cpm_7 amistoso no dia antes");
             return 1;
         }
         if item == after {
-            crate::comparacao::ramo("cpm_7 amistoso no dia depois");
+            crate::comparison::branch("cpm_7 amistoso no dia depois");
             return 1;
         }
         e = next(l);
@@ -2723,7 +2887,12 @@ pub(crate) unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, c
     0
 }
 
-/// appends the friendly (date and three ids) to the 0x14-byte array, which grows by 100
+/// `Friendly::add_planned_friendly(host, home, away, date)`: appends the friendly to the 0x14-byte array [this+0x34d8],
+/// which grows by 100.
+///
+/// Count +0x34e0, capacity +0x34e4; when full it grows by 100 at a time (realloc 0x945667; without memory, the "Error"
+/// box 0x797 and it returns). The friendly: the date at +0 (0x417c10, the returned copy stays on the stack) and the ids
+/// (the dword pointed to by each argument) at +8, +0xc and +0x10; the count goes up.
 /// Original: `Friendly::add_planned_friendly` (0x5c4b60, friendly.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x5c4b60 } (thiscall, ret 0x10, friendly.cpp): `Friendly::add_planned_friendly(anfitriao, mandante, visitante,
@@ -2732,7 +2901,7 @@ pub(crate) unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, c
 /// devolvida fica na pilha) e os ids (o dword apontado por cada argumento) em +8, +0xc e +0x10; a conta sobe.
 pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, home: usize, away: usize, data: usize) {
     if read_usize(this + friendly::PLANNED_COUNT) == read_usize(this + friendly::PLANNED_CAPACITY) {
-        crate::comparacao::ramo("cpm_7 amistosos crescem");
+        crate::comparison::branch("cpm_7 amistosos crescem");
         let cap = read_usize(this + friendly::PLANNED_CAPACITY).wrapping_add(100);
         write_usize(this + friendly::PLANNED_CAPACITY, cap);
         let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
@@ -2743,7 +2912,7 @@ pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitri
             return;
         }
     }
-    crate::comparacao::ramo("cpm_7 amistoso planejado");
+    crate::comparison::branch("cpm_7 amistoso planejado");
     let n = read_usize(this + friendly::PLANNED_COUNT);
     let item = read_usize(this + friendly::PLANNED_FRIENDLIES).wrapping_add(n.wrapping_mul(0x14));
     write_usize(item + 8, read_usize(anfitriao));
@@ -2797,7 +2966,7 @@ pub(crate) unsafe fn already_opponent(c: usize, clube: usize) -> bool {
 /// com +0x1db igual ao float de [0x9cf6f8] (comparado como inteiro).
 pub(crate) unsafe fn excluded_by_intertoto(this: usize, op: usize) -> bool {
     *(G_CURRENT_DATE as *const i16) as i32 == core::ptr::read_unaligned((this + 0x34e8) as *const u16) as i32
-        && read_usize(op + 0x1db) as u32 == *(KEY_CLUB_COMP_INTER_TOTO_CUP as *const u32)
+        && read_usize(op + club::EURO_FLAG) as u32 == *(KEY_CLUB_COMP_INTER_TOTO_CUP as *const u32)
 }
 
 /// True if the clubs are rivals (+0xb3/+0xb7/+0xbb, either direction).
@@ -2811,7 +2980,7 @@ pub(crate) unsafe fn are_rival_clubs(a: usize, b: usize) -> bool {
 ///
 /// [pt] As nações (+0x53) dos clubes são rivais (+0x110, +0x114, +0x118, nos dois sentidos)?
 pub(crate) unsafe fn are_rival_nations(a: usize, b: usize) -> bool {
-    let (na, nb) = (read_usize(a + 0x53), read_usize(b + 0x53));
+    let (na, nb) = (read_usize(a + club::NATION), read_usize(b + club::NATION));
     [0x110usize, 0x114, 0x118].iter().any(|&o| na == read_usize(nb + o) || nb == read_usize(na + o))
 }
 
@@ -2821,10 +2990,18 @@ pub(crate) unsafe fn friendly_random(n: i32) -> i32 {
     f(n)
 }
 
-/// searches (bsearch) the candidates of the band (1 to 20, going up until found) and, from there, the first one that is
-/// not the club, excluded, already an opponent, out by date, of crossed bands, a rival, of a rival nation (half the
-/// time), from the same city or above the drawn band, that passes the nation check by the club reputation and is drawn
-/// (1 in 5); else 0
+/// `Friendly::find_friendly_opponent(club, list, n, band, exclude)`: finds a friendly opponent among the candidates of
+/// the band, or 0.
+///
+/// The band (signed byte) is clamped to 1..=20; it searches (bsearch 0x946464 with 0x5c5270, by byte +5) the candidate
+/// list (0x16 bytes, `n` of them) for one of the band, raising the band until found (from 20 on: the start of the
+/// list). From there up to the second-to-last candidate (the last one is left out, as in the original), it skips: the
+/// club itself, those in the `exclude` vector (4 pointers, by id), those that already have the club in their list
+/// (+0xa, the cursor goes back to the start), those out by date, those of crossed bands (+0xe/+0x10, −1 = any), the
+/// rivals, those of rival nations (half the time: draw(2) = 0), those from the same city (+0x57) and those above the
+/// drawn band (+4 > draw(3) + 3). By the club's reputation (+0x80): below 2000 the same nation (+0x53); from 2000 to
+/// 3999 the same nation +0x75; from 4000 to 7999 the same +0x71; with the club's +4 above draw(2), the same nation. It
+/// keeps the candidate when draw(5) = 1; none: 0. No SEH, no box.
 /// Original: `Friendly::find_friendly_opponent` (0x5c4cb0, friendly.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x5c4cb0 } (thiscall, ret 0x14, friendly.cpp): `Friendly::find_friendly_opponent(clube, lista, n, faixa,
@@ -2884,20 +3061,20 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube
             if are_rival_clubs(cp, op) || (are_rival_nations(cp, op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
-            if read_usize(cp + 0x57) == read_usize(op + 0x57) {
+            if read_usize(cp + club::DIVISION) == read_usize(op + club::DIVISION) {
                 break 'proximo;
             }
             if read_i8(c + 4) > (friendly_random(3) as i8).wrapping_add(3) {
                 break 'proximo;
             }
-            let rep = read_i16(cp + 0x80);
-            let (nc, no) = (read_usize(cp + 0x53), read_usize(op + 0x53));
+            let rep = read_i16(cp + club::REPUTATION);
+            let (nc, no) = (read_usize(cp + club::NATION), read_usize(op + club::NATION));
             let far = if rep < 2000 {
                 no != nc
             } else if rep < 4000 {
-                read_i8(no + 0x75) != read_i8(nc + 0x75)
+                read_i8(no + nation::REGION) != read_i8(nc + nation::REGION)
             } else if rep < 8000 {
-                read_usize(no + 0x71) != read_usize(nc + 0x71)
+                read_usize(no + nation::CONTINENT) != read_usize(nc + nation::CONTINENT)
             } else {
                 false
             };
@@ -2920,7 +3097,7 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube
 ///
 /// [pt] As regiões dos dois comparadores: o estado do sorteio e o cursor (+0xa) da lista de cada candidato.
 pub(crate) unsafe fn candidate_regions(candidates: impl Iterator<Item = usize>) -> Vec<(usize, usize)> {
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for c in candidates.filter(|&c| c != 0) {
         let l = read_usize(c + 0xa);
         if l != 0 {
@@ -2931,9 +3108,15 @@ pub(crate) unsafe fn candidate_regions(candidates: impl Iterator<Item = usize>) 
 }
 
 
-/// searches (bsearch) the candidates of the tour nation and, from its first one, the one not above the maximum band nor
-/// out by date, the club itself, already an opponent, a rival, of a rival nation (half the time), from the same city or
-/// above the drawn band, drawn half the time; stops at the first one of another nation; else 0
+/// `Friendly::find_tour_opponent(club, sorted, n, max_band, nation)`: finds a tour opponent among the candidates of the
+/// tour nation, or 0.
+///
+/// It searches (bsearch 0x946464 with 0x5c5290, by +6) the vector of `n` pointers to candidates, sorted by nation, for
+/// one of the nation (the id, [nation]) and steps back to its first one. From there up to the second-to-last: the first
+/// whose club (+0x53) is not of the nation ends the search (0); it skips those above the band (+5 > max_band), those
+/// out by date, the club itself, those that already have the club in their list (+0xa), the rivals, those of rival
+/// nations (draw(2) = 0), those from the same city (+0x57) and those above the drawn band (+4 > draw(3) + 3); it keeps
+/// the candidate when draw(2) = 1. None: 0. No SEH, no box.
 /// Original: `Friendly::find_tour_opponent` (0x5c5040, friendly.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x5c5040 } (thiscall, ret 0x14, friendly.cpp): `Friendly::find_tour_opponent(clube, ordenados, n, faixa_max,
@@ -2970,7 +3153,7 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, clube: us
     while s < last {
         let c = read_usize(s);
         let op = friendly_club_by_id(read_usize(c));
-        if read_usize(op + 0x53) != nacao {
+        if read_usize(op + club::NATION) != nacao {
             return 0;
         }
         'proximo: {
@@ -2980,7 +3163,7 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, clube: us
             if are_rival_clubs(cp, op) || (are_rival_nations(cp, op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
-            if read_usize(cp + 0x57) == read_usize(op + 0x57) {
+            if read_usize(cp + club::DIVISION) == read_usize(op + club::DIVISION) {
                 break 'proximo;
             }
             if read_i8(c + 4) > (friendly_random(3) as i8).wrapping_add(3) {
@@ -2996,9 +3179,15 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, clube: us
 }
 
 
-/// the friendly of the club (+0xc) in the friendly list (+0x34c8): with a date, those on that date (0x4a7f20), the
-/// complete one (+0x10 and +0x14) or the second found at once, otherwise the last kept; without a date, the first
-/// incomplete one with +8
+/// `find_friendly_match(date, club)`: returns the club's friendly in the friendlies list (+0x34c8; null: 0), walking
+/// from the start (cursor +0xa = +2).
+///
+/// With `date`: those on the same date (0x4a7f20 with its two dwords) and of the club (+0xc); the first with +0x10 and
+/// +0x14 both non-null is returned at once, the others are kept (the last one) and a second one found is returned at
+/// once; at the end, the kept one (or 0). Without `date`: the first of the club with +0x10 or +0x14 null and +8
+/// non-null. The list is reread from the manager at every step, as in the original. Used by the friendly scheduling and
+/// screens (0x5c6f32, 0x5c86de, 0x5c9139), by the media (0x77ce23, 0x782d9e, 0x784314) and at 0x4741f9. No SEH, no box,
+/// no locals.
 /// Original: `find_friendly_match` (0x5c88f0, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5c88f0 } (thiscall, ret 8, friendly.cpp): `find_friendly_match(data, clube)`: o amistoso do clube na lista
@@ -3073,7 +3262,11 @@ pub(crate) unsafe fn friendly_manager_record(records: usize, id: *const i32) -> 
 
 
 
-/// stores the opponent in the first empty slot of the club's friendly schedule and marks the request
+/// `Friendly::schedule_assign_opponent(schedule, opponent)` (`this` is not read): stores the opponent in the first
+/// empty slot of the club's friendly schedule and marks the request.
+///
+/// In the first of the `[schedule+8]` (signed byte) 25-byte slots (from +0x19) without an opponent (dword +0), it
+/// writes the opponent and marks the request (+0x21 of the previous slot, that is schedule + 25·i + 0x21).
 /// Original: `Friendly::schedule_assign_opponent` (0x5c57d0, friendly.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5c57d0 } (thiscall, ret 8, friendly.cpp; `this` não é lido): `Friendly::schedule_assign_opponent(agenda,
@@ -3094,7 +3287,10 @@ pub(crate) unsafe extern "thiscall" fn schedule_assign_opponent(_this: usize, ag
 }
 
 
-/// stores the friendly and tournament objects in the competition table
+/// Stores the friendly and tournament objects in the competition table ([0xadadfc]).
+///
+/// The friendlies object ([0xae2c74]) goes under key [0x9cf668], and the friendly's tournaments (127 slots of 0x69
+/// bytes from +0xb1; with +0xb1 and +0x116 non-null, +0x116 goes under key [+0xaf] + slot).
 /// Original: `Friendly::register_comp_objects` (0x5ca030, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5ca030 } (thiscall, friendly.cpp): grava na tabela das competições ([0xadadfc]) o objeto dos
@@ -3114,9 +3310,16 @@ pub(crate) unsafe extern "thiscall" fn register_comp_objects(friendly: usize) {
 }
 
 
-/// on the first day of the year empties the nation lists, sorts the nations by reputation and gives the international
-/// dates their year by the World Cup cycle; then arranges the friendlies of the dates equal to today + 12 weeks
-/// (0x5cbdf0), once a day
+/// `Friendly::update_international_friendlies()` (SEH frame for the local date, empty destructor), called by the
+/// friendlies' day (0x5c2460, already in Rust): yearly reset of the nation lists and international dates, then the
+/// daily arranging of international friendlies.
+///
+/// On the first day of the year: the nation lists ([+0x34f6], [0xae2350] of them) are emptied (0x68d080), the list at
+/// +0x34fa (count +0x34fe) is sorted by reputation (0x5cc5f0) and each international date (+0x34ec, 20 bytes, count
+/// +0x34f0) gets its year by the World Cup cycle ((year − 2) a multiple of 4, plus the offset +0xb, less 4 if it is
+/// more than 3 years ahead; 0x5cbdd0), and they are re-sorted by date (0x5cc610). Then, if the date of 0xdd6ec8 is not
+/// after today + 12 weeks (0x54c770) and the day has not been done (+0x34f4), the entries dated today + 12 weeks
+/// (bsearch and the equal neighbours) go to 0x5cbdf0 and the day is marked.
 /// Original: `Friendly::update_international_friendlies` (0x5cbb00, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5cbb00 } (thiscall, ret 0, friendly.cpp, quadro SEH da data local de destrutor vazio): `Friendly::
@@ -3132,7 +3335,11 @@ pub(crate) unsafe extern "thiscall" fn update_international_friendlies(this: usi
 }
 
 
-/// in the friendlies list (+0x34cc), the 25-byte slot of the club with the requested day, year and opponent, or 0
+/// `Friendly::find_scheduled_friendly_slot(day, year, club, opponent)`: returns the club's 25-byte slot in the
+/// friendlies list with the requested day, year and opponent, or 0.
+///
+/// In the friendlies list (+0x34cc; the cursor goes back to the start), the first record of the club (+0) with a slot
+/// (25 bytes from +9, [+8] of them, signed) of the day (+0), year (+2) and opponent (+0x10): that slot. Otherwise 0.
 /// Original: `Friendly::find_scheduled_friendly_slot` (0x5c6740, friendly.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x5c6740 } (thiscall, ret 0x10, friendly.cpp): `Friendly::find_scheduled_friendly_slot(dia, ano, clube,
@@ -3153,7 +3360,7 @@ pub(crate) unsafe extern "thiscall" fn find_scheduled_friendly_slot(this: usize,
             for i in 0..(*((e + 8) as *const i8)).max(0) as usize {
                 let v = e + 25 * i + 9;
                 if *((v + 2) as *const u16) == year && *(v as *const u16) == day && read_usize(v + 0x10) == opponent {
-                    crate::comparacao::ramo("cpk_4 vaga do amistoso");
+                    crate::comparison::branch("cpk_4 vaga do amistoso");
                     return e + 25 * i + 9; // a vaga i
                 }
             }
@@ -3201,7 +3408,12 @@ pub(crate) unsafe extern "thiscall" fn remove_club_from_ai_plans(amistosos: usiz
 }
 
 
-/// draws the nation for a club tour, nearer the lower the reputation
+/// Draws the nation for a club tour, nearer the lower the reputation.
+///
+/// By the reputation (+0x80), the reach: ≥ 8000 any country, ≥ 6000 and ≥ 4000 the same continent (+0x71), ≥ 2000 the
+/// same continent and the same region (+0x75); below that, none (0). Candidates: the other countries (list [0xae23a8],
+/// 0x122 bytes, [0xae2350] countries) with +0x86 ≥ 20, +0x7e = 1, +0x84 ≤ 2 and +0x8e ≥ 5; each one draws 0x90cfc0(100)
+/// and the highest is kept (strictly, compared as a signed byte).
 /// Original: `Friendly::pick_tour_nation` (0x5c4680, friendly.cpp, thiscall).
 ///
 /// [pt] { 0x5c4680 } (thiscall, ret 4, friendly.cpp): sorteia o país da excursão do clube. Pela reputação
@@ -3228,14 +3440,14 @@ pub(crate) unsafe extern "thiscall" fn pick_tour_nation(_this: usize, clube: usi
     let mut i: i16 = 0;
     loop {
         let candidate = p != own
-            && *((p + 0x86) as *const i16) >= 0x14
-            && *((p + 0x7e) as *const u8) == 1
-            && *((p + 0x84) as *const i8) <= 2
-            && *((p + 0x8e) as *const i16) >= 5;
+            && *((p + nation::NUMBER_CLUBS) as *const i16) >= 0x14
+            && *((p + nation::STATE_OF_DEVELOPMENT) as *const u8) == 1
+            && *((p + nation::GAME_IMPORTANCE) as *const i8) <= 2
+            && *((p + nation::REPUTATION) as *const i16) >= 5;
         if candidate {
-            let continent = || *((p + 0x71) as *const u32) == *((own + 0x71) as *const u32);
+            let continent = || *((p + nation::CONTINENT) as *const u32) == *((own + nation::CONTINENT) as *const u32);
             let near = match reach {
-                2 => *((p + 0x75) as *const u8) == *((own + 0x75) as *const u8) && continent(),
+                2 => *((p + nation::REGION) as *const u8) == *((own + nation::REGION) as *const u8) && continent(),
                 5.. => true,
                 _ => continent(),
             };
@@ -3256,8 +3468,14 @@ pub(crate) unsafe extern "thiscall" fn pick_tour_nation(_this: usize, clube: usi
 }
 
 
-/// the date (+3) through 0x54a130 from the day (+1), month (+2), given year and weekday (+0); the high half of the
-/// arguments comes from the year (the caller eax)
+/// `friendly_international_date_resolve(year)`: sets the date (+3) of the international date entry `this` through
+/// 0x54a130 (Date.cpp: day, month, year, weekday) from the day (+1) and the weekday (+0) as signed bytes, the month
+/// (+2) and the given year.
+///
+/// The original builds the arguments over the incoming eax and edx: edx is the year (high half of the day), and eax is
+/// also the year in the only caller (0x5cbc18, `push eax; call`; high half of the month and of the weekday). The
+/// returned eax is garbage: the stack address of the temporary that 0x417c10 copies at the end of 0x54a2d0 (it changes
+/// with stack depth), and the caller discards it (0x5cbc1d `mov eax, [esp+14h]`); only the date (+3..+0xb) matters.
 /// Original: `friendly_international_date_resolve` (0x5cbdd0, friendly.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x5cbdd0 } (thiscall, ret 4, friendly.cpp): `friendly_international_date_resolve(ano)`: a data (+3) da entrada

@@ -31,7 +31,7 @@ unsafe fn mark_clubs_three_days(this: usize, d: usize) {
     // 0x7775c0: push &data; mov ecx, edi -> thiscall, ret 4
     let (mut t, mut u) = ([0u8; 8], [0u8; 8]);
     let (pt, pu) = (t.as_mut_ptr() as usize, u.as_mut_ptr() as usize);
-    crate::comparacao::ramo("cqc_12 marca os clubes");
+    crate::comparison::branch("cqc_12 marca os clubes");
     marcar(this, d);
     copiar(d, pu, menos(d, pt, 1));
     marcar(this, d);
@@ -56,7 +56,7 @@ unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
     cqc12_pd(l + 0xa, cqc12_d(l + 2));
     let mut p = proximo(l);
     while p != 0 {
-        crate::comparacao::ramo("cqc_12 convoca");
+        crate::comparison::branch("cqc_12 convoca");
         convocar(this, p); // cqc12: as convocações para o jogo
         let comp = cqc12_d(p + 0x14);
         let final_ = comp != 0
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn national_teams_daily_update(this: usize, hoje: usize
         || is_today(dma(pt, 0xf, 3, ano, u32::MAX), hoje)
         || is_today(dma(pt, 1, 7, ano, u32::MAX), hoje)
     {
-        crate::comparacao::ramo("cqc_12 refaz as reservas");
+        crate::comparison::branch("cqc_12 refaz as reservas");
         refazer(this);
     }
     let fixman = cqc12_d(0xae2a58);
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn comparar_national_teams_daily_update(this: usize, ho
     let antes = count_items_on_day(this, dia);
     o(this, hoje);
     let sobra = count_items_on_day(this, dia);
-    PLACAR.registrar(sobra == 0, || format!("national_teams_daily_update(dia {}) itens do dia antes {} depois {}", dia, antes, sobra));
+    PLACAR.record(sobra == 0, || format!("national_teams_daily_update(dia {}) itens do dia antes {} depois {}", dia, antes, sobra));
 }
 
 /// O índice (0..15) do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]]) pela conta de um byte da original
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn comparar_current_search_has_no_club(this: usize) -> 
     }
     let r = o(this);
     let n = current_search_has_no_club(this);
-    PLACAR.registrar(r == n, || format!("current_search_has_no_club() original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("current_search_has_no_club() original={} rust={}", r, n));
     r
 }
 
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn comparar_is_club_in_session_searches(this: usize, cl
     }
     let r = o(this, clube);
     let n = is_club_in_session_searches(this, clube);
-    PLACAR.registrar(r == n, || format!("is_club_in_session_searches(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("is_club_in_session_searches(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -310,7 +310,7 @@ unsafe fn squad_position_codes(tam: u8) -> [u16; 50] {
         _ => c[..22].copy_from_slice(&SQUAD_SLOTS_22),
     }
     if tam == 23 || tam == 25 {
-        crate::comparacao::ramo(if tam == 23 { "cqc_12 correção do elenco de 23" } else { "cqc_12 correção do elenco de 25" });
+        crate::comparison::branch(if tam == 23 { "cqc_12 correção do elenco de 23" } else { "cqc_12 correção do elenco de 25" });
         for i in 22..tam as usize {
             c[i] = SQUAD_SLOTS_24_EXTRAS[i - 22]; // cqc12: as vagas da correção
         }
@@ -610,7 +610,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
         let (mut d88c, mut d87c, mut d8a0) = ([0u8; 8], [0u8; 8], [0u8; 8]);
         let (p88c, p87c, p8a0) = (d88c.as_mut_ptr() as usize, d87c.as_mut_ptr() as usize, d8a0.as_mut_ptr() as usize);
         if finais {
-            crate::comparacao::ramo("cqc_12 elenco das fases finais");
+            crate::comparison::branch("cqc_12 elenco das fases finais");
             let d = data_nova(p87c, cqc12_uw(p + 0x2a) as u32, cqc12_uw(p + 0x28) as u32);
             menos(d, p88c, 10);
             let comp = cqc12_d(p + 0x14);
@@ -681,7 +681,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
             }
         }
         if decide() {
-            crate::comparacao::ramo("cqc_12 elenco pelo técnico humano");
+            crate::comparison::branch("cqc_12 elenco pelo técnico humano");
             cqc12_pb(r + 0x44, 0);
             pedir(this, elenco, time, p);
             return;
@@ -718,7 +718,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
     let n = collect_squad_candidates(this, nacao, t, data, p, elenco, reg, lim, &mut cand, &mut cursor);
     let modo: u32 = if t == 1 { 0x2100914 } else if t != 2 { 0x2000814 } else { 0x814 };
     let mut saida = [0usize; 50];
-    crate::comparacao::ramo("cqc_12 escala do elenco");
+    crate::comparison::branch("cqc_12 escala do elenco");
     pick(cand.as_ptr() as usize, n as u32, codigos.as_ptr() as usize, (modo & !0xff) | cqc12_b(tam) as u32, 0,
         saida.as_mut_ptr() as usize, modo, elenco, 0, 0, 0, 0, 0, 0, 0);
     let mut i = 0usize;
@@ -832,9 +832,9 @@ unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao: usize, tip
     let Some((_, _, a, _, antes, _, (ent, _))) = gravadas.iter().find(|c| c.0 == 0x6e2000) else {
         return;
     };
-    let depois = crate::comparacao::Memoria::ler(&regioes);
-    let sorteio = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    antes.escrever();
+    let depois = crate::comparison::MemorySnapshot::read(&regioes);
+    let sorteio = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    antes.write_back();
     let reg = squad_nation_record(this, nacao);
     let r = reg.wrapping_add((t as i32 * 0x14) as usize);
     let tam = cqc12_b(r + 0x42);
@@ -842,12 +842,12 @@ unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao: usize, tip
     let modo: u32 = if t == 1 { 0x2100914 } else if t != 2 { 0x2000814 } else { 0x814 };
     let mut cand = [0usize; 200];
     let mut cursor = 0usize;
-    let (n, codigos) = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
+    let (n, codigos) = crate::rng::pause_trace(|| crate::rng::without_counting(|| {
         let n = collect_squad_candidates(this, nacao, t, data, p, elenco, reg, reputation_limits(nacao, p), &mut cand, &mut cursor);
         (n, squad_position_codes(tam))
     }));
-    sorteio.escrever();
-    depois.escrever();
+    sorteio.write_back();
+    depois.write_back();
     let n1 = (a[1] as u8 as i8).max(0) as usize;
     let dw = |k: usize| u32::from_le_bytes([ent[k], ent[k + 1], ent[k + 2], ent[k + 3]]) as usize;
     let lista_o: Vec<usize> = (0..n1.min(ent.len() / 4)).map(|k| dw(4 * k)).collect();
@@ -856,7 +856,7 @@ unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao: usize, tip
     let lim = if corrigido { 22.min(cod_o.len()) } else { cod_o.len() };
     let igual = a[1] as u8 == n && a[2] == modo && a[3] as usize == elenco && cod_o.len() == tam as usize
         && lista_o[..] == cand[..n1.min(200)] && cod_o[..lim] == codigos[..lim];
-    PLACAR.registrar(igual, || format!(
+    PLACAR.record(igual, || format!(
         "select_squad(nação {:x}, tipo {}, tam {}) original: n {} modo {:#x} time {:x} lista {:x?} códigos {:x?}; rust: n {} modo {:#x} time {:x} lista {:x?} códigos {:x?}",
         nacao, t, tam, a[1] as u8, a[2], a[3], lista_o, cod_o, n, modo, elenco, &cand[..(n as i8).max(0) as usize], &codigos[..tam as usize]));
 }

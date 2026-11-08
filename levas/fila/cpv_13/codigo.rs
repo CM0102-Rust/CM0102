@@ -35,7 +35,7 @@ unsafe fn add_month_award_record_body(this: usize, p: usize, clube: usize, premi
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
         let r = staff_records_manager_record(this, p);
         if r != 0 {
-            crate::comparacao::ramo("cpv_13 prêmio do técnico");
+            crate::comparison::branch("cpv_13 prêmio do técnico");
             let a = (r + 0x9e) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1)); // cpv13: conta o prêmio
         }
@@ -65,7 +65,7 @@ unsafe fn add_month_award_record_body(this: usize, p: usize, clube: usize, premi
             let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
             let x = entrada(cpv13_d(cpv13_d(0xde1f54) + 0x856), contract_club_except_type5(p), p, 0, 0);
             if x != 0 && cpv13_d(x + 0xf) == cpv13_d(p) {
-                crate::comparacao::ramo("cpv_13 renovação");
+                crate::comparison::branch("cpv_13 renovação");
                 offer_renewal(p);
             }
         }
@@ -80,7 +80,7 @@ unsafe fn add_month_award_record_body(this: usize, p: usize, clube: usize, premi
     if cpv13_b(p + 0x5b) as i8 <= 0xa { // cpv13: o +0x5b
         return;
     }
-    crate::comparacao::ramo("cpv_13 sorteio do agradecimento");
+    crate::comparison::branch("cpv_13 sorteio do agradecimento");
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     if sorteio(v59 as i32) <= 5 {
         return;
@@ -139,23 +139,23 @@ unsafe extern "thiscall" fn comparar_add_month_award_record(this: usize, p: usiz
     }
     let (t3d, t28) = (cpv13_b(p + 0x3d), cpv13_b(p + 0x28));
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("add_month_award_record jogador");
+        crate::comparison::branch("add_month_award_record jogador");
         return o(this, p, clube, premio, a4, a5);
     }
     let r = staff_records_manager_record(this, p);
     if r == 0 {
         return o(this, p, clube, premio, a4, a5);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5),
         || add_month_award_record_body(this, p, clube, premio, a4, a5, false));
-    PLACAR.registrar(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpv13_d(premio), mo, mr));
+    PLACAR.record(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpv13_d(premio), mo, mr));
 }
 
 /// Comparador: pura.
 unsafe extern "stdcall" fn comparar_friendly_club_reputation_tier(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u8>(%%I1%%)(clube);
     let n = friendly_club_reputation_tier(clube);
-    PLACAR.registrar(r == n, || format!("friendly_club_reputation_tier({:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("friendly_club_reputation_tier({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -166,6 +166,6 @@ unsafe extern "stdcall" fn comparar_friendly_get_rest_days_for_kind(tipo: u32) -
         return r;
     }
     let n = friendly_get_rest_days_for_kind(tipo);
-    PLACAR.registrar(r == n, || format!("friendly_get_rest_days_for_kind({}) original={} rust={}", tipo as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("friendly_get_rest_days_for_kind({}) original={} rust={}", tipo as u8 as i8, r, n));
     r
 }

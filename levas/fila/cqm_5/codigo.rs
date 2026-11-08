@@ -52,7 +52,7 @@ unsafe fn construct_division_league(this: usize, ano: u32, registro: usize, p: &
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqm_5 divisao nova");
+    crate::comparison::branch("cqm_5 divisao nova");
     *((this + 0x44) as *mut u8) = 0xff;
     cqm5_pd(this + 0x30, 0xffff_ffff);
     cqm5_pd(this + 0x2c, 0);
@@ -84,7 +84,7 @@ unsafe fn construct_division_league(this: usize, ano: u32, registro: usize, p: &
     if p.baixo {
         let nacao = cqm5_d(cqm5_d(this + 4) + 0x5d);
         if *((nacao + 0x11c) as *const u8) & 4 == 0 { // cqm5: a divisão de baixo espanhola
-            crate::comparacao::ramo("cqm_5 divisao de baixo espanhola");
+            crate::comparison::branch("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
             // ponytail: a original empurra o ano na palavra de baixo do ecx, com o resto do ponteiro do registro em
             // cima; a 0x851020 só lê a palavra (mov ax, word ptr [esp + 0x21c]).
@@ -173,7 +173,7 @@ unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: u32, regist
             ok = ok && tem == (*((nacao + 0x11c) as *const u8) & 4 == 0);
         }
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", nome, this, r, cqm5_d(this), cqm5_d(this + 0x2c), cqm5_d(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", nome, this, r, cqm5_d(this), cqm5_d(this + 0x2c), cqm5_d(this + 8)));
     r
 }
 

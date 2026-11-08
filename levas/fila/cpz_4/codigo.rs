@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: u
                 let peso = scale_by_round(1, 0x14, cpz4_w(jogo + 0x34), 2);
                 // ponytail: +0x32 e +0x30 vão em registradores com lixo nos 16 bits altos; a 0x86c000 só usa as palavras.
                 european_cup_add_knocked_out_record(clube, comp, cpz4_w(jogo + 0x32) as u16 as u32, cpz4_w(jogo + 0x30) as u16 as u32, peso);
-                crate::comparacao::ramo("cpz_4 caiu na qualificacao");
+                crate::comparison::branch("cpz_4 caiu na qualificacao");
                 leave_euro_competition(clube); // cpz4: quem cai na qualificação sai da competição europeia
             }
             _ => {}
@@ -92,12 +92,12 @@ unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: u
             european_cup_add_qualified_record(clube, comp, 0x44a, 0xffff_ffff, 0x32);
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(clube, comp, 0x449, 0x32);
-            crate::comparacao::ramo("cpz_4 caiu na fase 1");
+            crate::comparison::branch("cpz_4 caiu na fase 1");
             leave_euro_competition(clube); // cpz4: quem cai na fase 1 sai da competição europeia
         }
     } else if (f as i8) < 0xc {
         if d == 6 {
-            crate::comparacao::ramo("cpz_4 passou da fase 2");
+            crate::comparison::branch("cpz_4 passou da fase 2");
             european_cup_add_qualified_record(clube, comp, 0, 0x78, 0x32); // cpz4: passar da fase 2 pesa 0x32
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(clube, comp, 0x44a, 0x32);
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_statu
     let r = o(this, clube, desfecho, fase, a, jogo, fim);
     let depois = if clube != 0 { core::ptr::read_unaligned((clube + 0x1db) as *const i32) } else { 0 };
     let igual = r == 0 && (clube == 0 || depois == if sai { -1 } else { antes });
-    PLACAR.registrar(igual, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, clube, d, f, r, antes, depois, sai));
+    PLACAR.record(igual, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, clube, d, f, r, antes, depois, sai));
     r
 }
 
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     if lista == 0 {
         return show_error_at(0x9c4900, 0x762);
     }
-    crate::comparacao::ramo("cpz_4 sorteio das quartas");
+    crate::comparison::branch("cpz_4 sorteio das quartas");
     let [a, b, c, d] = draw_four_groups();
     let ordem: [(i8, u32); 8] = [(a, 0), (b, 1), (a, 1), (b, 0), (c, 0), (d, 1), (c, 1), (d, 0)];
     for (k, &(g, l)) in ordem.iter().enumerate() {
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
     o(this);
     let fase = cpz4_d(cpz4_d(this + 0xc) + 0x30);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("draw_quarter_finals({:#x}) sem fase", this));
+        PLACAR.record(false, || format!("draw_quarter_finals({:#x}) sem fase", this));
         return;
     }
     let lista = cpz4_d(fase + 0xa7);
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
     esperado.sort_unstable();
     let saiu = fora.iter().all(|&c| core::ptr::read_unaligned((c + 0x1db) as *const i32) == -1);
     let igual = achou == esperado && saiu && cpz4_w(fase + 0x3e) == 8 && core::ptr::read_unaligned((this + 0x30) as *const i32) == 0xc;
-    PLACAR.registrar(igual, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, esperado, achou, saiu, core::ptr::read_unaligned((this + 0x30) as *const i32)));
+    PLACAR.record(igual, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, esperado, achou, saiu, core::ptr::read_unaligned((this + 0x30) as *const i32)));
 }
 
 /// A lista dos inscritos (+0x14, 6 bytes: +0 o clube, +4 a rodada de entrada; +0x38 deles) que seguem na competição
@@ -310,7 +310,7 @@ unsafe extern "thiscall" fn european_cup_collect_club_list(this: usize, saida: u
         core::ptr::write_unaligned(saida as *mut usize, 0);
         return 0;
     }
-    crate::comparacao::ramo("cpz_4 lista dos inscritos");
+    crate::comparison::branch("cpz_4 lista dos inscritos");
     let n = active_entrants(this, sem_7, v as *mut usize);
     core::ptr::write_unaligned(saida as *mut usize, v);
     (v as u32 & 0xffff_0000) | n as u16 as u32
@@ -336,11 +336,11 @@ unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(this: usize,
     let r = o(this, saida, tipo);
     let v = cpz4_d(saida);
     if v == 0 {
-        PLACAR.registrar(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) sem lista original={:#x}", this, t, r));
+        PLACAR.record(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) sem lista original={:#x}", this, t, r));
         return r;
     }
     let lista = core::slice::from_raw_parts(v as *const usize, (n.max(0) as usize).min(71));
     let igual = r as u16 as i16 == n && lista == &plano[..lista.len()];
-    PLACAR.registrar(igual, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this, t, r, n, lista, &plano[..lista.len()]));
+    PLACAR.record(igual, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this, t, r, n, lista, &plano[..lista.len()]));
     r
 }

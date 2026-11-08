@@ -51,7 +51,7 @@ const PLAYER_V1_FIELDS: [(usize, u32, usize); 5] = [(0, 4, 1), (4, 1, 1), (5, 2,
 /// Chamado por `db_files_read_clubs` 0x54db50 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
 unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparacao::ramo("banco ler clubes v1");
+    crate::comparison::branch("banco ler clubes v1");
     convert_v1_records(stream, use_zip, registros, n, 581, &CLUB_V1_LAYOUT, |b| (b.max(1) as u16).wrapping_mul(500))
 }
 
@@ -59,7 +59,7 @@ unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i32, registr
 /// comunidade troca os nomes: é a tabela id 9, a dos não jogadores, 68 bytes): campo a campo
 /// (`NON_PLAYER_V1_LAYOUT`); as reputações lidas em bytes, sem conta. Chamado por 0x54e880 com a versão 1.
 unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparacao::ramo("banco ler não jogadores v1");
+    crate::comparison::branch("banco ler não jogadores v1");
     convert_v1_records(stream, use_zip, registros, n, 68, &NON_PLAYER_V1_LAYOUT, |b| b as u16)
 }
 
@@ -67,7 +67,7 @@ unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip: i32, regis
 /// troca os nomes: é a tabela id 10, a dos jogadores, 70 bytes): campo a campo (`PLAYER_V1_FIELDS`); as reputações
 /// lidas em bytes, sem conta. Chamado por 0x54f030 com a versão 1.
 unsafe extern "C" fn db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparacao::ramo("banco ler jogadores v1");
+    crate::comparison::branch("banco ler jogadores v1");
     convert_v1_records(stream, use_zip, registros, n, 70, &PLAYER_V1_FIELDS, |b| b as u16)
 }
 
@@ -86,7 +86,7 @@ unsafe fn comparar_conversor_v1(nome: &str, o: V1Converter, rust: V1Converter, s
     let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(0x946a22usize);
     let pos = ftell(stream);
     let (mut fim_o, mut fim_r) = (0, 0);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(registros, n as usize * tamanho)],
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&[(registros, n as usize * tamanho)],
         || {
             let r = o(stream, use_zip, registros, n);
             fim_o = ftell(stream);
@@ -98,7 +98,7 @@ unsafe fn comparar_conversor_v1(nome: &str, o: V1Converter, rust: V1Converter, s
             fim_r = ftell(stream);
             r
         });
-    PLACAR.registrar(igual && r == x && fim_o == fim_r, || {
+    PLACAR.record(igual && r == x && fim_o == fim_r, || {
         let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
         format!("{}(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", nome, n, r, x, fim_o, fim_r, pos, dif)
     });
@@ -127,16 +127,16 @@ pub unsafe fn autoteste_dbj_1() {
     const ARQ: &str = "autoteste_banco_v1.tmp";
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
-    let (t0, d0) = PLACAR.contagem();
-    let mut s = Sorteio(0x5631_4442_4a31);
+    let (t0, d0) = PLACAR.counts();
+    let mut s = TestRng(0x5631_4442_4a31);
     let casos: [(V1Converter, &[(usize, u32, usize)], usize); 3] = [(comparar_db_files_read_clubs_v1, &CLUB_V1_LAYOUT, 581),
         (comparar_db_files_read_players_v1, &NON_PLAYER_V1_LAYOUT, 68), (comparar_db_files_read_non_players_v1, &PLAYER_V1_FIELDS, 70)];
     for (comparar, campos, tamanho) in casos {
         for caso in 0..64u64 {
-            let n = 1 + (s.proximo() % 6) as usize;
+            let n = 1 + (s.next_u64() % 6) as usize;
             let total = n * v1_record_size(campos);
-            let corte = if caso % 3 == 0 { total } else { (s.proximo() % (total as u64 + 1)) as usize };
-            let bytes: Vec<u8> = (0..corte).map(|_| if caso % 4 == 1 { 0 } else { s.proximo() as u8 }).collect();
+            let corte = if caso % 3 == 0 { total } else { (s.next_u64() % (total as u64 + 1)) as usize };
+            let bytes: Vec<u8> = (0..corte).map(|_| if caso % 4 == 1 { 0 } else { s.next_u64() as u8 }).collect();
             if std::fs::write(ARQ, &bytes).is_err() {
                 continue;
             }
@@ -144,12 +144,12 @@ pub unsafe fn autoteste_dbj_1() {
             if f == 0 {
                 continue;
             }
-            let mut buf: Vec<u8> = (0..n * tamanho).map(|_| s.proximo() as u8).collect();
+            let mut buf: Vec<u8> = (0..n * tamanho).map(|_| s.next_u64() as u8).collect();
             comparar(f, 0, buf.as_mut_ptr() as usize, n as u32);
             fclose(f);
         }
     }
     let _ = std::fs::remove_file(ARQ);
-    let (t1, d1) = PLACAR.contagem();
+    let (t1, d1) = PLACAR.counts();
     linha(&format!("banco v1 (conversores): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
 }

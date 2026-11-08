@@ -36,7 +36,7 @@
 //! inteira (`assinaturas.rs`). As quatro tabelas de `instalar` andam juntas pela posição; `original_fn::<F>(IDX_<NOME>)` chama a original
 //! `i`. Cada arquivo de `motor/` tem as rotinas do arquivo de origem do jogo de mesmo nome; o vocabulário está acima.
 
-use crate::comparacao::{Placar, Sorteio};
+use crate::comparison::{Scoreboard, TestRng};
 use crate::desvios::{self, Prologo};
 use crate::registro::linha;
 
@@ -2280,6 +2280,9 @@ include!("motor/macros.rs");
 #[path = "motor/area.rs"]
 pub(crate) mod area;
 pub(crate) use self::area::*;
+#[path = "motor/award/award_manager.rs"]
+pub(crate) mod award_award_manager;
+pub(crate) use self::award_award_manager::*;
 #[path = "motor/award/month_award.rs"]
 pub(crate) mod award_month_award;
 pub(crate) use self::award_month_award::*;
@@ -2325,18 +2328,42 @@ pub(crate) use self::comp_cups_eng_auto_cup::*;
 #[path = "motor/comp/cups/eng_cc_cup.rs"]
 pub(crate) mod comp_cups_eng_cc_cup;
 pub(crate) use self::comp_cups_eng_cc_cup::*;
+#[path = "motor/comp/cups/eng_charity.rs"]
+pub(crate) mod comp_cups_eng_charity;
+pub(crate) use self::comp_cups_eng_charity::*;
+#[path = "motor/comp/cups/eng_fa_cup.rs"]
+pub(crate) mod comp_cups_eng_fa_cup;
+pub(crate) use self::comp_cups_eng_fa_cup::*;
 #[path = "motor/comp/cups/fra_cup.rs"]
 pub(crate) mod comp_cups_fra_cup;
 pub(crate) use self::comp_cups_fra_cup::*;
+#[path = "motor/comp/cups/fra_lge_cup.rs"]
+pub(crate) mod comp_cups_fra_lge_cup;
+pub(crate) use self::comp_cups_fra_lge_cup::*;
 #[path = "motor/comp/cups/fra_super.rs"]
 pub(crate) mod comp_cups_fra_super;
 pub(crate) use self::comp_cups_fra_super::*;
+#[path = "motor/comp/cups/ita_c1_super.rs"]
+pub(crate) mod comp_cups_ita_c1_super;
+pub(crate) use self::comp_cups_ita_c1_super::*;
+#[path = "motor/comp/cups/ita_c_cup.rs"]
+pub(crate) mod comp_cups_ita_c_cup;
+pub(crate) use self::comp_cups_ita_c_cup::*;
 #[path = "motor/comp/cups/ita_cup.rs"]
 pub(crate) mod comp_cups_ita_cup;
 pub(crate) use self::comp_cups_ita_cup::*;
+#[path = "motor/comp/cups/ita_super.rs"]
+pub(crate) mod comp_cups_ita_super;
+pub(crate) use self::comp_cups_ita_super::*;
+#[path = "motor/comp/cups/jap_emp_cup.rs"]
+pub(crate) mod comp_cups_jap_emp_cup;
+pub(crate) use self::comp_cups_jap_emp_cup::*;
 #[path = "motor/comp/cups/jap_j_cup.rs"]
 pub(crate) mod comp_cups_jap_j_cup;
 pub(crate) use self::comp_cups_jap_j_cup::*;
+#[path = "motor/comp/cups/jap_super.rs"]
+pub(crate) mod comp_cups_jap_super;
+pub(crate) use self::comp_cups_jap_super::*;
 #[path = "motor/comp/cups/spa_cup.rs"]
 pub(crate) mod comp_cups_spa_cup;
 pub(crate) use self::comp_cups_spa_cup::*;
@@ -2346,12 +2373,18 @@ pub(crate) use self::comp_cups_spa_super::*;
 #[path = "motor/comp/cups/usa_mls_all_stars.rs"]
 pub(crate) mod comp_cups_usa_mls_all_stars;
 pub(crate) use self::comp_cups_usa_mls_all_stars::*;
+#[path = "motor/comp/cups/usa_open_cup.rs"]
+pub(crate) mod comp_cups_usa_open_cup;
+pub(crate) use self::comp_cups_usa_open_cup::*;
 #[path = "motor/comp/eurocomp/asia_club_champ.rs"]
 pub(crate) mod comp_eurocomp_asia_club_champ;
 pub(crate) use self::comp_eurocomp_asia_club_champ::*;
 #[path = "motor/comp/eurocomp/asia_cup_winner.rs"]
 pub(crate) mod comp_eurocomp_asia_cup_winner;
 pub(crate) use self::comp_eurocomp_asia_cup_winner::*;
+#[path = "motor/comp/eurocomp/asia_super_cup.rs"]
+pub(crate) mod comp_eurocomp_asia_super_cup;
+pub(crate) use self::comp_eurocomp_asia_super_cup::*;
 #[path = "motor/comp/eurocomp/con_champ.rs"]
 pub(crate) mod comp_eurocomp_con_champ;
 pub(crate) use self::comp_eurocomp_con_champ::*;
@@ -2370,6 +2403,9 @@ pub(crate) use self::comp_eurocomp_eur_super_cup::*;
 #[path = "motor/comp/eurocomp/european_cup.rs"]
 pub(crate) mod comp_eurocomp_european_cup;
 pub(crate) use self::comp_eurocomp_european_cup::*;
+#[path = "motor/comp/eurocomp/inter_amer_cup.rs"]
+pub(crate) mod comp_eurocomp_inter_amer_cup;
+pub(crate) use self::comp_eurocomp_inter_amer_cup::*;
 #[path = "motor/comp/eurocomp/intertoto_cup.rs"]
 pub(crate) mod comp_eurocomp_intertoto_cup;
 pub(crate) use self::comp_eurocomp_intertoto_cup::*;
@@ -2379,6 +2415,9 @@ pub(crate) use self::comp_eurocomp_oceania_club_champ::*;
 #[path = "motor/comp/eurocomp/uefa_cup.rs"]
 pub(crate) mod comp_eurocomp_uefa_cup;
 pub(crate) use self::comp_eurocomp_uefa_cup::*;
+#[path = "motor/comp/eurocomp/world_club_cup.rs"]
+pub(crate) mod comp_eurocomp_world_club_cup;
+pub(crate) use self::comp_eurocomp_world_club_cup::*;
 #[path = "motor/comp/fifa_rankings.rs"]
 pub(crate) mod comp_fifa_rankings;
 pub(crate) use self::comp_fifa_rankings::*;
@@ -2397,18 +2436,27 @@ pub(crate) use self::comp_intercomp_african_nations::*;
 #[path = "motor/comp/intercomp/euro_champ_qual.rs"]
 pub(crate) mod comp_intercomp_euro_champ_qual;
 pub(crate) use self::comp_intercomp_euro_champ_qual::*;
+#[path = "motor/comp/intercomp/fifa_confed.rs"]
+pub(crate) mod comp_intercomp_fifa_confed;
+pub(crate) use self::comp_intercomp_fifa_confed::*;
 #[path = "motor/comp/intercomp/goldcup.rs"]
 pub(crate) mod comp_intercomp_goldcup;
 pub(crate) use self::comp_intercomp_goldcup::*;
 #[path = "motor/comp/league.rs"]
 pub(crate) mod comp_league;
 pub(crate) use self::comp_league::*;
+#[path = "motor/comp/leagues/arg_second.rs"]
+pub(crate) mod comp_leagues_arg_second;
+pub(crate) use self::comp_leagues_arg_second::*;
 #[path = "motor/comp/leagues/aus_nsl.rs"]
 pub(crate) mod comp_leagues_aus_nsl;
 pub(crate) use self::comp_leagues_aus_nsl::*;
 #[path = "motor/comp/leagues/bra_nat_first.rs"]
 pub(crate) mod comp_leagues_bra_nat_first;
 pub(crate) use self::comp_leagues_bra_nat_first::*;
+#[path = "motor/comp/leagues/bra_nat_second.rs"]
+pub(crate) mod comp_leagues_bra_nat_second;
+pub(crate) use self::comp_leagues_bra_nat_second::*;
 #[path = "motor/comp/leagues/bra_nat_third.rs"]
 pub(crate) mod comp_leagues_bra_nat_third;
 pub(crate) use self::comp_leagues_bra_nat_third::*;
@@ -2427,6 +2475,9 @@ pub(crate) use self::comp_leagues_bra_reg_goias::*;
 #[path = "motor/comp/leagues/bra_reg_minas_gerais.rs"]
 pub(crate) mod comp_leagues_bra_reg_minas_gerais;
 pub(crate) use self::comp_leagues_bra_reg_minas_gerais::*;
+#[path = "motor/comp/leagues/bra_reg_north.rs"]
+pub(crate) mod comp_leagues_bra_reg_north;
+pub(crate) use self::comp_leagues_bra_reg_north::*;
 #[path = "motor/comp/leagues/bra_reg_northeast.rs"]
 pub(crate) mod comp_leagues_bra_reg_northeast;
 pub(crate) use self::comp_leagues_bra_reg_northeast::*;
@@ -2439,6 +2490,12 @@ pub(crate) use self::comp_leagues_bra_reg_pern::*;
 #[path = "motor/comp/leagues/bra_reg_rio.rs"]
 pub(crate) mod comp_leagues_bra_reg_rio;
 pub(crate) use self::comp_leagues_bra_reg_rio::*;
+#[path = "motor/comp/leagues/bra_reg_santa.rs"]
+pub(crate) mod comp_leagues_bra_reg_santa;
+pub(crate) use self::comp_leagues_bra_reg_santa::*;
+#[path = "motor/comp/leagues/bra_reg_sp.rs"]
+pub(crate) mod comp_leagues_bra_reg_sp;
+pub(crate) use self::comp_leagues_bra_reg_sp::*;
 #[path = "motor/comp/leagues/eng_first.rs"]
 pub(crate) mod comp_leagues_eng_first;
 pub(crate) use self::comp_leagues_eng_first::*;
@@ -2448,6 +2505,9 @@ pub(crate) use self::comp_leagues_eng_prm::*;
 #[path = "motor/comp/leagues/eng_second.rs"]
 pub(crate) mod comp_leagues_eng_second;
 pub(crate) use self::comp_leagues_eng_second::*;
+#[path = "motor/comp/leagues/eng_third.rs"]
+pub(crate) mod comp_leagues_eng_third;
+pub(crate) use self::comp_leagues_eng_third::*;
 #[path = "motor/comp/leagues/fin_prm.rs"]
 pub(crate) mod comp_leagues_fin_prm;
 pub(crate) use self::comp_leagues_fin_prm::*;
@@ -2457,6 +2517,9 @@ pub(crate) use self::comp_leagues_fra_cfa::*;
 #[path = "motor/comp/leagues/fra_first.rs"]
 pub(crate) mod comp_leagues_fra_first;
 pub(crate) use self::comp_leagues_fra_first::*;
+#[path = "motor/comp/leagues/fra_lower.rs"]
+pub(crate) mod comp_leagues_fra_lower;
+pub(crate) use self::comp_leagues_fra_lower::*;
 #[path = "motor/comp/leagues/fra_second.rs"]
 pub(crate) mod comp_leagues_fra_second;
 pub(crate) use self::comp_leagues_fra_second::*;
@@ -2466,12 +2529,24 @@ pub(crate) use self::comp_leagues_fra_third::*;
 #[path = "motor/comp/leagues/ita_ser_a.rs"]
 pub(crate) mod comp_leagues_ita_ser_a;
 pub(crate) use self::comp_leagues_ita_ser_a::*;
+#[path = "motor/comp/leagues/ita_ser_b.rs"]
+pub(crate) mod comp_leagues_ita_ser_b;
+pub(crate) use self::comp_leagues_ita_ser_b::*;
 #[path = "motor/comp/leagues/ita_ser_c1a.rs"]
 pub(crate) mod comp_leagues_ita_ser_c1a;
 pub(crate) use self::comp_leagues_ita_ser_c1a::*;
+#[path = "motor/comp/leagues/ita_ser_c1b.rs"]
+pub(crate) mod comp_leagues_ita_ser_c1b;
+pub(crate) use self::comp_leagues_ita_ser_c1b::*;
+#[path = "motor/comp/leagues/ita_ser_c2a.rs"]
+pub(crate) mod comp_leagues_ita_ser_c2a;
+pub(crate) use self::comp_leagues_ita_ser_c2a::*;
 #[path = "motor/comp/leagues/jap_j1.rs"]
 pub(crate) mod comp_leagues_jap_j1;
 pub(crate) use self::comp_leagues_jap_j1::*;
+#[path = "motor/comp/leagues/jap_j2.rs"]
+pub(crate) mod comp_leagues_jap_j2;
+pub(crate) use self::comp_leagues_jap_j2::*;
 #[path = "motor/comp/leagues/spa_first.rs"]
 pub(crate) mod comp_leagues_spa_first;
 pub(crate) use self::comp_leagues_spa_first::*;
@@ -2493,15 +2568,27 @@ pub(crate) use self::comp_stadium::*;
 #[path = "motor/comp/uefa_seeding.rs"]
 pub(crate) mod comp_uefa_seeding;
 pub(crate) use self::comp_uefa_seeding::*;
+#[path = "motor/comp/worldcup/wc_asia_league.rs"]
+pub(crate) mod comp_worldcup_wc_asia_league;
+pub(crate) use self::comp_worldcup_wc_asia_league::*;
 #[path = "motor/comp/worldcup/wc_europe_league.rs"]
 pub(crate) mod comp_worldcup_wc_europe_league;
 pub(crate) use self::comp_worldcup_wc_europe_league::*;
+#[path = "motor/comp/worldcup/wc_oceania_league.rs"]
+pub(crate) mod comp_worldcup_wc_oceania_league;
+pub(crate) use self::comp_worldcup_wc_oceania_league::*;
+#[path = "motor/comp/worldcup/wc_south_american_league.rs"]
+pub(crate) mod comp_worldcup_wc_south_american_league;
+pub(crate) use self::comp_worldcup_wc_south_american_league::*;
 #[path = "motor/comp/worldcup/world_cup.rs"]
 pub(crate) mod comp_worldcup_world_cup;
 pub(crate) use self::comp_worldcup_world_cup::*;
 #[path = "motor/compare/area.rs"]
 pub(crate) mod compare_area;
 pub(crate) use self::compare_area::*;
+#[path = "motor/compare/award/award_manager.rs"]
+pub(crate) mod compare_award_award_manager;
+pub(crate) use self::compare_award_award_manager::*;
 #[path = "motor/compare/award/month_award.rs"]
 pub(crate) mod compare_award_month_award;
 pub(crate) use self::compare_award_month_award::*;
@@ -2547,18 +2634,42 @@ pub(crate) use self::compare_comp_cups_eng_auto_cup::*;
 #[path = "motor/compare/comp/cups/eng_cc_cup.rs"]
 pub(crate) mod compare_comp_cups_eng_cc_cup;
 pub(crate) use self::compare_comp_cups_eng_cc_cup::*;
+#[path = "motor/compare/comp/cups/eng_charity.rs"]
+pub(crate) mod compare_comp_cups_eng_charity;
+pub(crate) use self::compare_comp_cups_eng_charity::*;
+#[path = "motor/compare/comp/cups/eng_fa_cup.rs"]
+pub(crate) mod compare_comp_cups_eng_fa_cup;
+pub(crate) use self::compare_comp_cups_eng_fa_cup::*;
 #[path = "motor/compare/comp/cups/fra_cup.rs"]
 pub(crate) mod compare_comp_cups_fra_cup;
 pub(crate) use self::compare_comp_cups_fra_cup::*;
+#[path = "motor/compare/comp/cups/fra_lge_cup.rs"]
+pub(crate) mod compare_comp_cups_fra_lge_cup;
+pub(crate) use self::compare_comp_cups_fra_lge_cup::*;
 #[path = "motor/compare/comp/cups/fra_super.rs"]
 pub(crate) mod compare_comp_cups_fra_super;
 pub(crate) use self::compare_comp_cups_fra_super::*;
+#[path = "motor/compare/comp/cups/ita_c1_super.rs"]
+pub(crate) mod compare_comp_cups_ita_c1_super;
+pub(crate) use self::compare_comp_cups_ita_c1_super::*;
+#[path = "motor/compare/comp/cups/ita_c_cup.rs"]
+pub(crate) mod compare_comp_cups_ita_c_cup;
+pub(crate) use self::compare_comp_cups_ita_c_cup::*;
 #[path = "motor/compare/comp/cups/ita_cup.rs"]
 pub(crate) mod compare_comp_cups_ita_cup;
 pub(crate) use self::compare_comp_cups_ita_cup::*;
+#[path = "motor/compare/comp/cups/ita_super.rs"]
+pub(crate) mod compare_comp_cups_ita_super;
+pub(crate) use self::compare_comp_cups_ita_super::*;
+#[path = "motor/compare/comp/cups/jap_emp_cup.rs"]
+pub(crate) mod compare_comp_cups_jap_emp_cup;
+pub(crate) use self::compare_comp_cups_jap_emp_cup::*;
 #[path = "motor/compare/comp/cups/jap_j_cup.rs"]
 pub(crate) mod compare_comp_cups_jap_j_cup;
 pub(crate) use self::compare_comp_cups_jap_j_cup::*;
+#[path = "motor/compare/comp/cups/jap_super.rs"]
+pub(crate) mod compare_comp_cups_jap_super;
+pub(crate) use self::compare_comp_cups_jap_super::*;
 #[path = "motor/compare/comp/cups/spa_cup.rs"]
 pub(crate) mod compare_comp_cups_spa_cup;
 pub(crate) use self::compare_comp_cups_spa_cup::*;
@@ -2568,12 +2679,18 @@ pub(crate) use self::compare_comp_cups_spa_super::*;
 #[path = "motor/compare/comp/cups/usa_mls_all_stars.rs"]
 pub(crate) mod compare_comp_cups_usa_mls_all_stars;
 pub(crate) use self::compare_comp_cups_usa_mls_all_stars::*;
+#[path = "motor/compare/comp/cups/usa_open_cup.rs"]
+pub(crate) mod compare_comp_cups_usa_open_cup;
+pub(crate) use self::compare_comp_cups_usa_open_cup::*;
 #[path = "motor/compare/comp/eurocomp/asia_club_champ.rs"]
 pub(crate) mod compare_comp_eurocomp_asia_club_champ;
 pub(crate) use self::compare_comp_eurocomp_asia_club_champ::*;
 #[path = "motor/compare/comp/eurocomp/asia_cup_winner.rs"]
 pub(crate) mod compare_comp_eurocomp_asia_cup_winner;
 pub(crate) use self::compare_comp_eurocomp_asia_cup_winner::*;
+#[path = "motor/compare/comp/eurocomp/asia_super_cup.rs"]
+pub(crate) mod compare_comp_eurocomp_asia_super_cup;
+pub(crate) use self::compare_comp_eurocomp_asia_super_cup::*;
 #[path = "motor/compare/comp/eurocomp/con_champ.rs"]
 pub(crate) mod compare_comp_eurocomp_con_champ;
 pub(crate) use self::compare_comp_eurocomp_con_champ::*;
@@ -2592,6 +2709,9 @@ pub(crate) use self::compare_comp_eurocomp_eur_super_cup::*;
 #[path = "motor/compare/comp/eurocomp/european_cup.rs"]
 pub(crate) mod compare_comp_eurocomp_european_cup;
 pub(crate) use self::compare_comp_eurocomp_european_cup::*;
+#[path = "motor/compare/comp/eurocomp/inter_amer_cup.rs"]
+pub(crate) mod compare_comp_eurocomp_inter_amer_cup;
+pub(crate) use self::compare_comp_eurocomp_inter_amer_cup::*;
 #[path = "motor/compare/comp/eurocomp/intertoto_cup.rs"]
 pub(crate) mod compare_comp_eurocomp_intertoto_cup;
 pub(crate) use self::compare_comp_eurocomp_intertoto_cup::*;
@@ -2601,6 +2721,9 @@ pub(crate) use self::compare_comp_eurocomp_oceania_club_champ::*;
 #[path = "motor/compare/comp/eurocomp/uefa_cup.rs"]
 pub(crate) mod compare_comp_eurocomp_uefa_cup;
 pub(crate) use self::compare_comp_eurocomp_uefa_cup::*;
+#[path = "motor/compare/comp/eurocomp/world_club_cup.rs"]
+pub(crate) mod compare_comp_eurocomp_world_club_cup;
+pub(crate) use self::compare_comp_eurocomp_world_club_cup::*;
 #[path = "motor/compare/comp/fifa_rankings.rs"]
 pub(crate) mod compare_comp_fifa_rankings;
 pub(crate) use self::compare_comp_fifa_rankings::*;
@@ -2619,18 +2742,27 @@ pub(crate) use self::compare_comp_intercomp_african_nations::*;
 #[path = "motor/compare/comp/intercomp/euro_champ_qual.rs"]
 pub(crate) mod compare_comp_intercomp_euro_champ_qual;
 pub(crate) use self::compare_comp_intercomp_euro_champ_qual::*;
+#[path = "motor/compare/comp/intercomp/fifa_confed.rs"]
+pub(crate) mod compare_comp_intercomp_fifa_confed;
+pub(crate) use self::compare_comp_intercomp_fifa_confed::*;
 #[path = "motor/compare/comp/intercomp/goldcup.rs"]
 pub(crate) mod compare_comp_intercomp_goldcup;
 pub(crate) use self::compare_comp_intercomp_goldcup::*;
 #[path = "motor/compare/comp/league.rs"]
 pub(crate) mod compare_comp_league;
 pub(crate) use self::compare_comp_league::*;
+#[path = "motor/compare/comp/leagues/arg_second.rs"]
+pub(crate) mod compare_comp_leagues_arg_second;
+pub(crate) use self::compare_comp_leagues_arg_second::*;
 #[path = "motor/compare/comp/leagues/aus_nsl.rs"]
 pub(crate) mod compare_comp_leagues_aus_nsl;
 pub(crate) use self::compare_comp_leagues_aus_nsl::*;
 #[path = "motor/compare/comp/leagues/bra_nat_first.rs"]
 pub(crate) mod compare_comp_leagues_bra_nat_first;
 pub(crate) use self::compare_comp_leagues_bra_nat_first::*;
+#[path = "motor/compare/comp/leagues/bra_nat_second.rs"]
+pub(crate) mod compare_comp_leagues_bra_nat_second;
+pub(crate) use self::compare_comp_leagues_bra_nat_second::*;
 #[path = "motor/compare/comp/leagues/bra_nat_third.rs"]
 pub(crate) mod compare_comp_leagues_bra_nat_third;
 pub(crate) use self::compare_comp_leagues_bra_nat_third::*;
@@ -2649,6 +2781,9 @@ pub(crate) use self::compare_comp_leagues_bra_reg_goias::*;
 #[path = "motor/compare/comp/leagues/bra_reg_minas_gerais.rs"]
 pub(crate) mod compare_comp_leagues_bra_reg_minas_gerais;
 pub(crate) use self::compare_comp_leagues_bra_reg_minas_gerais::*;
+#[path = "motor/compare/comp/leagues/bra_reg_north.rs"]
+pub(crate) mod compare_comp_leagues_bra_reg_north;
+pub(crate) use self::compare_comp_leagues_bra_reg_north::*;
 #[path = "motor/compare/comp/leagues/bra_reg_northeast.rs"]
 pub(crate) mod compare_comp_leagues_bra_reg_northeast;
 pub(crate) use self::compare_comp_leagues_bra_reg_northeast::*;
@@ -2661,6 +2796,12 @@ pub(crate) use self::compare_comp_leagues_bra_reg_pern::*;
 #[path = "motor/compare/comp/leagues/bra_reg_rio.rs"]
 pub(crate) mod compare_comp_leagues_bra_reg_rio;
 pub(crate) use self::compare_comp_leagues_bra_reg_rio::*;
+#[path = "motor/compare/comp/leagues/bra_reg_santa.rs"]
+pub(crate) mod compare_comp_leagues_bra_reg_santa;
+pub(crate) use self::compare_comp_leagues_bra_reg_santa::*;
+#[path = "motor/compare/comp/leagues/bra_reg_sp.rs"]
+pub(crate) mod compare_comp_leagues_bra_reg_sp;
+pub(crate) use self::compare_comp_leagues_bra_reg_sp::*;
 #[path = "motor/compare/comp/leagues/eng_first.rs"]
 pub(crate) mod compare_comp_leagues_eng_first;
 pub(crate) use self::compare_comp_leagues_eng_first::*;
@@ -2670,6 +2811,9 @@ pub(crate) use self::compare_comp_leagues_eng_prm::*;
 #[path = "motor/compare/comp/leagues/eng_second.rs"]
 pub(crate) mod compare_comp_leagues_eng_second;
 pub(crate) use self::compare_comp_leagues_eng_second::*;
+#[path = "motor/compare/comp/leagues/eng_third.rs"]
+pub(crate) mod compare_comp_leagues_eng_third;
+pub(crate) use self::compare_comp_leagues_eng_third::*;
 #[path = "motor/compare/comp/leagues/fin_prm.rs"]
 pub(crate) mod compare_comp_leagues_fin_prm;
 pub(crate) use self::compare_comp_leagues_fin_prm::*;
@@ -2679,6 +2823,9 @@ pub(crate) use self::compare_comp_leagues_fra_cfa::*;
 #[path = "motor/compare/comp/leagues/fra_first.rs"]
 pub(crate) mod compare_comp_leagues_fra_first;
 pub(crate) use self::compare_comp_leagues_fra_first::*;
+#[path = "motor/compare/comp/leagues/fra_lower.rs"]
+pub(crate) mod compare_comp_leagues_fra_lower;
+pub(crate) use self::compare_comp_leagues_fra_lower::*;
 #[path = "motor/compare/comp/leagues/fra_second.rs"]
 pub(crate) mod compare_comp_leagues_fra_second;
 pub(crate) use self::compare_comp_leagues_fra_second::*;
@@ -2688,12 +2835,24 @@ pub(crate) use self::compare_comp_leagues_fra_third::*;
 #[path = "motor/compare/comp/leagues/ita_ser_a.rs"]
 pub(crate) mod compare_comp_leagues_ita_ser_a;
 pub(crate) use self::compare_comp_leagues_ita_ser_a::*;
+#[path = "motor/compare/comp/leagues/ita_ser_b.rs"]
+pub(crate) mod compare_comp_leagues_ita_ser_b;
+pub(crate) use self::compare_comp_leagues_ita_ser_b::*;
 #[path = "motor/compare/comp/leagues/ita_ser_c1a.rs"]
 pub(crate) mod compare_comp_leagues_ita_ser_c1a;
 pub(crate) use self::compare_comp_leagues_ita_ser_c1a::*;
+#[path = "motor/compare/comp/leagues/ita_ser_c1b.rs"]
+pub(crate) mod compare_comp_leagues_ita_ser_c1b;
+pub(crate) use self::compare_comp_leagues_ita_ser_c1b::*;
+#[path = "motor/compare/comp/leagues/ita_ser_c2a.rs"]
+pub(crate) mod compare_comp_leagues_ita_ser_c2a;
+pub(crate) use self::compare_comp_leagues_ita_ser_c2a::*;
 #[path = "motor/compare/comp/leagues/jap_j1.rs"]
 pub(crate) mod compare_comp_leagues_jap_j1;
 pub(crate) use self::compare_comp_leagues_jap_j1::*;
+#[path = "motor/compare/comp/leagues/jap_j2.rs"]
+pub(crate) mod compare_comp_leagues_jap_j2;
+pub(crate) use self::compare_comp_leagues_jap_j2::*;
 #[path = "motor/compare/comp/leagues/spa_first.rs"]
 pub(crate) mod compare_comp_leagues_spa_first;
 pub(crate) use self::compare_comp_leagues_spa_first::*;
@@ -2715,9 +2874,18 @@ pub(crate) use self::compare_comp_stadium::*;
 #[path = "motor/compare/comp/uefa_seeding.rs"]
 pub(crate) mod compare_comp_uefa_seeding;
 pub(crate) use self::compare_comp_uefa_seeding::*;
+#[path = "motor/compare/comp/worldcup/wc_asia_league.rs"]
+pub(crate) mod compare_comp_worldcup_wc_asia_league;
+pub(crate) use self::compare_comp_worldcup_wc_asia_league::*;
 #[path = "motor/compare/comp/worldcup/wc_europe_league.rs"]
 pub(crate) mod compare_comp_worldcup_wc_europe_league;
 pub(crate) use self::compare_comp_worldcup_wc_europe_league::*;
+#[path = "motor/compare/comp/worldcup/wc_oceania_league.rs"]
+pub(crate) mod compare_comp_worldcup_wc_oceania_league;
+pub(crate) use self::compare_comp_worldcup_wc_oceania_league::*;
+#[path = "motor/compare/comp/worldcup/wc_south_american_league.rs"]
+pub(crate) mod compare_comp_worldcup_wc_south_american_league;
+pub(crate) use self::compare_comp_worldcup_wc_south_american_league::*;
 #[path = "motor/compare/comp/worldcup/world_cup.rs"]
 pub(crate) mod compare_comp_worldcup_world_cup;
 pub(crate) use self::compare_comp_worldcup_world_cup::*;
@@ -2733,6 +2901,12 @@ pub(crate) use self::compare_db_files::*;
 #[path = "motor/compare/discipline.rs"]
 pub(crate) mod compare_discipline;
 pub(crate) use self::compare_discipline::*;
+#[path = "motor/compare/dispute.rs"]
+pub(crate) mod compare_dispute;
+pub(crate) use self::compare_dispute::*;
+#[path = "motor/compare/file_screens.rs"]
+pub(crate) mod compare_file_screens;
+pub(crate) use self::compare_file_screens::*;
 #[path = "motor/compare/fine.rs"]
 pub(crate) mod compare_fine;
 pub(crate) use self::compare_fine::*;
@@ -2823,6 +2997,9 @@ pub(crate) use self::compare_shared::*;
 #[path = "motor/compare/shortlist_manager.rs"]
 pub(crate) mod compare_shortlist_manager;
 pub(crate) use self::compare_shortlist_manager::*;
+#[path = "motor/compare/simulated_stats.rs"]
+pub(crate) mod compare_simulated_stats;
+pub(crate) use self::compare_simulated_stats::*;
 #[path = "motor/compare/staff_contracts.rs"]
 pub(crate) mod compare_staff_contracts;
 pub(crate) use self::compare_staff_contracts::*;
@@ -2838,21 +3015,60 @@ pub(crate) use self::compare_training_manager::*;
 #[path = "motor/compare/transfer/argentina_rules.rs"]
 pub(crate) mod compare_transfer_argentina_rules;
 pub(crate) use self::compare_transfer_argentina_rules::*;
+#[path = "motor/compare/transfer/australia_rules.rs"]
+pub(crate) mod compare_transfer_australia_rules;
+pub(crate) use self::compare_transfer_australia_rules::*;
+#[path = "motor/compare/transfer/belgium_rules.rs"]
+pub(crate) mod compare_transfer_belgium_rules;
+pub(crate) use self::compare_transfer_belgium_rules::*;
 #[path = "motor/compare/transfer/brazil_rules.rs"]
 pub(crate) mod compare_transfer_brazil_rules;
 pub(crate) use self::compare_transfer_brazil_rules::*;
+#[path = "motor/compare/transfer/croatia_rules.rs"]
+pub(crate) mod compare_transfer_croatia_rules;
+pub(crate) use self::compare_transfer_croatia_rules::*;
 #[path = "motor/compare/transfer/england_rules.rs"]
 pub(crate) mod compare_transfer_england_rules;
 pub(crate) use self::compare_transfer_england_rules::*;
+#[path = "motor/compare/transfer/finland_rules.rs"]
+pub(crate) mod compare_transfer_finland_rules;
+pub(crate) use self::compare_transfer_finland_rules::*;
+#[path = "motor/compare/transfer/france_rules.rs"]
+pub(crate) mod compare_transfer_france_rules;
+pub(crate) use self::compare_transfer_france_rules::*;
+#[path = "motor/compare/transfer/germany_rules.rs"]
+pub(crate) mod compare_transfer_germany_rules;
+pub(crate) use self::compare_transfer_germany_rules::*;
 #[path = "motor/compare/transfer/greece_rules.rs"]
 pub(crate) mod compare_transfer_greece_rules;
 pub(crate) use self::compare_transfer_greece_rules::*;
 #[path = "motor/compare/transfer/holland_rules.rs"]
 pub(crate) mod compare_transfer_holland_rules;
 pub(crate) use self::compare_transfer_holland_rules::*;
+#[path = "motor/compare/transfer/ireland_rules.rs"]
+pub(crate) mod compare_transfer_ireland_rules;
+pub(crate) use self::compare_transfer_ireland_rules::*;
+#[path = "motor/compare/transfer/italy_rules.rs"]
+pub(crate) mod compare_transfer_italy_rules;
+pub(crate) use self::compare_transfer_italy_rules::*;
+#[path = "motor/compare/transfer/korea_rules.rs"]
+pub(crate) mod compare_transfer_korea_rules;
+pub(crate) use self::compare_transfer_korea_rules::*;
+#[path = "motor/compare/transfer/northern_ireland_rules.rs"]
+pub(crate) mod compare_transfer_northern_ireland_rules;
+pub(crate) use self::compare_transfer_northern_ireland_rules::*;
 #[path = "motor/compare/transfer/norway_rules.rs"]
 pub(crate) mod compare_transfer_norway_rules;
 pub(crate) use self::compare_transfer_norway_rules::*;
+#[path = "motor/compare/transfer/poland_rules.rs"]
+pub(crate) mod compare_transfer_poland_rules;
+pub(crate) use self::compare_transfer_poland_rules::*;
+#[path = "motor/compare/transfer/portugal_rules.rs"]
+pub(crate) mod compare_transfer_portugal_rules;
+pub(crate) use self::compare_transfer_portugal_rules::*;
+#[path = "motor/compare/transfer/russia_rules.rs"]
+pub(crate) mod compare_transfer_russia_rules;
+pub(crate) use self::compare_transfer_russia_rules::*;
 #[path = "motor/compare/transfer/scotland_rules.rs"]
 pub(crate) mod compare_transfer_scotland_rules;
 pub(crate) use self::compare_transfer_scotland_rules::*;
@@ -2862,9 +3078,21 @@ pub(crate) use self::compare_transfer_spain_rules::*;
 #[path = "motor/compare/transfer/turkey_rules.rs"]
 pub(crate) mod compare_transfer_turkey_rules;
 pub(crate) use self::compare_transfer_turkey_rules::*;
+#[path = "motor/compare/transfer/usa_rules.rs"]
+pub(crate) mod compare_transfer_usa_rules;
+pub(crate) use self::compare_transfer_usa_rules::*;
+#[path = "motor/compare/transfer/wales_rules.rs"]
+pub(crate) mod compare_transfer_wales_rules;
+pub(crate) use self::compare_transfer_wales_rules::*;
 #[path = "motor/compare/transfer_manager.rs"]
 pub(crate) mod compare_transfer_manager;
 pub(crate) use self::compare_transfer_manager::*;
+#[path = "motor/compare/transfer_offer.rs"]
+pub(crate) mod compare_transfer_offer;
+pub(crate) use self::compare_transfer_offer::*;
+#[path = "motor/compare/utils.rs"]
+pub(crate) mod compare_utils;
+pub(crate) use self::compare_utils::*;
 #[path = "motor/compare/weather.rs"]
 pub(crate) mod compare_weather;
 pub(crate) use self::compare_weather::*;
@@ -2883,12 +3111,18 @@ pub(crate) use self::db_files::*;
 #[path = "motor/discipline.rs"]
 pub(crate) mod discipline;
 pub(crate) use self::discipline::*;
+#[path = "motor/dispute.rs"]
+pub(crate) mod dispute;
+pub(crate) use self::dispute::*;
 #[path = "motor/exe_fns.rs"]
 pub(crate) mod exe_fns;
 pub(crate) use self::exe_fns::*;
 #[path = "motor/fields.rs"]
 pub(crate) mod fields;
 pub(crate) use self::fields::*;
+#[path = "motor/file_screens.rs"]
+pub(crate) mod file_screens;
+pub(crate) use self::file_screens::*;
 #[path = "motor/fine.rs"]
 pub(crate) mod fine;
 pub(crate) use self::fine::*;
@@ -2994,6 +3228,9 @@ pub(crate) use self::shared::*;
 #[path = "motor/shortlist_manager.rs"]
 pub(crate) mod shortlist_manager;
 pub(crate) use self::shortlist_manager::*;
+#[path = "motor/simulated_stats.rs"]
+pub(crate) mod simulated_stats;
+pub(crate) use self::simulated_stats::*;
 #[path = "motor/staff_contracts.rs"]
 pub(crate) mod staff_contracts;
 pub(crate) use self::staff_contracts::*;
@@ -3009,21 +3246,60 @@ pub(crate) use self::training_manager::*;
 #[path = "motor/transfer/argentina_rules.rs"]
 pub(crate) mod transfer_argentina_rules;
 pub(crate) use self::transfer_argentina_rules::*;
+#[path = "motor/transfer/australia_rules.rs"]
+pub(crate) mod transfer_australia_rules;
+pub(crate) use self::transfer_australia_rules::*;
+#[path = "motor/transfer/belgium_rules.rs"]
+pub(crate) mod transfer_belgium_rules;
+pub(crate) use self::transfer_belgium_rules::*;
 #[path = "motor/transfer/brazil_rules.rs"]
 pub(crate) mod transfer_brazil_rules;
 pub(crate) use self::transfer_brazil_rules::*;
+#[path = "motor/transfer/croatia_rules.rs"]
+pub(crate) mod transfer_croatia_rules;
+pub(crate) use self::transfer_croatia_rules::*;
 #[path = "motor/transfer/england_rules.rs"]
 pub(crate) mod transfer_england_rules;
 pub(crate) use self::transfer_england_rules::*;
+#[path = "motor/transfer/finland_rules.rs"]
+pub(crate) mod transfer_finland_rules;
+pub(crate) use self::transfer_finland_rules::*;
+#[path = "motor/transfer/france_rules.rs"]
+pub(crate) mod transfer_france_rules;
+pub(crate) use self::transfer_france_rules::*;
+#[path = "motor/transfer/germany_rules.rs"]
+pub(crate) mod transfer_germany_rules;
+pub(crate) use self::transfer_germany_rules::*;
 #[path = "motor/transfer/greece_rules.rs"]
 pub(crate) mod transfer_greece_rules;
 pub(crate) use self::transfer_greece_rules::*;
 #[path = "motor/transfer/holland_rules.rs"]
 pub(crate) mod transfer_holland_rules;
 pub(crate) use self::transfer_holland_rules::*;
+#[path = "motor/transfer/ireland_rules.rs"]
+pub(crate) mod transfer_ireland_rules;
+pub(crate) use self::transfer_ireland_rules::*;
+#[path = "motor/transfer/italy_rules.rs"]
+pub(crate) mod transfer_italy_rules;
+pub(crate) use self::transfer_italy_rules::*;
+#[path = "motor/transfer/korea_rules.rs"]
+pub(crate) mod transfer_korea_rules;
+pub(crate) use self::transfer_korea_rules::*;
+#[path = "motor/transfer/northern_ireland_rules.rs"]
+pub(crate) mod transfer_northern_ireland_rules;
+pub(crate) use self::transfer_northern_ireland_rules::*;
 #[path = "motor/transfer/norway_rules.rs"]
 pub(crate) mod transfer_norway_rules;
 pub(crate) use self::transfer_norway_rules::*;
+#[path = "motor/transfer/poland_rules.rs"]
+pub(crate) mod transfer_poland_rules;
+pub(crate) use self::transfer_poland_rules::*;
+#[path = "motor/transfer/portugal_rules.rs"]
+pub(crate) mod transfer_portugal_rules;
+pub(crate) use self::transfer_portugal_rules::*;
+#[path = "motor/transfer/russia_rules.rs"]
+pub(crate) mod transfer_russia_rules;
+pub(crate) use self::transfer_russia_rules::*;
 #[path = "motor/transfer/scotland_rules.rs"]
 pub(crate) mod transfer_scotland_rules;
 pub(crate) use self::transfer_scotland_rules::*;
@@ -3033,9 +3309,21 @@ pub(crate) use self::transfer_spain_rules::*;
 #[path = "motor/transfer/turkey_rules.rs"]
 pub(crate) mod transfer_turkey_rules;
 pub(crate) use self::transfer_turkey_rules::*;
+#[path = "motor/transfer/usa_rules.rs"]
+pub(crate) mod transfer_usa_rules;
+pub(crate) use self::transfer_usa_rules::*;
+#[path = "motor/transfer/wales_rules.rs"]
+pub(crate) mod transfer_wales_rules;
+pub(crate) use self::transfer_wales_rules::*;
 #[path = "motor/transfer_manager.rs"]
 pub(crate) mod transfer_manager;
 pub(crate) use self::transfer_manager::*;
+#[path = "motor/transfer_offer.rs"]
+pub(crate) mod transfer_offer;
+pub(crate) use self::transfer_offer::*;
+#[path = "motor/utils.rs"]
+pub(crate) mod utils;
+pub(crate) use self::utils::*;
 #[path = "motor/weather.rs"]
 pub(crate) mod weather;
 pub(crate) use self::weather::*;
@@ -3082,7 +3370,7 @@ unsafe fn regioes_da_tabela(t: usize, clube: usize, humano: u32) -> Vec<(usize, 
 unsafe extern "stdcall" fn comparar_bola_parada(c: i16) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(i16) -> u8>(IDX_SET_PIECE_CODE)(c);
     let n = set_piece_code(c);
-    PLACAR.registrar(r == n, || format!("set_piece_code({}) original={} rust={}", c, r, n));
+    PLACAR.record(r == n, || format!("set_piece_code({}) original={} rust={}", c, r, n));
     r
 }
 comparar_repartir!(comparar_add_disposition, add_disposition, IDX_ADD_DISPOSITION);
@@ -3094,8 +3382,8 @@ unsafe extern "thiscall" fn comparar_remover(this: usize, alvo: usize) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_REMOVE_FROM_LIST);
     let n = byte(this, 0x101).max(0) as usize;
     let reg = [(this + 0x101, 1), (this + 0x1ae, 4 * n)];
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(this, alvo), || remove_from_list(this, alvo));
-    PLACAR.registrar(igual && r == x, || format!("remove_from_list(n {}) original={} {:x?} rust={} {:x?}", n, r, mo, x, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, alvo), || remove_from_list(this, alvo));
+    PLACAR.record(igual && r == x, || format!("remove_from_list(n {}) original={} {:x?} rust={} {:x?}", n, r, mo, x, mr));
     r
 }
 unsafe extern "thiscall" fn comparar_entrar(this: usize, j: usize) -> u8 {
@@ -3103,8 +3391,8 @@ unsafe extern "thiscall" fn comparar_entrar(this: usize, j: usize) -> u8 {
     let l = lado(j) as isize;
     let n = *((this as isize + 0x4592 + l) as *const i8) as isize;
     let reg = [(j + 0x28, 1), (j + 0x102, 2), ((this as isize + 0x4592 + l) as usize, 1), ((this as isize + 0x453a + 4 * (n + 11 * l)) as usize, 4)];
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(this, j), || take_the_field(this, j));
-    PLACAR.registrar(igual && r == x, || format!("take_the_field(lado {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, j), || take_the_field(this, j));
+    PLACAR.record(igual && r == x, || format!("take_the_field(lado {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
     r
 }
 comparar_valor!(comparar_in_danger, in_danger, IDX_IN_DANGER, () -> u8);
@@ -3114,20 +3402,20 @@ comparar_valor!(comparar_alcanca_ponto, reaches_the_point, IDX_REACHES_THE_POINT
 
 unsafe extern "thiscall" fn comparar_destaque(this: usize) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CHOOSE_STANDOUT);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x477a, 4)], || f(this), || choose_standout(this));
-    PLACAR.registrar(igual, || format!("choose_standout original={:x?} rust={:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x477a, 4)], || f(this), || choose_standout(this));
+    PLACAR.record(igual, || format!("choose_standout original={:x?} rust={:x?}", mo, mr));
 }
 unsafe extern "thiscall" fn comparar_escolher_b(this: usize, arg: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(IDX_CHOOSE_BY_ROLE_B);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || f(this, arg), || crate::aleatorio::sem_contar(|| choose_by_role_b(this, arg)));
-    PLACAR.registrar(igual && r == n, || format!("choose_by_role_b({:#x}) original={} rust={}", arg, r as i8, n as i8));
+    let reg = crate::rng::STATE_REGIONS;
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg), || crate::rng::without_counting(|| choose_by_role_b(this, arg)));
+    PLACAR.record(igual && r == n, || format!("choose_by_role_b({:#x}) original={} rust={}", arg, r as i8, n as i8));
     r
 }
 unsafe extern "thiscall" fn comparar_casa_formacao(this: usize, j: usize, x: *mut u8, y: *mut u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_FORMATION_SQUARE);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(x as usize, 1), (y as usize, 1)], || f(this, j, x, y), || formation_square(this, j, x, y));
-    PLACAR.registrar(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, 0x8eae), byte(j, 0x27), byte(j, 0x19), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this, j, x, y), || formation_square(this, j, x, y));
+    PLACAR.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", byte(this, 0x8eae), byte(j, 0x27), byte(j, 0x19), mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_percentuais(this: usize, i: i8) {
@@ -3138,14 +3426,14 @@ unsafe extern "thiscall" fn comparar_percentuais(this: usize, i: i8) {
             reg.push(((this as isize + o + s) as usize, 1));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(this, i), || compute_percentages(this, i));
-    PLACAR.registrar(igual, || format!("compute_percentages({}) original={:x?} rust={:x?}", i, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, i), || compute_percentages(this, i));
+    PLACAR.record(igual, || format!("compute_percentages({}) original={:x?} rust={:x?}", i, mo, mr));
 }
 unsafe extern "thiscall" fn comparar_escolher_c(this: usize, arg: u32, modo: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CHOOSE_BY_ROLE_C);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || f(this, arg, modo), || crate::aleatorio::sem_contar(|| choose_by_role_c(this, arg, modo)));
-    PLACAR.registrar(igual && r == n, || format!("choose_by_role_c({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
+    let reg = crate::rng::STATE_REGIONS;
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, modo), || crate::rng::without_counting(|| choose_by_role_c(this, arg, modo)));
+    PLACAR.record(igual && r == n, || format!("choose_by_role_c({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
     r
 }
 
@@ -3153,20 +3441,20 @@ comparar_valor!(comparar_valor_condicao, value_by_condition, IDX_VALUE_BY_CONDIT
 unsafe extern "thiscall" fn comparar_aplicar_time(this: usize, j: usize, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, f32)>(IDX_APPLY_TO_TEAM);
     let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, lado(j), k) + 0x1a2, 4)).collect();
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, f), || apply_to_team(this, j, f));
-    PLACAR.registrar(igual, || format!("apply_to_team({}) original={:x?} rust={:x?}", f, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, f), || apply_to_team(this, j, f));
+    PLACAR.record(igual, || format!("apply_to_team({}) original={:x?} rust={:x?}", f, mo, mr));
 }
 unsafe extern "thiscall" fn comparar_aplicar_lado(this: usize, l: i8, f: f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, f32)>(IDX_APPLY_TO_SIDE);
     let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, l, k) + 0x1a2, 4)).collect();
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, f), || apply_to_side(this, l, f));
-    PLACAR.registrar(igual, || format!("apply_to_side({}, {}) original={:x?} rust={:x?}", l, f, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, f), || apply_to_side(this, l, f));
+    PLACAR.record(igual, || format!("apply_to_side({}, {}) original={:x?} rust={:x?}", l, f, mo, mr));
 }
 unsafe extern "thiscall" fn comparar_escolher_d(this: usize, l: i8, modo: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u8>(IDX_CHOOSE_BY_CONDITION);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, l, modo), || crate::aleatorio::sem_contar(|| choose_by_condition(this, l, modo)));
-    PLACAR.registrar(igual && r == n, || format!("choose_by_condition({}, {}) original={} rust={}", l, modo as u8, r as i8, n as i8));
+    let reg = crate::rng::STATE_REGIONS;
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, l, modo), || crate::rng::without_counting(|| choose_by_condition(this, l, modo)));
+    PLACAR.record(igual && r == n, || format!("choose_by_condition({}, {}) original={} rust={}", l, modo as u8, r as i8, n as i8));
     r
 }
 
@@ -3185,7 +3473,7 @@ comparar_valor!(comparar_pela_ficha, player_by_record, IDX_PLAYER_BY_RECORD, (fi
 
 unsafe fn regioes_do_cartao(motor: usize, j: usize, tipo: *mut u8, peso: *mut f32) -> Vec<(usize, usize)> {
     let mut reg = vec![(j, 0x40), (tipo as usize, 1), (peso as usize, 4), ((motor as isize + 0xf5c9 + 54 * lado(j) as isize) as usize, 1)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    reg.extend(crate::rng::STATE_REGIONS);
     reg
 }
 
@@ -3193,9 +3481,9 @@ unsafe fn regioes_do_cartao(motor: usize, j: usize, tipo: *mut u8, peso: *mut f3
 unsafe extern "thiscall" fn comparar_motor_decidir(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_ENGINE_DECIDE_FOUL);
     let mut reg = vec![(this + 0xf5b2 + 8, 2), (tipo as usize, 1), (valor as usize, 1), (this + 0x475a, 16)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, codigo, tipo, valor), || crate::aleatorio::sem_contar(|| engine_decide_foul(this, j, codigo, tipo, valor)));
-    PLACAR.registrar(igual && r == n, || format!("engine_decide_foul original={} {:x?} rust={} {:x?}", r, mo, n, mr));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, codigo, tipo, valor), || crate::rng::without_counting(|| engine_decide_foul(this, j, codigo, tipo, valor)));
+    PLACAR.record(igual && r == n, || format!("engine_decide_foul original={} {:x?} rust={} {:x?}", r, mo, n, mr));
     r
 }
 
@@ -3203,48 +3491,48 @@ unsafe extern "thiscall" fn comparar_impedimento(this: usize, l: i8, linha: i8, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_LOOK_FOR_OFFSIDE);
     let motor = *(this as *const usize);
     let mut reg = vec![(this + 8, 2), (motor + 0x475a, 16)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, linha, y, passador), || crate::aleatorio::sem_contar(|| look_for_offside(this, l, linha, y, passador)));
-    PLACAR.registrar(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| look_for_offside(this, l, linha, y, passador)));
+    PLACAR.record(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));
     r
 }
 unsafe extern "thiscall" fn comparar_motor_impedimento(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_ENGINE_LOOK_FOR_OFFSIDE);
     let mut reg = vec![(this + 0xf5b2 + 8, 2), (this + 0x475a, 16)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, linha, y, passador), || crate::aleatorio::sem_contar(|| engine_look_for_offside(this, l, linha, y, passador)));
-    PLACAR.registrar(igual && r == n, || format!("engine_look_for_offside original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| engine_look_for_offside(this, l, linha, y, passador)));
+    PLACAR.record(igual && r == n, || format!("engine_look_for_offside original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_cartao_gravidade(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8)>(IDX_CARD_BY_SEVERITY);
     let mut reg = vec![(j, 0x40), (tipo as usize, 1)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, tipo, g, flag), || crate::aleatorio::sem_contar(|| card_by_severity(this, j, tipo, g, flag)));
-    PLACAR.registrar(igual, || format!("card_by_severity(g {}, flag {}) original={:x?} rust={:x?}", g, flag, mo, mr));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, tipo, g, flag), || crate::rng::without_counting(|| card_by_severity(this, j, tipo, g, flag)));
+    PLACAR.record(igual, || format!("card_by_severity(g {}, flag {}) original={:x?} rust={:x?}", g, flag, mo, mr));
 }
 unsafe extern "thiscall" fn comparar_motor_cartao(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8)>(IDX_ENGINE_CARD_BY_SEVERITY);
     let mut reg = vec![(j, 0x40), (tipo as usize, 1)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, j, tipo, g, flag), || crate::aleatorio::sem_contar(|| engine_card_by_severity(this, j, tipo, g, flag)));
-    PLACAR.registrar(igual, || format!("engine_card_by_severity original={:x?} rust={:x?}", mo, mr));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, tipo, g, flag), || crate::rng::without_counting(|| engine_card_by_severity(this, j, tipo, g, flag)));
+    PLACAR.record(igual, || format!("engine_card_by_severity original={:x?} rust={:x?}", mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_escolher_e(this: usize, arg: u32, modo: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CHOOSE_BY_ROLE_E);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || f(this, arg, modo), || crate::aleatorio::sem_contar(|| choose_by_role_e(this, arg, modo)));
-    PLACAR.registrar(igual && r == n, || format!("choose_by_role_e({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
+    let reg = crate::rng::STATE_REGIONS;
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, modo), || crate::rng::without_counting(|| choose_by_role_e(this, arg, modo)));
+    PLACAR.record(igual && r == n, || format!("choose_by_role_e({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
     r
 }
 
 unsafe extern "thiscall" fn comparar_estatistica_posse(this: usize, l: i8, janela: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u8)>(IDX_POSSESSION_STATISTIC);
     let reg = [(this, 0x230), (this + 0x8d40, 0x260)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, janela), || possession_statistic(this, l, janela));
-    PLACAR.registrar(igual, || format!("possession_statistic({}, {}) original={:x?} rust={:x?}", l, janela, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, janela), || possession_statistic(this, l, janela));
+    PLACAR.record(igual, || format!("possession_statistic({}, {}) original={:x?} rust={:x?}", l, janela, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_resumo(this: usize, momento: i16) {
@@ -3257,9 +3545,9 @@ unsafe extern "thiscall" fn comparar_resumo(this: usize, momento: i16) {
         return;
     }
     let mut reg = vec![(this + 0x4796, 40 * 0x1be), (this + 0xf5b0, 0x90)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, momento), || crate::aleatorio::sem_contar(|| match_summary(this, momento)));
-    PLACAR.registrar(igual, || format!("match_summary({}) original={:x?} rust={:x?}", momento, mo, mr));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, momento), || crate::rng::without_counting(|| match_summary(this, momento)));
+    PLACAR.record(igual, || format!("match_summary({}) original={:x?} rust={:x?}", momento, mo, mr));
 }
 
 comparar_valor!(comparar_closest_on_side, closest_on_side, IDX_CLOSEST_ON_SIDE, (l: i8, a: i8, b: i8, todos: u8) -> usize);
@@ -3268,9 +3556,9 @@ comparar_valor!(comparar_closest_on_side, closest_on_side, IDX_CLOSEST_ON_SIDE, 
 unsafe extern "thiscall" fn comparar_defesa(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u8, i8, *mut u8, *mut u8) -> u16>(IDX_GOALKEEPER_SAVE);
     let mut reg = vec![(saida as usize, 1), (rebote as usize, 1)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, a, b, a3, codigo, saida, rebote), || crate::aleatorio::sem_contar(|| goalkeeper_save(this, a, b, a3, codigo, saida, rebote)));
-    PLACAR.registrar(igual && r == n, || format!("goalkeeper_save({}, {}, {}, {}) original={} {:x?} rust={} {:x?}", a, b, a3, codigo, r as i16, mo, n as i16, mr));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, a, b, a3, codigo, saida, rebote), || crate::rng::without_counting(|| goalkeeper_save(this, a, b, a3, codigo, saida, rebote)));
+    PLACAR.record(igual && r == n, || format!("goalkeeper_save({}, {}, {}, {}) original={} {:x?} rust={} {:x?}", a, b, a3, codigo, r as i16, mo, n as i16, mr));
     r
 }
 
@@ -3279,10 +3567,10 @@ unsafe extern "thiscall" fn comparar_defesa(this: usize, a: i8, b: i8, a3: u8, c
 unsafe extern "thiscall" fn comparar_dominio(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u8, *mut u8) -> u16>(IDX_CONTROL_OF_MOVE);
     let mut reg = vec![(codigo as usize, 1), (a as usize, 1), (b as usize, 1)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    reg.extend(crate::rng::STATE_REGIONS);
     let c0 = *codigo;
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, codigo, a, b), || crate::aleatorio::sem_contar(|| control_of_move(this, codigo, a, b)));
-    PLACAR.registrar(igual && r == n, || format!("control_of_move({}) original={} {:x?} rust={} {:x?}", c0, r as i16, mo, n as i16, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, codigo, a, b), || crate::rng::without_counting(|| control_of_move(this, codigo, a, b)));
+    PLACAR.record(igual && r == n, || format!("control_of_move({}) original={} {:x?} rust={} {:x?}", c0, r as i16, mo, n as i16, mr));
     r
 }
 
@@ -3291,13 +3579,13 @@ unsafe extern "thiscall" fn comparar_dominio(this: usize, codigo: *mut i8, a: *m
 // rotina, que tem efeitos nos jogadores) e o sorteio volta ao estado gravado a cada chamada.
 static GRAVANDO_6CD330: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 #[allow(clippy::type_complexity)]
-static FITA_6CD330: std::sync::Mutex<Vec<((i8, usize, u32, u32, u32, u32, i8), u8, crate::comparacao::Memoria)>> = std::sync::Mutex::new(Vec::new());
+static FITA_6CD330: std::sync::Mutex<Vec<((i8, usize, u32, u32, u32, u32, i8), u8, crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
 
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn comparar_procurar_gravando(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
     let r = comparar_procurar(this, lado, grupo, a3, a4, a5, a6, modo);
     if GRAVANDO_6CD330.load(std::sync::atomic::Ordering::Relaxed) {
-        let depois = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+        let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
         FITA_6CD330.lock().unwrap_or_else(|e| e.into_inner()).push(((lado, grupo, a3, a4, a5, a6, modo), r, depois));
     }
     r
@@ -3315,8 +3603,8 @@ unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8,
     FITA_6CD330.lock().unwrap_or_else(|e| e.into_inner()).clear();
     let tape_lock = core::cell::RefCell::new(Vec::new());
     let sequencia = core::cell::Cell::new(true);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO;
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    let reg = crate::rng::STATE_REGIONS;
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
         || {
             GRAVANDO_6CD330.store(true, Relaxed);
@@ -3328,11 +3616,11 @@ unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8,
         || {
             let gravadas = tape_lock.borrow();
             let mut prox = gravadas.iter();
-            let n = crate::aleatorio::sem_contar(|| {
+            let n = crate::rng::without_counting(|| {
                 trace_line_interception_with(this, x0, y0, x1, y1, codigo, a6, a7, &mut |l, c, dd, a, t, b| match prox.next() {
                     // o tipo e a6/a7 so tem o byte baixo (o resto e lixo da pilha no original)
                     Some(((gl, gc, gd, ga, gt, gb, 1), gr, depois)) if *gl == l && *gc == c && *gd == dd && *ga as u16 == a as u16 && *gt as u8 == t as u8 && *gb as u8 == b as u8 => {
-                        depois.escrever();
+                        depois.write_back();
                         *gr
                     }
                     _ => {
@@ -3347,7 +3635,7 @@ unsafe extern "thiscall" fn comparar_tracar(this: usize, x0: i8, y0: i8, x1: i8,
             n
         },
     );
-    PLACAR.registrar(igual && r == n && sequencia.get(), || format!("trace_move({} {} -> {} {}, cod {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, codigo, r, n, sequencia.get(), mo, mr));
+    PLACAR.record(igual && r == n && sequencia.get(), || format!("trace_move({} {} -> {} {}, cod {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, codigo, r, n, sequencia.get(), mo, mr));
     r
 }
 
@@ -3358,7 +3646,7 @@ unsafe extern "C" fn comparar_venceu(jogo: usize, clube: u32) -> u8 {
     }
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_WON_THE_MATCH)(jogo, clube);
     let n = won_the_match(jogo, clube);
-    PLACAR.registrar(r == n, || format!("won_the_match original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("won_the_match original={} rust={}", r, n));
     r
 }
 
@@ -3369,7 +3657,7 @@ static mut PORTA_6D6F70: usize = 0;
 static GRAVANDO_6D6F70: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// Na comparacao da 0x70dfd0 a fita guarda o setimo argumento da narracao no alto do codigo.
 static GRAVAR_A7: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-static FITA_6D6F70: std::sync::Mutex<Vec<(usize, [u32; 7], crate::comparacao::Memoria)>> = std::sync::Mutex::new(Vec::new());
+static FITA_6D6F70: std::sync::Mutex<Vec<(usize, [u32; 7], crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
 const PROLOGO_6D6F70: Prologo = Prologo { endereco: 0x6d6f70, bytes: &[0x8a, 0x44, 0x24, 0x10, 0x83, 0xec, 0x20] };
 
 #[allow(clippy::too_many_arguments)]
@@ -3394,7 +3682,7 @@ unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32,
     }
     PROFUNDIDADE.fetch_sub(1, Relaxed);
     if nivel == 0 && GRAVANDO_6D6F70.load(Relaxed) {
-        let depois = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+        let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
         FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).push((this, [a1, a2, a3, a4, a5, a6, a7], depois));
     }
 }
@@ -3423,9 +3711,9 @@ unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl F
     FITA_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).clear();
     let tape_lock = core::cell::RefCell::new(Vec::new());
     let sequencia = core::cell::Cell::new(true);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend_from_slice(extra);
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(
         &reg,
         || {
             GRAVANDO_6D6F70.store(true, Relaxed);
@@ -3436,9 +3724,9 @@ unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl F
         || {
             let gravadas = tape_lock.borrow();
             let mut prox = gravadas.iter();
-            crate::aleatorio::sem_contar(|| {
+            crate::rng::without_counting(|| {
                 rust(&mut |t, a| match prox.next() {
-                    Some((gt, ga, depois)) if *gt == t && mesmos_argumentos(ga, &a) => depois.escrever(),
+                    Some((gt, ga, depois)) if *gt == t && mesmos_argumentos(ga, &a) => depois.write_back(),
                     _ => sequencia.set(false),
                 })
             });
@@ -3456,10 +3744,10 @@ unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl F
 unsafe extern "thiscall" fn comparar_valor_chute(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u16) -> u16>(IDX_SHOT_VALUE);
     let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this + 0x39, 2)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    reg.extend(crate::rng::STATE_REGIONS);
     let t0 = *tipo;
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tipo, som), || crate::aleatorio::sem_contar(|| shot_value(this, tipo, som)));
-    PLACAR.registrar(igual && r == n, || format!("shot_value(tipo {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tipo, som), || crate::rng::without_counting(|| shot_value(this, tipo, som)));
+    PLACAR.record(igual && r == n, || format!("shot_value(tipo {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
     r
 }
 
@@ -3486,7 +3774,7 @@ comparar_valor!(comparar_word_0c, word_0c, IDX_WORD_0C, (id: i32) -> i32);
 unsafe extern "C" fn comparar_arredondar(v: i32) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_ROUND_BELOW_1000)(v);
     let n = round_below_1000(v);
-    PLACAR.registrar(r == n, || format!("round_below_1000({:#x}) original={} rust={}", v, r, n));
+    PLACAR.record(r == n, || format!("round_below_1000({:#x}) original={} rust={}", v, r, n));
     r
 }
 comparar_valor!(comparar_how_many_mark, how_many_mark, IDX_HOW_MANY_MARK, (alvo: usize) -> u8);
@@ -3522,7 +3810,7 @@ unsafe fn linhas_do_clube(clube: usize) -> Vec<(usize, usize)> {
     v
 }
 /// O primeiro byte diferente entre as memorias (as regioes do motor sao grandes).
-fn primeira_diferenca(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> String {
+fn primeira_diferenca(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
     mo.0.iter()
         .zip(mr.0.iter())
         .find_map(|(a, b)| {
@@ -3607,9 +3895,9 @@ const SO_NA_COMPARACAO: &[usize] = &[];
 /// Comparacao das bolas paradas da 57a leva: motor inteiro e sorteio.
 unsafe fn comparar_reinicio(nome: &str, this: usize, o: unsafe extern "thiscall" fn(usize), r: unsafe extern "thiscall" fn(usize)) {
     let mut regioes = vec![(this, MOTOR), (0xb67a34, 4)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this), || crate::aleatorio::sem_contar(|| r(this)));
-    PLACAR.registrar(igual, || {
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this), || crate::rng::without_counting(|| r(this)));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("{} diferencas em {:x?}", nome, dif)
@@ -5036,10 +5324,10 @@ pub unsafe fn instalar(comparando: bool) {
         post_contract_talks_news as *const () as usize,
         eng_first_create_playoff_stage as *const () as usize,
         eng_second_create_play_off_stage as *const () as usize,
-        eng_first_create_play_off_stage as *const () as usize,
+        eng_third_create_play_off_stage as *const () as usize,
         eng_second_update_staff_records_for_status as *const () as usize,
         eng_first_set_club_progress as *const () as usize,
-        eng_second_set_club_progress as *const () as usize,
+        eng_third_set_club_progress as *const () as usize,
         update_positions_and_status as *const () as usize,
         eng_first_advance_stage as *const () as usize,
         eng_second_advance_stage as *const () as usize,
@@ -5159,7 +5447,7 @@ pub unsafe fn instalar(comparando: bool) {
         save_temp_file as *const () as usize,
         club_history_save as *const () as usize,
         save_official_stats as *const () as usize,
-        club_history_save_84c680 as *const () as usize,
+        simulated_stats_save as *const () as usize,
         fix_man_save_club_dates as *const () as usize,
         fix_man_load_club_dates as *const () as usize,
         fix_man_save_fixture_leg_checks as *const () as usize,
@@ -5246,8 +5534,8 @@ pub unsafe fn instalar(comparando: bool) {
         england_rules_get_loan_period as *const () as usize,
         scotland_rules_can_loan_player as *const () as usize,
         scotland_rules_get_loan_period as *const () as usize,
-        scotland_rules_can_loan_player_661770 as *const () as usize,
-        scotland_rules_can_loan_player_63c3d0 as *const () as usize,
+        italy_rules_can_loan_player as *const () as usize,
+        ireland_rules_can_loan_player as *const () as usize,
         spain_rules_can_loan_player as *const () as usize,
         move_fixtures_for_tv as *const () as usize,
         send_group_draw_news as *const () as usize,
@@ -5334,10 +5622,10 @@ pub unsafe fn instalar(comparando: bool) {
         construct_usa_rules as *const () as usize,
         australia_rules as *const () as usize,
         spain_rules_init_transfer_windows as *const () as usize,
-        spain_rules_init_transfer_windows_6613f0 as *const () as usize,
-        spain_rules_init_transfer_windows_5c15e0 as *const () as usize,
+        italy_rules_init_transfer_windows as *const () as usize,
+        france_rules_init_transfer_windows as *const () as usize,
         construct_brazil_rules as *const () as usize,
-        brazil_rules_init_transfer_windows as *const () as usize,
+        germany_rules_init_transfer_windows as *const () as usize,
         construct_scotland_rules as *const () as usize,
         intertoto_cup_update_for_date as *const () as usize,
         intertoto_cup_update_staff_records_for_status as *const () as usize,
@@ -5346,20 +5634,20 @@ pub unsafe fn instalar(comparando: bool) {
         con_champ_update_for_date as *const () as usize,
         con_champ_set_up_rounds as *const () as usize,
         ita_cup_set_up_rules as *const () as usize,
-        ita_cup_set_up_rules_63d6e0 as *const () as usize,
+        ita_c_cup_set_up_rules as *const () as usize,
         bra_champ_cup_set_up_rules as *const () as usize,
         african_nations_update_staff_records_for_status as *const () as usize,
         goldcup_update_staff_records_for_status as *const () as usize,
-        african_nations_update_staff_records_for_status_91e840 as *const () as usize,
+        wc_oceania_league_update_staff_records_for_status as *const () as usize,
         conmebol_liber_set_up_rules as *const () as usize,
         con_merc_cup_set_up_rules as *const () as usize,
         oceania_club_champ_set_up_rules as *const () as usize,
         wc_europe_league_set_up_rules as *const () as usize,
-        wc_europe_league_set_up_rules_921040 as *const () as usize,
-        wc_europe_league_set_up_rules_912eb0 as *const () as usize,
+        wc_south_american_league_set_up_rules as *const () as usize,
+        wc_asia_league_set_up_rules as *const () as usize,
         goldcup_set_up_rules as *const () as usize,
         african_nations_set_up_rules as *const () as usize,
-        goldcup_set_up_rules_91ecf0 as *const () as usize,
+        wc_oceania_league_set_up_rules as *const () as usize,
         conmebol_liber_select_qualified_clubs as *const () as usize,
         conmebol_liber_update_staff_records_for_status as *const () as usize,
         conmebol_liber_advance_stage as *const () as usize,
@@ -5367,21 +5655,21 @@ pub unsafe fn instalar(comparando: bool) {
         init_group_a_table as *const () as usize,
         african_nations_record_season_honours as *const () as usize,
         bra_nat_first_set_up_rules as *const () as usize,
-        bra_nat_first_set_up_rules_42cb70 as *const () as usize,
+        bra_nat_second_set_up_rules as *const () as usize,
         bra_nat_third_set_up_rules as *const () as usize,
         bra_reg_central_set_up_rules as *const () as usize,
         bra_reg_gaucho_set_up_rules as *const () as usize,
-        bra_reg_central_set_up_rules_43bc70 as *const () as usize,
+        bra_reg_santa_set_up_rules as *const () as usize,
         bra_reg_parana_set_up_rules as *const () as usize,
         bra_reg_pern_set_up_rules as *const () as usize,
         bra_reg_rio_set_up_rules as *const () as usize,
         bra_reg_goias_set_up_rules as *const () as usize,
         jap_j1_set_up_rules as *const () as usize,
-        bra_reg_goias_set_up_rules_665140 as *const () as usize,
+        jap_j2_set_up_rules as *const () as usize,
         aus_nsl_set_up_rules as *const () as usize,
         usa_mls_set_up_rules as *const () as usize,
         bra_reg_gaucho_record_season_honours as *const () as usize,
-        aus_nsl_record_season_honours as *const () as usize,
+        arg_second_record_season_honours as *const () as usize,
         bra_nat_first_update_staff_records_for_status as *const () as usize,
         bra_nat_third_update_staff_records_for_status as *const () as usize,
         bra_reg_bahia_update_staff_records_for_status as *const () as usize,
@@ -5397,19 +5685,19 @@ pub unsafe fn instalar(comparando: bool) {
         eng_prm_set_up_rules as *const () as usize,
         eng_first_set_up_rules as *const () as usize,
         eng_second_set_up_rules as *const () as usize,
-        eng_prm_set_up_rules_5780c0 as *const () as usize,
+        eng_third_set_up_rules as *const () as usize,
         eng_prm_create_table as *const () as usize,
         eng_second_create_table as *const () as usize,
-        eng_prm_create_table_577f70 as *const () as usize,
+        eng_third_create_table as *const () as usize,
         eng_first_create_table as *const () as usize,
         ita_ser_a_set_up_rules as *const () as usize,
-        ita_ser_a_set_up_rules_6468a0 as *const () as usize,
+        ita_ser_b_set_up_rules as *const () as usize,
         ita_ser_c1a_set_up_rules as *const () as usize,
-        ita_ser_a_set_up_rules_64f920 as *const () as usize,
+        ita_ser_c1b_set_up_rules as *const () as usize,
         ita_ser_a_create_table as *const () as usize,
-        ita_ser_a_create_table_646780 as *const () as usize,
+        ita_ser_b_create_table as *const () as usize,
         ita_ser_c1a_create_table as *const () as usize,
-        ita_ser_a_create_table_64f820 as *const () as usize,
+        ita_ser_c1b_create_table as *const () as usize,
         fra_first_set_up_rules as *const () as usize,
         fra_second_set_up_rules as *const () as usize,
         fra_third_set_up_rules as *const () as usize,
@@ -5420,39 +5708,39 @@ pub unsafe fn instalar(comparando: bool) {
         spa_second_set_up_rules as *const () as usize,
         spa_lower_set_up_rules as *const () as usize,
         spa_first_create_table as *const () as usize,
-        spa_first_update_staff_records_for_status as *const () as usize,
+        ita_ser_c2a_update_staff_records_for_status as *const () as usize,
         spa_first_set_club_progress as *const () as usize,
         fra_cfa_create_group_table as *const () as usize,
-        fra_cfa_create_table as *const () as usize,
+        fra_lower_create_table as *const () as usize,
         ita_ser_c1a_set_club_progress as *const () as usize,
-        fra_cfa_set_club_progress as *const () as usize,
+        ita_ser_c1b_set_club_progress as *const () as usize,
         eng_cc_cup_create_round_table as *const () as usize,
-        eng_cc_cup_create_round_table_56f320 as *const () as usize,
-        eng_cc_cup_create_round_table_56d640 as *const () as usize,
+        eng_fa_cup_create_round_table as *const () as usize,
+        eng_charity_create_round_table as *const () as usize,
         fra_cup_create_round_table as *const () as usize,
-        fra_cup_create_round_table_5bcc40 as *const () as usize,
+        fra_lge_cup_create_round_table as *const () as usize,
         spa_cup_create_round_table as *const () as usize,
         fra_super_create_round_table as *const () as usize,
         spa_super_create_round_table as *const () as usize,
-        fra_super_create_round_table_666020 as *const () as usize,
+        jap_super_create_round_table as *const () as usize,
         eng_cc_cup_collect_entrants as *const () as usize,
         eng_auto_cup_collect_entrants as *const () as usize,
-        eng_cc_cup_select_teams as *const () as usize,
+        eng_charity_select_teams as *const () as usize,
         fra_cup_collect_entrants as *const () as usize,
-        fra_cup_collect_entrants_5bd160 as *const () as usize,
+        fra_lge_cup_collect_entrants as *const () as usize,
         fra_super_select_teams as *const () as usize,
         spa_super_select_teams as *const () as usize,
-        spa_super_select_teams_666160 as *const () as usize,
+        jap_super_select_teams as *const () as usize,
         usa_mls_all_stars_create_round_table as *const () as usize,
         eng_cc_cup_update_for_date as *const () as usize,
-        eng_cc_cup_update_for_date_570550 as *const () as usize,
+        eng_fa_cup_update_for_date as *const () as usize,
         usa_mls_all_stars_update_for_date as *const () as usize,
         jap_j_cup_create_round_table as *const () as usize,
-        jap_j_cup_create_round_table_661ff0 as *const () as usize,
-        jap_j_cup_create_round_table_90b170 as *const () as usize,
+        jap_emp_cup_create_round_table as *const () as usize,
+        usa_open_cup_create_round_table as *const () as usize,
         jap_j_cup_collect_entrants as *const () as usize,
-        jap_j_cup_collect_entrants_90b530 as *const () as usize,
-        jap_j_cup_collect_entrants_6624f0 as *const () as usize,
+        usa_open_cup_collect_entrants as *const () as usize,
+        jap_emp_cup_collect_entrants as *const () as usize,
         get_squad_number as *const () as usize,
         club_uses_squad_numbers as *const () as usize,
         set_squad_number as *const () as usize,
@@ -5471,50 +5759,50 @@ pub unsafe fn instalar(comparando: bool) {
         construct_poland_rules as *const () as usize,
         construct_finland_rules as *const () as usize,
         argentina_rules_init_transfer_windows as *const () as usize,
-        argentina_rules_init_transfer_windows_7d3df0 as *const () as usize,
+        portugal_rules_init_transfer_windows as *const () as usize,
         construct_korea_rules as *const () as usize,
         greece_rules_init_transfer_windows as *const () as usize,
-        greece_rules_init_transfer_windows_7ec7e0 as *const () as usize,
-        greece_rules_init_transfer_windows_424c00 as *const () as usize,
+        russia_rules_init_transfer_windows as *const () as usize,
+        belgium_rules_init_transfer_windows as *const () as usize,
         process_euro_registration as *const () as usize,
         create_default_table as *const () as usize,
         build_venue_list as *const () as usize,
         bra_nat_first_create_table as *const () as usize,
-        bra_nat_first_create_table_42ca70 as *const () as usize,
+        bra_nat_second_create_table as *const () as usize,
         bra_nat_third_create_table as *const () as usize,
         bra_reg_bahia_create_table as *const () as usize,
         bra_reg_central_load_region_clubs as *const () as usize,
         bra_reg_gaucho_load_region_clubs as *const () as usize,
         bra_reg_goias_create_table as *const () as usize,
         bra_reg_minas_gerais_create_table as *const () as usize,
-        bra_reg_goias_create_table_435d80 as *const () as usize,
+        bra_reg_north_create_table as *const () as usize,
         bra_reg_northeast_create_table as *const () as usize,
         bra_reg_parana_create_table as *const () as usize,
         bra_reg_pern_create_table as *const () as usize,
         bra_reg_rio_create_table as *const () as usize,
-        bra_reg_rio_create_table_43bb70 as *const () as usize,
-        bra_reg_rio_create_table_43cc40 as *const () as usize,
+        bra_reg_santa_create_table as *const () as usize,
+        bra_reg_sp_create_table as *const () as usize,
         jap_j1_create_table as *const () as usize,
-        jap_j1_create_table_665030 as *const () as usize,
+        jap_j2_create_table as *const () as usize,
         aus_nsl_create_table as *const () as usize,
         bra_reg_bahia_create_semi_final_stage as *const () as usize,
-        bra_reg_bahia_create_semi_final_stage_4360c0 as *const () as usize,
+        bra_reg_north_create_semi_final_stage as *const () as usize,
         bra_reg_northeast_create_semi_final_stage as *const () as usize,
         bra_reg_pern_create_semi_final_stage as *const () as usize,
-        bra_reg_pern_create_semi_final_stage_43bf50 as *const () as usize,
-        bra_reg_pern_create_semi_final_stage_43cf80 as *const () as usize,
+        bra_reg_santa_create_semi_final_stage as *const () as usize,
+        bra_reg_sp_create_semi_final_stage as *const () as usize,
         bra_reg_gaucho_create_knockout_stage as *const () as usize,
         bra_reg_central_create_knockout_stage as *const () as usize,
         bra_reg_goias_create_knockout_stage as *const () as usize,
         ita_ser_a_update_for_date as *const () as usize,
-        ita_ser_a_update_for_date_647050 as *const () as usize,
+        ita_ser_b_update_for_date as *const () as usize,
         ita_league_sort_clubs_level_on_points as *const () as usize,
         ita_ser_a_update_staff_records_for_status as *const () as usize,
         ita_ser_c1a_advance_stage as *const () as usize,
         create_playoff_stages as *const () as usize,
-        ita_ser_c1a_advance_stage_64fba0 as *const () as usize,
+        ita_ser_c1b_advance_stage as *const () as usize,
         create_play_off_stages as *const () as usize,
-        ita_ser_c1a_advance_stage_578330 as *const () as usize,
+        eng_third_advance_stage as *const () as usize,
         construct_eng_prm as *const () as usize,
         construct_eng_first as *const () as usize,
         construct_eng_second as *const () as usize,
@@ -5536,9 +5824,9 @@ pub unsafe fn instalar(comparando: bool) {
         destroy_fra_cfa as *const () as usize,
         destroy_fra_lower as *const () as usize,
         create_fixed_fixtures as *const () as usize,
-        ita_ser_a_set_up_fixed_fixtures as *const () as usize,
+        ita_ser_b_set_up_fixed_fixtures as *const () as usize,
         ita_ser_c1a_set_up_fixed_fixtures as *const () as usize,
-        fra_first_set_up_fixed_fixtures as *const () as usize,
+        ita_ser_c1b_set_up_fixed_fixtures as *const () as usize,
         stub_return_one_ret8 as *const () as usize,
         stub_return_one_ret4 as *const () as usize,
         set_fixture_venue as *const () as usize,
@@ -5546,12 +5834,12 @@ pub unsafe fn instalar(comparando: bool) {
         calculate_match_attendance as *const () as usize,
         fra_third_create_schedule as *const () as usize,
         fra_second_create_schedule as *const () as usize,
-        fra_third_create_schedule_5bd920 as *const () as usize,
+        fra_lower_create_schedule as *const () as usize,
         fra_cfa_create_schedule as *const () as usize,
         ita_ser_c1a_create_schedule as *const () as usize,
-        fra_cfa_create_schedule_64ef30 as *const () as usize,
+        ita_ser_c1b_create_schedule as *const () as usize,
         ita_ser_a_create_schedule as *const () as usize,
-        ita_ser_a_create_schedule_645af0 as *const () as usize,
+        ita_ser_b_create_schedule as *const () as usize,
         fra_first_create_schedule as *const () as usize,
         bra_reg_minas_gerais_advance_stage as *const () as usize,
         bra_reg_minas_gerais_create_final_stage as *const () as usize,
@@ -5563,12 +5851,12 @@ pub unsafe fn instalar(comparando: bool) {
         bra_reg_rio_create_final_stage as *const () as usize,
         bra_reg_rio_record_season_honours as *const () as usize,
         ita_cup_create_schedule as *const () as usize,
-        ita_cup_create_schedule_63cf90 as *const () as usize,
-        ita_cup_create_round_table as *const () as usize,
-        ita_cup_create_round_table_63c890 as *const () as usize,
+        ita_c_cup_create_schedule as *const () as usize,
+        ita_super_create_round_table as *const () as usize,
+        ita_c1_super_create_round_table as *const () as usize,
         ita_cup_select_entrants as *const () as usize,
-        ita_cup_select_entrants_63dfe0 as *const () as usize,
-        ita_cup_init_team_list as *const () as usize,
+        ita_c_cup_select_entrants as *const () as usize,
+        ita_super_init_team_list as *const () as usize,
         bra_cup_create_round_table as *const () as usize,
         bra_cup_build_team_table as *const () as usize,
         bra_cup_set_up_rounds as *const () as usize,
@@ -5576,7 +5864,7 @@ pub unsafe fn instalar(comparando: bool) {
         conmebol_merc_create_schedule as *const () as usize,
         conmebol_merc_select_invited_clubs as *const () as usize,
         eng_second_create_schedule as *const () as usize,
-        eng_second_create_schedule_5770e0 as *const () as usize,
+        eng_third_create_schedule as *const () as usize,
         eng_first_create_schedule as *const () as usize,
         eng_prm_create_schedule as *const () as usize,
         spa_first_create_schedule as *const () as usize,
@@ -5588,26 +5876,26 @@ pub unsafe fn instalar(comparando: bool) {
         bra_reg_gaucho_advance_stage as *const () as usize,
         bra_reg_goias_start_new_season as *const () as usize,
         bra_reg_goias_advance_stage as *const () as usize,
-        bra_reg_goias_start_new_season_435e80 as *const () as usize,
-        bra_reg_goias_advance_stage_436030 as *const () as usize,
+        bra_reg_north_start_new_season as *const () as usize,
+        bra_reg_north_advance_stage as *const () as usize,
         bra_reg_northeast_start_new_season as *const () as usize,
         bra_reg_northeast_advance_stage as *const () as usize,
         bra_reg_pern_start_new_season as *const () as usize,
         bra_reg_pern_advance_stage as *const () as usize,
-        bra_reg_pern_start_new_season_43bd10 as *const () as usize,
-        bra_reg_pern_advance_stage_43bec0 as *const () as usize,
-        bra_reg_pern_start_new_season_43cd40 as *const () as usize,
-        bra_reg_pern_advance_stage_43cef0 as *const () as usize,
+        bra_reg_santa_start_new_season as *const () as usize,
+        bra_reg_santa_advance_stage as *const () as usize,
+        bra_reg_sp_start_new_season as *const () as usize,
+        bra_reg_sp_advance_stage as *const () as usize,
         spa_second_create_schedule as *const () as usize,
         spa_lower_create_schedule as *const () as usize,
         construct_fra_first as *const () as usize,
         bra_nat_first_advance_stage as *const () as usize,
         bra_nat_first_create_play_off_stage as *const () as usize,
-        bra_nat_first_advance_stage_42cdd0 as *const () as usize,
-        bra_nat_first_create_play_off_stage_42ce60 as *const () as usize,
+        bra_nat_second_advance_stage as *const () as usize,
+        bra_nat_second_create_play_off_stage as *const () as usize,
         bra_nat_first_start_new_season as *const () as usize,
         bra_nat_first_process_promotion_relegation_chain as *const () as usize,
-        bra_nat_first_start_new_season_42cc10 as *const () as usize,
+        bra_nat_second_start_new_season as *const () as usize,
         jap_j1_advance_stage as *const () as usize,
         create_championship_final_stage as *const () as usize,
         jap_j1_start_new_season as *const () as usize,
@@ -5620,23 +5908,23 @@ pub unsafe fn instalar(comparando: bool) {
         bra_champ_cup_create_schedule as *const () as usize,
         con_merc_cup_create_schedule as *const () as usize,
         eur_super_cup_create_round_table as *const () as usize,
-        bra_champ_cup_create_round_table as *const () as usize,
+        asia_super_cup_create_round_table as *const () as usize,
         asia_club_champ_create_round_table as *const () as usize,
         asia_cup_winner_create_round_table as *const () as usize,
         eng_auto_cup_create_round_table as *const () as usize,
         goldcup_create_schedule as *const () as usize,
         african_nations_create_schedule as *const () as usize,
-        goldcup_create_schedule_58b560 as *const () as usize,
+        fifa_confed_create_schedule as *const () as usize,
         intertoto_cup_create_round_table as *const () as usize,
-        intertoto_cup_create_round_table_92b770 as *const () as usize,
-        intertoto_cup_create_round_table_632340 as *const () as usize,
+        world_club_cup_create_round_table as *const () as usize,
+        inter_amer_cup_create_round_table as *const () as usize,
         con_champ_create_round_table as *const () as usize,
         uefa_cup_create_round_table as *const () as usize,
         intertoto_cup_collect_entrants as *const () as usize,
         intertoto_cup_collect_club_list as *const () as usize,
         eur_super_cup_select_teams as *const () as usize,
-        eur_super_cup_select_teams_410a50 as *const () as usize,
-        eur_super_cup_init_team_list as *const () as usize,
+        asia_super_cup_select_teams as *const () as usize,
+        ita_c1_super_init_team_list as *const () as usize,
         oceania_club_champ_create_schedule as *const () as usize,
         asia_club_champ_build_team_table as *const () as usize,
         create_team_entries as *const () as usize,
@@ -5654,10 +5942,10 @@ pub unsafe fn instalar(comparando: bool) {
         usa_mls_create_playoff_stage as *const () as usize,
         usa_mls_create_final_stage as *const () as usize,
         bra_cup_start_new_season as *const () as usize,
-        bra_cup_start_new_season_662950 as *const () as usize,
+        jap_emp_cup_start_new_season as *const () as usize,
         jap_j_cup_start_new_season as *const () as usize,
-        usa_mls_all_stars_start_new_season as *const () as usize,
-        usa_mls_all_stars_start_new_season_90b790 as *const () as usize,
+        jap_super_start_new_season as *const () as usize,
+        usa_open_cup_start_new_season as *const () as usize,
         usa_mls_all_stars_start_new_season_90a760 as *const () as usize,
         set_up_teams as *const () as usize,
         conmebol_liber_update_for_date as *const () as usize,
@@ -7130,10 +7418,10 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_post_contract_talks_news as *const () as usize,
         comparar_eng_first_create_playoff_stage as *const () as usize,
         comparar_eng_second_create_play_off_stage as *const () as usize,
-        comparar_eng_first_create_play_off_stage as *const () as usize,
+        comparar_eng_third_create_play_off_stage as *const () as usize,
         comparar_eng_second_update_staff_records_for_status as *const () as usize,
         comparar_eng_first_set_club_progress as *const () as usize,
-        comparar_eng_second_set_club_progress as *const () as usize,
+        comparar_eng_third_set_club_progress as *const () as usize,
         comparar_update_positions_and_status as *const () as usize,
         comparar_eng_first_advance_stage as *const () as usize,
         comparar_eng_second_advance_stage as *const () as usize,
@@ -7253,7 +7541,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_save_temp_file as *const () as usize,
         comparar_club_history_save as *const () as usize,
         comparar_save_official_stats as *const () as usize,
-        comparar_club_history_save_84c680 as *const () as usize,
+        comparar_simulated_stats_save as *const () as usize,
         comparar_fix_man_save_club_dates as *const () as usize,
         comparar_fix_man_load_club_dates as *const () as usize,
         comparar_fix_man_save_fixture_leg_checks as *const () as usize,
@@ -7340,8 +7628,8 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_england_rules_get_loan_period as *const () as usize,
         comparar_scotland_rules_can_loan_player as *const () as usize,
         comparar_scotland_rules_get_loan_period as *const () as usize,
-        comparar_scotland_rules_can_loan_player_661770 as *const () as usize,
-        comparar_scotland_rules_can_loan_player_63c3d0 as *const () as usize,
+        comparar_italy_rules_can_loan_player as *const () as usize,
+        comparar_ireland_rules_can_loan_player as *const () as usize,
         comparar_spain_rules_can_loan_player as *const () as usize,
         comparar_move_fixtures_for_tv as *const () as usize,
         comparar_send_group_draw_news as *const () as usize,
@@ -7428,10 +7716,10 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_construct_usa_rules as *const () as usize,
         comparar_australia_rules as *const () as usize,
         comparar_spain_rules_init_transfer_windows as *const () as usize,
-        comparar_spain_rules_init_transfer_windows_6613f0 as *const () as usize,
-        comparar_spain_rules_init_transfer_windows_5c15e0 as *const () as usize,
+        comparar_italy_rules_init_transfer_windows as *const () as usize,
+        comparar_france_rules_init_transfer_windows as *const () as usize,
         comparar_construct_brazil_rules as *const () as usize,
-        comparar_brazil_rules_init_transfer_windows as *const () as usize,
+        comparar_germany_rules_init_transfer_windows as *const () as usize,
         comparar_construct_scotland_rules as *const () as usize,
         comparar_intertoto_cup_update_for_date as *const () as usize,
         comparar_intertoto_cup_update_staff_records_for_status as *const () as usize,
@@ -7440,20 +7728,20 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_con_champ_update_for_date as *const () as usize,
         comparar_con_champ_set_up_rounds as *const () as usize,
         comparar_ita_cup_set_up_rules as *const () as usize,
-        comparar_ita_cup_set_up_rules_63d6e0 as *const () as usize,
+        comparar_ita_c_cup_set_up_rules as *const () as usize,
         comparar_bra_champ_cup_set_up_rules as *const () as usize,
         comparar_african_nations_update_staff_records_for_status as *const () as usize,
         comparar_goldcup_update_staff_records_for_status as *const () as usize,
-        comparar_african_nations_update_staff_records_for_status_91e840 as *const () as usize,
+        comparar_wc_oceania_league_update_staff_records_for_status as *const () as usize,
         comparar_conmebol_liber_set_up_rules as *const () as usize,
         comparar_con_merc_cup_set_up_rules as *const () as usize,
         comparar_oceania_club_champ_set_up_rules as *const () as usize,
         comparar_wc_europe_league_set_up_rules as *const () as usize,
-        comparar_wc_europe_league_set_up_rules_921040 as *const () as usize,
-        comparar_wc_europe_league_set_up_rules_912eb0 as *const () as usize,
+        comparar_wc_south_american_league_set_up_rules as *const () as usize,
+        comparar_wc_asia_league_set_up_rules as *const () as usize,
         comparar_goldcup_set_up_rules as *const () as usize,
         comparar_african_nations_set_up_rules as *const () as usize,
-        comparar_goldcup_set_up_rules_91ecf0 as *const () as usize,
+        comparar_wc_oceania_league_set_up_rules as *const () as usize,
         comparar_conmebol_liber_select_qualified_clubs as *const () as usize,
         comparar_conmebol_liber_update_staff_records_for_status as *const () as usize,
         comparar_conmebol_liber_advance_stage as *const () as usize,
@@ -7461,21 +7749,21 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_init_group_a_table as *const () as usize,
         comparar_african_nations_record_season_honours as *const () as usize,
         comparar_bra_nat_first_set_up_rules as *const () as usize,
-        comparar_bra_nat_first_set_up_rules_42cb70 as *const () as usize,
+        comparar_bra_nat_second_set_up_rules as *const () as usize,
         comparar_bra_nat_third_set_up_rules as *const () as usize,
         comparar_bra_reg_central_set_up_rules as *const () as usize,
         comparar_bra_reg_gaucho_set_up_rules as *const () as usize,
-        comparar_bra_reg_central_set_up_rules_43bc70 as *const () as usize,
+        comparar_bra_reg_santa_set_up_rules as *const () as usize,
         comparar_bra_reg_parana_set_up_rules as *const () as usize,
         comparar_bra_reg_pern_set_up_rules as *const () as usize,
         comparar_bra_reg_rio_set_up_rules as *const () as usize,
         comparar_bra_reg_goias_set_up_rules as *const () as usize,
         comparar_jap_j1_set_up_rules as *const () as usize,
-        comparar_bra_reg_goias_set_up_rules_665140 as *const () as usize,
+        comparar_jap_j2_set_up_rules as *const () as usize,
         comparar_aus_nsl_set_up_rules as *const () as usize,
         comparar_usa_mls_set_up_rules as *const () as usize,
         comparar_bra_reg_gaucho_record_season_honours as *const () as usize,
-        comparar_aus_nsl_record_season_honours as *const () as usize,
+        comparar_arg_second_record_season_honours as *const () as usize,
         comparar_bra_nat_first_update_staff_records_for_status as *const () as usize,
         comparar_bra_nat_third_update_staff_records_for_status as *const () as usize,
         comparar_bra_reg_bahia_update_staff_records_for_status as *const () as usize,
@@ -7491,19 +7779,19 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_eng_prm_set_up_rules as *const () as usize,
         comparar_eng_first_set_up_rules as *const () as usize,
         comparar_eng_second_set_up_rules as *const () as usize,
-        comparar_eng_prm_set_up_rules_5780c0 as *const () as usize,
+        comparar_eng_third_set_up_rules as *const () as usize,
         comparar_eng_prm_create_table as *const () as usize,
         comparar_eng_second_create_table as *const () as usize,
-        comparar_eng_prm_create_table_577f70 as *const () as usize,
+        comparar_eng_third_create_table as *const () as usize,
         comparar_eng_first_create_table as *const () as usize,
         comparar_ita_ser_a_set_up_rules as *const () as usize,
-        comparar_ita_ser_a_set_up_rules_6468a0 as *const () as usize,
+        comparar_ita_ser_b_set_up_rules as *const () as usize,
         comparar_ita_ser_c1a_set_up_rules as *const () as usize,
-        comparar_ita_ser_a_set_up_rules_64f920 as *const () as usize,
+        comparar_ita_ser_c1b_set_up_rules as *const () as usize,
         comparar_ita_ser_a_create_table as *const () as usize,
-        comparar_ita_ser_a_create_table_646780 as *const () as usize,
+        comparar_ita_ser_b_create_table as *const () as usize,
         comparar_ita_ser_c1a_create_table as *const () as usize,
-        comparar_ita_ser_a_create_table_64f820 as *const () as usize,
+        comparar_ita_ser_c1b_create_table as *const () as usize,
         comparar_fra_first_set_up_rules as *const () as usize,
         comparar_fra_second_set_up_rules as *const () as usize,
         comparar_fra_third_set_up_rules as *const () as usize,
@@ -7514,39 +7802,39 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_spa_second_set_up_rules as *const () as usize,
         comparar_spa_lower_set_up_rules as *const () as usize,
         comparar_spa_first_create_table as *const () as usize,
-        comparar_spa_first_update_staff_records_for_status as *const () as usize,
+        comparar_ita_ser_c2a_update_staff_records_for_status as *const () as usize,
         comparar_spa_first_set_club_progress as *const () as usize,
         comparar_fra_cfa_create_group_table as *const () as usize,
-        comparar_fra_cfa_create_table as *const () as usize,
+        comparar_fra_lower_create_table as *const () as usize,
         comparar_ita_ser_c1a_set_club_progress as *const () as usize,
-        comparar_fra_cfa_set_club_progress as *const () as usize,
+        comparar_ita_ser_c1b_set_club_progress as *const () as usize,
         comparar_eng_cc_cup_create_round_table as *const () as usize,
-        comparar_eng_cc_cup_create_round_table_56f320 as *const () as usize,
-        comparar_eng_cc_cup_create_round_table_56d640 as *const () as usize,
+        comparar_eng_fa_cup_create_round_table as *const () as usize,
+        comparar_eng_charity_create_round_table as *const () as usize,
         comparar_fra_cup_create_round_table as *const () as usize,
-        comparar_fra_cup_create_round_table_5bcc40 as *const () as usize,
+        comparar_fra_lge_cup_create_round_table as *const () as usize,
         comparar_spa_cup_create_round_table as *const () as usize,
         comparar_fra_super_create_round_table as *const () as usize,
         comparar_spa_super_create_round_table as *const () as usize,
-        comparar_fra_super_create_round_table_666020 as *const () as usize,
+        comparar_jap_super_create_round_table as *const () as usize,
         comparar_eng_cc_cup_collect_entrants as *const () as usize,
         comparar_eng_auto_cup_collect_entrants as *const () as usize,
-        comparar_eng_cc_cup_select_teams as *const () as usize,
+        comparar_eng_charity_select_teams as *const () as usize,
         comparar_fra_cup_collect_entrants as *const () as usize,
-        comparar_fra_cup_collect_entrants_5bd160 as *const () as usize,
+        comparar_fra_lge_cup_collect_entrants as *const () as usize,
         comparar_fra_super_select_teams as *const () as usize,
         comparar_spa_super_select_teams as *const () as usize,
-        comparar_spa_super_select_teams_666160 as *const () as usize,
+        comparar_jap_super_select_teams as *const () as usize,
         comparar_usa_mls_all_stars_create_round_table as *const () as usize,
         comparar_eng_cc_cup_update_for_date as *const () as usize,
-        comparar_eng_cc_cup_update_for_date_570550 as *const () as usize,
+        comparar_eng_fa_cup_update_for_date as *const () as usize,
         comparar_usa_mls_all_stars_update_for_date as *const () as usize,
         comparar_jap_j_cup_create_round_table as *const () as usize,
-        comparar_jap_j_cup_create_round_table_661ff0 as *const () as usize,
-        comparar_jap_j_cup_create_round_table_90b170 as *const () as usize,
+        comparar_jap_emp_cup_create_round_table as *const () as usize,
+        comparar_usa_open_cup_create_round_table as *const () as usize,
         comparar_jap_j_cup_collect_entrants as *const () as usize,
-        comparar_jap_j_cup_collect_entrants_90b530 as *const () as usize,
-        comparar_jap_j_cup_collect_entrants_6624f0 as *const () as usize,
+        comparar_usa_open_cup_collect_entrants as *const () as usize,
+        comparar_jap_emp_cup_collect_entrants as *const () as usize,
         comparar_get_squad_number as *const () as usize,
         comparar_club_uses_squad_numbers as *const () as usize,
         comparar_set_squad_number as *const () as usize,
@@ -7565,50 +7853,50 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_construct_poland_rules as *const () as usize,
         comparar_construct_finland_rules as *const () as usize,
         comparar_argentina_rules_init_transfer_windows as *const () as usize,
-        comparar_argentina_rules_init_transfer_windows_7d3df0 as *const () as usize,
+        comparar_portugal_rules_init_transfer_windows as *const () as usize,
         comparar_construct_korea_rules as *const () as usize,
         comparar_greece_rules_init_transfer_windows as *const () as usize,
-        comparar_greece_rules_init_transfer_windows_7ec7e0 as *const () as usize,
-        comparar_greece_rules_init_transfer_windows_424c00 as *const () as usize,
+        comparar_russia_rules_init_transfer_windows as *const () as usize,
+        comparar_belgium_rules_init_transfer_windows as *const () as usize,
         comparar_process_euro_registration as *const () as usize,
         comparar_create_default_table as *const () as usize,
         comparar_build_venue_list as *const () as usize,
         comparar_bra_nat_first_create_table as *const () as usize,
-        comparar_bra_nat_first_create_table_42ca70 as *const () as usize,
+        comparar_bra_nat_second_create_table as *const () as usize,
         comparar_bra_nat_third_create_table as *const () as usize,
         comparar_bra_reg_bahia_create_table as *const () as usize,
         comparar_bra_reg_central_load_region_clubs as *const () as usize,
         comparar_bra_reg_gaucho_load_region_clubs as *const () as usize,
         comparar_bra_reg_goias_create_table as *const () as usize,
         comparar_bra_reg_minas_gerais_create_table as *const () as usize,
-        comparar_bra_reg_goias_create_table_435d80 as *const () as usize,
+        comparar_bra_reg_north_create_table as *const () as usize,
         comparar_bra_reg_northeast_create_table as *const () as usize,
         comparar_bra_reg_parana_create_table as *const () as usize,
         comparar_bra_reg_pern_create_table as *const () as usize,
         comparar_bra_reg_rio_create_table as *const () as usize,
-        comparar_bra_reg_rio_create_table_43bb70 as *const () as usize,
-        comparar_bra_reg_rio_create_table_43cc40 as *const () as usize,
+        comparar_bra_reg_santa_create_table as *const () as usize,
+        comparar_bra_reg_sp_create_table as *const () as usize,
         comparar_jap_j1_create_table as *const () as usize,
-        comparar_jap_j1_create_table_665030 as *const () as usize,
+        comparar_jap_j2_create_table as *const () as usize,
         comparar_aus_nsl_create_table as *const () as usize,
         comparar_bra_reg_bahia_create_semi_final_stage as *const () as usize,
-        comparar_bra_reg_bahia_create_semi_final_stage_4360c0 as *const () as usize,
+        comparar_bra_reg_north_create_semi_final_stage as *const () as usize,
         comparar_bra_reg_northeast_create_semi_final_stage as *const () as usize,
         comparar_bra_reg_pern_create_semi_final_stage as *const () as usize,
-        comparar_bra_reg_pern_create_semi_final_stage_43bf50 as *const () as usize,
-        comparar_bra_reg_pern_create_semi_final_stage_43cf80 as *const () as usize,
+        comparar_bra_reg_santa_create_semi_final_stage as *const () as usize,
+        comparar_bra_reg_sp_create_semi_final_stage as *const () as usize,
         comparar_bra_reg_gaucho_create_knockout_stage as *const () as usize,
         comparar_bra_reg_central_create_knockout_stage as *const () as usize,
         comparar_bra_reg_goias_create_knockout_stage as *const () as usize,
         comparar_ita_ser_a_update_for_date as *const () as usize,
-        comparar_ita_ser_a_update_for_date_647050 as *const () as usize,
+        comparar_ita_ser_b_update_for_date as *const () as usize,
         comparar_ita_league_sort_clubs_level_on_points as *const () as usize,
         comparar_ita_ser_a_update_staff_records_for_status as *const () as usize,
         comparar_ita_ser_c1a_advance_stage as *const () as usize,
         comparar_create_playoff_stages as *const () as usize,
-        comparar_ita_ser_c1a_advance_stage_64fba0 as *const () as usize,
+        comparar_ita_ser_c1b_advance_stage as *const () as usize,
         comparar_create_play_off_stages as *const () as usize,
-        comparar_ita_ser_c1a_advance_stage_578330 as *const () as usize,
+        comparar_eng_third_advance_stage as *const () as usize,
         comparar_construct_eng_prm as *const () as usize,
         comparar_construct_eng_first as *const () as usize,
         comparar_construct_eng_second as *const () as usize,
@@ -7630,9 +7918,9 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_destroy_fra_cfa as *const () as usize,
         comparar_destroy_fra_lower as *const () as usize,
         comparar_create_fixed_fixtures as *const () as usize,
-        comparar_ita_ser_a_set_up_fixed_fixtures as *const () as usize,
+        comparar_ita_ser_b_set_up_fixed_fixtures as *const () as usize,
         comparar_ita_ser_c1a_set_up_fixed_fixtures as *const () as usize,
-        comparar_fra_first_set_up_fixed_fixtures as *const () as usize,
+        comparar_ita_ser_c1b_set_up_fixed_fixtures as *const () as usize,
         comparar_stub_return_one_ret8 as *const () as usize,
         comparar_stub_return_one_ret4 as *const () as usize,
         comparar_set_fixture_venue as *const () as usize,
@@ -7640,12 +7928,12 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_calculate_match_attendance as *const () as usize,
         comparar_fra_third_create_schedule as *const () as usize,
         comparar_fra_second_create_schedule as *const () as usize,
-        comparar_fra_third_create_schedule_5bd920 as *const () as usize,
+        comparar_fra_lower_create_schedule as *const () as usize,
         comparar_fra_cfa_create_schedule as *const () as usize,
         comparar_ita_ser_c1a_create_schedule as *const () as usize,
-        comparar_fra_cfa_create_schedule_64ef30 as *const () as usize,
+        comparar_ita_ser_c1b_create_schedule as *const () as usize,
         comparar_ita_ser_a_create_schedule as *const () as usize,
-        comparar_ita_ser_a_create_schedule_645af0 as *const () as usize,
+        comparar_ita_ser_b_create_schedule as *const () as usize,
         comparar_fra_first_create_schedule as *const () as usize,
         comparar_bra_reg_minas_gerais_advance_stage as *const () as usize,
         comparar_bra_reg_minas_gerais_create_final_stage as *const () as usize,
@@ -7657,12 +7945,12 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_bra_reg_rio_create_final_stage as *const () as usize,
         comparar_bra_reg_rio_record_season_honours as *const () as usize,
         comparar_ita_cup_create_schedule as *const () as usize,
-        comparar_ita_cup_create_schedule_63cf90 as *const () as usize,
-        comparar_ita_cup_create_round_table as *const () as usize,
-        comparar_ita_cup_create_round_table_63c890 as *const () as usize,
+        comparar_ita_c_cup_create_schedule as *const () as usize,
+        comparar_ita_super_create_round_table as *const () as usize,
+        comparar_ita_c1_super_create_round_table as *const () as usize,
         comparar_ita_cup_select_entrants as *const () as usize,
-        comparar_ita_cup_select_entrants_63dfe0 as *const () as usize,
-        comparar_ita_cup_init_team_list as *const () as usize,
+        comparar_ita_c_cup_select_entrants as *const () as usize,
+        comparar_ita_super_init_team_list as *const () as usize,
         comparar_bra_cup_create_round_table as *const () as usize,
         comparar_bra_cup_build_team_table as *const () as usize,
         comparar_bra_cup_set_up_rounds as *const () as usize,
@@ -7670,7 +7958,7 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_conmebol_merc_create_schedule as *const () as usize,
         comparar_conmebol_merc_select_invited_clubs as *const () as usize,
         comparar_eng_second_create_schedule as *const () as usize,
-        comparar_eng_second_create_schedule_5770e0 as *const () as usize,
+        comparar_eng_third_create_schedule as *const () as usize,
         comparar_eng_first_create_schedule as *const () as usize,
         comparar_eng_prm_create_schedule as *const () as usize,
         comparar_spa_first_create_schedule as *const () as usize,
@@ -7682,26 +7970,26 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_bra_reg_gaucho_advance_stage as *const () as usize,
         comparar_bra_reg_goias_start_new_season as *const () as usize,
         comparar_bra_reg_goias_advance_stage as *const () as usize,
-        comparar_bra_reg_goias_start_new_season_435e80 as *const () as usize,
-        comparar_bra_reg_goias_advance_stage_436030 as *const () as usize,
+        comparar_bra_reg_north_start_new_season as *const () as usize,
+        comparar_bra_reg_north_advance_stage as *const () as usize,
         comparar_bra_reg_northeast_start_new_season as *const () as usize,
         comparar_bra_reg_northeast_advance_stage as *const () as usize,
         comparar_bra_reg_pern_start_new_season as *const () as usize,
         comparar_bra_reg_pern_advance_stage as *const () as usize,
-        comparar_bra_reg_pern_start_new_season_43bd10 as *const () as usize,
-        comparar_bra_reg_pern_advance_stage_43bec0 as *const () as usize,
-        comparar_bra_reg_pern_start_new_season_43cd40 as *const () as usize,
-        comparar_bra_reg_pern_advance_stage_43cef0 as *const () as usize,
+        comparar_bra_reg_santa_start_new_season as *const () as usize,
+        comparar_bra_reg_santa_advance_stage as *const () as usize,
+        comparar_bra_reg_sp_start_new_season as *const () as usize,
+        comparar_bra_reg_sp_advance_stage as *const () as usize,
         comparar_spa_second_create_schedule as *const () as usize,
         comparar_spa_lower_create_schedule as *const () as usize,
         comparar_construct_fra_first as *const () as usize,
         comparar_bra_nat_first_advance_stage as *const () as usize,
         comparar_bra_nat_first_create_play_off_stage as *const () as usize,
-        comparar_bra_nat_first_advance_stage_42cdd0 as *const () as usize,
-        comparar_bra_nat_first_create_play_off_stage_42ce60 as *const () as usize,
+        comparar_bra_nat_second_advance_stage as *const () as usize,
+        comparar_bra_nat_second_create_play_off_stage as *const () as usize,
         comparar_bra_nat_first_start_new_season as *const () as usize,
         comparar_bra_nat_first_process_promotion_relegation_chain as *const () as usize,
-        comparar_bra_nat_first_start_new_season_42cc10 as *const () as usize,
+        comparar_bra_nat_second_start_new_season as *const () as usize,
         comparar_jap_j1_advance_stage as *const () as usize,
         comparar_create_championship_final_stage as *const () as usize,
         comparar_jap_j1_start_new_season as *const () as usize,
@@ -7714,23 +8002,23 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_bra_champ_cup_create_schedule as *const () as usize,
         comparar_con_merc_cup_create_schedule as *const () as usize,
         comparar_eur_super_cup_create_round_table as *const () as usize,
-        comparar_bra_champ_cup_create_round_table as *const () as usize,
+        comparar_asia_super_cup_create_round_table as *const () as usize,
         comparar_asia_club_champ_create_round_table as *const () as usize,
         comparar_asia_cup_winner_create_round_table as *const () as usize,
         comparar_eng_auto_cup_create_round_table as *const () as usize,
         comparar_goldcup_create_schedule as *const () as usize,
         comparar_african_nations_create_schedule as *const () as usize,
-        comparar_goldcup_create_schedule_58b560 as *const () as usize,
+        comparar_fifa_confed_create_schedule as *const () as usize,
         comparar_intertoto_cup_create_round_table as *const () as usize,
-        comparar_intertoto_cup_create_round_table_92b770 as *const () as usize,
-        comparar_intertoto_cup_create_round_table_632340 as *const () as usize,
+        comparar_world_club_cup_create_round_table as *const () as usize,
+        comparar_inter_amer_cup_create_round_table as *const () as usize,
         comparar_con_champ_create_round_table as *const () as usize,
         comparar_uefa_cup_create_round_table as *const () as usize,
         comparar_intertoto_cup_collect_entrants as *const () as usize,
         comparar_intertoto_cup_collect_club_list as *const () as usize,
         comparar_eur_super_cup_select_teams as *const () as usize,
-        comparar_eur_super_cup_select_teams_410a50 as *const () as usize,
-        comparar_eur_super_cup_init_team_list as *const () as usize,
+        comparar_asia_super_cup_select_teams as *const () as usize,
+        comparar_ita_c1_super_init_team_list as *const () as usize,
         comparar_oceania_club_champ_create_schedule as *const () as usize,
         comparar_asia_club_champ_build_team_table as *const () as usize,
         comparar_create_team_entries as *const () as usize,
@@ -7748,10 +8036,10 @@ pub unsafe fn instalar(comparando: bool) {
         comparar_usa_mls_create_playoff_stage as *const () as usize,
         comparar_usa_mls_create_final_stage as *const () as usize,
         comparar_bra_cup_start_new_season as *const () as usize,
-        comparar_bra_cup_start_new_season_662950 as *const () as usize,
+        comparar_jap_emp_cup_start_new_season as *const () as usize,
         comparar_jap_j_cup_start_new_season as *const () as usize,
-        comparar_usa_mls_all_stars_start_new_season as *const () as usize,
-        comparar_usa_mls_all_stars_start_new_season_90b790 as *const () as usize,
+        comparar_jap_super_start_new_season as *const () as usize,
+        comparar_usa_open_cup_start_new_season as *const () as usize,
         comparar_usa_mls_all_stars_start_new_season_90a760 as *const () as usize,
         comparar_set_up_teams as *const () as usize,
         comparar_conmebol_liber_update_for_date as *const () as usize,
@@ -8142,7 +8430,7 @@ unsafe fn grade_inconsistente(m: usize) -> Option<String> {
 }
 
 pub unsafe fn autoteste(casos: u64) {
-    let mut s = Sorteio(0x4d4f544f52);
+    let mut s = TestRng(0x4d4f544f52);
     let mut motor = vec![0u8; 0x10000]; // campos ate 0xf5f5 (estado do lado)
     let mut tabelas = vec![vec![0u16; 11]; 4];
     let mut jogador = vec![0u8; 0x200];
@@ -8168,7 +8456,7 @@ pub unsafe fn autoteste(casos: u64) {
         for _ in 0..casos {
             for t in tabelas.iter_mut() {
                 for v in t.iter_mut() {
-                    *v = s.proximo() as u16;
+                    *v = s.next_u64() as u16;
                 }
             }
             let m = motor.as_mut_ptr() as usize;
@@ -8176,12 +8464,12 @@ pub unsafe fn autoteste(casos: u64) {
                 let t = &tabelas[(campo - 0x8ebc) / 4 + lado];
                 *((m + campo + lado * 4) as *mut usize) = t.as_ptr() as usize;
             }
-            let x = s.proximo();
+            let x = s.next_u64();
             *((m + 0x8eaf) as *mut u8) = x as u8;
             *((m + 0x8eb0) as *mut u8) = (x >> 8) as u8;
             *((m + 0x8ed8) as *mut u16) = (x >> 16) as u16;
             let j = jogador.as_mut_ptr() as usize;
-            let y = s.proximo();
+            let y = s.next_u64();
             *((j + 0x19) as *mut i8) = (y % 15) as i8 - 2; // -2..=12
             *((j + 0x27) as *mut i8) = ((y >> 8) % 2) as i8;
             *((j + 0x103) as *mut i8) = ((y >> 16) % 13) as i8 - 2;
@@ -8194,12 +8482,12 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((y >> 52) % 4) as usize];
             comparar_condicao(j);
             // coordenadas com diferencas de -5..=5 (a tabela global e lida do proprio jogo)
-            let z = s.proximo();
+            let z = s.next_u64();
             let (a, b) = ((z % 20) as i8, ((z >> 8) % 20) as i8);
             let (c, d) = (a + ((z >> 16) % 11) as i8 - 5, b + ((z >> 24) % 11) as i8 - 5);
             comparar_by_difference(m, a, b, c, d);
             // rotinas que tiram lado e valores do proprio jogador
-            let w = s.proximo();
+            let w = s.next_u64();
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][(w % 4) as usize];
             *((j + 0x19) as *mut i8) = ((w >> 4) % 15) as i8 - 2;
             *((j + 0x102) as *mut i8) = ((w >> 8) % 10) as i8 - 1;
@@ -8222,7 +8510,7 @@ pub unsafe fn autoteste(casos: u64) {
             // terceira leva (com o lado 0 ou 1 ainda valendo: 0x6f4600 indexa o bloco do lado).
             // 0x6f4600 sempre tem motor (com 0x19e zerado a original le o endereco 0 e cai).
             *((j + 0x19e) as *mut usize) = m;
-            let u = s.proximo();
+            let u = s.next_u64();
             for k in 0..16 {
                 *((m + 0x91e2 + 6371 * ((j + 0x27) as *const u8).read() as usize + 0x5b4 + k) as *mut u8) = (u >> (k * 4)) as u8;
             }
@@ -8237,7 +8525,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_can_choose(m, if (u >> 33) % 8 == 0 { 0 } else { j }, ((u >> 36) % 10) as i8 - 1, ((u >> 40) % 15) as i8 - 2);
             *((j + 0x27) as *mut i8) = lado_real;
             // direcao: coordenadas vizinhas (inclusive o mesmo ponto e os casos fixos), atributos
-            let v = s.proximo();
+            let v = s.next_u64();
             let pp = pessoa.as_mut_ptr() as usize;
             *((j + 0x6d) as *mut usize) = pp;
             *((pp + 0x30) as *mut i8) = ((v >> 4) % 21) as i8;
@@ -8256,7 +8544,7 @@ pub unsafe fn autoteste(casos: u64) {
             let (a, b) = if v % 3 == 1 { (c, d) } else { (a, b) };
             comparar_aim_set_facing_direction(j, a, b, c, d);
             // quarta leva (ponto flutuante): valores em volta das faixas, negativos e zero
-            let q = s.proximo();
+            let q = s.next_u64();
             let faixas = [9500.0f32, 8750.0, 7750.0, 0.0, 10000.0, 100.0];
             let base = faixas[(q % 6) as usize];
             *((j + 0x4d) as *mut f32) = base + ((q >> 8) % 2001) as f32 / 10.0 - 100.0;
@@ -8268,7 +8556,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x19a) as *mut i16) = ((q >> 54) % 400) as i16 - 20;
             comparar_facing(j, byte(j, 0x102).wrapping_add(((q >> 58) % 11) as i8 - 5), byte(j, 0x103).wrapping_add(((q >> 61) % 7) as i8 - 3));
             // quinta leva
-            let g = s.proximo();
+            let g = s.next_u64();
             let gp = grupo.as_mut_ptr() as usize;
             for (k, jog) in jogadores.iter_mut().enumerate() {
                 let jp = jog.as_mut_ptr() as usize;
@@ -8281,7 +8569,7 @@ pub unsafe fn autoteste(casos: u64) {
             let lado_g = ((g >> 10) % 2) as i8;
             let modo = [0i8, 1, 2, 2][((g >> 12) % 4) as usize];
             comparar_procurar(m, lado_g, gp, (g >> 14) as u32, (g >> 20) as u32, (g >> 26) as u32, (g >> 32) as u32, modo);
-            let h = s.proximo();
+            let h = s.next_u64();
             *((j + 0x27) as *mut i8) = [0i8, 1, 2][(h % 3) as usize];
             *((j + 0x102) as *mut i8) = ((h >> 2) % 9) as i8 - 1;
             *((j + 0x103) as *mut i8) = ((h >> 6) % 14) as i8 - 1;
@@ -8297,7 +8585,7 @@ pub unsafe fn autoteste(casos: u64) {
             let mut saida = 0xffffu16;
             comparar_classificar(j, codigo, a, b, a + ((h >> 51) % 11) as i8 - 5, b + ((h >> 55) % 11) as i8 - 5, ((h >> 59) % 32) as f32 / 3.0, &mut saida);
             // sexta leva: distancias e os dois blocos de 20 jogadores no motor
-            let e = s.proximo();
+            let e = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 let z = e.rotate_left(k as u32 * 3);
@@ -8317,7 +8605,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_distance_to_goal(jj);
             comparar_mais_perto(m, jj);
             // setima leva: grade com listas validas, linhas em todas as direcoes, passe com sorteio
-            let w2 = s.proximo();
+            let w2 = s.next_u64();
             for cel in 0..108usize {
                 let g = m + 0x215e + 90 * cel;
                 for l in 0..2usize {
@@ -8335,7 +8623,7 @@ pub unsafe fn autoteste(casos: u64) {
                 _ => pt(w2 >> 24),
             };
             comparar_na_linha(m, x1, y1, x2, y2);
-            let v2 = s.proximo();
+            let v2 = s.next_u64();
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x27) as *mut i8) = (v2 % 2) as i8;
             *((j + 0x102) as *mut i8) = ((v2 >> 2) % 9) as i8;
@@ -8348,7 +8636,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_consegue(j, a, b, ((v2 >> 34) % 3 != 0) as i8, ((v2 >> 36) % 40) as f32 / 3.0, ((v2 >> 42) % 30) as f32 / 4.0, ptr);
             comparar_in_the_box(j);
             // oitava leva: posicionamento (formacoes com margem: o indice fica negativo com posicao < 0)
-            let o2 = s.proximo();
+            let o2 = s.next_u64();
             for (l, f) in formacoes.iter_mut().enumerate() {
                 for (k, b) in f.iter_mut().enumerate() {
                     *b = (o2.rotate_left((k % 64) as u32) as u8) ^ (k as u8).wrapping_mul(37) ^ (l as u8);
@@ -8370,7 +8658,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8eae) as *mut i8) = ((o2 >> 15) % 3) as i8;
             *((m + 0x8eb1) as *mut i8) = ((o2 >> 17) % 3) as i8 - 1;
             *((m + 0xf57a) as *mut usize) = if (o2 >> 19) % 3 == 0 { 0 } else { jogadores[((o2 >> 21) % 22) as usize].as_ptr() as usize };
-            let p2 = s.proximo();
+            let p2 = s.next_u64();
             *((j + 0x27) as *mut i8) = (p2 % 2) as i8;
             *((j + 0x19) as *mut i8) = ((p2 >> 1) % 13) as i8 - 1;
             *((j + 0x102) as *mut i8) = ((p2 >> 5) % 12) as i8 - 2;
@@ -8382,7 +8670,7 @@ pub unsafe fn autoteste(casos: u64) {
             let (mut sx, mut sy) = (0x55i8, 0x55i8);
             comparar_position_place_players(m, j, &mut sx, &mut sy, 0);
             // nona leva: linhas defensivas sobre os dois blocos de 20 (ja preenchidos acima), y variado
-            let y2 = s.proximo();
+            let y2 = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 *((p + 0x103) as *mut i8) = (y2.rotate_left(k as u32 * 2) % 16) as i8 - 2;
@@ -8390,8 +8678,8 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_linhas(m);
             // decima leva: atualizacao do jogador (todos os papeis, atributos e faixas variados)
-            let z = s.proximo();
-            let z2 = s.proximo();
+            let z = s.next_u64();
+            let z2 = s.next_u64();
             // cada campo: zero com chance 1/2 (combinacoes "tudo parado"), senao 1..=24; 1 e 2 ate 100
             for (k, o) in [1usize, 2, 3, 4, 5, 6, 7, 8, 9, 0xb, 0xc, 0xf, 0x10, 0x11].iter().enumerate() {
                 let v = z.rotate_left(k as u32 * 5);
@@ -8421,8 +8709,8 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_atualizar(j);
             *((j + 0x19e) as *mut usize) = m;
             // decima primeira leva
-            let q1 = s.proximo();
-            let q2 = s.proximo();
+            let q1 = s.next_u64();
+            let q2 = s.next_u64();
             *((j + 0x4d) as *mut f32) = ((q1 >> 2) % 12000) as f32 / 1.5;
             for o in 0x10eusize..=0x117 {
                 *((j + o) as *mut i8) = (q1.rotate_left(o as u32) % 30) as i8 - 3;
@@ -8455,7 +8743,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_off_centre(((q1 >> 40) % 12) as i8 - 2);
             comparar_alem(m, ((q1 >> 44) % 14) as i8 - 1, ((q1 >> 48) % 3) as i8, ((q1 >> 50) & 1) as i8);
             // decima segunda leva
-            let g2 = s.proximo();
+            let g2 = s.next_u64();
             comparar_ler_8ea7(m);
             comparar_ler_8ea8(m);
             comparar_ler_8ea9(m);
@@ -8482,7 +8770,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_extremos(m);
             // decima terceira leva (blocos ja preenchidos; alguns 0x2b zerados; grade com contagens)
-            let h3 = s.proximo();
+            let h3 = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 if (h3 >> (k % 60)) & 1 == 0 {
@@ -8510,7 +8798,7 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_pressao_ponto(m, ((h3 >> 28) % 2) as i8, a3, b3, ((h3 >> 29) & 1) as i8);
             comparar_smallest_distance(m, ((h3 >> 30) % 2) as i8, a3, b3, ((h3 >> 31) & 1) as i8);
             // decima quarta leva (tabelas com bits de papel variados, inclusive sem nenhum e 0x700)
-            let h4 = s.proximo();
+            let h4 = s.next_u64();
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
                     let r = h4.rotate_left(k as u32 * 7) as u16;
@@ -8524,8 +8812,8 @@ pub unsafe fn autoteste(casos: u64) {
             let alto = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h4 >> 36) % 5) as usize];
             comparar_escolher(m, (alto & !0xff) | ((h4 >> 40) % 2) as u32);
             // decima quinta leva (acessores; extremos das faixas e lados fora de 0/1)
-            let h5 = s.proximo();
-            let h6 = s.proximo();
+            let h5 = s.next_u64();
+            let h6 = s.next_u64();
             *((j + 0x19a) as *mut u16) = h5 as u16;
             comparar_direction(j);
             *((m + 0xf59e) as *mut usize) = if h6 & 1 == 0 { j } else { o };
@@ -8565,8 +8853,8 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_add_disposition(m, ((h5 >> 60) % 2) as i8, (h6 >> 7) as i16);
             // decima sexta leva (tabelas de papel da 14a leva ainda valendo)
-            let h7 = s.proximo();
-            let h8 = s.proximo();
+            let h7 = s.next_u64();
+            let h8 = s.next_u64();
             let delta7 = ((h7 >> 20) % 4000) as i16 - 2000;
             comparar_split_d(m, (h7 % 2) as i8, delta7);
             comparar_split_e(m, ((h7 >> 1) % 2) as i8, delta7);
@@ -8589,8 +8877,8 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x103) as *mut i8) = ((h7 >> 40) % 14) as i8 - 1;
             comparar_in_danger(j);
             // decima setima leva
-            let h9 = s.proximo();
-            let h10 = s.proximo();
+            let h9 = s.next_u64();
+            let h10 = s.next_u64();
             *((m + 0x475a) as *mut i8) = [0i8, 8, 1, 5][(h9 % 4) as usize];
             *((m + 0x4761) as *mut usize) = if (h9 >> 2) % 5 == 0 { 0 } else { j };
             *((j + 0x27) as *mut i8) = [0i8, 1, 2][((h9 >> 5) % 3) as usize];
@@ -8625,8 +8913,8 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_alcanca_ponto(j, xa, ya);
             // decima oitava leva (fichas e pessoas proprias; 0x69 e 0x6d sempre validos no bloco)
-            let h11 = s.proximo();
-            let h12 = s.proximo();
+            let h11 = s.next_u64();
+            let h12 = s.next_u64();
             for (k, f) in fichas.iter_mut().enumerate() {
                 *f = (h11.rotate_left(k as u32) as u32) ^ k as u32;
             }
@@ -8659,8 +8947,8 @@ pub unsafe fn autoteste(casos: u64) {
             let (mut fx, mut fy) = (0u8, 0u8);
             comparar_casa_formacao(m, j, &mut fx, &mut fy);
             // decima nona leva: contagens (zeros, negativas e somas que transbordam) e atributos
-            let h13 = s.proximo();
-            let h14 = s.proximo();
+            let h13 = s.next_u64();
+            let h14 = s.next_u64();
             for k in 0..30usize {
                 let r = h13.rotate_left(k as u32 * 2) ^ h14.rotate_right(k as u32);
                 let v = match r % 6 {
@@ -8687,8 +8975,8 @@ pub unsafe fn autoteste(casos: u64) {
             }
             let alto13 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h13 >> 50) % 5) as usize];
             // vigesima leva: condicao 0x1a2, ficha 0x69 (pessoa com 0x5d) ou nenhuma, byte 0xff, 0x1a6
-            let h15 = s.proximo();
-            let h16 = s.proximo();
+            let h15 = s.next_u64();
+            let h16 = s.next_u64();
             for (k, pe) in pessoas.iter_mut().enumerate() {
                 pe[0x5d] = (h15.rotate_left(k as u32 * 11) % 34) as u8;
             }
@@ -8712,8 +9000,8 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_aplicar_lado(m, ((h16 >> 38) % 2) as i8, fat);
             comparar_escolher_d(m, ((h16 >> 39) % 2) as i8, [2u32, 0, 1, 0x102, (h16 >> 40) as u32][((h16 >> 44) % 5) as usize]);
             // vigesima primeira leva
-            let h17 = s.proximo();
-            let h18 = s.proximo();
+            let h17 = s.next_u64();
+            let h18 = s.next_u64();
             *((j + 0x1bc) as *mut u16) = h17 as u16;
             comparar_read_1bc(j);
             *((j + 0x2b) as *mut u8) = (h17 >> 16) as u8;
@@ -8759,8 +9047,8 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_code_byte(cod | (((h18 >> 15) as u32 & 1) << 15) | ((h17 as u32) & 0xffff0000));
             *alvo_t = antes;
             // vigesima segunda leva
-            let h19 = s.proximo();
-            let h20 = s.proximo();
+            let h19 = s.next_u64();
+            let h20 = s.next_u64();
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
                     *v = [0u16, 1, 0x80, 0x100, 0x200, 0x400, 0x800, 0x880, (h20 >> k) as u16][((h20 >> (k * 4)) % 9) as usize];
@@ -8782,8 +9070,8 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x17) as *mut i8) = ((h19 >> 37) % 26) as i8 - 3;
             comparar_adjust_17(j, if (h19 >> 42) % 4 == 0 { 0 } else { ((h19 >> 44) % 25) as i8 - 12 });
             // vigesima terceira leva: posse (dono anterior, passe do mesmo lado ou nao, zonas, papel 1)
-            let h21 = s.proximo();
-            let h22 = s.proximo();
+            let h21 = s.next_u64();
+            let h22 = s.next_u64();
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
                     *v = if (h22 >> k) & 1 == 0 { 1 } else { (h22 >> (k + 11)) as u16 & 0xfe };
@@ -8811,8 +9099,8 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x4782) as *mut u32) = (h22 >> 13) as u32;
             comparar_take_ball(j);
             // vigesima quarta leva
-            let h23 = s.proximo();
-            let h24 = s.proximo();
+            let h23 = s.next_u64();
+            let h24 = s.next_u64();
             let arb = jogadores[2].as_mut_ptr() as usize;
             let pe24 = pessoas[1].as_mut_ptr();
             *(pe24.add(0x1e) as *mut i16) = [0i16, 151, 150, 349, 350, -3, ((h23 >> 8) % 420) as i16][(h23 % 7) as usize];
@@ -8838,8 +9126,8 @@ pub unsafe fn autoteste(casos: u64) {
             let (mut t24, mut v24) = (0u8, 0u8);
             comparar_decide_foul(arb, jf, if (h24 >> 44) % 2 == 0 { 0x25 } else { (h24 >> 45) as u16 % 64 }, &mut t24, &mut v24);
             // vigesima quinta leva: cartoes (tipo 1 na maioria; 7 e outros tambem)
-            let h25 = s.proximo();
-            let h26 = s.proximo();
+            let h25 = s.next_u64();
+            let h26 = s.next_u64();
             let jc = side_player_slot(m, ((h25 >> 1) % 2) as i8, ((h25 >> 2) % 20) as usize);
             let oc = side_player_slot(m, ((h25 >> 7) % 2) as i8, ((h25 >> 8) % 20) as usize);
             *((jc + 0x24) as *mut u8) = [0u8, 0, 1, 2][((h25 >> 13) % 4) as usize];
@@ -8856,7 +9144,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((jc + 0x19) as *mut i8) = if (h26 >> 36) % 7 == 0 { -1 } else { ((h26 >> 37) % 11) as i8 };
             comparar_punish_move(arb, jc, oc, &mut tc2, ((h26 >> 41) % 90) as i8, ((h26 >> 48) % 30) as i8 - 5, ((h26 >> 54) % 3 == 0) as u8, &mut pc, ((h26 >> 56) % 2) as u8);
             // vigesima sexta leva: o arbitro dentro do motor (0xf5b2: motor, pessoa, valor)
-            let h27 = s.proximo();
+            let h27 = s.next_u64();
             *((m + 0xf5b2) as *mut usize) = m;
             *((m + 0xf5b6) as *mut usize) = if h27 % 4 == 0 { 0 } else { pe24 as usize };
             *((m + 0xf5ba) as *mut u16) = (h27 >> 8) as u16;
@@ -8868,8 +9156,8 @@ pub unsafe fn autoteste(casos: u64) {
             let mut tc4 = [1u8, 1, 7, 2][((h27 >> 48) % 4) as usize];
             comparar_engine_punish_move(m, jc, oc, &mut tc4, ((h27 >> 50) % 90) as i8, ((h27 >> 56) % 30) as i8 - 5, ((h27 >> 61) % 3 == 0) as u8, &mut pc3, ((h27 >> 63) & 1) as u8);
             // vigesima setima leva: impedimento (linhas 0x8eaf/0x8eb0, atacantes perto delas)
-            let h28 = s.proximo();
-            let h29 = s.proximo();
+            let h28 = s.next_u64();
+            let h29 = s.next_u64();
             let l27 = [0i8, 1, 0, 1, 2][(h28 % 5) as usize];
             let (lin0, lin1) = (((h28 >> 3) % 8) as i8 + 2, ((h28 >> 6) % 8) as i8 + 2);
             *((m + 0x8eaf) as *mut i8) = lin0;
@@ -8889,8 +9177,8 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_impedimento(m + 0xf5b2, l27, linha27, y27, pas);
             comparar_motor_impedimento(m, l27, linha27, ((h29 >> 50) % 12) as i8, pas);
             // vigesima oitava leva: cartao pela gravidade (pessoa do arbitro sempre presente aqui)
-            let h30 = s.proximo();
-            let h31 = s.proximo();
+            let h30 = s.next_u64();
+            let h31 = s.next_u64();
             pe24.add(0x25).write([0u8, 2, 3, 6, 7, 12, 13, 18, 19, 30][(h30 % 10) as usize]);
             pe24.add(0x24).write(((h30 >> 4) % 4) as u8);
             *((m + 0xf5b6) as *mut usize) = pe24 as usize;
@@ -8909,7 +9197,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             let _ = h31;
             // vigesima nona leva: atributos da pessoa nos limiares (0x37, 0x43, soma de quatro)
-            let h32 = s.proximo();
+            let h32 = s.next_u64();
             for (k, pe) in pessoas.iter_mut().enumerate() {
                 let r = h32.rotate_left(k as u32 * 13);
                 pe[0x37] = [15u8, 16, 5, 6, 9, 10, (r >> 8) as u8 % 21][(r % 7) as usize];
@@ -8926,7 +9214,7 @@ pub unsafe fn autoteste(casos: u64) {
             let alto32 = [0u32, 0x3f800000, 0x40000000, 0x12345600, 0xffffff00][((h32 >> 50) % 5) as usize];
             comparar_escolher_e(m, (alto32 & !0xff) | ((h32 >> 53) % 2) as u32, if (h32 >> 54) % 3 == 0 { 0x100 } else { (h32 >> 56) as u32 & 0xff });
             // trigesima leva: janela de 55 instantes (indice perto do fim), zonas, periodos
-            let h33 = s.proximo();
+            let h33 = s.next_u64();
             *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 0x100, (h33 >> 4) as u16][(h33 % 4) as usize];
             *((m + 0x8ea8) as *mut i8) = [3i8, 4, 7, 8, -1, 11, ((h33 >> 20) % 14) as i8][((h33 >> 2) % 7) as usize];
             *((m + 0x8e9b) as *mut i8) = [0i8, 53, 54, ((h33 >> 24) % 55) as i8][((h33 >> 6) % 4) as usize];
@@ -8940,7 +9228,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_estatistica_posse(m, [0i8, 1, 2, -1, -2][((h33 >> 30) % 5) as usize], [0u8, 1, 0x80][((h33 >> 32) % 3) as usize]);
             // trigesima primeira leva: resumo (notas nos limites 1 e 10, somas que transbordam)
-            let h34 = s.proximo();
+            let h34 = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 let r = h34.rotate_left(k as u32 * 7);
@@ -8954,7 +9242,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x8ed4) as *mut u16) = [0x1efu16, 0x3de, 7][((h34 >> 6) % 3) as usize];
             comparar_resumo(m, [0i16, 1, 0x3de, 2, -1][((h34 >> 8) % 5) as usize]);
             // trigesima segunda leva: o mais perto no lado (inclusive a propria casa: distancia zero)
-            let h35 = s.proximo();
+            let h35 = s.next_u64();
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
                 let r = h35.rotate_left(k as u32 * 3);
@@ -8965,8 +9253,8 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_closest_on_side(m, ((h35 >> 40) % 2) as i8, ((h35 >> 41) % 12) as i8, ((h35 >> 45) % 9) as i8, [0u8, 1, 2][((h35 >> 49) % 3) as usize]);
             // trigesima terceira leva: o goleiro (papel 1 quase sempre), na area ou fora, perto da bola
-            let h36 = s.proximo();
-            let h37 = s.proximo();
+            let h36 = s.next_u64();
+            let h37 = s.next_u64();
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
                     *v = if (h37 >> k) % 5 == 0 { 2 } else { 1 };
@@ -8992,7 +9280,7 @@ pub unsafe fn autoteste(casos: u64) {
             let alvo_y = yg + ((h37 >> 20) % 5) as i8 - 2;
             comparar_defesa(j, ((h37 >> 24) % 9) as i8, alvo_y, ((h37 >> 28) % 2) as u8, cod, &mut sd, &mut rb);
             // trigesima quarta leva: grade consistente nas duas casas (listas com jogadores validos)
-            let h38 = s.proximo();
+            let h38 = s.next_u64();
             let lj = ((h38 >> 1) % 2) as i8;
             let jm = side_player_slot(m, lj, ((h38 >> 2) % 20) as usize);
             let (ox, oy) = (((h38 >> 7) % 9) as i8, ((h38 >> 11) % 12) as i8);
@@ -9016,8 +9304,8 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0xf582) as *mut usize) = if (h38 >> 50) % 2 == 0 { jm } else { o };
             comparar_move_to(jm, nx, ny);
             // trigesima quinta leva: escolha da casa (grade com contagens pequenas e listas validas)
-            let h39 = s.proximo();
-            let h40 = s.proximo();
+            let h39 = s.next_u64();
+            let h40 = s.next_u64();
             let lc = ((h39 >> 1) % 2) as i8;
             let jc5 = side_player_slot(m, lc, ((h39 >> 2) % 20) as usize);
             *((jc5 + 0x102) as *mut i8) = [0i8, 1, 2, 3, 4, 5, 6, 7, 8][((h39 >> 7) % 9) as usize];
@@ -9054,8 +9342,8 @@ pub unsafe fn autoteste(casos: u64) {
             let (mut sxc, mut syc) = (((h39 >> 44) % 10) as i8 - 1, ((h39 >> 48) % 13) as i8 - 1);
             comparar_choose_square(m, jc5, &mut sxc, &mut syc, ((h39 >> 52) % 16) as u32 | if (h39 >> 56) % 4 == 0 { 0xff00 } else { 0 });
             // trigesima sexta leva: dominio (codigos da tabela, goleiro na area, bola com ou sem dono)
-            let h41 = s.proximo();
-            let h42 = s.proximo();
+            let h41 = s.next_u64();
+            let h42 = s.next_u64();
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x27) as *mut i8) = (h41 % 2) as i8;
             *((j + 0x19) as *mut i8) = ((h41 >> 1) % 11) as i8;
@@ -9080,7 +9368,7 @@ pub unsafe fn autoteste(casos: u64) {
             let (mut a36, mut b36) = (7u8, 7u8);
             comparar_dominio(j, &mut cod36, &mut a36, &mut b36);
             // trigesima setima leva: tracado (linhas nos quatro sentidos, pontos, saidas do campo)
-            let h43 = s.proximo();
+            let h43 = s.next_u64();
             let (tx0, ty0) = (((h43 >> 1) % 11) as i8 - 1, ((h43 >> 5) % 14) as i8 - 1);
             let (tx1, ty1) = if (h43 >> 9) % 8 == 0 { (tx0, ty0) } else { (((h43 >> 12) % 11) as i8 - 1, ((h43 >> 16) % 14) as i8 - 1) };
             let cods = [6i8, 8, 9, 30, 31, 52, 54, 55, 60, 61, 62, 90, 91, 92, 94, 7, 0, 100];
@@ -9095,7 +9383,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_tracar(m, tx0, ty0, tx1, ty1, cod37, (h43 >> 26) as u32 & 0x1ff | 0xabcd0000, (h43 >> 40) as u32 & 0x7);
             // trigesima oitava leva: lista de jogos do dia e placares (normal, prorrogacao, penaltis)
-            let h44 = s.proximo();
+            let h44 = s.next_u64();
             let clubes = [0x1000u32, 0x2000, 0x3000, 0x4000];
             for k in 0..10usize {
                 let jg = jogos.as_mut_ptr() as usize + 0x69 * k + 0x20;
@@ -9116,9 +9404,9 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_venceu(jogo44, [0x1000u32, 0x2000][((h44 >> 40) % 2) as usize]);
             // quadragesima primeira leva: valor do chute (tipos dados e escolhidos, zonas, goleiro)
-            let h45 = s.proximo();
-            let h46 = s.proximo();
-            let h47 = s.proximo();
+            let h45 = s.next_u64();
+            let h46 = s.next_u64();
+            let h47 = s.next_u64();
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x27) as *mut i8) = (h45 % 2) as i8;
             *((j + 0x19) as *mut i8) = ((h45 >> 1) % 11) as i8;
@@ -9149,8 +9437,8 @@ pub unsafe fn autoteste(casos: u64) {
             let mut som41 = 0u16;
             comparar_valor_chute(j, &mut tc41, &mut som41);
             // quadragesima segunda leva: forca do time (papeis, atributos nas bordas, competicao, reputacoes)
-            let h48 = s.proximo();
-            let h49 = s.proximo();
+            let h48 = s.next_u64();
+            let h49 = s.next_u64();
             let l42 = (h48 % 2) as i8;
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
@@ -9209,8 +9497,8 @@ pub unsafe fn autoteste(casos: u64) {
             }
             comparar_team_strength(m, l42);
             // quadragesima terceira leva: pontape inicial (grade consistente, formacoes com casas distintas)
-            let h50 = s.proximo();
-            let h51 = s.proximo();
+            let h50 = s.next_u64();
+            let h51 = s.next_u64();
             core::ptr::write_bytes((m + 0x215e) as *mut u8, 0, 90 * 108);
             for (l, f) in formacoes.iter_mut().enumerate() {
                 let base = f.as_mut_ptr() as usize + 1200 + if l == 1 { 0xa6 } else { 0x9e };
@@ -9296,8 +9584,8 @@ pub unsafe fn autoteste(casos: u64) {
             // quinquagesima segunda leva: tirar de campo (grade consistente do pontape, marcacoes, modos,
             // goleiro guardado, tecnico humano com as globais trocadas durante o teste)
             if grade47.is_none() {
-                let h60 = s.proximo();
-                let h61 = s.proximo();
+                let h60 = s.next_u64();
+                let h61 = s.next_u64();
                 let lj = ((h60 >> 1) % 2) as usize;
                 let jt = m + 0x4796 + 8920 * lj + ((h60 >> 2) % 20) as usize * 0x1be;
                 for k in 0..40usize {
@@ -9359,7 +9647,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *(G_STAFF_TABLE as *mut usize) = fichas56.as_mut_ptr() as usize;
                     let mut pessoas56 = vec![[0u8; 0x30]; 20];
                     let mut excl56 = [0u8; 40];
-                    let r0 = s.proximo();
+                    let r0 = s.next_u64();
                     let lado56 = (r0 % 2) as i8;
                     // os blocos do lado voltam como estavam no fim (fichas e pessoas daqui sao locais;
                     // as coordenadas nao mudam, para nao desfazer a grade)
@@ -9367,13 +9655,13 @@ pub unsafe fn autoteste(casos: u64) {
                     let antes_bloco56 = core::slice::from_raw_parts(bloco56 as *const u8, 20 * 0x1be).to_vec();
                     let tab = *((m + 0x8ebc + 4 * lado56 as usize) as *const usize) as *mut u16;
                     for i in 0..11 {
-                        let z = s.proximo();
+                        let z = s.next_u64();
                         *tab.add(i) = [1u16, 0x40, 0x41, 0, 2, z as u16][(z % 6) as usize];
                     }
                     for k in 0..20usize {
                         let q = side_player_slot(m, lado56, k);
-                        let z = s.proximo();
-                        let z2 = s.proximo();
+                        let z = s.next_u64();
+                        let z2 = s.next_u64();
                         *((q + 0x19) as *mut i8) = [0i8, 3, 7, 10, 11, 12, -1, 5][(z % 8) as usize];
                         *((q + 0x27) as *mut i8) = lado56;
                         *((q + 0x69) as *mut usize) = fichas56.as_mut_ptr() as usize + 110 * k;
@@ -9424,7 +9712,7 @@ pub unsafe fn autoteste(casos: u64) {
                             *((m + 0x904d + 208 * lado56 as usize) as *mut usize) = tec60.as_ptr() as usize;
                         }
                         for b in 0..50usize {
-                            let z = s.proximo();
+                            let z = s.next_u64();
                             *((reg + 0x1e05 + 4 * b) as *mut i32) = if z % 4 == 0 { ((z >> 8) % 20) as i32 } else { -1 };
                         }
                     }
@@ -9440,7 +9728,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             // quadragesima quarta leva: bola rolando (impulso, direcoes nas bordas, saidas do campo)
-            let h52 = s.proximo();
+            let h52 = s.next_u64();
             *((m + 0xf582) as *mut usize) = if h52 % 9 == 0 { j } else { 0 };
             *((m + 0xf57a) as *mut usize) = if (h52 >> 4) % 9 == 0 { o } else { 0 };
             *((m + 0x8eaa) as *mut i8) = [0i8, 1, 1, 1, 2, 3, 5, -1][((h52 >> 8) % 8) as usize];
@@ -9464,7 +9752,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *(G_ACTION_ORDER_MATCH_ENGINE as *mut u32) = g67;
             }
             // quadragesima quinta leva: teste de condicao (condicao 0..100, abaixo de 1 divide por zero)
-            let h53 = s.proximo();
+            let h53 = s.next_u64();
             let cond = [0.0f32, 0.5, 0.999, 1.0, 1.5, 100.0, 99.99, 10.0, 31.62, ((h53 >> 8) % 100_001) as f32 / 1000.0][((h53 >> 4) % 10) as usize];
             *((j + 0x1a2) as *mut f32) = cond;
             *((j + 0x1a6) as *mut usize) = if (h53 >> 30) % 2 == 0 { o } else { 0 };
@@ -9472,7 +9760,7 @@ pub unsafe fn autoteste(casos: u64) {
             let cod53 = [1i8, 2, 3, 4, 5, 0, 6, -1, 1, 2, 5][((h53 >> 35) % 11) as usize];
             comparar_condition_test(j, cod53, alvo53);
             // quadragesima sexta leva: preferencias (nulos, cada uma das 3 vagas, ausente) e marca por posicao
-            let h54 = s.proximo();
+            let h54 = s.next_u64();
             let pf = prefs46.as_mut_ptr() as usize;
             let pe46 = pessoa46.as_mut_ptr() as usize;
             let cand = [j, o, 0, 0x1234usize]; // 0: vaga vazia (o alvo nulo nao pode casar com ela)
@@ -9496,7 +9784,7 @@ pub unsafe fn autoteste(casos: u64) {
             let ficha54: *const u32 = if (h54 >> 52) % 4 == 0 { core::ptr::null() } else { &v54 };
             comparar_mark_position(base54, ((h54 >> 54) % 17) as i8 - 1, ficha54);
             // quadragesima oitava leva: folhas de outros modulos (globais do jogo trocadas durante o teste)
-            let h55 = s.proximo();
+            let h55 = s.next_u64();
             let globais = [0xae2378usize, 0xae2364, 0xae2d0c, 0xae235c, 0xae2350];
             let antes55: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
             comparar_units_digit([0i32, 9, 10, 999, 1000, 1001, -1, -10, -999, i32::MIN, ((h55 >> 3) % 3000) as i32 - 1000][((h55 >> 60) % 11) as usize]);
@@ -9525,7 +9813,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             // quadragesima nona leva: tecnico humano (indices nas bordas, sem pessoa pelo tecnico atual),
             // codigos de casa (todos os validos e vizinhos) e mascaras de formacao
-            let h56 = s.proximo();
+            let h56 = s.next_u64();
             let globais56 = [0xae2364usize, 0xb77c7a];
             let antes56: Vec<u32> = globais56.iter().map(|&a| *(a as *const u32)).collect();
             let npes56 = 1000 + ((h56 >> 2) % 50) as i32;
@@ -9582,7 +9870,7 @@ pub unsafe fn autoteste(casos: u64) {
                 comparar_manager_9a06(obj56.as_ptr() as usize, quem62, sp);
                 // sexagesima terceira leva: clube controlado por humano (clube, selecao e segunda selecao
                 // que volta para a principal; tecnico do clube, outro ou nenhum; com e sem tatica)
-                let h63 = s.proximo();
+                let h63 = s.next_u64();
                 let globais63 = [0xb63c98usize, 0xae235c, 0xae2350, 0xae23b4, 0xae23a8];
                 let antes63: Vec<u32> = globais63.iter().map(|&a| *(a as *const u32)).collect();
                 *(G_HUMAN_MANAGER as *mut usize) = obj56.as_ptr() as usize;
@@ -9646,7 +9934,7 @@ pub unsafe fn autoteste(casos: u64) {
                 // septuagesima quinta leva: nevoa de guerra (data de hoje, quadro de conhecimento,
                 // pessoas sinteticas; os dois lados com o clube humano sintetico)
                 {
-                    let h75 = s.proximo();
+                    let h75 = s.next_u64();
                     let globais75 = [0xae2a60usize, 0xae23bc, 0xae2c90, 0xae2c94];
                     let antes75: Vec<u32> = globais75.iter().map(|&a| *(a as *const u32)).collect();
                     *(G_CURRENT_DATE as *mut u32) = (h75 >> 3) as u32;
@@ -9696,7 +9984,7 @@ pub unsafe fn autoteste(casos: u64) {
                     comparar_chance_to_know(obs75.as_ptr() as usize, (h75 >> 33) as i8);
                     // septuagesima sexta leva: lista de observacao (ids repetidos em +0xf e +0x13, tipos
                     // 11 e outros) e bandeiras do contrato
-                    let h76 = s.proximo();
+                    let h76 = s.next_u64();
                     let mut entradas76 = [0u8; 40 * 37];
                     for k in 0..40usize {
                         let z = h76.rotate_left(k as u32 * 3) ^ (k as u64 * 0x2545);
@@ -9719,7 +10007,7 @@ pub unsafe fn autoteste(casos: u64) {
                     comparar_contract_flags(contrato76.as_ptr() as usize);
                     // septuagesima setima leva: lista encadeada (nos de 10 bytes, desalinhados), palavra
                     // +0xc em registros de 31 bytes, arredondamento e nacoes do grupo
-                    let h77 = s.proximo();
+                    let h77 = s.next_u64();
                     let mut nos77 = [0u8; 10 * 4 + 1];
                     let base77 = nos77.as_mut_ptr() as usize + 1;
                     for k in 0..4usize {
@@ -9753,7 +10041,7 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     // septuagesima oitava leva: competicao que conta (3 globais, tabela de 107 bytes,
                     // objetos com fase, rodadas e a primeira rodada) e as comparacoes de ordenacao
-                    let h78 = s.proximo();
+                    let h78 = s.next_u64();
                     let globais78 = [KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0xae23d0, 0xadadfc];
                     let antes78: Vec<u32> = globais78.iter().map(|&a| *(a as *const u32)).collect();
                     for k in 0..3usize {
@@ -9797,7 +10085,7 @@ pub unsafe fn autoteste(casos: u64) {
                     comparar_order_by_80(qa78.as_ptr(), qb78.as_ptr());
                     // octogesima leva: quadros da nevoa (16, alguns nulos ou inativos; nevoa ligada ou
                     // nao) e a formacao (casas das onze mascaras trocadas, ou casas sorteadas)
-                    let h80 = s.proximo();
+                    let h80 = s.next_u64();
                     let antes_nevoa80 = *(G_ATTRIBUTE_MASKING_ENABLED as *const u8);
                     *(G_ATTRIBUTE_MASKING_ENABLED as *mut u8) = ((h80 >> 1) % 4 != 0) as u8;
                     let mut niveis80 = vec![0u8; 9 * 70];
@@ -9862,7 +10150,7 @@ pub unsafe fn autoteste(casos: u64) {
                     // octogesima primeira leva: casa da vaga (so vagas 0..10: fora delas a original mostra a
                     // caixa de erro) e o criterio pelos bytes do registro (as palavras pedem a configuracao
                     // de 0xae3138, que ainda nao existe aqui; ficam com o jogo real)
-                    let h81 = s.proximo();
+                    let h81 = s.next_u64();
                     for k in 0..0x30usize {
                         form80[0x12d + k] = (h81 >> (k % 56)) as u8 ^ (k as u8).wrapping_mul(13);
                     }
@@ -9874,7 +10162,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let b81 = ((h81 >> 40) as u32) & 0xffff_0000;
                     // octogesima segunda leva: tipos, marcas por pessoa e o registro livre (tabela sintetica,
                     // indice guardado ou nao; nunca 0 registros: a 0x90cfc0(0) nao e caso do jogo)
-                    let h82 = s.proximo();
+                    let h82 = s.next_u64();
                     comparar_type_not_11(((h82 >> 1) % 20) as i8 - 2);
                     comparar_type_11_to_15(((h82 >> 6) % 20) as i8 - 2);
                     let mut marcas82 = vec![0u8; 110 * 12 + 0x100];
@@ -9887,7 +10175,7 @@ pub unsafe fn autoteste(casos: u64) {
                     comparar_read_person_mark(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k82);
                     comparar_clear_person_mark(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h82 >> 19) % 9) as i8 - 2);
                     // octogesima terceira leva: +0x44 (ligar e ler, com sinal) e o endereco do +0x3a
-                    let h83 = s.proximo();
+                    let h83 = s.next_u64();
                     for (k, b) in marcas82.iter_mut().enumerate() {
                         *b = (h83.rotate_left(k as u32 % 64) as u8) ^ (k as u8);
                     }
@@ -9899,7 +10187,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *(G_DATABASE_NAMES_LANGUAGE as *mut u32) = (h83 >> 20) as u32;
                     comparar_database_global_9b5984();
                     // octogesima quarta leva: competicao da pessoa (indice +4 negativo ou nao) e data com marca
-                    let h84 = s.proximo();
+                    let h84 = s.next_u64();
                     let antes84 = *(G_CLUB_COMP_TABLE as *const usize);
                     *(G_CLUB_COMP_TABLE as *mut usize) = 0x0200_0000;
                     for k in 0..10usize {
@@ -9950,7 +10238,7 @@ pub unsafe fn autoteste(casos: u64) {
                 // sexagesima oitava leva: vagas da linha tatica (indices em +2.., +0x52, +0x56) sobre
                 // 30 pessoas sinteticas de 110 bytes; a tabela e restaurada (mark_slot escreve +0x52)
                 {
-                    let h68 = s.proximo();
+                    let h68 = s.next_u64();
                     let mut pessoas68 = [0u8; 110 * 30];
                     for k in 0..30usize {
                         *(pessoas68.as_mut_ptr().add(110 * k) as *mut i32) = 7000 + (k as i32 % 25);
@@ -9985,7 +10273,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
                 // sexagesima nona leva: clube na competicao e clube especial
                 {
-                    let h69 = s.proximo();
+                    let h69 = s.next_u64();
                     let mut cont69 = [[0u8; 0x80]; 2];
                     *(cont69[1].as_mut_ptr() as *mut i32) = 1;
                     let mut nac69 = [[0u8; 0x80]; 3];
@@ -10042,7 +10330,7 @@ pub unsafe fn autoteste(casos: u64) {
                     // septuagesima terceira leva: clube parceiro (globais dos 82 pares e das 3 nacoes com
                     // valores distintos; alguns parceiros -1 e -5 para os dois testes de aceite)
                     {
-                        let h73 = s.proximo();
+                        let h73 = s.next_u64();
                         let nac73 = [KEY_NATION_SPAIN, KEY_NATION_GERMANY, KEY_NATION_PORTUGAL];
                         let mut todos73: Vec<usize> = nac73.to_vec();
                         for &(a, b) in A_B_CLUB_PAIRS.iter().chain(CLUB_PAIRS_B_A.iter()) {
@@ -10079,7 +10367,7 @@ pub unsafe fn autoteste(casos: u64) {
                         }
                         // a partir da vaga 16: parceiros de indice negativo (-5) ainda caem dentro do vetor
                         *(G_CLUB_TABLE as *mut usize) = CLUBES74.as_ptr() as usize + 581 * 16;
-                        let h74 = s.proximo();
+                        let h74 = s.next_u64();
                         let id_p74: i32 = [5i32, 40, 99999][((h74 >> 1) % 3) as usize];
                         let pessoa74 = [id_p74, 0, 0, 0];
                         let mut entrada74 = [0u8; 79];
@@ -10105,7 +10393,7 @@ pub unsafe fn autoteste(casos: u64) {
                         comparar_contract_level(pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
                         // septuagesima nona leva: nota do jogador (motor com o clube73 nos dois lados,
                         // pessoa com o mesmo id, ficha, data de hoje e de nascimento plausiveis)
-                        let h79 = s.proximo();
+                        let h79 = s.next_u64();
                         let mut pessoa79 = [0u8; 0x50];
                         *(pessoa79.as_mut_ptr() as *mut i32) = id_p74;
                         pessoa79[0x22] = (h79 >> 3) as u8;
@@ -10217,7 +10505,7 @@ pub unsafe fn autoteste(casos: u64) {
                 0x402, 0x404, 0x408, 0x410, 0x420, 0x440, 0x802, 0x804, 0x808, 0x810, 0x820, 0x840];
             let c56 = codigos56[((h56 >> 50) % 31) as usize];
             // quinquagesima leva: segunda selecao e placar agregado (empates, gols fora, sem ida, bits de +0x38)
-            let h57 = s.proximo();
+            let h57 = s.next_u64();
             let globais57 = [0xae235cusize, 0xae2350];
             let antes57: Vec<u32> = globais57.iter().map(|&a| *(a as *const u32)).collect();
             *(G_CLUB_COUNT as *mut i32) = 5000;
@@ -10251,12 +10539,12 @@ pub unsafe fn autoteste(casos: u64) {
             let sp = saidas57.as_mut_ptr();
             comparar_aggregate_score(m, ((h57 >> 54) % 2) as i8, sp as *mut i8, sp.add(1) as *mut i8, sp.add(2), sp.add(3), sp.add(4), [0u8, 1, 0x80][((h57 >> 56) % 3) as usize]);
             // quinquagesima primeira leva: marcador direto (papeis com setor e lado, goleiros, fora, distancias)
-            let h58 = s.proximo();
-            let h59 = s.proximo();
+            let h58 = s.next_u64();
+            let h59 = s.next_u64();
             for (ti, t) in tabelas.iter_mut().enumerate() {
                 for (i, v) in t.iter_mut().enumerate() {
                     let _ = (h59, ti, i);
-                    let r = s.proximo(); // um sorteio por entrada: rotacoes do mesmo numero saem correlacionadas
+                    let r = s.next_u64(); // um sorteio por entrada: rotacoes do mesmo numero saem correlacionadas
                     let setor = [1u16, 2, 4, 8, 0x10, 0x20, 0x40, 6, 0x48][(r % 9) as usize];
                     let lado_r = [0x80u16, 0x100, 0x200, 0x400, 0x800, 0x180, 0xa00][((r >> 4) % 7) as usize];
                     *v = setor | lado_r;
@@ -10279,7 +10567,7 @@ pub unsafe fn autoteste(casos: u64) {
                 let mut pessoas59 = vec![0u8; 110 * 24];
                 let pessoas_antes = *(G_STAFF_TABLE as *const usize);
                 *(G_STAFF_TABLE as *mut usize) = pessoas59.as_mut_ptr() as usize;
-                let r0 = s.proximo();
+                let r0 = s.next_u64();
                 let l59 = (r0 % 2) as usize;
                 let o59 = 1 - l59;
                 let blocos = [side_player_slot(m, 0, 0), side_player_slot(m, 1, 0)];
@@ -10290,7 +10578,7 @@ pub unsafe fn autoteste(casos: u64) {
                 let antes_fo = *((form_o + 0x187b) as *const u32);
                 let antes_af = *((m + 0xaf + o59) as *const u8);
                 for k in 0..20usize {
-                    let z = s.proximo();
+                    let z = s.next_u64();
                     let q = side_player_slot(m, o59 as i8, k);
                     *((q + 0x19) as *mut i8) = if z % 5 == 0 { -1 } else { (k % 11) as i8 };
                     *((q + 0x69) as *mut usize) = pessoas59.as_ptr() as usize + 110 * ((z >> 4) % 24) as usize;
@@ -10298,7 +10586,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((q + 0x19e) as *mut usize) = if (z >> 9) % 7 == 0 { 0 } else { m };
                 }
                 for pos in 0..11usize {
-                    let z = s.proximo();
+                    let z = s.next_u64();
                     *((form + 0x5b4 + pos) as *mut u8) = [4u8, 0x14, 0x10, 0, 0x15, 5][(z % 6) as usize];
                     *((form + 0x5bf + 4 * pos) as *mut i32) = if z % 7 == 3 { -1 } else { ((z >> 4) % 24) as i32 };
                 }
@@ -10313,7 +10601,7 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                 }
                 for _ in 0..4 {
-                    let z = s.proximo();
+                    let z = s.next_u64();
                     let j = side_player_slot(m, l59 as i8, (z % 20) as usize);
                     *((j + 0x19e) as *mut usize) = m;
                     *((j + 0x27) as *mut i8) = l59 as i8;
@@ -10358,12 +10646,12 @@ pub unsafe fn autoteste(casos: u64) {
                     0x10000, 0x20000, 0x40000, 0x80000, 0x10_0000, 0x20_0000, 0x40_0000, 0x80_0000, 0x100_0000, 0x200_0000,
                     0x400_0000, 0x800_0000, 0x1000_0000, 0x2000_0000, 0x4000_0000, 0x8000_0000, 1 << 32, 2 << 32];
                 let mais: [u64; 2] = [4 << 32, 8 << 32];
-                let lado58 = (s.proximo() % 2) as usize;
+                let lado58 = (s.next_u64() % 2) as usize;
                 let tabela58 = m + 0x91e2 + 6371 * lado58;
                 for _ in 0..3 {
-                    let z = s.proximo();
+                    let z = s.next_u64();
                     let b = if z % 18 == 0 { mais[((z >> 8) % 2) as usize] } else { bits[((z >> 8) % 34) as usize] };
-                    *((tabela58 + 0x188b + 8 * ((z >> 16) % 11) as usize) as *mut u64) = s.proximo();
+                    *((tabela58 + 0x188b + 8 * ((z >> 16) % 11) as usize) as *mut u64) = s.next_u64();
                     *((tabela58 + 0x187f) as *mut u32) = 0x5555;
                     comparar_set_square(tabela58, ((z >> 16) % 11) as i8, b);
                 }
@@ -10371,14 +10659,14 @@ pub unsafe fn autoteste(casos: u64) {
                 let antes58 = core::slice::from_raw_parts(bloco58 as *const u8, 20 * 0x1be).to_vec();
                 for k in 0..20usize {
                     let q = bloco58 + k * 0x1be;
-                    let z = s.proximo();
+                    let z = s.next_u64();
                     *((q + 0x19) as *mut i8) = if z % 6 == 0 { -1 } else { ((z >> 3) % 11) as i8 };
                     let pd = pessoas[k % 4].as_ptr() as usize;
                     *((q + 0x6d) as *mut usize) = pd;
                     *((q + 0x4d) as *mut f32) = [0.0f32, 5000.0, 7000.5, 8000.0, 8500.0, 9999.9, ((z >> 8) % 10000) as f32][((z >> 24) % 7) as usize];
                 }
                 for pd in pessoas.iter_mut() {
-                    let z = s.proximo();
+                    let z = s.next_u64();
                     pd[0x43] = (z % 21) as u8;
                     pd[0x33] = ((z >> 8) % 21) as u8;
                     pd[0x27] = ((z >> 16) % 21) as u8;
@@ -10389,13 +10677,13 @@ pub unsafe fn autoteste(casos: u64) {
             // quinquagesima terceira leva: marcacao individual (marcas por posicao nos dois lados, fichas)
             for l in 0..2usize {
                 for pos in 0..16usize {
-                    let r = s.proximo();
+                    let r = s.next_u64();
                     *((m + 0x91e2 + 6371 * l + 0x5b4 + pos) as *mut u8) = [0x14u8, 0x10, 4, 0x15, 0, (r >> 8) as u8][(r % 6) as usize];
                 }
             }
             for k in 0..40usize {
                 let p = m + 0x4796 + 8920 * (k / 20) + (k % 20) * 0x1be;
-                let r = s.proximo();
+                let r = s.next_u64();
                 *((p + 0x69) as *mut usize) = if r % 5 == 0 { 0 } else { fichas.as_ptr().add(k) as usize };
             }
             for (k, f) in fichas.iter_mut().enumerate() {
@@ -10415,7 +10703,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *(G_PLAYER_STATS as *mut usize) = est.as_mut_ptr() as usize;
                 let antes_m = *((m + 0x4792) as *const usize);
                 for _ in 0..6 {
-                    let r: Vec<u64> = (0..12).map(|_| s.proximo()).collect();
+                    let r: Vec<u64> = (0..12).map(|_| s.next_u64()).collect();
                     for (i, e) in est.iter_mut().enumerate() {
                         *e = if r[i] % 5 == 0 { 0.0 } else { (r[i] >> 8) as f64 % 4000.0 / 100.0 };
                     }
@@ -10443,12 +10731,12 @@ pub unsafe fn autoteste(casos: u64) {
                     let mut reg = [0u8; 0x20];
                     let mut jog = [0u8; 0x70];
                     let mut ficha = [0u8; 0x10];
-                    let rr = s.proximo();
+                    let rr = s.next_u64();
                     let (rp, jp, fp) = (reg.as_mut_ptr() as usize, jog.as_mut_ptr() as usize, ficha.as_mut_ptr() as usize);
                     *((rp + 0x1b) as *mut usize) = if rr % 23 == 0 { 0 } else { jp };
                     *((jp + 0x69) as *mut usize) = if rr % 19 == 1 { 0 } else { fp };
                     for (i, o) in [8usize, 0xa, 0xc].iter().enumerate() {
-                        let z = s.proximo();
+                        let z = s.next_u64();
                         *((fp + o) as *mut i16) = [0i16, 1, 999, 1000, 3000, 4999, 5000, 9999, 10000, ((z >> 8) % 12000) as i16][((z >> (i * 4)) % 10) as usize];
                     }
                     let alvo = cl[1].as_mut_ptr() as usize;

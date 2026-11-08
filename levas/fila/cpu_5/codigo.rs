@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
             } else {
                 5000
             };
-            crate::comparacao::ramo("cpu_5 rolagem das financas");
+            crate::comparison::branch("cpu_5 rolagem das financas");
             if cpu5_sortear(n) == 0 { // cpu5: a rolagem das finanças
                 return 0x12;
             }
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
             } else {
                 0xa
             };
-            crate::comparacao::ramo("cpu_5 chuva forte");
+            crate::comparison::branch("cpu_5 chuva forte");
             if cpu5_sortear(n) != 0 { // cpu5: o sorteio da chuva forte
                 0
             } else {
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn comparar_get_club_finance(this: usize, clube: usize)
     }
     let r = o(this, clube);
     let n = get_club_finance(this, clube);
-    PLACAR.registrar(r == n, || format!("get_club_finance(clube {:#x}) original={:#x} rust={:#x}", clube, r, n));
+    PLACAR.record(r == n, || format!("get_club_finance(clube {:#x}) original={:#x} rust={:#x}", clube, r, n));
     r
 }
 
@@ -231,6 +231,6 @@ unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = stadium_compare_bookings(a, b);
-    PLACAR.registrar(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }

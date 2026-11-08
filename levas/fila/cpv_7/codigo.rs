@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
             let e = |a: usize| n == cpv7_i(a);
             if e(0x9cf2e4) || e(0x9cf360) || e(0x9cf488) {
                 if cpv7_w(clube + 0x80) > 0x1c52 {
-                    crate::comparacao::ramo("cpv_7 clube grande");
+                    crate::comparison::branch("cpv_7 clube grande");
                     w = match_pl_ftol(w as f64 * read_f64_at(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
                 }
             } else if e(0x9cf36c) {
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
         }
         let liga = cpv7_d(clube + 0x57);
         if liga != 0 {
-            crate::comparacao::ramo("cpv_7 peso da liga");
+            crate::comparison::branch("cpv_7 peso da liga");
             w = match_pl_ftol(cpv7_w(liga + 0x69) as f64 * w as f64 * read_f64_at(0x968918)); // cpv7: o peso da liga
         }
     }
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
 unsafe extern "thiscall" fn comparar_get_max_staff_wage(this: usize, cargo: i8) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> i32>(%%I0%%)(this, cargo);
     let n = get_max_staff_wage(this, cargo);
-    PLACAR.registrar(r == n, || format!("get_max_staff_wage(fin {:#x}, cargo {}) original={} rust={}", this, cargo, r, n));
+    PLACAR.record(r == n, || format!("get_max_staff_wage(fin {:#x}, cargo {}) original={} rust={}", this, cargo, r, n));
     r
 }
 
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn pay_bonuses(this: usize, valor: i32) {
     for o in [0x138usize, 0x98] {
         core::ptr::write_unaligned((this + o) as *mut i32, cpv7_i(this + o).wrapping_add(valor));
     }
-    crate::comparacao::ramo("cpv_7 bonus pagos");
+    crate::comparison::branch("cpv_7 bonus pagos");
     let s = core::ptr::read_unaligned(this as *const i64);
     core::ptr::write_unaligned(this as *mut i64, s.wrapping_sub(valor as i64)); // cpv7: o bônus sai do saldo
 }
@@ -143,8 +143,8 @@ unsafe extern "thiscall" fn pay_bonuses(this: usize, valor: i32) {
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
 unsafe extern "thiscall" fn comparar_pay_bonuses(this: usize, valor: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_bonuses(this, valor));
-    PLACAR.registrar(igual, || format!("pay_bonuses(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, valor), || pay_bonuses(this, valor));
+    PLACAR.record(igual, || format!("pay_bonuses(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
 
 /// { 0x598340 } (thiscall, ret 4, finance.cpp): `Finance::adjust_max_wage(percentual)`, pela resposta da diretoria
@@ -158,6 +158,6 @@ unsafe extern "thiscall" fn adjust_max_wage(this: usize, write_percent_pair: i8)
 /// Comparador: lado a lado no teto salarial (+0x14).
 unsafe extern "thiscall" fn comparar_adjust_max_wage(this: usize, write_percent_pair: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x14, 4)], || o(this, write_percent_pair), || adjust_max_wage(this, write_percent_pair));
-    PLACAR.registrar(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, write_percent_pair, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x14, 4)], || o(this, write_percent_pair), || adjust_max_wage(this, write_percent_pair));
+    PLACAR.record(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, write_percent_pair, mo, mr));
 }

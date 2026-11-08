@@ -76,16 +76,16 @@ unsafe extern "C" fn database_club_has_reserve_squad(clube: usize) -> u32 {
 unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(pessoa, clube),
         || staff_is_listed_by_request(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
 unsafe extern "C" fn comparar_player_attribute_rating(jogador: usize, valor: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%)(jogador, valor);
     let n = player_attribute_rating(jogador, valor);
-    PLACAR.registrar(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
     r
 }
 
@@ -95,8 +95,8 @@ unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: usize) -> u
         return o(clube); // caixa: só a original
     }
     // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro: a região volta entre os lados
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1)], || o(clube),
         || database_club_has_reserve_squad(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

@@ -18,7 +18,7 @@ unsafe fn cps8_i(a: usize) -> i32 {
 unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let (c1, c2) = (cps8_d(partida + 0x1c), cps8_d(partida + 0x20));
     if cps8_i(partida) < 0 {
-        crate::comparacao::ramo("cps_8 competicao negativa");
+        crate::comparison::branch("cps_8 competicao negativa");
         return 0; // cps8: competição negativa
     }
     core::ptr::write_unaligned(0xb74442 as *mut u32, cps8_d(0xb7443a) as u32);
@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usi
         e = proximo(0xb74438);
     }
     if cps8_d(this + 0x5c) == 0 || cps8_i(this + 0x64) <= 0 {
-        crate::comparacao::ramo("cps_8 sem pedidos");
+        crate::comparison::branch("cps_8 sem pedidos");
         return 0; // cps8: sem pedidos de observação
     }
     let selecao: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x53b900usize);
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usi
 unsafe extern "thiscall" fn comparar_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
     let n = fixture_has_scouted_player(this, partida);
-    PLACAR.registrar(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
+    PLACAR.record(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
     r
 }
 
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn is_player_shortlisted(this: usize, pessoa: usize, ge
         let l = busca(this, i, m);
         if l != 0 && *((l + 0xa) as *const u8) == 1 {
             let r = tem(l, pessoa);
-            crate::comparacao::ramo("cps_8 lista do olheiro");
+            crate::comparison::branch("cps_8 lista do olheiro");
             return r; // cps8: a resposta da lista do olheiro
         }
     }
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, pessoa: 
     }
     let r = o(this, pessoa, gerente);
     let n = is_player_shortlisted(this, pessoa, gerente);
-    PLACAR.registrar(r == n, || format!("is_player_shortlisted(pessoa {:x}, gerente {:x}) original={} rust={}", pessoa, gerente, r, n));
+    PLACAR.record(r == n, || format!("is_player_shortlisted(pessoa {:x}, gerente {:x}) original={} rust={}", pessoa, gerente, r, n));
     r
 }
 
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, pessoa: 
 /// pessoa (tipo 6: o clube contratante +0x39 ou −1, o id do adversário na partida e a idade +0x18 com sinal), no arquivo (0x58e340).
 /// O clube é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
 unsafe extern "thiscall" fn add_first_cap_record(this: usize, pessoa: usize, adversario: usize) {
-    crate::comparacao::ramo("cps_8 primeira convocacao");
+    crate::comparison::branch("cps_8 primeira convocacao");
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 6;

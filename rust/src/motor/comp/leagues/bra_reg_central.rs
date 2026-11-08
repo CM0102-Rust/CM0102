@@ -66,7 +66,7 @@ pub(crate) unsafe fn catarinense_rules(o: usize) {
 /// devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize) -> u32 {
     centro_oeste_rules(this);
-    crate::comparacao::ramo("cqi_8 regras do centro-oeste");
+    crate::comparison::branch("cqi_8 regras do centro-oeste");
     create_main_schedule(this);
     1
 }
@@ -74,21 +74,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize)
 
 
 
-/// Bahia and Santa Catarina (the same routine in the two vtables): double round robin; 4 top places (the 4-club
-/// semi-final); 1 relegated; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table;
-/// no league above or below (the relegated go to the non-playable pool [inference]); rule word 8 (the top places lead
-/// to the next stage; no champion band: the champion comes from the final stage); 7 bench substitutes and 3
-/// substitutions; category 2 (league) matches. Then the main stage schedule
-/// Original: `BraRegSanta::set_up_rules` (0x43bc70, bra_reg_santa.cpp, thiscall).
-///
-/// [pt] { 0x43bc70 } (thiscall, bra_reg_santa.cpp): `BraRegSanta::set_up_rules`, nas vtables do Baiano (0x967fb4) e do
-/// Catarinense (0x9686bc); devolve 1.
-pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_up_rules_43bc70(this: usize) -> u32 {
-    catarinense_rules(this);
-    crate::comparacao::ramo("cqi_8 regras do catarinense");
-    create_main_schedule(this);
-    1
-}
 
 
 
@@ -105,11 +90,11 @@ pub(crate) unsafe fn record_state_league_stage(this: usize, clube: usize, st: u8
     let comp = read_u32_as_usize(this + 4);
     if st == 6 {
         if fazer {
-            crate::comparacao::ramo("cqk_7 classificado do estadual");
+            crate::comparison::branch("cqk_7 classificado do estadual");
             bra_nat_first_add_qualified_record(clube, comp, 0, 0x82, 0x32); // cqk7: o classificado do estadual
         }
     } else if st == 3 && fazer {
-        crate::comparacao::ramo("cqk_7 rebaixado do estadual");
+        crate::comparison::branch("cqk_7 rebaixado do estadual");
         bra_nat_first_add_relegation_record(clube, comp); // cqk7: o rebaixado do estadual
     }
 }
@@ -128,7 +113,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jo
         if read_u32_as_usize(read_u32_as_usize(this + 0xb1) + 0x3b * i as usize) == clube {
             if st == 1 {
                 if fazer {
-                    crate::comparacao::ramo("cqk_7 campeao do estadual");
+                    crate::comparison::branch("cqk_7 campeao do estadual");
                     add_champions_record(clube, comp); // cqk7: o registro do campeão do estadual
                 }
                 let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
@@ -142,7 +127,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jo
                     // simplification: the original pushes eax (caller garbage above the word) and whole ecx/edx; the
                     // 0x4bf850 and 0x86c000 only read the words: the words are passed.
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
-                    crate::comparacao::ramo("cqk_7 eliminado do estadual");
+                    crate::comparison::branch("cqk_7 eliminado do estadual");
                     let weight = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, rounds);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
                     elim(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight); // cqk7: o registro do eliminado
@@ -209,7 +194,7 @@ pub(crate) unsafe fn nsl_end_of_stage(this: usize, clube: usize, status: u32, st
         // a temporada regular
         if st == 6 {
             if fazer {
-                crate::comparacao::ramo("cqk_7 nsl classificado");
+                crate::comparison::branch("cqk_7 nsl classificado");
                 bra_nat_first_add_qualified_record(clube, comp, 0x435, 0, 0x28); // cqk7: o classificado da NSL
             }
             return (0, 0, 0);

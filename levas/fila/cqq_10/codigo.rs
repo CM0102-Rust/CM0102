@@ -32,7 +32,7 @@ fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
     u[3].times.3 = (m + 0x89) as u16;
     let mut n = 0;
     if b > 0 {
-        crate::comparacao::ramo("cqq_10 preliminar da uefa");
+        crate::comparison::branch("cqq_10 preliminar da uefa");
         t[0].times = (b as u16, m as u16, b as u16, 0);
         n = 1;
     }
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, 
         show_error_at(0xaa19e0, 0xe0);
         return 0;
     }
-    crate::comparacao::ramo("cqq_10 tabela da uefa");
+    crate::comparison::branch("cqq_10 tabela da uefa");
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     let (tab, n) = uefa_cup_rounds(*((this + 0xb2) as *const i8));
     for (i, r) in tab[..n].iter().enumerate() {
@@ -125,7 +125,7 @@ unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
         show_error_at(F, 0x17c);
         return (-1, 0);
     }
-    crate::comparacao::ramo("cqq_10 inscritos da intertoto");
+    crate::comparison::branch("cqq_10 inscritos da intertoto");
     let mut j: i16 = 0;
     while j < cqq10_w(this + 0x3e) {
         let c = cqq10_d(v + j as usize * 4);
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize)
     let nr = core::cell::Cell::new(0i32);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
     let antes = cqq10_d(this + 0xa7);
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqq10_d(this + 0xa7));
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, antes as u32);
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize)
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.record(igual && a == b && lista, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -195,7 +195,7 @@ unsafe fn collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 
         *saida = 0;
         return 0;
     }
-    crate::comparacao::ramo("cqq_10 lista da intertoto");
+    crate::comparison::branch("cqq_10 lista da intertoto");
     let mut k: i16 = 0;
     let mut i: i16 = 0;
     while i < cqq10_w(this + 0x3e) {
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(%%I2%%);
     let mut s2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, saida, ativos), || collect_club_list(this, &mut s2, ativos));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, saida, ativos), || collect_club_list(this, &mut s2, ativos));
     let lo = *saida;
     let lista = if lo != 0 && s2 != 0 {
         core::slice::from_raw_parts(lo as *const u8, a as usize * 4) == core::slice::from_raw_parts(s2 as *const u8, b as usize * 4)
@@ -233,6 +233,6 @@ unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(s2);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
+    PLACAR.record(igual && a == b && lista, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
     a
 }

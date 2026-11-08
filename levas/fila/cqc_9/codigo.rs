@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
             false
         };
         if sair {
-            crate::comparacao::ramo("cqc_9 saida pelo tempo");
+            crate::comparison::branch("cqc_9 saida pelo tempo");
             // o item de 6 bytes {1, 6, id do clube} copiado na lista [this+4]
             let mut item = [0u8; 8];
             item[0] = 1;
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     let fin = financas(cqc9_d(0xae2a38), clube);
-    crate::comparacao::ramo("cqc_9 meta");
+    crate::comparison::branch("cqc_9 meta");
     match band(fin) as i8 {
         2 => por(if meta() > 5 { meta() - 3 } else { meta() - 2 }),
         1 => por(if meta() > 5 { meta() - 2 } else { meta() - 1 }),
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
     let bf = cqc9_d(clube + 0xbf);
     if cqc9_u(ln() + 2) & 1 == 0 && call_comp_virtual(club_division_comp(clube), 0x98) == 0 && bf != 0 && cqc9_d(bf + 0x69) != 0 {
         let p1d = || cqc9_b(cqc9_d(cqc9_d(clube + 0xbf) + 0x69) + 0x1d) as i32;
-        crate::comparacao::ramo("cqc_9 sorteio do presidente");
+        crate::comparison::branch("cqc_9 sorteio do presidente");
         let r = cqc9_sortear(0x32); // cqc9: o sorteio do presidente
         if r > p1d() + meta() * 5 {
             ou(0x80);
@@ -360,7 +360,7 @@ unsafe fn post_expectations_news(this: usize, clube: usize, noticia: u32) {
 unsafe fn finish_board_update(this: usize, clube: usize) {
     let ln = || cqc9_linha(this, clube);
     if cqc9_w(ln() + 6) < 0x1964 {
-        crate::comparacao::ramo("cqc_9 confianca de volta");
+        crate::comparison::branch("cqc_9 confianca de volta");
         for (o, k) in [(6usize, 0x96d288usize), (8, 0x9688d0), (0xa, 0x9688d0), (0xc, 0x9688d0)] {
             let x = cqc9_w(ln() + o) as i32;
             let v = (x as f64 * cqc9_f(0x9688a0) + cqc9_f(k)) * cqc9_f(0x967880); // cqc9: a confiança de volta
@@ -600,7 +600,7 @@ unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usi
         if ok {
             let s = score_candidate(this, p, clube);
             if s > melhor {
-                crate::comparacao::ramo("cqc_9 candidato melhor");
+                crate::comparison::branch("cqc_9 candidato melhor");
                 v.d(6, k); // cqc9: o candidato escolhido
                 v.d(0x12, melhor);
                 melhor = s;
@@ -813,7 +813,7 @@ unsafe extern "thiscall" fn post_job_offer_news(_this: usize, pessoa: usize, clu
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let ao_tecnico: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    crate::comparacao::ramo("cqc_9 noticia da oferta");
+    crate::comparison::branch("cqc_9 noticia da oferta");
     let mut local = [0u32; 0x3a]; // a notícia local (0xe8 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x1775, 0);

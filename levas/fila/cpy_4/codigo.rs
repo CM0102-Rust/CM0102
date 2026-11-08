@@ -38,7 +38,7 @@ unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option<(usize, u3
     semanas(0xae2c90, &mut lim, 0xc); // cpy4: hoje + 12 semanas
     let hoje = cpy4_w(0xae2c90);
     if hoje == 0 && !ensaio {
-        crate::comparacao::ramo("cpy_4 virada do ano");
+        crate::comparison::branch("cpy_4 virada do ano");
         let mut i = 0i32;
         while i < cpy4_d(0xae2350) as i32 {
             let l = cpy4_d(cpy4_d(this + 0x34f6).wrapping_add(i as usize * 4));
@@ -102,7 +102,7 @@ unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option<(usize, u3
     if ensaio {
         return Some((primeira, quantas));
     }
-    crate::comparacao::ramo("cpy_4 amistosos marcados");
+    crate::comparison::branch("cpy_4 amistosos marcados");
     marcar(this, primeira, quantas); // cpy4: marcar os amistosos da data
     *((this + 0x34f4) as *mut u16) = cpy4_w(0xae2c90);
     Some((primeira, quantas))
@@ -131,13 +131,13 @@ unsafe extern "thiscall" fn comparar_update_international_friendlies(this: usize
     if let Some((primeira, quantas)) = update_friendlies_body(this, true) {
         o(this);
         let dia = cpy4_w(this + 0x34f4);
-        PLACAR.registrar(dia == cpy4_w(0xae2c90), || format!("update_international_friendlies(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, cpy4_w(0xae2c90)));
+        PLACAR.record(dia == cpy4_w(0xae2c90), || format!("update_international_friendlies(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, cpy4_w(0xae2c90)));
         return;
     }
     let mut reg = SCOUT_MANAGER_DATE_STATICS.to_vec();
     reg.push((this + 0x34f4, 2));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || update_international_friendlies(this));
-    PLACAR.registrar(igual, || format!("update_international_friendlies(sem amistosos) {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || update_international_friendlies(this));
+    PLACAR.record(igual, || format!("update_international_friendlies(sem amistosos) {:x?} x {:x?}", mo, mr));
 }
 
 /// O técnico (nulo: o humano da vez, [0xb74c26 + 0x300 × [0xb77c7a]]) e o índice dele entre os 16 humanos (id −
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_get_selected_list(this: usize, tecnico: usi
     }
     let r = o(this, tecnico);
     let n = get_selected_list(this, tecnico);
-    PLACAR.registrar(r == n, || format!("get_selected_list(tecnico {:x}) original={} rust={}", tecnico, r, n));
+    PLACAR.record(r == n, || format!("get_selected_list(tecnico {:x}) original={} rust={}", tecnico, r, n));
     r
 }
 
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn comparar_set_selected_list(this: usize, lista: u32, 
         return o(this, lista, tecnico);
     }
     let reg = [(this + 0x4c, 0x10)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, lista, tecnico), || set_selected_list(this, lista, tecnico));
-    PLACAR.registrar(igual && r == n, || format!("set_selected_list(lista {}, tecnico {:x}) original={} rust={} {:x?} x {:x?}", lista as u8, tecnico, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, lista, tecnico), || set_selected_list(this, lista, tecnico));
+    PLACAR.record(igual && r == n, || format!("set_selected_list(lista {}, tecnico {:x}) original={} rust={} {:x?} x {:x?}", lista as u8, tecnico, r, n, mo, mr));
     r
 }

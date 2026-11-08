@@ -15,9 +15,9 @@ pub(crate) unsafe fn set_news_slot(n: usize, k: i8, v: u32) {
 /// [pt] O id e as três chaves (+0x33 de +4, +8, +0xc) da pessoa `p` nos dados `k`..`k + 3`.
 pub(crate) unsafe fn set_news_person_slots(n: usize, k: i8, p: usize) {
     set_news_slot(n, k, read_u32(p));
-    set_news_slot(n, k + 1, read_u32(read_usize(p + 4) + 0x33));
-    set_news_slot(n, k + 2, read_u32(read_usize(p + 8) + 0x33));
-    set_news_slot(n, k + 3, read_u32(read_usize(p + 0xc) + 0x33));
+    set_news_slot(n, k + 1, read_u32(read_usize(p + staff::FIRST_NAME) + 0x33));
+    set_news_slot(n, k + 2, read_u32(read_usize(p + staff::SECOND_NAME) + 0x33));
+    set_news_slot(n, k + 3, read_u32(read_usize(p + staff::COMMON_NAME) + 0x33));
 }
 
 
@@ -27,8 +27,15 @@ pub(crate) static mut FINE_NEWS_WOULD_BUILD: bool = false;
 
 
 
-/// player under contract at a human club: news 0xbc6 with reason, reaction, draw(2), personality, period, contract
-/// type, future transfer and effects
+/// Posts the news of a fined player's reaction: for a player under contract at a human club, news 0xbc6 with reason,
+/// reaction, random(2), personality, period, contract type, future transfer and effects.
+///
+/// SEH frame for the local news item, no destructor. `post_fine_reaction_news(player, reason, reaction, period,
+/// effects)`, called from the fine (0x5a5980, five calls). No player, no contract (0x4cf5a0, on `[0xae1080]`), no club
+/// of his or no club contract (0x4cf5f0): nothing; player of a club (+0x39) without a human (0x7875e0): nothing. News
+/// 0xbc6 to the contract's club: the player (id and keys), reason, reaction, random(2), the personality (+0x5d + +0x5b
+/// below 12, +0x59 below 6 and reputation +0xb above 5250), period 1, the type 7 contract (+0x4f), the future transfer
+/// (0x8cca10), the effects and the game by the type (+0x4f 1 with more than 23 years, or 2).
 /// Original: `post_fine_reaction_news` (0x5a74b0, Fine.cpp, stdcall, ret 0x14).
 ///
 /// [pt] { 0x5a74b0 } (stdcall, ret 0x14, Fine.cpp, SEH da notícia local, sem destrutor): `post_fine_reaction_news(jogador,
@@ -57,11 +64,11 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     if c == 0 {
         return;
     }
-    let current = read_usize(player + 0x39);
+    let current = read_usize(player + staff::CLUB_JOB);
     if current != 0 && !club_has_human_manager(current) {
         return;
     }
-    crate::comparacao::ramo("cpz_9 noticia da reacao a multa");
+    crate::comparison::branch("cpz_9 noticia da reacao a multa");
     if FINE_NEWS_DRY_RUN {
         FINE_NEWS_WOULD_BUILD = true;
         return;
@@ -77,22 +84,28 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 5, reacao as i8 as u32);
     let r = friendly_random(2);
     set_news_slot(nt, 6, r as u32);
-    let p = read_i8_as_i32(player + 0x5d) + read_i8_as_i32(player + 0x5b) < 0xc
-        && read_i8_as_i32(player + 0x59) < 6
-        && core::ptr::read_unaligned((read_usize(player + 0x61) + 0xb) as *const i16) > 0x1482;
+    let p = read_i8_as_i32(player + staff::TEMPERAMENT) + read_i8_as_i32(player + staff::PROFESSIONALISM) < 0xc
+        && read_i8_as_i32(player + staff::LOYALITY) < 6
+        && core::ptr::read_unaligned((read_usize(player + staff::PLAYER) + 0xb) as *const i16) > 0x1482;
     set_news_slot(nt, 7, p as u32);
     set_news_slot(nt, 8, (prazo as u8 == 1) as u32);
-    let kind = *((c + 0x4f) as *const u8) & 0xf0;
+    let kind = *((c + contract::SQUAD_STATUS) as *const u8) & 0xf0;
     set_news_slot(nt, 9, (kind == 0x70) as u32);
     set_news_slot(nt, 0xa, (future(read_usize(G_TRANSFER_MANAGER), player, 0) != 0) as u32);
     set_news_slot(nt, 0xb, efeitos as i8 as u32);
-    let jogo = (read_i8_as_i32(player + 0x18) > 0x17 && kind == 0x10) || kind == 0x20;
+    let jogo = (read_i8_as_i32(player + staff::YEAR_OF_BIRTH) > 0x17 && kind == 0x10) || kind == 0x20;
     set_news_slot(nt, 0xc, jogo as u32);
     deliver(read_usize(G_NEWS), nt, clube);
 }
 
 
-/// player and coach with a record and nation, player with a club: news 0x1394 with the outcome and draw(5)
+/// Posts the coach's feedback on a fine: with player and coach both having a record and a nation, and the player having
+/// a club, news 0x1394 with the outcome and random(5).
+///
+/// SEH frame for the local news item, no destructor. `post_coach_fine_feedback_news(player, coach, outcome)`, called
+/// from the fines' daily pass (0x5a5820: the feedback marked as due, more than 30 days at the club and no serious
+/// injury; the original leaves the Fine in ecx). Both with a record (+0x61) and a nation (+0x1a), the player with a
+/// club (+0x39): news 0x1394 (the player and the coach, id and keys; the outcome; random(5)) to the player's club.
 /// Original: `post_coach_fine_feedback_news` (0x5a7f20, Fine.cpp, stdcall, ret 0xc).
 ///
 /// [pt] { 0x5a7f20 } (stdcall, ret 0xc, Fine.cpp, SEH da notícia local, sem destrutor): `post_coach_fine_feedback_news
@@ -100,13 +113,13 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
 /// casa e sem lesão grave; a original deixa o Fine em ecx). Os dois com ficha (+0x61) e nação (+0x1a), o jogador com
 /// clube (+0x39): a notícia 0x1394 (o jogador e o treinador, id e chaves; o desfecho; sorteio(5)) ao clube do jogador.
 pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usize, coach: usize, outcome: u32) {
-    if player == 0 || read_usize(player + 0x61) == 0 || read_usize(player + 0x1a) == 0 || read_usize(player + 0x39) == 0 {
+    if player == 0 || read_usize(player + staff::PLAYER) == 0 || read_usize(player + staff::NATION) == 0 || read_usize(player + staff::CLUB_JOB) == 0 {
         return;
     }
-    if coach == 0 || read_usize(coach + 0x61) == 0 || read_usize(coach + 0x1a) == 0 {
+    if coach == 0 || read_usize(coach + staff::PLAYER) == 0 || read_usize(coach + staff::NATION) == 0 {
         return;
     }
-    crate::comparacao::ramo("cpz_9 noticia do retorno do treinador");
+    crate::comparison::branch("cpz_9 noticia do retorno do treinador");
     let construct: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let deliver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
@@ -117,7 +130,7 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usiz
     set_news_slot(nt, 8, outcome as i8 as u32);
     let r = friendly_random(5);
     set_news_slot(nt, 9, r as u32);
-    deliver(read_usize(G_NEWS), nt, read_usize(player + 0x39));
+    deliver(read_usize(G_NEWS), nt, read_usize(player + staff::CLUB_JOB));
 }
 
 // simplification: the news rolls and goes to the managers’ inboxes (allocates): original only, with the copy taking the branch; without

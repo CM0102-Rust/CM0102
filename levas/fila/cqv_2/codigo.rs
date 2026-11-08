@@ -47,7 +47,7 @@ unsafe fn cqv2_previstas(this: usize, e: &Cqv2Estadual) {
     for (k, &l) in e.lugares.iter().enumerate() {
         gravar(cqv2_d(this + 8), cqv2_d(v + 4 * k), l as u32);
     }
-    crate::comparacao::ramo(e.ramo);
+    crate::comparison::branch(e.ramo);
     let mut k = e.lugares.len() as i32 + 1;
     while k <= core::ptr::read_unaligned((this + 0x3e) as *const i16) as i32 {
         gravar(cqv2_d(this + 8), cqv2_d(v + 4 * (k - 1) as usize), k as u32);
@@ -80,7 +80,7 @@ unsafe fn cqv2_comparar(nome: &str, this: usize, e: &Cqv2Estadual, original: imp
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if r == 0 { -1 } else { *((r + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.registrar(erros.is_empty(), || format!("{}({:#x}): {}", nome, this, erros.join("; ")));
+    PLACAR.record(erros.is_empty(), || format!("{}({:#x}): {}", nome, this, erros.join("; ")));
 }
 
 const CQV2_PERNAMBUCANO: Cqv2Estadual = Cqv2Estadual { arquivo: 0x98afd8, linhas: [0x307, 0x30f], lugares: &[1, 2, 3, 3], ramo: "cqv_2 pernambucano" }; // cqv2: os lugares do Pernambucano

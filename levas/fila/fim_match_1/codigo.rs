@@ -10,7 +10,7 @@
 /// (+0x5f, 0xd7a bytes com 2 objetos de 0x625 em +0x11f; sem ele erro 0xa68) e registra (0x7293f0),
 /// libera o motor e tira a partida da fila [0xde2f70] (0x90d6b0).
 unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
-    crate::comparacao::ramo("telas largar a partida assistida");
+    crate::comparison::branch("telas largar a partida assistida");
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
     let indice: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x7fffa0usize);
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn comparar_find_record_fixture(estat: usize, k: i32, s
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return o(estat, k, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 0x4f)], || o(estat, k, saida), || find_record_fixture(estat, k, saida));
-    PLACAR.registrar(igual && r == n, || format!("find_record_fixture(k {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(saida, 0x4f)], || o(estat, k, saida), || find_record_fixture(estat, k, saida));
+    PLACAR.record(igual && r == n, || format!("find_record_fixture(k {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

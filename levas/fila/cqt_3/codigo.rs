@@ -46,7 +46,7 @@ unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: u32, regist
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     *((this + 0x51) as *mut u8) = 0xf;
     *((this + 0x44) as *mut u8) = 0xff;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
@@ -92,7 +92,7 @@ unsafe fn bra_reg_northeast_compare_state_league_ctor(nome: &str, this: usize, a
     if *((this + 0x44) as *const u8) == 0xff && cqt3_d(this + 8) != 0 {
         ok = ok && cqt3_d(this + 0x2c) == e.fases as usize && cqt3_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt3_d(this), cqt3_d(this + 0x2c), cqt3_d(this + 0xc), cqt3_d(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt3_d(this), cqt3_d(this + 0x2c), cqt3_d(this + 0xc), cqt3_d(this + 8)));
     r
 }
 

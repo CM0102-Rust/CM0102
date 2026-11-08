@@ -11,7 +11,7 @@ unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: i32, regist
     if versao != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler árbitros");
+    crate::comparison::branch("banco ler árbitros");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 43, n, stream)
@@ -39,7 +39,7 @@ unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i32, registro
     if versao != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler cores");
+    crate::comparison::branch("banco ler cores");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 58, n, stream)
@@ -68,7 +68,7 @@ unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32, registros:
     if versao != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler nomes");
+    crate::comparison::branch("banco ler nomes");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 60, n, stream)

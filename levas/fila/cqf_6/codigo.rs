@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, fase: u32, ro
         show_error_at(0xad5888, 0xcc);
         return 0;
     }
-    crate::comparacao::ramo("cqf_6 tabela das rodadas");
+    crate::comparison::branch("cqf_6 tabela das rodadas");
     // o ano vai com lixo nos bytes altos na original (o cx do ano sobre o ecx de antes); a 0x68a160 só usa os 16 bits
     // de baixo (a 0x549f70 lê o ano como word e a palavra +2 guarda ano − base): a cópia passa o ano limpo
     let ano = cqf6_w(this + 0x40) as u16 as u32;
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: usize, fase
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(
         &reg,
         || o(this, fase, rodadas, id, liga),
         || world_cup_create_schedule(this, fase, &mut r2, &mut i2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }),
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: usize, fase
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("world_cup_create_schedule({}): saídas {} tabela {}", fase as u8 as i8, saidas, tabela));
+    PLACAR.record(igual && saidas && tabela, || format!("world_cup_create_schedule({}): saídas {} tabela {}", fase as u8 as i8, saidas, tabela));
     a
 }
 
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn add_qualified_team(this: usize, clube: usize) {
         show_error_at(0xad5888, 0x456);
         return;
     }
-    crate::comparacao::ramo("cqf_6 nação classificada");
+    crate::comparison::branch("cqf_6 nação classificada");
     let e = cqf6_d(this + 0x14).wrapping_add((n as i32 * 6) as usize);
     cqf6_pb(e + 4, 6);
     cqf6_pd(cqf6_d(this + 0x14).wrapping_add((cqf6_w(this + 0x36) as i32 * 6) as usize), clube);
@@ -146,8 +146,8 @@ unsafe extern "thiscall" fn comparar_add_qualified_team(this: usize, clube: usiz
         return o(this, clube);
     }
     let reg = [(this + 0x36, 2usize), (cqf6_d(this + 0x14).wrapping_add((n as i32 * 6) as usize), 6usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || add_qualified_team(this, clube));
-    PLACAR.registrar(igual, || format!("add_qualified_team: {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube), || add_qualified_team(this, clube));
+    PLACAR.record(igual, || format!("add_qualified_team: {:x?} x {:x?}", mo, mr));
 }
 
 /// { 0x92f230 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::seed_teams()`, do dia da Copa (0x92f1a0, na
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_add_qualified_team(this: usize, clube: usiz
 /// ordenadas pelo pote (0x92f660).
 unsafe extern "thiscall" fn seed_teams(this: usize) {
     if cqf6_w(this + 0x40) == 0x7d2 {
-        crate::comparacao::ramo("cqf_6 sem cabeças de chave em 2002");
+        crate::comparison::branch("cqf_6 sem cabeças de chave em 2002");
         return;
     }
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
@@ -277,6 +277,6 @@ unsafe extern "thiscall" fn comparar_seed_teams(this: usize) {
         return o(this);
     }
     let reg = [(this + 0x36, 0x16usize), (this + 0xee, 0xa0usize)];
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || seed_teams(this));
-    PLACAR.registrar(igual, || "seed_teams: a Copa de 2002 mudou".to_string());
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || seed_teams(this));
+    PLACAR.record(igual, || "seed_teams: a Copa de 2002 mudou".to_string());
 }

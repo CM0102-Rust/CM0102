@@ -37,7 +37,7 @@ unsafe fn create_knockout_from_table(this: usize, linhas: &[usize], sementes: &[
     for (k, &l) in linhas.iter().enumerate() {
         core::ptr::write_unaligned((lista + 4 * k) as *mut usize, cqn9_clube(this, l));
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqn9_d(cqn9_d(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
@@ -93,7 +93,7 @@ unsafe fn bra_reg_gaucho_compare_knockout_from_table(nome: &str, this: usize, li
     original();
     let fase = cqn9_d(cqn9_d(this + 0xc));
     if fase == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
+        PLACAR.record(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
     let lista = cqn9_d(fase + 0xa7);
@@ -102,7 +102,7 @@ unsafe fn bra_reg_gaucho_compare_knockout_from_table(nome: &str, this: usize, li
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqn9_w(fase + 0x3e) as usize == linhas.len() && cqn9_d(fase + 4) == cqn9_d(this + 4) && cqn9_d(this + 0x30) == 0;
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn9_w(fase + 0x3e)));
+    PLACAR.record(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn9_w(fase + 0x3e)));
 }
 
 unsafe extern "thiscall" fn comparar_bra_reg_gaucho_create_knockout_stage(this: usize) {

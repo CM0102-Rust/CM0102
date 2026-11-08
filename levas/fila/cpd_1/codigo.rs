@@ -63,15 +63,15 @@ unsafe fn end_call_ups_regions(this: usize) -> Vec<(usize, usize)> {
 unsafe extern "thiscall" fn comparar_end_duty_for_competition(this: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let reg = end_call_ups_regions(this);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, comp), || end_duty_for_competition(this, comp));
-    PLACAR.registrar(igual, || format!("end_duty_for_competition({:x}, {:x}) {:x?} x {:x?}", this, comp, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, comp), || end_duty_for_competition(this, comp));
+    PLACAR.record(igual, || format!("end_duty_for_competition({:x}, {:x}) {:x?} x {:x?}", this, comp, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_end_duty_for_nation_in_competition(this: usize, nacao: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let reg = end_call_ups_regions(this);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao, comp), || end_duty_for_nation_in_competition(this, nacao, comp));
-    PLACAR.registrar(igual, || format!("end_duty_for_nation_in_competition({:x}, {:x}, {:x}) {:x?} x {:x?}", this, nacao, comp, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, nacao, comp), || end_duty_for_nation_in_competition(this, nacao, comp));
+    PLACAR.record(igual, || format!("end_duty_for_nation_in_competition({:x}, {:x}, {:x}) {:x?} x {:x?}", this, nacao, comp, mo, mr));
 }
 
 /// O número de registros de convocação por clube da 0x7774b0: [0xae235c] − 2 × [0xae2350].
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
         if vencidas < conta(rec) {
             let mut k = vencidas;
             loop {
-                crate::comparacao::ramo("convocações descer as que ficam");
+                crate::comparison::branch("convocações descer as que ficam");
                 let v = cpd1_d(rec);
                 let de = v.wrapping_add(9usize.wrapping_mul(k as i32 as usize));
                 let para = v.wrapping_add(9usize.wrapping_mul((k as i32 - vencidas as i32) as usize));
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
         let resto = conta(rec).wrapping_sub(vencidas);
         *((rec + 5) as *mut i8) = resto;
         if resto == 0 && cpd1_d(rec) != 0 {
-            crate::comparacao::ramo("convocações soltar o vetor");
+            crate::comparison::branch("convocações soltar o vetor");
             free(cpd1_d(rec));
             *((rec + 4) as *mut u8) = 0;
             core::ptr::write_unaligned(rec as *mut usize, 0);
@@ -161,6 +161,6 @@ unsafe extern "thiscall" fn comparar_prune_club_call_up_records(this: usize) {
             reg.push((v, 9 * k as usize));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || prune_club_call_up_records(this));
-    PLACAR.registrar(igual, || format!("prune_club_call_up_records({:x}) {:x?} x {:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || prune_club_call_up_records(this));
+    PLACAR.record(igual, || format!("prune_club_call_up_records({:x}) {:x?} x {:x?}", this, mo, mr));
 }

@@ -118,7 +118,7 @@ const CQW13_RECOPA: Cqw13Copa = Cqw13Copa { vtable: 0x967574, fases: 2, arquivo:
 /// comp)`: a Liga dos Campeões asiática do ano do jogo (vtable 0x9674d4, 4 fases; 0x40b950, 0x40b620, 0x40bec0,
 /// 0x40c720; caixas nas linhas 0x4d, 0x54, 0x63 e 0x73).
 unsafe extern "thiscall" fn cqw13_liga_asiatica(this: usize, ano: u32, comp: usize) -> usize {
-    crate::comparacao::ramo("cqw_13 liga dos campeoes asiatica");
+    crate::comparison::branch("cqw_13 liga dos campeoes asiatica");
     let ano = ano as i16; // cqw13: a Liga dos Campeões asiática do ano do jogo
     cqw13_copa_de_32(this, ano, comp, &CQW13_LIGA)
 }
@@ -129,7 +129,7 @@ unsafe fn cqw13_comparar(nome: &str, this: usize, ano: u32, comp: usize, vtable:
     let r = o();
     let lido = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let ok = r == this && cqw13_d(this) == vtable && cqw13_d(this + 4) == comp && lido == ano as i16;
-    PLACAR.registrar(ok, || format!("{}({:#x}): ano {} pedido {}, vtable {:#x}", nome, this, lido, ano as i16, cqw13_d(this)));
+    PLACAR.record(ok, || format!("{}({:#x}): ano {} pedido {}, vtable {:#x}", nome, this, lido, ano as i16, cqw13_d(this)));
     r
 }
 
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_cqw13_liga_asiatica(this: usize, ano: u32, 
 /// comp)`: a Recopa asiática do ano do jogo (vtable 0x967574, 2 fases; 0x40d830, 0x40d4d0, 0x40ddf0, 0x40e3b0; caixas
 /// nas linhas 0x4e, 0x55, 0x64 e 0x74).
 unsafe extern "thiscall" fn cqw13_recopa_asiatica(this: usize, ano: u32, comp: usize) -> usize {
-    crate::comparacao::ramo("cqw_13 recopa asiatica");
+    crate::comparison::branch("cqw_13 recopa asiatica");
     let ano = ano as i16; // cqw13: a Recopa asiática do ano do jogo
     cqw13_copa_de_32(this, ano, comp, &CQW13_RECOPA)
 }

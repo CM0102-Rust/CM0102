@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         for i in (j + 1)..0x20 {
             let o = ent(i);
             if cqg4_d(o + 4) == 0 && club_nation(cqg4_d(e)) == club_nation(cqg4_d(o)) {
-                crate::comparacao::ramo("cqg_4 parceiro da mesma nação");
+                crate::comparison::branch("cqg_4 parceiro da mesma nação");
                 cqg4_pd(e + 4, cqg4_d(o)); // cqg4: o parceiro da mesma nação
                 cqg4_pd(o + 4, cqg4_d(e));
                 break;
@@ -142,10 +142,10 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             while cqg4_d(ent(s)) == 0 {
                 s = sorteio(8).wrapping_add(base);
             }
-            crate::comparacao::ramo("cqg_4 clube sorteado");
+            crate::comparison::branch("cqg_4 clube sorteado");
             let e = ent(s);
             if cqg4_b(e + 8) == 0 {
-                crate::comparacao::ramo("cqg_4 metade sorteada");
+                crate::comparison::branch("cqg_4 metade sorteada");
                 let b = livres_b as i32;
                 if sorteio(livres_a as i32 + b) < b { // cqg4: a metade sorteada
                     cqg4_pb(e + 8, 2);
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
                             continue;
                         }
                         if (0..4).all(|q| club_nation(cqg4_d(vaga(g, p))) != club_nation(cqg4_d(vaga(g2, q)))) {
-                            crate::comparacao::ramo("cqg_4 troca pela nação");
+                            crate::comparison::branch("cqg_4 troca pela nação");
                             let x = cqg4_d(vaga(g, p));
                             cqg4_pd(vaga(g, p), cqg4_d(vaga(g2, p)));
                             cqg4_pd(vaga(g2, p), x);
@@ -223,7 +223,7 @@ unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             let c = cqg4_d(linha + q * 4);
             pontos(cqg4_d(0xde1f58), club_nation(c), 1);
             let valor = 1_800_000i32; // cqg4: o prêmio da fase de grupos
-            crate::comparacao::ramo("cqg_4 prêmio da fase de grupos");
+            crate::comparison::branch("cqg_4 prêmio da fase de grupos");
             premio(financas(cqg4_d(0xae2a38), c), valor);
             send_prize_money_news(this, c, valor, 0, -1, 0x449, 0, -2);
         }
@@ -335,7 +335,7 @@ unsafe extern "thiscall" fn comparar_draw_phase1_groups(this: usize) {
     }
     vistos.sort_unstable();
     ok = ok && vistos == plano;
-    PLACAR.registrar(ok, || format!("draw_phase1_groups: as fases não têm os 32 clubes do plano (+0x30 = {})", cqg4_d(this + 0x30) as i32));
+    PLACAR.record(ok, || format!("draw_phase1_groups: as fases não têm os 32 clubes do plano (+0x30 = {})", cqg4_d(this + 0x30) as i32));
 }
 
 /// { 0x586f60 } (cdecl, european_cup.cpp): `european_cup_compare_clubs_by_seed(a, b)`, a comparação da qsort dos potes
@@ -354,7 +354,7 @@ unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usize, b: *con
 unsafe extern "C" fn comparar_european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = european_cup_compare_clubs_by_seed(a, b);
-    PLACAR.registrar(r == n, || format!("european_cup_compare_clubs_by_seed: original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("european_cup_compare_clubs_by_seed: original={} rust={}", r, n));
     r
 }
 
@@ -383,7 +383,7 @@ unsafe fn planned_final_positions(this: usize, mata: usize, nm: i16) -> (Vec<(i1
         if r == nm.wrapping_sub(1) {
             let mut k = 0i16;
             while k < n {
-                crate::comparacao::ramo("cqg_4 campeão");
+                crate::comparison::branch("cqg_4 campeão");
                 v.push((i, 1u8)); // cqg4: o campeão
                 i += 1;
                 cont = cont.wrapping_add(1);
@@ -416,7 +416,7 @@ unsafe fn planned_final_positions(this: usize, mata: usize, nm: i16) -> (Vec<(i1
         let p = cont;
         let mut k = 0i16;
         while k < cqg4p_w(cqg4p_d(this + 0xa3) + r as usize * 0x68 + 0x1a) {
-            crate::comparacao::ramo("cqg_4 posição na preliminar");
+            crate::comparison::branch("cqg_4 posição na preliminar");
             v.push((i, p)); // cqg4: a posição na preliminar
             i += 1;
             cont = cont.wrapping_add(1);
@@ -501,5 +501,5 @@ unsafe extern "thiscall" fn comparar_european_cup_rank_teams(this: usize) {
             e == 0 || *((e + 0x72) as *const u8) != p
         }
     });
-    PLACAR.registrar(errado.is_none(), || format!("european_cup_rank_teams: a posição {:?} não bate", errado));
+    PLACAR.record(errado.is_none(), || format!("european_cup_rank_teams: a posição {:?} não bate", errado));
 }

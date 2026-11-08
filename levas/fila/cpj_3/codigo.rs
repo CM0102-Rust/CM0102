@@ -65,16 +65,16 @@ unsafe extern "thiscall" fn send_to_nation_managers(this: usize, noticia: usize,
 /// Comparadores: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
 unsafe extern "thiscall" fn comparar_send_to_all_managers(this: usize, noticia: usize) -> u32 {
-    crate::comparacao::ramo("send_to_all_managers");
+    crate::comparison::branch("send_to_all_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, noticia)
 }
 
 unsafe extern "thiscall" fn comparar_send_to_division_managers(this: usize, noticia: usize, divisao: usize) -> u32 {
-    crate::comparacao::ramo("send_to_division_managers");
+    crate::comparison::branch("send_to_division_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, divisao)
 }
 
 unsafe extern "thiscall" fn comparar_send_to_nation_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
-    crate::comparacao::ramo("send_to_nation_managers");
+    crate::comparison::branch("send_to_nation_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, noticia, nacao)
 }

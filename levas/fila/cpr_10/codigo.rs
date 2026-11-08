@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: 
     let mut e = find_type3_decision(this, id, &limit, true);
     let pessoa = cpr10_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
     if e == 0 {
-        crate::comparacao::ramo("cpr_10 nova decisao");
+        crate::comparison::branch("cpr_10 nova decisao");
         let mut d = [0u8; 8];
         injury_date_add_days(0xae2c90, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
         let acrescentar: unsafe extern "thiscall" fn(usize, usize, *const u8, u32, u32) = core::mem::transmute(0x4cd6d0usize);
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_get_player_injury_status(this: usize, pesso
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, pessoa);
     if pessoa != 0 && (cpr10_d(pessoa) as i32) < cpr10_d(0xae2364) as i32 {
         let n = injury_status(this, pessoa);
-        PLACAR.registrar(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", pessoa, r, n));
+        PLACAR.record(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", pessoa, r, n));
     }
     r
 }
@@ -252,13 +252,13 @@ unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: usize, id: i3
     if find_type3_decision(this, id, &limit, false) == 0 {
         return o(this, id, vaga);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend_from_slice(&INJURY_DATE_STATICS);
     reg.push((this + 0x1c, 4));
     reg.push((cpr10_d(this + 0xc), cpr10_d(this + 0x14).wrapping_mul(14)));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id, vaga),
-        || crate::aleatorio::sem_contar(|| schedule_offer_decision(this, id, vaga)));
-    PLACAR.registrar(igual, || format!("schedule_offer_decision(id {}, vaga {}) {:x?} x {:x?}", id, vaga, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id, vaga),
+        || crate::rng::without_counting(|| schedule_offer_decision(this, id, vaga)));
+    PLACAR.record(igual, || format!("schedule_offer_decision(id {}, vaga {}) {:x?} x {:x?}", id, vaga, mo, mr));
 }
 
 /// Comparador: lado a lado pelo vetor dos clubes e pela data estática da 0x54cab0, e a devolução (os registros dos
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn comparar_get_manager_of_year_candidates(this: usize,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I2%%);
     let k = (n as u16 as i16).max(0) as usize;
     let reg = [(clubes, 4 * k), (0xae24c8, 8), (0xae24aa, 1)];
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, n), || get_manager_of_year_candidates(this, clubes, n));
-    PLACAR.registrar(igual && r == c, || format!("get_manager_of_year_candidates({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, n), || get_manager_of_year_candidates(this, clubes, n));
+    PLACAR.record(igual && r == c, || format!("get_manager_of_year_candidates({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
     r
 }

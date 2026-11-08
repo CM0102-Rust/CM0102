@@ -24,7 +24,7 @@ unsafe fn create_first_group_table(this: usize, n: i16, arquivo: usize, linha: u
         show_error_at(arquivo, linha);
         return 0;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut i: i8 = 0;
     while (i as i16) < cqr7_w(this + 0x3e) {
@@ -47,7 +47,7 @@ unsafe fn compare_first_group_table(nome: &str, this: usize, n: i16, original: i
     let t = cqr7_d(this + 0xb1);
     let ok = r == 1 && cqr7_w(this + 0x3e) == n && t != 0
         && plano.iter().enumerate().all(|(k, &c)| cqr7_d(t + k * 0x3b) == c && cqr7_d(cqr7_d(this + 0xee) + k * 4) == 0);
-    PLACAR.registrar(ok, || format!("{}({:#x}) devolveu {}; plano {:x?}", nome, this, r, plano));
+    PLACAR.record(ok, || format!("{}({:#x}) devolveu {}; plano {:x?}", nome, this, r, plano));
     r
 }
 
@@ -84,7 +84,7 @@ unsafe fn advance_cup_stage(this: usize, arquivo: usize, linha: u32, fim_dos_gru
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
     if fase == fim_dos_grupos {
-        crate::comparacao::ramo("cqr_7 mata-mata das copas italianas");
+        crate::comparison::branch("cqr_7 mata-mata das copas italianas");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(mata_mata);
         f(this); // cqr7: monta o mata-mata
     }
@@ -97,7 +97,7 @@ unsafe fn ita_cup_compare_advance_stage(nome: &str, this: usize, original: impl 
     let ultima = antes >= (cqr7_d(this + 0x2c) as i32).wrapping_sub(1);
     original();
     let depois = cqr7_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, antes, depois));
+    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, antes, depois));
 }
 
 /// { 0x63f5b0 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x28): `ItaCup::advance_stage()`: a fase seguinte

@@ -100,17 +100,17 @@ unsafe extern "thiscall" fn comparar_remove_retirement(this: usize, chave: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let n = (*((this + 8) as *const i32)).max(0) as usize;
     let reg = [(this + 4, 8), (cph5_d(this + 4) as usize, n * 26)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, chave), || remove_retirement(this, chave));
-    PLACAR.registrar(igual, || format!("remove_retirement {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, chave), || remove_retirement(this, chave));
+    PLACAR.record(igual, || format!("remove_retirement {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pela saída (26 bytes), a cópia em sem_contar.
 unsafe extern "stdcall" fn comparar_player_regen_check_unemployed_retirement(pessoa: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I1%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((saida, 0x1a));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida),
-        || crate::aleatorio::sem_contar(|| player_regen_check_unemployed_retirement(pessoa, saida)));
-    PLACAR.registrar(igual && r == n, || format!("player_regen_check_unemployed_retirement({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(pessoa, saida),
+        || crate::rng::without_counting(|| player_regen_check_unemployed_retirement(pessoa, saida)));
+    PLACAR.record(igual && r == n, || format!("player_regen_check_unemployed_retirement({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }

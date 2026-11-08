@@ -199,7 +199,7 @@ unsafe fn language_fluency_factor(p1: usize, clube: usize, s: i16) -> (f64, f64)
 /// de seleção e o tempo sem clube; e, pedido o salário (salário ≠ 0, sem empréstimo e nota de 1,75), o salário padrão
 /// (0x864550 num STAFF_CONTRACT local) contra o teto do clube (0x5968d0). O resto das contas está nos comentários.
 unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
-    use crate::comparacao::ramo;
+    use crate::comparison::branch;
     let k = |a: usize| cqe4_k(a);
     let zero = k(0x9689a0);
     // as chamadas por endereço, com as convenções conferidas nos pontos de chamada da original
@@ -1257,8 +1257,8 @@ unsafe extern "thiscall" fn comparar_staff_interest_in_joining_club(this: usize,
     if !p6.is_null() {
         regioes.push((p6 as usize, 4));
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, p1, p2, p3, p4, p5, p6), || staff_interest_in_joining_club(this, p1, p2, p3, p4, p5, p6));
-    PLACAR.registrar(igual && ro.to_bits() == rr.to_bits(), || format!("staff_interest_in_joining_club(pessoa {:#x}, clube {:#x}, {}, {}, {}) original={} {:x?} rust={} {:x?}", p1, p2, p3, p4 as u8, p5 as u8, ro, mo, rr, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, p1, p2, p3, p4, p5, p6), || staff_interest_in_joining_club(this, p1, p2, p3, p4, p5, p6));
+    PLACAR.record(igual && ro.to_bits() == rr.to_bits(), || format!("staff_interest_in_joining_club(pessoa {:#x}, clube {:#x}, {}, {}, {}) original={} {:x?} rust={} {:x?}", p1, p2, p3, p4 as u8, p5 as u8, ro, mo, rr, mr));
     ro
 }
 
@@ -1282,7 +1282,7 @@ unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> usize {
 /// Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
 unsafe extern "thiscall" fn comparar_construct_staff_contract(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
-    PLACAR.registrar(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
+    PLACAR.record(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
     ro
 }

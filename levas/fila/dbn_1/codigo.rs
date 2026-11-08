@@ -196,7 +196,7 @@ unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
     if *(0xae23a8 as *const usize) == 0 {
         return original_fn::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho);
     }
-    crate::comparacao::ramo("criação cortar a tabela de clubes");
+    crate::comparison::branch("criação cortar a tabela de clubes");
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let livre: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -394,7 +394,7 @@ unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
 unsafe extern "C" fn database_prune_comp_history_table() {
     let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    crate::comparacao::ramo("criação podar o histórico de competições");
+    crate::comparison::branch("criação podar o histórico de competições");
     let mut k = 0usize;
     let mut i = 0i32;
     while i < gi_dbn1(0xae237c) {
@@ -418,7 +418,7 @@ unsafe extern "C" fn database_prune_comp_history_table() {
 }
 
 /// O primeiro byte que difere entre as fotos da original e da cópia (endereço, original, cópia).
-fn first_memory_difference(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Option<(usize, u8, u8)> {
+fn first_memory_difference(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> Option<(usize, u8, u8)> {
     mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])))
 }
 
@@ -430,15 +430,15 @@ unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32
     if any_coach_missing_from_club() {
         return o();
     }
-    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut regioes = crate::rng::STATE_REGIONS.to_vec();
     regioes.push((0x9b59b4, 4));
     regioes.push((0xde1f64, 0x40));
     regioes.push((rd_dbn1(0xae23b4), gi_dbn1(0xae235c).max(0) as usize * 581));
     regioes.push((rd_dbn1(0xae23bc), gi_dbn1(0xae2364).max(0) as usize * 110));
-    let (r, m, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(),
-        || crate::aleatorio::sem_contar(|| database_generate_extra_non_playing_staff()));
+    let (r, m, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regioes, || o(),
+        || crate::rng::without_counting(|| database_generate_extra_non_playing_staff()));
     let onde = first_memory_difference(&mo, &mr);
-    PLACAR.registrar(igual && r == m, || match onde {
+    PLACAR.record(igual && r == m, || match onde {
         Some((a, x, y)) => format!("database_generate_extra_non_playing_staff: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
         None => format!("database_generate_extra_non_playing_staff: original={} rust={}", r, m),
     });

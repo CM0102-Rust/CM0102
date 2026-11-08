@@ -16,7 +16,7 @@ unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparacao::ramo("cpx_5 gravar financas");
+    crate::comparison::branch("cpx_5 gravar financas");
     if save == 0 {
         return;
     }
@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) -> u32 {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let ler_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparacao::ramo("cpx_5 carregar financas");
+    crate::comparison::branch("cpx_5 carregar financas");
     if save == 0 {
         return 0;
     }
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usize) -> u32 
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparacao::ramo("cpx_5 gravar gerente de elencos");
+    crate::comparison::branch("cpx_5 gravar gerente de elencos");
     let mut v = *(this as *const u16) as u32; // cpx5: o valor do gerente de elencos
     let mut z = abrir_item(save, 0xa82bc0, 1, 0x16, 4);
     if z == 0 {

@@ -104,14 +104,14 @@ unsafe extern "thiscall" fn report_poor_fitness(this: usize, jogador: usize, clu
     if np == 0 {
         return;
     }
-    crate::comparacao::ramo("cpz_9 multa avaliada");
+    crate::comparison::branch("cpz_9 multa avaliada");
     let a = cpz9_sortear(cpz9_sb(np + 0x14));
     let b = cpz9_sortear(10); // cpz9: o sorteio da multa
     if a <= b {
         return;
     }
     let np = cpz9_d(cpz9_d(clube + 0xcf) + 0x69);
-    crate::comparacao::ramo("cpz_9 multa pela forma");
+    crate::comparison::branch("cpz_9 multa pela forma");
     let nota: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
     // ponytail: a original empurra ecx com o byte +0x19 só no cl (os altos são sobra); a 0x544410 só lê o byte
     let c =cpz9_sortear(nota(np, *((np + 0x19) as *const u8) as u32) as i32);
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_report_poor_fitness(this: usize, jogador: u
     let no = if cauda != 0 { cpz9_d(cauda + 6) } else { cpz9_d(l + 2) };
     let dados = if no != 0 { cpz9_d(no) } else { 0 };
     let igual = dados != 0 && core::slice::from_raw_parts(dados as *const u8, 0x10) == plano;
-    PLACAR.registrar(igual, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", jogador, clube, plano, no, dados));
+    PLACAR.record(igual, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", jogador, clube, plano, no, dados));
 }
 
 /// { 0x5a74b0 } (stdcall, ret 0x14, Fine.cpp, SEH da notícia local, sem destrutor): `post_fine_reaction_news(jogador,
@@ -172,7 +172,7 @@ unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, motivo: u32, 
     if atual != 0 && !cpz9_clube_humano(atual) {
         return;
     }
-    crate::comparacao::ramo("cpz_9 noticia da reacao a multa");
+    crate::comparison::branch("cpz_9 noticia da reacao a multa");
     if FINE_NEWS_DRY_RUN {
         FINE_NEWS_WOULD_BUILD = true;
         return;
@@ -207,19 +207,19 @@ unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, motivo: u32, 
 unsafe extern "stdcall" fn comparar_post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(%%I1%%);
     let mut regioes = vec![(0xae1080, 4)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     FINE_NEWS_DRY_RUN = true;
     FINE_NEWS_WOULD_BUILD = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| post_fine_reaction_news(jogador, motivo, reacao, prazo, efeitos)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| post_fine_reaction_news(jogador, motivo, reacao, prazo, efeitos)));
     FINE_NEWS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(jogador, motivo, reacao, prazo, efeitos);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let montaria = FINE_NEWS_WOULD_BUILD;
     let igual = if montaria { mo.0[0].1 == mr.0[0].1 } else { mo == mr };
-    PLACAR.registrar(igual, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
+    PLACAR.record(igual, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
 }
 
 /// { 0x5a7f20 } (stdcall, ret 0xc, Fine.cpp, SEH da notícia local, sem destrutor): `post_coach_fine_feedback_news
@@ -233,7 +233,7 @@ unsafe extern "stdcall" fn post_coach_fine_feedback_news(jogador: usize, treinad
     if treinador == 0 || cpz9_d(treinador + 0x61) == 0 || cpz9_d(treinador + 0x1a) == 0 {
         return;
     }
-    crate::comparacao::ramo("cpz_9 noticia do retorno do treinador");
+    crate::comparison::branch("cpz_9 noticia do retorno do treinador");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)

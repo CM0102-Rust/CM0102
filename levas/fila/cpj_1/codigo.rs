@@ -58,8 +58,8 @@ unsafe extern "stdcall" fn passes_work_permit_check(jogador: usize, _atual: usiz
 
 unsafe extern "thiscall" fn comparar_oldest_player_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || oldest_player_record_construct(this));
-    PLACAR.registrar(igual && r == n, || format!("oldest_player_record_construct {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x28)], || o(this), || oldest_player_record_construct(this));
+    PLACAR.record(igual && r == n, || format!("oldest_player_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn comparar_oldest_player_record_construct(this: usize)
 unsafe extern "thiscall" fn comparar_find_work_permit(this: usize, pessoa: *const i32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> usize>(%%I1%%)(this, pessoa);
     let n = find_work_permit(this, pessoa);
-    PLACAR.registrar(r == n, || format!("find_work_permit({:x}) original={:#x} rust={:#x}", pessoa as usize, r, n));
+    PLACAR.record(r == n, || format!("find_work_permit({:x}) original={:#x} rust={:#x}", pessoa as usize, r, n));
     r
 }
 
@@ -75,8 +75,8 @@ unsafe extern "thiscall" fn comparar_find_work_permit(this: usize, pessoa: *cons
 /// sem_contar.
 unsafe extern "stdcall" fn comparar_passes_work_permit_check(jogador: usize, atual: usize, comprador: usize) -> u8 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, usize) -> u8>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(jogador, atual, comprador),
-        || crate::aleatorio::sem_contar(|| passes_work_permit_check(jogador, atual, comprador)));
-    PLACAR.registrar(igual && r == n, || format!("passes_work_permit_check({:x}, {:x}) original={} rust={} {:x?} x {:x?}", jogador, comprador, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(jogador, atual, comprador),
+        || crate::rng::without_counting(|| passes_work_permit_check(jogador, atual, comprador)));
+    PLACAR.record(igual && r == n, || format!("passes_work_permit_check({:x}, {:x}) original={} rust={} {:x?} x {:x?}", jogador, comprador, r, n, mo, mr));
     r
 }

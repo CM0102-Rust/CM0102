@@ -25,7 +25,7 @@ unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let gravar: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932e10usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparacao::ramo("save gravar regras fifa");
+    crate::comparison::branch("save gravar regras fifa");
     if save == 0 {
         setup_warning(0x3b24);
         return;
@@ -62,7 +62,7 @@ unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932c30usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparacao::ramo("save carregar regras fifa");
+    crate::comparison::branch("save carregar regras fifa");
     if save == 0 {
         setup_warning(0x3b4f);
         return;
@@ -186,10 +186,10 @@ unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
 // relógio (fixos só no modo simulação), como na prova do save.
 unsafe extern "C" fn comparar_build_save_game_summary(resumo: *mut u8) {
     let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
-    let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
+    let (_, _, _, mo, mr) = crate::comparison::side_by_side(&regioes,
         || original_fn::<unsafe extern "C" fn(*mut u8)>(%%I2%%)(resumo),
         || build_save_game_summary(resumo));
-    PLACAR.registrar(mo.0[0] == mr.0[0], || {
+    PLACAR.record(mo.0[0] == mr.0[0], || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let k = (0..a.len()).find(|&k| a[k] != b[k]).unwrap_or(0);
         format!("build_save_game_summary: primeira diferença em +{:#x}: {:#04x} x {:#04x}", k, a[k], b[k])

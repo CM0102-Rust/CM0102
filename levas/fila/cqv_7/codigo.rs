@@ -155,7 +155,7 @@ unsafe fn cqv7_inscritos(this: usize) -> i32 {
     let mut b = 0usize;
     let nacao = cqv7_d(cqv7_d(this + 4) + 0x5d);
     if *((nacao + 0x11c) as *const u8) & 4 != 0 || cqv7_w(this + 0x40) == 0x7d1 {
-        crate::comparacao::ramo("cqv_7 campeao e vice do trofeu");
+        crate::comparison::branch("cqv_7 campeao e vice do trofeu");
         let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
         let reg = cqv7_d(0xae23d0) + cqv7_d(0x9cf6a0).wrapping_mul(0x6b);
         a = colocado(reg, 0); // cqv7: o campeão
@@ -248,7 +248,7 @@ unsafe fn cqv7_inscritos(this: usize) -> i32 {
     let (x1, x2) = (fora_do_ano[0], fora_do_ano[1]);
     cqv7_divisao(this, &mut k, 0x9cf5c8, &[a, b, x1, x2]); cqv7_divisao(this, &mut k, 0x9cf5c4, &[x1, x2]); // cqv7: a terceira e a segunda
     cqv7_divisao(this, &mut k, 0x9cf5c0, &[x1, x2]);
-    crate::comparacao::ramo("cqv_7 primeira divisao embaralhada");
+    crate::comparison::branch("cqv_7 primeira divisao embaralhada");
     for _ in 0..0x3c { // cqv7: 60 trocas na primeira divisão
         let r1 = sorteio(0x18) as i8 as i32;
         let r2 = sorteio(0x18) as i8 as i32;
@@ -282,17 +282,17 @@ unsafe extern "thiscall" fn cqv7_inscritos_da_copa_da_inglaterra(this: usize) ->
 unsafe extern "thiscall" fn comparar_cqv7_inscritos_da_copa_da_inglaterra(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let antes = cqv7_d(this + 0xa7);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this + 0x3e, 2usize), (this + 0xb3, 2), (0xb67a34, 4)]);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqv7_d(this + 0xa7));
         cqv7_pd(this + 0xa7, antes);
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| cqv7_inscritos(this));
+        let r = crate::rng::without_counting(|| cqv7_inscritos(this));
         lr.set(cqv7_d(this + 0xa7));
         cqv7_pd(this + 0xa7, lo.get());
         r
@@ -304,6 +304,6 @@ unsafe extern "thiscall" fn comparar_cqv7_inscritos_da_copa_da_inglaterra(this: 
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && tabela, || format!("cqv7_inscritos_da_copa_da_inglaterra({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    PLACAR.record(igual && a == b && tabela, || format!("cqv7_inscritos_da_copa_da_inglaterra({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }

@@ -10,8 +10,17 @@ pub(crate) unsafe fn stage_leader(this: usize, k: i32) -> usize {
     read_usize(read_usize(t + 0xb1))
 }
 
-/// The Series C final: the winner of third-round group A against the winner of group B, in a two-club cup stage
-/// [inference: home and away]; the winner is the Series C champion
+/// Creates the Series C final: the winner of third-round group A against the winner of group B, in a two-club cup stage
+/// [inference: home and away]; the winner is the Series C champion.
+///
+/// SEH frame only for the `new`. `BraNatThird::create_final_stage()`, the Series C final, called at the end of the
+/// third round: the champions of the two third-round groups (the first of stage 8's table and that of stage 9, in that
+/// order) in a local list of 2; the round table through the virtual +0x3c (create_round_table: thiscall(this, 10,
+/// &rounds, &extra, 0), ret 0x10); the stage (operator new 0x944cf1(0xb2) and the Cup_Stage constructor 0x522e00,
+/// thiscall, ret 0x3c: the league, 2, the list, the rounds, +4, the table, the year, 10, 1, the extra, 0x14, 0, 0, 0,
+/// null seeds; clean words) into `[+0xc][10]`. Without a stage: the error box at line 0x392 and it returns (without
+/// freeing the table). With one: the table freed (free 0x9452ca) and +0x30 = 10. [inference] The final decides the
+/// Series C champion, home and away.
 /// Original: `BraNatThird::create_final_stage` (0x42e980, bra_nat_third.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x42e980 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_final_stage()`, a
@@ -45,14 +54,30 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
     if read_usize(read_usize(this + league::STAGES) + 0x28) == 0 {
         return show_error_at(0x98aba4, 0x392);
     }
-    crate::comparacao::ramo("cqs_4 final");
+    crate::comparison::branch("cqs_4 final");
     soltar(t);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 10);
 }
 
-/// The Series C turnover: archives the season, clears the table, the schedule and the stages, moves to the next year
-/// and rebuilds the rules, the 56-club list and the table, the fixtures and the order; then the board expectations, the
-/// referee renewal, the seven first-round groups and the predicted positions; the 56-club list is discarded at the end
+/// The Series C season turnover: archives the season, clears the table, the schedule and the stages, moves to the next
+/// year and rebuilds the rules, the 56-club list and the table, the fixtures and the order; then the board
+/// expectations, the referee renewal, the seven first-round groups and the predicted positions; the 56-club list is
+/// discarded at the end.
+///
+/// `BraNatThird::start_new_season()`, the Series C turnover (called from the Series A turnover): +0x4c = 0 and the
+/// table freed (League::free_table 0x687970, thiscall(this, 0), ret 4); the schedule (+0xba) freed (free 0x9452ca) and
+/// cleared; with statistics (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1), ret 4); with the
+/// current stage ≥ 0, the existing stages 0..=+0x30 are destroyed (virtual 0, the destructor with 1); +0x30 = −1; the
+/// stage array freed; the year (+0x40, word) goes up by one; a new array of +0x2c stages (malloc of 4 × +0x2c, not
+/// cleared; with +0x2c ≤ 0, null); then, each with its own error box (lines 0x202, 0x209, 0x20f and 0x216) if it
+/// returns 0: the rules (virtual +0x8c), the table and the list of the 56 (0x42dc90, thiscall, ret 0), the fixtures
+/// (League::create_fixtures 0x6835c0) and the table order (League::sort_table 0x6827d0, thiscall(this, 0), ret 4);
+/// finally the boards' expectations (League::set_club_season_expectations 0x68aa80, thiscall, ret 0), the referee
+/// renewal (OfficialsManager::renew_officials 0x79cee0, thiscall(`[0xb74340]`, +4), ret 4), the seven first-round
+/// groups (0x42ee80(g), thiscall, ret 4, g from 0 to 6), the predicted positions (virtual +0x5c) and the list of the 56
+/// (+0xee) freed (if present) and cleared. With an error box, the copy returns 0 (the original returns the box's eax,
+/// which the Brazilian turnover does not read); at the end, the eax of the free or +0xee (the copy returns 0: nobody
+/// reads it).
 /// Original: `BraNatThird::start_new_season` (0x42def0, bra_nat_third.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x42def0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::start_new_season()`, a virada da Série C (chamada
@@ -103,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     let n = read_usize(this + league::STAGE_COUNT) as i32;
     let a = read_i16(this + league::YEAR);
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1));
-    crate::comparacao::ramo("cqs_4 virada da serie c");
+    crate::comparison::branch("cqs_4 virada da serie c");
     let v = if n > 0 { alloc((n * 4) as u32) } else { 0 };
     core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
@@ -153,9 +178,16 @@ pub(crate) fn place_for_index(k: usize) -> u8 {
     if k < 16 { SERIE_C_PREDICTED_PLACES[k] } else { (16 + 8 * ((k - 16) / 8)) as u8 }
 }
 
-/// The Series C predicted positions: the 56 ordered by reputation; the favourite 1st, the second 2nd, the next two 3rd
-/// (the semi-finals), two 5th and two 7th, eight 9th (the second round) and the other forty in bands of eight: 16th,
-/// 24th, 32nd, 40th and 48th
+/// Sets the Series C predicted positions: the 56 ordered by reputation; the favourite 1st, the second 2nd, the next two
+/// 3rd (the semi-finals), two 5th and two 7th, eight 9th (the second round) and the other forty in bands of eight:
+/// 16th, 24th, 32nd, 40th and 48th.
+///
+/// `BraNatThird::set_predicted_positions()`, called from the constructor and the turnover, after the groups. Without
+/// statistics (+8): the error box at line 0x4a2 and it returns. The list of the 56 (+0xee) is sorted in place by
+/// reputation (qsort 0x945333 with 0x4b07d0, highest first, nulls at the end) and each club, in order, gets the
+/// predicted position from `place_for_index` (Comp_Stats::set_club_final_position 0x4a2540, thiscall(+8, club,
+/// position), ret 8; the original pushes the band of the forty in a dword with the band's byte and stack garbage above
+/// it; 0x4a2540 reads only the byte: the copy passes the clean byte).
 /// Original: `BraNatThird::set_predicted_positions` (0x42f0a0, bra_nat_third.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x42f0a0 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::set_predicted_positions()`, as posições previstas da
@@ -174,7 +206,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(thi
     for k in 0..0x38usize {
         position(read_usize(this + 8), read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k), place_for_index(k) as u32);
     }
-    crate::comparacao::ramo("cqs_4 posicoes previstas");
+    crate::comparison::branch("cqs_4 posicoes previstas");
 }
 
 
@@ -229,7 +261,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g:
     if read_usize(read_usize(this + 0xc) + 4 * k as usize) == 0 {
         return show_error_at(0x98aba4, 0x487);
     }
-    crate::comparacao::ramo("cqs_3 grupo");
+    crate::comparison::branch("cqs_3 grupo");
     soltar(v);
     soltar(t);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
@@ -248,9 +280,26 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_group_stage(this: us
 /// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `SECOND_ROUND_SEEDS[k]` da lista dos dezesseis.
 pub(crate) const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
 
-/// The Series C second round: the sixteen (the top two of each group) seeded by first-round points (ties go to the
-/// earlier one: the league, then groups 0 to 6, first before second), in a knockout where the best meets the 16th, the
-/// 2nd the 15th and so on [inference: pairs follow the list]
+/// Creates the Series C second round: the sixteen (the top two of each group) seeded by first-round points (ties go to
+/// the earlier one: the league, then groups 0 to 6, first before second), in a knockout where the best meets the 16th,
+/// the 2nd the 15th and so on [inference: pairs follow the list].
+///
+/// SEH frame only for the `new`. `BraNatThird::create_second_round_stage()`, the Series C second round, called at the
+/// end of the groups.
+///
+/// 1) A list of 16 (malloc 0x944e46 of 0x40; out of memory: the error box at line 0x2e6 and it returns).
+///
+/// 2) The top two of each of the eight groups (the league's table and those of stages 0 to 6, in that order), in 6-byte
+/// records (the club and the points, the row's +0x19).
+///
+/// 3) Sixteen times: the record with most points (the first one, on a tie) among those that still have a club is taken
+/// out (the club becomes 0) and the club goes to slot `SECOND_ROUND_SEEDS[k]`: the best against the 16th, the 2nd
+/// against the 15th... (with none left: the error box at line 0x30b; the original then reads address 0 and crashes).
+///
+/// 4) The round table through the virtual +0x3c (thiscall(this, 7, &rounds, &extra, 0), ret 0x10); the stage (operator
+/// new 0x944cf1(0xb2) and the Cup_Stage constructor 0x522e00, thiscall, ret 0x3c: the league, 16, the list, the rounds,
+/// +4, the table, the year, 7, 1, the extra, 0x14, 0, 0, 0, null seeds; clean words) into `[+0xc][7]`. Without a stage:
+/// the error box at line 0x31b and it returns. With one: the table and the list freed (free 0x9452ca) and +0x30 = 7.
 /// Original: `BraNatThird::create_second_round_stage` (0x42e430, bra_nat_third.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x42e430 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_second_round_stage()`,
@@ -316,15 +365,26 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     if read_usize(read_usize(this + league::STAGES) + 0x1c) == 0 {
         return show_error_at(0x98aba4, 0x31b);
     }
-    crate::comparacao::ramo("cqs_3 segunda fase");
+    crate::comparison::branch("cqs_3 segunda fase");
     soltar(t);
     soltar(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 7);
 }
 
-/// The Series C third round: the eight second-round winners, drawn (shuffled) into two groups of four, home and away,
-/// with 3 points for a win, 1 for a draw, tie-breakers {1, 2, 4} and two top places in each group [inference: the top
-/// two of each group go up to Series B and the group winners play the final]
+/// Creates the Series C third round: the eight second-round winners, drawn (shuffled) into two groups of four, home and
+/// away, with 3 points for a win, 1 for a draw, tie-breakers {1, 2, 4} and two top places in each group [inference: the
+/// top two of each group go up to Series B and the group winners play the final].
+///
+/// SEH frame only for the `new`. `BraNatThird::create_third_round_groups()`, the Series C third round, called at the
+/// end of the second: the second-round winners (`[+0xc][7]`, the 6-byte records of +0xa7 with +5 = 1, in order) in a
+/// local list of 8, shuffled (comp_util_shuffle_pointer_array 0x4afb40, cdecl(v, 8)); the first four form group A
+/// (stage 8) and the other four group B (stage 9). Each group: the round table through the virtual +0x3c
+/// (thiscall(this, 8 or 9, &rounds, &extra, 0)) and the stage (operator new 0x944cf1(0xee) and the League_Stage
+/// constructor 0x68b100: the league, 4, the list (or the list + 4), 2 (home and away), +4, the table, the rounds
+/// (word), 3 points per win, 1 per draw, category 5, &{1,2,4,0} (the tie-break criteria), &{2,0,0,0} (two top places),
+/// the year, 8 or 9, the extra (word), 0x14, 1, 0, 2 (the rule bits), −1, 0, 2) into `[+0xc][8]` or `[9]`; without a
+/// stage: the error box at line 0x353 or 0x363 and it returns; with one, the table freed (free 0x9452ca). After the
+/// second one, +0x30 = 9. [inference] The top two of each group go up to Series B; the group winners play the final.
 /// Original: `BraNatThird::create_third_round_groups` (0x42e700, bra_nat_third.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x42e700 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_third_round_groups()`,
@@ -377,16 +437,24 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         }
         soltar(t);
     }
-    crate::comparacao::ramo("cqs_3 terceira fase");
+    crate::comparison::branch("cqs_3 terceira fase");
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 9);
 }
 
 
 
 
-/// Series C takes up to 56 clubs (those of the division, in database order), which are drawn (3 swaps per club); the
-/// first 7 of the draw make the first table, of 7 clubs, and the drawn list is kept for the other groups [inference: 8
-/// groups of 7 in the first stage]
+/// Builds the Series C table: up to 56 clubs (those of the division, in database order), which are drawn (3 swaps per
+/// club); the first 7 of the draw make the first table, of 7 clubs, and the drawn list is kept for the other groups
+/// [inference: 8 groups of 7 in the first stage].
+///
+/// `BraNatThird::create_table()`: +0x3e = 7; the list of entrants (+0xee) is rebuilt (the old one freed, 0x9452ca push;
+/// add esp -> cdecl; the new one with 0xe0 bytes = 56 pointers; out of memory: the error box at line 0x18f and it
+/// returns 1, as the original); the table (+0xb1, 7 × 0x3b; out of memory: the error box at line 0x196 and 0); the list
+/// receives, in database order, up to 56 clubs whose division (+0x57) is Series C itself (the record in `[this+4]`);
+/// the list is shuffled (comp_util_shuffle_pointer_array 0x4afb40: push count (word); push list; add esp, 8 -> cdecl; 3
+/// × count random swaps) and the first 7 of the draw go into rows 0..6 (0x687430, the row in a clean dword). Source
+/// 0x98aba4. Returns 1.
 /// Original: `BraNatThird::create_table` (0x42dc90, bra_nat_third.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x42dc90 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::create_table()`: +0x3e = 7; a lista dos
@@ -432,7 +500,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
         i += 1;
         clube = clube.wrapping_add(0x245);
     }
-    crate::comparacao::ramo("cql_7 serie c sorteio");
+    crate::comparison::branch("cql_7 serie c sorteio");
     embaralhar(read_usize(this + bra_nat_third::CLUB_LIST), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
     for j in 0..7usize {
         iniciar(this, j as u32, read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + j * 4), 0, 0);
@@ -450,7 +518,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
 /// [pt] { 0x42de50 } (thiscall, bra_nat_third.cpp): `BraNatThird::set_up_rules`, as regras da Série C e o calendário.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_up_rules(this: usize) -> u32 {
     set_serie_c_rules(this);
-    crate::comparacao::ramo("cqi_7 regras da serie c");
+    crate::comparison::branch("cqi_7 regras da serie c");
     create_main_schedule(this);
     1
 }
@@ -488,7 +556,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usi
         let (a, c) = (serie_c_progress_code(a, 1), serie_c_progress_code(c, 9));
         let b2 = serie_c_progress_code(b, 1);
         if b == 3 {
-            crate::comparacao::ramo("cqk_8 serie c segundo 3");
+            crate::comparison::branch("cqk_8 serie c segundo 3");
         }
         write_progress_codes(e, a, b2, c); // cqk8: os códigos dos grupos da Série C
     } else {

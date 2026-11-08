@@ -52,7 +52,7 @@ unsafe fn cqm2_comparar(nome: &str, this: usize, o: impl FnOnce(), c: impl FnOnc
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.registrar(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
+    PLACAR.record(campos && janelas, || format!("{}: campos {} janelas {}", nome, campos, janelas));
 }
 
 /// As janelas da Noruega: uma janela, de 1º de setembro a 31 de agosto.
@@ -63,7 +63,7 @@ const NORWAY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x7944f0 } (thiscall, ret 0x14, norway_rules.cpp, `NORWAY_RULES::NORWAY_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Noruega (regra 17): a base (0x8e84a0), a vtable 0x96dfe4, 1 janela(s) de `NORWAY_TRANSFER_WINDOWS`. Devolve o objeto.
 unsafe extern "thiscall" fn construct_norway_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_2 noruega");
+    crate::comparison::branch("cqm_2 noruega");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96dfe4, 1, &NORWAY_TRANSFER_WINDOWS, 0xa69870, 0x51);
     this
 }
@@ -86,7 +86,7 @@ const NORTHERN_IRELAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x7936d0 } (thiscall, ret 0x14, northern_ireland_rules.cpp, `NORTHERN_IRELAND_RULES::NORTHERN_IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda do Norte (regra 16): a base (0x8e84a0), a vtable 0x96df9c, 1 janela(s) de `NORTHERN_IRELAND_TRANSFER_WINDOWS`. Devolve o objeto.
 unsafe extern "thiscall" fn construct_northern_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_2 irlanda_do_norte");
+    crate::comparison::branch("cqm_2 irlanda_do_norte");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96df9c, 1, &NORTHERN_IRELAND_TRANSFER_WINDOWS, 0xa697f4, 0x4e);
     this
 }
@@ -109,7 +109,7 @@ const WALES_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 
 /// { 0x90f080 } (thiscall, ret 0x14, wales_rules.cpp, `WALES_RULES::WALES_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência do País de Gales (regra 26): a base (0x8e84a0), a vtable 0x970a9c, 1 janela(s) de `WALES_TRANSFER_WINDOWS`. Devolve o objeto.
 unsafe extern "thiscall" fn construct_wales_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqm_2 pais_de_gales");
+    crate::comparison::branch("cqm_2 pais_de_gales");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x970a9c, 1, &WALES_TRANSFER_WINDOWS, 0xad4404, 0x4e);
     this
 }

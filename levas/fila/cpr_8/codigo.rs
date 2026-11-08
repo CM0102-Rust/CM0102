@@ -138,7 +138,7 @@ unsafe fn set_retirement_dates(pessoa: usize, saida: usize, fora: unsafe fn(usiz
     if k < 0 || k >= 0x23 {
         return fora(saida);
     }
-    crate::comparacao::ramo("cpr_8 datas pela nacao");
+    crate::comparison::branch("cpr_8 datas pela nacao");
     let ano = cpr8_u(0xae2c92);
     let a = (sortear(95) as u32).wrapping_add(cpr8_d(0xae2c90) as u32).wrapping_add(1) as u16;
     let (dia1, ano1) = if a as i16 > 0x16d { (sortear(60) as u16, ano.wrapping_add(1)) } else { (a, ano) };
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, 
             return 0; // cpr8: a habilidade alta segura o jogador
         }
         if hab < 0xa || v < 0x5dc {
-            crate::comparacao::ramo("cpr_8 inicio habilidade");
+            crate::comparison::branch("cpr_8 inicio habilidade");
             break 'm 1;
         }
         if clube != 0 {
@@ -334,7 +334,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
             n != 0 && *((n + 0x11c) as *const u8) == 0
         };
         if sorteia {
-            crate::comparacao::ramo("cpr_8 fora do jogo");
+            crate::comparison::branch("cpr_8 fora do jogo");
             if sortear(3) == 0 {
                 break 'm 1; // cpr8: um em três se aposenta
             }
@@ -375,7 +375,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
 /// ([0xae2d0c]) e sem contrato (0x4cf5a0) com +0x49 é testada (0x7a79c0); quem se aposenta entra na lista
 /// (0x7a8510). No fim o qsort da lista ([this+4], conta +8, 26 bytes, 0x7ae2a0).
 unsafe extern "thiscall" fn build_initial_retirement_list(this: usize) {
-    crate::comparacao::ramo("cpr_8 lista inicial");
+    crate::comparison::branch("cpr_8 lista inicial");
     // ponytail: a original constrói as duas datas da entrada (0x54a110) e deixa o resto como estava na pilha; a
     // 0x7a79c0 grava tudo o que a 0x7a8510 copia antes de devolver 1 (a terceira data local nunca é lida: fica de fora)
     let mut e = [0u8; 0x1a];
@@ -406,7 +406,7 @@ unsafe extern "thiscall" fn build_initial_retirement_list(this: usize) {
 
 /// As regiões que as duas decisões mudam: o sorteio, [0xae1080], a saída e a data estática da 0x54cdb0.
 unsafe fn retirement_decision_regions(saida: usize) -> Vec<(usize, usize)> {
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend_from_slice(&[(0xae1080, 4), (saida, 0x1a), (0xae2470, 8), (0xae2418, 1)]);
     reg
 }
@@ -414,18 +414,18 @@ unsafe fn retirement_decision_regions(saida: usize) -> Vec<(usize, usize)> {
 /// Comparador: lado a lado pelo sorteio, [0xae1080], a saída e a data estática (a cópia sem contar), e a devolução.
 unsafe extern "thiscall" fn comparar_player_regen_check_initial_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&retirement_decision_regions(saida), || o(this, pessoa, saida),
-        || crate::aleatorio::sem_contar(|| player_regen_check_initial_retirement(this, pessoa, saida)));
-    PLACAR.registrar(igual && r == n, || format!("player_regen_check_initial_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(saida), || o(this, pessoa, saida),
+        || crate::rng::without_counting(|| player_regen_check_initial_retirement(this, pessoa, saida)));
+    PLACAR.record(igual && r == n, || format!("player_regen_check_initial_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
 /// Comparador: como o da 0x7a79c0.
 unsafe extern "thiscall" fn comparar_player_regen_check_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&retirement_decision_regions(saida), || o(this, pessoa, saida),
-        || crate::aleatorio::sem_contar(|| player_regen_check_retirement(this, pessoa, saida)));
-    PLACAR.registrar(igual && r == n, || format!("player_regen_check_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(saida), || o(this, pessoa, saida),
+        || crate::rng::without_counting(|| player_regen_check_retirement(this, pessoa, saida)));
+    PLACAR.record(igual && r == n, || format!("player_regen_check_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 

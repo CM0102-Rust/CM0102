@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
             *(e as *mut i8) = vaga;
             let carga: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x8b4f60usize);
             let v = carga(cqd8_programa_do_humano(this, tec, vaga));
-            crate::comparacao::ramo("cqd_8 programa do humano");
+            crate::comparison::branch("cqd_8 programa do humano");
             gravar_carga(cqd8_d(0xb63d28), p, v as u32);
         }
     }
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
         let ainda = c != 0 && training_manager_club_of_contract(c) != 0 && cqd8_d(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
             && is_human_manager_id(cqd8_d(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf));
         if !ainda {
-            crate::comparacao::ramo("cqd_8 saiu do clube humano");
+            crate::comparison::branch("cqd_8 saiu do clube humano");
             *marca &= 0xdf;
             gravar_carga(cqd8_d(0xb63d28), p, 0x32);
             let f = cqd8_d(p + 0x61);
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
             if peso > 0x64 {
                 if cqd8_sortear(0xd2 - peso as i32) < 0x14 && v < teto { // cqd8: o sorteio da subida
                     if cqd8_sortear((v as i32).abs() * 2 + 0xe) < 10 {
-                        crate::comparacao::ramo("cqd_8 progresso sobe");
+                        crate::comparison::branch("cqd_8 progresso sobe");
                         d[k] = d[k].wrapping_add(1); // cqd8: o progresso sobe
                     }
                     continue;
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
                 continue;
             }
             if cqd8_sortear((v as i32).abs() * 2 + 0xe) < 10 {
-                crate::comparacao::ramo("cqd_8 progresso desce");
+                crate::comparison::branch("cqd_8 progresso desce");
                 d[k] = d[k].wrapping_sub(1); // cqd8: o progresso desce
             }
         }
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
                         let a = cqd8_b(p + 0x5b);
                         if quer && a < 0xf && cqd8_sortear(a as i32) < 10 && cqd8_d(0xb63d28) != 0
                             && estado(cqd8_d(0xb63d28), p) == 0 {
-                            crate::comparacao::ramo("cqd_8 reclama do treino de posicao");
+                            crate::comparison::branch("cqd_8 reclama do treino de posicao");
                             reclamar(c, 0x8000, 0);
                             let m = (c + 0x44) as *mut i8;
                             let v = *m as i32 - 5;
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular:
     let aplicar: unsafe extern "thiscall" fn(usize, usize, *const i8) = core::mem::transmute(0x8b2be0usize);
     aplicar(this, p, d.as_ptr());
     if acabou {
-        crate::comparacao::ramo("cqd_8 treino de posicao acabou");
+        crate::comparison::branch("cqd_8 treino de posicao acabou");
         let n0 = cqd8_i(this + 0x6525);
         let mut i = 0i32;
         if n0 > 0 {
@@ -330,15 +330,15 @@ unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usiz
         return o(this, p, pular);
     }
     let f = cqd8_d(p + 0x61);
-    let mut reg = Vec::from(crate::aleatorio::REGIOES_DO_ESTADO);
+    let mut reg = Vec::from(crate::rng::STATE_REGIONS);
     reg.extend_from_slice(&[(0xae1080, 4), (training_entry_of_staff(this, p), 6), (f + 0xf, 0x33)]);
     let les = cqd8_d(0xb63d28);
     if les != 0 {
         reg.push((cqd8_d(les).wrapping_add((cqd8_i(p) as isize * 31 + 0x1e) as usize), 1));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, pular),
-        || crate::aleatorio::sem_contar(|| update_player_training(this, p, pular)));
-    PLACAR.registrar(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, pular as u16, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, pular),
+        || crate::rng::without_counting(|| update_player_training(this, p, pular)));
+    PLACAR.record(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, pular as u16, mo.0, mr.0));
 }
 
 /// { 0x8b39f0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_player_schedule(pessoa)`, pelo diário
@@ -380,8 +380,8 @@ unsafe extern "thiscall" fn comparar_get_player_schedule(this: usize, p: usize) 
     if p == 0 || cqd8_d(p + 0x61) == 0 {
         return o(this, p);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p), || get_player_schedule(this, p));
-    PLACAR.registrar(igual && r == n, || format!("get_player_schedule(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo.0, mr.0));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, p), || get_player_schedule(this, p));
+    PLACAR.record(igual && r == n, || format!("get_player_schedule(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo.0, mr.0));
     r
 }
 
@@ -398,6 +398,6 @@ unsafe extern "thiscall" fn get_category_level(this: usize, categoria: u32) -> u
 unsafe extern "thiscall" fn comparar_get_category_level(this: usize, categoria: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, categoria);
     let n = get_category_level(this, categoria);
-    PLACAR.registrar(r == n, || format!("get_category_level({:x}, {}) original={:x} rust={:x}", this, categoria as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("get_category_level({:x}, {}) original={:x} rust={:x}", this, categoria as u8 as i8, r, n));
     r
 }

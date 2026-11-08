@@ -11,7 +11,7 @@ const COMPETITION_V1_LAYOUT: [(usize, u32, usize); 7] = [(0, 4, 1), (4, 0x33, 1)
 /// 1. Chamado por `db_files_read_comps` 0x54feb0 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
 unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparacao::ramo("banco ler competições v1");
+    crate::comparison::branch("banco ler competições v1");
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
         core::mem::transmute(if use_zip != 0 { 0x932c30usize } else { 0x945bfeusize });
     for i in 0..n as usize {
@@ -45,7 +45,7 @@ unsafe extern "C" fn comparar_db_files_read_comps_v1(stream: usize, use_zip: i32
     let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(0x946a22usize);
     let pos = ftell(stream);
     let (mut fim_o, mut fim_r) = (0, 0);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(registros, n as usize * 107)],
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&[(registros, n as usize * 107)],
         || {
             let r = o(stream, use_zip, registros, n);
             fim_o = ftell(stream);
@@ -57,7 +57,7 @@ unsafe extern "C" fn comparar_db_files_read_comps_v1(stream: usize, use_zip: i32
             fim_r = ftell(stream);
             r
         });
-    PLACAR.registrar(igual && r == x && fim_o == fim_r, || {
+    PLACAR.record(igual && r == x && fim_o == fim_r, || {
         let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
         format!("db_files_read_comps_v1(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", n, r, x, fim_o, fim_r, pos, dif)
     });
@@ -89,7 +89,7 @@ unsafe extern "C" fn comparar_nation_get_english_name(nacao: usize) -> usize {
     }
     let r = o(nacao);
     let n = nation_get_english_name(nacao);
-    PLACAR.registrar(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
+    PLACAR.record(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
     r
 }
 
@@ -128,7 +128,7 @@ unsafe extern "C" fn comparar_club_get_english_short_name(clube: usize) -> usize
     }
     let r = o(clube);
     let n = club_get_english_short_name(clube);
-    PLACAR.registrar(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
+    PLACAR.record(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
     r
 }
 
@@ -143,14 +143,14 @@ pub unsafe fn autoteste_dbj_2() {
     const ARQ: &str = "autoteste_banco_v1c.tmp";
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
-    let (t0, d0) = PLACAR.contagem();
-    let mut s = Sorteio(0x5631_4442_4a32);
+    let (t0, d0) = PLACAR.counts();
+    let mut s = TestRng(0x5631_4442_4a32);
     let v1: usize = COMPETITION_V1_LAYOUT.iter().map(|&(_, t, q)| t.max(1) as usize * q).sum();
     for caso in 0..64u64 {
-        let n = 1 + (s.proximo() % 6) as usize;
+        let n = 1 + (s.next_u64() % 6) as usize;
         let total = n * v1;
-        let corte = if caso % 3 == 0 { total } else { (s.proximo() % (total as u64 + 1)) as usize };
-        let bytes: Vec<u8> = (0..corte).map(|_| if caso % 4 == 1 { 0 } else { s.proximo() as u8 }).collect();
+        let corte = if caso % 3 == 0 { total } else { (s.next_u64() % (total as u64 + 1)) as usize };
+        let bytes: Vec<u8> = (0..corte).map(|_| if caso % 4 == 1 { 0 } else { s.next_u64() as u8 }).collect();
         if std::fs::write(ARQ, &bytes).is_err() {
             continue;
         }
@@ -158,7 +158,7 @@ pub unsafe fn autoteste_dbj_2() {
         if f == 0 {
             continue;
         }
-        let mut buf: Vec<u8> = (0..n * 107).map(|_| s.proximo() as u8).collect();
+        let mut buf: Vec<u8> = (0..n * 107).map(|_| s.next_u64() as u8).collect();
         comparar_db_files_read_comps_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
         fclose(f);
     }
@@ -169,7 +169,7 @@ pub unsafe fn autoteste_dbj_2() {
     let mut mapa = [0i32; 8];
     let mut registro = [0u8; 0x40];
     for _ in 0..256 {
-        let z = s.proximo();
+        let z = s.next_u64();
         *(0x9b5984 as *mut u32) = [0u32, 1, 2, 3, 13][(z % 5) as usize];
         tabela[0] = ((z >> 4) % 10) as usize;
         tabela[8] = 0x1000_0000 + ((z >> 8) as usize & 0xffff0);
@@ -188,6 +188,6 @@ pub unsafe fn autoteste_dbj_2() {
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
     }
-    let (t1, d1) = PLACAR.contagem();
+    let (t1, d1) = PLACAR.counts();
     linha(&format!("banco v1 e nomes em inglês: AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
 }

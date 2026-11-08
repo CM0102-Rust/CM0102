@@ -26,7 +26,7 @@ unsafe extern "C" fn open_latest_scores(vaga: u32, entrada: usize) {
     if vaga == 0 || entrada == 0 {
         return original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, entrada);
     }
-    crate::comparacao::ramo("telas abrir os ultimos placares");
+    crate::comparison::branch("telas abrir os ultimos placares");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
     if abrir(SCREEN_MANAGER, vaga, 0x71b300, 0x71b3d0, 0, 0, 0) == 0 {
         return;
@@ -43,7 +43,7 @@ unsafe extern "C" fn open_latest_scores(vaga: u32, entrada: usize) {
 /// placares (0x723d20, de 0x50 a 0x217) e os botões de voltar e avançar (0x5edcc0, desligados quando o
 /// gerente não tem para onde ir).
 unsafe extern "C" fn build_latest_scores() {
-    crate::comparacao::ramo("telas montar os ultimos placares");
+    crate::comparison::branch("telas montar os ultimos placares");
     let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
     let entrada = ler(SCREEN_MANAGER, 0xe);
     let id = *(entrada as *const i32);
@@ -74,7 +74,7 @@ unsafe extern "C" fn build_latest_scores() {
 /// competição (0x725860) decide; sem decisão, −11 com [0xb6b7b0] ou redesenha com [0xb6b7a8]
 /// (0x802d00). Por fim a barra de menu (0x7615d0, senão 0x7643d0).
 unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
-    crate::comparacao::ramo("telas respond aos ultimos placares");
+    crate::comparison::branch("telas respond aos ultimos placares");
     let g = |a: usize| *(a as *const u32);
     if g(0xb77c84) == 0 {
         let m = g(0xb67a50) as usize;
@@ -129,9 +129,9 @@ unsafe extern "C" fn comparar_build_latest_scores() {
     reg.push((0xde1f64, 0x100));
     // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
     // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
-    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| build_latest_scores()));
-    PLACAR.registrar(igual, || {
+    reg.extend_from_slice(&crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || crate::rng::without_counting(|| build_latest_scores()));
+    PLACAR.record(igual, || {
         // so as diferencas (a lista e grande): onde comecam e quantos bytes
         let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;

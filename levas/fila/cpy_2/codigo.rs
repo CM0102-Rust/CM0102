@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, club
         let mut faltou = !remove_sorted_pair(this, &chave, 0x757ea0);
         faltou |= !remove_sorted_pair(this + 4, &chave, 0x844740);
         if humano(clube, 0, 1, 0, 0) == 0 && !faltou {
-            crate::comparacao::ramo("cpy_2 contagem da lista");
+            crate::comparison::branch("cpy_2 contagem da lista");
             let r = (cpy2_d(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f)) + 0xb) as *mut u8;
             *r = (*r & 0xf0) | ((*r).wrapping_sub(1) & 0xf); // cpy2: uma lista a menos na conta da pessoa
         }
@@ -153,12 +153,12 @@ unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, club
                     cpy2_pd(v + 0x13, 0xffff_ffff);
                 }
                 *((v + 0x24) as *mut u8) &= 0xfe;
-                crate::comparacao::ramo("cpy_2 vaga refeita");
+                crate::comparison::branch("cpy_2 vaga refeita");
                 preencher(this, v, clube, pessoa); // cpy2: a vaga é preenchida de novo
             }
             2 => block_slot_for_person(v, entrada, pessoa, contrato, 0x54c5b0, 0x78),
             5 => {
-                crate::comparacao::ramo("cpy_2 bloqueio de 14 dias");
+                crate::comparison::branch("cpy_2 bloqueio de 14 dias");
                 block_slot_for_person(v, entrada, pessoa, contrato, 0x54c5b0, 0xe); // cpy2: o bloqueio de 14 dias
             }
             3 => {
@@ -238,9 +238,9 @@ unsafe extern "thiscall" fn comparar_update_staff_status(this: usize, pessoa: us
             reg.push((c + 0x4f, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, clube, evento, tipo),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, clube, evento, tipo),
         || update_staff_status(this, pessoa, clube, evento, tipo));
-    PLACAR.registrar(igual && r == n, || format!("update_staff_status(pessoa {:x}, clube {:x}, evento {}, tipo {}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("update_staff_status(pessoa {:x}, clube {:x}, evento {}, tipo {}) original={} rust={} {:x?} x {:x?}",
         pessoa, clube, evento as u8, tipo as u8, r, n, mo, mr));
     r
 }
@@ -263,8 +263,8 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_add_to_loan_list(pessoa: u
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cpy2_d(0xae1050), pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || shortlist_manager_add_to_loan_list(pessoa));
-    PLACAR.registrar(igual && r == n, || format!("shortlist_manager_add_to_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa), || shortlist_manager_add_to_loan_list(pessoa));
+    PLACAR.record(igual && r == n, || format!("shortlist_manager_add_to_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -289,6 +289,6 @@ unsafe extern "thiscall" fn comparar_shortlist_manager_max_fee_for_player_status
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32>(%%I2%%);
     let r = o(this, clube, pessoa, estatuto);
     let n = shortlist_manager_max_fee_for_player_status(this, clube, pessoa, estatuto);
-    PLACAR.registrar(r == n, || format!("shortlist_manager_max_fee_for_player_status(clube {:x}, pessoa {:x}, estatuto {}) original={} rust={}", clube, pessoa, estatuto as i8, r, n));
+    PLACAR.record(r == n, || format!("shortlist_manager_max_fee_for_player_status(clube {:x}, pessoa {:x}, estatuto {}) original={} rust={}", clube, pessoa, estatuto as i8, r, n));
     r
 }

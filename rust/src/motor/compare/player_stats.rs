@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "stdcall" fn comparar_player_statistic(r: *const u8, which: i8, weight: f32) -> f64 {
     let o = original_fn::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_PLAYER_STATISTIC)(r, which, weight);
     let n = player_statistic(r, which, weight);
-    PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("player_statistic({:p}, {}, {}) original={} rust={}", r, which, weight, o, n));
+    PLACAR.record(o.to_bits() == n.to_bits(), || format!("player_statistic({:p}, {}, {}) original={} rust={}", r, which, weight, o, n));
     o
 }
 
@@ -19,10 +19,10 @@ pub(crate) unsafe extern "stdcall" fn comparar_player_statistic(r: *const u8, wh
 /// +0x1c), que só a gravação da original move, ficam fora. Pessoa nula ou sem ficha: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize, p: usize, value: u32, loan: u32, end: u32, club_id: u32, other: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_ARCHIVE_PLAYER_STATS);
-    if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
+    if p == 0 || read_u32_as_usize(p + staff::PLAYER) == 0 {
         return o(this, p, value, loan, end, club_id, other);
     }
-    let reg = read_u32_as_usize(this + 0x30).wrapping_add((read_i32(read_u32_as_usize(p + 0x61)) as isize * 0x27) as usize);
+    let reg = read_u32_as_usize(this + 0x30).wrapping_add((read_i32(read_u32_as_usize(p + staff::PLAYER)) as isize * 0x27) as usize);
     let mut regions = vec![(reg + 0x20, 4)];
     for cat in 0..6usize {
         let id = read_i32(reg + 4 * cat);
@@ -30,17 +30,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize
             regions.push((read_u32_as_usize(this + 4).wrapping_add((id as isize * 0x20) as usize), 32));
         }
     }
-    let before = crate::comparacao::Memoria::ler(&regions);
+    let before = crate::comparison::MemorySnapshot::read(&regions);
     ARCHIVE_STATS_DRY_RUN = true;
     ARCHIVE_STATS_PENDING_TOTALS = (0, 0);
     ARCHIVE_STATS_CLUB_ID = club_id as i32;
-    let n = crate::aleatorio::pausar_rastro(|| archive_player_stats(this, p, value, loan, end, club_id, other));
+    let n = crate::rng::pause_trace(|| archive_player_stats(this, p, value, loan, end, club_id, other));
     ARCHIVE_STATS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regions);
-    before.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regions);
+    before.write_back();
     let r = o(this, p, value, loan, end, club_id, other);
-    let mo = crate::comparacao::Memoria::ler(&regions);
-    PLACAR.registrar(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
+    let mo = crate::comparison::MemorySnapshot::read(&regions);
+    PLACAR.record(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
         p, value as i32, club_id as i32, r, n, mo.0, mr.0));
     r
 }
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize
 /// de erro (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize, count: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(IDX_BUILD_CAREER_HISTORY);
-    if p == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(p + 0x61) == 0) {
+    if p == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(p + staff::PLAYER) == 0) {
         return o(this, p, count);
     }
     let r = o(this, p, count);
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_career_history(this: usize
             && core::slice::from_raw_parts(r as *const u8, n.max(0) as usize * HISTORY_ENTRY_SIZE)
                 == core::slice::from_raw_parts(t as *const u8, n.max(0) as usize * HISTORY_ENTRY_SIZE)
     };
-    PLACAR.registrar(same, || {
+    PLACAR.record(same, || {
         let k = (*count).max(n).max(0) as usize;
         let dif = (0..k).find(|&i| {
             r == 0 || t == 0 || core::slice::from_raw_parts((r + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE) != core::slice::from_raw_parts((t + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE)
@@ -84,12 +84,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_career_history(this: usize
 /// [pt] Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
 pub(crate) unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_PLAYER_STATS_YEARS_SINCE_AT_CLUB);
-    if p == 0 || clube == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(p + 0x39) != clube && read_u32_as_usize(p + 0x61) == 0) {
+    if p == 0 || clube == 0 || (read_i32(p) < read_i32(G_STAFF_COUNT) && read_u32_as_usize(p + staff::CLUB_JOB) != clube && read_u32_as_usize(p + staff::PLAYER) == 0) {
         return o(p, clube);
     }
     let r = o(p, clube);
     let n = player_stats_years_since_at_club(p, clube);
-    PLACAR.registrar(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
+    PLACAR.record(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
     r
 }
 
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(
 pub(crate) unsafe extern "C" fn comparar_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_HISTORY_BY_STAFF)(a, b);
     let n = player_stats_compare_history_by_staff(a, b);
-    PLACAR.registrar(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_stat(this: usize, player: us
     }
     let r = o(this, player, category, which, default);
     let n = get_stat(this, player, category, which, default);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || {
+    PLACAR.record(r.to_bits() == n.to_bits(), || {
         format!("get_stat(jogador {}, categoria {}, qual {}, padrão {}) original={} rust={}", read_usize(player) as i32, c, which as u8, default, r, n)
     });
     r
@@ -130,7 +130,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_stat(this: usize, player: us
 pub(crate) unsafe extern "C" fn comparar_player_stats_compare_language_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_LANGUAGE_ENTRIES)(a, b);
     let n = player_stats_compare_language_entries(a, b);
-    PLACAR.registrar(r == n, || format!("player_stats_compare_language_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("player_stats_compare_language_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "C" fn comparar_player_stats_compare_language_entries(a
 pub(crate) unsafe extern "C" fn comparar_player_stats_compare_history_by_club(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_HISTORY_BY_CLUB)(a, b);
     let n = player_stats_compare_history_by_club(a, b);
-    PLACAR.registrar(r == n, || format!("player_stats_compare_history_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("player_stats_compare_history_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -152,7 +152,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(per
     }
     let r = o(person);
     let n = player_stats_get_career_goals(person);
-    PLACAR.registrar(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", person, r, n));
+    PLACAR.record(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", person, r, n));
     r
 }
 
@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_category_record(this: usize,
         return r;
     }
     let n = get_category_record(this, player, category);
-    PLACAR.registrar(r == n, || format!("get_category_record({:x}, {:x}, {}) original={:x} rust={:x}", this, player, category as u8 as i8, r, n));
+    PLACAR.record(r == n, || format!("get_category_record({:x}, {:x}, {}) original={:x} rust={:x}", this, player, category as u8 as i8, r, n));
     r
 }
 
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_stats(this: usize, player
     let expected = read_usize(this + 4).wrapping_add((indice as usize) << 5);
     let zerado = current != -1 || (0..0x20).all(|k| *((r + k) as *const u8) == 0);
     let same = r == expected && read_usize(slot) as i32 == indice && read_usize(this + 0xc) == n2 && read_usize(this + 0x38) == soltos2 && zerado;
-    PLACAR.registrar(same, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
+    PLACAR.record(same, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
         this, player, category as u8 as i8, r, expected, read_usize(slot) as i32, indice, read_usize(this + 0xc), n2, read_usize(this + 0x38), soltos2, zerado));
     r
 }
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_language(this: usize, person
     if ok {
         ok = if sort == 0 { e(n) == new } else { (0..count).any(|i| e(i) == new) };
     }
-    PLACAR.registrar(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
+    PLACAR.record(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
         new, sort, count, n.wrapping_add(1), read_u32_as_usize(this + 0x40), cap));
 }
 
@@ -239,9 +239,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_improve_language(this: usize, pe
     if r == 0 {
         return o(this, person, language, aumento, sort);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 6)],
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 6)],
         || o(this, person, language, aumento, sort), || improve_language(this, person, language, aumento, sort));
-    PLACAR.registrar(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", read_u32_as_usize(person), language as u8, aumento as u8, mo, mr));
+    PLACAR.record(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", read_u32_as_usize(person), language as u8, aumento as u8, mo, mr));
 }
 
 /// Comparer for `player_stats_reset_player` (comparison mode: see the header of motor.rs).
@@ -261,8 +261,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: 
             reg.push((read_u32_as_usize(this + 4).wrapping_add(i << 5) + 0xe, 2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, person), || player_stats_reset_player(this, person));
-    PLACAR.registrar(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", read_u32_as_usize(person), mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person), || player_stats_reset_player(this, person));
+    PLACAR.record(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", read_u32_as_usize(person), mo, mr));
     a
 }
 
@@ -272,7 +272,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: 
 pub(crate) unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, person: usize, clube: usize, language: u32, by_contract: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(IDX_GET_LANGUAGE_FLUENCY)(this, person, clube, language, by_contract);
     let n = get_language_fluency(this, person, clube, language, by_contract);
-    PLACAR.registrar(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", person, clube, language as u8, by_contract, r, n));
+    PLACAR.record(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", person, clube, language as u8, by_contract, r, n));
     r
 }
 
@@ -317,12 +317,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_stats_record_match(this: 
         }
     }
     if simulado {
-        regions.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+        regions.extend(crate::rng::STATE_REGIONS);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, p, jogo), || {
-        crate::aleatorio::sem_contar(|| player_stats_record_match(this, p, jogo))
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, p, jogo), || {
+        crate::rng::without_counting(|| player_stats_record_match(this, p, jogo))
     });
-    PLACAR.registrar(igual && ro == rr, || format!("player_stats_record_match({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
+    PLACAR.record(igual && ro == rr, || format!("player_stats_record_match({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
     ro
 }
 
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_stats_record_match(this: 
 /// (1, ou 0 sem nação).
 pub(crate) unsafe extern "thiscall" fn comparar_end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_END_SEASON_FOR_KEY_NATION)(this, nacao);
-    PLACAR.registrar(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
+    PLACAR.record(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
     r
 }
 
@@ -344,9 +344,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_language(stats: usize, sh
     if table == 0 || contagem <= 0 {
         return o(stats, sheet, language);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(stats + 0x44, 4), (table, contagem as usize * 6)],
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(stats + 0x44, 4), (table, contagem as usize * 6)],
         || o(stats, sheet, language), || remove_language(stats, sheet, language));
-    PLACAR.registrar(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", language, mo.0[0].1, mr.0[0].1));
+    PLACAR.record(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", language, mo.0[0].1, mr.0[0].1));
 }
 
 /// Comparer for `get_club_league_stat` (comparison mode: see the header of motor.rs).
@@ -356,7 +356,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_club_league_stat(stats: usiz
         return r;
     }
     let n = get_club_league_stat(stats, player, field);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_club_league_stat({}) original={} rust={}", field, r, n));
+    PLACAR.record(r.to_bits() == n.to_bits(), || format!("get_club_league_stat({}) original={} rust={}", field, r, n));
     r
 }
 
@@ -367,7 +367,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_last_match_rating(stats: usi
         return r;
     }
     let n = get_last_match_rating(stats, id);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_last_match_rating({}) original={} rust={}", *id, r, n));
+    PLACAR.record(r.to_bits() == n.to_bits(), || format!("get_last_match_rating({}) original={} rust={}", *id, r, n));
     r
 }
 
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_player_stats_get_goals_for_club(p
     }
     let r = o(person, clube);
     let n = player_stats_get_goals_for_club(person, clube);
-    PLACAR.registrar(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", person, clube, r, n));
+    PLACAR.record(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", person, clube, r, n));
     r
 }
 
@@ -389,6 +389,6 @@ pub(crate) unsafe extern "stdcall" fn comparar_player_stats_get_goals_for_club(p
 pub(crate) unsafe extern "stdcall" fn comparar_competition_weight(p: usize, cod: i8) -> u16 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, i8) -> u16>(IDX_COMPETITION_WEIGHT)(p, cod);
     let n = competition_weight(p, cod);
-    PLACAR.registrar(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, cod, r, n));
+    PLACAR.record(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, cod, r, n));
     r
 }

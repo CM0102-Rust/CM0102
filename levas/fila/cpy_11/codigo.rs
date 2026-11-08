@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                         // a 0x8cb340 e a notícia só leem o byte: vai limpo
                         if (jogos as i32 % 10 == 0 && jogos <= 0x32) || jogos == 1 { // cpy11: os jogos do prêmio
                             if pay_appearance_money_unless_dry_run(this, p, jogos as i32, tipo as u32) != 0 {
-                                crate::comparacao::ramo("cpy_11 premio pago");
+                                crate::comparison::branch("cpy_11 premio pago");
                                 if tipo == 5 {
                                     tirar_selecao(this, p);
                                 } else {
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                     }
                     if contando && cpy11_b(staff_flags_record(this, p)) & 0x20 != 0 {
                         let r = transfer_manager_find_work_permit(this, p);
-                        crate::comparacao::ramo("cpy_11 jogo contado");
+                        crate::comparison::branch("cpy_11 jogo contado");
                         increment_permit_counter(r, 4); // cpy11: o jogo conta na permissão
                         let mut i: i8 = 0;
                         while i < n {
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                     }
                 }
                 let r = transfer_manager_find_work_permit(this, p);
-                crate::comparacao::ramo("cpy_11 falta contada");
+                crate::comparison::branch("cpy_11 falta contada");
                 increment_permit_counter(r, 6); // cpy11: a falta conta na permissão
             }
         }
@@ -209,16 +209,16 @@ unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_match(this:
         return o(this, jogo, partida); // ponytail: só a original (lixo da pilha ou sem permissões)
     }
     let regioes = [(v, n as usize * 0xe)];
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     APPEARANCE_CLAUSES_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| update_appearance_clauses_after_match(this, jogo, partida)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| update_appearance_clauses_after_match(this, jogo, partida)));
     APPEARANCE_CLAUSES_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(this, jogo, partida);
     // a original não realoca o vetor (os prêmios mexem em outros vetores)
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || {
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(mo == mr, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).collect();
         format!("update_appearance_clauses_after_match(jogo {:x}) permissões diferentes nos bytes {:x?}", jogo, dif)
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_match(this:
 /// (capacidade +0x89c, conta +0x8a0); cheio, cresce de 50 em 50 (sem memória: caixa 0x25af e nada). Reordena pela pessoa
 /// (qsort 0x945333 com 0x8b4e00). A gêmea do time principal é a 0x8cac40.
 unsafe extern "thiscall" fn add_international_team_appearance_money(this: usize, registro: usize) {
-    crate::comparacao::ramo("cpy_11 premio na selecao guardado");
+    crate::comparison::branch("cpy_11 premio na selecao guardado");
     if !grow_record_vector(this, 0x898, 4, 50, 0xd, 0x25af, 0xa8ebe0) {
         return;
     }
@@ -252,7 +252,7 @@ unsafe extern "thiscall" fn comparar_add_international_team_appearance_money(thi
     }
     let conta = cpy11_d(this + 0x8a0);
     let ok = conta == n.wrapping_add(1) && vector_contains_record(cpy11_d(this + 0x898), conta, 0xd, &alvo);
-    PLACAR.registrar(ok, || format!("add_international_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
+    PLACAR.record(ok, || format!("add_international_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }
 
 /// { 0x8da5e0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da data e da notícia locais): `TRANSFER_MANAGER::
@@ -283,7 +283,7 @@ unsafe extern "thiscall" fn post_transfer_finalised_news(this: usize, o: usize) 
     if vendedor != 0 && cpy11_b(contrato(cpy11_d(0xae1050), p) + 0x35) & 0x3f == 5 {
         vendedor = 0;
     }
-    crate::comparacao::ramo("cpy_11 noticia da transferencia finalizada");
+    crate::comparison::branch("cpy_11 noticia da transferencia finalizada");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfa5, 0);

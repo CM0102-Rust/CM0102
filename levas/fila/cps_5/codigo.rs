@@ -74,7 +74,7 @@ unsafe fn dressing_room_friction(p: usize, clube: usize, k: usize) {
     if ((cps5_w(0xae2c90) as i32) % 0xe).wrapping_add(cps5_d(p) as i32) != 0 {
         return;
     }
-    crate::comparacao::ramo("cps_5 atrito com o tecnico");
+    crate::comparison::branch("cps_5 atrito com o tecnico");
     let queixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x587c60usize);
     let marcar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x867700usize);
     let (tipo, marca) = if q == cps5_d(clube + 0xcf) {
@@ -176,7 +176,7 @@ unsafe fn player_vs_manager_check(p: usize) {
         return;
     }
     let mut e = cps5_sb(p + 0x5b) + (cps5_sb(p + 0x5a) + cps5_sb(p + 0x59)) + (cps5_sb(p + 0x5c) + cps5_sb(p + 0x18));
-    crate::comparacao::ramo("cps_5 tecnico sorteado");
+    crate::comparison::branch("cps_5 tecnico sorteado");
     if cps5_sortear(cps5_sb(p + 0x59)) == 0 { // cps5: o primeiro desconto
         e -= 3;
     }
@@ -284,7 +284,7 @@ unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 let c = game_contract_for_club(p, clube);
                 let m = if c == 0 { 0 } else { cps5_sb(c + 0x44) };
                 let l = cps5_sb(cps5_d(p + 0x61) + 0x2f);
-                crate::comparacao::ramo("cps_5 moral sorteado");
+                crate::comparison::branch("cps_5 moral sorteado");
                 let r1 = cps5_sortear(soma.wrapping_mul(2) / (l + lideranca));
                 let r2 = cps5_sortear(m / 12); // cps5: a parte do moral
                 let s = (r1 as u8).wrapping_add(r2 as u8) as i8;
@@ -296,7 +296,7 @@ unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 } else if s > 0 {
                     let e = cps5_sortear(s as i32);
                     if e > cps5_sortear(5) {
-                        crate::comparacao::ramo("cps_5 moral sobe");
+                        crate::comparison::branch("cps_5 moral sobe");
                         moral(p, 1, 1); // cps5: sobe o moral
                     }
                 }

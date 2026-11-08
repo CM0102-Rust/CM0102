@@ -28,7 +28,7 @@ unsafe fn club_has_vacancy(this: usize, clube: usize) -> Option<bool> {
             return None;
         }
         if cpn5_d(v + 0xe) == cpn5_d(clube) {
-            crate::comparacao::ramo("cpn_5 clube com vaga aberta");
+            crate::comparison::branch("cpn_5 clube com vaga aberta");
             return Some(true);
         }
         j += 1;
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn best_manager_candidate_score(this: usize, clube: usi
                 break 'f true;
             }
             if atual == p {
-                crate::comparacao::ramo("cpn_5 o tecnico atual fica de fora");
+                crate::comparison::branch("cpn_5 o tecnico atual fica de fora");
                 break 'f true; // o atual fica de fora
             }
             if cpn5_b(reg79 + 0xb) & 0x30 != 0 || emprestimo(cpn5_d(0xae1050), p) != 0 || candidato(this, p) != 0 {
@@ -179,7 +179,7 @@ unsafe fn vacancy_schedule_plan(this: usize, dias: u8, fatias: u8) -> ([u8; 8], 
 /// do plano (`vacancy_schedule_plan`) e o +0x20 dela (4 bytes) entra no balde (0x68d0d0, que aloca); devolve o que a 0x68d0d0
 /// devolve. Sem SEH, sem sorteio.
 unsafe extern "thiscall" fn schedule_offer(this: usize, oferta: usize, dias: u32, fatias: u32) -> u32 {
-    crate::comparacao::ramo("cpn_5 agendar oferta");
+    crate::comparison::branch("cpn_5 agendar oferta");
     if cpn5_w(this + 0x84f) == 0 {
         let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
         let mut tmp = [0u8; 8];
@@ -220,18 +220,18 @@ unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
         return o(this);
     }
     let reg = [(l + 0xa, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this), || fix_missing_jobs(this));
-    PLACAR.registrar(igual, || format!("fix_missing_jobs (nenhuma a abrir) {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || fix_missing_jobs(this));
+    PLACAR.record(igual, || format!("fix_missing_jobs (nenhuma a abrir) {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x69d1b0 e a 0x69f810 podem sortear), pela nota e
 /// pelo cursor da lista de vagas (a 0x69fc60 o devolve).
 unsafe extern "thiscall" fn comparar_best_manager_candidate_score(this: usize, clube: usize, atual: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I1%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((cpn5_d(this + 8) + 0xa, 4));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, atual), || crate::aleatorio::sem_contar(|| best_manager_candidate_score(this, clube, atual)));
-    PLACAR.registrar(igual && r == n, || format!("best_manager_candidate_score(clube {}, atual {:x}) original={} rust={} {:x?} x {:x?}", cpn5_d(clube), atual, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, atual), || crate::rng::without_counting(|| best_manager_candidate_score(this, clube, atual)));
+    PLACAR.record(igual && r == n, || format!("best_manager_candidate_score(clube {}, atual {:x}) original={} rust={} {:x?} x {:x?}", cpn5_d(clube), atual, r, n, mo, mr));
     r
 }
 
@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn comparar_schedule_offer(this: usize, oferta: usize, 
     let gravada = core::slice::from_raw_parts((oferta + 0x12) as *const u8, 8);
     let base_ok = !sem_base || core::slice::from_raw_parts((this + 0x84d) as *const u8, 8) == core::slice::from_raw_parts(0xae2c90 as *const u8, 8);
     let ok = gravada == &data[..] && *((oferta + 0x1a) as *const i8) == fatia && cpn5_w(balde) == conta.wrapping_add(1) && base_ok;
-    PLACAR.registrar(ok, || format!("schedule_offer(dias {}, fatias {}): data {:x?} (plano {:x?}), fatia {} (plano {}), balde {:x} conta {} -> {}, base {}",
+    PLACAR.record(ok, || format!("schedule_offer(dias {}, fatias {}): data {:x?} (plano {:x?}), fatia {} (plano {}), balde {:x} conta {} -> {}, base {}",
         dias as u8 as i8, fatias as u8 as i8, gravada, data, *((oferta + 0x1a) as *const i8), fatia, balde, conta, cpn5_w(balde), base_ok));
     r
 }

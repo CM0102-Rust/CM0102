@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32
     ordenar(l.mls.as_mut_ptr() as usize, l.n[3], 1);
     let t = |k: usize| cqi11_d(this + 0xa7).wrapping_add(k * 6);
     let pd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut u32, v as u32);
-    crate::comparacao::ramo("cqi_11 classificados");
+    crate::comparison::branch("cqi_11 classificados");
     pd(t(2), l.mex[0]);
     pd(t(3), l.mex[1]); // cqi11: o segundo mexicano
     pd(t(4), l.centro[0]);
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32
         pd(t(0), l.mls[0]);
         pd(t(1), l.mls[1]);
     } else {
-        crate::comparacao::ramo("cqi_11 campeao da mls");
+        crate::comparison::branch("cqi_11 campeao da mls");
         let mls = club_comp_record(cqi11_d(0x9cf590));
         pd(t(0), colocado(mls, 0));
         pd(t(1), colocado(cqi11_d(outro + 4), 0));
@@ -132,15 +132,15 @@ unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usiz
         return o(this); // ponytail: lista curta (a original lê sobra de pilha) ou sem tabela: só a original
     }
     let mut regioes = vec![(this + 0x3e, 2), (cqi11_d(this + 0xa7), 48)];
-    regioes.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
+    regioes.extend_from_slice(&crate::rng::STATE_REGIONS);
     // a 0x4afd80 reordena o histórico de competições ([0xae23d4], [0xae237c] linhas de 0x1a bytes) a cada chamada; com
     // empate, a ordem que a original deixou muda o campeão que a cópia acharia: o histórico entra nas regiões
     let historico = cqi11_d(0xae23d4);
     if historico != 0 {
         regioes.push((historico, cqi11_d(0xae237c).wrapping_mul(0x1a)));
     }
-    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this), || crate::aleatorio::sem_contar(|| con_champ_select_qualified_clubs(this)));
-    PLACAR.registrar(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
+    let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this), || crate::rng::without_counting(|| con_champ_select_qualified_clubs(this)));
+    PLACAR.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
     r
 }
 
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, hoje: usize, 
             show_error_at(0x9a7d30, 0x1ba);
             return 0;
         }
-        crate::comparacao::ramo("cqi_11 dia da selecao");
+        crate::comparison::branch("cqi_11 dia da selecao");
         let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqi11_d(cqi11_d(this) + 0x5c));
         prever(this);
     }
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, hoje
     let n = cqi11_w(this + 0x3e);
     let r = o(this, hoje, fase);
     let igual = if seleciona { cqi11_w(this + 0x3e) == 8 } else { cqi11_w(this + 0x3e) == n };
-    PLACAR.registrar(igual, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, fase, seleciona, n, cqi11_w(this + 0x3e)));
+    PLACAR.record(igual, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, fase, seleciona, n, cqi11_w(this + 0x3e)));
     r
 }
 
@@ -195,6 +195,6 @@ unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
 unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
-    PLACAR.registrar(r == 1 && cqi11_d(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, cqi11_d(this + 0x28)));
+    PLACAR.record(r == 1 && cqi11_d(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, cqi11_d(this + 0x28)));
     r
 }

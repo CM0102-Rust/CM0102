@@ -4,7 +4,7 @@
 # 0x842080 e o sorteio 0x90cfc0). Simulação: as mutações pela carreira até 2002-06-01 e a confirmação no jogo real
 # comparando. Sem SEH, sem caixa, sem local lida sem valor. A 0x7a8050 SORTEIA (sorteio(5) para o técnico fraco,
 # sorteio(nota) < 750 para o jogador desempregado há mais de um ano): comparador lado a lado pelo estado do sorteio
-# (REGIOES_DO_ESTADO) e pela saída de 26 bytes, a cópia em sem_contar. A 0x7a8690 lado a lado pelo vetor e pela
+# (STATE_REGIONS) e pela saída de 26 bytes, a cópia em without_counting. A 0x7a8690 lado a lado pelo vetor e pela
 # contagem. Nenhuma em laço quente (a 0x7a8050 roda para cada desempregado, uma vez por dia de checagem).
 SAVE = False
 ROTINAS = [('tirar_aposentadoria_pendente', 0x7a8690, [0x8b, 0x54, 0x24, 0x04, 0x53]),

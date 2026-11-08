@@ -96,7 +96,7 @@ unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize
     if clube == 0 || jogador == 0 {
         return;
     }
-    crate::comparacao::ramo("cqb_8 reacao do elenco");
+    crate::comparison::branch("cqb_8 reacao do elenco");
     let mut chance: i32 = 0xa; // cqb8: a chance inicial
     if favorito(jogador, clube) != 0 {
         chance = 5;
@@ -165,7 +165,7 @@ unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize
             if cqb8_b(jogador + 0x18) > 0x14 && cqb8_b(p + 0x18) < 0x17 && cqb8_w(cqb8_d(p + 0x61) + 0xb) < 0x109a {
                 continue;
             }
-            crate::comparacao::ramo("cqb_8 nota do jogador");
+            crate::comparison::branch("cqb_8 nota do jogador");
             nota = cqb8_b(p + 0x5d).wrapping_add(10); // cqb8: a nota do jogador do elenco
             if cqb8_b(p + 0x18) < 0x14 {
                 nota = nota.wrapping_sub(5);
@@ -226,7 +226,7 @@ unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize
         }
         let r1 = cqb8_sortear(chance);
         if r1 > cqb8_sortear(nota as i32) { // cqb8: o desafeto sorteado
-            crate::comparacao::ramo("cqb_8 desafeto sorteado");
+            crate::comparison::branch("cqb_8 desafeto sorteado");
             chamar(0x547af0, 0, [p as u32, jogador as u32, 1, 0, 0]);
             let c = chamar(0x4cf5f0, cqb8_d(0xae1050), [p as u32, clube as u32, 0, 0, 0]) as usize;
             if c != 0 {
@@ -253,7 +253,7 @@ unsafe extern "thiscall" fn apply_squad_reaction_to_player_story(_this: usize, t
 /// vetor, as preferências (+0x1c..+0x33), o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(%%I0%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((0xae1080, 4));
     if clube != 0 && jogador != 0 {
         reg.push((clube + 0x9b, 24));
@@ -304,7 +304,7 @@ unsafe fn warn_position_rivals_with(jogador: usize, clube: usize, chamar: &mut d
     if cqb8_w(cqb8_d(jogador + 0x61) + 0xb) <= 0x128e {
         return;
     }
-    crate::comparacao::ramo("cqb_8 rival de posicao");
+    crate::comparison::branch("cqb_8 rival de posicao");
     let n = n as i32;
     let mut postou = false;
     for i in 0..50 {
@@ -360,7 +360,7 @@ unsafe extern "thiscall" fn warn_squad_of_position_rival(_this: usize, jogador: 
 /// o sorteador, [0xae1080] e, de cada um dos 50 do elenco, o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(this: usize, jogador: usize, clube: usize, a: u32, b: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((0xae1080, 4));
     if clube != 0 {
         for i in 0..50 {
@@ -407,6 +407,6 @@ unsafe extern "stdcall" fn media_format_response_option_label(tipo: u32, opcao: 
 unsafe extern "stdcall" fn comparar_media_format_response_option_label(tipo: u32, opcao: u32, saida: usize, tamanho: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(%%I2%%);
     let reg = if saida != 0 && (tamanho as i16) >= 0xf { vec![(saida, (tamanho as u16 as usize).min(0x50))] } else { Vec::new() };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(tipo, opcao, saida, tamanho), || media_format_response_option_label(tipo, opcao, saida, tamanho));
-    PLACAR.registrar(igual, || format!("media_format_response_option_label({}, {}) {:x?} x {:x?}", tipo as i16, opcao as i8, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(tipo, opcao, saida, tamanho), || media_format_response_option_label(tipo, opcao, saida, tamanho));
+    PLACAR.record(igual, || format!("media_format_response_option_label({}, {}) {:x?} x {:x?}", tipo as i16, opcao as i8, mo, mr));
 }

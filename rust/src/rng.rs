@@ -13,7 +13,7 @@
 
 use core::cell::Cell;
 
-use crate::comparacao::{Placar, Sorteio};
+use crate::comparison::{Scoreboard, TestRng};
 use crate::desvios::{self, Prologo};
 use crate::registro::linha;
 use crate::simulacao;
@@ -45,7 +45,7 @@ thread_local! {
 }
 
 /// Roda `f` sem contar os sorteios dela (replica Rust de rotinas que sorteiam, no modo comparacao).
-pub fn sem_contar<R>(f: impl FnOnce() -> R) -> R {
+pub fn without_counting<R>(f: impl FnOnce() -> R) -> R {
     let antes = CONTAR.with(|c| c.replace(false));
     let r = f();
     CONTAR.with(|c| c.set(antes));
@@ -53,7 +53,7 @@ pub fn sem_contar<R>(f: impl FnOnce() -> R) -> R {
 }
 
 /// Estado do gerador (deslocamento e ponteiro da tabela, rand da CRT): regioes para `lado_a_lado`.
-pub const REGIOES_DO_ESTADO: [(usize, usize); 2] = [(0xde1f5c, 8), (0xad6c30, 4)];
+pub const STATE_REGIONS: [(usize, usize); 2] = [(0xde1f5c, 8), (0xad6c30, 4)];
 
 unsafe fn contar(n: i32) {
     desvios::reconferir_no_dia();
@@ -117,7 +117,7 @@ impl Estado {
     unsafe fn ler() -> Estado {
         Estado { ponteiro: *PONTEIRO, deslocamento: *DESLOCAMENTO, rand: *ESTADO_RAND }
     }
-    unsafe fn escrever(self) {
+    unsafe fn write_back(self) {
         *PONTEIRO = self.ponteiro;
         *DESLOCAMENTO = self.deslocamento;
         *ESTADO_RAND = self.rand;
@@ -134,7 +134,7 @@ thread_local! {
     static RODANDO: Cell<Rodando> = const { Cell::new(Rodando::Nada) };
 }
 
-static PLACAR: Placar = Placar::novo("aleatorio");
+static PLACAR: Scoreboard = Scoreboard::new("aleatorio");
 
 thread_local! {
     /// Rastro de sorteios (diagnostico): (n, resposta) de cada chamada de fora, quando ligado.
@@ -142,7 +142,7 @@ thread_local! {
 }
 
 /// Roda `f` guardando os sorteios de fora que ela fizer (n e resposta).
-pub fn rastrear<R>(f: impl FnOnce() -> R) -> (R, Vec<(i32, i32)>) {
+pub fn trace<R>(f: impl FnOnce() -> R) -> (R, Vec<(i32, i32)>) {
     let antes = RASTRO.with(|t| t.borrow_mut().replace(Vec::new()));
     let r = f();
     let v = RASTRO.with(|t| core::mem::replace(&mut *t.borrow_mut(), antes)).unwrap_or_default();
@@ -151,7 +151,7 @@ pub fn rastrear<R>(f: impl FnOnce() -> R) -> (R, Vec<(i32, i32)>) {
 
 /// Roda `f` sem guardar sorteios no rastro (os de uma unidade gravada: a copia Rust recebe o resultado
 /// da fita e nao os refaz, entao a lista da original so tem de conter o que a propria rotina sorteia).
-pub fn pausar_rastro<R>(f: impl FnOnce() -> R) -> R {
+pub fn pause_trace<R>(f: impl FnOnce() -> R) -> R {
     let guardado = RASTRO.with(|t| t.borrow_mut().take());
     let r = f();
     RASTRO.with(|t| *t.borrow_mut() = guardado);
@@ -178,16 +178,16 @@ unsafe extern "C" fn comparar(n: i32) -> i32 {
     RODANDO.with(|r| r.set(Rodando::Nada));
     let depois_orig = Estado::ler();
 
-    antes.escrever();
+    antes.write_back();
     // restaura (nao liga): dentro de uma replica Rust (`sem_contar`) que sorteia varias vezes, ligar
     // aqui fazia os sorteios seguintes da replica entrarem na contagem
     let contava = CONTAR.with(|c| c.replace(false));
     let r_rust = aleatorio(n);
     CONTAR.with(|c| c.set(contava));
     let depois_rust = Estado::ler();
-    depois_orig.escrever();
+    depois_orig.write_back();
 
-    PLACAR.registrar(r_orig == r_rust && depois_orig == depois_rust, || {
+    PLACAR.record(r_orig == r_rust && depois_orig == depois_rust, || {
         format!(
             "n={} original={} rust={} estado antes={:x?} original={:x?} rust={:x?}",
             n, r_orig, r_rust, antes, depois_orig, depois_rust
@@ -242,8 +242,8 @@ pub unsafe fn autoteste(casos: u64) {
     const FIM_REAL: u32 = 0xad4130; // o que a semente (0x90d0a0) grava em [0xde2798]
     let fim = FIM_DA_TABELA as *mut u32;
     let (guardado, fim_guardado) = (Estado::ler(), *fim);
-    let mut s = Sorteio(0x9e37_79b9_7f4a_7c15);
-    let mut sorteio = || s.proximo();
+    let mut s = TestRng(0x9e37_79b9_7f4a_7c15);
+    let mut sorteio = || s.next_u64();
     let entradas = ((FIM_REAL - INICIO_DA_TABELA) / 4 + 1) as u64;
     let bordas = [1, 2, 3, 7, 10, 100, 0xfffe, 0xffff, 0x10000, 0x10001, 100_000, 1_000_000, i32::MAX];
     PLACAR.autoteste(|| for i in 0..casos {
@@ -256,7 +256,7 @@ pub unsafe fn autoteste(casos: u64) {
             deslocamento: ((a >> 20) & 0xffff) as i32,
             rand: (a >> 32) as u32,
         }
-        .escrever();
+        .write_back();
         let b = sorteio();
         let n = match b % 6 {
             0 => (b >> 8) as i32 % 100 + 1,
@@ -271,7 +271,7 @@ pub unsafe fn autoteste(casos: u64) {
             linha(&format!("aleatorio: autoteste {} casos...", i + 1));
         }
     });
-    guardado.escrever();
+    guardado.write_back();
     *fim = fim_guardado;
 }
 

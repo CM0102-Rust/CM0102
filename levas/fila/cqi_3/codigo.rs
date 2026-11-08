@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubes: usize, c
     let mut r = 0i8;
     while r < n8() {
         let (f1, f2): (u8, u8) = if r < 6 {
-            crate::comparacao::ramo("cqi_3 tres na primeira fase");
+            crate::comparison::branch("cqi_3 tres na primeira fase");
             (3, 0) // cqi3: 1ª a 6ª nação
         } else if r < 8 {
             (4, 0)
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubes: usize, c
             vagas[1] = vagas[1].wrapping_sub(1);
         }
         if r == s1 || r == s2 || r == s3 {
-            crate::comparacao::ramo("cqi_3 fair play");
+            crate::comparison::branch("cqi_3 fair play");
             vagas[2] = vagas[2].wrapping_add(1); // cqi3: a vaga do fair play
         }
         let um = || enesimo(this, clubes, conta, cqi3_d(e), 1, 1, 0);
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubes: usize, c
 }
 
 /// As diferenças entre duas memórias (os 16 primeiros endereços).
-fn cqi3_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
+fn cqi3_dif(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> Vec<usize> {
     let (a, b) = (&mo.0, &mr.0);
     (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
 }
@@ -249,9 +249,9 @@ unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usize, clubes:
     let n = (cqi3_d(0xae235c) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let mut reg = vec![(this, 0x698), (cqi3_d(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (cqi3_d(0xae23d4) as usize, (cqi3_d(0xae237c) as i32).max(0) as usize * 0x1a)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| assign_uefa_cup_places(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", cqi3_dif(&mo, &mr)));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, conta), || crate::rng::without_counting(|| assign_uefa_cup_places(this, clubes, conta)));
+    PLACAR.record(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", cqi3_dif(&mo, &mr)));
 }
 
 /// { 0x903890 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::pick_english_intertoto_club`; quadro SEH pela notícia
@@ -273,7 +273,7 @@ unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) -> usize {
     if liga == 0 {
         return 0;
     }
-    crate::comparacao::ramo("cqi_3 voluntario ingles");
+    crate::comparison::branch("cqi_3 voluntario ingles");
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -350,7 +350,7 @@ unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this: usize) ->
     }
     let r = o(this);
     let c = pick_english_intertoto_club(this);
-    PLACAR.registrar(r == c, || format!("pick_english_intertoto_club: original {:x} rust {:x}", r, c));
+    PLACAR.record(r == c, || format!("pick_english_intertoto_club: original {:x} rust {:x}", r, c));
     r
 }
 
@@ -367,7 +367,7 @@ unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
         if ano == cqi3_w(this + 0x439) {
             return;
         }
-        crate::comparacao::ramo("cqi_3 virada da classificacao");
+        crate::comparison::branch("cqi_3 virada da classificacao");
         core::ptr::write_unaligned((this + 0x439) as *mut i16, ano);
         let coeficientes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x903b50usize);
         let vagas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x903cc0usize);

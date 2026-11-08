@@ -35,7 +35,7 @@ unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -
     }
     let k = contrato(cql1_d(0xae1050) as usize, p);
     if k != 0 && jogador(*((p + 0x3d) as *const i8)) != 0 && contract_valid_for_club(k, c) {
-        crate::comparacao::ramo("cql_1 numero do contrato");
+        crate::comparison::branch("cql_1 numero do contrato");
         return *((k + 0x3a) as *const i8); // cql1: o número do contrato
     }
     let k = emprestimo(cql1_d(0xae1050) as usize, p);
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p: usize, c: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(%%I0%%);
     let r = o(this, p, c);
     let n = get_squad_number(this, p, c);
-    PLACAR.registrar(r == n, || format!("get_squad_number(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
+    PLACAR.record(r == n, || format!("get_squad_number(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
     r
 }
 
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: usize, outr
             return 0;
         }
     }
-    crate::comparacao::ramo("cql_1 usa numeros");
+    crate::comparison::branch("cql_1 usa numeros");
     1 // cql1: usa números
 }
 
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usi
     }
     let r = o(this, c, outra);
     let n = club_uses_squad_numbers(this, c, outra);
-    PLACAR.registrar(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, outra, r, n));
+    PLACAR.record(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, outra, r, n));
     r
 }
 
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, c: usize, n
     }
     let k = contrato(cql1_d(0xae1050) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
-        crate::comparacao::ramo("cql_1 grava no contrato");
+        crate::comparison::branch("cql_1 grava no contrato");
         *((k + 0x3a) as *mut i8) = n; // cql1: grava no contrato
         return;
     }
@@ -138,6 +138,6 @@ unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: 
             reg.push((k + 0x3a, 1));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, c, n), || set_squad_number(this, p, c, n));
-    PLACAR.registrar(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, c, n), || set_squad_number(this, p, c, n));
+    PLACAR.record(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
 }

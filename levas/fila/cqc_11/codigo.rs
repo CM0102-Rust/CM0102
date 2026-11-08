@@ -111,7 +111,7 @@ unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, ens: Option
         None => {
             let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
             *((usadas.wrapping_add(a as usize)) as *mut u8) = 1;
-            crate::comparacao::ramo("cqc_11 nacoes com jogo");
+            crate::comparison::branch("cqc_11 nacoes com jogo");
             *((usadas.wrapping_add(b as usize)) as *mut u8) = 1; // cqc11: as nações com jogo perto da data
             let (va, vb) = (a, b);
             por(nation_friendly_list(this, a as usize), &vb as *const u32 as usize, 4);
@@ -254,7 +254,7 @@ unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas:
                                 }
                             };
                             if !ja {
-                                crate::comparacao::ramo("cqc_11 amistoso entre selecoes");
+                                crate::comparison::branch("cqc_11 amistoso entre selecoes");
                                 let casa = sortear(2) as u32; // cqc11: o mando sorteado
                                 match ens.as_deref_mut() {
                                     Some(e) => {
@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usiz
     let antes: Vec<Vec<u32>> = (0..k).map(|q| list_item_ids(nation_friendly_list(this, q))).collect();
     let mut e = FriendlyComparerTrial { usadas: vec![0u8; nacoes.max(0) as usize], antes: std::rc::Rc::new(antes), novos: vec![Vec::new(); k] };
     link_nations_near_date(this, datas, 0, Some(&mut e));
-    let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, datas, n));
+    let ((), tape_lock) = crate::rng::trace(|| o(this, datas, n));
     let quantos = tape_lock.len();
     *core::ptr::addr_of_mut!(FRIENDLY_TAPE) = (tape_lock, 0, false);
     pair_nations_for_friendlies(this, datas, n, 0, Some(&mut e), 0);
@@ -369,7 +369,7 @@ unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usiz
             dif.push((q, depois, esperado));
         }
     }
-    PLACAR.registrar(igual && dif.is_empty(), || {
+    PLACAR.record(igual && dif.is_empty(), || {
         format!("arrange_international_friendlies(datas {:x}, {}) tape_lock de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
             datas, n as i16, quantos, pos, falhou, dif.iter().take(4).collect::<Vec<_>>())
     });
@@ -456,9 +456,9 @@ unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(this: usize
         return o(this, a, b, clube, dia, ano, data, texto, tamanho);
     }
     let reg = news_text_regions(texto, tamanho);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, a, b, clube, dia, ano, data, texto, tamanho),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, a, b, clube, dia, ano, data, texto, tamanho),
         || friendly_check_match_invitation(this, a, b, clube, dia, ano, data, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
         a, b, clube, data, r, n, mo, mr));
     r
 }
@@ -507,9 +507,9 @@ unsafe extern "thiscall" fn comparar_friendly_check_tournament_invitation(this: 
         return o(this, clube, torneio, texto, tamanho);
     }
     let reg = news_text_regions(texto, tamanho);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, torneio, texto, tamanho),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, torneio, texto, tamanho),
         || friendly_check_tournament_invitation(this, clube, torneio, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("friendly_check_tournament_invitation(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("friendly_check_tournament_invitation(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",
         clube, torneio, r, n, mo, mr));
     r
 }

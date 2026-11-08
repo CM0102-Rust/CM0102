@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn cqu12_oceania_dia(this: usize, hoje: usize, completo
     }
     let no_dia = (ano_de_hoje == ano && dia_de_hoje == dia) || ano_de_hoje == 0x7d1; // cqu12: o jogo de 2001 monta já
     if no_dia && cqu12_d(this + 0x45) == 0 && completo != 0 {
-        crate::comparacao::ramo("cqu_12 montagem da eliminatoria");
+        crate::comparison::branch("cqu_12 montagem da eliminatoria");
         let gerente = cqu12_d(0xb74318);
         liberar(gerente, cqu12_d(0xae23a4).wrapping_add(cqu12_d(0x9cfa18).wrapping_mul(0xc6)), 0);
         let mut i = 0i16;
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn comparar_cqu12_oceania_dia(this: usize, hoje: usize,
     if monta {
         let fases = cqu12_d(this + 0xc);
         let ok = cqu12_d(this + 0x45) == 1 && fases != 0 && cqu12_d(fases) != 0 && cqu12_d(this + 0x30) == 0;
-        PLACAR.registrar(ok, || format!("cqu12_oceania_dia({:#x}): a montagem não fez a fase (+0x45 {}, +0x30 {})", this, cqu12_d(this + 0x45), cqu12_d(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("cqu12_oceania_dia({:#x}): a montagem não fez a fase (+0x45 {}, +0x30 {})", this, cqu12_d(this + 0x45), cqu12_d(this + 0x30) as i32));
     }
     r
 }
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn cqu12_oceania_primeiro_grupo(this: usize) -> u32 {
     }
     let mut i = 0i8;
     while (i as i16) < cqu12_w(this + 0x3e) {
-        crate::comparacao::ramo("cqu_12 linha do primeiro grupo");
+        crate::comparison::branch("cqu_12 linha do primeiro grupo");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, cqu12_d(cqu12_d(this + 0xef) + i as isize as usize * 8), 0, 0);
         i = i.wrapping_add(1);
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn comparar_cqu12_oceania_primeiro_grupo(this: usize) -
         }
     }
     let igual = r == 1 && cqu12_w(this + 0x3e) == 5 && t != 0 && (0..5).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("cqu12_oceania_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    PLACAR.record(igual, || format!("cqu12_oceania_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn cqu12_oceania_segundo_grupo(this: usize) -> u32 {
         return 0;
     }
     for i in 0..n {
-        crate::comparacao::ramo("cqu_12 time do segundo grupo");
+        crate::comparison::branch("cqu_12 time do segundo grupo");
         cqu12_pd(times + i * 4, cqu12_d(cqu12_d(this + 0xef) + i * 8 + 4)); // cqu12: a seleção na vaga i do segundo grupo
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqu12_d(cqu12_d(this) + 0x3c));
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn comparar_cqu12_oceania_segundo_grupo(this: usize) ->
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqu12_d(this + 0x30) == 0 && cqu12_w(f + 0x3e) as usize == n && cqu12_w(f + 0x40) == cqu12_w(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("cqu12_oceania_segundo_grupo: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
+        PLACAR.record(ok, || format!("cqu12_oceania_segundo_grupo: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
     }
     r
 }

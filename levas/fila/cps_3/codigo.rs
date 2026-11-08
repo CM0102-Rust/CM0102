@@ -77,16 +77,16 @@ unsafe extern "thiscall" fn process_free_transfer_queue(this: usize) {
                 if cps3_b(e + 4) == 0 {
                     let r = sorteio(cps3_b(p + 0x5b) as i8 as i32);
                     if r < sorteio(0x14) || gosta(p, clube) != 0 { // cps3: o sorteio do desafeto
-                        crate::comparacao::ramo("cps_3 desafeto do tecnico");
+                        crate::comparison::branch("cps_3 desafeto do tecnico");
                         desafeto(p, cps3_d(clube + 0xcf), 1);
                     }
                 }
-                crate::comparacao::ramo("cps_3 liberado");
+                crate::comparison::branch("cps_3 liberado");
                 registros(cps3_d(0xdd7f00), p); // cps3: os registros da liberação
                 cancelar(this, p);
                 let comp = cps3_d(e + 5); // cps3: a compensação ao clube
                 if comp != 0 {
-                    crate::comparacao::ramo("cps_3 compensacao");
+                    crate::comparison::branch("cps_3 compensacao");
                 }
                 liberar(this, p, clube, cps3_b(e + 4) as i8 as i32, comp, 0);
             }
@@ -167,14 +167,14 @@ unsafe extern "thiscall" fn comparar_process_free_transfer_queue(this: usize) {
 /// sairia duas vezes (não acontece com as regras do jogo).
 unsafe extern "thiscall" fn comparar_find_next_window_open_date(this: usize, clube: usize, saida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 8)], || o(this, clube, saida), || find_next_window_open_date(this, clube, saida));
-    PLACAR.registrar(igual, || format!("find_next_window_open_date(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(saida, 8)], || o(this, clube, saida), || find_next_window_open_date(this, clube, saida));
+    PLACAR.record(igual, || format!("find_next_window_open_date(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
 }
 
 /// Comparador: pelo valor (as duas voltas deixam o cursor da lista no mesmo lugar).
 unsafe extern "thiscall" fn comparar_find_negotiated_loan_contract(this: usize, pessoa: usize, clube: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, pessoa, clube);
     let n = find_negotiated_loan_contract(this, pessoa, clube);
-    PLACAR.registrar(r == n, || format!("find_negotiated_loan_contract(pessoa {}, clube {}) original={:x} rust={:x}", cps3_d(pessoa), cps3_d(clube), r, n));
+    PLACAR.record(r == n, || format!("find_negotiated_loan_contract(pessoa {}, clube {}) original={:x} rust={:x}", cps3_d(pessoa), cps3_d(clube), r, n));
     r
 }

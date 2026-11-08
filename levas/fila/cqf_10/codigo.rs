@@ -186,9 +186,9 @@ unsafe extern "thiscall" fn comparar_player_search_record_scouted_club_match(thi
         return;
     }
     let regioes = [(this, 4 + 0x32 * 0x1a2), (0xae24d0, 0x100), (0xb67a34, 4)];
-    let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogo, resultado),
+    let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, jogo, resultado),
         || player_search_record_scouted_club_match(this, jogo, resultado));
-    PLACAR.registrar(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", cqf10_d(this), jogo, mo, mr));
+    PLACAR.record(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", cqf10_d(this), jogo, mo, mr));
 }
 
 /// O ensaio da 0x7b5be0 (só no comparador): a cópia decide tudo até o relatório sem os efeitos (o histórico 0x7bd310 e o
@@ -255,7 +255,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
     let acompanhado = cqf10_i(this + 0x190);
     if acompanhado > -1 && cqf10_d(this + 0x170) != 0 && (cqf10_i(jogo + 0xc) == acompanhado || cqf10_i(jogo + 0x10) == acompanhado) {
         if !SCOUT_MATCH_DRY_RUN {
-            crate::comparacao::ramo("cqf_10 historico do clube");
+            crate::comparison::branch("cqf_10 historico do clube");
             let historico: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7bd310usize);
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
             historico(cqf10_d(this + 0x170), jogo, resultado);
@@ -336,7 +336,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
             return 0;
         }
     }
-    crate::comparacao::ramo("cqf_10 relatorio");
+    crate::comparison::branch("cqf_10 relatorio");
     // o começo da lista vai a amanhã (0x54c5b0 com 1, 0x417c10 grava em +0x1a5); o byte baixo do dword da data copiada
     // vira o contador dos dois lados e vai inteiro como 7º argumento da 0x7b62a0
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
@@ -434,7 +434,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
                 }
                 2
             };
-            crate::comparacao::ramo("cqf_10 avaliar jogador");
+            crate::comparison::branch("cqf_10 avaliar jogador");
             let n = ((cqf10_b(atual + 5) as i32 * 0x28 - 0x104).wrapping_mul(nota as i8 as i32)) / 2;
             relatorio(this, p, reg, n, modo, jogo, resultado, marca);
             if (cqf10_b(reg + 0x66) as i8) > -1 {
@@ -454,14 +454,14 @@ unsafe extern "thiscall" fn comparar_player_search_scout_match(this: usize, jogo
     if jogo == 0 || resultado == 0 {
         return o(this, jogo, resultado, saida);
     }
-    let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let estado = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let antes = (cqf10_d(this + 0x1a5), cqf10_d(this + 0x1a9));
     SCOUT_MATCH_DRY_RUN = true;
     SCOUT_MATCH_WOULD_REPORT = false;
-    let n = crate::aleatorio::sem_contar(|| player_search_scout_match(this, jogo, resultado, saida));
+    let n = crate::rng::without_counting(|| player_search_scout_match(this, jogo, resultado, saida));
     SCOUT_MATCH_DRY_RUN = false;
     let relata = SCOUT_MATCH_WOULD_REPORT;
-    estado.escrever();
+    estado.write_back();
     let previsto = if relata {
         let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
         let mut t = [0u32; 2];
@@ -472,7 +472,7 @@ unsafe extern "thiscall" fn comparar_player_search_scout_match(this: usize, jogo
     };
     let r = o(this, jogo, resultado, saida);
     let depois = (cqf10_w(this + 0x1a7) as u16, cqf10_w(this + 0x1a5));
-    PLACAR.registrar(r == n && depois == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
+    PLACAR.record(r == n && depois == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
         this, jogo, r, n, antes, previsto, depois));
     r
 }

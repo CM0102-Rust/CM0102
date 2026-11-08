@@ -45,7 +45,7 @@ unsafe fn can_club_bid_body(this: usize, jogador: usize, clube: usize, ignorar_a
     let marca = cpr2_d(this + 0x86e).wrapping_add(cpr2_d(jogador).wrapping_mul(8));
     if cpr2_b(marca) & 0x40 != 0 {
         if acertada(cpr2_d(0xae1050), cpr2_d(jogador) as i32) != 0 {
-            crate::comparacao::ramo("cpr_2 contrato acertado");
+            crate::comparison::branch("cpr_2 contrato acertado");
             return (0x21, 0); // contrato acertado
         }
         let m = cpr2_d(this + 0x86e).wrapping_add(cpr2_d(jogador).wrapping_mul(8)) as *mut u8;
@@ -74,12 +74,12 @@ unsafe fn can_club_bid_body(this: usize, jogador: usize, clube: usize, ignorar_a
             let o = cpr2_d(vaga);
             let st = cpr2_b(o + 0x2c);
             if (0xa..=0xe).contains(&st) {
-                crate::comparacao::ramo("cpr_2 oferta em negociacao");
+                crate::comparison::branch("cpr_2 oferta em negociacao");
                 *((o + 0x2d) as *mut u8) = 1;
                 return (0x12, 0); // já em negociação
             }
             if st == 0x13 {
-                crate::comparacao::ramo("cpr_2 transferencia futura");
+                crate::comparison::branch("cpr_2 transferencia futura");
                 return (0x20, 0); // transferência futura acertada
             }
             e = proximo(l);
@@ -209,8 +209,8 @@ unsafe extern "thiscall" fn comparar_can_club_bid_for_player(this: usize, jogado
     let marca = cpr2_d(this + 0x86e).wrapping_add(cpr2_d(jogador).wrapping_mul(8));
     let regioes = [(marca, 1), (this + 0x936, 4), (motivo as usize, 2)];
     let n = if motivo.is_null() { 2 } else { 3 };
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes[..n], || o(this, jogador, clube, motivo, ignorar_abertas), || can_club_bid_for_player(this, jogador, clube, motivo, ignorar_abertas));
-    PLACAR.registrar(igual && r == c, || format!("can_club_bid_for_player(jogador {}, clube {:x}, {}) original={} rust={} {:x?} x {:x?}", cpr2_d(jogador), clube, ignorar_abertas, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes[..n], || o(this, jogador, clube, motivo, ignorar_abertas), || can_club_bid_for_player(this, jogador, clube, motivo, ignorar_abertas));
+    PLACAR.record(igual && r == c, || format!("can_club_bid_for_player(jogador {}, clube {:x}, {}) original={} rust={} {:x?} x {:x?}", cpr2_d(jogador), clube, ignorar_abertas, r, c, mo, mr));
     r
 }
 
@@ -227,8 +227,8 @@ unsafe extern "thiscall" fn comparar_note_terms_offered_to_exchange_player(this:
     for e in llist_collect(l) {
         regioes.push((e + 4, 1));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, k, pessoa), || note_terms_offered_to_exchange_player(this, k, pessoa));
-    PLACAR.registrar(igual, || format!("note_terms_offered_to_exchange_player({}, pessoa {}) {:x?} x {:x?}", k, pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, k, pessoa), || note_terms_offered_to_exchange_player(this, k, pessoa));
+    PLACAR.record(igual, || format!("note_terms_offered_to_exchange_player({}, pessoa {}) {:x?} x {:x?}", k, pessoa, mo, mr));
 }
 
 /// Comparador: lado a lado pelo cursor da fila e pela devolução (só lê). Clube nulo: a caixa, só a original.
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn comparar_count_club_free_transfer_queue(this: usize,
     if clube == 0 {
         return o(this, clube);
     }
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x936, 4)], || o(this, clube), || count_club_free_transfer_queue(this, clube));
-    PLACAR.registrar(igual && r == c, || format!("count_club_free_transfer_queue({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0x936, 4)], || o(this, clube), || count_club_free_transfer_queue(this, clube));
+    PLACAR.record(igual && r == c, || format!("count_club_free_transfer_queue({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
     r
 }

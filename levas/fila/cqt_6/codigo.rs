@@ -24,7 +24,7 @@ unsafe fn cqt6_tabela(this: usize) -> u32 {
         show_error_at(CQT6_F, 0x195);
         return 0;
     }
-    crate::comparacao::ramo("cqt_6 tabela da preliminar");
+    crate::comparison::branch("cqt_6 tabela da preliminar");
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut i: i8 = 0;
     if cqt6_w(this + 0x3e) > 0 {
@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn comparar_cqt6_campeoes_tabela_da_preliminar(this: us
     let t = cqt6_d(this + 0xb1);
     let ok = r == 1 && cqt6_w(this + 0x3e) == 3 && t != 0
         && plano.iter().enumerate().all(|(k, &c)| cqt6_d(t + k * 0x3b) == c && cqt6_d(cqt6_d(this + 0x14) + k * 6) == 0);
-    PLACAR.registrar(ok, || format!("cqt6_campeoes_tabela_da_preliminar({:#x}) devolveu {}; plano {:x?}", this, r, plano));
+    PLACAR.record(ok, || format!("cqt6_campeoes_tabela_da_preliminar({:#x}) devolveu {}; plano {:x?}", this, r, plano));
     r
 }
 
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_preliminar(this: usize) {
     if ordenar(this, 0) == 0 { // cqt6: a ordem da tabela da preliminar
         return show_error_at(CQT6_F, 0x49e);
     }
-    crate::comparacao::ramo("cqt_6 preliminar dos campeoes");
+    crate::comparison::branch("cqt_6 preliminar dos campeoes");
     core::ptr::write_unaligned((this + 0x45) as *mut u32, 1);
 }
 
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_preliminar(this: usize) {
 unsafe extern "thiscall" fn comparar_cqt6_campeoes_preliminar(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
-    PLACAR.registrar(cqt6_d(this + 0x45) == 1 && cqt6_w(this + 0x3e) == 3, || format!("cqt6_campeoes_preliminar({:#x}) +0x45 {} +0x3e {}", this, cqt6_d(this + 0x45), cqt6_w(this + 0x3e)));
+    PLACAR.record(cqt6_d(this + 0x45) == 1 && cqt6_w(this + 0x3e) == 3, || format!("cqt6_campeoes_preliminar({:#x}) +0x45 {} +0x3e {}", this, cqt6_d(this + 0x45), cqt6_w(this + 0x3e)));
 }
 
 /// { 0x4263c0 } (thiscall, ret 0, bra_champ_cup.cpp; a virtual +0x28): `BraChampCup::advance_stage()`: na última fase
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn cqt6_campeoes_fase_seguinte(this: usize) {
         2 => 0x426720,      // cqt6: as semifinais depois dos grupos
         _ => return,
     };
-    crate::comparacao::ramo("cqt_6 fase seguinte dos campeoes");
+    crate::comparison::branch("cqt_6 fase seguinte dos campeoes");
     let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(alvo);
     f(this);
 }
@@ -121,5 +121,5 @@ unsafe extern "thiscall" fn comparar_cqt6_campeoes_fase_seguinte(this: usize) {
     let depois = cqt6_d(this + 0x30) as i32;
     // os grupos (fase 0) gravam a fase deles em +0x30 depois (na comparação de 06/11: −1 -> 1): aí só confere que andou
     let ok = if ultima { depois == antes } else if antes + 1 == 0 || antes + 1 == 2 { depois > antes } else { depois == antes + 1 };
-    PLACAR.registrar(ok, || format!("cqt6_campeoes_fase_seguinte({:#x}) fase {} -> {}", this, antes, depois));
+    PLACAR.record(ok, || format!("cqt6_campeoes_fase_seguinte({:#x}) fase {} -> {}", this, antes, depois));
 }

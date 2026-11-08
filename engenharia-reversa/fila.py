@@ -221,11 +221,11 @@ def main():
                     lido = any(re.search(r'\b%s as \*const' % t, cod) for t in trocados)
                     print('alterada no cm0102-1080.exe', nome, a, hex(e), 'em', trocados[:6], '(lida do exe no código)' if lido else '')
             cod = open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read()
-            # comparador que restaura o gerador e roda a cópia sem `sem_contar`: os sorteios dela entram na
+            # comparador que restaura o gerador e roda a cópia sem `without_counting`: os sorteios dela entram na
             # contagem e a impressão do jogo real comparando sai da referência (204a, 210a)
-            for chamada in re.findall(r'lado_a_lado(?:_leve)?\((?:[^;]|\n)*?;', cod):
-                if 'REGIOES_DO_ESTADO' in chamada and 'sem_contar' not in chamada:
-                    print('sem sem_contar', nome, chamada.split('\n')[0][:100])
+            for chamada in re.findall(r'side_by_side(?:_leve)?\((?:[^;]|\n)*?;', cod):
+                if 'STATE_REGIONS' in chamada and 'without_counting' not in chamada:
+                    print('sem without_counting', nome, chamada.split('\n')[0][:100])
             for k in range(len(rot['ROTINAS'])):
                 cod = cod.replace('%%%%I%d%%%%' % k, 'IDX_' + rot['ROTINAS'][k][0].upper())
             m += '\n' + cod

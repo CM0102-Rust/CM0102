@@ -211,10 +211,36 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
     }
 }
 
-/// loads the saved game: disk, memory, CD, the database (0x524d10), unpacks the *.tmp files, general.dat (version,
-/// summary, ids, dates, leagues, default nation, the runtime data of people, clubs and reputation, converting old
-/// saves), the subsystem constructors in the original order with disk and memory checks between them, the FIFA rules
-/// and the last save date
+/// `load_game_data(path)` (cdecl, ~14.6 KB, SEH): loads the whole saved game. Returns 1 if it loaded.
+///
+/// Disk (0x7a1820(0) < 25 sets [0xdd7134]) and memory ([0x9cd1fc] and 0x7a1710() < 50 set [0xdd7138]); the temporary
+/// folder (0x90bde0 "CM3_TEMP"); the CD (`check_game_cd`); a null `path` gives the "Error" box 0x233b. The database:
+/// 0x528080 if [0xae23a8] ≠ 0 and 0x524d10(path, 1) (the answer is not looked at).
+///
+/// "Loading game data" and the progress bar 0x802f80 (step 0x2d); clears the `*.tmp` files (0x90cd50), checks their
+/// space (0x933860, in MB, 0 becomes 25) against the disk, unpacks (0x933320; on failure: "Disk Space Error" 0x2382).
+///
+/// `general.dat` (0x9326e0 reading, 0x15, type 4; without it: "Load Game Error" 0x2397): the version ([0xdd7110]); the
+/// summary (|v| ≥ 0x3e023; 0xf70 bytes up to 0x3e026 with the play time zeroed, 0xf74 after that, with [0xdd7140] = its
+/// play time); [0xdd7144] = time(); the unique id, the database size, the dates and times (the game's in a local), the
+/// leagues, the default nation ([0xae2d08] = nation id, or 0 if < 0), the runtime data of people ([0xae2d0c], 0x4f ×
+/// [0xae2d10]; old saves converted by `convert_staff_state`; |v| < 0x3e018 clears bit 7 of +0xb of the first
+/// [0xae2364]), of clubs ([0xae2d14], 6 × [0xae2d18] = [0xae235c]; |v| < 0x3e022: −1, 0, 0) and the reputation
+/// ([0xae2d1c], 4 × [0xae235c]; |v| < 0x3e022 does not read it and calls 0x53db40(1)). A failed read: "Load Game Error"
+/// with the line and the field's text, item closed; without memory: "Error" and the game closes.
+///
+/// Steps 4..=0x2d (`LOAD_STEPS`, disk and memory checked before each): at step 5, the game date (0x417c10 into
+/// 0xae2c90); before step 9, the last 16 managers with +0x5f = 5 are undone (News, HUMAN_MANAGER, CONTRACT_MANAGER,
+/// NationalTeams, Staff_Records; empty names, date 1/0/1966, +0x24 and +0x39 = 0, 0x7ff990); after 0x22, 0x7e61c0;
+/// before the last one, |v| < 0x3e032 passes each person through 0x538bc0.
+///
+/// FIFA rules (0x839760, |v| ≥ 0x3e039); 0xdd70a0 = the game date; [0xdd711c] = [0xdd7130] = 1, [0xa801bc] = 0; with
+/// [0x9b5980], it switches the rules on or off by the date of [0xae2330] (0x58a890(1) when switching on); without
+/// `auto_setup.cfg`, the CD search at the end.
+///
+/// The original's branches for 0x3e042 ≤ |v| < 0x3e038 (0xd-byte records) and 0x3e042 ≤ |v| < 0x3e034 (0xc) are
+/// unreachable (the comparisons are chained with `jge`): they are left out. The original's two-pass loop ([esp+0x24];
+/// the 1st only sets the total 0x2d) runs the body once.
 /// Original: `load_game_data` (0x82a9c0, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x82a9c0 } (cdecl, Setup.cpp, ~14,6 KB, SEH): `load_game_data(caminho)`: carrega o save inteiro.
@@ -269,7 +295,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(FN_LOAD_FIFA_TRANSFER_RULES);
     let ligar_regras: unsafe extern "C" fn(u32) = core::mem::transmute(FN_NEWS_POST_TRANSFER_SYSTEM_CHANGE);
     let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_UTILS_FILE_EXISTS);
-    crate::comparacao::ramo("save carregar jogo");
+    crate::comparison::branch("save carregar jogo");
     let u = |a: usize| *(a as *const u32);
     let sem_memoria = |minimum: i32| u(G_MEMORY_CHECK_ENABLED) != 0 && memoria() < minimum;
     // the original’s two local dates (the 2nd is unused); their destructor is empty
@@ -556,10 +582,10 @@ pub(crate) unsafe fn undo_holiday_managers() {
     let um: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_CLEAR_INBOX);
     for i in 0..0x10usize {
         let s = u(G_STAFF_TABLE).wrapping_add(0x6e * ((*(G_STAFF_COUNT as *const i32)).wrapping_sub(i as i32).wrapping_sub(1) as usize));
-        if *((s + 0x5f) as *const u8) != 5 {
+        if *((s + staff::CLASSIFICATION) as *const u8) != 5 {
             continue;
         }
-        *((s + 0x5f) as *mut u8) = 0;
+        *((s + staff::CLASSIFICATION) as *mut u8) = 0;
         um(u(G_NEWS), s);
         for f in [0x5fd2f0usize, 0x5fd590, 0x5fe140] {
             let f: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(f);
@@ -569,15 +595,15 @@ pub(crate) unsafe fn undo_holiday_managers() {
             let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(f);
             f(u(g), s);
         }
-        *((s + 0x5f) as *mut u8) = 0;
-        *(u(s + 4) as *mut u8) = 0;
-        *(u(s + 8) as *mut u8) = 0;
-        *(u(s + 0xc) as *mut u8) = 0;
+        *((s + staff::CLASSIFICATION) as *mut u8) = 0;
+        *(u(s + staff::FIRST_NAME) as *mut u8) = 0;
+        *(u(s + staff::SECOND_NAME) as *mut u8) = 0;
+        *(u(s + staff::COMMON_NAME) as *mut u8) = 0;
         let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_SET);
-        acertar_data(s + 0x10, 1, 0, 0x7ae, -1);
-        *((s + 0x18) as *mut u16) = 0x7ae;
-        core::ptr::write_unaligned((s + 0x24) as *mut u32, 0);
-        core::ptr::write_unaligned((s + 0x39) as *mut u32, 0);
+        acertar_data(s + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
+        *((s + staff::YEAR_OF_BIRTH) as *mut u16) = 0x7ae;
+        core::ptr::write_unaligned((s + staff::NATIONAL_JOB) as *mut u32, 0);
+        core::ptr::write_unaligned((s + staff::CLUB_JOB) as *mut u32, 0);
         let tela: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(FN_SCREENMANAGER_REMOVE_MANAGER_RECORD);
         tela(G_SCREEN_MANAGER, s, -1);
     }
@@ -600,9 +626,39 @@ pub(crate) unsafe fn setup_fatal_error(row: u32) -> ! {
     exit(-1)
 }
 
-/// reads auto_setup.cfg/quick_start.cfg (database, stats, foreground and background leagues, language, engine, bids,
-/// holiday), creates the game (0x828110) and saves the .qst (0x82e430 with 0x17) and frees everything, or puts the
-/// human manager on holiday at a drawn club
+/// `create_game_from_setup_file(cfg, qst)` (cdecl, ~3 KB): reads the configuration file `cfg` (`auto_setup.cfg` or
+/// `quick_start.cfg`: database, stats, foreground and background leagues, language, engine, bids, holiday), creates the
+/// game and, with `qst`, saves the quick start `CM3_QSTART\<qst>.qst` and frees everything; without `qst`, puts the
+/// human manager on holiday at a drawn club. Returns 1 if it created the game.
+///
+/// Folders CM3_TEMP (0x90bde0, only copied, as in the original) and CM3_DATA. A null `cfg` or one that does not open
+/// (0x945b00 "r"): the "Error" box (0x1c13, 0x1c1b) and 0.
+///
+/// Each line (0x90cba0, 1000-byte buffer) goes through 0x90bb70 and loses its spaces (one by one, like the original's
+/// `strcpy`); the value is searched for with `strstr` (0x945a60) after the prefix: `DATABASE=` NORMAL/MINIMUM/MAXIMUM →
+/// 0x5d7c60(1/2/4) in [0xae3138]; `MATCH_STATS=` NORMAL/SMALL/LARGE → 0x200/0x400/0x800; `FOREGROUND_LEAGUES=` and
+/// `BACKGROUND_LEAGUES=`: on the first one, without a database ([0xae23a8] = 0), it loads the database (0x524d50,
+/// CM3_DATA; a failure stops the game), applies it (0x5d8480), zeroes byte +0x11c of the nations, [0xae2d00],
+/// [0xae2d04] (and [0xae2d08] for the foreground) and builds the key nations (0x667150; a failure stops the game);
+/// then, for each league in the table 0xb63d60 (0x23 of 0x48 bytes) with a nation and +8, if the name (0x5454c0) is on
+/// the line or 0x839340 accepts it: foreground, flag 0/1 → ((~options & 2) | 1) << 1 and counts (+[0xae2d00] only from
+/// 0, +[0xae2d04]) and the 1st that matches by `strncmp` (0x946fa0) or 0x839340 becomes [0xae2d08]; background, 0 →
+/// ((~options & 2) << 1) | 1 (+[0xae2d00]) and 2 → the same (−[0xae2d04]); `LANGUAGE=`: the 1st language i (table
+/// 0x9eb244, 19) that exists (0x66ea50), is English, there is no database or the database has it (0x535930), and is on
+/// the line: 0x5d8020(i) and 0x5d8480; `ENABLE_MATCH_ENGINE=` YES/NO → byte [0xa5a390]; `ENABLE_COMPUTER_BIDS=` →
+/// [0x9cd1f8]; `ON_HOLIDAY=` → the manager's holiday.
+///
+/// Closes the file; with no league flagged, no foreground league, no default nation or one without bit 2: 0. [0xdd7124]
+/// = [0xdd713c] = 1; creates the game (0x828110(qst ≠ 0); a failure stops the game). With `qst`: 0x945b13 (CM3_QSTART,
+/// `qst`, ".qst"), 0x82e430(path, 0x17), 0x82ff40(1) and 1.
+///
+/// Without it: "auto_setup_game" in [0xae3138]+0x113, [0xdd7130] = 1, the date in 0xdd70a0; if the current human
+/// (0xb74c26 + 0x300 × (i16)[0xb77c7a]) already has a person, 0. Otherwise, the 1st of the last 16 people (0xae23bc,
+/// 0x6e) with +0x5f = 0 (without a table, box 0x39b3 and person 0) becomes the human: text +0xc zeroed, date +0x10
+/// (0x54a130: 1, 0, 1966, −1), +0x18 = 1966, +0x24 and +0x39 = 0, +0x5f = 1, 0x5fb810 and 0x5fd2f0(holiday, 0) on
+/// [0xb63c98]; it draws (0x90cfc0) clubs (0xae23b4, 0x245) until one that is not a national side (0x53b900), with a
+/// nation of a foreground league (bit 2) and accepted by 0x544820: its nation into +0x1a, the names (0x539c60,
+/// 0x53a1b0) into +4 and +8, and 0x826f20(person, club). Returns 1.
 /// Original: `create_game_from_setup_file` (0x827110, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x827110 } (cdecl, Setup.cpp, ~3 KB): `create_game_from_setup_file(cfg, qst)`: lê o arquivo de
@@ -667,7 +723,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     let first_name: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_PICK_FIRST_NAME_FOR_NATION);
     let second_name: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_PICK_SECOND_NAME_FOR_NATION);
     let pos_human: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_APPOINT_HUMAN_MANAGER_TO_CLUB);
-    crate::comparacao::ramo("save criar jogo pela configuracao");
+    crate::comparison::branch("save criar jogo pela configuracao");
     let opcoes = || *(G_CONFIG as *const usize);
     let u = |a: usize| *(a as *const u32);
     let i = |a: usize| *(a as *const i32);
@@ -834,7 +890,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         return 0;
     }
     let default = u(G_MAIN_NATION) as usize;
-    if default == 0 || *((default + 0x11c) as *const u8) & 2 == 0 {
+    if default == 0 || *((default + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 == 0 {
         return 0;
     }
     *(G_NEW_GAME_SETUP_DONE_FLAG as *mut u32) = 1;
@@ -864,7 +920,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     } else {
         let mut q = table.wrapping_add((i(G_STAFF_COUNT) as usize).wrapping_mul(staff::SIZE)).wrapping_sub(0x6e);
         for _ in 0..0x10 {
-            if *((q + 0x5f) as *const u8) == 0 {
+            if *((q + staff::CLASSIFICATION) as *const u8) == 0 {
                 p = q;
                 break;
             }
@@ -886,7 +942,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         if national_team(c) != 0 {
             continue;
         }
-        let nacao = core::ptr::read_unaligned((c + 0x53) as *const usize);
+        let nacao = core::ptr::read_unaligned((c + club::NATION) as *const usize);
         if nacao == 0 || *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 == 0 || accepted(c) == 0 {
             continue;
         }
@@ -985,9 +1041,35 @@ pub(crate) const SAVE_STEPS: [SaveStep; 0x23] = [
     SaveStep::Caminho(G_SQUAD_MANAGER, 0x859cc0), // 0x24 SQUAD_MANAGER
 ];
 
-/// saves the game: deletes the old file, the database (0x524d30), general.dat (16 fields and the summary), the
-/// subsystem saves in the original order with disk and memory checks between them, packs the *.tmp files, the FIFA
-/// rules; on a network game, writes to temp_save_file and renames
+/// `save_game_data(path, a4)` (cdecl, ~6.8 KB, SEH): saves the whole game into the container `path` (a4 0x16 `.sav`,
+/// 0x17 `.qst`; type 3 with bit 0x8000 of `game.cfg` [[0xae3138]+4], otherwise 4 = RLE): the database, general.dat, the
+/// subsystem saves in the original order with disk and memory checks between them, the packed *.tmp files and the FIFA
+/// rules; on a network game it writes to temp_save_file and renames. Returns 1 if it saved.
+///
+/// [0xdd7110] = 0xfffc1fb9 (the save version). On a network game (bit 0x20000000), before anything, disk (0x7a1820(0) <
+/// 25) sets [0xdd7134] and memory ([0x9cd1fc] and 0x7a1710() < 1) sets [0xdd7138]: deletes `path` and returns 0.
+///
+/// Temporary folder (0x90bde0 "CM3_TEMP"); a null `path` gives the "Error" box (0x2958). The working path is `path` or,
+/// on a network game, the same with the name `temp_save_file` (0x944cff/0x945b13); if it already exists (0x90c120) and
+/// cannot be removed (0x94643a = −1), returns 0. With bit 0x40000000, disk and memory again (deleting `path`).
+///
+/// 0x524d30 (the database, step 1 of the save); disk and memory (deleting the working path); the translated "Saving
+/// game data" and the progress bar 0x802f80 (step 1 of 0x25).
+///
+/// `general.dat` (0x9326e0): 16 fields (the version, the 0xf74-byte summary 0x591f80, the unique id, the database size,
+/// the dates and times, the leagues, the default nation or −1, the runtime data of people, clubs and reputation); a
+/// write error gives the "Disk Space Error" box with the field's line and closes the item.
+///
+/// Steps 2..=0x24 (`SAVE_STEPS`): disk and memory (before 0x11, without deleting and with memory < 25), the progress
+/// bar and the subsystem's `save`; 0x25: packs the `*.tmp` files (0x933610).
+///
+/// Hall of fame (0x5f00c0, outside the save), FIFA rules (0x8395b0); on a network game, swaps the old save for the new
+/// one (0x945ba4); [0xdd7130] = 1, [0xa801bc] = 0 and the date of the last save (0xdd70a0).
+///
+/// The original's local date ([esp+0x1758], 0x54a110, empty destructor 0x5a53c0 in the SEH) is not used: it is left
+/// out. The original's loop ([esp+0x11c] from 1 to 2) runs the body once, with the total 0x25. The summary is a zeroed
+/// buffer here; in the original, what 0x591f80 does not write (the club of the 16 non-human managers, the rest of the
+/// texts) is leftover from its stack, saved into `general.dat`.
 /// Original: `save_game_data` (0x82e430, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x82e430 } (cdecl, Setup.cpp, ~6,8 KB, SEH): `save_game_data(caminho, a4)`: grava o jogo
@@ -1035,7 +1117,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     let hall_da_fama: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_HALLOFFAME_SAVE);
     let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(FN_SAVE_FIFA_TRANSFER_RULES);
     let copy_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    crate::comparacao::ramo("save gravar jogo");
+    crate::comparison::branch("save gravar jogo");
     let opcoes = || *((*(G_CONFIG as *const usize) + 4) as *const u32);
     let kind = || if opcoes() & 0x8000 != 0 { 3u32 } else { 4 };
     let sem_memoria = || *(G_MEMORY_CHECK_ENABLED as *const u32) != 0 && memoria() < 1;
@@ -1237,8 +1319,11 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
 // simplification: writes the whole save (deletes the old one, creates the container, packs the temporary folder);
 // does not run twice. Original only; the copy takes the branch and is proven by the save proof.
 
-/// file box filter for saved games: 1 if the container has id 0x16 (.sav), else 2 (ax only); a null path gives the
-/// error box
+/// `check_saved_game_file(path)` (cdecl): file box filter for saved games: 1 if the container has id 0x16 (`.sav`,
+/// 0x9331c0), otherwise 2.
+///
+/// The original only sets `ax`: the upper 16 bits of `eax` are those of the id answer, as here. A null path is the
+/// Setup.cpp error 0x3a1b ("Error" box): the port calls the original.
 /// Original: `check_saved_game_file` (0x838e10, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x838e10 } (cdecl, Setup.cpp): `check_saved_game_file(caminho)`: filtro da caixa de arquivos
@@ -1257,8 +1342,11 @@ pub(crate) unsafe extern "C" fn check_saved_game_file(path: usize) -> u32 {
 // The id only reads the file and frees what it allocates: both run side by side. Null path (box of
 // error) original only.
 
-/// file box filter for quick starts: 1 if the container has id 0x17 (.qst) and the saved version is the exe one, else 2
-/// (ax only)
+/// `check_quick_start_file(path)` (cdecl): file box filter for quick starts: 1 if the container has id 0x17 (`.qst`)
+/// and the saved version is the exe's (0x838eb0), otherwise 2.
+///
+/// Only `ax` is set: the upper 16 bits of `eax` are those of the last call (the id, or the version). A null path:
+/// Setup.cpp error 0x3a6d, the port calls the original.
 /// Original: `check_quick_start_file` (0x839290, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x839290 } (cdecl, Setup.cpp): `check_quick_start_file(caminho)`: filtro da caixa de arquivos
@@ -1271,7 +1359,7 @@ pub(crate) unsafe extern "C" fn check_quick_start_file(path: usize) -> u32 {
     }
     let zget_archive_id: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_ZGET_ARCHIVE_ID);
     let versao_valida: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_VALID_SAVED_GAME_VERSION);
-    crate::comparacao::ramo("save filtro do inicio rapido");
+    crate::comparison::branch("save filtro do inicio rapido");
     let id = zget_archive_id(path);
     if id != 0x17 {
         return (id & 0xffff0000) | 2;
@@ -1307,8 +1395,15 @@ pub(crate) unsafe fn load_version_error_box(row: u32, reason: usize) {
     caixa(0xae28bc, 0xae26c4, 0);
 }
 
-/// opens the container general.dat, reads the version and the summary (0xf70 or 0xf74 bytes) and returns 1 if the
-/// summary version text is the exe one; on success it does not close the item (as the original)
+/// `valid_saved_game_version(path)` (cdecl): opens the container's `general.dat` item, reads the version and the
+/// summary and returns 1 if the summary's version text is the exe's.
+///
+/// Opens the item (0x9326e0 reading, a4 0x15, type 4), reads the saved version (4 bytes) and the save summary (0xf70
+/// bytes if |version| < 0x3e027, otherwise 0xf74) and returns 1 if the summary's version text (+0x7d0) equals the exe's
+/// (0x90d130), otherwise 0. Each failed read gives the "Load Game Error" box (Setup.cpp 0x3a36, 0x3a3d, 0x3a48, 0x3a55)
+/// and 0. As in the original, on success the item is NOT closed (the ZFILE and the file stay open). The original's SEH
+/// frame only protects the local date (0x54a110, no destructor), which falls inside the summary (+0xf64) and is
+/// overwritten by the read.
 /// Original: `valid_saved_game_version` (0x838eb0, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x838eb0 } (cdecl, Setup.cpp): `valid_saved_game_version(caminho)`: abre o item `general.dat`
@@ -1324,7 +1419,7 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
     let read_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
     let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
     let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
-    crate::comparacao::ramo("save versao do jogo salvo");
+    crate::comparison::branch("save versao do jogo salvo");
     let mut summary = [0u8; 0xf74];
     let mut v = 0i32;
     data_default(summary.as_mut_ptr() as usize + 0xf64);
@@ -1378,8 +1473,12 @@ pub(crate) unsafe fn setup_warning(row: u32) {
     *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
 }
 
-/// writes the last saved game item, fifa_transfer_rules.zip: 2 bytes ([0xae233c] and the rule in force [0xa83608]);
-/// errors give the "Error" box
+/// `save_fifa_transfer_rules(save)` (cdecl): writes the last item of the save, `fifa_transfer_rules.zip`: 2 bytes,
+/// [0xae233c] and the rule in force [0xa83608], then `zclose`.
+///
+/// The item is opened with 0x9326e0 writing, a4 0x16, type 4 (in an already created container its header applies). A
+/// null path, an item that does not open or a failed write: the "Error" box (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38);
+/// on the writes, the item is closed after the box. The original returns nothing (`eax` is leftover).
 /// Original: `save_fifa_transfer_rules` (0x8395b0, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x8395b0 } (cdecl, Setup.cpp): `save_fifa_transfer_rules(save)`: o último item do save,
@@ -1391,7 +1490,7 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
     let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     let write: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZWRITE);
     let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
-    crate::comparacao::ramo("save gravar regras fifa");
+    crate::comparison::branch("save gravar regras fifa");
     if save == 0 {
         setup_warning(0x3b24);
         return;
@@ -1417,7 +1516,10 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
 // simplification: appends an item to the container; it does not run twice. Original only; the copy takes the
 // branch and is proved by the save proof (the .qst written with and without the batch).
 
-/// reads the 2 bytes of fifa_transfer_rules.zip; if the first is 1, the rule in force becomes 5
+/// `load_fifa_transfer_rules(save)` (cdecl): reads the 2 bytes of the `fifa_transfer_rules.zip` item (0x9326e0 reading)
+/// into [0xae233c] and [0xa83608]; if [0xae233c] = 1, the rule in force [0xa83608] becomes 5. Closes the item.
+///
+/// Errors: the "Error" box (Setup.cpp 0x3b4f, 0x3b57, 0x3b5d, 0x3b63), as in the save.
 /// Original: `load_fifa_transfer_rules` (0x839760, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x839760 } (cdecl, Setup.cpp): `load_fifa_transfer_rules(save)`: lê os 2 bytes do item
@@ -1428,7 +1530,7 @@ pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
     let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
     let read_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
     let close_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
-    crate::comparacao::ramo("save carregar regras fifa");
+    crate::comparison::branch("save carregar regras fifa");
     if save == 0 {
         setup_warning(0x3b4f);
         return;
@@ -1473,92 +1575,19 @@ pub(crate) unsafe fn copy_text(target: *mut u8, font: *const u8) {
     core::ptr::copy(font, target, n);
 }
 
-/// builds the general.dat summary: the active nations (two groups), the human managers with club and nation, the game
-/// date, the version, the play time and time()
-/// Original: `build_save_game_summary` (0x591f80, file_screens.cpp, cdecl).
-///
-/// [pt] { 0x591f80 } (cdecl, file_screens.cpp): `build_save_game_summary(resumo)`: o resumo que o
-/// `save_game_data` grava no `general.dat` (logo depois da versão):
-/// - +0: as nações da tabela de ligas (0xb63d60, 0x23 de 0x48 bytes) com o bit 2 em +0x11c, a
-///   primeira pelo sprintf com o próprio nome como formato (0x944c9f), as outras por ", <%s>"
-///   traduzido (0x66f4e0); +1000 (0x3e8): o mesmo com o bit 1;
-/// - 16 técnicos, do último da tabela de pessoas (0xae23bc, 0x6e bytes) para trás: humano (+0x5f
-///   = 1) dá o nome em +0x7e4 + 0x78 × i (0x53dba0, 200) e em +0x820 + 0x78 × i "clube / nação"
-///   (+0x39 e +0x24, nome em +0x38 de cada), só um deles, ou nada; não humano só zera o nome (o
-///   clube fica como estava no buffer do chamador);
-/// - +0xf64 a data do jogo (0x417c10 de 0xae2c90), +0x7d0 a versão (0x90d130), +0xf6c o tempo de
-///   jogo ([0xdd7140] += time() − [0xdd7144]; [0xdd7144] = time()) e +0xf70 o time().
-pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
-    let format: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let name_of: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
-    let copy_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
-    let relogio: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(FN_946EBB);
-    let mut nacao = [0u8; 100];
-    *summary = 0;
-    *summary.add(0x3e8) = 0;
-    for (bit, destino) in [(2u8, summary), (1u8, summary.add(0x3e8))] {
-        let mut first = true;
-        for i in 0..0x23usize {
-            let n = *((0xb63d60 + i * 0x48) as *const usize);
-            if n == 0 || *((n + 0x11c) as *const u8) & bit == 0 {
-                continue;
-            }
-            if first {
-                format(nacao.as_mut_ptr(), n + 0x38);
-                first = false;
-            } else {
-                translate(nacao.as_mut_ptr(), 0x9c8134, n + 0x38);
-            }
-            append_text(destino, nacao.as_ptr());
-        }
-        if bit == 1 && first {
-            *summary.add(0x3e8) = 0;
-        }
-    }
-    let how_many = *(G_STAFF_COUNT as *const i32);
-    let table = *(G_STAFF_TABLE as *const usize);
-    for i in 0..0x10i32 {
-        let club_txt = summary.add(0x820 + 0x78 * i as usize);
-        let p = table.wrapping_add((how_many - i - 1).wrapping_mul(0x6e) as usize);
-        if *((p + 0x5f) as *const u8) != 1 {
-            *club_txt.sub(0x3c) = 0;
-            continue;
-        }
-        name_of(p, club_txt.sub(0x3c), 200, 1);
-        let clube = core::ptr::read_unaligned((p + 0x39) as *const usize);
-        let nation_of = core::ptr::read_unaligned((p + 0x24) as *const usize);
-        if clube != 0 && nation_of != 0 {
-            translate(club_txt, 0x9c80f4, clube + club::SHORT_NAME, nation_of + nation::SHORT_NAME);
-        } else if clube != 0 {
-            copy_text(club_txt, (clube + club::SHORT_NAME) as *const u8);
-        } else if nation_of != 0 {
-            copy_text(club_txt, (nation_of + nation::SHORT_NAME) as *const u8);
-        } else {
-            *club_txt = 0;
-        }
-    }
-    let mut copy = [0u8; 8];
-    copy_data(summary as usize + 0xf64, copy.as_mut_ptr(), G_CURRENT_DATE);
-    copy_text(summary.add(0x7d0), version());
-    let mut now = 0i32;
-    let t = relogio(&mut now);
-    let total = (*(G_GAME_PLAY_TIME_TOTAL as *const i32)).wrapping_add(t.wrapping_sub(*(G_GAME_PLAY_TIME_LAST_STAMP as *const i32)));
-    *(G_GAME_PLAY_TIME_TOTAL as *mut i32) = total;
-    core::ptr::write_unaligned(summary.add(0xf6c) as *mut i32, total);
-    *(G_GAME_PLAY_TIME_LAST_STAMP as *mut i32) = t;
-    let t2 = relogio(core::ptr::null_mut());
-    core::ptr::write_unaligned(summary.add(0xf70) as *mut i32, t2);
-}
 
 // Side by side over the whole summary (0xf74) and the match-time clock ([0xdd7140], [0xdd7144]),
 // restored between the two; compares only +0..+0xf6c: the match time and time() (+0xf6c, +0xf70) are
 // clock (fixed only in simulation mode), as in the save proof.
 
-/// releases the screens, destroys the subsystems held in globals (destructor + delete, free, virtual destructor) in the
-/// original order, deletes the *.tmp files, frees the database tables, resets the game date and clears three flags;
-/// returns 1
+/// `free_game_data(screen)` (cdecl): releases the screens and destroys the subsystems held in globals, in the original
+/// order; returns 1.
+///
+/// The screen manager (0xb74450) releases the screens (0x7ff5f0) and, if `screen` ≠ 0, also 0x7fc5e0; 0x6d5b50; then
+/// each subsystem kept in a global, in the original's order: destructor (thiscall) + `delete` (0x944c94) and the global
+/// zeroed; the loose vectors through `free` (0x9452ca); two objects through the virtual destructor (vtable[0](1)); the
+/// `*.tmp` files of the temporary folder (0x90cd50), [0xae2338], the database tables (0x528080), the game date
+/// (0x54a130: 1, 0, 2001, −1) and three flags zeroed.
 /// Original: `free_game_data` (0x82ff40, Setup.cpp, cdecl).
 ///
 /// [pt] { 0x82ff40 } (cdecl, Setup.cpp): `free_game_data(tela)`: o gerente de telas (0xb74450) solta as
@@ -1577,7 +1606,7 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     let limpar_temporarios: unsafe extern "C" fn(usize) = core::mem::transmute(FN_UTILS_CLEAR_TEMP_FOLDER);
     let liberar_tabelas: unsafe extern "C" fn() = core::mem::transmute(FN_DATABASE_FREE_ALL_TABLES);
     let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_SET);
-    crate::comparacao::ramo("save liberar dados do jogo");
+    crate::comparison::branch("save liberar dados do jogo");
     // destrutor + delete + global zerado
     let objetos = |list: &[(usize, usize)]| {
         for &(g, destrutor) in list {

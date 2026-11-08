@@ -11,14 +11,14 @@ unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32, registros:
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao == 1 {
-        crate::comparacao::ramo("banco ler clubes versão 1");
+        crate::comparison::branch("banco ler clubes versão 1");
         let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(0x54dc90usize);
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler clubes");
+    crate::comparison::branch("banco ler clubes");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 581, n, stream)
@@ -54,14 +54,14 @@ unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32, registros:
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao == 1 {
-        crate::comparacao::ramo("banco ler competições versão 1");
+        crate::comparison::branch("banco ler competições versão 1");
         let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(0x54ffd0usize);
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler competições");
+    crate::comparison::branch("banco ler competições");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 107, n, stream)
@@ -89,14 +89,14 @@ unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i32, registro
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao == 1 {
-        crate::comparacao::ramo("banco ler não jogadores versão 1");
+        crate::comparison::branch("banco ler não jogadores versão 1");
         let converter: unsafe extern "C" fn(usize, i32, usize, u32) -> i32 = core::mem::transmute(0x54e9a0usize);
         return converter(stream, use_zip, registros, n);
     }
     if versao != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparacao::ramo("banco ler não jogadores");
+    crate::comparison::branch("banco ler não jogadores");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 68, n, stream)

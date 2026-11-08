@@ -6,16 +6,10 @@ use super::*;
 /// Comparer for `fra_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CUP_CREATE_ROUND_TABLE);
-    compare_single_stage_round_table("fra_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
+    compare_cup_round_table("fra_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
         |r, e, s| fra_cup_create_round_table(this, stage, r, e, s))
 }
 
-/// Comparer for `fra_cup_create_round_table_5bcc40` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_create_round_table_5bcc40(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CUP_CREATE_ROUND_TABLE_5BCC40);
-    compare_single_stage_round_table("fra_cup_create_round_table_5bcc40", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
-        |r, e, s| fra_cup_create_round_table_5bcc40(this, stage, r, e, s))
-}
 
 /// Comparer for `fra_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants(this: usize) -> i32 {
@@ -24,9 +18,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants(this: u
         |_, n| n.clamp(0, 0xde) as usize * 6)
 }
 
-/// Comparer for `fra_cup_collect_entrants_5bd160` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants_5bd160(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_CUP_COLLECT_ENTRANTS_5BD160);
-    eng_cc_cup_compare_entrant_list("fra_cup_collect_entrants_5bd160", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || french_league_cup_collect_entrants(this),
-        |_, n| n.clamp(0, 0x36) as usize * 6)
-}

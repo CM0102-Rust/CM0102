@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize
     let f = f + 1;
     write_u32_from_usize(this + 0x30, f as usize);
     if f == 1 {
-        crate::comparacao::ramo("cqt_12 grupos da asia");
+        crate::comparison::branch("cqt_12 grupos da asia");
         let groups: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ASIACLUBCHAMP_CREATE_GROUP_STAGES);
         groups(this);
     } else if f == 3 {
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
         return show_error_at(0x987a40, 0x39e);
     }
     noticia(f);
-    crate::comparacao::ramo("cqt_12 dois grupos da asia");
+    crate::comparison::branch("cqt_12 dois grupos da asia");
     let group_2 = [v[4], v[5], v[6], v[7]]; // cqt12: o grupo 2
     let f = create_asia_group(this, 2, group_2.as_ptr(), 1);
     if f == 0 {
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(t
     if list == 0 {
         return show_error_at(0x987a40, 0x3d1);
     }
-    crate::comparacao::ramo("cqt_12 cruzamentos da asia");
+    crate::comparison::branch("cqt_12 cruzamentos da asia");
     for (k, &c) in asia_semi_finalists(this).iter().enumerate() {
         write_u32_from_usize(list + k * 4, c);
     }
@@ -267,7 +267,7 @@ pub(crate) unsafe fn create_round_table(this: usize, f: Option<ScheduleStage>, r
         show_error_at(arquivo, f.linha);
         return 0;
     }
-    crate::comparacao::ramo(f.nome);
+    crate::comparison::branch(f.nome);
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let jogo_l: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
@@ -337,14 +337,14 @@ pub(crate) unsafe fn asia_club_champ_compare_round_table(name: &str, stage: u32,
         Some(f) => f,
         None => {
             let a = o();
-            PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+            PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
             return a;
         }
     };
     let (mut r2, mut e2) = (*rounds, if extra.is_null() { 0 } else { *extra });
     let mut l2 = if league.is_null() { 0 } else { *league };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
         if league.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let outs = *rounds == r2 && (extra.is_null() || *extra == e2) && (league.is_null() || *league == l2);
     let table = if a != 0 && b != 0 { written_round_table_bytes(f.ops, a) == written_round_table_bytes(f.ops, b) } else { a == 0 && b == 0 };
@@ -352,7 +352,7 @@ pub(crate) unsafe fn asia_club_champ_compare_round_table(name: &str, stage: u32,
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 

@@ -35,9 +35,9 @@ unsafe fn raise_champion_reputation(clube: usize, peso: i16, campeao_da_liga: bo
         let v = cqd13_w(clube + 0x80).wrapping_add(soma as i16);
         let v = if v < 1 { 1 } else if v > 10000 { 10000 } else { v };
         if campeao_da_liga {
-            crate::comparacao::ramo("cqd_13 injury_word_0c do campeao da liga");
+            crate::comparison::branch("cqd_13 injury_word_0c do campeao da liga");
         } else {
-            crate::comparacao::ramo("cqd_13 injury_word_0c do campeao da copa");
+            crate::comparison::branch("cqd_13 injury_word_0c do campeao da copa");
         }
         core::ptr::write_unaligned((clube + 0x80) as *mut i16, v); // cqd13: a reputação do campeão
     }
@@ -219,14 +219,14 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
         }
         let f = media(cqd13_d(0xb74350), cqd13_d(p + 0x61), 2, 1, 6.5);
         if f > limiar as f64 { // cqd13: acima do limiar
-            crate::comparacao::ramo("cqd_13 jogador destacado do campeao");
+            crate::comparison::branch("cqd_13 jogador destacado do campeao");
             append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, cqd13_d(p), &e);
             moral(p, 0x14, 1); // cqd13: o moral do jogador destacado
             let k = contrato(cqd13_d(0xae1050), p, clube);
             if k == 0 {
                 continue;
             }
-            crate::comparacao::ramo("cqd_13 contrato do destacado");
+            crate::comparison::branch("cqd_13 contrato do destacado");
             add_contract_morale(k, 100); // cqd13: o contrato do jogador destacado
             offer_renewal_if_due(clube, p, k);
         } else {
@@ -309,13 +309,13 @@ unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jo
         if p == 0 || cqd13_d(p + 0x61) == 0 || cqd13_i(p) >= cqd13_i(0xae2364) || p == cqd13_d(clube + 0xcf) {
             continue;
         }
-        crate::comparacao::ramo("cqd_13 elenco do campeao da copa");
+        crate::comparison::branch("cqd_13 elenco do campeao da copa");
         moral(p, 0xf, 1); // cqd13: o moral do jogador do campeão da copa
         let k = contrato(cqd13_d(0xae1050), p, clube);
         if k == 0 {
             continue;
         }
-        crate::comparacao::ramo("cqd_13 moral do elenco campeao da copa");
+        crate::comparison::branch("cqd_13 moral do elenco campeao da copa");
         add_contract_morale(k, 100); // cqd13: o moral do contrato do campeão da copa
         let s = *((k + 0x4f) as *const u8) >> 4;
         if s == 0 || (s > 3 && s != 5) {
@@ -384,12 +384,12 @@ unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: 
     let mut todas = fixas.clone();
     todas.extend(fichas.iter().map(|&(m, _, _)| (m, 1)));
     todas.extend(contratos.iter().map(|&k| (k + 0x44, 1)));
-    todas.extend(crate::aleatorio::REGIOES_DO_ESTADO.iter().copied());
-    let antes = crate::comparacao::Memoria::ler(&todas);
+    todas.extend(crate::rng::STATE_REGIONS.iter().copied());
+    let antes = crate::comparison::MemorySnapshot::read(&todas);
     (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).clear();
     DRY_RUN_STRAY_SCRATCH_DATE = false;
     STAFF_HISTORY_DRY_RUN = true;
-    crate::aleatorio::sem_contar(copia);
+    crate::rng::without_counting(copia);
     STAFF_HISTORY_DRY_RUN = false;
     let renovados = core::mem::take(&mut *core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS));
     let mut conta = fixas;
@@ -407,12 +407,12 @@ unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: 
         v >= m0.clamp(1, 20) && v <= (m0 + 20).clamp(1, 20)
     };
     let mut na_faixa = fichas.iter().skip(corte + 1).all(band);
-    let mr = crate::comparacao::Memoria::ler(&conta);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&conta);
+    antes.write_back();
     original();
     na_faixa &= fichas.iter().skip(corte + 1).all(band);
-    let mo = crate::comparacao::Memoria::ler(&conta);
-    PLACAR.registrar(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da band: {}) original={:x?} rust={:x?}",
+    let mo = crate::comparison::MemorySnapshot::read(&conta);
+    PLACAR.record(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da band: {}) original={:x?} rust={:x?}",
         nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
@@ -467,7 +467,7 @@ unsafe extern "thiscall" fn comparar_clear_human_manager_record(this: usize, pes
     } else {
         pessoa
     };
-    let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, pessoa),
+    let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, pessoa),
         || clear_human_manager_record(this, pessoa));
-    PLACAR.registrar(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", pessoa, mo, mr));
+    PLACAR.record(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", pessoa, mo, mr));
 }

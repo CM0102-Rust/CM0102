@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn cqv4_construir_fase(this: usize, liga: usize, n: u32
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x6827d0usize);
     base(this);
-    crate::comparacao::ramo("cqv_4 fase");
+    crate::comparison::branch("cqv_4 fase");
     let w = |o: usize, v: u32| core::ptr::write_unaligned((this + o) as *mut u16, v as u16);
     let b = |o: usize, v: u32| *((this + o) as *mut u8) = v as u8;
     let x = |o: usize, v: u32| core::ptr::write_unaligned((this + o) as *mut u32, v);
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn cqv4_construir_fase(this: usize, liga: usize, n: u32
             show_error_at(0x9f1630, 0x8a);
             return this;
         }
-        crate::comparacao::ramo("cqv_4 fase de uma rodada");
+        crate::comparison::branch("cqv_4 fase de uma rodada");
         core::ptr::write_unaligned(r as *mut u16, core::ptr::read_unaligned(0xae2c90 as *const u16));
         core::ptr::write_unaligned((r + 2) as *mut i16, cqv4_w(0xae2c92).wrapping_sub(cqv4_w(this + 0x40)));
         *((r + 4) as *mut u8) = 0;
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn comparar_cqv4_construir_fase(this: usize, liga: usiz
     if ok && clubes != 0 {
         ok = cqv4_clubes_da_tabela(this) == lista;
     }
-    PLACAR.registrar(ok, || format!("cqv4_construir_fase({:#x}): devolveu {:#x}, vtable {:#x}, +0x3e {}, +0xc2 {}, +0xb1 {:#x}, +0xba {:#x}", this, r, cqv4_d(this), cqv4_w(this + 0x3e), cqv4_b(this + 0xc2), cqv4_d(this + 0xb1), cqv4_d(this + 0xba)));
+    PLACAR.record(ok, || format!("cqv4_construir_fase({:#x}): devolveu {:#x}, vtable {:#x}, +0x3e {}, +0xc2 {}, +0xb1 {:#x}, +0xba {:#x}", this, r, cqv4_d(this), cqv4_w(this + 0x3e), cqv4_b(this + 0xc2), cqv4_d(this + 0xb1), cqv4_d(this + 0xba)));
     r
 }
 
@@ -178,5 +178,5 @@ unsafe extern "thiscall" fn cqv4_destruir_fase(this: usize) {
 /// O comparador do destrutor: só a original (libera; não roda duas vezes), conferindo o vetor +0x18 zerado.
 unsafe extern "thiscall" fn comparar_cqv4_destruir_fase(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
-    PLACAR.registrar(cqv4_d(this + 0x18) == 0, || format!("cqv4_destruir_fase({:#x}): +0x18 = {:#x}", this, cqv4_d(this + 0x18)));
+    PLACAR.record(cqv4_d(this + 0x18) == 0, || format!("cqv4_destruir_fase({:#x}): +0x18 = {:#x}", this, cqv4_d(this + 0x18)));
 }

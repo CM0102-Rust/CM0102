@@ -1,6 +1,6 @@
 # Mutações da 253a leva (itens cpq_1, cpq_2, cpq_3, cpq_4, cpq_5, cpq_6, cpq_7, cpq_8, cpq_9, cpq_10, cpq_11, cpq_12, cpq_13). Uso: python mutacoes.py mutacoes\leva253.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpq1_sem_demissao', '    crate::comparacao::ramo("cpq_1 demitido");\n    record_departure(this, clube, 1);', '    crate::comparacao::ramo("cpq_1 demitido"); // mutacao: a demissao nao entra na lista', 'cpq_1 demitido'),
+    ('cpq1_sem_demissao', '    crate::comparison::branch("cpq_1 demitido");\n    record_departure(this, clube, 1);', '    crate::comparison::branch("cpq_1 demitido"); // mutacao: a demissao nao entra na lista', 'cpq_1 demitido'),
     ('cpq1_ultimato_fora_da_lista', '    list_add_tail(read_usize(this + 0x10), &id as *const u32 as usize, 4);', '    let _ = id; // mutacao: o ultimato nao entra na lista', 'cpq_1 ultimato dado'),
     ('cpq1_tecnico_com_contrato', '        without_contract(read_usize(G_CONTRACT_MANAGER), tec);', '        let _ = (without_contract, tec); // mutacao: o tecnico fica com o contrato', 'cpq_1 tirar o tecnico'),
     ('cpq2_apuro_sem_saldo', '    (core::ptr::read_unaligned(f as *const i64) < 0) as u8', '    1 // mutacao: sem olhar o saldo'),
@@ -8,7 +8,7 @@ MUTACOES = [
     ('cpq2_federacao_demite', '    let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_MANAGER_MANAGER_CONSIDER_SACKING_MANAGER);\n    pensar(this, national_team, 0);', '    record_national_departure(this, national_team, 0); // mutacao: demite em vez de pensar', 'cpq_2 a federacao pensa'),
     ('cpq3_acesso_400', '    write_i16(clube + club::REPUTATION, read_i16(clube + club::REPUTATION).wrapping_add(500));', '    write_i16(clube + club::REPUTATION, read_i16(clube + club::REPUTATION).wrapping_add(400)); // mutacao: +400', 'cpq_3 acesso'),
     ('cpq3_rebaixamento_sem_moral', '        adjust_morale(p, -0xf);', '        // mutacao: sem o moral', 'cpq_3 rebaixamento'),
-    ('cpq3_classificado_na_copa', '        crate::comparacao::ramo("cpq_3 classificado clube");\n        staff_records_add_i32(r + 0xba, points);', '        crate::comparacao::ramo("cpq_3 classificado clube");\n        staff_records_add_i32(r + 0xbe, points); // mutacao: na copa', 'cpq_3 classificado clube'),
+    ('cpq3_classificado_na_copa', '        crate::comparison::branch("cpq_3 classificado clube");\n        staff_records_add_i32(r + 0xba, points);', '        crate::comparison::branch("cpq_3 classificado clube");\n        staff_records_add_i32(r + 0xbe, points); // mutacao: na copa', 'cpq_3 classificado clube'),
     ('cpq4_maior_compra_sem_valor', '                write_i32(r + 0x18, value);', '                // mutacao: a maior compra sem o valor', 'cpq_4 maior compra'),
     ('cpq4_compras_de_2_em_2', '            write_i16(r + 0xa0, read_i16(r + 0xa0).wrapping_add(1));', '            write_i16(r + 0xa0, read_i16(r + 0xa0).wrapping_add(2)); // mutacao: de 2 em 2', 'cpq_4 compra'),
     ('cpq4_venda_sem_receita', '            staff_records_add_i64(r + 0xac, value);\n            if read_usize(t + 4) != 0 {\n                write_i16(r + 0xa0,', '            // mutacao: sem a receita\n            if read_usize(t + 4) != 0 {\n                write_i16(r + 0xa0,', 'cpq_4 venda'),

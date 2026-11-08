@@ -80,14 +80,14 @@ unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, jogador: us
     l0 = (l0 as f64 - xf as f64) as f32;
     let dif = s2f as f64 - xf as f64;
     let dif_f = dif as f32;
-    crate::comparacao::ramo("cpn_3 nota do jogador");
+    crate::comparison::branch("cpn_3 nota do jogador");
     let mut r = dif + l0 as f64 - peso as f64 * (1.0f32 / 60.0) as f64; // o peso da história
     if !(s1f as f64 >= 12.0) {
-        crate::comparacao::ramo("cpn_3 poucas partidas");
+        crate::comparison::branch("cpn_3 poucas partidas");
         r = r * s1f as f64 * (1.0f32 / 12.0) as f64; // menos de 12 partidas
     }
     if !(r >= 0.0) {
-        crate::comparacao::ramo("cpn_3 nota negativa");
+        crate::comparison::branch("cpn_3 nota negativa");
         r = r * player_club_reputation_ratio(jogador, clube); // a negativa pela reputação
     }
     let rf = r as f32;
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: usize, noti
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let por_texto: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4ae660usize);
     let ligar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x4ae8a0usize);
-    crate::comparacao::ramo("cpn_3 texto da crise financeira");
+    crate::comparison::branch("cpn_3 texto da crise financeira");
     let id = campo(noticia, 0);
     let gravidade = campo(noticia, 1);
     campo(noticia, 2);
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: 
 unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this: usize, jogador: usize, clube: usize, contrato: usize, tipo: u32, modo: u32, peso: f32) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(%%I0%%)(this, jogador, clube, contrato, tipo, modo, peso);
     let n = rate_player_form_for_story(this, jogador, clube, contrato, tipo, modo, peso);
-    PLACAR.registrar(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
+    PLACAR.record(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
         || format!("rate_player_form_for_story(tipo {}, modo {}, peso {}) {} x {}", tipo as u16 as i16, modo as u8, peso, o, n));
     o
 }
@@ -284,6 +284,6 @@ unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tecnico: usize
     } else {
         r == 0 || (*conta as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| cpn3_d(r + i * MEDIA_NEWS_ITEM_SIZE + 0xd6) == id))
     };
-    PLACAR.registrar(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", categoria as u8, if r == 0 { 0 } else { *conta }, ids));
+    PLACAR.record(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", categoria as u8, if r == 0 { 0 } else { *conta }, ids));
     r
 }

@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 {
         }
         i = i.wrapping_add(1);
     }
-    crate::comparacao::ramo("cqs_1 tabela da mls");
+    crate::comparison::branch("cqs_1 tabela da mls");
     (n == cqs1_w(this + 0x3e)) as u32
 }
 
@@ -104,7 +104,7 @@ unsafe fn create_division_stage(this: usize, codigo: i16, k: u32, atual: u32, pv
         return show_error_at(0xaa1fb4, linhas[1]);
     }
     core::ptr::write_unaligned((this + 0x30) as *mut u32, atual);
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     core::ptr::write_unaligned((fase + 0x3a) as *mut i16, codigo);
 }
 
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_create_table(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let t = cqs1_d(this + 0xb1);
     let igual = r == (n == 4) as u32 && cqs1_w(this + 0x3e) == 4 && t != 0 && (0..n).all(|k| cqs1_d(t + k * 0x3b) == plano[k]);
-    PLACAR.registrar(igual, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
+    PLACAR.record(igual, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
     r
 }
 
@@ -170,7 +170,7 @@ unsafe fn compare_division_stage(nome: &str, this: usize, codigo: i16, k: usize,
         b[..n].sort_unstable();
         a[..n] == b[..n]
     };
-    PLACAR.registrar(igual, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", nome, this, fase, n, plano));
+    PLACAR.record(igual, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", nome, this, fase, n, plano));
 }
 
 unsafe extern "thiscall" fn comparar_create_second_division_stage(this: usize) {

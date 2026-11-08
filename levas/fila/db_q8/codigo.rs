@@ -97,9 +97,9 @@ unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: usize, kit: u
     if clube == 0 {
         return o(clube, kit, frente, fundo); // caixa: só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(frente as usize, 2), (fundo as usize, 2)],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(frente as usize, 2), (fundo as usize, 2)],
         || o(clube, kit, frente, fundo), || database_get_club_kit_colours(clube, kit, frente, fundo));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, kit as u8, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, kit as u8, r, n, mo, mr));
     r
 }
 
@@ -110,9 +110,9 @@ unsafe extern "C" fn comparar_database_get_club_manager(clube: usize) -> usize {
     }
     // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro (e a recusa se repete com ela zerada):
     // a região volta entre os lados
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(clube + 0x244, 1)], || o(clube),
         || database_get_club_manager(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -124,6 +124,6 @@ unsafe extern "C" fn comparar_club_get_english_name(clube: usize) -> usize {
     }
     let r = o(clube);
     let n = club_get_english_name(clube);
-    PLACAR.registrar(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
+    PLACAR.record(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
     r
 }

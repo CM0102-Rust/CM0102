@@ -9,7 +9,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usiz
     let last = before >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AUS_NSL_ADVANCE_STAGE)(this);
     let after = read_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, before, after));
+    PLACAR.record(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, before, after));
 }
 
 /// Comparer for `create_finals_series_stage` (comparison mode: see the header of motor.rs).
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_finals_series_stage(this:
         b.sort_unstable();
         a == b
     };
-    PLACAR.registrar(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, stage, seis));
+    PLACAR.record(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, stage, seis));
     r
 }
 
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: u
         let (x, y) = (read_usize(l), read_usize(l + 6));
         read_i16(stage + 0x3e) == 2 && read_usize(stage + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    PLACAR.registrar(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, stage));
+    PLACAR.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, stage));
 }
 
 /// Comparer for `aus_nsl_set_up_rules` (comparison mode: see the header of motor.rs).
@@ -64,20 +64,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_set_up_rules(this: usize) -> u32 {
     let o = this;
     let reg = [(o, 0x3a), (o + 0x3c, 0xa9 - 0x3c), (o + 0xab, 0xba - 0xab), (o + 0xbe, 0xee - 0xbe)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_SET_UP_RULES)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_SET_UP_RULES)(this), || {
         set_nsl_rules(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("aus_nsl_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("aus_nsl_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
-/// Comparer for `aus_nsl_record_season_honours` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: só a original (simplification: grava o histórico e aloca o registro; não pode rodar duas vezes).
-pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_record_season_honours(this: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_RECORD_SEASON_HONOURS)(this)
-}
 
 /// Comparer for `aus_nsl_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
@@ -85,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_record_season_honours(th
 pub(crate) unsafe extern "thiscall" fn comparar_aus_nsl_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, _, _) = nsl_end_of_stage(this, clube, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_AUS_NSL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, status, stage, a4, a5, a6);
-    PLACAR.registrar(r == n, || format!("aus_nsl_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32));
+    PLACAR.record(r == n, || format!("aus_nsl_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32));
     r
 }
 

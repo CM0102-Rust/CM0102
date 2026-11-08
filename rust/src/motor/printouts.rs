@@ -5,8 +5,14 @@ use super::*;
 
 
 
-/// type 1 on Sunday becomes 7; local types (2, 4): the club's pundits; the others: of the type and nation (−1 any); up
-/// to 20, draw(n) and the id, or −1
+/// Picks a random pundit: type 1 on Sunday becomes 7; local types (2, 4): the club's pundits; the others: of the type
+/// and nation (−1 any); up to 20, random(n) and the id, or −1.
+///
+/// Ret 0xc; 0x1094-byte frame through 0x945610: `PunditList::pick_random_pundit(club, type, nation)`, from the press
+/// stories (0x72c1f0, 0x733a60) and from the news texts. Type 1 on Sunday (0x54a3f0 = 6) becomes 7. Types 2 and 4
+/// (local): those of list `[this+4]` whose +0xcb is the id of `[[club+0x69]+0x38]` (none: −1); the others: those of
+/// list `[this]` of the type (+0xca) and the nation (+0xcf; −1 accepts any). Up to 20; none: −1; otherwise the id (word
+/// +0, signed) of one of them by random(n).
 /// Original: `PunditList::pick_random_pundit` (0x7dab90, printouts.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x7dab90 } (thiscall, ret 0xc, printouts.cpp, quadro de 0x1094 bytes pela 0x945610): `PunditList::
@@ -26,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
     let mut n = 0usize;
     if t == 2 || t == 4 {
         let est = read_usize(clube + club::STADIUM);
-        if est == 0 || read_usize(est + 0x38) == 0 {
+        if est == 0 || read_usize(est + stadium::STADIUM_CITY) == 0 {
             return -1;
         }
         let l = read_usize(this + 4);
@@ -41,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
                 break;
             }
             if read_u32(p + 0xcb) == read_u32(read_usize(read_usize(clube + club::STADIUM) + 0x38)) { // cpz10: o comentarista local
-                crate::comparacao::ramo("cpz_10 comentarista local");
+                crate::comparison::branch("cpz_10 comentarista local");
                 ids[n] = read_i16_as_i32(p) as i16;
                 n += 1;
                 if n >= 20 {
@@ -67,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
             }
             if *((p + 0xca) as *const i8) == t {
                 let accepted = if nacao == -1 {
-                    crate::comparacao::ramo("cpz_10 comentarista de qualquer nacao");
+                    crate::comparison::branch("cpz_10 comentarista de qualquer nacao");
                     true // cpz10: qualquer nação
                 } else {
                     read_u32(p + 0xcf) as i32 == nacao
@@ -90,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
         return -1;
     }
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    crate::comparacao::ramo("cpz_10 sorteio do comentarista");
+    crate::comparison::branch("cpz_10 sorteio do comentarista");
     let r = sortear(n as i32); // cpz10: o sorteio do comentarista
     ids[r as usize] as i32
 }
@@ -110,7 +116,11 @@ pub(crate) fn default_media_name(kind: i8) -> usize {
     }
 }
 
-/// the name (+2) and flag (+0xd3) of the pundit with the id, or the default outlet type name and flag 0
+/// Returns the name (+2) and flag (+0xd3) of the pundit with the id, or the default outlet type name and flag 0.
+///
+/// Ret 0x10: `PunditList::get_pundit_name(type, id, name, flag)`, from the news texts. Without `name`: flag 0. Id −1:
+/// the type's default name and flag 0. Otherwise the pundit with the id (word +0) in list `[this+4]` (types 2 and 4) or
+/// `[this]`: the name (+2, sprintf "%s" 0x944c9f) and the flag (+0xd3); without him, the default name and flag 0.
 /// Original: `PunditList::get_pundit_name` (0x7dad20, printouts.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x7dad20 } (thiscall, ret 0x10, printouts.cpp): `PunditList::get_pundit_name(tipo, id, nome, marca)`, pelos textos

@@ -28,7 +28,7 @@ unsafe fn south_american_cup_schedule(this: usize, fase: u32, rodadas: *mut i16,
             show_error_at(arquivo, linha_g);
             return 0;
         }
-        crate::comparacao::ramo(nome_g);
+        crate::comparison::branch(nome_g);
         // o ano vai com lixo nos bytes altos na original (o registrador de antes com a palavra +0x40 por cima); a
         // 0x68a160 só usa os 16 bits de baixo: a cópia passa o ano limpo
         let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
@@ -51,7 +51,7 @@ unsafe fn south_american_cup_schedule(this: usize, fase: u32, rodadas: *mut i16,
         show_error_at(arquivo, linha_m);
         return 0;
     }
-    crate::comparacao::ramo(nome);
+    crate::comparison::branch(nome);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     for (i, r) in mata.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, ano);
@@ -83,13 +83,13 @@ unsafe fn compare_south_american_cup_schedule(nome: &str, fase: u32, rodadas: *m
     if f > limit {
         // ponytail: acima do mata-mata nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
-        PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, f, a));
+        PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, f, a));
         return a;
     }
     let (mut r2, mut e2) = (*rodadas, *extra);
     let mut l2 = if liga.is_null() { 0 } else { *liga };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, o, || c(&mut r2, &mut e2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let saidas = *rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2);
     let mais = |t: usize| a_mais.iter().flat_map(|&(r, o, _)| core::slice::from_raw_parts((t + r * 0x68 + o) as *const u8, 2).to_vec()).collect::<Vec<u8>>();
     let tabela = if a != 0 && b != 0 {
@@ -105,7 +105,7 @@ unsafe fn compare_south_american_cup_schedule(nome: &str, fase: u32, rodadas: *m
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, f, saidas, *rodadas, r2, tabela));
+    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, f, saidas, *rodadas, r2, tabela));
     a
 }
 
@@ -193,7 +193,7 @@ unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         }
         i += 1;
     }
-    crate::comparacao::ramo("cqo_13 convidados da mercosul");
+    crate::comparison::branch("cqo_13 convidados da mercosul");
     // ponytail: a original empurra a palavra +0xf2 com lixo nos 16 bits altos (o eax de antes); a 0x4afb40 lê a palavra
     embaralhar(cqo13_d(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
     (1, k as i32)
@@ -210,14 +210,14 @@ unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: us
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqo13_d(this + 0xee));
         r
     }, || {
-        let (r, n) = crate::aleatorio::sem_contar(|| mercosur_select_invited_clubs(this));
+        let (r, n) = crate::rng::without_counting(|| mercosur_select_invited_clubs(this));
         lr.set(cqo13_d(this + 0xee));
         nr.set(n);
         core::ptr::write_unaligned((this + 0xee) as *mut u32, lo.get() as u32);
@@ -234,6 +234,6 @@ unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: us
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, lista, k));
+    PLACAR.record(igual && a == b && lista, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, lista, k));
     a
 }

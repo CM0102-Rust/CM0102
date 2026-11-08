@@ -96,9 +96,20 @@ pub(crate) unsafe fn crt_free(p: usize) {
     f(p);
 }
 
-/// on a new game: reviews the officials, sorts them by nation and quality, keeps 6 per nation (61 in the youth club
-/// nations), builds the per-nation blocks with one slot per league (the demand from the competition), draws the missing
-/// ones and shares the nation officials among the slots
+/// Sets up the referees on a new game: reviews them, sorts them by nation and quality, keeps 6 per nation (61 in some
+/// nations), builds the per-nation blocks with one slot per league, draws the missing referees and shares the nation's
+/// referees among the slots.
+///
+/// `OfficialsManager::set_up_officials()`, from the constructor (0x79b580) on a new game. It reviews the records
+/// (0x79caa0), sorts them by nation and quality (qsort 0x79d4e0) and, per nation, keeps the first 6 (nation with +0x11c
+/// zero) or 61 (the first of each nation after the first one is not kept: the count restarts on it), copied (0x79c530)
+/// into a new table; the per-nation blocks (this+0xc, 0x102 bytes: +0 the nation, +4 the referees, +8 the first, +0xc
+/// the demand, +0x10 the competitions and 15 slots of 16 bytes at +0x12): each league (0x4b0700, not a friendly
+/// 0x5c6710, with nation +0x5d) gets a slot with the demand (+0x3e of the competition) / 2 + 10; a nation with
+/// competitions asks for the largest × the number and, if short, draws the missing ones (0x79c5c0); without
+/// competitions and with fewer than 5, it draws up to the nation's +0x8e (1..5). The indexes (+0), the first of each
+/// nation and, per nation, the slots sorted (qsort 0x79d410) with each one's share; this+4 the count and this+8 the
+/// flags (calloc).
 /// Original: `OfficialsManager::set_up_officials` (0x79bf60, officials_manager.cpp, thiscall).
 ///
 /// [pt] { 0x79bf60 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::set_up_officials()`, pelo construtor
@@ -132,11 +143,11 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
                 *m = 0;
                 continue;
             }
-            let limit = if *((nac + 0x11c) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: os árbitros que ficam por nação
+            let limit = if *((nac + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: os árbitros que ficam por nação
             if group <= limit {
                 ficam += 1;
                 *m = 1;
-                crate::comparacao::ramo("cqg_9 arbitro mantido");
+                crate::comparison::branch("cqg_9 arbitro mantido");
             } else {
                 *m = 0;
             }
@@ -197,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let v = b.wrapping_add((read_i16(b + 0x10) as isize * 0x10) as usize);
         write_u32(v + 0x1e, k as u32);
         let request = read_i16(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: o pedido da vaga
-        crate::comparacao::ramo("cqg_9 vaga de competicao");
+        crate::comparison::branch("cqg_9 vaga de competicao");
         write_u32(v + 0x1a, request as u32);
         if read_i32(v + 0x1a) > read_i32(b + 0xc) {
             write_u32(b + 0xc, read_u32_as_usize(v + 0x1a) as u32);
@@ -220,10 +231,10 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
                 write_u32(b + 4, read_u32_as_usize(b + 0xc) as u32);
             }
         } else if read_i32(b + 4) < 5 {
-            if read_i16(nac + 0x8e) == 0 {
-                write_i16(nac + 0x8e, 1);
+            if read_i16(nac + nation::REPUTATION) == 0 {
+                write_i16(nac + nation::REPUTATION, 1);
             }
-            novos((read_i16(nac + 0x8e) as i32).min(5), nac);
+            novos((read_i16(nac + nation::REPUTATION) as i32).min(5), nac);
             write_u32(b + 4, (read_i16(read_u32_as_usize(G_NATION_TABLE).wrapping_add(k as usize * nation::SIZE) + 0x8e) as i32).min(5) as u32);
         }
     }
@@ -247,7 +258,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let mut j = 0i32;
         while j < read_i16(b + 0x10) as i32 {
             let c = read_i16(b + 0x10) as i32;
-            crate::comparacao::ramo("cqg_9 parte da vaga");
+            crate::comparison::branch("cqg_9 parte da vaga");
             write_u32(b + 0x16 + 16 * j as usize, (read_i32(b + 4) / c) as u32); // cqg9: a parte de cada vaga
             let c = read_i16(b + 0x10) as i32;
             write_u32(b + 0x12 + 16 * j as usize, (read_i32(b + 4).wrapping_mul(j) / c).wrapping_add(read_i32(b + 8)) as u32);
@@ -267,7 +278,11 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
 
 
 
-/// orders the official slots of a nation by competition level (the invalid ones last or first), tie by id
+/// Orders a nation's referee slots by competition level (the invalid ones last or first), tie by id.
+///
+/// `officials_manager_compare_comp_level(a, b)` (cdecl), the order of a nation's competition slots (qsort of 0x79bf60,
+/// 16-byte entries with the competition at +0xc): `a`'s competition outside 0..[0xae2378]: 1; `b`'s outside: −1; by
+/// level (+0x69, word, of the 0x6b-byte competition in [0xae23d0]); same level: the difference of the ids.
 /// Original: `officials_manager_compare_comp_level` (0x79d410, officials_manager.cpp, cdecl).
 ///
 /// [pt] { 0x79d410 } (cdecl, officials_manager.cpp): `officials_manager_compare_comp_level(a, b)`, a ordem das vagas de
@@ -309,8 +324,11 @@ pub(crate) unsafe fn official_nation_id(r: usize) -> i32 {
     read_i32(read_i32(r + 0x16) as u32 as usize)
 }
 
-/// orders the officials by nation and, within it, by quality (+0x28 × 50 + +0x22) from highest to lowest; tie by index,
-/// descending
+/// Orders the referees by nation and, within it, by quality (+0x28 × 50 + +0x22) from highest to lowest; tie by index,
+/// descending.
+///
+/// `officials_manager_compare_nation_then_quality_desc(a, b)` (cdecl), the qsort order of 0x79bf60 (those kept per
+/// nation): by nation (id) and, within it, by quality from highest to lowest; tie: `b`'s index +0 minus `a`'s.
 /// Original: `officials_manager_compare_nation_then_quality_desc` (0x79d4e0, officials_manager.cpp, cdecl).
 ///
 /// [pt] { 0x79d4e0 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_desc(a, b)`, a ordem do
@@ -322,7 +340,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_de
         return na.wrapping_sub(nb);
     }
     let (ka, kb) = (official_quality(a), official_quality(b));
-    crate::comparacao::ramo("cqh_7 ordem decrescente");
+    crate::comparison::branch("cqh_7 ordem decrescente");
     if ka == kb {
         return read_i32(b).wrapping_sub(read_i32(a)); // cqh7: o empate pelo índice
     }
@@ -330,7 +348,10 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_de
 }
 
 
-/// orders the officials by nation and by quality from lowest to highest; tie by index, ascending
+/// Orders the referees by nation and by quality from lowest to highest; tie by index, ascending.
+///
+/// `officials_manager_compare_nation_then_quality_asc(a, b)` (cdecl), the qsort order of 0x79c5c0 (after the new
+/// referees): by nation and by quality from lowest to highest; tie: `a`'s index +0 minus `b`'s.
 /// Original: `officials_manager_compare_nation_then_quality_asc` (0x79d480, officials_manager.cpp, cdecl).
 ///
 /// [pt] { 0x79d480 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_asc(a, b)`, a ordem do
@@ -342,7 +363,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_as
         return na.wrapping_sub(nb);
     }
     let (ka, kb) = (official_quality(a), official_quality(b));
-    crate::comparacao::ramo("cqh_7 ordem crescente");
+    crate::comparison::branch("cqh_7 ordem crescente");
     if ka == kb {
         return read_i32(a).wrapping_sub(read_i32(b));
     }
@@ -370,9 +391,19 @@ pub(crate) unsafe fn officials_manager_club_nation_id(clube: usize) -> Option<i3
     if n != 0 { Some(read_i32(n)) } else { None }
 }
 
-/// the referee range for the competition (the league range in the nation block, the top quarter of a neutral nation of
-/// the continent in type 2 and 4 competitions, the home nation for a friendly), a random one in it and the next free
-/// one
+/// Chooses a match referee: the referee range for the competition, a random one in it and the next free one.
+///
+/// `OfficialsManager::choose_match_official(match, out)`, from setting up the day (0x6b3c10, output at +0x2e of the
+/// match). Removed match (−2): 0 (eax 0xffffff00, as in the original). The referee range: without a competition, the
+/// home club's nation (+0x1c, +0x53) or a random one; a friendly (0x5c6710 on [0xae2c74]), the home club's; a
+/// competition without an object ([0xadadfc]), as without a competition; a competition of types 2 and 4 (+0x42), the
+/// top quarter (ftol of 0.75 and 0.25 of the count) of the first nation, starting from a random one, of the continent
+/// (+0x59 of the competition, or +0x71 of the home club's nation, of the away club's, or a random one) that is not that
+/// of either club (a neutral nation); in the others, the competition's range in its nation's block (+0x5d; or the home
+/// club's, the away club's, or a random one), the last that matches, or the whole block. Count 1: the first; otherwise
+/// first + random(count − 1). Busy (the byte of the referee's id in [this+8]): the next in the range, wrapping around;
+/// all busy, the drawn one. Writes the index (word) and returns 1 in al (the rest of eax with the index, as in the
+/// original).
 /// Original: `OfficialsManager::choose_match_official` (0x79c7b0, officials_manager.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x79c7b0 } (thiscall, ret 8, officials_manager.cpp): `OfficialsManager::choose_match_official(jogo, saida)`, pela
@@ -402,7 +433,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
     } else {
         let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
         if friendly(read_usize(G_FRIENDLY), comp) != 0 {
-            faixa_da_nacao(read_i32(read_usize(home + 0x53))) // like the original, without checking the nation
+            faixa_da_nacao(read_i32(read_usize(home + club::NATION))) // like the original, without checking the nation
         } else {
             let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp).wrapping_mul(4) as usize));
             if c == 0 {
@@ -427,7 +458,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
                     let mut k = start;
                     loop {
                         let nac = read_usize(G_NATION_TABLE).wrapping_add(k.wrapping_mul(0x122) as usize);
-                        let cont = read_usize(nac + 0x71);
+                        let cont = read_usize(nac + nation::CONTINENT);
                         if cont != 0 && read_i32(cont) == continent
                             && officials_manager_club_nation_id(home) != Some(read_i32(nac))
                             && officials_manager_club_nation_id(away) != Some(read_i32(nac))
@@ -444,7 +475,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
                     }
                     let b = nation_officials_block(this, k);
                     let count = read_i32(b + 4) as f64;
-                    crate::comparacao::ramo("cpy_8 arbitro neutro");
+                    crate::comparison::branch("cpy_8 arbitro neutro");
                     (read_i32(b + 8).wrapping_sub(match_pl_ftol(count * -0.75)), match_pl_ftol(count * 0.25)) // cpy8: o quarto de cima
                 } else {
                     let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 {
@@ -467,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
                     }
                     match found {
                         Some(band) => {
-                            crate::comparacao::ramo("cpy_8 band da liga");
+                            crate::comparison::branch("cpy_8 band da liga");
                             band // cpy8: a faixa da liga
                         }
                         None => (read_i32(b + 8), read_i32(b + 4)),
@@ -479,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
     let drawn = if n == 1 {
         ini
     } else {
-        crate::comparacao::ramo("cpy_8 arbitro sorteado");
+        crate::comparison::branch("cpy_8 arbitro sorteado");
         ini.wrapping_add(sortear(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
     };
     let ocupado = |k: i32| {
@@ -504,7 +535,11 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
 }
 
 
-/// clears the daily referee busy bytes
+/// Clears the daily referee busy bytes.
+///
+/// `OfficialsManager::clear_busy_flags`, in the day loop (0x5cccd0) and in the run up to the start date (0x5cc850):
+/// zeroes the [this+4] busy bytes at [this+8] (the count and the vector re-read at each step). Returns the count (0 if
+/// not positive), like the original's eax.
 /// Original: `OfficialsManager::clear_busy_flags` (0x79bf40, officials_manager.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x79bf40 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::clear_busy_flags`, no laço do dia
@@ -520,8 +555,18 @@ pub(crate) unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
 }
 
 
-/// at the league season start, replaces the referees of the range over 45 (or over 40, one in three) with new random
-/// ones and clears the stats row of the first one
+/// At each league's season start, replaces the referees of its range over 45 (or over 40, one in three) with new random
+/// ones and clears the range's statistics rows.
+///
+/// `OfficialsManager::renew_officials(comp)`, at the start of each league's season (83 callers). Without a competition,
+/// without an object ([0xadadfc]), of types 4 and 2 (+0x42), or without a count (0x4b0700): 0. The competition's range
+/// in its nation's block (+0x5d, or a random one), the first that matches, or the whole block. Each referee of the
+/// range (0x2b-byte records in [0xae23e8]; null record: the "Error" box): over 45 years old (the year as a byte, minus
+/// 1 before his birthday), or over 40 and random(3) zero, becomes another: two names from his nation (0x539c60, +4 and
+/// +8), +0x25 random(16) + 5 (or, with random(10) zero, random(11) + random(11)), the year (+0xe) game year − 27 +
+/// random(5) and the day (+0xc) random(340). Then it zeroes the statistics rows (17 bytes at [this]) of each referee of
+/// the range (+4, +8, +0xa, +0xc, +0xf; the `add eax, 0x11` at 0x79d149 stays inside the loop). Returns 1 (only al
+/// counts).
 /// Original: `OfficialsManager::renew_officials` (0x79cee0, officials_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x79cee0 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::renew_officials(comp)`, no começo da
@@ -569,7 +614,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         if age <= 0x28 || (age <= 0x2d && sortear(3) != 0) {
             continue;
         }
-        crate::comparacao::ramo("cpy_8 arbitro renovado");
+        crate::comparison::branch("cpy_8 arbitro renovado");
         let nac = read_usize(sheet + player_sheet::WING_BACK);
         let n1 = name(nac);
         core::ptr::write_unaligned((sheet + 4) as *mut usize, n1);
@@ -641,8 +686,15 @@ pub(crate) unsafe fn generate_official(r: usize, nacao: usize) {
     write_i16(r + 0xc, sortear(0x12c).wrapping_add(1) as i16);
 }
 
-/// reallocates the referee table, generates `count` new referees of the nation (names by weight, random ratings and
-/// attributes, born in the 1960s) and sorts the table by nation and quality
+/// Reallocates the referee table, generates `count` new referees of the nation and sorts the table by nation and
+/// quality.
+///
+/// `officials_manager_add_random_officials(count, nation)` (thiscall with this unused, ret 8), from setting up the
+/// referees of a new game (0x79bf60, in nations with few referees). A nation without a continent (+0x71): nothing. It
+/// reallocates the table ([0xae23e8], 0x945667) to [0xae2390] + count records (out of memory: error and the game
+/// stops), generates `count` new records at the end (generate_official: names by weight, random ratings and attributes,
+/// born in the 1960s), adds the count to [0xae2390] and sorts the whole table (qsort 0x945333 with 0x79d480: nation,
+/// +0x28 × 50 + +0x22, id).
 /// Original: `officials_manager_add_random_officials` (0x79c5c0, officials_manager.cpp, thiscall (this sem uso), ret 8).
 ///
 /// [pt] { 0x79c5c0 } (thiscall com o this sem uso, ret 8, officials_manager.cpp): `officials_manager_add_random_officials(
@@ -663,14 +715,14 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_t
     }
     let mut r = t.wrapping_add(before.wrapping_mul(0x2b) as usize);
     for _ in 0..count.max(0) {
-        crate::comparacao::ramo("cpy_9 arbitro novo");
+        crate::comparison::branch("cpy_9 arbitro novo");
         generate_official(r, nacao);
         r += 0x2b;
     }
     let n = read_i32(G_OFFICIAL_COUNT).wrapping_add(count);
     *(G_OFFICIAL_COUNT as *mut i32) = n;
     let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    crate::comparacao::ramo("cpy_9 ordenar");
+    crate::comparison::branch("cpy_9 ordenar");
     sort(read_usize(G_OFFICIAL_TABLE), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela
 }
 
@@ -693,8 +745,16 @@ pub(crate) unsafe fn fix_official_attribute(e: usize, o: usize, f: impl FnOnce()
     }
 }
 
-/// repairs each referee record: the nation from the names, out-of-range ratings and attributes drawn again and a too
-/// old birth date
+/// Repairs each referee record: the nation from the names, out-of-range ratings and attributes drawn again, and a
+/// too-old birth date.
+///
+/// `officials_manager_validate_officials()` (cdecl), at the start of setting up the referees of a new game (0x79bf60).
+/// For each of the [0xae2390] records (0x2b bytes in [0xae23e8]): without a nation (+0x16), the one from the nation
+/// table by the index (+0x37) of the first name (+4), of the second (+8), or a random one; the words +0x22, +0x1e and
+/// +0x20 outside 1..200: random(80) + 1 plus the nation's byte +0x8e (+0x22) or 4 times it (+0x1e, +0x20; the redone
+/// +0x20 is at least +0x1e); the bytes +0x24..+0x2a outside 1..20 drawn by the bands of +0x1e (above 120, above 80);
+/// born before the date 0x549f70(1, 1, 1910, −1) (year unsigned, then the day signed), year 1960 + random(10) and day
+/// random(300) + 1.
 /// Original: `officials_manager_validate_officials` (0x79caa0, officials_manager.cpp, cdecl).
 ///
 /// [pt] { 0x79caa0 } (cdecl, officials_manager.cpp): `officials_manager_validate_officials()`, no começo da montagem dos
@@ -736,7 +796,7 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
         }
         for o in [0x1eusize, 0x20] {
             if away(o) {
-                crate::comparacao::ramo("cpy_9 nota consertada");
+                crate::comparison::branch("cpy_9 nota consertada");
                 let nac = read_usize(e + 0x16);
                 let v = if nac != 0 {
                     let s = sortear(0x50) as u8;
@@ -776,7 +836,11 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
 }
 
 
-/// copies a 0x2b-byte referee record field by field, the date through the date copy
+/// Copies a 0x2b-byte referee record field by field, the date through the date copy.
+///
+/// `Official::operator=(src)`, from setting up the referees of a new game (0x79bf60, the records that are kept). Copies
+/// the 0x2b-byte record field by field (+0, +4, +8; the date at +0xc through 0x417c10; +0x14, +0x16, +0x1a, +0x1e,
+/// +0x20, +0x22, the bytes +0x24..+0x2a). Returns `this`.
 /// Original: `Official::operator=` (0x79c530, officials_manager.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x79c530 } (thiscall, ret 4, officials_manager.cpp): `Official::operator=(src)`, pela montagem dos árbitros do
@@ -802,9 +866,13 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_operator(this: usize, s
 }
 
 
-/// writes [0xae2390] officials (0x11 bytes from [+0]), [0xae2350] nations (0x102 bytes from [+0xc]) and one byte per
-/// official from [+8] into the off.dat item; returns 1 in the low byte; with no officials or on error the "Error" box,
-/// closes the item and 0
+/// Writes the referees and their statistics into the off.dat item of the save.
+///
+/// `OfficialsManager::save_official_stats(save)`: writes into the `off.dat` item the number of referees [0xae2390], the
+/// 0x11-byte records from [+0] (one per referee), the number of nations [0xae2350], the 0x102-byte records from [+0xc]
+/// (one per nation) and one byte per referee from [+8]; returns 1 (in the low byte). No container or an error on
+/// opening: the "Error" box (officials_manager.cpp 0x142, 0x14a) and 0; no referees or an error on writing: the box
+/// (0x150, 0x156, 0x15c, 0x164, 0x16c, 0x174), it closes the item and 0.
 /// Original: `OfficialsManager::save_official_stats` (0x79bb80, officials_manager.cpp, thiscall).
 ///
 /// [pt] { 0x79bb80 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::save_official_stats(save)`: grava no item
@@ -816,7 +884,7 @@ pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: us
     const FONTE: usize = 0xa6a22c;
     let arbitros = || *(G_OFFICIAL_COUNT as *const u32);
     let nations = || *(G_NATION_COUNT as *const u32);
-    crate::comparacao::ramo("cpx_7 gravar estatisticas dos arbitros");
+    crate::comparison::branch("cpx_7 gravar estatisticas dos arbitros");
     if save == 0 {
         show_error_at(FONTE, 0x142);
         return 0;

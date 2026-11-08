@@ -75,7 +75,7 @@ unsafe fn round_prizes(copa: usize, r: i32, contar: bool) -> Option<(i32, i32)> 
             return None;
         }
         if contar {
-            crate::comparacao::ramo("cqa_1 premio pelo fundo");
+            crate::comparison::branch("cqa_1 premio pelo fundo");
         }
         let q = q0 / confrontos; // cqa1: o fundo pelas rodadas que faltam e pelos confrontos
         if ao_perdedor == -1 {
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn pay_round_prize_money(copa: usize, vencedor: usize, 
     }
     if ao_vencedor != 0 {
         send_prize_news(copa, cqa1_d(vencedor), ao_vencedor, seguinte, partida, desfecho);
-        crate::comparacao::ramo("cqa_1 premio do vencedor");
+        crate::comparison::branch("cqa_1 premio do vencedor");
         cqa1_somar(cqa1_financas(cqa1_d(vencedor)), ao_vencedor); // cqa1: o prêmio do vencedor
         core::ptr::write_unaligned((copa + 0x28) as *mut i32, cqa1_i(copa + 0x28).wrapping_sub(ao_vencedor));
     }
@@ -139,15 +139,15 @@ unsafe extern "thiscall" fn comparar_pay_round_prize_money(copa: usize, vencedor
         return o(copa, vencedor, perdedor, rodada, partida); // ponytail: sem finanças, só a original
     }
     let regioes = [(copa + 0x28, 4), (fv, 0x167), (fp, 0x167)];
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     ROUND_PRIZE_MONEY_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pay_round_prize_money(copa, vencedor, perdedor, rodada, partida)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_round_prize_money(copa, vencedor, perdedor, rodada, partida)));
     ROUND_PRIZE_MONEY_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(copa, vencedor, perdedor, rodada, partida);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", rodada as i16, cv, cp));
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", rodada as i16, cv, cp));
 }
 
 /// Os confrontos [início, fim) que a 0x51e870 percorre: um só (`laco`; o fim é a palavra baixa de laco + 1, como o
@@ -216,8 +216,8 @@ unsafe extern "thiscall" fn comparar_set_home_teams_for_round(copa: usize, rodad
     if ini < fim {
         reg.push((round_tie(copa, rodada as i16 as i32, ini as i32), (fim as i32 - ini as i32) as usize * 0x35));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada, laco), || set_home_teams_for_round(copa, rodada, laco));
-    PLACAR.registrar(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", rodada as i16, laco as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada, laco), || set_home_teams_for_round(copa, rodada, laco));
+    PLACAR.record(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", rodada as i16, laco as i16, mo, mr));
 }
 
 /// Os argumentos da virtual +0x68 que a 0x521b30 chama para o time `t` na rodada `r`: (p1, p2, p3) ou None.
@@ -305,6 +305,6 @@ unsafe extern "thiscall" fn comparar_record_team_progress(copa: usize, time: u32
     if reg == 0 {
         return o(copa, time, rodada); // ponytail: sem registro para olhar, só a original
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg + 0x73, 3)], || o(copa, time, rodada), || record_team_progress(copa, time, rodada));
-    PLACAR.registrar(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", time as i16, rodada as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(reg + 0x73, 3)], || o(copa, time, rodada), || record_team_progress(copa, time, rodada));
+    PLACAR.record(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", time as i16, rodada as i16, mo, mr));
 }

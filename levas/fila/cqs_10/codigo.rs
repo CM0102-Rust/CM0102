@@ -59,7 +59,7 @@ unsafe fn build_knockout_stage(this: usize, times: u32, fases: usize, mata: u32,
     for f in 0..fases {
         let mut j = 0i32;
         while j < qualifiers_per_group(this) {
-            crate::comparacao::ramo(ramo);
+            crate::comparison::branch(ramo);
             cqs10_pd(lista + n * 4, stage_club_at(this, f, j)); // cqs10: os classificados de cada fase
             n += 1;
             j += 1;
@@ -103,7 +103,7 @@ unsafe fn con_merc_cup_compare_knockout_stage(nome: &str, this: usize, times: us
     original();
     let fase = cqs10_d(cqs10_d(this + 0xc) + mata * 4);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", nome, this));
+        PLACAR.record(false, || format!("{}({:#x}) sem fase", nome, this));
         return;
     }
     let lista = cqs10_d(fase + 0xa7);
@@ -112,7 +112,7 @@ unsafe fn con_merc_cup_compare_knockout_stage(nome: &str, this: usize, times: us
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqs10_w(fase + 0x3e) as usize == times && cqs10_d(fase + 4) == cqs10_d(this + 4);
-    PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqs10_w(fase + 0x3e)));
+    PLACAR.record(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqs10_w(fase + 0x3e)));
 }
 
 /// { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
     let f = f + 1;
     cqs10_pd(this + 0x30, f as usize);
     if f == 3 { // cqs10: as semifinais da Merconorte depois dos grupos
-        crate::comparacao::ramo("cqs_10 semifinais da merconorte");
+        crate::comparison::branch("cqs_10 semifinais da merconorte");
         let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c2330usize);
         semifinais(this);
     }
@@ -164,5 +164,5 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
     let ultima = f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqs10_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.record(depois == if ultima { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }

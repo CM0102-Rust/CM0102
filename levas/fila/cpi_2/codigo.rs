@@ -27,21 +27,21 @@ unsafe extern "thiscall" fn unbeaten_run_record_construct(this: usize) -> usize 
 
 unsafe extern "thiscall" fn comparar_won_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || won_run_record_construct(this));
-    PLACAR.registrar(igual && r == n, || format!("won_run_record_construct {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || won_run_record_construct(this));
+    PLACAR.record(igual && r == n, || format!("won_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_lost_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || lost_run_record_construct(this));
-    PLACAR.registrar(igual && r == n, || format!("lost_run_record_construct {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || lost_run_record_construct(this));
+    PLACAR.record(igual && r == n, || format!("lost_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_unbeaten_run_record_construct(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || unbeaten_run_record_construct(this));
-    PLACAR.registrar(igual && r == n, || format!("unbeaten_run_record_construct {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x14)], || o(this), || unbeaten_run_record_construct(this));
+    PLACAR.record(igual && r == n, || format!("unbeaten_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }

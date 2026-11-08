@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn init_work_permits(this: usize) {
                     }
                     let a = cps2_w(e - 2);
                     if a < ano { // cps2: o ano mais antigo
-                        crate::comparacao::ramo("cps_2 ano mais antigo");
+                        crate::comparison::branch("cps_2 ano mais antigo");
                         ano = a;
                     }
                 }
@@ -79,12 +79,12 @@ unsafe extern "thiscall" fn init_work_permits(this: usize) {
                     let r = mais_semanas(dp, t2.as_mut_ptr() as usize, 0x34);
                     copiar(dp, t3.as_mut_ptr() as usize, r);
                 }
-                crate::comparacao::ramo("cps_2 permissao pela carreira");
+                crate::comparison::branch("cps_2 permissao pela carreira");
                 // ponytail: a original empurra o registrador do ano com os 16 bits altos de um ponteiro; a 0x8c7070
                 // só grava a palavra baixa
                 dar(this, p, cps2_d(cps2_d(p + 0x39) + 0x53), ano as u32, 1, 0);
             } else {
-                crate::comparacao::ramo("cps_2 segunda nacionalidade");
+                crate::comparison::branch("cps_2 segunda nacionalidade");
                 core::ptr::write_unaligned((p + 0x1e) as *mut usize, cps2_d(cps2_d(p + 0x39) + 0x53)); // cps2: a segunda nacionalidade
             }
         }
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_init_work_permits(this: usize) {
 unsafe extern "thiscall" fn comparar_get_clause_count(this: usize, pessoa: usize, tipo: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, pessoa, tipo);
     let n = get_clause_count(this, pessoa, tipo);
-    PLACAR.registrar(r == n, || format!("get_clause_count(pessoa {}, tipo {}) original={} rust={}", cps2_d(pessoa), tipo as u8, r, n));
+    PLACAR.record(r == n, || format!("get_clause_count(pessoa {}, tipo {}) original={} rust={}", cps2_d(pessoa), tipo as u8, r, n));
     r
 }
 
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn comparar_get_clause_count(this: usize, pessoa: usize
 unsafe extern "thiscall" fn comparar_find_first_team_appearance_money(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cps2_d(this + 0x86e).wrapping_add(cps2_d(pessoa).wrapping_mul(8));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1)], || o(this, pessoa), || find_first_team_appearance_money(this, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("find_first_team_appearance_money(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps2_d(pessoa), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1)], || o(this, pessoa), || find_first_team_appearance_money(this, pessoa));
+    PLACAR.record(igual && r == n, || format!("find_first_team_appearance_money(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps2_d(pessoa), r, n, mo, mr));
     r
 }

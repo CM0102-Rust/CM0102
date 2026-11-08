@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
             cqg8_pd(this + 0x188b + 8 * k, *x);
             cqg8_pd(this + 0x188b + 8 * k + 4, 0xa); // cqg8: a instrução padrão das versões antigas
         }
-        crate::comparacao::ramo("cqg_8 instructions antigas");
+        crate::comparison::branch("cqg_8 instructions antigas");
     } else if crt_fread_one(this + 0x188b, 0x58, f) == 1 {
         if !nativo {
             let troca64: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f350usize);
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
     if v & 0x4000 == 0 {
         v |= 0x2000; // cqg8: a instrução 0x2000 sem a 0x4000
         cqg8_pd(time, v);
-        crate::comparacao::ramo("cqg_8 instrucao 0x2000");
+        crate::comparison::branch("cqg_8 instrucao 0x2000");
     }
     if id < 0x98ec5d {
         cqg8_pd(time, cqg8_d(time) | 0x20000);
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
     let mut c = 0u32;
     for vaga in 0..0xbi32 {
         guardada(this, vaga as i8, 0, 0, &mut c); // cqg8: a casa guardada da fase 0
-        crate::comparacao::ramo("cqg_8 posicoes refeitas");
+        crate::comparison::branch("cqg_8 posicoes refeitas");
         refazer(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa
     }
     let separar: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(0x944cffusize);
@@ -227,9 +227,9 @@ unsafe extern "thiscall" fn comparar_load_from_disk(this: usize, caminho: usize,
     if this == 0 {
         return o(this, caminho, quieto, ofuscado);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x18e3)], || o(this, caminho, quieto, ofuscado),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x18e3)], || o(this, caminho, quieto, ofuscado),
         || load_from_disk(this, caminho, quieto, ofuscado));
-    PLACAR.registrar(igual && r == n, || {
+    PLACAR.record(igual && r == n, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&k| a[k] != b[k]).take(8).collect();
         format!("load_from_disk(this {:x}) original={} rust={}, bytes diferentes {:x?}", this, r, n, dif)
@@ -251,8 +251,8 @@ unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, conta: u32) {
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 2 * conta as usize)], || o(p, conta), || swap_bytes_16_array(p, conta));
-    PLACAR.registrar(igual, || format!("swap_bytes_16_array({:x}, {})", p, conta));
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(p, 2 * conta as usize)], || o(p, conta), || swap_bytes_16_array(p, conta));
+    PLACAR.record(igual, || format!("swap_bytes_16_array({:x}, {})", p, conta));
 }
 
 /// { 0x43f300 } (cdecl, cash.cpp): `swap_bytes_32_array(dwords, conta)`: inverte os quatro bytes de cada dword.
@@ -268,6 +268,6 @@ unsafe extern "C" fn comparar_swap_bytes_32_array(p: usize, conta: u32) {
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 4 * conta as usize)], || o(p, conta), || swap_bytes_32_array(p, conta));
-    PLACAR.registrar(igual, || format!("swap_bytes_32_array({:x}, {})", p, conta));
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(p, 4 * conta as usize)], || o(p, conta), || swap_bytes_32_array(p, conta));
+    PLACAR.record(igual, || format!("swap_bytes_32_array({:x}, {})", p, conta));
 }

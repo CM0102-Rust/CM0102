@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, hoje: u
         return 0;
     }
     if ano_de_hoje == ano && dia_de_hoje == dia && cqs13_d(this + 0x45) == 0 {
-        crate::comparacao::ramo("cqs_13 dia do sorteio da copa africana");
+        crate::comparison::branch("cqs_13 dia do sorteio da copa africana");
         sortear(this);
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqs13_d(cqs13_d(this) + 0x5c));
         previstas(this);
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn comparar_african_nations_update_for_date(this: usize
             && fases != 0
             && (0..3).all(|g| cqs13_d(fases + g * 4) != 0)
             && cqs13_d(this + 0x30) == 2;
-        PLACAR.registrar(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqs13_d(this + 0x45), cqs13_d(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqs13_d(this + 0x45), cqs13_d(this + 0x30) as i32));
     }
     r
 }
@@ -158,7 +158,7 @@ unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
         show_error_at(0x9870f8, 0x380);
         return 0;
     }
-    crate::comparacao::ramo("cqs_13 sorteio da copa africana");
+    crate::comparison::branch("cqs_13 sorteio da copa africana");
     for j in 0..4usize {
         for p in 0..4usize {
             let mut r = sorteio(4) as u8 as i8 as usize;
@@ -186,14 +186,14 @@ unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
+    let a_ = crate::rng::STATE_REGIONS;
     let reg = [(this + 0xf2, 2usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqs13_d(this + 0xee));
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| draw_african_nations_finalists(this));
+        let r = crate::rng::without_counting(|| draw_african_nations_finalists(this));
         lr.set(cqs13_d(this + 0xee));
         cqs13_pd(this + 0xee, lo.get());
         r
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.record(igual && a == b && lista, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i
         return 0;
     }
     for n in 0..4usize {
-        crate::comparacao::ramo("cqs_13 time do grupo");
+        crate::comparison::branch("cqs_13 time do grupo");
         cqs13_pd(times + n * 4, cqs13_d(cqs13_d(this + 0xee) + ((g as usize + 1) * 4 + n) * 4)); // cqs13: o time na vaga do grupo
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqs13_d(cqs13_d(this) + 0x3c));
@@ -304,7 +304,7 @@ unsafe extern "thiscall" fn comparar_african_nations_create_group_stage(this: us
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqs13_d(this + 0x30) as i32 == g && cqs13_w(f + 0x3e) == 4 && cqs13_w(f + 0x40) == cqs13_w(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        PLACAR.record(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }

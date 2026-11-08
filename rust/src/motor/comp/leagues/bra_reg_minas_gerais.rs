@@ -32,8 +32,23 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_advance_stage(this: 
 }
 
 /// The Minas Gerais final: the winners of the first and second halves meet over two games [inference: home and away],
-/// the first-half winner as seed 0; if the same club wins both halves, it is champion without a final (the season ends
-/// with the two stages and it gets status 5, champion, in the three tables)
+/// the first-half winner as seed 0; if the same club wins both halves, it is champion without a final.
+///
+/// `BraRegMinasGerais::create_final_stage()`, called from the next stage when the second half ends. The two half
+/// winners (the club in the first row of each League_Stage's table) go into a list of 2 (malloc 0x944e46 of 8; out of
+/// memory: the error box at line 0x226 and return).
+///
+/// - The same club in both halves: it is champion without a final. +0x30 = 1, +0x2c = 2 (the season ends with the two
+/// stages), status 5 (+0x37, champion) in the first row of each half's table and in its row of the league table (+0xb1,
+/// the +0x3e rows). The list is not freed (the original leaks it; so does the copy).
+///
+/// - Different winners: the final, over two games [inference: home and away]. Virtual +0x3c (create_round_table:
+/// thiscall(this, stage 2, &rounds, &extra, 0), ret 0x10) builds the round table; the new stage (operator new 0x944cf1
+/// of 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: the league, 2, the list, the rounds, +4, the table, the
+/// year +0x40, 2, 1, the extra, 0x14, 0, 1, 0 and the seeds {0, 1}: the first-half winner is seed 0) goes into the
+/// third stage slot ([+0xc]+8; no stage: the error box at line 0x250 and return, without freeing). With it:
+/// Cup::set_up_round (0x51c800, thiscall(stage, 0), ret 4), the table and the list freed (free 0x9452ca, in that order)
+/// and +0x30 = 2. The original's SEH frame covers only the constructor (no destructor).
 /// Original: `BraRegMinasGerais::create_final_stage` (0x434b70, bra_reg_minas_gerais.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x434b70 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_final_stage()`, da fase seguinte quando o segundo turno
@@ -61,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
     let b = half_champion(this, 1);
     core::ptr::write_unaligned((list + 4) as *mut usize, b);
     if a == b {
-        crate::comparacao::ramo("cqo_7 mesmo campeao");
+        crate::comparison::branch("cqo_7 mesmo campeao");
         core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 1);
         core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 2);
         for k in 0..2 {
@@ -98,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
     if stage == 0 {
         return show_error_at(0x98aed0, 0x250);
     }
-    crate::comparacao::ramo("cqo_7 final");
+    crate::comparison::branch("cqo_7 final");
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -108,8 +123,20 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
 }
 
 /// The end of the Minas Gerais season: with a final, the honours come from the final; without one, from the league, and
-/// the champion gets 350,000 and the runner-up 100,000 in prize money (to the balance, with the prize money news).
-/// Then, once the twelve state leagues are over, the champions go into the Champions Cup
+/// the champion gets 350,000 and the runner-up 100,000 in prize money. Then, once the twelve state leagues are over,
+/// the champions go into the Champions Cup.
+///
+/// `BraRegMinasGerais::record_season_honours()` (slot 13).
+///
+/// - With a final (+0x30 = 2): the history of the final (slot 13, +0x30, of stage [+0xc]+8) and then, as a tail jump,
+/// 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl with no arguments: when the twelve state leagues are
+/// over, it puts the champions into the Champions Cup); returns its eax.
+///
+/// - Without a final (the same champion in both halves): the league history (League::record_season_honours 0x684640,
+/// thiscall, ret 0); the prizes, 350,000 to the champion (first row of table +0xb1) and 100,000 to the runner-up
+/// (second row), each one to the balance (0x5a0590 on [0xae2a38] -> the club's finances, thiscall, ret 4; 0x5999a0
+/// Finance::add_prize_money, thiscall, ret 4) and in the prize money news (0x48e3e0 Comp::send_prize_money_news:
+/// thiscall(this, club, 64-bit amount, position 1 or 2, round 0, match 0, type −2), ret 0x1c); then 0x42bba0, as above.
 /// Original: `BraRegMinasGerais::record_season_honours` (0x434ed0, bra_reg_minas_gerais.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x434ed0 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::record_season_honours()` (slot 13), o fim da temporada do Mineiro.
@@ -127,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
         let f = read_usize(read_usize(this + league::STAGES) + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
-        crate::comparacao::ramo("cqo_7 historico da final");
+        crate::comparison::branch("cqo_7 historico da final");
         return campeoes();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
@@ -140,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
         prize(finances(read_usize(G_FINANCE_TABLE), c), valor);
         noticia(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparacao::ramo("cqo_7 premios");
+    crate::comparison::branch("cqo_7 premios");
     campeoes()
 }
 
@@ -180,12 +207,12 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(th
             b = 1;
         }
         if c < 3 {
-            crate::comparacao::ramo("cqk_8 mineiro terceiro abaixo de 3");
+            crate::comparison::branch("cqk_8 mineiro terceiro abaixo de 3");
             write_progress_codes(e, a, b, 2); // cqk8: o terceiro código do Mineiro
             return e;
         }
     }
-    crate::comparacao::ramo("cqk_8 mineiro como vem");
+    crate::comparison::branch("cqk_8 mineiro como vem");
     write_progress_codes(e, a, b, c); // cqk8: os códigos do Mineiro como vêm
     e
 }
@@ -252,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_minas_gerais(this: usiz
 /// [pt] { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
 /// Fonte 0x98aed0, linha 0x169.
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: usize) -> u32 {
-    bra_reg_goias_create_state_league_table(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
+    fill_state_league_table(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
 }
 
 

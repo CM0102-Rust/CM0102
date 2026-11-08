@@ -11,7 +11,7 @@ MUTACOES = [
     ('cpo_gratidao_nao_sobe', '*((ficha + 0x44) as *mut u8) += 1;',
      '// mutacao: sem subir +0x44',
      'cpo_7 gratidao sobe'),
-    ('cpo_gratidao_sem_sorteio_3', 'crate::comparacao::ramo("cpo_7 gratidao sorteio 3");\n            sorteio(3)',
-     'crate::comparacao::ramo("cpo_7 gratidao sorteio 3");\n            0 // mutacao: sem o sorteio',
+    ('cpo_gratidao_sem_sorteio_3', 'crate::comparison::branch("cpo_7 gratidao sorteio 3");\n            sorteio(3)',
+     'crate::comparison::branch("cpo_7 gratidao sorteio 3");\n            0 // mutacao: sem o sorteio',
      'cpo_7 gratidao sorteio 3'),
 ]

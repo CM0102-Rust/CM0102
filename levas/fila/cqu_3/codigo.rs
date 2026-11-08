@@ -28,7 +28,7 @@ unsafe fn cqu3_resultado(this: usize, jogo: usize, estat: u32, segundo: i16, tur
     while (cqu3_d(this + 0x30) as i32) < fase as i32 {
         montar(this, (*((this + 0x30) as *const u8)).wrapping_add(1) as u32);
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     let guardado = cqu3_d(this + 8);
     core::ptr::write_unaligned((this + 8) as *mut usize, 0);
     let f = cqu3_d(cqu3_d(this + 0xc) + 4 * (*((jogo + 0x42) as *const i8)) as i32 as usize);
@@ -51,7 +51,7 @@ unsafe fn cqu3_comparar(nome: &str, this: usize, jogo: usize, segundo: i16, orig
     if marca == 0xff {
         ok = ok && cqu3_d(this + 0x30) as i32 >= fase && cqu3_d(cqu3_d(this + 0xc) + 4 * fase as usize) != 0;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}, {:#x}): devolveu {}, marca {:#x} -> {:#x}, +0x30 = {}, fase do jogo {}", nome, this, jogo, r, marca, *((jogo + 0x42) as *const u8), cqu3_d(this + 0x30) as i32, fase));
+    PLACAR.record(ok, || format!("{}({:#x}, {:#x}): devolveu {}, marca {:#x} -> {:#x}, +0x30 = {}, fase do jogo {}", nome, this, jogo, r, marca, *((jogo + 0x42) as *const u8), cqu3_d(this + 0x30) as i32, fase));
     r
 }
 

@@ -63,7 +63,7 @@ unsafe fn cqw12_carregar(this: usize) -> bool {
 unsafe extern "thiscall" fn cqw12_concacaf(this: usize, ano: u32, comp: usize) -> usize {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     cqw12_copa(this);
-    crate::comparacao::ramo("cqw_12 copa da concacaf");
+    crate::comparison::branch("cqw_12 copa da concacaf");
     cqw12_pd(this + 4, comp);
     cqw12_pd(this, 0x968aa0);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, ano as i16); // cqw12: a CONCACAF do ano do jogo
@@ -92,7 +92,7 @@ unsafe fn cqw12_comparar(nome: &str, this: usize, ano: u32, comp: usize, vtable:
     let r = o();
     let lido = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let ok = r == this && cqw12_d(this) == vtable && cqw12_d(this + 4) == comp && lido == ano as i16;
-    PLACAR.registrar(ok, || format!("{}({:#x}): ano {} pedido {}, vtable {:#x}", nome, this, lido, ano as i16, cqw12_d(this)));
+    PLACAR.record(ok, || format!("{}({:#x}): ano {} pedido {}, vtable {:#x}", nome, this, lido, ano as i16, cqw12_d(this)));
     r
 }
 
@@ -135,7 +135,7 @@ unsafe fn cqw12_dois_clubes(this: usize, ano: u32, comp: usize, vtable: usize, b
 /// { 0x92b4b0 } (thiscall, ret 8, world_club_cup.cpp; SEH só para exceções): `WorldClubCup::WorldClubCup(ano, comp)`: a
 /// Copa Intercontinental (vtable 0x971250, +0x52 = 3, +0x4a = 3) do ano do jogo, com os dois clubes de 0x92b8b0.
 unsafe extern "thiscall" fn cqw12_intercontinental(this: usize, ano: u32, comp: usize) -> usize {
-    crate::comparacao::ramo("cqw_12 copa intercontinental");
+    crate::comparison::branch("cqw_12 copa intercontinental");
     let ano = ano; // cqw12: a Intercontinental do ano do jogo
     cqw12_dois_clubes(this, ano, comp, 0x971250, 3, 3, 0x92b8b0, 0xad5848)
 }

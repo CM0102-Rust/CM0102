@@ -24,5 +24,5 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_table(this: us
 /// Comparer for `fra_second_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SECOND_CREATE_SCHEDULE);
-    compare_league_schedule("fra_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_second_create_schedule(this, stage, r, e, l))
+    compare_cfa_schedule("fra_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fra_second_create_schedule(this, stage, r, e, l))
 }

@@ -21,16 +21,6 @@ pub(crate) unsafe fn set_transfer_windows(this: usize, n: u8, t: &[[u8; 6]], fil
     }
 }
 
-/// Nation transfer rules constructor: base 0x8e84a0, nation vtable and windows.
-///
-/// [pt] O construtor das regras de uma nação: a base (0x8e84a0, original, thiscall com os 5 argumentos de quem chama), a
-/// vtable da nação e as janelas.
-pub(crate) unsafe fn england_rules_construct_transfer_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], file: usize, row: u32) {
-    let base: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_TRANSFER_RULES_TRANSFER_RULES);
-    base(this, a[0], a[1], a[2], a[3], a[4]);
-    core::ptr::write_unaligned(this as *mut u32, vtable);
-    set_transfer_windows(this, n, t, file, row);
-}
 
 /// Side-by-side comparer for transfer rules constructors: original on the object, copy on a scratch copy; fields and
 /// windows must match.
@@ -56,7 +46,7 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
     if jb != 0 {
         soltar(jb);
     }
-    PLACAR.registrar(campos && windows, || format!("{}: campos {} janelas {}", name, campos, windows));
+    PLACAR.record(campos && windows, || format!("{}: campos {} janelas {}", name, campos, windows));
 }
 
 /// A janela da Inglaterra: de 2 de junho (andando para a segunda-feira [inferência]) a 26 de março (andando para a quinta-feira [inferência]).
@@ -73,8 +63,8 @@ pub(crate) const ENGLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 /// [pt] { 0x579b30 } (thiscall, ret 0x14, england_rules.cpp, `ENGLAND_RULES::ENGLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Inglaterra (regra 7): a base (0x8e84a0), a vtable 0x969f4c, 1 janela(s) de `ENGLAND_TRANSFER_WINDOWS`. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_england_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqk_1 inglaterra");
-    england_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x969f4c, 1, &ENGLAND_TRANSFER_WINDOWS, 0x9c4498, 0x4f);
+    crate::comparison::branch("cqk_1 inglaterra");
+    construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x969f4c, 1, &ENGLAND_TRANSFER_WINDOWS, 0x9c4498, 0x4f);
     this
 }
 
@@ -85,18 +75,6 @@ pub(crate) const USA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x19, 0x00, 0xff, 0x0f, 0x07, 0x00], // cqk1: os EUA fecham em agosto
 ];
 
-/// the USA rule (25): one window, from 7 January (moved to the Wednesday [inference]) to 15 August; +0x13 = 4 (default
-/// 50) [inference: the foreign squad limit]
-/// Original: `USA_RULES::USA_RULES` (0x90b940, usa_rules.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x90b940 } (thiscall, ret 0x14, usa_rules.cpp, `USA_RULES::USA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
-/// transferência dos EUA (regra 25): a base (0x8e84a0), a vtable 0x970a38, 1 janela(s) de `USA_TRANSFER_WINDOWS` e o +0x13 = 4 (o padrão da base é 50) [inferência: o limite de estrangeiros]. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn construct_usa_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqk_1 eua");
-    england_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x970a38, 1, &USA_TRANSFER_WINDOWS, 0xaa211c, 0x54);
-    *((this + 0x13) as *mut u8) = 4;
-    this
-}
 
 
 /// A janela da Austrália: de 11 de junho (andando para o sábado [inferência]) a 17 de abril.
@@ -105,18 +83,6 @@ pub(crate) const AUSTRALIA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x02, 0x00, 0xff, 0x11, 0x03, 0x00],
 ];
 
-/// the Australian rule (2): one window, from 11 June (moved to the Saturday [inference]) to 17 April; +0x13 = 6
-/// [inference: the foreign squad limit]
-/// Original: `AUSTRALIA_RULES::Australia_rules` (0x412c80, australia_rules.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x412c80 } (thiscall, ret 0x14, australia_rules.cpp, `AUSTRALIA_RULES::Australia_rules`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
-/// transferência da Austrália (regra 2): a base (0x8e84a0), a vtable 0x967830, 1 janela(s) de `AUSTRALIA_TRANSFER_WINDOWS` e o +0x13 = 6 [inferência: o limite de estrangeiros]. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn australia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqk_1 australia");
-    england_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x967830, 1, &AUSTRALIA_TRANSFER_WINDOWS, 0x987cfc, 0x51);
-    *((this + 0x13) as *mut u8) = 6;
-    this
-}
 
 
 
@@ -138,9 +104,16 @@ pub(crate) unsafe fn season_loans_entry(clube: usize) -> usize {
     read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(clube).wrapping_mul(16))
 }
 
-/// refuses (0, with the message and the reason) between clubs of the same English division (0x1d), with five loans this
-/// season (0x1e), with more than one player on loan from another club in the squad (0x26) and outside the window (9);
-/// otherwise 1
+/// Decides whether an English loan is allowed: refuses (0, with the message and the reason) between clubs of the same
+/// English division (0x1d), with five loans this season (0x1e), with more than one player on loan from another club in
+/// the squad (0x26) and outside the window (9); otherwise 1.
+///
+/// `ENGLAND_RULES::can_loan_player(club, player, message, reason)`, through the nation's rules in
+/// `TRANSFER_MANAGER::can_loan_player` (0x8d0040). Without a contract (or without the contract's club): allowed. The
+/// requesting club and the owner in the same English division (`[0x9cf5bc]`): reason 0x1d. Five loans in the season
+/// (the table `[[0xde1f54] + 0x91c]`): 0x1e. More than one player from another club in the squad (the 50 slots at
+/// +0xd7, counted only with the player's id below `[0xae2364]`): 0x26. Outside the window (0x8e8e50): 9, with the
+/// nation's adjective.
 /// Original: `ENGLAND_RULES::can_loan_player` (0x579d60, england_rules.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x579d60 } (thiscall, ret 0x10, england_rules.cpp): `ENGLAND_RULES::can_loan_player(clube, jogador, mensagem,
@@ -158,13 +131,13 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     let c2 = game_get_contract_and_store(player);
     let owner = if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 };
     let comp = read_usize(clube + club::DIVISION);
-    if comp == read_usize(owner + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
-        crate::comparacao::ramo("cqe_5 mesma divisao");
+    if comp == read_usize(owner + club::DIVISION) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
+        crate::comparison::branch("cqe_5 mesma divisao");
         if msg != 0 {
             let id = read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION);
             let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b));
-            let g = read_u8(r + 0x37) as i8 as i32;
-            text(msg, 0x9c4590, g, g, r + 4);
+            let g = read_u8(r + competition::GENDER_NAME) as i8 as i32;
+            text(msg, 0x9c4590, g, g, r + competition::NAME);
         }
         if !reason.is_null() {
             *reason = 0x1d;
@@ -173,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     }
     if read_u8(season_loans_entry(clube)) as i8 >= 5 {
         // cqe5: cinco na temporada
-        crate::comparacao::ramo("cqe_5 cinco na temporada");
+        crate::comparison::branch("cqe_5 cinco na temporada");
         if msg != 0 {
             let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
             text(msg, 0x9c4534, g, g, clube + club::SHORT_NAME);
@@ -204,7 +177,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         }
     }
     if n > 1 { // cqe5: dois ao mesmo tempo
-        crate::comparacao::ramo("cqe_5 dois ao mesmo tempo");
+        crate::comparison::branch("cqe_5 dois ao mesmo tempo");
         if msg != 0 {
             let g = read_u8(clube + club::SHORT_GENDER_NAME) as i8 as i32;
             text(msg, 0x9c44d4, g, g, clube + club::SHORT_NAME);
@@ -219,7 +192,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     if window(this, G_CURRENT_DATE, 0) != 0 {
         return 1;
     }
-    crate::comparacao::ramo("cqe_5 fora da janela");
+    crate::comparison::branch("cqe_5 fora da janela");
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nation; add esp, 0x10 -> cdecl (the nation’s adjective)
         let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_NATION_GET_NATIONALITY_ADJECTIVE);
@@ -243,13 +216,16 @@ pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
     let nacao = read_usize(clube + club::NATION);
     if nacao != 0 && read_usize(nacao) == read_usize(KEY_NATION_ENGLAND) {
-        crate::comparacao::ramo("cqe_5 emprestimo contado");
+        crate::comparison::branch("cqe_5 emprestimo contado");
         let p = season_loans_entry(clube);
         *(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: a conta da temporada
     }
 }
 
-/// on 20 June, resets the season loan count of every club of this rule set nation
+/// On 20 June, resets the season loan count of every club of this rule set's nation.
+///
+/// `ENGLAND_RULES::daily_update(date)`, from the rules' daily pass: on 20 June (only the day of the year, 0x549f70 with
+/// 1998), the season count of each club (`[0xae235c]` in `[0xae23b4]`) of these rules' nation (+0xa) goes back to zero.
 /// Original: `ENGLAND_RULES::daily_update` (0x57a020, england_rules.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x57a020 } (thiscall, ret 4, england_rules.cpp): `ENGLAND_RULES::daily_update(data)`, pelo dia das regras: em
@@ -303,7 +279,7 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
     }
     let mut to = Vec::new();
     let mut tr = Vec::new();
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || {
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regions, || {
         let x = o(this, clube, player, msg, reason);
         to = message_text(msg);
         x
@@ -318,14 +294,19 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
     if msg != 0 {
         core::ptr::copy_nonoverlapping(to.as_ptr(), msg as *mut u8, to.len());
     }
-    PLACAR.registrar(igual && ro == rr && to == tr, || format!("{}(regras {:#x}, clube {:#x}, jogador {:#x}) original={} {:x?} {:?} rust={} {:x?} {:?}", name, this, clube, player, ro, mo, String::from_utf8_lossy(&to), rr, mr, String::from_utf8_lossy(&tr)));
+    PLACAR.record(igual && ro == rr && to == tr, || format!("{}(regras {:#x}, clube {:#x}, jogador {:#x}) original={} {:x?} {:?} rust={} {:x?} {:?}", name, this, clube, player, ro, mo, String::from_utf8_lossy(&to), rr, mr, String::from_utf8_lossy(&tr)));
     ro
 }
 
 
 
 
-/// after 19 June and with the player under 24, the base rule period; otherwise from next month to three months later
+/// Returns the loan period: after 19 June and with the player under 24, the base rule period; otherwise from next month
+/// to three months later.
+///
+/// `ENGLAND_RULES::get_loan_period(club, a2, start_month, start_year, end_month, end_year, player)`, called from the
+/// loan period (0x8d0590). After 19 June (only the day of the year, 0x549f70 with 1998) and with the player under 24
+/// (+0x18): the base rule period (0x8e8bd0). Otherwise it starts the following month and ends three months later.
 /// Original: `ENGLAND_RULES::get_loan_period` (0x579c70, england_rules.cpp, thiscall, ret 0x1c).
 ///
 /// [pt] { 0x579c70 } (thiscall, ret 0x1c, england_rules.cpp): `ENGLAND_RULES::get_loan_period(clube, a2, início_mês,
@@ -337,8 +318,8 @@ pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     data_de(d.as_mut_ptr() as usize, 0x13, 5, 0x7ce, -1);
-    if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && (read_u8(player + 0x18) as i8) < 0x18 { // cqe6: abaixo de 24 anos
-        crate::comparacao::ramo("cqe_6 inglaterra periodo da base");
+    if read_i16(G_CURRENT_DATE) > read_i16(d.as_ptr() as usize) && (read_u8(player + staff::YEAR_OF_BIRTH) as i8) < 0x18 { // cqe6: abaixo de 24 anos
+        crate::comparison::branch("cqe_6 inglaterra periodo da base");
         // 0x8e8bd0: the same 7 arguments pushed again; mov ecx, esi (this) -> thiscall, ret 0x1c
         let base: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize) = core::mem::transmute(FN_TRANSFER_RULES_GET_LOAN_PERIOD);
         base(this, clube, a2, ini_month, ini_year, end_month, end_year, player);
@@ -352,7 +333,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize
         *ini_month = (*ini_month).wrapping_sub(0xc);
         *ini_year = (*ini_year).wrapping_add(1);
     }
-    crate::comparacao::ramo("cqe_6 inglaterra tres meses");
+    crate::comparison::branch("cqe_6 inglaterra tres meses");
     *end_month = (*ini_month).wrapping_add(3); // cqe6: três meses
     *end_year = *ini_year;
     if *end_month > 0xb {

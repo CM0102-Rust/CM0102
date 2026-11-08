@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize, hoje: usi
             let o = cqd1_d(vaga);
             if o != 0 && cqd1_w(hoje + 2) == cqd1_w(o + 0x14) && cqd1_w(hoje) == cqd1_w(o + 0x12)
                 && cqd1_b(o + 0x1a) == f { // cqd1: a oferta desta fatia
-                crate::comparacao::ramo("cqd_1 oferta do dia");
+                crate::comparison::branch("cqd_1 oferta do dia");
                 processar(this, vaga);
             }
         }
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize, hoje: usi
         let amanha = mais(hoje, t30.as_mut_ptr() as usize, 1);
         let m = mes(hoje);
         if m != mes(amanha) {
-            crate::comparacao::ramo("cqd_1 prestações do mês");
+            crate::comparison::branch("cqd_1 prestações do mês");
             prestacoes(this); // cqd1: as prestações na virada do mês
         }
         if cqd1_w(hoje) == 0 {
@@ -305,7 +305,7 @@ unsafe extern "thiscall" fn comparar_transfer_manager_daily_update(this: usize, 
         }
         ok = ok && erradas == 0;
     }
-    PLACAR.registrar(ok, || format!("transfer_manager_daily_update(dia {}, fatia {}): +0x855 {} -> {}, +0x84c {} -> {}, pessoas sem a nação do clube em +0x1e {}",
+    PLACAR.record(ok, || format!("transfer_manager_daily_update(dia {}, fatia {}): +0x855 {} -> {}, +0x84c {} -> {}, pessoas sem a nação do clube em +0x1e {}",
         cqd1_w(hoje), f, f855, cqd1_b(this + 0x855), j84c, cqd1_b(this + 0x84c), erradas));
 }
 
@@ -381,7 +381,7 @@ unsafe fn process_due_offer_body(this: usize, vaga: usize) {
             return;
         }
         if cqd1_b(cqd1_d(vaga) + 0x1f) != 1 {
-            crate::comparacao::ramo("cqd_1 resposta da IA");
+            crate::comparison::branch("cqd_1 resposta da IA");
             respond(this, vaga, 0); // cqd1: a resposta da IA ao lance
             return;
         }
@@ -449,7 +449,7 @@ unsafe fn process_due_offer_body(this: usize, vaga: usize) {
             cqd1_pb(o + 0x2c, 9);
             schedule_offer_days(this, o, 0xa);
         } else {
-            crate::comparacao::ramo("cqd_1 contrato ao jogador");
+            crate::comparison::branch("cqd_1 contrato ao jogador");
             contrato(this, comprador, cqd1_pessoa(cqd1_d(o + 0xc)), o); // cqd1: o contrato ao alvo
         }
         return;
@@ -585,7 +585,7 @@ unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, deci
     let v = apply_attribute_step(&mut dinheiro as *mut u32 as usize, 4) as i64;
     let t = total(o, 0, 1, 1, 0);
     if decide == comprador {
-        crate::comparacao::ramo("cqd_1 orçamento");
+        crate::comparison::branch("cqd_1 orçamento");
         if t as f64 > v as f64 * 1.1 { // cqd1: acima do orçamento
             if !motivo.is_null() {
                 *motivo = 3;

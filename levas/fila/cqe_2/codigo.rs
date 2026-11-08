@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
     let nova = if m != 0 { nova_oferta(m) } else { 0 };
     *saida = nova;
     preparar(nova, alvo, comprador, valor);
-    crate::comparacao::ramo("cqe_2 opção montada");
+    crate::comparison::branch("cqe_2 opção montada");
     *atracao = 0x32; // cqe2: a atração da opção
     cqe2_pd(nova + 0x1b, valor as u32 as usize); // cqe2: o preço da opção
     let mut teto = match_pl_ftol(valor as f64 * read_f64_at(0x9689c0));
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                 if cqe2_d(p + 0x39) == vendedor {
                     break 'vaga;
                 }
-                crate::comparacao::ramo("cqe_2 vaga com alvo");
+                crate::comparison::branch("cqe_2 vaga com alvo");
                 p
             };
             let cc = contrato_com(cqe2_d(0xae1050), cand, contract_club_any_type(cand));
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                     if !(r >= read_f64_at(0x968e58)) { // cqe2: o interesse abaixo de 3,15
                         break 'jogador;
                     }
-                    crate::comparacao::ramo("cqe_2 interesse");
+                    crate::comparison::branch("cqe_2 interesse");
                     if estatuto == 5 {
                         ebp = marcas;
                     } else {
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                     if !(nx as f64 / base as f64 > read_f64_at(0x9689d8)) { // cqe2: a nota até 0,9 da base
                         break 'jogador;
                     }
-                    crate::comparacao::ramo("cqe_2 nota da troca");
+                    crate::comparison::branch("cqe_2 nota da troca");
                     let a = if nx > base { (*atracao).wrapping_add(20) } else { (*atracao).wrapping_add(5) };
                     *atracao = if a < 0 { 0 } else if a > 100 { 100 } else { a };
                     if cqe2_d(nova + 4) == 0 {
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                     let entrada = cqe2_d(reg).wrapping_add((i as i32 * 0x25) as usize);
                     let mut fora: i32 = 0;
                     let v = valor_jogador(cqe2_d(cqe2_d(0xde1f54) + 0x856), vendedor, x, entrada, &mut fora, -1, 1);
-                    crate::comparacao::ramo("cqe_2 jogador na troca");
+                    crate::comparison::branch("cqe_2 jogador na troca");
                     teto = teto.wrapping_sub(v);
                     let r = (cqe2_d(nova + 0x1b) as i32).wrapping_sub(v); // cqe2: o valor dele sai do preço
                     cqe2_pd(nova + 0x1b, if r < 0 { 0 } else { r as u32 as usize });
@@ -309,15 +309,15 @@ unsafe extern "thiscall" fn comparar_make_exchange_option(this: usize, comprador
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut usize, *mut i8, i32) -> u32>(%%I0%%);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8e5710usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
-    let est = crate::aleatorio::REGIOES_DO_ESTADO;
+    let est = crate::rng::STATE_REGIONS;
     let regioes = [(0xae1080usize, 4usize), (saida as usize, 4), (atracao as usize, 1), est[0], est[1]];
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     let r = o(this, comprador, alvo, oferta, saida, atracao, valor);
-    let depois = crate::comparacao::Memoria::ler(&regioes);
+    let depois = crate::comparison::MemorySnapshot::read(&regioes);
     let (ao, fo) = (*atracao, if r != 0 && *saida != 0 { option_offer_snapshot(*saida) } else { Vec::new() });
     let e_o = cqe2_d(0xae1080);
-    antes.escrever();
-    let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| make_exchange_option(this, comprador, alvo, oferta, saida, atracao, valor)));
+    antes.write_back();
+    let n = crate::rng::pause_trace(|| crate::rng::without_counting(|| make_exchange_option(this, comprador, alvo, oferta, saida, atracao, valor)));
     let (an, fn_) = (*atracao, if n != 0 && *saida != 0 { option_offer_snapshot(*saida) } else { Vec::new() });
     let e_n = cqe2_d(0xae1080);
     if n != 0 && *saida != 0 {
@@ -325,8 +325,8 @@ unsafe extern "thiscall" fn comparar_make_exchange_option(this: usize, comprador
         destruir(s);
         liberar(s);
     }
-    depois.escrever();
-    PLACAR.registrar(r == n && ao == an && e_o == e_n && fo == fn_, || format!(
+    depois.write_back();
+    PLACAR.record(r == n && ao == an && e_o == e_n && fo == fn_, || format!(
         "make_exchange_option(comprador {:#x}, alvo {:#x}, valor {}): original {} rust {}, atração {} x {}, [0xae1080] {:#x} x {:#x}, oferta {:x?} x {:x?}",
         comprador, alvo, valor, r, n, ao, an, e_o, e_n, fo, fn_));
     r

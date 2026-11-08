@@ -72,7 +72,7 @@ unsafe fn cqw10_torneio(this: usize, ano: i16, comp: usize, vtable: usize, fases
 /// regras 0x401ab0, caixas nas linhas 0x58 e 0x5f); a edição é a do ano seguinte ao do jogo, levada ao primeiro ano
 /// par (de 1996 em diante, de dois em dois).
 unsafe extern "thiscall" fn cqw10_africana(this: usize, ano: u32, comp: usize) -> usize {
-    crate::comparacao::ramo("cqw_10 copa africana");
+    crate::comparison::branch("cqw_10 copa africana");
     let edicao = cqw10_edicao((ano as i16).wrapping_add(1), 0); // cqw10: a Copa Africana do ano seguinte, par
     cqw10_torneio(this, edicao, comp, 0x967270, 4, 0x401ab0, 0x9870f8, (0x58, 0x5f))
 }
@@ -83,7 +83,7 @@ unsafe fn cqw10_comparar(nome: &str, this: usize, comp: usize, vtable: usize, an
     let r = o();
     let lido = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let ok = r == this && cqw10_d(this) == vtable && cqw10_d(this + 4) == comp && lido == ano && *((this + 0x51) as *const u8) == 0xf;
-    PLACAR.registrar(ok, || format!("{}({:#x}): ano {} previsto {}, vtable {:#x}", nome, this, lido, ano, cqw10_d(this)));
+    PLACAR.record(ok, || format!("{}({:#x}): ano {} previsto {}, vtable {:#x}", nome, this, lido, ano, cqw10_d(this)));
     r
 }
 
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_cqw10_africana(this: usize, ano: u32, comp:
 /// (vtable 0x96b400, 3 fases, regras 0x5e12d0, caixas nas linhas 0x56 e 0x5d); a edição é a do próprio ano do jogo,
 /// levada ao primeiro ano ímpar (1997, 1999, 2001...).
 unsafe extern "thiscall" fn cqw10_copa_america(this: usize, ano: u32, comp: usize) -> usize {
-    crate::comparacao::ramo("cqw_10 copa america");
+    crate::comparison::branch("cqw_10 copa america");
     let edicao = cqw10_edicao(ano as i16, 1); // cqw10: a Copa América no ano ímpar
     cqw10_torneio(this, edicao, comp, 0x96b400, 3, 0x5e12d0, 0x9cd640, (0x56, 0x5d))
 }
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn comparar_cqw10_copa_america(this: usize, ano: u32, c
 /// comp)`: a Copa das Nações da Oceania (vtable 0x96e0cc, 2 fases, regras 0x799690, caixas nas linhas 0x57 e 0x5e); a
 /// edição é a do ano do jogo, nunca antes de 2002, levada ao primeiro ano par.
 unsafe extern "thiscall" fn cqw10_oceania_nacoes(this: usize, ano: u32, comp: usize) -> usize {
-    crate::comparacao::ramo("cqw_10 copa da oceania");
+    crate::comparison::branch("cqw_10 copa da oceania");
     let edicao = cqw10_edicao((ano as i16).max(0x7d2), 0); // cqw10: a Copa da Oceania de 2002 em diante
     cqw10_torneio(this, edicao, comp, 0x96e0cc, 2, 0x799690, 0xa6a0ec, (0x57, 0x5e))
 }

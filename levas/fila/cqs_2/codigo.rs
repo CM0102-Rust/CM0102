@@ -57,7 +57,7 @@ unsafe fn mls_start_new_season(this: usize, ano: i16) -> u32 {
     }
     let a = cqs2_w(this + 0x40);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
-    crate::comparacao::ramo("cqs_2 virada da mls");
+    crate::comparison::branch("cqs_2 virada da mls");
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs2_d(cqs2_d(this) + 0x8c));
     if regras(this) == 0 {
         show_error_at(0xaa1fb4, 0x4af);
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usize) {
     for (k, p) in lugares.iter().enumerate() {
         posicao(cqs2_d(this + 8), cqs2_d(v + 4 * k), *p);
     }
-    crate::comparacao::ramo("cqs_2 posicoes previstas");
+    crate::comparison::branch("cqs_2 posicoes previstas");
     soltar(v);
 }
 
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, lista: *mut usiz
         core::ptr::write_unaligned((*lista + 4 * k as usize) as *mut usize, cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), i as usize));
         i += 1;
     }
-    crate::comparacao::ramo("cqs_2 clubes da mls");
+    crate::comparison::branch("cqs_2 clubes da mls");
 }
 
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: usize) -> u3
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let depois = cqs2_w(this + 0x40);
     let igual = depois == antes.wrapping_add(1) && cqs2_w(this + 0x3e) == 4 && cqs2_d(cqs2_d(this + 0xc)) != 0 && cqs2_d(cqs2_d(this + 0xc) + 4) != 0;
-    PLACAR.registrar(igual, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, cqs2_w(this + 0x3e)));
+    PLACAR.record(igual, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, cqs2_w(this + 0x3e)));
     r
 }
 
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(this: usize
         let e = if v[k] != 0 { achar(cqs2_d(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + 0x72) as *const u8) != LUGARES[k]
     });
-    PLACAR.registrar(errado.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));
+    PLACAR.record(errado.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));
 }
 
 /// O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
@@ -218,5 +218,5 @@ unsafe extern "thiscall" fn comparar_usa_mls_get_club_array(this: usize, lista: 
             && cqs2_d(*lista + 4 * (m + i)) == cqs2_linha(cqs2_d(cqs2_d(this + 0xc)), i)
             && cqs2_d(*lista + 4 * (2 * m + i)) == cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), i)
     });
-    PLACAR.registrar(igual, || format!("usa_mls_get_club_array({:#x}) n={}", this, *n));
+    PLACAR.record(igual, || format!("usa_mls_get_club_array({:#x}) n={}", this, *n));
 }

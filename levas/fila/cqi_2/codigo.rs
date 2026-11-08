@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn collect_european_clubs(this: usize, saida: *mut usiz
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + 0x80) as *const i16) as i32 / 500) as u8;
                     let linha = cqi2_d(c + 0x5b) as usize;
                     if linha != 0 {
-                        crate::comparacao::ramo("cqi_2 nivel da divisao");
+                        crate::comparison::branch("cqi_2 nivel da divisao");
                         core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((linha + 0x69) as *const u16)); // cqi2: o nível da divisão
                         *((r + 0xb) as *mut u8) = cqi2_b(c + 0x5f);
                         let comp = cqi2_d(cqi2_d(c + 0x5b) as usize + 0x5d) as usize;
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn collect_european_clubs(this: usize, saida: *mut usiz
 }
 
 /// As diferenças entre duas memórias (os 16 primeiros endereços).
-fn cqi2_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> Vec<usize> {
+fn cqi2_dif(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> Vec<usize> {
     let (a, b) = (&mo.0, &mr.0);
     (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
 }
@@ -117,14 +117,14 @@ unsafe extern "thiscall" fn comparar_collect_european_clubs(this: usize, saida: 
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut t2 = 0usize;
     let reg = club_regions();
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, saida), || collect_european_clubs(this, &mut t2));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, saida), || collect_european_clubs(this, &mut t2));
     let (n, m) = (a as u16 as i16, b as u16 as i16);
     let t1 = *saida;
     let tabela = n == m && (n <= 0 || t1 == 0 || t2 == 0 || core::slice::from_raw_parts(t1 as *const u8, n as usize * 12) == core::slice::from_raw_parts(t2 as *const u8, n as usize * 12));
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.registrar(igual && tabela, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqi2_dif(&mo, &mr)));
+    PLACAR.record(igual && tabela, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqi2_dif(&mo, &mr)));
     a
 }
 
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
     let mut r = 0i8;
     while r < *((this + 0x438) as *const i8) {
         let (band, ultima): ([u8; 4], u8) = if r < 3 {
-            crate::comparacao::ramo("cqi_2 duas nos grupos");
+            crate::comparison::branch("cqi_2 duas nos grupos");
             ([0, 2, 2, 0], 0) // cqi2: 1ª a 3ª nação
         } else if r < 6 {
             ([0, 2, 1, 0], 0)
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
                     if cap[f] != 0 {
                         break;
                     }
-                    crate::comparacao::ramo("cqi_2 fase cheia");
+                    crate::comparison::branch("cqi_2 fase cheia");
                     if f + 1 < 5 {
                         vagas[f + 1] = vagas[f + 1].wrapping_add(1); // cqi2: a vaga passa para a fase seguinte
                     }
@@ -216,8 +216,8 @@ unsafe extern "thiscall" fn comparar_assign_champions_league_places(this: usize,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let mut reg = club_regions();
     reg.push((this, 0x440));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || assign_champions_league_places(this, clubes, conta));
-    PLACAR.registrar(igual, || format!("assign_champions_league_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, conta), || assign_champions_league_places(this, clubes, conta));
+    PLACAR.record(igual, || format!("assign_champions_league_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
 }
 
 /// { 0x904e30 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_intertoto_places`): as vagas da Intertoto
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn assign_intertoto_places(this: usize, clubes: usize, 
                 }
                 let c = enesimo(this, clubes, conta, cqi2_d(e), 1, 1, 0);
                 if assign_comp_place(this, c, it, (j as u8).wrapping_add(fase), i as i8 as i32) {
-                    crate::comparacao::ramo("cqi_2 clube na intertoto");
+                    crate::comparison::branch("cqi_2 clube na intertoto");
                     colocados += 1; // cqi2: mais um na Intertoto
                 }
                 j += 1;
@@ -297,7 +297,7 @@ unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: usize, clubes
     }
     let mut reg = club_regions();
     reg.push((this, 0x440));
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| assign_intertoto_places(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("assign_intertoto_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubes, conta), || crate::rng::without_counting(|| assign_intertoto_places(this, clubes, conta)));
+    PLACAR.record(igual, || format!("assign_intertoto_places: diferenças em {:x?}", cqi2_dif(&mo, &mr)));
 }

@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: usize, clube:
         if cpn2_d(vaga + 0xd6) == 0 {
             return 1;
         }
-        crate::comparacao::ramo("cpn_2 respond todas");
+        crate::comparison::branch("cpn_2 respond todas");
         respond(vaga, tecnico, clube); // a resposta automática
         k -= 1;
         if k == cpn2_i(e + 4) - 1 {
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn set_slot_string(this: usize, campo: u32, texto: *con
         }
         let quartos = ((n + 1 + 3) & !3) / 4; // o tamanho com o zero, em campos de 4 bytes
         let mut p = (quartos as u8).wrapping_add(campo as u8);
-        crate::comparacao::ramo("cpn_2 proximo campo do texto");
+        crate::comparison::branch("cpn_2 proximo campo do texto");
         if p as i8 > 0x32 {
             p = 0x32;
         }
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn set_slot_string(this: usize, campo: u32, texto: *con
 unsafe extern "thiscall" fn comparar_auto_respond_all(this: usize, tecnico: usize, clube: usize) -> u32 {
     let humano = tecnico != 0 && cpn2_i(tecnico).wrapping_sub(cpn2_i(0xae2364)).wrapping_add(0x10) >= 0;
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, tecnico, clube);
-    PLACAR.registrar(r == humano as u32, || format!("auto_respond_all(técnico {:x}, humano {}) devolveu {}", tecnico, humano, r));
+    PLACAR.record(r == humano as u32, || format!("auto_respond_all(técnico {:x}, humano {}) devolveu {}", tecnico, humano, r));
     r
 }
 
@@ -150,8 +150,8 @@ unsafe extern "thiscall" fn comparar_has_urgent_items(this: usize, tecnico: usiz
         return o(this, tecnico, so_urgentes); // a caixa "Error"
     }
     let reg = [(0xde1f64usize, 0x7d0usize)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tecnico, so_urgentes), || has_urgent_items(this, tecnico, so_urgentes));
-    PLACAR.registrar(igual && r == n, || format!("has_urgent_items(urgentes {}) {} x {} {:x?} x {:x?}", so_urgentes, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tecnico, so_urgentes), || has_urgent_items(this, tecnico, so_urgentes));
+    PLACAR.record(igual && r == n, || format!("has_urgent_items(urgentes {}) {} x {} {:x?} x {:x?}", so_urgentes, r, n, mo, mr));
     r
 }
 
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_set_slot_string(this: usize, campo: u32, te
     if !proximo.is_null() {
         reg.push((proximo as usize, 1));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, campo, texto, proximo), || set_slot_string(this, campo, texto, proximo));
-    PLACAR.registrar(igual && r == n, || format!("set_slot_string(campo {}) {:x?} x {:x?}", campo as u8 as i8, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, campo, texto, proximo), || set_slot_string(this, campo, texto, proximo));
+    PLACAR.record(igual && r == n, || format!("set_slot_string(campo {}) {:x?} x {:x?}", campo as u8 as i8, mo, mr));
     r
 }

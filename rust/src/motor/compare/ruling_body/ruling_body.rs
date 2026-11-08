@@ -9,8 +9,8 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_MAKE_POINTS_BAN);
     let regions = [(r, 0x70)];
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, r, j, by_games), || make_points_ban(this, r, j, by_games));
-    PLACAR.registrar(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", read_u32_as_usize(j), by_games, a, b, mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, r, j, by_games), || make_points_ban(this, r, j, by_games));
+    PLACAR.record(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", read_u32_as_usize(j), by_games, a, b, mo, mr));
     a
 }
 
@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
     let n = (expected.len() / 0xe) as u32;
     let p = read_u32_as_usize(this + 0xb);
     let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, expected.len()) == &expected[..];
-    PLACAR.registrar(read_u32_as_usize(this + 0x13) as u32 == n && read_u32_as_usize(this + 0xf) as u32 == n + 100 && iguais, || {
+    PLACAR.record(read_u32_as_usize(this + 0x13) as u32 == n && read_u32_as_usize(this + 0xf) as u32 == n + 100 && iguais, || {
         format!("compact_entries: conta {} (esperava {}), capacidade {}, entradas iguais {}", read_u32_as_usize(this + 0x13), n, read_u32_as_usize(this + 0xf), iguais)
     });
 }

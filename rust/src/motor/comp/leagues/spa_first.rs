@@ -70,7 +70,7 @@ pub(crate) unsafe fn compare_league_round_table(name: &str, stage: u32, rounds: 
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, original, || copy(&mut r2, &mut e2, pl2));
     let gravou = a != 0 || b != 0;
     let outs = !gravou || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
     let table = if a != 0 && b != 0 {
@@ -86,7 +86,7 @@ pub(crate) unsafe fn compare_league_round_table(name: &str, stage: u32, rounds: 
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
+    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, st
                 show_error_at(0xa82844, 0xb0);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_6 calendario da primera");
+            crate::comparison::branch("cqp_6 calendario da primera");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             if (year as i16) % 2 != 0 {
                 write_rounds_winter_break(t, year, &PRIMERA_ODD_YEAR_CHRISTMAS, 0xa82844);
@@ -347,7 +347,7 @@ pub(crate) fn spanish_common_rules() -> Vec<(usize, u8, u32)> {
 /// (+0xbe = +0xbf = 0), 3 caem (+0xc1), nenhuma liga acima (+0x1c = −1), a Segunda abaixo (+0x20 = [0x9cf628]) e
 /// +0x52 = 2 [sem nome].
 pub(crate) unsafe extern "thiscall" fn spa_first_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_4 regras da primera");
+    crate::comparison::branch("cqk_4 regras da primera");
     core::ptr::write_unaligned((this + league::ROUND_COUNT) as *mut u16, 0x26);
     spa_first_apply_league_rules(this, &primera_rules())
 }
@@ -391,16 +391,16 @@ pub(crate) unsafe fn lower_division_rules() -> Vec<(usize, u8, u32)> {
 /// virtual reescreve, fica de fora), e a devolução 1; no fim fica a faixa da original.
 pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let band = [(this + 0x1c, 0xd0)];
-    let before = crate::comparacao::Memoria::ler(&band);
+    let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&band);
-    before.escrever();
+    let mo = crate::comparison::MemorySnapshot::read(&band);
+    before.write_back();
     SPA_FIRST_RULES_DRY_RUN = true;
-    let rr = crate::aleatorio::pausar_rastro(copy);
+    let rr = crate::rng::pause_trace(copy);
     SPA_FIRST_RULES_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&band);
-    mo.escrever();
-    let field = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {
+    let mr = crate::comparison::MemorySnapshot::read(&band);
+    mo.write_back();
+    let field = |m: &crate::comparison::MemorySnapshot, d: usize, t: u8| -> u32 {
         let b = &m.0[0].1[d - 0x1c..];
         match t {
             1 => b[0] as u32,
@@ -409,7 +409,7 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, esc
         }
     };
     let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    PLACAR.registrar(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
+    PLACAR.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
     r
 }
 
@@ -419,8 +419,15 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, esc
 
 
 
-/// La Primera has 20 clubs; first, the clubs of the Spanish lower division move to the generic lower division; prize
-/// fund of 250,000 per place; TV pays 5,000,000 to each club
+/// Creates the La Primera table of 20 clubs; first the clubs of the Spanish lower division move to the generic lower
+/// division; prize fund of 250,000 per place; TV pays 5,000,000 to each club.
+///
+/// `SpaFirst::create_table()`. +0x3e = 20 and the table (malloc 0x944e46 of 0x49c; out of memory: the box with source
+/// 0xa82844, line 0x250, and 0). Before filling, the clubs of the Spanish lower division ([0x9cf6b0]) move to the
+/// generic lower division (+0x57 = the record of [0x9cf764]). Then the Primera clubs ([0x9cf624]) in database order,
+/// each in the next row (League::init_table_row 0x687430: thiscall(league, row, club, 0, 0), ret 0x10), until full (not
+/// filled: 0). Full: the prize fund (+0x28 = League::calc_prize_fund 0x682f70 with the share of 250,000), +0xe1 = 1,
+/// the TV money of 5,000,000 to each club (0x683010: thiscall(league, value, 0), ret 8) and 1.
 /// Original: `SpaFirst::create_table` (0x84fc70, spa_first.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x84fc70 } (thiscall, ret 0, spa_first.cpp): `SpaFirst::create_table()`. +0x3e = 20 e a tabela (malloc 0x944e46
@@ -472,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }
-    crate::comparacao::ramo("cqk_5 tabela da primera");
+    crate::comparison::branch("cqk_5 tabela da primera");
     let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
     let f = prize(this, 0x3d090); // cqk5: a cota da Primera
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
@@ -484,101 +491,16 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
 
 
 
-/// Serie C2/A records: in the table, the title, promotion (weight 100), the play-off place (weight 40) and relegation;
-/// in the promotion play-off, the winner goes up (weight 50) and the loser gets the knock-out record (weight by round);
-/// in the play-out, the winner stays up and the loser goes down
-/// Original: `ItaSerC2a::update_staff_records_for_status` (0x654180, ita_ser_c2a.cpp, thiscall, ret 0x18).
+
+
+/// Writes the club's current, best and worst possible position into La Primera statistics; places 17 and 18 become 16
+/// for the best and 19 for the worst.
 ///
-/// [pt] { 0x654180 } (thiscall, ret 0x18, ita_ser_c2a.cpp): `ItaSerC2a::update_staff_records_for_status(clube, situação,
-/// fase, _, jogo, _)`, a virtual +0x44 (anunciada pela 0x686670). Devolve 0. Na liga (fase 0xff), pela situação: 5,
-/// o título (Staff_Records::add_league_champions_record 0x868c50: thiscall(registros, clube, comp +4), ret 8); 0, o
-/// acesso (0x869480: thiscall(registros, clube, comp, 0x64), ret 0xc); 1, a vaga no play-off (0x86bdd0:
-/// thiscall(registros, clube, comp, 0xa0, 0x82, 0x28), ret 0x14); 3, o rebaixamento (0x86a1c0: thiscall(registros,
-/// clube, comp), ret 8). No play-off de acesso (fase 0), na primeira linha do clube com situação 1, 2 ou 0xff: 1
-/// (venceu), o acesso com peso 0x32 e +0x37 = 0; 2 ou 0xff (caiu), a eliminação (0x86c000: thiscall(registros, clube,
-/// comp, fase do jogo +0x32, rodada +0x30, peso), ret 0x14; o peso = comp_util_scale_by_round 0x4bf850: cdecl(0x1e,
-/// 0x32, rodada do jogo +0x34, 2)) e +0x37 = 0xfe. No play-out (fase 1): 1 (salvou-se), +0x37 = 0xfe; 2 ou 0xff,
-/// o rebaixamento e +0x37 = 3.
-pub(crate) unsafe extern "thiscall" fn spa_first_update_staff_records_for_status(this: usize, clube: usize, status: u32, stage: u32, _a4: u32, jogo: usize, _a6: u32) -> u32 {
-    let s = status as u8;
-    let comp = read_usize(this + 4);
-    let f = stage as u8;
-    if f == 0xff {
-        match s {
-            5 => {
-                let title: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-                title(eng_second_staff_records(), clube, comp);
-            }
-            0 => {
-                let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
-                promotion(eng_second_staff_records(), clube, comp, 0x64);
-            }
-            1 => {
-                crate::comparacao::ramo("cqk_5 vaga no play-off da c2a");
-                let slot: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-                slot(eng_second_staff_records(), clube, comp, 0xa0, 0x82, 0x28);
-            }
-            3 => {
-                crate::comparacao::ramo("cqk_5 rebaixamento na c2a");
-                let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-                cair(eng_second_staff_records(), clube, comp); // cqk5: o rebaixamento pela tabela da C2/A
-            }
-            _ => {}
-        }
-        return 0;
-    }
-    if f > 1 {
-        return 0;
-    }
-    let n = read_i16(this + league::CLUB_COUNT) as i32;
-    let mut i: i32 = 0;
-    while i < n {
-        let row = read_usize(this + league::TABLE) + (i as usize) * 0x3b;
-        if read_usize(row) == clube {
-            if f == 0 {
-                match s {
-                    1 => {
-                        let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
-                        promotion(eng_second_staff_records(), clube, comp, 0x32);
-                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
-                        return 0;
-                    }
-                    2 | 0xff => {
-                        let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
-                        let weight = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, 2);
-                        // simplification: the original pushes the match’s stage (+0x32) and round (+0x30) as words in
-                        // registers with garbage in the high 16 bits; 0x86c000 only reads the words.
-                        let away: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                        away(eng_second_staff_records(), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
-                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
-                        return 0;
-                    }
-                    _ => {}
-                }
-            } else {
-                match s {
-                    1 => {
-                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
-                        return 0;
-                    }
-                    2 | 0xff => {
-                        let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-                        cair(eng_second_staff_records(), clube, comp);
-                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 3;
-                        return 0;
-                    }
-                    _ => {}
-                }
-            }
-        }
-        i += 1;
-    }
-    0
-}
-
-
-/// the club's current, best and worst possible position in La Primera stats; places 17 and 18 become 16 for the best
-/// and 19 for the worst [inference: they are not a band of their own]
+/// `SpaFirst::set_club_progress(club, stage, current, best, worst)`, virtual +0x68 (from 0x684cd0 for each table row):
+/// in the club's entry in the statistics (Comp_Stats::find_club_entry 0x4a4850: thiscall(+8, club), ret 4) it writes
+/// the current position (+0x73), the best possible (+0x74; 17 and 18 become 16) and the worst (+0x75; 17 and 18 become
+/// 19): the 17 to 18 band of the Primera does not count as a band of its own [inference: positions 17 to 18 join the
+/// neighbouring band above for the best and the one below for the worst].
 /// Original: `SpaFirst::set_club_progress` (0x850880, spa_first.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x850880 } (thiscall, ret 0x14, spa_first.cpp): `SpaFirst::set_club_progress(clube, fase, atual, melhor, pior)`,

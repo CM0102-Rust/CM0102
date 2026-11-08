@@ -41,7 +41,7 @@ unsafe fn cap_professional_status(clube: usize, valor: i8, baixar: u32) {
     let p = (clube + 0x64) as *mut i8;
     let muda = if baixar != 0 { *p > valor } else { *p < valor };
     if muda {
-        crate::comparacao::ramo("cpp_13 teto da divisao");
+        crate::comparison::branch("cpp_13 teto da divisao");
         *p = valor; // o teto novo
     }
 }
@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn limit_club_division_tier(this: usize, valor: u32, fo
 unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
     let n = cup_compare_entries_by_level_desc(a, b);
-    PLACAR.registrar(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -79,7 +79,7 @@ unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usi
 unsafe extern "C" fn comparar_cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = cup_compare_entries_by_level_asc(a, b);
-    PLACAR.registrar(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -89,8 +89,8 @@ unsafe extern "thiscall" fn comparar_limit_club_division_tier(this: usize, valor
     let n = *((this + 0x3e) as *const i16);
     let tabela = cpp13_d(this + 0xb1);
     let reg: Vec<(usize, usize)> = (0..n.max(0) as usize).map(|i| (cpp13_d(tabela + i * 0x3b) + 0x64, 1)).collect();
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, valor, fora, dentro, baixar),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, valor, fora, dentro, baixar),
         || limit_club_division_tier(this, valor, fora, dentro, baixar));
-    PLACAR.registrar(igual, || format!("limit_club_division_tier(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
+    PLACAR.record(igual, || format!("limit_club_division_tier(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
         valor as u8 as i8, fora as u8, dentro as u8, baixar, mo, mr));
 }

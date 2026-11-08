@@ -24,12 +24,33 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
     c
 }
 
-/// builds the French first division: discipline 0xc; two placeholder competitions (the CFA and the lower division),
-/// with no matches of their own; in a new career, every club whose league in the database is the CFA moves to the
-/// generic division with the CFA as reserve competition [inference: the B sides of the professional clubs], and every
-/// lower division club moves to the generic division with no reserve; then the rules, the table, the fixtures, the
-/// order, the statistics and the predicted positions; at last it builds the CFA (4 groups of 18) and the lower division
-/// (2 groups of 20), which leave their matches in the calendar, and frees both objects
+/// Builds the French first division: discipline `0xc`; two placeholder competitions (the CFA and the lower division)
+/// with no matches of their own; in a new career, clubs of the CFA and of the lower division move to the generic
+/// division; then the rules, the table, the fixtures, the order, the statistics and the predicted positions; at last it
+/// builds the CFA (4 groups of 18) and the lower division (2 groups of 20), which leave their matches in the calendar,
+/// and frees both objects. Returns this.
+///
+/// Convention: thiscall, ret 8, `fra_first.cpp`, 988 bytes, SEH frame only for the operator new calls.
+/// `FraFirst::FraFirst(ano, registro)` (year, record): the base (League::League `0x682200`: mov ecx -> thiscall, ret
+/// 0), the vtable `0x96aa24`, the year (`+0x40`, word), the record (`+4`) and discipline `0xc` (`+0x50`); at `+0xee`
+/// and `+0xf2` the placeholder competitions of the CFA (vtable `0x96a994`, id `[0x9cf5d8]`) and of the lower division
+/// (`0x96a904`, id `[0x9cf548]`).
+///
+/// It tries to load from the temporary file (League::load_from_temp_file `0x687b10`: push 1; mov ecx -> thiscall, ret
+/// 4): if loaded, done. Otherwise, the new league: each club (the first `[0xae235c]` − 2 × `[0xae2350]` of
+/// `[0xae23b4]`, `0x245` bytes; the count recomputed on every pass) whose competition (`+0x57`) is the CFA moves to the
+/// generic division (record with id `[0x9cf764]`) with the CFA as reserve competition (`+0x60`) [inference: the B sides
+/// of the professional clubs]; a lower-division club moves to the generic division with no reserve (`+0x60` = 0).
+///
+/// Then stage `0xff` (`+0x44`), current stage −1 (`+0x30`), no stages (`+0x2c`, `+0xc`); the rules (`0x5bc410`), the
+/// table (`0x5bc2b0`), the fixtures (League::create_fixtures `0x6835c0`), the order (League::sort_table `0x6827d0`:
+/// push 0 -> thiscall, ret 4), the statistics (operator new of `0x5ce` and Comp_Stats::Comp_Stats `0x49ee70`: push
+/// league; mov ecx, new -> thiscall, ret 4) at `+8` and the predicted positions (`0x68a850`: mov ecx -> thiscall, ret
+/// 0); each step that fails shows the box of its line (`0x65`, `0x6c`, `0x73`, `0x7c`, `0x83`) and ends.
+///
+/// Finally, the two background leagues: the CFA (operator new of `0xee`; FraCfa::FraCfa `0x5b91c0`: push year; mov ecx
+/// -> thiscall, ret 4) and the lower division (`0x5bd600`, the same), which leave their matches in the game calendar,
+/// and are destroyed (virtual 0 with 1: push 1; mov ecx -> thiscall, ret 4).
 /// Original: `FraFirst::FraFirst` (0x5bb160, fra_first.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5bb160 } (thiscall, ret 8, fra_first.cpp, 988 bytes, quadro SEH só para os operator new): `FraFirst::FraFirst(ano,
@@ -71,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     if load(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqq_6 primeira francesa nova");
+    crate::comparison::branch("cqq_6 primeira francesa nova");
     let n = || (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     if n() > 0 {
         let mut p = read_u32_as_usize(G_CLUB_TABLE) + 0x57;
@@ -177,7 +198,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
     for (k, &(dia, mes, ano, casa, fora)) in table.iter().enumerate() {
         jogo(read_u32_as_usize(this + 0xea) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
     }
-    crate::comparacao::ramo("cqn_6 calendario fixo");
+    crate::comparison::branch("cqn_6 calendario fixo");
     let n = league_match_count(this);
     if n <= 0 {
         return;
@@ -197,14 +218,6 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
 }
 
 
-/// the 2001/02 C1/B, with the same rule
-/// Original: `ItaSerC1b::set_up_fixed_fixtures` (0x650100, ita_ser_c1b.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x650100 } (thiscall, ret 0, ita_ser_c1b.cpp, 11.650 bytes): `ItaSerC1b::set_up_fixed_fixtures()`: os 306 jogos
-/// da C1/B 2001/02. Fonte 0x9ea558, linha 0x404.
-pub(crate) unsafe extern "thiscall" fn fra_first_set_up_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures_body(this, &SERIE_C1B_FIXTURES, 0x9ea558, 0x404)
-}
 /// Comparer: runs only the original and checks +0xea is either 0 or n fixtures with both clubs found.
 ///
 /// [pt] O comparador das duas: alocam: só a original, conferindo o que ela garante: ou a lista ficou (+0xea com a conta n e
@@ -214,7 +227,7 @@ pub(crate) unsafe fn fra_first_compare_fixed_fixtures(name: &str, this: usize, o
     let v = read_u32_as_usize(this + 0xea);
     let n = league_match_count(this);
     let ok = v == 0 || (read_u32_as_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_u32_as_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_u32_as_usize(v + i * 0x10 + 0xc) != 0xffff_ffff));
-    PLACAR.registrar(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", name, this, v));
+    PLACAR.record(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", name, this, v));
 }
 
 
@@ -911,7 +924,7 @@ pub(crate) fn common_rules() -> Vec<(usize, u8, u32)> {
 /// turnos, 3 pontos, +0xab e +0xdb = 0, ninguém sobe (+0xbe = 0), caem 2 em 2001 e 3 depois (+0xc1), 5 reservas
 /// (+0x49), nenhuma liga acima (+0x1c = −1), +0x52 = 2 [sem nome] e a segunda abaixo (+0x20 = [0x9cf5d0]).
 pub(crate) unsafe extern "thiscall" fn fra_first_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_5 regras da primeira");
+    crate::comparison::branch("cqj_5 regras da primeira");
     fra_first_apply_league_rules(this, &fra_first_first_division_rules(this))
 }
 
@@ -952,16 +965,16 @@ pub(crate) unsafe fn national_division_rules(this: usize) -> Vec<(usize, u8, u32
 /// fim fica a faixa da original.
 pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let band = [(this + 0x1c, 0xd0)];
-    let before = crate::comparacao::Memoria::ler(&band);
+    let before = crate::comparison::MemorySnapshot::read(&band);
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&band);
-    before.escrever();
+    let mo = crate::comparison::MemorySnapshot::read(&band);
+    before.write_back();
     FRA_FIRST_RULES_DRY_RUN = true;
-    let rr = crate::aleatorio::pausar_rastro(copy);
+    let rr = crate::rng::pause_trace(copy);
     FRA_FIRST_RULES_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&band);
-    mo.escrever();
-    let field = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {
+    let mr = crate::comparison::MemorySnapshot::read(&band);
+    mo.write_back();
+    let field = |m: &crate::comparison::MemorySnapshot, d: usize, t: u8| -> u32 {
         let b = &m.0[0].1[d - 0x1c..];
         match t {
             1 => b[0] as u32,
@@ -970,7 +983,7 @@ pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: usize, esc
         }
     };
     let difs: Vec<(usize, u32, u32)> = escritas.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    PLACAR.registrar(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
+    PLACAR.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this, r, rr, difs));
     r
 }
 
@@ -1019,8 +1032,12 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: usize, file: usize, row: 
     Some(k as i8 as i16 == read_i16(this + 0x3e))
 }
 
-/// the top division has 18 clubs in the 2001 season and 20 afterwards; prize fund of 200,000 per place; TV pays
-/// 6,000,000 to each club
+/// Creates the French top-division table: 18 clubs in the 2001 season and 20 afterwards; prize fund of 200,000 per
+/// place; TV pays 6,000,000 to each club.
+///
+/// `FraFirst::create_table()`: 18 clubs in the 2001 season (`+0x40` = `0x7d1`) and 20 afterwards (`[0x9cf5cc]`),
+/// `+0xa7` = −1; once filled, the fund by the 200,000 share and the TV money of 6,000,000 to each club; returns 1 (0 if
+/// it could not fill). Source `0x9ccb5c`, line `0x1d3`.
 /// Original: `FraFirst::create_table` (0x5bc2b0, fra_first.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5bc2b0 } (thiscall, ret 0, fra_first.cpp): `FraFirst::create_table()`: 18 clubes na temporada 2001 (+0x40 =
@@ -1033,7 +1050,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u3
     if fra_first_fill_league_table(this, 0x9ccb5c, 0x1d3, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION) != Some(true) {
         return 0;
     }
-    crate::comparacao::ramo("cqj_6 tabela da primeira");
+    crate::comparison::branch("cqj_6 tabela da primeira");
     set_prize_fund(this, 0x30d40);
     eng_prm_pay_tv_rights(this, 0x5b8d80, 0); // cqj6: a TV da primeira
     1
@@ -1078,7 +1095,7 @@ pub(crate) unsafe fn fra_first_compare_league_table(name: &str, this: usize, n: 
                 };
         }
     }
-    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 
@@ -1111,7 +1128,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, st
         show_error_at(0x9ccb5c, 0xd1);
         return 0;
     }
-    crate::comparacao::ramo("cqo_6 calendario da primeira francesa");
+    crate::comparison::branch("cqo_6 calendario da primeira francesa");
     let mut i: i16 = 0;
     for (so_38, r) in FRENCH_FIRST_DIVISION_ROUNDS.iter() {
         if *so_38 && n != 0x26 {

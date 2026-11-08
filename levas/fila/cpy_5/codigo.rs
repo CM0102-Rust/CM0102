@@ -55,7 +55,7 @@ unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 }
                 2 => {
                     if o2 < 0x6c {
-                        crate::comparacao::ramo("cpy_5 entrada da banda 2");
+                        crate::comparison::branch("cpy_5 entrada da banda 2");
                         european_cup_write_entrant(t + 0x60 + o2, c, 8); // cpy5: a banda 2 entra na rodada 8
                         n2 += 1;
                         o2 += 6;
@@ -63,7 +63,7 @@ unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 }
                 3 => {
                     if o3 < 0x72 {
-                        crate::comparacao::ramo("cpy_5 entrada da banda 3");
+                        crate::comparison::branch("cpy_5 entrada da banda 3");
                         european_cup_write_entrant(t + 0xcc + o3, c, 0xd); // cpy5: a banda 3 entra na rodada 0xd
                         n3 += 1;
                         o3 += 6;
@@ -71,7 +71,7 @@ unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 }
                 4 => {
                     if o4 < 0x6c {
-                        crate::comparacao::ramo("cpy_5 entrada da banda 4");
+                        crate::comparison::branch("cpy_5 entrada da banda 4");
                         european_cup_write_entrant(t + 0x13e + o4, c, 0); // cpy5: a banda 4 entra na rodada 0
                         n4 += 1;
                         o4 += 6;
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn comparar_european_cup_collect_entrants(this: usize) 
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let t = cpy5_d(this + 0x14);
     if t == 0 {
-        PLACAR.registrar(r == 0, || format!("european_cup_collect_entrants({:x}) sem lista original={}", this, r));
+        PLACAR.record(r == 0, || format!("european_cup_collect_entrants({:x}) sem lista original={}", this, r));
         return r;
     }
     let mut v = core::slice::from_raw_parts(t as *const u8, 0x47 * 6).to_vec();
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn comparar_european_cup_collect_entrants(this: usize) 
         && v[..] == *core::slice::from_raw_parts(t as *const u8, 0x47 * 6)
         && cpy5_w(this + 0x36) == if n == 1 { 0x47 } else { 0 }
         && cpy5_w(this + 0x38) == 0x47;
-    PLACAR.registrar(igual, || format!("european_cup_collect_entrants({:x}) original={} +0x36={} rust={} total={}", this, r, cpy5_w(this + 0x36), n, total));
+    PLACAR.record(igual, || format!("european_cup_collect_entrants({:x}) original={} +0x36={} rust={} total={}", this, r, cpy5_w(this + 0x36), n, total));
     r
 }
 
@@ -180,13 +180,13 @@ unsafe extern "thiscall" fn comparar_build_qualifying_entry_table(this: usize) -
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%)(this);
     let t = cpy5_d(this + 0xa7);
     if t == 0 || cpy5_w(this + 0x3e) != 0x37 {
-        PLACAR.registrar(r == -1 && t == 0, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x} +0x3e={}", this, r, t, cpy5_w(this + 0x3e)));
+        PLACAR.record(r == -1 && t == 0, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x} +0x3e={}", this, r, t, cpy5_w(this + 0x3e)));
         return r;
     }
     let mut v = core::slice::from_raw_parts(t as *const u8, 0x14a).to_vec();
     fill_qualifying_table(this, v.as_mut_ptr() as usize);
     let igual = r == 1 && v[..] == *core::slice::from_raw_parts(t as *const u8, 0x14a);
-    PLACAR.registrar(igual, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x?}", this, r, &v[..]));
+    PLACAR.record(igual, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x?}", this, r, &v[..]));
     r
 }
 
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
     }
     let f = f.wrapping_add(1);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
-    crate::comparacao::ramo("cpy_5 fase seguinte");
+    crate::comparison::branch("cpy_5 fase seguinte");
     match f {
         0 => {
             let sortear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x585290usize);

@@ -116,9 +116,9 @@ unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, tecnico: usiz
     let Some(entrada) = entrada else {
         return o(noticias, tecnico, categoria);
     };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(entrada + 8, 4)], || o(noticias, tecnico, categoria),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(entrada + 8, 4)], || o(noticias, tecnico, categoria),
         || count_unread(noticias, tecnico, categoria));
-    PLACAR.registrar(igual && r == n, || format!("count_unread(categoria {}) original={} rust={} {:x?} x {:x?}", categoria as u8, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("count_unread(categoria {}) original={} rust={} {:x?} x {:x?}", categoria as u8, r, n, mo, mr));
     r
 }
 
@@ -134,9 +134,9 @@ unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, tecnico: usi
     if let Some(a) = alvo {
         regioes.push((a + 5 + 4 * vaga as usize, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(noticias, tecnico, id, vaga, valor, copia),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(noticias, tecnico, id, vaga, valor, copia),
         || set_item_slot(noticias, tecnico, id, vaga, valor, copia));
-    PLACAR.registrar(igual && r == n, || format!("set_item_slot(vaga {}) original={} rust={} {:x?} x {:x?}", vaga, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("set_item_slot(vaga {}) original={} rust={} {:x?} x {:x?}", vaga, r, n, mo, mr));
     r
 }
 
@@ -144,6 +144,6 @@ unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube: usize) ->
     // só consultas: as duas rodam de novo sem efeito
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
     let n = news_club_has_human_manager(clube);
-    PLACAR.registrar(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
     r
 }

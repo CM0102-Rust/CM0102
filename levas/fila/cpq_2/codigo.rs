@@ -44,7 +44,7 @@ unsafe fn record_national_departure(this: usize, selecao: usize, motivo: u8) {
 
 /// A federação pensa em demitir (0x69aba0 sem conferir o ultimato).
 unsafe fn consider_sacking(this: usize, selecao: usize) {
-    crate::comparacao::ramo("cpq_2 a federacao pensa");
+    crate::comparison::branch("cpq_2 a federacao pensa");
     let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x69aba0usize);
     pensar(this, selecao, 0);
 }
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn review_national_team_performance(this: usize, comp: 
     let o = objeto();
     let nota_de: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(cpq2_d(cpq2_d(o) + 0x74));
     let nota = nota_de(o, selecao) as u8 as i8;
-    crate::comparacao::ramo("cpq_2 selecao avaliada");
+    crate::comparison::branch("cpq_2 selecao avaliada");
     let avaliar: unsafe extern "thiscall" fn(usize, usize, usize, i32) = core::mem::transmute(0x6a5a60usize);
     let c = cpq2_linha(this, selecao) + 6;
     let injury_word_0c = || cpq2_w(selecao + 0x80);
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn is_club_in_financial_trouble(this: usize, clube: usi
 unsafe extern "thiscall" fn comparar_is_club_in_financial_trouble(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
     let n = is_club_in_financial_trouble(this, clube);
-    PLACAR.registrar(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -187,6 +187,6 @@ unsafe extern "thiscall" fn get_board_confidence_band(this: usize, clube: usize)
 unsafe extern "thiscall" fn comparar_get_board_confidence_band(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, clube);
     let n = get_board_confidence_band(this, clube);
-    PLACAR.registrar(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r
 }

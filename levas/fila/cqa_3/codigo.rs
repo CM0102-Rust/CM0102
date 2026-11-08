@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn draw_round(copa: usize, rodada: u32) -> u32 {
         let copia: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], *mut [u8; 8]) -> usize = core::mem::transmute(0x417c10usize);
         let (mut a, mut b, mut c) = ([0u8; 8], [0u8; 8], [0u8; 8]);
         round_draw_date(copa, reg, &mut a);
-        crate::comparacao::ramo("cqa_3 sorteio adiado");
+        crate::comparison::branch("cqa_3 sorteio adiado");
         let r = mais(&mut a, &mut b, 1); // cqa3: o sorteio adiado
         copia(&mut a, &mut c, r); // push &b; push &c; ecx = &a -> thiscall, ret 8
         set_round_draw_date(copa, reg, &a);
@@ -126,12 +126,12 @@ unsafe extern "thiscall" fn draw_round(copa: usize, rodada: u32) -> u32 {
     };
     let regra = cqa3_w(reg + 0xd);
     if regra & 0x400 != 0 {
-        crate::comparacao::ramo("cqa_3 sorteio pela semente");
+        crate::comparison::branch("cqa_3 sorteio pela semente");
         sorteio(0x51d2d0); // cqa3: pela semente
     } else if cqa3_b(reg + 0xb) & 4 != 0 {
         sorteio(0x51d9f0);
     } else if regra & 0x200 == 0 {
-        crate::comparacao::ramo("cqa_3 sorteio livre");
+        crate::comparison::branch("cqa_3 sorteio livre");
         sorteio(0x51e220); // cqa3: o sorteio livre
     }
     // push −1; push rodada; ecx = a copa -> thiscall, ret 8
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn comparar_draw_round(copa: usize, rodada: u32) -> u32
         }
         let r = o(copa, rodada);
         let ok = plano.iter().all(|&(rk, d, y)| cqa3_w(rk) == d && cqa3_b(rk + 2) == y);
-        PLACAR.registrar(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", rodada as i32));
+        PLACAR.record(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", rodada as i32));
         return r;
     }
     let antes_ac = cqa3_b(copa + 0xac);
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn comparar_draw_round(copa: usize, rodada: u32) -> u32
     }
     let soma = if !skips_draw_news(copa, rodada) && cqa3_w(reg + 7) != 0x8c { 1 } else { 0 };
     ok &= cqa3_b(copa + 0xac) == antes_ac.wrapping_add(soma);
-    PLACAR.registrar(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", rodada as i32, antes_ac, cqa3_b(copa + 0xac)));
+    PLACAR.record(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", rodada as i32, antes_ac, cqa3_b(copa + 0xac)));
     r
 }
 
@@ -277,9 +277,9 @@ unsafe extern "C" fn comparar_comp_util_format_stage_round_name(fase: u32, rodad
     if saida.is_null() || tamanho < 0xc8 {
         return o(fase, rodada, saida, tamanho, estilo); // a caixa: só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida as usize, (tamanho as usize).min(0x400))],
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(saida as usize, (tamanho as usize).min(0x400))],
         || o(fase, rodada, saida, tamanho, estilo), || comp_util_format_stage_round_name(fase, rodada, saida, tamanho, estilo));
-    PLACAR.registrar(igual && r == n, || format!("comp_util_format_stage_round_name({}, {}) {} x {} {:x?} x {:x?}", fase as i16, rodada as i16, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("comp_util_format_stage_round_name({}, {}) {} x {} {:x?} x {:x?}", fase as i16, rodada as i16, r, n, mo, mr));
     r
 }
 
@@ -310,6 +310,6 @@ unsafe extern "thiscall" fn club_in_higher_division(_this: usize, a: usize, b: u
 unsafe extern "thiscall" fn comparar_club_in_higher_division(this: usize, a: usize, b: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, a, b);
     let n = club_in_higher_division(this, a, b);
-    PLACAR.registrar(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
+    PLACAR.record(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
     r
 }

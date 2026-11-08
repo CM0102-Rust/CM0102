@@ -8,7 +8,7 @@
 # contador da 0x5480f0 (que zera o byte antes de contar) e o limite do sorteio fica na pilha como 3º argumento da
 # 0x4b02e0 (que lê dois); a cópia faz o mesmo. Código morto no original: o teste "nota + 750 < nota" dos rejeitados
 # nunca passa (o sorteio(3) dali não acontece). A 0x72b940 SORTEIA: comparador lado a lado pelo estado do sorteio, a
-# cópia em sem_contar. Os outros: o olheiro pelo valor; a sequência com a original nas saídas e a cópia em locais
+# cópia em without_counting. Os outros: o olheiro pelo valor; a sequência com a original nas saídas e a cópia em locais
 # (a 0x4a4850 reordena só na primeira); o recordista lado a lado pela data. Nenhuma em laço quente.
 SAVE = False
 ROTINAS = [('olheiro_da_busca', 0x7ae950, [0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x80, 0x01, 0x00, 0x00]),

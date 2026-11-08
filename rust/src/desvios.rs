@@ -12,7 +12,7 @@
 use core::ffi::c_void;
 
 use crate::registro::linha;
-use crate::{aleatorio, data, win};
+use crate::{rng, data, win};
 
 pub struct Prologo {
     pub endereco: usize,
@@ -669,7 +669,7 @@ unsafe fn instalar_motor() {
     // CM_ORIGINAL=1: nenhuma rotina substituida; o sorteio so e observado (contagem e parada da
     // simulacao), para comparar uma simulacao so com as originais contra outra com o Rust.
     if win::ambiente("CM_ORIGINAL") {
-        aleatorio::instalar(aleatorio::Modo::Observar);
+        rng::instalar(rng::Modo::Observar);
         if ISOLAR.load(std::sync::atomic::Ordering::Relaxed) {
             data::instalar_passagem();
             crate::motor::instalar_passagem();
@@ -686,7 +686,7 @@ unsafe fn instalar_motor() {
         win::AddVectoredExceptionHandler(1, crate::simulacao::registrar_excecao);
     }
     let comparar = win::ambiente("CM_COMPARAR") || win::ambiente("CM_AUTOTESTE");
-    aleatorio::instalar(if comparar { aleatorio::Modo::Comparar } else { aleatorio::Modo::Rust });
+    rng::instalar(if comparar { rng::Modo::Comparar } else { rng::Modo::Rust });
     data::instalar(comparar);
     crate::motor::instalar(comparar);
     crate::motor::instalar_zeradas();
@@ -786,7 +786,7 @@ pub unsafe fn autotestes() {
     crate::motor::autoteste_dbj_2();
     crate::motor::autoteste_dbm_1();
     crate::motor::autoteste_dbm_2();
-    aleatorio::autoteste(5_000_000);
+    rng::autoteste(5_000_000);
     data::autoteste();
     crate::motor::autoteste(2_000_000);
 }

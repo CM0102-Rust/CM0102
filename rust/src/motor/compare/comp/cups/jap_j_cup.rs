@@ -10,19 +10,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table(thi
         |r, e, s| jap_j_cup_create_round_table(this, stage, r, e, s))
 }
 
-/// Comparer for `jap_j_cup_create_round_table_661ff0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table_661ff0(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_JAP_J_CUP_CREATE_ROUND_TABLE_661FF0);
-    compare_cup_round_table("jap_j_cup_create_round_table_661ff0", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
-        |r, e, s| jap_j_cup_create_round_table_661ff0(this, stage, r, e, s))
-}
 
-/// Comparer for `jap_j_cup_create_round_table_90b170` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table_90b170(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_JAP_J_CUP_CREATE_ROUND_TABLE_90B170);
-    compare_cup_round_table("jap_j_cup_create_round_table_90b170", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
-        |r, e, s| jap_j_cup_create_round_table_90b170(this, stage, r, e, s))
-}
 
 /// Comparer for `jap_j_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants(this: usize) -> i32 {
@@ -30,17 +18,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants(this:
     jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants", this, || o(this), || collect_j_cup_entrants(this))
 }
 
-/// Comparer for `jap_j_cup_collect_entrants_90b530` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_90b530(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_J_CUP_COLLECT_ENTRANTS_90B530);
-    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants_90b530", this, || o(this), || collect_us_open_cup_entrants(this))
-}
 
-/// Comparer for `jap_j_cup_collect_entrants_6624f0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_6624f0(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_J_CUP_COLLECT_ENTRANTS_6624F0);
-    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants_6624f0", this, || o(this), || collect_emperors_cup_entrants(this))
-}
 
 /// Comparer for `jap_j_cup_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_start_new_season(this: usize) -> u32 {

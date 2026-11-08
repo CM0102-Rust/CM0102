@@ -45,7 +45,7 @@ unsafe fn state_league_new_season(this: usize, tabela: usize, arquivo: usize, li
     }
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqp7_d(cqp7_d(this) + 0x8c));
     if regras(this) == 0 {
@@ -95,7 +95,7 @@ unsafe fn compare_state_league_new_season(nome: &str, this: usize, original: imp
     let antes = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let r = original();
     let depois = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    PLACAR.registrar(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
+    PLACAR.record(depois == antes.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", nome, this, antes, depois));
     r
 }
 
@@ -106,7 +106,7 @@ unsafe fn compare_state_league_advance_stage(nome: &str, this: usize, original: 
     let ultima = antes >= (cqp7_d(this + 0x2c) as i32).wrapping_sub(1);
     original();
     let depois = cqp7_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
+    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) antes={} depois={}", nome, this, antes, depois));
 }
 
 /// { 0x42fe10 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::start_new_season()`, a virada da temporada do Baiano (a tabela:

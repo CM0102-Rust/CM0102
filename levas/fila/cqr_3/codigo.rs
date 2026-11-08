@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
         show_error_at(0x987c20, 0x328);
         return 0;
     }
-    crate::comparacao::ramo("cqr_3 serie final");
+    crate::comparison::branch("cqr_3 serie final");
     noticia(fase);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
     1
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     if fase == 0 {
         return show_error_at(0x987c20, 0x35c);
     }
-    crate::comparacao::ramo("cqr_3 grande final");
+    crate::comparison::branch("cqr_3 grande final");
     montar(fase, 0);
     soltar(lista);
 }
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usize) {
     let ultima = antes >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqr3_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da série final: só a original (aloca a tabela das rodadas e a fase e manda a notícia), com o plano feito
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn comparar_create_finals_series_stage(this: usize) -> 
         b.sort_unstable();
         a == b
     };
-    PLACAR.registrar(igual, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, fase, seis));
+    PLACAR.record(igual, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, fase, seis));
     r
 }
 
@@ -175,5 +175,5 @@ unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: usize) {
         let (x, y) = (cqr3_d(l), cqr3_d(l + 6));
         cqr3_w(fase + 0x3e) == 2 && cqr3_d(fase + 4) == cqr3_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    PLACAR.registrar(igual, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, fase));
+    PLACAR.record(igual, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, fase));
 }

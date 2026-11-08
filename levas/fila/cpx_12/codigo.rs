@@ -70,7 +70,7 @@ unsafe fn match_stats_category(p: usize, lado: i32, avisar: bool, erro: &mut boo
         2 => 4,
         1 => {
             if avisar {
-                crate::comparacao::ramo("cpx_12 categoria da liga");
+                crate::comparison::branch("cpx_12 categoria da liga");
             }
             if conta(cpx12_d(p) as i32) != 0 { 2 } else { 3 } // cpx12: a categoria da liga
         }
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jog
             }
             if !contou {
                 contou = true;
-                crate::comparacao::ramo("cpx_12 jogo registrado");
+                crate::comparison::branch("cpx_12 jogo registrado");
             }
             for c in stats_categories_for(cat).into_iter().flatten() {
                 let mut r = player_category_record(this, dados, c);
@@ -263,12 +263,12 @@ unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: u
         }
     }
     if simulado {
-        regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+        regioes.extend(crate::rng::STATE_REGIONS);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, p, jogo), || {
-        crate::aleatorio::sem_contar(|| player_stats_record_match(this, p, jogo))
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, p, jogo), || {
+        crate::rng::without_counting(|| player_stats_record_match(this, p, jogo))
     });
-    PLACAR.registrar(igual && ro == rr, || format!("player_stats_record_match({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
+    PLACAR.record(igual && ro == rr, || format!("player_stats_record_match({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
     ro
 }
 
@@ -375,7 +375,7 @@ unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: u
                 }
                 let v = cpx12_d(s + 1) as i32;
                 if sempre != 0 && (fora(v) || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < cpx12_b(s))) {
-                    crate::comparacao::ramo("cpx_12 melhor posicao de sempre");
+                    crate::comparison::branch("cpx_12 melhor posicao de sempre");
                     *(s as *mut u8) = pos;
                     core::ptr::write_unaligned((s + 1) as *mut i32, comp);
                     core::ptr::write_unaligned((s + 5) as *mut u16, ano);
@@ -440,16 +440,16 @@ unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize,
     if fila != 0 {
         regioes.push((fila, 6 * cpx12_d(this + 0x28)));
     }
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     let ro = o(this, liga0, sempre);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     POSITION_RECORDS_DRY_RUN = true;
-    let rr = crate::aleatorio::pausar_rastro(|| update_league_position_records(this, liga0, sempre));
+    let rr = crate::rng::pause_trace(|| update_league_position_records(this, liga0, sempre));
     POSITION_RECORDS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    mo.escrever();
-    PLACAR.registrar(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    mo.write_back();
+    PLACAR.record(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
     ro
 }
 
@@ -483,7 +483,7 @@ unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         if humano(clube) == 0 && selecao(clube) == 0 {
             continue;
         }
-        crate::comparacao::ramo("cpx_12 noticia de recorde");
+        crate::comparison::branch("cpx_12 noticia de recorde");
         let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
         let n = local.as_mut_ptr() as usize;
         construir(n, 0x3e8, 0);
@@ -515,14 +515,14 @@ unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_send_record_news(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let regioes = [(this + 0x24, 0xc)];
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     RECORD_NEWS_DRY_RUN = true;
-    let rr = crate::aleatorio::pausar_rastro(|| send_record_news(this));
+    let rr = crate::rng::pause_trace(|| send_record_news(this));
     RECORD_NEWS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     let ro = o(this);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(ro == rr && mo == mr, || format!("send_record_news({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(ro == rr && mo == mr, || format!("send_record_news({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
     ro
 }

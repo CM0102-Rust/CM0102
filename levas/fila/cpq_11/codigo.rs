@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
                 let casa_livre = casa == -2;
                 if fora == -2 {
                     if casa_livre && sorteio(2) != 0 {
-                        crate::comparacao::ramo("cpq_11 sorteio mandante");
+                        crate::comparison::branch("cpq_11 sorteio mandante");
                         break true;
                     }
                     break false;
@@ -193,11 +193,11 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
 unsafe extern "thiscall" fn comparar_randomize_round_teams(copa: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend(all_ties_regions(copa));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada),
-        || crate::aleatorio::sem_contar(|| randomize_round_teams(copa, rodada)));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada),
+        || crate::rng::without_counting(|| randomize_round_teams(copa, rodada)));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("randomize_round_teams(rodada {}) diferencas em {:x?}", rodada as i16, dif)
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn separate_shared_stadium_ties(copa: usize, rodada: u3
                 let a = if lado == 0 { casa_i } else { cpq11_w(fi + 2) };
                 let b = cpq11_w(fj + lado);
                 if a != -1 && b != -1 {
-                    crate::comparacao::ramo("cpq_11 estadio comparado");
+                    crate::comparison::branch("cpq_11 estadio comparado");
                     let (sa, signed_byte_at) = (estadio(a), estadio(b));
                     if sa == signed_byte_at && sa != 0 {
                         dividem = true;
@@ -265,8 +265,8 @@ unsafe extern "thiscall" fn separate_shared_stadium_ties(copa: usize, rodada: u3
 unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(copa: usize, rodada: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     let reg = all_ties_regions(copa);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada), || separate_shared_stadium_ties(copa, rodada));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(copa, rodada), || separate_shared_stadium_ties(copa, rodada));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("separate_shared_stadium_ties(rodada {}) diferencas em {:x?}", rodada as i16, dif)
@@ -300,7 +300,7 @@ unsafe extern "C" fn comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32
         return original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(baixo, alto, rodada, rodadas);
     }
     if rodadas as u16 != 1 {
-        crate::comparacao::ramo("cpq_11 escala pela rodada");
+        crate::comparison::branch("cpq_11 escala pela rodada");
     }
     eax
 }
@@ -313,7 +313,7 @@ unsafe extern "C" fn comparar_comp_util_scale_by_round(baixo: u32, alto: u32, ro
     }
     let r = o(baixo, alto, rodada, rodadas);
     let n = comp_util_scale_by_round(baixo, alto, rodada, rodadas);
-    PLACAR.registrar(r == n, || format!("comp_util_scale_by_round({}, {}, {}, {}) original={:x} rust={:x}",
+    PLACAR.record(r == n, || format!("comp_util_scale_by_round({}, {}, {}, {}) original={:x} rust={:x}",
         baixo as u8 as i8, alto as u8 as i8, rodada as u16 as i16, rodadas as u16 as i16, r, n));
     r
 }

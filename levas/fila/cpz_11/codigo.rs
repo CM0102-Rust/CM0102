@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         }
     }
     if comissao != 0 {
-        crate::comparacao::ramo("cpz_11 folha do pessoal");
+        crate::comparison::branch("cpz_11 folha do pessoal");
         cpz11_por(this + 0xc, cpz11_i(this + 0xc).wrapping_add(comissao)); // cpz11: o pessoal na folha
     }
     let tipo1 = cpz11_b(clube + 0x64) == 1;
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     } else {
         0x96a5c0
     };
-    crate::comparacao::ramo("cpz_11 folha pela injury_word_0c");
+    crate::comparison::branch("cpz_11 folha pela injury_word_0c");
     let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64_at(k) + cpz11_i(this + 0xc) as f64); // cpz11: a reputação na folha
     cpz11_por(this + 0xc, folha);
     let t = teto(this, 0, -1);
@@ -134,8 +134,8 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
 /// ([0xae1080], que o salário padrão 0x864550 grava); as outras chamadas (contratos, teto 0x5968d0) só leem.
 unsafe extern "thiscall" fn comparar_update_wage_bill(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 12), (0xae1080, 4)], || o(this), || update_wage_bill(this));
-    PLACAR.registrar(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + 0xc, 12), (0xae1080, 4)], || o(this), || update_wage_bill(this));
+    PLACAR.record(igual, || format!("update_wage_bill(fin {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// { 0x59cf50 } (thiscall, finance.cpp): `FinanceTable::refresh_all_wage_bills()`, só pela criação do jogo (0x828110):
@@ -161,8 +161,8 @@ unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
 unsafe extern "thiscall" fn comparar_refresh_all_wage_bills(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = (cpz11_i(0xae235c).max(0) as usize).wrapping_mul(0x167);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(cpz11_d(this), n), (0xae1080, 4)], || o(this), || refresh_all_wage_bills(this));
-    PLACAR.registrar(igual, || format!("refresh_all_wage_bills({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(cpz11_d(this), n), (0xae1080, 4)], || o(this), || refresh_all_wage_bills(this));
+    PLACAR.record(igual, || format!("refresh_all_wage_bills({:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// { 0x59b4c0 } (ret 8, finance.cpp): `finance_get_days_to_season_start(clube, &passou)`, pelo passe diário das
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: usize, clube
     }
     let r = dias_ate(e + 0x2a, cpz11_d(0xae2c90) as u32, cpz11_d(0xae2c94) as u32);
     if r > 0 {
-        crate::comparacao::ramo("cpz_11 dias ate a temporada");
+        crate::comparison::branch("cpz_11 dias ate a temporada");
         return r; // cpz11: os dias até a temporada
     }
     0
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn comparar_finance_get_days_to_season_start(this: usiz
     if (linha(clube) as i8) < 0 {
         return o(this, clube, passou);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(passou as usize, 4), (0xae2470, 8)], || o(this, clube, passou), || finance_get_days_to_season_start(this, clube, passou));
-    PLACAR.registrar(igual && r == n, || format!("finance_get_days_to_season_start(clube {:#x}) original={} {:x?} rust={} {:x?}", clube, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(passou as usize, 4), (0xae2470, 8)], || o(this, clube, passou), || finance_get_days_to_season_start(this, clube, passou));
+    PLACAR.record(igual && r == n, || format!("finance_get_days_to_season_start(clube {:#x}) original={} {:x?} rust={} {:x?}", clube, r, mo, n, mr));
     r
 }

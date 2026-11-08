@@ -65,7 +65,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
     let falta: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x41a360usize);
     let n = cps6_d(0xae2364) as i32;
     let q = n / 250;
-    crate::comparacao::ramo("cps_6 faltas do dia");
+    crate::comparison::branch("cps_6 faltas do dia");
     let r = cps6_sortear(n - q - 1); // cps6: a primeira pessoa
     let mut atual = cps6_d(0xae23bc).wrapping_add((r as usize).wrapping_mul(0x6e));
     for _ in 0..q {
@@ -119,7 +119,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
             } else if days_since_staff_date(p) < 0xb4 {
                 s = s.wrapping_add(0x19);
             }
-            crate::comparacao::ramo("cps_6 falta pela soma");
+            crate::comparison::branch("cps_6 falta pela soma");
             if cps6_sortear(s as i8 as i32) == 0 { // cps6: o sorteio da soma
                 e_falta = true;
             }
@@ -146,7 +146,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
             }
         }
         if e_falta {
-            crate::comparacao::ramo("cps_6 falta ao treino");
+            crate::comparison::branch("cps_6 falta ao treino");
             falta(cps6_d(0xad9c6c), p); // cps6: a falta
         }
     }
@@ -172,7 +172,7 @@ unsafe extern "C" fn game_update_comps_for_date(marca: u32) {
         i += 1;
     }
     if m != 0 {
-        crate::comparacao::ramo("cps_6 competicoes do dia");
+        crate::comparison::branch("cps_6 competicoes do dia");
         let seguinte: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5aaf00usize);
         seguinte(cps6_d(0xae2a58));
     }
@@ -212,6 +212,6 @@ unsafe extern "thiscall" fn comparar_manager_manager_adjust_board_confidence(thi
         return o(this, clube, delta);
     }
     let c = board_confidence_ptr(this, clube);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 2)], || o(this, clube, delta), || manager_manager_adjust_board_confidence(this, clube, delta));
-    PLACAR.registrar(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", clube, delta as i32, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 2)], || o(this, clube, delta), || manager_manager_adjust_board_confidence(this, clube, delta));
+    PLACAR.record(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", clube, delta as i32, mo, mr));
 }

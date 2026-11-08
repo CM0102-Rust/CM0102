@@ -28,7 +28,7 @@ unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: usize, vaga
     if k == -1 {
         return 0;
     }
-    crate::comparacao::ramo("cpq_13 limpar vaga");
+    crate::comparison::branch("cpq_13 limpar vaga");
     core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * v as usize) as *mut i32, -1); // a vaga
     if *((this + 0x5f0) as *const u8) != 0 {
         for e in 0..16 {
@@ -55,8 +55,8 @@ unsafe extern "thiscall" fn comparar_clear_selection_slot(this: usize, clube: us
     if k != -1 {
         reg.push((tactics_cell(this, k, 2), 20 * 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, vaga, time), || clear_selection_slot(this, clube, vaga, time));
-    PLACAR.registrar(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, time, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, vaga, time), || clear_selection_slot(this, clube, vaga, time));
+    PLACAR.record(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, time, r, n, mo, mr));
     r
 }
 
@@ -79,14 +79,14 @@ unsafe extern "thiscall" fn set_set_piece_taker(this: usize, clube: usize, papel
         core::ptr::write_unaligned(celula(e), cpq13_d(pessoa) as i32);
         return 1;
     }
-    crate::comparacao::ramo("cpq_13 batedor limpo");
+    crate::comparison::branch("cpq_13 batedor limpo");
     core::ptr::write_unaligned(celula(e), -1); // sem batedor
     if e < 1 {
         let mut j = e + 1;
         while j < 2 {
             let c = core::ptr::read_unaligned(celula(j));
             if c > -1 {
-                crate::comparacao::ramo("cpq_13 batedor sobe");
+                crate::comparison::branch("cpq_13 batedor sobe");
                 core::ptr::write_unaligned(celula(e), c);
                 core::ptr::write_unaligned(celula(j), -1);
                 return 1;
@@ -107,8 +107,8 @@ unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize, clube: usi
     }
     let k = club_tactics_row(clube, time);
     let reg = if k != -1 { vec![(tactics_cell(this, k, 0x5e), 10 * 4)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, papel, escolha, pessoa, time),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, papel, escolha, pessoa, time),
         || set_set_piece_taker(this, clube, papel, escolha, pessoa, time));
-    PLACAR.registrar(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, pessoa, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, pessoa, r, n, mo, mr));
     r
 }

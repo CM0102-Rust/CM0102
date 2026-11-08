@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn board_named_players_after_match(this: usize, jogo: u
     if t == 0 || cqa10_d(t + 0x69) == 0 || selecao(clube) != 0 {
         return 0;
     }
-    crate::comparacao::ramo("cqa_10 a diretoria sorteia");
+    crate::comparison::branch("cqa_10 a diretoria sorteia");
     let r1 = sorteio(cqa10_b(cqa10_d(t + 0x69) + 0x16) as i32); // cqa10: o sorteio pela ficha do técnico
     let r2 = sorteio(10); // cqa10: o sorteio da diretoria
     if r1 < r2 {
@@ -130,10 +130,10 @@ unsafe extern "thiscall" fn board_named_players_after_match(this: usize, jogo: u
     let x = cqa10_b(cqa10_d(clube + 0xbf) + 0x57) as i16;
     let conf = (cqa10_diretoria(this, clube) + 6) as *mut i16;
     if da != 0 {
-        crate::comparacao::ramo("cqa_10 diretoria elogia");
+        crate::comparison::branch("cqa_10 diretoria elogia");
         core::ptr::write_unaligned(conf, core::ptr::read_unaligned(conf).wrapping_add(x.wrapping_mul(10))); // cqa10: a confiança pelos preferidos
     } else if d9 != 0 {
-        crate::comparacao::ramo("cqa_10 diretoria culpa");
+        crate::comparison::branch("cqa_10 diretoria culpa");
         core::ptr::write_unaligned(conf, core::ptr::read_unaligned(conf).wrapping_sub(x.wrapping_mul(10))); // cqa10: a confiança pelos rejeitados
     }
     (d9 as u8).wrapping_add(da as u8)
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn comparar_board_named_players_after_match(this: usize
                                                                   a6: *mut u8, a7: *mut u8, a8: *mut u8, a9: *mut u8, a10: *mut u8) -> u8 {
     type F = unsafe extern "thiscall" fn(usize, usize, usize, *mut i32, u32, *const u8, *mut u8, *mut u8, *mut u8, *mut u8, *mut u8) -> u8;
     let o = original_fn::<F>(%%I0%%);
-    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut regioes = crate::rng::STATE_REGIONS.to_vec();
     regioes.push((0xae1080, 4));
     if clube != 0 {
         regioes.push((cqa10_diretoria(this, clube), 0x49));
@@ -158,9 +158,9 @@ unsafe extern "thiscall" fn comparar_board_named_players_after_match(this: usize
     for s in [a6, a7, a8, a9, a10] {
         regioes.push((s as usize, 1));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10),
-        || crate::aleatorio::sem_contar(|| board_named_players_after_match(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10)));
-    PLACAR.registrar(igual && r == n, || format!("board_named_players_after_match(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", clube, *elogio, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10),
+        || crate::rng::without_counting(|| board_named_players_after_match(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10)));
+    PLACAR.record(igual && r == n, || format!("board_named_players_after_match(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", clube, *elogio, r, n, mo, mr));
     r
 }
 
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn get_player_match_rating_verdict(_this: usize, pessoa
 unsafe extern "thiscall" fn comparar_get_player_match_rating_verdict(this: usize, pessoa: usize, partida: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, pessoa, partida);
     let n = get_player_match_rating_verdict(this, pessoa, partida);
-    PLACAR.registrar(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", pessoa, partida as i32, r as i8, n as i8));
+    PLACAR.record(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", pessoa, partida as i32, r as i8, n as i8));
     r
 }
 
@@ -221,7 +221,7 @@ unsafe extern "stdcall" fn build_board_player_performance_text(ids: *const i32, 
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let mut buf = [0u8; 0xc8];
     let b = buf.as_mut_ptr() as usize;
-    crate::comparacao::ramo("cqa_10 texto da diretoria");
+    crate::comparison::branch("cqa_10 texto da diretoria");
     if vitoria as u8 != 0 {
         if i0 != -1 {
             nome(cqa10_pessoa(i0), b, 0xc8, 1);
@@ -254,8 +254,8 @@ unsafe extern "stdcall" fn comparar_build_board_player_performance_text(ids: *co
     if ids.is_null() || (*ids == -1 && (*ids.add(1) != -1 || *ids.add(2) != -1)) {
         return o(ids, vitoria, saida, variante);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 0x200)], || o(ids, vitoria, saida, variante),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(saida, 0x200)], || o(ids, vitoria, saida, variante),
         || build_board_player_performance_text(ids, vitoria, saida, variante));
-    PLACAR.registrar(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", vitoria as u8, variante,
+    PLACAR.record(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", vitoria as u8, variante,
         String::from_utf8_lossy(&mo.0[0].1[..0x40]), String::from_utf8_lossy(&mr.0[0].1[..0x40])));
 }

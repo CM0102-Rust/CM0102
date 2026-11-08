@@ -42,7 +42,7 @@ unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usiz
     let salario: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x8626e0usize);
     let usa_numeros: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x85add0usize);
     let dar_numero: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x85a470usize);
-    crate::comparacao::ramo("cpv_9 regen contratado");
+    crate::comparison::branch("cpv_9 regen contratado");
     cpv9_por(clube + 0xd7 + 4 * k, pessoa as i32);
     cpv9_por(pessoa + 0x39, clube as i32);
     cpv9_por(pessoa + 0x4e, 0);
@@ -50,7 +50,7 @@ unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usiz
     cpv9_por(pessoa + 0x52, v); // cpv9: o valor do regen
     elenco(pessoa, 1);
     if sorteio(4) == 0 { // cpv9: uma vez em quatro
-        crate::comparacao::ramo("cpv_9 uma em quatro");
+        crate::comparison::branch("cpv_9 uma em quatro");
         f547d90(pessoa, clube, 0);
     }
     if *((clube + 0x64) as *const u8) == 3 && cpv9_d(pessoa + 0x52) > 0x1388 {
@@ -60,7 +60,7 @@ unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usiz
     let ano = *(0xae2c92 as *const u16) as u32;
     let (mut d, mut ret) = ([0u8; 8], [0u8; 8]);
     let dia_e_ano = if *((pessoa + 0x18) as *const i8) < 0x13 {
-        crate::comparacao::ramo("cpv_9 contrato do jovem");
+        crate::comparison::branch("cpv_9 contrato do jovem");
         let a = ano.wrapping_add(2); // cpv9: o jovem por dois anos
         let mes = mes_do_fim(clube);
         (sorteio(0x1c), mes, a)
@@ -105,13 +105,13 @@ unsafe extern "stdcall" fn comparar_player_regen_sign_for_club(pessoa: usize, cl
     let k = first_free_squad_slot(clube);
     let r = o(pessoa, clube);
     if k == 0x32 {
-        PLACAR.registrar(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", pessoa, clube, r));
+        PLACAR.record(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", pessoa, clube, r));
         return r;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(cpv9_d(0xae1050) as usize, pessoa);
     let ok = r == 1 && cpv9_d(clube + 0xd7 + 4 * k) == pessoa as i32 && cpv9_d(pessoa + 0x39) == clube as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
-    PLACAR.registrar(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", pessoa, clube, k, r));
+    PLACAR.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", pessoa, clube, k, r));
     r
 }
 
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, pessoa: usiz
         let base = cpv9_d(this + 4) as usize;
         let id = cpv9_d(pessoa);
         if let Some(i) = (0..n as usize).find(|&i| cpv9_d(base + 0x1a * i) == id) {
-            crate::comparacao::ramo("cpv_9 tira a aposentadoria pendente");
+            crate::comparison::branch("cpv_9 tira a aposentadoria pendente");
             tirar(this, base + 0x1a * i);
         }
     }
@@ -158,11 +158,11 @@ unsafe extern "thiscall" fn comparar_schedule_injury_retirement(this: usize, pes
     if pessoa == 0 || n >= cap.wrapping_sub(1) || cap <= 0 {
         return o(this, pessoa, dias);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((this + 4, 12));
     reg.push((cpv9_d(this + 4) as usize, cap as usize * 0x1a));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, dias), || crate::aleatorio::sem_contar(|| schedule_injury_retirement(this, pessoa, dias)));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, dias), || crate::rng::without_counting(|| schedule_injury_retirement(this, pessoa, dias)));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
         format!("schedule_injury_retirement({:x}, {}) diferencas em {:x?}", pessoa, dias, dif)
@@ -182,7 +182,7 @@ unsafe extern "stdcall" fn player_regen_post_retirement_announcement_news(pessoa
     if cpv9_d(pessoa + 0x61) != 0 && matches!(*((pessoa + 0x3d) as *const u8), 8 | 5) {
         return;
     }
-    crate::comparacao::ramo("player_regen_post_retirement_announcement_news");
+    crate::comparison::branch("player_regen_post_retirement_announcement_news");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);

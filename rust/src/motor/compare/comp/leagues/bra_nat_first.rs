@@ -15,17 +15,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_st
     compare_play_off_stage("bra_nat_first_create_play_off_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-/// Comparer for `bra_nat_first_advance_stage_42cdd0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_advance_stage_42cdd0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_ADVANCE_STAGE_42CDD0);
-    compare_state_league_advance_stage("bra_nat_first_advance_stage_42cdd0", this, || o(this))
-}
 
-/// Comparer for `bra_nat_first_create_play_off_stage_42ce60` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_stage_42ce60(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_CREATE_PLAY_OFF_STAGE_42CE60);
-    compare_play_off_stage("bra_nat_first_create_play_off_stage_42ce60", this, &[0, 3, 1, 2], || o(this))
-}
 
 /// Comparer for `bra_nat_first_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season(this: usize) -> u32 {
@@ -41,11 +31,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_process_promotion_
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_BRA_NAT_FIRST_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, pairs)
 }
 
-/// Comparer for `bra_nat_first_start_new_season_42cc10` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_START_NEW_SEASON_42CC10);
-    compare_state_league_new_season("bra_nat_first_start_new_season_42cc10", this, || o(this))
-}
 
 /// Comparer for `bra_nat_first_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table(this: usize) -> u32 {
@@ -53,11 +38,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table(this:
     compare_division_table("bra_nat_first_create_table", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, || o(this))
 }
 
-/// Comparer for `bra_nat_first_create_table_42ca70` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table_42ca70(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_CREATE_TABLE_42CA70);
-    compare_division_table("bra_nat_first_create_table_42ca70", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, || o(this))
-}
 
 /// Comparer for `bra_nat_first_set_up_rules` (comparison mode: see the header of motor.rs).
 ///
@@ -65,26 +45,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table_42ca7
 /// menos as saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_SET_UP_RULES)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_SET_UP_RULES)(this), || {
         set_serie_a_rules(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("bra_nat_first_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("bra_nat_first_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
-/// Comparer for `bra_nat_first_set_up_rules_42cb70` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules_42cb70(this: usize) -> u32 {
-    let reg = league_regions_without_schedule(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_SET_UP_RULES_42CB70)(this), || {
-        set_serie_b_rules(this);
-        1
-    });
-    PLACAR.registrar(igual && r == n, || format!("bra_nat_first_set_up_rules_42cb70({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
-}
 
 /// Comparer for `bra_nat_first_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 ///
@@ -94,6 +62,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_recor
     let (n, l, dest) = serie_a_staff_records(this, clube, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_FIRST_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, status, stage, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.record(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }

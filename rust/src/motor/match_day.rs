@@ -71,8 +71,12 @@ pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
 }
 
 
-/// frees the global list, the day's vectors and, for each match, the engine (0x6b97a0), the summary and the +0x5f
-/// object
+/// The end of the match day: frees the global list, the day's arrays and, for each match, the engine, the summary and
+/// the `+0x5f` object.
+///
+/// Frees the global list `[0xb67dc8]`, the two day arrays (`+1`, `+0xd`) and, for each match (`+0x19`, `0x69` bytes
+/// each, `+0x21` of them), the engine (`0x6b97a0` and freed; the match leaves `[0xde2f70]` via `0x90d6b0`), the summary
+/// (`+0x5b`) and the object at `+0x5f` (`0x453bc0`); finally the match array.
 /// Original: `end_day` (0x6b4190, match_day.cpp, thiscall).
 ///
 /// [pt] { 0x6b4190 } (match_day.cpp): o fim do dia de jogos. Libera a lista global [0xb67dc8], os dois
@@ -133,8 +137,12 @@ pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
     *d(0x21) = 0;
 }
 
-/// clears each of the day's matches' fields and picks the human's (or the first marked) for the screen (0x717cc0,
-/// 0x7fc7e0)
+/// Clears each of the day's matches' fields and picks the human's match (or the first marked one) for the screen.
+/// Returns 1 if there was one of the human's.
+///
+/// With matches on the day (`+0x2b`), it clears the `0x40` bytes of each one (`+0xd`, `0x54` bytes, `+0x15` of them)
+/// from `+0x14` and picks the human's (`+0x10`; otherwise the first with `+0xc`) for the screen (`0x717cc0` and
+/// `0x7fc7e0` with `[0xb67a48]` on).
 /// Original: `pick_day_match` (0x6b42a0, match_day.cpp, thiscall).
 ///
 /// [pt] { 0x6b42a0 } (match_day.cpp): com partidas no dia (+0x2b), limpa os 0x40 bytes de cada uma
@@ -176,9 +184,19 @@ pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
 // match day releases engines and lists: no comparison of its own, validated by the career (Rust x
 // original), like the creation and the end of the engine. The calling routines are still compared.
 
-/// starts the day's next match after the current one (+0x2f): skips the decided ones, those of a human club and those
-/// already started; creates the engine (0x6b7e50) and prepares it (0x6b7f20); in the 1st round with none, moves to the
-/// 2nd. Returns 1 if it started one
+/// Starts the day's next match after the current one (`+0x2f`): skips the decided ones, those of a human club and those
+/// already started; creates the engine and prepares it; in the 1st pass with none, moves to the 2nd. Returns 1 if it
+/// started one.
+///
+/// Starts the next match of the day (`+0x19`, `0x69` bytes each, `+0x21` of them) after the current one (`+0x2f`; -2 =
+/// finished). The current one still with an engine (`+0x57`): error `0x68d`. It skips those already decided (`+0x47`
+/// -2), those with no match set in the 2nd pass (`+0x33` 1 and `+0x63.+0x10` zero), those of a human club (`0x600a50`
+/// with `+0x44`/`+0x45`) and those already started (`+0x47` != -1, `+0x57`, `+0x53`).
+///
+/// On the chosen one: takes it off queue `[0xde2f70]` (`0x90d2f0` with -3), creates the engine (`0xf63b` bytes,
+/// `0x6b7e50`; without it error `0x6b2` and it carries on) and prepares it (`0x6b7f20` with the fast mode from
+/// `0x6b66a0`); `+0x2f` = it, returns 1. With none: in the 1st pass (`+0x33` 1) it moves to 2 and starts again from the
+/// beginning; otherwise `+0x2f` = -2 and returns 0.
 /// Original: `start_next_match` (0x6b5a70, match_day.cpp, thiscall).
 ///
 /// [pt] { 0x6b5a70 } (thiscall, match_day.cpp): comeca a proxima partida do dia (+0x19, 0x69 bytes cada,
@@ -226,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
                     let r = rapida(p + 4);
                     prepare(engine, p + 4, r, 0, 0);
                     por(0x2f, k);
-                    crate::comparacao::ramo("dia partida iniciada");
+                    crate::comparison::branch("dia partida iniciada");
                     return 1;
                 }
                 show_error_at(0xa15708, 0x6b2);
@@ -235,18 +253,24 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
         }
         if byte(day, 0x33) != 1 {
             por(0x2f, -2);
-            crate::comparacao::ramo("dia sem mais partidas");
+            crate::comparison::branch("dia sem mais partidas");
             return 0;
         }
         *((day + 0x33) as *mut u8) = 2;
-        crate::comparacao::ramo("dia segunda volta");
+        crate::comparison::branch("dia segunda volta");
         por(0x2f, -1);
     }
 }
 
-/// one engine step of the current match (1 in 3 or 6 calls, by the modes in [0xae3138]) or to the end; when it
-/// finishes, creates the summary, records it (0x7293f0), frees the engine and takes it off the queue. Returns 1 if it
-/// finished
+/// Moves the day's current match (`+0x2f`) forward: one engine step (1 in 3 or 6 calls, by the modes in `[0xae3138]`)
+/// or to the end; when it finishes, creates the summary, records it, frees the engine and takes it off the queue.
+/// Returns 1 if the match finished.
+///
+/// Without `ate_o_fim` (to the end), only 1 in every 3 (`0x40000` in `[0xae3138]+4`) or 6 (`0x80000`) calls, by counter
+/// `[0xb67a54]` (0..100), and one engine step (`0x6b98c0` with 1); with `ate_o_fim`, steps (-1) to the end. The state
+/// goes to `+0x67`; on finishing (2 or 8) it counts in `+0x25`, creates the summary (`+0x5f`, `0xd7a` bytes with 2
+/// objects of `0x625` at `+0x11f`; without it error `0x713`), records it (`0x7293f0`), frees the engine and takes the
+/// match off queue `[0xde2f70]` (`0x90d6b0`).
 /// Original: `step_day_match` (0x6b5ce0, match_day.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x6b5ce0 } (thiscall, ret 4, match_day.cpp): faz andar a partida atual do dia (+0x2f). Sem
@@ -287,7 +311,7 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
         return 0;
     }
     let state = (p + 0x67) as *mut u8;
-    crate::comparacao::ramo("andar com motor");
+    crate::comparison::branch("andar com motor");
     let end = |e: u8| e == 2 || e == 8;
     let step_towards = |n: i32| {
         let e = laco(u(p, 0x57), n) as u8;
@@ -297,18 +321,18 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
         }
     };
     if until_end != 0 {
-        crate::comparacao::ramo("andar ate o fim");
+        crate::comparison::branch("andar ate o fim");
         while !end(*state) {
             step_towards(-1);
         }
     } else {
         step_towards(1);
-        crate::comparacao::ramo("andar um step_towards");
+        crate::comparison::branch("andar um step_towards");
     }
     if !end(*state) {
         return 0;
     }
-    crate::comparacao::ramo("andar partida terminada");
+    crate::comparison::branch("andar partida terminada");
     let mem = new(0xd7a);
     if mem != 0 {
         array(mem + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
@@ -329,9 +353,21 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
     1
 }
 
-/// copies the day's match into the match, records the result in the competition (method 1, or 0x924050 and
-/// 0x5ab510/0x5aa680 for the away game) and runs the post-match: players, events, contracts, suspensions, states, the
-/// history and each side's club (0x6b79a0)
+/// Closes one of the day's matches: copies the day's match into the fixture, records the result in the competition
+/// (method 1, or the away-game path) and runs the post-match: players, events, contracts, suspensions, states, the
+/// history and each side's club.
+///
+/// The closing of day match `p` (`0x69` bytes): copies the `0x4f` bytes from p+4 to the fixture (`+0`) and, with a
+/// competition (`+0x14`), reads the round number of a human club (`[adadfc]` of the competition `+8`, `0x4a4850`,
+/// `+0x2d` above 1; as in the original, it looks only at the away club `+0x20` on both passes) and records the result:
+/// p+`0x47` = -3 (away game, `0x924050` with bits 12-13 of `+0x4d` and the copy with scores -1 in
+/// `0x5ab510`/`0x5aa680`) or method 1 of the competition.
+///
+/// Then the post-match with the summary (p+`0x5f`): players (`0x6b6cc0`), events (`0x6b74a0`), contracts (`0x4ca6d0`),
+/// suspensions (`0x55ca00`), `0x76b600` (except for -3), states (`0x62c080`) and, except for -3, the history
+/// (`[0xb74434]` method 1, outside `[0x9cf684]`), `0x7c0d70`, `0x8c39f0`, `0x444930`, `0x868830`, `0x4134c0`,
+/// `0x6951e0`, `0x59a5d0`, `0x7f8c00` and the club of each side (`0x6b79a0` with the round). Without `p`, error `0x73f`
+/// and 0.
 /// Original: `close_day_match` (0x6b5f00, match_day.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x6b5f00 } (thiscall, ret 4, match_day.cpp): o fechamento de uma partida do dia `p` (0x69
@@ -356,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     let mut round = [0u8; 4];
     let competicao = |id: i32| *((u(G_COMP_OBJECT_TABLE, 0) as isize + 4 * id as isize) as *const usize);
     if u(jogo, 0x14) != 0 {
-        crate::comparacao::ramo("fechar com competicao");
+        crate::comparison::branch("fechar com competicao");
         let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
         let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
         for k in 0..2 {
@@ -375,11 +411,11 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
             let r = search(u(competicao(id), 8), c);
             if r != 0 && *((r + 0x2d) as *const i32) > 1 {
                 round[k] = *((r + 0x2d) as *const u8);
-                crate::comparacao::ramo("fechar rodada do humano");
+                crate::comparison::branch("fechar rodada do humano");
             }
         }
         if byte(p, 0x47) == -3 {
-            crate::comparacao::ramo("fechar jogo de fora");
+            crate::comparison::branch("fechar jogo de fora");
             let mut copia = [0u8; 0x100];
             core::ptr::copy((p + 4) as *const u8, copia.as_mut_ptr(), 0x4f);
             for o in 0x43..=0x4a {
@@ -397,7 +433,7 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
             let c = competicao(*(jogo as *const i32));
             let metodo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(u(u(c, 0), 4));
             metodo(c, jogo, summary);
-            crate::comparacao::ramo("fechar metodo da competicao");
+            crate::comparison::branch("fechar metodo da competicao");
         }
     }
     *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 1;
@@ -421,7 +457,7 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     if *(jogo as *const u32) != *(KEY_CLUB_COMP_RESERVE as *const u32) {
         let h = u(G_RESERVE_COMP, 0);
         two(h, u(u(h, 0), 4));
-        crate::comparacao::ramo("fechar historia");
+        crate::comparison::branch("fechar historia");
     }
     for (this, f) in [(G_PLAYER_STATS, 0x7c0d70), (G_TRANSFER_MANAGER, 0x8c39f0), (G_CLUB_RECORDS, 0x444930), (G_STAFF_RECORDS, 0x868830), (G_AWARD_MANAGER, 0x4134c0), (G_MANAGER_MANAGER, 0x6951e0), (G_FINANCE_TABLE, 0x59a5d0), (G_SCOUT_MANAGER, 0x7f8c00)] {
         two(u(this, 0), f);
@@ -436,11 +472,26 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
 // simplification: match day creates and frees engines and summaries and calls dozens of routines still
 // originals; no comparison of their own, validated by the career (Rust x original), like those of the 149th.
 
-/// plays the day. On a network, ties the humans to their matches (0x11d-byte scoreboard, 0x765480, 0x5fcff0/0x5fd100)
-/// and plays them to the end; then each match without an engine: with a human on a network, steps the current one
-/// (0x6b5ce0) and restarts; otherwise creates the engine, plays to the end, creates the summary, records it and writes
-/// the score with the percentage on the bar (0x66f4e0, 0x802f80). Finally closes each match (0x6b5f00), redoes the
-/// humans' stored tactics and frees the summaries
+/// Plays the match day: on a network it ties the humans to their matches and plays them to the end; then plays each
+/// match without an engine; finally closes each match, redoes the humans' stored tactics and frees the summaries.
+/// Returns 1.
+///
+/// Convention: thiscall, `match_day.cpp`, ~3.3 KB. Plays day `dia` (`+0x19` matches of `0x69` bytes, `+0x21` of them,
+/// `+0x25` finished, `+0x34` the human's). It starts the next one (`0x6b5a70`). On a network (`[0xa5a390]`): for each
+/// pending match with a human (`+0x53`) it creates the humans' scoreboard (`+0x5b`, `0x11d` bytes), ties each human to
+/// his side (`0x765480` `+0xe2`/`+0xe6`, `0x4542f0`, `0x727f00`), stores the highest level (`0x5fcff0`) and passes it
+/// on (`0x5fd100`); then it notifies those not playing (`0x71b1b0`), releases the humans and plays their matches to the
+/// end.
+///
+/// Then, each match still without an engine (`+0x47` -1): with a human on a network, it moves the current one to the
+/// end (`0x6b5ce0`) and starts everything again; otherwise it creates the engine (`0x6b7e50`, `0x6b7f20`), plays to the
+/// end (`0x6b98c0` -1, counting in `+0x25`), creates the summary (`0xd7a` bytes), records it (`0x7293f0`), frees the
+/// engine and, if the engine was not in fast mode (`+0` of the engine zero), writes the score with the day's percentage
+/// on the bar (`0x66f4e0`, `0x802f80`).
+///
+/// Finally it moves the current one (`0x6b5ce0` with 1), closes each match (`0x6b5f00`), redoes the humans' stored
+/// tactics (`0x5fbe20`, `0x5fbd00`, `0x5b5960`) and frees the summaries; with a score written, the date on the bar
+/// (`0x54ba20`).
 /// Original: `play_the_day` (0x6b4360, match_day.cpp (~3.3 KB), thiscall).
 ///
 /// [pt] { 0x6b4360 } (thiscall, match_day.cpp, ~3,3 KB): joga o dia `dia` (+0x19 partidas de 0x69 bytes,
@@ -546,7 +597,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         let mut vistos = [0u32; 16];
         let mut algum = false;
         if rede() {
-            crate::comparacao::ramo("rede");
+            crate::comparison::branch("rede");
             let mut k = 0i32;
             while k < read(0x21) {
                 let p = partida(k);
@@ -626,7 +677,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                             por(day, 0x34, p);
                         }
                         algum = true;
-                        crate::comparacao::ramo("rede partida com humanos");
+                        crate::comparison::branch("rede partida com humanos");
                     }
                 }
                 k += 1;
@@ -700,7 +751,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                 if with_human && rede() {
                     andar(day, 1);
                     *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 0;
-                    crate::comparacao::ramo("humano em rede recomeca");
+                    crate::comparison::branch("humano em rede recomeca");
                     continue 'reinicio;
                 }
                 remove_of_queue(u(G_VIRTUAL_STAFF, 0), p + 4, -2, 0);
@@ -709,7 +760,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                     show_error_at(0xa15708, 0x39d);
                 } else {
                     let r = rapida(p + 4);
-                    crate::comparacao::ramo("partida sem humano");
+                    crate::comparison::branch("partida sem humano");
                     prepare(m, p + 4, r, 0, 0);
                     let rapido = *(u(p, 0x57) as *const i8) != 0;
                     until_end(p);
@@ -720,7 +771,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                         register(u(G_MATCH_STATS, 0), u(p, 0x57), summary);
                         without_engine(p);
                         if !rapido {
-                            crate::comparacao::ramo("placar na barra");
+                            crate::comparison::branch("placar na barra");
                             // the scoreboard with the day’s percentage on the bar
                             let n = read(0x21);
                             let pct = if n != 0 { read(0x25).wrapping_mul(100) / n } else { 0 } as i8 as i32;
@@ -728,11 +779,11 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                             let (a52, b52) = (byte(casa, 0x52) as i32, byte(fora, 0x52) as i32);
                             let (g1, g2) = if byte(p, 0x4b) > -1 { (byte(p, 0x4b), byte(p, 0x4c)) } else { (byte(p, 0x47), byte(p, 0x48)) };
                             if c != 0 {
-                                crate::comparacao::ramo("placar com competicao");
+                                crate::comparison::branch("placar com competicao");
                                 let c37 = byte(c, 0x37) as i32;
-                                text(0xde1f64, 0xa157b4, c37, c37, a52, a52, b52, b52, c + 4, casa + 0x38, g1 as i32, fora + 0x38, g2 as i32, pct, 0xa15850usize);
+                                text(0xde1f64, 0xa157b4, c37, c37, a52, a52, b52, b52, c + 4, casa + club::SHORT_NAME, g1 as i32, fora + club::SHORT_NAME, g2 as i32, pct, 0xa15850usize);
                             } else {
-                                text(0xde1f64, 0xa15734, a52, a52, b52, b52, casa + 0x38, g1 as i32, fora + 0x38, g2 as i32, pct, 0xa15850usize);
+                                text(0xde1f64, 0xa15734, a52, a52, b52, b52, casa + club::SHORT_NAME, g1 as i32, fora + club::SHORT_NAME, g2 as i32, pct, 0xa15850usize);
                             }
                             mostrar(G_SCREEN_MANAGER, 0xde1f64, -1, 0, -1);
                             placar_escrito = true;
@@ -755,11 +806,11 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                     show_error_at(0xa15708, 0x3fb);
                 } else {
                     close(day, p);
-                    crate::comparacao::ramo("match_wrap_up");
+                    crate::comparison::branch("match_wrap_up");
                     for (oc, ob) in [(0x20usize, 0x44usize), (0x24, 0x45)] {
                         if human(u(p, oc), 0, 1, 0, 0) != 0 && usa(u(p, oc)) != 0 {
                             let x = usa(u(p, oc));
-                            crate::comparacao::ramo("linhas do humano refeitas");
+                            crate::comparison::branch("linhas do humano refeitas");
                             prepare_rows(manager(), (b(p, ob) == 0) as i32, u(p, oc), x);
                             clear(guardadas(manager(), u(u(p, oc), 0xcf)));
                         }
@@ -775,7 +826,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
             k += 1;
         }
         if placar_escrito {
-            crate::comparacao::ramo("data na barra");
+            crate::comparison::branch("data na barra");
             data_text(G_CURRENT_DATE, 0xde1f64, 0x7d0, *(G_CURRENT_DAY_SLICE as *const u8) as u32);
             mostrar(G_SCREEN_MANAGER, 0xde1f64, -1, 0, -1);
         }
@@ -786,10 +837,22 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
 // simplification: the day loop creates and frees engines and summaries and touches the screen; no comparison of its own,
 // validated by the career (Rust x original), like those of the 151st.
 
-/// sets up the day (date, mode 0..2): zeroes the vectors, gathers the pending matches of each list (0x5ae6a0), records
-/// the already decided ones (0x923630/0x923cc0), groups by list and by competition (qsort 0x6b6510), points each match
-/// to its competition (+0x63), creates the global list [0xb67dc8] and works out the day's interest (0x6b5040). Returns
-/// the day
+/// Sets up the match day (date, mode 0..2): zeroes the arrays, gathers the pending matches of each list, records the
+/// already decided ones, groups by list and by competition, points each match to its competition, creates the global
+/// list and works out the day's interest. Returns the day.
+///
+/// Sets up day `dia` with the matches of date `data` in mode `modo` (0, 1 or 2; otherwise or with no date, error
+/// `0x93`). Zeroes the day (`+0` mode; arrays `+1` groups of 24 bytes, `+0xd` competitions of `0x54`, `+0x19` matches
+/// of `0x69`, each with capacity and count; `+0x2f` -1, `+0x33` 1).
+///
+/// For each of the `[0xb64738]` lists (`0x5ae6a0`): the pending matches (`+0x43` <= -1, except -2) go into the day
+/// (copy of `0x4f` bytes; `+0x67` -1), those decided earlier (`0x923630` bit 0) are recorded and marked -2 (`0x923cc0`,
+/// `0x5ab510`/`0x5aa680`), the others notified (`0x79c7b0`); the list's group (`0x48dcd0`) stores the range of its
+/// matches, which is sorted (qsort with `0x6b6510`) and split by competition (`+4` of the copy), and each match points
+/// to its own (`+0x63`).
+///
+/// Finally the global list `[0xb67dc8]` (`0x68d020`) and the day's interest (`0x6b5040`). The arrays grow 5 at a time
+/// (`0x945667`; out of memory, errors `0xd6`, `0xf4`, `0x140`).
 /// Original: `set_up_the_day` (0x6b3c10, match_day.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x6b3c10 } (thiscall, ret 8, match_day.cpp): monta o dia `dia` com as partidas da data `data`
@@ -863,7 +926,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
                 if e <= -1 && e != -2 {
                     let r = decidida(u(G_WEATHER, 0), x);
                     if r & 1 != 0 {
-                        crate::comparacao::ramo("montagem decidida antes");
+                        crate::comparison::branch("montagem decidida antes");
                         let mut copia = [0u8; 0x100];
                         core::ptr::copy(x as *const u8, copia.as_mut_ptr(), 0x4f);
                         *((x + 0x43) as *mut u8) = 0xfe;
@@ -873,10 +936,10 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
                         join(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr(), 1);
                     } else {
                         warn(u(G_OFFICIALS_MANAGER, 0), x, x + 0x2e);
-                        crate::comparacao::ramo("montagem avisada");
+                        crate::comparison::branch("montagem avisada");
                     }
                     if group == 0 {
-                        crate::comparacao::ramo("montagem grupo novo");
+                        crate::comparison::branch("montagem grupo novo");
                         if !crescer(1, 24) {
                             show_error_at(0xa15708, 0xd6);
                             return day;
@@ -917,7 +980,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
                     let p = u(day, 0x19) + k as usize * 0x69;
                     let id = u(p, 4) as i32;
                     if id != last {
-                        crate::comparacao::ramo("montagem competicao nova");
+                        crate::comparison::branch("montagem competicao nova");
                         if !crescer(0xd, 0x54) {
                             show_error_at(0xa15708, 0x140);
                             return day;
@@ -1031,14 +1094,14 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
             if read(comp) > -1 {
                 let objeto = g(g(G_COMP_OBJECT_TABLE) + read(comp) as usize * 4);
                 if (0..16).filter(|k| g((g(G_STAFF_TABLE) as isize + (read(0xae2364) + k - 16) as isize * 0x6e) as usize + 0x39) != 0).count() >= 2 {
-                    crate::comparacao::ramo("interesse dois humanos com clube");
+                    crate::comparison::branch("interesse dois humanos com clube");
                 }
                 for k in 0..16 {
                     let pe = (g(G_STAFF_TABLE) as isize + (read(0xae2364) + k - 16) as isize * 0x6e) as usize;
-                    let clube = g(pe + 0x39);
-                    let other = g(pe + 0x24);
+                    let clube = g(pe + staff::CLUB_JOB);
+                    let other = g(pe + staff::NATIONAL_JOB);
                     if (clube != 0 && in_competition(objeto, clube) != 0) || (other != 0 && in_competition(objeto, other) != 0) {
-                        crate::comparacao::ramo("interesse humano na competicao");
+                        crate::comparison::branch("interesse humano na competicao");
                         pr(comp + 0xc, 1);
                         pr(d + 0x2b, 1);
                     }
@@ -1052,7 +1115,7 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
                     || human(g(m + 0x24), 0, *((m + 0x45) as *const u8) as u32, 0, 0) != 0
                     || f5fe420(g(G_HUMAN_MANAGER), m + 4) != 0;
                 if marcada {
-                    crate::comparacao::ramo("interesse partida marcada");
+                    crate::comparison::branch("interesse partida marcada");
                     pr(m + 0x53, 1);
                     if read(grp + 0x14) == 0 {
                         *((d + 0x29) as *mut u8) = (*((d + 0x29) as *const u8)).wrapping_add(1);
@@ -1065,7 +1128,7 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
                     pr(comp + 0xc, 1);
                     pr(d + 0x2b, 1);
                 } else if f6b61e0(m + 4) != 0 {
-                    crate::comparacao::ramo("interesse pela 6b61e0");
+                    crate::comparison::branch("interesse pela 6b61e0");
                     pr(comp + 0xc, 1);
                     pr(d + 0x2b, 1);
                 }
@@ -1088,8 +1151,8 @@ pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
     let mut v = Vec::new();
     for e in (0xb63d60usize..0xb64738).step_by(0x48) {
         let p = *(e as *const usize);
-        if p != 0 && *((p + 0x11c) as *const u8) & 2 != 0 {
-            let q = *((p + 0x71) as *const usize);
+        if p != 0 && *((p + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 != 0 {
+            let q = *((p + nation::CONTINENT) as *const usize);
             if q != 0 {
                 v.push(0xb67a58 + *(q as *const usize));
             }
@@ -1126,7 +1189,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16) as i32;
     if g(0xa15704) != 0 {
         for e in human_national_team_marks() {
-            crate::comparacao::ramo("sem humano selecao de humano");
+            crate::comparison::branch("sem humano selecao de humano");
             *(e as *mut u8) = 1;
         }
         *(G_QUICK_SIM_COMP_FLAGS_PENDING as *mut u32) = 0;
@@ -1136,12 +1199,12 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     }
     let (c1, c2) = (g(partida + 0x1c), g(partida + 0x20));
     if human(c1, 1, 1, 0, 0) != 0 || human(c2, 1, 1, 0, 0) != 0 {
-        crate::comparacao::ramo("sem humano clube humano em campo");
+        crate::comparison::branch("sem humano clube humano em campo");
         return 0;
     }
     for c in [c1, c2] {
         if ligado(c, 0, 1) != 0 && human(ligado(c, 0, 1), 1, 1, 0, 0) != 0 {
-            crate::comparacao::ramo("sem humano clube ligado");
+            crate::comparison::branch("sem humano clube ligado");
             return 0;
         }
     }
@@ -1159,24 +1222,24 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         }
     }
     if comp == read(KEY_CLUB_COMP_RESERVE) && human(c1, 1, 1, 0, 0) == 0 && human(c2, 1, 1, 0, 0) == 0 {
-        crate::comparacao::ramo("sem humano competicao direta");
+        crate::comparison::branch("sem humano competicao direta");
         return final_();
     }
     // the 16 humans at the end of the people table
     let base = g(G_STAFF_TABLE);
     for k in 0..16isize {
         let pe = (base as isize + (read(0xae2364) as isize - 1 - k) * 0x6e) as usize;
-        if pe != 0 && *((pe + 0x5f) as *const u8) == 1 && g(pe + 0x39) != 0 {
-            let nacao = read(g(pe + 0x39) + 0x57);
-            if nacao == read(c1 + 0x57) || nacao == read(c2 + 0x57) {
-                crate::comparacao::ramo("sem humano tecnico da nacao");
+        if pe != 0 && *((pe + staff::CLASSIFICATION) as *const u8) == 1 && g(pe + staff::CLUB_JOB) != 0 {
+            let nacao = read(g(pe + staff::CLUB_JOB) + 0x57);
+            if nacao == read(c1 + club::DIVISION) || nacao == read(c2 + club::DIVISION) {
+                crate::comparison::branch("sem humano tecnico da nacao");
                 return 0;
             }
         }
     }
     if (national_team(c2) == 0 && f5c2990(g(G_FRIENDLY), read(partida + 0x14) as u32) != 0) || comp == read(KEY_CLUB_COMP_INTER_TOTO_CUP) {
-        crate::comparacao::ramo("sem humano pela injury_word_0c");
-        return if w(c2 + 0x80) + w(c1 + 0x80) > 0x2ee0 { 0 } else { final_() };
+        crate::comparison::branch("sem humano pela injury_word_0c");
+        return if w(c2 + club::REPUTATION) + w(c1 + club::REPUTATION) > 0x2ee0 { 0 } else { final_() };
     }
     let mut x = slot_of(read(partida + 0x14) as u32, partida) as u8;
     if let Some(k) = (0xb63d74usize..G_KEY_NATION_ACTIVE_SLOT_LOOP_END).step_by(0x48).position(|e| *(e as *const u8) == x) {
@@ -1188,17 +1251,17 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     if matches!(x, 3..=7) {
         let q = g(g(partida + 0x14) + 0x59);
         if q != 0 && *((0xb67a58 + g(q)) as *const u8) != 0 {
-            crate::comparacao::ramo("sem humano selecao marcada");
+            crate::comparison::branch("sem humano selecao marcada");
             return 0;
         }
     }
     if (x as i8) > -1 {
         let e = g(0xb63d60 + x as usize * 0x48);
-        if e != 0 && *((e + 0x11c) as *const u8) & 2 != 0 {
+        if e != 0 && *((e + nation::NATION_LEAGUE_SELECTED) as *const u8) & 2 != 0 {
             return 0;
         }
     }
-    crate::comparacao::ramo("sem humano 7f9720");
+    crate::comparison::branch("sem humano 7f9720");
     final_()
 }
 
@@ -1244,7 +1307,7 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
     if teste_600a50(clube, 0, 1, 0, 0) == 0 && w(clube + club::REPUTATION) < 0x128e && sortear(100) != 0 {
         return;
     }
-    crate::comparacao::ramo("clube segue");
+    crate::comparison::branch("clube segue");
     let n = n as u8 as i8;
     if teste_6b7cf0(partida, clube) != 0 && ub(partida + 0x40) != 0 && ub(partida + 0x41) != 0 && away(clube) == 0 {
         for k in 0..50 {
@@ -1255,18 +1318,18 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
             let c = contrato(g(G_CONTRACT_MANAGER), s);
             let free = c != 0 && read(c + 0x45) == 0;
             if free {
-                crate::comparacao::ramo("clube elenco");
+                crate::comparison::branch("clube elenco");
             }
             if free
-                && g(s + 0x61) != 0
-                && w(g(s + 0x61) + 0xb) > 0x109a
+                && g(s + staff::PLAYER) != 0
+                && w(g(s + staff::PLAYER) + 0xb) > 0x109a
                 && byte(s, 0x59) > 5
                 && byte(s, 0x57) > 0xf
                 && byte(s, 0x58) > 0xa
                 && n > 2
                 && sortear(n as i32) != 0
             {
-                crate::comparacao::ramo("clube 5896d0");
+                crate::comparison::branch("clube 5896d0");
                 out(s, clube, other, n as i32);
                 return;
             }
@@ -1280,7 +1343,7 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
             continue;
         }
         let p = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
-        if g(p + 0x61) == 0 || (p != 0 && read(p) >= read(0xae2364)) || byte(p, 0x18) > 0x14 {
+        if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(0xae2364)) || byte(p, 0x18) > 0x14 {
             continue;
         }
         let c = contrato(g(G_CONTRACT_MANAGER), p);
@@ -1290,16 +1353,16 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, other: usize, partida: u
         if read(partida + 0x14) == 0 || read(partida + 0x14) != read(clube + club::DIVISION) || away(clube) != 0 || byte(p, 0x59) <= 0xf {
             continue;
         }
-        crate::comparacao::ramo("clube jovem");
+        crate::comparison::branch("clube jovem");
         let r = sortear(5);
-        if byte(p, 0x57) <= (r as u8).wrapping_add(10) as i8 || g(p + 0x61) == 0 || w(g(p + 0x61) + 0xb) >= 0x109a {
+        if byte(p, 0x57) <= (r as u8).wrapping_add(10) as i8 || g(p + staff::PLAYER) == 0 || w(g(p + staff::PLAYER) + 0xb) >= 0x109a {
             continue;
         }
         if teste_7c3a40(g(G_PLAYER_STATS), p, clube) == 0 {
-            crate::comparacao::ramo("clube 589bc0");
+            crate::comparison::branch("clube 589bc0");
             f589bc0(p, clube);
             if teste_547d60(p, clube) == 0 {
-                crate::comparacao::ramo("clube 547d90");
+                crate::comparison::branch("clube 547d90");
                 f547d90(p, clube, 1);
             }
             return;
@@ -1503,8 +1566,19 @@ pub(crate) unsafe fn contract_flags_region(person: usize, clube: usize) -> Optio
 
 
 
-/// the current human leaves the match he was watching; with no other human watching, the match runs to the end, is
-/// recorded and leaves the queue
+/// The current human leaves the match he was watching; with no other human watching, the match runs to the end, is
+/// recorded and leaves the queue.
+///
+/// The current human (`[0xb77c7a]`) leaves the match he was watching (called only when a network player leaves,
+/// `0x838c00`). His match (`[0xb74c26 + 0x300 × turn]`, `0x765480` → `+0xe2`): if another of the 16 humans (the last 16
+/// records of `[0xae23bc]`, 110 bytes, `+0x5f` active) watches the same one and it is his turn (`0x7fffa0` on the
+/// manager), it leaves silently; otherwise it removes the turn from the four arrays of the summary (`+0x5b`:
+/// `+5`/`+0x45`/`+0x85`/`+0xc5`, the counters `+0x105..+0x108`).
+///
+/// Nobody else watching: it creates the engine (`+0x57`, `0xf63b` bytes, `0x6b7e50` + `0x6b7f20`; without it error
+/// `0xa4b`), runs to the end (`0x6b98c0` with −1; state `+0x67`, 2 or 8 count in `[[0xb67a50]+0x25]`), except for 8
+/// creates the summary (`+0x5f`, `0xd7a` bytes with 2 objects of `0x625` at `+0x11f`; without it error `0xa68`) and
+/// records it (`0x7293f0`), frees the engine and takes the match off queue `[0xde2f70]` (`0x90d6b0`).
 /// Original: `match_day_drop_viewer_and_finish_match` (0x6b6970, match_day.cpp, cdecl).
 ///
 /// [pt] { 0x6b6970 } (cdecl, match_day.cpp): o humano da vez ([0xb77c7a]) deixa a partida que assistia
@@ -1517,7 +1591,7 @@ pub(crate) unsafe fn contract_flags_region(person: usize, clube: usize) -> Optio
 /// (+0x5f, 0xd7a bytes com 2 objetos de 0x625 em +0x11f; sem ele erro 0xa68) e registra (0x7293f0),
 /// libera o motor e tira a partida da fila [0xde2f70] (0x90d6b0).
 pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
-    crate::comparacao::ramo("telas largar a partida assistida");
+    crate::comparison::branch("telas largar a partida assistida");
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let sheet: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
     let indice: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
@@ -1549,7 +1623,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         let idx = (*(G_STAFF_COUNT as *const usize)).wrapping_add(i).wrapping_sub(0x10);
         let q = u(G_STAFF_TABLE, 0).wrapping_add(idx.wrapping_mul(110));
         // like the original, without checking the other human’s null record
-        if *((q + 0x5f) as *const u8) != 0 && q != p && u(sheet(q), 0xe2) == jogo {
+        if *((q + staff::CLASSIFICATION) as *const u8) != 0 && q != p && u(sheet(q), 0xe2) == jogo {
             let minha = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const u16);
             if indice(G_SCREEN_MANAGER, q) == minha {
                 return;
@@ -1612,7 +1686,13 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     remove(u(G_VIRTUAL_STAFF, 0), jogo + 4);
 }
 
-/// finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture
+/// Finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture.
+/// Returns 1 if found.
+///
+/// The fixture (`0x4f` bytes) of record `k` of the statistics index (`[this]`, 12 bytes: `+0` competition, `+4` one of
+/// the clubs, `+8`/`+0xa` the date): it asks the schedule `[0xae2a58]` (`0x5acbe0`) for the matches of that date and
+/// competition in a local list (`0x68d020`) and copies to `saida` the first one with club `+4` at home (`+0xc`) or away
+/// (`+0x10`). Index outside 0..`[this+0x1c]` or null output: the original routine runs (error box, 0).
 /// Original: `Match_Stats::find_record_fixture` (0x729e30, match_stats.cpp, thiscall).
 ///
 /// [pt] { 0x729e30 } (thiscall, ret 8, match_stats.cpp): a ficha do jogo (0x4f bytes) do registro `k` do
@@ -1657,8 +1737,20 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
 // Rust mode (the branch), in Lucas’s network session (only a network player leaving calls it).
 
 
-/// one step of the human's match on a network, by the clock and the humans' scoreboard (everyone sees each state;
-/// sounds, events, engine step, end, half time, goals, minute); records it (0x729ff0) and picks the day's human match
+/// One step of the human's match on a network, by the clock and the humans' scoreboard (everyone sees each state;
+/// sounds, events, engine step, end, half time, goals, minute); records it and picks the day's human match. Returns 1
+/// if it changed.
+///
+/// One step of human match `p` on a network, by the clock (`0x90c510`) and the humans' scoreboard (`+0x5b`: `+0` state,
+/// `+1` event, `+0x85` who has already seen it, `+0x105` humans, `+0x107` seen, `+0x108` pause, `+0x109` wait, `+0x10d`
+/// time, `+0x111` may advance, `+0x115` highlight). Without `p`, it moves the current one (`0x6b5ce0`) and starts the
+/// next (`0x6b5a70`).
+///
+/// It waits for everyone to see the state; then the sounds (`0x6d8c70`) and the time; it shows the next event
+/// (`0x6d78b0`, highlight by table `0x6d5cd0`) or takes one engine step (`0x6b98c0` with 1) and sets the state: end
+/// (2/8), half time (4), goals on each side (`+0xf5bd`/`+0xf5f3` against the summary), highlight, `+0x8eb2`, the minute
+/// (`+0x8ed0` / 11) against the summary (wait `0x226` - 50 x `+0x51`); with a state, it records it (`0x729ff0`) and the
+/// day's human match (`+0x34`) becomes the one with the highest competition (`0x6b6570`) or the furthest along.
 /// Original: `network_step` (0x6b55c0, match_day.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x6b55c0 } (thiscall, ret 4, match_day.cpp): um passo da partida do humano `p` em rede, pelo
@@ -1692,7 +1784,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
         return seguir();
     }
     let pl = u(p, 0x5b);
-    crate::comparacao::ramo("step_towards em rede");
+    crate::comparison::branch("step_towards em rede");
     let engine = u(p, 0x57);
     let state = pl as *mut u8;
     let eu = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
@@ -1812,8 +1904,15 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
 }
 
 
-/// each human confirms the network match; with all of them, creates the engine and prepares it for watching, or plays
-/// it to the end and records it
+/// Each human confirms the network match; with all of them confirmed, creates the engine and prepares it for watching,
+/// or plays it to the end and records it.
+///
+/// The current human (`[0xb77c7a]`) confirms match `p` on a network (humans' scoreboard `+0x5b`: `+0x45` who confirmed,
+/// `+0x105` humans, `+0x106` confirmed). With all: it creates the engine (`0x6b7e50`) and prepares it for watching
+/// (`0x6b7f20` with the last argument 1). If it is not one to be watched (returns 0), it plays to the end (counting in
+/// `[0xb67a50]+0x25`), creates the summary, records it (`0x7293f0`), frees the engine, takes it off the queue and sets
+/// `+0x119`; if it is, it notifies the commentator (`+0x8f7a` = 3), creates the summary, records it for watching
+/// (`0x729ff0`) and returns 1. Errors `0x4b8` (no match), `0x4d0`, `0x4ea`, `0x511` (out of memory).
 /// Original: `confirm_network_match` (0x6b5260, match_day.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x6b5260 } (thiscall, ret 4, match_day.cpp): o humano da vez ([0xb77c7a]) confirma a partida
@@ -1851,7 +1950,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usiz
     if *((pl + 0x106) as *const u8) != *((pl + 0x105) as *const u8) {
         return 0;
     }
-    crate::comparacao::ramo("partida em rede confirmada");
+    crate::comparison::branch("partida em rede confirmada");
     let mem = new(0xf63b);
     let engine = if mem != 0 { construct(mem) } else { 0 };
     por(p, 0x57, engine);
@@ -1916,7 +2015,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usiz
 /// (caixa de erro).
 pub(crate) unsafe extern "C" fn competition_number(code: u32, second: u32) -> u32 {
     let s = (second as u8 == 1) as u32;
-    crate::comparacao::ramo("numero da competicao");
+    crate::comparison::branch("numero da competicao");
     match code as u16 as i16 {
         0 => 4 + s,
         1 => 10 + s,

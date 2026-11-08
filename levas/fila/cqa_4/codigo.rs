@@ -90,14 +90,14 @@ unsafe extern "thiscall" fn cup_update_staff_records_for_status(copa: usize, clu
     let comp = cqa4_d(copa + 4);
     match desfecho as u8 {
         1 => {
-            crate::comparacao::ramo("cqa_4 campeao");
+            crate::comparison::branch("cqa_4 campeao");
             cup_record_final_result(0x86a800, clube, jogo, final_); // cqa4: o registro de campeão
             if wins_uefa_cup_place(comp, clube) {
                 core::ptr::write_unaligned(club_state_record(clube) as *mut i32, cqa4_i(0x9cf6f0));
             }
         }
         2 => {
-            crate::comparacao::ramo("cqa_4 vice");
+            crate::comparison::branch("cqa_4 vice");
             cup_record_final_result(0x86b0b0, clube, jogo, final_); // cqa4: o registro de vice
         }
         3 => cup_record_final_result(0x86b710, clube, jogo, final_),
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_cup_update_staff_records_for_status(copa: u
         && wins_uefa_cup_place(cqa4_d(copa + 4), clube) { cqa4_i(0x9cf6f0) } else { antes };
     let r = o(copa, clube, desfecho, a3, a4, jogo, final_);
     let depois = cqa4_i(estado);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", desfecho as u8, antes, depois, previsto, r));
+    PLACAR.record(r == 0 && depois == previsto, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", desfecho as u8, antes, depois, previsto, r));
     r
 }
 
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn comparar_cup_record_season_honours(copa: usize) {
     o(copa);
     let lido = (cqa4_d(linha + 4), core::ptr::read_unaligned((linha + 8) as *const u16), cqa4_d(linha + 0xa), cqa4_d(linha + 0xe), cqa4_d(linha + 0x12), cqa4_d(linha + 0x16));
     let previsto = (cqa4_d(copa + 4), ano, campeao, vice, terceiro, anfitria);
-    PLACAR.registrar(lido == previsto, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, previsto));
+    PLACAR.record(lido == previsto, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, previsto));
 }
 
 /// Os dois clubes (ids) que a 0x519fc0 manda à semeadura da UEFA, ou None quando ela sai sem mandar: a rodada 0x82
@@ -321,6 +321,6 @@ unsafe extern "thiscall" fn comparar_register_semi_final_losers_for_uefa(copa: u
     if s == 0 {
         return o(copa); // ponytail: sem a semeadura, só a original
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(s + 0x440, 50 * 12)], || o(copa), || register_semi_final_losers_for_uefa(copa));
-    PLACAR.registrar(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", copa, semi_final_losers(copa)));
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(s + 0x440, 50 * 12)], || o(copa), || register_semi_final_losers_for_uefa(copa));
+    PLACAR.record(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", copa, semi_final_losers(copa)));
 }

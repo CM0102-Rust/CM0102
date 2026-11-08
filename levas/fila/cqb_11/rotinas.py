@@ -14,8 +14,8 @@
 #   0x10 em 0x51d54b). 0x90cfc0 sorteio: cdecl (push n; add esp, 4 em 0x51d590/0x51d644/0x51de40/0x51dfd5), 1 arg.
 #   As caixas: 0x944cff, 0x90d130, 0x944c9f, 0x66f4e0, 0x5e8290, 0x5cc7d0, 0x5a8f60, 0x945934 pelo cpq11_sem_memoria e
 #   pelo aviso_em (cdecl, ja no motor.rs).
-# Comparadores: as duas lado a lado pelo estado do sorteador (REGIOES_DO_ESTADO) e pelos confrontos de todas as rodadas
-# da copa (cpq11_confrontos, com 0xb67a34), a copia em sem_contar (os vetores sao temporarios: malloc e free nas duas);
+# Comparadores: as duas lado a lado pelo estado do sorteador (STATE_REGIONS) e pelos confrontos de todas as rodadas
+# da copa (cpq11_confrontos, com 0xb67a34), a copia em without_counting (os vetores sao temporarios: malloc e free nas duas);
 # a 0x518780 lado a lado no byte +0xb1. Sem SEH. Iguais no cm0102-1080.exe (as tres inteiras).
 SAVE = False
 ROTINAS = [('copa_sortear_pela_semente', 0x51d2d0, [0x81, 0xec, 0x2c, 0x02, 0x00, 0x00]),

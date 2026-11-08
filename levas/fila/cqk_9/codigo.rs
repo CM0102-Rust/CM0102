@@ -34,7 +34,7 @@ unsafe fn mls_stage_outcome(this: usize, clube: usize, situacao: u32, fase: u32,
         // a temporada (-1) e as duas primeiras rodadas dos play-offs
         if st == 6 {
             if fazer {
-                crate::comparacao::ramo("cqk_9 mls classificado");
+                crate::comparison::branch("cqk_9 mls classificado");
                 cqk9_classificou(clube, comp, 0xa0, 0x78, 0x28); // cqk9: o classificado da MLS
             }
             return 0;
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(this: usize,
 unsafe extern "thiscall" fn comparar_usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let n = mls_stage_outcome(this, clube, situacao, fase, jogo, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, jogo, a6);
-    PLACAR.registrar(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
+    PLACAR.record(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
     r
 }
 
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn usa_mls_add_result(this: usize, jogo: usize, estat: 
     f0(e0, jogo, estat);
     *((jogo + 0x42) as *mut u8) = 1;
     let (e1, f1) = estagio(1);
-    crate::comparacao::ramo("cqk_9 mls segunda conferencia");
+    crate::comparison::branch("cqk_9 mls segunda conferencia");
     f1(e1, jogo, estat); // cqk9: o jogo na tabela da segunda conferência
     *((this + 8) as *mut u32) = guardado as u32;
     1
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn comparar_usa_mls_add_result(this: usize, jogo: usize
     let esperada = if cqk9_d(this + 0x30) == 1 { 1 } else if marca < 2 { -1 } else { marca };
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, estat);
     let (m, b) = (*((jogo + 0x42) as *const i8), cqk9_d(this + 8));
-    PLACAR.registrar(r == 1 && m == esperada && b == bloco, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
+    PLACAR.record(r == 1 && m == esperada && b == bloco, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
     r
 }
 
@@ -152,7 +152,7 @@ unsafe extern "C" fn usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
     const LESTE: [usize; 6] = [0x9d0390, 0x9d0394, 0x9d0388, 0x9d0384, 0x9d03a4, 0x9d0380];
     const OESTE: [usize; 6] = [0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c];
     if LESTE.iter().any(|&k| cqk9_d(k) == id) {
-        crate::comparacao::ramo("cqk_9 conferencia 0x413");
+        crate::comparison::branch("cqk_9 conferencia 0x413");
         return 0x413; // cqk9: a primeira conferência
     }
     if OESTE.iter().any(|&k| cqk9_d(k) == id) {
@@ -169,6 +169,6 @@ unsafe extern "C" fn comparar_usa_mls_get_club_all_star_conference(clube: usize)
         return r; // o caso de erro (a caixa já saiu na original)
     }
     let n = usa_mls_get_club_all_star_conference(clube);
-    PLACAR.registrar(r == n, || format!("usa_mls_get_club_all_star_conference({:x}) original={:x} rust={:x}", clube, r, n));
+    PLACAR.record(r == n, || format!("usa_mls_get_club_all_star_conference({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }

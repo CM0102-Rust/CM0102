@@ -6,23 +6,11 @@ use super::*;
 /// Comparer for `intertoto_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE);
-    eng_cc_cup_compare_round_table("intertoto_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
+    compare_cup_round_table("intertoto_cup_create_round_table", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
         |r, e, s| intertoto_cup_create_round_table(this, stage, r, e, s))
 }
 
-/// Comparer for `intertoto_cup_create_round_table_92b770` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table_92b770(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE_92B770);
-    eng_cc_cup_compare_round_table("intertoto_cup_create_round_table_92b770", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
-        |r, e, s| intertoto_cup_create_round_table_92b770(this, stage, r, e, s))
-}
 
-/// Comparer for `intertoto_cup_create_round_table_632340` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table_632340(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE_632340);
-    eng_cc_cup_compare_round_table("intertoto_cup_create_round_table_632340", stage, rounds, extra, out, || o(this, stage, rounds, extra, out),
-        |r, e, s| intertoto_cup_create_round_table_632340(this, stage, r, e, s))
-}
 
 /// Comparer for `intertoto_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 ///
@@ -35,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(t
     let nr = core::cell::Cell::new(0i32);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
     let before = read_u32_as_usize(this + 0xa7);
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(read_u32_as_usize(this + 0xa7));
         core::ptr::write_unaligned((this + 0xa7) as *mut u32, before as u32);
@@ -58,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(t
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    PLACAR.record(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
     a
 }
 
@@ -70,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_INTERTOTO_CUP_COLLECT_CLUB_LIST);
     let mut s2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, out, ativos), || collect_club_list(this, &mut s2, ativos));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, out, ativos), || collect_club_list(this, &mut s2, ativos));
     let lo = *out;
     let list = if lo != 0 && s2 != 0 {
         core::slice::from_raw_parts(lo as *const u8, a as usize * 4) == core::slice::from_raw_parts(s2 as *const u8, b as usize * 4)
@@ -81,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(s2);
     }
-    PLACAR.registrar(igual && a == b && list, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, list));
+    PLACAR.record(igual && a == b && list, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, list));
     a
 }
 
@@ -104,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(th
             same &= read_u32_as_usize(l) == c && read_u8(l + 4) == 4;
         }
     }
-    PLACAR.registrar(same, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, read_i16(uefa + 0x36), previsto, &v[..k]));
+    PLACAR.record(same, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, read_i16(uefa + 0x36), previsto, &v[..k]));
     r
 }
 
@@ -122,6 +110,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_recor
     };
     let r = o(this, clube, outcome, a3, a4, jogo, a6);
     let after = read_u32_as_usize(clube + club::EURO_FLAG);
-    PLACAR.registrar(r == 0 && after == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, outcome as u8, before, after, previsto, r));
+    PLACAR.record(r == 0 && after == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, outcome as u8, before, after, previsto, r));
     r
 }

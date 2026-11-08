@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m
                     continue;
                 }
                 if k >= 11 && *((vaga + 0x32) as *const u8) == 0xff { // cpw12: a reserva que não entrou
-                    crate::comparacao::ramo("cpw_12 reserva sem entrar");
+                    crate::comparison::branch("cpw_12 reserva sem entrar");
                     continue;
                 }
                 let pessoa = cpw12_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m
                         primeira(cpw12_d(0xdd7f00), pessoa, adversario);
                     }
                 }
-                crate::comparacao::ramo("cpw_12 jogo pela seleção");
+                crate::comparison::branch("cpw_12 jogo pela seleção");
                 *((pessoa + 0x22) as *mut u8) = (*((pessoa + 0x22) as *const u8)).wrapping_add(1); // cpw12: um jogo
                 *((pessoa + 0x23) as *mut u8) = (*((pessoa + 0x23) as *const u8)).wrapping_add(*((vaga + 0x21) as *const u8)); // cpw12: os gols
                 if !INTERNATIONAL_RESULT_DRY_RUN {
@@ -191,15 +191,15 @@ unsafe extern "thiscall" fn comparar_record_international_result(this: usize, p:
         return o(this, p, m); // ponytail: não grava nada, só a original
     }
     let regioes = caps_update_regions(this, p, m);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     INTERNATIONAL_RESULT_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| record_international_result(this, p, m)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| record_international_result(this, p, m)));
     INTERNATIONAL_RESULT_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(this, p, m);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("record_international_result(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p, m, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(mo == mr, || format!("record_international_result(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p, m, mo, mr));
 }
 
 /// { 0x775610 } (thiscall, ret 0x14, national_teams.cpp; `this` não é lido): `NationalTeams::format_squad_label(tipo,
@@ -230,9 +230,9 @@ unsafe extern "thiscall" fn comparar_format_squad_label(this: usize, tipo: u32, 
         return o(this, tipo, sub23, saida, tamanho, minusculo); // ponytail: a caixa, só a original
     }
     let reg = [(saida, (tamanho as usize).min(0x40))];
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tipo, sub23, saida, tamanho, minusculo),
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, tipo, sub23, saida, tamanho, minusculo),
         || format_squad_label(this, tipo, sub23, saida, tamanho, minusculo));
-    PLACAR.registrar(igual && ro == rr, || format!("format_squad_label({}, {}, {}) original={:x} {:x?} rust={:x} {:x?}", tipo as u8, sub23, minusculo as u8, ro, mo, rr, mr));
+    PLACAR.record(igual && ro == rr, || format!("format_squad_label({}, {}, {}) original={:x} {:x?} rust={:x} {:x?}", tipo as u8, sub23, minusculo as u8, ro, mo, rr, mr));
     ro
 }
 
@@ -274,6 +274,6 @@ unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, fase:
     }
     let r = o(this, fase, rodada);
     let n = are_round_fixtures_known(this, fase, rodada);
-    PLACAR.registrar(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, fase, rodada, r, n));
+    PLACAR.record(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, fase, rodada, r, n));
     r
 }

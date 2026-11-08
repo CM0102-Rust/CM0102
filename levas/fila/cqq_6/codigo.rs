@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn construct_fra_first(this: usize, ano: u32, registro:
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqq_6 primeira francesa nova");
+    crate::comparison::branch("cqq_6 primeira francesa nova");
     let n = || (cqq6_d(0xae235c) as i32).wrapping_sub((cqq6_d(0xae2350) as i32).wrapping_mul(2));
     if n() > 0 {
         let mut p = cqq6_d(0xae23b4) + 0x57;
@@ -148,6 +148,6 @@ unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize, ano: u32, 
     if *((this + 0x44) as *const u8) == 0xff && cqq6_d(this + 8) != 0 {
         ok = ok && cqq6_d(this + 0x2c) == 0 && cqq6_d(this + 0xc) == 0;
     }
-    PLACAR.registrar(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, cqq6_d(this), cqq6_d(this + 0xee), cqq6_d(this + 0xf2), cqq6_d(this + 8)));
+    PLACAR.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, cqq6_d(this), cqq6_d(this + 0xee), cqq6_d(this + 0xf2), cqq6_d(this + 8)));
     r
 }

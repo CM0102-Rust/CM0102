@@ -25,7 +25,7 @@ pub(crate) unsafe extern "C" fn comparar_check_saved_game_file(path: usize) -> u
         return r;
     }
     let n = check_saved_game_file(path);
-    PLACAR.registrar(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
+    PLACAR.record(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
     r
 }
 
@@ -49,18 +49,6 @@ pub(crate) unsafe extern "C" fn comparar_load_fifa_transfer_rules(save: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(IDX_LOAD_FIFA_TRANSFER_RULES)(save)
 }
 
-/// Comparer for `build_save_game_summary` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_build_save_game_summary(summary: *mut u8) {
-    let regions = [(summary as usize, 0xf6c), (summary as usize + 0xf6c, 8), (0xdd7140, 8)];
-    let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regions,
-        || original_fn::<unsafe extern "C" fn(*mut u8)>(IDX_BUILD_SAVE_GAME_SUMMARY)(summary),
-        || build_save_game_summary(summary));
-    PLACAR.registrar(mo.0[0] == mr.0[0], || {
-        let (a, b) = (&mo.0[0].1, &mr.0[0].1);
-        let k = (0..a.len()).find(|&k| a[k] != b[k]).unwrap_or(0);
-        format!("build_save_game_summary: primeira diferença em +{:#x}: {:#04x} x {:#04x}", k, a[k], b[k])
-    });
-}
 
 /// Comparer for `free_game_data` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_free_game_data(tela: u32) -> u32 {
@@ -71,6 +59,6 @@ pub(crate) unsafe extern "C" fn comparar_free_game_data(tela: u32) -> u32 {
 pub(crate) unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_GET_HEADING_COLOUR)(x);
     let n = get_heading_colour(x);
-    PLACAR.registrar(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
+    PLACAR.record(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
     r
 }

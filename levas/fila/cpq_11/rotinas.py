@@ -6,7 +6,7 @@
 # (malloc/free; sem memória a caixa 0xe7f e o jogo para, como a original); a 0x522610 só grava confrontos; a 0x4bf850
 # é pura (fora de 0..=100 a cópia chama a original, que abre a caixa). A 0x4bf850 devolve o eax inteiro (quem chama
 # empurra o registrador todo). Iguais no cm0102-1080.exe. Comparadores: o sorteio lado a lado com o estado do
-# sorteador (cópia em sem_contar) e os confrontos de todas as rodadas; o estádio lado a lado nos confrontos; a escala
+# sorteador (cópia em without_counting) e os confrontos de todas as rodadas; o estádio lado a lado nos confrontos; a escala
 # pelo valor.
 SAVE = False
 ROTINAS = [('copa_sortear_times_da_rodada', 0x51e220, [0x81, 0xec, 0x28, 0x02, 0x00, 0x00]),

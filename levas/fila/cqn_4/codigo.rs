@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize) -> u32 {
         && b(0xc5) == 4 && b(0xc6) == 1 && b(0xc7) == 2 && b(0x42) == 1 && b(0xbe) == 0 && b(0xbf) == 0 && b(0xc0) == 0 && b(0xc1) == 0
         && cqn4_d(this + 0x1c) == cqn4_d(0x9cf624) && cqn4_d(this + 0x20) == 0xffff_ffff
         && core::ptr::read_unaligned((this + 0xd9) as *const u16) == 0x43;
-    PLACAR.registrar(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this, r));
+    PLACAR.record(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this, r));
     r
 }
 
@@ -108,7 +108,7 @@ unsafe fn construct_group_league(this: usize, ano: u32, p: &BackgroundLeague) ->
         show_error_at(p.arquivo, p.linhas[0]);
         return this;
     }
-    crate::comparacao::ramo("cqn_4 liga de fundo francesa");
+    crate::comparison::branch("cqn_4 liga de fundo francesa");
     let mut lista = vec![0usize; p.maximo as usize];
     let mut k: i16 = 0;
     let mut genericos: i16 = 0;
@@ -211,7 +211,7 @@ unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &
     let ok = r == this && cqn4_d(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && *((this + 0x50) as *const u8) == 0xff && cqn4_d(this + 4) == cqn4_registro(p.competicao)
         && cqn4_d(this + 0xb1) == 0;
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", nome, this, r, cqn4_d(this), cqn4_d(this + 4), cqn4_d(this + 0xb1)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", nome, this, r, cqn4_d(this), cqn4_d(this + 4), cqn4_d(this + 0xb1)));
     r
 }
 
@@ -265,13 +265,13 @@ unsafe fn destroy_group_league(this: usize, vtabela: usize) {
 
 /// { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
 unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
-    crate::comparacao::ramo("cqn_4 destrutor da cfa");
+    crate::comparison::branch("cqn_4 destrutor da cfa");
     destroy_group_league(this, 0x96a7b0)
 }
 
 /// { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
 unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
-    crate::comparacao::ramo("cqn_4 destrutor da divisao de baixo");
+    crate::comparison::branch("cqn_4 destrutor da divisao de baixo");
     destroy_group_league(this, 0x96ab78)
 }
 

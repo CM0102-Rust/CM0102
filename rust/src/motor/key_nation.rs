@@ -1,7 +1,12 @@
 use super::*;
 
 
-/// the first row of the 35 key nation table holding the given nation, or 4
+/// Returns the first row of the 35-row key nation table holding the given nation, or 4.
+///
+/// `key_nation_index_of_nation(nação)` (nation): the first row of the table of the 35 key nations (`0xb63d60`, 72
+/// bytes, nation at `+0`) with the given nation (without checking for null), or 4. Called by the match morale
+/// `0x4cb250`, the retirements `0x7a7310`, the free friendly `0x5c6b70`, the prizes of the nations' day and the UEFA
+/// places. TapeCall for every player: no counter.
 /// Original: `key_nation_index_of_nation` (0x669340, key_nation.cpp, cdecl).
 ///
 /// [pt] { 0x669340 } (cdecl, key_nation.cpp): `key_nation_index_of_nation(nação)`: a primeira linha da tabela das 35
@@ -18,7 +23,15 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
 }
 
 
-/// the row of the club's chosen nation; national side, 1; nation not chosen, the row of its continent, or 3
+/// Returns the key nation row of the club: the row of its chosen nation; for a national team, 1; for a nation not
+/// chosen, the row of its continent, or 3.
+///
+/// `key_nation_index_of_club(clube)` (club). A club that is not a national team (`0x53b900`), with a nation (`+0x53`)
+/// chosen to be played (`+0x11c` of the nation): the nation's row in the table, or the "Error" box (line `0x26d`) and
+/// 0. Otherwise (the original calls `0x53b900` again): national team, 1; the first row whose continent (`+4`) is that
+/// of the club's nation (`+0x71`), or 3 (with no nation, 3). Called by the retirements `0x7a7310`, the weather
+/// postponement `0x923630`, the days until the season `0x59b4c0`, the desired contract `0x85fc50`, the season year
+/// `0x669950` and others. No counter.
 /// Original: `key_nation_index_of_club` (0x669360, key_nation.cpp, cdecl).
 ///
 /// [pt] { 0x669360 } (cdecl, key_nation.cpp): `key_nation_index_of_club(clube)`. Clube que não é seleção (0x53b900), com
@@ -65,7 +78,13 @@ pub(crate) unsafe fn hits_key_nation_error(clube: usize) -> bool {
 }
 
 
-/// the club's season year: the previous year before the season start day of its row
+/// Returns the club's season year: the previous year when today is before the season start day of its row.
+///
+/// `key_nation_get_club_season_year(clube)` (club): today's year (`[0xae2c92]`); for a club that is not a national
+/// team, by the club's row (`0x669360`): with the row's dword `+0x17` not zero or the start day (`+0x15`, unsigned)
+/// below 60, and today's day (`[0xae2c90]`, signed) before the start day, the previous year. The original returns only
+/// the low 16 bits meaningfully (the high ones are left over from the pushed slot). Called by the club records
+/// `0x444930`/`0x447430`/`0x448ad0` and the player history `0x7c3e40`/`0x7c5fe0`.
 /// Original: `key_nation_get_club_season_year` (0x669950, key_nation.cpp, cdecl).
 ///
 /// [pt] { 0x669950 } (cdecl, key_nation.cpp): `key_nation_get_club_season_year(clube)`: o ano de hoje ([0xae2c92]); para
@@ -104,8 +123,22 @@ pub(crate) unsafe fn write_date(dst: usize, day: i16, year: u16) {
     core::ptr::copy_nonoverlapping(b.as_ptr(), dst as *mut u8, 8);
 }
 
-/// by the start and end days of the club nation row and today: whether it is in season and the start and end dates with
-/// the right year
+/// By the start and end days of the club's nation row and today, tells whether the club is in season and gives the
+/// start and end dates with the right year.
+///
+/// Convention: cdecl, `key_nation.cpp`, SEH frame only for the local dates. `key_nation_club_in_season(clube, &início,
+/// &fim)` (club, &start, &end). The row of the club's nation (`+0x53`) in the table of the 35 key nations (`0xb63d60`,
+/// 72 bytes; with no nation or outside the table, row 3 `0xb63e38` and the end day of the default date `0x54a110`, 40).
+/// `a` = day `+0x2a` of the row (start), `c` = the day of date `+0x39` (end; the original also copies the next 7 bytes
+/// and, with club `+0x1db` ≠ −1 and byte `+0x43` 3, 4 or 5, swaps two of them, but does not use them), `t` today's day
+/// (`[0xae2c90]`) and `y` the year (`[0xae2c92]`); signed 16-bit comparisons.
+///
+/// With a > c (a season that crosses the year): t > a, (a, y) and (c, y+1), 1; t < c, (a, y−1) and (c, y), 1; otherwise
+/// (a, y) and (c, y), 0. With a ≤ c: t < a, (a, y) and (c, y), 0; t > c, (a, y+1) and (c, y+1), 1; otherwise (a, y) and
+/// (c, y), 1. The dates go to `início` and `fim` when not null.
+///
+/// Called by the club in season `0x547770`, the fitness `0x62a920`, `0x62c680` and `0x62ce30`, the month of the season
+/// end `0x4d45f0` and the transfer date `0x8cee70`. TapeCall for every player: no counter.
 /// Original: `key_nation_club_in_season` (0x669bd0, key_nation.cpp, cdecl).
 ///
 /// [pt] { 0x669bd0 } (cdecl, key_nation.cpp, quadro SEH só das datas locais): `key_nation_club_in_season(clube, &início,
@@ -245,8 +278,17 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
 }
 
 
-/// the competition's key nation row: the nation's, 0 for the World Cup, 1 for national side tournaments, 2 for the club
-/// world cups, the continent's or 3
+/// Returns the competition's key nation row: the nation's row, 0 for the World Cup, 1 for national team tournaments, 2
+/// for the club world cups, the continent's row or 3.
+///
+/// `key_nation_index_of_comp(competição)` (competition), called by the scope of the match rules `0x8d2fa0`, the league
+/// day `0x6847c0`, the cup records `0x519890` and the match key nation `0x48dd70` of cpt_3. A nation competition
+/// (`+0x5d`): its row in the table of the 35 key nations (`0xb63d60`, 72 bytes), or 4. With no nation: the World Cup
+/// and its qualifiers, 0; national team tournament (`0x669ae0`), 1; the Club World Cup and the FIFA Club World
+/// Championship, 2; otherwise the continent row (nation 0) with the competition's continent (`+0x59`), or 3.
+///
+/// The original reads `+0x5d` before checking for a null competition (the error case never reaches the box). TapeCall
+/// for every match: no counter.
 /// Original: `key_nation_index_of_comp` (0x669470, key_nation.cpp, cdecl).
 ///
 /// [pt] { 0x669470 } (cdecl, key_nation.cpp): `key_nation_index_of_comp(competição)` (pelo alcance das regras da partida

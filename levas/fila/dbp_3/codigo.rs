@@ -28,8 +28,8 @@ unsafe extern "C" fn comparar_staff_remove_disliked_staff(pessoa: usize, alvo: u
     if pref == 0 {
         return o(pessoa, alvo); // não escreve nada
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x28, 12)], || o(pessoa, alvo), || staff_remove_disliked_staff(pessoa, alvo));
-    PLACAR.registrar(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(pref + 0x28, 12)], || o(pessoa, alvo), || staff_remove_disliked_staff(pessoa, alvo));
+    PLACAR.record(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
     r
 }
 
@@ -62,7 +62,7 @@ unsafe extern "C" fn comparar_staff_get_favoured_staff(pessoa: usize, vetor: usi
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(%%I1%%);
     let com_vetor = [(vetor, 12), (n as usize, 1)];
     let regioes: &[(usize, usize)] = if vetor == 0 { &com_vetor[1..] } else { &com_vetor };
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(pessoa, vetor, n), || staff_get_favoured_staff(pessoa, vetor, n));
-    PLACAR.registrar(igual && r == x, || format!("staff_get_favoured_staff({:x}, {:x}) {:x?} x {:x?}", pessoa, vetor, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(regioes, || o(pessoa, vetor, n), || staff_get_favoured_staff(pessoa, vetor, n));
+    PLACAR.record(igual && r == x, || format!("staff_get_favoured_staff({:x}, {:x}) {:x?} x {:x?}", pessoa, vetor, mo, mr));
     r
 }

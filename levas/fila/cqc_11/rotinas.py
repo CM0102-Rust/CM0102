@@ -22,7 +22,7 @@
 #   0x54c5b0, 0x5c6b70 (o tipo e o byte +0xc empurrado no ecx inteiro: a 0x5c6b70 so le o byte) e 0x66f4e0.
 #   As caixas pelo aviso_em (cdecl, ja no motor.rs) ou pela original.
 # Comparadores: 0x5cbdf0 so a original (cria amistosos, acrescenta as listas, sorteia) com o plano em ensaio: a
-# primeira parte antes dela, a segunda lado a lado pelo estado do sorteador (sem_contar), decidindo cada amistoso pelo
+# primeira parte antes dela, a segunda lado a lado pelo estado do sorteador (without_counting), decidindo cada amistoso pelo
 # que a original fez; confere o sorteador e os itens novos de cada lista de nacoes. 0x5ca090 e 0x5ca290 lado a lado
 # pelo texto e a devolucao (com a caixa, so a original). SEH sem destrutor no caminho normal (as datas; a LLIST local
 # da 0x5ca090 e construida e destruida pelas originais 0x68d020/0x68d040). Iguais no cm0102-1080.exe (as tres inteiras).

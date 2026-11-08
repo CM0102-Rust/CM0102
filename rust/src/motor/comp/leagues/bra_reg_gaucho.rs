@@ -30,7 +30,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], sem
     for (k, &l) in rows.iter().enumerate() {
         core::ptr::write_unaligned((list + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
@@ -71,32 +71,15 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
 
 
 
-/// Comparer of the knockout stage: runs only the original and checks stage, count and clubs (as a set) and +0x30 = 0.
+
+
+/// End of a state league: records the honours of the first stage (the table) and calls 0x42bba0, which, once the twelve
+/// state leagues are over, puts the champions into the Champions Cup.
 ///
-/// [pt] O comparador dos três: a original aloca a lista, a tabela de rodadas e a fase e monta a rodada (só ela roda). O
-/// plano, feito antes: os clubes das linhas. Depois, a fase da primeira vaga tem de existir, com +0x3e = n, +4 = o +4 da
-/// liga e os n primeiros clubes da lista dela (+0xa7, 6 bytes) iguais aos do plano (como conjunto: o sorteio da rodada
-/// 0x51c800 pode reordenar as chaves), e +0x30 = 0.
-pub(crate) unsafe fn bra_reg_gaucho_compare_knockout_from_table(name: &str, this: usize, rows: &[usize], original: impl FnOnce()) {
-    let mut plan: Vec<usize> = rows.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
-    original();
-    let stage = read_usize(read_usize(this + 0xc));
-    if stage == 0 {
-        PLACAR.registrar(false, || format!("{}({:#x}) sem fase", name, this));
-        return;
-    }
-    let list = read_usize(stage + 0xa7);
-    let mut found: Vec<usize> = (0..rows.len()).map(|k| read_usize(list + 6 * k)).collect();
-    let (pl, ac) = (plan.clone(), found.clone());
-    plan.sort_unstable();
-    found.sort_unstable();
-    let same = plan == found && read_i16(stage + 0x3e) as usize == rows.len() && read_usize(stage + 4) == read_usize(this + 4) && read_usize(this + 0x30) == 0;
-    PLACAR.registrar(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this, pl, stage, ac, read_i16(stage + 0x3e)));
-}
-
-
-/// end of a state league (nine of them): records the honours of the first stage (the table) and calls 0x42bba0, which,
-/// once the twelve state leagues are over, puts the champions into the Champions Cup
+/// `BraRegGaucho::record_season_honours` (slot 13 of nine state leagues: Baiano, Centro-Oeste, Gaúcho, Goiano, Norte,
+/// Nordeste, Pernambucano, Catarinense and Paulista): the history of the first stage and then, as a tail jump, 0x42bba0
+/// (`bra_nat_first_fill_champions_cup_entrants`, cdecl with no arguments: when the twelve state leagues are over, it
+/// puts the champions into the Champions Cup); returns its eax.
 /// Original: `BraRegGaucho::record_season_honours` (0x432970, bra_reg_gaucho.cpp, thiscall).
 ///
 /// [pt] { 0x432970 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::record_season_honours` (slot 13 de nove estaduais: Baiano,
@@ -105,7 +88,7 @@ pub(crate) unsafe fn bra_reg_gaucho_compare_knockout_from_table(name: &str, this
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
     record_first_stage_honours(this); // cqj8: o histórico do estadual
-    crate::comparacao::ramo("cqj_8 historico do estadual");
+    crate::comparison::branch("cqj_8 historico do estadual");
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
     campeoes()
 }
@@ -167,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: us
 /// Nordeste (0x9683ec) e do Paulista (0x968770); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     gaucho_rules(this);
-    crate::comparacao::ramo("cqi_8 regras do gaucho");
+    crate::comparison::branch("cqi_8 regras do gaucho");
     create_main_schedule(this);
     1
 }

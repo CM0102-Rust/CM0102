@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
     for cat in 1..=6u8 {
         let ano = ano_do_clube(clube);
         let id = if clube == 0 { 0xffff_ffff } else { cqf8_d(clube) as u32 }; // cqf8: o clube da temporada atual
-        crate::comparacao::ramo("cqf_8 temporada atual");
+        crate::comparison::branch("cqf_8 temporada atual");
         let mut r = PlayerStatsEntry::nova(ano, id, cat, 0xffff_ffff);
         let c = categoria(this, f, cat as u32);
         if c != 0 {
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
                 for cat in 1..=6u8 {
                     let mut r = PlayerStatsEntry::nova(ano_no, clube_no, cat, cqf8_d(no + 0x26) as u32);
                     r.0[0x2a] = (cat << 3) | (tipo & 7);
-                    crate::comparacao::ramo("cqf_8 temporada do historico");
+                    crate::comparison::branch("cqf_8 temporada do historico");
                     if *conta + cat as i32 - 1 >= cap {
                         tam += 0x53fc;
                         cap += 500;
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize,
             && core::slice::from_raw_parts(r as *const u8, n.max(0) as usize * HISTORY_ENTRY_SIZE)
                 == core::slice::from_raw_parts(t as *const u8, n.max(0) as usize * HISTORY_ENTRY_SIZE)
     };
-    PLACAR.registrar(igual, || {
+    PLACAR.record(igual, || {
         let k = (*conta).max(n).max(0) as usize;
         let dif = (0..k).find(|&i| {
             r == 0 || t == 0 || core::slice::from_raw_parts((r + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE) != core::slice::from_raw_parts((t + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE)
@@ -383,7 +383,7 @@ unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(p: usize, c
     }
     let r = o(p, clube);
     let n = player_stats_years_since_at_club(p, clube);
-    PLACAR.registrar(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
+    PLACAR.record(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
     r
 }
 
@@ -418,6 +418,6 @@ unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, b: usize) -
 unsafe extern "C" fn comparar_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = player_stats_compare_history_by_staff(a, b);
-    PLACAR.registrar(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

@@ -87,7 +87,7 @@ unsafe fn cqu6_copa_do_rei_corpo(this: usize, ano: u32, dono: usize) -> usize {
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_6 copa_do_rei nova");
+    crate::comparison::branch("cqu_6 copa_do_rei nova");
     cqu6_p16(this + 0x3e, 0x53);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let v = zerada(0x53, 6);
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn cqu6_copa_do_rei(this: usize, ano: u32, dono: usize)
 unsafe extern "thiscall" fn comparar_cqu6_copa_do_rei(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu6_plano(this, r, ano, dono, 0x96f9c8, &CQU6_CAMPOS_COPA_DO_REI, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu6_copa_do_rei({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu6_copa_do_rei({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -151,7 +151,7 @@ unsafe fn cqu6_supercopa_espanhola_corpo(this: usize, ano: u32, dono: usize) -> 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_6 supercopa_espanhola nova");
+    crate::comparison::branch("cqu_6 supercopa_espanhola nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x858aa0usize);
     let r = f(this);
     if r < 0 {
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn cqu6_supercopa_espanhola(this: usize, ano: u32, dono
 unsafe extern "thiscall" fn comparar_cqu6_supercopa_espanhola(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu6_plano(this, r, ano, dono, 0x96fd38, &CQU6_CAMPOS_SUPERCOPA_ESPANHOLA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu6_supercopa_espanhola({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu6_supercopa_espanhola({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -258,7 +258,7 @@ unsafe fn cqu6_inscritos(this: usize) -> i32 {
                     primeira[np as usize] = c;
                     np += 1;
                 } else if cqu6_div(c, 0x9cf628) && ns < 0x16 {
-                    crate::comparacao::ramo("cqu_6 segunda divisao");
+                    crate::comparison::branch("cqu_6 segunda divisao");
                     segunda[ns as usize] = c;
                     ns += 1;
                 }
@@ -324,7 +324,7 @@ unsafe fn cqu6_inscritos(this: usize) -> i32 {
         }
     }
     if faltam_w - k > 0 && limit() > 0 {
-        crate::comparacao::ramo("cqu_6 completar com os sem divisao");
+        crate::comparison::branch("cqu_6 completar com os sem divisao");
         let mut i = 0i32;
         while i < limit() {
             let c = base + i as usize * 0x245;
@@ -357,7 +357,7 @@ unsafe extern "thiscall" fn comparar_cqu6_inscritos_da_copa_do_rei(this: usize) 
     let antes = cqu6_d(this + 0xa7);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&[(this + 0x3e, 2usize)], || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&[(this + 0x3e, 2usize)], || {
         let r = o(this);
         lo.set(cqu6_d(this + 0xa7));
         cqu6_p32(this + 0xa7, antes as u32);
@@ -374,6 +374,6 @@ unsafe extern "thiscall" fn comparar_cqu6_inscritos_da_copa_do_rei(this: usize) 
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && tabela, || format!("cqu6_inscritos_da_copa_do_rei({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    PLACAR.record(igual && a == b && tabela, || format!("cqu6_inscritos_da_copa_do_rei({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }

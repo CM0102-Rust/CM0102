@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_board_named_players_after_match(
                                                                   a6: *mut u8, a7: *mut u8, a8: *mut u8, a9: *mut u8, a10: *mut u8) -> u8 {
     type F = unsafe extern "thiscall" fn(usize, usize, usize, *mut i32, u32, *const u8, *mut u8, *mut u8, *mut u8, *mut u8, *mut u8) -> u8;
     let o = original_fn::<F>(IDX_BOARD_NAMED_PLAYERS_AFTER_MATCH);
-    let mut regions = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut regions = crate::rng::STATE_REGIONS.to_vec();
     regions.push((G_CONTRACT_LOOKUP_RESULT, 4));
     if clube != 0 {
         regions.push((club_board_row(this, clube), 0x49));
@@ -55,9 +55,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_board_named_players_after_match(
     for s in [a6, a7, a8, a9, a10] {
         regions.push((s as usize, 1));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10),
-        || crate::aleatorio::sem_contar(|| board_named_players_after_match(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10)));
-    PLACAR.registrar(igual && r == n, || format!("board_named_players_after_match(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", clube, *elogio, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10),
+        || crate::rng::without_counting(|| board_named_players_after_match(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10)));
+    PLACAR.record(igual && r == n, || format!("board_named_players_after_match(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", clube, *elogio, r, n, mo, mr));
     r
 }
 
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_board_named_players_after_match(
 pub(crate) unsafe extern "thiscall" fn comparar_get_player_match_rating_verdict(this: usize, person: usize, partida: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_PLAYER_MATCH_RATING_VERDICT)(this, person, partida);
     let n = get_player_match_rating_verdict(this, person, partida);
-    PLACAR.registrar(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", person, partida as i32, r as i8, n as i8));
+    PLACAR.record(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", person, partida as i32, r as i8, n as i8));
     r
 }
 
@@ -79,9 +79,9 @@ pub(crate) unsafe extern "stdcall" fn comparar_build_board_player_performance_te
     if ids.is_null() || (*ids == -1 && (*ids.add(1) != -1 || *ids.add(2) != -1)) {
         return o(ids, win, out, variant);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(out, 0x200)], || o(ids, win, out, variant),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(out, 0x200)], || o(ids, win, out, variant),
         || build_board_player_performance_text(ids, win, out, variant));
-    PLACAR.registrar(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", win as u8, variant,
+    PLACAR.record(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", win as u8, variant,
         String::from_utf8_lossy(&mo.0[0].1[..0x40]), String::from_utf8_lossy(&mr.0[0].1[..0x40])));
 }
 
@@ -99,11 +99,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: 
         in_day(read_usize(G_INJURY), j);
     }
     let regions = [(club_board_row(this, clube), 0x49), (G_CONTRACT_LOOKUP_RESULT, 4), (0xde1f5c, 8), (0xad6c30, 4)];
-    let (r, n, _, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, j, clube, value, comprando),
-        || crate::aleatorio::sem_contar(|| check_board_transfer_veto(this, j, clube, value, comprando)));
+    let (r, n, _, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, j, clube, value, comprando),
+        || crate::rng::without_counting(|| check_board_transfer_veto(this, j, clube, value, comprando)));
     let partes = if BOARD_VETO_SEEDED_RAND { 3 } else { 4 };
     let same = (0..partes).all(|i| mo.0[i] == mr.0[i]);
-    PLACAR.registrar(same && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, value, comprando as u8, r, n, mo, mr));
+    PLACAR.record(same && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, value, comprando as u8, r, n, mo, mr));
     r
 }
 
@@ -143,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_manager_appointment_news(th
 pub(crate) unsafe extern "thiscall" fn comparar_get_league_confidence_band(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_LEAGUE_CONFIDENCE_BAND)(this, clube);
     let n = get_league_confidence_band(this, clube);
-    PLACAR.registrar(r == n, || format!("get_league_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("get_league_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -151,8 +151,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_league_confidence_band(this:
 pub(crate) unsafe extern "thiscall" fn comparar_set_board_ratings(this: usize, clube: usize, value: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SET_BOARD_RATINGS);
     let r = read_usize(this).wrapping_add((read_i32(clube) as u32).wrapping_mul(0x49) as usize);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 0x49)], || o(this, clube, value), || set_board_ratings(this, clube, value));
-    PLACAR.registrar(igual, || format!("set_board_ratings(clube {:x}, {:x}) {:x?} x {:x?}", clube, value, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 0x49)], || o(this, clube, value), || set_board_ratings(this, clube, value));
+    PLACAR.record(igual, || format!("set_board_ratings(clube {:x}, {:x}) {:x?} x {:x?}", clube, value, mo, mr));
 }
 
 /// Comparer for `post_board_confidence_update_news` (comparison mode: see the header of motor.rs).
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_issue_board_ultimatum(this: usiz
     let before = read_i16(read_usize(this + 0x10)) as i32;
     let r = o(this, clube);
     let after = read_i16(read_usize(this + 0x10)) as i32;
-    PLACAR.registrar(after == before + (r != 0) as i32, || {
+    PLACAR.record(after == before + (r != 0) as i32, || {
         format!("issue_board_ultimatum(clube {:x}) devolveu {}, ultimatos {} -> {}", clube, r, before, after)
     });
     r
@@ -220,7 +220,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize,
     if national_team(clube) == 0 {
         for k in 0..50usize {
             let p = read_usize(clube + club::SQUAD + 4 * k);
-            if p == 0 || read_usize(p + 0x61) == 0 {
+            if p == 0 || read_usize(p + staff::PLAYER) == 0 {
                 continue;
             }
             let ct = contrato(read_usize(G_CONTRACT_MANAGER), p);
@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize,
         }
     }
     let conf = read_i16(club_board_row(this, clube) + 6);
-    PLACAR.registrar(sobra == 0 && (keep != 0 || conf == 0xdac), || {
+    PLACAR.record(sobra == 0 && (keep != 0 || conf == 0xdac), || {
         format!("remove_club_manager(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", clube, kind as u8, keep, sobra, conf)
     });
 }
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_review_national_team_performance
 pub(crate) unsafe extern "thiscall" fn comparar_is_club_in_financial_trouble(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_CLUB_IN_FINANCIAL_TROUBLE)(this, clube);
     let n = is_club_in_financial_trouble(this, clube);
-    PLACAR.registrar(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -253,7 +253,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_club_in_financial_trouble(thi
 pub(crate) unsafe extern "thiscall" fn comparar_get_board_confidence_band(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_BOARD_CONFIDENCE_BAND)(this, clube);
     let n = get_board_confidence_band(this, clube);
-    PLACAR.registrar(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -270,9 +270,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_reset_board_for_new_manager(this
 /// a cópia sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn comparar_get_departure_reason(this: usize, id: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(IDX_GET_DEPARTURE_REASON);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, id),
-        || crate::aleatorio::sem_contar(|| get_departure_reason(this, id)));
-    PLACAR.registrar(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, id),
+        || crate::rng::without_counting(|| get_departure_reason(this, id)));
+    PLACAR.record(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
     r
 }
 
@@ -282,7 +282,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_departure_reason(this: usize
 /// duas palavras de marcas e os gastos líquidos do comprador e do vendedor; a cópia sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ASSESS_TRANSFER_DEAL);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(f1, 2), (f2, 2)]);
     let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + 0xc).wrapping_mul(staff::SIZE));
     let buyer = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(transf + 8).wrapping_mul(club::SIZE));
@@ -291,9 +291,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize
     if seller != 0 {
         reg.push((board_row_at(this, read_usize(seller)) + 0x38, 8));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, transf, f1, f2),
-        || crate::aleatorio::sem_contar(|| assess_transfer_deal(this, transf, f1, f2)));
-    PLACAR.registrar(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf, f1, f2),
+        || crate::rng::without_counting(|| assess_transfer_deal(this, transf, f1, f2)));
+    PLACAR.record(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf, mo, mr));
 }
 
 /// Comparer for `apply_transfer_confidence_changes` (comparison mode: see the header of motor.rs).
@@ -302,20 +302,20 @@ pub(crate) unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize
 /// comprador e do vendedor e as três pessoas favoritas do presidente do vendedor (0x547c10); a cópia sem contar.
 pub(crate) unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usize, transf: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_APPLY_TRANSFER_CONFIDENCE_CHANGES);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + 0xc).wrapping_mul(staff::SIZE));
     reg.push((board_row_at(this, read_usize(transf + 8)), 0x49));
     let seller = read_usize(person + staff::CLUB_JOB);
     if seller != 0 {
         reg.push((board_row_at(this, read_usize(seller)), 0x49));
-        let pref = staff_preferences(read_usize(seller + 0xbf));
+        let pref = staff_preferences(read_usize(seller + club::CHAIRMAN));
         if pref != 0 {
-            reg.push((pref + 0x1c, 12));
+            reg.push((pref + preferences::STAFF_FAVOURITE_STAFF1, 12));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, transf),
-        || crate::aleatorio::sem_contar(|| apply_transfer_confidence_changes(this, transf)));
-    PLACAR.registrar(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf),
+        || crate::rng::without_counting(|| apply_transfer_confidence_changes(this, transf)));
+    PLACAR.record(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf, mo, mr));
 }
 
 /// Comparer for `resolve_board_ultimatum` (comparison mode: see the header of motor.rs).
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_resolve_board_ultimatum(this: us
     let r = o(this, clube);
     let after = read_i16(read_usize(this + 4)) as i32;
     let ok = after == before + (r != 0) as i32 && (r == 0 || *((board_row_at(this, read_usize(clube)) + 2) as *const u8) & 2 != 0);
-    PLACAR.registrar(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, before, after));
+    PLACAR.record(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, before, after));
     r
 }
 
@@ -368,7 +368,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_remove_player_fr
     let r = o(this, person, clube);
     let away = !(in_club || in_national_team) || (0..0x32usize).all(|k| read_usize(clube + club::SQUAD + 4 * k) != person);
     let ok = away && read_u8(person + staff::JOB_FOR_CLUB) == f39 && read_usize(person + staff::CLUB_JOB) == c39 && read_u8(person + staff::JOB_FOR_NATION) == f28 && read_usize(person + staff::NATIONAL_JOB) == c24;
-    PLACAR.registrar(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
+    PLACAR.record(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
         read_usize(person), read_usize(clube), read_u8(person + staff::JOB_FOR_CLUB), read_u8(person + staff::JOB_FOR_NATION), read_usize(person + staff::CLUB_JOB), read_usize(person + staff::NATIONAL_JOB), f39, f28, c39, c24, away));
     r
 }
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_staff_from_club(this: usi
     let expected = staff_job_fields(s.as_ptr() as usize, c.as_ptr() as usize);
     let r = o(this, person, clube);
     let after = staff_job_fields(person, clube);
-    PLACAR.registrar(after == expected, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
+    PLACAR.record(after == expected, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
         read_usize(person), read_u8(person + staff::JOB_FOR_CLUB) as i8, read_usize(clube), after.0, after.1, expected.0, expected.1));
     r
 }
@@ -421,8 +421,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
         return o(this);
     }
     let reg = [(l + 0xa, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this), || fix_missing_jobs(this));
-    PLACAR.registrar(igual, || format!("fix_missing_jobs (nenhuma a abrir) {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || fix_missing_jobs(this));
+    PLACAR.record(igual, || format!("fix_missing_jobs (nenhuma a abrir) {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparer for `best_manager_candidate_score` (comparison mode: see the header of motor.rs).
@@ -431,10 +431,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_fix_missing_jobs(this: usize) {
 /// pelo cursor da lista de vagas (a 0x69fc60 o devolve).
 pub(crate) unsafe extern "thiscall" fn comparar_best_manager_candidate_score(this: usize, clube: usize, current: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_BEST_MANAGER_CANDIDATE_SCORE);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((read_usize(this + 8) + 0xa, 4));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, current), || crate::aleatorio::sem_contar(|| best_manager_candidate_score(this, clube, current)));
-    PLACAR.registrar(igual && r == n, || format!("best_manager_candidate_score(clube {}, atual {:x}) original={} rust={} {:x?} x {:x?}", read_usize(clube), current, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube, current), || crate::rng::without_counting(|| best_manager_candidate_score(this, clube, current)));
+    PLACAR.record(igual && r == n, || format!("best_manager_candidate_score(clube {}, atual {:x}) original={} rust={} {:x?} x {:x?}", read_usize(clube), current, r, n, mo, mr));
     r
 }
 
@@ -442,7 +442,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_best_manager_candidate_score(thi
 ///
 /// [pt] Comparador: a 0x695240 mexe na diretoria (e pode dar notícia): só a original (a prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_update_board_after_fixture(this: usize, partida: usize, jogo: usize) {
-    crate::comparacao::ramo("update_board_after_fixture");
+    crate::comparison::branch("update_board_after_fixture");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_BOARD_AFTER_FIXTURE)(this, partida, jogo)
 }
 
@@ -452,7 +452,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_board_after_fixture(this:
 pub(crate) unsafe extern "thiscall" fn comparar_is_staff_suitable_for_job(this: usize, person: usize, clube: usize, nota_minima: f64) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(IDX_IS_STAFF_SUITABLE_FOR_JOB)(this, person, clube, nota_minima);
     let n = is_staff_suitable_for_job(this, person, clube, nota_minima);
-    PLACAR.registrar(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", person, clube, nota_minima, r, n));
+    PLACAR.record(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", person, clube, nota_minima, r, n));
     r
 }
 
@@ -480,7 +480,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_remove(this: usi
             && (no == cabeca || read_usize(ant + 6) == prox)
             && (no == cauda || read_usize(prox + 0xa) == ant)
     };
-    PLACAR.registrar(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, given, r, no, before, after));
+    PLACAR.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, given, r, no, before, after));
     r
 }
 
@@ -490,14 +490,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_remove(this: usi
 pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_clear(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_MANAGER_MANAGER_CLEAR)(this);
     let after: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
-    PLACAR.registrar(after == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, after));
+    PLACAR.record(after == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, after));
 }
 
 /// Comparer for `get_current` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_get_current(this: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_GET_CURRENT)(this);
     let n = get_current(this);
-    PLACAR.registrar(r == n, || format!("get_current({:#x}) original={:#x} rust={:#x}", this, r, n));
+    PLACAR.record(r == n, || format!("get_current({:#x}) original={:#x} rust={:#x}", this, r, n));
     r
 }
 
@@ -509,7 +509,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_current_run(this: usize, clu
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_GET_CURRENT_RUN)(this, clube, kind, size);
     let (mut t, mut n) = (0u8, 0u8);
     get_current_run(this, clube, &mut t, &mut n);
-    PLACAR.registrar(*kind == t && *size == n, || format!("get_current_run({:x}) original={}/{} rust={}/{}", clube, *kind, *size, t, n));
+    PLACAR.record(*kind == t && *size == n, || format!("get_current_run({:x}) original={}/{} rust={}/{}", clube, *kind, *size, t, n));
 }
 
 /// Comparer for `post_job_rumour_news` (comparison mode: see the header of motor.rs).

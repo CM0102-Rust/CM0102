@@ -58,36 +58,6 @@ pub(crate) unsafe fn eng_second_set_christmas_rounds(t: usize, year: u32, n: &En
     eng_second_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
 }
 
-/// Side-by-side comparer of a round table: outputs and written bytes must match; frees the copy's table.
-///
-/// [pt] Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
-pub(crate) unsafe fn eng_second_compare_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
-                       original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
-    let reg = [(0xb67a34usize, 4usize)];
-    let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
-    let gravou = a != 0 || b != 0;
-    let outs = !gravou || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
-    let table = if a != 0 && b != 0 {
-        if stage as u8 == 0xff {
-            let n = *rounds as usize;
-            written_league_round_bytes(a, a, n) == written_league_round_bytes(b, a, n)
-        } else {
-            eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, *rounds)
-        }
-    } else {
-        a == 0 && b == 0
-    };
-    if b != 0 {
-        soltar(b);
-    }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
-    a
-}
 
 /// a segunda e a terceira divisões inglesas (as mesmas datas): as rodadas antes do Natal
 pub(crate) const SECOND_DIVISION_START: [EngSecondScheduleRound; 23] = [
@@ -297,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
                 show_error_at(0x9c43e8, 0xae);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_4 calendario da segunda inglesa");
+            crate::comparison::branch("cqp_4 calendario da segunda inglesa");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_second_set_christmas_rounds(t, year, &DIVISION_TWO_CHRISTMAS, 0x9c43e8);
             t
@@ -313,7 +283,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
                 show_error_at(0x9c43e8, 0x1b5);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_4 play-offs da segunda inglesa");
+            crate::comparison::branch("cqp_4 play-offs da segunda inglesa");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_TWO_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &SECOND_DIVISION_PLAYOFF_1, year);
@@ -324,52 +294,6 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
 }
 
 
-/// the Division Three schedule: the same 46 rounds as Division Two. The promotion play-offs (stage 0): two-legged
-/// semi-finals (4 clubs, draw on 7 May, first leg on 12, 4 days apart) and a one-off final on 26 May [inference: venue
-/// 4 is the neutral ground]
-/// Original: `EngThird::create_schedule` (0x5770e0, eng_third.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x5770e0 } (thiscall, ret 0x10, eng_third.cpp, 3.692 bytes, método +0x3c): `EngThird::create_schedule`: o mesmo
-/// código da segunda (as mesmas rodadas), com a data da final dos play-offs um dia antes. Fonte 0x9c4424.
-pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule_5770e0(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    match stage as u8 {
-        0xff => {
-            if !league.is_null() {
-                *league = 1;
-            }
-            *rounds = 46;
-            *extra = 0;
-            let t = alloc(0xbae);
-            if t == 0 {
-                show_error_at(0x9c4424, 0xb3);
-                return 0;
-            }
-            crate::comparacao::ramo("cqp_4 calendario da terceira inglesa");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
-            eng_second_set_christmas_rounds(t, year, &THIRD_DIVISION_CHRISTMAS_SCHEDULE, 0x9c4424);
-            t
-        }
-        0 => {
-            if !league.is_null() {
-                *league = 0;
-            }
-            *rounds = 2;
-            *extra = 0xa0;
-            let t = alloc(0xd0);
-            if t == 0 {
-                show_error_at(0x9c4424, 0x1ba);
-                return 0;
-            }
-            crate::comparacao::ramo("cqp_4 play-offs da terceira inglesa");
-            let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
-            eng_cc_cup_write_cup_round(t, 0, &THIRD_DIVISION_PLAYOFF_SEMIFINAL, year);
-            eng_cc_cup_write_cup_round(t, 1, &DIVISION_THREE_PLAYOFF_1, year);
-            t
-        }
-        _ => 0,
-    }
-}
 
 
 
@@ -381,9 +305,20 @@ pub(crate) unsafe fn eng_second_staff_records() -> usize {
     read_usize(G_STAFF_RECORDS)
 }
 
-/// in the league (stage 0xff): title (5) 0x868c50, promotion (0) 0x869480 with weight 0x64, play-off place (1) 0x86bdd0
-/// (0xa0, 0x82, 0x1e), relegation (3) 0x86a1c0; in the play-offs, on the club row: won (1) promotion with 0x32, +0x37 =
-/// 0 and removed = 1; went through (0) 0x86bdd0 (0xa0, 0x96, 0xf); out (0xff, 2) +0x37 = 0xfe; returns 0
+/// Updates the staff records by the club's status in the English Second Division (virtual `+0x44` of the First, Second
+/// and Third). Returns 0.
+///
+/// `EngSecond::update_staff_records_for_status(clube, situação, fase, &saiu, _, _)` (club, status, stage, &removed, _,
+/// _), announced by `0x686670`.
+///
+/// In the league (stage `0xff`), by status: 5, the title (Staff_Records::add_league_champions_record `0x868c50`,
+/// thiscall(records, club, comp `+4`), ret 8); 0, promotion (`0x869480`, thiscall(records, club, comp, `0x64`), ret
+/// `0xc`); 1, the play-off place (`0x86bdd0`, thiscall(records, club, comp, `0xa0`, `0x82`, `0x1e`), ret `0x14`); 3,
+/// relegation (`0x86a1c0`, thiscall(records, club, comp), ret 8).
+///
+/// In the play-offs (any other stage), on the club's row of the table (`+0xb1`, `0x3b` bytes, `+0x3e` rows): 1 (won the
+/// final), promotion with weight `0x32`, `+0x37` = 0 and removed = 1; 0 (went through the round), the qualification
+/// (`0xa0`, `0x96`, `0xf`) and it keeps searching; `0xff` or 2 (knocked out), `+0x37` = `0xfe`.
 /// Original: `EngSecond::update_staff_records_for_status` (0x576c50, eng_second.cpp, thiscall, ret 0x18).
 ///
 /// [pt] { 0x576c50 } (thiscall, ret 0x18, eng_second.cpp): `EngSecond::update_staff_records_for_status(clube, situação,
@@ -404,17 +339,17 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                 title(eng_second_staff_records(), clube, comp);
             }
             0 => {
-                crate::comparacao::ramo("cpz_2 acesso na tabela");
+                crate::comparison::branch("cpz_2 acesso na tabela");
                 let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                 promotion(eng_second_staff_records(), clube, comp, 0x64); // cpz2: o acesso pela tabela pesa 0x64
             }
             1 => {
-                crate::comparacao::ramo("cpz_2 vaga no mata-mata");
+                crate::comparison::branch("cpz_2 vaga no mata-mata");
                 let slot: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
                 slot(eng_second_staff_records(), clube, comp, 0xa0, 0x82, 0x1e); // cpz2: a vaga no mata-mata pesa 0x1e
             }
             3 => {
-                crate::comparacao::ramo("cpz_2 rebaixamento na tabela");
+                crate::comparison::branch("cpz_2 rebaixamento na tabela");
                 let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
                 cair(eng_second_staff_records(), clube, comp); // cpz2: o rebaixamento pela tabela
             }
@@ -428,7 +363,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
         if read_usize(row) == clube {
             match s {
                 1 => {
-                    crate::comparacao::ramo("cpz_2 venceu o mata-mata");
+                    crate::comparison::branch("cpz_2 venceu o mata-mata");
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                     promotion(eng_second_staff_records(), clube, comp, 0x32);
                     *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
@@ -494,14 +429,6 @@ pub(crate) unsafe fn set_club_stage_status(this: usize, clube: usize, stage: u8,
 }
 
 
-/// like the First one, with places 4 to 7 (4 and 7; in the play-offs, 4, 5 and 6)
-/// Original: `EngThird::set_club_progress` (0x578660, eng_third.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x578660 } (thiscall, ret 0x14, eng_third.cpp): `EngThird::set_club_progress(clube, fase, atual, melhor, pior)`,
-/// a virtual +0x68 da Third: as vagas do mata-mata são 4 a 7.
-pub(crate) unsafe extern "thiscall" fn eng_second_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
-    set_club_stage_status(this, clube, stage as u8, current as u8, best as u8, worst as u8, 4, 7)
-}
 
 /// Comparer of the stage status: side by side on the entry's 3 bytes; only the original without an entry.
 ///
@@ -512,8 +439,8 @@ pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, clube: u
     if e == 0 {
         return original();
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x73, 3)], original, copy);
-    PLACAR.registrar(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], original, copy);
+    PLACAR.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, clube, mo, mr));
 }
 
 
@@ -554,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_second(this: usize, year: u
 /// [pt] { 0x576780 } (thiscall, ret 0, eng_second.cpp): `EngSecond::set_up_rules()`. A Second: como a First, mas 4
 /// caem (+0xc1); a First acima ([0x9cf5c0]) e a Third abaixo ([0x9cf5c8]).
 pub(crate) unsafe extern "thiscall" fn eng_second_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_4 regras da second");
+    crate::comparison::branch("cqi_4 regras da second");
     eng_prm_apply_league_rules(this, &eng_prm_second_division_rules())
 }
 

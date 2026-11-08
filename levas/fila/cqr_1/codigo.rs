@@ -57,7 +57,7 @@ unsafe fn create_half_season_stage(this: usize, k: u32, arquivo: usize, linha: u
     let k = k as u8 as i8 as i32;
     core::ptr::write_unaligned((cqr1_d(this + 0xc) + 4 * k as usize) as *mut usize, fase);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     soltar(clubes);
 }
 
@@ -68,7 +68,7 @@ unsafe fn compare_half_season_stage(nome: &str, this: usize, k: u32, original: i
     let kk = k as u8 as i8 as i32;
     let fase = cqr1_d(cqr1_d(this + 0xc) + 4 * kk as usize);
     let igual = fase != 0 && cqr1_d(this + 0x30) as i32 == kk && cqr1_w(fase + 0x3e) == cqr1_w(this + 0x3e);
-    PLACAR.registrar(igual, || format!("{}({:#x}, {}) fase={:#x} +0x30={}", nome, this, kk, fase, cqr1_d(this + 0x30) as i32));
+    PLACAR.record(igual, || format!("{}({:#x}, {}) fase={:#x} +0x30={}", nome, this, kk, fase, cqr1_d(this + 0x30) as i32));
 }
 
 /// { 0x43afa0 } (thiscall, ret 4, bra_reg_rio.cpp): `BraRegRio::create_half_season_stage(k)`, um turno do Carioca (os

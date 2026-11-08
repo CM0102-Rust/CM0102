@@ -109,9 +109,9 @@ unsafe extern "thiscall" fn pick_tour_nation(_this: usize, clube: usize) -> usiz
 
 unsafe extern "thiscall" fn comparar_apply_round_rules_to_match(copa: usize, jogo: usize, chave: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I0%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(jogo + 0x38, 2)], || o(copa, jogo, chave),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(jogo + 0x38, 2)], || o(copa, jogo, chave),
         || apply_round_rules_to_match(copa, jogo, chave));
-    PLACAR.registrar(igual, || format!("apply_round_rules_to_match(chave {}) {:x?} x {:x?}", chave, mo, mr));
+    PLACAR.record(igual, || format!("apply_round_rules_to_match(chave {}) {:x?} x {:x?}", chave, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_find_tree_slot_for_fixture(copa: usize, jogo: usize) -> i32 {
@@ -120,15 +120,15 @@ unsafe extern "thiscall" fn comparar_find_tree_slot_for_fixture(copa: usize, jog
         return r;
     }
     let n = find_tree_slot_for_fixture(copa, jogo);
-    PLACAR.registrar(r == n, || format!("find_tree_slot_for_fixture original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("find_tree_slot_for_fixture original={} rust={}", r, n));
     r
 }
 
 unsafe extern "thiscall" fn comparar_pick_tour_nation(this: usize, clube: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube),
-        || crate::aleatorio::sem_contar(|| pick_tour_nation(this, clube)));
-    PLACAR.registrar(igual && r == n, || format!("pick_tour_nation({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let reg = crate::rng::STATE_REGIONS.to_vec();
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube),
+        || crate::rng::without_counting(|| pick_tour_nation(this, clube)));
+    PLACAR.record(igual && r == n, || format!("pick_tour_nation({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

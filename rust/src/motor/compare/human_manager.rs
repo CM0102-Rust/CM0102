@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, m
     }
     let r = o(this, manager);
     let n = get_active_tactic(this, manager);
-    PLACAR.registrar(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", manager, r, n));
+    PLACAR.record(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", manager, r, n));
     r
 }
 
@@ -29,8 +29,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, 
         return o(this, reserve, clube, manager);
     };
     let reg = [(human_manager_record_at(this, k) + 0x9a69, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, reserve, clube, manager), || select_tactic_slot(this, reserve, clube, manager));
-    PLACAR.registrar(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserve, clube, manager, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, reserve, clube, manager), || select_tactic_slot(this, reserve, clube, manager));
+    PLACAR.record(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserve, clube, manager, mo, mr));
 }
 
 /// Comparer for `clear_invalid_watched_fixtures` (comparison mode: see the header of motor.rs).
@@ -39,8 +39,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, 
 pub(crate) unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLEAR_INVALID_WATCHED_FIXTURES);
     let reg: Vec<(usize, usize)> = (0..0x10).map(|i| (human_manager_watched_match_record(this, i), 79)).collect();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this), || clear_invalid_watched_fixtures(this));
-    PLACAR.registrar(igual && r == n, || format!("clear_invalid_watched_fixtures {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || clear_invalid_watched_fixtures(this));
+    PLACAR.record(igual && r == n, || format!("clear_invalid_watched_fixtures {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, 
     }
     let r = o(this, partida);
     let n = is_fixture_watched(this, partida);
-    PLACAR.registrar(r == n, || format!("is_fixture_watched original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("is_fixture_watched original={} rust={}", r, n));
     r
 }
 
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_nickname(this: usize, person
     }
     let r = o(this, person, human);
     let n = has_nickname(this, person, human);
-    PLACAR.registrar(r == n, || format!("has_nickname original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("has_nickname original={} rust={}", r, n));
     r
 }
 
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_holiday_stamp(manager: usize
     }
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GET_HOLIDAY_STAMP)(manager, person);
     let n = get_holiday_stamp(manager, person);
-    PLACAR.registrar(r == n, || format!("get_holiday_stamp original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("get_holiday_stamp original={} rust={}", r, n));
     r
 }
 
@@ -87,7 +87,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_saved_lineup(manager: usize,
     }
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_SAVED_LINEUP)(manager, person);
     let n = get_saved_lineup(manager, person);
-    PLACAR.registrar(r == n, || format!("get_saved_lineup original={:#x} rust={:#x}", r, n));
+    PLACAR.record(r == n, || format!("get_saved_lineup original={:#x} rust={:#x}", r, n));
     r
 }
 
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_saved_lineup(manager: usize,
 pub(crate) unsafe extern "C" fn comparar_human_manager_get_stand_in_manager(clube: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_HUMAN_MANAGER_GET_STAND_IN_MANAGER)(clube);
     let n = human_manager_get_stand_in_manager(clube);
-    PLACAR.registrar(r == n, || format!("human_manager_get_stand_in_manager({:#x}) original={:#x} rust={:#x}", clube, r, n));
+    PLACAR.record(r == n, || format!("human_manager_get_stand_in_manager({:#x}) original={:#x} rust={:#x}", clube, r, n));
     r
 }
 
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize,
         return r;
     }
     let n = is_watching_fixture(this, partida, human);
-    PLACAR.registrar(r == n, || format!("is_watching_fixture original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("is_watching_fixture original={} rust={}", r, n));
     r
 }
 
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, p
         return r;
     }
     let n = can_watch_fixture(this, partida, human);
-    PLACAR.registrar(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, human, r, n));
+    PLACAR.record(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, human, r, n));
     r
 }
 
@@ -143,15 +143,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: u
             reg.push((read_u32(g + 0xa6e3) as usize, (read_u32(g + 0xa6eb) as i32).max(0) as usize * 30));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id), || remove_nickname_from_all(this, id));
-    PLACAR.registrar(igual, || format!("remove_nickname_from_all({:x}) {:x?} x {:x?}", id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id), || remove_nickname_from_all(this, id));
+    PLACAR.record(igual, || format!("remove_nickname_from_all({:x}) {:x?} x {:x?}", id, mo, mr));
 }
 
 /// Comparer for `human_runs_club` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_human_runs_club(clube: usize, qualquer: u32, force: i8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(clube, qualquer, force);
     let n = human_runs_club(clube, qualquer, force);
-    PLACAR.registrar(r == n, || format!("human_runs_club({:#x}, {}, {}) original={} rust={}", clube, qualquer, force, r, n));
+    PLACAR.record(r == n, || format!("human_runs_club({:#x}, {}, {}) original={} rust={}", clube, qualquer, force, r, n));
     r
 }
 
@@ -169,8 +169,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_human_field(t: usize, value:
         let i = (*p).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
         if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) { vec![] } else { vec![(*(t as *const usize) + i as usize * 0xa6ef + 0x9a65, 4)] }
     };
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, value, manager), || set_human_field(t, value, manager));
-    PLACAR.registrar(igual && r == v, || format!("set_human_field({:#x}, {:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, value, manager, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, value, manager), || set_human_field(t, value, manager));
+    PLACAR.record(igual && r == v, || format!("set_human_field({:#x}, {:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, value, manager, r, mo, v, mr));
     r
 }
 
@@ -187,14 +187,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, holi
     let esperada = conta + if holiday != 0 && antes == 0 { 1 } else if holiday == 0 && antes != 0 { -1 } else { 0 };
     o(this, holiday, manager);
     let (depois, conta2) = (read_usize(mark) as u32, read_usize(this + 0xc) as i32);
-    PLACAR.registrar(depois == holiday && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", holiday, t, antes, depois, conta, conta2, esperada));
+    PLACAR.record(depois == holiday && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", holiday, t, antes, depois, conta, conta2, esperada));
 }
 
 /// Comparer for `square_bit` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_square_bit(code: i16) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(i16) -> u32>(IDX_SQUARE_BIT)(code);
     let v = square_bit(code);
-    PLACAR.registrar(r == v, || format!("square_bit({:#x}) original={:#x} rust={:#x}", code, r, v));
+    PLACAR.record(r == v, || format!("square_bit({:#x}) original={:#x} rust={:#x}", code, r, v));
     r
 }
 
@@ -202,8 +202,8 @@ pub(crate) unsafe extern "stdcall" fn comparar_square_bit(code: i16) -> u32 {
 pub(crate) unsafe extern "C" fn comparar_split_mask(m: u32, setor: *mut u16, side: *mut u16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32>(IDX_SPLIT_MASK);
     let reg = [(setor as usize, 2), (side as usize, 2)];
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, setor, side), || split_mask(m, setor, side));
-    PLACAR.registrar(igual && r == v, || format!("split_mask({:#x}) original={} {:x?} rust={} {:x?}", m, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m, setor, side), || split_mask(m, setor, side));
+    PLACAR.record(igual && r == v, || format!("split_mask({:#x}) original={} {:x?} rust={} {:x?}", m, r, mo, v, mr));
     r
 }
 
@@ -215,7 +215,7 @@ pub(crate) unsafe extern "C" fn comparar_human_club(clube: usize, a: u32, b: u8,
     }
     let r = original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB)(clube, a, b, person, c);
     let v = human_club(clube, a, b, person, c);
-    PLACAR.registrar(r == v, || format!("human_club({:#x}, {}, {}, {:#x}, {}) original={} rust={}", clube, a, b, person, c, r, v));
+    PLACAR.record(r == v, || format!("human_club({:#x}, {}, {}, {:#x}, {}) original={} rust={}", clube, a, b, person, c, r, v));
     r
 }
 
@@ -223,7 +223,7 @@ pub(crate) unsafe extern "C" fn comparar_human_club(clube: usize, a: u32, b: u8,
 pub(crate) unsafe extern "thiscall" fn comparar_manager_9a06(this: usize, person: usize, out: *mut u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8>(IDX_MANAGER_9A06);
     let reg: Vec<(usize, usize)> = if out.is_null() { vec![] } else { vec![(out as usize, 4)] };
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, person, out), || manager_9a06(this, person, out));
-    PLACAR.registrar(igual && r == v, || format!("manager_9a06 original={} {:x?} rust={} {:x?}", r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, out), || manager_9a06(this, person, out));
+    PLACAR.record(igual && r == v, || format!("manager_9a06 original={} {:x?} rust={} {:x?}", r, mo, v, mr));
     r
 }

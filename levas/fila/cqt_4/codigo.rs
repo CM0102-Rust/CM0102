@@ -46,7 +46,7 @@ unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, registro: us
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     *((this + 0x51) as *mut u8) = 0xf;
     *((this + 0x44) as *mut u8) = 0xff;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
@@ -92,7 +92,7 @@ unsafe fn bra_reg_rio_compare_state_league_ctor(nome: &str, this: usize, ano: u3
     if *((this + 0x44) as *const u8) == 0xff && cqt4_d(this + 8) != 0 {
         ok = ok && cqt4_d(this + 0x2c) == e.fases as usize && cqt4_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt4_d(this), cqt4_d(this + 0x2c), cqt4_d(this + 0xc), cqt4_d(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt4_d(this), cqt4_d(this + 0x2c), cqt4_d(this + 0xc), cqt4_d(this + 8)));
     r
 }
 
@@ -295,7 +295,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
                     somar(v);
                 }
                 raise_attendance_floor(c, league_comp_reputation(cima), f);
-                crate::comparacao::ramo("cqt_4 publico de quem subiu");
+                crate::comparison::branch("cqt_4 publico de quem subiu");
             }
         } else if *((liga + 0xbf) as *const i8) != 0 && pos as i32 <= *((liga + 0xbf) as *const i8) as i32 {
             let a = (prevista as i16).wrapping_sub(pos as i16);
@@ -341,7 +341,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
                 let rb = league_comp_reputation(baixo);
                 let lim = if rb > 7 { match_pl_ftol(rb.wrapping_mul(3000) as f64 * f) } else { match_pl_ftol(rb.wrapping_mul(2000) as f64 * f) };
                 cap_attendance(c, lim);
-                crate::comparacao::ramo("cqt_4 publico de quem caiu");
+                crate::comparison::branch("cqt_4 publico de quem caiu");
             }
         } else {
             let r16 = cqt4_w(cqt4_d(liga + 4) + 0x69);
@@ -360,7 +360,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
                 let val = (cqt4_i(e + 6) / jogos as i32).wrapping_add(cqt4_i(c + 0x73).wrapping_mul(4));
                 cqt4_pi(c + 0x73, match_pl_ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
             }
-            crate::comparacao::ramo("cqt_4 publico do meio da tabela");
+            crate::comparison::branch("cqt_4 publico do meio da tabela");
             raise_attendance_floor(c, league_comp_reputation(liga), f);
             let r = league_comp_reputation(liga);
             let teto = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
@@ -386,7 +386,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
 unsafe extern "C" fn comparar_cqt4_atualizar_media_de_publico(liga: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(%%I3%%);
     let mut regioes = vec![(cqt4_d(0xae23b4), cqt4_d(0xae235c) * 0x245)];
-    regioes.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(liga), || crate::aleatorio::sem_contar(|| cqt4_atualizar_media_de_publico(liga)));
-    PLACAR.registrar(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", liga));
+    regioes.extend_from_slice(&crate::rng::STATE_REGIONS);
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&regioes, || o(liga), || crate::rng::without_counting(|| cqt4_atualizar_media_de_publico(liga)));
+    PLACAR.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", liga));
 }

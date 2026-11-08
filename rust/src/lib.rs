@@ -19,8 +19,8 @@ mod assinaturas;
 
 #[global_allocator]
 static GLOBAL: alocador::Global = alocador::Global;
-mod aleatorio;
-mod comparacao;
+mod rng;
+mod comparison;
 mod data;
 mod desvios;
 mod espiao;
@@ -69,7 +69,7 @@ unsafe fn ddraw_do_sistema() -> Option<FnDirectDrawCreate> {
 pub unsafe extern "system" fn DllMain(_modulo: *mut c_void, motivo: u32, _reservado: *mut c_void) -> i32 {
     const DLL_PROCESS_ATTACH: u32 = 1;
     if motivo == DLL_PROCESS_ATTACH {
-        cm0102_base::ganchos::definir_ramo(comparacao::ramo);
+        cm0102_base::ganchos::definir_ramo(comparison::branch);
         cm0102_base::ganchos::definir_visivel(alocador::entrar_visivel, alocador::sair_visivel);
         desvios::aplicar_resolucao(); // CM_RESOLUCAO=1080 (experimento): antes de tudo
     }

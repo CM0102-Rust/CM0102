@@ -87,7 +87,7 @@ unsafe fn cqu9_copa_da_uefa_corpo(this: usize, ano: u32, dono: usize) -> usize {
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_9 copa_da_uefa nova");
+    crate::comparison::branch("cqu_9 copa_da_uefa nova");
     // a semeadura europeia do ano (UefaSeeding::update_season 0x9035a0: push 0; mov ecx, [0xde1f58] -> thiscall, ret 4)
     let s = cqu9_d(0xde1f58);
     if s != 0 {
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn cqu9_copa_da_uefa(this: usize, ano: u32, dono: usize
 unsafe extern "thiscall" fn comparar_cqu9_copa_da_uefa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu9_plano(this, r, ano, dono, 0x970790, &CQU9_CAMPOS_COPA_DA_UEFA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu9_copa_da_uefa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu9_copa_da_uefa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -158,7 +158,7 @@ unsafe fn cqu9_supercopa_europeia_corpo(this: usize, ano: u32, dono: usize) -> u
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_9 supercopa_europeia nova");
+    crate::comparison::branch("cqu_9 supercopa_europeia nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x57a500usize);
     let r = f(this);
     if r < 0 {
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn cqu9_supercopa_europeia(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqu9_supercopa_europeia(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu9_plano(this, r, ano, dono, 0x969f80, &CQU9_CAMPOS_SUPERCOPA_EUROPEIA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu9_supercopa_europeia({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu9_supercopa_europeia({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -223,7 +223,7 @@ unsafe fn cqu9_intertoto_corpo(this: usize, ano: u32, dono: usize) -> usize {
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_9 intertoto nova");
+    crate::comparison::branch("cqu_9 intertoto nova");
     // a semeadura europeia do ano (UefaSeeding::update_season 0x9035a0: push 0; mov ecx, [0xde1f58] -> thiscall, ret 4)
     let s = cqu9_d(0xde1f58);
     if s != 0 {
@@ -262,6 +262,6 @@ unsafe extern "thiscall" fn cqu9_intertoto(this: usize, ano: u32, dono: usize) -
 unsafe extern "thiscall" fn comparar_cqu9_intertoto(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqu9_plano(this, r, ano, dono, 0x96bb8c, &CQU9_CAMPOS_INTERTOTO, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu9_intertoto({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu9_intertoto({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

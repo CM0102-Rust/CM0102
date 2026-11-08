@@ -7,7 +7,7 @@
 # sorteiam (0x90cfc0) e a 0x4afbd0 ordena com o qsort da CRT (0x945333, com a 0x4b07d0). Sem SEH; a caixa só na
 # 0x4afbd0 com contas erradas (a cópia chama a original). Iguais no cm0102-1080.exe. Simulação: as mutações pela
 # carreira e a confirmação no jogo real comparando. Comparadores: a mudança só pela original (efeitos que não podem
-# rodar duas vezes); os embaralhamentos lado a lado pelo estado do sorteio e pelo vetor, a cópia em sem_contar.
+# rodar duas vezes); os embaralhamentos lado a lado pelo estado do sorteio e pelo vetor, a cópia em without_counting.
 SAVE = False
 ROTINAS = [('mudar_clube_de_divisao', 0x6830b0, [0x8b, 0x0d, 0xf0, 0x7e, 0xdd, 0x00]),
            ('embaralhar_ponteiros', 0x4afb40, [0x56, 0x57, 0x0f, 0xbf, 0x74, 0x24, 0x10]),

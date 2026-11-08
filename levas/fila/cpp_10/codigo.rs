@@ -43,7 +43,7 @@ unsafe fn fan_rating(p: usize, clube: usize, st: usize) -> f64 {
     let mut nota = media + cpp10_b(st + 2) as i32 as f64 * cpp10_q(0x967878);
     nota = nota + cpp10_b(st + 6) as i32 as f64 * cpp10_q(0x968958);
     if favorito(p, clube) != 0 {
-        crate::comparacao::ramo("cpp_10 favorito do clube");
+        crate::comparison::branch("cpp_10 favorito do clube");
         nota = nota + cpp10_q(0x968918); // o clube gosta dele
     } else if desafeto(p, clube) != 0 {
         nota = nota - cpp10_q(0x968950);
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, nacao: usize)
                     continue;
                 }
                 if emprestimo(cpp10_d(0xae1050), p) == 0 || cpp10_d(p + 0x39) == clube {
-                    crate::comparacao::ramo("cpp_10 arquivar");
+                    crate::comparison::branch("cpp_10 arquivar");
                     arquivar(this, p, -1, 0, 0, -1, 0);
                 }
             }
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
     }
     let valor = cpp10_i(t + 0x1b);
     if valor != 0 && valor > cpp10_i(s + 0x313) {
-        crate::comparacao::ramo("cpp_10 recorde pago");
+        crate::comparison::branch("cpp_10 recorde pago");
         core::ptr::write_unaligned((s + 0x313) as *mut i32, valor);
         referencia(pessoa, s + 0x317);
         core::ptr::write_unaligned((s + 0x32f) as *mut usize, cpp10_d(vendedor));
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
         if cpp10_i(t + 0x1b) > cpp10_i(a + 0x313) {
             copy_transfer_record(a, s, 0x313);
             if is_big_transfer(cpp10_i(a + 0x313), comprador) {
-                crate::comparacao::ramo("cpp_10 transferencia grande");
+                crate::comparison::branch("cpp_10 transferencia grande");
                 if !record_news_queued(this, cpp10_d(comprador), 0x1c) {
                     noticia(this, cpp10_d(comprador) as u32, 0x1c);
                 }
@@ -239,8 +239,8 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
 /// Comparador: lado a lado pela referência do escolhido (registro +0x371, 0x18 bytes) e pela devolução.
 unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(registro + 0x371, 0x18)], || o(this, clube, registro), || pick_fans_player_of_year(this, clube, registro));
-    PLACAR.registrar(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", cpp10_d(clube), r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(registro + 0x371, 0x18)], || o(this, clube, registro), || pick_fans_player_of_year(this, clube, registro));
+    PLACAR.record(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", cpp10_d(clube), r, mo, n, mr));
     r
 }
 
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube
 /// (1, ou 0 sem nação).
 unsafe extern "thiscall" fn comparar_end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, nacao);
-    PLACAR.registrar(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
+    PLACAR.record(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
     r
 }
 
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t:
     let vendedor = if contrato != 0 { cpp10_clube(cpp10_i(contrato + 4)) } else { 0 };
     if vendedor == 0 {
         let r = o(this, t);
-        PLACAR.registrar(r == 1 && cpp10_d(0xae1080) == 0, || format!("update_transfer_fee_records sem vendedor: {} [0xae1080]={:x}", r, cpp10_d(0xae1080)));
+        PLACAR.record(r == 1 && cpp10_d(0xae1080) == 0, || format!("update_transfer_fee_records sem vendedor: {} [0xae1080]={:x}", r, cpp10_d(0xae1080)));
         return r;
     }
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4528d0usize);
@@ -301,7 +301,7 @@ unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t:
     let agora = [(cpp10_i(rg[0] + 0x313), cpp10_d(rg[0] + 0x32f)), (cpp10_i(rg[1] + 0x313), cpp10_d(rg[1] + 0x32f)),
                  (cpp10_i(rg[2] + 0x33c), cpp10_d(rg[2] + 0x358)), (cpp10_i(rg[3] + 0x33c), cpp10_d(rg[3] + 0x358))];
     let fila_agora = cpp10_i(this + 0x2c);
-    PLACAR.registrar(r == 1 && agora == plano && fila_agora == fila && cpp10_d(0xae1080) == contrato, || {
+    PLACAR.record(r == 1 && agora == plano && fila_agora == fila && cpp10_d(0xae1080) == contrato, || {
         format!("update_transfer_fee_records(valor {}) plano {:x?} fila {} x {:x?} fila {}", valor, plano, fila, agora, fila_agora)
     });
     r

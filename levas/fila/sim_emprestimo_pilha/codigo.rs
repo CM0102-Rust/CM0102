@@ -28,6 +28,6 @@ unsafe extern "thiscall" fn comparar_can_end_loan(gerente: usize, clube: usize, 
     // as regras só escrevem o texto da recusa em a3 (o mesmo texto de novo na cópia)
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32>(%%I0%%)(gerente, clube, jogador, a3, a4, a5);
     let n = can_end_loan(gerente, clube, jogador, a3, a4, a5);
-    PLACAR.registrar(r == n, || format!("can_end_loan original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("can_end_loan original={} rust={}", r, n));
     r
 }

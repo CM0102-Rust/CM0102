@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn manager_manager_remove(this: usize, dado: usize) -> 
     if no == 0 {
         return 0;
     }
-    crate::comparacao::ramo("cqb_10 tirado");
+    crate::comparison::branch("cqb_10 tirado");
     let (prox, ant) = (cqb10_d(no + 6), cqb10_d(no + 0xa));
     if no == cqb10_d(this + 2) {
         cqb10_por(this + 2, prox);
@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn manager_manager_remove(this: usize, dado: usize) -> 
         cqb10_por(ant + 6, prox);
     }
     if no == cqb10_d(this + 6) {
-        crate::comparacao::ramo("cqb_10 cauda");
+        crate::comparison::branch("cqb_10 cauda");
         cqb10_por(this + 6, ant); // cqb10: a cauda volta ao anterior
     } else {
         cqb10_por(prox + 0xa, ant);
@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn manager_manager_remove(this: usize, dado: usize) -> 
     let conta = core::ptr::read_unaligned(this as *const i16);
     core::ptr::write_unaligned(this as *mut i16, conta.wrapping_sub(1));
     if no == cqb10_d(this + 0xa) {
-        crate::comparacao::ramo("cqb_10 cursor");
+        crate::comparison::branch("cqb_10 cursor");
         cqb10_por(this + 0xa, cqb10_d(no + 6)); // cqb10: o cursor anda
     }
     liberar_item(no);
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn comparar_manager_manager_remove(this: usize, dado: u
             && (no == cabeca || cqb10_d(ant + 6) == prox)
             && (no == cauda || cqb10_d(prox + 0xa) == ant)
     };
-    PLACAR.registrar(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, dado, r, no, antes, depois));
+    PLACAR.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, dado, r, no, antes, depois));
     r
 }
 
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn manager_manager_clear(this: usize) {
 unsafe extern "thiscall" fn comparar_manager_manager_clear(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let depois: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
-    PLACAR.registrar(depois == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, depois));
+    PLACAR.record(depois == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, depois));
 }
 
 /// { 0x68d2e0 } (thiscall, ret 0): `LLIST::get_current()`: o item do nó do cursor (+0xa), sem andar; sem cursor, 0.
@@ -126,6 +126,6 @@ unsafe extern "thiscall" fn get_current(this: usize) -> usize {
 unsafe extern "thiscall" fn comparar_get_current(this: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%)(this);
     let n = get_current(this);
-    PLACAR.registrar(r == n, || format!("get_current({:#x}) original={:#x} rust={:#x}", this, r, n));
+    PLACAR.record(r == n, || format!("get_current({:#x}) original={:#x} rust={:#x}", this, r, n));
     r
 }

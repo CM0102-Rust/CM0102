@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn pay_prize_money(liga: usize) {
         let valor = (cpx11_w(liga + 0x3e) as i32).wrapping_sub(i as i32).wrapping_mul(parte);
         let clube = cpx11_d(cpx11_d(liga + 0xb1).wrapping_add(0x3b * i as usize));
         let fin = cpx11_financas(clube);
-        crate::comparacao::ramo("cpx_11 premio pago");
+        crate::comparison::branch("cpx_11 premio pago");
         somar(fin, valor); // cpx11: o prêmio
         if valor > 1000 && !LEAGUE_PRIZE_MONEY_DRY_RUN {
             // ponytail: a original empurra a posição no dl e o resto do edx (29 × i, sobra da conta da linha); a
@@ -107,15 +107,15 @@ unsafe extern "thiscall" fn comparar_pay_prize_money(liga: usize) {
             }
         }
     }
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     LEAGUE_PRIZE_MONEY_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pay_prize_money(liga)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_prize_money(liga)));
     LEAGUE_PRIZE_MONEY_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     o(liga);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("pay_prize_money({:x}) +0xe1 {} n {} original={:x?} rust={:x?}", liga, e1, n, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
+    PLACAR.record(mo == mr, || format!("pay_prize_money({:x}) +0xe1 {} n {} original={:x?} rust={:x?}", liga, e1, n, mo, mr));
 }
 
 /// { 0x686940 } (thiscall, ret 0x18, league.cpp): `League::update_staff_records_for_status(clube, situação, fase,
@@ -126,17 +126,17 @@ unsafe extern "thiscall" fn league_update_staff_records_for_status(liga: usize, 
     let comp = cpx11_d(liga + 4);
     match situacao as u8 {
         5 => {
-            crate::comparacao::ramo("cpx_11 registro do titulo");
+            crate::comparison::branch("cpx_11 registro do titulo");
             let titulo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x868c50usize);
             titulo(registros, clube, comp);
         }
         0 => {
-            crate::comparacao::ramo("cpx_11 registro do acesso");
+            crate::comparison::branch("cpx_11 registro do acesso");
             let acesso: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x869480usize);
             acesso(registros, clube, comp, 0x64);
         }
         3 => {
-            crate::comparacao::ramo("cpx_11 registro do rebaixamento");
+            crate::comparison::branch("cpx_11 registro do rebaixamento");
             let rebaixamento: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x86a1c0usize);
             rebaixamento(registros, clube, comp);
         }
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn announce_team_status(liga: usize, clube: usize, situ
         let f = cpx11_d(cpx11_d(liga + 0xc).wrapping_add((fase as u8 as i8 as isize as usize).wrapping_mul(4)));
         rodada = cpx11_w(f + 0x3a);
     }
-    crate::comparacao::ramo("cpx_11 noticia da situacao");
+    crate::comparison::branch("cpx_11 noticia da situacao");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xc, 0);

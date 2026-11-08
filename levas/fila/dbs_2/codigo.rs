@@ -100,9 +100,9 @@ unsafe extern "C" fn comparar_write_position_name(mascara: u32, texto: usize, ta
         return o(mascara, texto, tamanho); // caixa: só a original
     }
     let n = (tamanho as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(mascara, texto, tamanho),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, n)], || o(mascara, texto, tamanho),
         || write_position_name(mascara, texto, tamanho));
-    PLACAR.registrar(igual && r == x, || format!("write_position_name({:x}) original={} rust={} {:x?} x {:x?}", mascara, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("write_position_name({:x}) original={} rust={} {:x?} x {:x?}", mascara, r, x, mo, mr));
     r
 }
 
@@ -217,9 +217,9 @@ unsafe extern "C" fn comparar_write_player_description(pessoa: i32, posicao: u32
         return o(pessoa, posicao, qualidades, texto, tamanho, genero); // caixa: só a original
     }
     let n = (tamanho as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(pessoa, posicao, qualidades, texto, tamanho, genero),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, n)], || o(pessoa, posicao, qualidades, texto, tamanho, genero),
         || write_player_description(pessoa, posicao, qualidades, texto, tamanho, genero));
-    PLACAR.registrar(igual && r == x, || format!("write_player_description({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, posicao, qualidades, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("write_player_description({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, posicao, qualidades, r, x, mo, mr));
     r
 }
 
@@ -345,8 +345,8 @@ unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(pessoa: usize, cl
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u8>(%%I2%%);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube, candidato),
-        || crate::aleatorio::sem_contar(|| staff_is_best_favoured_candidate(pessoa, clube, candidato)));
-    PLACAR.registrar(igual && r == x, || format!("staff_is_best_favoured_candidate({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, candidato, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(pessoa, clube, candidato),
+        || crate::rng::without_counting(|| staff_is_best_favoured_candidate(pessoa, clube, candidato)));
+    PLACAR.record(igual && r == x, || format!("staff_is_best_favoured_candidate({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, candidato, r, x, mo, mr));
     r
 }

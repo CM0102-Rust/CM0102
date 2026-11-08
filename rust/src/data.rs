@@ -15,7 +15,7 @@
 //!   { 0x54cdb0 } dias_ate(outra)           this - outra em dias (outra por valor; usa a Data estatica
 //!                0xae2470, que fica com a data de this e o ano de outra)
 
-use crate::comparacao::{lado_a_lado_leve as lado_a_lado, Placar, Sorteio};
+use crate::comparison::{side_by_side_light as side_by_side, Scoreboard, TestRng};
 use crate::desvios::{self, Prologo};
 use crate::jogo;
 use crate::registro::linha;
@@ -306,7 +306,7 @@ pub unsafe extern "thiscall" fn dias_ate(this: *const Data, outra: Data) -> i32 
 // ---------- comparacao com as originais ----------
 
 static mut ORIGINAIS: [usize; 10] = [0; 10];
-static PLACAR: Placar = Placar::novo("data");
+static PLACAR: Scoreboard = Scoreboard::new("data");
 
 unsafe fn original_fn<F>(i: usize) -> F {
     core::mem::transmute_copy(&ORIGINAIS[i])
@@ -337,15 +337,15 @@ fn regioes(objetos: &[usize]) -> Regioes {
 
 unsafe extern "thiscall" fn comparar_padrao(this: *mut Data) -> *mut Data {
     let f: unsafe extern "thiscall" fn(*mut Data) -> *mut Data = original_fn(0);
-    let (r, rr, igual, mo, mr) = lado_a_lado(&regioes(&[this as usize]), || f(this), || data_padrao(this));
-    PLACAR.registrar(igual && r == rr, || format!("padrao original={:x?} rust={:x?}", mo, mr));
+    let (r, rr, igual, mo, mr) = side_by_side(&regioes(&[this as usize]), || f(this), || data_padrao(this));
+    PLACAR.record(igual && r == rr, || format!("padrao original={:x?} rust={:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_nova(this: *mut Data, dia: u32, ano: u32) -> *mut Data {
     let f: unsafe extern "thiscall" fn(*mut Data, u32, u32) -> *mut Data = original_fn(1);
-    let (r, rr, igual, mo, mr) = lado_a_lado(&regioes(&[this as usize]), || f(this, dia, ano), || data_nova(this, dia, ano));
-    PLACAR.registrar(igual && r == rr, || format!("nova({:#x}, {:#x}) original={:x?} rust={:x?}", dia, ano, mo, mr));
+    let (r, rr, igual, mo, mr) = side_by_side(&regioes(&[this as usize]), || f(this, dia, ano), || data_nova(this, dia, ano));
+    PLACAR.record(igual && r == rr, || format!("nova({:#x}, {:#x}) original={:x?} rust={:x?}", dia, ano, mo, mr));
     r
 }
 
@@ -353,15 +353,15 @@ unsafe extern "thiscall" fn comparar_semana(this: *const Data) -> i32 {
     let f: unsafe extern "thiscall" fn(*const Data) -> i32 = original_fn(2);
     let r = f(this);
     let nosso = dia_da_semana(this);
-    PLACAR.registrar(r == nosso, || format!("semana({:?}) original={} rust={}", *this, r, nosso));
+    PLACAR.record(r == nosso, || format!("semana({:?}) original={} rust={}", *this, r, nosso));
     r
 }
 
 unsafe extern "thiscall" fn comparar_copia(this: *mut Data, ret: *mut Data, src: *const Data) -> *mut Data {
     let f: unsafe extern "thiscall" fn(*mut Data, *mut Data, *const Data) -> *mut Data = original_fn(3);
     let reg = regioes(&[this as usize, ret as usize, src as usize]);
-    let (r, rr, igual, mo, mr) = lado_a_lado(&reg, || f(this, ret, src), || copia(this, ret, src));
-    PLACAR.registrar(igual && r == rr, || format!("copia original={:x?} rust={:x?}", mo, mr));
+    let (r, rr, igual, mo, mr) = side_by_side(&reg, || f(this, ret, src), || copia(this, ret, src));
+    PLACAR.record(igual && r == rr, || format!("copia original={:x?} rust={:x?}", mo, mr));
     r
 }
 
@@ -370,8 +370,8 @@ macro_rules! comparar_operador {
         unsafe extern "thiscall" fn $nome(this: *const Data, ret: *mut Data, n: u32) -> *mut Data {
             let f: unsafe extern "thiscall" fn(*const Data, *mut Data, u32) -> *mut Data = original_fn($i);
             let reg = regioes(&[this as usize, ret as usize]);
-            let (r, rr, igual, mo, mr) = lado_a_lado(&reg, || f(this, ret, n), || $rust(this, ret, n));
-            PLACAR.registrar(igual && r == rr, || format!("{}({:?}, {:#x}) original={:x?} rust={:x?}", $texto, *this, n, mo, mr));
+            let (r, rr, igual, mo, mr) = side_by_side(&reg, || f(this, ret, n), || $rust(this, ret, n));
+            PLACAR.record(igual && r == rr, || format!("{}({:?}, {:#x}) original={:x?} rust={:x?}", $texto, *this, n, mo, mr));
             r
         }
     };
@@ -385,8 +385,8 @@ unsafe extern "thiscall" fn comparar_ajustar(this: *const Data, alvo: u32, dest:
     let f: unsafe extern "thiscall" fn(*const Data, u32, *mut Data) -> u32 = original_fn(7);
     let reg = regioes(&[this as usize, dest as usize]);
     // O valor devolvido e o endereco de uma temporaria na pilha: nao e comparado.
-    let (r, _, igual, mo, mr) = lado_a_lado(&reg, || f(this, alvo, dest), || ajustar_semana(this, alvo, dest));
-    PLACAR.registrar(igual, || format!("ajustar_semana({:#x}) original={:x?} rust={:x?}", alvo, mo, mr));
+    let (r, _, igual, mo, mr) = side_by_side(&reg, || f(this, alvo, dest), || ajustar_semana(this, alvo, dest));
+    PLACAR.record(igual, || format!("ajustar_semana({:#x}) original={:x?} rust={:x?}", alvo, mo, mr));
     r
 }
 
@@ -397,26 +397,26 @@ unsafe extern "thiscall" fn comparar_dma(this: *mut Data, dia: u32, mes: u32, an
         return f(this, dia, mes, ano, semana);
     }
     let reg = regioes(&[this as usize]);
-    let (r, rr, igual, mo, mr) = lado_a_lado(&reg, || f(this, dia, mes, ano, semana), || data_dma(this, dia, mes, ano, semana));
-    PLACAR.registrar(igual && r == rr, || format!("dma({:#x}, {:#x}, {:#x}, {:#x}) original={:x?} rust={:x?}", dia, mes, ano, semana, mo, mr));
+    let (r, rr, igual, mo, mr) = side_by_side(&reg, || f(this, dia, mes, ano, semana), || data_dma(this, dia, mes, ano, semana));
+    PLACAR.record(igual && r == rr, || format!("dma({:#x}, {:#x}, {:#x}, {:#x}) original={:x?} rust={:x?}", dia, mes, ano, semana, mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_dias(this: *const Data, outra: Data) -> i32 {
     let f: unsafe extern "thiscall" fn(*const Data, Data) -> i32 = original_fn(9);
     let reg = [(this as usize, 8), (EST_DIAS.valor, 8), (EST_DIAS.guarda, 1)];
-    let (r, rr, igual, mo, mr) = lado_a_lado(&reg, || f(this, outra), || dias_ate(this, outra));
-    PLACAR.registrar(igual && r == rr, || format!("dias_ate({:?}, {:?}) original={} {:x?} rust={} {:x?}", *this, outra, r, mo, rr, mr));
+    let (r, rr, igual, mo, mr) = side_by_side(&reg, || f(this, outra), || dias_ate(this, outra));
+    PLACAR.record(igual && r == rr, || format!("dias_ate({:?}, {:?}) original={} {:x?} rust={} {:x?}", *this, outra, r, mo, rr, mr));
     r
 }
 
 /// Autoteste (roda depois de a CRT do jogo estar inicializada: os operadores chamam atexit).
 pub unsafe fn autoteste() {
-    let mut s = Sorteio(0x1234_5678_9abc_def1);
+    let mut s = TestRng(0x1234_5678_9abc_def1);
     PLACAR.autoteste(|| {
         // Construtores: todos os anos de 16 bits, com lixo nos 16 bits de cima dos argumentos.
         for ano in 0..=0xffffu32 {
-            let lixo = s.proximo() as u32;
+            let lixo = s.next_u64() as u32;
             let mut d = Data::default();
             comparar_nova(&mut d, (lixo & 0xffff_0000) | (lixo >> 7 & 0xffff), (lixo << 16) | ano);
         }
@@ -431,7 +431,7 @@ pub unsafe fn autoteste() {
             }
         }
         for _ in 0..200_000 {
-            let x = s.proximo();
+            let x = s.next_u64();
             comparar_semana(&Data { dia: x as i16, ano: (x >> 16) as u16, bissexto: (x >> 32) as i32 });
         }
         // Operadores e cia.: datas plausiveis e estranhas, n pequenos, grandes, negativos e bordas.
@@ -439,7 +439,7 @@ pub unsafe fn autoteste() {
         // chamam um ao outro para sempre ate estourar a pilha; a original faz o mesmo.
         let bordas: [u32; 10] = [0, 1, 7, 365, 366, 0x7fff, 0x8001, 0xffff, 0x1_0005, 0xffff_fff9];
         for i in 0..400_000u32 {
-            let x = s.proximo();
+            let x = s.next_u64();
             let ano = if i % 4 == 0 { (x >> 48) as u16 } else { 1900 + ((x >> 48) % 250) as u16 };
             let dia = if i % 5 == 0 { (x >> 32) as i16 } else { ((x >> 32) % 400) as i16 - 20 };
             let a = Data { dia, ano, bissexto: if i % 7 == 0 { (x >> 20) as i32 } else { bissexto(ano) } };

@@ -137,16 +137,16 @@ unsafe extern "thiscall" fn comparar_get_offers_for_player(this: usize, pessoa: 
     let e = offer_for_player(this, *pessoa);
     let l = if e == 0 { 0 } else { *(e as *const usize) };
     let reg = if l == 0 { vec![] } else { vec![(l, 0xe)] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, lista, todas), || get_offers_for_player(this, pessoa, lista, todas));
-    PLACAR.registrar(igual && r == n, || format!("get_offers_for_player({}, todas {}) original={} rust={} {:x?} x {:x?}", *pessoa, todas, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, pessoa, lista, todas), || get_offers_for_player(this, pessoa, lista, todas));
+    PLACAR.record(igual && r == n, || format!("get_offers_for_player({}, todas {}) original={} rust={} {:x?} x {:x?}", *pessoa, todas, r, n, mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn comparar_update_club_target_reputation(this: usize, clube: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%);
     let reg = [(shopping_list_entry(this, clube) + 5, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || update_club_target_reputation(this, clube));
-    PLACAR.registrar(igual && r == n, || format!("update_club_target_reputation({}) original={} rust={} {:x?} x {:x?}", *(clube as *const i32), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube), || update_club_target_reputation(this, clube));
+    PLACAR.record(igual && r == n, || format!("update_club_target_reputation({}) original={} rust={} {:x?} x {:x?}", *(clube as *const i32), r, n, mo, mr));
     r
 }
 
@@ -158,7 +158,7 @@ unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(jogo: usize,
         return o(jogo, noticia, cursor);
     }
     let reg = [(noticia + 5, 200), (cursor as usize, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(jogo, noticia, cursor), || comp_util_write_fixture_to_news_slots(jogo, noticia, cursor));
-    PLACAR.registrar(igual && r == n, || format!("comp_util_write_fixture_to_news_slots(cursor {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(jogo, noticia, cursor), || comp_util_write_fixture_to_news_slots(jogo, noticia, cursor));
+    PLACAR.record(igual && r == n, || format!("comp_util_write_fixture_to_news_slots(cursor {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

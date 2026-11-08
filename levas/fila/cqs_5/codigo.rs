@@ -78,7 +78,7 @@ unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             let c = base + i as u16 as usize * 0x245;
             let antes = cqs5_d(c + 0x5b);
             if eng_auto_cup_is_in_comp(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8) {
-                crate::comparacao::ramo("cqs_5 rebaixado para a conference");
+                crate::comparison::branch("cqs_5 rebaixado para a conference");
                 push_section_club(this, &mut k, c); // cqs5: o rebaixado entra
                 achado = c;
                 break;
@@ -178,7 +178,7 @@ unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     if k != cqs5_d(this + 0xb6) as i32 {
         return 0;
     }
-    crate::comparacao::ramo("cqs_5 chaves do trofeu da liga");
+    crate::comparison::branch("cqs_5 chaves do trofeu da liga");
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     ordenar(cqs5_d(this + 0xb2), cqs5_d(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
     let metade = (cqs5_d(this + 0xb6) as i32) / 2;
@@ -207,17 +207,17 @@ unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
         return o(this);
     }
     let antes = cqs5_d(this + 0xb2);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this + 0xb6, 4usize), (0xb67a34, 4)]);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqs5_d(this + 0xb2));
         cqs5_pd(this + 0xb2, antes);
         r
     }, || {
-        let r = crate::aleatorio::sem_contar(|| eng_auto_cup_select_section_clubs(this));
+        let r = crate::rng::without_counting(|| eng_auto_cup_select_section_clubs(this));
         lr.set(cqs5_d(this + 0xb2));
         cqs5_pd(this + 0xb2, lo.get());
         r
@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("select_section_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.record(igual && a == b && lista, || format!("select_section_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -276,7 +276,7 @@ unsafe extern "thiscall" fn create_section_stage(this: usize) {
     if cqs5_d(cqs5_d(this + 0xc)) == 0 {
         return show_error_at(0x9c4180, 0x300);
     }
-    crate::comparacao::ramo("cqs_5 fase das chaves do trofeu");
+    crate::comparison::branch("cqs_5 fase das chaves do trofeu");
     cqs5_pd(this + 0x30, 0);
 }
 
@@ -285,7 +285,7 @@ unsafe extern "thiscall" fn comparar_create_section_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
     let f = cqs5_d(cqs5_d(this + 0xc));
-    PLACAR.registrar(f != 0 && cqs5_d(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
+    PLACAR.record(f != 0 && cqs5_d(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
 }
 
 /// { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
@@ -299,7 +299,7 @@ unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     let fase = fase + 1;
     cqs5_pd(this + 0x30, fase as usize);
     if fase == 1 {
-        crate::comparacao::ramo("cqs_5 final do trofeu");
+        crate::comparison::branch("cqs_5 final do trofeu");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x56bce0usize);
         f(this);
     }
@@ -312,5 +312,5 @@ unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this: usize) {
     let ultima = antes >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqs5_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, antes, depois));
+    PLACAR.record(depois == if ultima { antes } else { antes + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, antes, depois));
 }

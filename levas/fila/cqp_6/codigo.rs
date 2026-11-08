@@ -81,7 +81,7 @@ unsafe fn compare_league_round_table(nome: &str, fase: u32, rodadas: *mut i16, e
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if liga.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copia(&mut r2, &mut e2, pl2));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, original, || copia(&mut r2, &mut e2, pl2));
     let gravou = a != 0 || b != 0;
     let saidas = !gravou || (*rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2));
     let tabela = if a != 0 && b != 0 {
@@ -97,7 +97,7 @@ unsafe fn compare_league_round_table(nome: &str, fase: u32, rodadas: *mut i16, e
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
+    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} tabela {}", nome, fase as u8 as i8, saidas, tabela));
     a
 }
 
@@ -291,7 +291,7 @@ unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, fase: u32, ro
                 show_error_at(0xa82844, 0xb0);
                 return 0;
             }
-            crate::comparacao::ramo("cqp_6 calendario da primera");
+            crate::comparison::branch("cqp_6 calendario da primera");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             if (ano as i16) % 2 != 0 {
                 write_rounds_winter_break(t, ano, &PRIMERA_ODD_YEAR_CHRISTMAS, 0xa82844);

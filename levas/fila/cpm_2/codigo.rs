@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, clube: usize, ma
     }
     let n = cpm2_w(this + 0x3e) as isize;
     if idx == n - 1 && cpm2_d(l + 5) != 0 {
-        crate::comparacao::ramo("cpm_2 confrontos diretos");
+        crate::comparison::branch("cpm_2 confrontos diretos");
         let mut a = 0isize;
         while a < cpm2_w(this + 0x3e) as isize {
             let mut k = 0usize;
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn league_get_club_array(this: usize, saida: *mut usize
         *n = 0;
         return;
     }
-    crate::comparacao::ramo("cpm_2 vetor dos clubes");
+    crate::comparison::branch("cpm_2 vetor dos clubes");
     let mut i = 0i16;
     while i < cpm2_w(this + 0x3e) {
         cpm2_por(p + 4 * i as usize, cpm2_d(cpm2_d(this + 0xb1) + i as usize * TABLE_ROW_SIZE));
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn record_final_positions(this: usize) {
         let divisao = cpm2_d(this + 4);
         let c = cpm2_d(cpm2_d(this + 0xb1) + i as usize * TABLE_ROW_SIZE);
         if cpm2_d(c + 0x57) == divisao {
-            crate::comparacao::ramo("cpm_2 posicao final");
+            crate::comparison::branch("cpm_2 posicao final");
             cpm2_por(c + 0x5b, divisao);
             *((c + 0x5f) as *mut u8) = (i as u8).wrapping_add(1); // a posição final
         }
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u32, clube: 
             ok &= outros.enumerate().all(|(k, j)| cpm2_d(p + 14 * k) == cpm2_d(tab + j * TABLE_ROW_SIZE));
         }
     }
-    PLACAR.registrar(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
+    PLACAR.record(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
         idx, clube, marca as u8, n, cpm2_w(this + 0xa7), a7_esperado, confrontos, cpm2_d(l + 5), cpm2_d(l + 9)));
 }
 
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn comparar_league_get_club_array(this: usize, saida: *
     }
     let conta = cpm2_w(this + 0x3e);
     let ok = *n == conta && (0..conta.max(0) as usize).all(|i| cpm2_d(p + 4 * i) == cpm2_d(cpm2_d(this + 0xb1) + i * TABLE_ROW_SIZE));
-    PLACAR.registrar(ok, || format!("league_get_club_array conta {} (tabela {})", *n, conta));
+    PLACAR.record(ok, || format!("league_get_club_array conta {} (tabela {})", *n, conta));
 }
 
 /// Comparador: lado a lado pela divisão da última temporada e pela posição (+0x5b..+0x5f) de cada clube da tabela.
@@ -202,6 +202,6 @@ unsafe extern "thiscall" fn comparar_record_final_positions(this: usize) {
     let reg: Vec<(usize, usize)> = (0..cpm2_w(this + 0x3e).max(0) as usize)
         .map(|i| (cpm2_d(cpm2_d(this + 0xb1) + i * TABLE_ROW_SIZE) + 0x5b, 5))
         .collect();
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || record_final_positions(this));
-    PLACAR.registrar(igual, || format!("record_final_positions {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || record_final_positions(this));
+    PLACAR.record(igual, || format!("record_final_positions {:x?} x {:x?}", mo, mr));
 }

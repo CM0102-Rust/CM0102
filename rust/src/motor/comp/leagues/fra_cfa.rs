@@ -55,7 +55,7 @@ pub(crate) unsafe fn create_cfa_schedule(this: usize, fase: u32, rodadas: *mut i
         show_error_at(p.arquivo, p.linha);
         return 0;
     }
-    crate::comparacao::ramo(p.ramo);
+    crate::comparison::branch(p.ramo);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
     fra_cfa_set_league_rounds(t, ano, 0, p.tabela);
     t
@@ -71,7 +71,7 @@ pub(crate) unsafe fn compare_cfa_schedule(name: &str, stage: u32, rounds: *mut i
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, original, || copy(&mut r2, &mut e2, pl2));
     let outs = stage as u8 != 0xff || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
     let table = if a != 0 && b != 0 {
         let n = *rounds as usize;
@@ -82,7 +82,7 @@ pub(crate) unsafe fn compare_cfa_schedule(name: &str, stage: u32, rounds: *mut i
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
+    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -98,7 +98,7 @@ pub(crate) unsafe fn compare_c1_schedule(name: &str, stage: u32, rounds: *mut i1
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
     let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, original, || copy(&mut r2, &mut e2, pl2));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, original, || copy(&mut r2, &mut e2, pl2));
     let gravou = a != 0 || b != 0;
     let outs = !gravou || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
     let table = if a != 0 && b != 0 {
@@ -114,7 +114,7 @@ pub(crate) unsafe fn compare_c1_schedule(name: &str, stage: u32, rounds: *mut i1
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
+    PLACAR.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -251,10 +251,10 @@ pub(crate) unsafe fn create_c1_schedule(this: usize, stage: u32, rounds: *mut i1
     }
     let year = core::ptr::read_unaligned((this + 0x40) as *const i16);
     if k == 0 {
-        crate::comparacao::ramo("cqo_5 calendario da c1");
+        crate::comparison::branch("cqo_5 calendario da c1");
         fra_cfa_set_league_rounds(t, year as u16 as u32, 0, &SERIE_C1_ROUNDS);
     } else {
-        crate::comparacao::ramo("cqo_5 play-offs da c1");
+        crate::comparison::branch("cqo_5 play-offs da c1");
         let year = year as i32 as u32;
         if k == 1 {
             eng_cc_cup_write_cup_round(t, 0, &CFA_SEMIFINAL_ROUND, year);
@@ -268,14 +268,6 @@ pub(crate) unsafe fn create_c1_schedule(this: usize, stage: u32, rounds: *mut i1
 
 
 
-/// the same for the other Serie C1 group (the same table)
-/// Original: `ItaSerC1b::create_schedule` (0x64ef30, ita_ser_c1b.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x64ef30 } (thiscall, ret 0x10, ita_ser_c1b.cpp, 2.279 bytes, método +0x3c): `ItaSerC1b::create_schedule`: a
-/// chave B, o mesmo código. Fonte 0x9ea558, linhas 0xac, 0x156, 0x190.
-pub(crate) unsafe extern "thiscall" fn fra_cfa_create_schedule_64ef30(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_c1_schedule(this, fase, rodadas, extra, liga, &C1BracketVariant { arquivo: 0x9ea558, linhas: [0xac, 0x156, 0x190] })
-}
 
 
 
@@ -373,7 +365,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
         show_error_at(p.arquivo, p.linhas[0]);
         return this;
     }
-    crate::comparacao::ramo("cqn_4 liga de fundo francesa");
+    crate::comparison::branch("cqn_4 liga de fundo francesa");
     let mut lista = vec![0usize; p.maximo as usize];
     let mut k: i16 = 0;
     let mut genericos: i16 = 0;
@@ -382,7 +374,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
     let mut i: i32 = 0;
     while i < n {
         let c = base_clubes + (i as usize) * club::SIZE;
-        let comp = read_u32_as_usize(c + 0x57);
+        let comp = read_u32_as_usize(c + club::DIVISION);
         let id = if comp != 0 { read_u32_as_usize(comp) } else { 0 };
         if comp != 0 && p.todas.iter().any(|&g| id == read_u32_as_usize(g)) {
             lista[k as usize] = c;
@@ -393,11 +385,11 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
         } else {
             let entra = match p.nacao {
                 Some(g) => {
-                    let nacao = read_u32_as_usize(c + 0x53);
-                    nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(g) && read_u32_as_usize(c + 0x60) == 0 && comp != 0 && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)
+                    let nacao = read_u32_as_usize(c + club::NATION);
+                    nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(g) && read_u32_as_usize(c + club::RESERVE_DIVISION) == 0 && comp != 0 && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)
                 }
                 None => {
-                    let reserva = read_u32_as_usize(c + 0x60);
+                    let reserva = read_u32_as_usize(c + club::RESERVE_DIVISION);
                     comp != 0 && id == read_u32_as_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && reserva != 0 && read_u32_as_usize(reserva) == read_u32_as_usize(p.competicao)
                 }
             };
@@ -467,16 +459,6 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, year: u32)
     construct_group_league(this, year, &FRA_CFA_CFA_LEAGUE)
 }
 
-/// the French lower division (background): up to 40 clubs, those of the National and up to 20 French clubs of the
-/// generic division with no reserve competition, drawn into 2 groups of 20
-/// Original: `FraLower::FraLower` (0x5bd600, fra_lower.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5bd600 } (thiscall, ret 4, fra_lower.cpp, 578 bytes): `FraLower::FraLower(ano)`, a divisão de baixo francesa
-/// (competição de id [0x9cf548]): até 40 clubes, os do National ([0x9cf5d4]) e até 20 franceses ([0x9cf300]) da divisão
-/// genérica sem competição de reserva, embaralhados em 2 grupos de 20. Fonte 0x9ccbd0, linhas 0x40, 0x62, 0x69.
-pub(crate) unsafe extern "thiscall" fn construct_fra_lower(this: usize, year: u32) -> usize {
-    construct_group_league(this, year, &FRENCH_LOWER_DIVISION)
-}
 
 /// Comparer of the constructors (they draw and allocate): original only, checking return, vtable, year, discipline,
 /// record and no table left (+0x3e = 0, +0xb1 = 0).
@@ -488,7 +470,7 @@ pub(crate) unsafe fn compare_construct_group_league(name: &str, this: usize, yea
     let ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == year as u16
         && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == comp_record_of_key(p.competicao)
         && read_u32_as_usize(this + 0xb1) == 0;
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4), read_u32_as_usize(this + 0xb1)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 4), read_u32_as_usize(this + 0xb1)));
     r
 }
 
@@ -540,18 +522,10 @@ pub(crate) unsafe fn destroy_group_league(this: usize, vtabela: usize) {
 ///
 /// [pt] { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
 pub(crate) unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
-    crate::comparacao::ramo("cqn_4 destrutor da cfa");
+    crate::comparison::branch("cqn_4 destrutor da cfa");
     destroy_group_league(this, 0x96a7b0)
 }
 
-/// the same for the lower division
-/// Original: `FraLower::~FraLower` (0x5bd870, fra_lower.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
-pub(crate) unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
-    crate::comparacao::ramo("cqn_4 destrutor da divisao de baixo");
-    destroy_group_league(this, 0x96ab78)
-}
 
 
 
@@ -587,7 +561,7 @@ pub(crate) unsafe fn create_french_table(this: usize, clubs: usize, n: i16, file
         k = k.wrapping_add(1);
         i = i.wrapping_add(1);
     }
-    crate::comparacao::ramo("cqk_6 tabela francesa de baixo");
+    crate::comparison::branch("cqk_6 tabela francesa de baixo");
     (k as i8 as i16 == read_i16(this + 0x3e)) as u32
 }
 
@@ -603,15 +577,6 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_create_group_table(this: usize, c
     create_french_table(this, clubs, 0x12, 0x9ccaf0, 0x185, &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION])
 }
 
-/// the French lower division has 20 clubs (chosen by the constructor); those in the National get the mark
-/// Original: `FraLower::create_table` (0x5be230, fra_lower.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5be230 } (thiscall, ret 4, fra_lower.cpp): `FraLower::create_table(clubes)`: a divisão de baixo francesa com
-/// 20 clubes da lista (o construtor 0x5bd600 escolhe-os), marcando os que estão no National ([0x9cf5d4]). Fonte
-/// 0x9ccbd0, linha 0x175.
-pub(crate) unsafe extern "thiscall" fn fra_cfa_create_table(this: usize, clubs: usize) -> u32 {
-    create_french_table(this, clubs, 0x14, 0x9ccbd0, 0x175, &[KEY_CLUB_COMP_FRENCH_NATIONAL])
-}
 
 /// Comparer of the French table creation: original only, then checks +0x3e, return 1 and rows with the planned clubs
 /// and marks (+0x38).
@@ -622,7 +587,7 @@ pub(crate) unsafe fn compare_french_table(name: &str, this: usize, clubs: usize,
     let plan: Vec<(usize, u8)> = (0..n as usize)
         .map(|i| {
             let c = read_usize(clubs + i * 4);
-            let id = read_usize(read_usize(c + 0x57));
+            let id = read_usize(read_usize(c + club::DIVISION));
             (c, marcadas.iter().any(|&g| read_usize(g) == id) as u8)
         })
         .collect();
@@ -634,7 +599,7 @@ pub(crate) unsafe fn compare_french_table(name: &str, this: usize, clubs: usize,
         found = (0..n as usize).map(|k| (read_usize(t + k * 0x3b), *((t + k * 0x3b + 0x38) as *const u8))).collect();
         same = found == plan;
     }
-    PLACAR.registrar(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
+    PLACAR.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
     r
 }
 
@@ -656,7 +621,7 @@ pub(crate) unsafe fn set_c1_club_progress(this: usize, clube: usize, stage: u8, 
         m = match m {
             2..=5 => 2,
             14..=17 => {
-                crate::comparacao::ramo("cqk_6 band do play-out");
+                crate::comparison::branch("cqk_6 band do play-out");
                 0xe // cqk6: a melhor na faixa do play-out
             }
             v => v,
@@ -683,13 +648,6 @@ pub(crate) unsafe fn set_c1_club_progress(this: usize, clube: usize, stage: u8, 
 }
 
 
-/// the same rule in C1/B
-/// Original: `ItaSerC1b::set_club_progress` (0x64ff40, ita_ser_c1b.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x64ff40 } (thiscall, ret 0x14, ita_ser_c1b.cpp): `ItaSerC1b::set_club_progress(...)`, igual à da C1/A.
-pub(crate) unsafe extern "thiscall" fn fra_cfa_set_club_progress(this: usize, clube: usize, stage: u32, current: u32, best: u32, worst: u32) {
-    set_c1_club_progress(this, clube, stage as u8, current as u8, best as u8, worst as u8)
-}
 
 /// Comparer of set_club_progress: finds the stats entry first and runs both side by side on its 3 bytes; without entry,
 /// original only.
@@ -702,8 +660,8 @@ pub(crate) unsafe fn compare_c1_club_progress(name: &str, this: usize, clube: us
     if e == 0 {
         return original();
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x73, 3)], original, copy);
-    PLACAR.registrar(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], original, copy);
+    PLACAR.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, clube, mo, mr));
 }
 
 

@@ -7,7 +7,7 @@
 /// particular e o lixo gravado muda (prova do save da 219a). Volta quando a cópia reproduzir o resíduo.
 unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, tipo: u32) -> u32 {
     let gravar_banco: unsafe extern "C" fn(usize, u32, u32, u32) -> u32 = core::mem::transmute(0x52dad0usize);
-    crate::comparacao::ramo("save gravar banco");
+    crate::comparison::branch("save gravar banco");
     gravar_banco(save, 1, a4, tipo)
 }
 
@@ -22,7 +22,7 @@ unsafe extern "C" fn comparar_save_database_for_game(save: usize, a4: u32, tipo:
 /// a resposta dela (1 = certo).
 unsafe extern "C" fn load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
     let carregar_banco: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x528540usize);
-    crate::comparacao::ramo("save carregar banco");
+    crate::comparison::branch("save carregar banco");
     carregar_banco(save, compartilhado, 1)
 }
 
@@ -48,7 +48,7 @@ unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     let limpar_temporarios: unsafe extern "C" fn(usize) = core::mem::transmute(0x90cd50usize);
     let liberar_tabelas: unsafe extern "C" fn() = core::mem::transmute(0x528080usize);
     let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(0x54a130usize);
-    crate::comparacao::ramo("save liberar dados do jogo");
+    crate::comparison::branch("save liberar dados do jogo");
     // destrutor + delete + global zerado
     let objetos = |lista: &[(usize, usize)]| {
         for &(g, destrutor) in lista {

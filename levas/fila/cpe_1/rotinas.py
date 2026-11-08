@@ -3,7 +3,7 @@
 # 0x5c5040, 174; pela 0x5c3040). Simulação: as mutações pela carreira até 2002-06-01 e a confirmação no jogo real
 # comparando. Sem SEH, sem caixa, locais todas gravadas antes de lidas (a chave do bsearch: 0x16 bytes zerados com a
 # faixa, ou 0xff e a nação). As duas sorteiam (0x90cfc0): comparador lado a lado pelo estado do sorteio
-# (REGIOES_DO_ESTADO), a cópia em sem_contar, e pelo cursor (+0xa) da lista de cada candidato (a única escrita: as duas
+# (STATE_REGIONS), a cópia em without_counting, e pelo cursor (+0xa) da lista de cada candidato (a única escrita: as duas
 # voltam o cursor ao começo e percorrem com a 0x68d1b0). Nenhuma em laço quente.
 SAVE = False
 ROTINAS = [('adversario_do_amistoso', 0x5c4cb0, [0x83, 0xec, 0x1c, 0x89, 0x4c, 0x24, 0x00]),

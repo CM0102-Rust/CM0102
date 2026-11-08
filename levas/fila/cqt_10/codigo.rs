@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, hoje
         return 0;
     }
     if ano_de_hoje == ano && dia_de_hoje == dia && cqt10_d(this + 0x45) == 0 && completo == 0 {
-        crate::comparacao::ramo("cqt_10 sorteio da oceania");
+        crate::comparison::branch("cqt_10 sorteio da oceania");
         clubes(this);
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqt10_d(cqt10_d(this) + 0x5c));
         previstas(this);
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn comparar_oceania_club_champ_update_for_date(this: us
             && fases != 0
             && cqt10_d(fases) != 0
             && cqt10_d(this + 0x30) == 0;
-        PLACAR.registrar(ok, || format!("oceania_club_champ_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqt10_d(this + 0x45), cqt10_d(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("oceania_club_champ_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqt10_d(this + 0x45), cqt10_d(this + 0x30) as i32));
     }
     r
 }
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
     }
     let mut i = 0i8;
     while (i as i16) < cqt10_w(this + 0x3e) {
-        crate::comparacao::ramo("cqt_10 linha do grupo a");
+        crate::comparison::branch("cqt_10 linha do grupo a");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
         i = i.wrapping_add(1);
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn comparar_create_group_a_table(this: usize) -> u32 {
         }
     }
     let igual = r == 1 && cqt10_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("create_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    PLACAR.record(igual, || format!("create_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
         return 0;
     }
     for n in 0..4usize {
-        crate::comparacao::ramo("cqt_10 time do grupo b");
+        crate::comparison::branch("cqt_10 time do grupo b");
         cqt10_pd(times + n * 4, selected_club(this, 4 + n)); // cqt10: o time na vaga do grupo B
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt10_d(cqt10_d(this) + 0x3c));
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize) -> u32 {
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqt10_d(this + 0x30) == 0 && cqt10_w(f + 0x3e) == 4 && cqt10_w(f + 0x40) == cqt10_w(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("create_group_b_stage: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
+        PLACAR.record(ok, || format!("create_group_b_stage: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
     }
     r
 }

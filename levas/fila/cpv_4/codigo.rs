@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn add_transfer_negotiation(this: usize, oferta: usize,
             Some(j) => k = j,
             None => return show_error_at(0xa8d514, 0x60f),
         }
-        crate::comparacao::ramo("cpv_4 vaga nova");
+        crate::comparison::branch("cpv_4 vaga nova");
         cpv4_pd(oferta + 0x28, k);
         cpv4_pb(oferta + 0x2c, 1); // cpv4: a oferta em negociação
     }
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn add_transfer_negotiation(this: usize, oferta: usize,
         }
         agendar(this, oferta, 0xe, 0);
     } else {
-        crate::comparacao::ramo("cpv_4 negociacao agendada");
+        crate::comparison::branch("cpv_4 negociacao agendada");
         agendar(this, oferta, 2, 0); // cpv4: a oferta em 2 dias
     }
 }
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn post_job_rumour_news(_this: usize, pessoa: usize, cl
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u32 = core::mem::transmute(0x8d1da0usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    crate::comparacao::ramo("cpv_4 boato do tecnico");
+    crate::comparison::branch("cpv_4 boato do tecnico");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x1776, 0);
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn post_player_rejects_move_news(this: usize, oferta: u
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    crate::comparacao::ramo("cpv_4 recusa em se mudar");
+    crate::comparison::branch("cpv_4 recusa em se mudar");
     let p = cpv4_pessoa(cpv4_d(oferta + 0xc));
     let c = contract_of(cpv4_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;

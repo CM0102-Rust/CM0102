@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
         while conta[r as i16 as usize] >= lim {
             r = sorteio(8);
         }
-        crate::comparacao::ramo("cqf_4 vaga no grupo");
+        crate::comparison::branch("cqf_4 vaga no grupo");
         cqf4_pd(dst, cqf4_d(src));
         src += 5;
         cqf4_pb(dst + 4, (r as u8).wrapping_add(1));
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     if cqf4_w(this + 0x40) != 0x7d2 {
         return lista;
     }
-    crate::comparacao::ramo("cqf_4 sorteio de 2002");
+    crate::comparison::branch("cqf_4 sorteio de 2002");
     for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: as nações do sorteio real
         let nacao = cqf4_d(0xae23a8).wrapping_add((cqf4_d(chave) as i32).wrapping_mul(0x122) as usize);
         cqf4_pd(lista + i * 5, cqf4_d(principal(nacao)));
@@ -134,12 +134,12 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
 unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend_from_slice(&[(this + 0xee, 0xa0), (this + 0x36, 2), (0xb67a34, 4)]);
     if cqf4_w(this + 0x40) == 0x7d2 && cqf4_d(this + 0x14) != 0 {
         reg.push((cqf4_d(this + 0x14), 0xc0));
     }
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| draw_groups(this)));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| draw_groups(this)));
     let mesma = if a != 0 && b != 0 {
         core::slice::from_raw_parts(a as *const u8, 0xa0) == core::slice::from_raw_parts(b as *const u8, 0xa0)
     } else {
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usize {
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && mesma, || format!("draw_groups: memória igual={} lista igual={}", igual, mesma));
+    PLACAR.record(igual && mesma, || format!("draw_groups: memória igual={} lista igual={}", igual, mesma));
     a
 }
 
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn comparar_run_group_draw(this: usize) {
     if cqf4_d(this + 0x45) == 1 {
         let fases = cqf4_d(this + 0xc);
         let ok = fases != 0 && (0..7).all(|g| cqf4_d(fases + g * 4) != 0) && cqf4_d(this + 0x30) == 6;
-        PLACAR.registrar(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", cqf4_d(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", cqf4_d(this + 0x30) as i32));
     }
 }
 
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, hoje: usize, 
     }
     let dia_do_sorteio = cqf4_w(this + 0xb6) as u16; // cqf4: o dia do sorteio
     if dia_do_sorteio == dia && cqf4_w(this + 0xb8) as i32 + cqf4_w(this + 0x40) as i32 == ano && completo != 0 && cqf4_d(this + 0xb1) == 0 {
-        crate::comparacao::ramo("cqf_4 dia do sorteio");
+        crate::comparison::branch("cqf_4 dia do sorteio");
         sortear(this);
     }
     liga(this, hoje, completo)
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: usize, hoje
     let sorteia = cqf4_w(this + 0xb6) as u16 == dia && cqf4_w(this + 0xb8) as i32 + cqf4_w(this + 0x40) as i32 == ano && completo != 0 && cqf4_d(this + 0xb1) == 0;
     let r = o(this, hoje, completo);
     if sorteia {
-        PLACAR.registrar(cqf4_d(this + 0xb1) != 0 && cqf4_d(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", cqf4_d(this + 0xb1), cqf4_d(this + 0x45)));
+        PLACAR.record(cqf4_d(this + 0xb1) != 0 && cqf4_d(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", cqf4_d(this + 0xb1), cqf4_d(this + 0x45)));
     }
     r
 }

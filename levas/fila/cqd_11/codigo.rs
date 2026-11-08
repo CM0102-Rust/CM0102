@@ -40,7 +40,7 @@ unsafe fn toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, lista: usi
         return;
     }
     if falta {
-        crate::comparacao::ramo("cqd_11 falta tirada");
+        crate::comparison::branch("cqd_11 falta tirada");
     }
     *(p as *mut u8) = m ^ bit;
     let l = cqd11_d(this + lista);
@@ -62,7 +62,7 @@ unsafe fn toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, lista: usi
         }
         if cqd11_d(item) == cqd11_d(pessoa) {
             if falta {
-                crate::comparacao::ramo("cqd_11 registro da falta tirado");
+                crate::comparison::branch("cqd_11 registro da falta tirado");
             }
             tirar(cqd11_d(this + lista), item);
             return;
@@ -119,7 +119,7 @@ unsafe fn compare_toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, li
     o(this, pessoa);
     let depois = llist_items(l);
     let marca_ok = marca.map_or(true, |(p, m)| *(p as *const u8) == m);
-    PLACAR.registrar(marca_ok && depois == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
+    PLACAR.record(marca_ok && depois == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
         nome, pessoa, marca, marca.map(|(p, _)| *(p as *const u8)), fica, depois));
 }
 
@@ -182,13 +182,13 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
     gravar(nt, 2, cqd11_d(cqd11_d(jogador + 8) + 0x33) as u32);
     gravar(nt, 3, cqd11_d(cqd11_d(jogador + 0xc) + 0x33) as u32);
     gravar(nt, 4, cqd11_d(clube) as u32);
-    crate::comparacao::ramo("cqd_11 noticia da falta");
+    crate::comparison::branch("cqd_11 noticia da falta");
     let r = taped_random(3); // cqd11: o sorteio da notícia
     gravar(nt, 5, r as u32);
     gravar(nt, 6, humano(clube, 0, 1, 0, 0));
     let tecnico = cqd11_d(clube + 0xcf);
     if tecnico != 0 && humano(clube, 1, 1, 0, 0) == 0 { // cqd11: o técnico da IA relata
-        crate::comparacao::ramo("cqd_11 relator tecnico");
+        crate::comparison::branch("cqd_11 relator tecnico");
         let t = cqd11_d(clube + 0xcf);
         gravar(nt, 7, cqd11_d(t) as u32);
         gravar(nt, 8, cqd11_d(cqd11_d(t + 4) + 0x33) as u32);
@@ -253,17 +253,17 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
 unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize, jogador: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
-    let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, jogador, clube));
+    let ((), tape_lock) = crate::rng::trace(|| o(this, jogador, clube));
     let n = tape_lock.len();
     *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = Some((tape_lock, 0, false));
     AWOL_NEWS_DESTINATION = (0, 0);
-    crate::aleatorio::sem_contar(|| awol_post_missed_training_news(this, jogador, clube));
+    crate::rng::without_counting(|| awol_post_missed_training_news(this, jogador, clube));
     let (k, falhou) = match &*core::ptr::addr_of!(AWOL_NEWS_TAPE) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
     };
     *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = None;
     let destino = AWOL_NEWS_DESTINATION;
-    PLACAR.registrar(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
+    PLACAR.record(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
         jogador, clube, n, k, falhou, destino));
 }

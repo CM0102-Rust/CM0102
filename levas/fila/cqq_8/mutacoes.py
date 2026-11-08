@@ -15,8 +15,8 @@ MUTACOES = [
      '    // mutacao: sem a troca entre A e B',
      'cqq_8 acesso e rebaixamento'),
     ('cqq8_serie_b_sem_arbitros',
-     '    crate::comparacao::ramo("cqq_8 virada da serie b");\n    set_expectations_and_renew_officials(this)\n',
-     '    crate::comparacao::ramo("cqq_8 virada da serie b");\n    0 // mutacao: sem expectativas nem arbitros\n',
+     '    crate::comparison::branch("cqq_8 virada da serie b");\n    set_expectations_and_renew_officials(this)\n',
+     '    crate::comparison::branch("cqq_8 virada da serie b");\n    0 // mutacao: sem expectativas nem arbitros\n',
      'cqq_8 virada da serie b'),
 ]
 # Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01, base com os 9 itens): as tres ACUSADAS (a virada do Brasil em 2002-011; separam em 2002-012).

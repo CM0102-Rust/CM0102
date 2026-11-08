@@ -7,19 +7,19 @@ use super::*;
 pub(crate) unsafe extern "C" fn comparar_chance_to_know(person: usize, level: i8) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, i8) -> i32>(IDX_CHANCE_TO_KNOW)(person, level);
     let v = chance_to_know(person, level);
-    PLACAR.registrar(r == v, || format!("chance_to_know({}, {}) original={} rust={}", *((person + 4) as *const i16), level, r, v));
+    PLACAR.record(r == v, || format!("chance_to_know({}, {}) original={} rust={}", *((person + 4) as *const i16), level, r, v));
     r
 }
 
 /// Comparer for `know_person` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, person: usize, font: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_KNOW_PERSON);
-    let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
     if person != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
         reg.push(((*(this as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9)), 9));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, person, font), || crate::aleatorio::sem_contar(|| know_person(this, person, font)));
-    PLACAR.registrar(igual, || format!("know_person original={:x?} rust={:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, font), || crate::rng::without_counting(|| know_person(this, person, font)));
+    PLACAR.record(igual, || format!("know_person original={:x?} rust={:x?}", mo, mr));
 }
 
 /// Comparer for `fog_after_match` (comparison mode: see the header of motor.rs).
@@ -47,6 +47,6 @@ pub(crate) unsafe extern "stdcall" fn comparar_fog_after_match(partida: usize, d
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(partida, dados), || fog_after_match(partida, dados));
-    PLACAR.registrar(igual, || format!("fog_after_match original={:x?} rust={:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(partida, dados), || fog_after_match(partida, dados));
+    PLACAR.record(igual, || format!("fog_after_match original={:x?} rust={:x?}", mo, mr));
 }

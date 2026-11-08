@@ -986,7 +986,7 @@ unsafe extern "C" fn match_nation_key_id(nome: usize, linha: u32) -> u32 {
 }
 
 /// As globais (dword) que ficaram diferentes entre a original e a cópia: "[end] original x rust".
-fn describe_key_diffs(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) -> String {
+fn describe_key_diffs(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
     let mut s = String::new();
     for ((a, x), (_, y)) in mo.0.iter().zip(mr.0.iter()) {
         for i in (0..x.len()).step_by(4) {
@@ -1002,8 +1002,8 @@ fn describe_key_diffs(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::M
 unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I0%%);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_key_id(nome, linha));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(nome, linha), || match_club_key_id(nome, linha));
+    PLACAR.record(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
         format!("match_club_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });
@@ -1013,16 +1013,16 @@ unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u32) -> u32 
 unsafe extern "C" fn comparar_remap_club_key_id(antigo: u32, novo: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(%%I1%%);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remap_club_key_id(antigo, novo));
-    PLACAR.registrar(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, describe_key_diffs(&mo, &mr)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(antigo, novo), || remap_club_key_id(antigo, novo));
+    PLACAR.record(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, describe_key_diffs(&mo, &mr)));
     r
 }
 
 unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%);
     let reg: [(usize, usize); 1] = [(0x9cf200, 0x348)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_nation_key_id(nome, linha));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(nome, linha), || match_nation_key_id(nome, linha));
+    PLACAR.record(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
         format!("match_nation_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
     });

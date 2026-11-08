@@ -49,7 +49,7 @@ unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: usize, g: u32, arq
         loop {
             let c = cqr8_d(cqr8_d(this + 0xee) + o);
             if c != 0 {
-                crate::comparacao::ramo(ramo);
+                crate::comparison::branch(ramo);
                 cqr8_pd(times + k as usize * 4, c); // cqr8: o time na vaga k do grupo
                 cqr8_pd(cqr8_d(this + 0xee) + o, 0);
                 k += 1;
@@ -135,7 +135,7 @@ unsafe fn compare_group_stage(nome: &str, this: usize, g: u32, original: impl Fn
                 a == b
             });
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}, {}) devolveu {}; plano {:x?}", nome, this, g, r, plano));
+    PLACAR.record(ok, || format!("{}({:#x}, {}) devolveu {}; plano {:x?}", nome, this, g, r, plano));
     r
 }
 

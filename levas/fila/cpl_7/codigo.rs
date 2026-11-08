@@ -41,10 +41,10 @@ unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogador: usize, c
     padrao(data.as_mut_ptr() as usize);
     let chave = interest_key(jogador, clube);
     if has_interest(this, &chave) {
-        crate::comparacao::ramo("cpl_7 interesse repetido");
+        crate::comparison::branch("cpl_7 interesse repetido");
         return; // o interesse já está
     }
-    crate::comparacao::ramo("cpl_7 interesse novo");
+    crate::comparison::branch("cpl_7 interesse novo");
     if cpl7_d(this + 0xc) == 0 {
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
         let p = alocar(0x1f4);
@@ -144,14 +144,14 @@ unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usize, jogador:
             core::slice::from_raw_parts(cpl7_d(this + 0xc).wrapping_add(k * 0x19) as *const u8, 0x19) == &e[..]
         }),
     };
-    PLACAR.registrar(ok, || format!("add_transfer_interest(valor {}, avaliacao {}) conta {} -> {}, esperado {:x?}", valor, avaliacao, n, m, esperado));
+    PLACAR.record(ok, || format!("add_transfer_interest(valor {}, avaliacao {}) conta {} -> {}, esperado {:x?}", valor, avaliacao, n, m, esperado));
 }
 
 /// Comparador: pelo valor (só lê).
 unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = compare_id_pair_keys(a, b);
-    PLACAR.registrar(r == n, || format!("compare_id_pair_keys({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_id_pair_keys({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -159,6 +159,6 @@ unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
 unsafe extern "C" fn comparar_compare_story_log_records(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = compare_story_log_records(a, b);
-    PLACAR.registrar(r == n, || format!("compare_story_log_records({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("compare_story_log_records({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

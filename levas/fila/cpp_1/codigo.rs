@@ -31,7 +31,7 @@ unsafe extern "C" fn comparar_compare_decision_dates(a: usize, b: usize) -> i32 
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%);
     let r = o(a, b);
     let n = compare_decision_dates(a, b);
-    PLACAR.registrar(r == n, || format!("compare_decision_dates original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("compare_decision_dates original={} rust={}", r, n));
     r
 }
 
@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn process_due_decision_dates(this: usize, data: usize,
             let pessoa = (cpp1_d(0xae23bc) as usize).wrapping_add((id as usize).wrapping_mul(0x6e));
             core::ptr::write_unaligned(e as *mut i32, -1);
             if cpp1_b(e + 0xd) == 3 {
-                crate::comparacao::ramo("cpp_1 decidir ofertas");
+                crate::comparison::branch("cpp_1 decidir ofertas");
                 resolver(this, pessoa); // a pessoa decide as ofertas
             }
         }
@@ -95,8 +95,8 @@ unsafe extern "thiscall" fn comparar_process_due_decision_dates(this: usize, dat
     if i > i0 {
         reg.push(((cpp1_d(this + 0xc) as usize).wrapping_add((i0 as usize).wrapping_mul(14)), ((i - i0) as usize) * 14));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, data, fatia), || process_due_decision_dates(this, data, fatia));
-    PLACAR.registrar(igual, || format!("process_due_decision_dates(fatia {}) {:x?} x {:x?}", fatia as u8 as i8, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, data, fatia), || process_due_decision_dates(this, data, fatia));
+    PLACAR.record(igual, || format!("process_due_decision_dates(fatia {}) {:x?} x {:x?}", fatia as u8 as i8, mo, mr));
 }
 
 /// { 0x4ca300 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::get_current_contract_offers(clube, saida)`:
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn get_current_contract_offers(this: usize, clube: usiz
                         return 0;
                     }
                 }
-                crate::comparacao::ramo("cpp_1 oferta do clube");
+                crate::comparison::branch("cpp_1 oferta do clube");
                 core::ptr::copy(item as *const u8, vetor.wrapping_add((n as i32 * 111) as usize) as *mut u8, 111);
                 n = n.wrapping_add(1);
             }
@@ -161,6 +161,6 @@ unsafe extern "thiscall" fn comparar_get_current_contract_offers(this: usize, cl
     let vetor = cpp1_d(saida) as usize;
     let k = plano.len() / 111;
     let ok = r as usize == k && (k == 0 || core::slice::from_raw_parts(vetor as *const u8, k * 111) == &plano[..]);
-    PLACAR.registrar(ok, || format!("get_current_contract_offers(clube {:x}) original {} ofertas, plano {}", clube, r, k));
+    PLACAR.record(ok, || format!("get_current_contract_offers(clube {:x}) original {} ofertas, plano {}", clube, r, k));
     r
 }

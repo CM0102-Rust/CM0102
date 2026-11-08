@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jogo: usize) 
         if find_club_fixtures_between(this, d.as_ptr(), d.as_ptr(), cpz8_u(clube), lp) as u16 != 0 {
             copy_first_fixture(lp, &mut f1, &mut f2);
             if !fix_man_is_friendly_comp(cpz8_u(f1.as_ptr() as usize + 0x14)) {
-                crate::comparacao::ramo("cpz_8 jogo dois dias antes");
+                crate::comparison::branch("cpz_8 jogo dois dias antes");
                 if f2[0x43] == 0xff { // cpz8: o jogo de dois dias antes sem a marca
                     let mut v = [0u8; 8];
                     let r = date_sub_days(d.as_ptr() as usize, v.as_mut_ptr(), 1); // cpz8: um dia antes
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jogo: usize) 
                     f2[0x2a..0x2c].copy_from_slice(&d[0..2]);
                     f2[0x28..0x2a].copy_from_slice(&d[2..4]);
                     if !new_date_has_clash(this, f2.as_mut_ptr(), f1.as_ptr()) {
-                        crate::comparacao::ramo("cpz_8 jogo antecipado");
+                        crate::comparison::branch("cpz_8 jogo antecipado");
                         fix_man_remove_fixture(this, f1.as_ptr() as usize);
                         fix_man_add_fixture(this, f2.as_mut_ptr() as usize, 0);
                         fix_man_queue_fixture_moved_news(this, f2.as_mut_ptr() as usize, jogo, 0);
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jogo: usize) 
         f2[0x2a..0x2c].copy_from_slice(&d[0..2]);
         f2[0x28..0x2a].copy_from_slice(&d[2..4]);
         if !new_date_has_clash(this, f2.as_mut_ptr(), f1.as_ptr()) {
-            crate::comparacao::ramo("cpz_8 jogo adiado");
+            crate::comparison::branch("cpz_8 jogo adiado");
             fix_man_remove_fixture(this, f1.as_ptr() as usize);
             fix_man_add_fixture(this, f2.as_mut_ptr() as usize, 0);
             fix_man_queue_fixture_moved_news(this, f2.as_mut_ptr() as usize, jogo, 0);
@@ -243,7 +243,7 @@ unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: usize, club
         let mut velha = [0u8; 8];
         date_from_day_year_ptr(velha.as_mut_ptr(), cpz8_w(p + 0x2a) as u32, cpz8_w(p + 0x28) as u32);
         if fix_man_remove_fixture(this, p) != 0 {
-            crate::comparacao::ramo("cpz_8 jogo remarcado pela selecao");
+            crate::comparison::branch("cpz_8 jogo remarcado pela selecao");
             gravar(this, p);
             fix_man_add_fixture(this, p, 1);
             fix_man_queue_fixture_moved_news(this, p, 0, velha.as_ptr() as usize);
@@ -311,7 +311,7 @@ unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, caus
             return;
         }
     }
-    crate::comparacao::ramo("cpz_8 noticia do jogo remarcado");
+    crate::comparison::branch("cpz_8 noticia do jogo remarcado");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 1, 0);
@@ -354,21 +354,21 @@ unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: us
     let alvo = if l != 0 { find_queued_fixture_news(l, f) } else { 0 };
     if alvo != 0 {
         let regioes = [(this + 0x1128, 4), (l, 0xe), (alvo, 0xdf)];
-        let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, f, causa, velha), || queue_fixture_moved_news(this, f, causa, velha));
-        PLACAR.registrar(igual, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
+        let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, f, causa, velha), || queue_fixture_moved_news(this, f, causa, velha));
+        PLACAR.record(igual, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
         return;
     }
     let mut regioes = vec![(this + 0x1128, 4)];
     if l != 0 {
         regioes.push((l, 0xe));
     }
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     let conta = if l != 0 { cpz8_sw(l) } else { 0 };
     FIXTURE_MOVED_NEWS_DRY_RUN = true;
     FIXTURE_MOVED_NEWS_WAS_BUILT = false;
-    crate::aleatorio::pausar_rastro(|| queue_fixture_moved_news(this, f, causa, velha));
+    crate::rng::pause_trace(|| queue_fixture_moved_news(this, f, causa, velha));
     FIXTURE_MOVED_NEWS_DRY_RUN = false;
-    antes.escrever();
+    antes.write_back();
     o(this, f, causa, velha);
     let l2 = cpz8_d(this + 0x1128);
     let montada = FIXTURE_MOVED_NEWS_WAS_BUILT;
@@ -378,5 +378,5 @@ unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: us
         && cpz8_d(cpz8_d(l2 + 6)) != 0
         && core::slice::from_raw_parts(cpz8_d(cpz8_d(l2 + 6)) as *const u8, 0xde)
             == core::slice::from_raw_parts(core::ptr::addr_of!(FIXTURE_MOVED_NEWS_BUILT) as *const u8, 0xde);
-    PLACAR.registrar(igual, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { cpz8_sw(l2) } else { -1 }));
+    PLACAR.record(igual, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { cpz8_sw(l2) } else { -1 }));
 }

@@ -18,10 +18,3 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_winner(this: usize, id: i32,
     compare_month_award("set_winner", &regions, || o(this, id, club_id, month, year), || set_winner(this, id, club_id, month, year));
 }
 
-/// Comparer for `award_raise_winner_reputation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_award_raise_winner_reputation(person: usize, clube: usize, nac: u32, mundo: u32, player: u32) {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32, u32)>(IDX_AWARD_RAISE_WINNER_REPUTATION);
-    let mut regions = Vec::new();
-    winner_reputation_regions(&mut regions, person, clube);
-    compare_month_award("award_raise_winner_reputation", &regions, || o(person, clube, nac, mundo, player), || award_raise_winner_reputation(person, clube, nac, mundo, player));
-}

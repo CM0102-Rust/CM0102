@@ -44,7 +44,7 @@ unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
         show_error_at(0x98a3bc, 0x143);
         return -1;
     }
-    crate::comparacao::ramo("cqo_12 times da copa do brasil");
+    crate::comparison::branch("cqo_12 times da copa do brasil");
     let mut i = 0i16;
     while i < cqo12_w(this + 0x3e) {
         let o = i as usize * 6;
@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: usize) -> i3
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set(cqo12_d(this + 0xa7));
         r
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: usize) -> i3
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("bra_cup_build_team_table({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.record(igual && a == b && lista, || format!("bra_cup_build_team_table({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: usize) -> i3
 /// substituições (+0x4a), o fundo de prêmios de 500 mil (+0x28) e a tabela das rodadas (a virtual +0x3c com a fase −1,
 /// as rodadas em +0x3c e o extra em +0x3a, sem saída) em +0xa3. Devolve 1.
 unsafe fn set_up_brazil_cup_rounds(this: usize) -> i32 {
-    crate::comparacao::ramo("cqo_12 regras da copa do brasil");
+    crate::comparison::branch("cqo_12 regras da copa do brasil");
     *((this + 0x49) as *mut u8) = 7;
     *((this + 0x4a) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
     core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x7a120);
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn comparar_bra_cup_set_up_rounds(this: usize) -> i32 {
     let tr = core::cell::Cell::new(0usize);
     let antes = cqo12_d(this + 0xa3);
     let reg = [(this + 0x28, 4usize), (this + 0x3a, 4), (this + 0x49, 2), (0xb67a34, 4)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         to.set(cqo12_d(this + 0xa3));
         core::ptr::write_unaligned((this + 0xa3) as *mut u32, antes as u32);
@@ -139,6 +139,6 @@ unsafe extern "thiscall" fn comparar_bra_cup_set_up_rounds(this: usize) -> i32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && tabela, || format!("bra_cup_set_up_rounds({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    PLACAR.record(igual && a == b && tabela, || format!("bra_cup_set_up_rounds({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }

@@ -187,7 +187,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
             let t = *topo;
             let y = (*base - t - 0x46) / 2 + t;
             if get_screen_param(7) != 0 {
-                crate::comparacao::ramo("telas visao geral com o narrador");
+                crate::comparison::branch("telas visao geral com o narrador");
                 let rel = u(u(p0 + 0x57) + 0x8f7a);
                 let r = txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 1, 0, 0x10c, 5, 0, 0, 1);
                 let m = u(p0 + 0x57);
@@ -784,8 +784,8 @@ unsafe extern "C" fn comparar_refresh_possession_bar() {
         reg.push((copia, 0xd7a));
     }
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_possession_bar());
-    PLACAR.registrar(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || refresh_possession_bar());
+    PLACAR.record(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// A visão geral é comparada de verdade pela lista de exibição, com `*topo`, `*base` e a barra da posse
@@ -812,8 +812,8 @@ unsafe extern "C" fn comparar_draw_match_overview_panel(topo: *mut i32, base: *m
     if foto != 0 {
         reg.push((foto, 0xd7a));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(topo, base), || draw_match_overview_panel(topo, base));
-    PLACAR.registrar(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(topo, base), || draw_match_overview_panel(topo, base));
+    PLACAR.record(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
 }
 
 /// A tabela ao vivo é comparada de verdade pela lista de exibição, com a liga (0xee bytes: [+0xad]) e a

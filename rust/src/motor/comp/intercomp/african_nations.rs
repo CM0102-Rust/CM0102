@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
         return 0;
     }
     if year_of_today == year && day_of_today == day && read_u32_as_usize(this + 0x45) == 0 {
-        crate::comparacao::ramo("cqs_13 dia do sorteio da copa africana");
+        crate::comparison::branch("cqs_13 dia do sorteio da copa africana");
         sortear(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
         predicted(this);
@@ -138,7 +138,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
         show_error_at(0x9870f8, 0x380);
         return 0;
     }
-    crate::comparacao::ramo("cqs_13 sorteio da copa africana");
+    crate::comparison::branch("cqs_13 sorteio da copa africana");
     for j in 0..4usize {
         for p in 0..4usize {
             let mut r = sorteio(4) as u8 as i8 as usize;
@@ -192,7 +192,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
         return 0;
     }
     for n in 0..4usize {
-        crate::comparacao::ramo("cqs_13 time do grupo");
+        crate::comparison::branch("cqs_13 time do grupo");
         write_u32_from_usize(teams + n * 4, read_u32_as_usize(read_u32_as_usize(this + 0xee) + ((g as usize + 1) * 4 + n) * 4)); // cqs13: o time na vaga do grupo
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
     let f = f + 1;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, f);
     if f == 3 { // cqk12: o mata-mata da Copa Africana depois dos grupos
-        crate::comparacao::ramo("cqk_12 mata-mata da copa africana");
+        crate::comparison::branch("cqk_12 mata-mata da copa africana");
         let knockout: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AFRICANNATIONS_CREATE_KNOCKOUT_STAGE);
         knockout(this);
     }
@@ -273,7 +273,13 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
 // simplification: the knockout (0x402090) allocates the stage and draws: does not run twice. Original only; the plan: +0x30 goes up one
 // (outside the last stage, which gives the message box).
 
-/// rule: group A has four national teams, the first four of the draw list, in order; the managers get the draw news
+/// Builds the group A table of the African Nations Cup. Rule: group A has four national teams, the first four of the
+/// draw list, in order; the managers get the draw news.
+///
+/// Ret 0: `AfricanNations::init_group_a_table()`: group A with 4 teams (+0x3e), table +0xb1 (0x944e46(0xec): push 0xec;
+/// add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of memory: the box at line 0x1f1 and returns 0), each row i with
+/// national side i of the draw list (+0xee) (0x687430: push 0; push 0; push national side; push i; mov ecx, this ->
+/// thiscall, ret 0x10), the group draw news (0x684230: mov ecx, this -> thiscall, ret 0) and returns 1.
 /// Original: `AfricanNations::init_group_a_table` (0x4019c0, african_nations.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x4019c0 } (thiscall, ret 0, african_nations.cpp): `AfricanNations::init_group_a_table()`: o grupo A com 4 times
@@ -293,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
         show_error_at(0x9870f8, 0x1f1);
         return 0;
     }
-    crate::comparacao::ramo("cqk_12 grupo a da copa africana");
+    crate::comparison::branch("cqk_12 grupo a da copa africana");
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         let national_team = read_u32_as_usize(read_u32_as_usize(this + 0xee).wrapping_add((i as isize * 4) as usize)); // cqk12: a seleção da linha
@@ -351,10 +357,10 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, cl
             european_cup_add_qualified_record(clube, comp, 0, 0x78, 0x19);
         } else if d == 0xfe {
             if name == 0 {
-                crate::comparacao::ramo("cqj_10 africana fora nos grupos");
+                crate::comparison::branch("cqj_10 africana fora nos grupos");
                 european_cup_add_failed_to_qualify_record(clube, comp, 0x41c, 0x19); // cqj10: quem cai nos grupos da Copa Africana
             } else {
-                crate::comparacao::ramo("cqj_10 copa america fora nos grupos");
+                crate::comparison::branch("cqj_10 copa america fora nos grupos");
                 european_cup_add_failed_to_qualify_record(clube, comp, 0x41c, 0x19); // cqj10: quem cai nos grupos da Copa América
             }
         }
@@ -371,7 +377,7 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, cl
                 let weight = scale_by_round(0x28, 0x64, read_i16(jogo + 0x34), 3);
                 // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
                 if name == 0 {
-                    crate::comparacao::ramo("cqj_10 africana fora no mata-mata");
+                    crate::comparison::branch("cqj_10 africana fora no mata-mata");
                     european_cup_add_knocked_out_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight); // cqj10: quem cai no mata-mata da Copa Africana
                 } else {
                     european_cup_add_knocked_out_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
@@ -413,56 +419,6 @@ pub(crate) unsafe fn clear_national_team_competition(clube: usize) {
     f(read_u32_as_usize(G_NATIONAL_TEAMS), read_u32_as_usize(clube + club::NATION));
 }
 
-/// rule: in the Oceania qualifier groups, a team going through gets the qualification (weight 20) and one going out the
-/// failed-to-qualify record and ends its campaign; in the Oceania final, the winner gets the qualification (weight 30)
-/// and the loser the knock-out; in the play-off (against South America [inference]), the winner gets the World Cup
-/// place (weight 100 record, the entry in its list and status 4) and the loser the knock-out (weight 100) and the end
-/// of the campaign
-/// Original: `WcOceaniaLeague::update_staff_records_for_status` (0x91e840, wc_oceania_league.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x91e840 } (thiscall, ret 0x18, wc_oceania_league.cpp; a virtual +0x44): `WcOceaniaLeague::
-/// update_staff_records_for_status(seleção, desfecho, fase, saida, jogo, _)`; devolve 0. Fase (byte com sinal) 0 ou
-/// menos, os grupos: 6, a classificação (fase 0, rodada 0x82, peso 0x14); 0xfe, a não classificação (0x41c, 0x14) e a
-/// competição atual da seleção acaba. Fase 1 (a final da Oceania): 1, a classificação (0xa0, 0, 0x1e); 2 ou 0xff, a
-/// eliminação (+0x32 e +0x30 do jogo, peso 0x1e) e a competição acaba. Fase 2 (a repescagem): 1, a classificação para
-/// a Copa do Mundo (a competição [0xae23d0] + 0x6b × [0x9cf79c], 0, 0, 0x64), a vaga nela (0x92e740 no objeto
-/// [[0xadadfc] + 4 × [0x9cf79c]]: push seleção -> thiscall, ret 4) e *saida = 4; 2, a eliminação (peso 0x64) e a
-/// competição acaba.
-pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_status_91e840(this: usize, clube: usize, outcome: u32, stage: u32, out: usize, jogo: usize, _a6: u32) -> u32 {
-    let (d, f) = (outcome as u8, stage as u8 as i8);
-    let comp = read_u32_as_usize(this + 4);
-    let eliminar = |weight: u32| {
-        // simplification: +0x30 and +0x32 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
-        european_cup_add_knocked_out_record(clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
-        clear_national_team_competition(clube);
-    };
-    if f < 1 {
-        if d == 6 {
-            european_cup_add_qualified_record(clube, comp, 0, 0x82, 0x14);
-        } else if d == 0xfe {
-            european_cup_add_failed_to_qualify_record(clube, comp, 0x41c, 0x14);
-            clear_national_team_competition(clube);
-        }
-    } else if f == 1 {
-        if d == 1 {
-            european_cup_add_qualified_record(clube, comp, 0xa0, 0, 0x1e);
-        } else if d == 2 || d == 0xff {
-            eliminar(0x1e);
-        }
-    } else if f == 2 {
-        if d == 1 {
-            crate::comparacao::ramo("cqj_10 oceania na copa do mundo");
-            let id = read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP);
-            european_cup_add_qualified_record(clube, read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)), 0, 0, 0x64);
-            let slot: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_WORLDCUP_ADD_QUALIFIED_TEAM);
-            slot(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))), clube);
-            *(out as *mut u8) = 4;
-        } else if d == 2 {
-            eliminar(0x64);
-        }
-    }
-    0
-}
 
 // simplification: the records, the end of the national team’s competition and the World Cup place do not run twice. Original only;
 // the plan: return value 0 and, on a won play-off, *saida = 4 and the World Cup list (+0x36) one more (if it fit).
@@ -490,7 +446,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_schedule(this: usi
 /// desempates (1, 2, 3), dois classificados por grupo, seleções, 7 no banco e 3 substituições, a data em 5 do mês 9 do
 /// ano anterior ao da competição num dia da semana 5 [inferência: o sorteio] e +0xb8 = −1.
 pub(crate) unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_10 regras da copa africana");
+    crate::comparison::branch("cqk_10 regras da copa africana");
     let win = 3; // cqk10: a vitória nos grupos da Copa Africana
     goldcup_write_rule_fields(this, &AFRICAN_NATIONS_RULE_FIELDS, win);
     let day = 5; // cqk10: o dia da data da Copa Africana

@@ -15,11 +15,11 @@ unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
     let r = rep as i32;
     let saldo = core::ptr::read_unaligned(this as *const i64);
     if saldo > r.wrapping_mul(2500).wrapping_add(5_000_000) as i64 {
-        crate::comparacao::ramo("cpu_7 rica");
+        crate::comparison::branch("cpu_7 rica");
         return 2; // cpu7: a faixa rica
     }
     if saldo > r.wrapping_mul(1000).wrapping_add(3_500_000) as i64 {
-        crate::comparacao::ramo("cpu_7 confortavel");
+        crate::comparison::branch("cpu_7 confortavel");
         return 1; // cpu7: a faixa confortável
     }
     if saldo < (-2_500_000i32).wrapping_sub(r.wrapping_mul(1500)) as i64 {
@@ -27,7 +27,7 @@ unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
     }
     let devendo = if rep < 0x1388 { r.wrapping_mul(-250) } else { (0xea6 - r).wrapping_mul(1000) };
     if saldo < devendo as i64 {
-        crate::comparacao::ramo("cpu_7 devendo");
+        crate::comparison::branch("cpu_7 devendo");
         return 0xff; // cpu7: a faixa devendo
     }
     0
@@ -37,7 +37,7 @@ unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
 unsafe extern "thiscall" fn comparar_get_wealth_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(%%I0%%)(this);
     let n = get_wealth_band(this);
-    PLACAR.registrar(r == n, || format!("get_wealth_band(financas {:#x}) original={} rust={}", this, r as i8, n as i8));
+    PLACAR.record(r == n, || format!("get_wealth_band(financas {:#x}) original={} rust={}", this, r as i8, n as i8));
     r
 }
 
@@ -56,7 +56,7 @@ unsafe extern "C" fn compare_players_by_ability(a: *const usize, b: *const usize
 unsafe extern "C" fn comparar_compare_players_by_ability(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
     let n = compare_players_by_ability(a, b);
-    PLACAR.registrar(r == n, || format!("compare_players_by_ability({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    PLACAR.record(r == n, || format!("compare_players_by_ability({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r
 }
 
@@ -78,6 +78,6 @@ unsafe extern "C" fn stadium_compare_venues_by_capacity(a: usize, b: usize) -> i
 unsafe extern "C" fn comparar_stadium_compare_venues_by_capacity(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = stadium_compare_venues_by_capacity(a, b);
-    PLACAR.registrar(r == n, || format!("stadium_compare_venues_by_capacity({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("stadium_compare_venues_by_capacity({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }

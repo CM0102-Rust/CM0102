@@ -17,7 +17,7 @@ unsafe fn strncmp(a: usize, b: usize, n: u32) -> i32 {
 unsafe extern "C" fn player_setup_injury_from_name(nome: usize) -> u32 {
     for &(n, texto, tipo) in INJURY_NAMES.iter() {
         if strncmp(nome, texto, n) == 0 {
-            crate::comparacao::ramo("cqf_9 lesao pelo nome");
+            crate::comparison::branch("cqf_9 lesao pelo nome");
             return tipo as u32; // cqf9: o tipo da lesão pelo nome
         }
     }
@@ -28,7 +28,7 @@ unsafe extern "C" fn player_setup_injury_from_name(nome: usize) -> u32 {
 unsafe extern "C" fn comparar_player_setup_injury_from_name(nome: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nome);
     let n = player_setup_injury_from_name(nome);
-    PLACAR.registrar(r as u8 == n as u8, || format!("player_setup_injury_from_name({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
+    PLACAR.record(r as u8 == n as u8, || format!("player_setup_injury_from_name({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
     r
 }
 
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
                 let mut seguir = true;
                 if feliz {
                     let v = cqf9_sb(c + 0x44) as i32 + 0xf; // cqf9: a felicidade sobe 15
-                    crate::comparacao::ramo("cqf_9 felicidade pelas ferias");
+                    crate::comparison::branch("cqf_9 felicidade pelas ferias");
                     *((c + 0x44) as *mut i8) = if v > 100 { 100 } else if v < -100 { -100 } else { v as i8 };
                 }
                 if feliz && caiu {
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
                                 *((f + 0x44) as *mut i8) -= 1;
                             }
                         };
-                        crate::comparacao::ramo("cqf_9 acerto pelas ferias");
+                        crate::comparison::branch("cqf_9 acerto pelas ferias");
                         if r == 0 {
                             subir_57(p); // cqf9: o sorteio 0 sobe +0x57
                             descer_5d_44(p, f);
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
             } else {
                 let forma = physical_record_of_player(this, p);
                 let mut v: Option<i8> = None;
-                crate::comparacao::ramo("cqf_9 tratamento");
+                crate::comparison::branch("cqf_9 tratamento");
                 if s == 0 { // cqf9: o tratamento dá certo
                     res = 2;
                     *((forma + 0x12) as *mut u8) = 0xff;
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
             }
         } else {
             let forma = physical_record_of_player(this, p);
-            crate::comparacao::ramo("cqf_9 volta da lesao");
+            crate::comparison::branch("cqf_9 volta da lesao");
             if tp == 0x4f {
                 if s < 30000 { // cqf9: a volta 'O' completa
                     res = 2;
@@ -320,7 +320,7 @@ unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, e
     if p == 0 {
         return o(this, p, estagio, tipo, forcar, dias);
     }
-    let mut reg: Vec<(usize, usize)> = Vec::from(crate::aleatorio::REGIOES_DO_ESTADO);
+    let mut reg: Vec<(usize, usize)> = Vec::from(crate::rng::STATE_REGIONS);
     reg.push((p, 0x6e));
     if cqf9_d(p + 0x61) != 0 {
         reg.push((cqf9_d(p + 0x61), 0x46));
@@ -339,20 +339,20 @@ unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, e
     if clube != 0 && cqf9_d(clube + 0xcf) != 0 {
         reg.push((cqf9_d(clube + 0xcf), 0x6e));
     }
-    let antes = crate::comparacao::Memoria::ler(&reg);
+    let antes = crate::comparison::MemorySnapshot::read(&reg);
     RECOVERY_NEWS_DRY_RUN = true;
     RECOVERY_NEWS_WOULD_GO_AWOL = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| post_recovery_news(this, p, estagio, tipo, forcar, dias)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| post_recovery_news(this, p, estagio, tipo, forcar, dias)));
     RECOVERY_NEWS_DRY_RUN = false;
     let fugiu = RECOVERY_NEWS_WOULD_GO_AWOL;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&reg);
+    antes.write_back();
     o(this, p, estagio, tipo, forcar, dias);
     if fugiu {
         return;
     }
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("post_recovery_news(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, tipo as u8, mo.0, mr.0));
+    let mo = crate::comparison::MemorySnapshot::read(&reg);
+    PLACAR.record(mo == mr, || format!("post_recovery_news(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, tipo as u8, mo.0, mr.0));
 }
 
 /// { 0x630c50 } (stdcall, ret 0xc, injury.cpp): `injury_get_category_name(categoria, texto, tamanho)`: o nome traduzido
@@ -382,7 +382,7 @@ unsafe extern "stdcall" fn comparar_injury_get_category_name(categoria: u32, tex
     if tamanho < 0x14 || texto == 0 {
         return o(categoria, texto, tamanho);
     }
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(texto, (tamanho as usize).min(0x100))], || o(categoria, texto, tamanho), || injury_get_category_name(categoria, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("injury_get_category_name({}) original={} rust={}", categoria as u8 as i8, r, n));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(texto, (tamanho as usize).min(0x100))], || o(categoria, texto, tamanho), || injury_get_category_name(categoria, texto, tamanho));
+    PLACAR.record(igual && r == n, || format!("injury_get_category_name({}) original={} rust={}", categoria as u8 as i8, r, n));
     r
 }

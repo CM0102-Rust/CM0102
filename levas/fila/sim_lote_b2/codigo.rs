@@ -137,15 +137,15 @@ unsafe extern "C" fn cup_set_round_match_day(rodadas: usize, rodada: i16, vaga: 
 
 unsafe extern "C" fn comparar_comp_util_read_fixture_from_news_slots(noticia: usize, partida: usize, cursor: *mut u8) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut u8)>(%%I0%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(partida, 0x4d), (cursor as usize, 1)],
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(partida, 0x4d), (cursor as usize, 1)],
         || o(noticia, partida, cursor), || comp_util_read_fixture_from_news_slots(noticia, partida, cursor));
-    PLACAR.registrar(igual, || format!("comp_util_read_fixture_from_news_slots {:x?} x {:x?}", mo, mr));
+    PLACAR.record(igual, || format!("comp_util_read_fixture_from_news_slots {:x?} x {:x?}", mo, mr));
 }
 
 unsafe extern "C" fn comparar_comp_util_classify_tie_result_for_news(clube: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%)(clube, partida);
     let n = comp_util_classify_tie_result_for_news(clube, partida);
-    PLACAR.registrar(r == n, || format!("comp_util_classify_tie_result_for_news original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("comp_util_classify_tie_result_for_news original={} rust={}", r, n));
     r
 }
 
@@ -155,8 +155,8 @@ unsafe extern "C" fn comparar_cup_set_round_match_day(rodadas: usize, rodada: i1
         return o(rodadas, rodada, vaga, semana, hora, codigo, mando);
     }
     let e = rodadas.wrapping_add((rodada as isize * 104 + vaga as isize * 7) as usize);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x23, 7)], || o(rodadas, rodada, vaga, semana, hora, codigo, mando),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x23, 7)], || o(rodadas, rodada, vaga, semana, hora, codigo, mando),
         || cup_set_round_match_day(rodadas, rodada, vaga, semana, hora, codigo, mando));
-    PLACAR.registrar(igual && r == n, || format!("cup_set_round_match_day({}, {}) {:x?} x {:x?}", rodada, vaga, mo, mr));
+    PLACAR.record(igual && r == n, || format!("cup_set_round_match_day({}, {}) {:x?} x {:x?}", rodada, vaga, mo, mr));
     r
 }

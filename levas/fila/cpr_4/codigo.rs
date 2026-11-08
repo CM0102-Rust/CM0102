@@ -59,10 +59,10 @@ unsafe extern "thiscall" fn get_open_offers_for_club_players(this: usize, clube:
         i += 1;
     }
     if desfeita {
-        crate::comparacao::ramo("cpr_4 oferta desfeita");
+        crate::comparison::branch("cpr_4 oferta desfeita");
     }
     if emprestado {
-        crate::comparacao::ramo("cpr_4 jogador emprestado");
+        crate::comparison::branch("cpr_4 jogador emprestado");
     }
     n
 }
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn collapse_offers_for_player(this: usize, pessoa: usiz
         cpr4_por(l + 0xa, cpr4_d(l + 2));
         let mut e = proximo(l);
         while e != 0 {
-            crate::comparacao::ramo("cpr_4 desfazer oferta");
+            crate::comparison::branch("cpr_4 desfazer oferta");
             let o = cpr4_d(cpr4_d(this).wrapping_add(cpr4_d(e).wrapping_mul(4)));
             if cpr4_b(o + 0x2c) == 0x13 {
                 tirar_futura(this, o);
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn collapse_offers_for_player(this: usize, pessoa: usiz
 /// conta +0x888); cheio, cresce de 50 em 50 (sem memória: caixa 0x2553 e nada). Reordena (qsort 0x945333 com 0x8e54d0,
 /// a ordem da busca 0x8cb0f0).
 unsafe extern "thiscall" fn add_next_sale_percentage(this: usize, registro: usize) {
-    crate::comparacao::ramo("cpr_4 write_percent_pair da proxima venda");
+    crate::comparison::branch("cpr_4 write_percent_pair da proxima venda");
     if !grow_record_vector(this, 0x880, 4, 50, 0xd, 0x2553, 0xa8eb50) {
         return;
     }
@@ -141,11 +141,11 @@ unsafe extern "thiscall" fn comparar_get_open_offers_for_club_players(this: usiz
     if lista != 0 {
         let n = get_open_offers_for_club_players(this, clube, 0);
         let r = o(this, clube, lista);
-        PLACAR.registrar(r == n, || format!("get_open_offers_for_club_players({:x}, lista) original={} rust={}", clube, r, n));
+        PLACAR.record(r == n, || format!("get_open_offers_for_club_players({:x}, lista) original={} rust={}", clube, r, n));
         return r;
     }
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, clube, 0), || get_open_offers_for_club_players(this, clube, 0));
-    PLACAR.registrar(igual && r == c, || format!("get_open_offers_for_club_players({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparison::side_by_side_light(&[(0xae1080, 4)], || o(this, clube, 0), || get_open_offers_for_club_players(this, clube, 0));
+    PLACAR.record(igual && r == c, || format!("get_open_offers_for_club_players({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
     r
 }
 
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn comparar_collapse_offers_for_player(this: usize, pes
     soltar(l);
     o(this, pessoa);
     let ok = alvo.iter().all(|&of| cpr4_b(of + 0x2c) == 0xf && cpr4_b(of + 0x2e) == 3);
-    PLACAR.registrar(ok, || format!("collapse_offers_for_player(pessoa {}): {} ofertas, estados {:x?}", cpr4_d(pessoa), alvo.len(), alvo.iter().map(|&of| (cpr4_b(of + 0x2c), cpr4_b(of + 0x2e))).collect::<Vec<_>>()));
+    PLACAR.record(ok, || format!("collapse_offers_for_player(pessoa {}): {} ofertas, estados {:x?}", cpr4_d(pessoa), alvo.len(), alvo.iter().map(|&of| (cpr4_b(of + 0x2c), cpr4_b(of + 0x2e))).collect::<Vec<_>>()));
 }
 
 /// Comparador: o plano antes (a conta e os 13 bytes), a original roda; confere a conta e que o registro está no vetor
@@ -188,5 +188,5 @@ unsafe extern "thiscall" fn comparar_add_next_sale_percentage(this: usize, regis
     }
     let conta = cpr4_d(this + 0x888);
     let ok = conta == n.wrapping_add(1) && vector_contains_record(cpr4_d(this + 0x880), conta, 0xd, &alvo);
-    PLACAR.registrar(ok, || format!("add_next_sale_percentage: conta {} -> {}, registro {:x?}", n, conta, alvo));
+    PLACAR.record(ok, || format!("add_next_sale_percentage: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }

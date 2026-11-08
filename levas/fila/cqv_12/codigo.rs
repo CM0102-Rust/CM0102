@@ -73,7 +73,7 @@ unsafe fn cqv12_regras(this: usize, arquivo: usize, linha: u32) -> u32 {
 unsafe extern "thiscall" fn cqv12_libertadores_virada(this: usize) -> u32 {
     let semear: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4c61b0usize);
     cqv12_soltar(this);
-    crate::comparacao::ramo("cqv_12 virada da libertadores");
+    crate::comparison::branch("cqv_12 virada da libertadores");
     cqv12_ano_seguinte(this); // cqv12: a Libertadores do ano seguinte
     semear(cqv12_d(0xae1000), 0); // cqv12: as vagas da Libertadores nova
     cqv12_pd(this + 0x45, 0); // cqv12: a Libertadores nova ainda sem sorteio
@@ -87,7 +87,7 @@ unsafe fn cqv12_comparar(nome: &str, this: usize, zera_45: bool, o: impl FnOnce(
     let r = o();
     let novo = core::ptr::read_unaligned((this + 0x40) as *const i16);
     let ok = cqv12_d(this + 0x4c) == 0 && novo == ano.wrapping_add(1) && (!zera_45 || cqv12_d(this + 0x45) == 0);
-    PLACAR.registrar(ok, || format!("{}({:#x}): ano {} -> {}, +0x4c {}, +0xba {:#x}, +0x45 {}", nome, this, ano, novo, cqv12_d(this + 0x4c), cqv12_d(this + 0xba), cqv12_d(this + 0x45)));
+    PLACAR.record(ok, || format!("{}({:#x}): ano {} -> {}, +0x4c {}, +0xba {:#x}, +0x45 {}", nome, this, ano, novo, cqv12_d(this + 0x4c), cqv12_d(this + 0xba), cqv12_d(this + 0x45)));
     r
 }
 

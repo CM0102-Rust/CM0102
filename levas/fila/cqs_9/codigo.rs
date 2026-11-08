@@ -75,7 +75,7 @@ unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
                 let c = base + j as u16 as usize * 0x245;
                 let nac = cqs9_d(c + 0x53);
                 if nac != 0 && *((nac + 0x11c) as *const u8) == 0 && cqs9_w(nac + 0x8e) < 0x7d0 && cqs9_d(c + 0x1db) as i32 == -1 {
-                    crate::comparacao::ramo("cqs_9 clube completando a uefa");
+                    crate::comparison::branch("cqs_9 clube completando a uefa");
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);
                     cqs9_pd(cqs9_d(this + 0xa7) + e, c);
@@ -100,7 +100,7 @@ unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
     }
-    crate::comparacao::ramo("cqs_9 inscritos da uefa");
+    crate::comparison::branch("cqs_9 inscritos da uefa");
     core::ptr::write_unaligned((this + 0x36) as *mut i16, 0);
     let n = k.wrapping_add(0x1b);
     core::ptr::write_unaligned((this + 0x38) as *mut i16, n);
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
     reg.extend((0..cqs9_d(0xae235c)).map(|i| (base + i * 0x245 + 0x1db, 4)));
     let lo = core::cell::Cell::new((0usize, 0usize));
     let lr = core::cell::Cell::new((0usize, 0usize));
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o(this);
         lo.set((cqs9_d(this + 0xa7), cqs9_d(this + 0x14)));
         cqs9_pd(this + 0xa7, a0);
@@ -164,6 +164,6 @@ unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
     if tr != 0 && tr != to && tr != t0 {
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && listas, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
+    PLACAR.record(igual && a == b && listas, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
     a
 }

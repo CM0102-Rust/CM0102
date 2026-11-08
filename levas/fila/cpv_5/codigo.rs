@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, clube: 
         }
     };
     let base = match_pl_ftol(cpv5_i(clube + 0x73) as f64 * rep as f64 * read_f64_at(fator));
-    crate::comparacao::ramo("cpv_5 merchandising");
+    crate::comparison::branch("cpv_5 merchandising");
     let r = cpv5_sortear(0xb); // cpv5: o sorteio do merchandising
     let v = match_pl_ftol((r + 0x5f).wrapping_mul(base) as f64 * read_f64_at(0x967898));
     let fin = fin_prm_club_finance(this, clube);
@@ -85,9 +85,9 @@ unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, clube: 
 unsafe extern "thiscall" fn comparar_add_weekly_merchandising_income(this: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let mut regioes = vec![(fin_prm_club_finance(this, clube), 0x167)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube), || crate::aleatorio::sem_contar(|| add_weekly_merchandising_income(this, clube)));
-    PLACAR.registrar(igual, || format!("add_weekly_merchandising_income(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, clube), || crate::rng::without_counting(|| add_weekly_merchandising_income(this, clube)));
+    PLACAR.record(igual, || format!("add_weekly_merchandising_income(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
 }
 
 /// { 0x599a20 } (thiscall, ret 4, finance.cpp): `Finance::sell_season_tickets(aplicar)`, pelo passe diário das finanças
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
     }
     *((this + 0x164) as *mut i8) = step_towards;
     let b = match_pl_ftol(n.wrapping_sub(ja) as f64 * read_f32_at(0x9c8758 + step_towards as usize * 4) as f64);
-    crate::comparacao::ramo("cpv_5 ingressos vendidos");
+    crate::comparison::branch("cpv_5 ingressos vendidos");
     let r = cpv5_sortear(0xb);
     let novos = (r + 0x5f).wrapping_mul(b) / 100;
     let total = ja.wrapping_add(novos);
@@ -213,9 +213,9 @@ unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize, aplicar: i
     if est != 0 {
         regioes.push((est + 0x3c, 4));
     }
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, aplicar), || crate::aleatorio::sem_contar(|| sell_season_tickets(this, aplicar)));
-    PLACAR.registrar(igual, || format!("sell_season_tickets(fin {:#x}, {}) original={:x?} rust={:x?}", this, aplicar, mo, mr));
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, aplicar), || crate::rng::without_counting(|| sell_season_tickets(this, aplicar)));
+    PLACAR.record(igual, || format!("sell_season_tickets(fin {:#x}, {}) original={:x?} rust={:x?}", this, aplicar, mo, mr));
 }
 
 /// O custo da obra (+0x8c e +0x12c, menos no saldo) no registro de finanças do clube.
@@ -274,6 +274,6 @@ unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, clube: usiz
 unsafe extern "thiscall" fn comparar_upgrade_training_facilities(this: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let regioes = [(clube + 0x7f, 1), (fin_prm_club_finance(this, clube), 0x167)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube), || upgrade_training_facilities(this, clube));
-    PLACAR.registrar(igual, || format!("upgrade_training_facilities(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, clube), || upgrade_training_facilities(this, clube));
+    PLACAR.record(igual, || format!("upgrade_training_facilities(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
 }

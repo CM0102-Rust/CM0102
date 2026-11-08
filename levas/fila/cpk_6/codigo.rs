@@ -17,7 +17,7 @@ unsafe extern "thiscall" fn get_slot_string(noticia: usize, dado: u32, destino: 
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(%%I0%%)(noticia, dado, destino, n); // caixa: só a original
     }
-    crate::comparacao::ramo("cpk_6 texto do dado");
+    crate::comparison::branch("cpk_6 texto do dado");
     let origem = (noticia + 5 + 4 * k as usize) as *const u8; // o dado
     let mut fim = false;
     for i in 0..n as usize {
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize, clube: usi
     if ficha == 0 || cpk6_d(ficha + 0x38) == 0 || cpk6_d(clube + 0x57) == 0 {
         return;
     }
-    crate::comparacao::ramo("cpk_6 apuro financeiro");
+    crate::comparison::branch("cpk_6 apuro financeiro");
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nacao: usize, clu
     let f = get_club_finance(cpk6_d(0xae2a38), c);
     if f != 0 && core::ptr::read_unaligned(f as *const i64) < 1_000_000 && cpk6_w(c + 0x80) < 5000 {
         if *((cpk6_d(c + 0x53) + 0x76) as *const u8) != *((nacao + 0x76) as *const u8) { // fora da região
-            crate::comparacao::ramo("cpk_6 olheiro fora da regiao");
+            crate::comparison::branch("cpk_6 olheiro fora da regiao");
             return 0;
         }
     }
@@ -100,15 +100,15 @@ unsafe extern "thiscall" fn comparar_get_slot_string(noticia: usize, dado: u32, 
         return o(noticia, dado, destino, n);
     }
     let reg = [(destino as usize, n as usize)];
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(noticia, dado, destino, n), || get_slot_string(noticia, dado, destino, n));
-    PLACAR.registrar(igual && r == m, || format!("get_slot_string({}, {}) {:x?} x {:x?}", k, n, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(noticia, dado, destino, n), || get_slot_string(noticia, dado, destino, n));
+    PLACAR.record(igual && r == m, || format!("get_slot_string({}, {}) {:x?} x {:x?}", k, n, mo, mr));
     r
 }
 
 /// Comparador: a notícia sorteia (0x90cfc0) e vai para as caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
 unsafe extern "thiscall" fn comparar_post_financial_trouble_news(this: usize, clube: usize) {
-    crate::comparacao::ramo("post_financial_trouble_news");
+    crate::comparison::branch("post_financial_trouble_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
 }
 
@@ -119,6 +119,6 @@ unsafe extern "thiscall" fn comparar_can_club_scout_nation(this: usize, nacao: u
         return r;
     }
     let n = can_club_scout_nation(this, nacao, clube);
-    PLACAR.registrar(r == n, || format!("can_club_scout_nation({:x}, {:x}) original={} rust={}", nacao, clube, r, n));
+    PLACAR.record(r == n, || format!("can_club_scout_nation({:x}, {:x}) original={} rust={}", nacao, clube, r, n));
     r
 }

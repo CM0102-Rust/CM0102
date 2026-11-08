@@ -20,7 +20,7 @@ unsafe extern "thiscall" fn league_process_promotion_relegation_chain(this: usiz
     if (cqp1_d(this + 0x1c) as i32) >= 0 {
         return;
     }
-    crate::comparacao::ramo("cqp_1 cadeia");
+    crate::comparison::branch("cqp_1 cadeia");
     let trocar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) = core::mem::transmute(0x689c80usize);
     let mut acima = this;
     finalize_league_table(this); // cqp1: fecha a liga do topo
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube: usize, lo:
     if valor < minimo {
         return;
     }
-    crate::comparacao::ramo("cqp_1 noticia do premio");
+    crate::comparison::branch("cqp_1 noticia do premio");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let dado: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: usize, valor
     if !cqp1_humano(clube) {
         return;
     }
-    crate::comparacao::ramo("cqp_1 noticia da tv");
+    crate::comparison::branch("cqp_1 noticia da tv");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let dado: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);

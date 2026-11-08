@@ -117,11 +117,11 @@ Tipo novo de item (**save**), ao lado de telas e simulação. 21 rotinas em 7 it
 
 | Leva | Item | Rotinas | Comparador previsto |
 |---|---|---|---|
-| S1 | C1 contêiner: consultas | 0x933a00 padrão, 0x9331c0 id, 0x933860 tamanho | padrão: `lado_a_lado` puro (+ autoteste com nomes, `*`, maiúsculas); id e tamanho: as duas no mesmo arquivo (só leem), compara a resposta |
+| S1 | C1 contêiner: consultas | 0x933a00 padrão, 0x9331c0 id, 0x933860 tamanho | padrão: `side_by_side` puro (+ autoteste com nomes, `*`, maiúsculas); id e tamanho: as duas no mesmo arquivo (só leem), compara a resposta |
 | S1 | C2 empacotar/desempacotar | 0x933320 `zextract`, 0x933610 `zadd`, 0x90cd50 limpar `CM3_TEMP` | **arquivo** (novo): original e Rust sobre cópias (pastas A e B em `jogo_testes`), compara resposta, lista e bytes dos arquivos gerados |
 | S1 | R1 RLE | 0x932c30 `zread`, 0x932e10 `zwrite`, 0x932b00 `zclose` | **arquivo**: dois `ZFILE` sobre cópias do mesmo contêiner; compara buffer, resposta, a estrutura sem o `FILE*` (+0) e, no `zclose`, o arquivo inteiro. Autoteste com tipos 3 e 4, repetições de 1 a 300, bytes > 0x80, viradas do buffer de 0x30d40, repetição entre chamadas; leitura de um save comprimido real (cópia de `TesteTelasComprimido.sav`) comparando cada item |
-| S2 | S1 verificações | 0x838e10, 0x839290, 0x838eb0 | `lado_a_lado` sobre um `.sav`/`.qst` fixo (só leitura); autoteste, porque só a caixa de arquivos chama |
-| S2 | S2 itens avulsos | 0x8395b0, 0x839760 regras FIFA; 0x591f80 resumo | regras: **arquivo**; resumo: `lado_a_lado` do bloco (com a máscara do tempo de jogo, se for relógio) |
+| S2 | S1 verificações | 0x838e10, 0x839290, 0x838eb0 | `side_by_side` sobre um `.sav`/`.qst` fixo (só leitura); autoteste, porque só a caixa de arquivos chama |
+| S2 | S2 itens avulsos | 0x8395b0, 0x839760 regras FIFA; 0x591f80 resumo | regras: **arquivo**; resumo: `side_by_side` do bloco (com a máscara do tempo de jogo, se for relógio) |
 | S2 | S3 ligações e limpeza | 0x524d30, 0x524d10, 0x82ff40 `free_game_data` | ligações: repasse (validadas pelo save e pela carga); `free_game_data`: orquestrador, carreira |
 | S3 | S4 gravar | 0x82e430 `save_game_data`, 0x827110 `create_game_from_setup_file` | orquestrador sem comparador: `.qst` gravado pela original e pela Rust no mesmo estado, comparado byte a byte (tipos 3 e 4); `create_game_from_setup_file` também pela carreira |
 | S4 | S5 carregar | 0x82a9c0 `load_game_data` | orquestrador: `-load <qst>` + carreira de férias, impressão Rust = original; mutações pela cadeia |

@@ -174,16 +174,16 @@ unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida: usize, hum
 
 unsafe extern "thiscall" fn comparar_build_position_lookup(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || build_position_lookup(this));
-    PLACAR.registrar(igual && r == n, || format!("build_position_lookup {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || build_position_lookup(this));
+    PLACAR.record(igual && r == n, || format!("build_position_lookup {:x?} x {:x?}", mo, mr));
     r
 }
 
 unsafe extern "stdcall" fn comparar_player_regen_score_club_for_player(jogador: usize, clube: usize, elenco: i8) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i8) -> i32>(%%I1%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO,
-        || o(jogador, clube, elenco), || crate::aleatorio::sem_contar(|| player_regen_score_club_for_player(jogador, clube, elenco)));
-    PLACAR.registrar(igual && r == n, || format!("player_regen_score_club_for_player(elenco {}) original={} rust={} sorteio igual={}", elenco, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS,
+        || o(jogador, clube, elenco), || crate::rng::without_counting(|| player_regen_score_club_for_player(jogador, clube, elenco)));
+    PLACAR.record(igual && r == n, || format!("player_regen_score_club_for_player(elenco {}) original={} rust={} sorteio igual={}", elenco, r, n, igual));
     r
 }
 
@@ -195,6 +195,6 @@ unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize, partida: u
         return r;
     }
     let n = is_watching_fixture(this, partida, humano);
-    PLACAR.registrar(r == n, || format!("is_watching_fixture original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("is_watching_fixture original={} rust={}", r, n));
     r
 }

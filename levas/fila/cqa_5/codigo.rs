@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn reject_loan_offer(this: usize, vaga: *mut usize, mar
         *((o + 0x2d) as *mut u8) = 1;
     }
     *((o + 0x2c) as *mut u8) = 2;
-    crate::comparacao::ramo("cqa_5 emprestimo recusado");
+    crate::comparison::branch("cqa_5 emprestimo recusado");
     let vendedor = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
     clear_offer_and_exchange_markers(this, o, vendedor);
     transfer_manager_post_offer_rejected_news(this, o, motivo);
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
         }
     } else {
         if cqa5_d(o + 4) == 0 {
-            crate::comparacao::ramo("cqa_5 vendedor sem troca");
+            crate::comparison::branch("cqa_5 vendedor sem troca");
             return 1; // cqa5: o vendedor sem troca tem vaga
         }
         let t = cqa5_b(cpx1_pessoa(cqa5_d(o + 0xc)) + 0x3d);
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                 }
             }
         };
-        crate::comparacao::ramo("cqa_5 conta o elenco");
+        crate::comparison::branch("cqa_5 conta o elenco");
         contar(clube, &mut n);
         if parceiro != 0 {
             contar(parceiro, &mut n);
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
             if n > 0x32 {
                 let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
                 if cqa5_d(clube) != cqa5_d(o + 8) || humano(clube, 1, 1, 0, 0) != 0 || cqa5_d(o + 4) != 0 {
-                    crate::comparacao::ramo("cqa_5 elenco cheio");
+                    crate::comparison::branch("cqa_5 elenco cheio");
                     return fail_with_reason(clube, o, motivo, 4);
                 }
                 let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                 if escolhido == 0 {
                     return fail_with_reason(clube, o, motivo, 4);
                 }
-                crate::comparacao::ramo("cqa_5 libera o mais barato");
+                crate::comparison::branch("cqa_5 libera o mais barato");
                 if SQUAD_LIMITS_DRY_RUN {
                     SQUAD_LIMITS_RELEASED_PLAYER = escolhido;
                 } else {
@@ -316,16 +316,16 @@ unsafe extern "thiscall" fn comparar_check_squad_limits(this: usize, clube: usiz
     if cqa5_d(o + 4) != 0 {
         regioes.push((cqa5_d(o + 4) + 0xa, 4));
     }
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     SQUAD_LIMITS_DRY_RUN = true;
     SQUAD_LIMITS_RELEASED_PLAYER = 0;
-    let n = crate::aleatorio::pausar_rastro(|| check_squad_limits(this, clube, o, contar_fila, motivo));
+    let n = crate::rng::pause_trace(|| check_squad_limits(this, clube, o, contar_fila, motivo));
     SQUAD_LIMITS_DRY_RUN = false;
     let liberado = SQUAD_LIMITS_RELEASED_PLAYER;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
+    antes.write_back();
     let r = f(this, clube, o, contar_fila, motivo);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let igual = if liberado == 0 {
         mo.0 == mr.0
     } else {
@@ -333,7 +333,7 @@ unsafe extern "thiscall" fn comparar_check_squad_limits(this: usize, clube: usiz
         let c = contrato(cqa5_d(0xae1050), liberado);
         c == 0 || cpx1_clube(cqa5_d(c + 4)) != clube
     };
-    PLACAR.registrar(igual && r == n, || {
+    PLACAR.record(igual && r == n, || {
         format!("check_squad_limits(clube {:x}, oferta {:x}, fila {}) original={} rust={} liberado={:x} {:x?} x {:x?}", clube, o, contar_fila, r, n, liberado, mo, mr)
     });
     r
@@ -371,7 +371,7 @@ unsafe extern "thiscall" fn find_next_sale_percentage(this: usize, p: usize) -> 
 unsafe extern "thiscall" fn comparar_find_next_sale_percentage(this: usize, p: usize) -> usize {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa5_d(this + 0x86e).wrapping_add(cqa5_d(p).wrapping_mul(8));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1), (0xae1080, 4)], || f(this, p), || find_next_sale_percentage(this, p));
-    PLACAR.registrar(igual && r == n, || format!("find_next_sale_percentage(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(m, 1), (0xae1080, 4)], || f(this, p), || find_next_sale_percentage(this, p));
+    PLACAR.record(igual && r == n, || format!("find_next_sale_percentage(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
     r
 }

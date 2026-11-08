@@ -13,7 +13,7 @@ unsafe fn cqd12_i(a: usize) -> i32 {
 fn count_hot_branch(n: &core::sync::atomic::AtomicU32, nome: &'static str) {
     // ponytail: rotina quente; o contador do ramo conta de 4096 em 4096
     if n.fetch_add(1, core::sync::atomic::Ordering::Relaxed) & 0xfff == 0 {
-        crate::comparacao::ramo(nome);
+        crate::comparison::branch(nome);
     }
 }
 
@@ -81,9 +81,9 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
 unsafe extern "thiscall" fn comparar_shortlist_manager_is_compensation_deal(this: usize, vaga: usize, contrato: usize, clube: usize, taxa: *mut i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32) -> u32>(%%I0%%);
     let reg = [(taxa as usize, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, vaga, contrato, clube, taxa),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, vaga, contrato, clube, taxa),
         || shortlist_manager_is_compensation_deal(this, vaga, contrato, clube, taxa));
-    PLACAR.registrar(igual && r == n, || format!("shortlist_manager_is_compensation_deal(vaga {:#x}, contrato {:#x}, clube {:#x}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("shortlist_manager_is_compensation_deal(vaga {:#x}, contrato {:#x}, clube {:#x}) original={} rust={} {:x?} x {:x?}",
         vaga, contrato, clube, r, n, mo, mr));
     r
 }
@@ -101,7 +101,7 @@ unsafe extern "C" fn comparar_shortlist_compare_slots_by_index(a: usize, b: usiz
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
     let n = shortlist_compare_slots_by_index(a, b);
-    PLACAR.registrar(r == n, || format!("shortlist_compare_slots_by_index({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("shortlist_compare_slots_by_index({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -197,8 +197,8 @@ unsafe extern "thiscall" fn comparar_mark_player_under_offer(this: usize, jogado
     if troca != 0 {
         reg.push((troca + 0xa, 4));
     }
-    let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogador, comprador, troca),
+    let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogador, comprador, troca),
         || mark_player_under_offer(this, jogador, comprador, troca));
-    PLACAR.registrar(igual, || format!("mark_player_under_offer(jogador {:#x}, comprador {:#x}, troca {:#x}) {:x?} x {:x?}",
+    PLACAR.record(igual, || format!("mark_player_under_offer(jogador {:#x}, comprador {:#x}, troca {:#x}) {:x?} x {:x?}",
         jogador, comprador, troca, mo, mr));
 }

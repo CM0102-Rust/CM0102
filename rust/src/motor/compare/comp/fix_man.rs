@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fix_man_daily_update(this: usize
     o(this);
     let queue = read_u32_as_usize(this + 0x1128);
     let after = read_i16(G_FIXTURE_LEGS_LIST);
-    PLACAR.registrar((havia == 0 || queue == 0) && (before == 0 || after == 0),
+    PLACAR.record((havia == 0 || queue == 0) && (before == 0 || after == 0),
         || format!("fix_man_daily_update: fila das notícias {:x} -> {:x}, conferências {} -> {}", havia, queue, before, after));
 }
 
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_list(this: usize, ye
     }
     let r = o(this, year, day, slice, kind);
     let n = get_fixture_list(this, year, day, slice, kind);
-    PLACAR.registrar(r == n, || format!("get_fixture_list(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
+    PLACAR.record(r == n, || format!("get_fixture_list(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
         year as u16, day as u16, slice as u8, kind as u8 as i8, r, n));
     r
 }
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LOAD_FIXTURES)(this);
     let expected = format!("fixtures_{}.tmp", read_i16(this + 0x1130) as u16);
     let s = core::slice::from_raw_parts((this + 0x1133) as *const u8, expected.len() + 1);
-    PLACAR.registrar(&s[..expected.len()] == expected.as_bytes() && s[expected.len()] == 0,
+    PLACAR.record(&s[..expected.len()] == expected.as_bytes() && s[expected.len()] == 0,
         || format!("load_fixtures: nome {:?} (esperado {})", s, expected));
 }
 
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize,
     o(this, jogo, grav, list, nations, n, data, desloc);
     let after = fix_man_list_items(list);
     let same = *grav == g && after.len() == before.len() + ne && after[..before.len()] == before[..] && fixtures_bytes(&after[before.len()..]) == expected;
-    PLACAR.registrar(same, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", jogo, desloc as u8 as i8, *grav, g, after.len().saturating_sub(before.len()), ne));
+    PLACAR.record(same, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", jogo, desloc as u8 as i8, *grav, g, after.len().saturating_sub(before.len()), ne));
 }
 
 /// Comparer for `find_fixture_clashes` (comparison mode: see the header of motor.rs).
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_fixture_clashes(this: usize
     let nr = find_fixture_clashes(this, jogo, &mut gr, two_days);
     let (lo, lr) = (fixtures_bytes(&fix_man_list_items(r)), fixtures_bytes(&fix_man_list_items(nr)));
     let same = (r == 0) == (nr == 0) && go == gr && lo == lr;
-    PLACAR.registrar(same, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", jogo, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
+    PLACAR.record(same, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", jogo, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
     if nr != 0 {
         let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
         let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
@@ -120,8 +120,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_new_fixture_date(this: usiz
         return o(this, jogo);
     }
     let reg = [(jogo, 0x4f)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || find_new_fixture_date(this, jogo));
-    PLACAR.registrar(igual, || format!("find_new_fixture_date(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, jogo), || find_new_fixture_date(this, jogo));
+    PLACAR.record(igual, || format!("find_new_fixture_date(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
 }
 
 /// Comparer for `add_fixture` (comparison mode: see the header of motor.rs).
@@ -180,15 +180,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_resolve_same_day_clash(this: usi
         return o(this, jogo, conflitos);
     }
     let reg = [(conflitos + 2, 0xc)];
-    let before = crate::comparacao::Memoria::ler(&reg);
+    let before = crate::comparison::MemorySnapshot::read(&reg);
     SAME_DAY_CLASH_DRY_RUN = true;
     resolve_same_day_clash(this, jogo, conflitos);
     SAME_DAY_CLASH_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    before.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&reg);
+    before.write_back();
     let r = o(this, jogo, conflitos);
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr && (r == 0 || r == 1), || format!("resolve_same_day_clash(jogo {:#x}) devolveu {}, cursor da lista {:x?} x {:x?}", jogo, r, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&reg);
+    PLACAR.record(mo == mr && (r == 0 || r == 1), || format!("resolve_same_day_clash(jogo {:#x}) devolveu {}, cursor da lista {:x?} x {:x?}", jogo, r, mo, mr));
     r
 }
 
@@ -214,21 +214,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: u
     let target = if l != 0 { find_queued_fixture_news(l, f) } else { 0 };
     if target != 0 {
         let regions = [(this + 0x1128, 4), (l, 0xe), (target, 0xdf)];
-        let (_, _, same, mo, mr) = crate::comparacao::lado_a_lado(&regions, || o(this, f, causa, velha), || queue_fixture_moved_news(this, f, causa, velha));
-        PLACAR.registrar(same, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
+        let (_, _, same, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, f, causa, velha), || queue_fixture_moved_news(this, f, causa, velha));
+        PLACAR.record(same, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
         return;
     }
     let mut regions = vec![(this + 0x1128, 4)];
     if l != 0 {
         regions.push((l, 0xe));
     }
-    let before = crate::comparacao::Memoria::ler(&regions);
+    let before = crate::comparison::MemorySnapshot::read(&regions);
     let count = if l != 0 { read_i16_as_i32(l) } else { 0 };
     FIXTURE_MOVED_NEWS_DRY_RUN = true;
     FIXTURE_MOVED_NEWS_WAS_BUILT = false;
-    crate::aleatorio::pausar_rastro(|| queue_fixture_moved_news(this, f, causa, velha));
+    crate::rng::pause_trace(|| queue_fixture_moved_news(this, f, causa, velha));
     FIXTURE_MOVED_NEWS_DRY_RUN = false;
-    before.escrever();
+    before.write_back();
     o(this, f, causa, velha);
     let l2 = read_usize(this + 0x1128);
     let montada = FIXTURE_MOVED_NEWS_WAS_BUILT;
@@ -238,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: u
         && read_usize(read_usize(l2 + 6)) != 0
         && core::slice::from_raw_parts(read_usize(read_usize(l2 + 6)) as *const u8, 0xde)
             == core::slice::from_raw_parts(core::ptr::addr_of!(FIXTURE_MOVED_NEWS_BUILT) as *const u8, 0xde);
-    PLACAR.registrar(same, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, count, if l2 != 0 { read_i16_as_i32(l2) } else { -1 }));
+    PLACAR.record(same, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, count, if l2 != 0 { read_i16_as_i32(l2) } else { -1 }));
 }
 
 /// Comparer for `find_stored_fixture` (comparison mode: see the header of motor.rs).
@@ -248,7 +248,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize, f: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FIND_STORED_FIXTURE)(this, f);
     let n = find_stored_fixture(this, f);
-    PLACAR.registrar(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
+    PLACAR.record(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
     r
 }
 
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: u
     let cauda = read_u32_as_usize(l + 6);
     let same = read_u16(l) == count.wrapping_add(1) && cauda != 0
         && core::slice::from_raw_parts(read_u32_as_usize(cauda) as *const u8, 0x4f) == core::slice::from_raw_parts(f as *const u8, 0x4f);
-    PLACAR.registrar(same, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, count, read_u16(l)));
+    PLACAR.record(same, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, count, read_u16(l)));
 }
 
 /// Comparer for `remove_fixture` (comparison mode: see the header of motor.rs).
@@ -291,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_fixture(this: usize, f: u
     let r = o(this, f);
     let expected = has as u32;
     let same = r == expected && read_u16(l) == count.wrapping_sub(expected as u16);
-    PLACAR.registrar(same, || format!("remove_fixture(jogo {:x}) original={} esperado={} conta antes={} depois={}",
+    PLACAR.record(same, || format!("remove_fixture(jogo {:x}) original={} esperado={} conta antes={} depois={}",
         f, r, expected, count, read_u16(l)));
     r
 }
@@ -307,7 +307,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0:
     if list == 0 {
         let r = o(this, dia0, ano0, dia1, ano1, clube, 0, comp, kind, side);
         let n = find_fixtures(this, dia0, ano0, dia1, ano1, clube, 0, comp, kind, side);
-        PLACAR.registrar(r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}) original={} rust={}",
+        PLACAR.record(r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}) original={} rust={}",
             dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, clube as i32, comp as i32, kind as u8, side as u8, r as u16, n as u16));
         return r;
     }
@@ -315,7 +315,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0:
     let r = o(this, dia0, ano0, dia1, ano1, clube, list, comp, kind, side);
     let (n, iguais) = run_with_temp_list(list, conta, cauda,
         |p| find_fixtures(this, dia0, ano0, dia1, ano1, clube, p, comp, kind, side));
-    PLACAR.registrar(iguais && r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}, com lista) original={} rust={} itens iguais {}",
+    PLACAR.record(iguais && r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}, com lista) original={} rust={} itens iguais {}",
         dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, clube as i32, comp as i32, kind as u8, side as u8, r as u16, n as u16, iguais));
     r
 }
@@ -331,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(thi
     let r = o(this, year, day, slice, comp, round, kind, list);
     let (n, iguais) = run_with_temp_list(list, conta, cauda,
         |p| collect_comp_fixtures_on_day(this, year, day, slice, comp, round, kind, p));
-    PLACAR.registrar(iguais && r as u16 == n as u16, || format!("collect_comp_fixtures_on_day({}/{} fatia {}, comp {}, rodada {}, tipo {:x}) original={} rust={} itens iguais {}",
+    PLACAR.record(iguais && r as u16 == n as u16, || format!("collect_comp_fixtures_on_day({}/{} fatia {}, comp {}, rodada {}, tipo {:x}) original={} rust={} itens iguais {}",
         day as u16, year as u16, slice as u8, comp as i32, round as i32, kind as u8, r as u16, n as u16, iguais));
     r
 }
@@ -342,7 +342,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(thi
 pub(crate) unsafe extern "stdcall" fn comparar_fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(IDX_FIX_MAN_COMP_HAS_FIXTURE_ON_DATE)(data, comp);
     let n = fix_man_comp_has_fixture_on_date(data, comp);
-    PLACAR.registrar(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
+    PLACAR.record(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
     r
 }
 
@@ -352,10 +352,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_next_fixture(this: usize, p
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(IDX_FIND_NEXT_FIXTURE);
     let before = (*pano, *pdia, *pfatia);
     let reg = [(pano as usize, 2), (pdia as usize, 2), (pfatia as usize, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg,
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg,
         || o(this, pano, pdia, pfatia, adiante, comp, stage, clube_a, club_b, a9, a10, a11),
         || find_next_fixture(this, pano, pdia, pfatia, adiante, comp, stage, clube_a, club_b, a9, a10, a11));
-    PLACAR.registrar(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    PLACAR.record(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         before, adiante, comp, stage, clube_a, club_b, r, n, mo, mr));
     r
 }
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_next_fixture(this: usize, p
 pub(crate) unsafe extern "thiscall" fn comparar_get_time_slice(this: usize, comp: usize, day: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_TIME_SLICE)(this, comp, day);
     let n = get_time_slice(this, comp, day);
-    PLACAR.registrar(r == n, || format!("get_time_slice(dia {}) original={} rust={}", day as i16, r, n));
+    PLACAR.record(r == n, || format!("get_time_slice(dia {}) original={} rust={}", day as i16, r, n));
     r
 }
 
@@ -379,7 +379,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_away_trip_illness_risk(this:
 pub(crate) unsafe extern "C" fn comparar_fix_man_get_partner_key_nation_index(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_FIX_MAN_GET_PARTNER_KEY_NATION_INDEX)(clube);
     let n = fix_man_get_partner_key_nation_index(clube);
-    PLACAR.registrar(r == n, || format!("fix_man_get_partner_key_nation_index({:x}) original={:x} rust={:x}", clube, r, n));
+    PLACAR.record(r == n, || format!("fix_man_get_partner_key_nation_index({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }
 
@@ -387,7 +387,7 @@ pub(crate) unsafe extern "C" fn comparar_fix_man_get_partner_key_nation_index(cl
 pub(crate) unsafe extern "stdcall" fn comparar_get_fixture_list_for_date(data: usize, slice: u32, group: u32) -> usize {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> usize>(IDX_GET_FIXTURE_LIST_FOR_DATE)(data, slice, group);
     let n = get_fixture_list_for_date(data, slice, group);
-    PLACAR.registrar(r == n, || format!("get_fixture_list_for_date({:x}, fatia {}, grupo {}) original={:x} rust={:x}", data, slice, group, r, n));
+    PLACAR.record(r == n, || format!("get_fixture_list_for_date({:x}, fatia {}, grupo {}) original={:x} rust={:x}", data, slice, group, r, n));
     r
 }
 
@@ -400,6 +400,6 @@ pub(crate) unsafe extern "C" fn comparar_mark_calendar_year(jogo: usize) {
     } else {
         [0xc, 0x10].iter().map(|&o| (table.wrapping_add((*((jogo + o) as *const i32) as usize).wrapping_mul(2)), 2)).collect()
     };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(jogo), || mark_calendar_year(jogo));
-    PLACAR.registrar(igual, || format!("mark_calendar_year({:#x}) {:x?} x {:x?}", jogo, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(jogo), || mark_calendar_year(jogo));
+    PLACAR.record(igual, || format!("mark_calendar_year({:#x}) {:x?} x {:x?}", jogo, mo, mr));
 }

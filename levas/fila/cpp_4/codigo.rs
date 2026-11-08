@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, pessoa: usiz
 unsafe extern "thiscall" fn comparar_is_staff_suitable_for_job(this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(%%I0%%)(this, pessoa, clube, nota_minima);
     let n = is_staff_suitable_for_job(this, pessoa, clube, nota_minima);
-    PLACAR.registrar(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", pessoa, clube, nota_minima, r, n));
+    PLACAR.record(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", pessoa, clube, nota_minima, r, n));
     r
 }
 
@@ -183,7 +183,7 @@ unsafe extern "stdcall" fn staff_can_take_job(cargo: u32, pessoa: usize) -> u32 
         return 0;
     }
     if pessoa == 0 {
-        crate::comparacao::ramo("cpp_4 pessoa nula");
+        crate::comparison::branch("cpp_4 pessoa nula");
         return 0; // pessoa nula
     }
     let p = pessoa;
@@ -231,7 +231,7 @@ unsafe extern "stdcall" fn staff_can_take_job(cargo: u32, pessoa: usize) -> u32 
 unsafe extern "stdcall" fn comparar_staff_can_take_job(cargo: u32, pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32, usize) -> u32>(%%I1%%)(cargo, pessoa);
     let n = staff_can_take_job(cargo, pessoa);
-    PLACAR.registrar(r == n, || format!("staff_can_take_job(cargo {}, pessoa {:x}) original={} rust={}", cargo as u8 as i8, pessoa, r, n));
+    PLACAR.record(r == n, || format!("staff_can_take_job(cargo {}, pessoa {:x}) original={} rust={}", cargo as u8 as i8, pessoa, r, n));
     r
 }
 
@@ -380,7 +380,7 @@ unsafe extern "thiscall" fn contract_manager_lower_match_morale(this: usize, pes
             let nota = cpp4_w(jogador + 0xb);
             if nota > cpp4_w(clube + 0x80) && nota > 0x8ca {
                 if transfer_window_open(pessoa, clube) {
-                    crate::comparacao::ramo("cpp_4 queixa na janela");
+                    crate::comparison::branch("cpp_4 queixa na janela");
                     apagar(contrato, 4);
                     marcar(contrato, 4, 0);
                 }
@@ -429,5 +429,5 @@ unsafe extern "thiscall" fn comparar_contract_manager_lower_match_morale(this: u
     o(this, pessoa, clube, contrato);
     let depois = read_u8_volatile(contrato + 0x44) as i8;
     let esperada = plano.map_or(antes, |m| lowered_morale(antes, m));
-    PLACAR.registrar(depois == esperada, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plano, antes, depois, esperada));
+    PLACAR.record(depois == esperada, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plano, antes, depois, esperada));
 }

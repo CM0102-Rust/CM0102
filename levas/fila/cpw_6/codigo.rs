@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn award_best_rated_player(this: usize, notas: usize, i
     if r == 0 {
         return;
     }
-    crate::comparacao::ramo("cpw_6 premiou o melhor do mes");
+    crate::comparison::branch("cpw_6 premiou o melhor do mes");
     let id = cpw6_i(r);
     let tabela = cpw6_d(0xae23bc) as u32;
     let clube = cpw6_d(cpw6_pessoa(id) + 0x39);
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn set_winner(this: usize, id: i32, clube_id: i32, mes:
         // os bytes altos das reputações vêm do dword +0x19 no registrador, como a original empurra
         let marca = cpw6_d(this + 0x19) as u32;
         let alto = marca & 0xffff0000;
-        crate::comparacao::ramo("cpw_6 vencedor do mes");
+        crate::comparison::branch("cpw_6 vencedor do mes");
         raise_winner_reputation(cpw6_pessoa(id), clube, alto | cpw6_w(this + 0x15) as u16 as u32, alto | cpw6_w(this + 0x17) as u16 as u32, marca);
     }
     if MONTH_AWARD_DRY_RUN {
@@ -144,15 +144,15 @@ unsafe fn winner_reputation_regions(regioes: &mut Vec<(usize, usize)>, pessoa: u
 
 /// O comparador em ensaio: a cópia sem as chamadas que alocam e a original a partir do mesmo estado das `regioes`.
 unsafe fn compare_month_award(nome: &str, regioes: &[(usize, usize)], original: impl FnOnce(), copia: impl FnOnce()) {
-    let antes = crate::comparacao::Memoria::ler(regioes);
+    let antes = crate::comparison::MemorySnapshot::read(regioes);
     MONTH_AWARD_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(copia);
+    crate::rng::pause_trace(copia);
     MONTH_AWARD_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(regioes);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(regioes);
+    antes.write_back();
     original();
-    let mo = crate::comparacao::Memoria::ler(regioes);
-    PLACAR.registrar(mo == mr, || format!("{} original={:x?} rust={:x?}", nome, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(regioes);
+    PLACAR.record(mo == mr, || format!("{} original={:x?} rust={:x?}", nome, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_set_winner(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
@@ -192,7 +192,7 @@ unsafe extern "C" fn award_raise_winner_reputation(pessoa: usize, clube: usize, 
     let mundo = mundo as u16 as i16;
     let p = cpw6_d(pessoa + 0x61);
     if p != 0 && jogador != 0 {
-        crate::comparacao::ramo("cpw_6 premio de jogador");
+        crate::comparison::branch("cpw_6 premio de jogador");
         add_to_word(p + 0xd, match_pl_ftol(mundo as i32 as f64 * read_f64_at(0x967888))); // cpw6: o aumento mundial
         if cpw6_w(p + 0xd) > 10000 {
             cpw6_pw(p + 0xd, 10000);

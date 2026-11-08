@@ -44,9 +44,9 @@ unsafe extern "C" fn comparar_database_format_name_from_ids(nome: i32, sobrenome
     }
     // o texto produzido (até o tamanho dado, no máximo 128 bytes)
     let n = (tamanho as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma, pessoa),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma, pessoa),
         || database_format_name_from_ids(nome, sobrenome, comum, texto, tamanho, forma, pessoa));
-    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", nome, sobrenome, comum, forma, pessoa, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", nome, sobrenome, comum, forma, pessoa, r, x, mo, mr));
     r
 }
 
@@ -119,9 +119,9 @@ unsafe extern "C" fn comparar_database_format_official_name(oficial: usize, text
         return o(oficial, texto, tamanho, forma); // caixa: só a original
     }
     let n = (tamanho as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(oficial, texto, tamanho, forma),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, n)], || o(oficial, texto, tamanho, forma),
         || database_format_official_name(oficial, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("database_format_official_name({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, forma as u8, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("database_format_official_name({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, forma as u8, r, x, mo, mr));
     r
 }
 
@@ -190,8 +190,8 @@ unsafe extern "C" fn comparar_position_mask_get_text(mascara: u32, texto: usize,
         return o(mascara, texto, maiuscula);
     }
     // sem tamanho: os nomes traduzidos cabem em 128
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 128)], || o(mascara, texto, maiuscula),
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(texto, 128)], || o(mascara, texto, maiuscula),
         || position_mask_get_text(mascara, texto, maiuscula));
-    PLACAR.registrar(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mascara, maiuscula as u8, r, x, mo, mr));
+    PLACAR.record(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mascara, maiuscula as u8, r, x, mo, mr));
     r
 }

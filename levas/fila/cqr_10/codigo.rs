@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usize, hoje: us
         let dia = cqr10_w(this + 0xb6) as u16; // cqr10: o dia do sorteio
         let ano = (cqr10_w(this + 0xb8) as u16).wrapping_add(cqr10_w(this + 0x40) as u16);
         if ano == core::ptr::read_unaligned((hoje + 2) as *const u16) && dia == core::ptr::read_unaligned(hoje as *const u16) {
-            crate::comparacao::ramo("cqr_10 sorteio da libertadores");
+            crate::comparison::branch("cqr_10 sorteio da libertadores");
             clubes(this);
             if primeiro(this) == 0 {
                 show_error_at(0x9a7de4, 0x365);
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_update_for_date(this: usize,
             && fases != 0
             && (0..7).all(|g| cqr10_d(fases + g * 4) != 0)
             && cqr10_d(this + 0x30) == 6;
-        PLACAR.registrar(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr10_d(this + 0x45), cqr10_d(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqr10_d(this + 0x45), cqr10_d(this + 0x30) as i32));
     }
     r
 }
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u32 {
     }
     let mut i = 0i8;
     while (i as i16) < cqr10_w(this + 0x3e) {
-        crate::comparacao::ramo("cqr_10 linha do primeiro grupo");
+        crate::comparison::branch("cqr_10 linha do primeiro grupo");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, conmebol_liber_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_build_first_group_table(this: usize) -> u32
         }
     }
     let igual = r == 1 && cqr10_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    PLACAR.record(igual, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: usize, g: i3
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
-        crate::comparacao::ramo("cqr_10 time do grupo");
+        crate::comparison::branch("cqr_10 time do grupo");
         cqr10_pd(times + n * 4, conmebol_liber_drawn_club(this, k as usize)); // cqr10: o time na vaga do grupo
         k += 1;
     }
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_create_group_stage(this: usi
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqr10_d(this + 0x30) as i32 == g && cqr10_w(f + 0x3e) == 4 && cqr10_w(f + 0x40) == cqr10_w(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        PLACAR.record(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }

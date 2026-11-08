@@ -19,9 +19,29 @@ pub(crate) const WORLD_CUP_2002_DRAW: [usize; 32] = [
     KEY_NATION_JAPAN, KEY_NATION_BELGIUM, KEY_NATION_RUSSIA, KEY_NATION_TUNISIA, // H: Japan, Belgium, Russia, Tunisia
 ];
 
-/// the draw list: the seeds in groups 1..8 (drawn among the slots still standing: the loop that hangs the game on
-/// 27/12/2001 when none is), the other 24 in drawn groups with a limit; in 2002, the real draw and the nation table
-/// with the holder and the hosts
+/// Builds the World Cup draw list: the seeds into groups 1..8, the other 24 into drawn groups with a limit; in 2002,
+/// the real draw and the nation table with the holder and the hosts.
+///
+/// `WorldCup::draw_groups()`, from the draw made on the day (0x92e7f0); no SEH. The draw list: 32 entries of 5 bytes
+/// (+0 the id of the national team's club, +4 the group 1..8), zeroed (0x945501(0x20, 5): push 5; push 0x20; add esp, 8
+/// -> cdecl; out of memory, the box for line 0x4b5 and it returns 0).
+///
+/// 1) The seeds (8 slots of 5 bytes at +0xee: +0 the id, +4 the pot; 0xff = already drawn): slot 0 goes to group 1 and
+/// slot 1 (+0xf3) to group 3; groups 2 and 4..8 draw one of slots 2..7 (0x90cfc0(6) + 2), drawing again while the drawn
+/// slot has already gone. THIS IS THE LOOP OF THE 27/12/2001 HANG (the game stops without an error; worked around by
+/// Alan_v2 by changing the jump at 0x92ea55): if fewer than six of slots 2..7 are still standing (in a career started
+/// before 2001, seed_teams 0x92f230 does not seed the 2002 World Cup and the slots stay 0xff), the draw never finds a
+/// slot and the loop never ends. The port repeats the loop like the original, with no limit.
+///
+/// 2) The other 24 (the slots at +0x116, in order) fall into drawn groups (0x90cfc0(8)), each group with at most (k /
+/// 8) + 1 teams when the kth goes in (k from 8 to 31): it draws again while the group already has the limit.
+///
+/// 3) In the 2002 World Cup (+0x40 = 2002), after the draw, the list becomes the real draw (the order of
+/// `WORLD_CUP_2002_DRAW`: the id of the main national team's club, 0x53b3d0 push nation; add esp -> cdecl), groups i/4
+/// + 1, and the table of the 32 World Cup nations ([+0x14], 6 bytes: +0 the club, +4 the status) receives the clubs
+/// with status 6, France (holder) 2, Korea and Japan (hosts) 1; +0x36 (how many) = 32.
+///
+/// Returns the list.
 /// Original: `WorldCup::draw_groups` (0x92e940, world_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x92e940 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::draw_groups()`, do sorteio feito no dia
@@ -84,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
         while count[r as i16 as usize] >= lim {
             r = sorteio(8);
         }
-        crate::comparacao::ramo("cqf_4 vaga no grupo");
+        crate::comparison::branch("cqf_4 vaga no grupo");
         write_u32_from_usize(dst, read_u32_as_usize(src));
         src += 5;
         write_u8(dst + 4, (r as u8).wrapping_add(1));
@@ -96,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     if read_i16(this + league::YEAR) != 0x7d2 {
         return list;
     }
-    crate::comparacao::ramo("cqf_4 sorteio de 2002");
+    crate::comparison::branch("cqf_4 sorteio de 2002");
     for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: as nações do sorteio real
         let nacao = read_u32_as_usize(G_NATION_TABLE).wrapping_add((read_u32_as_usize(chave) as i32).wrapping_mul(0x122) as usize);
         write_u32_from_usize(list + i * 5, read_u32_as_usize(principal(nacao)));
@@ -116,8 +136,16 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
 }
 
 
-/// the draw day: the list, group 1 in the World Cup itself with its fixtures and sorted table, the group 2..8 stages,
-/// the predicted positions and the bookings reset
+/// The World Cup draw day: the draw list, group 1 in the World Cup itself with its fixtures and sorted table, the group
+/// 2..8 stages, the predicted positions and the bookings reset.
+///
+/// `WorldCup::run_group_draw()`, from the draw day (0x92f1a0); no SEH. The draw list (0x92e940, mov ecx, this ->
+/// thiscall); group 1 in the World Cup's own table (0x92d0f0 push list; mov ecx -> thiscall, ret 4; 0: the box for line
+/// 0x46d and end); its fixtures (0x6835c0 mov ecx -> thiscall, ret 0; 0: line 0x473); the sorted table (0x6827d0 push
+/// 0; mov ecx -> thiscall, ret 4; 0: line 0x47a). With everything done: +0x45 = 1, the stages of groups 2..8 (0x92d540
+/// push list; push g; mov ecx -> thiscall, ret 8, g from 0 to 6), the list freed (0x9452ca push; add esp -> cdecl), the
+/// predicted positions (method +0x5c, 0x92f680) and the bookings reset in the competition's body (0x7e9180 push 0; ecx
+/// = [[0xae28f0] + 4 × (char)+0x50] -> thiscall, ret 4). On an error the list is not freed (as in the original).
 /// Original: `WorldCup::run_group_draw` (0x92e7f0, world_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x92e7f0 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::run_group_draw()`, do dia do sorteio (0x92f1a0).
@@ -161,7 +189,14 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
 }
 
 
-/// the World Cup day: the seeding on the seeding date, the draw on its date (no table yet) and the league day
+/// The World Cup day: the seeding on the seeding date, the draw on its date (no table yet) and the league day.
+///
+/// `WorldCup::update_for_date(today, full)`, method +0x14 of the World Cup, the World Cup's day from the competitions'
+/// day. On the seeding date (+0x18e the day of the year, +0x190 the year relative to +0x40: 15/12 of the previous year,
+/// written by 0x92d200) and with `full`, it seeds (0x92f230 mov ecx -> thiscall, ret 0); on the draw date (+0xb6,
+/// +0xb8: 27/12 of the previous year), with `full` and no table yet (+0xb1 = 0), the draw (0x92e7f0 mov ecx ->
+/// thiscall, ret 0). Then the league day (0x6847c0 push full; push today; mov ecx -> thiscall, ret 8), whose return
+/// value (eax) it passes on. The date: +0 the day of the year, +2 the year (unsigned).
 /// Original: `WorldCup::update_for_date` (0x92f1a0, world_cup.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x92f1a0 } (thiscall, ret 8, world_cup.cpp, método +0x14 da Copa do Mundo): `WorldCup::update_for_date(hoje,
@@ -181,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
     }
     let day_of_draw = read_i16(this + 0xb6) as u16; // cqf4: o dia do sorteio
     if day_of_draw == day && read_i16(this + 0xb8) as i32 + read_i16(this + league::YEAR) as i32 == year && full != 0 && read_u32_as_usize(this + league::TABLE) == 0 {
-        crate::comparacao::ramo("cqf_4 dia do sorteio");
+        crate::comparison::branch("cqf_4 dia do sorteio");
         sortear(this);
     }
     league(this, today, full)
@@ -200,8 +235,15 @@ pub(crate) unsafe fn draw_list_club(list: usize, i: usize) -> usize {
     read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(list + i * 5).wrapping_mul(club::SIZE))
 }
 
-/// the World Cup itself becomes group 1: four teams, the allocated table, the group 1 teams of the list in the rows and
-/// the group draw news
+/// The World Cup itself becomes group 1: four teams, the allocated table, the group 1 teams of the draw list in the
+/// rows and the group draw news.
+///
+/// `WorldCup::create_group_table(list)`, from the draw (0x92e7f0); no SEH. The World Cup itself becomes group 1: +0x3e
+/// (teams) = 4, the table [+0xb1] allocated with 0xec bytes (0x944e46 push; add esp -> cdecl; out of memory, the box
+/// for line 0x2b1 and it returns 0); the list entries of group 1 (+4 = 1), in order, go into rows 0..3 (0x687430 push
+/// 0; push 0; push club; push row; mov ecx, this -> thiscall, ret 0x10; the row goes in cl and the original leaves
+/// garbage in the high bytes of ecx, which 0x687430 does not read: the port passes the clean byte), up to 4 rows or the
+/// end of the 32 entries; then the group news (0x684230 mov ecx, this -> thiscall). Returns 1.
 /// Original: `WorldCup::create_group_table` (0x92d0f0, world_cup.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x92d0f0 } (thiscall, ret 4, world_cup.cpp, sem SEH): `WorldCup::create_group_table(lista)`, do sorteio
@@ -227,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_table(this: usize,
     while row < 4 {
         let e = i as usize; // cqf5: a entrada da lista
         if read_u8(list + e * 5 + 4) == 1 {
-            crate::comparacao::ramo("cqf_5 time do grupo um");
+            crate::comparison::branch("cqf_5 time do grupo um");
             let clube = draw_list_club(list, e);
             row_of_table(this, row as u8 as u32, clube, 0, 0);
             row += 1;
@@ -249,8 +291,20 @@ pub(crate) unsafe fn group_clubs(list: usize, g: i32) -> Vec<usize> {
 }
 
 
-/// the stage of one of groups 2 to 8: its teams, the round schedule, the stage constructor, the current stage and the
-/// group news
+/// Creates the stage of one of groups 2 to 8: its teams, the round schedule, the stage constructor, the current stage
+/// and the group news.
+///
+/// `WorldCup::create_group_stage(g, list)`, from the draw (0x92e7f0, g from 0 to 6: groups 2 to 8); SEH frame only for
+/// the new: no destructor on the normal path. The teams of group g+2 (up to 4, in list order) in a vector of +0x3e
+/// pointers (0x944e46; out of memory, the box for line 0x366 and 0); the round table through the World Cup's method
+/// +0x3c (push 0; push &id; push &rounds; push g; mov ecx -> thiscall, ret 0x10: 0x92c290 writes both outputs for
+/// stages 0..6); the stage (0x944cf1(0xee) push; add esp -> cdecl; the League_Stage constructor 0x68b100, thiscall, ret
+/// 0x58: 22 arguments, checked against its reading: the World Cup, the teams (word), the vector, 1, +4, the round
+/// table, the rounds (word: +0xa9 of the stage, the date count), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the year +0x40
+/// (word), g (byte), the id (word: +0x3a of the stage), +0x51, 4, 0, +0xd9 (word), −1, 0, 2; the original pushes the
+/// words and bytes with garbage in the high bytes, which the constructor does not read: the port passes the clean
+/// values) stored in [+0xc][g]; the vector and the round table freed (0x9452ca). Without a stage: the box for line
+/// 0x380 and 0. With it: +0x30 = g and the group news (0x684230 on the stage). Returns 1.
 /// Original: `WorldCup::create_group_stage` (0x92d540, world_cup.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x92d540 } (thiscall, ret 8, world_cup.cpp, quadro SEH só para o new: sem destrutor no caminho normal):
@@ -282,7 +336,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
     while n < 4 {
         let e = list + i as usize * 5;
         if read_u8(e + 4) as i8 as i32 == g + 2 {
-            crate::comparacao::ramo("cqf_5 time do grupo");
+            crate::comparison::branch("cqf_5 time do grupo");
             write_u32_from_usize(teams + n as usize * 4, draw_list_club(list, i as usize)); // cqf5: o time na vaga do grupo
             n += 1;
         }
@@ -337,8 +391,17 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
 }
 
 
-/// the 32 nations sorted by reputation, each one's predicted position (1, 2, 3, 4, 5, 9, 17, 25 by the stage bands) and
-/// the World Cup as the nation's current competition
+/// Sorts the 32 nations by reputation, sets each one's predicted position (1, 2, 3, 4, 5, 9, 17, 25 by the stage bands)
+/// and makes the World Cup the nation's current competition.
+///
+/// `WorldCup::set_predicted_positions()`, method +0x5c of the World Cup, from the draw (0x92e7f0). Without statistics
+/// (+8): the box for line 0x671 and it returns. Fewer than 32 nations (+0x36): the box for line 0x678 and +0x36 = 32.
+/// The clubs of the nation table ([+0x14], 6 bytes) in a vector (0x944e46; out of memory, the box for line 0x680 and it
+/// returns), sorted by reputation (qsort 0x945333 with 0x4b07d0: push; add esp, 0x10 -> cdecl), and each one's
+/// predicted position in the statistics (0x4a2540 push position; push club; mov ecx, [+8] -> thiscall, ret 8): 1, 2, 3,
+/// 4, four 5s, eight 9s, eight 17s and eight 25s (the bands of the final stages); then the current competition of each
+/// club's nation (+0x53) becomes the World Cup (0x775220 push [+4]; push nation; mov ecx, [0xb74318] -> thiscall, ret
+/// 8) and the vector is freed (0x9452ca).
 /// Original: `WorldCup::set_predicted_positions` (0x92f680, world_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x92f680 } (thiscall, ret 0, world_cup.cpp, método +0x5c da Copa do Mundo): `WorldCup::set_predicted_positions()`,
@@ -380,7 +443,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
     }
     let mut i = 0i16;
     while i < read_i16(this + 0x36) {
-        crate::comparacao::ramo("cqf_5 competição da nação");
+        crate::comparison::branch("cqf_5 competição da nação");
         competicao(read_u32_as_usize(G_NATIONAL_TEAMS), read_u32_as_usize(read_u32_as_usize(v + i as usize * 4) + 0x53), read_u32_as_usize(this + 4));
         i += 1; // cqf5: a próxima nação
     }
@@ -407,8 +470,16 @@ pub(crate) const WORLD_CUP_GROUP_GAMES: [[(i32, i32, i32, i32, i32, u32); 6]; 8]
     [(0, 0, 6, 1, 3, 0x800), (0, 1, 6, 2, 3, 0x200), (1, 0, 5, 1, 3, 0x400), (1, 1, 6, 1, 3, 0x80), (2, 0, 4, 1, 3, 0x1000), (2, 1, 4, 1, 3, 0x100)],
 ];
 
-/// the three-round schedule of a group stage (12, 19 and 24 June, moved to the weekday) with the two fixtures of each
-/// round; the knockout stays with the original
+/// Creates the three-round schedule of a World Cup group stage (12, 19 and 24 June, moved to the weekday) with the two
+/// fixtures of each round; the knockout stays with the original.
+///
+/// `WorldCup::create_schedule(stage, &rounds, &id, &is_league)`, method +0x3c of the World Cup, from the creation of
+/// the rules (0x92d200, stage −1) and from the group stages (0x92d540, 0..6). In the group stages (char < 7): is_league
+/// (if requested) = 1, rounds = 3, id = 0x420 + stage; the table of 3 rounds of 0x41 bytes (0x944e46(0xc3); out of
+/// memory, the box for line 0xcc and it returns 0), the dates (0x68a160: 12, 19 and 24 June of the World Cup year,
+/// moved to weekdays 4, 4 and 2, code 1, value 1), game 2 of each round empty (−1) and the two fixtures of each round
+/// of the stage (`WORLD_CUP_GROUP_GAMES`). The knockout (stage 7, with the cup routines) and the stages above: the
+/// original. Returns the table.
 /// Original: `WorldCup::create_schedule` (0x92c290, world_cup.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x92c290 } (thiscall, ret 0x10, world_cup.cpp, método +0x3c da Copa do Mundo): `WorldCup::create_schedule(fase,
@@ -436,7 +507,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, st
         show_error_at(0xad5888, 0xcc);
         return 0;
     }
-    crate::comparacao::ramo("cqf_6 tabela das rodadas");
+    crate::comparison::branch("cqf_6 tabela das rodadas");
     // the year carries garbage in the high bytes in the original (the year’s cx over the previous ecx); 0x68a160 only uses the 16 bits
     // low (0x549f70 reads the year as a word and the word at +2 holds year − base): the copy passes the clean year
     let year = read_i16(this + league::YEAR) as u16 as u32;
@@ -474,7 +545,11 @@ pub(crate) unsafe fn written_group_round_bytes(t: usize) -> Vec<u8> {
 }
 
 
-/// the qualified nation enters the World Cup nation table (status 6), or the box when the list is full
+/// Adds a qualified nation to the World Cup nation table (status 6), or shows the box when the list is full.
+///
+/// `WorldCup::add_qualified_team(club)`, from the qualifiers (0x90f4f0, 0x911e10, 0x91538e, 0x9184c0, 0x91e200,
+/// 0x920500); no SEH. With the nation list (+0x36) below the maximum (+0x38), slot +0x36 of table [+0x14] (6 bytes)
+/// receives status 6 and the club, and +0x36 goes up; when full, the box for line 0x456.
 /// Original: `WorldCup::add_qualified_team` (0x92e740, world_cup.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x92e740 } (thiscall, ret 4, world_cup.cpp, sem SEH): `WorldCup::add_qualified_team(clube)`, das eliminatórias
@@ -487,7 +562,7 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, clube: us
         show_error_at(0xad5888, 0x456);
         return;
     }
-    crate::comparacao::ramo("cqf_6 nação classificada");
+    crate::comparison::branch("cqf_6 nação classificada");
     let e = read_u32_as_usize(this + 0x14).wrapping_add((n as i32 * 6) as usize);
     write_u8(e + 4, 6);
     write_u32_from_usize(read_u32_as_usize(this + 0x14).wrapping_add((read_i16(this + 0x36) as i32 * 6) as usize), clube);
@@ -495,7 +570,20 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, clube: us
 }
 
 
-/// the seeds (holder, hosts, reputation) and the pots by continent; does nothing for the 2002 World Cup
+/// Sets the World Cup seeds (holder, hosts, reputation) and the pots by continent; does nothing for the 2002 World Cup.
+///
+/// `WorldCup::seed_teams()`, from the World Cup day (0x92f1a0, on the seeding date); no SEH. In the 2002 World Cup
+/// (+0x40 = 2002) it returns without doing anything: its draw slots come from the database, which is why a 2002 World
+/// Cup created by another path hangs the draw (the 0x92e940 loop, cqf_4). In the others: +0x4b = 0; with fewer than 32
+/// nations (+0x36), the box for line 0x59e and it completes the list with the main national team (0x53b3d0) of each
+/// nation ([0xae2350] nations of 0x122 bytes) not yet in it, up to 32; it sorts table [+0x14] (6 bytes) by reputation
+/// (qsort 0x945333 with 0x4b07b0); the hosts (0x5fa730 on [0xb5e134]: thiscall, ret 0x14, with the World Cup id
+/// [0x9cf79c], the year as a word, the two outputs and 1; output −1 = no host) and the holder (the most recent
+/// champion, 0x4afd80 of the competition [0xae23d0] + id × 0x6b) go to slots 1, 2 and 0 (swapping places), and the
+/// others are sorted again from the first free one; the first 8 become seeds (pot 0, status 3) and the other 24 go to
+/// their continent's pot (+0x53 nation, +0x71 continent: [0x9cfa10] pot 1, [0x9cfa18]/[0x9cfa0c]/[0x9cfa1c] pot 2,
+/// [0x9cfa08]/[0x9cfa14] pot 3; without a nation or continent, the box for line 0x61e) with the club id in the slots at
+/// +0xee (5 bytes); finally the 24 of the table (from the 9th on) and the slots at +0x116 are sorted by pot (0x92f660).
 /// Original: `WorldCup::seed_teams` (0x92f230, world_cup.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x92f230 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::seed_teams()`, do dia da Copa (0x92f1a0, na
@@ -513,7 +601,7 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, clube: us
 /// ordenadas pelo pote (0x92f660).
 pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     if read_i16(this + league::YEAR) == 0x7d2 {
-        crate::comparacao::ramo("cqf_6 sem cabeças de chave em 2002");
+        crate::comparison::branch("cqf_6 sem cabeças de chave em 2002");
         return;
     }
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);

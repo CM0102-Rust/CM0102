@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje: usize, fa
             }
             soltar(cqt5_d(this + 0xad));
         }
-        crate::comparacao::ramo("cqt_5 copa do rei refeita");
+        crate::comparison::branch("cqt_5 copa do rei refeita");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x84d910usize);
         // ponytail: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte
@@ -70,14 +70,14 @@ unsafe extern "thiscall" fn comparar_spa_cup_update_for_date(this: usize, hoje: 
     let vira = antes == 0 && cqt5_w(cqt5_d(0xde1f58) + 0x439) as u16 as i32 == cqt5_w(this + 0x40) as i32 && fase != 0;
     let r = o(this, hoje, fase);
     let depois = cqt5_d(this + 0x45);
-    PLACAR.registrar(depois == if vira { 1 } else { antes }, || format!("spa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
+    PLACAR.record(depois == if vira { 1 } else { antes }, || format!("spa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
     r
 }
 
 /// O histórico da temporada de uma copa (`record_season_honours`, 11 bytes: mov eax, [ecx+0xc]; mov ecx, [eax+o]; mov
 /// edx, [ecx]; jmp [edx+0x30]): a virtual +0x30 da fase [+0xc][o/4] (a última fase da copa: a final), com o eax dela.
 unsafe fn record_season_honours(this: usize, o: usize, ramo: &'static str) -> i32 {
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     let fase = cqt5_d(cqt5_d(this + 0xc) + o);
     cqt5_virtual(fase, 0x30)
 }

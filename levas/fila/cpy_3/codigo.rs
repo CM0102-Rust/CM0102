@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
             let divisor = if t == 0xb {
                 match ((cpy3_b(v + 0x24) >> 1) & 0xf).wrapping_sub(2) {
                     0 | 1 => {
-                        crate::comparacao::ramo("cpy_3 verba da vaga de titular");
+                        crate::comparison::branch("cpy_3 verba da vaga de titular");
                         Some(a * 2) // cpy3: a verba da vaga de titular
                     }
                     2 => Some(a * 4),
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
                 let base = if repartido >= 1000 { repartido } else { 1000 };
                 let e = cpy3_i(v + 7);
                 let x = match_pl_ftol((e as f64) / (base as f64) * (resto as f64) * cpy3_f64(0x969540));
-                crate::comparacao::ramo("cpy_3 reducao pela sobra");
+                crate::comparison::branch("cpy_3 reducao pela sobra");
                 cpy3_pi(v + 7, e.wrapping_sub(x)); // cpy3: a redução da vaga pela sobra
             }
             let marca = cpy3_b(v + 0x24) & 0x1e;
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
                 cpy3_pi(v + 7, cpy3_i(v + 7).wrapping_add(x));
             }
             *((v + 0x24) as *mut u8) &= 0xfe;
-            crate::comparacao::ramo("cpy_3 vaga preenchida");
+            crate::comparison::branch("cpy_3 vaga preenchida");
             preencher(this, v, clube, 0); // cpy3: a vaga é preenchida
             let alvo = cpy3_i(v + 0xf);
             if alvo > -1 && cpy3_b(v + 0x24) & 1 == 0 {
@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
             ano > ano_c || (ano == ano_c && dia > core::ptr::read_unaligned((c2 + 0x25) as *const i16))
         };
         if candidata {
-            crate::comparacao::ramo("cpy_3 sobra ao jogador do clube");
+            crate::comparison::branch("cpy_3 sobra ao jogador do clube");
             cpy3_pi(v + 0xb, cpy3_i(v + 3));
             cpy3_pi(v + 7, resto);
             return;
@@ -285,7 +285,7 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_squad_status_allowed(pesso
     }
     let r = o(pessoa, estatuto);
     let n = shortlist_manager_squad_status_allowed(pessoa, estatuto);
-    PLACAR.registrar(r == n, || format!("shortlist_manager_squad_status_allowed(pessoa {:x}, estatuto {}) original={} rust={}", pessoa, estatuto as i8, r, n));
+    PLACAR.record(r == n, || format!("shortlist_manager_squad_status_allowed(pessoa {:x}, estatuto {}) original={} rust={}", pessoa, estatuto as i8, r, n));
     r
 }
 
@@ -318,7 +318,7 @@ unsafe extern "C" fn comparar_scout_manager_write_list_name(indice: u32, texto: 
         return o(indice, texto, tamanho);
     }
     let reg = [(texto, (tamanho as usize).min(0x100))];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(indice, texto, tamanho), || scout_manager_write_list_name(indice, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("scout_manager_write_list_name(indice {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(indice, texto, tamanho), || scout_manager_write_list_name(indice, texto, tamanho));
+    PLACAR.record(igual && r == n, || format!("scout_manager_write_list_name(indice {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

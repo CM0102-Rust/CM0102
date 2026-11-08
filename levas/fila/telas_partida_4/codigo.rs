@@ -28,7 +28,7 @@ unsafe extern "C" fn open_match_screen(vaga: u32, partida: usize) {
     if vaga == 0 || partida == 0 {
         return original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, partida);
     }
-    crate::comparacao::ramo("telas abrir a partida");
+    crate::comparison::branch("telas abrir a partida");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
     if abrir(SCREEN_MANAGER, vaga, 0x718e90, 0x71a240, 1, 0x71b120, 0) == 0 {
         return;
@@ -67,7 +67,7 @@ unsafe extern "C" fn open_match_screen(vaga: u32, partida: usize) {
 /// [0xb6b7a8]. Itens: 5 troca a competição (0xe) e volta à página 1, 6 e 8 a página anterior e a
 /// seguinte (em círculo), 7 para ou solta a troca automática; cada um liga [0xb6b7b0]. Devolve 0.
 unsafe extern "C" fn match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
-    crate::comparacao::ramo("telas respond ao painel dos placares");
+    crate::comparison::branch("telas respond ao painel dos placares");
     let pagina = get_screen_param(0x11) as u8 as i8;
     let parado = get_screen_param(0x12);
     let paginas = get_screen_param(0x13) as u8 as i8;
@@ -117,7 +117,7 @@ unsafe extern "C" fn match_screens_handle_latest_scores_cycle(item: u32) -> i32 
 /// redesenha o painel (0x721cd0 com 0 e −1) e liga [0xb6b7a8]; os itens 9 e 0xa descem e sobem a
 /// linha do parâmetro 0x1c e ligam [0xb6b7b0]. Devolve 0.
 unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
-    crate::comparacao::ramo("telas respond as estatisticas do time");
+    crate::comparison::branch("telas respond as estatisticas do time");
     let p0 = get_screen_param(0);
     let linha = get_screen_param(0x1c) as u8 as i8;
     if *(0xb6b7ac as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0 && *(0xb6b7b0 as *const u32) == 0 {
@@ -153,8 +153,8 @@ unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) 
     if item as u16 == 0xffff || redesenha {
         return o(item);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&screen_param_regions(), || o(item), || r(item));
-    PLACAR.registrar(igual && ro == rr, || format!("{}(item {:#x}) original={} rust={} {:?} x {:?}", nome, item, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&screen_param_regions(), || o(item), || r(item));
+    PLACAR.record(igual && ro == rr, || format!("{}(item {:#x}) original={} rust={} {:?} x {:?}", nome, item, ro, rr, mo, mr));
     ro
 }
 

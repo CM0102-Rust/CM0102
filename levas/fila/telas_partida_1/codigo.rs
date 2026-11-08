@@ -33,7 +33,7 @@ unsafe extern "C" fn match_control_label(estado: u8, m: usize, saida: *mut u8, t
             if esperando(0xb74450, jogador) != 0 { (0xa16d34, true) } else { (0xa16d24, false) }
         }
     };
-    crate::comparacao::ramo("telas rotulo do controle");
+    crate::comparison::branch("telas rotulo do controle");
     texto(saida, formato);
     if desligado {
         *marcas |= 0x40;
@@ -45,7 +45,7 @@ unsafe extern "C" fn match_control_label(estado: u8, m: usize, saida: *mut u8, t
 /// gerente de telas [0xb74450] (0x7ff010), se houver, são destruídos (0x5a8f60 e 0x453bc0), liberados
 /// (0x944c94) e zerados (0x7ff270).
 unsafe extern "C" fn close_match_screen() {
-    crate::comparacao::ramo("telas fechar a partida");
+    crate::comparison::branch("telas fechar a partida");
     let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
     let gravar: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(0x7ff270usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
@@ -69,7 +69,7 @@ unsafe extern "C" fn open_waiting_screen(vaga: u32) {
     if vaga == 0 {
         return original_fn::<unsafe extern "C" fn(u32)>(%%I2%%)(vaga);
     }
-    crate::comparacao::ramo("telas abrir a espera");
+    crate::comparison::branch("telas abrir a espera");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) = core::mem::transmute(0x7fe4a0usize);
     abrir(0xb74450, vaga, 0x727fa0, 0x727fb0, 0, 0, 0);
 }
@@ -80,8 +80,8 @@ unsafe extern "C" fn comparar_match_control_label(estado: u8, m: usize, saida: *
         return o(estado, m, saida, tam, marcas);
     }
     let reg = [(saida as usize, tam.min(0x100) as usize), (marcas as usize, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(estado, m, saida, tam, marcas), || match_control_label(estado, m, saida, tam, marcas));
-    PLACAR.registrar(igual && r == n, || format!("match_control_label(estado {}) original={} rust={} {:x?} x {:x?}", estado, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(estado, m, saida, tam, marcas), || match_control_label(estado, m, saida, tam, marcas));
+    PLACAR.record(igual && r == n, || format!("match_control_label(estado {}) original={} rust={} {:x?} x {:x?}", estado, r, n, mo, mr));
     r
 }
 

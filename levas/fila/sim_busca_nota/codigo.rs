@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn comparar_get_last_match_rating(estatisticas: usize, 
         return r;
     }
     let n = get_last_match_rating(estatisticas, id);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_last_match_rating({}) original={} rust={}", *id, r, n));
+    PLACAR.record(r.to_bits() == n.to_bits(), || format!("get_last_match_rating({}) original={} rust={}", *id, r, n));
     r
 }
 
@@ -47,8 +47,8 @@ unsafe extern "thiscall" fn comparar_set_slot_index(busca: usize, vaga: i8) -> u
     if !(0..=9).contains(&vaga) {
         return o(busca, vaga);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(busca + 4, 1)], || o(busca, vaga), || set_slot_index(busca, vaga));
-    PLACAR.registrar(igual && ro == rr, || format!("set_slot_index({}) original={} rust={} {:x?} x {:x?}", vaga, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(busca + 4, 1)], || o(busca, vaga), || set_slot_index(busca, vaga));
+    PLACAR.record(igual && ro == rr, || format!("set_slot_index({}) original={} rust={} {:x?} x {:x?}", vaga, ro, rr, mo, mr));
     ro
 }
 
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn comparar_set_list_type(busca: usize, tipo: i8) -> u3
     if !(1..=4).contains(&tipo) {
         return o(busca, tipo);
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(busca + 0xa, 1)], || o(busca, tipo), || set_list_type(busca, tipo));
-    PLACAR.registrar(igual && ro == rr, || format!("set_list_type({}) original={} rust={} {:x?} x {:x?}", tipo, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(busca + 0xa, 1)], || o(busca, tipo), || set_list_type(busca, tipo));
+    PLACAR.record(igual && ro == rr, || format!("set_list_type({}) original={} rust={} {:x?} x {:x?}", tipo, ro, rr, mo, mr));
     ro
 }

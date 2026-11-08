@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
                 } else {
                     let (f, mc) = (cpw8_w(rec + 8) as i32, cpw8_w(rec + 0xa) as i32);
                     if mc.wrapping_mul(f) / 10000 < 8000 { // cpw8: a forma abaixo de 80% na pré-temporada
-                        crate::comparacao::ramo("cpw_8 sorteio da forma");
+                        crate::comparison::branch("cpw_8 sorteio da forma");
                         let r = cpw8_sortear(2);
                         l38 = (r + l3c) / 2;
                         l3c -= l38;
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     let n = natural as i32;
     let piso = ((n * 25 / 20 + 15) * 100) as i16 as i32;
     if l34 != 0 {
-        crate::comparacao::ramo("cpw_8 perda");
+        crate::comparison::branch("cpw_8 perda");
     }
     let mut x = f.wrapping_sub(66i32.wrapping_mul(l34)); // cpw8: a perda por dia parado
     if x < piso {
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
         x = teto16;
     }
     if l38 != 0 {
-        crate::comparacao::ramo("cpw_8 recuperacao");
+        crate::comparison::branch("cpw_8 recuperacao");
     }
     x = x.wrapping_add(s.wrapping_mul(l38));
     if f > 0x267a {
@@ -319,19 +319,19 @@ unsafe extern "thiscall" fn comparar_update_player_fitness(this: usize, pessoa: 
     let id = cpw8_i(pessoa) as usize;
     let rec = cpw8_d(this).wrapping_add(id.wrapping_mul(31));
     let geral = cpw8_d(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f));
-    let e = crate::aleatorio::REGIOES_DO_ESTADO;
+    let e = crate::rng::STATE_REGIONS;
     let reg = [(rec, 31), (geral + 0xa, 1), (0xb63d08, 0x2c), e[0], e[1]];
     END_INJURY_REACHED = false;
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa), || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, pessoa), || {
         END_INJURY_DRY_RUN = true;
-        crate::aleatorio::sem_contar(|| update_player_fitness(this, pessoa));
+        crate::rng::without_counting(|| update_player_fitness(this, pessoa));
         END_INJURY_DRY_RUN = false;
     });
     if END_INJURY_REACHED {
-        crate::comparacao::ramo("cpw_8 fim da lesao so na original");
+        crate::comparison::branch("cpw_8 fim da lesao so na original");
         return;
     }
-    PLACAR.registrar(igual, || format!("update_player_fitness(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    PLACAR.record(igual, || format!("update_player_fitness(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// { 0x690bd0 } (thiscall, ret 4, manager_manager.cpp): `MANAGER_MANAGER::get_league_confidence_band(clube)`: a
@@ -360,7 +360,7 @@ unsafe extern "thiscall" fn get_league_confidence_band(this: usize, clube: usize
 unsafe extern "thiscall" fn comparar_get_league_confidence_band(this: usize, clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
     let n = get_league_confidence_band(this, clube);
-    PLACAR.registrar(r == n, || format!("get_league_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
+    PLACAR.record(r == n, || format!("get_league_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -377,6 +377,6 @@ unsafe extern "thiscall" fn set_board_ratings(this: usize, clube: usize, valor: 
 unsafe extern "thiscall" fn comparar_set_board_ratings(this: usize, clube: usize, valor: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     let r = cpw8_d(this).wrapping_add((cpw8_i(clube) as u32).wrapping_mul(0x49) as usize);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 0x49)], || o(this, clube, valor), || set_board_ratings(this, clube, valor));
-    PLACAR.registrar(igual, || format!("set_board_ratings(clube {:x}, {:x}) {:x?} x {:x?}", clube, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 0x49)], || o(this, clube, valor), || set_board_ratings(this, clube, valor));
+    PLACAR.record(igual, || format!("set_board_ratings(clube {:x}, {:x}) {:x?} x {:x?}", clube, valor, mo, mr));
 }

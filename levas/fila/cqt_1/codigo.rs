@@ -46,7 +46,7 @@ unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32, registro: 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     *((this + 0x51) as *mut u8) = 0xf;
     *((this + 0x44) as *mut u8) = 0xff;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
@@ -92,7 +92,7 @@ unsafe fn bra_reg_bahia_compare_state_league_ctor(nome: &str, this: usize, ano: 
     if *((this + 0x44) as *const u8) == 0xff && cqt1_d(this + 8) != 0 {
         ok = ok && cqt1_d(this + 0x2c) == e.fases as usize && cqt1_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == 0xf;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt1_d(this), cqt1_d(this + 0x2c), cqt1_d(this + 0xc), cqt1_d(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", nome, this, r, cqt1_d(this), cqt1_d(this + 0x2c), cqt1_d(this + 0xc), cqt1_d(this + 8)));
     r
 }
 

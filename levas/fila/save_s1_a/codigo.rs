@@ -51,7 +51,7 @@ unsafe extern "C" fn zipdir_match_filename_pattern(padrao: *const u8, nome: *con
 unsafe extern "C" fn comparar_zipdir_match_filename_pattern(padrao: *const u8, nome: *const u8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(%%I0%%)(padrao, nome);
     let n = zipdir_match_filename_pattern(padrao, nome);
-    PLACAR.registrar(r == n, || {
+    PLACAR.record(r == n, || {
         let t = |p: *const u8| String::from_utf8_lossy(core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes()).into_owned();
         format!("zipdir_match_filename_pattern({:?}, {:?}) {} x {}", t(padrao), t(nome), r, n)
     });
@@ -114,7 +114,7 @@ unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
 unsafe extern "C" fn comparar_zget_archive_id(caminho: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho);
     let n = zget_archive_id(caminho);
-    PLACAR.registrar(r == n, || format!("zget_archive_id {:#x} x {:#x}", r, n));
+    PLACAR.record(r == n, || format!("zget_archive_id {:#x} x {:#x}", r, n));
     r
 }
 
@@ -162,6 +162,6 @@ unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize) -> i32 {
 unsafe extern "C" fn comparar_zget_matching_size(caminho: usize, padrao: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(caminho, padrao);
     let n = zget_matching_size(caminho, padrao);
-    PLACAR.registrar(r == n, || format!("zget_matching_size {} x {}", r, n));
+    PLACAR.record(r == n, || format!("zget_matching_size {} x {}", r, n));
     r
 }

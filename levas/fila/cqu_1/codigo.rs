@@ -52,7 +52,7 @@ unsafe fn cqu1_construir(this: usize, ano: u32, registro: usize, e: &Cqu1Liga, d
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo(ramo);
+    crate::comparison::branch(ramo);
     if !e.importancia_antes {
         *((this + 0x51) as *mut u8) = e.importancia;
     }
@@ -101,7 +101,7 @@ unsafe fn cqu1_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &
     if *((this + 0x44) as *const u8) == 0xff && cqu1_d(this + 8) != 0 {
         ok = ok && cqu1_d(this + 0x2c) == e.fases as usize && cqu1_d(this + 0xc) != 0 && *((this + 0x51) as *const u8) == e.importancia;
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}, +0x51 = {}", nome, this, r, cqu1_d(this), cqu1_d(this + 0x2c), cqu1_d(this + 0xc), cqu1_d(this + 8), *((this + 0x51) as *const u8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}, +0x51 = {}", nome, this, r, cqu1_d(this), cqu1_d(this + 0x2c), cqu1_d(this + 0xc), cqu1_d(this + 8), *((this + 0x51) as *const u8)));
     r
 }
 

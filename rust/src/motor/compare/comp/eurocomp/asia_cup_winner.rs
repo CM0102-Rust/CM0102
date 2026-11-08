@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_
     o(this);
     let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
     if stage == 0 {
-        PLACAR.registrar(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this));
+        PLACAR.record(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this));
         return;
     }
     let list = read_u32_as_usize(stage + 0xa7);
@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && read_i16(stage + 0x3e) == 8 && read_u32_as_usize(stage + 4) == read_u32_as_usize(this + 4) && read_u32_as_usize(this + 0x30) == 3;
-    PLACAR.registrar(same, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.record(same, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 
 /// Comparer for `asia_cup_winner_advance_stage` (comparison mode: see the header of motor.rs).
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_advance_stage(th
     let last = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let after = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(after == if last { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    PLACAR.record(after == if last { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this, f, after));
 }
 
 /// Comparer for `create_finals_stage` (comparison mode: see the header of motor.rs).
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize)
     o(this);
     let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
     if stage == 0 {
-        PLACAR.registrar(false, || format!("create_finals_stage({:#x}) sem fase", this));
+        PLACAR.record(false, || format!("create_finals_stage({:#x}) sem fase", this));
         return;
     }
     let list = read_u32_as_usize(stage + 0xa7);
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize)
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && read_i16(stage + 0x3e) == 4 && read_u32_as_usize(stage + 4) == read_u32_as_usize(this + 4);
-    PLACAR.registrar(same, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.record(same, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 
 /// Comparer for `asia_cup_winner_create_round_table` (comparison mode: see the header of motor.rs).

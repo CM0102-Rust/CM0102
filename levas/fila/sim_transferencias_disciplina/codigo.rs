@@ -69,22 +69,22 @@ unsafe extern "thiscall" fn comparar_get_agreed_contract_club(gerente: usize, id
     if !clube.is_null() {
         reg.push((clube as usize, 4));
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(gerente, id, clube), || get_agreed_contract_club(gerente, id, clube));
-    PLACAR.registrar(igual && ro == rr, || format!("get_agreed_contract_club({}) original={} rust={} {:x?} x {:x?}", *id, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, id, clube), || get_agreed_contract_club(gerente, id, clube));
+    PLACAR.record(igual && ro == rr, || format!("get_agreed_contract_club({}) original={} rust={} {:x?} x {:x?}", *id, ro, rr, mo, mr));
     ro
 }
 
 unsafe extern "thiscall" fn comparar_record_international_appearance(gerente: usize, id: *const i32, numero: i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, i16)>(%%I1%%);
     let reg = [(staff_flags_entry(gerente, id) + 3, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(gerente, id, numero), || record_international_appearance(gerente, id, numero));
-    PLACAR.registrar(igual, || format!("record_international_appearance({}, {}) {:x?} x {:x?}", *id, numero, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(gerente, id, numero), || record_international_appearance(gerente, id, numero));
+    PLACAR.record(igual, || format!("record_international_appearance({}, {}) {:x?} x {:x?}", *id, numero, mo, mr));
 }
 
 unsafe extern "thiscall" fn comparar_find_held_ban(disciplina: usize, id: i32, vaga: i8) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8) -> usize>(%%I2%%);
     // a lista guarda o cursor: as duas partem do mesmo e têm de deixá-lo igual
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(disciplina + 0x1c, 0x12)], || o(disciplina, id, vaga), || find_held_ban(disciplina, id, vaga));
-    PLACAR.registrar(igual && ro == rr, || format!("find_held_ban({}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", id, vaga, ro, rr, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(disciplina + 0x1c, 0x12)], || o(disciplina, id, vaga), || find_held_ban(disciplina, id, vaga));
+    PLACAR.record(igual && ro == rr, || format!("find_held_ban({}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", id, vaga, ro, rr, mo, mr));
     ro
 }

@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_count_results_in_period(this: usize, nacao: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(IDX_COUNT_RESULTS_IN_PERIOD)(this, nacao, month_of, year_of, month_until, year_until);
     let n = count_results_in_period(this, nacao, month_of, year_of, month_until, year_until);
-    PLACAR.registrar(r == n, || format!("count_results_in_period(nação {}, {}/{} a {}/{}) original={} rust={}", read_usize(nacao), month_of as u8, year_of as u16, month_until as u8, year_until as u16, r, n));
+    PLACAR.record(r == n, || format!("count_results_in_period(nação {}, {}/{} a {}/{}) original={} rust={}", read_usize(nacao), month_of as u8, year_of as u16, month_until as u8, year_until as u16, r, n));
     r
 }
 
@@ -28,8 +28,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_rankings(this: usize, dat
             reg.push((h, cap as usize * 5));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, data), || update_rankings(this, data));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, data), || update_rankings(this, data));
+    PLACAR.record(igual, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
         format!("update_rankings(dia {}) diferenças em {:x?}", read_u16(data), dif)
     });
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_rankings(this: usize, dat
 pub(crate) unsafe extern "C" fn comparar_compare_result_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_RESULT_POINTS_DESC)(a, b);
     let n = compare_result_points_desc(a, b);
-    PLACAR.registrar(r == n, || format!("compare_result_points_desc({}, {}) original={} rust={}", read_i16(a), read_i16(b), r, n));
+    PLACAR.record(r == n, || format!("compare_result_points_desc({}, {}) original={} rust={}", read_i16(a), read_i16(b), r, n));
     r
 }
 
@@ -53,14 +53,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_append_result(this: usize, nacao
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };
     let lido = (read_i16(e + 0xa), read_i16(e + 8), read_u16(p), *((p + 2) as *const u8), read_u16(p + 3));
     let plan = (conta.wrapping_add(1), cap_n, points as u16, mes, ano);
-    PLACAR.registrar(lido == plan, || format!("append_result(nação {}, pontos {}) original={:?} plano={:?}", read_usize(nacao), points as u16, lido, plan));
+    PLACAR.record(lido == plan, || format!("append_result(nação {}, pontos {}) original={:?} plano={:?}", read_usize(nacao), points as u16, lido, plan));
 }
 
 /// Comparer for `get_nation_strength_tier` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_get_nation_strength_tier(this: usize, nacao: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_NATION_STRENGTH_TIER)(this, nacao);
     let n = get_nation_strength_tier(this, nacao);
-    PLACAR.registrar(r == n, || format!("get_nation_strength_tier(nação {}) original={} rust={}", read_usize(nacao), r, n));
+    PLACAR.record(r == n, || format!("get_nation_strength_tier(nação {}) original={} rust={}", read_usize(nacao), r, n));
     r
 }
 
@@ -68,8 +68,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_nation_strength_tier(this: u
 pub(crate) unsafe extern "thiscall" fn comparar_recalculate_scores(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RECALCULATE_SCORES);
     let reg = [(read_usize(this), read_usize(G_NATION_COUNT) * 0x2c)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || recalculate_scores(this));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || recalculate_scores(this));
+    PLACAR.record(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).collect();
         format!("recalculate_scores diferenças nos deslocamentos {:x?}", dif)
@@ -86,7 +86,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_ranked_order(this: usize
     let v = collect_ranked_order(this, &mut c);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let same = v != 0 && c == *count && (0..c as usize).all(|k| read_usize(r + k * 4) == read_usize(v + k * 4));
-    PLACAR.registrar(same, || format!("collect_ranked_order conta original={} rust={}", *count, c));
+    PLACAR.record(same, || format!("collect_ranked_order conta original={} rust={}", *count, c));
     free(v);
     r
 }
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_ranked_order(this: usize
 pub(crate) unsafe extern "C" fn comparar_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_RANKING_SCORE_DESC)(a, b);
     let n = compare_ranking_score_desc(a, b);
-    PLACAR.registrar(r == n, || format!("compare_ranking_score_desc original={} rust={}", r, n));
+    PLACAR.record(r == n, || format!("compare_ranking_score_desc original={} rust={}", r, n));
     r
 }
 
@@ -124,5 +124,5 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_default_table(this: usize
     if tb != 0 {
         soltar(tb);
     }
-    PLACAR.registrar(same, || format!("create_default_table: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
+    PLACAR.record(same, || format!("create_default_table: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
 }

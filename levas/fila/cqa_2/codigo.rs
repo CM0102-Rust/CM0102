@@ -95,7 +95,7 @@ unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
         let so = if sa != 0 && fo != 0 { cqa2_d(fo + 0x38) } else { 0 };
         if sa != 0 && so != 0 {
             if contar {
-                crate::comparacao::ramo("cqa_2 distancia do amistoso");
+                crate::comparison::branch("cqa_2 distancia do amistoso");
             }
             let dx = read_f64_at(sa + 0x2b) - read_f64_at(so + 0x2b);
             let dy = read_f64_at(sa + 0x23) - read_f64_at(so + 0x23);
@@ -106,7 +106,7 @@ unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
     }
     let (ro, ra) = (cqa2_w(o + 0x80) as i32, cqa2_w(a + 0x80) as i32);
     if contar {
-        crate::comparacao::ramo("cqa_2 decisao do amistoso");
+        crate::comparison::branch("cqa_2 decisao do amistoso");
     }
     // fcompp/test ah, 1: o C0 vale para "menor" e para "sem ordem" (NaN): os >= abaixo dão o mesmo caminho
     let aceita = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: usize, forcar
     }
     let s = cqa2_b(m + 0x18);
     if s == 3 {
-        crate::comparacao::ramo("cqa_2 amistoso aceito");
+        crate::comparison::branch("cqa_2 amistoso aceito");
         let mut p = [0u8; 0x50];
         let pp = p.as_mut_ptr() as usize;
         let comp = cqa2_d(this + 4);
@@ -251,7 +251,7 @@ unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usiz
     } else {
         cqa2_b(m + 0x18) == s && !list_holds(cqa2_d(this + 0x34d4), m)
     };
-    PLACAR.registrar(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
+    PLACAR.record(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
 }
 
 /// { 0x5c5570 } (thiscall, ret 4, friendly.cpp, quadro SEH sem destrutor no caminho normal):
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usize) {
     if o == 0 || cqa2_b(m + 0x18) != 1 || !club_has_human_manager(o) {
         return;
     }
-    crate::comparacao::ramo("cqa_2 pedido ao humano");
+    crate::comparison::branch("cqa_2 pedido ao humano");
     *((m + 0x18) as *mut u8) = 2;
     if !club_has_human_manager(cqa2_d(m + 0x10)) && !club_has_human_manager(cqa2_d(m + 0x14)) {
         return;
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn comparar_send_friendly_request(this: usize, m: usize
     o(this, m);
     let l = cqa2_d(this + 0x34d4);
     let ok = l == 0 || (list_len(l) == antes + 1 && list_holds(l, m) && cqa2_b(m + 0x18) == s);
-    PLACAR.registrar(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, list_len(l), cqa2_b(m + 0x18), s));
+    PLACAR.record(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, list_len(l), cqa2_b(m + 0x18), s));
 }
 
 /// As nações com continente (+0x71) da tabela [0xae23a8] (0x122 bytes cada, [0xae2350] delas), na ordem da tabela.
@@ -366,5 +366,5 @@ unsafe extern "thiscall" fn comparar_build_nation_list(this: usize) {
     let p = cqa2_d(this + 0x34fa);
     let n = cqa2_i(this + 0x34fe);
     let ok = p == 0 || (n as usize == plano.len() && (0..plano.len()).all(|k| cqa2_d(p + 4 * k) == plano[k]));
-    PLACAR.registrar(ok, || format!("build_nation_list: conta {} prevista {}", n, plano.len()));
+    PLACAR.record(ok, || format!("build_nation_list: conta {} prevista {}", n, plano.len()));
 }

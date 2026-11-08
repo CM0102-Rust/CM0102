@@ -239,7 +239,7 @@ unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clube: usize, 
         let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
         if humano(clube, 0, 1, 0, 0) == 0 && marca(cpq1_d(0xb7434c), cpq1_d(clube + 0xcf)) == 0
             && cpq1_sortear(cpq1_b(cpq1_d(clube + 0xcf) + 0x5a) as i8 as i32) == 0 && cpq1_sortear(4) == 0 {
-            crate::comparacao::ramo("cpq_1 o tecnico sai");
+            crate::comparison::branch("cpq_1 o tecnico sai");
             record_departure(this, clube, 2);
             return;
         }
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clube: usize, 
             cpq1_pw(nj + 0xa, piso);
         }
     }
-    crate::comparacao::ramo("cpq_1 demitido");
+    crate::comparison::branch("cpq_1 demitido");
     record_departure(this, clube, 1);
 }
 
@@ -325,7 +325,7 @@ unsafe fn issue_ultimatum(this: usize, clube: usize, l: usize) -> u8 {
     let adversario = if cpq1_d(e + 0x1c) == clube { cpq1_d(e + 0x20) } else { cpq1_d(e + 0x1c) };
     let noticia: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x6ac700usize);
     noticia(this, clube, adversario, cpq1_d(e + 0x14));
-    crate::comparacao::ramo("cpq_1 ultimato dado");
+    crate::comparison::branch("cpq_1 ultimato dado");
     let id = cpq1_d(clube) as u32;
     list_add_tail(cpq1_d(this + 0x10), &id as *const u32 as usize, 4);
     1
@@ -356,7 +356,7 @@ unsafe extern "thiscall" fn comparar_issue_board_ultimatum(this: usize, clube: u
     let antes = cpq1_w(cpq1_d(this + 0x10)) as i32;
     let r = o(this, clube);
     let depois = cpq1_w(cpq1_d(this + 0x10)) as i32;
-    PLACAR.registrar(depois == antes + (r != 0) as i32, || {
+    PLACAR.record(depois == antes + (r != 0) as i32, || {
         format!("issue_board_ultimatum(clube {:x}) devolveu {}, ultimatos {} -> {}", clube, r, antes, depois)
     });
     r
@@ -395,7 +395,7 @@ unsafe extern "thiscall" fn remove_club_manager(this: usize, clube: usize, tipo:
         Some(t) => t,
         None => return,
     };
-    crate::comparacao::ramo("cpq_1 tirar o tecnico");
+    crate::comparison::branch("cpq_1 tirar o tecnico");
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if humano(clube, 1, 1, 0, 0) != 0 {
         let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7874b0usize);
@@ -486,7 +486,7 @@ unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize, clube: usi
         }
     }
     let conf = cpq1_w(club_board_row(this, clube) + 6);
-    PLACAR.registrar(sobra == 0 && (manter != 0 || conf == 0xdac), || {
+    PLACAR.record(sobra == 0 && (manter != 0 || conf == 0xdac), || {
         format!("remove_club_manager(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", clube, tipo as u8, manter, sobra, conf)
     });
 }

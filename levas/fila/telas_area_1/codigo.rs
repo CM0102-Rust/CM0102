@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn area_layout(area: usize) {
         // ponytail: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
         return original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(area);
     }
-    crate::comparacao::ramo("telas organizar a area");
+    crate::comparison::branch("telas organizar a area");
     let dono = core::ptr::read_unaligned((area + 0x20e) as *const i16);
     if dono != -1 {
         *((area + 0xbe9) as *mut u32) = 0;
@@ -131,8 +131,8 @@ unsafe extern "thiscall" fn comparar_area_layout(area: usize) {
     if dono != -1 {
         reg.push((area_item_at(*((area + 0x208) as *const usize), dono) + 0x7c, 2));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(area), || area_layout(area));
-    PLACAR.registrar(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(area), || area_layout(area));
+    PLACAR.record(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
 }
 
 /// { 0x402ac0 } (thiscall, Area.cpp): inicia a área. Área que abre por cima de um item (`dono` ≠ -1):
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn init(
     area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
     pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
 ) {
-    crate::comparacao::ramo("telas iniciar a area");
+    crate::comparison::branch("telas iniciar a area");
     let linhas = cap_area_rows(linhas);
     let (mut x1, mut y1, mut x2, mut y2) = (x1, y1, x2, y2);
     let (mut colunas, mut pesos_colunas, mut linhas, mut pesos_linhas) = (colunas as u8, pesos_colunas, linhas as u8, pesos_linhas);
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn init(
 // igual no comparador, então a comparação segue valendo
 fn cap_area_rows(linhas: u32) -> u32 {
     if linhas & 0xff > 30 {
-        crate::comparacao::ramo("telas linhas da area travadas em 30");
+        crate::comparison::branch("telas linhas da area travadas em 30");
         (linhas & !0xff) | 30
     } else {
         linhas
@@ -235,12 +235,12 @@ unsafe extern "thiscall" fn comparar_init(
 ) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(%%I1%%);
     let reg = [(area, 0xbcb + 0xff)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(
         &reg,
         || o(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, cap_area_rows(linhas), pesos_linhas, marcas, cor, dono),
         || init(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, linhas, pesos_linhas, marcas, cor, dono),
     );
-    PLACAR.registrar(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
+    PLACAR.record(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
 }
 
 /// { 0x402e70 } (thiscall, Area.cpp): desenha a área. Com `redesenhar`, libera a imagem guardada
@@ -254,7 +254,7 @@ unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
     if core::ptr::read_unaligned((area + 0xb76) as *const i16) == -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(area, redesenhar);
     }
-    crate::comparacao::ramo("telas desenhar a area");
+    crate::comparison::branch("telas desenhar a area");
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x5e42b0usize);
     let guardar: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(0x5e3dd0usize);
     let imagem = (area + 0x200) as *mut usize;

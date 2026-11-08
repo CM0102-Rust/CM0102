@@ -124,17 +124,17 @@ unsafe fn compare_manager_news(nome: &str, regioes: Vec<(usize, usize)>, origina
     let caixas = if noticias != 0 { cpx10_d(noticias + 8) } else { 0 };
     let antes_caixas: Vec<(i32, i32)> = if caixas != 0 { (0..0x10).map(|k| (cpx10_i(caixas + 12 * k), cpx10_i(caixas + 12 * k + 4))).collect() } else { Vec::new() };
     let mut todas = regioes.clone();
-    todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&todas);
+    todas.extend(crate::rng::STATE_REGIONS);
+    let antes = crate::comparison::MemorySnapshot::read(&todas);
     MANAGER_NEWS_DRY_RUN = true;
     MANAGER_NEWS_REACH = 0;
-    let (_, rr) = crate::aleatorio::rastrear(|| crate::aleatorio::sem_contar(copia));
+    let (_, rr) = crate::rng::trace(|| crate::rng::without_counting(copia));
     MANAGER_NEWS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
+    let mr = crate::comparison::MemorySnapshot::read(&regioes);
     let (alcance, noticia) = (MANAGER_NEWS_REACH, *core::ptr::addr_of!(MANAGER_NEWS_BUILT));
-    antes.escrever();
-    let (_, ro) = crate::aleatorio::rastrear(original);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
+    antes.write_back();
+    let (_, ro) = crate::rng::trace(original);
+    let mo = crate::comparison::MemorySnapshot::read(&regioes);
     let mut entregues = 0;
     let mut noticia_igual = true;
     let caixas = if noticias != 0 { cpx10_d(noticias + 8) } else { 0 };
@@ -154,7 +154,7 @@ unsafe fn compare_manager_news(nome: &str, regioes: Vec<(usize, usize)>, origina
         }
     }
     let igual = mo == mr && ro.len() >= rr.len() && ro[..rr.len()] == rr[..] && noticia_igual && (alcance != 0 || entregues == 0);
-    PLACAR.registrar(igual, || format!("{} original {:x?} sorteios {:?} rust {:x?} sorteios {:?}; alcance {} entregues {} noticia igual {}", nome, mo, ro, mr, rr, alcance, entregues, noticia_igual));
+    PLACAR.record(igual, || format!("{} original {:x?} sorteios {:?} rust {:x?} sorteios {:?}; alcance {} entregues {} noticia igual {}", nome, mo, ro, mr, rr, alcance, entregues, noticia_igual));
 }
 
 /// { 0x6a0e70 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::post_manager_under_pressure_news(clube, tipo)`,
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
     }
     let l = board_row_of(this, clube);
     let motivo: i8 = if (cpx10_w(l + 8) as i32) < cpx10_w(l + 6) as i32 - 500 /* cpx10: o limit pela avaliação +8 */ && {
-        crate::comparacao::ramo("cpx_10 motivo pela avaliacao");
+        crate::comparison::branch("cpx_10 motivo pela avaliacao");
         cpx10_sortear(3) == 0
     } {
         2
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
     };
     news_set_slot(n, 8, motivo as i32 as u32);
     news_set_slot(n, 9, tipo as u8 as i8 as i32 as u32);
-    crate::comparacao::ramo("cpx_10 sorteio do boato");
+    crate::comparison::branch("cpx_10 sorteio do boato");
     let mut boato = cpx10_sortear(10); // cpx10: o sorteio do boato
     let nj = cpx10_d(tec + 0x69);
     if nj != 0 {
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut data = [0u32; 2];
-    crate::comparacao::ramo("cpx_10 data da pressure");
+    crate::comparison::branch("cpx_10 data da pressure");
     copiar(board_row_of(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha
 }
 
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn post_manager_departure_news(this: usize, tec: usize,
         news_set_slot(n, k, if pres != 0 { cpx10_d(cpx10_d(pres + d) + 0x33) as u32 } else { u32::MAX });
     }
     news_set_slot(n, 0xb, motivo as u8 as i8 as i32 as u32);
-    crate::comparacao::ramo("cpx_10 noticia da saida");
+    crate::comparison::branch("cpx_10 noticia da saida");
     if is_human_manager(tec) {
         news_set_manager_names(n, tec, 0xd, 0xc);
         deliver_news(n, 4, 0);
@@ -319,7 +319,7 @@ unsafe extern "thiscall" fn post_manager_appointment_news(this: usize, tec: usiz
         cpx10_b(tec + 0x3d) as i8 as i32 as u32
     };
     news_set_slot(n, 7, funcao);
-    crate::comparacao::ramo("cpx_10 noticia do tecnico novo");
+    crate::comparison::branch("cpx_10 noticia do tecnico novo");
     if is_human_manager(tec) {
         news_set_manager_names(n, tec, 8, 7);
         deliver_news(n, 4, 0);

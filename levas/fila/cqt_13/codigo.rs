@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(this: usize) {
     if lista == 0 {
         return show_error_at(0x9870f8, 0x311);
     }
-    crate::comparacao::ramo("cqt_13 quartas da copa africana");
+    crate::comparison::branch("cqt_13 quartas da copa africana");
     for (k, &(g, p)) in AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().enumerate() {
         cqt13_pd(lista + k * 4, group_table_club(this, g, p));
     }
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_stage(this:
     o(this);
     let fase = cqt13_d(cqt13_d(this + 0xc) + 0xc);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this));
+        PLACAR.record(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt13_d(fase + 0xa7);
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_stage(this:
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt13_w(fase + 0x3e) == 8 && cqt13_d(fase + 4) == cqt13_d(this + 4) && cqt13_d(this + 0x30) == 3;
-    PLACAR.registrar(igual, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.record(igual, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 
 /// { 0x40dfa0 } (thiscall, ret 0, asia_cup_winner.cpp; a virtual +0x28): `AsiaCupWinner::advance_stage()`: na última
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize) {
     let f = f + 1;
     cqt13_pd(this + 0x30, f as usize);
     if f == 1 {
-        crate::comparacao::ramo("cqt_13 finais da recopa asiatica");
+        crate::comparison::branch("cqt_13 finais da recopa asiatica");
         let finais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x40e030usize);
         finais(this);
     }
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_advance_stage(this: usize) 
     let ultima = f >= (cqt13_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqt13_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.record(depois == if ultima { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// Os 4 finalistas da Recopa asiática: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     if lista == 0 {
         return show_error_at(0x987b60, 0x34b);
     }
-    crate::comparacao::ramo("cqt_13 finalistas da recopa asiatica");
+    crate::comparison::branch("cqt_13 finalistas da recopa asiatica");
     // ponytail: com menos de 4 vivos a original deixa nas vagas o que o malloc deu; a cópia grava 0 (nesta carreira são 4)
     for (k, &c) in asian_cup_winners_finalists(this).iter().enumerate() {
         cqt13_pd(lista + k * 4, c);
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize) {
     o(this);
     let fase = cqt13_d(cqt13_d(this + 0xc) + 4);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("create_finals_stage({:#x}) sem fase", this));
+        PLACAR.record(false, || format!("create_finals_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt13_d(fase + 0xa7);
@@ -215,5 +215,5 @@ unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize) {
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt13_w(fase + 0x3e) == 4 && cqt13_d(fase + 4) == cqt13_d(this + 4);
-    PLACAR.registrar(igual, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.record(igual, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }

@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn create_due_planned_friendlies(this: usize) {
             let pdata = data.as_mut_ptr() as usize;
             if club_date_status(this, cps12_clube(b), pdata) == 1 && club_date_status(this, cps12_clube(c), pdata) == 1 {
                 let e = cps12_d(this + 0x34d8).wrapping_add(cps12_d(this + 0x34dc).wrapping_mul(20));
-                crate::comparacao::ramo("cps_12 amistoso planejado");
+                crate::comparison::branch("cps_12 amistoso planejado");
                 let m = if a == b { acrescentar(this, cps12_clube(a), e, cps12_clube(c), 1) } else { acrescentar(this, cps12_clube(a), e, cps12_clube(b), 0) }; // cps12: criar
                 if m != 0 {
                     pedir(this, m);
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn add_friendly_match(this: usize, clube: usize, data: 
     *((m + 0x18) as *mut u8) = 1;
     cps12_pd(m + 8, 0);
     let (mandante, visitante) = if em_casa != 0 {
-        crate::comparacao::ramo("cps_12 amistoso em casa");
+        crate::comparison::branch("cps_12 amistoso em casa");
         (clube, adversario) // cps12: o clube em casa
     } else {
         (adversario, clube)
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, anfitriao: u
         }
     }
     let marcar: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(0x5c4b60usize);
-    crate::comparacao::ramo("cps_12 data livre");
+    crate::comparison::branch("cps_12 data livre");
     marcar(this, anfitriao, casa, fora, pdata);
     if cps12_d(casa + 0x12) == 0 {
         cps12_pd(casa + 0x12, alloc_empty_list());
@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usiz
         r == 0 || (cps12_w(r) == dia && cps12_w(r + 2) == ano && cps12_d(r + 0xc) == clube && cps12_d(r + 8) == 0
             && *((r + 0x18) as *const u8) == 1 && cps12_d(r + 0x10) == casa && cps12_d(r + 0x14) == fora)
     };
-    PLACAR.registrar(igual, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
+    PLACAR.record(igual, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
         clube, dia, ano, adversario, em_casa, ocupada, r));
     r
 }

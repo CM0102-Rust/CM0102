@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "C" fn comparar_zipdir_match_filename_pattern(default: *const u8, name: *const u8) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(IDX_ZIPDIR_MATCH_FILENAME_PATTERN)(default, name);
     let n = zipdir_match_filename_pattern(default, name);
-    PLACAR.registrar(r == n, || {
+    PLACAR.record(r == n, || {
         let t = |p: *const u8| String::from_utf8_lossy(core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes()).into_owned();
         format!("zipdir_match_filename_pattern({:?}, {:?}) {} x {}", t(default), t(name), r, n)
     });
@@ -18,7 +18,7 @@ pub(crate) unsafe extern "C" fn comparar_zipdir_match_filename_pattern(default: 
 pub(crate) unsafe extern "C" fn comparar_zget_archive_id(path: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_ZGET_ARCHIVE_ID)(path);
     let n = zget_archive_id(path);
-    PLACAR.registrar(r == n, || format!("zget_archive_id {:#x} x {:#x}", r, n));
+    PLACAR.record(r == n, || format!("zget_archive_id {:#x} x {:#x}", r, n));
     r
 }
 
@@ -26,7 +26,7 @@ pub(crate) unsafe extern "C" fn comparar_zget_archive_id(path: usize) -> u32 {
 pub(crate) unsafe extern "C" fn comparar_zget_matching_size(path: usize, default: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ZGET_MATCHING_SIZE)(path, default);
     let n = zget_matching_size(path, default);
-    PLACAR.registrar(r == n, || format!("zget_matching_size {} x {}", r, n));
+    PLACAR.record(r == n, || format!("zget_matching_size {} x {}", r, n));
     r
 }
 
@@ -40,10 +40,6 @@ pub(crate) unsafe extern "C" fn comparar_zextract_matching_files(path: usize, fo
     original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_ZEXTRACT_MATCHING_FILES)(path, folder, default)
 }
 
-/// Comparer for `utils_clear_temp_folder` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_utils_clear_temp_folder(default: usize) {
-    original_fn::<unsafe extern "C" fn(usize)>(IDX_UTILS_CLEAR_TEMP_FOLDER)(default)
-}
 
 /// Comparer for `zipdir_zread` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_zipdir_zread(buf: *mut u8, size: i32, how_many: i32, z: usize) -> i32 {

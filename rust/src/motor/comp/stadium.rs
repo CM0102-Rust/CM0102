@@ -35,10 +35,29 @@ pub(crate) unsafe fn call_stadium_compare(f: usize, a: usize, b: usize) -> i32 {
     f(a, b)
 }
 
-/// the neutral venue search: in the venue list sorted by nation, continent or capacity, up to 30 candidates of the key
-/// (skipping the stashed venue and, in club matches, both clubs' grounds); the ordinary neutral venue is the free one
-/// with the best score (0x85da00); the host rotation of a tournament (flags 0x40..0x4000) takes the candidate whose
-/// position modulo 9 matches the flag; failing that, the national stadium (flags 4/8/0x20) or none
+/// The neutral venue search: in the venue list sorted by nation, continent or capacity, it looks at up to 30 candidates
+/// of the key; the ordinary neutral venue is the free one with the best score; the host rotation of a tournament (flags
+/// `0x40..0x4000`) takes the candidate whose position modulo 9 matches the flag; failing that, the national stadium
+/// (flags 4/8/`0x20`) or none.
+///
+/// `Stadium::find_available_venue(marcas, continente, nação, data, casa, fora, partida)` (flags, continent, nation,
+/// date, home, away, fixture). The venue list is this `+0xc`, count `+0x10`; 16-byte slots: `+0` the nation, `+4` the
+/// continent, `+8` 1 if it is a club ground [inference], `+0xc` the stadium. It is sorted (qsort `0x945333`) by nation
+/// (with a nation; flag `+0x18` = 1), by continent (with a continent; 2) or only by capacity (3).
+///
+/// With a nation or continent, the binary search (`0x946464`) finds the first slot of the key; with neither, it starts
+/// from the first. It looks at up to 30 slots (never the last one in the list), skipping the stashed venue
+/// (`[0xa835a4]`) and, in club matches with flags < `0x40`, both clubs' grounds; it stops at the first slot of another
+/// key.
+///
+/// Flags without `0x40`/`0x80`/`0x7f00` (the ordinary neutral venue): with 4 only club slots, with 2 only the others;
+/// among those free on the date (`0x85ddb0`), the one with the best score (`0x85da00`), which is booked (`0x85de20`,
+/// with the fixture). With `0x40..0x4000` (the host rotation of a tournament): the non-club slot whose (counted)
+/// position modulo 9 is the flag's (`0x40` → 0, `0x80` → 1, `0x100` → 2 ... `0x4000` → 8), free on the date (or, in
+/// competition `[0x9cf76c]`, without checking), is booked and returned.
+///
+/// With nothing found: with a nation, flags without 2 and with 4/8/`0x20`, that nation's national stadium (`+0x80`);
+/// otherwise 0.
 /// Original: `Stadium::find_available_venue` (0x85c800, stadium.cpp, thiscall, ret 0x1c).
 ///
 /// [pt] { 0x85c800 } (thiscall, ret 0x1c, stadium.cpp, `Stadium::find_available_venue(marcas, continente, nação, data, casa,
@@ -123,7 +142,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                 }
                 if home != 0 && away != 0 && !fin_prm_is_national_team(home) && (marks as i32) < 0x40 {
                     let s = read_u32_as_usize(e + 0xc);
-                    if s == read_u32_as_usize(home + 0x69) || s == read_u32_as_usize(away + 0x69) {
+                    if s == read_u32_as_usize(home + club::STADIUM) || s == read_u32_as_usize(away + club::STADIUM) {
                         break 'vaga;
                     }
                 }
@@ -167,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                         || (marks & 0x2000 != 0 && p == 7)
                         || (marks & 0x4000 != 0 && p == 8);
                     if vez && ((partida != 0 && read_u32_as_usize(partida) == read_u32_as_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION)) || is_stadium_free(this, read_u32_as_usize(e + 0xc), data)) {
-                        crate::comparacao::ramo("cqo_1 rodizio");
+                        crate::comparison::branch("cqo_1 rodizio");
                         add_stadium_booking(this, read_u32_as_usize(e + 0xc), data);
                         return read_u32_as_usize(e + 0xc);
                     }
@@ -185,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
             }
         }
         if best > 0 {
-            crate::comparacao::ramo("cqo_1 neutro pela nota");
+            crate::comparison::branch("cqo_1 neutro pela nota");
             if partida != 0 {
                 add_stadium_booking(this, read_u32_as_usize(escolhida + 0xc), data);
             }
@@ -211,7 +230,7 @@ pub(crate) unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, u
     let mut r = [(0usize, 0usize); 6];
     let mut m = 0;
     // the neutral stadium rating (0x85da00) rolls: the roller state goes in (and the copy runs without counting)
-    for x in crate::aleatorio::REGIOES_DO_ESTADO {
+    for x in crate::rng::STATE_REGIONS {
         r[m] = x;
         m += 1;
     }
@@ -232,12 +251,31 @@ pub(crate) unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, u
 }
 
 
-/// the fixture venue (+0x18, id in +4, +0x3c neutral): an ordinary match is at the home club ground; the England
-/// national team until 2002 and Italian and French clubs in friendlies go to a neutral ground; a Finnish side in the
-/// Champions League with a ground under 40,000 plays at the national stadium if free; flag 0x8000 the Monaco ground;
-/// the English competition (flag 4) with the stashed venue goes to the Welsh national stadium [inference: Cardiff, with
-/// Wembley being rebuilt]; other flags the national stadium or the neutral venue search in the competition hosts
-/// (0x5fa730), rotating between the two hosts of a tournament
+/// Sets the fixture venue (`+0x18` the pointer, `+4` the id, -1 if none; `+0x3c` 1 on neutral ground).
+///
+/// Convention: thiscall, ret `0xc`, `stadium.cpp`; this = `[0xdd7ef4]`. `Stadium::set_fixture_venue(marcas, partida,
+/// estadio)` (flags, fixture, stadium). Null fixture: the error box (line `0x1f0`). The date is the fixture's (`+0x2a`
+/// the day, `+0x28` the year).
+///
+/// The rules, by flags: `0x8000`: the Monaco ground (`[0x9d0264]`), if neither club is Monaco; otherwise as 4. 4: in
+/// the English club competition (competition nation `+0x5d` = `[0x9cf2e4]`), with the stashed venue (`[0xa835a4]` !=
+/// -1), the Welsh national stadium (`[0x9cf510]`: the Millennium, while Wembley is being rebuilt); otherwise as the
+/// others.
+///
+/// 0 (the ordinary match): the England national team before 2003 goes to neutral ground (as `0x20`); in the Champions
+/// League (`[0x9cf6e8]`) with a Finnish team (`[0x9cf2fc]`) outside stage `0xff`, if the Finnish national stadium is
+/// free on the date (without the booking, `0x946464` with `0x85e380`) and the club ground has fewer than 40,000 seats,
+/// it plays there (booked); otherwise the home club's ground (`+0x69`), except Italian or French clubs in a friendly
+/// (`0x5c6710`, they go to neutral ground as `0x20`); with no ground: a national team as `0x20`, a club none. `0x10`:
+/// the stadium `estadio` (table `[0xae23b0]`, `0x4e` bytes), without it none; 1: none.
+///
+/// The others (neutral ground): the competition hosts in year `+0x2c` (`0x5fa730`): with two, the first and the second
+/// swap roles according to the rotation flags (`0x40`/`0x100`/`0x400`/`0x1000`/`0x4000` →
+/// 4/`0x40`/`0x80`/`0x100`/`0x200`, the second as alternative; `0x80`/`0x200`/`0x800`/`0x2000` →
+/// `0x40`/`0x80`/`0x100`/`0x200`, the first as alternative); with one, that one; with none, the competition nation
+/// (`+0x5d`). With `0x20`, a national team plays in its own country. With 4, the nation's national stadium (booked);
+/// without it, `0x20` (national team) or `0x40`. Then the neutral venue search (`0x85c800`) in the nation and, failing
+/// that, in the alternative (flags `0x40..0x200` → `0x400..0x2000`).
 /// Original: `Stadium::set_fixture_venue` (0x85c260, stadium.cpp, thiscall, ret 0xc).
 ///
 /// [pt] { 0x85c260 } (thiscall, ret 0xc, stadium.cpp, `Stadium::set_fixture_venue(marcas, partida, estadio)`; this =
@@ -289,13 +327,13 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         step_towards = 1;
     } else if f == 0 {
         let casa = read_u32_as_usize(fx + 0x1c);
-        if d.ano < 0x7d3 && fin_prm_is_national_team(casa) && read_u32_as_usize(read_u32_as_usize(casa + 0x53)) == read_u32_as_usize(KEY_NATION_ENGLAND) {
+        if d.ano < 0x7d3 && fin_prm_is_national_team(casa) && read_u32_as_usize(read_u32_as_usize(casa + club::NATION)) == read_u32_as_usize(KEY_NATION_ENGLAND) {
             f = 0x20;
         }
         let casa = read_u32_as_usize(fx + 0x1c);
-        let n = read_u32_as_usize(casa + 0x53);
+        let n = read_u32_as_usize(casa + club::NATION);
         let fin = read_u32_as_usize(KEY_NATION_FINLAND);
-        if n != 0 && read_u32_as_usize(n) == fin && *((fx + 0x42) as *const u8) != 0xff && read_u32_as_usize(fx) == read_u32_as_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) && read_u32_as_usize(casa + 0x69) != 0 {
+        if n != 0 && read_u32_as_usize(n) == fin && *((fx + 0x42) as *const u8) != 0xff && read_u32_as_usize(fx) == read_u32_as_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) && read_u32_as_usize(casa + club::STADIUM) != 0 {
             let st = read_u32_as_usize(nation_by_id(fin) + 0x80);
             let mut livre = true;
             if read_u32_as_usize(this) != 0 {
@@ -315,15 +353,15 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         }
         *neutro = 0;
         let casa = read_u32_as_usize(fx + 0x1c);
-        if f != 0x20 && casa != 0 && read_u32_as_usize(casa + 0x69) != 0 {
-            let n = read_u32_as_usize(casa + 0x53);
+        if f != 0x20 && casa != 0 && read_u32_as_usize(casa + club::STADIUM) != 0 {
+            let n = read_u32_as_usize(casa + club::NATION);
             let mut amistoso = false;
             if n != 0 && (read_u32_as_usize(n) == read_u32_as_usize(KEY_NATION_ITALY) || read_u32_as_usize(n) == read_u32_as_usize(KEY_NATION_FRANCE)) {
                 let e: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
                 amistoso = e(read_u32_as_usize(G_FRIENDLY), read_u32_as_usize(fx + 0x14)) != 0;
             }
             if !amistoso {
-                crate::comparacao::ramo("cqo_1 estadio do mandante");
+                crate::comparison::branch("cqo_1 estadio do mandante");
                 fixar(read_u32_as_usize(read_u32_as_usize(fx + 0x1c) + 0x69)); // cqo1: o estádio do mandante
                 return;
             }
@@ -401,7 +439,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             alt = na;
         }
     } else if r == 1 {
-        crate::comparacao::ramo("cqo_1 uma sede");
+        crate::comparison::branch("cqo_1 uma sede");
         alvo = nation_by_id(a as usize); // cqo1: a sede única
     } else {
         alvo = read_u32_as_usize(comp + competition::CLUB_COMP_NATION);
@@ -410,9 +448,9 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         alvo = read_u32_as_usize(read_u32_as_usize(fx + 0x1c) + 0x53);
     }
     if f & 4 != 0 && alvo != 0 {
-        let st = read_u32_as_usize(alvo + 0x80);
+        let st = read_u32_as_usize(alvo + nation::NATIONAL_STADIUM);
         if st != 0 {
-            crate::comparacao::ramo("cqo_1 estadio nacional");
+            crate::comparison::branch("cqo_1 estadio nacional");
             fixar(st);
             add_stadium_booking(this, read_u32_as_usize(fx + 0x18), pd);
             return;
@@ -459,8 +497,8 @@ pub(crate) unsafe fn random_below(n: u32) -> i32 {
 /// [pt] A cidade (registro de 0x38 bytes em [0xae23ac]) do estádio `est` (+0x38); sem estádio ou sem cidade, uma sorteada
 /// entre as [0xae2354].
 pub(crate) unsafe fn stadium_city(est: usize) -> usize {
-    if est != 0 && read_u32_as_usize(est + 0x38) != 0 {
-        return read_u32_as_usize(est + 0x38);
+    if est != 0 && read_u32_as_usize(est + stadium::STADIUM_CITY) != 0 {
+        return read_u32_as_usize(est + stadium::STADIUM_CITY);
     }
     let r = random_below(read_u32_as_usize(G_CITY_COUNT) as u32);
     read_u32_as_usize(G_CITY_TABLE).wrapping_add((r as usize).wrapping_mul(0x38))
@@ -544,14 +582,35 @@ pub(crate) unsafe fn apply_side_factor_floor(jogo: usize, side: u8, f: &mut [f64
     }
 }
 
-/// the match attendance: one factor per side (number of clubs in the competition, +2 for cup types 6/8/10, the league
-/// round difference between −6 and 5; by the reputation/500 of both clubs: the bigger one draws more, ×1.1 against
-/// sides above 17, ×1.25 against sides above 12; divided by the number of clubs in the club's league), with floors by
-/// cup type (finals and semi-finals, +0x30/+0x32 = 150/130/160); the home side gets the average gate × factor ×
-/// distance (0x85d8a0, at least 0.15), the away side (average + minimum) × factor × distance × 0.5; in the league, a
-/// bonus by position (+50/100/150 per club at the top, +25/50 in the race, −25/−10 at the bottom) and by form; derby
-/// ×1.5 (same city ×1.35), off neutral ground ×1.05/×0.85; capped by the capacity (away fans between 5% and 15%) and a
-/// ground under 1,500 becomes reputation/500 × 1,000; total = both − random(50)
+/// Computes the match attendance, writes the total, the home and the away crowd to `saida` and returns the total.
+///
+/// Convention: thiscall, ret 8, `stadium.cpp`; this = `[0xdd7ef4]`; called by the match engine `0x6b7f20`.
+/// `Stadium::calculate_match_attendance(partida, saida)` (fixture, output). With no fixture, `[0xa835ac]` (15,000). R =
+/// club reputation / 500 (at least 1).
+///
+/// For each side, the factor starts at the number of clubs in the competition (`+0x69`, at least 1; with no competition
+/// 1), +2 in competitions of type 6, 8 and 10; in leagues (table `[0xadadfc]`, outside friendlies `0x5c6710` and the
+/// nations of `0x7e6f20`, without `+0x43` = 2) plus the difference (`+0x34` of the fixture − `+0x3c` of the league,
+/// between −6 and 5). The home factor times the away R / its own R (if it has R < 15 or below the other's), ×1.1 with
+/// the other above 17, ×1.25 with the other above 12 and it below 14; divided by the number of clubs in the club's
+/// league (`+0x57` → `+0x69`), without one ×0.2 (type 10) or ×0.05. The away factor, the same with the roles swapped.
+/// Floors by competition type (apply_side_factor_floor: cups 8, 6 and 5 with the limits `+0x30`/`+0x32` and the
+/// reputation; 10 1.25; 9 0.8; otherwise 0.1).
+///
+/// With a stadium off neutral ground: the cities of the stadium and of the two clubs (drawn when there is no city), the
+/// distance factor (`0x85d8a0`, at least 0.15); the home side gets the average (`+0x73`) × factor × distance, the away
+/// side (`+0x73` + `+0x77`) × factor × distance × 0.5; in the home club's league, by position (`0x4a4850` on the league
+/// table): +50/100/150 per club at the top, +25/50 in the race, −25/−10 at the bottom, and by form
+/// (`+0x72`/`+0x73`/`+0x74`); in the ground of a club's city, its crowd between the minimum (`+0x77`) and the maximum
+/// (`+0x7b`). With no stadium or on neutral ground: average × factor.
+///
+/// Derby (`+0xb3`/`+0xb7`/`+0xbb`): ×1.5 (same city ×1.35); rival away side ×1.35; off neutral ground with `+0x3b` !=
+/// `0xff` ×1.05 and ×0.85. In the league with `+0x6d`: the minimum by the number of clubs in the league (and the
+/// maximum with up to 4 clubs). A stadium with fewer than 1,500 seats becomes R × 1,000 (at least 1,500). Limits by
+/// capacity (the away side up to max(5%, min(capacity − away average × home factor, 15%)) and the home side the rest;
+/// neutral half), with no stadium 40,000 and 25,000; with no crowd, 1 to 50 and 1 to 15.
+///
+/// Total = home + away − random(50) (negative: 45 to 194).
 /// Original: `Stadium::calculate_match_attendance` (0x85cba0, stadium.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x85cba0 } (thiscall, ret 8, stadium.cpp, `Stadium::calculate_match_attendance(partida, saida)`; this =
@@ -640,8 +699,8 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             }
             let _ = clube;
             let lg = read_u32_as_usize(read_u32_as_usize(jogo + if side == 0 { 0x1c } else { 0x20 }) + 0x57);
-            if lg != 0 && read_i16(lg + 0x69) != 0 {
-                f[k] /= read_i16(lg + 0x69) as i32 as f64;
+            if lg != 0 && read_i16(lg + competition::CLUB_COMP_REPUTATION) != 0 {
+                f[k] /= read_i16(lg + competition::CLUB_COMP_REPUTATION) as i32 as f64;
             } else if read_u8(jogo + 0x3a) == 0xa {
                 f[k] *= read_f64_at(0x968918); // 0x968918 = 0.2
             } else {
@@ -656,21 +715,21 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
     let est = read_u32_as_usize(jogo + 0x18);
     if est != 0 && read_u8(jogo + 0x3c) == 0 {
         let c_est = stadium_city(est);
-        let c_home = stadium_city(read_u32_as_usize(home + 0x69));
-        let c_away = stadium_city(read_u32_as_usize(away + 0x69));
+        let c_home = stadium_city(read_u32_as_usize(home + club::STADIUM));
+        let c_away = stadium_city(read_u32_as_usize(away + club::STADIUM));
         let factor: unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64 = core::mem::transmute(FN_STADIUM_GET_TRAVEL_DISTANCE_FACTOR);
         let mut d = factor(this, jogo, c_est, c_home, f[0]);
         if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
             d = read_f64_at(0x968f20); // 0x968f20 = 0.15
         }
-        pc = match_pl_ftol(read_i32(home + 0x73) as f64 * f[0] * d);
+        pc = match_pl_ftol(read_i32(home + club::ATTENDANCE) as f64 * f[0] * d);
         let mut d = factor(this, jogo, c_est, c_away, f[1]);
         if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
             d = read_f64_at(0x968f20); // 0x968f20 = 0.15
         }
-        pf = match_pl_ftol(read_i32(away + 0x77).wrapping_add(read_i32(away + 0x73)) as f64 * f[1] * d * read_f64_at(0x968968)); // 0x968968 = 0.5
+        pf = match_pl_ftol(read_i32(away + club::MIN_ATTENDANCE).wrapping_add(read_i32(away + club::ATTENDANCE)) as f64 * f[1] * d * read_f64_at(0x968968)); // 0x968968 = 0.5
         let comp = read_u32_as_usize(jogo + 0x14);
-        if comp != 0 && home != 0 && read_u32_as_usize(home + 0x57) == comp {
+        if comp != 0 && home != 0 && read_u32_as_usize(home + club::DIVISION) == comp {
             let league = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4);
             if league != 0 && read_u32_as_usize(league + 8) != 0 {
                 let search: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
@@ -679,7 +738,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
                     let n = read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32;
                     let v = read_i32(p + 0x19);
                     if v > 1 {
-                        crate::comparacao::ramo("cqo_2 posicao de cima");
+                        crate::comparison::branch("cqo_2 posicao de cima");
                         pc = pc.wrapping_add(if v < 4 || n < 0xc {
                             n * 50
                         } else if v < 7 {
@@ -715,7 +774,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             }
         }
         if c_est == c_home {
-            let (mx, mn) = (read_i32(home + 0x7b), read_i32(home + 0x77));
+            let (mx, mn) = (read_i32(home + club::MAX_ATTENDANCE), read_i32(home + club::MIN_ATTENDANCE));
             if pc > mx {
                 pc = mx;
             } else if pc < mn {
@@ -723,7 +782,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             }
         }
         if c_est == c_away {
-            let (mx, mn) = (read_i32(away + 0x7b), read_i32(away + 0x77));
+            let (mx, mn) = (read_i32(away + club::MAX_ATTENDANCE), read_i32(away + club::MIN_ATTENDANCE));
             if pf > mx {
                 pf = mx;
             } else if pf < mn {
@@ -731,16 +790,16 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             }
         }
     } else {
-        pc = match_pl_ftol(read_i32(home + 0x73) as f64 * f[0]);
-        pf = match_pl_ftol(read_i32(away + 0x73) as f64 * f[1]);
+        pc = match_pl_ftol(read_i32(home + club::ATTENDANCE) as f64 * f[0]);
+        pf = match_pl_ftol(read_i32(away + club::ATTENDANCE) as f64 * f[1]);
     }
     // the derbies
     let (home, away) = (read_u32_as_usize(jogo + 0x1c), read_u32_as_usize(jogo + 0x20));
     let rival = |a: usize, b: usize| read_u32_as_usize(a + 0xb3) == b || read_u32_as_usize(a + 0xb7) == b || read_u32_as_usize(a + 0xbb) == b;
     if rival(home, away) {
-        crate::comparacao::ramo("cqo_2 classico");
+        crate::comparison::branch("cqo_2 classico");
         pc = match_pl_ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico; 0x968940 = 1.5
-    } else if read_u32_as_usize(home + 0x69) != 0 && read_u32_as_usize(away + 0x69) != 0 && read_u32_as_usize(read_u32_as_usize(home + 0x69) + 0x38) == read_u32_as_usize(read_u32_as_usize(away + 0x69) + 0x38) {
+    } else if read_u32_as_usize(home + club::STADIUM) != 0 && read_u32_as_usize(away + club::STADIUM) != 0 && read_u32_as_usize(read_u32_as_usize(home + club::STADIUM) + 0x38) == read_u32_as_usize(read_u32_as_usize(away + club::STADIUM) + 0x38) {
         pc = match_pl_ftol(pc as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
     }
     if rival(away, home) {
@@ -751,7 +810,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         pf = match_pl_ftol(pf as f64 * read_f64_at(0x969520)); // 0x969520 = 0.85
     }
     let comp = read_u32_as_usize(jogo + 0x14);
-    if comp != 0 && home != 0 && read_u32_as_usize(home + 0x57) == comp && read_u8(home + 0x6d) != 0 {
+    if comp != 0 && home != 0 && read_u32_as_usize(home + club::DIVISION) == comp && read_u8(home + club::OWN_STADIUM) != 0 {
         let n = read_i16(comp + competition::CLUB_COMP_REPUTATION);
         if n > 0xc {
             let m = (n.wrapping_sub(0xc) as i32 + 3) * 2000;
@@ -778,16 +837,16 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         }
     }
     let est = read_u32_as_usize(jogo + 0x18);
-    if est != 0 && read_i32(est + 0x3c) < 0x5dc {
-        core::ptr::write_unaligned((est + 0x3c) as *mut i32, rc as i32 * 1000);
-        if read_i32(est + 0x3c) < 0x5dc {
-            core::ptr::write_unaligned((est + 0x3c) as *mut i32, 0x5dc);
+    if est != 0 && read_i32(est + stadium::STADIUM_CAPACITY) < 0x5dc {
+        core::ptr::write_unaligned((est + stadium::STADIUM_CAPACITY) as *mut i32, rc as i32 * 1000);
+        if read_i32(est + stadium::STADIUM_CAPACITY) < 0x5dc {
+            core::ptr::write_unaligned((est + stadium::STADIUM_CAPACITY) as *mut i32, 0x5dc);
         }
     }
     if pf.wrapping_add(pc) != 0 {
         let est = read_u32_as_usize(jogo + 0x18);
         if est != 0 {
-            let lot = read_i32(est + 0x3c);
+            let lot = read_i32(est + stadium::STADIUM_CAPACITY);
             let vis = if read_u8(jogo + 0x3c) == 0 {
                 let a = lot as f64;
                 let x = a - read_i32(read_u32_as_usize(jogo + 0x20) + 0x73) as f64 * f[0];
@@ -839,14 +898,29 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
 ///
 /// [pt] A distância entre duas cidades (x em +0x23, y em +0x2b, doubles) × 44,44, truncada (_ftol).
 pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
-    let dx = (read_f64(a + 0x23) - read_f64(b + 0x23)).abs();
-    let dy = (read_f64(a + 0x2b) - read_f64(b + 0x2b)).abs();
+    let dx = (read_f64(a + city::CITY_LATITUDE) - read_f64(b + city::CITY_LATITUDE)).abs();
+    let dy = (read_f64(a + city::CITY_LONGITUDE) - read_f64(b + city::CITY_LONGITUDE)).abs();
     match_pl_ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40)) // 0x96fe40 = 44.44444444
 }
 
-/// the English national stadium before 2004 scores 0; the score starts at 100000, changes with the city distances (flag
-/// 8) or with the places against the expected crowd (flag 0x20: national team 60000, otherwise the clubs crowd sum) or
-/// becomes random(places) (flag 4), and ends × (random(100) × 0.004 + 0.8)
+/// Scores a venue for a neutral fixture: the English national stadium before 2004 scores 0; the score starts at 100000,
+/// changes with the city distances (flag 8) or with the seats against the expected crowd (flag `0x20`) or becomes
+/// random(seats) (flag 4), and ends × (random(100) × 0.004 + 0.8).
+///
+/// `Stadium::score_venue_for_fixture(estadio, marcas, casa, fora, jogo)` (stadium, flags, home, away, match), called by
+/// the neutral venue search `0x85c800` (with flags `0x20` in career matches). The English national stadium (nation
+/// `[0x9cf2e4]` `+0x80`) before 2004: 0.
+///
+/// The score starts at 100000: flags & 8, with the cities of both clubs (`+0x69` → `+0x38`) and the stadium's (`+0x38`)
+/// and more than 10000 seats (`+0x3c`): by the distances d1 (home-away), d2 (home-stadium), d3 (away-stadium): with d1
+/// < 30, 200000/180000/140000 if d2 and d3 < 15/30/50 and 50000 if either exceeds 100; otherwise 200000 if both <
+/// 0.588·d1 and 50000 if either ≥ 0.8333·d1.
+///
+/// flags & `0x20`: the expected crowd (10000; home national team 60000; otherwise the sum of the crowds `+0x73` of both
+/// clubs, at least 5000 and, above 40000, half of it without going below either of the two); seats above it: × 1.2;
+/// above 1.5× it: / ((seats − 1.5·expected)·8.33e-5 + 1); below 0.3/0.5/0.7/0.9 of it: × 0.1/0.3/0.7/0.9.
+///
+/// Otherwise, with flags & 4: the score is random(seats). At the end, score × (random(100) × 0.004 + 0.8), truncated.
 /// Original: `Stadium::score_venue_for_fixture` (0x85da00, stadium.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x85da00 } (thiscall, ret 0x14, stadium.cpp): `Stadium::score_venue_for_fixture(estadio, marcas, casa, fora,
@@ -863,17 +937,17 @@ pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
 pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, marks: u32, home: usize, away: usize, jogo: usize) -> i32 {
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let inglaterra = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE));
-    if est == read_usize(inglaterra + 0x80) && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
+    if est == read_usize(inglaterra + nation::NATIONAL_STADIUM) && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
         return 0;
     }
     let m = marks as u8;
     let mut rating: i32 = 100000;
     if m & 8 != 0 {
-        let cc = read_usize(home + 0x69);
-        let cf = read_usize(away + 0x69);
-        let (cidc, cidf) = (if cc != 0 { read_usize(cc + 0x38) } else { 0 }, if cf != 0 { read_usize(cf + 0x38) } else { 0 });
-        let cide = read_usize(est + 0x38);
-        if cc != 0 && cidc != 0 && cf != 0 && cidf != 0 && cide != 0 && read_i32(est + 0x3c) > 0x2710 {
+        let cc = read_usize(home + club::STADIUM);
+        let cf = read_usize(away + club::STADIUM);
+        let (cidc, cidf) = (if cc != 0 { read_usize(cc + stadium::STADIUM_CITY) } else { 0 }, if cf != 0 { read_usize(cf + stadium::STADIUM_CITY) } else { 0 });
+        let cide = read_usize(est + stadium::STADIUM_CITY);
+        if cc != 0 && cidc != 0 && cf != 0 && cidf != 0 && cide != 0 && read_i32(est + stadium::STADIUM_CAPACITY) > 0x2710 {
             let d1 = stadium_city_distance(cidc, cidf);
             let d2 = stadium_city_distance(cidc, cide);
             let d3 = stadium_city_distance(cidf, cide);
@@ -899,7 +973,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             }
         }
     }
-    let lugares = read_i32(est + 0x3c);
+    let lugares = read_i32(est + stadium::STADIUM_CAPACITY);
     if m & 0x20 != 0 {
         let mut expected: i32 = 0x2710;
         if jogo != 0 {
@@ -944,15 +1018,23 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
     } else if m & 4 != 0 {
         rating = friendly_random(lugares);
     }
-    crate::comparacao::ramo("cpt_7 nota do estadio");
+    crate::comparison::branch("cpt_7 nota do estadio");
     let r = friendly_random(100); // cpt7: o sorteio da nota
     match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * rating as f64) // 0x968d60 = 0.004, 0x9689b0 = 0.8
 }
 
 // simplification: rolls random numbers (and, with flag 4, draws the places): original only; the copy takes the branch.
 
-/// 1 − distance × k (squared without +0x3c), divided by (reputation + 1)² when far and with reputation; with minimums
-/// by the base, by type 10 (0.2), by both clubs of the same nation (0.05) and a general one
+/// Returns the travel distance factor for the attendance: 1 − distance × k (squared without `+0x3c`), divided by
+/// (reputation + 1)² when far and with reputation, with several minimums. Returns the double in st0.
+///
+/// `Stadium::get_travel_distance_factor(jogo, cidade_do_estadio, cidade_do_clube, base)` (match, stadium city, club
+/// city, base), in the match attendance (`0x85cba0`, called by the engine `0x6b7f20`). D = distance between the cities
+/// (halved with match `+0x30` = `0xa0` and `+0x3a` = 5); F = 1 − D·`[0x96afe0]`, squared without `+0x3c`; with D and
+/// the reputation R (byte `+0x7e` of nation `+0x53` of the away club `+0x20`) above `[0x9689a0]`: F / (R + 1)².
+///
+/// With base above `[0x969558]`, the minimum 1 − (`[0x968ea8]` − base)·`[0x968f20]`; with `+0x3a` = 10, the minimum
+/// 0.2; with both clubs of the same nation, 0.05; and always `[0x96d2c8]`.
 /// Original: `Stadium::get_travel_distance_factor` (0x85d8a0, stadium.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x85d8a0 } (thiscall, ret 0x14, stadium.cpp): `Stadium::get_travel_distance_factor(jogo, cidade_do_estadio,
@@ -964,8 +1046,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
 pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, jogo: usize, cid_est: usize, cid_club: usize, base: f64) -> f64 {
     let nacao = read_usize(read_usize(jogo + 0x20) + 0x53);
     let r = *((nacao + nation::STATE_OF_DEVELOPMENT) as *const i8) as i32 as f64;
-    let dy = read_f64(cid_est + 0x2b) - read_f64(cid_club + 0x2b);
-    let dx = read_f64(cid_est + 0x23) - read_f64(cid_club + 0x23);
+    let dy = read_f64(cid_est + city::CITY_LONGITUDE) - read_f64(cid_club + city::CITY_LONGITUDE);
+    let dx = read_f64(cid_est + city::CITY_LATITUDE) - read_f64(cid_club + city::CITY_LATITUDE);
     let mut d = (dx * dx + dy * dy).sqrt();
     let kind = *((jogo + 0x3a) as *const u8);
     if core::ptr::read_unaligned((jogo + 0x30) as *const u16) == 0xa0 && kind == 5 {
@@ -1032,9 +1114,17 @@ pub(crate) unsafe fn sort_stadium_list(list: usize, n: u32) {
     qsort(list, n, 0xc, 0x85e380);
 }
 
-/// on day 0 rebuilds the venue list; before 2003 closes the England national stadium (id in [0xa835a4], nation and
-/// national team without a stadium) and reopens it on 1/6/2003 with 90000 places; every 30 days removes the expired
-/// bookings and re-sorts
+/// The stadium daily update: on day 0 it rebuilds the venue list; before 2003 it closes the England national stadium
+/// and reopens it on 1/6/2003 with 90000 seats; every 30 days it removes the expired bookings and re-sorts.
+///
+/// `Stadium::daily_update(hoje)` (today), every day from the game's day loop (`[0xdd7ef4]`). On day 0 of the year it
+/// rebuilds the venue list (`0x85dfc0`). Before 2003, the England national stadium (nation `+0x80`) closes: the id goes
+/// to `[0xa835a4]`, the nation and the senior national team (`+0x69`) are left without a stadium. On 1/6/2003
+/// (`0x549f70`) it comes back with 90000 seats (`+0x3c`, `+0x40`).
+///
+/// Every 30 days, the bookings (list at `+0`, count at `+4`, 12 bytes: id and date) before today are removed: the
+/// original counts the first k (year unsigned, day signed), copies over them, moving forward, the k that start at n − k
+/// − 1 (not at n − k) and re-sorts the n − k (`0x945333` with `0x85e380`).
 /// Original: `Stadium::daily_update` (0x85b820, stadium.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x85b820 } (thiscall, ret 4, stadium.cpp): `Stadium::daily_update(hoje)`, todo dia pelo laço do dia do jogo
@@ -1053,7 +1143,7 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
         let nacao = england_nation();
         let e = read_usize(nacao + nation::NATIONAL_STADIUM);
         if e != 0 {
-            crate::comparacao::ramo("cps_7 fecha o estadio nacional");
+            crate::comparison::branch("cps_7 fecha o estadio nacional");
             write_u32(G_STADIUM_STASHED_VENUE_ID, read_usize(e) as u32); // cps7: guarda o id do estádio fechado
             write_u32(nacao + nation::NATIONAL_STADIUM, 0);
             write_u32(nation_national_team(england_nation()) + 0x69, 0); // cps7: a seleção sem casa
@@ -1064,7 +1154,7 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
     let r = new(t.as_mut_ptr() as usize, 1, 6, 0x7d3, 0xffff_ffff);
     let reabre = read_usize(r) as u32;
     if (reabre >> 16) as u16 == read_u16(today + 2) && reabre as u16 == read_u16(today) && read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
-        crate::comparacao::ramo("cps_7 reabre o estadio nacional");
+        crate::comparison::branch("cps_7 reabre o estadio nacional");
         write_u32(england_nation() + 0x80, stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) as u32);
         let nacao = england_nation();
         write_u32(nation_national_team(nacao) + 0x69, read_usize(nacao + nation::NATIONAL_STADIUM) as u32);
@@ -1099,7 +1189,7 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
     if k as u16 == 0 {
         return;
     }
-    crate::comparacao::ramo("cps_7 reservas vencidas");
+    crate::comparison::branch("cps_7 reservas vencidas");
     let k = k as i16 as i32;
     let n = read_usize(this + 4) as i32;
     if k < n {
@@ -1114,7 +1204,12 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
 }
 
 
-/// appends the booking (stadium id and date) to the list, which grows 30 at a time, and re-sorts by date and id
+/// Appends a booking (stadium id and date) to the list, which grows 30 at a time, and re-sorts by date and id.
+///
+/// `Stadium::add_booking(estadio, data)` (stadium, date): appends the booking (stadium id, copy of the date via
+/// `0x417c10`) to the list (`+0`; count `+4`, capacity `+8`), which starts with 30 (`0x944e46`, `0x168` bytes) and
+/// grows 30 at a time (`0x945667`), and re-sorts (`0x945333` with `0x85e380`). Null stadium or date, or out of memory:
+/// the "Error" box (lines `0x810`, `0x81b`, `0x82b`). Called by the venue choice (`0x85c260`, `0x85c800`).
 /// Original: `Stadium::add_booking` (0x85de20, stadium.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x85de20 } (thiscall, ret 8, stadium.cpp): `Stadium::add_booking(estadio, data)`: acrescenta a reserva (id do
@@ -1153,7 +1248,11 @@ pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, estadio: usize, 
 }
 
 
-/// 1 when there is no booking of the stadium on the date (binary search in the list; no list, 1)
+/// Returns 1 when there is no booking of the stadium on the date.
+///
+/// `Stadium::is_stadium_free_on_date(estadio, data)` (stadium, date): 1 with no booking list; otherwise 1 if the binary
+/// search (`0x946464` with `0x85e380`) does not find the booking (stadium id, date copied via `0x417c10`). Called by
+/// the neutral venue choice (`0x85c800`).
 /// Original: `Stadium::is_stadium_free_on_date` (0x85ddb0, stadium.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x85ddb0 } (thiscall, ret 8, stadium.cpp): `Stadium::is_stadium_free_on_date(estadio, data)`: 1 sem lista de
@@ -1170,7 +1269,7 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, esta
     core::ptr::write_unaligned(key.as_mut_ptr() as *mut u32, read_usize(estadio) as u32);
     copy(key.as_mut_ptr() as usize + 4, t.as_mut_ptr() as usize, data);
     let r = search(key.as_ptr() as usize, read_usize(this), read_usize(this + 4) as u32, 0xc, 0x85e380);
-    crate::comparacao::ramo("cps_7 reserva conferida");
+    crate::comparison::branch("cps_7 reserva conferida");
     (r == 0) as u32 // cps7: livre sem a reserva
 }
 
@@ -1195,9 +1294,21 @@ pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> 
 }
 
 
-/// the neutral venue rule (finals and semi-finals): grounds with a city, nation and continent qualify, except the City
-/// of Manchester Stadium (under construction) and, in nations with competitions, those under 5000 seats; each nation's
-/// national stadium is flagged
+/// Rebuilds the list of venues for neutral-ground matches (finals and semi-finals): grounds with a city, nation and
+/// continent qualify, except the City of Manchester Stadium (under construction) and, in nations with competitions,
+/// those under 5000 seats; each nation's national stadium is flagged.
+///
+/// `Stadium::build_venue_list`: `+0xc` the list of 16-byte records, `+0x10` the count, `+0x14` the capacity; the old
+/// list is released. The hosts of the next editions of three competitions (keys `0x9cf79c`, `0x9cf7a4`, `0x9cf7ac`;
+/// `0x5fa7d0` on HostCountry `[0xb5e134]`, without it the box of line `0x858`) are found, but change nothing (their
+/// loop ends the same way on both paths).
+///
+/// The stadiums that go in (records of `0x4e` bytes in `[0xae23b0]`, count `[0xae2358]`) are those with a city
+/// (`+0x38`), the city's nation (`+0x1f`) and the nation's continent (`+0x71`), except the "City of Manchester Stadium"
+/// (still under construction in 2001) and, in nations with competitions (`+0x11c`), those with fewer than 5000 seats
+/// (`+0x3c`). Each record: `+0` the nation id, `+4` the continent id, `+8` whether it is the national stadium (`+0x80`
+/// of the nation), `+0xc` the stadium. The list grows 30 at a time (`0x944e46`, realloc `0x945667`; out of memory, the
+/// boxes of lines `0x89c` and `0x8ac`, and it stops). At the end it is sorted (qsort with `0x85e2f0`) and `+0x18` = 1.
 /// Original: `Stadium::build_venue_list` (0x85dfc0, stadium.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x85dfc0 } (thiscall, ret 0, stadium.cpp, `Stadium::build_venue_list`): refaz a lista dos estádios para jogos
@@ -1237,7 +1348,7 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
     while k < read_u32(G_STADIUM_COUNT) as i32 {
         let e = read_u32(G_STADIUM_TABLE) as usize + 0x4e * k as usize;
         k = (k as i16).wrapping_add(1) as i32;
-        let cidade = read_u32(e + 0x38) as usize;
+        let cidade = read_u32(e + stadium::STADIUM_CITY) as usize;
         if cidade == 0 {
             continue;
         }
@@ -1245,11 +1356,11 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
         if nacao == 0 || read_u32(nacao + nation::CONTINENT) == 0 {
             continue;
         }
-        if core::ffi::CStr::from_ptr((e + 4) as *const core::ffi::c_char).to_bytes() == b"City of Manchester Stadium" {
+        if core::ffi::CStr::from_ptr((e + stadium::NAME) as *const core::ffi::c_char).to_bytes() == b"City of Manchester Stadium" {
             continue;
         }
-        if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && (read_u32(e + 0x3c) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
-            crate::comparacao::ramo("cqn_3 estadio pequeno");
+        if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) != 0 && (read_u32(e + stadium::STADIUM_CAPACITY) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
+            crate::comparison::branch("cqn_3 estadio pequeno");
             continue; // cqn3: o estádio pequeno fica de fora
         }
         if *lista == 0 {
@@ -1271,7 +1382,7 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
         *(r as *mut u32) = read_u32(nacao);
         *((r + 4) as *mut u32) = read_u32(read_u32(nacao + nation::CONTINENT) as usize);
         *((r + 0xc) as *mut usize) = e;
-        crate::comparacao::ramo("cqn_3 entra na lista");
+        crate::comparison::branch("cqn_3 entra na lista");
         *((r + 8) as *mut u32) = (read_u32(nacao + nation::NATIONAL_STADIUM) as usize == e) as u32; // cqn3: o estádio nacional
         *conta += 1;
     }
@@ -1294,6 +1405,6 @@ pub(crate) unsafe extern "C" fn stadium_compare_venues_by_capacity(a: usize, b: 
     if eb == 0 {
         return 0;
     }
-    core::ptr::read_unaligned((eb + 0x3c) as *const i32).wrapping_sub(core::ptr::read_unaligned((ea + 0x3c) as *const i32))
+    core::ptr::read_unaligned((eb + stadium::STADIUM_CAPACITY) as *const i32).wrapping_sub(core::ptr::read_unaligned((ea + stadium::STADIUM_CAPACITY) as *const i32))
 }
 

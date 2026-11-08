@@ -75,11 +75,11 @@ unsafe extern "thiscall" fn process_fixture(this: usize, jogo: usize, arg: u32) 
     let fase = cpy6_b(jogo + 0x42) as i8;
     if fase > -1 && fase < 0xc {
         if vencedor != 0 {
-            crate::comparacao::ramo("cpy_6 premio da vitoria");
+            crate::comparison::branch("cpy_6 premio da vitoria");
             european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x30d40); // cpy6: o prêmio da vitória
             european_cup_send_prize_money_news(this, vencedor, 0x30d40, jogo);
         } else {
-            crate::comparacao::ramo("cpy_6 premio do empate");
+            crate::comparison::branch("cpy_6 premio do empate");
             european_cup_add_prize_money(european_cup_club_finance(cpy6_d(jogo + 0x1c)), 0x186a0); // cpy6: o prêmio do empate do mandante
             european_cup_add_prize_money(european_cup_club_finance(cpy6_d(jogo + 0x20)), 0x186a0);
             european_cup_send_prize_money_news(this, cpy6_d(jogo + 0x1c), 0x186a0, jogo);
@@ -127,19 +127,19 @@ unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jogo: usize, a
         return o(this, jogo, arg); // ponytail: sem nação, seleção ou finanças, só a original (cai do mesmo jeito)
     }
     let conferir = [(ca, 2), (cb, 2)];
-    let antes = crate::comparacao::Memoria::ler(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
+    let antes = crate::comparison::MemorySnapshot::read(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
     let fase = cpy6_i(this + 0x30);
     EUROPEAN_CUP_FIXTURE_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| process_fixture(this, jogo, arg)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| process_fixture(this, jogo, arg)));
     EUROPEAN_CUP_FIXTURE_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&conferir);
-    antes.escrever();
+    let mr = crate::comparison::MemorySnapshot::read(&conferir);
+    antes.write_back();
     o(this, jogo, arg);
     if cpy6_i(this + 0x30) != fase {
         return; // ponytail: a fase andou na base e o sorteio somou coeficiente: sem comparação
     }
-    let mo = crate::comparacao::Memoria::ler(&conferir);
-    PLACAR.registrar(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
+    let mo = crate::comparison::MemorySnapshot::read(&conferir);
+    PLACAR.record(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
 }
 
 /// { 0x586c00 } (thiscall, ret 0x14, european_cup.cpp): `EuropeanCup::set_club_progress(clube, fase, p1, p2, p3)` (a
@@ -194,12 +194,12 @@ unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(this: usize,
     if e == 0 {
         return o(this, clube, fase, p1, p2, p3); // ponytail: sem registro, só a original
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(
         &[(e + 0x73, 3)],
         || o(this, clube, fase, p1, p2, p3),
         || european_cup_set_club_progress(this, clube, fase, p1, p2, p3),
     );
-    PLACAR.registrar(igual, || format!("european_cup_set_club_progress(fase {} {} {} {}) original={:x?} rust={:x?}", fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
+    PLACAR.record(igual, || format!("european_cup_set_club_progress(fase {} {} {} {}) original={:x?} rust={:x?}", fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
 }
 
 /// { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
@@ -213,6 +213,6 @@ unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, jogo: usize, 
 unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, outro: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, jogo, outro);
     let n = counts_for_fixture_clash(this, jogo, outro);
-    PLACAR.registrar(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", cpy6_w(jogo + 0x30), r, n));
+    PLACAR.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", cpy6_w(jogo + 0x30), r, n));
     r
 }

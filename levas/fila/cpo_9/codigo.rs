@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn add_shortlist_entry(this: usize, pessoa: usize, club
             return;
         }
     }
-    crate::comparacao::ramo("cpo_9 nova entrada");
+    crate::comparison::branch("cpo_9 nova entrada");
     if cpo9_i(this + 8) == cpo9_i(this + 0x10) {
         let v = realocar(cpo9_d(this), (cpo9_i(this + 8) as u32).wrapping_mul(8).wrapping_add(0x320));
         cpo9_w(this, v as u32);
@@ -166,7 +166,7 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
     if preco as f64 * read_f64_at(0x96f9c0) > oferta as f64 {
         return 2;
     }
-    crate::comparacao::ramo("cpo_9 negocia");
+    crate::comparison::branch("cpo_9 negocia");
     1
 }
 
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: usize, clube:
         if !is_after_contract_end(cpo9_h(d), cpo9_h(d + 2) as u16, c) {
             return;
         }
-        crate::comparacao::ramo("cpo_9 recua o mes");
+        crate::comparison::branch("cpo_9 recua o mes");
         let m = (*mes).wrapping_sub(1);
         *mes = m;
         if m < 0 {
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn comparar_add_shortlist_entry(this: usize, pessoa: us
     let (d0, d1) = (if tinha { n0 } else { n0 + 1 }, if tinha { n1 } else { n1 + 1 });
     let achado = bsearch(chave.as_ptr(), cpo9_d(this), cpo9_i(this + 0x10), 8, 0x757ea0) != 0;
     let ok = cpo9_i(this + 0x10) == d0 && cpo9_i(this + 0x14) == d1 && cpo9_b(r) == esperado && (achado || clube == 0);
-    PLACAR.registrar(ok, || {
+    PLACAR.record(ok, || {
         format!("add_shortlist_entry({:#x}, {:#x}) tinha={} contas {}/{} -> {}/{} nibble {:#x} -> {:#x} (esperado {:#x})",
             pessoa, clube, tinha, n0, n1, cpo9_i(this + 0x10), cpo9_i(this + 0x14), nib, cpo9_b(r), esperado)
     });
@@ -270,13 +270,13 @@ unsafe extern "thiscall" fn comparar_add_shortlist_entry(this: usize, pessoa: us
 unsafe extern "stdcall" fn comparar_shortlist_manager_predict_selling_club_response(vendedor: usize, jogador: usize, oferta: i64, comprador: usize, pedido: i64, emprestimo: u32) -> u8 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i64, usize, i64, u32) -> u8>(%%I1%%);
     let mut reg = vec![(0xae1080usize, 4usize)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(
         &reg,
         || o(vendedor, jogador, oferta, comprador, pedido, emprestimo),
-        || crate::aleatorio::sem_contar(|| shortlist_manager_predict_selling_club_response(vendedor, jogador, oferta, comprador, pedido, emprestimo)),
+        || crate::rng::without_counting(|| shortlist_manager_predict_selling_club_response(vendedor, jogador, oferta, comprador, pedido, emprestimo)),
     );
-    PLACAR.registrar(igual && r == n, || format!("shortlist_manager_predict_selling_club_response({:#x}, {:#x}, {}, {:#x}, {}, {}) original={} rust={} {:x?} x {:x?}", vendedor, jogador, oferta, comprador, pedido, emprestimo as u8, r, n, mo, mr));
+    PLACAR.record(igual && r == n, || format!("shortlist_manager_predict_selling_club_response({:#x}, {:#x}, {}, {:#x}, {}, {}) original={} rust={} {:x?} x {:x?}", vendedor, jogador, oferta, comprador, pedido, emprestimo as u8, r, n, mo, mr));
     r
 }
 
@@ -284,11 +284,11 @@ unsafe extern "stdcall" fn comparar_shortlist_manager_predict_selling_club_respo
 unsafe extern "thiscall" fn comparar_transfer_manager_get_loan_period(this: usize, clube: usize, a2: u32, jogador: usize, ini_mes: *mut i8, ini_ano: *mut u16, mes: *mut i8, ano: *mut u16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, *mut i8, *mut u16, *mut i8, *mut u16)>(%%I2%%);
     let mut reg = vec![(ini_mes as usize, 1usize), (ini_ano as usize, 2), (mes as usize, 1), (ano as usize, 2), (0xae1080, 4)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(
         &reg,
         || o(this, clube, a2, jogador, ini_mes, ini_ano, mes, ano),
-        || crate::aleatorio::sem_contar(|| transfer_manager_get_loan_period(this, clube, a2, jogador, ini_mes, ini_ano, mes, ano)),
+        || crate::rng::without_counting(|| transfer_manager_get_loan_period(this, clube, a2, jogador, ini_mes, ini_ano, mes, ano)),
     );
-    PLACAR.registrar(igual, || format!("transfer_manager_get_loan_period({:#x}, {:#x}) {:x?} x {:x?}", clube, jogador, mo, mr));
+    PLACAR.record(igual, || format!("transfer_manager_get_loan_period({:#x}, {:#x}) {:x?} x {:x?}", clube, jogador, mo, mr));
 }

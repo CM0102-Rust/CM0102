@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, tipo: 
                 break;
             }
             if cpz10_u(p + 0xcb) == cpz10_u(cpz10_d(cpz10_d(clube + 0x69) + 0x38)) { // cpz10: o comentarista local
-                crate::comparacao::ramo("cpz_10 comentarista local");
+                crate::comparison::branch("cpz_10 comentarista local");
                 ids[n] = cpz10_sw(p) as i16;
                 n += 1;
                 if n >= 20 {
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, tipo: 
             }
             if *((p + 0xca) as *const i8) == t {
                 let aceita = if nacao == -1 {
-                    crate::comparacao::ramo("cpz_10 comentarista de qualquer nacao");
+                    crate::comparison::branch("cpz_10 comentarista de qualquer nacao");
                     true // cpz10: qualquer nação
                 } else {
                     cpz10_u(p + 0xcf) as i32 == nacao
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, tipo: 
         return -1;
     }
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    crate::comparacao::ramo("cpz_10 sorteio do comentarista");
+    crate::comparison::branch("cpz_10 sorteio do comentarista");
     let r = sortear(n as i32); // cpz10: o sorteio do comentarista
     ids[r as usize] as i32
 }
@@ -116,13 +116,13 @@ unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, clube: usiz
             regioes.push((l, 0xe));
         }
     }
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+    regioes.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regioes,
         || o(this, clube, tipo, nacao),
-        || crate::aleatorio::sem_contar(|| pick_random_pundit(this, clube, tipo, nacao)),
+        || crate::rng::without_counting(|| pick_random_pundit(this, clube, tipo, nacao)),
     );
-    PLACAR.registrar(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", clube, tipo as i8, nacao, r, mo, n, mr));
+    PLACAR.record(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", clube, tipo as i8, nacao, r, mo, n, mr));
     r
 }
 
@@ -189,8 +189,8 @@ unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, tipo: u32, id:
             regioes.push((l, 0xe));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, tipo, id, nome, marca), || get_pundit_name(this, tipo, id, nome, marca));
-    PLACAR.registrar(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", tipo as i8, id as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, tipo, id, nome, marca), || get_pundit_name(this, tipo, id, nome, marca));
+    PLACAR.record(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", tipo as i8, id as i16, mo, mr));
 }
 
 /// { 0x758de0 } (thiscall, ret 0x18, media.cpp, SEH da notícia local, sem destrutor): `Media::
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: usize, clube:
     if clube == 0 || cpz10_d(clube + 0x53) == 0 || cpz10_d(clube + 0xcf) == 0 || pessoa == 0 {
         return;
     }
-    crate::comparacao::ramo("cpz_10 noticia da queixa a federacao");
+    crate::comparison::branch("cpz_10 noticia da queixa a federacao");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)

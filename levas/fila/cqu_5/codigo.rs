@@ -85,7 +85,7 @@ unsafe fn cqu5_copa_da_inglaterra_corpo(this: usize, ano: u32, dono: usize) -> u
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_5 copa_da_inglaterra nova");
+    crate::comparison::branch("cqu_5 copa_da_inglaterra nova");
     cqu5_p8(this + 0xb2, 0x0);
     cqu5_p8(this + 0xb4, 0x1);
     cqu5_p8(this + 0xb3, 0x0);
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn cqu5_copa_da_inglaterra(this: usize, ano: u32, dono:
 unsafe extern "thiscall" fn comparar_cqu5_copa_da_inglaterra(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
     let erro = cqu5_plano(this, r, ano, dono, 0x969b28, &CQU5_CAMPOS_COPA_DA_INGLATERRA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu5_copa_da_inglaterra({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu5_copa_da_inglaterra({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -152,7 +152,7 @@ unsafe fn cqu5_copa_da_liga_inglesa_corpo(this: usize, ano: u32, dono: usize) ->
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_5 copa_da_liga_inglesa nova");
+    crate::comparison::branch("cqu_5 copa_da_liga_inglesa nova");
     cqu5_p16(this + 0x3e, 0x5c);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let v = zerada(0x5c, 6);
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn cqu5_copa_da_liga_inglesa(this: usize, ano: u32, don
 unsafe extern "thiscall" fn comparar_cqu5_copa_da_liga_inglesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
     let erro = cqu5_plano(this, r, ano, dono, 0x969934, &CQU5_CAMPOS_COPA_DA_LIGA_INGLESA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu5_copa_da_liga_inglesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu5_copa_da_liga_inglesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }
 
@@ -216,7 +216,7 @@ unsafe fn cqu5_supercopa_inglesa_corpo(this: usize, ano: u32, dono: usize) -> us
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqu_5 supercopa_inglesa nova");
+    crate::comparison::branch("cqu_5 supercopa_inglesa nova");
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x56d780usize);
     let r = f(this);
     if r < 0 {
@@ -250,6 +250,6 @@ unsafe extern "thiscall" fn cqu5_supercopa_inglesa(this: usize, ano: u32, dono: 
 unsafe extern "thiscall" fn comparar_cqu5_supercopa_inglesa(this: usize, ano: u32, dono: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
     let erro = cqu5_plano(this, r, ano, dono, 0x9699d4, &CQU5_CAMPOS_SUPERCOPA_INGLESA, true);
-    PLACAR.registrar(erro.is_none(), || format!("cqu5_supercopa_inglesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+    PLACAR.record(erro.is_none(), || format!("cqu5_supercopa_inglesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
     r
 }

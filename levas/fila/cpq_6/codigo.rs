@@ -107,7 +107,7 @@ unsafe extern "stdcall" fn transfer_manager_calc_compensation_fee(pessoa: usize,
     if britanica(cpq6_d(comprador + 0x53)) == 0 || britanica(cpq6_d(vendedor + 0x53)) == 0 {
         return 0;
     }
-    crate::comparacao::ramo("cpq_6 compensacao britanica");
+    crate::comparison::branch("cpq_6 compensacao britanica");
     valor(gerente(), pessoa, vendedor, 1, 0xffff_ffff, 0) / 2 // menor de 24 anos entre clubes britânicos
 }
 
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, oferta: usiz
     let n = cpq6_b(oferta + 0x40) as i8;
     let primeira = if n > 0 { (valor / n as i32) as i64 } else { valor as i64 };
     totais(cpq6_d(0xad9dac), valor, comprador, vendedor);
-    crate::comparacao::ramo("cpq_6 pagar transferencia");
+    crate::comparison::branch("cpq_6 pagar transferencia");
     pagar(fin_c, primeira);
     if fin_v != 0 {
         receber(fin_v, primeira); // o vendedor recebe
@@ -218,7 +218,7 @@ unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usi
         return 1;
     }
     let c = contract_of(cpq6_d(0xae1050), pessoa);
-    crate::comparacao::ramo("cpq_6 clube deve aceitar");
+    crate::comparison::branch("cpq_6 clube deve aceitar");
     if ativa(c) != 0 && cpq6_d(oferta + 4) == 0 && cpq6_b(oferta + 0x40) == 0 {
         let (multa, valor) = (cpq6_d(c + 0x21) as u32, cpq6_d(oferta + 0x1b) as u32);
         let m = exibir(&multa, 4);
@@ -254,8 +254,8 @@ unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usi
 /// Comparador: pelo valor (lado a lado pelas estáticas das datas; o valor do jogador 0x4d0c60 e a idade só calculam).
 unsafe extern "stdcall" fn comparar_transfer_manager_calc_compensation_fee(pessoa: usize, comprador: usize, sem_regras_novas: u32) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> i32>(%%I0%%);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&DATE_OP_STATICS, || o(pessoa, comprador, sem_regras_novas), || transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas));
-    PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_calc_compensation_fee(pessoa {:x}) {} x {}, estáticas iguais {}", if pessoa != 0 { cpq6_d(pessoa) } else { 0 }, ro, rr, igual));
+    let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&DATE_OP_STATICS, || o(pessoa, comprador, sem_regras_novas), || transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas));
+    PLACAR.record(igual && ro == rr, || format!("transfer_manager_calc_compensation_fee(pessoa {:x}) {} x {}, estáticas iguais {}", if pessoa != 0 { cpq6_d(pessoa) } else { 0 }, ro, rr, igual));
     ro
 }
 
@@ -273,7 +273,7 @@ unsafe extern "stdcall" fn comparar_transfer_manager_selling_club_must_accept(of
         reg.push((motivo as usize, 2));
     }
     reg.extend_from_slice(&DATE_OP_STATICS);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(oferta, estrito, motivo), || transfer_manager_selling_club_must_accept(oferta, estrito, motivo));
-    PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_selling_club_must_accept(estrito {}) {} x {}, memória igual {}", estrito, ro, rr, igual));
+    let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&reg, || o(oferta, estrito, motivo), || transfer_manager_selling_club_must_accept(oferta, estrito, motivo));
+    PLACAR.record(igual && ro == rr, || format!("transfer_manager_selling_club_must_accept(estrito {}) {} x {}, memória igual {}", estrito, ro, rr, igual));
     ro
 }

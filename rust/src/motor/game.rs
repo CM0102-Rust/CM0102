@@ -11,7 +11,7 @@ use super::*;
 pub(crate) unsafe fn nation_coefficient_history(na: usize) -> [f64; 6] {
     let mut h = [0f64; 6];
     for (k, x) in h.iter_mut().enumerate() {
-        *x = read_f64(na + 0xb0 + k * 8);
+        *x = read_f64(na + nation::FIFACOEFFICIENT91 + k * 8);
     }
     h
 }
@@ -30,10 +30,10 @@ pub(crate) unsafe fn current_month() -> i32 {
 /// [pt] Dezembro na história `h` da nação `na` (`marca` = +0x121): com marca < 12, o ano corrente ganha
 /// reputação (+0x8e) × 0,05 × (12 − marca) × 3; a história anda um ano, o ano corrente e a marca zeram.
 pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &mut u8) {
-    crate::comparacao::ramo("cpt_6 dezembro");
+    crate::comparison::branch("cpt_6 dezembro");
     if (*mark as i8) < 0xc {
-        crate::comparacao::ramo("cpt_6 bonus de dezembro");
-        h[5] = read_i16(na + 0x8e) as i32 as f64 * read_f64_at(0x967888) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro; 0x967888 = 0.05, 0x968930 = 3
+        crate::comparison::branch("cpt_6 bonus de dezembro");
+        h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64_at(0x967888) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro; 0x967888 = 0.05, 0x968930 = 3
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -93,17 +93,17 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         loop {
             let e = array + i as i32 as usize * 0xc;
             *(e as *mut usize) = na;
-            let s = read_f64(na + 0xc0) * read_f64_at(0x968e48) + read_f64(na + 0xb8) * read_f64_at(0x968e00) + read_f64(na + 0xb0) * read_f64_at(0x968918) // 0x968e48 = 0.6, 0x968e00 = 0.4, 0x968918 = 0.2
-                + read_f64(na + 0xc8) * read_f64_at(0x9689b0) + read_f64(na + 0xd8) + read_f64(na + 0xd0); // 0x9689b0 = 0.8
+            let s = read_f64(na + nation::FIFACOEFFICIENT93) * read_f64_at(0x968e48) + read_f64(na + nation::FIFACOEFFICIENT92) * read_f64_at(0x968e00) + read_f64(na + nation::FIFACOEFFICIENT91) * read_f64_at(0x968918) // 0x968e48 = 0.6, 0x968e00 = 0.4, 0x968918 = 0.2
+                + read_f64(na + nation::FIFACOEFFICIENT94) * read_f64_at(0x9689b0) + read_f64(na + nation::FIFACOEFFICIENT96) + read_f64(na + nation::FIFACOEFFICIENT95); // 0x9689b0 = 0.8
             write_f64(e + 4, s);
             if dez {
                 let mut h = nation_coefficient_history(na);
-                let mut mark = read_u8(na + 0x121);
+                let mut mark = read_u8(na + nation::NATION_GAMES_PLAYED);
                 roll_coefficient_year(na, &mut h, &mut mark);
                 for (k, x) in h.iter().enumerate() {
-                    write_f64(na + 0xb0 + k * 8, *x);
+                    write_f64(na + nation::FIFACOEFFICIENT91 + k * 8, *x);
                 }
-                *((na + 0x121) as *mut u8) = mark;
+                *((na + nation::NATION_GAMES_PLAYED) as *mut u8) = mark;
             }
             i = i.wrapping_add(1);
             na += 0x122;
@@ -118,7 +118,11 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
 }
 
 
-/// 1 on days 0, 80, 173 and 250 of the year (the retirement scan days), otherwise 0
+/// Returns 1 on days 0, 80, 173 and 250 of the year (the retirement scan days), otherwise 0.
+///
+/// `is_player_regen_day(day)`: 1 on days 0, 80, 173 and 250 of the year (the retirement search), otherwise 0. Called
+/// from the game's day loop (0x5cda97, with the whole date: the day is the low word). The original returns only `al`
+/// (`ah` keeps the day's high byte).
 /// Original: `is_player_regen_day` (0x5d6250, game.cpp, cdecl).
 ///
 /// [pt] { 0x5d6250 } (cdecl, game.cpp): `is_player_regen_day(dia)`: 1 nos dias 0, 80, 173 e 250 do ano (a busca das
@@ -130,7 +134,11 @@ pub(crate) unsafe extern "C" fn is_player_regen_day(day: u32) -> u32 {
 }
 
 
-/// the sum of two signed bytes clamped between the given minimum and maximum
+/// Returns the sum of two signed bytes clamped between the given minimum and maximum.
+///
+/// `clamp_char_sum(a, b, min, max)`: the sum of the two signed bytes (16 bits), clamped between the other two. Returns
+/// the original's `ax`: `min` or `max` extended, or the high byte of `max` extended with the sum in `al` (the 26
+/// callers, in the players' daily pass, write only `al`).
 /// Original: `clamp_char_sum` (0x5d61d0, game.cpp, cdecl).
 ///
 /// [pt] { 0x5d61d0 } (cdecl, game.cpp): `clamp_char_sum(a, b, min, max)`: a soma dos dois bytes com sinal (16 bits),
@@ -218,7 +226,7 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, clube: usize, k: usize) {
     if ((read_i16(G_CURRENT_DATE) as i32) % 0xe).wrapping_add(read_usize(p) as i32) != 0 {
         return;
     }
-    crate::comparacao::ramo("cps_5 atrito com o tecnico");
+    crate::comparison::branch("cps_5 atrito com o tecnico");
     let queixa: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_NEWS_POST_DRESSING_ROOM_UNREST);
     let mark: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
     let (tipo, marca) = if q == read_usize(clube + club::MANAGER) {
@@ -232,9 +240,19 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, clube: usize, k: usize) {
     mark(k, marca, 0);
 }
 
-/// ten random pairs of team-mates: a disliked one stops being disliked and may fight (0x5888a0); otherwise becomes
-/// disliked, liked or stops being liked; every 50 days, random clubs go through the dressing room friction; on the
-/// other days each player, by attribute draws, may reach the friction with the manager
+/// Updates the relationships in the squads: ten random pairs of team-mates: a disliked one stops being disliked and may
+/// fight (0x5888a0); otherwise becomes disliked, liked or stops being liked; every 50 days, random clubs go through the
+/// dressing room friction; on the other days each player, by attribute draws, may reach friction with the manager.
+///
+/// `game_update_squad_relationships()`, every day from the game's day loop. (1) Ten times: a random club and two random
+/// squad slots (50); different people and random(the first one's +0x5b) = 0: if the first dislikes the second, he stops
+/// disliking him (0x547c50) and, at the same contract club and with the link flagged in +0x45 & 0x800, the fight
+/// (0x5888a0); otherwise, 1/3 start disliking (0x547af0), 1/3 of the rest start liking (0x547a10) and the rest stop
+/// liking (0x547c10). (2) Day a multiple of 50: `[0xae235c]`/100 random clubs go through the dressing room friction
+/// (0x5d7190). On the other days, each person (except the last 17) with a player record and preferences, a contract and
+/// the club's link with the +0xff person: three random draws (+0x5b, +0x5d, +0x5a, each + 5) filter; the sum of five
+/// attributes minus 3, 5, 15, 15 by draws that came out zero and 5 if the player's reputation (+0xb) exceeds 4500 and
+/// the club's (+0x80) gives the draw that, when zero, leads to friction with the manager.
 /// Original: `game_update_squad_relationships` (0x5d6d10, game.cpp, cdecl).
 ///
 /// [pt] { 0x5d6d10 } (cdecl, game.cpp): `game_update_squad_relationships()`, todo dia pelo laço do dia do jogo. (1) Dez
@@ -259,7 +277,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
         if a == 0 || b == 0 || a == b {
             continue;
         }
-        if friendly_random(read_i8_as_i32(a + 0x5b)) != 0 {
+        if friendly_random(read_i8_as_i32(a + staff::PROFESSIONALISM)) != 0 {
             continue;
         }
         if is_disliked_by(b, a) != 0 {
@@ -309,7 +327,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
 ///
 /// [pt] Uma pessoa do laço de fora dos dias múltiplos de 50 (0x5d6f15..0x5d7115).
 pub(crate) unsafe fn player_vs_manager_check(p: usize) {
-    if read_usize(p + 0x61) == 0 || read_usize(p + 0x65) == 0 {
+    if read_usize(p + staff::PLAYER) == 0 || read_usize(p + staff::STAFF_PREFERENCES) == 0 {
         return;
     }
     let c = game_get_contract_and_store(p);
@@ -324,33 +342,33 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
     if k == 0 {
         return;
     }
-    if friendly_random(read_i8_as_i32(p + 0x5b) + 5) != 0 && friendly_random(read_i8_as_i32(p + 0x5d) + 5) != 0 && friendly_random(read_i8_as_i32(p + 0x5a) + 5) != 0 {
+    if friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM) + 5) != 0 && friendly_random(read_i8_as_i32(p + staff::TEMPERAMENT) + 5) != 0 && friendly_random(read_i8_as_i32(p + staff::PRESSURE) + 5) != 0 {
         return;
     }
-    let mut e = read_i8_as_i32(p + 0x5b) + (read_i8_as_i32(p + 0x5a) + read_i8_as_i32(p + 0x59)) + (read_i8_as_i32(p + 0x5c) + read_i8_as_i32(p + 0x18));
-    crate::comparacao::ramo("cps_5 tecnico sorteado");
-    if friendly_random(read_i8_as_i32(p + 0x59)) == 0 { // cps5: o primeiro desconto
+    let mut e = read_i8_as_i32(p + staff::PROFESSIONALISM) + (read_i8_as_i32(p + staff::PRESSURE) + read_i8_as_i32(p + staff::LOYALITY)) + (read_i8_as_i32(p + staff::SPORTSMANSHIP) + read_i8_as_i32(p + staff::YEAR_OF_BIRTH));
+    crate::comparison::branch("cps_5 tecnico sorteado");
+    if friendly_random(read_i8_as_i32(p + staff::LOYALITY)) == 0 { // cps5: o primeiro desconto
         e -= 3;
     }
-    if friendly_random(read_i8_as_i32(p + 0x5a)) == 0 {
+    if friendly_random(read_i8_as_i32(p + staff::PRESSURE)) == 0 {
         e -= 5;
     }
     if read_usize(k + 0x45) != 0 || friendly_random(0x64) == 0 {
-        if friendly_random(read_i8_as_i32(p + 0x5b)) == 0 {
+        if friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM)) == 0 {
             e -= 0xf;
         }
-        if friendly_random(read_i8_as_i32(p + 0x5d)) == 0 {
+        if friendly_random(read_i8_as_i32(p + staff::TEMPERAMENT)) == 0 {
             e -= 0xf;
         }
     }
-    let rep = read_i16(read_usize(p + 0x61) + 0xb);
+    let rep = read_i16(read_usize(p + staff::PLAYER) + 0xb);
     if rep > 0x1194 && rep > read_i16(clube + club::REPUTATION) {
         e -= 5;
     }
     if friendly_random(e) >= 1 {
         return;
     }
-    if read_usize(p + 0x65) == 0 {
+    if read_usize(p + staff::STAFF_PREFERENCES) == 0 {
         return;
     }
     dressing_room_friction(p, clube, k);
@@ -376,7 +394,7 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(clube: usiz
         if k == 0 {
             continue;
         }
-        if read_usize(p + 0x65) == 0 {
+        if read_usize(p + staff::STAFF_PREFERENCES) == 0 {
             continue;
         }
         dressing_room_friction(p, clube, k);
@@ -390,11 +408,19 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(clube: usiz
 ///
 /// [pt] A pessoa conta para a liderança do clube: id válido (< [0xae2364]), contrato com o clube (+0x39) e ficha de jogador.
 pub(crate) unsafe fn is_club_squad_player(p: usize, clube: usize) -> bool {
-    p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 && read_usize(p + 0x39) == clube && read_usize(p + 0x61) != 0
+    p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 && read_usize(p + staff::CLUB_JOB) == clube && read_usize(p + staff::PLAYER) != 0
 }
 
-/// one club in seven each day (not national teams): squad leadership and leadership × morale summed; each player draws
-/// from them and his own morale and the morale goes up or down by one (0x544710)
+/// Spreads morale through the squads by leadership: one club in seven each day (not national teams): the squad's
+/// leadership and leadership × morale are summed; each player draws from them and his own morale, and his morale goes
+/// up or down by one (0x544710).
+///
+/// `game_spread_squad_morale_by_leadership()`, every day from the game's day loop. Each club that is not a national
+/// team (0x53b900), with random(7) = 0: sums the leadership (player +0x2f) and leadership × morale of the link (+0x44)
+/// over the squad (+0xd7, 50 slots); fewer than 16 players count 10 for each one missing. With a non-zero sum, each
+/// player draws (2 × Σ leadership × morale) / (his leadership + sum) plus random(morale / 12), as a signed byte:
+/// negative, random(s) < random(−5) lowers the morale (0x544710 with −1); positive, random(s) > random(5) raises it
+/// (+1).
 /// Original: `game_spread_squad_morale_by_leadership` (0x5ce0b0, game.cpp, cdecl).
 ///
 /// [pt] { 0x5ce0b0 } (cdecl, game.cpp): `game_spread_squad_morale_by_leadership()`, todo dia pelo laço do dia do jogo. Cada
@@ -421,7 +447,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 if c == 0 {
                     continue;
                 }
-                let l = read_i8_as_i32(read_usize(p + 0x61) + 0x2f);
+                let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x2f);
                 soma = soma.wrapping_add(read_i8_as_i32(c + 0x44) * l);
                 lideranca += l;
                 q += 1;
@@ -439,8 +465,8 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 }
                 let c = game_contract_for_club(p, clube);
                 let m = if c == 0 { 0 } else { read_i8_as_i32(c + 0x44) };
-                let l = read_i8_as_i32(read_usize(p + 0x61) + 0x2f);
-                crate::comparacao::ramo("cps_5 moral sorteado");
+                let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x2f);
+                crate::comparison::branch("cps_5 moral sorteado");
                 let r1 = friendly_random(soma.wrapping_mul(2) / (l + lideranca));
                 let r2 = friendly_random(m / 12); // cps5: a parte do moral
                 let s = (r1 as u8).wrapping_add(r2 as u8) as i8;
@@ -452,7 +478,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 } else if s > 0 {
                     let e = friendly_random(s as i32);
                     if e > friendly_random(5) {
-                        crate::comparacao::ramo("cps_5 moral sobe");
+                        crate::comparison::branch("cps_5 moral sobe");
                         morale(p, 1, 1); // cps5: sobe o moral
                     }
                 }
@@ -487,12 +513,21 @@ pub(crate) unsafe fn contract_club_record(c: usize) -> usize {
 /// [pt] Dias desde a data de +0x3e da pessoa até hoje (0x54cdb0 sobre a data do jogo 0xae2c90, a outra por valor).
 pub(crate) unsafe fn days_since_staff_date(p: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    f(G_CURRENT_DATE, read_usize(p + 0x3e) as u32, read_usize(p + 0x42) as u32)
+    f(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32)
 }
 
-/// n/250 consecutive people from a random one: a present player, with training and without a serious injury misses
-/// training (0x41a360) by a draw on the sum of attributes, morale and likes of the manager (more likely when newly
-/// arrived) or by the contract flags
+/// Checks players missing training: n/250 consecutive people from a random one; a present player with training and
+/// without a serious injury misses training (0x41a360) by a random draw on the sum of attributes, morale and liking of
+/// the manager (more likely when newly arrived) or by the contract flags.
+///
+/// `game_check_players_missing_training()`, every day from the game's day loop. Starting from a random person (random(n
+/// − n/250 − 1)), n/250 consecutive people: a player (+0x61, function +0x3d = 11) with a contract and a club, present
+/// (0x418f60), with the training record (0x8b39f0, +0x15) and without a serious injury (0x62c400 ≠ 2). (1) With +0x5b <
+/// 8, player +0x2f < 8 and the sum (player +0x2f, +0x18, +0x5b, link +0x44, −5 if +0x5b or the morale are 1, −5 if he
+/// dislikes the manager, +2 if he likes him) < 43: random(+0x5b + 100, 50 or 25 depending on the days since +0x3e: <
+/// 30, < 90, < 180) coming out zero is a miss. (2) Otherwise, with +0x5b < 10 and a link with the club: the link flags
+/// (+0x45: 0x8000, 0x30000; with +0x5b < 5, 0x7800) give random(+0x5b) draws that, when zero, are a miss. The miss:
+/// 0x41a360.
 /// Original: `game_check_players_missing_training` (0x5d6aa0, game.cpp, cdecl).
 ///
 /// [pt] { 0x5d6aa0 } (cdecl, game.cpp): `game_check_players_missing_training()`, todo dia pelo laço do dia do jogo. A partir
@@ -512,13 +547,13 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     let foul: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWOL_MISS_TRAINING);
     let n = read_usize(G_STAFF_COUNT) as i32;
     let q = n / 250;
-    crate::comparacao::ramo("cps_6 faltas do dia");
+    crate::comparison::branch("cps_6 faltas do dia");
     let r = friendly_random(n - q - 1); // cps6: a primeira pessoa
     let mut current = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(staff::SIZE));
     for _ in 0..q {
         let p = current;
         current = current.wrapping_add(0x6e);
-        if read_usize(p + 0x61) == 0 || read_u8(p + 0x3d) != 0xb {
+        if read_usize(p + staff::PLAYER) == 0 || read_u8(p + staff::JOB_FOR_CLUB) != 0xb {
             continue;
         }
         let c = game_get_contract_and_store(p);
@@ -539,10 +574,10 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         if lesao(read_usize(G_INJURY), p) == 2 {
             continue;
         }
-        let jog = read_usize(p + 0x61);
-        let cl = read_u8(p + 0x5b);
-        let dl = read_u8(jog + 0x44);
-        let mut bl = read_u8(jog + 0x2f).wrapping_add(read_u8(p + 0x18)).wrapping_add(cl).wrapping_add(dl);
+        let jog = read_usize(p + staff::PLAYER);
+        let cl = read_u8(p + staff::PROFESSIONALISM);
+        let dl = read_u8(jog + player_sheet::WORK_RATE);
+        let mut bl = read_u8(jog + player_sheet::LEADERSHIP).wrapping_add(read_u8(p + staff::YEAR_OF_BIRTH)).wrapping_add(cl).wrapping_add(dl);
         if cl == 1 {
             bl = bl.wrapping_add(0xfb);
         }
@@ -556,8 +591,8 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             bl = bl.wrapping_add(2);
         }
         let mut and_foul = false;
-        let a = read_u8(p + 0x5b);
-        if (a as i8) < 8 && (read_u8(read_usize(p + 0x61) + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
+        let a = read_u8(p + staff::PROFESSIONALISM);
+        if (a as i8) < 8 && (read_u8(read_usize(p + staff::PLAYER) + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
             let mut s = a;
             if days_since_staff_date(p) < 0x1e {
                 s = s.wrapping_add(0x64);
@@ -566,13 +601,13 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             } else if days_since_staff_date(p) < 0xb4 {
                 s = s.wrapping_add(0x19);
             }
-            crate::comparacao::ramo("cps_6 falta pela soma");
+            crate::comparison::branch("cps_6 falta pela soma");
             if friendly_random(s as i8 as i32) == 0 { // cps6: o sorteio da soma
                 and_foul = true;
             }
         }
         if !and_foul {
-            if read_i8_as_i32(p + 0x5b) >= 0xa {
+            if read_i8_as_i32(p + staff::PROFESSIONALISM) >= 0xa {
                 continue;
             }
             let clube = contract_club_record(game_get_contract_and_store(p));
@@ -580,12 +615,12 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             if v == 0 {
                 continue;
             }
-            if read_usize(v + 0x45) & 0x8000 != 0 && friendly_random(read_i8_as_i32(p + 0x5b)) == 0 {
+            if read_usize(v + 0x45) & 0x8000 != 0 && friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM)) == 0 {
                 and_foul = true;
-            } else if read_usize(v + 0x45) & 0x30000 != 0 && friendly_random(read_i8_as_i32(p + 0x5b)) == 0 {
+            } else if read_usize(v + 0x45) & 0x30000 != 0 && friendly_random(read_i8_as_i32(p + staff::PROFESSIONALISM)) == 0 {
                 and_foul = true;
             } else {
-                let a = read_i8_as_i32(p + 0x5b);
+                let a = read_i8_as_i32(p + staff::PROFESSIONALISM);
                 if a >= 5 || read_usize(v + 0x45) & 0x7800 == 0 || friendly_random(a) != 0 {
                     continue;
                 }
@@ -593,7 +628,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             }
         }
         if and_foul {
-            crate::comparacao::ramo("cps_6 falta ao treino");
+            crate::comparison::branch("cps_6 falta ao treino");
             foul(read_usize(G_AWOL), p); // cps6: a falta
         }
     }
@@ -601,8 +636,12 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
 
 // simplification: draws and the foul (0x41a360) fines, draws and changes the form: original only; the copy carries the branches.
 
-/// each competition in the list gets the day (virtual +0x14 with the game date and the flag); with the flag, the next
-/// step of [0xae2a58] (0x5aaf00)
+/// Gives the day to each competition in the list (virtual +0x14 with the game date and the flag); with the flag, the
+/// next step of `[0xae2a58]` (0x5aaf00).
+///
+/// `game_update_comps_for_date(flag)`: each competition in the list (`[0xadadfc]`, count `[0xadadf8]` re-read on each
+/// iteration) receives the day (virtual +0x14 with the game date 0xae2c90 and the flag); with the flag, the next step
+/// of `[0xae2a58]` (0x5aaf00, which the original calls as a tail jump). Called from the game's day loop (with 1).
 /// Original: `game_update_comps_for_date` (0x5ce060, game.cpp, cdecl).
 ///
 /// [pt] { 0x5ce060 } (cdecl, game.cpp): `game_update_comps_for_date(marca)`: cada competição da lista ([0xadadfc], conta
@@ -620,7 +659,7 @@ pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
         i += 1;
     }
     if m != 0 {
-        crate::comparacao::ramo("cps_6 competicoes do dia");
+        crate::comparison::branch("cps_6 competicoes do dia");
         let next: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FIXTURE_MANAGER_DAILY_UPDATE);
         next(read_usize(G_FIXTURE_MANAGER));
     }
@@ -635,7 +674,11 @@ pub(crate) unsafe fn board_confidence_ptr(this: usize, clube: usize) -> usize {
     read_usize(this).wrapping_add(read_usize(clube).wrapping_mul(0x49)) + 6
 }
 
-/// adds the delta to the board confidence in the club (+6 of the 73-byte club row), held to 1..10000
+/// Adds the delta to the board's confidence in the club (+6 of the 73-byte club row), held to 1..10000.
+///
+/// `manager_manager_adjust_board_confidence(club, delta)`: adds `delta` (word) to the board's confidence in the club
+/// (+6 of the MANAGER_MANAGER row `[0xb67a44]`), clamped to 1..10000. Null club: nothing. Called from the game's day
+/// loop (with −5).
 /// Original: `manager_manager_adjust_board_confidence` (0x5cdde0, game.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x5cdde0 } (thiscall, ret 8, game.cpp): `manager_manager_adjust_board_confidence(clube, delta)`: soma `delta`
@@ -672,7 +715,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ma
 /// ([treino+0x651d]), pelo id dos dados do jogador ([[jogador+0x61]]).
 pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, player: usize) -> usize {
     let table = core::ptr::read_unaligned((treino + 0x651d) as *const usize);
-    let id = *(core::ptr::read_unaligned((player + 0x61) as *const usize) as *const i32);
+    let id = *(core::ptr::read_unaligned((player + staff::PLAYER) as *const usize) as *const i32);
     (table as isize + id as isize * 6) as usize
 }
 

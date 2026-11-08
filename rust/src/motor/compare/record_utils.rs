@@ -12,8 +12,8 @@ pub(crate) unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: us
     if jogo == 0 || clube == 0 || out == 0 {
         return o(jogo, clube, out);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(out, 0x1f)], || o(jogo, clube, out), || fill_match_record_from_fixture(jogo, clube, out));
-    PLACAR.registrar(igual && r == n, || format!("fill_match_record_from_fixture(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", jogo, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(out, 0x1f)], || o(jogo, clube, out), || fill_match_record_from_fixture(jogo, clube, out));
+    PLACAR.record(igual && r == n, || format!("fill_match_record_from_fixture(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", jogo, clube, r, n, mo, mr));
     r
 }
 
@@ -25,8 +25,8 @@ pub(crate) unsafe extern "C" fn comparar_fill_staff_name_ref(person: usize, out:
     if person == 0 || out == 0 {
         return o(person, out);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(out, 0x18)], || o(person, out), || fill_staff_name_ref(person, out));
-    PLACAR.registrar(igual && r == n, || format!("fill_staff_name_ref(pessoa {:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(out, 0x18)], || o(person, out), || fill_staff_name_ref(person, out));
+    PLACAR.record(igual && r == n, || format!("fill_staff_name_ref(pessoa {:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "C" fn comparar_match_record_result_code(record: usize)
     }
     let r = o(record);
     let n = match_record_result_code(record);
-    PLACAR.registrar(r == n, || format!("match_record_result_code(registro {:x}) original={} rust={}", record, r as i8, n as i8));
+    PLACAR.record(r == n, || format!("match_record_result_code(registro {:x}) original={} rust={}", record, r as i8, n as i8));
     r
 }
 
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b:
         return r;
     }
     let n = match_record_is_bigger_win(a, b);
-    PLACAR.registrar(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -66,6 +66,6 @@ pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize,
         return r;
     }
     let n = match_record_is_bigger_defeat(a, b);
-    PLACAR.registrar(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

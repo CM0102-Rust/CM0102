@@ -56,7 +56,7 @@ unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g: u32, pv: u
     if cqs3_d(cqs3_d(this + 0xc) + 4 * k as usize) == 0 {
         return show_error_at(0x98aba4, 0x487);
     }
-    crate::comparacao::ramo("cqs_3 grupo");
+    crate::comparison::branch("cqs_3 grupo");
     soltar(v);
     soltar(t);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     if cqs3_d(cqs3_d(this + 0xc) + 0x1c) == 0 {
         return show_error_at(0x98aba4, 0x31b);
     }
-    crate::comparacao::ramo("cqs_3 segunda fase");
+    crate::comparison::branch("cqs_3 segunda fase");
     soltar(t);
     soltar(lista);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 7);
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         }
         soltar(t);
     }
-    crate::comparacao::ramo("cqs_3 terceira fase");
+    crate::comparison::branch("cqs_3 terceira fase");
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 9);
 }
 
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage(this: usiz
         nela.sort_unstable();
         a == nela
     };
-    PLACAR.registrar(igual, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, fase, plano));
+    PLACAR.record(igual, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, fase, plano));
 }
 
 /// O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
@@ -252,7 +252,7 @@ unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
         b.sort_unstable();
         a == b
     };
-    PLACAR.registrar(igual, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
+    PLACAR.record(igual, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
 }
 
 /// O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
@@ -283,5 +283,5 @@ unsafe extern "thiscall" fn comparar_create_third_round_groups(this: usize) {
         nela.sort_unstable();
         p == nela
     };
-    PLACAR.registrar(igual, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plano));
+    PLACAR.record(igual, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plano));
 }

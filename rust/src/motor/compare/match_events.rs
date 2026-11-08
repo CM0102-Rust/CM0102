@@ -18,8 +18,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_read_events(e: usize, desc: *con
     }
     let n = (*desc.add(1) as usize).min(0x10000);
     let reg = [(e + 6, 2), (e + 0x720, 0xe * n)];
-    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(e, desc), || read_events(e, desc));
-    PLACAR.registrar(igual && r == rr, || format!("read_events(pos {} n {} numero {} humano {}) original={} rust={} {:x?} x {:x?}", *desc, *desc.add(1), *desc.add(2), *(desc.add(3) as *const u8), r, rr, mo, mr));
+    let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(e, desc), || read_events(e, desc));
+    PLACAR.record(igual && r == rr, || format!("read_events(pos {} n {} numero {} humano {}) original={} rust={} {:x?} x {:x?}", *desc, *desc.add(1), *desc.add(2), *(desc.add(3) as *const u8), r, rr, mo, mr));
     r
 }
 
@@ -38,8 +38,8 @@ pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize,
         return o(ev, ctx, comp, variant);
     }
     let reg = [(ev + 2, 2), (0xb67ea0, 0x400), (0xb67dd8, 0xc8)];
-    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(ev, ctx, comp, variant) as u32, || event_text(ev, ctx, comp, variant) as u32);
-    PLACAR.registrar(igual && r == rr, || format!("event_text(codigo {:#x} variante {}) original={:#x} rust={:#x} {:x?} x {:x?}", *(ev as *const u16), variant, r, rr, mo, mr));
+    let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(ev, ctx, comp, variant) as u32, || event_text(ev, ctx, comp, variant) as u32);
+    PLACAR.record(igual && r == rr, || format!("event_text(codigo {:#x} variante {}) original={:#x} rust={:#x} {:x?} x {:x?}", *(ev as *const u16), variant, r, rr, mo, mr));
     r as usize
 }
 
@@ -56,8 +56,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_next_event(t: usize, out: *mut u
     if !out.is_null() {
         reg.push((out as usize, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, out), || next_event(t, out));
-    PLACAR.registrar(igual && r == n, || format!("next_event({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, out), || next_event(t, out));
+    PLACAR.record(igual && r == n, || format!("next_event({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
     r
 }
 
@@ -65,10 +65,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_next_event(t: usize, out: *mut u
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn comparar_commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, curto: u8, x: u32, longa: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(IDX_COMMENTARY_PLAYER_NAME);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((buf as usize, size as usize));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, player, side, buf, size, curto, x, longa), || crate::aleatorio::sem_contar(|| commentary_player_name(pt, player, side, buf, size, curto, x, longa)));
-    PLACAR.registrar(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", player, side, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pt, player, side, buf, size, curto, x, longa), || crate::rng::without_counting(|| commentary_player_name(pt, player, side, buf, size, curto, x, longa)));
+    PLACAR.record(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", player, side, mo, mr));
 }
 
 /// Comparer for `combine_with_previous` (comparison mode: see the header of motor.rs).
@@ -77,10 +77,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, 
     if is_recording_top_level() {
         return o(t, e, m);
     }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(e, 14), (t + 0x30, 12 * 14)]);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, e, m), || crate::aleatorio::sem_contar(|| combine_with_previous(t, e, m)));
-    PLACAR.registrar(igual && r == n, || format!("combine_with_previous({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", core::ptr::read_unaligned(e as *const u16), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, e, m), || crate::rng::without_counting(|| combine_with_previous(t, e, m)));
+    PLACAR.record(igual && r == n, || format!("combine_with_previous({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", core::ptr::read_unaligned(e as *const u16), r, n, mo, mr));
     r
 }
 
@@ -110,8 +110,8 @@ pub(crate) unsafe extern "system" fn comparar_event_variant(e: *const i16, lados
     if is_recording_top_level() {
         return o(e, lados, kind);
     }
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(e, lados, kind), || crate::aleatorio::sem_contar(|| event_variant(e, lados, kind)));
-    PLACAR.registrar(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, kind, r, n, mo, mr));
+    let reg = crate::rng::STATE_REGIONS.to_vec();
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(e, lados, kind), || crate::rng::without_counting(|| event_variant(e, lados, kind)));
+    PLACAR.record(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, kind, r, n, mo, mr));
     r
 }

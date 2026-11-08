@@ -50,7 +50,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparacao::ramo("cqm_5 divisao nova");
+    crate::comparison::branch("cqm_5 divisao nova");
     *((this + 0x44) as *mut u8) = 0xff;
     write_u32_from_usize(this + 0x30, 0xffff_ffff);
     write_u32_from_usize(this + 0x2c, 0);
@@ -82,7 +82,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     if p.baixo {
         let nacao = read_u32_as_usize(read_u32_as_usize(this + 4) + 0x5d);
         if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: a divisão de baixo espanhola
-            crate::comparacao::ramo("cqm_5 divisao de baixo espanhola");
+            crate::comparison::branch("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
             // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
             // above; 0x851020 only reads the word (mov ax, word ptr [esp + 0x21c]).
@@ -163,19 +163,24 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: usize, year:
             ok = ok && has == (*((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0);
         }
     }
-    PLACAR.registrar(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 8)));
+    PLACAR.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this, r, read_u32_as_usize(this), read_u32_as_usize(this + 0x2c), read_u32_as_usize(this + 8)));
     r
 }
 
 
-/// the second: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as the top division
+/// Sets up the rules of the French second division: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as
+/// the top division.
+///
+/// `FraSecond::set_up_rules()`: the common rules, 2 rounds, 3 points; in 2001, 4 promoted (`+0xbe`) and 2 relegated
+/// (`+0xc1`), afterwards 3 up and 3 down; the first division above (`[0x9cf5cc]`), the third below (`[0x9cf5d4]`),
+/// `+0x52` = 2 and 5 substitutes.
 /// Original: `FraSecond::set_up_rules` (0x5bf0a0, fra_second.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5bf0a0 } (thiscall, ret 0, fra_second.cpp): `FraSecond::set_up_rules()`. A segunda: as comuns, 2 turnos, 3
 /// pontos; em 2001 sobem 4 (+0xbe) e caem 2 (+0xc1), depois sobem 3 e caem 3; a primeira acima ([0x9cf5cc]), a
 /// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
 pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u32 {
-    crate::comparacao::ramo("cqj_5 regras da segunda");
+    crate::comparison::branch("cqj_5 regras da segunda");
     fra_first_apply_league_rules(this, &fra_first_second_division_rules(this))
 }
 
@@ -193,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u
     if fra_first_fill_league_table(this, 0x9ccc0c, 0x171, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION) != Some(true) {
         return 0;
     }
-    crate::comparacao::ramo("cqj_6 tabela da segunda");
+    crate::comparison::branch("cqj_6 tabela da segunda");
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, 0);
     *((this + league::PRIZE_MODE) as *mut u8) = 2;
     eng_prm_pay_tv_rights(this, 0x1e8480, comp_record_of(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: a TV de quem caiu da primeira

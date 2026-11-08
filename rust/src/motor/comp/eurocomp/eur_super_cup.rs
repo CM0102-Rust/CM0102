@@ -20,7 +20,7 @@ pub(crate) unsafe fn select_european_super_cup_teams(this: usize) -> (i32, i32) 
     if !set_team_slot(l, 1, b, F, 0xd5) {
         return (0, 0);
     }
-    crate::comparacao::ramo("cqq_11 clubes da supercopa europeia");
+    crate::comparison::branch("cqq_11 clubes da supercopa europeia");
     finish_two_team_list(l)
 }
 
@@ -57,22 +57,13 @@ pub(crate) unsafe fn select_asian_super_cup_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparacao::ramo("cqq_11 dobradinha asiatica");
+        crate::comparison::branch("cqq_11 dobradinha asiatica");
         core::ptr::write_unaligned(l as *mut u32, latest_placed_club(KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, 1) as u32);
     }
-    crate::comparacao::ramo("cqq_11 clubes da supercopa asiatica");
+    crate::comparison::branch("cqq_11 clubes da supercopa asiatica");
     finish_two_team_list(l)
 }
 
-/// rule: the Asian Super Cup is between the Asian Club Championship winner and the Asian Cup Winners' Cup winner; if
-/// the same club won both, the Club Championship runner-up plays
-/// Original: `AsiaSuperCup::select_teams` (0x410a50, asia_super_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: a Supercopa Asiática é entre o campeão da Liga dos Campeões asiática e o da Recopa asiática; se o mesmo clube
-/// ganhou as duas, entra o vice da Liga dos Campeões
-pub(crate) unsafe extern "thiscall" fn eur_super_cup_select_teams_410a50(this: usize) -> i32 {
-    select_asian_super_cup_teams(this).0
-}
 
 
 /// ItaC1Super::init_team_list (0x63c9d0): two-entry list with both slots empty.
@@ -85,21 +76,12 @@ pub(crate) unsafe fn init_c1_super_cup_list(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    crate::comparacao::ramo("cqq_11 vagas da supercopa c1");
+    crate::comparison::branch("cqq_11 vagas da supercopa c1");
     core::ptr::write_unaligned(l as *mut u32, 0);
     core::ptr::write_unaligned((l + 6) as *mut u32, 0);
     finish_two_team_list(l)
 }
 
-/// rule: the Serie C1 Super Cup starts with both places empty; the clubs enter at the end of the season [inference: the
-/// champions of the two C1 groups]
-/// Original: `ItaC1Super::init_team_list` (0x63c9d0, ita_c1_super.cpp, thiscall, ret 0).
-///
-/// [pt] regra: a Supercopa da Série C1 começa com as duas vagas vazias; os clubes entram no fim da temporada [inferência: os
-/// campeões das duas chaves da C1]
-pub(crate) unsafe extern "thiscall" fn eur_super_cup_init_team_list(this: usize) -> i32 {
-    init_c1_super_cup_list(this).0
-}
 
 
 /// rule: the European Super Cup is a single match on 24 August (drawn on 4 July) on neutral ground (venue 0x8000:

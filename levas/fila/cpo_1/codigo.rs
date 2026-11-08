@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1:
         let limit = fee_limit(comprador);
         let razao = if valor == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / valor as f64 };
         if taxa <= limit {
-            crate::comparacao::ramo("cpo_1 comprador no limit");
+            crate::comparison::branch("cpo_1 comprador no limit");
             or_byte(f1, 4); // o comprador: taxa dentro do limite
         } else if valor > 0x3d090 {
             let m = if razao < exe_f64(0x968918) {
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1:
     let limit = fee_limit(vendedor);
     let razao = if v2 == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / v2 as f64 };
     if taxa <= limit {
-        crate::comparacao::ramo("cpo_1 vendedor no limit");
+        crate::comparison::branch("cpo_1 vendedor no limit");
         or_byte(f2, 4); // o vendedor: taxa dentro do limite
     } else if v2 > 0x3d090 {
         let m = if razao < exe_f64(0x9689e0) {
@@ -270,7 +270,7 @@ unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: usize, trans
     }
     clamp_board_row(e);
     let tirar: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x547c10usize);
-    crate::comparacao::ramo("cpo_1 tirar favorito");
+    crate::comparison::branch("cpo_1 tirar favorito");
     tirar(cpo1_d(cpo1_d(pessoa + 0x39) + 0xbf), pessoa); // o presidente do vendedor
 }
 
@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, clube: usize) -
             remover(cpo1_d(this + 0x10), item);
             let tecnico = cpo1_d(clube + 0xcf);
             if tecnico != 0 && dias(0xae2c90, cpo1_d(tecnico + 0x3e), cpo1_d(tecnico + 0x42)) > 0x64 {
-                crate::comparacao::ramo("cpo_1 ultimato cumprido");
+                crate::comparison::branch("cpo_1 ultimato cumprido");
                 let mut reg = [0u8; 8];
                 reg[0] = 1;
                 reg[2..6].copy_from_slice(&(cpo1_d(clube) as u32).to_le_bytes());
@@ -327,7 +327,7 @@ unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, clube: usize) -
 /// duas palavras de marcas e os gastos líquidos do comprador e do vendedor; a cópia sem contar os sorteios.
 unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I0%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(f1, 2), (f2, 2)]);
     let pessoa = cpo1_d(0xae23bc).wrapping_add(cpo1_d(transf + 0xc).wrapping_mul(0x6e));
     let comprador = cpo1_d(0xae23b4).wrapping_add(cpo1_d(transf + 8).wrapping_mul(0x245));
@@ -336,16 +336,16 @@ unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: u
     if vendedor != 0 {
         reg.push((board_row_at(this, cpo1_d(vendedor)) + 0x38, 8));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, transf, f1, f2),
-        || crate::aleatorio::sem_contar(|| assess_transfer_deal(this, transf, f1, f2)));
-    PLACAR.registrar(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf, f1, f2),
+        || crate::rng::without_counting(|| assess_transfer_deal(this, transf, f1, f2)));
+    PLACAR.record(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf, mo, mr));
 }
 
 /// Comparador: lado a lado com o estado do sorteador (a avaliação 0x696570 sorteia), as linhas da diretoria do
 /// comprador e do vendedor e as três pessoas favoritas do presidente do vendedor (0x547c10); a cópia sem contar.
 unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usize, transf: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let pessoa = cpo1_d(0xae23bc).wrapping_add(cpo1_d(transf + 0xc).wrapping_mul(0x6e));
     reg.push((board_row_at(this, cpo1_d(transf + 8)), 0x49));
     let vendedor = cpo1_d(pessoa + 0x39);
@@ -356,9 +356,9 @@ unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usi
             reg.push((pref + 0x1c, 12));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, transf),
-        || crate::aleatorio::sem_contar(|| apply_transfer_confidence_changes(this, transf)));
-    PLACAR.registrar(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf),
+        || crate::rng::without_counting(|| apply_transfer_confidence_changes(this, transf)));
+    PLACAR.record(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf, mo, mr));
 }
 
 /// Comparador: a original tira o item da lista (e o libera) e acrescenta a saída: roda só ela e confere o plano: a
@@ -373,6 +373,6 @@ unsafe extern "thiscall" fn comparar_resolve_board_ultimatum(this: usize, clube:
     let r = o(this, clube);
     let depois = cpo1_w(cpo1_d(this + 4)) as i32;
     let ok = depois == antes + (r != 0) as i32 && (r == 0 || *((board_row_at(this, cpo1_d(clube)) + 2) as *const u8) & 2 != 0);
-    PLACAR.registrar(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, antes, depois));
+    PLACAR.record(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, antes, depois));
     r
 }

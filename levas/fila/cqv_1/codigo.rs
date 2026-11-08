@@ -47,7 +47,7 @@ unsafe fn cqv1_previstas(this: usize, e: &Cqv1Estadual) {
     for (k, &l) in e.lugares.iter().enumerate() {
         gravar(cqv1_d(this + 8), cqv1_d(v + 4 * k), l as u32);
     }
-    crate::comparacao::ramo(e.ramo);
+    crate::comparison::branch(e.ramo);
     let mut k = e.lugares.len() as i32 + 1;
     while k <= core::ptr::read_unaligned((this + 0x3e) as *const i16) as i32 {
         gravar(cqv1_d(this + 8), cqv1_d(v + 4 * (k - 1) as usize), k as u32);
@@ -80,7 +80,7 @@ unsafe fn cqv1_comparar(nome: &str, this: usize, e: &Cqv1Estadual, original: imp
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if r == 0 { -1 } else { *((r + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.registrar(erros.is_empty(), || format!("{}({:#x}): {}", nome, this, erros.join("; ")));
+    PLACAR.record(erros.is_empty(), || format!("{}({:#x}): {}", nome, this, erros.join("; ")));
 }
 
 const CQV1_MINEIRO: Cqv1Estadual = Cqv1Estadual { arquivo: 0x98aed0, linhas: [0x33f, 0x347], lugares: &[1, 2], ramo: "cqv_1 mineiro" }; // cqv1: os lugares do Mineiro

@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn send_club_international_report_news(this: usize, clu
                 pr(cqf11_d(cqf11_d(p + 0xc) + 0x33) as u32);
             }
             pr(0x420e9);
-            crate::comparacao::ramo("cqf_11 noticia do clube");
+            crate::comparison::branch("cqf_11 noticia do clube");
             let k_sorteio = idx;
             idx = idx.wrapping_add(1);
             let r = random_or_tape(2); // cqf11: o sorteio da notícia
@@ -221,14 +221,14 @@ unsafe extern "thiscall" fn comparar_send_club_international_report_news(this: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, *mut usize, u32)>(%%I0%%);
     let q = (conta as u8 as i8).max(0) as usize;
     let antes: Vec<usize> = (0..q).map(|k| *elenco.add(k)).collect();
-    let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, clube, jogo, resultado, destaque, elenco, conta));
+    let ((), tape_lock) = crate::rng::trace(|| o(this, clube, jogo, resultado, destaque, elenco, conta));
     let depois_o: Vec<usize> = (0..q).map(|k| *elenco.add(k)).collect();
     let n = tape_lock.len();
     for k in 0..q {
         *elenco.add(k) = antes[k];
     }
     *core::ptr::addr_of_mut!(INTERNATIONAL_REPORT_TAPE) = Some((tape_lock, 0, false));
-    crate::aleatorio::sem_contar(|| send_club_international_report_news(this, clube, jogo, resultado, destaque, elenco, conta));
+    crate::rng::without_counting(|| send_club_international_report_news(this, clube, jogo, resultado, destaque, elenco, conta));
     let (k, falhou) = match &*core::ptr::addr_of!(INTERNATIONAL_REPORT_TAPE) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn comparar_send_club_international_report_news(this: u
     for k in 0..q {
         *elenco.add(k) = depois_o[k];
     }
-    PLACAR.registrar(!falhou && k == n && depois_o == depois_r, || format!("send_club_international_report_news(clube {:#x}, jogo {:#x}, conta {}) tape_lock de {} sorteios, ensaio usou {} (n diferente: {}); elenco original {:x?} copia {:x?}",
+    PLACAR.record(!falhou && k == n && depois_o == depois_r, || format!("send_club_international_report_news(clube {:#x}, jogo {:#x}, conta {}) tape_lock de {} sorteios, ensaio usou {} (n diferente: {}); elenco original {:x?} copia {:x?}",
         clube, jogo, q, n, k, falhou, depois_o, depois_r));
 }
 
@@ -293,7 +293,7 @@ unsafe extern "thiscall" fn national_teams_post_call_up_news(this: usize, seleca
                 continue;
             }
         }
-        crate::comparacao::ramo("cqf_11 noticia da convocacao");
+        crate::comparison::branch("cqf_11 noticia da convocacao");
         construir(nt, 0x1d, 0);
         gravar(nt, 0, cqf11_d(selecao) as u32);
         gravar(nt, 1, cqf11_d(clube) as u32);
@@ -438,6 +438,6 @@ unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_opponents(th
     let plano = (*core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN)).take().unwrap_or_default();
     let r = o(this, selecao, jogo);
     let agora = list_item_values(r);
-    PLACAR.registrar(agora == plano, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));
+    PLACAR.record(agora == plano, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));
     r
 }

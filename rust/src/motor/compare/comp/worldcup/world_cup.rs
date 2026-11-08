@@ -11,12 +11,12 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DRAW_GROUPS);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend_from_slice(&[(this + 0xee, 0xa0), (this + 0x36, 2), (0xb67a34, 4)]);
     if read_i16(this + 0x40) == 0x7d2 && read_u32_as_usize(this + 0x14) != 0 {
         reg.push((read_u32_as_usize(this + 0x14), 0xc0));
     }
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| draw_groups(this)));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| draw_groups(this)));
     let same = if a != 0 && b != 0 {
         core::slice::from_raw_parts(a as *const u8, 0xa0) == core::slice::from_raw_parts(b as *const u8, 0xa0)
     } else {
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usiz
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && same, || format!("draw_groups: memória igual={} lista igual={}", igual, same));
+    PLACAR.record(igual && same, || format!("draw_groups: memória igual={} lista igual={}", igual, same));
     a
 }
 
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_run_group_draw(this: usize) {
     if read_u32_as_usize(this + 0x45) == 1 {
         let stages = read_u32_as_usize(this + 0xc);
         let ok = stages != 0 && (0..7).all(|g| read_u32_as_usize(stages + g * 4) != 0) && read_u32_as_usize(this + 0x30) == 6;
-        PLACAR.registrar(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.record(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", read_u32_as_usize(this + 0x30) as i32));
     }
 }
 
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: 
     let sorteia = read_i16(this + 0xb6) as u16 == day && read_i16(this + 0xb8) as i32 + read_i16(this + 0x40) as i32 == year && full != 0 && read_u32_as_usize(this + 0xb1) == 0;
     let r = o(this, today, full);
     if sorteia {
-        PLACAR.registrar(read_u32_as_usize(this + 0xb1) != 0 && read_u32_as_usize(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", read_u32_as_usize(this + 0xb1), read_u32_as_usize(this + 0x45)));
+        PLACAR.record(read_u32_as_usize(this + 0xb1) != 0 && read_u32_as_usize(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", read_u32_as_usize(this + 0xb1), read_u32_as_usize(this + 0x45)));
     }
     r
 }
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_table(thi
     if r == 1 {
         let t = read_u32_as_usize(this + 0xb1);
         let ok = read_i16(this + 0x3e) == 4 && plan.iter().enumerate().all(|(k, &c)| read_u32_as_usize(t + k * 0x3b) == c);
-        PLACAR.registrar(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plan));
+        PLACAR.record(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plan));
     }
     r
 }
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(thi
                 b.sort_unstable();
                 a == b
             });
-        PLACAR.registrar(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plan));
+        PLACAR.record(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plan));
     }
     r
 }
@@ -124,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_set_predicted_position
         let e = if v[k] != 0 { achar(read_u32_as_usize(this + 8), v[k]) } else { 0 };
         e == 0 || read_u8(e + 0x72) != FAIXAS[k]
     });
-    PLACAR.registrar(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
+    PLACAR.record(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }
 
 /// Comparer for `world_cup_create_schedule` (comparison mode: see the header of motor.rs).
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: 
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(
         &reg,
         || o(this, stage, rounds, id, league),
         || world_cup_create_schedule(this, stage, &mut r2, &mut i2, if league.is_null() { core::ptr::null_mut() } else { &mut l2 }),
@@ -150,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: 
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && outs && table, || format!("world_cup_create_schedule({}): saídas {} tabela {}", stage as u8 as i8, outs, table));
+    PLACAR.record(igual && outs && table, || format!("world_cup_create_schedule({}): saídas {} tabela {}", stage as u8 as i8, outs, table));
     a
 }
 
@@ -164,8 +164,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_qualified_team(this: usize, 
         return o(this, clube);
     }
     let reg = [(this + 0x36, 2usize), (read_u32_as_usize(this + 0x14).wrapping_add((n as i32 * 6) as usize), 6usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || add_qualified_team(this, clube));
-    PLACAR.registrar(igual, || format!("add_qualified_team: {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clube), || add_qualified_team(this, clube));
+    PLACAR.record(igual, || format!("add_qualified_team: {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparer for `seed_teams` (comparison mode: see the header of motor.rs).
@@ -178,6 +178,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_seed_teams(this: usize) {
         return o(this);
     }
     let reg = [(this + 0x36, 0x16usize), (this + 0xee, 0xa0usize)];
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || seed_teams(this));
-    PLACAR.registrar(igual, || "seed_teams: a Copa de 2002 mudou".to_string());
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || seed_teams(this));
+    PLACAR.record(igual, || "seed_teams: a Copa de 2002 mudou".to_string());
 }

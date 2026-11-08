@@ -22,7 +22,7 @@ unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u32 {
 unsafe extern "thiscall" fn comparar_has_active_release_clause(c: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(c);
     let n = has_active_release_clause(c);
-    PLACAR.registrar(r == n, || format!("has_active_release_clause({:x}) original={} rust={}", c, r, n));
+    PLACAR.record(r == n, || format!("has_active_release_clause({:x}) original={} rust={}", c, r, n));
     r
 }
 
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: usize, x: us
         if anos.is_null() { core::ptr::null_mut() } else { &mut na },
     );
     let ok = r == n && (no_limite.is_null() || ol == nl) && (anos.is_null() || oa == na);
-    PLACAR.registrar(ok, || format!("check_fifa_protected_period({:x}) original={} {} {} rust={} {} {}", c, r, ol, oa, n, nl, na));
+    PLACAR.record(ok, || format!("check_fifa_protected_period({:x}) original={} {} {} rust={} {} {}", c, r, ol, oa, n, nl, na));
     r
 }
 
@@ -102,6 +102,6 @@ unsafe extern "C" fn staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u
 unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%)(pessoa, tipo);
     let n = staff_contract_is_bonus_type_allowed(pessoa, tipo);
-    PLACAR.registrar(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));
+    PLACAR.record(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));
     r
 }

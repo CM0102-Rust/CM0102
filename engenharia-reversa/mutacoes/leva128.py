@@ -4,7 +4,7 @@ MUTACOES = [
     ('r_goleiro', "sortear(match_pl_ftol(2000.0 - read_f32_at(j + match_player::HANDLING) as f64 * 40.0))", "sortear(match_pl_ftol(2000.0 - read_f32_at(j + match_player::HANDLING) as f64 * 41.0))", "respond goleiro na area"),
     ('r_tipo', "            3 => sortear(1000),\n            4 => sortear(0x708),", "            3 => sortear(1001),\n            4 => sortear(0x708),"),
     ('r_altura', "attack = match_pl_ftol(((byte(m, 0x8eaa) as i32 + 1) * attack as i16 as i32) as f64 / st);", "attack = match_pl_ftol(((byte(m, 0x8eaa) as i32 + 2) * attack as i16 as i32) as f64 / st);"),
-    ('r_proprio', "        if sortear(attack as i16 as i32 + 100) != 0 {\n            return 0;\n        }\n        crate::comparacao::ramo(\"respond bola", "        if sortear(attack as i16 as i32 + 101) != 0 {\n            return 0;\n        }\n        crate::comparacao::ramo(\"respond bola", "respond bola do proprio lado"),
+    ('r_proprio', "        if sortear(attack as i16 as i32 + 100) != 0 {\n            return 0;\n        }\n        crate::comparison::branch(\"respond bola", "        if sortear(attack as i16 as i32 + 101) != 0 {\n            return 0;\n        }\n        crate::comparison::branch(\"respond bola", "respond bola do proprio lado"),
     ('r_cabeca', "ficha5c * 200) != 0 { escolher(kind)", "ficha5c * 201) != 0 { escolher(kind)"),
     ('r_nota', "    if rating < 0x96 {\n        return 0;", "    if rating < 0x95 {\n        return 0;"),
     ('r_registra', "register(m, code as u16, j as u32, 0, 0, t, *b(j, 0x102), *b(j, 0x103), cartao, grav);", "register(m, code as u16, j as u32, 0, 0, t, *b(j, 0x103), *b(j, 0x102), cartao, grav);", "respond falta registrada"),

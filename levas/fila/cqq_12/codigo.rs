@@ -57,7 +57,7 @@ unsafe fn build_stage_table(this: usize, f: Option<OceaniaStage>, rodadas: *mut 
         show_error_at(arquivo, f.linha);
         return 0;
     }
-    crate::comparacao::ramo(f.nome);
+    crate::comparison::branch(f.nome);
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(0x68a160usize);
     let jogo_l: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
@@ -122,14 +122,14 @@ unsafe fn compare_stage_table(nome: &str, fase: u32, f: Option<OceaniaStage>, ro
         Some(f) => f,
         None => {
             let a = o();
-            PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
+            PLACAR.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
             return a;
         }
     };
     let (mut r2, mut e2) = (*rodadas, if extra.is_null() { 0 } else { *extra });
     let mut l2 = if liga.is_null() { 0 } else { *liga };
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, o, || c(&mut r2, if extra.is_null() { core::ptr::null_mut() } else { &mut e2 },
         if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let saidas = *rodadas == r2 && (extra.is_null() || *extra == e2) && (liga.is_null() || *liga == l2);
     let tabela = if a != 0 && b != 0 { oceania_club_champ_written_table_bytes(f.ops, f.ops2, a) == oceania_club_champ_written_table_bytes(f.ops, f.ops2, b) } else { a == 0 && b == 0 };
@@ -137,7 +137,7 @@ unsafe fn compare_stage_table(nome: &str, fase: u32, f: Option<OceaniaStage>, ro
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
+    PLACAR.record(igual && saidas && tabela, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", nome, fase as u8 as i8, saidas, *rodadas, r2, tabela));
     a
 }
 
@@ -219,7 +219,7 @@ unsafe fn build_team_table(this: usize, arquivo: usize, linha: u32, nome: &'stat
         show_error_at(arquivo, linha);
         return -1;
     }
-    crate::comparacao::ramo(nome);
+    crate::comparison::branch(nome);
     let mut i: i16 = 0;
     while i < core::ptr::read_unaligned((this + 0x3e) as *const i16) {
         let c = cqq12_d(cqq12_d(this + 0xb2) + ordem(i) as usize * 4);
@@ -238,7 +238,7 @@ unsafe fn compare_team_table(nome: &str, this: usize, o: impl FnOnce() -> i32, c
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
         lo.set(cqq12_d(this + 0xa7));
         r
@@ -259,7 +259,7 @@ unsafe fn compare_team_table(nome: &str, this: usize, o: impl FnOnce() -> i32, c
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", nome, this, a, b, igual, lista));
+    PLACAR.record(igual && a == b && lista, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", nome, this, a, b, igual, lista));
     a
 }
 

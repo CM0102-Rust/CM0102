@@ -11,18 +11,4 @@ pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windo
     compare_transfer_rules_ctor("greece_rules_init_transfer_windows", this, || o(this), |s| greece_rules_init_transfer_windows(s));
 }
 
-/// Comparer for `greece_rules_init_transfer_windows_7ec7e0` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_7ec7e0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_7EC7E0);
-    compare_transfer_rules_ctor("greece_rules_init_transfer_windows_7ec7e0", this, || o(this), |s| greece_rules_init_transfer_windows_7ec7e0(s));
-}
 
-/// Comparer for `greece_rules_init_transfer_windows_424c00` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_424c00(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_424C00);
-    compare_transfer_rules_ctor("greece_rules_init_transfer_windows_424c00", this, || o(this), |s| greece_rules_init_transfer_windows_424c00(s));
-}

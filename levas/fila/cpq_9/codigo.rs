@@ -138,10 +138,10 @@ unsafe extern "C" fn player_regen_compare_queue_entries(a: usize, b: usize) -> i
 /// Comparador: lado a lado pelo estado do sorteio (a cópia sem contar), e a nota.
 unsafe extern "stdcall" fn comparar_player_regen_score_non_player_candidate(pessoa: usize) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> i32>(%%I0%%);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa),
-        || crate::aleatorio::sem_contar(|| player_regen_score_non_player_candidate(pessoa)));
-    PLACAR.registrar(igual && r == n, || format!("player_regen_score_non_player_candidate({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let reg = crate::rng::STATE_REGIONS.to_vec();
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(pessoa),
+        || crate::rng::without_counting(|| player_regen_score_non_player_candidate(pessoa)));
+    PLACAR.record(igual && r == n, || format!("player_regen_score_non_player_candidate({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -149,7 +149,7 @@ unsafe extern "stdcall" fn comparar_player_regen_score_non_player_candidate(pess
 unsafe extern "C" fn comparar_player_regen_compare_retirements(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
     let n = player_regen_compare_retirements(a, b);
-    PLACAR.registrar(r == n, || format!("player_regen_compare_retirements({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("player_regen_compare_retirements({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -157,6 +157,6 @@ unsafe extern "C" fn comparar_player_regen_compare_retirements(a: usize, b: usiz
 unsafe extern "C" fn comparar_player_regen_compare_queue_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
     let n = player_regen_compare_queue_entries(a, b);
-    PLACAR.registrar(r == n, || format!("player_regen_compare_queue_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
+    PLACAR.record(r == n, || format!("player_regen_compare_queue_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

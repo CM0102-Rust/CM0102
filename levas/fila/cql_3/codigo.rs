@@ -16,7 +16,7 @@ unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
     while i < cql3_d(0xadadf8) as i32 {
         let c = cql3_d(cql3_d(0xadadfc) as usize + 4 * i as usize) as usize;
         if c != 0 && divisao(cql3_d(cql3_d(c + 4) as usize) as i32) != 0 && *((c + 0x52) as *const u8) & 2 != 0 {
-            crate::comparacao::ramo("cql_3 numera a liga");
+            crate::comparison::branch("cql_3 numera a liga");
             cada(c); // cql3: numera a liga
         }
         i += 1;
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
     o(this);
     let feito = SQUAD_NUMBERS_PLAN.take().unwrap_or_default();
     let zerado = *(this as *const u16) == 0;
-    PLACAR.registrar(feito == plano && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
+    PLACAR.record(feito == plano && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
 }
 
 /// { 0x859e20 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::assign_league_squad_numbers`): numera os clubes
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, liga: usize
                 }
                 let b = *((f + 4) as *const i8);
                 let k = if b < 0 { 0 } else if b > 0x32 { 0x32 } else { b as i32 };
-                crate::comparacao::ramo("cql_3 numero do banco");
+                crate::comparison::branch("cql_3 numero do banco");
                 gravar(this, p, c, k as u32); // cql3: o número do banco
             }
         }
@@ -149,8 +149,8 @@ unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, li
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, liga, inicial, automatico), || assign_league_squad_numbers(this, liga, inicial, automatico));
-    PLACAR.registrar(igual, || {
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, liga, inicial, automatico), || assign_league_squad_numbers(this, liga, inicial, automatico));
+    PLACAR.record(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("assign_league_squad_numbers(liga {:x}, {} {}): {}", liga, inicial, automatico, d.join(", "))
     });
@@ -240,13 +240,13 @@ unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usiz
         if p != 0 {
             let v = if marca != 0 { 1 } else { 2 };
             if etapa == 1 {
-                crate::comparacao::ramo("cql_3 inscreve na etapa 1");
+                crate::comparison::branch("cql_3 inscreve na etapa 1");
                 *m6d(p) = v; // cql3: inscreve
                 conta = conta.wrapping_add(1);
             } else {
                 let a = *m6d(p);
                 if a != 2 && a & 8 == 0 && (conta as i32) < total {
-                    crate::comparacao::ramo("cql_3 inscreve depois");
+                    crate::comparison::branch("cql_3 inscreve depois");
                     *m6d(p) = v; // cql3: inscreve depois
                     conta = conta.wrapping_add(1);
                 }
@@ -270,8 +270,8 @@ unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize,
             reg.push((p + 0x6d, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, etapa, marca), || select_euro_registered_players(this, c, etapa, marca));
-    PLACAR.registrar(igual && r == n, || {
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, etapa, marca), || select_euro_registered_players(this, c, etapa, marca));
+    PLACAR.record(igual && r == n, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
         format!("select_euro_registered_players(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, etapa as u8, marca, r, n, d.join(", "))
     });

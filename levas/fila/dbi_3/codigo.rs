@@ -179,13 +179,13 @@ unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust:
     }
     let regioes = [(jogador, 70), (pessoa + 0x58, 1)];
     let gerente = *(0xde1f44 as *const usize);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
+    let antes = crate::comparison::MemorySnapshot::read(&regioes);
     *(0xde1f44 as *mut usize) = 0;
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(pessoa), || rust(pessoa));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regioes, || o(pessoa), || rust(pessoa));
     *(0xde1f44 as *mut usize) = gerente;
-    PLACAR.registrar(igual, || format!("{}({:x}) {:x?} x {:x?}", nome, pessoa, mo, mr));
+    PLACAR.record(igual, || format!("{}({:x}) {:x?} x {:x?}", nome, pessoa, mo, mr));
     if gerente != 0 {
-        antes.escrever();
+        antes.write_back();
         o(pessoa);
     }
 }
@@ -225,9 +225,9 @@ unsafe extern "C" fn database_pick_second_name_by_weight(nacao: usize) -> usize 
 unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_second_name_by_weight(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(nacao),
+        || crate::rng::without_counting(|| database_pick_second_name_by_weight(nacao)));
+    PLACAR.record(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 

@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, por
             None => return 0,
         }
     };
-    crate::comparacao::ramo("cpu_10 punicao");
+    crate::comparison::branch("cpu_10 punicao");
     *(r as *mut u8) = jogos; // cpu10: os jogos da suspensão
     *((r + 1) as *mut u8) = 0;
     *((r + 2) as *mut u16) = dias;
@@ -86,8 +86,8 @@ unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, por
 unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     let regioes = [(r, 0x70)];
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, r, j, por_jogos), || make_points_ban(this, r, j, por_jogos));
-    PLACAR.registrar(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", cpu10_d(j), por_jogos, a, b, mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&regioes, || o(this, r, j, por_jogos), || make_points_ban(this, r, j, por_jogos));
+    PLACAR.record(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", cpu10_d(j), por_jogos, a, b, mo, mr));
     a
 }
 
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
     let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(0x55cb60usize);
     let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(0x55cb20usize);
     let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
-    crate::comparacao::ramo("cpu_10 nova temporada");
+    crate::comparison::branch("cpu_10 nova temporada");
     let mut e = cpu10_d(this + 0xb);
     let mut i = 0i32;
     while i < cpu10_i(this + 0x13) {
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
                 let anos = if cpu10_i(this + 0x17) == -1 && cpu10_i(this + 0x1b) == -1 { 4 } else { 2 };
                 let ano = *((ban + 6) as *const u16) as i32;
                 if *(0xae2c92 as *const u16) as i32 - ano >= anos {
-                    crate::comparacao::ramo("cpu_10 suspensao velha");
+                    crate::comparison::branch("cpu_10 suspensao velha");
                     // ponytail: a original empurra o índice com os 16 bits altos do edx de antes; a 0x556d00 lê só a palavra.
                     soltar(cpu10_d(0xae28f0), id as u32, s as u16 as u32);
                     true
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
     let n = (esperado.len() / 0xe) as u32;
     let p = cpu10_d(this + 0xb);
     let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, esperado.len()) == &esperado[..];
-    PLACAR.registrar(cpu10_d(this + 0x13) as u32 == n && cpu10_d(this + 0xf) as u32 == n + 100 && iguais, || {
+    PLACAR.record(cpu10_d(this + 0x13) as u32 == n && cpu10_d(this + 0xf) as u32 == n + 100 && iguais, || {
         format!("compact_entries: conta {} (esperava {}), capacidade {}, entradas iguais {}", cpu10_d(this + 0x13), n, cpu10_d(this + 0xf), iguais)
     });
 }
